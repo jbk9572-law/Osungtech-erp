@@ -35,7 +35,12 @@ export async function adjustInventory(
   });
 
   if (error) {
-    return { error: "재고 조정에 실패했습니다." };
+    return {
+      error:
+        quantity < 0
+          ? "재고 조정에 실패했습니다. 현재 재고보다 많은 수량을 차감할 수 없습니다 (재고는 0 미만이 될 수 없습니다)."
+          : "재고 조정에 실패했습니다.",
+    };
   }
 
   revalidatePath("/inventory");

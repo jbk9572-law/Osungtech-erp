@@ -5,6 +5,7 @@ import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
+import { NumberInput } from "@/components/number-input";
 
 type Supplier = { id: string; name: string };
 type Product = { id: string; sku: string; name: string; cost: number };
@@ -15,6 +16,7 @@ type Row = {
   productId: string;
   quantity: number;
   unitCost: number;
+  manualPrice: boolean;
 };
 
 export type PurchaseInitial = {
@@ -49,8 +51,8 @@ export function NewPurchaseForm({
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
-      ? initial.items.map((item, i) => ({ key: i, ...item }))
-      : [{ key: 0, productId: "", quantity: 1, unitCost: 0 }]
+      ? initial.items.map((item, i) => ({ key: i, ...item, manualPrice: false }))
+      : [{ key: 0, productId: "", quantity: 1, unitCost: 0, manualPrice: false }]
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -65,7 +67,10 @@ export function NewPurchaseForm({
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { key: nextKey, productId: "", quantity: 1, unitCost: 0 }]);
+    setRows((prev) => [
+      ...prev,
+      { key: nextKey, productId: "", quantity: 1, unitCost: 0, manualPrice: false },
+    ]);
     setNextKey((k) => k + 1);
   }
 
@@ -160,43 +165,62 @@ export function NewPurchaseForm({
         </div>
 
         <div className="space-y-3">
-          {rows.map((row) => (
-            <div key={row.key} className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
-              <div className="sm:col-span-5">
-                <ProductSearchSelect
-                  products={products}
-                  value={row.productId}
-                  onChange={(productId) => handleProductChange(row.key, productId)}
-                />
+          {rows.map((row) => {
+            const product = products.find((p) => p.id === row.productId);
+            const recentCost = product ? Number(product.cost) : 0;
+            return (
+              <div key={row.key} className="rounded-md border border-gray-100 p-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
+                  <div className="sm:col-span-5">
+                    <ProductSearchSelect
+                      products={products}
+                      value={row.productId}
+                      onChange={(productId) => handleProductChange(row.key, productId)}
+                    />
+                  </div>
+                  <NumberInput
+                    placeholder="수량"
+                    value={row.quantity}
+                    onChange={(n) => updateRow(row.key, { quantity: n })}
+                    className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
+                  />
+                  <NumberInput
+                    placeholder="매입단가"
+                    value={row.unitCost}
+                    onChange={(n) => updateRow(row.key, { unitCost: n })}
+                    disabled={!row.manualPrice}
+                    className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400 sm:col-span-2"
+                  />
+                  <div className="text-sm text-gray-500 sm:col-span-2">
+                    {(row.quantity * row.unitCost).toLocaleString()}원
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.key)}
+                    className="text-sm text-red-600 hover:underline sm:col-span-1"
+                  >
+                    삭제
+                  </button>
+                </div>
+                {row.productId && (
+                  <label className="mt-1.5 flex items-center gap-1.5 pl-1 text-xs text-gray-500">
+                    <input
+                      type="checkbox"
+                      checked={row.manualPrice}
+                      onChange={(e) => {
+                        const manualPrice = e.target.checked;
+                        updateRow(row.key, {
+                          manualPrice,
+                          ...(manualPrice ? {} : { unitCost: recentCost }),
+                        });
+                      }}
+                    />
+                    직접입력 (최근단가: {recentCost.toLocaleString()}원)
+                  </label>
+                )}
               </div>
-              <input
-                type="number"
-                min={1}
-                placeholder="수량"
-                value={row.quantity}
-                onChange={(e) => updateRow(row.key, { quantity: Number(e.target.value) })}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <input
-                type="number"
-                step="0.01"
-                placeholder="매입단가"
-                value={row.unitCost}
-                onChange={(e) => updateRow(row.key, { unitCost: Number(e.target.value) })}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <div className="text-sm text-gray-500 sm:col-span-2">
-                {(row.quantity * row.unitCost).toLocaleString()}원
-              </div>
-              <button
-                type="button"
-                onClick={() => removeRow(row.key)}
-                className="text-sm text-red-600 hover:underline sm:col-span-1"
-              >
-                삭제
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-4 flex justify-end border-t border-gray-100 pt-4 text-base font-semibold text-gray-900">

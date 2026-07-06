@@ -45,6 +45,10 @@ function formatDate(dateStr: string) {
 }
 
 const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
+// 품목 테이블의 모든 행(입력된 행/빈 행 포함)이 항상 같은 높이를 갖도록 고정.
+// 비어 있는 셀은 내용이 없어 줄 높이가 생기지 않아 그냥 두면 입력된 행보다
+// 얇게 찌그러지는 문제가 있어, 모든 품목 행에 동일한 높이를 강제로 지정한다.
+const ITEM_ROW_HEIGHT = "h-[19px]";
 
 function Cell({
   as = "td",
@@ -64,7 +68,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden text-ellipsis break-words border border-current px-[5px] py-[1.5px] text-left align-middle font-normal ${className}`}
+      className={`overflow-hidden text-ellipsis whitespace-nowrap border border-current px-[5px] py-[1.5px] text-left align-middle font-normal ${className}`}
     >
       {children}
     </Tag>
@@ -194,15 +198,15 @@ export function InvoiceDoc({
             <Cell as="th" colSpan={1}>
               비고
             </Cell>
-            <Cell colSpan={9} />
-            <Cell as="th" colSpan={3}>
+            <Cell colSpan={8} />
+            <Cell as="th" colSpan={4}>
               인수자
             </Cell>
             <Cell colSpan={4} />
           </tr>
 
           {/* item header */}
-          <tr>
+          <tr className={ITEM_ROW_HEIGHT}>
             <Cell as="th" colSpan={ITEM_COLS[0]} className="text-center">
               월일
             </Cell>
@@ -230,7 +234,7 @@ export function InvoiceDoc({
           </tr>
 
           {items.map((item, i) => (
-            <tr key={item.id} style={stripe(i)}>
+            <tr key={item.id} className={ITEM_ROW_HEIGHT} style={stripe(i)}>
               <Cell colSpan={ITEM_COLS[0]} className="text-center">
                 {item.monthDay}
               </Cell>
@@ -254,7 +258,7 @@ export function InvoiceDoc({
             </tr>
           ))}
           {Array.from({ length: blankCount }).map((_, i) => (
-            <tr key={`blank-${i}`} style={stripe(items.length + i)}>
+            <tr key={`blank-${i}`} className={ITEM_ROW_HEIGHT} style={stripe(items.length + i)}>
               <Cell colSpan={ITEM_COLS[0]} />
               <Cell colSpan={ITEM_COLS[1]} className="text-center opacity-60">
                 {i === 0 ? "=이하여백=" : ""}

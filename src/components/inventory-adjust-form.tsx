@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { adjustInventory } from "@/app/(dashboard)/inventory/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
+import { NumberInput } from "@/components/number-input";
 
 type Product = { id: string; sku: string; name: string };
 type Warehouse = { id: string; name: string };
@@ -17,10 +18,12 @@ export function InventoryAdjustForm({
 }) {
   const [state, formAction, pending] = useActionState(adjustInventory, undefined);
   const [productId, setProductId] = useState("");
+  const [quantity, setQuantity] = useState(0);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-5">
       <input type="hidden" name="product_id" value={productId} />
+      <input type="hidden" name="quantity" value={quantity} />
       <div className="sm:col-span-2">
         <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
       </div>
@@ -39,11 +42,11 @@ export function InventoryAdjustForm({
           </option>
         ))}
       </select>
-      <input
-        name="quantity"
-        type="number"
+      <NumberInput
+        value={quantity}
+        onChange={setQuantity}
+        allowNegative
         placeholder="수량 (증가: 양수, 차감: 음수)"
-        required
         className="rounded-md border border-gray-300 px-3 py-2 text-sm"
       />
       <input

@@ -6,6 +6,7 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
+import { NumberInput } from "@/components/number-input";
 
 type Customer = { id: string; name: string };
 type Product = { id: string; sku: string; name: string; price: number };
@@ -23,6 +24,7 @@ type Row = {
   productId: string;
   quantity: number;
   unitPrice: number;
+  manualPrice: boolean;
 };
 
 export type SaleInitial = {
@@ -61,8 +63,8 @@ export function NewSaleForm({
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
-      ? initial.items.map((item, i) => ({ key: i, ...item }))
-      : [{ key: 0, productId: "", quantity: 1, unitPrice: 0 }]
+      ? initial.items.map((item, i) => ({ key: i, ...item, manualPrice: false }))
+      : [{ key: 0, productId: "", quantity: 1, unitPrice: 0, manualPrice: false }]
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -94,13 +96,18 @@ export function NewSaleForm({
     setCustomerId(newCustomerId);
     setRows((prev) =>
       prev.map((row) =>
-        row.productId ? { ...row, unitPrice: resolvePrice(newCustomerId, row.productId) } : row
+        row.productId && !row.manualPrice
+          ? { ...row, unitPrice: resolvePrice(newCustomerId, row.productId) }
+          : row
       )
     );
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { key: nextKey, productId: "", quantity: 1, unitPrice: 0 }]);
+    setRows((prev) => [
+      ...prev,
+      { key: nextKey, productId: "", quantity: 1, unitPrice: 0, manualPrice: false },
+    ]);
     setNextKey((k) => k + 1);
   }
 
@@ -203,50 +210,64 @@ export function NewSaleForm({
         </div>
 
         <div className="space-y-3">
-          {rows.map((row) => (
-            <div key={row.key} className="rounded-md border border-gray-100 p-2">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
-                <div className="sm:col-span-5">
-                  <ProductSearchSelect
-                    products={products}
-                    value={row.productId}
-                    onChange={(productId) => handleProductChange(row.key, productId)}
+          {rows.map((row) => {
+            const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
+            return (
+              <div key={row.key} className="rounded-md border border-gray-100 p-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
+                  <div className="sm:col-span-5">
+                    <ProductSearchSelect
+                      products={products}
+                      value={row.productId}
+                      onChange={(productId) => handleProductChange(row.key, productId)}
+                    />
+                  </div>
+                  <NumberInput
+                    placeholder="수량"
+                    value={row.quantity}
+                    onChange={(n) => updateRow(row.key, { quantity: n })}
+                    className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
                   />
+                  <NumberInput
+                    placeholder="단가"
+                    value={row.unitPrice}
+                    onChange={(n) => updateRow(row.key, { unitPrice: n })}
+                    disabled={!row.manualPrice}
+                    className="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400 sm:col-span-2"
+                  />
+                  <div className="text-sm text-gray-500 sm:col-span-2">
+                    {(row.quantity * row.unitPrice).toLocaleString()}원
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeRow(row.key)}
+                    className="text-sm text-red-600 hover:underline sm:col-span-1"
+                  >
+                    삭제
+                  </button>
                 </div>
-                <input
-                  type="number"
-                  min={1}
-                  placeholder="수량"
-                  value={row.quantity}
-                  onChange={(e) => updateRow(row.key, { quantity: Number(e.target.value) })}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-                />
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="단가"
-                  value={row.unitPrice}
-                  onChange={(e) => updateRow(row.key, { unitPrice: Number(e.target.value) })}
-                  className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-                />
-                <div className="text-sm text-gray-500 sm:col-span-2">
-                  {(row.quantity * row.unitPrice).toLocaleString()}원
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeRow(row.key)}
-                  className="text-sm text-red-600 hover:underline sm:col-span-1"
-                >
-                  삭제
-                </button>
+                {row.productId && customerId && (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-3 pl-1">
+                    <label className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <input
+                        type="checkbox"
+                        checked={row.manualPrice}
+                        onChange={(e) => {
+                          const manualPrice = e.target.checked;
+                          updateRow(row.key, {
+                            manualPrice,
+                            ...(manualPrice ? {} : { unitPrice: recentPrice }),
+                          });
+                        }}
+                      />
+                      직접입력 (최근단가: {recentPrice.toLocaleString()}원)
+                    </label>
+                    <PriceHistoryHint history={getHistoryFor(row.productId)} />
+                  </div>
+                )}
               </div>
-              {row.productId && customerId && (
-                <div className="mt-1.5 pl-1">
-                  <PriceHistoryHint history={getHistoryFor(row.productId)} />
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-4 flex flex-col items-end gap-1 border-t border-gray-100 pt-4 text-sm">
