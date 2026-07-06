@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { createCustomer } from "./actions";
+import { CreateCustomerForm } from "@/components/create-customer-form";
 
 export default async function CustomersPage() {
   const supabase = await createClient();
@@ -15,51 +15,7 @@ export default async function CustomersPage() {
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-medium text-gray-700">거래처 추가</h2>
-        <form action={createCustomer} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <input
-            name="name"
-            placeholder="거래처명"
-            required
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="business_number"
-            placeholder="사업자등록번호"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="representative_name"
-            placeholder="대표자명"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="contact_name"
-            placeholder="담당자"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="phone"
-            placeholder="연락처"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="email"
-            placeholder="이메일"
-            type="email"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-          />
-          <input
-            name="address"
-            placeholder="주소"
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-3"
-          />
-          <button
-            type="submit"
-            className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 sm:col-span-3 sm:w-32"
-          >
-            추가
-          </button>
-        </form>
+        <CreateCustomerForm />
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">

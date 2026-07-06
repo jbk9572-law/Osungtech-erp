@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { FormMessage } from "@/components/form-message";
 
 type Customer = { id: string; name: string };
 type Product = { id: string; sku: string; name: string; price: number };
@@ -33,6 +34,7 @@ export function NewSaleForm({
   const [memo, setMemo] = useState("");
   const [rows, setRows] = useState<Row[]>([{ key: 0, productId: "", quantity: 1, unitPrice: 0 }]);
   const [nextKey, setNextKey] = useState(1);
+  const [state, formAction, pending] = useActionState(createSale, undefined);
 
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -86,7 +88,7 @@ export function NewSaleForm({
   );
 
   return (
-    <form action={createSale} className="space-y-6">
+    <form action={formAction} className="space-y-6">
       <input type="hidden" name="items" value={itemsJson} />
 
       <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:grid-cols-3">
@@ -211,11 +213,14 @@ export function NewSaleForm({
         </div>
       </div>
 
+      <FormMessage state={state} />
+
       <button
         type="submit"
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+        disabled={pending}
+        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
       >
-        거래 등록 및 거래명세표 보기
+        {pending ? "등록 중..." : "거래 등록 및 거래명세표 보기"}
       </button>
     </form>
   );

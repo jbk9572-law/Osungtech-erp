@@ -3,12 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function PurchasesPage() {
   const supabase = await createClient();
-  const { data: orders } = await supabase
-    .from("purchase_orders")
-    .select("*, suppliers(name), warehouses(name), purchase_order_items(quantity, unit_cost)")
-    .order("purchase_date", { ascending: false })
+  const { data: items } = await supabase
+    .from("purchase_order_items")
+    .select(
+      "*, purchase_orders(id, purchase_date, memo, suppliers(name, contact_name, phone), warehouses(name)), products(sku, name, unit)"
+    )
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(200);
 
   return (
     <div>
@@ -28,32 +29,47 @@ export default async function PurchasesPage() {
             <tr>
               <th className="px-4 py-3 font-medium">매입일자</th>
               <th className="px-4 py-3 font-medium">공급업체</th>
+              <th className="px-4 py-3 font-medium">담당자/연락처</th>
               <th className="px-4 py-3 font-medium">입고 창고</th>
-              <th className="px-4 py-3 font-medium">품목수</th>
-              <th className="px-4 py-3 font-medium">매입금액</th>
+              <th className="px-4 py-3 font-medium">SKU</th>
+              <th className="px-4 py-3 font-medium">품목명</th>
+              <th className="px-4 py-3 font-medium">규격</th>
+              <th className="px-4 py-3 font-medium text-right">수량</th>
+              <th className="px-4 py-3 font-medium text-right">매입단가</th>
+              <th className="px-4 py-3 font-medium text-right">금액</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {orders?.map((order) => {
-              const total = order.purchase_order_items.reduce(
-                (sum, item) => sum + item.quantity * Number(item.unit_cost),
-                0
-              );
+            {items?.map((item) => {
+              const order = item.purchase_orders;
+              const amount = item.quantity * Number(item.unit_cost);
               return (
-                <tr key={order.id}>
-                  <td className="px-4 py-3 text-gray-500">
-                    {new Date(order.purchase_date).toLocaleDateString("ko-KR")}
+                <tr key={item.id}>
+                  <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                    {order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}
                   </td>
-                  <td className="px-4 py-3 text-gray-900">{order.suppliers?.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{order.warehouses?.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{order.purchase_order_items.length}</td>
-                  <td className="px-4 py-3 text-gray-900">{total.toLocaleString()}원</td>
+                  <td className="px-4 py-3 text-gray-900">{order?.suppliers?.name}</td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {order?.suppliers?.contact_name ?? "-"}
+                    {order?.suppliers?.phone ? ` · ${order.suppliers.phone}` : ""}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">{order?.warehouses?.name}</td>
+                  <td className="px-4 py-3 text-gray-900">{item.products?.sku}</td>
+                  <td className="px-4 py-3 text-gray-900">{item.products?.name}</td>
+                  <td className="px-4 py-3 text-gray-500">{item.products?.unit}</td>
+                  <td className="px-4 py-3 text-right text-gray-900">{item.quantity}</td>
+                  <td className="px-4 py-3 text-right text-gray-500">
+                    {Number(item.unit_cost).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-900">
+                    {amount.toLocaleString()}
+                  </td>
                 </tr>
               );
             })}
-            {!orders?.length && (
+            {!items?.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
                   등록된 매입 거래가 없습니다.
                 </td>
               </tr>

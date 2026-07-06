@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { FormState } from "@/components/form-message";
 
 type SaleItemInput = {
   productId: string;
@@ -10,24 +11,28 @@ type SaleItemInput = {
   unitPrice: number;
 };
 
-export async function createSale(formData: FormData) {
+export async function createSale(_prevState: FormState, formData: FormData): Promise<FormState> {
   const customerId = String(formData.get("customer_id") ?? "");
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const orderDate = String(formData.get("order_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
   const itemsRaw = String(formData.get("items") ?? "[]");
 
-  if (!customerId || !warehouseId || !orderDate) return;
+  if (!customerId || !warehouseId || !orderDate) {
+    return { error: "거래처, 창고, 거래일자를 모두 입력해주세요." };
+  }
 
   let items: SaleItemInput[];
   try {
     items = JSON.parse(itemsRaw);
   } catch {
-    return;
+    return { error: "품목 정보를 처리하지 못했습니다." };
   }
 
   items = items.filter((item) => item.productId && item.quantity > 0);
-  if (items.length === 0) return;
+  if (items.length === 0) {
+    return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
+  }
 
   const supabase = await createClient();
   const {
@@ -46,7 +51,9 @@ export async function createSale(formData: FormData) {
     .select("id")
     .single();
 
-  if (error || !salesOrder) return;
+  if (error || !salesOrder) {
+    return { error: "판매 거래 등록에 실패했습니다." };
+  }
 
   const salesOrderId = salesOrder.id;
 
