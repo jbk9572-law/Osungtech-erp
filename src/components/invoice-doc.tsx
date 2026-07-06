@@ -59,7 +59,8 @@ function Cell({
   className = "",
   wrap = false,
   align,
-  border = "all",
+  valign = "middle",
+  hideBorder = [],
   children,
 }: {
   as?: "td" | "th";
@@ -68,19 +69,32 @@ function Cell({
   className?: string;
   wrap?: boolean;
   align?: "left" | "center" | "right";
-  border?: "all" | "x";
+  valign?: "top" | "middle";
+  hideBorder?: Array<"t" | "b" | "l" | "r">;
   children?: React.ReactNode;
 }) {
   const Tag = as;
   const resolvedAlign = align ?? (as === "th" ? "center" : "left");
   const alignClass =
     resolvedAlign === "center" ? "text-center" : resolvedAlign === "right" ? "text-right" : "text-left";
-  const borderClass = border === "x" ? "border-x border-current" : "border border-current";
+  const valignClass = valign === "top" ? "align-top" : "align-middle";
+  // 각 변의 두께 클래스를 사이드별로 정확히 하나씩만 부여해야 tailwind 클래스
+  // 충돌(같은 우선순위의 상반된 유틸리티가 소스 순서와 무관하게 적용되는 문제) 없이 안전하다.
+  const sideClass = {
+    t: hideBorder.includes("t") ? "border-t-0" : "border-t",
+    b: hideBorder.includes("b") ? "border-b-0" : "border-b",
+    l: hideBorder.includes("l") ? "border-l-0" : "border-l",
+    r: hideBorder.includes("r") ? "border-r-0" : "border-r",
+  };
+  // border-current 대신 CSS 변수를 참조: 특정 셀의 글자색을 검은색으로 덮어써도
+  // (예: 사업자번호/상호/성명 등 실제 데이터 값) 테두리 색까지 검게 변하지 않도록
+  // 테두리 색은 항상 테마색(--invoice-line)을 그대로 참조한다.
+  const borderClass = `border-[var(--invoice-line)] ${sideClass.t} ${sideClass.b} ${sideClass.l} ${sideClass.r}`;
   return (
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden ${borderClass} px-[4px] py-[2.5px] ${alignClass} align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
+      className={`overflow-hidden ${borderClass} px-[4px] py-[2.5px] ${alignClass} ${valignClass} font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>
@@ -113,7 +127,7 @@ export function InvoiceDoc({
 
   const minItemRows = 10;
   const blankCount = Math.max(0, minItemRows - items.length);
-  const colorStyle = { color: COLOR_HEX[color] };
+  const colorStyle = { color: COLOR_HEX[color], "--invoice-line": COLOR_HEX[color] } as React.CSSProperties;
   const tint = color === "blue" ? "rgba(0,0,255,0.08)" : "rgba(255,0,0,0.08)";
   const stripe = (rowIndex: number) => (rowIndex % 2 === 0 ? { backgroundColor: tint } : undefined);
 
@@ -128,10 +142,15 @@ export function InvoiceDoc({
         <tbody>
           {/* title row: 실제 인쇄본은 제목이 가운데가 아니라 왼쪽 정렬 */}
           <tr>
-            <Cell colSpan={9} align="left" className="text-[19px] font-bold tracking-[0.05em] pl-[8px]">
+            <Cell
+              colSpan={9}
+              align="left"
+              hideBorder={["r"]}
+              className="text-[19px] font-bold tracking-[0.05em] pl-[8px]"
+            >
               거래명세표
             </Cell>
-            <Cell colSpan={4} align="center" className="font-medium" wrap>
+            <Cell colSpan={4} align="center" hideBorder={["l"]} className="font-medium" wrap>
               ({copyLabel})
             </Cell>
             <Cell colSpan={2}>일자</Cell>
@@ -143,12 +162,14 @@ export function InvoiceDoc({
             </Cell>
           </tr>
 
-          {/* 공급자 / 종사업장 / 공급받는자 / 貴下 */}
+          {/* 공급자 / 종사업장 / 공급받는자 / 거래처명·貴下·인사말(2행 병합, 내부 선 없음) */}
           <tr>
             <Cell colSpan={4} as="th" className="tracking-[0.3em] pl-[6px]">
               공급자
             </Cell>
-            <Cell colSpan={7}>{company?.business_number ?? "-"}</Cell>
+            <Cell colSpan={7} className="font-bold text-black">
+              {company?.business_number ?? "-"}
+            </Cell>
             <Cell colSpan={4} as="th">
               종사업장
             </Cell>
@@ -162,24 +183,27 @@ export function InvoiceDoc({
             >
               공급받는자
             </Cell>
-            <Cell colSpan={13} align="center" className="font-semibold">
-              {customerName}
-            </Cell>
-            <Cell colSpan={3} align="center" className="font-semibold">
-              貴下
+            <Cell colSpan={16} rowSpan={2} valign="top" wrap className="relative pt-[3px]">
+              <div className="text-center font-bold text-black">{customerName}</div>
+              <span className="absolute top-[3px] right-[4px] font-bold">貴下</span>
+              <div className="pt-[2px] text-center">거래해 주셔서 감사드립니다.</div>
             </Cell>
           </tr>
 
-          {/* 상호 / 성명 / 거래해주셔서 감사드립니다 */}
+          {/* 상호 / 성명 */}
           <tr>
             <Cell as="th" colSpan={1}>
               상<br />호
             </Cell>
-            <Cell colSpan={8}>{company?.name ?? "-"}</Cell>
+            <Cell colSpan={8} className="font-bold text-black">
+              {company?.name ?? "-"}
+            </Cell>
             <Cell as="th" colSpan={1}>
               성<br />명
             </Cell>
-            <Cell colSpan={5}>{company?.representative_name ?? "-"}</Cell>
+            <Cell colSpan={5} className="font-bold text-black">
+              {company?.representative_name ?? "-"}
+            </Cell>
             <Cell colSpan={2} align="center" className="relative">
               (인)
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -190,9 +214,6 @@ export function InvoiceDoc({
                 className="pointer-events-none absolute top-1/2 left-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 opacity-90 mix-blend-multiply"
               />
             </Cell>
-            <Cell colSpan={16} align="center" className="opacity-80">
-              거래해 주셔서 감사드립니다.
-            </Cell>
           </tr>
 
           {/* 주소 */}
@@ -200,7 +221,7 @@ export function InvoiceDoc({
             <Cell as="th" colSpan={1}>
               주<br />소
             </Cell>
-            <Cell colSpan={33}>{company?.address ?? "-"}</Cell>
+            <Cell colSpan={33} className="text-black">{company?.address ?? "-"}</Cell>
           </tr>
 
           {/* 업태 / 종목 / 비고 / 인수자 */}
@@ -252,39 +273,39 @@ export function InvoiceDoc({
           </tr>
 
           {items.map((item, i) => (
-            <tr key={item.id} className={ITEM_ROW_HEIGHT} style={stripe(i)}>
-              <Cell colSpan={ITEM_COLS[0]} align="center" border="x">
+            <tr key={item.id} className={`${ITEM_ROW_HEIGHT} text-black`} style={stripe(i)}>
+              <Cell colSpan={ITEM_COLS[0]} align="center" hideBorder={["t", "b"]}>
                 {item.monthDay}
               </Cell>
-              <Cell colSpan={ITEM_COLS[1]} border="x">{item.productLabel}</Cell>
-              <Cell colSpan={ITEM_COLS[2]} align="center" border="x">
+              <Cell colSpan={ITEM_COLS[1]} hideBorder={["t", "b"]}>{item.productLabel}</Cell>
+              <Cell colSpan={ITEM_COLS[2]} align="center" hideBorder={["t", "b"]}>
                 {item.unit}
               </Cell>
-              <Cell colSpan={ITEM_COLS[3]} align="right" border="x">
+              <Cell colSpan={ITEM_COLS[3]} align="right" hideBorder={["t", "b"]}>
                 {item.quantity.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[4]} align="right" border="x">
+              <Cell colSpan={ITEM_COLS[4]} align="right" hideBorder={["t", "b"]}>
                 {item.unitPrice.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[5]} align="right" border="x">
+              <Cell colSpan={ITEM_COLS[5]} align="right" hideBorder={["t", "b"]}>
                 {item.supplyAmount.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[6]} align="right" border="x">
+              <Cell colSpan={ITEM_COLS[6]} align="right" hideBorder={["t", "b"]}>
                 {item.taxAmount.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[7]} border="x" />
+              <Cell colSpan={ITEM_COLS[7]} hideBorder={["t", "b"]} />
             </tr>
           ))}
           {Array.from({ length: blankCount }).map((_, i) => (
             <tr key={`blank-${i}`} className={ITEM_ROW_HEIGHT} style={stripe(items.length + i)}>
-              <Cell colSpan={ITEM_COLS[0]} border="x" />
-              <Cell colSpan={ITEM_COLS[1]} border="x" />
-              <Cell colSpan={ITEM_COLS[2]} border="x" />
-              <Cell colSpan={ITEM_COLS[3]} border="x" />
-              <Cell colSpan={ITEM_COLS[4]} border="x" />
-              <Cell colSpan={ITEM_COLS[5]} border="x" />
-              <Cell colSpan={ITEM_COLS[6]} border="x" />
-              <Cell colSpan={ITEM_COLS[7]} border="x" />
+              <Cell colSpan={ITEM_COLS[0]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[1]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[2]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[3]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[4]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[5]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[6]} hideBorder={["t", "b"]} />
+              <Cell colSpan={ITEM_COLS[7]} hideBorder={["t", "b"]} />
             </tr>
           ))}
 
@@ -293,10 +314,10 @@ export function InvoiceDoc({
             <Cell colSpan={2} className="font-semibold">
               합계
             </Cell>
-            <Cell colSpan={10} className="font-semibold">
+            <Cell colSpan={10} className="font-bold text-black">
               ₩{grandTotal.toLocaleString()}원정
             </Cell>
-            <Cell colSpan={18} className="opacity-80">
+            <Cell colSpan={18} className="text-black">
               (수량 : {totalQuantity.toLocaleString()}, 공급가 : {supplyTotal.toLocaleString()},
               세액 : {taxTotal.toLocaleString()})
             </Cell>
