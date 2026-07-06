@@ -98,7 +98,7 @@ export function InventoryAdjustForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 sm:w-40"
+        className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
       >
         {pending ? "저장 중..." : "재고 조정 등록"}
       </button>
