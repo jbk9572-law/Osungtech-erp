@@ -560,6 +560,30 @@ export type Database = {
           },
         ];
       };
+      calendar_notes: {
+        Row: {
+          id: string;
+          note_date: string;
+          content: string;
+          created_by: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          note_date: string;
+          content?: string;
+          created_by?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          note_date?: string;
+          content?: string;
+          created_by?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
