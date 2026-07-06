@@ -39,3 +39,61 @@ export async function updateCompanyProfile(
   revalidatePath("/settings/company");
   return { success: "회사 정보가 저장되었습니다." };
 }
+
+const BRANDING_SLOTS = {
+  logo_wordmark_url: "logo-wordmark",
+  logo_mark_url: "logo-mark",
+  seal_image_url: "company-seal",
+} as const;
+
+type BrandingSlot = keyof typeof BRANDING_SLOTS;
+
+export async function uploadBrandingImage(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const slot = String(formData.get("slot") ?? "") as BrandingSlot;
+  const file = formData.get("file");
+
+  if (!(slot in BRANDING_SLOTS)) {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "이미지 파일을 선택해주세요." };
+  }
+  if (!file.type.startsWith("image/")) {
+    return { error: "이미지 파일만 업로드할 수 있습니다." };
+  }
+
+  const supabase = await createClient();
+  const path = `${BRANDING_SLOTS[slot]}.png`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("branding")
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if (uploadError) {
+    return { error: "이미지 업로드에 실패했습니다." };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("branding").getPublicUrl(path);
+  const url = `${publicUrl}?t=${Date.now()}`;
+
+  const update =
+    slot === "logo_wordmark_url"
+      ? { logo_wordmark_url: url }
+      : slot === "logo_mark_url"
+        ? { logo_mark_url: url }
+        : { seal_image_url: url };
+
+  const { error } = await supabase.from("company_profile").update(update).eq("id", 1);
+
+  if (error) {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: "이미지가 저장되었습니다." };
+}

@@ -36,6 +36,7 @@ export function DashboardCalendar({
   todayStr,
   prevMonthHref,
   nextMonthHref,
+  backgroundLogoUrl,
 }: {
   year: number;
   month: number;
@@ -44,6 +45,7 @@ export function DashboardCalendar({
   todayStr: string;
   prevMonthHref: string;
   nextMonthHref: string;
+  backgroundLogoUrl?: string | null;
 }) {
   const defaultSelected = dataByDate[todayStr] !== undefined || weeks.some((w) => w.some((c) => c?.dateStr === todayStr))
     ? todayStr
@@ -62,8 +64,15 @@ export function DashboardCalendar({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={backgroundLogoUrl || "/branding/logo-mark.png"}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.06]"
+        />
+        <div className="relative mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">
             {year}년 {month}월
           </h2>

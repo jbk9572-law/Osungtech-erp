@@ -53,6 +53,7 @@ export default async function DashboardPage({
     { data: salesItems },
     { data: purchaseItems },
     { data: notes },
+    { data: company },
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase.from("inventory").select("*", { count: "exact", head: true }).lte("quantity", 0),
@@ -76,6 +77,7 @@ export default async function DashboardPage({
       .select("note_date, content")
       .gte("note_date", monthStart)
       .lte("note_date", monthEnd),
+    supabase.from("company_profile").select("logo_mark_url").eq("id", 1).maybeSingle(),
   ]);
 
   type ItemRow = {
@@ -184,6 +186,7 @@ export default async function DashboardPage({
         todayStr={todayStr}
         prevMonthHref={prevMonthHref}
         nextMonthHref={nextMonthHref}
+        backgroundLogoUrl={company?.logo_mark_url}
       />
     </div>
   );

@@ -9,6 +9,7 @@ type Company = {
   address: string | null;
   email: string | null;
   greeting_message: string | null;
+  seal_image_url?: string | null;
 } | null;
 
 type Item = {
@@ -157,8 +158,15 @@ export function InvoiceDoc({
               성<br />명
             </Cell>
             <Cell colSpan={5}>{company?.representative_name ?? "-"}</Cell>
-            <Cell colSpan={2} className="text-center">
+            <Cell colSpan={2} className="relative text-center">
               (인)
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={company?.seal_image_url || "/branding/company-seal.png"}
+                alt=""
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 left-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 opacity-90 mix-blend-multiply"
+              />
             </Cell>
             <Cell colSpan={16} className="text-center opacity-80">
               거래해 주셔서 감사드립니다.

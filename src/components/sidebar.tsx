@@ -15,13 +15,14 @@ const NAV_ITEMS = [
   { href: "/settings/company", label: "정보" },
 ];
 
-export function Sidebar() {
+export function Sidebar({ logoUrl }: { logoUrl?: string | null }) {
   const pathname = usePathname();
 
   return (
     <aside className="hidden w-56 shrink-0 border-r border-gray-200 bg-white sm:block print:hidden">
       <div className="px-4 py-5">
-        <span className="text-lg font-semibold text-gray-900">Osungtech ERP</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logoUrl || "/branding/logo-wordmark.png"} alt="Osungtech ERP" className="h-7 w-auto" />
       </div>
       <nav className="flex flex-col gap-1 px-2">
         {NAV_ITEMS.map((item) => {
