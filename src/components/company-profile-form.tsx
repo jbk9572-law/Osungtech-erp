@@ -15,6 +15,8 @@ type Company = {
   business_type: string | null;
   business_item: string | null;
   address: string | null;
+  email: string | null;
+  greeting_message: string | null;
 } | null;
 
 export function CompanyProfileForm({ company }: { company: Company }) {
@@ -104,6 +106,25 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           name="address"
           defaultValue={company?.address ?? ""}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">이메일</label>
+        <input
+          name="email"
+          type="email"
+          defaultValue={company?.email ?? ""}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+      </div>
+      <div className="sm:col-span-2">
+        <label className="mb-1 block text-sm font-medium text-gray-700">
+          명세표 하단 인사말
+        </label>
+        <input
+          name="greeting_message"
+          defaultValue={company?.greeting_message ?? "오늘 하루도 행복하십시요."}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
       </div>

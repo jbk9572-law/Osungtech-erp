@@ -288,6 +288,8 @@ export type Database = {
           fax_number: string | null;
           manager_name: string | null;
           manager_phone: string | null;
+          email: string | null;
+          greeting_message: string | null;
           updated_at: string;
         };
         Insert: {
@@ -302,6 +304,8 @@ export type Database = {
           fax_number?: string | null;
           manager_name?: string | null;
           manager_phone?: string | null;
+          email?: string | null;
+          greeting_message?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -316,6 +320,8 @@ export type Database = {
           fax_number?: string | null;
           manager_name?: string | null;
           manager_phone?: string | null;
+          email?: string | null;
+          greeting_message?: string | null;
           updated_at?: string;
         };
         Relationships: [];

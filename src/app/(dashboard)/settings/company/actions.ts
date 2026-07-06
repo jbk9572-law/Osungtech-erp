@@ -27,6 +27,8 @@ export async function updateCompanyProfile(
       fax_number: String(formData.get("fax_number") ?? "") || null,
       manager_name: String(formData.get("manager_name") ?? "") || null,
       manager_phone: String(formData.get("manager_phone") ?? "") || null,
+      email: String(formData.get("email") ?? "") || null,
+      greeting_message: String(formData.get("greeting_message") ?? "") || null,
     })
     .eq("id", 1);
 
