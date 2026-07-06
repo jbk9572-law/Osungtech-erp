@@ -27,12 +27,20 @@ const COLOR_HEX = {
   red: "#FF0000",
 };
 
-// 원본 엑셀(34개 열)의 실제 열 너비(문자 단위 * 7px)를 그대로 옮긴 값
+// 원본 엑셀(34개 열)의 실제 열 너비(문자 단위 * 7px) 비율을 유지하면서 실제 인쇄 크기에 맞게 확대한 값
 const COL_WIDTHS = [
-  18, 18, 18, 18, 18, 18, 18, 22, 18, 18, 22, 18, 18, 18, 18, 16, 23, 16, 16, 16, 16, 16, 16, 16,
-  16, 46, 33, 16, 16, 11, 16, 18, 16, 30,
+  25, 25, 25, 25, 25, 25, 25, 31, 25, 25, 31, 25, 25, 25, 25, 22, 32, 22, 22, 22, 22, 22, 22, 22,
+  22, 64, 46, 22, 22, 15, 22, 25, 22, 42,
 ];
 const TOTAL_WIDTH = COL_WIDTHS.reduce((a, b) => a + b, 0);
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
 
@@ -54,7 +62,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden text-ellipsis break-words border border-current px-[3px] py-[1px] text-left align-middle font-normal ${className}`}
+      className={`overflow-hidden text-ellipsis break-words border border-current px-[4px] py-[2px] text-left align-middle font-normal ${className}`}
     >
       {children}
     </Tag>
@@ -88,11 +96,13 @@ export function InvoiceDoc({
   const minItemRows = 10;
   const blankCount = Math.max(0, minItemRows - items.length);
   const colorStyle = { color: COLOR_HEX[color] };
+  const tint = color === "blue" ? "rgba(0,0,255,0.08)" : "rgba(255,0,0,0.08)";
+  const stripe = (rowIndex: number) => (rowIndex % 2 === 0 ? { backgroundColor: tint } : undefined);
 
   return (
-    <div style={colorStyle}>
+    <div className="break-inside-avoid" style={colorStyle}>
       <table
-        className="table-fixed border-collapse text-[10px] leading-tight"
+        className="table-fixed border-collapse text-[11px] leading-tight"
         style={{ width: `${TOTAL_WIDTH}px` }}
       >
         <colgroup>
@@ -110,7 +120,7 @@ export function InvoiceDoc({
               ({copyLabel})
             </Cell>
             <Cell colSpan={2}>일자</Cell>
-            <Cell colSpan={6}>{new Date(orderDate).toLocaleDateString("ko-KR")}</Cell>
+            <Cell colSpan={6}>{formatDate(orderDate)}</Cell>
             <Cell colSpan={2}>No.</Cell>
             <Cell colSpan={9}>{docNumber}</Cell>
             <Cell colSpan={2} className="text-center">
@@ -213,8 +223,8 @@ export function InvoiceDoc({
             </Cell>
           </tr>
 
-          {items.map((item) => (
-            <tr key={item.id}>
+          {items.map((item, i) => (
+            <tr key={item.id} style={stripe(i)}>
               <Cell colSpan={ITEM_COLS[0]} className="text-center">
                 {item.monthDay}
               </Cell>
@@ -238,7 +248,7 @@ export function InvoiceDoc({
             </tr>
           ))}
           {Array.from({ length: blankCount }).map((_, i) => (
-            <tr key={`blank-${i}`}>
+            <tr key={`blank-${i}`} style={stripe(items.length + i)}>
               <Cell colSpan={ITEM_COLS[0]} />
               <Cell colSpan={ITEM_COLS[1]} className="text-center opacity-60">
                 {i === 0 ? "=이하여백=" : ""}
@@ -282,7 +292,7 @@ export function InvoiceDoc({
       </table>
 
       <div
-        className="flex justify-between px-[3px] pt-[3px] text-[10px] opacity-90"
+        className="flex justify-between px-[4px] pt-[4px] text-[11px] opacity-90"
         style={{ width: `${TOTAL_WIDTH}px` }}
       >
         <span>{company?.greeting_message || ""}</span>

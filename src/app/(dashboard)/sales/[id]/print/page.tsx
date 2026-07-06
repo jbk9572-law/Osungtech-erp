@@ -73,11 +73,11 @@ export default async function SalesPrintPage({
   });
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
       <div className="mb-4 flex justify-end print:hidden">
         <PrintButton />
       </div>
-      <div className="space-y-4 overflow-x-auto">
+      <div className="space-y-6 overflow-x-auto">
         <InvoiceDoc
           copyLabel="공급받는자 보관용"
           color="blue"
@@ -88,16 +88,18 @@ export default async function SalesPrintPage({
           items={invoiceItems}
           memo={order.memo}
         />
-        <InvoiceDoc
-          copyLabel="공급자 보관용"
-          color="red"
-          company={company}
-          customerName={order.customers?.name ?? ""}
-          orderDate={order.order_date}
-          docNumber={docNumber}
-          items={invoiceItems}
-          memo={order.memo}
-        />
+        <div className="print:break-before-page">
+          <InvoiceDoc
+            copyLabel="공급자 보관용"
+            color="red"
+            company={company}
+            customerName={order.customers?.name ?? ""}
+            orderDate={order.order_date}
+            docNumber={docNumber}
+            items={invoiceItems}
+            memo={order.memo}
+          />
+        </div>
       </div>
     </div>
   );
