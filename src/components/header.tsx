@@ -2,7 +2,7 @@ import { signOut } from "@/app/login/actions";
 
 export function Header({ email }: { email: string | null }) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6 print:hidden">
       <span className="text-sm text-gray-500">{email}</span>
       <form action={signOut}>
         <button

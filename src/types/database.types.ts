@@ -214,6 +214,7 @@ export type Database = {
           reference: string | null;
           note: string | null;
           created_by: string | null;
+          sales_order_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -225,6 +226,7 @@ export type Database = {
           reference?: string | null;
           note?: string | null;
           created_by?: string | null;
+          sales_order_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -236,6 +238,7 @@ export type Database = {
           reference?: string | null;
           note?: string | null;
           created_by?: string | null;
+          sales_order_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -251,6 +254,211 @@ export type Database = {
             columns: ["warehouse_id"];
             isOneToOne: false;
             referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_transactions_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      company_profile: {
+        Row: {
+          id: number;
+          name: string;
+          business_number: string | null;
+          representative_name: string | null;
+          address: string | null;
+          business_type: string | null;
+          business_item: string | null;
+          phone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          name?: string;
+          business_number?: string | null;
+          representative_name?: string | null;
+          address?: string | null;
+          business_type?: string | null;
+          business_item?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          name?: string;
+          business_number?: string | null;
+          representative_name?: string | null;
+          address?: string | null;
+          business_type?: string | null;
+          business_item?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      customers: {
+        Row: {
+          id: string;
+          name: string;
+          business_number: string | null;
+          representative_name: string | null;
+          contact_name: string | null;
+          email: string | null;
+          phone: string | null;
+          address: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          business_number?: string | null;
+          representative_name?: string | null;
+          contact_name?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          address?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          business_number?: string | null;
+          representative_name?: string | null;
+          contact_name?: string | null;
+          email?: string | null;
+          phone?: string | null;
+          address?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      customer_product_prices: {
+        Row: {
+          id: string;
+          customer_id: string;
+          product_id: string;
+          unit_price: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          product_id: string;
+          unit_price?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          product_id?: string;
+          unit_price?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_product_prices_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_product_prices_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sales_orders: {
+        Row: {
+          id: string;
+          customer_id: string;
+          warehouse_id: string;
+          order_date: string;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          warehouse_id: string;
+          order_date?: string;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          warehouse_id?: string;
+          order_date?: string;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sales_orders_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sales_orders_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      sales_order_items: {
+        Row: {
+          id: string;
+          sales_order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sales_order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          sales_order_id?: string;
+          product_id?: string;
+          quantity?: number;
+          unit_price?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_items_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "sales_order_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];
