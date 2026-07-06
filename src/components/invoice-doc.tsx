@@ -164,13 +164,13 @@ export function InvoiceDoc({
 
           {/* 공급자 / 종사업장 / 공급받는자 / 거래처명·貴下·인사말(공급자~주소 3행 병합, 내부 선 없음) */}
           <tr>
-            <Cell colSpan={4} as="th" className="tracking-[0.3em] pl-[6px]">
+            <Cell colSpan={4} as="th" className="text-[15px] tracking-[0.3em] pl-[6px]">
               공급자
             </Cell>
             <Cell colSpan={7} className="font-bold text-black">
               {company?.business_number ?? "-"}
             </Cell>
-            <Cell colSpan={4} as="th">
+            <Cell colSpan={4} as="th" className="text-[15px]">
               종사업장
             </Cell>
             <Cell colSpan={2} />
@@ -178,7 +178,7 @@ export function InvoiceDoc({
               colSpan={1}
               rowSpan={3}
               as="th"
-              className="text-[8px] leading-none"
+              className="text-[11px] leading-none"
               wrap
             >
               <div className="flex flex-col items-center gap-[3px]">
@@ -238,7 +238,7 @@ export function InvoiceDoc({
               종<br />목
             </Cell>
             <Cell colSpan={8}>{company?.business_item ?? "-"}</Cell>
-            <Cell as="th" colSpan={1} wrap>
+            <Cell as="th" colSpan={1} wrap className="text-[14px]">
               비<br />고
             </Cell>
             <Cell colSpan={8} />
