@@ -77,7 +77,7 @@ export default async function SalesPrintPage({
       <div className="mb-4 flex justify-end print:hidden">
         <PrintButton />
       </div>
-      <div className="space-y-6 overflow-x-auto">
+      <div className="overflow-x-auto break-inside-avoid">
         <InvoiceDoc
           copyLabel="공급받는자 보관용"
           color="blue"
@@ -88,19 +88,28 @@ export default async function SalesPrintPage({
           items={invoiceItems}
           memo={order.memo}
         />
-        <div className="print:break-before-page">
-          <InvoiceDoc
-            copyLabel="공급자 보관용"
-            color="red"
-            company={company}
-            customerName={order.customers?.name ?? ""}
-            orderDate={order.order_date}
-            docNumber={docNumber}
-            items={invoiceItems}
-            memo={order.memo}
-          />
-        </div>
+        <CutLine />
+        <InvoiceDoc
+          copyLabel="공급자 보관용"
+          color="red"
+          company={company}
+          customerName={order.customers?.name ?? ""}
+          orderDate={order.order_date}
+          docNumber={docNumber}
+          items={invoiceItems}
+          memo={order.memo}
+        />
       </div>
+    </div>
+  );
+}
+
+function CutLine() {
+  return (
+    <div className="my-2 flex items-center gap-2 text-[11px] text-gray-400">
+      <span className="flex-1 border-t border-dashed border-gray-400" />
+      <span>✂ 절취선 ✂</span>
+      <span className="flex-1 border-t border-dashed border-gray-400" />
     </div>
   );
 }
