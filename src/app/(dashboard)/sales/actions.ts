@@ -22,28 +22,35 @@ function parseItems(itemsRaw: string): SaleItemInput[] | null {
   }
 }
 
+function isStockCheckViolation(message: string, code?: string) {
+  return code === "23514" || message.includes("check constraint");
+}
+
 // 기존 판매 건의 출고 효과를 재고 조정(adjustment)으로 되돌린다.
 // 호출 전에 미리 읽어둔 품목/창고 정보를 받는다 (주문을 지우거나 바꾸고 나면
 // 원래 품목 수량을 알 수 없기 때문에, 실제 삭제/수정이 성공한 뒤에만 호출해야 한다).
+// 반환값이 null이 아니면 재고 반영에 실패한 것이므로 반드시 사용자에게 알려야 한다.
 async function reverseSaleInventory(
   supabase: SupabaseServerClient,
   salesOrderId: string,
   warehouseId: string,
   items: { product_id: string; quantity: number }[],
   userId: string | null
-) {
-  if (!items.length) return;
+): Promise<string | null> {
+  if (!items.length) return null;
 
-  await supabase.from("inventory_transactions").insert(
+  const { error } = await supabase.from("inventory_transactions").insert(
     items.map((item) => ({
       product_id: item.product_id,
       warehouse_id: warehouseId,
       type: "adjustment" as const,
-      quantity: item.quantity,
+      quantity: -item.quantity,
       reference: `sales_order_reversal:${salesOrderId}`,
       created_by: userId,
     }))
   );
+
+  return error ? error.message : null;
 }
 
 export async function createSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -86,7 +93,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
 
   const salesOrderId = salesOrder.id;
 
-  await supabase.from("sales_order_items").insert(
+  const { error: itemsError } = await supabase.from("sales_order_items").insert(
     items.map((item) => ({
       sales_order_id: salesOrderId,
       product_id: item.productId,
@@ -95,7 +102,14 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     }))
   );
 
-  await supabase.from("inventory_transactions").insert(
+  if (itemsError) {
+    await supabase.from("sales_orders").delete().eq("id", salesOrderId);
+    return { error: `품목 등록에 실패하여 거래 등록을 취소했습니다: ${itemsError.message}` };
+  }
+
+  // 재고 반영(출고)이 실패하면 거래 자체를 취소한다 — 그렇지 않으면 매출은
+  // 등록됐는데 재고는 그대로인 상태(재고 차감 누락)가 조용히 남는다.
+  const { error: invError } = await supabase.from("inventory_transactions").insert(
     items.map((item) => ({
       product_id: item.productId,
       warehouse_id: warehouseId,
@@ -106,6 +120,16 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       created_by: user?.id ?? null,
     }))
   );
+
+  if (invError) {
+    await supabase.from("sales_order_items").delete().eq("sales_order_id", salesOrderId);
+    await supabase.from("sales_orders").delete().eq("id", salesOrderId);
+    return {
+      error: isStockCheckViolation(invError.message, invError.code)
+        ? "재고가 부족하여 출고할 수 없습니다. 현재 재고를 확인한 뒤 다시 시도해주세요."
+        : `재고 반영에 실패하여 거래 등록을 취소했습니다: ${invError.message}`,
+    };
+  }
 
   await Promise.all(
     items.map((item) =>
@@ -175,10 +199,28 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     return { error: "판매 거래 수정에 실패했습니다." };
   }
 
-  await reverseSaleInventory(supabase, id, oldOrder.warehouse_id, oldItems ?? [], user?.id ?? null);
-  await supabase.from("sales_order_items").delete().eq("sales_order_id", id);
+  const reverseError = await reverseSaleInventory(
+    supabase,
+    id,
+    oldOrder.warehouse_id,
+    oldItems ?? [],
+    user?.id ?? null
+  );
+  if (reverseError) {
+    return {
+      error: `기존 재고 반영을 되돌리지 못해 수정을 중단했습니다: ${reverseError}`,
+    };
+  }
 
-  await supabase.from("sales_order_items").insert(
+  const { error: deleteItemsError } = await supabase
+    .from("sales_order_items")
+    .delete()
+    .eq("sales_order_id", id);
+  if (deleteItemsError) {
+    return { error: `기존 품목 삭제에 실패했습니다: ${deleteItemsError.message}` };
+  }
+
+  const { error: itemsError } = await supabase.from("sales_order_items").insert(
     items.map((item) => ({
       sales_order_id: id,
       product_id: item.productId,
@@ -186,8 +228,11 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       unit_price: item.unitPrice,
     }))
   );
+  if (itemsError) {
+    return { error: `품목 등록에 실패했습니다: ${itemsError.message}` };
+  }
 
-  await supabase.from("inventory_transactions").insert(
+  const { error: invError } = await supabase.from("inventory_transactions").insert(
     items.map((item) => ({
       product_id: item.productId,
       warehouse_id: warehouseId,
@@ -198,6 +243,13 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       created_by: user?.id ?? null,
     }))
   );
+  if (invError) {
+    return {
+      error: isStockCheckViolation(invError.message, invError.code)
+        ? "재고가 부족하여 출고할 수 없습니다. 현재 재고를 확인한 뒤 다시 시도해주세요."
+        : `재고 반영에 실패했습니다: ${invError.message}`,
+    };
+  }
 
   await Promise.all(
     items.map((item) =>
@@ -245,7 +297,18 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
     return { error: "삭제에 실패했습니다." };
   }
 
-  await reverseSaleInventory(supabase, id, order.warehouse_id, items ?? [], user?.id ?? null);
+  const reverseError = await reverseSaleInventory(
+    supabase,
+    id,
+    order.warehouse_id,
+    items ?? [],
+    user?.id ?? null
+  );
+  if (reverseError) {
+    return {
+      error: `거래는 삭제되었지만 재고 복구에 실패했습니다: ${reverseError} — 재고 조정 화면에서 직접 확인해주세요.`,
+    };
+  }
 
   revalidatePath("/sales");
   revalidatePath("/inventory");
