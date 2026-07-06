@@ -59,6 +59,7 @@ function Cell({
   className = "",
   wrap = false,
   align,
+  border = "all",
   children,
 }: {
   as?: "td" | "th";
@@ -67,17 +68,19 @@ function Cell({
   className?: string;
   wrap?: boolean;
   align?: "left" | "center" | "right";
+  border?: "all" | "x";
   children?: React.ReactNode;
 }) {
   const Tag = as;
   const resolvedAlign = align ?? (as === "th" ? "center" : "left");
   const alignClass =
     resolvedAlign === "center" ? "text-center" : resolvedAlign === "right" ? "text-right" : "text-left";
+  const borderClass = border === "x" ? "border-x border-current" : "border border-current";
   return (
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden border border-current px-[4px] py-[2.5px] ${alignClass} align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
+      className={`overflow-hidden ${borderClass} px-[4px] py-[2.5px] ${alignClass} align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>
@@ -125,7 +128,7 @@ export function InvoiceDoc({
         <tbody>
           {/* title row: 실제 인쇄본은 제목이 가운데가 아니라 왼쪽 정렬 */}
           <tr>
-            <Cell colSpan={9} align="left" className="text-[19px] font-bold tracking-[0.2em]">
+            <Cell colSpan={9} align="left" className="text-[19px] font-bold tracking-[0.05em] pl-[8px]">
               거래명세표
             </Cell>
             <Cell colSpan={4} align="center" className="font-medium" wrap>
@@ -162,7 +165,7 @@ export function InvoiceDoc({
             <Cell colSpan={13} align="center" className="font-semibold">
               {customerName}
             </Cell>
-            <Cell colSpan={3} align="center">
+            <Cell colSpan={3} align="center" className="font-semibold">
               貴下
             </Cell>
           </tr>
@@ -250,40 +253,38 @@ export function InvoiceDoc({
 
           {items.map((item, i) => (
             <tr key={item.id} className={ITEM_ROW_HEIGHT} style={stripe(i)}>
-              <Cell colSpan={ITEM_COLS[0]} align="center">
+              <Cell colSpan={ITEM_COLS[0]} align="center" border="x">
                 {item.monthDay}
               </Cell>
-              <Cell colSpan={ITEM_COLS[1]}>{item.productLabel}</Cell>
-              <Cell colSpan={ITEM_COLS[2]} align="center">
+              <Cell colSpan={ITEM_COLS[1]} border="x">{item.productLabel}</Cell>
+              <Cell colSpan={ITEM_COLS[2]} align="center" border="x">
                 {item.unit}
               </Cell>
-              <Cell colSpan={ITEM_COLS[3]} align="right">
+              <Cell colSpan={ITEM_COLS[3]} align="right" border="x">
                 {item.quantity.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[4]} align="right">
+              <Cell colSpan={ITEM_COLS[4]} align="right" border="x">
                 {item.unitPrice.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[5]} align="right">
+              <Cell colSpan={ITEM_COLS[5]} align="right" border="x">
                 {item.supplyAmount.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[6]} align="right">
+              <Cell colSpan={ITEM_COLS[6]} align="right" border="x">
                 {item.taxAmount.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[7]} />
+              <Cell colSpan={ITEM_COLS[7]} border="x" />
             </tr>
           ))}
           {Array.from({ length: blankCount }).map((_, i) => (
             <tr key={`blank-${i}`} className={ITEM_ROW_HEIGHT} style={stripe(items.length + i)}>
-              <Cell colSpan={ITEM_COLS[0]} />
-              <Cell colSpan={ITEM_COLS[1]} align="center" className="opacity-60">
-                {i === 0 ? "=이하여백=" : ""}
-              </Cell>
-              <Cell colSpan={ITEM_COLS[2]} />
-              <Cell colSpan={ITEM_COLS[3]} />
-              <Cell colSpan={ITEM_COLS[4]} />
-              <Cell colSpan={ITEM_COLS[5]} />
-              <Cell colSpan={ITEM_COLS[6]} />
-              <Cell colSpan={ITEM_COLS[7]} />
+              <Cell colSpan={ITEM_COLS[0]} border="x" />
+              <Cell colSpan={ITEM_COLS[1]} border="x" />
+              <Cell colSpan={ITEM_COLS[2]} border="x" />
+              <Cell colSpan={ITEM_COLS[3]} border="x" />
+              <Cell colSpan={ITEM_COLS[4]} border="x" />
+              <Cell colSpan={ITEM_COLS[5]} border="x" />
+              <Cell colSpan={ITEM_COLS[6]} border="x" />
+              <Cell colSpan={ITEM_COLS[7]} border="x" />
             </tr>
           ))}
 
