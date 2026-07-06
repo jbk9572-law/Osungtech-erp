@@ -218,17 +218,6 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   redirect(`/sales/${id}/print`);
 }
 
-export async function updateSaleStatus(formData: FormData): Promise<void> {
-  const id = String(formData.get("id") ?? "");
-  const status = String(formData.get("status") ?? "");
-  if (!id || !status) return;
-
-  const supabase = await createClient();
-  await supabase.from("sales_orders").update({ status }).eq("id", id);
-
-  revalidatePath("/sales");
-}
-
 export async function deleteSale(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   if (!id) {

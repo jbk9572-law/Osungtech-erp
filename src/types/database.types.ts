@@ -432,7 +432,6 @@ export type Database = {
           warehouse_id: string;
           order_date: string;
           memo: string | null;
-          status: string;
           created_by: string | null;
           created_at: string;
         };
@@ -442,7 +441,6 @@ export type Database = {
           warehouse_id: string;
           order_date?: string;
           memo?: string | null;
-          status?: string;
           created_by?: string | null;
           created_at?: string;
         };
@@ -452,7 +450,6 @@ export type Database = {
           warehouse_id?: string;
           order_date?: string;
           memo?: string | null;
-          status?: string;
           created_by?: string | null;
           created_at?: string;
         };
@@ -522,7 +519,6 @@ export type Database = {
           warehouse_id: string;
           purchase_date: string;
           memo: string | null;
-          status: string;
           created_by: string | null;
           created_at: string;
         };
@@ -532,7 +528,6 @@ export type Database = {
           warehouse_id: string;
           purchase_date?: string;
           memo?: string | null;
-          status?: string;
           created_by?: string | null;
           created_at?: string;
         };
@@ -542,7 +537,6 @@ export type Database = {
           warehouse_id?: string;
           purchase_date?: string;
           memo?: string | null;
-          status?: string;
           created_by?: string | null;
           created_at?: string;
         };
