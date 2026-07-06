@@ -59,12 +59,16 @@ export default async function DashboardPage({
     supabase.from("warehouses").select("*", { count: "exact", head: true }),
     supabase
       .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(order_date, customers(name))")
+      .select(
+        "quantity, unit_price, products(name, unit), sales_orders!inner(order_date, customers(name))"
+      )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(purchase_date, suppliers(name))")
+      .select(
+        "quantity, unit_cost, products(name, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+      )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
     supabase
@@ -74,13 +78,21 @@ export default async function DashboardPage({
       .lte("note_date", monthEnd),
   ]);
 
+  type ItemRow = {
+    partnerName: string;
+    productName: string;
+    unit: string;
+    quantity: number;
+    amount: number;
+  };
+
   type DayData = {
     salesCount: number;
     salesTotal: number;
-    salesItems: { label: string; amount: number }[];
+    salesItems: ItemRow[];
     purchaseCount: number;
     purchaseTotal: number;
-    purchaseItems: { label: string; amount: number }[];
+    purchaseItems: ItemRow[];
     note: string;
   };
 
@@ -107,7 +119,13 @@ export default async function DashboardPage({
     const bucket = ensure(date);
     bucket.salesCount += 1;
     bucket.salesTotal += amount;
-    bucket.salesItems.push({ label: item.sales_orders.customers?.name ?? "거래처 미상", amount });
+    bucket.salesItems.push({
+      partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
+      productName: item.products?.name ?? "상품 미상",
+      unit: item.products?.unit ?? "",
+      quantity: item.quantity,
+      amount,
+    });
   }
 
   for (const item of purchaseItems ?? []) {
@@ -116,7 +134,13 @@ export default async function DashboardPage({
     const bucket = ensure(date);
     bucket.purchaseCount += 1;
     bucket.purchaseTotal += amount;
-    bucket.purchaseItems.push({ label: item.purchase_orders.suppliers?.name ?? "공급처 미상", amount });
+    bucket.purchaseItems.push({
+      partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
+      productName: item.products?.name ?? "상품 미상",
+      unit: item.products?.unit ?? "",
+      quantity: item.quantity,
+      amount,
+    });
   }
 
   for (const note of notes ?? []) {

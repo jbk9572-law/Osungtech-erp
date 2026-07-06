@@ -5,13 +5,21 @@ import Link from "next/link";
 import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 
+type ItemRow = {
+  partnerName: string;
+  productName: string;
+  unit: string;
+  quantity: number;
+  amount: number;
+};
+
 type DayData = {
   salesCount: number;
   salesTotal: number;
-  salesItems: { label: string; amount: number }[];
+  salesItems: ItemRow[];
   purchaseCount: number;
   purchaseTotal: number;
-  purchaseItems: { label: string; amount: number }[];
+  purchaseItems: ItemRow[];
   note: string;
 };
 
@@ -151,10 +159,19 @@ export function DashboardCalendar({
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
               {selectedData.salesItems.length > 0 && (
-                <ul className="space-y-0.5 text-xs text-gray-600">
+                <ul className="space-y-1 text-xs text-gray-600">
                   {selectedData.salesItems.map((item, i) => (
-                    <li key={i} className="flex justify-between gap-2">
-                      <span className="truncate">{item.label}</span>
+                    <li key={i} className="flex items-baseline justify-between gap-2">
+                      <span className="min-w-0 truncate">
+                        <span className="text-gray-900">{item.partnerName}</span>
+                        <span className="text-gray-400"> · </span>
+                        {item.productName}
+                        <span className="text-gray-400">
+                          {" "}
+                          ({item.quantity}
+                          {item.unit})
+                        </span>
+                      </span>
                       <span className="shrink-0">{item.amount.toLocaleString()}원</span>
                     </li>
                   ))}
@@ -167,10 +184,19 @@ export function DashboardCalendar({
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
               {selectedData.purchaseItems.length > 0 && (
-                <ul className="space-y-0.5 text-xs text-gray-600">
+                <ul className="space-y-1 text-xs text-gray-600">
                   {selectedData.purchaseItems.map((item, i) => (
-                    <li key={i} className="flex justify-between gap-2">
-                      <span className="truncate">{item.label}</span>
+                    <li key={i} className="flex items-baseline justify-between gap-2">
+                      <span className="min-w-0 truncate">
+                        <span className="text-gray-900">{item.partnerName}</span>
+                        <span className="text-gray-400"> · </span>
+                        {item.productName}
+                        <span className="text-gray-400">
+                          {" "}
+                          ({item.quantity}
+                          {item.unit})
+                        </span>
+                      </span>
                       <span className="shrink-0">{item.amount.toLocaleString()}원</span>
                     </li>
                   ))}
