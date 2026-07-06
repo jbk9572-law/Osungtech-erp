@@ -146,17 +146,17 @@ export function InvoiceDoc({
               colSpan={10}
               align="center"
               hideBorder={["r"]}
-              className="text-[19px] font-bold tracking-[0.05em]"
+              className="text-[18px] font-bold tracking-[0.05em]"
             >
               거래명세표
             </Cell>
-            <Cell colSpan={3} align="center" hideBorder={["l"]} className="text-[10.5px] leading-[1.1] font-medium" wrap>
+            <Cell colSpan={7} align="center" hideBorder={["l"]} className="text-[13px] font-medium" wrap>
               ({copyLabel})
             </Cell>
             <Cell colSpan={2}>일자</Cell>
             <Cell colSpan={6}>{formatDate(orderDate)}</Cell>
             <Cell colSpan={2}>No.</Cell>
-            <Cell colSpan={9}>{docNumber}</Cell>
+            <Cell colSpan={5}>{docNumber}</Cell>
             <Cell colSpan={2} align="center">
               1/1
             </Cell>
