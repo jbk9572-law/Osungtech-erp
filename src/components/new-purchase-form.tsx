@@ -193,7 +193,10 @@ export function NewPurchaseForm({
                     disabled={!row.manualPrice}
                     className="erp-input disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad] sm:col-span-2"
                   />
-                  <div className="text-xs sm:col-span-2" style={{ color: "var(--erp-text-muted)" }}>
+                  <div
+                    className="text-right text-xs sm:col-span-2"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {(row.quantity * row.unitCost).toLocaleString()}원
                   </div>
                   <button

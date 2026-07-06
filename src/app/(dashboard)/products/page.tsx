@@ -50,7 +50,7 @@ export default async function ProductsPage() {
                   {Number(product.price).toLocaleString()}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {product.reorder_point}
+                  {product.reorder_point.toLocaleString()}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   수정 →

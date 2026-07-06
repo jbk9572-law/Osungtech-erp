@@ -221,7 +221,7 @@ export function DashboardCalendar({
                         {item.productName}
                         <span className="text-[#8ea3c9]">
                           {" "}
-                          ({item.quantity}
+                          ({item.quantity.toLocaleString()}
                           {item.unit})
                         </span>
                       </span>
@@ -246,7 +246,7 @@ export function DashboardCalendar({
                         {item.productName}
                         <span className="text-[#8fcb9d]">
                           {" "}
-                          ({item.quantity}
+                          ({item.quantity.toLocaleString()}
                           {item.unit})
                         </span>
                       </span>

@@ -57,7 +57,7 @@ export default async function InventoryPage() {
                   <td>{row.products?.sku}</td>
                   <td>{row.products?.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.warehouses?.name}</td>
-                  <td className="num">{row.quantity}</td>
+                  <td className="num">{row.quantity.toLocaleString()}</td>
                   <td>
                     <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
                       {isLow ? "재주문 필요" : "정상"}

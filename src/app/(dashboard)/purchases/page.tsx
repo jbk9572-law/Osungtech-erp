@@ -109,7 +109,7 @@ export default async function PurchasesPage({
                   <td>{order?.suppliers?.name}</td>
                   <td>{item.products?.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.unit}</td>
-                  <td className="num">{item.quantity}</td>
+                  <td className="num">{item.quantity.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(item.unit_cost).toLocaleString()}
                   </td>
@@ -129,7 +129,7 @@ export default async function PurchasesPage({
             <tfoot>
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={4}>합계 ({rows.length}건)</td>
-                <td className="num">{totalQuantity}</td>
+                <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />
                 <td className="num">{totalAmount.toLocaleString()}</td>
               </tr>

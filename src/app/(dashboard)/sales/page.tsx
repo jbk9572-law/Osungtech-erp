@@ -113,7 +113,7 @@ export default async function SalesPage({
                   <td>{order?.customers?.name}</td>
                   <td>{item.products?.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.unit}</td>
-                  <td className="num">{item.quantity}</td>
+                  <td className="num">{item.quantity.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(item.unit_price).toLocaleString()}
                   </td>
@@ -146,7 +146,7 @@ export default async function SalesPage({
             <tfoot>
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={4}>합계 ({rows.length}건)</td>
-                <td className="num">{totalQuantity}</td>
+                <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />
                 <td className="num">{totalSupply.toLocaleString()}</td>
                 <td className="num">{totalTax.toLocaleString()}</td>

@@ -99,7 +99,7 @@ export default async function SaleDetailPage({
               <tr key={row.id}>
                 <td>{row.products?.name}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
-                <td className="num">{row.quantity}</td>
+                <td className="num">{row.quantity.toLocaleString()}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   {Number(row.unit_price).toLocaleString()}
                 </td>
