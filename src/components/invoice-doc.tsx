@@ -143,14 +143,14 @@ export function InvoiceDoc({
           {/* title row */}
           <tr className="h-[46px]">
             <Cell
-              colSpan={9}
+              colSpan={10}
               align="center"
               hideBorder={["r"]}
               className="text-[19px] font-bold tracking-[0.05em]"
             >
               거래명세표
             </Cell>
-            <Cell colSpan={4} align="center" hideBorder={["l"]} className="font-medium" wrap>
+            <Cell colSpan={3} align="center" hideBorder={["l"]} className="text-[10.5px] leading-[1.1] font-medium" wrap>
               ({copyLabel})
             </Cell>
             <Cell colSpan={2}>일자</Cell>
