@@ -56,7 +56,16 @@ export function InvoiceDoc({
       <table className="w-full border-collapse">
         <tbody>
           <tr>
-            <th className="w-14 border border-black bg-gray-50 px-2 py-1 font-medium">공급자</th>
+            <td className="border border-black px-2 py-1" colSpan={2} />
+            <th className="w-24 border border-black bg-gray-50 px-2 py-1 font-medium">
+              공급자연락처
+            </th>
+            <td className="border border-black px-2 py-1" colSpan={2}>
+              Tel. {company?.phone ?? "-"} &nbsp;Fax. {company?.fax_number ?? "-"}
+            </td>
+          </tr>
+          <tr>
+            <th className="w-16 border border-black bg-gray-50 px-2 py-1 font-medium">공급자</th>
             <td className="border border-black px-2 py-1">{company?.business_number ?? "-"}</td>
             <th className="w-20 border border-black bg-gray-50 px-2 py-1 font-medium">
               공급받는자
@@ -67,12 +76,13 @@ export function InvoiceDoc({
           </tr>
           <tr>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">상호</th>
+            <td className="border border-black px-2 py-1">{company?.name ?? "-"}</td>
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">성명</th>
             <td className="border border-black px-2 py-1">
-              {company?.name ?? "-"} &nbsp;&nbsp;성명 {company?.representative_name ?? "-"} (인)
+              {company?.representative_name ?? "-"} &nbsp;(인)
             </td>
-            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">연락처</th>
-            <td className="border border-black px-2 py-1" colSpan={2}>
-              Tel. {company?.phone ?? "-"} &nbsp;Fax. {company?.fax_number ?? "-"}
+            <td className="border border-black px-2 py-1 text-center text-gray-400" rowSpan={2}>
+              &nbsp;
             </td>
           </tr>
           <tr>
@@ -80,17 +90,25 @@ export function InvoiceDoc({
             <td className="border border-black px-2 py-1" colSpan={3}>
               {company?.address ?? "-"}
             </td>
-            <td className="border border-black px-2 py-1 text-center text-gray-500" rowSpan={2}>
-              거래해 주셔서
-              <br />
-              감사드립니다.
+          </tr>
+          <tr>
+            <td className="border border-black px-2 py-1 text-center text-gray-500" colSpan={5}>
+              거래해 주셔서 감사드립니다.
             </td>
           </tr>
           <tr>
-            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">업태 / 종목</th>
-            <td className="border border-black px-2 py-1" colSpan={3}>
-              {company?.business_type ?? "-"} / {company?.business_item ?? "-"}
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">업태</th>
+            <td className="border border-black px-2 py-1">{company?.business_type ?? "-"}</td>
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">종목</th>
+            <td className="border border-black px-2 py-1" colSpan={2}>
+              {company?.business_item ?? "-"}
             </td>
+          </tr>
+          <tr>
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">비고</th>
+            <td className="border border-black px-2 py-1" />
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">인수자</th>
+            <td className="border border-black px-2 py-1" colSpan={2} />
           </tr>
         </tbody>
       </table>
@@ -98,13 +116,14 @@ export function InvoiceDoc({
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-gray-50">
-            <th className="w-14 border border-black px-1 py-1.5 font-medium">월일</th>
+            <th className="w-12 border border-black px-1 py-1.5 font-medium">월일</th>
             <th className="border border-black px-2 py-1.5 font-medium">품명 / 규격</th>
-            <th className="w-12 border border-black px-1 py-1.5 font-medium">단위</th>
-            <th className="w-16 border border-black px-1 py-1.5 font-medium">수량</th>
-            <th className="w-16 border border-black px-1 py-1.5 font-medium">단가</th>
+            <th className="w-10 border border-black px-1 py-1.5 font-medium">단위</th>
+            <th className="w-14 border border-black px-1 py-1.5 font-medium">수량</th>
+            <th className="w-14 border border-black px-1 py-1.5 font-medium">단가</th>
             <th className="w-20 border border-black px-1 py-1.5 font-medium">공급가액</th>
             <th className="w-16 border border-black px-1 py-1.5 font-medium">세액</th>
+            <th className="w-14 border border-black px-1 py-1.5 font-medium">비고/합계</th>
           </tr>
         </thead>
         <tbody>
@@ -125,6 +144,7 @@ export function InvoiceDoc({
               <td className="border border-black px-1 py-1 text-right">
                 {item.taxAmount.toLocaleString()}
               </td>
+              <td className="border border-black px-1 py-1" />
             </tr>
           ))}
           {blankRows > 0 && (
@@ -138,11 +158,13 @@ export function InvoiceDoc({
               <td className="border border-black px-1 py-1" />
               <td className="border border-black px-1 py-1" />
               <td className="border border-black px-1 py-1" />
+              <td className="border border-black px-1 py-1" />
             </tr>
           )}
           {Array.from({ length: Math.max(0, blankRows - 1) }).map((_, i) => (
             <tr key={`blank-${i}`}>
               <td className="border border-black px-1 py-1">&nbsp;</td>
+              <td className="border border-black px-1 py-1" />
               <td className="border border-black px-1 py-1" />
               <td className="border border-black px-1 py-1" />
               <td className="border border-black px-1 py-1" />
@@ -164,9 +186,10 @@ export function InvoiceDoc({
             <td className="border border-black px-1 py-1.5 text-right">
               {taxTotal.toLocaleString()}
             </td>
+            <td className="border border-black px-1 py-1.5" />
           </tr>
           <tr>
-            <td className="border border-black px-2 py-1 text-gray-500" colSpan={7}>
+            <td className="border border-black px-2 py-1 text-gray-500" colSpan={8}>
               메모: {memo || "-"}
             </td>
           </tr>
