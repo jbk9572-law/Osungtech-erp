@@ -80,6 +80,7 @@ export default async function SalesPrintPage({
       <div className="space-y-4">
         <InvoiceDoc
           copyLabel="공급받는자 보관용"
+          color="blue"
           company={company}
           customerName={order.customers?.name ?? ""}
           orderDate={order.order_date}
@@ -89,6 +90,7 @@ export default async function SalesPrintPage({
         />
         <InvoiceDoc
           copyLabel="공급자 보관용"
+          color="red"
           company={company}
           customerName={order.customers?.name ?? ""}
           orderDate={order.order_date}
