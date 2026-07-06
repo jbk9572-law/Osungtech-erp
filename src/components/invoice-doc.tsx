@@ -25,6 +25,39 @@ const COLOR_HEX = {
   red: "#FF0000",
 };
 
+// 원본 엑셀(34개 열)의 실제 열 너비(문자 단위 * 7px)를 그대로 옮긴 값
+const COL_WIDTHS = [
+  18, 18, 18, 18, 18, 18, 18, 22, 18, 18, 22, 18, 18, 18, 18, 16, 23, 16, 16, 16, 16, 16, 16, 16,
+  16, 46, 33, 16, 16, 11, 16, 18, 16, 30,
+];
+
+const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
+
+function Cell({
+  as = "td",
+  colSpan,
+  rowSpan,
+  className = "",
+  children,
+}: {
+  as?: "td" | "th";
+  colSpan?: number;
+  rowSpan?: number;
+  className?: string;
+  children?: React.ReactNode;
+}) {
+  const Tag = as;
+  return (
+    <Tag
+      colSpan={colSpan}
+      rowSpan={rowSpan}
+      className={`border border-current px-[3px] py-[1px] text-left align-middle font-normal ${className}`}
+    >
+      {children}
+    </Tag>
+  );
+}
+
 export function InvoiceDoc({
   copyLabel,
   color,
@@ -47,160 +80,199 @@ export function InvoiceDoc({
   const supplyTotal = items.reduce((sum, item) => sum + item.supplyAmount, 0);
   const taxTotal = items.reduce((sum, item) => sum + item.taxAmount, 0);
   const grandTotal = supplyTotal + taxTotal;
-  const blankRows = Math.max(0, 6 - items.length);
+
+  const minItemRows = 10;
+  const blankCount = Math.max(0, minItemRows - items.length);
 
   return (
-    <div
-      className="border border-current text-[11.5px]"
-      style={{ color: COLOR_HEX[color] }}
+    <table
+      className="border-collapse text-[10px] leading-tight"
+      style={{ color: COLOR_HEX[color], width: `${COL_WIDTHS.reduce((a, b) => a + b, 0)}px` }}
     >
-      <div className="flex items-baseline justify-between border-b border-current px-3 py-1.5">
-        <span className="text-base font-bold tracking-[0.3em]">거래명세표</span>
-        <span className="text-xs font-medium">({copyLabel})</span>
-        <span className="text-xs">
-          일자 {new Date(orderDate).toLocaleDateString("ko-KR")} &nbsp;&nbsp;No. {docNumber}
-          &nbsp;&nbsp;1/1
-        </span>
-      </div>
+      <colgroup>
+        {COL_WIDTHS.map((w, i) => (
+          <col key={i} style={{ width: `${w}px` }} />
+        ))}
+      </colgroup>
+      <tbody>
+        {/* excel row 2-3 */}
+        <tr>
+          <Cell colSpan={9} rowSpan={2} className="text-center text-[13px] font-bold tracking-[0.25em]">
+            거래명세표
+          </Cell>
+          <Cell colSpan={4} rowSpan={2} className="text-center font-medium">
+            ({copyLabel})
+          </Cell>
+          <Cell colSpan={2}>일자</Cell>
+          <Cell colSpan={6}>{new Date(orderDate).toLocaleDateString("ko-KR")}</Cell>
+          <Cell colSpan={2}>No.</Cell>
+          <Cell colSpan={9}>{docNumber}</Cell>
+          <Cell colSpan={2} className="text-center">
+            1/1
+          </Cell>
+        </tr>
+        <tr>
+          <Cell colSpan={5}>공급자연락처</Cell>
+          <Cell colSpan={16}>
+            Tel. {company?.phone ?? "-"} &nbsp;Fax. {company?.fax_number ?? "-"}
+          </Cell>
+        </tr>
 
-      <table className="w-full border-collapse">
-        <tbody>
-          <tr>
-            <td className="border border-current px-2 py-1" colSpan={2} />
-            <th className="w-24 border border-current px-2 py-1 font-medium">공급자연락처</th>
-            <td className="border border-current px-2 py-1" colSpan={2}>
-              Tel. {company?.phone ?? "-"} &nbsp;Fax. {company?.fax_number ?? "-"}
-            </td>
-          </tr>
-          <tr>
-            <th className="w-16 border border-current px-2 py-1 font-medium">공급자</th>
-            <td className="border border-current px-2 py-1">{company?.business_number ?? "-"}</td>
-            <th className="w-20 border border-current px-2 py-1 font-medium">공급받는자</th>
-            <td className="border border-current px-2 py-1 font-semibold" colSpan={2}>
-              {customerName} 貴下
-            </td>
-          </tr>
-          <tr>
-            <th className="border border-current px-2 py-1 font-medium">상호</th>
-            <td className="border border-current px-2 py-1">{company?.name ?? "-"}</td>
-            <th className="border border-current px-2 py-1 font-medium">성명</th>
-            <td className="border border-current px-2 py-1">
-              {company?.representative_name ?? "-"} &nbsp;(인)
-            </td>
-            <td className="border border-current px-2 py-1 text-center" rowSpan={2}>
-              &nbsp;
-            </td>
-          </tr>
-          <tr>
-            <th className="border border-current px-2 py-1 font-medium">주소</th>
-            <td className="border border-current px-2 py-1" colSpan={3}>
-              {company?.address ?? "-"}
-            </td>
-          </tr>
-          <tr>
-            <td className="border border-current px-2 py-1 text-center opacity-80" colSpan={5}>
-              거래해 주셔서 감사드립니다.
-            </td>
-          </tr>
-          <tr>
-            <th className="border border-current px-2 py-1 font-medium">업태</th>
-            <td className="border border-current px-2 py-1">{company?.business_type ?? "-"}</td>
-            <th className="border border-current px-2 py-1 font-medium">종목</th>
-            <td className="border border-current px-2 py-1" colSpan={2}>
-              {company?.business_item ?? "-"}
-            </td>
-          </tr>
-          <tr>
-            <th className="border border-current px-2 py-1 font-medium">비고</th>
-            <td className="border border-current px-2 py-1" />
-            <th className="border border-current px-2 py-1 font-medium">인수자</th>
-            <td className="border border-current px-2 py-1" colSpan={2} />
-          </tr>
-        </tbody>
-      </table>
+        {/* excel row 4 */}
+        <tr>
+          <Cell colSpan={4} as="th">
+            공급자
+          </Cell>
+          <Cell colSpan={13}>{company?.business_number ?? "-"}</Cell>
+          <Cell colSpan={1} rowSpan={3} as="th" className="text-center">
+            공급받는자
+          </Cell>
+          <Cell colSpan={13} rowSpan={2} className="text-center font-semibold">
+            {customerName}
+          </Cell>
+          <Cell colSpan={3} rowSpan={2} className="text-center">
+            貴下
+          </Cell>
+        </tr>
 
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            <th className="w-12 border border-current px-1 py-1.5 font-medium">월일</th>
-            <th className="border border-current px-2 py-1.5 font-medium">품명 / 규격</th>
-            <th className="w-10 border border-current px-1 py-1.5 font-medium">단위</th>
-            <th className="w-14 border border-current px-1 py-1.5 font-medium">수량</th>
-            <th className="w-14 border border-current px-1 py-1.5 font-medium">단가</th>
-            <th className="w-20 border border-current px-1 py-1.5 font-medium">공급가액</th>
-            <th className="w-16 border border-current px-1 py-1.5 font-medium">세액</th>
-            <th className="w-14 border border-current px-1 py-1.5 font-medium">비고/합계</th>
+        {/* excel row 5 */}
+        <tr>
+          <Cell as="th" colSpan={1}>
+            상<br />호
+          </Cell>
+          <Cell colSpan={8}>{company?.name ?? "-"}</Cell>
+          <Cell as="th" colSpan={1}>
+            성<br />명
+          </Cell>
+          <Cell colSpan={5}>{company?.representative_name ?? "-"}</Cell>
+          <Cell colSpan={2} className="text-center">
+            (인)
+          </Cell>
+        </tr>
+
+        {/* excel row 6 */}
+        <tr>
+          <Cell as="th" colSpan={1}>
+            주<br />소
+          </Cell>
+          <Cell colSpan={16}>{company?.address ?? "-"}</Cell>
+          <Cell colSpan={16} className="text-center opacity-80">
+            거래해 주셔서 감사드립니다.
+          </Cell>
+        </tr>
+
+        {/* excel row 7 */}
+        <tr>
+          <Cell as="th" colSpan={1}>
+            업<br />태
+          </Cell>
+          <Cell colSpan={7}>{company?.business_type ?? "-"}</Cell>
+          <Cell as="th" colSpan={1}>
+            종<br />목
+          </Cell>
+          <Cell colSpan={8}>{company?.business_item ?? "-"}</Cell>
+          <Cell as="th" colSpan={1}>
+            비고
+          </Cell>
+          <Cell colSpan={9} />
+          <Cell as="th" colSpan={3}>
+            인수자
+          </Cell>
+          <Cell colSpan={4} />
+        </tr>
+
+        {/* excel row 8: item header */}
+        <tr>
+          <Cell as="th" colSpan={ITEM_COLS[0]} className="text-center">
+            월일
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[1]} className="text-center">
+            품명 / 규격
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[2]} className="text-center">
+            단위
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[3]} className="text-center">
+            수량
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[4]} className="text-center">
+            단가
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[5]} className="text-center">
+            공급가액
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[6]} className="text-center">
+            세 액
+          </Cell>
+          <Cell as="th" colSpan={ITEM_COLS[7]} className="text-center">
+            비고/합계
+          </Cell>
+        </tr>
+
+        {items.map((item) => (
+          <tr key={item.id}>
+            <Cell colSpan={ITEM_COLS[0]} className="text-center">
+              {item.monthDay}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[1]}>{item.productLabel}</Cell>
+            <Cell colSpan={ITEM_COLS[2]} className="text-center">
+              {item.unit}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[3]} className="text-right">
+              {item.quantity.toLocaleString()}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[4]} className="text-right">
+              {item.unitPrice.toLocaleString()}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[5]} className="text-right">
+              {item.supplyAmount.toLocaleString()}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[6]} className="text-right">
+              {item.taxAmount.toLocaleString()}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[7]} />
           </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td className="border border-current px-1 py-1 text-center">{item.monthDay}</td>
-              <td className="border border-current px-2 py-1">{item.productLabel}</td>
-              <td className="border border-current px-1 py-1 text-center">{item.unit}</td>
-              <td className="border border-current px-1 py-1 text-right">
-                {item.quantity.toLocaleString()}
-              </td>
-              <td className="border border-current px-1 py-1 text-right">
-                {item.unitPrice.toLocaleString()}
-              </td>
-              <td className="border border-current px-1 py-1 text-right">
-                {item.supplyAmount.toLocaleString()}
-              </td>
-              <td className="border border-current px-1 py-1 text-right">
-                {item.taxAmount.toLocaleString()}
-              </td>
-              <td className="border border-current px-1 py-1" />
-            </tr>
-          ))}
-          {blankRows > 0 && (
-            <tr>
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-2 py-1 text-center opacity-70">
-                =이하여백=
-              </td>
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-            </tr>
-          )}
-          {Array.from({ length: Math.max(0, blankRows - 1) }).map((_, i) => (
-            <tr key={`blank-${i}`}>
-              <td className="border border-current px-1 py-1">&nbsp;</td>
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-              <td className="border border-current px-1 py-1" />
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="font-semibold">
-            <td className="border border-current px-2 py-1.5" colSpan={4}>
-              합계 {grandTotal.toLocaleString()}
-            </td>
-            <td className="border border-current px-1 py-1.5" />
-            <td className="border border-current px-1 py-1.5 text-right">
-              {supplyTotal.toLocaleString()}
-            </td>
-            <td className="border border-current px-1 py-1.5 text-right">
-              {taxTotal.toLocaleString()}
-            </td>
-            <td className="border border-current px-1 py-1.5" />
+        ))}
+        {Array.from({ length: blankCount }).map((_, i) => (
+          <tr key={`blank-${i}`}>
+            <Cell colSpan={ITEM_COLS[0]} />
+            <Cell colSpan={ITEM_COLS[1]} className="text-center opacity-60">
+              {i === 0 ? "=이하여백=" : ""}
+            </Cell>
+            <Cell colSpan={ITEM_COLS[2]} />
+            <Cell colSpan={ITEM_COLS[3]} />
+            <Cell colSpan={ITEM_COLS[4]} />
+            <Cell colSpan={ITEM_COLS[5]} />
+            <Cell colSpan={ITEM_COLS[6]} />
+            <Cell colSpan={ITEM_COLS[7]} />
           </tr>
-          <tr>
-            <td className="border border-current px-2 py-1 opacity-80" colSpan={8}>
-              메모: {memo || "-"}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+        ))}
+
+        {/* 합계 */}
+        <tr>
+          <Cell colSpan={2} className="font-semibold">
+            합계
+          </Cell>
+          <Cell colSpan={5} className="text-right font-semibold">
+            {grandTotal.toLocaleString()}
+          </Cell>
+          <Cell colSpan={5} className="text-right font-semibold">
+            {supplyTotal.toLocaleString()}
+          </Cell>
+          <Cell colSpan={6} className="text-right font-semibold">
+            {taxTotal.toLocaleString()}
+          </Cell>
+          <Cell colSpan={16} />
+        </tr>
+        {/* 메모 */}
+        <tr>
+          <Cell colSpan={2}>메모</Cell>
+          <Cell colSpan={23} className="opacity-80">
+            {memo || ""}
+          </Cell>
+          <Cell colSpan={9} />
+        </tr>
+      </tbody>
+    </table>
   );
 }
