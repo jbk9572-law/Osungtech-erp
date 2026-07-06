@@ -48,14 +48,17 @@ const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
 // 품목 테이블의 모든 행(입력된 행/빈 행 포함)이 항상 같은 높이를 갖도록 고정.
 // 비어 있는 셀은 내용이 없어 줄 높이가 생기지 않아 그냥 두면 입력된 행보다
 // 얇게 찌그러지는 문제가 있어, 모든 품목 행에 동일한 높이를 강제로 지정한다.
-const ITEM_ROW_HEIGHT = "h-[17px]";
+const ITEM_ROW_HEIGHT = "h-[20px]";
 
+// 라벨(th)은 가운데 정렬, 값(td)은 왼쪽 정렬이 기본값 (실제 인쇄본 기준).
+// 숫자 열이나 특별히 가운데/왼쪽 정렬이 필요한 값은 align prop으로 개별 지정한다.
 function Cell({
   as = "td",
   colSpan,
   rowSpan,
   className = "",
   wrap = false,
+  align,
   children,
 }: {
   as?: "td" | "th";
@@ -63,14 +66,18 @@ function Cell({
   rowSpan?: number;
   className?: string;
   wrap?: boolean;
+  align?: "left" | "center" | "right";
   children?: React.ReactNode;
 }) {
   const Tag = as;
+  const resolvedAlign = align ?? (as === "th" ? "center" : "left");
+  const alignClass =
+    resolvedAlign === "center" ? "text-center" : resolvedAlign === "right" ? "text-right" : "text-left";
   return (
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden border border-current px-[3px] py-[1px] text-left align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
+      className={`overflow-hidden border border-current px-[4px] py-[1.5px] ${alignClass} align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>
@@ -109,26 +116,26 @@ export function InvoiceDoc({
 
   return (
     <div className="break-inside-avoid" style={colorStyle}>
-      <table className="w-full table-fixed border-collapse text-[11px] leading-tight">
+      <table className="w-full table-fixed border-collapse text-[13px] leading-tight">
         <colgroup>
           {COL_WIDTHS.map((w, i) => (
             <col key={i} style={{ width: `${w}%` }} />
           ))}
         </colgroup>
         <tbody>
-          {/* title row */}
+          {/* title row: 실제 인쇄본은 제목이 가운데가 아니라 왼쪽 정렬 */}
           <tr>
-            <Cell colSpan={9} className="text-center text-[16px] font-bold tracking-[0.2em]">
+            <Cell colSpan={9} align="left" className="text-[19px] font-bold tracking-[0.2em]">
               거래명세표
             </Cell>
-            <Cell colSpan={4} className="text-center font-medium" wrap>
+            <Cell colSpan={4} align="center" className="font-medium" wrap>
               ({copyLabel})
             </Cell>
             <Cell colSpan={2}>일자</Cell>
             <Cell colSpan={6}>{formatDate(orderDate)}</Cell>
             <Cell colSpan={2}>No.</Cell>
             <Cell colSpan={9}>{docNumber}</Cell>
-            <Cell colSpan={2} className="text-center">
+            <Cell colSpan={2} align="center">
               1/1
             </Cell>
           </tr>
@@ -139,17 +146,23 @@ export function InvoiceDoc({
               공급자
             </Cell>
             <Cell colSpan={7}>{company?.business_number ?? "-"}</Cell>
-            <Cell colSpan={3} as="th">
+            <Cell colSpan={4} as="th">
               종사업장
             </Cell>
-            <Cell colSpan={3} />
-            <Cell colSpan={1} rowSpan={2} as="th" className="text-center text-[7px] leading-none" wrap>
+            <Cell colSpan={2} />
+            <Cell
+              colSpan={1}
+              rowSpan={2}
+              as="th"
+              className="text-[8px] leading-none"
+              wrap
+            >
               공급받는자
             </Cell>
-            <Cell colSpan={13} className="text-center font-semibold">
+            <Cell colSpan={13} align="center" className="font-semibold">
               {customerName}
             </Cell>
-            <Cell colSpan={3} className="text-center">
+            <Cell colSpan={3} align="center">
               貴下
             </Cell>
           </tr>
@@ -164,7 +177,7 @@ export function InvoiceDoc({
               성<br />명
             </Cell>
             <Cell colSpan={5}>{company?.representative_name ?? "-"}</Cell>
-            <Cell colSpan={2} className="relative text-center">
+            <Cell colSpan={2} align="center" className="relative">
               (인)
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -174,7 +187,7 @@ export function InvoiceDoc({
                 className="pointer-events-none absolute top-1/2 left-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 opacity-90 mix-blend-multiply"
               />
             </Cell>
-            <Cell colSpan={16} className="text-center opacity-80">
+            <Cell colSpan={16} align="center" className="opacity-80">
               거래해 주셔서 감사드립니다.
             </Cell>
           </tr>
@@ -209,51 +222,51 @@ export function InvoiceDoc({
 
           {/* item header */}
           <tr className={ITEM_ROW_HEIGHT}>
-            <Cell as="th" colSpan={ITEM_COLS[0]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[0]}>
               월일
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[1]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[1]}>
               품명 / 규격
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[2]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[2]}>
               단위
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[3]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[3]}>
               수량
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[4]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[4]}>
               단가
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[5]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[5]}>
               공급가액
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[6]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[6]}>
               세 액
             </Cell>
-            <Cell as="th" colSpan={ITEM_COLS[7]} className="text-center">
+            <Cell as="th" colSpan={ITEM_COLS[7]}>
               비고/합계
             </Cell>
           </tr>
 
           {items.map((item, i) => (
             <tr key={item.id} className={ITEM_ROW_HEIGHT} style={stripe(i)}>
-              <Cell colSpan={ITEM_COLS[0]} className="text-center">
+              <Cell colSpan={ITEM_COLS[0]} align="center">
                 {item.monthDay}
               </Cell>
               <Cell colSpan={ITEM_COLS[1]}>{item.productLabel}</Cell>
-              <Cell colSpan={ITEM_COLS[2]} className="text-center">
+              <Cell colSpan={ITEM_COLS[2]} align="center">
                 {item.unit}
               </Cell>
-              <Cell colSpan={ITEM_COLS[3]} className="text-right">
+              <Cell colSpan={ITEM_COLS[3]} align="right">
                 {item.quantity.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[4]} className="text-right">
+              <Cell colSpan={ITEM_COLS[4]} align="right">
                 {item.unitPrice.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[5]} className="text-right">
+              <Cell colSpan={ITEM_COLS[5]} align="right">
                 {item.supplyAmount.toLocaleString()}
               </Cell>
-              <Cell colSpan={ITEM_COLS[6]} className="text-right">
+              <Cell colSpan={ITEM_COLS[6]} align="right">
                 {item.taxAmount.toLocaleString()}
               </Cell>
               <Cell colSpan={ITEM_COLS[7]} />
@@ -262,7 +275,7 @@ export function InvoiceDoc({
           {Array.from({ length: blankCount }).map((_, i) => (
             <tr key={`blank-${i}`} className={ITEM_ROW_HEIGHT} style={stripe(items.length + i)}>
               <Cell colSpan={ITEM_COLS[0]} />
-              <Cell colSpan={ITEM_COLS[1]} className="text-center opacity-60">
+              <Cell colSpan={ITEM_COLS[1]} align="center" className="opacity-60">
                 {i === 0 ? "=이하여백=" : ""}
               </Cell>
               <Cell colSpan={ITEM_COLS[2]} />
@@ -303,7 +316,7 @@ export function InvoiceDoc({
         </tbody>
       </table>
 
-      <div className="flex w-full justify-between px-[4px] pt-[3px] text-[11px] opacity-90">
+      <div className="flex w-full justify-between px-[4px] pt-[3px] text-[12px] opacity-90">
         <span>{company?.greeting_message || ""}</span>
         <span>
           From. ☎ {company?.phone ?? "-"} Fax {company?.fax_number ?? "-"}
