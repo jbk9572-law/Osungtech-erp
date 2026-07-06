@@ -9,6 +9,9 @@ type Company = {
   business_number: string | null;
   representative_name: string | null;
   phone: string | null;
+  fax_number: string | null;
+  manager_name: string | null;
+  manager_phone: string | null;
   business_type: string | null;
   business_item: string | null;
   address: string | null;
@@ -52,6 +55,31 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           name="phone"
           defaultValue={company?.phone ?? ""}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">팩스번호</label>
+        <input
+          name="fax_number"
+          defaultValue={company?.fax_number ?? ""}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">담당자 성명</label>
+        <input
+          name="manager_name"
+          defaultValue={company?.manager_name ?? ""}
+          placeholder="예: 강신조 차장님"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-gray-700">담당자 연락처</label>
+        <input
+          name="manager_phone"
+          defaultValue={company?.manager_phone ?? ""}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
         />
       </div>

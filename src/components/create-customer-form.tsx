@@ -46,6 +46,17 @@ export function CreateCustomerForm() {
         placeholder="주소"
         className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-3"
       />
+      <div>
+        <label className="mb-1 block text-xs text-gray-500">발행 문서</label>
+        <select
+          name="document_type"
+          defaultValue="명세표"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        >
+          <option value="명세표">명세표 (단가 포함)</option>
+          <option value="출고증">출고증 (단가 없음)</option>
+        </select>
+      </div>
       <button
         type="submit"
         disabled={pending}

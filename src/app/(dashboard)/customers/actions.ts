@@ -10,6 +10,8 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
     return { error: "거래처명을 입력해주세요." };
   }
 
+  const documentType = String(formData.get("document_type") ?? "명세표");
+
   const supabase = await createClient();
   const { error } = await supabase.from("customers").insert({
     name,
@@ -19,6 +21,7 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
     email: String(formData.get("email") ?? "") || null,
     phone: String(formData.get("phone") ?? "") || null,
     address: String(formData.get("address") ?? "") || null,
+    document_type: documentType === "출고증" ? "출고증" : "명세표",
   });
 
   if (error) {
@@ -27,6 +30,31 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
 
   revalidatePath("/customers");
   return { success: "거래처가 등록되었습니다." };
+}
+
+export async function updateCustomerDocumentType(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const customerId = String(formData.get("customer_id") ?? "");
+  const documentType = String(formData.get("document_type") ?? "");
+  if (!customerId || (documentType !== "출고증" && documentType !== "명세표")) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customers")
+    .update({ document_type: documentType })
+    .eq("id", customerId);
+
+  if (error) {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/customers");
+  return { success: "발행 문서 설정이 저장되었습니다." };
 }
 
 export async function upsertCustomerPrice(

@@ -285,6 +285,9 @@ export type Database = {
           business_type: string | null;
           business_item: string | null;
           phone: string | null;
+          fax_number: string | null;
+          manager_name: string | null;
+          manager_phone: string | null;
           updated_at: string;
         };
         Insert: {
@@ -296,6 +299,9 @@ export type Database = {
           business_type?: string | null;
           business_item?: string | null;
           phone?: string | null;
+          fax_number?: string | null;
+          manager_name?: string | null;
+          manager_phone?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -307,6 +313,9 @@ export type Database = {
           business_type?: string | null;
           business_item?: string | null;
           phone?: string | null;
+          fax_number?: string | null;
+          manager_name?: string | null;
+          manager_phone?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -321,6 +330,7 @@ export type Database = {
           email: string | null;
           phone: string | null;
           address: string | null;
+          document_type: "출고증" | "명세표";
           created_at: string;
         };
         Insert: {
@@ -332,6 +342,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           address?: string | null;
+          document_type?: "출고증" | "명세표";
           created_at?: string;
         };
         Update: {
@@ -343,6 +354,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           address?: string | null;
+          document_type?: "출고증" | "명세표";
           created_at?: string;
         };
         Relationships: [];

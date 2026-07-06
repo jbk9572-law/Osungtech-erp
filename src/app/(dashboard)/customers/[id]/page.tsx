@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
+import { CustomerDocumentTypeForm } from "@/components/customer-document-type-form";
 
 export default async function CustomerDetailPage({
   params,
@@ -30,6 +31,14 @@ export default async function CustomerDetailPage({
       <p className="mb-6 text-sm text-gray-500">
         {customer.business_number ?? "사업자번호 미등록"} · {customer.contact_name ?? "담당자 미등록"}
       </p>
+
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-3 text-sm font-medium text-gray-700">발행 문서 설정</h2>
+        <p className="mb-3 text-xs text-gray-400">
+          이 거래처에 판매 등록 시 거래명세표 대신 어떤 문서를 출력할지 정합니다.
+        </p>
+        <CustomerDocumentTypeForm customerId={customer.id} documentType={customer.document_type} />
+      </div>
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-medium text-gray-700">판매단가 등록/수정</h2>

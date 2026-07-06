@@ -26,6 +26,7 @@ export default async function CustomersPage() {
               <th className="px-4 py-3 font-medium">사업자번호</th>
               <th className="px-4 py-3 font-medium">담당자</th>
               <th className="px-4 py-3 font-medium">연락처</th>
+              <th className="px-4 py-3 font-medium">발행 문서</th>
               <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
@@ -36,6 +37,17 @@ export default async function CustomersPage() {
                 <td className="px-4 py-3 text-gray-500">{customer.business_number ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{customer.contact_name ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{customer.phone ?? "-"}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      customer.document_type === "출고증"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    {customer.document_type}
+                  </span>
+                </td>
                 <td className="px-4 py-3 text-right">
                   <Link
                     href={`/customers/${customer.id}`}
@@ -48,7 +60,7 @@ export default async function CustomersPage() {
             ))}
             {!customers?.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
                   등록된 거래처가 없습니다.
                 </td>
               </tr>
