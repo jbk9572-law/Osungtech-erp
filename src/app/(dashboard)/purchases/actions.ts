@@ -213,6 +213,17 @@ export async function updatePurchase(
   redirect(`/purchases/${id}`);
 }
 
+export async function updatePurchaseStatus(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!id || !status) return;
+
+  const supabase = await createClient();
+  await supabase.from("purchase_orders").update({ status }).eq("id", id);
+
+  revalidatePath("/purchases");
+}
+
 export async function deletePurchase(
   _prevState: FormState,
   formData: FormData
