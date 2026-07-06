@@ -153,10 +153,10 @@ export function InvoiceDoc({
             <Cell colSpan={7} align="center" hideBorder={["l"]} className="text-[13px] font-medium" wrap>
               ({copyLabel})
             </Cell>
-            <Cell colSpan={2}>일자</Cell>
+            <Cell colSpan={3}>일자</Cell>
             <Cell colSpan={6}>{formatDate(orderDate)}</Cell>
             <Cell colSpan={2}>No.</Cell>
-            <Cell colSpan={5}>{docNumber}</Cell>
+            <Cell colSpan={4}>{docNumber}</Cell>
             <Cell colSpan={2} align="center">
               1/1
             </Cell>
@@ -181,12 +181,16 @@ export function InvoiceDoc({
               className="text-[8px] leading-none"
               wrap
             >
-              공급받는자
+              <div className="flex flex-col items-center gap-[3px]">
+                {[..."공급받는자"].map((ch, i) => (
+                  <span key={i}>{ch}</span>
+                ))}
+              </div>
             </Cell>
-            <Cell colSpan={16} rowSpan={3} valign="top" wrap className="relative pt-[3px]">
+            <Cell colSpan={16} rowSpan={3} valign="top" wrap className="relative pt-[18px]">
               <div className="text-center font-bold text-black">{customerName}</div>
-              <span className="absolute top-[3px] right-[4px] font-bold">貴下</span>
-              <div className="pt-[2px] text-center">거래해 주셔서 감사드립니다.</div>
+              <span className="absolute top-[18px] right-[4px] font-bold">貴下</span>
+              <div className="pt-[28px] text-center">거래해 주셔서 감사드립니다.</div>
             </Cell>
           </tr>
 
@@ -195,7 +199,7 @@ export function InvoiceDoc({
             <Cell as="th" colSpan={1}>
               상<br />호
             </Cell>
-            <Cell colSpan={8} className="font-bold text-black">
+            <Cell colSpan={8} align="center" className="font-bold text-black">
               {company?.name ?? "-"}
             </Cell>
             <Cell as="th" colSpan={1}>
@@ -211,7 +215,7 @@ export function InvoiceDoc({
                 src={company?.seal_image_url || "/branding/company-seal.png"}
                 alt=""
                 aria-hidden
-                className="pointer-events-none absolute top-1/2 left-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 opacity-90 mix-blend-multiply"
+                className="pointer-events-none absolute top-1/2 left-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 opacity-90 mix-blend-multiply"
               />
             </Cell>
           </tr>
@@ -314,10 +318,8 @@ export function InvoiceDoc({
             <Cell colSpan={2} className="font-semibold">
               합계
             </Cell>
-            <Cell colSpan={10} className="font-bold text-black">
-              ₩{grandTotal.toLocaleString()}원정
-            </Cell>
-            <Cell colSpan={18} className="text-black">
+            <Cell colSpan={28} className="text-black">
+              <span className="font-bold">₩{grandTotal.toLocaleString()}원정</span>{"  "}
               (수량 : {totalQuantity.toLocaleString()}, 공급가 : {supplyTotal.toLocaleString()},
               세액 : {taxTotal.toLocaleString()})
             </Cell>
