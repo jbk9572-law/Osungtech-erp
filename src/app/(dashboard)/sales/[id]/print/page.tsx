@@ -77,7 +77,7 @@ export default async function SalesPrintPage({
       <div className="mb-4 flex justify-end print:hidden">
         <PrintButton />
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-x-auto">
         <InvoiceDoc
           copyLabel="공급받는자 보관용"
           color="blue"

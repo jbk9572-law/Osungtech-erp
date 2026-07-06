@@ -51,7 +51,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`border border-current px-[3px] py-[1px] text-left align-middle font-normal ${className}`}
+      className={`overflow-hidden text-ellipsis break-words border border-current px-[3px] py-[1px] text-left align-middle font-normal ${className}`}
     >
       {children}
     </Tag>
@@ -86,7 +86,7 @@ export function InvoiceDoc({
 
   return (
     <table
-      className="border-collapse text-[10px] leading-tight"
+      className="table-fixed border-collapse text-[10px] leading-tight"
       style={{ color: COLOR_HEX[color], width: `${COL_WIDTHS.reduce((a, b) => a + b, 0)}px` }}
     >
       <colgroup>
