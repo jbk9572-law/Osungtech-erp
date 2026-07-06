@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CreateSupplierForm } from "@/components/create-supplier-form";
+import { ClickableRow } from "@/components/clickable-row";
 
 export default async function SuppliersPage() {
   const supabase = await createClient();
@@ -25,20 +26,22 @@ export default async function SuppliersPage() {
               <th className="px-4 py-3 font-medium">담당자</th>
               <th className="px-4 py-3 font-medium">이메일</th>
               <th className="px-4 py-3 font-medium">연락처</th>
+              <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {suppliers?.map((supplier) => (
-              <tr key={supplier.id}>
+              <ClickableRow key={supplier.id} href={`/suppliers/${supplier.id}`}>
                 <td className="px-4 py-3 text-gray-900">{supplier.name}</td>
                 <td className="px-4 py-3 text-gray-500">{supplier.contact_name ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{supplier.email ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{supplier.phone ?? "-"}</td>
-              </tr>
+                <td className="px-4 py-3 text-right text-gray-400">수정 →</td>
+              </ClickableRow>
             ))}
             {!suppliers?.length && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
                   등록된 공급업체가 없습니다.
                 </td>
               </tr>

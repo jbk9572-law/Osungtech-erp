@@ -55,28 +55,37 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          business_number: string | null;
+          representative_name: string | null;
           contact_name: string | null;
           email: string | null;
           phone: string | null;
           address: string | null;
+          notes: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
+          business_number?: string | null;
+          representative_name?: string | null;
           contact_name?: string | null;
           email?: string | null;
           phone?: string | null;
           address?: string | null;
+          notes?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
+          business_number?: string | null;
+          representative_name?: string | null;
           contact_name?: string | null;
           email?: string | null;
           phone?: string | null;
           address?: string | null;
+          notes?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -290,6 +299,9 @@ export type Database = {
           manager_phone: string | null;
           email: string | null;
           greeting_message: string | null;
+          logo_wordmark_url: string | null;
+          logo_mark_url: string | null;
+          seal_image_url: string | null;
           updated_at: string;
         };
         Insert: {
@@ -306,6 +318,9 @@ export type Database = {
           manager_phone?: string | null;
           email?: string | null;
           greeting_message?: string | null;
+          logo_wordmark_url?: string | null;
+          logo_mark_url?: string | null;
+          seal_image_url?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -322,6 +337,9 @@ export type Database = {
           manager_phone?: string | null;
           email?: string | null;
           greeting_message?: string | null;
+          logo_wordmark_url?: string | null;
+          logo_mark_url?: string | null;
+          seal_image_url?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -336,6 +354,7 @@ export type Database = {
           email: string | null;
           phone: string | null;
           address: string | null;
+          notes: string | null;
           document_type: "출고증" | "명세표";
           created_at: string;
         };
@@ -348,6 +367,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           address?: string | null;
+          notes?: string | null;
           document_type?: "출고증" | "명세표";
           created_at?: string;
         };
@@ -360,6 +380,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           address?: string | null;
+          notes?: string | null;
           document_type?: "출고증" | "명세표";
           created_at?: string;
         };

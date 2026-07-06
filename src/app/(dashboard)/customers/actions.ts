@@ -1,8 +1,24 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
+
+function customerFieldsFrom(formData: FormData) {
+  const documentType = String(formData.get("document_type") ?? "명세표");
+  return {
+    business_number: String(formData.get("business_number") ?? "") || null,
+    representative_name: String(formData.get("representative_name") ?? "") || null,
+    contact_name: String(formData.get("contact_name") ?? "") || null,
+    email: String(formData.get("email") ?? "") || null,
+    phone: combinePhone(formData),
+    address: String(formData.get("address") ?? "") || null,
+    notes: String(formData.get("notes") ?? "") || null,
+    document_type: (documentType === "출고증" ? "출고증" : "명세표") as "출고증" | "명세표",
+  };
+}
 
 export async function createCustomer(_prevState: FormState, formData: FormData): Promise<FormState> {
   const name = String(formData.get("name") ?? "").trim();
@@ -10,18 +26,10 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
     return { error: "거래처명을 입력해주세요." };
   }
 
-  const documentType = String(formData.get("document_type") ?? "명세표");
-
   const supabase = await createClient();
   const { error } = await supabase.from("customers").insert({
     name,
-    business_number: String(formData.get("business_number") ?? "") || null,
-    representative_name: String(formData.get("representative_name") ?? "") || null,
-    contact_name: String(formData.get("contact_name") ?? "") || null,
-    email: String(formData.get("email") ?? "") || null,
-    phone: String(formData.get("phone") ?? "") || null,
-    address: String(formData.get("address") ?? "") || null,
-    document_type: documentType === "출고증" ? "출고증" : "명세표",
+    ...customerFieldsFrom(formData),
   });
 
   if (error) {
@@ -32,29 +40,47 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
   return { success: "거래처가 등록되었습니다." };
 }
 
-export async function updateCustomerDocumentType(
-  _prevState: FormState,
-  formData: FormData
-): Promise<FormState> {
-  const customerId = String(formData.get("customer_id") ?? "");
-  const documentType = String(formData.get("document_type") ?? "");
-  if (!customerId || (documentType !== "출고증" && documentType !== "명세표")) {
-    return { error: "잘못된 요청입니다." };
+export async function updateCustomer(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name) {
+    return { error: "거래처명을 입력해주세요." };
   }
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("customers")
-    .update({ document_type: documentType })
-    .eq("id", customerId);
+    .update({ name, ...customerFieldsFrom(formData) })
+    .eq("id", id);
 
   if (error) {
     return { error: "저장에 실패했습니다." };
   }
 
-  revalidatePath(`/customers/${customerId}`);
   revalidatePath("/customers");
-  return { success: "발행 문서 설정이 저장되었습니다." };
+  revalidatePath(`/customers/${id}`);
+  return { success: "거래처 정보가 저장되었습니다." };
+}
+
+export async function deleteCustomer(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("customers").delete().eq("id", id);
+
+  if (error) {
+    return {
+      error: error.message.includes("foreign key")
+        ? "이 거래처와 연결된 매출/판매단가 내역이 있어 삭제할 수 없습니다."
+        : "삭제에 실패했습니다.",
+    };
+  }
+
+  revalidatePath("/customers");
+  redirect("/customers");
 }
 
 export async function upsertCustomerPrice(

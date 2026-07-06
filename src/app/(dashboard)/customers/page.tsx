@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
+import { ClickableRow } from "@/components/clickable-row";
 
 export default async function CustomersPage() {
   const supabase = await createClient();
@@ -32,7 +32,7 @@ export default async function CustomersPage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {customers?.map((customer) => (
-              <tr key={customer.id}>
+              <ClickableRow key={customer.id} href={`/customers/${customer.id}`}>
                 <td className="px-4 py-3 text-gray-900">{customer.name}</td>
                 <td className="px-4 py-3 text-gray-500">{customer.business_number ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{customer.contact_name ?? "-"}</td>
@@ -48,15 +48,8 @@ export default async function CustomersPage() {
                     {customer.document_type}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/customers/${customer.id}`}
-                    className="text-sm font-medium text-gray-900 hover:underline"
-                  >
-                    판매단가 관리 →
-                  </Link>
-                </td>
-              </tr>
+                <td className="px-4 py-3 text-right text-gray-400">수정 →</td>
+              </ClickableRow>
             ))}
             {!customers?.length && (
               <tr>

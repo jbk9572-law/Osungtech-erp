@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
-import { CustomerDocumentTypeForm } from "@/components/customer-document-type-form";
+import { PartnerForm } from "@/components/partner-form";
+import { DeleteButton } from "@/components/delete-button";
+import { updateCustomer, deleteCustomer } from "@/app/(dashboard)/customers/actions";
 
 export default async function CustomerDetailPage({
   params,
@@ -33,11 +35,21 @@ export default async function CustomerDetailPage({
       </p>
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium text-gray-700">발행 문서 설정</h2>
-        <p className="mb-3 text-xs text-gray-400">
-          이 거래처에 판매 등록 시 거래명세표 대신 어떤 문서를 출력할지 정합니다.
-        </p>
-        <CustomerDocumentTypeForm customerId={customer.id} documentType={customer.document_type} />
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium text-gray-700">거래처 정보 수정</h2>
+          <DeleteButton
+            action={deleteCustomer}
+            id={customer.id}
+            confirmMessage="이 거래처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
+          />
+        </div>
+        <PartnerForm
+          action={updateCustomer}
+          idFieldValue={customer.id}
+          initial={customer}
+          showDocumentType
+          submitLabel="저장"
+        />
       </div>
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">

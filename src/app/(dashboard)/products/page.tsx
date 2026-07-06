@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CreateProductForm } from "@/components/create-product-form";
+import { ClickableRow } from "@/components/clickable-row";
 
 export default async function ProductsPage() {
   const supabase = await createClient();
@@ -31,22 +32,24 @@ export default async function ProductsPage() {
               <th className="px-4 py-3 font-medium">공급업체</th>
               <th className="px-4 py-3 font-medium">판매가</th>
               <th className="px-4 py-3 font-medium">재주문 기준</th>
+              <th className="px-4 py-3 font-medium" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {products?.map((product) => (
-              <tr key={product.id}>
+              <ClickableRow key={product.id} href={`/products/${product.id}`}>
                 <td className="px-4 py-3 text-gray-900">{product.sku}</td>
                 <td className="px-4 py-3 text-gray-900">{product.name}</td>
                 <td className="px-4 py-3 text-gray-500">{product.categories?.name ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{product.suppliers?.name ?? "-"}</td>
                 <td className="px-4 py-3 text-gray-500">{Number(product.price).toLocaleString()}</td>
                 <td className="px-4 py-3 text-gray-500">{product.reorder_point}</td>
-              </tr>
+                <td className="px-4 py-3 text-right text-gray-400">수정 →</td>
+              </ClickableRow>
             ))}
             {!products?.length && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
                   등록된 상품이 없습니다.
                 </td>
               </tr>
