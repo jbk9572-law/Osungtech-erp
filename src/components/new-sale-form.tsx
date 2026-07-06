@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 
 type Customer = { id: string; name: string };
@@ -24,26 +25,47 @@ type Row = {
   unitPrice: number;
 };
 
+export type SaleInitial = {
+  id: string;
+  customerId: string;
+  warehouseId: string;
+  orderDate: string;
+  memo: string;
+  items: { productId: string; quantity: number; unitPrice: number }[];
+};
+
 export function NewSaleForm({
   customers,
   products,
   warehouses,
   prices,
   history,
+  action = createSale,
+  initial,
+  submitLabel = "거래 등록 및 거래명세표 보기",
 }: {
   customers: Customer[];
   products: Product[];
   warehouses: Warehouse[];
   prices: CustomerPrice[];
   history: PriceHistoryEntry[];
+  action?: (state: FormState, formData: FormData) => Promise<FormState>;
+  initial?: SaleInitial;
+  submitLabel?: string;
 }) {
-  const [customerId, setCustomerId] = useState("");
-  const [warehouseId, setWarehouseId] = useState("");
-  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [memo, setMemo] = useState("");
-  const [rows, setRows] = useState<Row[]>([{ key: 0, productId: "", quantity: 1, unitPrice: 0 }]);
-  const [nextKey, setNextKey] = useState(1);
-  const [state, formAction, pending] = useActionState(createSale, undefined);
+  const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
+  const [warehouseId, setWarehouseId] = useState(initial?.warehouseId ?? "");
+  const [orderDate, setOrderDate] = useState(
+    () => initial?.orderDate ?? new Date().toISOString().slice(0, 10)
+  );
+  const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [rows, setRows] = useState<Row[]>(
+    initial?.items.length
+      ? initial.items.map((item, i) => ({ key: i, ...item }))
+      : [{ key: 0, productId: "", quantity: 1, unitPrice: 0 }]
+  );
+  const [nextKey, setNextKey] = useState(rows.length);
+  const [state, formAction, pending] = useActionState(action, undefined);
 
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -104,6 +126,7 @@ export function NewSaleForm({
 
   return (
     <form action={formAction} className="space-y-6">
+      {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="items" value={itemsJson} />
 
       <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:grid-cols-3">
@@ -242,7 +265,7 @@ export function NewSaleForm({
         disabled={pending}
         className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
       >
-        {pending ? "등록 중..." : "거래 등록 및 거래명세표 보기"}
+        {pending ? "저장 중..." : submitLabel}
       </button>
     </form>
   );

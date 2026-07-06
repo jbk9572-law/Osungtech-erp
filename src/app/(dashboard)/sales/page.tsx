@@ -122,7 +122,7 @@ export default async function SalesPage({
             {rows.map((item) => {
               const order = item.sales_orders;
               return (
-                <ClickableRow key={item.id} href={order ? `/sales/${order.id}/print` : "#"}>
+                <ClickableRow key={item.id} href={order ? `/sales/${order.id}` : "#"}>
                   <td className="whitespace-nowrap px-4 py-3 text-gray-500">
                     {order ? new Date(order.order_date).toLocaleDateString("ko-KR") : "-"}
                   </td>

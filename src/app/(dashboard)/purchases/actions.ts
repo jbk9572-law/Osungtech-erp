@@ -11,6 +11,45 @@ type PurchaseItemInput = {
   unitCost: number;
 };
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
+  try {
+    const items = JSON.parse(itemsRaw) as PurchaseItemInput[];
+    return items.filter((item) => item.productId && item.quantity > 0);
+  } catch {
+    return null;
+  }
+}
+
+// 기존 매입 건의 입고 효과를 재고 조정(adjustment)으로 되돌린다.
+async function reversePurchaseInventory(
+  supabase: SupabaseServerClient,
+  purchaseOrderId: string,
+  userId: string | null
+) {
+  const [{ data: items }, { data: order }] = await Promise.all([
+    supabase
+      .from("purchase_order_items")
+      .select("product_id, quantity")
+      .eq("purchase_order_id", purchaseOrderId),
+    supabase.from("purchase_orders").select("warehouse_id").eq("id", purchaseOrderId).maybeSingle(),
+  ]);
+
+  if (!items?.length || !order) return;
+
+  await supabase.from("inventory_transactions").insert(
+    items.map((item) => ({
+      product_id: item.product_id,
+      warehouse_id: order.warehouse_id,
+      type: "adjustment" as const,
+      quantity: -item.quantity,
+      reference: `purchase_order_reversal:${purchaseOrderId}`,
+      created_by: userId,
+    }))
+  );
+}
+
 export async function createPurchase(
   _prevState: FormState,
   formData: FormData
@@ -19,20 +58,14 @@ export async function createPurchase(
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const purchaseDate = String(formData.get("purchase_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
-  const itemsRaw = String(formData.get("items") ?? "[]");
+  const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
   }
-
-  let items: PurchaseItemInput[];
-  try {
-    items = JSON.parse(itemsRaw);
-  } catch {
+  if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };
   }
-
-  items = items.filter((item) => item.productId && item.quantity > 0);
   if (items.length === 0) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
@@ -92,4 +125,109 @@ export async function createPurchase(
   revalidatePath("/products");
   revalidatePath("/dashboard");
   redirect(`/purchases`);
+}
+
+export async function updatePurchase(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  const warehouseId = String(formData.get("warehouse_id") ?? "");
+  const purchaseDate = String(formData.get("purchase_date") ?? "");
+  const memo = String(formData.get("memo") ?? "") || null;
+  const items = parseItems(String(formData.get("items") ?? "[]"));
+
+  if (!id || !supplierId || !warehouseId || !purchaseDate) {
+    return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
+  }
+  if (!items) {
+    return { error: "품목 정보를 처리하지 못했습니다." };
+  }
+  if (items.length === 0) {
+    return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  await reversePurchaseInventory(supabase, id, user?.id ?? null);
+  await supabase.from("purchase_order_items").delete().eq("purchase_order_id", id);
+
+  const { error } = await supabase
+    .from("purchase_orders")
+    .update({
+      supplier_id: supplierId,
+      warehouse_id: warehouseId,
+      purchase_date: purchaseDate,
+      memo,
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { error: "매입 거래 수정에 실패했습니다." };
+  }
+
+  await supabase.from("purchase_order_items").insert(
+    items.map((item) => ({
+      purchase_order_id: id,
+      product_id: item.productId,
+      quantity: item.quantity,
+      unit_cost: item.unitCost,
+    }))
+  );
+
+  await supabase.from("inventory_transactions").insert(
+    items.map((item) => ({
+      product_id: item.productId,
+      warehouse_id: warehouseId,
+      type: "in" as const,
+      quantity: item.quantity,
+      reference: `purchase_order:${id}`,
+      purchase_order_id: id,
+      created_by: user?.id ?? null,
+    }))
+  );
+
+  await Promise.all(
+    items.map((item) =>
+      supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
+    )
+  );
+
+  revalidatePath("/purchases");
+  revalidatePath(`/purchases/${id}`);
+  revalidatePath("/inventory");
+  revalidatePath("/products");
+  revalidatePath("/dashboard");
+  redirect(`/purchases/${id}`);
+}
+
+export async function deletePurchase(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  await reversePurchaseInventory(supabase, id, user?.id ?? null);
+
+  const { error } = await supabase.from("purchase_orders").delete().eq("id", id);
+  if (error) {
+    return { error: "삭제에 실패했습니다." };
+  }
+
+  revalidatePath("/purchases");
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+  redirect("/purchases");
 }
