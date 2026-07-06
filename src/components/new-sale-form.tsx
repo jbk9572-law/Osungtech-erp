@@ -4,11 +4,18 @@ import { useActionState, useMemo, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
+import { PriceHistoryHint } from "@/components/price-history-hint";
 
 type Customer = { id: string; name: string };
 type Product = { id: string; sku: string; name: string; price: number };
 type Warehouse = { id: string; name: string };
 type CustomerPrice = { customer_id: string; product_id: string; unit_price: number };
+type PriceHistoryEntry = {
+  customerId: string;
+  productId: string;
+  unitPrice: number;
+  orderDate: string;
+};
 
 type Row = {
   key: number;
@@ -22,11 +29,13 @@ export function NewSaleForm({
   products,
   warehouses,
   prices,
+  history,
 }: {
   customers: Customer[];
   products: Product[];
   warehouses: Warehouse[];
   prices: CustomerPrice[];
+  history: PriceHistoryEntry[];
 }) {
   const [customerId, setCustomerId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
@@ -75,6 +84,12 @@ export function NewSaleForm({
 
   function removeRow(key: number) {
     setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
+  }
+
+  function getHistoryFor(productId: string) {
+    return history
+      .filter((h) => h.customerId === customerId && h.productId === productId)
+      .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
   }
 
   const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0);
@@ -166,40 +181,47 @@ export function NewSaleForm({
 
         <div className="space-y-3">
           {rows.map((row) => (
-            <div key={row.key} className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
-              <div className="sm:col-span-5">
-                <ProductSearchSelect
-                  products={products}
-                  value={row.productId}
-                  onChange={(productId) => handleProductChange(row.key, productId)}
+            <div key={row.key} className="rounded-md border border-gray-100 p-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
+                <div className="sm:col-span-5">
+                  <ProductSearchSelect
+                    products={products}
+                    value={row.productId}
+                    onChange={(productId) => handleProductChange(row.key, productId)}
+                  />
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  placeholder="수량"
+                  value={row.quantity}
+                  onChange={(e) => updateRow(row.key, { quantity: Number(e.target.value) })}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
                 />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="단가"
+                  value={row.unitPrice}
+                  onChange={(e) => updateRow(row.key, { unitPrice: Number(e.target.value) })}
+                  className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
+                />
+                <div className="text-sm text-gray-500 sm:col-span-2">
+                  {(row.quantity * row.unitPrice).toLocaleString()}원
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeRow(row.key)}
+                  className="text-sm text-red-600 hover:underline sm:col-span-1"
+                >
+                  삭제
+                </button>
               </div>
-              <input
-                type="number"
-                min={1}
-                placeholder="수량"
-                value={row.quantity}
-                onChange={(e) => updateRow(row.key, { quantity: Number(e.target.value) })}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <input
-                type="number"
-                step="0.01"
-                placeholder="단가"
-                value={row.unitPrice}
-                onChange={(e) => updateRow(row.key, { unitPrice: Number(e.target.value) })}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
-              />
-              <div className="text-sm text-gray-500 sm:col-span-2">
-                {(row.quantity * row.unitPrice).toLocaleString()}원
-              </div>
-              <button
-                type="button"
-                onClick={() => removeRow(row.key)}
-                className="text-sm text-red-600 hover:underline sm:col-span-1"
-              >
-                삭제
-              </button>
+              {row.productId && customerId && (
+                <div className="mt-1.5 pl-1">
+                  <PriceHistoryHint history={getHistoryFor(row.productId)} />
+                </div>
+              )}
             </div>
           ))}
         </div>

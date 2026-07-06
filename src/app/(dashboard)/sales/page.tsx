@@ -12,7 +12,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, customers(name, contact_name, phone), warehouses(name)), products(sku, name, unit)"
+      "*, sales_orders!inner(id, order_date, memo, customers(name)), products(sku, name, unit)"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -108,8 +108,6 @@ export default async function SalesPage({
             <tr>
               <th className="px-4 py-3 font-medium">거래일자</th>
               <th className="px-4 py-3 font-medium">거래처</th>
-              <th className="px-4 py-3 font-medium">담당자/연락처</th>
-              <th className="px-4 py-3 font-medium">창고</th>
               <th className="px-4 py-3 font-medium">SKU</th>
               <th className="px-4 py-3 font-medium">품목명</th>
               <th className="px-4 py-3 font-medium">규격</th>
@@ -129,11 +127,6 @@ export default async function SalesPage({
                     {order ? new Date(order.order_date).toLocaleDateString("ko-KR") : "-"}
                   </td>
                   <td className="px-4 py-3 text-gray-900">{order?.customers?.name}</td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {order?.customers?.contact_name ?? "-"}
-                    {order?.customers?.phone ? ` · ${order.customers.phone}` : ""}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{order?.warehouses?.name}</td>
                   <td className="px-4 py-3 text-gray-900">{item.products?.sku}</td>
                   <td className="px-4 py-3 text-gray-900">{item.products?.name}</td>
                   <td className="px-4 py-3 text-gray-500">{item.products?.unit}</td>
@@ -162,7 +155,7 @@ export default async function SalesPage({
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={12} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={10} className="px-4 py-6 text-center text-gray-400">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -171,7 +164,7 @@ export default async function SalesPage({
           {rows.length > 0 && (
             <tfoot>
               <tr className="border-t border-gray-300 bg-gray-50 font-semibold text-gray-900">
-                <td colSpan={7} className="px-4 py-3">
+                <td colSpan={5} className="px-4 py-3">
                   합계 ({rows.length}건)
                 </td>
                 <td className="px-4 py-3 text-right">{totalQuantity}</td>
