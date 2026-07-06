@@ -140,13 +140,13 @@ export function InvoiceDoc({
           ))}
         </colgroup>
         <tbody>
-          {/* title row: 실제 인쇄본은 제목이 가운데가 아니라 왼쪽 정렬 */}
-          <tr>
+          {/* title row */}
+          <tr className="h-[36px]">
             <Cell
               colSpan={9}
-              align="left"
+              align="center"
               hideBorder={["r"]}
-              className="text-[19px] font-bold tracking-[0.05em] pl-[8px]"
+              className="text-[19px] font-bold tracking-[0.05em]"
             >
               거래명세표
             </Cell>
@@ -162,7 +162,7 @@ export function InvoiceDoc({
             </Cell>
           </tr>
 
-          {/* 공급자 / 종사업장 / 공급받는자 / 거래처명·貴下·인사말(2행 병합, 내부 선 없음) */}
+          {/* 공급자 / 종사업장 / 공급받는자 / 거래처명·貴下·인사말(공급자~주소 3행 병합, 내부 선 없음) */}
           <tr>
             <Cell colSpan={4} as="th" className="tracking-[0.3em] pl-[6px]">
               공급자
@@ -176,14 +176,14 @@ export function InvoiceDoc({
             <Cell colSpan={2} />
             <Cell
               colSpan={1}
-              rowSpan={2}
+              rowSpan={3}
               as="th"
               className="text-[8px] leading-none"
               wrap
             >
               공급받는자
             </Cell>
-            <Cell colSpan={16} rowSpan={2} valign="top" wrap className="relative pt-[3px]">
+            <Cell colSpan={16} rowSpan={3} valign="top" wrap className="relative pt-[3px]">
               <div className="text-center font-bold text-black">{customerName}</div>
               <span className="absolute top-[3px] right-[4px] font-bold">貴下</span>
               <div className="pt-[2px] text-center">거래해 주셔서 감사드립니다.</div>
@@ -216,12 +216,12 @@ export function InvoiceDoc({
             </Cell>
           </tr>
 
-          {/* 주소 */}
+          {/* 주소: 공급받는자/거래처명 병합 칸이 여기까지 이어지므로 값 칸 너비는 상호행과 동일하게 맞춘다 */}
           <tr>
             <Cell as="th" colSpan={1}>
               주<br />소
             </Cell>
-            <Cell colSpan={33} className="text-black">{company?.address ?? "-"}</Cell>
+            <Cell colSpan={16} className="text-black">{company?.address ?? "-"}</Cell>
           </tr>
 
           {/* 업태 / 종목 / 비고 / 인수자 */}
