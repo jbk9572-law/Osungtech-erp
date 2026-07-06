@@ -18,7 +18,7 @@ export function PhoneInputGroup({
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"
       />
-      <span className="text-gray-400">-</span>
+      <span style={{ color: "#9aa2ad" }}>-</span>
       <input
         name={`${namePrefix}2`}
         placeholder="1234"
@@ -26,7 +26,7 @@ export function PhoneInputGroup({
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"
       />
-      <span className="text-gray-400">-</span>
+      <span style={{ color: "#9aa2ad" }}>-</span>
       <input
         name={`${namePrefix}3`}
         placeholder="5678"

@@ -7,10 +7,7 @@ export function ClickableRow({ href, children }: { href: string; children: React
   const router = useRouter();
 
   return (
-    <tr
-      onClick={() => router.push(href)}
-      className="cursor-pointer hover:bg-gray-50"
-    >
+    <tr onClick={() => router.push(href)} className="cursor-pointer">
       {children}
     </tr>
   );
