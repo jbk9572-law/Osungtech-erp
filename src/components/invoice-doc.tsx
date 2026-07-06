@@ -94,7 +94,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden ${borderClass} px-[4px] py-[2.5px] ${alignClass} ${valignClass} font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
+      className={`overflow-hidden ${borderClass} px-[4px] py-0 ${alignClass} ${valignClass} font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>
@@ -141,7 +141,7 @@ export function InvoiceDoc({
         </colgroup>
         <tbody>
           {/* title row */}
-          <tr className="h-[36px]">
+          <tr className="h-[46px]">
             <Cell
               colSpan={9}
               align="center"
@@ -245,7 +245,7 @@ export function InvoiceDoc({
           </tr>
 
           {/* item header */}
-          <tr className={ITEM_ROW_HEIGHT}>
+          <tr className="h-[19px]">
             <Cell as="th" colSpan={ITEM_COLS[0]}>
               월일
             </Cell>
@@ -310,7 +310,7 @@ export function InvoiceDoc({
           ))}
 
           {/* 합계: "₩1,234원정 (수량 : x, 공급가 : y, 세액 : z)" 형태 */}
-          <tr>
+          <tr className="h-[27px]">
             <Cell colSpan={2} className="font-semibold">
               합계
             </Cell>
@@ -326,7 +326,7 @@ export function InvoiceDoc({
             </Cell>
           </tr>
           {/* 메모 */}
-          <tr>
+          <tr className="h-[30px]">
             <Cell colSpan={2}>메모</Cell>
             <Cell colSpan={28} className="opacity-80">
               {memo || ""}
