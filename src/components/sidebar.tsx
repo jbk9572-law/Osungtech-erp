@@ -7,12 +7,12 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "대시보드" },
   { href: "/products", label: "상품" },
   { href: "/inventory", label: "재고" },
-  { href: "/purchases", label: "매입(입고)" },
-  { href: "/sales", label: "판매(거래명세표)" },
-  { href: "/customers", label: "거래처" },
-  { href: "/suppliers", label: "공급업체" },
+  { href: "/purchases", label: "매입" },
+  { href: "/sales", label: "매출" },
+  { href: "/suppliers", label: "공급처" },
+  { href: "/customers", label: "판매처" },
   { href: "/warehouses", label: "창고" },
-  { href: "/settings/company", label: "회사 정보" },
+  { href: "/settings/company", label: "정보" },
 ];
 
 export function Sidebar() {

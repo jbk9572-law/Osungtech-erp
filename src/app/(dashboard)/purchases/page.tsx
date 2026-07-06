@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ClickableRow } from "@/components/clickable-row";
 
 export default async function PurchasesPage({
   searchParams,
@@ -43,7 +44,7 @@ export default async function PurchasesPage({
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">매입 (입고)</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">매입</h1>
         <Link
           href="/purchases/new"
           className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
@@ -74,7 +75,7 @@ export default async function PurchasesPage({
             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
           />
         </div>
-        <div className="flex-1 min-w-[160px]">
+        <div className="min-w-[160px] flex-1">
           <label className="mb-1 block text-xs text-gray-500">공급업체 / 상품 검색</label>
           <input
             type="text"
@@ -104,41 +105,47 @@ export default async function PurchasesPage({
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
-              <th className="px-4 py-3 font-medium">매입일자</th>
-              <th className="px-4 py-3 font-medium">공급업체</th>
-              <th className="px-4 py-3 font-medium">SKU</th>
-              <th className="px-4 py-3 font-medium">품목명</th>
-              <th className="px-4 py-3 font-medium">규격</th>
-              <th className="px-4 py-3 font-medium text-right">수량</th>
-              <th className="px-4 py-3 font-medium text-right">매입단가</th>
-              <th className="px-4 py-3 font-medium text-right">금액</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium">매입일자</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium">공급업체</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium">품목명</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium">규격</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">수량</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">매입단가</th>
+              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">금액</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {rows.map((item) => {
               const order = item.purchase_orders;
               return (
-                <tr key={item.id}>
-                  <td className="px-4 py-3 whitespace-nowrap text-gray-500">
+                <ClickableRow key={item.id} href={order ? `/purchases/${order.id}` : "#"}>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
                     {order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}
                   </td>
-                  <td className="px-4 py-3 text-gray-900">{order?.suppliers?.name}</td>
-                  <td className="px-4 py-3 text-gray-900">{item.products?.sku}</td>
-                  <td className="px-4 py-3 text-gray-900">{item.products?.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.products?.unit}</td>
-                  <td className="px-4 py-3 text-right text-gray-900">{item.quantity}</td>
-                  <td className="px-4 py-3 text-right text-gray-500">
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-900">
+                    {order?.suppliers?.name}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-900">
+                    {item.products?.name}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
+                    {item.products?.unit}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-900">
+                    {item.quantity}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-500">
                     {Number(item.unit_cost).toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-900">
+                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-900">
                     {item.amount.toLocaleString()}
                   </td>
-                </tr>
+                </ClickableRow>
               );
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -147,12 +154,14 @@ export default async function PurchasesPage({
           {rows.length > 0 && (
             <tfoot>
               <tr className="border-t border-gray-300 bg-gray-50 font-semibold text-gray-900">
-                <td colSpan={5} className="px-4 py-3">
+                <td colSpan={4} className="whitespace-nowrap px-4 py-3">
                   합계 ({rows.length}건)
                 </td>
-                <td className="px-4 py-3 text-right">{totalQuantity}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-right">{totalQuantity}</td>
                 <td className="px-4 py-3" />
-                <td className="px-4 py-3 text-right">{totalAmount.toLocaleString()}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-right">
+                  {totalAmount.toLocaleString()}
+                </td>
               </tr>
             </tfoot>
           )}
