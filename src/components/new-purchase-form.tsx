@@ -1,73 +1,47 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { createSale } from "@/app/(dashboard)/sales/actions";
+import { useState } from "react";
+import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 
-type Customer = { id: string; name: string };
-type Product = { id: string; sku: string; name: string; price: number };
+type Supplier = { id: string; name: string };
+type Product = { id: string; sku: string; name: string; cost: number };
 type Warehouse = { id: string; name: string };
-type CustomerPrice = { customer_id: string; product_id: string; unit_price: number };
 
 type Row = {
   key: number;
   productId: string;
   quantity: number;
-  unitPrice: number;
+  unitCost: number;
 };
 
-export function NewSaleForm({
-  customers,
+export function NewPurchaseForm({
+  suppliers,
   products,
   warehouses,
-  prices,
 }: {
-  customers: Customer[];
+  suppliers: Supplier[];
   products: Product[];
   warehouses: Warehouse[];
-  prices: CustomerPrice[];
 }) {
-  const [customerId, setCustomerId] = useState("");
+  const [supplierId, setSupplierId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
-  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [memo, setMemo] = useState("");
-  const [rows, setRows] = useState<Row[]>([{ key: 0, productId: "", quantity: 1, unitPrice: 0 }]);
+  const [rows, setRows] = useState<Row[]>([{ key: 0, productId: "", quantity: 1, unitCost: 0 }]);
   const [nextKey, setNextKey] = useState(1);
-
-  const priceMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const price of prices) {
-      map.set(`${price.customer_id}:${price.product_id}`, Number(price.unit_price));
-    }
-    return map;
-  }, [prices]);
-
-  function resolvePrice(forCustomerId: string, productId: string) {
-    const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
-    if (fromCustomer !== undefined) return fromCustomer;
-    const product = products.find((p) => p.id === productId);
-    return product ? Number(product.price) : 0;
-  }
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
   }
 
   function handleProductChange(key: number, productId: string) {
-    updateRow(key, { productId, unitPrice: resolvePrice(customerId, productId) });
-  }
-
-  function handleCustomerChange(newCustomerId: string) {
-    setCustomerId(newCustomerId);
-    setRows((prev) =>
-      prev.map((row) =>
-        row.productId ? { ...row, unitPrice: resolvePrice(newCustomerId, row.productId) } : row
-      )
-    );
+    const product = products.find((p) => p.id === productId);
+    updateRow(key, { productId, unitCost: product ? Number(product.cost) : 0 });
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { key: nextKey, productId: "", quantity: 1, unitPrice: 0 }]);
+    setRows((prev) => [...prev, { key: nextKey, productId: "", quantity: 1, unitCost: 0 }]);
     setNextKey((k) => k + 1);
   }
 
@@ -75,42 +49,40 @@ export function NewSaleForm({
     setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
   }
 
-  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0);
-  const taxAmount = Math.round(supplyAmount * 0.1);
-  const total = supplyAmount + taxAmount;
+  const total = rows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0);
 
   const itemsJson = JSON.stringify(
     rows
       .filter((row) => row.productId && row.quantity > 0)
-      .map((row) => ({ productId: row.productId, quantity: row.quantity, unitPrice: row.unitPrice }))
+      .map((row) => ({ productId: row.productId, quantity: row.quantity, unitCost: row.unitCost }))
   );
 
   return (
-    <form action={createSale} className="space-y-6">
+    <form action={createPurchase} className="space-y-6">
       <input type="hidden" name="items" value={itemsJson} />
 
       <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">거래처</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">공급업체</label>
           <select
-            name="customer_id"
+            name="supplier_id"
             required
-            value={customerId}
-            onChange={(e) => handleCustomerChange(e.target.value)}
+            value={supplierId}
+            onChange={(e) => setSupplierId(e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="" disabled>
-              거래처 선택
+              공급업체 선택
             </option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.name}
+            {suppliers.map((supplier) => (
+              <option key={supplier.id} value={supplier.id}>
+                {supplier.name}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">출고 창고</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">입고 창고</label>
           <select
             name="warehouse_id"
             required
@@ -129,13 +101,13 @@ export function NewSaleForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">거래일자</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700">매입일자</label>
           <input
-            name="order_date"
+            name="purchase_date"
             type="date"
             required
-            value={orderDate}
-            onChange={(e) => setOrderDate(e.target.value)}
+            value={purchaseDate}
+            onChange={(e) => setPurchaseDate(e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
         </div>
@@ -183,13 +155,13 @@ export function NewSaleForm({
               <input
                 type="number"
                 step="0.01"
-                placeholder="단가"
-                value={row.unitPrice}
-                onChange={(e) => updateRow(row.key, { unitPrice: Number(e.target.value) })}
+                placeholder="매입단가"
+                value={row.unitCost}
+                onChange={(e) => updateRow(row.key, { unitCost: Number(e.target.value) })}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-2"
               />
               <div className="text-sm text-gray-500 sm:col-span-2">
-                {(row.quantity * row.unitPrice).toLocaleString()}원
+                {(row.quantity * row.unitCost).toLocaleString()}원
               </div>
               <button
                 type="button"
@@ -202,12 +174,8 @@ export function NewSaleForm({
           ))}
         </div>
 
-        <div className="mt-4 flex flex-col items-end gap-1 border-t border-gray-100 pt-4 text-sm">
-          <div className="text-gray-500">공급가액: {supplyAmount.toLocaleString()}원</div>
-          <div className="text-gray-500">부가세(10%): {taxAmount.toLocaleString()}원</div>
-          <div className="text-base font-semibold text-gray-900">
-            합계: {total.toLocaleString()}원
-          </div>
+        <div className="mt-4 flex justify-end border-t border-gray-100 pt-4 text-base font-semibold text-gray-900">
+          매입 합계: {total.toLocaleString()}원
         </div>
       </div>
 
@@ -215,7 +183,7 @@ export function NewSaleForm({
         type="submit"
         className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
       >
-        거래 등록 및 거래명세표 보기
+        매입 등록
       </button>
     </form>
   );

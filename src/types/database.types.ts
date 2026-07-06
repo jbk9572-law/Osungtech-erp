@@ -215,6 +215,7 @@ export type Database = {
           note: string | null;
           created_by: string | null;
           sales_order_id: string | null;
+          purchase_order_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -227,6 +228,7 @@ export type Database = {
           note?: string | null;
           created_by?: string | null;
           sales_order_id?: string | null;
+          purchase_order_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -239,6 +241,7 @@ export type Database = {
           note?: string | null;
           created_by?: string | null;
           sales_order_id?: string | null;
+          purchase_order_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -261,6 +264,13 @@ export type Database = {
             columns: ["sales_order_id"];
             isOneToOne: false;
             referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_transactions_purchase_order_id_fkey";
+            columns: ["purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_orders";
             referencedColumns: ["id"];
           },
         ];
@@ -456,6 +466,93 @@ export type Database = {
           },
           {
             foreignKeyName: "sales_order_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      purchase_orders: {
+        Row: {
+          id: string;
+          supplier_id: string;
+          warehouse_id: string;
+          purchase_date: string;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          supplier_id: string;
+          warehouse_id: string;
+          purchase_date?: string;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          supplier_id?: string;
+          warehouse_id?: string;
+          purchase_date?: string;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_orders_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      purchase_order_items: {
+        Row: {
+          id: string;
+          purchase_order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_cost: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          purchase_order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_cost?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          purchase_order_id?: string;
+          product_id?: string;
+          quantity?: number;
+          unit_cost?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_purchase_order_id_fkey";
+            columns: ["purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_order_items_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
