@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateCompanyProfile } from "@/app/(dashboard)/settings/company/actions";
 import { FormMessage } from "@/components/form-message";
+import { PhoneInputGroup } from "@/components/phone-input-group";
 
 type Company = {
   name: string;
@@ -54,19 +55,11 @@ export function CompanyProfileForm({ company }: { company: Company }) {
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">연락처</label>
-        <input
-          name="phone"
-          defaultValue={company?.phone ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <PhoneInputGroup namePrefix="phone" defaultValue={company?.phone} />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">팩스번호</label>
-        <input
-          name="fax_number"
-          defaultValue={company?.fax_number ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <PhoneInputGroup namePrefix="fax" defaultValue={company?.fax_number} />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">담당자 성명</label>
@@ -79,11 +72,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">담당자 연락처</label>
-        <input
-          name="manager_phone"
-          defaultValue={company?.manager_phone ?? ""}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
+        <PhoneInputGroup namePrefix="mgrphone" defaultValue={company?.manager_phone} />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium text-gray-700">업태</label>

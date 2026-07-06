@@ -23,25 +23,21 @@ function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
 }
 
 // 기존 매입 건의 입고 효과를 재고 조정(adjustment)으로 되돌린다.
+// 호출 전에 미리 읽어둔 품목/창고 정보를 받는다 (주문을 지우거나 바꾸고 나면
+// 원래 품목 수량을 알 수 없기 때문에, 실제 삭제/수정이 성공한 뒤에만 호출해야 한다).
 async function reversePurchaseInventory(
   supabase: SupabaseServerClient,
   purchaseOrderId: string,
+  warehouseId: string,
+  items: { product_id: string; quantity: number }[],
   userId: string | null
 ) {
-  const [{ data: items }, { data: order }] = await Promise.all([
-    supabase
-      .from("purchase_order_items")
-      .select("product_id, quantity")
-      .eq("purchase_order_id", purchaseOrderId),
-    supabase.from("purchase_orders").select("warehouse_id").eq("id", purchaseOrderId).maybeSingle(),
-  ]);
-
-  if (!items?.length || !order) return;
+  if (!items.length) return;
 
   await supabase.from("inventory_transactions").insert(
     items.map((item) => ({
       product_id: item.product_id,
-      warehouse_id: order.warehouse_id,
+      warehouse_id: warehouseId,
       type: "adjustment" as const,
       quantity: -item.quantity,
       reference: `purchase_order_reversal:${purchaseOrderId}`,
@@ -153,9 +149,18 @@ export async function updatePurchase(
     data: { user },
   } = await supabase.auth.getUser();
 
-  await reversePurchaseInventory(supabase, id, user?.id ?? null);
-  await supabase.from("purchase_order_items").delete().eq("purchase_order_id", id);
+  // 재고를 건드리기 전에 기존 품목/창고 정보를 먼저 읽어둔다.
+  const [{ data: oldItems }, { data: oldOrder }] = await Promise.all([
+    supabase.from("purchase_order_items").select("product_id, quantity").eq("purchase_order_id", id),
+    supabase.from("purchase_orders").select("warehouse_id").eq("id", id).maybeSingle(),
+  ]);
 
+  if (!oldOrder) {
+    return { error: "매입 거래를 찾을 수 없습니다." };
+  }
+
+  // 헤더 수정이 실제로 성공한 경우에만 재고에 손을 댄다 (RLS 등으로 수정이
+  // 막혀 있으면 재고만 잘못 되돌아가는 사고를 방지).
   const { error } = await supabase
     .from("purchase_orders")
     .update({
@@ -169,6 +174,9 @@ export async function updatePurchase(
   if (error) {
     return { error: "매입 거래 수정에 실패했습니다." };
   }
+
+  await reversePurchaseInventory(supabase, id, oldOrder.warehouse_id, oldItems ?? [], user?.id ?? null);
+  await supabase.from("purchase_order_items").delete().eq("purchase_order_id", id);
 
   await supabase.from("purchase_order_items").insert(
     items.map((item) => ({
@@ -219,12 +227,23 @@ export async function deletePurchase(
     data: { user },
   } = await supabase.auth.getUser();
 
-  await reversePurchaseInventory(supabase, id, user?.id ?? null);
+  // 재고를 되돌리기 전에 삭제될 품목/창고 정보를 먼저 읽어둔다.
+  const [{ data: items }, { data: order }] = await Promise.all([
+    supabase.from("purchase_order_items").select("product_id, quantity").eq("purchase_order_id", id),
+    supabase.from("purchase_orders").select("warehouse_id").eq("id", id).maybeSingle(),
+  ]);
 
+  if (!order) {
+    return { error: "매입 거래를 찾을 수 없습니다." };
+  }
+
+  // 삭제가 실제로 성공한 경우에만 재고를 되돌린다.
   const { error } = await supabase.from("purchase_orders").delete().eq("id", id);
   if (error) {
     return { error: "삭제에 실패했습니다." };
   }
+
+  await reversePurchaseInventory(supabase, id, order.warehouse_id, items ?? [], user?.id ?? null);
 
   revalidatePath("/purchases");
   revalidatePath("/inventory");

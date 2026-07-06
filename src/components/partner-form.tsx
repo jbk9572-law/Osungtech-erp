@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
+import { PhoneInputGroup } from "@/components/phone-input-group";
 
 export type PartnerFormInitial = {
   name?: string | null;
@@ -15,11 +16,6 @@ export type PartnerFormInitial = {
   notes?: string | null;
   document_type?: "출고증" | "명세표" | null;
 };
-
-function splitPhone(phone?: string | null) {
-  const parts = (phone ?? "").split("-");
-  return [parts[0] ?? "", parts[1] ?? "", parts[2] ?? ""];
-}
 
 export function PartnerForm({
   action,
@@ -35,7 +31,6 @@ export function PartnerForm({
   idFieldValue?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [phone1, phone2, phone3] = splitPhone(initial?.phone);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -72,31 +67,7 @@ export function PartnerForm({
         defaultValue={initial?.email ?? ""}
         className="rounded-md border border-gray-300 px-3 py-2 text-sm"
       />
-      <div className="flex items-center gap-1">
-        <input
-          name="phone1"
-          placeholder="010"
-          defaultValue={phone1}
-          maxLength={4}
-          className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm"
-        />
-        <span className="text-gray-400">-</span>
-        <input
-          name="phone2"
-          placeholder="1234"
-          defaultValue={phone2}
-          maxLength={4}
-          className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm"
-        />
-        <span className="text-gray-400">-</span>
-        <input
-          name="phone3"
-          placeholder="5678"
-          defaultValue={phone3}
-          maxLength={4}
-          className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm"
-        />
-      </div>
+      <PhoneInputGroup namePrefix="phone" defaultValue={initial?.phone} />
       <input
         name="address"
         placeholder="주소"

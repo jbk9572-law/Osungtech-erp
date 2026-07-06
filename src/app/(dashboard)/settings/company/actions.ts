@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 
 export async function updateCompanyProfile(
@@ -23,17 +24,21 @@ export async function updateCompanyProfile(
       address: String(formData.get("address") ?? "") || null,
       business_type: String(formData.get("business_type") ?? "") || null,
       business_item: String(formData.get("business_item") ?? "") || null,
-      phone: String(formData.get("phone") ?? "") || null,
-      fax_number: String(formData.get("fax_number") ?? "") || null,
+      phone: combinePhone(formData, "phone"),
+      fax_number: combinePhone(formData, "fax"),
       manager_name: String(formData.get("manager_name") ?? "") || null,
-      manager_phone: String(formData.get("manager_phone") ?? "") || null,
+      manager_phone: combinePhone(formData, "mgrphone"),
       email: String(formData.get("email") ?? "") || null,
       greeting_message: String(formData.get("greeting_message") ?? "") || null,
     })
     .eq("id", 1);
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return {
+      error: error.message.includes("column")
+        ? "저장에 실패했습니다. 아직 실행하지 않은 데이터베이스 마이그레이션이 있을 수 있습니다."
+        : "저장에 실패했습니다.",
+    };
   }
 
   revalidatePath("/settings/company");
