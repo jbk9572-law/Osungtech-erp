@@ -40,66 +40,63 @@ export function PartnerForm({
         placeholder="상호명"
         required
         defaultValue={initial?.name ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="business_number"
         placeholder="사업자등록번호"
         defaultValue={initial?.business_number ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="representative_name"
         placeholder="대표자명"
         defaultValue={initial?.representative_name ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="contact_name"
         placeholder="담당자"
         defaultValue={initial?.contact_name ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="email"
         placeholder="이메일"
         type="email"
         defaultValue={initial?.email ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <PhoneInputGroup namePrefix="phone" defaultValue={initial?.phone} />
       <input
         name="address"
         placeholder="주소"
         defaultValue={initial?.address ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-3"
+        className="erp-input sm:col-span-3"
       />
       <textarea
         name="notes"
         placeholder="비고 / 특이사항"
         defaultValue={initial?.notes ?? ""}
         rows={2}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-3"
+        className="erp-input sm:col-span-3"
+        style={{ height: "auto", paddingTop: 6, paddingBottom: 6 }}
       />
       {showDocumentType && (
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">발행 문서</label>
+        <div className="erp-field">
+          <label>발행 문서</label>
           <select
             name="document_type"
             defaultValue={initial?.document_type ?? "명세표"}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            className="erp-select"
           >
             <option value="명세표">명세표 (단가 포함)</option>
             <option value="출고증">출고증 (단가 없음)</option>
           </select>
         </div>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 sm:col-span-3 sm:w-32"
-      >
-        {pending ? "저장 중..." : submitLabel}
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-3">
+        {pending ? "저장 중..." : `F7 ${submitLabel}`}
       </button>
       <div className="sm:col-span-3">
         <FormMessage state={state} />

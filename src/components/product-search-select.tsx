@@ -43,10 +43,13 @@ export function ProductSearchSelect({
         onBlur={() => {
           setTimeout(() => setOpen(false), 150);
         }}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
+        style={{ width: "100%" }}
       />
       {open && (
-        <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-gray-200 bg-white text-sm shadow-lg">
+        <ul
+          className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-sm border border-[#d9d9d9] bg-white text-[12.5px] shadow-md"
+        >
           {results.map((product) => (
             <li key={product.id}>
               <button
@@ -57,15 +60,15 @@ export function ProductSearchSelect({
                   setQuery("");
                   setOpen(false);
                 }}
-                className="block w-full px-3 py-2 text-left hover:bg-gray-100"
+                className="block w-full px-2.5 py-2 text-left hover:bg-[#f3f7fc]"
               >
-                <span className="font-medium text-gray-900">{product.sku}</span>
-                <span className="ml-2 text-gray-500">{product.name}</span>
+                <span className="font-medium text-[#1c1c1c]">{product.sku}</span>
+                <span className="ml-2 text-[#6b7280]">{product.name}</span>
               </button>
             </li>
           ))}
           {results.length === 0 && (
-            <li className="px-3 py-2 text-gray-400">검색 결과가 없습니다.</li>
+            <li className="px-2.5 py-2 text-[#9aa2ad]">검색 결과가 없습니다.</li>
           )}
         </ul>
       )}

@@ -16,7 +16,7 @@ export function PhoneInputGroup({
         placeholder="010"
         defaultValue={part1}
         maxLength={4}
-        className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm"
+        className="erp-input w-full min-w-0 text-center"
       />
       <span className="text-gray-400">-</span>
       <input
@@ -24,7 +24,7 @@ export function PhoneInputGroup({
         placeholder="1234"
         defaultValue={part2}
         maxLength={4}
-        className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm"
+        className="erp-input w-full min-w-0 text-center"
       />
       <span className="text-gray-400">-</span>
       <input
@@ -32,7 +32,7 @@ export function PhoneInputGroup({
         placeholder="5678"
         defaultValue={part3}
         maxLength={4}
-        className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 text-center text-sm"
+        className="erp-input w-full min-w-0 text-center"
       />
     </div>
   );

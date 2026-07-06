@@ -11,7 +11,7 @@ export default async function NewPurchasePage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">새 매입(입고) 등록</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">새 매입(입고) 등록</h1>
       <NewPurchaseForm
         suppliers={suppliers ?? []}
         products={products ?? []}

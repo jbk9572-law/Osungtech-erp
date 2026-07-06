@@ -12,20 +12,22 @@ export default async function CompanySettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-gray-900">회사 정보</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        거래명세표의 공급자 정보로 사용됩니다.
-      </p>
+      <h1 className="mb-1 text-lg font-bold text-[#1c1c1c]">환경설정 &gt; 회사정보</h1>
+      <p className="mb-4 text-xs text-[#6b7280]">거래명세표의 공급자 정보로 사용됩니다.</p>
 
       <CompanyProfileForm company={company} />
 
-      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium text-gray-700">이미지 관리</h2>
-        <BrandingImageForm
-          logoWordmarkUrl={company?.logo_wordmark_url}
-          logoMarkUrl={company?.logo_mark_url}
-          sealImageUrl={company?.seal_image_url}
-        />
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">이미지 관리</span>
+        </div>
+        <div className="erp-detail-body">
+          <BrandingImageForm
+            logoWordmarkUrl={company?.logo_wordmark_url}
+            logoMarkUrl={company?.logo_mark_url}
+            sealImageUrl={company?.seal_image_url}
+          />
+        </div>
       </div>
     </div>
   );

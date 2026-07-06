@@ -50,7 +50,7 @@ export default async function EditSalePage({
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">매출 거래 수정</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">매출 거래 수정</h1>
       <NewSaleForm
         customers={customers ?? []}
         products={products ?? []}

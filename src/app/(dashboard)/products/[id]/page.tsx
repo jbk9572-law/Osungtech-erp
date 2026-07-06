@@ -24,26 +24,30 @@ export default async function ProductDetailPage({
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold text-gray-900">{product.name}</h1>
-      <p className="mb-6 text-sm text-gray-500">{product.sku}</p>
+      <h1 className="mb-1 text-lg font-bold text-[#1c1c1c]">{product.name}</h1>
+      <p className="mb-4 text-xs text-[#6b7280]">{product.sku}</p>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-700">상품 정보 수정</h2>
-          <DeleteButton
-            action={deleteProduct}
-            id={product.id}
-            confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
+      <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
+          <span className="erp-detail-tab active">상품 정보 수정</span>
+          <div style={{ margin: 4 }}>
+            <DeleteButton
+              action={deleteProduct}
+              id={product.id}
+              confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
+            />
+          </div>
+        </div>
+        <div className="erp-detail-body">
+          <ProductForm
+            action={updateProduct}
+            idFieldValue={product.id}
+            initial={product}
+            categories={categories ?? []}
+            suppliers={suppliers ?? []}
+            submitLabel="저장"
           />
         </div>
-        <ProductForm
-          action={updateProduct}
-          idFieldValue={product.id}
-          initial={product}
-          categories={categories ?? []}
-          suppliers={suppliers ?? []}
-          submitLabel="저장"
-        />
       </div>
     </div>
   );

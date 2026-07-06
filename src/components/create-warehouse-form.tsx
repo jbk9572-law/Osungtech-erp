@@ -13,19 +13,15 @@ export function CreateWarehouseForm() {
         name="name"
         placeholder="창고명"
         required
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="location"
         placeholder="위치"
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 sm:w-32"
-      >
-        {pending ? "저장 중..." : "추가"}
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        {pending ? "저장 중..." : "F7 추가"}
       </button>
       <div className="sm:col-span-3">
         <FormMessage state={state} />

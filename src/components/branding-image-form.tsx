@@ -22,9 +22,9 @@ function BrandingSlot({
   const [state, formAction, pending] = useActionState(uploadBrandingImage, undefined);
 
   return (
-    <div className="rounded-lg border border-gray-100 p-4">
-      <p className="mb-1 text-sm font-medium text-gray-900">{label}</p>
-      <p className="mb-3 text-xs text-gray-400">{description}</p>
+    <div className="rounded-sm border border-[#eef0f3] p-4">
+      <p className="mb-1 text-xs font-bold text-[#1c1c1c]">{label}</p>
+      <p className="mb-3 text-xs text-[#9aa2ad]">{description}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={currentUrl || defaultUrl} alt={label} className={`mb-3 ${previewClassName}`} />
       <form action={formAction} className="flex flex-wrap items-center gap-2">
@@ -34,13 +34,9 @@ function BrandingSlot({
           name="file"
           accept="image/*"
           required
-          className="text-xs text-gray-600 file:mr-2 file:rounded-md file:border-0 file:bg-gray-900 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+          className="text-xs text-[#6b7280] file:mr-2 file:rounded-sm file:border-0 file:bg-[#1f3b75] file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
         />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending} className="erp-btn" style={{ minWidth: 0 }}>
           {pending ? "업로드 중..." : "교체"}
         </button>
       </form>

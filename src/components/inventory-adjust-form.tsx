@@ -47,7 +47,7 @@ export function InventoryAdjustForm({
         value={warehouseId}
         onChange={(e) => setWarehouseId(e.target.value)}
         required
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-select"
       >
         <option value="" disabled>
           창고 선택
@@ -58,34 +58,37 @@ export function InventoryAdjustForm({
           </option>
         ))}
       </select>
-      <div className="flex overflow-hidden rounded-md border border-gray-300">
+      <div className="flex overflow-hidden rounded-sm border border-[#d9d9d9]">
         <button
           type="button"
           onClick={() => setDirection("increase")}
-          className={`flex-1 px-3 py-2 text-sm font-medium ${
-            direction === "increase" ? "bg-gray-900 text-white" : "bg-white text-gray-600"
-          }`}
+          className="flex-1 text-xs font-semibold"
+          style={{
+            padding: "0 10px",
+            height: 30,
+            background: direction === "increase" ? "var(--erp-primary)" : "#fff",
+            color: direction === "increase" ? "#fff" : "var(--erp-text-muted)",
+          }}
         >
           증가
         </button>
         <button
           type="button"
           onClick={() => setDirection("decrease")}
-          className={`flex-1 px-3 py-2 text-sm font-medium ${
-            direction === "decrease" ? "bg-gray-900 text-white" : "bg-white text-gray-600"
-          }`}
+          className="flex-1 text-xs font-semibold"
+          style={{
+            padding: "0 10px",
+            height: 30,
+            background: direction === "decrease" ? "var(--erp-primary)" : "#fff",
+            color: direction === "decrease" ? "#fff" : "var(--erp-text-muted)",
+          }}
         >
           차감
         </button>
       </div>
-      <NumberInput
-        value={amount}
-        onChange={setAmount}
-        placeholder="수량"
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-      />
+      <NumberInput value={amount} onChange={setAmount} placeholder="수량" className="erp-input" />
       {currentStock !== null && (
-        <p className="text-xs text-gray-500 sm:col-span-5">
+        <p className="text-xs sm:col-span-5" style={{ color: "var(--erp-text-muted)" }}>
           현재 재고: {currentStock.toLocaleString()}개 → 조정 후:{" "}
           {(currentStock + signedQuantity).toLocaleString()}개
         </p>
@@ -93,14 +96,10 @@ export function InventoryAdjustForm({
       <input
         name="note"
         placeholder="사유 (예: 기초재고, 실사 조정)"
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm sm:col-span-4"
+        className="erp-input sm:col-span-4"
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
-      >
-        {pending ? "저장 중..." : "재고 조정 등록"}
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
+        {pending ? "저장 중..." : "F7 재고 조정 등록"}
       </button>
       <div className="sm:col-span-5">
         <FormMessage state={state} />

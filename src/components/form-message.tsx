@@ -5,9 +5,12 @@ export function FormMessage({ state }: { state: FormState }) {
 
   return (
     <p
-      className={`rounded-md px-3 py-2 text-sm ${
-        state.error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
-      }`}
+      className="rounded-sm px-3 py-2 text-xs font-medium"
+      style={
+        state.error
+          ? { background: "#fdeaec", color: "#dc3545" }
+          : { background: "#e7f6ea", color: "#28a745" }
+      }
     >
       {state.error ?? state.success}
     </p>

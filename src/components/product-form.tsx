@@ -43,19 +43,19 @@ export function ProductForm({
         placeholder="SKU"
         required
         defaultValue={initial?.sku ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="name"
         placeholder="상품명"
         required
         defaultValue={initial?.name ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <select
         name="category_id"
         defaultValue={initial?.category_id ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       >
         <option value="">카테고리 선택</option>
         {categories.map((category) => (
@@ -67,7 +67,7 @@ export function ProductForm({
       <select
         name="supplier_id"
         defaultValue={initial?.supplier_id ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       >
         <option value="">공급업체 선택</option>
         {suppliers.map((supplier) => (
@@ -80,7 +80,7 @@ export function ProductForm({
         name="unit"
         placeholder="단위 (ea)"
         defaultValue={initial?.unit ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="price"
@@ -88,7 +88,7 @@ export function ProductForm({
         type="number"
         step="0.01"
         defaultValue={initial?.price ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="cost"
@@ -96,21 +96,17 @@ export function ProductForm({
         type="number"
         step="0.01"
         defaultValue={initial?.cost ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
       <input
         name="reorder_point"
         placeholder="재주문 기준 수량"
         type="number"
         defaultValue={initial?.reorder_point ?? ""}
-        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input"
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 sm:col-span-4 sm:w-32"
-      >
-        {pending ? "저장 중..." : submitLabel}
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-4">
+        {pending ? "저장 중..." : `F7 ${submitLabel}`}
       </button>
       <div className="sm:col-span-4">
         <FormMessage state={state} />

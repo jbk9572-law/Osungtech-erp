@@ -273,20 +273,19 @@ function NoteForm({ dateStr, initialContent }: { dateStr: string; initialContent
   return (
     <form action={formAction} key={dateStr} className="space-y-2">
       <input type="hidden" name="note_date" value={dateStr} />
-      <label className="block text-xs font-medium text-gray-500">메모</label>
+      <label className="block text-xs font-medium" style={{ color: "var(--erp-text-muted)" }}>
+        메모
+      </label>
       <textarea
         name="content"
         defaultValue={initialContent}
         rows={4}
         placeholder="이 날짜에 대한 메모를 남겨보세요"
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        className="erp-input w-full"
+        style={{ height: "auto" }}
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700 disabled:opacity-50"
-      >
-        {pending ? "저장 중..." : "메모 저장"}
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        {pending ? "저장 중..." : "F7 메모 저장"}
       </button>
       <FormMessage state={state} />
     </form>
