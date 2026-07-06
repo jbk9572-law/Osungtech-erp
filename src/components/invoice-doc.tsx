@@ -27,12 +27,13 @@ const COLOR_HEX = {
   red: "#FF0000",
 };
 
-// 원본 엑셀(34개 열)의 실제 열 너비(문자 단위 * 7px) 비율을 유지하면서 실제 인쇄 크기에 맞게 확대한 값
+// 원본 엑셀(34개 열)의 실제 열 너비 비율을 그대로 유지한 채 %로 변환한 값.
+// 고정 px가 아니라 %로 두어야 인쇄 시 A4 용지 폭을 실제로 꽉 채운다.
 const COL_WIDTHS = [
-  25, 25, 25, 25, 25, 25, 25, 31, 25, 25, 31, 25, 25, 25, 25, 22, 32, 22, 22, 22, 22, 22, 22, 22,
-  22, 64, 46, 22, 22, 15, 22, 25, 22, 42,
+  3.2821, 3.2821, 2.7821, 2.7821, 2.7821, 2.7821, 2.7821, 3.4003, 2.7821, 2.7821, 3.4003, 2.7821,
+  2.7821, 2.7821, 2.7821, 2.473, 3.5549, 2.473, 2.473, 2.473, 2.473, 2.473, 2.473, 2.473, 2.473,
+  6.1097, 5.1005, 2.473, 2.473, 1.7002, 2.473, 2.7821, 2.473, 4.6368,
 ];
-const TOTAL_WIDTH = COL_WIDTHS.reduce((a, b) => a + b, 0);
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -62,7 +63,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden text-ellipsis break-words border border-current px-[4px] py-[2px] text-left align-middle font-normal ${className}`}
+      className={`overflow-hidden text-ellipsis break-words border border-current px-[5px] py-[1.5px] text-left align-middle font-normal ${className}`}
     >
       {children}
     </Tag>
@@ -101,19 +102,16 @@ export function InvoiceDoc({
 
   return (
     <div className="break-inside-avoid" style={colorStyle}>
-      <table
-        className="table-fixed border-collapse text-[11px] leading-tight"
-        style={{ width: `${TOTAL_WIDTH}px` }}
-      >
+      <table className="w-full table-fixed border-collapse text-[12px] leading-tight">
         <colgroup>
           {COL_WIDTHS.map((w, i) => (
-            <col key={i} style={{ width: `${w}px` }} />
+            <col key={i} style={{ width: `${w}%` }} />
           ))}
         </colgroup>
         <tbody>
           {/* title row */}
           <tr>
-            <Cell colSpan={9} className="text-center text-[13px] font-bold tracking-[0.25em]">
+            <Cell colSpan={9} className="text-center text-[17px] font-bold tracking-[0.2em]">
               거래명세표
             </Cell>
             <Cell colSpan={4} className="text-center font-medium">
@@ -291,10 +289,7 @@ export function InvoiceDoc({
         </tbody>
       </table>
 
-      <div
-        className="flex justify-between px-[4px] pt-[4px] text-[11px] opacity-90"
-        style={{ width: `${TOTAL_WIDTH}px` }}
-      >
+      <div className="flex w-full justify-between px-[5px] pt-[4px] text-[12px] opacity-90">
         <span>{company?.greeting_message || ""}</span>
         <span>
           From. ☎ {company?.phone ?? "-"} Fax {company?.fax_number ?? "-"}

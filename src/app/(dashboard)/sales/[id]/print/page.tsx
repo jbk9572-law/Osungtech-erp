@@ -73,7 +73,7 @@ export default async function SalesPrintPage({
   });
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none">
       <div className="mb-4 flex justify-end print:hidden">
         <PrintButton />
       </div>
