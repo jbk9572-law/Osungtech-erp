@@ -48,19 +48,21 @@ const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
 // 품목 테이블의 모든 행(입력된 행/빈 행 포함)이 항상 같은 높이를 갖도록 고정.
 // 비어 있는 셀은 내용이 없어 줄 높이가 생기지 않아 그냥 두면 입력된 행보다
 // 얇게 찌그러지는 문제가 있어, 모든 품목 행에 동일한 높이를 강제로 지정한다.
-const ITEM_ROW_HEIGHT = "h-[19px]";
+const ITEM_ROW_HEIGHT = "h-[17px]";
 
 function Cell({
   as = "td",
   colSpan,
   rowSpan,
   className = "",
+  wrap = false,
   children,
 }: {
   as?: "td" | "th";
   colSpan?: number;
   rowSpan?: number;
   className?: string;
+  wrap?: boolean;
   children?: React.ReactNode;
 }) {
   const Tag = as;
@@ -68,7 +70,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden text-ellipsis whitespace-nowrap border border-current px-[5px] py-[1.5px] text-left align-middle font-normal ${className}`}
+      className={`overflow-hidden border border-current px-[3px] py-[1px] text-left align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>
@@ -107,7 +109,7 @@ export function InvoiceDoc({
 
   return (
     <div className="break-inside-avoid" style={colorStyle}>
-      <table className="w-full table-fixed border-collapse text-[12px] leading-tight">
+      <table className="w-full table-fixed border-collapse text-[11px] leading-tight">
         <colgroup>
           {COL_WIDTHS.map((w, i) => (
             <col key={i} style={{ width: `${w}%` }} />
@@ -116,10 +118,10 @@ export function InvoiceDoc({
         <tbody>
           {/* title row */}
           <tr>
-            <Cell colSpan={9} className="text-center text-[17px] font-bold tracking-[0.2em]">
+            <Cell colSpan={9} className="text-center text-[16px] font-bold tracking-[0.2em]">
               거래명세표
             </Cell>
-            <Cell colSpan={4} className="text-center font-medium">
+            <Cell colSpan={4} className="text-center font-medium" wrap>
               ({copyLabel})
             </Cell>
             <Cell colSpan={2}>일자</Cell>
@@ -141,7 +143,7 @@ export function InvoiceDoc({
               종사업장
             </Cell>
             <Cell colSpan={3} />
-            <Cell colSpan={1} rowSpan={2} as="th" className="text-center">
+            <Cell colSpan={1} rowSpan={2} as="th" className="text-center text-[7px] leading-none" wrap>
               공급받는자
             </Cell>
             <Cell colSpan={13} className="text-center font-semibold">
@@ -195,8 +197,8 @@ export function InvoiceDoc({
               종<br />목
             </Cell>
             <Cell colSpan={8}>{company?.business_item ?? "-"}</Cell>
-            <Cell as="th" colSpan={1}>
-              비고
+            <Cell as="th" colSpan={1} wrap>
+              비<br />고
             </Cell>
             <Cell colSpan={8} />
             <Cell as="th" colSpan={4}>
@@ -301,7 +303,7 @@ export function InvoiceDoc({
         </tbody>
       </table>
 
-      <div className="flex w-full justify-between px-[5px] pt-[4px] text-[12px] opacity-90">
+      <div className="flex w-full justify-between px-[4px] pt-[3px] text-[11px] opacity-90">
         <span>{company?.greeting_message || ""}</span>
         <span>
           From. ☎ {company?.phone ?? "-"} Fax {company?.fax_number ?? "-"}

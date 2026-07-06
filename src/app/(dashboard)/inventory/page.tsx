@@ -23,7 +23,15 @@ export default async function InventoryPage() {
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-sm font-medium text-gray-700">재고 조정 (기초재고 등록 등)</h2>
-        <InventoryAdjustForm products={products ?? []} warehouses={warehouses ?? []} />
+        <InventoryAdjustForm
+          products={products ?? []}
+          warehouses={warehouses ?? []}
+          stockLevels={(inventory ?? []).map((row) => ({
+            product_id: row.product_id,
+            warehouse_id: row.warehouse_id,
+            quantity: row.quantity,
+          }))}
+        />
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
