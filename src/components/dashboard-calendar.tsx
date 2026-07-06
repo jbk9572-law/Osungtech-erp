@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
+import { getHolidayName } from "@/lib/kr-holidays";
 
 type ItemRow = {
   partnerName: string;
@@ -82,9 +83,12 @@ export function DashboardCalendar({
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-400">
-          {WEEKDAYS.map((w) => (
-            <div key={w} className="py-1">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs">
+          {WEEKDAYS.map((w, i) => (
+            <div
+              key={w}
+              className={`py-1 ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-400"}`}
+            >
               {w}
             </div>
           ))}
@@ -99,6 +103,18 @@ export function DashboardCalendar({
               const data = dataByDate[cell.dateStr];
               const isToday = cell.dateStr === todayStr;
               const isSelected = cell.dateStr === selected;
+              const holidayName = getHolidayName(cell.dateStr);
+              const isSunday = di === 0;
+              const isSaturday = di === 6;
+              const dayColorClass = isSelected
+                ? "text-white"
+                : holidayName
+                  ? "text-red-600 font-semibold"
+                  : isSunday
+                    ? "text-red-500"
+                    : isSaturday
+                      ? "text-blue-500"
+                      : "text-gray-900";
               return (
                 <button
                   key={cell.dateStr}
@@ -108,20 +124,27 @@ export function DashboardCalendar({
                     isSelected
                       ? "border-gray-900 bg-gray-900 text-white"
                       : isToday
-                        ? "border-gray-400 bg-gray-50 text-gray-900"
-                        : "border-transparent text-gray-700 hover:bg-gray-50"
+                        ? "border-gray-400 bg-gray-50"
+                        : "border-transparent hover:bg-gray-50"
                   }`}
                 >
-                  <div>{cell.day}</div>
-                  <div className="mt-1 flex gap-0.5">
+                  <div className={dayColorClass}>{cell.day}</div>
+                  {holidayName ? (
+                    <div
+                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-red-500"}`}
+                    >
+                      {holidayName}
+                    </div>
+                  ) : null}
+                  <div className="mt-0.5 flex gap-0.5">
                     {data?.salesCount ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-green-500"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-red-500"}`}
                       />
                     ) : null}
                     {data?.purchaseCount ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-amber-500"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`}
                       />
                     ) : null}
                     {data?.note ? (
@@ -138,10 +161,10 @@ export function DashboardCalendar({
 
         <div className="mt-3 flex gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> 매출
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> 매출
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> 매입
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> 매입
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-gray-400" /> 메모
@@ -155,18 +178,18 @@ export function DashboardCalendar({
             <h3 className="mb-3 text-sm font-semibold text-gray-900">{selected}</h3>
 
             <div className="mb-3">
-              <p className="mb-1 text-xs font-medium text-gray-500">
+              <p className="mb-1 text-xs font-bold text-red-600">
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
               {selectedData.salesItems.length > 0 && (
-                <ul className="space-y-1 text-xs text-gray-600">
+                <ul className="space-y-1 text-xs font-bold text-red-600">
                   {selectedData.salesItems.map((item, i) => (
                     <li key={i} className="flex items-baseline justify-between gap-2">
                       <span className="min-w-0 truncate">
-                        <span className="text-gray-900">{item.partnerName}</span>
-                        <span className="text-gray-400"> · </span>
+                        {item.partnerName}
+                        <span className="text-red-300"> · </span>
                         {item.productName}
-                        <span className="text-gray-400">
+                        <span className="text-red-300">
                           {" "}
                           ({item.quantity}
                           {item.unit})
@@ -180,18 +203,18 @@ export function DashboardCalendar({
             </div>
 
             <div className="mb-4">
-              <p className="mb-1 text-xs font-medium text-gray-500">
+              <p className="mb-1 text-xs font-bold text-blue-600">
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
               {selectedData.purchaseItems.length > 0 && (
-                <ul className="space-y-1 text-xs text-gray-600">
+                <ul className="space-y-1 text-xs font-bold text-blue-600">
                   {selectedData.purchaseItems.map((item, i) => (
                     <li key={i} className="flex items-baseline justify-between gap-2">
                       <span className="min-w-0 truncate">
-                        <span className="text-gray-900">{item.partnerName}</span>
-                        <span className="text-gray-400"> · </span>
+                        {item.partnerName}
+                        <span className="text-blue-300"> · </span>
                         {item.productName}
-                        <span className="text-gray-400">
+                        <span className="text-blue-300">
                           {" "}
                           ({item.quantity}
                           {item.unit})
