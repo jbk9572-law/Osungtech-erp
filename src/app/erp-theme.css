@@ -1,0 +1,617 @@
+/* NEST ERP 데스크톱 디자인 시스템 — .erp 스코프 안에서만 적용된다.
+   로그인/인쇄(print) 라우트는 이 테마의 영향을 받지 않는다. */
+
+.erp {
+  --erp-primary: #1f3b75;
+  --erp-primary-dark: #142a56;
+  --erp-border: #d9d9d9;
+  --erp-hover: #f3f7fc;
+  --erp-selected: #ddebff;
+  --erp-success: #28a745;
+  --erp-warning: #ff9800;
+  --erp-danger: #dc3545;
+  --erp-text: #1c1c1c;
+  --erp-text-muted: #6b7280;
+  --erp-bg: #eef1f5;
+  --erp-panel: #ffffff;
+
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--erp-bg);
+  color: var(--erp-text);
+  font-family: "Malgun Gothic", "Segoe UI", -apple-system, sans-serif;
+  font-size: 13px;
+}
+
+.erp * {
+  box-sizing: border-box;
+}
+
+.erp button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ── 1. Title Bar (40px) ───────────────────────────────────── */
+.erp-titlebar {
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--erp-primary);
+  color: #fff;
+  padding: 0 12px;
+}
+
+.erp-titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.erp-titlebar-logo {
+  height: 20px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
+.erp-titlebar-name {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.erp-titlebar-menu {
+  font-size: 12px;
+  color: #cfe0ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.erp-titlebar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #dbe6f9;
+}
+
+.erp-titlebar-right button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+
+.erp-titlebar-right button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ── 2. Ribbon (40px) ──────────────────────────────────────── */
+.erp-ribbon {
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f7f9fc;
+  border-bottom: 1px solid var(--erp-border);
+  padding: 0 10px;
+}
+
+.erp-ribbon-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-size: 12px;
+  color: var(--erp-text);
+}
+
+.erp-ribbon-btn:hover {
+  background: var(--erp-hover);
+  border-color: var(--erp-border);
+}
+
+/* ── Body split: tree / workspace ─────────────────────────── */
+.erp-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* ── 3. Left Tree Menu ─────────────────────────────────────── */
+.erp-tree {
+  flex: 0 0 240px;
+  width: 240px;
+  background: var(--erp-panel);
+  border-right: 1px solid var(--erp-border);
+  overflow-y: auto;
+  transition: width 0.15s ease, flex-basis 0.15s ease;
+}
+
+.erp-tree.collapsed {
+  flex-basis: 60px;
+  width: 60px;
+}
+
+.erp-tree-toggle {
+  width: 100%;
+  height: 32px;
+  border: none;
+  border-bottom: 1px solid var(--erp-border);
+  background: #fafbfc;
+  color: var(--erp-text-muted);
+  font-size: 12px;
+}
+
+.erp-tree-group {
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.erp-tree-group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  background: none;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--erp-text);
+  text-align: left;
+}
+
+.erp-tree-group-label:hover {
+  background: var(--erp-hover);
+}
+
+.erp-tree-group-label.disabled {
+  color: #b7bec9;
+  cursor: default;
+}
+
+.erp-tree-caret {
+  font-size: 9px;
+  width: 10px;
+  color: var(--erp-text-muted);
+}
+
+.erp-tree-children {
+  display: flex;
+  flex-direction: column;
+}
+
+.erp-tree-item {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px 0 28px;
+  font-size: 12.5px;
+  color: var(--erp-text);
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  text-decoration: none;
+}
+
+.erp-tree-item:hover {
+  background: var(--erp-hover);
+}
+
+.erp-tree-item.active {
+  background: var(--erp-selected);
+  color: var(--erp-primary);
+  font-weight: 600;
+}
+
+.erp-tree-item.disabled {
+  color: #c3c9d1;
+  cursor: default;
+}
+
+.erp-tree-item.disabled:hover {
+  background: none;
+}
+
+.erp-tree-badge {
+  margin-left: auto;
+  font-size: 9px;
+  color: #9aa2ad;
+  border: 1px solid #d9dee5;
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+/* ── Workspace (right of tree) ────────────────────────────── */
+.erp-workspace {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── Tab bar ───────────────────────────────────────────────── */
+.erp-tabbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 34px;
+  flex: 0 0 34px;
+  background: #e4e8ee;
+  padding: 4px 8px 0;
+  overflow-x: auto;
+}
+
+.erp-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px 0 14px;
+  background: #d3d9e1;
+  color: var(--erp-text-muted);
+  font-size: 12.5px;
+  border-radius: 3px 3px 0 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.erp-tab.active {
+  background: var(--erp-panel);
+  color: var(--erp-primary);
+  font-weight: 600;
+}
+
+.erp-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  font-size: 12px;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.erp-tab-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  opacity: 1;
+}
+
+/* ── Page container ───────────────────────────────────────── */
+.erp-page {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--erp-panel);
+  padding: 16px;
+}
+
+/* ── 4. Search / filter panel ──────────────────────────────── */
+.erp-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 12px;
+  background: #fafbfc;
+  border: 1px solid var(--erp-border);
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.erp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.erp-field label {
+  font-size: 11.5px;
+  color: var(--erp-text-muted);
+}
+
+.erp-input,
+.erp-select {
+  height: 30px;
+  border: 1px solid var(--erp-border);
+  border-radius: 2px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  background: #fff;
+  color: var(--erp-text);
+}
+
+.erp-input:focus,
+.erp-select:focus {
+  outline: none;
+  border-color: var(--erp-primary);
+}
+
+/* ── 5. Toolbar buttons ────────────────────────────────────── */
+.erp-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.erp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 32px;
+  min-width: 90px;
+  padding: 0 12px;
+  border-radius: 2px;
+  border: 1px solid var(--erp-border);
+  background: #fff;
+  color: var(--erp-text);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.erp-btn:hover {
+  background: var(--erp-hover);
+}
+
+.erp-btn:disabled {
+  color: #b9bfc8;
+  cursor: not-allowed;
+  background: #f5f6f8;
+}
+
+.erp-btn-primary {
+  background: var(--erp-primary);
+  border-color: var(--erp-primary);
+  color: #fff;
+}
+
+.erp-btn-primary:hover {
+  background: var(--erp-primary-dark);
+}
+
+.erp-btn-danger {
+  background: var(--erp-danger);
+  border-color: var(--erp-danger);
+  color: #fff;
+}
+
+.erp-btn-danger:hover {
+  background: #c22636;
+}
+
+/* ── 6. Data grid ──────────────────────────────────────────── */
+.erp-grid-wrap {
+  border: 1px solid var(--erp-border);
+  border-radius: 2px;
+  overflow: auto;
+}
+
+.erp-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.erp-grid thead th {
+  height: 32px;
+  background: #eef1f5;
+  color: var(--erp-text);
+  font-weight: 700;
+  text-align: left;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--erp-border);
+  white-space: nowrap;
+}
+
+.erp-grid tbody td {
+  height: 30px;
+  padding: 0 10px;
+  border-bottom: 1px solid #eef0f3;
+  white-space: nowrap;
+  color: var(--erp-text);
+}
+
+.erp-grid tbody tr {
+  cursor: pointer;
+}
+
+.erp-grid tbody tr:hover {
+  background: var(--erp-hover);
+}
+
+.erp-grid tbody tr.selected {
+  background: var(--erp-selected);
+}
+
+.erp-grid .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-grid-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--erp-text-muted);
+}
+
+/* ── Status badges ─────────────────────────────────────────── */
+.erp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.erp-badge-success {
+  background: #e7f6ea;
+  color: var(--erp-success);
+}
+
+.erp-badge-warning {
+  background: #fff3e0;
+  color: var(--erp-warning);
+}
+
+.erp-badge-danger {
+  background: #fdeaec;
+  color: var(--erp-danger);
+}
+
+.erp-badge-muted {
+  background: #eef0f3;
+  color: var(--erp-text-muted);
+}
+
+/* ── 7. Detail panel ───────────────────────────────────────── */
+.erp-detail {
+  margin-top: 10px;
+  border: 1px solid var(--erp-border);
+  border-radius: 2px;
+}
+
+.erp-detail-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--erp-border);
+  background: #fafbfc;
+}
+
+.erp-detail-tab {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  color: var(--erp-text-muted);
+  background: none;
+  border: none;
+  border-right: 1px solid var(--erp-border);
+}
+
+.erp-detail-tab.active {
+  background: #fff;
+  color: var(--erp-primary);
+  font-weight: 600;
+}
+
+.erp-detail-body {
+  padding: 14px;
+}
+
+/* ── 8. Status bar ─────────────────────────────────────────── */
+.erp-statusbar {
+  height: 26px;
+  flex: 0 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: #f0f2f5;
+  border-top: 1px solid var(--erp-border);
+  font-size: 11px;
+  color: var(--erp-text-muted);
+}
+
+.erp-statusbar span {
+  white-space: nowrap;
+}
+
+.erp-statusbar .sep {
+  color: #d0d5db;
+}
+
+/* ── Home Workspace ────────────────────────────────────────── */
+.erp-home {
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .erp-home {
+    grid-template-columns: 1fr;
+  }
+}
+
+.erp-home-panel {
+  border: 1px solid var(--erp-border);
+  border-radius: 2px;
+  background: #fff;
+}
+
+.erp-home-panel-title {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: #eef1f5;
+  border-bottom: 1px solid var(--erp-border);
+}
+
+.erp-home-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f2f5;
+  font-size: 12.5px;
+}
+
+.erp-home-stat-row:last-child {
+  border-bottom: none;
+}
+
+.erp-home-stat-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-home-list {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.erp-home-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--erp-text);
+  border: 1px solid #f0f2f5;
+}
+
+.erp-home-list-item:hover {
+  background: var(--erp-hover);
+}
+
+.erp-home-empty {
+  padding: 16px 10px;
+  color: var(--erp-text-muted);
+  font-size: 12px;
+}

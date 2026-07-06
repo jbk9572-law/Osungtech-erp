@@ -27,12 +27,8 @@ export function DeleteButton({
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-      >
-        {pending ? "삭제 중..." : label}
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-danger">
+        {pending ? "삭제 중..." : `F6 ${label}`}
       </button>
       <FormMessage state={state} />
     </form>

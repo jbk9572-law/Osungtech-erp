@@ -1,61 +1,128 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { login } from "./actions";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, undefined);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(false);
+  const [savedEmail, setSavedEmail] = useState("");
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("nest-erp-remember-email");
+    if (stored) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
+      setSavedEmail(stored);
+      setRememberEmail(true);
+    }
+  }, []);
+
+  function handleSubmit(formData: FormData) {
+    const email = String(formData.get("email") ?? "");
+    if (rememberEmail) {
+      window.localStorage.setItem("nest-erp-remember-email", email);
+    } else {
+      window.localStorage.removeItem("nest-erp-remember-email");
+    }
+    formAction(formData);
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-1 text-xl font-semibold text-gray-900">Osungtech ERP</h1>
-        <p className="mb-6 text-sm text-gray-500">재고관리 시스템에 로그인하세요.</p>
-
-        <form action={formAction} className="space-y-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#eef1f5] px-4">
+      <div className="flex h-[420px] w-[640px] max-w-full overflow-hidden rounded-sm border border-[#d9d9d9] bg-white shadow-sm">
+        <div className="flex w-[260px] flex-col justify-between bg-[#1f3b75] p-7 text-white">
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
-              이메일
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/branding/logo-mark.png"
+              alt=""
+              className="h-12 w-12 rounded bg-white/10 object-contain p-1"
             />
+            <h1 className="mt-4 text-lg font-bold tracking-tight">NEST ERP</h1>
+            <p className="mt-2 text-xs leading-relaxed text-[#cfe0ff]">
+              Integrated Business
+              <br />
+              Management Platform
+            </p>
           </div>
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
-              비밀번호
+          <div className="text-[10px] text-[#9fb6de]">
+            <p>Version 1.0</p>
+            <p className="mt-1">&copy; {new Date().getFullYear()} 오성테크</p>
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col justify-between p-7">
+          <form action={handleSubmit} className="flex flex-1 flex-col justify-center gap-3">
+            <div>
+              <label htmlFor="email" className="mb-1 block text-xs font-medium text-[#6b7280]">
+                아이디 (이메일)
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                defaultValue={savedEmail}
+                className="h-[30px] w-full rounded-sm border border-[#d9d9d9] px-2.5 text-sm focus:border-[#1f3b75] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="mb-1 block text-xs font-medium text-[#6b7280]">
+                비밀번호
+              </label>
+              <div className="flex items-stretch gap-1">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="h-[30px] w-full rounded-sm border border-[#d9d9d9] px-2.5 text-sm focus:border-[#1f3b75] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="shrink-0 rounded-sm border border-[#d9d9d9] px-2 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+                >
+                  {showPassword ? "숨김" : "표시"}
+                </button>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-1.5 text-xs text-[#6b7280]">
+              <input
+                type="checkbox"
+                checked={rememberEmail}
+                onChange={(e) => setRememberEmail(e.target.checked)}
+              />
+              아이디 저장
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
-            />
+
+            {state?.error && <p className="text-xs text-[#dc3545]">{state.error}</p>}
+
+            <button
+              type="submit"
+              disabled={pending}
+              className="h-10 w-full rounded-sm bg-[#1f3b75] text-sm font-semibold text-white hover:bg-[#142a56] disabled:opacity-50"
+            >
+              {pending ? "로그인 중..." : "로그인"}
+            </button>
+
+            <p className="text-center text-xs text-[#6b7280]">
+              계정이 없으신가요?{" "}
+              <Link href="/signup" className="font-medium text-[#1f3b75] hover:underline">
+                회원가입
+              </Link>
+            </p>
+          </form>
+
+          <div className="flex justify-between border-t border-[#f0f2f5] pt-2 text-[10px] text-[#9aa2ad]">
+            <span>서버: Production</span>
+            <span>DB: 연결됨</span>
+            <span>NEST ERP v1.0</span>
           </div>
-
-          {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-
-          <button
-            type="submit"
-            disabled={pending}
-            className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
-          >
-            {pending ? "로그인 중..." : "로그인"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-gray-500">
-          계정이 없으신가요?{" "}
-          <Link href="/signup" className="font-medium text-gray-900 hover:underline">
-            회원가입
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

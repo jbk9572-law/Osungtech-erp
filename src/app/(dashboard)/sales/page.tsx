@@ -45,113 +45,87 @@ export default async function SalesPage({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">매출</h1>
-        <Link
-          href="/sales/new"
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-        >
-          새 거래 등록
-        </Link>
-      </div>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">영업관리 &gt; 수주관리</h1>
 
-      <form
-        method="get"
-        className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-      >
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">시작일</label>
-          <input
-            type="date"
-            name="from"
-            defaultValue={from ?? ""}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-          />
+      <form method="get" className="erp-search">
+        <div className="erp-field">
+          <label>시작일</label>
+          <input type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
         </div>
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">종료일</label>
-          <input
-            type="date"
-            name="to"
-            defaultValue={to ?? ""}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-          />
+        <div className="erp-field">
+          <label>종료일</label>
+          <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
-        <div className="min-w-[160px] flex-1">
-          <label className="mb-1 block text-xs text-gray-500">거래처 / 상품 검색</label>
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label>거래처 / 상품 검색</label>
           <input
             type="text"
             name="q"
             defaultValue={q ?? ""}
             placeholder="거래처명, 상품명, SKU"
-            className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            className="erp-input"
+            style={{ width: "100%" }}
           />
         </div>
-        <button
-          type="submit"
-          className="rounded-md bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-700"
-        >
-          검색
+        <button type="submit" className="erp-btn erp-btn-primary">
+          F5 조회
         </button>
         {(from || to || q) && (
-          <Link
-            href="/sales"
-            className="rounded-md border border-gray-300 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
-          >
+          <Link href="/sales" className="erp-btn">
             초기화
           </Link>
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+      <div className="erp-toolbar">
+        <Link href="/sales/new" className="erp-btn erp-btn-primary">
+          F2 신규
+        </Link>
+        <button type="button" className="erp-btn" disabled>
+          F8 엑셀
+        </button>
+        <Link href="/dashboard" className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
+
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
             <tr>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">거래일자</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">거래처</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">품목명</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">규격</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">수량</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">단가</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">공급가액</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">세액</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium" />
+              <th>거래일자</th>
+              <th>거래처</th>
+              <th>품목명</th>
+              <th>규격</th>
+              <th className="num">수량</th>
+              <th className="num">단가</th>
+              <th className="num">공급가액</th>
+              <th className="num">세액</th>
+              <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {rows.map((item) => {
               const order = item.sales_orders;
               return (
                 <ClickableRow key={item.id} href={order ? `/sales/${order.id}` : "#"}>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                    {order ? new Date(order.order_date).toLocaleDateString("ko-KR") : "-"}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-900">
-                    {order?.customers?.name}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-900">
-                    {item.products?.name}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                    {item.products?.unit}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-900">
-                    {item.quantity}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-500">
+                  <td>{order ? new Date(order.order_date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td>{order?.customers?.name}</td>
+                  <td>{item.products?.name}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.unit}</td>
+                  <td className="num">{item.quantity}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(item.unit_price).toLocaleString()}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-900">
-                    {item.supplyAmount.toLocaleString()}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-500">
+                  <td className="num">{item.supplyAmount.toLocaleString()}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {item.taxAmount.toLocaleString()}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                  <td className="num">
                     {order && (
                       <Link
                         href={`/sales/${order.id}/print`}
-                        className="text-sm font-medium text-gray-900 hover:underline"
+                        style={{ color: "var(--erp-primary)", fontWeight: 600 }}
                       >
                         명세표 →
                       </Link>
@@ -162,7 +136,7 @@ export default async function SalesPage({
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={9} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -170,19 +144,13 @@ export default async function SalesPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr className="border-t border-gray-300 bg-gray-50 font-semibold text-gray-900">
-                <td colSpan={4} className="whitespace-nowrap px-4 py-3">
-                  합계 ({rows.length}건)
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right">{totalQuantity}</td>
-                <td className="px-4 py-3" />
-                <td className="whitespace-nowrap px-4 py-3 text-right">
-                  {totalSupply.toLocaleString()}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right">
-                  {totalTax.toLocaleString()}
-                </td>
-                <td className="px-4 py-3" />
+              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
+                <td colSpan={4}>합계 ({rows.length}건)</td>
+                <td className="num">{totalQuantity}</td>
+                <td />
+                <td className="num">{totalSupply.toLocaleString()}</td>
+                <td className="num">{totalTax.toLocaleString()}</td>
+                <td />
               </tr>
             </tfoot>
           )}

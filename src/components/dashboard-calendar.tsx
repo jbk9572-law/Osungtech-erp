@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 import { getHolidayName } from "@/lib/kr-holidays";
@@ -37,6 +38,7 @@ export function DashboardCalendar({
   prevMonthHref,
   nextMonthHref,
   backgroundLogoUrl,
+  lowStockToday,
 }: {
   year: number;
   month: number;
@@ -46,7 +48,9 @@ export function DashboardCalendar({
   prevMonthHref: string;
   nextMonthHref: string;
   backgroundLogoUrl?: string | null;
+  lowStockToday?: boolean;
 }) {
+  const router = useRouter();
   const defaultSelected = dataByDate[todayStr] !== undefined || weeks.some((w) => w.some((c) => c?.dateStr === todayStr))
     ? todayStr
     : null;
@@ -63,29 +67,29 @@ export function DashboardCalendar({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-      <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_300px]">
+      <div className="relative overflow-hidden rounded-sm border border-[#d9d9d9] bg-white p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={backgroundLogoUrl || "/branding/logo-mark.png"}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.06]"
+          className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.05]"
         />
         <div className="relative mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900">
+          <h2 className="text-sm font-bold text-[#1c1c1c]">
             {year}년 {month}월
           </h2>
           <div className="flex gap-1">
             <Link
               href={prevMonthHref}
-              className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
             >
               ← 이전달
             </Link>
             <Link
               href={nextMonthHref}
-              className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
             >
               다음달 →
             </Link>
@@ -96,18 +100,18 @@ export function DashboardCalendar({
           {WEEKDAYS.map((w, i) => (
             <div
               key={w}
-              className={`py-1 ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-400"}`}
+              className={`py-1 ${i === 0 ? "text-[#dc3545]" : i === 6 ? "text-[#1f3b75]" : "text-[#9aa2ad]"}`}
             >
               {w}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="relative grid grid-cols-7 gap-1">
           {weeks.map((week, wi) =>
             week.map((cell, di) => {
               if (!cell) {
-                return <div key={`${wi}-${di}`} className="aspect-square rounded-md" />;
+                return <div key={`${wi}-${di}`} className="aspect-square rounded-sm" />;
               }
               const data = dataByDate[cell.dateStr];
               const isToday = cell.dateStr === todayStr;
@@ -118,47 +122,61 @@ export function DashboardCalendar({
               const dayColorClass = isSelected
                 ? "text-white"
                 : holidayName
-                  ? "text-red-600 font-semibold"
+                  ? "text-[#dc3545] font-semibold"
                   : isSunday
-                    ? "text-red-500"
+                    ? "text-[#dc3545]"
                     : isSaturday
-                      ? "text-blue-500"
-                      : "text-gray-900";
+                      ? "text-[#1f3b75]"
+                      : "text-[#1c1c1c]";
+              const showLowStockDot = isToday && lowStockToday;
+              const tooltipParts = [
+                data?.salesCount ? `매출 ${data.salesCount}건` : null,
+                data?.purchaseCount ? `매입 ${data.purchaseCount}건` : null,
+                data?.note ? "메모 있음" : null,
+                showLowStockDot ? "안전재고 부족" : null,
+              ].filter(Boolean);
               return (
                 <button
                   key={cell.dateStr}
                   type="button"
+                  title={tooltipParts.length ? tooltipParts.join(" · ") : undefined}
                   onClick={() => setSelected(cell.dateStr)}
-                  className={`aspect-square rounded-md border p-1 text-left text-xs transition-colors ${
+                  onDoubleClick={() => router.push(`/sales?from=${cell.dateStr}&to=${cell.dateStr}`)}
+                  className={`aspect-square rounded-sm border p-1 text-left text-xs transition-colors ${
                     isSelected
-                      ? "border-gray-900 bg-gray-900 text-white"
+                      ? "border-[#1f3b75] bg-[#1f3b75] text-white"
                       : isToday
-                        ? "border-gray-400 bg-gray-50"
-                        : "border-transparent hover:bg-gray-50"
+                        ? "border-[#1f3b75] bg-[#ddebff]"
+                        : "border-transparent hover:bg-[#f3f7fc]"
                   }`}
                 >
                   <div className={dayColorClass}>{cell.day}</div>
                   {holidayName ? (
                     <div
-                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-red-500"}`}
+                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-[#dc3545]"}`}
                     >
                       {holidayName}
                     </div>
                   ) : null}
                   <div className="mt-0.5 flex gap-0.5">
-                    {data?.salesCount ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-red-500"}`}
-                      />
-                    ) : null}
                     {data?.purchaseCount ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#28a745]"}`}
+                      />
+                    ) : null}
+                    {data?.salesCount ? (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#1f3b75]"}`}
                       />
                     ) : null}
                     {data?.note ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-gray-400"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#ff9800]"}`}
+                      />
+                    ) : null}
+                    {showLowStockDot ? (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#dc3545]"}`}
                       />
                     ) : null}
                   </div>
@@ -168,37 +186,40 @@ export function DashboardCalendar({
           )}
         </div>
 
-        <div className="mt-3 flex gap-4 text-xs text-gray-500">
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6b7280]">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> 매출
+            <span className="h-1.5 w-1.5 rounded-full bg-[#28a745]" /> 매입
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> 매입
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1f3b75]" /> 매출
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-gray-400" /> 메모
+            <span className="h-1.5 w-1.5 rounded-full bg-[#ff9800]" /> 메모
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#dc3545]" /> 재고부족
           </span>
         </div>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="rounded-sm border border-[#d9d9d9] bg-white p-4">
         {selected ? (
           <>
-            <h3 className="mb-3 text-sm font-semibold text-gray-900">{selected}</h3>
+            <h3 className="mb-3 text-sm font-bold text-[#1c1c1c]">{selected} 오늘의 업무</h3>
 
             <div className="mb-3">
-              <p className="mb-1 text-xs font-bold text-red-600">
+              <p className="mb-1 text-xs font-bold text-[#1f3b75]">
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
               {selectedData.salesItems.length > 0 && (
-                <ul className="space-y-1 text-xs font-bold text-red-600">
+                <ul className="space-y-1 text-xs font-medium text-[#1f3b75]">
                   {selectedData.salesItems.map((item, i) => (
                     <li key={i} className="flex items-baseline justify-between gap-2">
                       <span className="min-w-0 truncate">
                         {item.partnerName}
-                        <span className="text-red-300"> · </span>
+                        <span className="text-[#8ea3c9]"> · </span>
                         {item.productName}
-                        <span className="text-red-300">
+                        <span className="text-[#8ea3c9]">
                           {" "}
                           ({item.quantity}
                           {item.unit})
@@ -212,18 +233,18 @@ export function DashboardCalendar({
             </div>
 
             <div className="mb-4">
-              <p className="mb-1 text-xs font-bold text-blue-600">
+              <p className="mb-1 text-xs font-bold text-[#28a745]">
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
               {selectedData.purchaseItems.length > 0 && (
-                <ul className="space-y-1 text-xs font-bold text-blue-600">
+                <ul className="space-y-1 text-xs font-medium text-[#28a745]">
                   {selectedData.purchaseItems.map((item, i) => (
                     <li key={i} className="flex items-baseline justify-between gap-2">
                       <span className="min-w-0 truncate">
                         {item.partnerName}
-                        <span className="text-blue-300"> · </span>
+                        <span className="text-[#8fcb9d]"> · </span>
                         {item.productName}
-                        <span className="text-blue-300">
+                        <span className="text-[#8fcb9d]">
                           {" "}
                           ({item.quantity}
                           {item.unit})
@@ -239,7 +260,7 @@ export function DashboardCalendar({
             <NoteForm dateStr={selected} initialContent={selectedData.note} />
           </>
         ) : (
-          <p className="text-sm text-gray-400">날짜를 선택해주세요.</p>
+          <p className="text-sm text-[#9aa2ad]">날짜를 선택해주세요.</p>
         )}
       </div>
     </div>

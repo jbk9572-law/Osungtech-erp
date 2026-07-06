@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
+import { ErpShell } from "@/components/erp/erp-shell";
+import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
   children,
@@ -19,17 +19,17 @@ export default async function DashboardLayout({
 
   const { data: company } = await supabase
     .from("company_profile")
-    .select("logo_wordmark_url")
+    .select("name, logo_mark_url")
     .eq("id", 1)
     .maybeSingle();
 
   return (
-    <div className="flex min-h-screen bg-gray-50 print:block print:bg-white">
-      <Sidebar logoUrl={company?.logo_wordmark_url} />
-      <div className="flex min-w-0 flex-1 flex-col print:block">
-        <Header email={user.email ?? null} />
-        <main className="flex-1 p-6 print:p-0">{children}</main>
-      </div>
-    </div>
+    <ErpShell
+      companyName={company?.name}
+      logoUrl={company?.logo_mark_url}
+      email={user.email ?? null}
+    >
+      {children}
+    </ErpShell>
   );
 }

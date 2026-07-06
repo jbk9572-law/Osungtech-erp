@@ -11,49 +11,53 @@ export default async function CustomersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">거래처 (판매처)</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">거래처관리 &gt; 판매처관리</h1>
 
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium text-gray-700">거래처 추가</h2>
-        <CreateCustomerForm />
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">거래처 추가</span>
+        </div>
+        <div className="erp-detail-body">
+          <CreateCustomerForm />
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">거래처명</th>
-              <th className="px-4 py-3 font-medium">사업자번호</th>
-              <th className="px-4 py-3 font-medium">담당자</th>
-              <th className="px-4 py-3 font-medium">연락처</th>
-              <th className="px-4 py-3 font-medium">발행 문서</th>
-              <th className="px-4 py-3 font-medium" />
+              <th>거래처명</th>
+              <th>사업자번호</th>
+              <th>담당자</th>
+              <th>연락처</th>
+              <th>발행 문서</th>
+              <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {customers?.map((customer) => (
               <ClickableRow key={customer.id} href={`/customers/${customer.id}`}>
-                <td className="px-4 py-3 text-gray-900">{customer.name}</td>
-                <td className="px-4 py-3 text-gray-500">{customer.business_number ?? "-"}</td>
-                <td className="px-4 py-3 text-gray-500">{customer.contact_name ?? "-"}</td>
-                <td className="px-4 py-3 text-gray-500">{customer.phone ?? "-"}</td>
-                <td className="px-4 py-3">
+                <td>{customer.name}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{customer.business_number ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{customer.contact_name ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{customer.phone ?? "-"}</td>
+                <td>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      customer.document_type === "출고증"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-blue-100 text-blue-700"
+                    className={`erp-badge ${
+                      customer.document_type === "출고증" ? "erp-badge-warning" : "erp-badge-success"
                     }`}
                   >
                     {customer.document_type}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right text-gray-400">수정 →</td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  수정 →
+                </td>
               </ClickableRow>
             ))}
             {!customers?.length && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={6} className="erp-grid-empty">
                   등록된 거래처가 없습니다.
                 </td>
               </tr>

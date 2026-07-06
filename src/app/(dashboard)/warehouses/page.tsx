@@ -10,31 +10,35 @@ export default async function WarehousesPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">창고</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">거래처관리 &gt; 창고관리</h1>
 
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium text-gray-700">창고 추가</h2>
-        <CreateWarehouseForm />
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">창고 추가</span>
+        </div>
+        <div className="erp-detail-body">
+          <CreateWarehouseForm />
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">창고명</th>
-              <th className="px-4 py-3 font-medium">위치</th>
+              <th>창고명</th>
+              <th>위치</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {warehouses?.map((warehouse) => (
               <tr key={warehouse.id}>
-                <td className="px-4 py-3 text-gray-900">{warehouse.name}</td>
-                <td className="px-4 py-3 text-gray-500">{warehouse.location ?? "-"}</td>
+                <td>{warehouse.name}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{warehouse.location ?? "-"}</td>
               </tr>
             ))}
             {!warehouses?.length && (
               <tr>
-                <td colSpan={2} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={2} className="erp-grid-empty">
                   등록된 창고가 없습니다.
                 </td>
               </tr>

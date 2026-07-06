@@ -43,109 +43,83 @@ export default async function PurchasesPage({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">매입</h1>
-        <Link
-          href="/purchases/new"
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-        >
-          새 매입 등록
-        </Link>
-      </div>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">구매관리 &gt; 발주관리</h1>
 
-      <form
-        method="get"
-        className="mb-4 flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-      >
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">시작일</label>
-          <input
-            type="date"
-            name="from"
-            defaultValue={from ?? ""}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-          />
+      <form method="get" className="erp-search">
+        <div className="erp-field">
+          <label>시작일</label>
+          <input type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
         </div>
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">종료일</label>
-          <input
-            type="date"
-            name="to"
-            defaultValue={to ?? ""}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-          />
+        <div className="erp-field">
+          <label>종료일</label>
+          <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
-        <div className="min-w-[160px] flex-1">
-          <label className="mb-1 block text-xs text-gray-500">공급업체 / 상품 검색</label>
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label>공급업체 / 상품 검색</label>
           <input
             type="text"
             name="q"
             defaultValue={q ?? ""}
             placeholder="공급업체명, 상품명, SKU"
-            className="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            className="erp-input"
+            style={{ width: "100%" }}
           />
         </div>
-        <button
-          type="submit"
-          className="rounded-md bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-700"
-        >
-          검색
+        <button type="submit" className="erp-btn erp-btn-primary">
+          F5 조회
         </button>
         {(from || to || q) && (
-          <Link
-            href="/purchases"
-            className="rounded-md border border-gray-300 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
-          >
+          <Link href="/purchases" className="erp-btn">
             초기화
           </Link>
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+      <div className="erp-toolbar">
+        <Link href="/purchases/new" className="erp-btn erp-btn-primary">
+          F2 신규
+        </Link>
+        <button type="button" className="erp-btn" disabled>
+          F8 엑셀
+        </button>
+        <Link href="/dashboard" className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
+
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
             <tr>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">매입일자</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">공급업체</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">품목명</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium">규격</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">수량</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">매입단가</th>
-              <th className="whitespace-nowrap px-4 py-3 font-medium text-right">금액</th>
+              <th>매입일자</th>
+              <th>공급업체</th>
+              <th>품목명</th>
+              <th>규격</th>
+              <th className="num">수량</th>
+              <th className="num">매입단가</th>
+              <th className="num">금액</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {rows.map((item) => {
               const order = item.purchase_orders;
               return (
                 <ClickableRow key={item.id} href={order ? `/purchases/${order.id}` : "#"}>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                    {order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-900">
-                    {order?.suppliers?.name}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-900">
-                    {item.products?.name}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                    {item.products?.unit}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-900">
-                    {item.quantity}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-500">
+                  <td>{order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td>{order?.suppliers?.name}</td>
+                  <td>{item.products?.name}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.unit}</td>
+                  <td className="num">{item.quantity}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(item.unit_cost).toLocaleString()}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-gray-900">
-                    {item.amount.toLocaleString()}
-                  </td>
+                  <td className="num">{item.amount.toLocaleString()}</td>
                 </ClickableRow>
               );
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={7} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -153,15 +127,11 @@ export default async function PurchasesPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr className="border-t border-gray-300 bg-gray-50 font-semibold text-gray-900">
-                <td colSpan={4} className="whitespace-nowrap px-4 py-3">
-                  합계 ({rows.length}건)
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right">{totalQuantity}</td>
-                <td className="px-4 py-3" />
-                <td className="whitespace-nowrap px-4 py-3 text-right">
-                  {totalAmount.toLocaleString()}
-                </td>
+              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
+                <td colSpan={4}>합계 ({rows.length}건)</td>
+                <td className="num">{totalQuantity}</td>
+                <td />
+                <td className="num">{totalAmount.toLocaleString()}</td>
               </tr>
             </tfoot>
           )}

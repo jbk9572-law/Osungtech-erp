@@ -11,37 +11,43 @@ export default async function SuppliersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">공급업체</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">거래처관리 &gt; 공급처관리</h1>
 
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium text-gray-700">공급업체 추가</h2>
-        <CreateSupplierForm />
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">공급업체 추가</span>
+        </div>
+        <div className="erp-detail-body">
+          <CreateSupplierForm />
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">업체명</th>
-              <th className="px-4 py-3 font-medium">담당자</th>
-              <th className="px-4 py-3 font-medium">이메일</th>
-              <th className="px-4 py-3 font-medium">연락처</th>
-              <th className="px-4 py-3 font-medium" />
+              <th>업체명</th>
+              <th>담당자</th>
+              <th>이메일</th>
+              <th>연락처</th>
+              <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {suppliers?.map((supplier) => (
               <ClickableRow key={supplier.id} href={`/suppliers/${supplier.id}`}>
-                <td className="px-4 py-3 text-gray-900">{supplier.name}</td>
-                <td className="px-4 py-3 text-gray-500">{supplier.contact_name ?? "-"}</td>
-                <td className="px-4 py-3 text-gray-500">{supplier.email ?? "-"}</td>
-                <td className="px-4 py-3 text-gray-500">{supplier.phone ?? "-"}</td>
-                <td className="px-4 py-3 text-right text-gray-400">수정 →</td>
+                <td>{supplier.name}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.contact_name ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.email ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.phone ?? "-"}</td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  수정 →
+                </td>
               </ClickableRow>
             ))}
             {!suppliers?.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={5} className="erp-grid-empty">
                   등록된 공급업체가 없습니다.
                 </td>
               </tr>

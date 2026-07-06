@@ -15,41 +15,51 @@ export default async function ProductsPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">상품</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">품목관리</h1>
 
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-3 text-sm font-medium text-gray-700">상품 추가</h2>
-        <CreateProductForm categories={categories ?? []} suppliers={suppliers ?? []} />
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">품목 추가</span>
+        </div>
+        <div className="erp-detail-body">
+          <CreateProductForm categories={categories ?? []} suppliers={suppliers ?? []} />
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
             <tr>
-              <th className="px-4 py-3 font-medium">SKU</th>
-              <th className="px-4 py-3 font-medium">상품명</th>
-              <th className="px-4 py-3 font-medium">카테고리</th>
-              <th className="px-4 py-3 font-medium">공급업체</th>
-              <th className="px-4 py-3 font-medium">판매가</th>
-              <th className="px-4 py-3 font-medium">재주문 기준</th>
-              <th className="px-4 py-3 font-medium" />
+              <th>SKU</th>
+              <th>상품명</th>
+              <th>카테고리</th>
+              <th>공급업체</th>
+              <th className="num">판매가</th>
+              <th className="num">재주문 기준</th>
+              <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {products?.map((product) => (
               <ClickableRow key={product.id} href={`/products/${product.id}`}>
-                <td className="px-4 py-3 text-gray-900">{product.sku}</td>
-                <td className="px-4 py-3 text-gray-900">{product.name}</td>
-                <td className="px-4 py-3 text-gray-500">{product.categories?.name ?? "-"}</td>
-                <td className="px-4 py-3 text-gray-500">{product.suppliers?.name ?? "-"}</td>
-                <td className="px-4 py-3 text-gray-500">{Number(product.price).toLocaleString()}</td>
-                <td className="px-4 py-3 text-gray-500">{product.reorder_point}</td>
-                <td className="px-4 py-3 text-right text-gray-400">수정 →</td>
+                <td>{product.sku}</td>
+                <td>{product.name}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{product.categories?.name ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{product.suppliers?.name ?? "-"}</td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {Number(product.price).toLocaleString()}
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {product.reorder_point}
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  수정 →
+                </td>
               </ClickableRow>
             ))}
             {!products?.length && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={7} className="erp-grid-empty">
                   등록된 상품이 없습니다.
                 </td>
               </tr>

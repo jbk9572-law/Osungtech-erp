@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 
@@ -45,6 +46,7 @@ export default async function DashboardPage({
   const nextMonthHref = `/dashboard?month=${nextDate.getFullYear()}-${pad(nextDate.getMonth() + 1)}`;
 
   const supabase = await createClient();
+  const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
   const [
     { count: productCount },
@@ -53,7 +55,10 @@ export default async function DashboardPage({
     { data: salesItems },
     { data: purchaseItems },
     { data: notes },
+    { data: recentNotes },
     { data: company },
+    { data: todaySales },
+    { data: todayPurchases },
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase.from("inventory").select("*", { count: "exact", head: true }).lte("quantity", 0),
@@ -77,7 +82,20 @@ export default async function DashboardPage({
       .select("note_date, content")
       .gte("note_date", monthStart)
       .lte("note_date", monthEnd),
-    supabase.from("company_profile").select("logo_mark_url").eq("id", 1).maybeSingle(),
+    supabase
+      .from("calendar_notes")
+      .select("note_date, content")
+      .order("note_date", { ascending: false })
+      .limit(5),
+    supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
+    supabase
+      .from("sales_order_items")
+      .select("quantity, unit_price, sales_orders!inner(order_date)")
+      .eq("sales_orders.order_date", todayStr),
+    supabase
+      .from("purchase_order_items")
+      .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
+      .eq("purchase_orders.purchase_date", todayStr),
   ]);
 
   type ItemRow = {
@@ -150,30 +168,37 @@ export default async function DashboardPage({
   }
 
   const weeks = buildWeeks(year, month);
-  const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
-  const monthSalesTotal = Object.values(dataByDate).reduce((sum, d) => sum + d.salesTotal, 0);
-  const monthPurchaseTotal = Object.values(dataByDate).reduce((sum, d) => sum + d.purchaseTotal, 0);
+  const todaySalesTotal = (todaySales ?? []).reduce(
+    (sum, item) => sum + item.quantity * Number(item.unit_price),
+    0
+  );
+  const todayPurchaseTotal = (todayPurchases ?? []).reduce(
+    (sum, item) => sum + item.quantity * Number(item.unit_cost),
+    0
+  );
 
-  const stats = [
-    { label: "전체 상품 수", value: productCount ?? 0 },
-    { label: "재고 소진 항목", value: lowStockCount ?? 0 },
-    { label: "창고 수", value: warehouseCount ?? 0 },
-    { label: "이번달 매출", value: `${monthSalesTotal.toLocaleString()}원` },
-    { label: "이번달 매입", value: `${monthPurchaseTotal.toLocaleString()}원` },
+  const summaryRows = [
+    { label: "오늘 매출", value: `${(todaySales ?? []).length}건 · ${todaySalesTotal.toLocaleString()}원` },
+    { label: "오늘 매입", value: `${(todayPurchases ?? []).length}건 · ${todayPurchaseTotal.toLocaleString()}원` },
+    { label: "전체 품목 수", value: `${productCount ?? 0}개` },
+    { label: "안전재고 부족", value: `${lowStockCount ?? 0}건`, danger: (lowStockCount ?? 0) > 0 },
+    { label: "창고 수", value: `${warehouseCount ?? 0}개` },
   ];
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">대시보드</h1>
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <p className="text-sm text-gray-500">{stat.label}</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">{stat.value}</p>
+    <div className="erp-home">
+      <div className="erp-home-panel">
+        <div className="erp-home-panel-title">업무 요약</div>
+        {summaryRows.map((row) => (
+          <div className="erp-home-stat-row" key={row.label}>
+            <span>{row.label}</span>
+            <span
+              className="erp-home-stat-value"
+              style={row.danger ? { color: "var(--erp-danger)" } : undefined}
+            >
+              {row.value}
+            </span>
           </div>
         ))}
       </div>
@@ -187,7 +212,44 @@ export default async function DashboardPage({
         prevMonthHref={prevMonthHref}
         nextMonthHref={nextMonthHref}
         backgroundLogoUrl={company?.logo_mark_url}
+        lowStockToday={(lowStockCount ?? 0) > 0}
       />
+
+      <div className="erp-home-panel">
+        <div className="erp-home-panel-title">최근 메모</div>
+        {recentNotes?.length ? (
+          <div className="erp-home-list">
+            {recentNotes.map((note) => (
+              <div className="erp-home-list-item" key={note.note_date}>
+                <span style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                  {note.note_date}
+                </span>
+                <span className="truncate">{note.content}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="erp-home-empty">등록된 메모가 없습니다.</p>
+        )}
+
+        <div className="erp-home-panel-title" style={{ marginTop: 0 }}>
+          빠른 실행
+        </div>
+        <div className="erp-home-list">
+          <Link className="erp-home-list-item" href="/sales">
+            새 수주 등록
+          </Link>
+          <Link className="erp-home-list-item" href="/purchases">
+            새 발주 등록
+          </Link>
+          <Link className="erp-home-list-item" href="/products">
+            품목 등록
+          </Link>
+          <Link className="erp-home-list-item" href="/inventory">
+            재고 조회
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
