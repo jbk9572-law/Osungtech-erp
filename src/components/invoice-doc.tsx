@@ -48,7 +48,7 @@ const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
 // 품목 테이블의 모든 행(입력된 행/빈 행 포함)이 항상 같은 높이를 갖도록 고정.
 // 비어 있는 셀은 내용이 없어 줄 높이가 생기지 않아 그냥 두면 입력된 행보다
 // 얇게 찌그러지는 문제가 있어, 모든 품목 행에 동일한 높이를 강제로 지정한다.
-const ITEM_ROW_HEIGHT = "h-[20px]";
+const ITEM_ROW_HEIGHT = "h-[23px]";
 
 // 라벨(th)은 가운데 정렬, 값(td)은 왼쪽 정렬이 기본값 (실제 인쇄본 기준).
 // 숫자 열이나 특별히 가운데/왼쪽 정렬이 필요한 값은 align prop으로 개별 지정한다.
@@ -77,7 +77,7 @@ function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden border border-current px-[4px] py-[1.5px] ${alignClass} align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
+      className={`overflow-hidden border border-current px-[4px] py-[2.5px] ${alignClass} align-middle font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>
@@ -142,7 +142,7 @@ export function InvoiceDoc({
 
           {/* 공급자 / 종사업장 / 공급받는자 / 貴下 */}
           <tr>
-            <Cell colSpan={4} as="th">
+            <Cell colSpan={4} as="th" className="tracking-[0.3em] pl-[6px]">
               공급자
             </Cell>
             <Cell colSpan={7}>{company?.business_number ?? "-"}</Cell>
