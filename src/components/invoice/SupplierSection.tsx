@@ -43,15 +43,8 @@ export function SupplierSection({
         <Cell colSpan={5} className="font-bold text-black">
           {company?.representative_name ?? "-"}
         </Cell>
-        <Cell colSpan={2} align="center" className="relative">
+        <Cell colSpan={2} align="center">
           (인)
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={company?.seal_image_url || "/branding/company-seal.png"}
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 opacity-90 mix-blend-multiply"
-          />
         </Cell>
       </tr>
 

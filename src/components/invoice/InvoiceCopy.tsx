@@ -31,7 +31,7 @@ export function InvoiceCopy({
   const colorStyle = { color: COLOR_HEX[color], "--invoice-line": COLOR_HEX[color] } as React.CSSProperties;
 
   return (
-    <div className="break-inside-avoid" style={colorStyle}>
+    <div className="relative break-inside-avoid" style={colorStyle}>
       <table className="w-full table-fixed border-collapse text-[13px] leading-tight">
         <colgroup>
           {COL_WIDTHS.map((w, i) => (
@@ -45,6 +45,18 @@ export function InvoiceCopy({
           <SummarySection items={items} memo={memo} />
         </tbody>
       </table>
+      {/* 도장: 0707 원본에서 셀 경계에 갇히지 않고 종사업장/상호/주소 행 경계를
+          가로질러 겹쳐 찍힌다. 표 내부 셀이 아니라 표 전체를 기준으로 절대
+          위치시켜 셀의 overflow-hidden에 잘리지 않게 한다 (원본 실측: 표
+          상단에서 58px 지점, 좌측에서 43.5% 지점을 중심으로 겹침). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={company?.seal_image_url || "/branding/company-seal.png"}
+        alt=""
+        aria-hidden
+        className="pointer-events-none absolute h-[52px] w-[52px] -translate-x-1/2 opacity-90 mix-blend-multiply"
+        style={{ top: "58px", left: "43.5%" }}
+      />
       <Footer company={company} />
     </div>
   );
