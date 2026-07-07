@@ -7,9 +7,9 @@ export const DOCUMENT = {
 };
 
 export const TITLE = {
-  fontSize: 32,
+  fontSize: 27,
   fontWeight: 700,
-  letterSpacing: "0.05em",
+  letterSpacing: "0em",
 };
 
 export const HEADER = {
