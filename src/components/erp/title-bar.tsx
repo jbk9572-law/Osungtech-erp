@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 
@@ -36,9 +37,11 @@ export function TitleBar({
   return (
     <header className="erp-titlebar">
       <div className="erp-titlebar-left">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logoUrl || "/branding/logo-mark.png"} alt="" className="erp-titlebar-logo" />
-        <span className="erp-titlebar-name">{companyName || "오성테크"} ERP</span>
+        <Link href="/dashboard" className="erp-titlebar-home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoUrl || "/branding/logo-mark.png"} alt="" className="erp-titlebar-logo" />
+          <span className="erp-titlebar-name">{companyName || "오성테크"} ERP</span>
+        </Link>
         <span className="erp-titlebar-menu">{menuLabel}</span>
       </div>
       <div className="erp-titlebar-right">

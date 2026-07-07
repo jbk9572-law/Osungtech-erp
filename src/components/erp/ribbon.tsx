@@ -74,7 +74,11 @@ export function Ribbon() {
 
   return (
     <div className="erp-ribbon" ref={wrapRef}>
-      <button type="button" className="erp-ribbon-btn" onClick={() => router.refresh()}>
+      <button
+        type="button"
+        className="erp-ribbon-btn"
+        onClick={() => window.location.reload()}
+      >
         ↻ 새로고침
       </button>
 
