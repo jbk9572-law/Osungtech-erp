@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
-import { InvoiceDoc } from "@/components/invoice-doc";
-
-type Copies = "both" | "receiver" | "supplier";
+import { InvoicePage, type InvoiceCopies } from "@/components/invoice/InvoicePage";
 
 export default async function SalesPrintPage({
   params,
@@ -16,7 +14,7 @@ export default async function SalesPrintPage({
 }) {
   const { id } = await params;
   const { copies: copiesParam } = await searchParams;
-  const copies: Copies =
+  const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const supabase = await createClient();
 
@@ -83,9 +81,6 @@ export default async function SalesPrintPage({
     };
   });
 
-  const showReceiver = copies === "both" || copies === "receiver";
-  const showSupplier = copies === "both" || copies === "supplier";
-
   return (
     <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none">
       <div className="mb-4 flex items-center justify-between print:hidden">
@@ -110,43 +105,15 @@ export default async function SalesPrintPage({
         </div>
         <PrintButton />
       </div>
-      <div className="overflow-x-auto break-inside-avoid">
-        {showReceiver && (
-          <InvoiceDoc
-            copyLabel="공급받는자 보관용"
-            color="blue"
-            company={company}
-            customerName={order.customers?.name ?? ""}
-            orderDate={order.order_date}
-            docNumber={docNumber}
-            items={invoiceItems}
-            memo={order.memo}
-          />
-        )}
-        {showReceiver && showSupplier && <CutLine />}
-        {showSupplier && (
-          <InvoiceDoc
-            copyLabel="공급자 보관용"
-            color="red"
-            company={company}
-            customerName={order.customers?.name ?? ""}
-            orderDate={order.order_date}
-            docNumber={docNumber}
-            items={invoiceItems}
-            memo={order.memo}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CutLine() {
-  return (
-    <div className="my-2 flex items-center gap-2 text-[11px] text-gray-400">
-      <span className="flex-1 border-t border-dashed border-gray-400" />
-      <span>✂ 절취선 ✂</span>
-      <span className="flex-1 border-t border-dashed border-gray-400" />
+      <InvoicePage
+        company={company}
+        customerName={order.customers?.name ?? ""}
+        orderDate={order.order_date}
+        docNumber={docNumber}
+        items={invoiceItems}
+        memo={order.memo}
+        copies={copies}
+      />
     </div>
   );
 }
