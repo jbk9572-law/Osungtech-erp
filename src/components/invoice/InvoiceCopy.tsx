@@ -4,6 +4,7 @@ import { CustomerSection } from "./CustomerSection";
 import { ItemsTable } from "./ItemsTable";
 import { SummarySection } from "./SummarySection";
 import { Footer } from "./Footer";
+import { DOCUMENT, SEAL } from "./InvoiceMetrics";
 import { COL_WIDTHS, COLOR_HEX, type Company, type CopyLabel, type InvoiceColor, type InvoiceItem } from "./types";
 
 // 0707 원본(엔택스 B형 서식) 한 부(공급받는자용 또는 공급자용 한 장)를 그대로
@@ -32,7 +33,10 @@ export function InvoiceCopy({
 
   return (
     <div className="relative break-inside-avoid" style={colorStyle}>
-      <table className="w-full table-fixed border-collapse text-[13px] leading-tight">
+      <table
+        className="w-full table-fixed border-collapse leading-tight"
+        style={{ fontSize: DOCUMENT.baseFontSize }}
+      >
         <colgroup>
           {COL_WIDTHS.map((w, i) => (
             <col key={i} style={{ width: `${w}%` }} />
@@ -54,8 +58,8 @@ export function InvoiceCopy({
         src={company?.seal_image_url || "/branding/company-seal.png"}
         alt=""
         aria-hidden
-        className="pointer-events-none absolute h-[52px] w-[52px] -translate-x-1/2 opacity-90 mix-blend-multiply"
-        style={{ top: "58px", left: "43.5%" }}
+        className="pointer-events-none absolute -translate-x-1/2 opacity-90 mix-blend-multiply"
+        style={{ top: SEAL.top, left: SEAL.left, height: SEAL.size, width: SEAL.size }}
       />
       <Footer company={company} />
     </div>

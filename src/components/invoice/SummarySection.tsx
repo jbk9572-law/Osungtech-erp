@@ -1,4 +1,5 @@
 import { Cell } from "./Cell";
+import { SUMMARY } from "./InvoiceMetrics";
 import type { InvoiceItem } from "./types";
 
 // 0707 원본: "합계 ₩1,265,000원정 (수량 : 10,000, 공급가 : 1,150,000, 세액 : 115,000)"
@@ -11,7 +12,7 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
 
   return (
     <>
-      <tr className="h-[27px]">
+      <tr style={{ height: SUMMARY.totalRowHeight }}>
         <Cell colSpan={2} className="font-semibold">
           합계
         </Cell>
@@ -29,7 +30,7 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
         </Cell>
         <Cell colSpan={4} />
       </tr>
-      <tr className="h-[30px]">
+      <tr style={{ height: SUMMARY.memoRowHeight }}>
         <Cell colSpan={2}>메모</Cell>
         <Cell colSpan={24} className="opacity-80">
           {memo || ""}

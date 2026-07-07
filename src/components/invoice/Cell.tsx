@@ -1,3 +1,5 @@
+import { CELL } from "./InvoiceMetrics";
+
 // 라벨(th)은 가운데 정렬, 값(td)은 왼쪽 정렬이 기본값 (0707 원본 인쇄본 기준).
 // 숫자 열이나 특별히 가운데/왼쪽 정렬이 필요한 값은 align prop으로 개별 지정한다.
 export function Cell({
@@ -5,6 +7,7 @@ export function Cell({
   colSpan,
   rowSpan,
   className = "",
+  style,
   wrap = false,
   align,
   valign = "middle",
@@ -15,6 +18,7 @@ export function Cell({
   colSpan?: number;
   rowSpan?: number;
   className?: string;
+  style?: React.CSSProperties;
   wrap?: boolean;
   align?: "left" | "center" | "right";
   valign?: "top" | "middle";
@@ -42,7 +46,8 @@ export function Cell({
     <Tag
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`overflow-hidden ${borderClass} px-[4px] py-0 ${alignClass} ${valignClass} font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
+      style={{ paddingLeft: CELL.paddingX, paddingRight: CELL.paddingX, paddingTop: 0, paddingBottom: 0, ...style }}
+      className={`overflow-hidden ${borderClass} ${alignClass} ${valignClass} font-normal ${wrap ? "whitespace-normal break-words text-clip" : "whitespace-nowrap text-ellipsis"} ${className}`}
     >
       {children}
     </Tag>

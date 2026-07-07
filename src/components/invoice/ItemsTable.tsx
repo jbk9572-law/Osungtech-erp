@@ -1,5 +1,6 @@
 import { Cell } from "./Cell";
-import { ITEM_COLS, ITEM_ROW_HEIGHT, type InvoiceItem, type InvoiceColor } from "./types";
+import { TABLE } from "./InvoiceMetrics";
+import { ITEM_COLS, type InvoiceItem, type InvoiceColor } from "./types";
 
 // 0707 원본 품목 헤더: 월일 / 품 명 / 규 격 / 단위 / 수량 / 단 가 / 공급가액 / 세 액 / 비고/합계
 export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: InvoiceColor }) {
@@ -12,7 +13,7 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
 
   return (
     <>
-      <tr className="h-[19px]">
+      <tr style={{ height: TABLE.headerRowHeight }}>
         <Cell as="th" colSpan={ITEM_COLS[0]}>
           월일
         </Cell>
@@ -40,7 +41,7 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
       </tr>
 
       {items.map((item, i) => (
-        <tr key={item.id} className={`${ITEM_ROW_HEIGHT} text-black`} style={stripe(i)}>
+        <tr key={item.id} className="text-black" style={{ height: TABLE.itemRowHeight, ...stripe(i) }}>
           <Cell colSpan={ITEM_COLS[0]} align="center" hideBorder={["t", "b"]}>
             {item.monthDay}
           </Cell>
@@ -66,7 +67,7 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
         </tr>
       ))}
       {Array.from({ length: blankCount }).map((_, i) => (
-        <tr key={`blank-${i}`} className={ITEM_ROW_HEIGHT} style={stripe(items.length + i)}>
+        <tr key={`blank-${i}`} style={{ height: TABLE.itemRowHeight, ...stripe(items.length + i) }}>
           <Cell colSpan={ITEM_COLS[0]} hideBorder={["t", "b"]} />
           <Cell colSpan={ITEM_COLS[1]} hideBorder={["t", "b"]} />
           <Cell colSpan={ITEM_COLS[2]} hideBorder={["t", "b"]} />

@@ -1,4 +1,5 @@
 import { Cell } from "./Cell";
+import { CUSTOMER } from "./InvoiceMetrics";
 
 // 0707 원본: "공급받는자" 세로 라벨 + 거래처 상호/貴下/인사말 박스는 공급자
 // 정보 첫 행(공급자/종사업장)에서 시작해 3행(상호~주소)에 걸쳐 세로로
@@ -7,17 +8,40 @@ import { Cell } from "./Cell";
 export function CustomerSection({ customerName }: { customerName: string }) {
   return (
     <>
-      <Cell colSpan={1} rowSpan={3} as="th" className="text-[11px] leading-none" wrap>
-        <div className="flex flex-col items-center gap-[3px]">
+      <Cell
+        colSpan={1}
+        rowSpan={3}
+        as="th"
+        className="leading-none"
+        style={{ fontSize: CUSTOMER.verticalLabelFontSize }}
+        wrap
+      >
+        <div className="flex flex-col items-center" style={{ gap: CUSTOMER.verticalLabelGap }}>
           {[..."공급받는자"].map((ch, i) => (
             <span key={i}>{ch}</span>
           ))}
         </div>
       </Cell>
-      <Cell colSpan={16} rowSpan={3} valign="top" wrap className="relative pt-[18px]">
-        <div className="pl-[10px] text-left text-black">{customerName}</div>
-        <span className="absolute top-[18px] right-[4px] font-bold">貴下</span>
-        <div className="pt-[28px] text-center">거래해 주셔서 감사드립니다.</div>
+      <Cell
+        colSpan={16}
+        rowSpan={3}
+        valign="top"
+        wrap
+        className="relative"
+        style={{ paddingTop: CUSTOMER.boxTopPadding }}
+      >
+        <div className="text-left text-black" style={{ paddingLeft: CUSTOMER.namePaddingLeft }}>
+          {customerName}
+        </div>
+        <span
+          className="absolute font-bold"
+          style={{ top: CUSTOMER.guihaTop, right: CUSTOMER.guihaRight }}
+        >
+          貴下
+        </span>
+        <div className="text-center" style={{ paddingTop: CUSTOMER.greetingTopPadding }}>
+          거래해 주셔서 감사드립니다.
+        </div>
       </Cell>
     </>
   );
