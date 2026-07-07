@@ -32,6 +32,14 @@ body {
 
   body {
     background: #ffffff;
-    color: #000000;
+  }
+
+  /* 브라우저가 인쇄 시 잉크 절약을 위해 배경색/테두리색을 임의로 빼버리는
+     기본 동작을 막는다. 이게 없으면 화면에서는 빨간 테두리·줄무늬가 보여도
+     실제 인쇄물/PDF에는 검은 선만 남고 색이 전부 사라진다. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }
