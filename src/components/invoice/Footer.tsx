@@ -6,10 +6,10 @@ export function Footer({ company }: { company: Company }) {
   return (
     <div
       className="flex w-full justify-between opacity-90"
-      style={{ paddingLeft: FOOTER.paddingX, paddingRight: FOOTER.paddingX, paddingTop: FOOTER.paddingTop, fontSize: FOOTER.fontSize }}
+      style={{ paddingLeft: FOOTER.paddingX, paddingRight: FOOTER.paddingX, paddingTop: FOOTER.paddingTop }}
     >
-      <span>{company?.greeting_message || ""}</span>
-      <span>
+      <span style={{ fontSize: FOOTER.greetingFontSize }}>{company?.greeting_message || ""}</span>
+      <span style={{ fontSize: FOOTER.fromFontSize }}>
         From. ☎ {company?.phone ?? "-"} Fax {company?.fax_number ?? "-"}
         {company?.email ? ` ${company.email}` : ""}
       </span>

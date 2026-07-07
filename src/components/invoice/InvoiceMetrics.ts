@@ -56,15 +56,33 @@ export const CUSTOMER = {
 export const TABLE = {
   headerRowHeight: 19,
   itemRowHeight: 24,
+  headerFontSize: 12,
+  itemFontSize: 12,
+  unitHeaderOffsetX: -8.96,
+  qtyHeaderOffsetX: -10.63,
+  priceHeaderOffsetX: -8.0,
+  productHeaderOffsetX: -9.81,
+  qtyDataOffsetX: -11.29,
+  priceDataOffsetX: -1.63,
+  taxDataOffsetX: 3.81,
+  productDataOffsetX: -4.48,
 };
 
 export const SUMMARY = {
   totalRowHeight: 27,
   memoRowHeight: 30,
+  labelFontSize: 12,
+  labelOffsetX: 4.55,
+  balanceLabelFontSize: 12,
+  balanceLabelOffsetX: -42.79,
+  amountOffsetX: -6.48,
+  breakdownFontSize: 12,
+  breakdownOffsetX: -42.69,
 };
 
 export const FOOTER = {
-  fontSize: 12,
+  greetingFontSize: 12.13,
+  fromFontSize: 10.93,
   paddingX: 4,
   paddingTop: 3,
 };
