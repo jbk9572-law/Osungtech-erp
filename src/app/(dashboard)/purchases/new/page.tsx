@@ -3,10 +3,10 @@ import { NewPurchaseForm } from "@/components/new-purchase-form";
 
 export default async function NewPurchasePage() {
   const supabase = await createClient();
-  const [{ data: suppliers }, { data: products }, { data: warehouses }] = await Promise.all([
+  const [{ data: suppliers }, { data: products }, { data: warehouse }] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
-    supabase.from("products").select("id, sku, name, spec, cost").order("name"),
-    supabase.from("warehouses").select("id, name").order("name"),
+    supabase.from("products").select("id, sku, name, spec, unit, cost").order("name"),
+    supabase.from("warehouses").select("id").limit(1).maybeSingle(),
   ]);
 
   return (
@@ -15,7 +15,7 @@ export default async function NewPurchasePage() {
       <NewPurchaseForm
         suppliers={suppliers ?? []}
         products={products ?? []}
-        warehouses={warehouses ?? []}
+        warehouseId={warehouse?.id ?? ""}
       />
     </div>
   );

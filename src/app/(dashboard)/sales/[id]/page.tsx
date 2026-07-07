@@ -15,7 +15,7 @@ export default async function SaleDetailPage({
   const [{ data: order }, { data: items }] = await Promise.all([
     supabase
       .from("sales_orders")
-      .select("*, customers(*), warehouses(name)")
+      .select("*, customers(*)")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -57,7 +57,7 @@ export default async function SaleDetailPage({
         </div>
       </div>
       <p className="mb-4 text-xs text-[#6b7280]">
-        {new Date(order.order_date).toLocaleDateString("ko-KR")} · {order.warehouses?.name} 출고
+        {new Date(order.order_date).toLocaleDateString("ko-KR")} 출고
       </p>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>

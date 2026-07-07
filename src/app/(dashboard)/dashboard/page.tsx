@@ -51,7 +51,6 @@ export default async function DashboardPage({
   const [
     { count: productCount },
     { count: lowStockCount },
-    { count: warehouseCount },
     { data: salesItems },
     { data: purchaseItems },
     { data: notes },
@@ -62,7 +61,6 @@ export default async function DashboardPage({
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase.from("inventory").select("*", { count: "exact", head: true }).lte("quantity", 0),
-    supabase.from("warehouses").select("*", { count: "exact", head: true }),
     supabase
       .from("sales_order_items")
       .select(
@@ -183,7 +181,6 @@ export default async function DashboardPage({
     { label: "오늘 매입", value: `${(todayPurchases ?? []).length}건 · ${todayPurchaseTotal.toLocaleString()}원` },
     { label: "전체 품목 수", value: `${productCount ?? 0}개` },
     { label: "안전재고 부족", value: `${lowStockCount ?? 0}건`, danger: (lowStockCount ?? 0) > 0 },
-    { label: "창고 수", value: `${warehouseCount ?? 0}개` },
   ];
 
   return (

@@ -16,7 +16,7 @@ export default async function EditSalePage({
     { data: items },
     { data: customers },
     { data: products },
-    { data: warehouses },
+    { data: warehouse },
     { data: prices },
     { data: history },
   ] = await Promise.all([
@@ -27,8 +27,8 @@ export default async function EditSalePage({
       .eq("sales_order_id", id)
       .order("created_at"),
     supabase.from("customers").select("id, name").order("name"),
-    supabase.from("products").select("id, sku, name, spec, price").order("name"),
-    supabase.from("warehouses").select("id, name").order("name"),
+    supabase.from("products").select("id, sku, name, spec, unit, price").order("name"),
+    supabase.from("warehouses").select("id").limit(1).maybeSingle(),
     supabase.from("customer_product_prices").select("customer_id, product_id, unit_price"),
     supabase
       .from("sales_order_items")
@@ -54,7 +54,7 @@ export default async function EditSalePage({
       <NewSaleForm
         customers={customers ?? []}
         products={products ?? []}
-        warehouses={warehouses ?? []}
+        warehouseId={warehouse?.id ?? order.warehouse_id}
         prices={prices ?? []}
         history={priceHistory}
         action={updateSale}

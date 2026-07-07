@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
+import { getDatePresets } from "@/lib/date-presets";
 
 export default async function SalesPage({
   searchParams,
@@ -42,10 +43,23 @@ export default async function SalesPage({
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
   const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
+  const presets = getDatePresets();
 
   return (
     <div>
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">영업관리 &gt; 수주관리</h1>
+
+      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+        {presets.map((preset) => (
+          <Link
+            key={preset.label}
+            href={`/sales?from=${preset.from}&to=${preset.to}`}
+            className={`erp-date-preset-btn${from === preset.from && to === preset.to ? " active" : ""}`}
+          >
+            {preset.label}
+          </Link>
+        ))}
+      </div>
 
       <form method="get" className="erp-search">
         <div className="erp-field">

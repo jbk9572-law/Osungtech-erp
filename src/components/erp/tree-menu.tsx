@@ -39,7 +39,6 @@ const TREE: GroupItem[] = [
     items: [
       { label: "판매처관리", href: "/customers" },
       { label: "공급처관리", href: "/suppliers" },
-      { label: "창고관리", href: "/warehouses" },
     ],
   },
   { label: "회계관리", items: [{ label: "전표관리" }] },

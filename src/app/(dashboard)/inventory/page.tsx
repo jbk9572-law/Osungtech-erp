@@ -3,13 +3,13 @@ import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 
 export default async function InventoryPage() {
   const supabase = await createClient();
-  const [{ data: inventory }, { data: products }, { data: warehouses }] = await Promise.all([
+  const [{ data: inventory }, { data: products }, { data: warehouse }] = await Promise.all([
     supabase
       .from("inventory")
-      .select("*, products(sku, name, reorder_point), warehouses(name)")
+      .select("*, products(sku, name, reorder_point)")
       .order("updated_at", { ascending: false }),
     supabase.from("products").select("id, sku, name, spec").order("name"),
-    supabase.from("warehouses").select("id, name").order("name"),
+    supabase.from("warehouses").select("id").limit(1).maybeSingle(),
   ]);
 
   return (
@@ -28,7 +28,7 @@ export default async function InventoryPage() {
         <div className="erp-detail-body">
           <InventoryAdjustForm
             products={products ?? []}
-            warehouses={warehouses ?? []}
+            warehouseId={warehouse?.id ?? ""}
             stockLevels={(inventory ?? []).map((row) => ({
               product_id: row.product_id,
               warehouse_id: row.warehouse_id,
@@ -44,7 +44,6 @@ export default async function InventoryPage() {
             <tr>
               <th>SKU</th>
               <th>상품명</th>
-              <th>창고</th>
               <th className="num">수량</th>
               <th>상태</th>
             </tr>
@@ -56,7 +55,6 @@ export default async function InventoryPage() {
                 <tr key={row.id}>
                   <td>{row.products?.sku}</td>
                   <td>{row.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.warehouses?.name}</td>
                   <td className="num">{row.quantity.toLocaleString()}</td>
                   <td>
                     <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
@@ -68,7 +66,7 @@ export default async function InventoryPage() {
             })}
             {!inventory?.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={4} className="erp-grid-empty">
                   재고 데이터가 없습니다. 매입 등록 또는 재고 조정 후 표시됩니다.
                 </td>
               </tr>

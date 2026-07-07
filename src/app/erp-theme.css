@@ -469,6 +469,35 @@
   margin-bottom: 8px;
 }
 
+.erp-date-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.erp-date-preset-btn {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 2px;
+  border: 1px solid var(--erp-border);
+  background: #fff;
+  color: var(--erp-text-muted);
+  font-size: 11.5px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.erp-date-preset-btn:hover {
+  background: var(--erp-hover);
+}
+
+.erp-date-preset-btn.active {
+  background: var(--erp-selected);
+  color: var(--erp-primary);
+  border-color: var(--erp-primary);
+  font-weight: 600;
+}
+
 .erp-field {
   display: flex;
   flex-direction: column;

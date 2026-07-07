@@ -11,7 +11,7 @@ export default async function EditPurchasePage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }, { data: suppliers }, { data: products }, { data: warehouses }] =
+  const [{ data: order }, { data: items }, { data: suppliers }, { data: products }, { data: warehouse }] =
     await Promise.all([
       supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -20,8 +20,8 @@ export default async function EditPurchasePage({
         .eq("purchase_order_id", id)
         .order("created_at"),
       supabase.from("suppliers").select("id, name").order("name"),
-      supabase.from("products").select("id, sku, name, spec, cost").order("name"),
-      supabase.from("warehouses").select("id, name").order("name"),
+      supabase.from("products").select("id, sku, name, spec, unit, cost").order("name"),
+      supabase.from("warehouses").select("id").limit(1).maybeSingle(),
     ]);
 
   if (!order) {
@@ -34,7 +34,7 @@ export default async function EditPurchasePage({
       <NewPurchaseForm
         suppliers={suppliers ?? []}
         products={products ?? []}
-        warehouses={warehouses ?? []}
+        warehouseId={warehouse?.id ?? order.warehouse_id}
         action={updatePurchase}
         submitLabel="매입 수정"
         initial={{

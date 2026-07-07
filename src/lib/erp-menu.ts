@@ -11,7 +11,6 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "품목관리", href: "/products" },
   { label: "거래처관리 > 판매처관리", href: "/customers" },
   { label: "거래처관리 > 공급처관리", href: "/suppliers" },
-  { label: "거래처관리 > 창고관리", href: "/warehouses" },
   { label: "환경설정 > 회사정보", href: "/settings/company" },
 ];
 

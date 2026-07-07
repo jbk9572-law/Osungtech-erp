@@ -9,8 +9,14 @@ import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
 
 type Customer = { id: string; name: string };
-type Product = { id: string; sku: string; name: string; spec?: string | null; price: number };
-type Warehouse = { id: string; name: string };
+type Product = {
+  id: string;
+  sku: string;
+  name: string;
+  spec?: string | null;
+  unit?: string | null;
+  price: number;
+};
 type CustomerPrice = { customer_id: string; product_id: string; unit_price: number };
 type PriceHistoryEntry = {
   customerId: string;
@@ -39,7 +45,7 @@ export type SaleInitial = {
 export function NewSaleForm({
   customers,
   products,
-  warehouses,
+  warehouseId,
   prices,
   history,
   action = createSale,
@@ -48,7 +54,7 @@ export function NewSaleForm({
 }: {
   customers: Customer[];
   products: Product[];
-  warehouses: Warehouse[];
+  warehouseId: string;
   prices: CustomerPrice[];
   history: PriceHistoryEntry[];
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
@@ -56,7 +62,6 @@ export function NewSaleForm({
   submitLabel?: string;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
-  const [warehouseId, setWarehouseId] = useState(initial?.warehouseId ?? "");
   const [orderDate, setOrderDate] = useState(
     () => initial?.orderDate ?? new Date().toISOString().slice(0, 10)
   );
@@ -134,6 +139,7 @@ export function NewSaleForm({
   return (
     <form action={formAction} className="space-y-6">
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+      <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
@@ -156,25 +162,6 @@ export function NewSaleForm({
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="erp-field">
-            <label>출고 창고</label>
-            <select
-              name="warehouse_id"
-              required
-              value={warehouseId}
-              onChange={(e) => setWarehouseId(e.target.value)}
-              className="erp-select"
-            >
-              <option value="" disabled>
-                창고 선택
-              </option>
-              {warehouses.map((warehouse) => (
-                <option key={warehouse.id} value={warehouse.id}>
-                  {warehouse.name}
                 </option>
               ))}
             </select>
@@ -211,88 +198,126 @@ export function NewSaleForm({
           </button>
         </div>
 
-        <div className="erp-detail-body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {rows.map((row) => {
-            const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
-            return (
-              <div key={row.key} className="rounded-sm border border-[#eef0f3] p-2">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center">
-                  <div className="sm:col-span-5">
-                    <ProductSearchSelect
-                      products={products}
-                      value={row.productId}
-                      onChange={(productId) => handleProductChange(row.key, productId)}
-                    />
-                  </div>
-                  <NumberInput
-                    placeholder="수량"
-                    value={row.quantity}
-                    onChange={(n) => updateRow(row.key, { quantity: n })}
-                    className="erp-input sm:col-span-2"
-                  />
-                  <NumberInput
-                    placeholder="단가"
-                    value={row.unitPrice}
-                    onChange={(n) => updateRow(row.key, { unitPrice: n })}
-                    disabled={!row.manualPrice}
-                    className="erp-input disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad] sm:col-span-2"
-                  />
-                  <div
-                    className="text-right text-xs sm:col-span-2"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {(row.quantity * row.unitPrice).toLocaleString()}원
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeRow(row.key)}
-                    className="text-xs font-medium sm:col-span-1"
-                    style={{ color: "#dc3545" }}
-                  >
-                    삭제
-                  </button>
-                </div>
-                {row.productId && customerId && (
-                  <div className="mt-1.5 flex flex-wrap items-center gap-3 pl-1">
-                    <label
-                      className="flex items-center gap-1.5 text-xs"
-                      style={{ color: "var(--erp-text-muted)" }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={row.manualPrice}
-                        onChange={(e) => {
-                          const manualPrice = e.target.checked;
-                          updateRow(row.key, {
-                            manualPrice,
-                            ...(manualPrice ? {} : { unitPrice: recentPrice }),
-                          });
-                        }}
+        <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
+          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
+            <thead>
+              <tr>
+                <th style={{ width: "32%" }}>품목</th>
+                <th style={{ width: "13%" }}>규격</th>
+                <th style={{ width: "8%" }}>단위</th>
+                <th className="num" style={{ width: "11%" }}>
+                  수량
+                </th>
+                <th className="num" style={{ width: "15%" }}>
+                  단가
+                </th>
+                <th className="num" style={{ width: "14%" }}>
+                  금액
+                </th>
+                <th style={{ width: "7%" }} />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const product = products.find((p) => p.id === row.productId);
+                const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
+                return (
+                  <tr key={row.key}>
+                    <td>
+                      <ProductSearchSelect
+                        products={products}
+                        value={row.productId}
+                        onChange={(productId) => handleProductChange(row.key, productId)}
                       />
-                      직접입력 (최근단가: {recentPrice.toLocaleString()}원)
-                    </label>
-                    <PriceHistoryHint history={getHistoryFor(row.productId)} />
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.spec ?? "-"}</td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
+                    <td className="num">
+                      <NumberInput
+                        placeholder="수량"
+                        value={row.quantity}
+                        onChange={(n) => updateRow(row.key, { quantity: n })}
+                        className="erp-input w-full"
+                      />
+                    </td>
+                    <td className="num">
+                      <NumberInput
+                        placeholder="단가"
+                        value={row.unitPrice}
+                        onChange={(n) => updateRow(row.key, { unitPrice: n })}
+                        disabled={!row.manualPrice}
+                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
+                      />
+                      {row.productId && customerId && (
+                        <label
+                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px]"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={row.manualPrice}
+                            onChange={(e) => {
+                              const manualPrice = e.target.checked;
+                              updateRow(row.key, {
+                                manualPrice,
+                                ...(manualPrice ? {} : { unitPrice: recentPrice }),
+                              });
+                            }}
+                          />
+                          직접입력
+                        </label>
+                      )}
+                    </td>
+                    <td className="num">{(row.quantity * row.unitPrice).toLocaleString()}원</td>
+                    <td className="num">
+                      <button
+                        type="button"
+                        onClick={() => removeRow(row.key)}
+                        className="text-xs font-medium"
+                        style={{ color: "#dc3545" }}
+                      >
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ background: "#eef1f5" }}>
+                <td colSpan={5} style={{ fontWeight: 700 }}>
+                  합계
+                </td>
+                <td className="num" colSpan={2}>
+                  <div style={{ color: "var(--erp-text-muted)" }}>
+                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
                   </div>
-                )}
-              </div>
-            );
-          })}
+                  <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                    {total.toLocaleString()}원
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
 
-        <div
-          className="grid grid-cols-1 gap-1 border-t border-[#eef0f3] px-4 py-3 text-xs sm:grid-cols-12"
-          style={{ color: "var(--erp-text-muted)" }}
-        >
-          <div className="hidden sm:col-span-9 sm:block" />
-          <div className="flex flex-col items-end gap-1 sm:col-span-2">
-            <div>공급가액: {supplyAmount.toLocaleString()}원</div>
-            <div>부가세(10%): {taxAmount.toLocaleString()}원</div>
-            <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
-              합계: {total.toLocaleString()}원
-            </div>
+        {rows.some((r) => r.productId && customerId && getHistoryFor(r.productId).length > 0) && (
+          <div className="erp-detail-body" style={{ paddingTop: 8 }}>
+            {rows
+              .filter((r) => r.productId && customerId)
+              .map((r) => {
+                const hist = getHistoryFor(r.productId);
+                if (!hist.length) return null;
+                const product = products.find((p) => p.id === r.productId);
+                return (
+                  <div key={r.key} className="mb-1 flex items-center gap-2 text-xs">
+                    <span style={{ color: "var(--erp-text-muted)" }}>{product?.name}:</span>
+                    <PriceHistoryHint history={hist} />
+                  </div>
+                );
+              })}
           </div>
-          <div className="hidden sm:col-span-1 sm:block" />
-        </div>
+        )}
       </div>
 
       <FormMessage state={state} />
