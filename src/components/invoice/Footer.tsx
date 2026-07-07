@@ -1,5 +1,6 @@
 import type { Company } from "./types";
 
+// 0707 원본 하단: 인사말 + "From. ☎ 전화 Fax 팩스 이메일"
 export function Footer({ company }: { company: Company }) {
   return (
     <div className="flex w-full justify-between px-[4px] pt-[3px] text-[12px] opacity-90">

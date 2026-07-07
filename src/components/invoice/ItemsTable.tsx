@@ -1,6 +1,7 @@
 import { Cell } from "./Cell";
 import { ITEM_COLS, ITEM_ROW_HEIGHT, type InvoiceItem, type InvoiceColor } from "./types";
 
+// 0707 원본 품목 헤더: 월일 / 품 명 / 규 격 / 단위 / 수량 / 단 가 / 공급가액 / 세 액 / 비고/합계
 export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: InvoiceColor }) {
   const minItemRows = 10;
   const blankCount = Math.max(0, minItemRows - items.length);
@@ -11,7 +12,6 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
 
   return (
     <>
-      {/* item header */}
       <tr className="h-[19px]">
         <Cell as="th" colSpan={ITEM_COLS[0]}>
           월일

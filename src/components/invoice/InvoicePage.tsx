@@ -3,6 +3,9 @@ import type { Company, InvoiceItem } from "./types";
 
 export type InvoiceCopies = "both" | "receiver" | "supplier";
 
+// 0707 원본: 한 페이지에 공급받는자 보관용(위) + 공급자 보관용(아래) 두 부가
+// 절취선으로 나뉘어 인쇄된다. 두 부는 완전히 같은 컴포넌트(InvoiceCopy)를
+// props(copyLabel/color)만 바꿔 재사용한다 — 레이아웃을 복제하지 않는다.
 export function InvoicePage({
   company,
   customerName,

@@ -1,6 +1,7 @@
 import { Cell } from "./Cell";
 import { formatDate, type CopyLabel } from "./types";
 
+// 0707 원본: "거래명세표" 제목 + "(공급받는자/보관용)" 보관용 라벨 + 일자/No/페이지.
 export function Header({
   copyLabel,
   orderDate,

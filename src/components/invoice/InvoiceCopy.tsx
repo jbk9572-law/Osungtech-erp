@@ -6,9 +6,9 @@ import { SummarySection } from "./SummarySection";
 import { Footer } from "./Footer";
 import { COL_WIDTHS, COLOR_HEX, type Company, type CopyLabel, type InvoiceColor, type InvoiceItem } from "./types";
 
-// 엔택스 B형 서식 한 부(공급받는자용 또는 공급자용 한 장)를 그대로 재현한다.
-// 원본 실측 PDF와 대조해 확정한 레이아웃이므로 임의로 여백/폰트/줄바꿈을
-// 바꾸지 않는다.
+// 0707 원본(엔택스 B형 서식) 한 부(공급받는자용 또는 공급자용 한 장)를 그대로
+// 재현한다. 원본 실측 PDF와 대조해 확정한 레이아웃이므로 임의로
+// 여백/폰트/줄바꿈을 바꾸지 않는다.
 export function InvoiceCopy({
   copyLabel,
   color,
@@ -32,6 +32,7 @@ export function InvoiceCopy({
 
   return (
     <div className="break-inside-avoid" style={colorStyle}>
+      <div className="-mb-[11px] text-[11px] leading-none text-black">(엔택스 B형 서식)</div>
       <table className="w-full table-fixed border-collapse text-[13px] leading-tight">
         <colgroup>
           {COL_WIDTHS.map((w, i) => (

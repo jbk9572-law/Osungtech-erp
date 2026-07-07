@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Cell } from "./Cell";
 import type { Company } from "./types";
 
+// 0707 원본: 공급자 사업자번호/종사업장, 상호/성명/(인), 주소, 업태/종목/비고/인수자.
 export function SupplierSection({
   company,
   customerSlot,

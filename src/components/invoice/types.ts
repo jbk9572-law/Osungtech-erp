@@ -1,3 +1,6 @@
+// 0707 원본 PDF(엔택스 B형 서식, 거래명세표)를 기준으로 재구성한 타입 정의.
+// 이 파일의 모든 값은 실제 화면/데이터에서 props로 주입되며 하드코딩된
+// 텍스트는 없다.
 export type Company = {
   name: string;
   business_number: string | null;

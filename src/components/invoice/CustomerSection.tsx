@@ -1,8 +1,9 @@
 import { Cell } from "./Cell";
 
-// 원본 서식에서 "공급받는자" 라벨+거래처 박스는 공급자 정보 첫 행(공급자/종사업장
-// 행)에서 시작해 3행(상호~주소)에 걸쳐 세로로 병합된다. 그래서 이 컴포넌트는
-// 독립된 <tr>을 갖지 않고, SupplierSection의 첫 번째 행 안에 셀로 끼워 넣는다.
+// 0707 원본: "공급받는자" 세로 라벨 + 거래처 상호/貴下/인사말 박스는 공급자
+// 정보 첫 행(공급자/종사업장)에서 시작해 3행(상호~주소)에 걸쳐 세로로
+// 병합된다. 그래서 이 컴포넌트는 독립된 <tr>을 갖지 않고, SupplierSection의
+// 첫 번째 행 안에 셀로 끼워 넣는다.
 export function CustomerSection({ customerName }: { customerName: string }) {
   return (
     <>
