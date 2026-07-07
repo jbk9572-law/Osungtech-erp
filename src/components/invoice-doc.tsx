@@ -129,7 +129,9 @@ export function InvoiceDoc({
   const blankCount = Math.max(0, minItemRows - items.length);
   const colorStyle = { color: COLOR_HEX[color], "--invoice-line": COLOR_HEX[color] } as React.CSSProperties;
   const tint = color === "blue" ? "rgba(0,0,255,0.08)" : "rgba(255,0,0,0.08)";
-  const stripe = (rowIndex: number) => (rowIndex % 2 === 0 ? { backgroundColor: tint } : undefined);
+  // 원본 실제 출력물은 품목 영역 첫 줄이 항상 흰색이고, 그다음 줄부터 번갈아
+  // 옅은 색이 들어간다 (짝수 인덱스가 아니라 홀수 인덱스에 색이 들어감).
+  const stripe = (rowIndex: number) => (rowIndex % 2 === 1 ? { backgroundColor: tint } : undefined);
 
   return (
     <div className="break-inside-avoid" style={colorStyle}>
@@ -155,7 +157,7 @@ export function InvoiceDoc({
             </Cell>
             <Cell colSpan={3}>일자</Cell>
             <Cell colSpan={6}>{formatDate(orderDate)}</Cell>
-            <Cell colSpan={2}>No.</Cell>
+            <Cell colSpan={2}>No</Cell>
             <Cell colSpan={4}>{docNumber}</Cell>
             <Cell colSpan={2} align="center">
               1/1
@@ -254,7 +256,7 @@ export function InvoiceDoc({
               월일
             </Cell>
             <Cell as="th" colSpan={ITEM_COLS[1]}>
-              품명 / 규격
+              품 명 / 규 격
             </Cell>
             <Cell as="th" colSpan={ITEM_COLS[2]}>
               단위
@@ -263,7 +265,7 @@ export function InvoiceDoc({
               수량
             </Cell>
             <Cell as="th" colSpan={ITEM_COLS[4]}>
-              단가
+              단 가
             </Cell>
             <Cell as="th" colSpan={ITEM_COLS[5]}>
               공급가액
