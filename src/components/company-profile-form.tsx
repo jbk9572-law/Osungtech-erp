@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { updateCompanyProfile } from "@/app/(dashboard)/settings/company/actions";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Company = {
   name: string;
@@ -22,6 +23,8 @@ type Company = {
 
 export function CompanyProfileForm({ company }: { company: Company }) {
   const [state, formAction, pending] = useActionState(updateCompanyProfile, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
 
   return (
     <form
@@ -118,7 +121,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-2">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-2">
         {pending ? "저장 중..." : "F7 저장"}
       </button>
       <div className="sm:col-span-2">

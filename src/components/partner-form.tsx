@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 export type PartnerFormInitial = {
   name?: string | null;
@@ -31,6 +32,8 @@ export function PartnerForm({
   idFieldValue?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -95,7 +98,7 @@ export function PartnerForm({
           </select>
         </div>
       )}
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-3">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-3">
         {pending ? "저장 중..." : `F7 ${submitLabel}`}
       </button>
       <div className="sm:col-span-3">

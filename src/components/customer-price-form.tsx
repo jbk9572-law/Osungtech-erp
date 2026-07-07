@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { upsertCustomerPrice } from "@/app/(dashboard)/customers/actions";
 import { FormMessage } from "@/components/form-message";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Product = { id: string; sku: string; name: string };
 
@@ -14,6 +15,8 @@ export function CustomerPriceForm({
   products: Product[];
 }) {
   const [state, formAction, pending] = useActionState(upsertCustomerPrice, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -41,7 +44,7 @@ export function CustomerPriceForm({
         required
         className="erp-input"
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
         {pending ? "저장 중..." : "F7 저장"}
       </button>
       <div className="sm:col-span-3">

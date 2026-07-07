@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -86,6 +87,8 @@ export function NewPurchaseForm({
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
   // 화면에서만 숨긴다 (다시 제출하면 onSubmit에서 원복해 새 결과를 보여줌).
   const [messageDismissed, setMessageDismissed] = useState(false);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -330,7 +333,7 @@ export function NewPurchaseForm({
 
       <FormMessage state={messageDismissed ? undefined : state} />
 
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
         {pending ? "저장 중..." : `F7 ${submitLabel}`}
       </button>
     </form>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function SalesPage({
   searchParams,
@@ -47,6 +48,13 @@ export default async function SalesPage({
 
   return (
     <div>
+      <KeyboardShortcuts
+        shortcuts={{
+          F2: { href: "/sales/new" },
+          F5: { submitFormSelector: "#sales-search-form" },
+          Escape: { href: "/dashboard" },
+        }}
+      />
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">영업관리 &gt; 수주관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
@@ -61,7 +69,7 @@ export default async function SalesPage({
         ))}
       </div>
 
-      <form method="get" className="erp-search">
+      <form method="get" id="sales-search-form" className="erp-search">
         <div className="erp-field">
           <label>시작일</label>
           <input type="date" name="from" defaultValue={from ?? ""} className="erp-input" />

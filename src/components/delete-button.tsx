@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 export function DeleteButton({
   action,
@@ -16,6 +17,8 @@ export function DeleteButton({
   label?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F6", buttonRef);
 
   return (
     <form
@@ -27,7 +30,7 @@ export function DeleteButton({
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-danger">
+      <button ref={buttonRef} type="submit" disabled={pending} className="erp-btn erp-btn-danger">
         {pending ? "삭제 중..." : `F6 ${label}`}
       </button>
       <FormMessage state={state} />

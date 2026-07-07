@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { adjustInventory } from "@/app/(dashboard)/inventory/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 type StockLevel = { product_id: string; warehouse_id: string; quantity: number };
@@ -19,6 +20,8 @@ export function InventoryAdjustForm({
   stockLevels: StockLevel[];
 }) {
   const [state, formAction, pending] = useActionState(adjustInventory, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
   const [productId, setProductId] = useState("");
   const [direction, setDirection] = useState<"increase" | "decrease">("increase");
   const [amount, setAmount] = useState(0);
@@ -81,7 +84,7 @@ export function InventoryAdjustForm({
         placeholder="사유 (예: 기초재고, 실사 조정)"
         className="erp-input sm:col-span-3"
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
         {pending ? "저장 중..." : "F7 재고 조정 등록"}
       </button>
       <div className="sm:col-span-4">

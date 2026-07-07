@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deletePurchase } from "@/app/(dashboard)/purchases/actions";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function PurchaseDetailPage({
   params,
@@ -37,6 +38,12 @@ export default async function PurchaseDetailPage({
 
   return (
     <div>
+      <KeyboardShortcuts
+        shortcuts={{
+          F4: { href: `/purchases/${id}/edit` },
+          Escape: { href: "/purchases" },
+        }}
+      />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">구매관리 &gt; 발주 상세</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
@@ -110,7 +117,9 @@ export default async function PurchaseDetailPage({
           </tbody>
           <tfoot>
             <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-              <td colSpan={4}>합계</td>
+              <td colSpan={4} className="num">
+                합계
+              </td>
               <td className="num">{totalAmount.toLocaleString()}</td>
             </tr>
           </tfoot>

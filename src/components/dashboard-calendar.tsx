@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 import { getHolidayName } from "@/lib/kr-holidays";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type ItemRow = {
   partnerName: string;
@@ -269,6 +270,8 @@ export function DashboardCalendar({
 
 function NoteForm({ dateStr, initialContent }: { dateStr: string; initialContent: string }) {
   const [state, formAction, pending] = useActionState(upsertCalendarNote, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
 
   return (
     <form action={formAction} key={dateStr} className="space-y-2">
@@ -284,7 +287,7 @@ function NoteForm({ dateStr, initialContent }: { dateStr: string; initialContent
         className="erp-input w-full"
         style={{ height: "auto" }}
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
         {pending ? "저장 중..." : "F7 메모 저장"}
       </button>
       <FormMessage state={state} />
