@@ -20,7 +20,7 @@ export default async function PurchaseDetailPage({
       .maybeSingle(),
     supabase
       .from("purchase_order_items")
-      .select("*, products(sku, name, unit)")
+      .select("*, products(sku, name, spec, unit)")
       .eq("purchase_order_id", id)
       .order("created_at"),
   ]);
@@ -61,21 +61,21 @@ export default async function PurchaseDetailPage({
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
-        <div className="erp-detail-body" style={{ fontSize: 12.5 }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+        <div className="erp-detail-body" style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>업체명</span>
             <span>{order.suppliers?.name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>담당자</span>
             <span>{order.suppliers?.contact_name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>연락처</span>
             <span>{order.suppliers?.phone ?? "-"}</span>
           </div>
           {order.memo && (
-            <p style={{ marginTop: 10, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>
+            <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>
           )}
         </div>
       </div>
@@ -95,8 +95,10 @@ export default async function PurchaseDetailPage({
             {rows.map((row) => (
               <tr key={row.id}>
                 <td>{row.products?.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
-                <td className="num">{row.quantity.toLocaleString()}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.spec ?? "-"}</td>
+                <td className="num">
+                  {row.quantity.toLocaleString()} {row.products?.unit}
+                </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   {Number(row.unit_cost).toLocaleString()}
                 </td>

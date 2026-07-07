@@ -6,7 +6,7 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
 
-type Product = { id: string; sku: string; name: string };
+type Product = { id: string; sku: string; name: string; spec?: string | null };
 type Warehouse = { id: string; name: string };
 type StockLevel = { product_id: string; warehouse_id: string; quantity: number };
 

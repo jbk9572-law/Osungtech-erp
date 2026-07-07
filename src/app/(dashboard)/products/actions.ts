@@ -9,6 +9,7 @@ function productFieldsFrom(formData: FormData) {
   return {
     category_id: String(formData.get("category_id") ?? "") || null,
     supplier_id: String(formData.get("supplier_id") ?? "") || null,
+    spec: String(formData.get("spec") ?? "").trim() || null,
     unit: String(formData.get("unit") ?? "ea") || "ea",
     price: Number(formData.get("price") ?? 0),
     cost: Number(formData.get("cost") ?? 0),

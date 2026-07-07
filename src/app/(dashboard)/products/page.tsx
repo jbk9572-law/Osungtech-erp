@@ -32,6 +32,8 @@ export default async function ProductsPage() {
             <tr>
               <th>SKU</th>
               <th>상품명</th>
+              <th>규격</th>
+              <th>단위</th>
               <th>카테고리</th>
               <th>공급업체</th>
               <th className="num">판매가</th>
@@ -44,6 +46,8 @@ export default async function ProductsPage() {
               <ClickableRow key={product.id} href={`/products/${product.id}`}>
                 <td>{product.sku}</td>
                 <td>{product.name}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{product.spec ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{product.unit}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.categories?.name ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.suppliers?.name ?? "-"}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
@@ -59,7 +63,7 @@ export default async function ProductsPage() {
             ))}
             {!products?.length && (
               <tr>
-                <td colSpan={7} className="erp-grid-empty">
+                <td colSpan={9} className="erp-grid-empty">
                   등록된 상품이 없습니다.
                 </td>
               </tr>

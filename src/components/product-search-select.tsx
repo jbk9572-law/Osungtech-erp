@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-type Product = { id: string; sku: string; name: string };
+type Product = { id: string; sku: string; name: string; spec?: string | null };
 
 export function ProductSearchSelect({
   products,
@@ -33,7 +33,13 @@ export function ProductSearchSelect({
     <div className="relative">
       <input
         type="text"
-        value={open ? query : selected ? `${selected.sku} · ${selected.name}` : ""}
+        value={
+          open
+            ? query
+            : selected
+              ? `${selected.sku} · ${selected.name}${selected.spec ? ` (${selected.spec})` : ""}`
+              : ""
+        }
         placeholder={placeholder}
         onFocus={() => {
           setQuery("");
@@ -63,7 +69,10 @@ export function ProductSearchSelect({
                 className="block w-full px-2.5 py-2 text-left hover:bg-[#f3f7fc]"
               >
                 <span className="font-medium text-[#1c1c1c]">{product.sku}</span>
-                <span className="ml-2 text-[#6b7280]">{product.name}</span>
+                <span className="ml-2 text-[#6b7280]">
+                  {product.name}
+                  {product.spec ? ` (${product.spec})` : ""}
+                </span>
               </button>
             </li>
           ))}

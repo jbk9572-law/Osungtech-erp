@@ -8,7 +8,7 @@ import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
 
 type Supplier = { id: string; name: string };
-type Product = { id: string; sku: string; name: string; cost: number };
+type Product = { id: string; sku: string; name: string; spec?: string | null; cost: number };
 type Warehouse = { id: string; name: string };
 
 type Row = {
@@ -233,10 +233,12 @@ export function NewPurchaseForm({
         </div>
 
         <div
-          className="flex justify-end border-t border-[#eef0f3] px-4 py-3 text-sm font-bold"
+          className="grid grid-cols-1 gap-1 border-t border-[#eef0f3] px-4 py-3 text-sm font-bold sm:grid-cols-12"
           style={{ color: "var(--erp-text)" }}
         >
-          매입 합계: {total.toLocaleString()}원
+          <div className="hidden sm:col-span-9 sm:block" />
+          <div className="text-right sm:col-span-2">매입 합계: {total.toLocaleString()}원</div>
+          <div className="hidden sm:col-span-1 sm:block" />
         </div>
       </div>
 

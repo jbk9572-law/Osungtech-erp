@@ -1,11 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { TitleBar } from "@/components/erp/title-bar";
 import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
 import { StatusBar } from "@/components/erp/status-bar";
+import { findMenuItem } from "@/lib/erp-menu";
+import { pushRecentMenu } from "@/lib/erp-menu-history";
+
+function RecentMenuTracker() {
+  const pathname = usePathname();
+  useEffect(() => {
+    const menu = findMenuItem(pathname);
+    if (menu) pushRecentMenu(menu.href);
+  }, [pathname]);
+  return null;
+}
 
 export function ErpShell({
   companyName,
@@ -25,6 +37,7 @@ export function ErpShell({
 
   return (
     <div className="erp">
+      <RecentMenuTracker />
       <TitleBar logoUrl={logoUrl} companyName={companyName} email={email} />
       <Ribbon />
       <div className="erp-body">

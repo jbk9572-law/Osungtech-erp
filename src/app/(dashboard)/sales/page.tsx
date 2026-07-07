@@ -13,7 +13,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, customers(name)), products(sku, name, unit)"
+      "*, sales_orders!inner(id, order_date, memo, customers(name)), products(sku, name, spec, unit)"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -112,8 +112,10 @@ export default async function SalesPage({
                   <td>{order ? new Date(order.order_date).toLocaleDateString("ko-KR") : "-"}</td>
                   <td>{order?.customers?.name}</td>
                   <td>{item.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.unit}</td>
-                  <td className="num">{item.quantity.toLocaleString()}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.spec ?? "-"}</td>
+                  <td className="num">
+                    {item.quantity.toLocaleString()} {item.products?.unit}
+                  </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(item.unit_price).toLocaleString()}
                   </td>

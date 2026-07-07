@@ -20,7 +20,7 @@ export default async function EditPurchasePage({
         .eq("purchase_order_id", id)
         .order("created_at"),
       supabase.from("suppliers").select("id, name").order("name"),
-      supabase.from("products").select("id, sku, name, cost").order("name"),
+      supabase.from("products").select("id, sku, name, spec, cost").order("name"),
       supabase.from("warehouses").select("id, name").order("name"),
     ]);
 

@@ -9,7 +9,7 @@ import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
 
 type Customer = { id: string; name: string };
-type Product = { id: string; sku: string; name: string; price: number };
+type Product = { id: string; sku: string; name: string; spec?: string | null; price: number };
 type Warehouse = { id: string; name: string };
 type CustomerPrice = { customer_id: string; product_id: string; unit_price: number };
 type PriceHistoryEntry = {
@@ -280,14 +280,18 @@ export function NewSaleForm({
         </div>
 
         <div
-          className="flex flex-col items-end gap-1 border-t border-[#eef0f3] px-4 py-3 text-xs"
+          className="grid grid-cols-1 gap-1 border-t border-[#eef0f3] px-4 py-3 text-xs sm:grid-cols-12"
           style={{ color: "var(--erp-text-muted)" }}
         >
-          <div>공급가액: {supplyAmount.toLocaleString()}원</div>
-          <div>부가세(10%): {taxAmount.toLocaleString()}원</div>
-          <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
-            합계: {total.toLocaleString()}원
+          <div className="hidden sm:col-span-9 sm:block" />
+          <div className="flex flex-col items-end gap-1 sm:col-span-2">
+            <div>공급가액: {supplyAmount.toLocaleString()}원</div>
+            <div>부가세(10%): {taxAmount.toLocaleString()}원</div>
+            <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+              합계: {total.toLocaleString()}원
+            </div>
           </div>
+          <div className="hidden sm:col-span-1 sm:block" />
         </div>
       </div>
 

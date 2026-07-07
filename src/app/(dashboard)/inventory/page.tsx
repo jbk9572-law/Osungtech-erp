@@ -8,7 +8,7 @@ export default async function InventoryPage() {
       .from("inventory")
       .select("*, products(sku, name, reorder_point), warehouses(name)")
       .order("updated_at", { ascending: false }),
-    supabase.from("products").select("id, sku, name").order("name"),
+    supabase.from("products").select("id, sku, name, spec").order("name"),
     supabase.from("warehouses").select("id, name").order("name"),
   ]);
 

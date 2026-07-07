@@ -13,7 +13,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name)), products(sku, name, unit)"
+      "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name)), products(sku, name, spec, unit)"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -108,8 +108,10 @@ export default async function PurchasesPage({
                   <td>{order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}</td>
                   <td>{order?.suppliers?.name}</td>
                   <td>{item.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.unit}</td>
-                  <td className="num">{item.quantity.toLocaleString()}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.spec ?? "-"}</td>
+                  <td className="num">
+                    {item.quantity.toLocaleString()} {item.products?.unit}
+                  </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(item.unit_cost).toLocaleString()}
                   </td>

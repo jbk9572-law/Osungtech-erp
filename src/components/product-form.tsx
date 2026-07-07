@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 
@@ -12,11 +12,14 @@ type ProductInitial = {
   name?: string | null;
   category_id?: string | null;
   supplier_id?: string | null;
+  spec?: string | null;
   unit?: string | null;
   price?: number | null;
   cost?: number | null;
   reorder_point?: number | null;
 };
+
+const UNIT_PRESETS = ["EA", "KG", "G", "L", "ML", "BOX", "SET", "M", "ROLL"];
 
 export function ProductForm({
   action,
@@ -34,6 +37,11 @@ export function ProductForm({
   submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const initialUnit = initial?.unit || "EA";
+  const [unitMode, setUnitMode] = useState<"preset" | "custom">(
+    UNIT_PRESETS.includes(initialUnit) ? "preset" : "custom"
+  );
+  const [unitValue, setUnitValue] = useState(initialUnit);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-4">
@@ -77,11 +85,45 @@ export function ProductForm({
         ))}
       </select>
       <input
-        name="unit"
-        placeholder="단위 (ea)"
-        defaultValue={initial?.unit ?? ""}
+        name="spec"
+        placeholder="규격 (예: wp(150), 150mm)"
+        defaultValue={initial?.spec ?? ""}
         className="erp-input"
       />
+      <div style={{ display: "flex", gap: 4 }}>
+        {unitMode === "preset" ? (
+          <select
+            name="unit"
+            value={UNIT_PRESETS.includes(unitValue) ? unitValue : "EA"}
+            onChange={(e) => setUnitValue(e.target.value)}
+            className="erp-select"
+            style={{ flex: 1 }}
+          >
+            {UNIT_PRESETS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            name="unit"
+            value={unitValue}
+            onChange={(e) => setUnitValue(e.target.value)}
+            placeholder="단위 직접입력"
+            className="erp-input"
+            style={{ flex: 1 }}
+          />
+        )}
+        <button
+          type="button"
+          className="erp-btn"
+          style={{ minWidth: 0, padding: "0 8px" }}
+          onClick={() => setUnitMode((m) => (m === "preset" ? "custom" : "preset"))}
+        >
+          {unitMode === "preset" ? "직접입력" : "목록"}
+        </button>
+      </div>
       <input
         name="price"
         placeholder="판매가"
