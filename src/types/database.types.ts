@@ -478,6 +478,7 @@ export type Database = {
           id: string;
           sales_order_id: string;
           product_id: string;
+          spec: string | null;
           quantity: number;
           unit_price: number;
           created_at: string;
@@ -486,6 +487,7 @@ export type Database = {
           id?: string;
           sales_order_id: string;
           product_id: string;
+          spec?: string | null;
           quantity: number;
           unit_price?: number;
           created_at?: string;
@@ -494,6 +496,7 @@ export type Database = {
           id?: string;
           sales_order_id?: string;
           product_id?: string;
+          spec?: string | null;
           quantity?: number;
           unit_price?: number;
           created_at?: string;
@@ -565,6 +568,7 @@ export type Database = {
           id: string;
           purchase_order_id: string;
           product_id: string;
+          spec: string | null;
           quantity: number;
           unit_cost: number;
           created_at: string;
@@ -573,6 +577,7 @@ export type Database = {
           id?: string;
           purchase_order_id: string;
           product_id: string;
+          spec?: string | null;
           quantity: number;
           unit_cost?: number;
           created_at?: string;
@@ -581,6 +586,7 @@ export type Database = {
           id?: string;
           purchase_order_id?: string;
           product_id?: string;
+          spec?: string | null;
           quantity?: number;
           unit_cost?: number;
           created_at?: string;

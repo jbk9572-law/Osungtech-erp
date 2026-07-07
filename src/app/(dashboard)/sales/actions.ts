@@ -7,6 +7,7 @@ import type { FormState } from "@/components/form-message";
 
 type SaleItemInput = {
   productId: string;
+  spec?: string | null;
   quantity: number;
   unitPrice: number;
 };
@@ -39,12 +40,15 @@ async function reverseSaleInventory(
 ): Promise<string | null> {
   if (!items.length) return null;
 
+  // 매출은 "출고(out)"로 재고를 차감했으므로, 되돌릴 때는 그만큼 다시
+  // 더해줘야 한다 (양수). 여기서 부호가 반대로(음수) 들어가면 삭제/수정할
+  // 때마다 재고가 두 번 깎이는 심각한 버그가 된다.
   const { error } = await supabase.from("inventory_transactions").insert(
     items.map((item) => ({
       product_id: item.product_id,
       warehouse_id: warehouseId,
       type: "adjustment" as const,
-      quantity: -item.quantity,
+      quantity: item.quantity,
       reference: `sales_order_reversal:${salesOrderId}`,
       created_by: userId,
     }))
@@ -97,6 +101,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     items.map((item) => ({
       sales_order_id: salesOrderId,
       product_id: item.productId,
+      spec: item.spec || null,
       quantity: item.quantity,
       unit_price: item.unitPrice,
     }))
@@ -224,6 +229,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     items.map((item) => ({
       sales_order_id: id,
       product_id: item.productId,
+      spec: item.spec || null,
       quantity: item.quantity,
       unit_price: item.unitPrice,
     }))

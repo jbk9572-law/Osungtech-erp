@@ -122,7 +122,9 @@ export default async function PurchasesPage({
                   <td>{order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}</td>
                   <td>{order?.suppliers?.name}</td>
                   <td>{item.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{item.products?.spec ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {item.spec || item.products?.spec || "-"}
+                  </td>
                   <td className="num">
                     {item.quantity.toLocaleString()} {item.products?.unit}
                   </td>

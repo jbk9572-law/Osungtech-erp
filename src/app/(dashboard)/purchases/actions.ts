@@ -7,6 +7,7 @@ import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
   productId: string;
+  spec?: string | null;
   quantity: number;
   unitCost: number;
 };
@@ -100,6 +101,7 @@ export async function createPurchase(
     items.map((item) => ({
       purchase_order_id: purchaseOrderId,
       product_id: item.productId,
+      spec: item.spec || null,
       quantity: item.quantity,
       unit_cost: item.unitCost,
     }))
@@ -226,6 +228,7 @@ export async function updatePurchase(
     items.map((item) => ({
       purchase_order_id: id,
       product_id: item.productId,
+      spec: item.spec || null,
       quantity: item.quantity,
       unit_cost: item.unitCost,
     }))

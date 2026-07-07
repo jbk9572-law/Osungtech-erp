@@ -98,7 +98,9 @@ export default async function SaleDetailPage({
             {rows.map((row) => (
               <tr key={row.id}>
                 <td>{row.products?.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.spec ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>
+                  {row.spec || row.products?.spec || "-"}
+                </td>
                 <td className="num">
                   {row.quantity.toLocaleString()} {row.products?.unit}
                 </td>

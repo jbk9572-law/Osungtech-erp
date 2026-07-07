@@ -20,6 +20,7 @@ type Product = {
 type Row = {
   key: number;
   productId: string;
+  spec: string;
   quantity: number;
   unitCost: number;
   manualPrice: boolean;
@@ -31,7 +32,7 @@ export type PurchaseInitial = {
   warehouseId: string;
   purchaseDate: string;
   memo: string;
-  items: { productId: string; quantity: number; unitCost: number }[];
+  items: { productId: string; spec?: string | null; quantity: number; unitCost: number }[];
 };
 
 export function NewPurchaseForm({
@@ -56,8 +57,15 @@ export function NewPurchaseForm({
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
-      ? initial.items.map((item, i) => ({ key: i, ...item, manualPrice: false }))
-      : [{ key: 0, productId: "", quantity: 1, unitCost: 0, manualPrice: false }]
+      ? initial.items.map((item, i) => ({
+          key: i,
+          productId: item.productId,
+          spec: item.spec ?? "",
+          quantity: item.quantity,
+          unitCost: item.unitCost,
+          manualPrice: false,
+        }))
+      : [{ key: 0, productId: "", spec: "", quantity: 1, unitCost: 0, manualPrice: false }]
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -68,13 +76,17 @@ export function NewPurchaseForm({
 
   function handleProductChange(key: number, productId: string) {
     const product = products.find((p) => p.id === productId);
-    updateRow(key, { productId, unitCost: product ? Number(product.cost) : 0 });
+    updateRow(key, {
+      productId,
+      spec: product?.spec ?? "",
+      unitCost: product ? Number(product.cost) : 0,
+    });
   }
 
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { key: nextKey, productId: "", quantity: 1, unitCost: 0, manualPrice: false },
+      { key: nextKey, productId: "", spec: "", quantity: 1, unitCost: 0, manualPrice: false },
     ]);
     setNextKey((k) => k + 1);
   }
@@ -88,7 +100,12 @@ export function NewPurchaseForm({
   const itemsJson = JSON.stringify(
     rows
       .filter((row) => row.productId && row.quantity > 0)
-      .map((row) => ({ productId: row.productId, quantity: row.quantity, unitCost: row.unitCost }))
+      .map((row) => ({
+        productId: row.productId,
+        spec: row.spec,
+        quantity: row.quantity,
+        unitCost: row.unitCost,
+      }))
   );
 
   return (
@@ -185,7 +202,15 @@ export function NewPurchaseForm({
                         onChange={(productId) => handleProductChange(row.key, productId)}
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.spec ?? "-"}</td>
+                    <td>
+                      <input
+                        type="text"
+                        placeholder="규격"
+                        value={row.spec}
+                        onChange={(e) => updateRow(row.key, { spec: e.target.value })}
+                        className="erp-input w-full"
+                      />
+                    </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
                       <NumberInput

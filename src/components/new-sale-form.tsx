@@ -28,6 +28,7 @@ type PriceHistoryEntry = {
 type Row = {
   key: number;
   productId: string;
+  spec: string;
   quantity: number;
   unitPrice: number;
   manualPrice: boolean;
@@ -39,7 +40,7 @@ export type SaleInitial = {
   warehouseId: string;
   orderDate: string;
   memo: string;
-  items: { productId: string; quantity: number; unitPrice: number }[];
+  items: { productId: string; spec?: string | null; quantity: number; unitPrice: number }[];
 };
 
 export function NewSaleForm({
@@ -68,8 +69,15 @@ export function NewSaleForm({
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
-      ? initial.items.map((item, i) => ({ key: i, ...item, manualPrice: false }))
-      : [{ key: 0, productId: "", quantity: 1, unitPrice: 0, manualPrice: false }]
+      ? initial.items.map((item, i) => ({
+          key: i,
+          productId: item.productId,
+          spec: item.spec ?? "",
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          manualPrice: false,
+        }))
+      : [{ key: 0, productId: "", spec: "", quantity: 1, unitPrice: 0, manualPrice: false }]
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -94,7 +102,12 @@ export function NewSaleForm({
   }
 
   function handleProductChange(key: number, productId: string) {
-    updateRow(key, { productId, unitPrice: resolvePrice(customerId, productId) });
+    const product = products.find((p) => p.id === productId);
+    updateRow(key, {
+      productId,
+      spec: product?.spec ?? "",
+      unitPrice: resolvePrice(customerId, productId),
+    });
   }
 
   function handleCustomerChange(newCustomerId: string) {
@@ -111,7 +124,7 @@ export function NewSaleForm({
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { key: nextKey, productId: "", quantity: 1, unitPrice: 0, manualPrice: false },
+      { key: nextKey, productId: "", spec: "", quantity: 1, unitPrice: 0, manualPrice: false },
     ]);
     setNextKey((k) => k + 1);
   }
@@ -133,7 +146,12 @@ export function NewSaleForm({
   const itemsJson = JSON.stringify(
     rows
       .filter((row) => row.productId && row.quantity > 0)
-      .map((row) => ({ productId: row.productId, quantity: row.quantity, unitPrice: row.unitPrice }))
+      .map((row) => ({
+        productId: row.productId,
+        spec: row.spec,
+        quantity: row.quantity,
+        unitPrice: row.unitPrice,
+      }))
   );
 
   return (
@@ -230,7 +248,15 @@ export function NewSaleForm({
                         onChange={(productId) => handleProductChange(row.key, productId)}
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.spec ?? "-"}</td>
+                    <td>
+                      <input
+                        type="text"
+                        placeholder="규격"
+                        value={row.spec}
+                        onChange={(e) => updateRow(row.key, { spec: e.target.value })}
+                        className="erp-input w-full"
+                      />
+                    </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
                       <NumberInput
