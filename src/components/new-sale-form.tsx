@@ -29,6 +29,7 @@ type Row = {
   key: number;
   productId: string;
   spec: string;
+  manualSpec: boolean;
   quantity: number;
   unitPrice: number;
   manualPrice: boolean;
@@ -73,11 +74,22 @@ export function NewSaleForm({
           key: i,
           productId: item.productId,
           spec: item.spec ?? "",
+          manualSpec: Boolean(item.spec),
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           manualPrice: false,
         }))
-      : [{ key: 0, productId: "", spec: "", quantity: 1, unitPrice: 0, manualPrice: false }]
+      : [
+          {
+            key: 0,
+            productId: "",
+            spec: "",
+            manualSpec: false,
+            quantity: 1,
+            unitPrice: 0,
+            manualPrice: false,
+          },
+        ]
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -124,7 +136,15 @@ export function NewSaleForm({
   function addRow() {
     setRows((prev) => [
       ...prev,
-      { key: nextKey, productId: "", spec: "", quantity: 1, unitPrice: 0, manualPrice: false },
+      {
+        key: nextKey,
+        productId: "",
+        spec: "",
+        manualSpec: false,
+        quantity: 1,
+        unitPrice: 0,
+        manualPrice: false,
+      },
     ]);
     setNextKey((k) => k + 1);
   }
@@ -254,8 +274,28 @@ export function NewSaleForm({
                         placeholder="규격"
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
-                        className="erp-input w-full"
+                        disabled={!row.manualSpec}
+                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
                       />
+                      {row.productId && (
+                        <label
+                          className="mt-1 flex items-center gap-1 text-[10.5px]"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={row.manualSpec}
+                            onChange={(e) => {
+                              const manualSpec = e.target.checked;
+                              updateRow(row.key, {
+                                manualSpec,
+                                ...(manualSpec ? {} : { spec: product?.spec ?? "" }),
+                              });
+                            }}
+                          />
+                          직접입력
+                        </label>
+                      )}
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
