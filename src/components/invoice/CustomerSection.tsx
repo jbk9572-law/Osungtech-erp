@@ -15,7 +15,7 @@ export function CustomerSection({ customerName }: { customerName: string }) {
         </div>
       </Cell>
       <Cell colSpan={16} rowSpan={3} valign="top" wrap className="relative pt-[18px]">
-        <div className="text-center font-bold text-black">{customerName}</div>
+        <div className="pl-[10px] text-left text-black">{customerName}</div>
         <span className="absolute top-[18px] right-[4px] font-bold">貴下</span>
         <div className="pt-[28px] text-center">거래해 주셔서 감사드립니다.</div>
       </Cell>

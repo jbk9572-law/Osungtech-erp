@@ -20,9 +20,9 @@ export function Header({
         ({copyLabel})
       </Cell>
       <Cell colSpan={3}>일자</Cell>
-      <Cell colSpan={6}>{formatDate(orderDate)}</Cell>
+      <Cell colSpan={5}>{formatDate(orderDate)}</Cell>
       <Cell colSpan={2}>No</Cell>
-      <Cell colSpan={4}>{docNumber}</Cell>
+      <Cell colSpan={5}>{docNumber}</Cell>
       <Cell colSpan={2} align="center">
         1/1
       </Cell>
