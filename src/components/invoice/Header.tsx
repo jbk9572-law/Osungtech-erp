@@ -13,7 +13,7 @@ export function Header({
 }) {
   return (
     <tr className="h-[46px]">
-      <Cell colSpan={10} align="center" hideBorder={["r"]} className="text-[18px] font-bold tracking-[0.05em]">
+      <Cell colSpan={10} align="center" hideBorder={["r"]} className="text-[32px] font-bold tracking-[0.05em]">
         거래명세표
       </Cell>
       <Cell colSpan={7} align="center" hideBorder={["l"]} className="text-[13px] font-medium" wrap>
