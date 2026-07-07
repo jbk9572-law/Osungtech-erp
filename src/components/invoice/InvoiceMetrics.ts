@@ -7,6 +7,7 @@ export const DOCUMENT = {
 };
 
 export const TITLE = {
+  fontFamily: "'Malgun Gothic', '맑은 고딕', Gulim, '굴림', sans-serif",
   fontSize: 27,
   fontWeight: 700,
   letterSpacing: "0em",

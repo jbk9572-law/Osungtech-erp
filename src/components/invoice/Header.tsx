@@ -18,7 +18,12 @@ export function Header({
         colSpan={10}
         align="center"
         hideBorder={["r"]}
-        style={{ fontSize: TITLE.fontSize, fontWeight: TITLE.fontWeight, letterSpacing: TITLE.letterSpacing }}
+        style={{
+          fontFamily: TITLE.fontFamily,
+          fontSize: TITLE.fontSize,
+          fontWeight: TITLE.fontWeight,
+          letterSpacing: TITLE.letterSpacing,
+        }}
       >
         거래명세표
       </Cell>
