@@ -437,6 +437,7 @@ export type Database = {
           memo: string | null;
           created_by: string | null;
           created_at: string;
+          doc_no: number;
         };
         Insert: {
           id?: string;
@@ -446,6 +447,7 @@ export type Database = {
           memo?: string | null;
           created_by?: string | null;
           created_at?: string;
+          doc_no?: number;
         };
         Update: {
           id?: string;
@@ -455,6 +457,7 @@ export type Database = {
           memo?: string | null;
           created_by?: string | null;
           created_at?: string;
+          doc_no?: number;
         };
         Relationships: [
           {

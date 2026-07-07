@@ -27,7 +27,7 @@ export default async function SalesPrintPage({
   }
 
   const docType = order.customers?.document_type ?? "명세표";
-  const docNumber = order.id.slice(0, 8).toUpperCase();
+  const docNumber = String(order.doc_no);
 
   if (docType === "출고증") {
     const deliveryItems = (items ?? []).map((item) => ({
