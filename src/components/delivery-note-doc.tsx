@@ -9,6 +9,7 @@ type Company = {
   address: string | null;
   manager_name: string | null;
   manager_phone: string | null;
+  seal_image_url?: string | null;
 } | null;
 
 type Item = {
@@ -19,21 +20,61 @@ type Item = {
   quantity: number;
 };
 
+type DisplayRow = {
+  key: string;
+  category: string;
+  productName: string;
+  unit: string;
+  quantity: number | null;
+};
+
 export function DeliveryNoteDoc({
   company,
   customerName,
   customerAddress,
+  customerContactName,
+  customerContactPhone,
   orderDate,
   items,
+  note,
 }: {
   company: Company;
   customerName: string;
   customerAddress: string | null;
+  customerContactName?: string | null;
+  customerContactPhone?: string | null;
   orderDate: string;
   items: Item[];
+  note?: string | null;
 }) {
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const blankRows = Math.max(0, 10 - items.length);
+  const blankRows = Math.max(0, 20 - items.length);
+
+  const displayRows: DisplayRow[] = [
+    ...items.map((item) => ({
+      key: item.id,
+      category: item.category,
+      productName: item.productName,
+      unit: item.unit,
+      quantity: item.quantity,
+    })),
+    ...Array.from({ length: blankRows }).map((_, i) => ({
+      key: `blank-${i}`,
+      category: items[items.length - 1]?.category ?? "",
+      productName: "",
+      unit: "",
+      quantity: null,
+    })),
+  ];
+
+  // 연속된 같은 품명(대분류)은 세로로 병합한다 (실제 거래명세표처럼 빈 줄까지 이어짐).
+  const rowSpans: number[] = new Array(displayRows.length).fill(0);
+  for (let i = 0; i < displayRows.length; ) {
+    let j = i + 1;
+    while (j < displayRows.length && displayRows[j].category === displayRows[i].category) j++;
+    rowSpans[i] = j - i;
+    i = j;
+  }
 
   return (
     <div className="border border-black text-[12px] text-black">
@@ -57,7 +98,14 @@ export function DeliveryNoteDoc({
             <td className="border border-black px-2 py-1" colSpan={3}>
               {company?.name ?? "-"} &nbsp;&nbsp;성명 {company?.representative_name ?? "-"}
             </td>
-            <td className="border border-black px-2 py-1" colSpan={2} rowSpan={4} />
+            <th rowSpan={3} className="border border-black bg-gray-50 px-2 py-1 font-medium align-top">
+              담당자
+            </th>
+            <td rowSpan={3} className="border border-black px-2 py-1 align-top">
+              {customerContactPhone && <div>Tel : {customerContactPhone}</div>}
+              {customerContactName && <div>{customerContactName}</div>}
+              {!customerContactPhone && !customerContactName && "-"}
+            </td>
           </tr>
           <tr>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">전화번호</th>
@@ -69,7 +117,6 @@ export function DeliveryNoteDoc({
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">업태</th>
             <td className="border border-black px-2 py-1" colSpan={3}>
               {company?.business_type ?? "-"} &nbsp;&nbsp;종목 {company?.business_item ?? "-"}
-              &nbsp;&nbsp;담당자 {company?.manager_phone ?? "-"} {company?.manager_name ?? ""}
             </td>
           </tr>
           <tr>
@@ -91,31 +138,40 @@ export function DeliveryNoteDoc({
             <th className="border border-black px-2 py-1.5 font-medium">품명</th>
             <th className="border border-black px-2 py-1.5 font-medium">규격</th>
             <th className="w-16 border border-black px-2 py-1.5 font-medium">단위</th>
-            <th className="w-20 border border-black px-2 py-1.5 font-medium">수량</th>
+            <th className="w-20 border border-black px-2 py-1.5 font-medium">
+              합계
+              <br />
+              (Ea)
+            </th>
             <th className="w-24 border border-black px-2 py-1.5 font-medium">비고</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td className="border border-black px-2 py-1">{item.category}</td>
-              <td className="border border-black px-2 py-1">{item.productName}</td>
-              <td className="border border-black px-2 py-1 text-center">{item.unit}</td>
+          {displayRows.map((row, idx) => (
+            <tr key={row.key}>
+              {rowSpans[idx] > 0 && (
+                <td
+                  rowSpan={rowSpans[idx]}
+                  className="border border-black px-2 py-1 text-center align-top"
+                >
+                  {row.category}
+                </td>
+              )}
+              <td className="border border-black px-2 py-1">{row.productName}</td>
+              <td className="border border-black px-2 py-1 text-center">{row.unit}</td>
               <td className="border border-black px-2 py-1 text-right">
-                {item.quantity.toLocaleString()}
+                {row.quantity != null ? row.quantity.toLocaleString() : ""}
               </td>
               <td className="border border-black px-2 py-1" />
             </tr>
           ))}
-          {Array.from({ length: blankRows }).map((_, i) => (
-            <tr key={`blank-${i}`}>
-              <td className="border border-black px-2 py-1">&nbsp;</td>
-              <td className="border border-black px-2 py-1" />
-              <td className="border border-black px-2 py-1" />
-              <td className="border border-black px-2 py-1" />
-              <td className="border border-black px-2 py-1" />
+          {note && (
+            <tr>
+              <td colSpan={5} className="border border-black px-2 py-1 text-[11px] text-gray-600">
+                {note}
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
         <tfoot>
           <tr className="bg-gray-50 font-semibold">
@@ -131,7 +187,16 @@ export function DeliveryNoteDoc({
       </table>
 
       <div className="flex items-center justify-around border-t border-black px-3 py-4 text-sm">
-        <span>공급자 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(인)</span>
+        <span className="relative">
+          공급자 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(인)
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={company?.seal_image_url || "/branding/company-seal.png"}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 right-2 h-10 w-10 -translate-y-1/2 opacity-90 mix-blend-multiply"
+          />
+        </span>
         <span>인수자 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(인)</span>
       </div>
     </div>

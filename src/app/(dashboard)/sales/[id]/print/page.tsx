@@ -47,8 +47,11 @@ export default async function SalesPrintPage({
           company={company}
           customerName={order.customers?.name ?? ""}
           customerAddress={order.customers?.address ?? null}
+          customerContactName={order.customers?.contact_name ?? null}
+          customerContactPhone={order.customers?.phone ?? null}
           orderDate={order.order_date}
           items={deliveryItems}
+          note={order.memo}
         />
       </div>
     );
