@@ -27,7 +27,7 @@ const TREE: GroupItem[] = [
   },
   {
     label: "재고관리",
-    items: [{ label: "재고현황 / 재고조정", href: "/inventory" }],
+    items: [{ label: "재고현황", href: "/inventory" }],
   },
   { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
   { label: "생산관리", items: [{ label: "작업지시" }] },
