@@ -45,7 +45,7 @@ export default async function SalesPrintPage({
     }));
 
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-3xl print-page-wrapper">
         <div className="mb-4 flex justify-end print:hidden">
           <PrintButton />
         </div>
@@ -84,7 +84,7 @@ export default async function SalesPrintPage({
   });
 
   return (
-    <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none">
+    <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none print-page-wrapper">
       <div className="mb-4 flex items-center justify-between print:hidden">
         <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
           {(

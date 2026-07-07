@@ -22,11 +22,15 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 16.9mm 12mm 6mm 15mm;
+    margin: 0;
   }
 
   body {
     background: #ffffff;
+  }
+
+  .print-page-wrapper {
+    padding: 16.9mm 12mm 6mm 15mm;
   }
 
   /* 브라우저가 인쇄 시 잉크 절약을 위해 배경색/테두리색을 임의로 빼버리는
