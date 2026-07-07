@@ -1,15 +1,23 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import { InvoiceDoc } from "@/components/invoice-doc";
 
+type Copies = "both" | "receiver" | "supplier";
+
 export default async function SalesPrintPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ copies?: string }>;
 }) {
   const { id } = await params;
+  const { copies: copiesParam } = await searchParams;
+  const copies: Copies =
+    copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: company }] = await Promise.all([
@@ -75,33 +83,59 @@ export default async function SalesPrintPage({
     };
   });
 
+  const showReceiver = copies === "both" || copies === "receiver";
+  const showSupplier = copies === "both" || copies === "supplier";
+
   return (
     <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none">
-      <div className="mb-4 flex justify-end print:hidden">
+      <div className="mb-4 flex items-center justify-between print:hidden">
+        <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+          {(
+            [
+              ["both", "양쪽 다"],
+              ["receiver", "공급받는자만"],
+              ["supplier", "공급자만"],
+            ] as const
+          ).map(([value, label]) => (
+            <Link
+              key={value}
+              href={`/sales/${id}/print?copies=${value}`}
+              className={`rounded px-3 py-1.5 ${
+                copies === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
         <PrintButton />
       </div>
       <div className="overflow-x-auto break-inside-avoid">
-        <InvoiceDoc
-          copyLabel="공급받는자 보관용"
-          color="blue"
-          company={company}
-          customerName={order.customers?.name ?? ""}
-          orderDate={order.order_date}
-          docNumber={docNumber}
-          items={invoiceItems}
-          memo={order.memo}
-        />
-        <CutLine />
-        <InvoiceDoc
-          copyLabel="공급자 보관용"
-          color="red"
-          company={company}
-          customerName={order.customers?.name ?? ""}
-          orderDate={order.order_date}
-          docNumber={docNumber}
-          items={invoiceItems}
-          memo={order.memo}
-        />
+        {showReceiver && (
+          <InvoiceDoc
+            copyLabel="공급받는자 보관용"
+            color="blue"
+            company={company}
+            customerName={order.customers?.name ?? ""}
+            orderDate={order.order_date}
+            docNumber={docNumber}
+            items={invoiceItems}
+            memo={order.memo}
+          />
+        )}
+        {showReceiver && showSupplier && <CutLine />}
+        {showSupplier && (
+          <InvoiceDoc
+            copyLabel="공급자 보관용"
+            color="red"
+            company={company}
+            customerName={order.customers?.name ?? ""}
+            orderDate={order.order_date}
+            docNumber={docNumber}
+            items={invoiceItems}
+            memo={order.memo}
+          />
+        )}
       </div>
     </div>
   );
