@@ -56,7 +56,7 @@ export function SupplierSection({
       </tr>
 
       {/* 주소: 공급받는자/거래처명 병합 칸이 여기까지 이어지므로 값 칸 너비는 상호행과 동일하게 맞춘다 */}
-      <tr className="h-[28px]">
+      <tr className="h-[27px]">
         <Cell as="th" colSpan={1} className="leading-[13px]">
           주<br />소
         </Cell>
@@ -66,7 +66,7 @@ export function SupplierSection({
       </tr>
 
       {/* 업태 / 종목 / 비고 / 인수자 */}
-      <tr className="h-[28px]">
+      <tr className="h-[27px]">
         <Cell as="th" colSpan={1} className="leading-[13px]">
           업<br />태
         </Cell>

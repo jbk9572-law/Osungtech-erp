@@ -32,7 +32,7 @@ export function InvoiceCopy({
 
   return (
     <div className="break-inside-avoid" style={colorStyle}>
-      <div className="-mb-[11px] text-[11px] leading-none text-black">(엔택스 B형 서식)</div>
+      <div className="-mb-[12px] text-[11px] leading-none text-black">(엔택스 B형 서식)</div>
       <table className="w-full table-fixed border-collapse text-[13px] leading-tight">
         <colgroup>
           {COL_WIDTHS.map((w, i) => (
