@@ -28,11 +28,13 @@ export function SupplierSection({
         >
           공급자
         </Cell>
-        <Cell colSpan={7} className="font-bold text-black">
-          {company?.business_number ?? "-"}
+        <Cell colSpan={7} className="font-bold text-black" style={{ fontSize: SUPPLIER.businessNumberFontSize }}>
+          <span style={{ position: "relative", left: SUPPLIER.businessNumberOffsetX }}>
+            {company?.business_number ?? "-"}
+          </span>
         </Cell>
         <Cell colSpan={4} as="th" style={{ fontSize: SUPPLIER.labelFontSize }}>
-          종사업장
+          <span style={{ position: "relative", left: SUPPLIER.subLabelOffsetX }}>종사업장</span>
         </Cell>
         <Cell colSpan={2} />
         {customerSlot}
@@ -44,16 +46,20 @@ export function SupplierSection({
           상<br />호
         </Cell>
         <Cell colSpan={8} align="center" className="font-bold text-black">
-          {company?.name ?? "-"}
+          <span style={{ position: "relative", left: SUPPLIER.companyNameOffsetX }}>{company?.name ?? "-"}</span>
         </Cell>
         <Cell as="th" colSpan={1} style={{ lineHeight: `${SUPPLIER.verticalLabelLineHeight}px` }}>
           성<br />명
         </Cell>
         <Cell colSpan={5} className="font-bold text-black">
-          {company?.representative_name ?? "-"}
+          <span style={{ position: "relative", left: SUPPLIER.repNameOffsetX }}>
+            {company?.representative_name ?? "-"}
+          </span>
         </Cell>
         <Cell colSpan={2} align="center">
-          (인)
+          <span style={{ position: "relative", left: SUPPLIER.stampOffsetX, fontSize: SUPPLIER.stampFontSize }}>
+            (인)
+          </span>
         </Cell>
       </tr>
 
@@ -86,8 +92,8 @@ export function SupplierSection({
           비<br />고
         </Cell>
         <Cell colSpan={8} />
-        <Cell as="th" colSpan={4}>
-          인수자
+        <Cell as="th" colSpan={4} style={{ fontSize: SUPPLIER.assigneeLabelFontSize }}>
+          <span style={{ position: "relative", left: SUPPLIER.assigneeLabelOffsetX }}>인수자</span>
         </Cell>
         <Cell colSpan={4} />
       </tr>

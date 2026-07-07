@@ -30,7 +30,15 @@ export function CustomerSection({ customerName }: { customerName: string }) {
         className="relative"
         style={{ paddingTop: CUSTOMER.boxTopPadding }}
       >
-        <div className="text-left text-black" style={{ paddingLeft: CUSTOMER.namePaddingLeft }}>
+        <div
+          className="text-left text-black"
+          style={{
+            paddingLeft: CUSTOMER.namePaddingLeft,
+            fontSize: CUSTOMER.nameFontSize,
+            position: "relative",
+            left: CUSTOMER.nameOffsetX,
+          }}
+        >
           {customerName}
         </div>
         <span

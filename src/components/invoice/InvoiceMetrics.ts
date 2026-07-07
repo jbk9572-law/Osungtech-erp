@@ -25,21 +25,32 @@ export const SUPPLIER = {
   row2Height: 28,
   row3Height: 28,
   row4Height: 28,
-  labelFontSize: 15,
-  labelLetterSpacing: "0.3em",
+  labelFontSize: 12,
+  labelLetterSpacing: "0.35em",
   labelPaddingLeft: 6,
+  subLabelOffsetX: -13.16,
   verticalLabelLineHeight: 13,
-  remarkLabelFontSize: 14,
+  remarkLabelFontSize: 12,
+  companyNameOffsetX: 20.6,
+  repNameOffsetX: 44.2,
+  stampFontSize: 9.3,
+  stampOffsetX: 5.8,
+  assigneeLabelFontSize: 10.75,
+  assigneeLabelOffsetX: 28.07,
+  businessNumberFontSize: 16,
+  businessNumberOffsetX: 4.52,
 };
 
 export const CUSTOMER = {
-  verticalLabelFontSize: 11,
+  verticalLabelFontSize: 12,
   verticalLabelGap: 3,
   boxTopPadding: 18,
   namePaddingLeft: 10,
+  nameFontSize: 16,
+  nameOffsetX: 51,
   guihaTop: 18,
-  guihaRight: 4,
-  greetingTopPadding: 28,
+  guihaRight: 11,
+  greetingTopPadding: 13,
 };
 
 export const TABLE = {
