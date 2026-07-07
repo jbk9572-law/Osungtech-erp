@@ -240,16 +240,16 @@ export function NewSaleForm({
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
             <thead>
               <tr>
-                <th style={{ width: "32%" }}>품목</th>
-                <th style={{ width: "13%" }}>규격</th>
-                <th style={{ width: "8%" }}>단위</th>
-                <th className="num" style={{ width: "11%" }}>
+                <th style={{ width: "22%" }}>품목</th>
+                <th style={{ width: "12%" }}>규격</th>
+                <th style={{ width: "7%" }}>단위</th>
+                <th className="num" style={{ width: "18%" }}>
                   수량
                 </th>
-                <th className="num" style={{ width: "15%" }}>
+                <th className="num" style={{ width: "17%" }}>
                   단가
                 </th>
-                <th className="num" style={{ width: "14%" }}>
+                <th className="num" style={{ width: "17%" }}>
                   금액
                 </th>
                 <th style={{ width: "7%" }} />

@@ -21,7 +21,7 @@ export default async function EditPurchasePage({
         .order("created_at"),
       supabase.from("suppliers").select("id, name").order("name"),
       supabase.from("products").select("id, sku, name, spec, unit, cost").order("name"),
-      supabase.from("warehouses").select("id").limit(1).maybeSingle(),
+      supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
     ]);
 
   if (!order) {
