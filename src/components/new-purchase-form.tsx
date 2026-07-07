@@ -81,6 +81,11 @@ export function NewPurchaseForm({
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
+  // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
+  // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
+  // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
+  // 화면에서만 숨긴다 (다시 제출하면 onSubmit에서 원복해 새 결과를 보여줌).
+  const [messageDismissed, setMessageDismissed] = useState(false);
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -129,7 +134,13 @@ export function NewPurchaseForm({
   );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form
+      action={formAction}
+      className="space-y-6"
+      onChangeCapture={() => setMessageDismissed(true)}
+      onClickCapture={() => setMessageDismissed(true)}
+      onSubmit={() => setMessageDismissed(false)}
+    >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
@@ -317,7 +328,7 @@ export function NewPurchaseForm({
         </div>
       </div>
 
-      <FormMessage state={state} />
+      <FormMessage state={messageDismissed ? undefined : state} />
 
       <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
         {pending ? "저장 중..." : `F7 ${submitLabel}`}
