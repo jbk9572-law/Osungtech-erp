@@ -69,7 +69,7 @@ export default async function SalesPrintPage({
     const d = new Date(order.order_date);
     return {
       id: item.id,
-      monthDay: `${d.getMonth() + 1}/${d.getDate()}`,
+      monthDay: `${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`,
       productLabel: item.products?.categories?.name
         ? `${item.products.categories.name}/${item.products.name}`
         : (item.products?.name ?? ""),
