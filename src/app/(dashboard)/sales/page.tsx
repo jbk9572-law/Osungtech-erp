@@ -4,6 +4,20 @@ import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
+type DisplayRow = {
+  key: string;
+  orderId: string | undefined;
+  date: string | undefined;
+  customerName: string | undefined;
+  productLabel: string;
+  spec: string;
+  quantity: number;
+  unit: string | null | undefined;
+  unitPrice: number | null;
+  supplyAmount: number;
+  taxAmount: number;
+};
+
 export default async function SalesPage({
   searchParams,
 }: {
@@ -35,15 +49,63 @@ export default async function SalesPage({
       )
     : rawItems;
 
-  const rows = (items ?? []).map((item) => {
+  const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
     const taxAmount = Math.round(supplyAmount * 0.1);
     return { ...item, supplyAmount, taxAmount };
   });
 
-  const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
-  const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
-  const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
+  // 검색어 없이 조회할 때는 한 명세표(sales_order)를 한 행으로 묶어서 보여준다.
+  // 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로 요약하고, 나머지 품목은
+  // 리스트에 펼쳐 보이지 않는다. 거래처/상품 검색어가 있을 때만(특정 품목을
+  // 찾는 상황) 품목별로 전체 펼쳐서 보여준다.
+  const rows: DisplayRow[] = keyword
+    ? itemRows.map((item) => ({
+        key: item.id,
+        orderId: item.sales_orders?.id,
+        date: item.sales_orders?.order_date,
+        customerName: item.sales_orders?.customers?.name,
+        productLabel: item.products?.name ?? "-",
+        spec: item.spec || item.products?.spec || "-",
+        quantity: item.quantity,
+        unit: item.products?.unit,
+        unitPrice: Number(item.unit_price),
+        supplyAmount: item.supplyAmount,
+        taxAmount: item.taxAmount,
+      }))
+    : Object.values(
+        itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
+          const orderId = item.sales_orders?.id ?? item.id;
+          if (!acc[orderId]) {
+            acc[orderId] = {
+              key: orderId,
+              orderId,
+              date: item.sales_orders?.order_date,
+              customerName: item.sales_orders?.customers?.name,
+              productLabel: item.products?.name ?? "-",
+              spec: item.spec || item.products?.spec || "-",
+              quantity: 0,
+              unit: item.products?.unit,
+              unitPrice: null,
+              supplyAmount: 0,
+              taxAmount: 0,
+              itemCount: 0,
+            };
+          }
+          acc[orderId].itemCount += 1;
+          acc[orderId].quantity += item.quantity;
+          acc[orderId].supplyAmount += item.supplyAmount;
+          acc[orderId].taxAmount += item.taxAmount;
+          return acc;
+        }, {})
+      ).map((row) => ({
+        ...row,
+        productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+      }));
+
+  const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
+  const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);
+  const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
   const presets = getDatePresets();
 
   return (
@@ -55,7 +117,7 @@ export default async function SalesPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">영업관리 &gt; 수주관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">영업관리 &gt; 매출관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
@@ -127,39 +189,34 @@ export default async function SalesPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((item) => {
-              const order = item.sales_orders;
-              return (
-                <ClickableRow key={item.id} href={order ? `/sales/${order.id}` : "#"}>
-                  <td>{order ? new Date(order.order_date).toLocaleDateString("ko-KR") : "-"}</td>
-                  <td>{order?.customers?.name}</td>
-                  <td>{item.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {item.spec || item.products?.spec || "-"}
-                  </td>
-                  <td className="num">
-                    {item.quantity.toLocaleString()} {item.products?.unit}
-                  </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {Number(item.unit_price).toLocaleString()}
-                  </td>
-                  <td className="num">{item.supplyAmount.toLocaleString()}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {item.taxAmount.toLocaleString()}
-                  </td>
-                  <td className="num">
-                    {order && (
-                      <Link
-                        href={`/sales/${order.id}/print`}
-                        style={{ color: "var(--erp-primary)", fontWeight: 600 }}
-                      >
-                        명세표 →
-                      </Link>
-                    )}
-                  </td>
-                </ClickableRow>
-              );
-            })}
+            {rows.map((row) => (
+              <ClickableRow key={row.key} href={row.orderId ? `/sales/${row.orderId}` : "#"}>
+                <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                <td>{row.customerName}</td>
+                <td>{row.productLabel}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
+                <td className="num">
+                  {row.quantity.toLocaleString()} {row.unit}
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {row.unitPrice != null ? row.unitPrice.toLocaleString() : "-"}
+                </td>
+                <td className="num">{row.supplyAmount.toLocaleString()}</td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {row.taxAmount.toLocaleString()}
+                </td>
+                <td className="num">
+                  {row.orderId && (
+                    <Link
+                      href={`/sales/${row.orderId}/print`}
+                      style={{ color: "var(--erp-primary)", fontWeight: 600 }}
+                    >
+                      명세표 →
+                    </Link>
+                  )}
+                </td>
+              </ClickableRow>
+            ))}
             {!rows.length && (
               <tr>
                 <td colSpan={9} className="erp-grid-empty">

@@ -12,7 +12,7 @@ const TREE: GroupItem[] = [
   {
     label: "영업관리",
     items: [
-      { label: "수주관리", href: "/sales" },
+      { label: "매출관리", href: "/sales" },
       { label: "견적관리" },
       { label: "출하지시" },
       { label: "세금계산서" },
@@ -21,7 +21,7 @@ const TREE: GroupItem[] = [
   {
     label: "구매관리",
     items: [
-      { label: "발주관리", href: "/purchases" },
+      { label: "매입관리", href: "/purchases" },
       { label: "입고관리" },
     ],
   },
@@ -30,7 +30,6 @@ const TREE: GroupItem[] = [
     items: [{ label: "재고현황", href: "/inventory" }],
   },
   { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
-  { label: "생산관리", items: [{ label: "작업지시" }] },
   {
     label: "거래처관리",
     items: [
@@ -38,10 +37,11 @@ const TREE: GroupItem[] = [
       { label: "공급처관리", href: "/suppliers" },
     ],
   },
-  { label: "회계관리", items: [{ label: "전표관리" }] },
-  { label: "CRM", items: [{ label: "고객상담" }] },
-  { label: "인사관리", items: [{ label: "사원관리" }] },
-  { label: "보고서", items: [{ label: "영업분석" }] },
+  { label: "회계관리", items: [{ label: "전표관리", href: "/accounting/vouchers" }] },
+  {
+    label: "보고서",
+    items: [{ label: "영업분석" }, { label: "지급결의양식", href: "/reports/payment-requests" }],
+  },
   {
     label: "환경설정",
     items: [{ label: "회사정보", href: "/settings/company" }],

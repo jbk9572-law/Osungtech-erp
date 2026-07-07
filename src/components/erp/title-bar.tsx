@@ -6,12 +6,14 @@ import { signOut } from "@/app/login/actions";
 
 const SECTION_LABEL: { prefix: string; label: string }[] = [
   { prefix: "/dashboard", label: "메인 대시보드" },
-  { prefix: "/sales", label: "영업관리 > 수주관리" },
-  { prefix: "/purchases", label: "구매관리 > 발주관리" },
+  { prefix: "/sales", label: "영업관리 > 매출관리" },
+  { prefix: "/purchases", label: "구매관리 > 매입관리" },
   { prefix: "/inventory", label: "재고관리 > 재고현황" },
   { prefix: "/products", label: "품목관리" },
   { prefix: "/customers", label: "거래처관리 > 판매처관리" },
   { prefix: "/suppliers", label: "거래처관리 > 공급처관리" },
+  { prefix: "/accounting", label: "회계관리 > 전표관리" },
+  { prefix: "/reports", label: "보고서 > 지급결의양식" },
   { prefix: "/settings", label: "환경설정" },
 ];
 
