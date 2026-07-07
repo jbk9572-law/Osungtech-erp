@@ -22,7 +22,7 @@ export default async function SalesPrintPage({
     supabase.from("sales_orders").select("*, customers(*)").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select("*, products(sku, name, unit, categories(name))")
+      .select("*, products(sku, name, spec, unit, categories(name))")
       .eq("sales_order_id", id)
       .order("created_at"),
     supabase.from("company_profile").select("*").eq("id", 1).maybeSingle(),
@@ -70,9 +70,11 @@ export default async function SalesPrintPage({
     return {
       id: item.id,
       monthDay: `${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`,
-      productLabel: item.products?.categories?.name
-        ? `${item.products.categories.name}/${item.products.name}`
-        : (item.products?.name ?? ""),
+      productLabel: (() => {
+        const name = item.products?.name ?? "";
+        const spec = item.spec || item.products?.spec;
+        return spec ? `${name}/${spec}` : name;
+      })(),
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
       unitPrice: Number(item.unit_price),
