@@ -46,7 +46,7 @@ export const ITEM_COLS = [2, 10, 3, 3, 4, 4, 4, 4] as const;
 // 품목 테이블의 모든 행(입력된 행/빈 행 포함)이 항상 같은 높이를 갖도록 고정.
 // 비어 있는 셀은 내용이 없어 줄 높이가 생기지 않아 그냥 두면 입력된 행보다
 // 얇게 찌그러지는 문제가 있어, 모든 품목 행에 동일한 높이를 강제로 지정한다.
-export const ITEM_ROW_HEIGHT = "h-[25px]";
+export const ITEM_ROW_HEIGHT = "h-[24px]";
 
 export function formatDate(dateStr: string) {
   const d = new Date(dateStr);
