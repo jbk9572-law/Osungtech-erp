@@ -11,6 +11,8 @@ export const TITLE = {
   fontSize: 27,
   fontWeight: 700,
   letterSpacing: "0em",
+  offsetX: 60,
+  offsetY: 0,
 };
 
 export const HEADER = {

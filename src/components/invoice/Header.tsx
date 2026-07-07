@@ -25,7 +25,7 @@ export function Header({
           letterSpacing: TITLE.letterSpacing,
         }}
       >
-        거래명세표
+        <span style={{ position: "relative", left: TITLE.offsetX, top: TITLE.offsetY }}>거래명세표</span>
       </Cell>
       <Cell
         colSpan={7}
