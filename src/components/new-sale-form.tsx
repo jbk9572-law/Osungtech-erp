@@ -9,6 +9,7 @@ import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -271,7 +272,7 @@ export function NewSaleForm({
                 <th style={{ width: "7%" }} />
               </tr>
             </thead>
-            <tbody>
+            <tbody onKeyDown={focusSameColumnNextRow}>
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
