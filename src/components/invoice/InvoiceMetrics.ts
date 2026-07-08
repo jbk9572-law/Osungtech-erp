@@ -51,7 +51,7 @@ export const CUSTOMER = {
   boxTopPadding: 18,
   namePaddingLeft: 10,
   nameFontSize: 16,
-  nameOffsetX: 51,
+  nameOffsetX: 81.52,
   guihaTop: 18,
   guihaRight: 11,
   greetingTopPadding: 13,
@@ -94,7 +94,7 @@ export const FOOTER = {
 
 export const SEAL = {
   top: 58,
-  left: "43.5%",
+  left: "49.38%",
   size: 52,
 };
 
