@@ -43,9 +43,15 @@ export function Header({
           {copyLabel.split(" ")[1]})
         </span>
       </Cell>
+      {/* 0707 원본 실측: 일자/날짜/No/문서번호/1-1 사이 세로 구분선은 위쪽
+          절반(가로선 위)에서만 존재하고, 가로선 아래는 칸 구분 없이 하나로
+          뚫린 빈 공간이다. 테이블 셀 테두리는 항상 셀 전체 높이로만 그려지므로
+          기본 테두리는 전부 숨기고, 위쪽 절반 높이만큼만 커스텀 세로선을
+          그려 이 구조를 재현한다. */}
       <Cell
         colSpan={3}
         valign="top"
+        hideBorder={["r"]}
         style={{ paddingTop: HEADER.dateRowTopPadding, position: "relative" }}
       >
         일자
@@ -58,8 +64,14 @@ export function Header({
       <Cell
         colSpan={5}
         valign="top"
+        hideBorder={["l", "r"]}
         style={{ paddingTop: HEADER.dateRowTopPadding, position: "relative" }}
       >
+        <span
+          aria-hidden
+          className="absolute top-0 border-l border-[var(--invoice-line)]"
+          style={{ height: HEADER.dateRowLineOffsetY }}
+        />
         {formatDate(orderDate)}
         <span
           aria-hidden
@@ -70,9 +82,14 @@ export function Header({
       <Cell
         colSpan={1}
         valign="top"
-        hideBorder={["r"]}
+        hideBorder={["l", "r"]}
         style={{ paddingTop: HEADER.dateRowTopPadding, position: "relative" }}
       >
+        <span
+          aria-hidden
+          className="absolute top-0 border-l border-[var(--invoice-line)]"
+          style={{ height: HEADER.dateRowLineOffsetY }}
+        />
         No
         <span
           aria-hidden
@@ -83,13 +100,13 @@ export function Header({
       <Cell
         colSpan={6}
         valign="top"
-        hideBorder={["l"]}
+        hideBorder={["l", "r"]}
         style={{ paddingTop: HEADER.dateRowTopPadding, overflow: "visible", position: "relative" }}
       >
         <span
           aria-hidden
-          className="absolute top-0 bottom-0 border-l border-[var(--invoice-line)]"
-          style={{ left: HEADER.docNumberLineOffsetX }}
+          className="absolute top-0 border-l border-[var(--invoice-line)]"
+          style={{ left: HEADER.docNumberLineOffsetX, height: HEADER.dateRowLineOffsetY }}
         />
         <span style={{ position: "relative", left: HEADER.docNumberOffsetX }}>{docNumber}</span>
         <span
@@ -98,7 +115,18 @@ export function Header({
           style={{ top: HEADER.dateRowLineOffsetY }}
         />
       </Cell>
-      <Cell colSpan={2} align="center" valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
+      <Cell
+        colSpan={2}
+        align="center"
+        valign="top"
+        hideBorder={["l"]}
+        style={{ paddingTop: HEADER.dateRowTopPadding, position: "relative" }}
+      >
+        <span
+          aria-hidden
+          className="absolute top-0 border-l border-[var(--invoice-line)]"
+          style={{ height: HEADER.dateRowLineOffsetY }}
+        />
         1/1
       </Cell>
     </tr>
