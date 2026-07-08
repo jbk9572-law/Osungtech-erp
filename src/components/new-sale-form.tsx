@@ -19,6 +19,7 @@ type Product = {
   spec?: string | null;
   unit?: string | null;
   price: number;
+  stock?: number;
 };
 type CustomerPrice = { customer_id: string; product_id: string; unit_price: number };
 type PriceHistoryEntry = {
@@ -331,6 +332,17 @@ export function NewSaleForm({
                         disabled={!row.manualPrice}
                         className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
                       />
+                      {row.productId && product && (
+                        <p
+                          className="mt-1 text-right text-[10.5px]"
+                          style={{
+                            color: row.quantity > (product.stock ?? 0) ? "#dc3545" : "var(--erp-text-muted)",
+                          }}
+                        >
+                          재고 {(product.stock ?? 0).toLocaleString()}{product.unit ?? ""}
+                          {row.quantity > (product.stock ?? 0) && " · 재고 부족"}
+                        </p>
+                      )}
                       {row.productId && customerId && (
                         <label
                           className="mt-1 flex items-center justify-end gap-1 text-[10.5px]"
