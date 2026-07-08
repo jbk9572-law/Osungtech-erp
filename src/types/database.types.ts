@@ -121,6 +121,7 @@ export type Database = {
           supplier_id: string | null;
           spec: string | null;
           unit: string;
+          base_package_qty: number | null;
           price: number;
           cost: number;
           reorder_point: number;
@@ -137,6 +138,7 @@ export type Database = {
           supplier_id?: string | null;
           spec?: string | null;
           unit?: string;
+          base_package_qty?: number | null;
           price?: number;
           cost?: number;
           reorder_point?: number;
@@ -153,6 +155,7 @@ export type Database = {
           supplier_id?: string | null;
           spec?: string | null;
           unit?: string;
+          base_package_qty?: number | null;
           price?: number;
           cost?: number;
           reorder_point?: number;

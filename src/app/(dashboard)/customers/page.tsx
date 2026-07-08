@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
 import { ClickableRow } from "@/components/clickable-row";
+import { ExcelImportForm } from "@/components/excel-import-form";
+import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 
 export default async function CustomersPage() {
   const supabase = await createClient();
@@ -19,6 +21,15 @@ export default async function CustomersPage() {
         </div>
         <div className="erp-detail-body">
           <CreateCustomerForm />
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">엑셀 일괄등록</span>
+        </div>
+        <div className="erp-detail-body">
+          <ExcelImportForm action={importCustomersExcel} templateHref="/templates/customers-template.xlsx" />
         </div>
       </div>
 
