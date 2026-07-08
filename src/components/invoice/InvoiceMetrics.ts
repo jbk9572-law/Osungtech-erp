@@ -94,7 +94,7 @@ export const FOOTER = {
 
 export const SEAL = {
   top: 58,
-  left: "49.38%",
+  left: "47.8%",
   size: 52,
 };
 
