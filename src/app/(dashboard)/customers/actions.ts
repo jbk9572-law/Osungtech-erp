@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 
-const DELIVERY_NOTE_VARIANTS = ["sns_pheeltech", "zenith_tech", "kt_solution"] as const;
+const DELIVERY_NOTE_VARIANTS = ["sns_filtech", "zenith_tech", "ket_solution"] as const;
 
 function customerFieldsFrom(formData: FormData) {
   const documentType = String(formData.get("document_type") ?? "명세표");

@@ -13,7 +13,7 @@ type Company = {
   logo_wordmark_url?: string | null;
 } | null;
 
-export type DeliveryNoteVariant = "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
+export type DeliveryNoteVariant = "sns_filtech" | "zenith_tech" | "ket_solution" | null;
 
 type Item = {
   id: string;
@@ -54,7 +54,7 @@ type ZoneConfig = {
 };
 
 const VARIANT_CONFIG: Record<Exclude<DeliveryNoteVariant, null>, ZoneConfig> = {
-  sns_pheeltech: {
+  sns_filtech: {
     bLabel: "수량 (box)",
     cLabel: "",
     cellB: (row) => (row.quantity != null ? `${row.quantity.toLocaleString()}${row.unit ? ` ${row.unit}` : ""}` : ""),
@@ -68,7 +68,7 @@ const VARIANT_CONFIG: Record<Exclude<DeliveryNoteVariant, null>, ZoneConfig> = {
     cellC: (row) => (row.quantity != null ? row.quantity.toLocaleString() : ""),
     totalZone: "c",
   },
-  kt_solution: {
+  ket_solution: {
     bLabel: "관리번호",
     cLabel: "수량",
     cellB: (row) => row.sku,

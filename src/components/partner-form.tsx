@@ -16,7 +16,7 @@ export type PartnerFormInitial = {
   address?: string | null;
   notes?: string | null;
   document_type?: "출고증" | "명세표" | null;
-  delivery_note_variant?: "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
+  delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
 };
 
 export function PartnerForm({
@@ -110,9 +110,9 @@ export function PartnerForm({
             className="erp-select"
           >
             <option value="">공용 서식 (기본)</option>
-            <option value="sns_pheeltech">에스엔에스필텍 전용 서식</option>
+            <option value="sns_filtech">에스엔에스필텍 전용 서식</option>
             <option value="zenith_tech">제니스테크 전용 서식</option>
-            <option value="kt_solution">케이이티솔루션 전용 서식</option>
+            <option value="ket_solution">케이이티솔루션 전용 서식</option>
           </select>
         </div>
       )}

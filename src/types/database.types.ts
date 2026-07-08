@@ -359,7 +359,7 @@ export type Database = {
           address: string | null;
           notes: string | null;
           document_type: "출고증" | "명세표";
-          delivery_note_variant: "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
+          delivery_note_variant: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           created_at: string;
         };
         Insert: {
@@ -373,7 +373,7 @@ export type Database = {
           address?: string | null;
           notes?: string | null;
           document_type?: "출고증" | "명세표";
-          delivery_note_variant?: "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
+          delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           created_at?: string;
         };
         Update: {
@@ -387,7 +387,7 @@ export type Database = {
           address?: string | null;
           notes?: string | null;
           document_type?: "출고증" | "명세표";
-          delivery_note_variant?: "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
+          delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           created_at?: string;
         };
         Relationships: [];
