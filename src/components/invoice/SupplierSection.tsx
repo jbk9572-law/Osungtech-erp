@@ -92,8 +92,8 @@ export function SupplierSection({
           비<br />고
         </Cell>
         <Cell colSpan={8} />
-        <Cell as="th" colSpan={4} style={{ fontSize: SUPPLIER.assigneeLabelFontSize }}>
-          <span style={{ position: "relative", left: SUPPLIER.assigneeLabelOffsetX }}>인수자</span>
+        <Cell as="th" colSpan={4} align="center" style={{ fontSize: SUPPLIER.assigneeLabelFontSize }}>
+          인수자
         </Cell>
         <Cell colSpan={4} />
       </tr>

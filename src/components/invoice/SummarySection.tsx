@@ -36,7 +36,7 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
           </div>
         </Cell>
         <Cell
-          colSpan={4}
+          colSpan={8}
           as="th"
           hideBorder={["l"]}
           style={{ fontSize: SUMMARY.balanceLabelFontSize, overflow: "visible", position: "relative" }}
@@ -48,7 +48,6 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
           />
           <span style={{ position: "relative", left: SUMMARY.balanceLabelOffsetX }}>전잔금</span>
         </Cell>
-        <Cell colSpan={4} />
       </tr>
       <tr style={{ height: SUMMARY.memoRowHeight, fontSize: SUMMARY.labelFontSize }}>
         <Cell colSpan={2}>
@@ -58,7 +57,7 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
           {memo || ""}
         </Cell>
         <Cell
-          colSpan={4}
+          colSpan={8}
           as="th"
           hideBorder={["l"]}
           style={{ fontSize: SUMMARY.balanceLabelFontSize, overflow: "visible", position: "relative" }}
@@ -70,7 +69,6 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
           />
           <span style={{ position: "relative", left: SUMMARY.balanceLabelOffsetX }}>총잔금</span>
         </Cell>
-        <Cell colSpan={4} />
       </tr>
     </>
   );

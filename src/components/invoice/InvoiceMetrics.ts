@@ -41,7 +41,6 @@ export const SUPPLIER = {
   stampFontSize: 9.3,
   stampOffsetX: 5.8,
   assigneeLabelFontSize: 10.75,
-  assigneeLabelOffsetX: 28.07,
   businessNumberFontSize: 16,
   businessNumberOffsetX: 4.52,
 };
@@ -80,7 +79,7 @@ export const SUMMARY = {
   labelOffsetX: 4.55,
   balanceLabelFontSize: 12,
   balanceLabelOffsetX: -42.79,
-  amountOffsetX: -6.48,
+  amountOffsetX: 0,
   breakdownFontSize: 12,
   breakdownOffsetX: -42.69,
   balanceLineOffsetX: 18.93,
