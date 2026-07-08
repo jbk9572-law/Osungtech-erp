@@ -13,11 +13,19 @@ export default async function TodoDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: row } = await supabase
+  const { data: row, error } = await supabase
     .from("todos")
     .select("id, title, memo, due_date, done, profiles(full_name)")
     .eq("id", id)
     .maybeSingle();
+
+  if (error) {
+    return (
+      <div className="erp-grid-empty" style={{ padding: 24 }}>
+        할 일을 불러오지 못했습니다: {error.message}
+      </div>
+    );
+  }
 
   if (!row) {
     notFound();

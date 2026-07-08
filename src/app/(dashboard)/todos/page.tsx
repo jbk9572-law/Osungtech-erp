@@ -6,7 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function TodosPage() {
   const supabase = await createClient();
-  const { data: rows } = await supabase
+  const { data: rows, error } = await supabase
     .from("todos")
     .select("id, title, memo, due_date, done, profiles(full_name)")
     .order("done", { ascending: true })
@@ -28,6 +28,12 @@ export default async function TodosPage() {
           ESC 닫기
         </Link>
       </div>
+
+      {error && (
+        <p className="erp-grid-empty" style={{ marginBottom: 12 }}>
+          목록을 불러오지 못했습니다: {error.message}
+        </p>
+      )}
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

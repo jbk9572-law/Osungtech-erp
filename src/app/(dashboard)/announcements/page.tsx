@@ -9,7 +9,7 @@ export default async function AnnouncementsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: rows }, { data: reads }] = await Promise.all([
+  const [{ data: rows, error }, { data: reads }] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, pinned, created_at, profiles(full_name)")
@@ -38,6 +38,12 @@ export default async function AnnouncementsPage() {
           ESC 닫기
         </Link>
       </div>
+
+      {error && (
+        <p className="erp-grid-empty" style={{ marginBottom: 12 }}>
+          목록을 불러오지 못했습니다: {error.message}
+        </p>
+      )}
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

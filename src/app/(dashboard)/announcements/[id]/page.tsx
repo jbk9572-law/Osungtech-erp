@@ -13,17 +13,29 @@ export default async function AnnouncementDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: row } = await supabase
+  const { data: row, error } = await supabase
     .from("announcements")
     .select("id, title, content, pinned, created_at, profiles(full_name)")
     .eq("id", id)
     .maybeSingle();
 
+  if (error) {
+    return (
+      <div className="erp-grid-empty" style={{ padding: 24 }}>
+        공지사항을 불러오지 못했습니다: {error.message}
+      </div>
+    );
+  }
+
   if (!row) {
     notFound();
   }
 
-  await markAnnouncementRead(row.id);
+  try {
+    await markAnnouncementRead(row.id);
+  } catch {
+    // 읽음 처리 실패는 화면 표시에 영향을 주지 않도록 무시한다.
+  }
 
   return (
     <div>
