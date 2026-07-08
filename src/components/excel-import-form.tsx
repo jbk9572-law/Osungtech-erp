@@ -28,7 +28,13 @@ export function ExcelImportForm({
       </a>
       <input type="file" name="file" accept=".xlsx,.xls" required className="erp-input" style={{ maxWidth: 280 }} />
       <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-        {pending ? "업로드 중..." : "엑셀로 일괄등록"}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 업로드 중...
+          </>
+        ) : (
+          "엑셀로 일괄등록"
+        )}
       </button>
       <div className="basis-full">
         <FormMessage state={state} />

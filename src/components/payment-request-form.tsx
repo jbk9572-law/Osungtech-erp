@@ -23,7 +23,13 @@ export function PaymentRequestForm() {
       />
       <div className="sm:col-span-3 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-          {pending ? "저장 중..." : "F7 저장"}
+          {pending ? (
+            <>
+              <span className="erp-spinner" aria-hidden /> 저장 중...
+            </>
+          ) : (
+            "F7 저장"
+          )}
         </button>
         <FormMessage state={state} />
       </div>

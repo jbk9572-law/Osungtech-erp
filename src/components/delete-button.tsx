@@ -31,7 +31,13 @@ export function DeleteButton({
     >
       <input type="hidden" name="id" value={id} />
       <button ref={buttonRef} type="submit" disabled={pending} className="erp-btn erp-btn-danger">
-        {pending ? "삭제 중..." : `F6 ${label}`}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 삭제 중...
+          </>
+        ) : (
+          `F6 ${label}`
+        )}
       </button>
       <FormMessage state={state} />
     </form>

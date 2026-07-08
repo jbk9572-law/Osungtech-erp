@@ -75,7 +75,13 @@ export default function SignupPage() {
             disabled={pending}
             className="w-full rounded-md bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
           >
-            {pending ? "가입 중..." : "회원가입"}
+            {pending ? (
+              <>
+                <span className="erp-spinner" aria-hidden /> 가입 중...
+              </>
+            ) : (
+              "회원가입"
+            )}
           </button>
         </form>
 

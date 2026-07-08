@@ -85,7 +85,13 @@ export function InventoryAdjustForm({
         className="erp-input sm:col-span-3"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
-        {pending ? "저장 중..." : "F7 재고 조정 등록"}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          "F7 재고 조정 등록"
+        )}
       </button>
       <div className="sm:col-span-4">
         <FormMessage state={state} />

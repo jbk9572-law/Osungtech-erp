@@ -161,7 +161,13 @@ export function ProductForm({
         className="erp-input"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-4">
-        {pending ? "저장 중..." : `F7 ${submitLabel}`}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          `F7 ${submitLabel}`
+        )}
       </button>
       <div className="sm:col-span-4">
         <FormMessage state={state} />

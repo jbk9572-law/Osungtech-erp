@@ -122,7 +122,13 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-2">
-        {pending ? "저장 중..." : "F7 저장"}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          "F7 저장"
+        )}
       </button>
       <div className="sm:col-span-2">
         <FormMessage state={state} />

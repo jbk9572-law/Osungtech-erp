@@ -45,7 +45,13 @@ export function CustomerPriceForm({
         className="erp-input"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-        {pending ? "저장 중..." : "F7 저장"}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          "F7 저장"
+        )}
       </button>
       <div className="sm:col-span-3">
         <FormMessage state={state} />

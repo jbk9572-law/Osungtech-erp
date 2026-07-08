@@ -106,7 +106,13 @@ export default function LoginPage() {
               disabled={pending}
               className="h-10 w-full rounded-sm bg-[#1f3b75] text-sm font-semibold text-white hover:bg-[#142a56] disabled:opacity-50"
             >
-              {pending ? "로그인 중..." : "로그인"}
+              {pending ? (
+                <>
+                  <span className="erp-spinner" aria-hidden /> 로그인 중...
+                </>
+              ) : (
+                "로그인"
+              )}
             </button>
 
             <p className="text-center text-xs text-[#6b7280]">

@@ -37,7 +37,13 @@ function BrandingSlot({
           className="text-xs text-[#6b7280] file:mr-2 file:rounded-sm file:border-0 file:bg-[#1f3b75] file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
         />
         <button type="submit" disabled={pending} className="erp-btn" style={{ minWidth: 0 }}>
-          {pending ? "업로드 중..." : "교체"}
+          {pending ? (
+            <>
+              <span className="erp-spinner" aria-hidden /> 업로드 중...
+            </>
+          ) : (
+            "교체"
+          )}
         </button>
       </form>
       <div className="mt-2">

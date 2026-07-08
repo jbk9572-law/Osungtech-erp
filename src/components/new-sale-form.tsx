@@ -420,7 +420,13 @@ export function NewSaleForm({
       <FormMessage state={messageDismissed ? undefined : state} />
 
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-        {pending ? "저장 중..." : `F7 ${submitLabel}`}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          `F7 ${submitLabel}`
+        )}
       </button>
     </form>
   );

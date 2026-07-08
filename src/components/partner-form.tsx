@@ -117,7 +117,13 @@ export function PartnerForm({
         </div>
       )}
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-3">
-        {pending ? "저장 중..." : `F7 ${submitLabel}`}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          `F7 ${submitLabel}`
+        )}
       </button>
       <div className="sm:col-span-3">
         <FormMessage state={state} />

@@ -288,7 +288,13 @@ function NoteForm({ dateStr, initialContent }: { dateStr: string; initialContent
         style={{ height: "auto" }}
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-        {pending ? "저장 중..." : "F7 메모 저장"}
+        {pending ? (
+          <>
+            <span className="erp-spinner" aria-hidden /> 저장 중...
+          </>
+        ) : (
+          "F7 메모 저장"
+        )}
       </button>
       <FormMessage state={state} />
     </form>
