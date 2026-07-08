@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
-import { SnsFiltechCanvas } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
+import { SnsFiltechCanvas, ZenithTechCanvas } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
 import { InvoicePage, type InvoiceCopies } from "@/components/invoice/InvoicePage";
 
 export default async function SalesPrintPage({
@@ -61,6 +61,39 @@ export default async function SalesPrintPage({
             <PrintButton />
           </div>
           <SnsFiltechCanvas
+            company={company}
+            customerName={order.customers?.name ?? ""}
+            customerAddress={order.customers?.address ?? null}
+            customerContactName={order.customers?.contact_name ?? null}
+            customerContactPhone={order.customers?.phone ?? null}
+            orderDate={order.order_date}
+            items={canvasItems}
+            note={order.memo}
+          />
+        </div>
+      );
+    }
+
+    if (variant === "zenith_tech") {
+      const canvasItems = (items ?? []).map((item) => ({
+        id: item.id,
+        category: item.products?.categories?.name ?? "",
+        spec: item.spec || item.products?.spec || "",
+        sku: item.products?.sku ?? "",
+        unit: item.products?.unit ?? "",
+        quantity: item.quantity,
+        basePackageQty: item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+      }));
+
+      return (
+        <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+          <div className="mb-4 flex items-center justify-between print:hidden">
+            <Link href="/sales" className="erp-btn">
+              목록으로
+            </Link>
+            <PrintButton />
+          </div>
+          <ZenithTechCanvas
             company={company}
             customerName={order.customers?.name ?? ""}
             customerAddress={order.customers?.address ?? null}
