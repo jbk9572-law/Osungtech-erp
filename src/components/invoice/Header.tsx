@@ -23,6 +23,7 @@ export function Header({
           fontSize: TITLE.fontSize,
           fontWeight: TITLE.fontWeight,
           letterSpacing: TITLE.letterSpacing,
+          overflow: "visible",
         }}
       >
         <span style={{ position: "relative", left: TITLE.offsetX, top: TITLE.offsetY }}>거래명세표</span>
@@ -33,12 +34,14 @@ export function Header({
         valign="top"
         hideBorder={["l"]}
         className="font-medium"
-        style={{ fontSize: HEADER.copyLabelFontSize, paddingTop: HEADER.dateRowTopPadding }}
+        style={{ fontSize: HEADER.copyLabelFontSize, paddingTop: HEADER.dateRowTopPadding, overflow: "visible" }}
         wrap
       >
-        ({copyLabel.split(" ")[0]}
-        <br />
-        {copyLabel.split(" ")[1]})
+        <span style={{ position: "relative", left: HEADER.copyLabelOffsetX }}>
+          ({copyLabel.split(" ")[0]}
+          <br />
+          {copyLabel.split(" ")[1]})
+        </span>
       </Cell>
       <Cell colSpan={3} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
         일자
@@ -46,11 +49,15 @@ export function Header({
       <Cell colSpan={5} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
         {formatDate(orderDate)}
       </Cell>
-      <Cell colSpan={2} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
+      <Cell colSpan={1} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
         No
       </Cell>
-      <Cell colSpan={5} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
-        {docNumber}
+      <Cell
+        colSpan={6}
+        valign="top"
+        style={{ paddingTop: HEADER.dateRowTopPadding, overflow: "visible" }}
+      >
+        <span style={{ position: "relative", left: HEADER.docNumberOffsetX }}>{docNumber}</span>
       </Cell>
       <Cell colSpan={2} align="center" valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
         1/1
