@@ -47,6 +47,11 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const soonStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate() + 3);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const [
     { count: productCount },
@@ -58,6 +63,9 @@ export default async function DashboardPage({
     { data: company },
     { data: todaySales },
     { data: todayPurchases },
+    { data: announcements },
+    { data: announcementReads },
+    { data: dueTodos },
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase.from("inventory").select("*", { count: "exact", head: true }).lte("quantity", 0),
@@ -94,7 +102,28 @@ export default async function DashboardPage({
       .from("purchase_order_items")
       .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
       .eq("purchase_orders.purchase_date", todayStr),
+    supabase
+      .from("announcements")
+      .select("id, title, pinned, created_at")
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(30),
+    user
+      ? supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id)
+      : Promise.resolve({ data: [] as { announcement_id: string }[] }),
+    supabase
+      .from("todos")
+      .select("id, title, due_date")
+      .eq("done", false)
+      .lte("due_date", soonStr)
+      .order("due_date", { ascending: true })
+      .limit(20),
   ]);
+
+  const readAnnouncementIds = new Set((announcementReads ?? []).map((r) => r.announcement_id));
+  const unreadAnnouncements = (announcements ?? []).filter((a) => !readAnnouncementIds.has(a.id));
+  const overdueTodos = (dueTodos ?? []).filter((t) => t.due_date && t.due_date < todayStr);
+  const dueSoonTodos = (dueTodos ?? []).filter((t) => !t.due_date || t.due_date >= todayStr);
 
   type ItemRow = {
     partnerName: string;
@@ -183,8 +212,35 @@ export default async function DashboardPage({
     { label: "안전재고 부족", value: `${lowStockCount ?? 0}건`, danger: (lowStockCount ?? 0) > 0 },
   ];
 
+  const hasAlerts = unreadAnnouncements.length > 0 || overdueTodos.length > 0 || dueSoonTodos.length > 0;
+
   return (
-    <div className="erp-home">
+    <>
+      {hasAlerts && (
+        <div className="erp-alert-banner">
+          {unreadAnnouncements.slice(0, 3).map((a) => (
+            <Link key={`a-${a.id}`} href={`/announcements/${a.id}`} className="erp-alert-item">
+              <span className="erp-alert-tag">공지</span>
+              {a.pinned ? "📌 " : ""}
+              {a.title}
+            </Link>
+          ))}
+          {overdueTodos.slice(0, 3).map((t) => (
+            <Link key={`o-${t.id}`} href={`/todos/${t.id}`} className="erp-alert-item danger">
+              <span className="erp-alert-tag danger">기한초과</span>
+              {t.title} ({t.due_date})
+            </Link>
+          ))}
+          {dueSoonTodos.slice(0, 3).map((t) => (
+            <Link key={`d-${t.id}`} href={`/todos/${t.id}`} className="erp-alert-item">
+              <span className="erp-alert-tag">할 일</span>
+              {t.title}
+              {t.due_date ? ` (${t.due_date})` : ""}
+            </Link>
+          ))}
+        </div>
+      )}
+      <div className="erp-home">
       <div className="erp-home-panel">
         <div className="erp-home-panel-title">업무 요약</div>
         {summaryRows.map((row) => (
@@ -247,6 +303,7 @@ export default async function DashboardPage({
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
