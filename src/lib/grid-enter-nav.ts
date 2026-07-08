@@ -21,3 +21,24 @@ export function focusSameColumnNextRow(e: KeyboardEvent<HTMLTableSectionElement>
     nextInput.select();
   }
 }
+
+// 품목 검색 드롭다운에서 방향키+Enter로 항목을 고른 직후, 같은 행에서 바로
+// 다음으로 입력 가능한 칸(규격이 자동입력이라 비활성화돼 있으면 그다음인
+// 수량 등)으로 포커스를 옮긴다.
+export function focusNextCellInRow(fromInput: HTMLElement) {
+  let cell: Element | null = fromInput.closest("td");
+  while (cell) {
+    cell = cell.nextElementSibling;
+    if (!cell) break;
+    const next = cell.querySelector("input, select, textarea") as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
+      | null;
+    if (next && !next.disabled) {
+      next.focus();
+      if (next instanceof HTMLInputElement) next.select();
+      return;
+    }
+  }
+}
