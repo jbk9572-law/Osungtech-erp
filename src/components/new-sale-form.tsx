@@ -250,7 +250,7 @@ export function NewSaleForm({
           </button>
         </div>
 
-        <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
+        <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
             <thead>
               <tr>
