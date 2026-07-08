@@ -19,7 +19,7 @@ export const HEADER = {
   rowHeight: 46,
   copyLabelFontSize: 13,
   copyLabelOffsetX: 36.93,
-  docNumberOffsetX: -13.21,
+  docNumberOffsetX: -8.5,
   docNumberLineOffsetX: -11.93,
   dateRowTopPadding: 6.33,
   dateRowLineOffsetY: 22.64,
