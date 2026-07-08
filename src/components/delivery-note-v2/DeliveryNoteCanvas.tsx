@@ -1,5 +1,6 @@
 import { SNS_LINES, SNS_FILLS } from "./sns-lines";
 import { ZENITH_LINES, ZENITH_FILLS } from "./zenith-lines";
+import { KT_LINES, KT_FILLS } from "./kt-lines";
 import { PAGE_W, PAGE_H, FONT, pt, dash, Fill, Line, T, TCenter, TRight, type Company } from "./shared";
 
 type Item = {
@@ -358,6 +359,188 @@ export function ZenithTechCanvas({
       />
       <T x={319.08} y={732.08} size={9.96} bold>인수자</T>
       <TCenter centerX={(388.08 + 534.48) / 2} y={732.08} size={9.96}>(인)</TCenter>
+    </div>
+  );
+}
+
+// 케이이티솔루션 출고증 좌표 (실측).
+const KT_SPEC_X = 168.24;
+const KT_LOT_CENTER = (278.64 + 387.48) / 2;
+const KT_QTY_CENTER = (387.48 + 460.92) / 2;
+const KT_REMARK_X = 488.88;
+const KT_ROW_TOP0 = 238.28;
+const KT_ROW_H = 16.68;
+const KT_ROW_COUNT = 27;
+
+export function KtSolutionCanvas({
+  company,
+  customerName,
+  customerAddress,
+  customerContactName,
+  customerContactPhone,
+  orderDate,
+  items,
+  note,
+}: {
+  company: Company;
+  customerName: string;
+  customerAddress: string | null;
+  customerContactName?: string | null;
+  customerContactPhone?: string | null;
+  orderDate: string;
+  items: Item[];
+  note?: string | null;
+}) {
+  const blankCount = Math.max(0, KT_ROW_COUNT - items.length);
+  const rows = [
+    ...items,
+    ...Array.from({ length: blankCount }).map((_, i) => ({
+      id: `blank-${i}`,
+      category: items[items.length - 1]?.category ?? "",
+      spec: "",
+      sku: "",
+      unit: "",
+      quantity: 0,
+      basePackageQty: null as number | null,
+      remark: null as string | null,
+    })),
+  ];
+
+  // 연속된 같은 대분류(품명)는 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
+  const groups: { category: string; start: number; count: number }[] = [];
+  for (let i = 0; i < rows.length; ) {
+    let j = i + 1;
+    while (j < rows.length && rows[j].category === rows[i].category) j++;
+    groups.push({ category: rows[i].category, start: i, count: j - i });
+    i = j;
+  }
+
+  // 케이이티솔루션 서식은 개별 행 수량(RL 등 실단위)의 합계를 박스 환산 단위로 보여준다.
+  const totalBox = items.reduce((sum, it) => {
+    if (it.basePackageQty) return sum + it.quantity / it.basePackageQty;
+    return sum;
+  }, 0);
+
+  return (
+    <div style={{ position: "relative", width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
+      {KT_FILLS.map((f, i) => (
+        <Fill key={i} {...f} />
+      ))}
+      {KT_LINES.map((l, i) => (
+        <Line key={i} {...l} />
+      ))}
+
+      {/* 제목 / 거래처 귀하 */}
+      <T x={161.04} y={78.38} size={12} bold>
+        거래명세표 (출고)
+      </T>
+      <TRight right={534.48} y={78.38} size={12} bold>
+        {customerName}&nbsp;&nbsp;귀하
+      </TRight>
+
+      {/* 공급자(우리 회사) 정보 - 항상 고정 */}
+      <T x={99.36} y={104.09} size={9}>등록번호</T>
+      <T x={216.48} y={104.09} size={9}>{dash(company?.business_number)}</T>
+      <T x={103.92} y={119.81} size={9}>공급자</T>
+      <T x={168.84} y={120.29} size={9}>{dash(company?.name)}</T>
+      <T x={244.19} y={120.29} size={9}>성명</T>
+      <T x={297.83} y={120.29} size={9}>{dash(company?.representative_name)}</T>
+      <T x={99.36} y={135.53} size={9}>전화번호</T>
+      <T x={164.64} y={136.01} size={9}>{dash(company?.phone)}</T>
+      <T x={235.16} y={136.01} size={9}>팩스번호</T>
+      <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
+      <T x={108.12} y={151.25} size={9}>업태</T>
+      <T x={173.04} y={151.73} size={9}>{dash(company?.business_type)}</T>
+      <T x={243.98} y={151.73} size={9}>종목</T>
+      <T x={291.5} y={151.73} size={9}>{dash(company?.business_item)}</T>
+      <T x={93.36} y={175.61} size={9}>사업장 주소</T>
+      <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
+
+      {/* 공급받는자(거래처) 정보 */}
+      <T x={356.76} y={119.81} size={9}>주소</T>
+      <T x={392.67} y={119.81} size={9} width={140}>{dash(customerAddress)}</T>
+      <T x={352.32} y={159.17} size={9}>담당자</T>
+      <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
+      <T x={430.44} y={166.97} size={9}>{customerContactName || ""}</T>
+      <T x={386.28} y={183.41} size={9} bold>출고일 :</T>
+      <T x={474.48} y={183.89} size={9} bold>{new Date(orderDate).toLocaleDateString("sv-SE")}</T>
+
+      {/* 품목 헤더 */}
+      <T x={107.4} y={213.8} size={9.96} bold>품명</T>
+      <T x={209.29} y={213.8} size={9.96} bold>규격</T>
+      <TCenter centerX={KT_LOT_CENTER} y={213.8} size={9.96} bold>관리번호</TCenter>
+      <TCenter centerX={KT_QTY_CENTER} y={213.8} size={9.96} bold>수량</TCenter>
+      <T x={488.88} y={213.8} size={9.96} bold>비고</T>
+
+      {/* 품목 대분류(세로 병합) */}
+      {groups.map((g) => {
+        const groupTop = KT_ROW_TOP0 + g.start * KT_ROW_H;
+        const groupHeight = g.count * KT_ROW_H;
+        return (
+          <TCenter
+            key={g.start}
+            centerX={CATEGORY_CENTER}
+            y={groupTop + groupHeight / 2 - 15}
+            size={9.96}
+            width={76}
+          >
+            {g.category}
+          </TCenter>
+        );
+      })}
+
+      {/* 품목 행 */}
+      {rows.map((row, i) => {
+        const y = KT_ROW_TOP0 + i * KT_ROW_H;
+        return (
+          <div key={row.id}>
+            <T x={KT_SPEC_X} y={y} size={9.96}>{row.spec}</T>
+            {row.spec && (
+              <TCenter centerX={KT_LOT_CENTER} y={y} size={9.96}>-</TCenter>
+            )}
+            {row.quantity > 0 && (
+              <TCenter centerX={KT_QTY_CENTER} y={y} size={9.96}>
+                {row.quantity.toLocaleString()} {row.unit || ""}
+              </TCenter>
+            )}
+            {row.remark && <T x={KT_REMARK_X} y={y} size={9.96}>{row.remark}</T>}
+          </div>
+        );
+      })}
+
+      {note && (
+        <T x={KT_SPEC_X} y={KT_ROW_TOP0 + KT_ROW_COUNT * KT_ROW_H + 4} size={9} width={340}>
+          {note}
+        </T>
+      )}
+
+      {/* 합계 행 */}
+      <T x={222.12} y={688.04} size={9.96}>합계</T>
+      <TCenter centerX={KT_QTY_CENTER} y={688.52} size={9.96}>{Math.round(totalBox).toLocaleString()} box</TCenter>
+
+      {/* 하단 도장란 */}
+      <T x={102.48} y={729.92} size={9.96} bold>공급자</T>
+      <TCenter centerX={(159 + 278.64) / 2} y={729.92} size={9.96}>(인)</TCenter>
+      {company?.logo_wordmark_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={company.logo_wordmark_url}
+          alt=""
+          aria-hidden
+          className="pointer-events-none opacity-90"
+          style={{ position: "absolute", left: pt(158.16), top: pt(728.88), width: pt(87.36), height: pt(17.52) }}
+        />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={company?.seal_image_url || "/branding/company-seal.png"}
+        alt=""
+        aria-hidden
+        className="pointer-events-none opacity-90 mix-blend-multiply"
+        style={{ position: "absolute", left: pt(243), top: pt(722.4), width: pt(33.12), height: pt(30.24) }}
+      />
+      <T x={319.08} y={729.92} size={9.96} bold>인수자</T>
+      <TCenter centerX={(388.08 + 534.48) / 2} y={729.92} size={9.96}>(인)</TCenter>
     </div>
   );
 }

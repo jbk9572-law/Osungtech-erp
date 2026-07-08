@@ -104,18 +104,21 @@ export function T({
 }
 
 // 가운데 정렬 텍스트: centerX를 텍스트 중심으로 고정(translateX(-50%)).
+// width를 주면 그 폭 안에서 가운데 정렬로 줄바꿈한다(긴 대분류명 등).
 export function TCenter({
   centerX,
   y,
   size,
   bold,
   children,
+  width,
 }: {
   centerX: number;
   y: number;
   size: number;
   bold?: boolean;
   children: ReactNode;
+  width?: number;
 }) {
   return (
     <div
@@ -123,12 +126,15 @@ export function TCenter({
         position: "absolute",
         left: pt(centerX),
         top: pt(y),
+        width: width != null ? pt(width) : undefined,
         transform: "translateX(-50%)",
+        textAlign: width != null ? "center" : undefined,
         fontSize: pt(size),
         fontWeight: bold ? 700 : 400,
         fontFamily: FONT,
         color: "#000",
-        whiteSpace: "nowrap",
+        lineHeight: 1.2,
+        whiteSpace: width != null ? "normal" : "nowrap",
       }}
     >
       {children}
