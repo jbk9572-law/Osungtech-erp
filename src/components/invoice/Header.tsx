@@ -128,6 +128,11 @@ export function Header({
           style={{ height: HEADER.dateRowLineOffsetY }}
         />
         1/1
+        <span
+          aria-hidden
+          className="absolute left-0 right-0 border-t border-[var(--invoice-line)]"
+          style={{ top: HEADER.dateRowLineOffsetY }}
+        />
       </Cell>
     </tr>
   );
