@@ -18,6 +18,7 @@ export const TITLE = {
 export const HEADER = {
   rowHeight: 46,
   copyLabelFontSize: 13,
+  dateRowTopPadding: 6.33,
 };
 
 export const SUPPLIER = {
@@ -78,6 +79,7 @@ export const SUMMARY = {
   amountOffsetX: -6.48,
   breakdownFontSize: 12,
   breakdownOffsetX: -42.69,
+  balanceLineOffsetX: 18.93,
 };
 
 export const FOOTER = {

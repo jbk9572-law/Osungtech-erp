@@ -30,18 +30,29 @@ export function Header({
       <Cell
         colSpan={7}
         align="center"
+        valign="top"
         hideBorder={["l"]}
         className="font-medium"
-        style={{ fontSize: HEADER.copyLabelFontSize }}
+        style={{ fontSize: HEADER.copyLabelFontSize, paddingTop: HEADER.dateRowTopPadding }}
         wrap
       >
-        ({copyLabel})
+        ({copyLabel.split(" ")[0]}
+        <br />
+        {copyLabel.split(" ")[1]})
       </Cell>
-      <Cell colSpan={3}>일자</Cell>
-      <Cell colSpan={5}>{formatDate(orderDate)}</Cell>
-      <Cell colSpan={2}>No</Cell>
-      <Cell colSpan={5}>{docNumber}</Cell>
-      <Cell colSpan={2} align="center">
+      <Cell colSpan={3} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
+        일자
+      </Cell>
+      <Cell colSpan={5} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
+        {formatDate(orderDate)}
+      </Cell>
+      <Cell colSpan={2} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
+        No
+      </Cell>
+      <Cell colSpan={5} valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
+        {docNumber}
+      </Cell>
+      <Cell colSpan={2} align="center" valign="top" style={{ paddingTop: HEADER.dateRowTopPadding }}>
         1/1
       </Cell>
     </tr>

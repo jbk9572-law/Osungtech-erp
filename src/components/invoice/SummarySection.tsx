@@ -16,7 +16,12 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
         <Cell colSpan={2} className="font-semibold">
           <span style={{ position: "relative", left: SUMMARY.labelOffsetX }}>합계</span>
         </Cell>
-        <Cell colSpan={24} className="text-black" style={{ fontSize: DOCUMENT.baseFontSize }}>
+        <Cell
+          colSpan={24}
+          className="text-black"
+          hideBorder={["r"]}
+          style={{ fontSize: DOCUMENT.baseFontSize }}
+        >
           <div className="flex items-baseline justify-between">
             <span className="font-bold" style={{ position: "relative", left: SUMMARY.amountOffsetX }}>
               ￦{grandTotal.toLocaleString()}원정
@@ -30,7 +35,17 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
             </span>
           </div>
         </Cell>
-        <Cell colSpan={4} as="th" style={{ fontSize: SUMMARY.balanceLabelFontSize, overflow: "visible" }}>
+        <Cell
+          colSpan={4}
+          as="th"
+          hideBorder={["l"]}
+          style={{ fontSize: SUMMARY.balanceLabelFontSize, overflow: "visible", position: "relative" }}
+        >
+          <span
+            aria-hidden
+            className="absolute top-0 bottom-0 border-l border-[var(--invoice-line)]"
+            style={{ left: SUMMARY.balanceLineOffsetX }}
+          />
           <span style={{ position: "relative", left: SUMMARY.balanceLabelOffsetX }}>전잔금</span>
         </Cell>
         <Cell colSpan={4} />
@@ -39,10 +54,20 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
         <Cell colSpan={2}>
           <span style={{ position: "relative", left: SUMMARY.labelOffsetX }}>메모</span>
         </Cell>
-        <Cell colSpan={24} className="opacity-80" style={{ fontSize: DOCUMENT.baseFontSize }}>
+        <Cell colSpan={24} className="opacity-80" hideBorder={["r"]} style={{ fontSize: DOCUMENT.baseFontSize }}>
           {memo || ""}
         </Cell>
-        <Cell colSpan={4} as="th" style={{ fontSize: SUMMARY.balanceLabelFontSize, overflow: "visible" }}>
+        <Cell
+          colSpan={4}
+          as="th"
+          hideBorder={["l"]}
+          style={{ fontSize: SUMMARY.balanceLabelFontSize, overflow: "visible", position: "relative" }}
+        >
+          <span
+            aria-hidden
+            className="absolute top-0 bottom-0 border-l border-[var(--invoice-line)]"
+            style={{ left: SUMMARY.balanceLineOffsetX }}
+          />
           <span style={{ position: "relative", left: SUMMARY.balanceLabelOffsetX }}>총잔금</span>
         </Cell>
         <Cell colSpan={4} />
