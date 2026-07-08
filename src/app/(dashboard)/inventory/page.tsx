@@ -3,14 +3,31 @@ import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 
 export default async function InventoryPage() {
   const supabase = await createClient();
-  const [{ data: inventory }, { data: products }, { data: warehouse }] = await Promise.all([
+  const [{ data: products }, { data: warehouse }] = await Promise.all([
+    // 매입/매출/조정이 한 번도 없어 inventory 행이 아예 없는 상품도 수량 0으로
+    // 표시하기 위해 products를 기준으로 재고를 왼쪽 조인한다.
     supabase
-      .from("inventory")
-      .select("*, products(sku, name, reorder_point)")
-      .order("updated_at", { ascending: false }),
-    supabase.from("products").select("id, sku, name, spec").order("name"),
+      .from("products")
+      .select("id, sku, name, spec, reorder_point, inventory(quantity, warehouse_id)")
+      .order("name"),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
+
+  const stockRows = (products ?? []).map((p) => ({
+    id: p.id,
+    sku: p.sku,
+    name: p.name,
+    reorderPoint: p.reorder_point,
+    quantity: p.inventory?.[0]?.quantity ?? 0,
+  }));
+
+  const stockLevels = (products ?? []).flatMap((p) =>
+    p.inventory.map((inv) => ({
+      product_id: p.id,
+      warehouse_id: inv.warehouse_id,
+      quantity: inv.quantity,
+    }))
+  );
 
   return (
     <div>
@@ -27,13 +44,9 @@ export default async function InventoryPage() {
         </div>
         <div className="erp-detail-body">
           <InventoryAdjustForm
-            products={products ?? []}
+            products={(products ?? []).map((p) => ({ id: p.id, sku: p.sku, name: p.name, spec: p.spec }))}
             warehouseId={warehouse?.id ?? ""}
-            stockLevels={(inventory ?? []).map((row) => ({
-              product_id: row.product_id,
-              warehouse_id: row.warehouse_id,
-              quantity: row.quantity,
-            }))}
+            stockLevels={stockLevels}
           />
         </div>
       </div>
@@ -49,12 +62,12 @@ export default async function InventoryPage() {
             </tr>
           </thead>
           <tbody>
-            {inventory?.map((row) => {
-              const isLow = row.quantity <= (row.products?.reorder_point ?? 0);
+            {stockRows.map((row) => {
+              const isLow = row.quantity <= (row.reorderPoint ?? 0);
               return (
                 <tr key={row.id}>
-                  <td>{row.products?.sku}</td>
-                  <td>{row.products?.name}</td>
+                  <td>{row.sku}</td>
+                  <td>{row.name}</td>
                   <td className="num">{row.quantity.toLocaleString()}</td>
                   <td>
                     <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
@@ -64,10 +77,10 @@ export default async function InventoryPage() {
                 </tr>
               );
             })}
-            {!inventory?.length && (
+            {!stockRows.length && (
               <tr>
                 <td colSpan={4} className="erp-grid-empty">
-                  재고 데이터가 없습니다. 매입 등록 또는 재고 조정 후 표시됩니다.
+                  등록된 상품이 없습니다.
                 </td>
               </tr>
             )}
