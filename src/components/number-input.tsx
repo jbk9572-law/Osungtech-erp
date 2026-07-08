@@ -3,7 +3,10 @@
 import { useState } from "react";
 
 function formatNumber(value: number): string {
-  if (!Number.isFinite(value) || value === 0) return value === 0 ? "0" : "";
+  // 0(=아직 입력 안 한 값)을 "0"으로 채워두면 사용자가 지우고 나서야 원하는
+  // 값을 입력할 수 있었다. 0은 빈 칸으로 보여줘서 바로 원하는 숫자부터
+  // 입력할 수 있게 한다.
+  if (!Number.isFinite(value) || value === 0) return "";
   return value.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
 }
 

@@ -8,7 +8,7 @@ export function ProductSearchSelect({
   products,
   value,
   onChange,
-  placeholder = "코드 또는 상품명 검색",
+  placeholder = "코드, 상품명 또는 규격 검색",
 }: {
   products: Product[];
   value: string;
@@ -24,7 +24,10 @@ export function ProductSearchSelect({
     if (!q) return products.slice(0, 20);
     return products
       .filter(
-        (p) => p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+        (p) =>
+          p.sku.toLowerCase().includes(q) ||
+          p.name.toLowerCase().includes(q) ||
+          (p.spec ?? "").toLowerCase().includes(q)
       )
       .slice(0, 20);
   }, [products, query]);
