@@ -70,14 +70,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, products(name, unit), sales_orders!inner(order_date, customers(name))"
+        "quantity, unit_price, spec, products(name, unit, spec), sales_orders!inner(order_date, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, products(name, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+        "quantity, unit_cost, spec, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -112,6 +112,7 @@ export default async function DashboardPage({
   type ItemRow = {
     partnerName: string;
     productName: string;
+    spec: string;
     unit: string;
     quantity: number;
     amount: number;
@@ -153,6 +154,7 @@ export default async function DashboardPage({
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
       productName: item.products?.name ?? "상품 미상",
+      spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
       amount,
@@ -168,6 +170,7 @@ export default async function DashboardPage({
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? "상품 미상",
+      spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
       amount,

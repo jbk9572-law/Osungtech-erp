@@ -11,6 +11,7 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 type ItemRow = {
   partnerName: string;
   productName: string;
+  spec: string;
   unit: string;
   quantity: number;
   amount: number;
@@ -220,6 +221,7 @@ export function DashboardCalendar({
                         {item.partnerName}
                         <span className="text-[#8ea3c9]"> · </span>
                         {item.productName}
+                        {item.spec && <span className="text-[#8ea3c9]"> ({item.spec})</span>}
                         <span className="text-[#8ea3c9]">
                           {" "}
                           ({item.quantity.toLocaleString()}
@@ -245,6 +247,7 @@ export function DashboardCalendar({
                         {item.partnerName}
                         <span className="text-[#8fcb9d]"> · </span>
                         {item.productName}
+                        {item.spec && <span className="text-[#8fcb9d]"> ({item.spec})</span>}
                         <span className="text-[#8fcb9d]">
                           {" "}
                           ({item.quantity.toLocaleString()}
