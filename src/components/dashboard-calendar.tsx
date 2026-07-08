@@ -234,11 +234,11 @@ export function DashboardCalendar({
                 <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
                   {groupByPartner(selectedData.salesItems).map((group, gi) => (
                     <div key={gi}>
-                      <p className="truncate font-bold">- {group.partnerName}</p>
+                      <p className="font-bold">- {group.partnerName}</p>
                       <ul className="space-y-1 pl-3 font-normal">
                         {group.items.map((item, i) => (
-                          <li key={i} className="flex items-baseline justify-between gap-2">
-                            <span className="min-w-0 truncate">
+                          <li key={i} className="flex items-start justify-between gap-2">
+                            <span className="min-w-0">
                               {item.productName}
                               {item.spec && <span className="text-[#8ea3c9]"> ({item.spec})</span>}
                               <span className="text-[#8ea3c9]">
@@ -265,11 +265,11 @@ export function DashboardCalendar({
                 <div className="space-y-2 text-xs font-medium text-[#28a745]">
                   {groupByPartner(selectedData.purchaseItems).map((group, gi) => (
                     <div key={gi}>
-                      <p className="truncate font-bold">- {group.partnerName}</p>
+                      <p className="font-bold">- {group.partnerName}</p>
                       <ul className="space-y-1 pl-3 font-normal">
                         {group.items.map((item, i) => (
-                          <li key={i} className="flex items-baseline justify-between gap-2">
-                            <span className="min-w-0 truncate">
+                          <li key={i} className="flex items-start justify-between gap-2">
+                            <span className="min-w-0">
                               {item.productName}
                               {item.spec && <span className="text-[#8fcb9d]"> ({item.spec})</span>}
                               <span className="text-[#8fcb9d]">
