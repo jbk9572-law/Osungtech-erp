@@ -40,6 +40,8 @@ export default async function SalesPrintPage({
       id: item.id,
       category: item.products?.categories?.name ?? "",
       productName: item.products?.name ?? "",
+      spec: item.spec || item.products?.spec || "",
+      sku: item.products?.sku ?? "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
     }));
@@ -58,6 +60,7 @@ export default async function SalesPrintPage({
           orderDate={order.order_date}
           items={deliveryItems}
           note={order.memo}
+          variant={order.customers?.delivery_note_variant ?? null}
         />
       </div>
     );

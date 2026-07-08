@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
@@ -16,6 +16,7 @@ export type PartnerFormInitial = {
   address?: string | null;
   notes?: string | null;
   document_type?: "출고증" | "명세표" | null;
+  delivery_note_variant?: "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
 };
 
 export function PartnerForm({
@@ -34,6 +35,7 @@ export function PartnerForm({
   const [state, formAction, pending] = useActionState(action, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const [documentType, setDocumentType] = useState(initial?.document_type ?? "명세표");
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -90,11 +92,27 @@ export function PartnerForm({
           <label>발행 문서</label>
           <select
             name="document_type"
-            defaultValue={initial?.document_type ?? "명세표"}
+            value={documentType}
+            onChange={(e) => setDocumentType(e.target.value as "출고증" | "명세표")}
             className="erp-select"
           >
             <option value="명세표">명세표 (단가 포함)</option>
             <option value="출고증">출고증 (단가 없음)</option>
+          </select>
+        </div>
+      )}
+      {showDocumentType && documentType === "출고증" && (
+        <div className="erp-field">
+          <label>출고증 서식</label>
+          <select
+            name="delivery_note_variant"
+            defaultValue={initial?.delivery_note_variant ?? ""}
+            className="erp-select"
+          >
+            <option value="">공용 서식 (기본)</option>
+            <option value="sns_pheeltech">에스엔에스필텍 전용 서식</option>
+            <option value="zenith_tech">제니스테크 전용 서식</option>
+            <option value="kt_solution">케이이티솔루션 전용 서식</option>
           </select>
         </div>
       )}

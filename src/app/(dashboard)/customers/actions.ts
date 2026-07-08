@@ -6,8 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 
+const DELIVERY_NOTE_VARIANTS = ["sns_pheeltech", "zenith_tech", "kt_solution"] as const;
+
 function customerFieldsFrom(formData: FormData) {
   const documentType = String(formData.get("document_type") ?? "명세표");
+  const variant = String(formData.get("delivery_note_variant") ?? "");
   return {
     business_number: String(formData.get("business_number") ?? "") || null,
     representative_name: String(formData.get("representative_name") ?? "") || null,
@@ -17,6 +20,9 @@ function customerFieldsFrom(formData: FormData) {
     address: String(formData.get("address") ?? "") || null,
     notes: String(formData.get("notes") ?? "") || null,
     document_type: (documentType === "출고증" ? "출고증" : "명세표") as "출고증" | "명세표",
+    delivery_note_variant: (DELIVERY_NOTE_VARIANTS as readonly string[]).includes(variant)
+      ? (variant as (typeof DELIVERY_NOTE_VARIANTS)[number])
+      : null,
   };
 }
 

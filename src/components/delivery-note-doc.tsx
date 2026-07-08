@@ -10,12 +10,17 @@ type Company = {
   manager_name: string | null;
   manager_phone: string | null;
   seal_image_url?: string | null;
+  logo_wordmark_url?: string | null;
 } | null;
+
+export type DeliveryNoteVariant = "sns_pheeltech" | "zenith_tech" | "kt_solution" | null;
 
 type Item = {
   id: string;
   category: string;
   productName: string;
+  spec: string;
+  sku: string;
   unit: string;
   quantity: number;
 };
@@ -23,9 +28,53 @@ type Item = {
 type DisplayRow = {
   key: string;
   category: string;
-  productName: string;
+  spec: string;
+  sku: string;
   unit: string;
   quantity: number | null;
+};
+
+// 업체별 실제 출고증 3종(에스엔에스필텍/제니스테크/케이이티솔루션) 벡터 실측 기준:
+// 품목 영역은 항상 5개 구역(대분류 | 규격 | B | C | 비고)으로 나뉘고,
+// 업체마다 B/C 구역에 들어가는 라벨과 값만 다르다.
+const ITEM_ZONE_WIDTHS = {
+  category: 17.89,
+  spec: 26.08,
+  b: 23.66,
+  c: 15.96,
+  remark: 16.41,
+} as const;
+
+type ZoneConfig = {
+  bLabel: string;
+  cLabel: string;
+  cellB: (row: DisplayRow) => string;
+  cellC: (row: DisplayRow) => string;
+  totalZone: "b" | "c";
+};
+
+const VARIANT_CONFIG: Record<Exclude<DeliveryNoteVariant, null>, ZoneConfig> = {
+  sns_pheeltech: {
+    bLabel: "수량 (box)",
+    cLabel: "",
+    cellB: (row) => (row.quantity != null ? `${row.quantity.toLocaleString()}${row.unit ? ` ${row.unit}` : ""}` : ""),
+    cellC: () => "",
+    totalZone: "b",
+  },
+  zenith_tech: {
+    bLabel: "단위",
+    cLabel: "합계 (Ea)",
+    cellB: (row) => row.unit,
+    cellC: (row) => (row.quantity != null ? row.quantity.toLocaleString() : ""),
+    totalZone: "c",
+  },
+  kt_solution: {
+    bLabel: "관리번호",
+    cLabel: "수량",
+    cellB: (row) => row.sku,
+    cellC: (row) => (row.quantity != null ? `${row.quantity.toLocaleString()}${row.unit ? ` ${row.unit}` : ""}` : ""),
+    totalZone: "c",
+  },
 };
 
 export function DeliveryNoteDoc({
@@ -37,6 +86,7 @@ export function DeliveryNoteDoc({
   orderDate,
   items,
   note,
+  variant = null,
 }: {
   company: Company;
   customerName: string;
@@ -46,22 +96,26 @@ export function DeliveryNoteDoc({
   orderDate: string;
   items: Item[];
   note?: string | null;
+  variant?: DeliveryNoteVariant;
 }) {
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const blankRows = Math.max(0, 20 - items.length);
+  const zone = variant ? VARIANT_CONFIG[variant] : null;
 
   const displayRows: DisplayRow[] = [
     ...items.map((item) => ({
       key: item.id,
       category: item.category,
-      productName: item.productName,
+      spec: item.spec,
+      sku: item.sku,
       unit: item.unit,
       quantity: item.quantity,
     })),
     ...Array.from({ length: blankRows }).map((_, i) => ({
       key: `blank-${i}`,
       category: items[items.length - 1]?.category ?? "",
-      productName: "",
+      spec: "",
+      sku: "",
       unit: "",
       quantity: null,
     })),
@@ -90,21 +144,22 @@ export function DeliveryNoteDoc({
             <td className="border border-black px-2 py-1" colSpan={3}>
               {company?.business_number ?? "-"}
             </td>
-            <th className="w-14 border border-black bg-gray-50 px-2 py-1 font-medium">주소</th>
-            <td className="border border-black px-2 py-1">{customerAddress ?? "-"}</td>
+            <th rowSpan={4} className="w-14 border border-black bg-gray-50 px-2 py-1 font-medium align-top">
+              주소
+            </th>
+            <td rowSpan={4} className="border border-black px-2 py-1 align-top">
+              <div>{customerAddress ?? "-"}</div>
+              <div className="mt-2">
+                담당자 &nbsp;
+                {customerContactPhone && <>Tel : {customerContactPhone} &nbsp;&nbsp;</>}
+                {customerContactName ?? ""}
+              </div>
+            </td>
           </tr>
           <tr>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">공급자</th>
             <td className="border border-black px-2 py-1" colSpan={3}>
               {company?.name ?? "-"} &nbsp;&nbsp;성명 {company?.representative_name ?? "-"}
-            </td>
-            <th rowSpan={3} className="border border-black bg-gray-50 px-2 py-1 font-medium align-top">
-              담당자
-            </th>
-            <td rowSpan={3} className="border border-black px-2 py-1 align-top">
-              {customerContactPhone && <div>Tel : {customerContactPhone}</div>}
-              {customerContactName && <div>{customerContactName}</div>}
-              {!customerContactPhone && !customerContactName && "-"}
             </td>
           </tr>
           <tr>
@@ -132,35 +187,40 @@ export function DeliveryNoteDoc({
         </tbody>
       </table>
 
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse table-fixed">
         <thead>
           <tr className="bg-gray-50">
-            <th className="border border-black px-2 py-1.5 font-medium">품명</th>
-            <th className="border border-black px-2 py-1.5 font-medium">규격</th>
-            <th className="w-16 border border-black px-2 py-1.5 font-medium">단위</th>
-            <th className="w-20 border border-black px-2 py-1.5 font-medium">
-              합계
-              <br />
-              (Ea)
+            <th className="border border-black px-2 py-1.5 font-medium" style={{ width: `${ITEM_ZONE_WIDTHS.category}%` }}>
+              품명
             </th>
-            <th className="w-24 border border-black px-2 py-1.5 font-medium">비고</th>
+            <th className="border border-black px-2 py-1.5 font-medium" style={{ width: `${ITEM_ZONE_WIDTHS.spec}%` }}>
+              규격
+            </th>
+            <th className="border border-black px-2 py-1.5 font-medium" style={{ width: `${ITEM_ZONE_WIDTHS.b}%` }}>
+              {zone ? zone.bLabel : "수량"}
+            </th>
+            <th className="border border-black px-2 py-1.5 font-medium" style={{ width: `${ITEM_ZONE_WIDTHS.c}%` }}>
+              {zone ? zone.cLabel : ""}
+            </th>
+            <th className="border border-black px-2 py-1.5 font-medium" style={{ width: `${ITEM_ZONE_WIDTHS.remark}%` }}>
+              비고
+            </th>
           </tr>
         </thead>
         <tbody>
           {displayRows.map((row, idx) => (
             <tr key={row.key}>
               {rowSpans[idx] > 0 && (
-                <td
-                  rowSpan={rowSpans[idx]}
-                  className="border border-black px-2 py-1 text-center align-top"
-                >
+                <td rowSpan={rowSpans[idx]} className="border border-black px-2 py-1 text-center align-top">
                   {row.category}
                 </td>
               )}
-              <td className="border border-black px-2 py-1">{row.productName}</td>
-              <td className="border border-black px-2 py-1 text-center">{row.unit}</td>
+              <td className="border border-black px-2 py-1">{row.spec}</td>
+              <td className="border border-black px-2 py-1 text-center">
+                {zone ? zone.cellB(row) : row.unit}
+              </td>
               <td className="border border-black px-2 py-1 text-right">
-                {row.quantity != null ? row.quantity.toLocaleString() : ""}
+                {zone ? zone.cellC(row) : row.quantity != null ? row.quantity.toLocaleString() : ""}
               </td>
               <td className="border border-black px-2 py-1" />
             </tr>
@@ -175,11 +235,14 @@ export function DeliveryNoteDoc({
         </tbody>
         <tfoot>
           <tr className="bg-gray-50 font-semibold">
-            <td className="border border-black px-2 py-1.5" colSpan={3}>
+            <td className="border border-black px-2 py-1.5" colSpan={2}>
               합계
             </td>
             <td className="border border-black px-2 py-1.5 text-right">
-              {totalQuantity.toLocaleString()}
+              {(!zone || zone.totalZone === "b") ? totalQuantity.toLocaleString() : ""}
+            </td>
+            <td className="border border-black px-2 py-1.5 text-right">
+              {zone?.totalZone === "c" ? totalQuantity.toLocaleString() : ""}
             </td>
             <td className="border border-black px-2 py-1.5" />
           </tr>
@@ -189,6 +252,15 @@ export function DeliveryNoteDoc({
       <div className="flex items-center justify-around border-t border-black px-3 py-4 text-sm">
         <span className="relative">
           공급자 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(인)
+          {company?.logo_wordmark_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={company.logo_wordmark_url}
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 left-0 h-4 w-auto -translate-y-1/2 opacity-90"
+            />
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={company?.seal_image_url || "/branding/company-seal.png"}
