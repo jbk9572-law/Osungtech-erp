@@ -12,7 +12,7 @@ export default async function AnnouncementsPage() {
   const [{ data: rows, error }, { data: reads }] = await Promise.all([
     supabase
       .from("announcements")
-      .select("id, title, pinned, created_at, profiles(full_name)")
+      .select("id, title, pinned, created_at, profiles!created_by(full_name)")
       .order("pinned", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(300),

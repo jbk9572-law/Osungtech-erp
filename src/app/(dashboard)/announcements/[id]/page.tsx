@@ -15,7 +15,7 @@ export default async function AnnouncementDetailPage({
   const supabase = await createClient();
   const { data: row, error } = await supabase
     .from("announcements")
-    .select("id, title, content, pinned, created_at, profiles(full_name)")
+    .select("id, title, content, pinned, created_at, profiles!created_by(full_name)")
     .eq("id", id)
     .maybeSingle();
 

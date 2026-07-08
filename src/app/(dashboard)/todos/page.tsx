@@ -8,7 +8,7 @@ export default async function TodosPage() {
   const supabase = await createClient();
   const { data: rows, error } = await supabase
     .from("todos")
-    .select("id, title, memo, due_date, done, profiles(full_name)")
+    .select("id, title, memo, due_date, done, profiles!created_by(full_name)")
     .order("done", { ascending: true })
     .order("due_date", { ascending: true, nullsFirst: false })
     .limit(300);
