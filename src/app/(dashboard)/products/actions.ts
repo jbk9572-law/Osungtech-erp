@@ -6,9 +6,32 @@ import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 
-function productFieldsFrom(formData: FormData) {
+async function resolveCategoryId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  formData: FormData
+): Promise<string | null> {
+  const newCategoryName = String(formData.get("new_category") ?? "").trim();
+  if (newCategoryName) {
+    const { data: existing } = await supabase
+      .from("categories")
+      .select("id")
+      .ilike("name", newCategoryName)
+      .maybeSingle();
+    if (existing) return existing.id;
+
+    const { data: created } = await supabase
+      .from("categories")
+      .insert({ name: newCategoryName })
+      .select("id")
+      .single();
+    return created?.id ?? null;
+  }
+  return String(formData.get("category_id") ?? "") || null;
+}
+
+async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClient>>, formData: FormData) {
   return {
-    category_id: String(formData.get("category_id") ?? "") || null,
+    category_id: await resolveCategoryId(supabase, formData),
     supplier_id: String(formData.get("supplier_id") ?? "") || null,
     spec: String(formData.get("spec") ?? "").trim() || null,
     unit: String(formData.get("unit") ?? "ea") || "ea",
@@ -29,7 +52,7 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   const { error } = await supabase.from("products").insert({
     sku,
     name,
-    ...productFieldsFrom(formData),
+    ...(await productFieldsFrom(supabase, formData)),
   });
 
   if (error) {
@@ -51,7 +74,7 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
   const supabase = await createClient();
   const { error } = await supabase
     .from("products")
-    .update({ sku, name, ...productFieldsFrom(formData) })
+    .update({ sku, name, ...(await productFieldsFrom(supabase, formData)) })
     .eq("id", id);
 
   if (error) {

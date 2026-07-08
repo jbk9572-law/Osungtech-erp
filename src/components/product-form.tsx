@@ -63,18 +63,28 @@ export function ProductForm({
         defaultValue={initial?.name ?? ""}
         className="erp-input"
       />
-      <select
-        name="category_id"
-        defaultValue={initial?.category_id ?? ""}
-        className="erp-input"
-      >
-        <option value="">카테고리 선택</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+      <div style={{ display: "flex", gap: 4 }}>
+        <select
+          name="category_id"
+          defaultValue={initial?.category_id ?? ""}
+          className="erp-input"
+          style={{ flex: 1 }}
+        >
+          <option value="">카테고리 선택</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+        <input
+          name="new_category"
+          placeholder="새 카테고리 입력"
+          className="erp-input"
+          style={{ flex: 1 }}
+          title="입력하면 위 선택을 무시하고 이 이름으로 카테고리를 새로 만들거나 기존 카테고리를 사용합니다."
+        />
+      </div>
       <select
         name="supplier_id"
         defaultValue={initial?.supplier_id ?? ""}
