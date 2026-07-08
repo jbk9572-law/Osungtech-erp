@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { deleteAnnouncement, markAnnouncementRead, updateAnnouncement } from "../actions";
+import { deleteAnnouncement, updateAnnouncement } from "../actions";
 
 export default async function AnnouncementDetailPage({
   params,
@@ -29,12 +29,6 @@ export default async function AnnouncementDetailPage({
 
   if (!row) {
     notFound();
-  }
-
-  try {
-    await markAnnouncementRead(row.id);
-  } catch {
-    // 읽음 처리 실패는 화면 표시에 영향을 주지 않도록 무시한다.
   }
 
   return (

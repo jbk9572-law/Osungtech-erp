@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
+import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function AnnouncementsPage() {
@@ -49,6 +50,7 @@ export default async function AnnouncementsPage() {
         <table className="erp-grid">
           <thead>
             <tr>
+              <th style={{ width: 40 }}>읽음</th>
               <th style={{ width: 60 }}>구분</th>
               <th>제목</th>
               <th style={{ width: 140 }}>작성자</th>
@@ -57,26 +59,15 @@ export default async function AnnouncementsPage() {
           </thead>
           <tbody>
             {(rows ?? []).map((row) => {
-              const unread = !readIds.has(row.id);
+              const read = readIds.has(row.id);
               return (
                 <ClickableRow key={row.id} href={`/announcements/${row.id}`}>
+                  <td onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+                    <AnnouncementCheckbox id={row.id} read={read} />
+                  </td>
                   <td style={{ textAlign: "center" }}>{row.pinned ? "📌" : ""}</td>
-                  <td style={unread ? { fontWeight: 700 } : undefined}>
+                  <td style={!read ? { fontWeight: 700 } : { color: "var(--erp-text-muted)" }}>
                     {row.title}
-                    {unread && (
-                      <span
-                        aria-hidden
-                        style={{
-                          display: "inline-block",
-                          marginLeft: 6,
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: "var(--erp-danger)",
-                          verticalAlign: "middle",
-                        }}
-                      />
-                    )}
                   </td>
                   <td>{row.profiles?.full_name ?? "-"}</td>
                   <td>{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
@@ -85,7 +76,7 @@ export default async function AnnouncementsPage() {
             })}
             {!rows?.length && (
               <tr>
-                <td colSpan={4} className="erp-grid-empty">
+                <td colSpan={5} className="erp-grid-empty">
                   등록된 공지사항이 없습니다.
                 </td>
               </tr>

@@ -86,14 +86,29 @@ export async function deleteAnnouncement(
   redirect("/announcements");
 }
 
-export async function markAnnouncementRead(announcementId: string) {
+export async function toggleAnnouncementRead(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const currentlyRead = formData.get("read") === "true";
+  if (!id) return;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase
-    .from("announcement_reads")
-    .upsert({ announcement_id: announcementId, user_id: user.id }, { onConflict: "announcement_id,user_id" });
+  if (currentlyRead) {
+    await supabase
+      .from("announcement_reads")
+      .delete()
+      .eq("announcement_id", id)
+      .eq("user_id", user.id);
+  } else {
+    await supabase
+      .from("announcement_reads")
+      .upsert({ announcement_id: id, user_id: user.id }, { onConflict: "announcement_id,user_id" });
+  }
+
+  revalidatePath("/announcements");
+  revalidatePath("/dashboard");
 }
