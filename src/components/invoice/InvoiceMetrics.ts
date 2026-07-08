@@ -20,7 +20,9 @@ export const HEADER = {
   copyLabelFontSize: 13,
   copyLabelOffsetX: 36.93,
   docNumberOffsetX: -13.21,
+  docNumberLineOffsetX: -11.93,
   dateRowTopPadding: 6.33,
+  dateRowLineOffsetY: 22.64,
 };
 
 export const SUPPLIER = {
