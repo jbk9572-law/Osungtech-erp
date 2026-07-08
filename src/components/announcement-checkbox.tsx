@@ -11,6 +11,7 @@ export function AnnouncementCheckbox({ id, read }: { id: string; read: boolean }
       type="checkbox"
       defaultChecked={read}
       disabled={pending}
+      onClick={(e) => e.stopPropagation()}
       onChange={() => {
         const formData = new FormData();
         formData.set("id", id);

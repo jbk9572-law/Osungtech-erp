@@ -50,7 +50,7 @@ export default async function TodosPage() {
               const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
               return (
                 <ClickableRow key={row.id} href={`/todos/${row.id}`}>
-                  <td onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+                  <td style={{ textAlign: "center" }}>
                     <TodoCheckbox id={row.id} done={row.done} />
                   </td>
                   <td style={row.done ? { textDecoration: "line-through", color: "var(--erp-text-muted)" } : undefined}>

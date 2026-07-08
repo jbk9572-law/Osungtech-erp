@@ -62,7 +62,7 @@ export default async function AnnouncementsPage() {
               const read = readIds.has(row.id);
               return (
                 <ClickableRow key={row.id} href={`/announcements/${row.id}`}>
-                  <td onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+                  <td style={{ textAlign: "center" }}>
                     <AnnouncementCheckbox id={row.id} read={read} />
                   </td>
                   <td style={{ textAlign: "center" }}>{row.pinned ? "📌" : ""}</td>
