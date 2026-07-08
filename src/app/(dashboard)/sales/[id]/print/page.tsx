@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
+import { SnsFiltechCanvas } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
 import { InvoicePage, type InvoiceCopies } from "@/components/invoice/InvoicePage";
 
 export default async function SalesPrintPage({
@@ -22,7 +23,7 @@ export default async function SalesPrintPage({
     supabase.from("sales_orders").select("*, customers(*)").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select("*, products(sku, name, spec, unit, categories(name))")
+      .select("*, products(sku, name, spec, unit, base_package_qty, categories(name))")
       .eq("sales_order_id", id)
       .order("created_at"),
     supabase.from("company_profile").select("*").eq("id", 1).maybeSingle(),
@@ -36,6 +37,43 @@ export default async function SalesPrintPage({
   const docNumber = String(order.doc_no);
 
   if (docType === "출고증") {
+    const variant = order.customers?.delivery_note_variant ?? null;
+
+    // sns_filtech: 실제 PDF 벡터 좌표를 그대로 옮긴 정밀 재현 버전.
+    // 그 외 변형은 아직 구조적 근사치(DeliveryNoteDoc)를 사용한다.
+    if (variant === "sns_filtech") {
+      const canvasItems = (items ?? []).map((item) => ({
+        id: item.id,
+        category: item.products?.categories?.name ?? "",
+        spec: item.spec || item.products?.spec || "",
+        sku: item.products?.sku ?? "",
+        unit: item.products?.unit ?? "",
+        quantity: item.quantity,
+        basePackageQty: item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+      }));
+
+      return (
+        <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+          <div className="mb-4 flex items-center justify-between print:hidden">
+            <Link href="/sales" className="erp-btn">
+              목록으로
+            </Link>
+            <PrintButton />
+          </div>
+          <SnsFiltechCanvas
+            company={company}
+            customerName={order.customers?.name ?? ""}
+            customerAddress={order.customers?.address ?? null}
+            customerContactName={order.customers?.contact_name ?? null}
+            customerContactPhone={order.customers?.phone ?? null}
+            orderDate={order.order_date}
+            items={canvasItems}
+            note={order.memo}
+          />
+        </div>
+      );
+    }
+
     const deliveryItems = (items ?? []).map((item) => ({
       id: item.id,
       category: item.products?.categories?.name ?? "",
@@ -63,7 +101,7 @@ export default async function SalesPrintPage({
           orderDate={order.order_date}
           items={deliveryItems}
           note={order.memo}
-          variant={order.customers?.delivery_note_variant ?? null}
+          variant={variant}
         />
       </div>
     );
