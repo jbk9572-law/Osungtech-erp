@@ -14,6 +14,11 @@ const FONT = "'Malgun Gothic', '맑은 고딕', Gulim, '굴림', sans-serif";
 // 물리적 포인트로 그대로 처리해 원본 PDF 좌표와 1:1로 맞는다.
 const pt = (n: number) => `${n}pt`;
 
+// 값이 null/undefined뿐 아니라 빈 문자열("")일 때도 "-"로 보여준다.
+// ??만 쓰면 실제 DB에 빈 문자열이 들어있을 때 그냥 빈칸으로 보여서
+// 항목 자체가 깨진 것처럼 보이는 문제가 있었다.
+const dash = (v: string | null | undefined) => (v ? v : "-");
+
 type Company = {
   name: string;
   business_number: string | null;
@@ -247,28 +252,28 @@ export function SnsFiltechCanvas({
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
       <T x={99.36} y={104.09} size={9}>등록번호</T>
-      <T x={216.48} y={104.09} size={9}>{company?.business_number ?? "-"}</T>
+      <T x={216.48} y={104.09} size={9}>{dash(company?.business_number)}</T>
       <T x={103.92} y={119.81} size={9}>공급자</T>
-      <T x={168.84} y={120.29} size={9}>{company?.name ?? "-"}</T>
+      <T x={168.84} y={120.29} size={9}>{dash(company?.name)}</T>
       <T x={244.19} y={120.29} size={9}>성명</T>
-      <T x={297.83} y={120.29} size={9}>{company?.representative_name ?? "-"}</T>
+      <T x={297.83} y={120.29} size={9}>{dash(company?.representative_name)}</T>
       <T x={99.36} y={135.53} size={9}>전화번호</T>
-      <T x={164.64} y={136.01} size={9}>{company?.phone ?? "-"}</T>
+      <T x={164.64} y={136.01} size={9}>{dash(company?.phone)}</T>
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
-      <T x={283.04} y={136.01} size={9}>{company?.fax_number ?? "-"}</T>
+      <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9}>{company?.business_type ?? "-"}</T>
+      <T x={173.04} y={151.73} size={9}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9}>{company?.business_item ?? "-"}</T>
+      <T x={291.5} y={151.73} size={9}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
-      <T x={162.84} y={168.77} size={9} width={166}>{company?.address ?? "-"}</T>
+      <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={389.76} y={112.97} size={9} width={144}>{customerAddress ?? "-"}</T>
+      <T x={389.76} y={112.97} size={9} width={144}>{dash(customerAddress)}</T>
       <T x={352.32} y={159.17} size={9}>담당자</T>
-      <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : ""}</T>
-      <T x={430.44} y={166.97} size={9}>{customerContactName ?? ""}</T>
+      <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
+      <T x={430.44} y={166.97} size={9}>{customerContactName || ""}</T>
       <T x={386.28} y={183.41} size={9} bold>출고일 :</T>
       <T x={474.48} y={183.89} size={9} bold>{new Date(orderDate).toLocaleDateString("sv-SE")}</T>
 
