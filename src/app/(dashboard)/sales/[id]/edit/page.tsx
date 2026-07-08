@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
 import { updateSale } from "@/app/(dashboard)/sales/actions";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function EditSalePage({
   params,
@@ -50,7 +52,13 @@ export default async function EditSalePage({
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">매출 거래 수정</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[#1c1c1c]">매출 거래 수정</h1>
+        <Link href={`/sales/${id}`} className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
       <NewSaleForm
         customers={customers ?? []}
         products={products ?? []}

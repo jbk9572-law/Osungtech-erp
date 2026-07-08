@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerForm } from "@/components/partner-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateSupplier, deleteSupplier } from "@/app/(dashboard)/suppliers/actions";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function SupplierDetailPage({
   params,
@@ -19,7 +21,13 @@ export default async function SupplierDetailPage({
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[#1c1c1c]">{supplier.name}</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/suppliers" } }} />
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[#1c1c1c]">{supplier.name}</h1>
+        <Link href="/suppliers" className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
       <p className="mb-4 text-xs text-[#6b7280]">
         {supplier.business_number ?? "사업자번호 미등록"} · {supplier.contact_name ?? "담당자 미등록"}
       </p>

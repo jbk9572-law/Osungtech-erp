@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
 import { PartnerForm } from "@/components/partner-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateCustomer, deleteCustomer } from "@/app/(dashboard)/customers/actions";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function CustomerDetailPage({
   params,
@@ -29,7 +31,13 @@ export default async function CustomerDetailPage({
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[#1c1c1c]">{customer.name}</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/customers" } }} />
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[#1c1c1c]">{customer.name}</h1>
+        <Link href="/customers" className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
       <p className="mb-4 text-xs text-[#6b7280]">
         {customer.business_number ?? "사업자번호 미등록"} · {customer.contact_name ?? "담당자 미등록"}
       </p>

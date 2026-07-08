@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function NewPurchasePage() {
   const supabase = await createClient();
@@ -11,7 +13,13 @@ export default async function NewPurchasePage() {
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">새 매입(입고) 등록</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[#1c1c1c]">새 매입(입고) 등록</h1>
+        <Link href="/purchases" className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
       <NewPurchaseForm
         suppliers={suppliers ?? []}
         products={products ?? []}

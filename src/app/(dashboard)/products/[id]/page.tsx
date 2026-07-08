@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "@/components/product-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateProduct, deleteProduct } from "@/app/(dashboard)/products/actions";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function ProductDetailPage({
   params,
@@ -24,7 +26,13 @@ export default async function ProductDetailPage({
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[#1c1c1c]">{product.name}</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/products" } }} />
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[#1c1c1c]">{product.name}</h1>
+        <Link href="/products" className="erp-btn">
+          ESC 닫기
+        </Link>
+      </div>
       <p className="mb-4 text-xs text-[#6b7280]">{product.sku}</p>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
