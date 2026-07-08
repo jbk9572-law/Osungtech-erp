@@ -9,6 +9,7 @@ import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
+import { NotificationToaster } from "@/components/erp/notification-toaster";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
 
@@ -44,6 +45,7 @@ export function ErpShell({
   return (
     <div className="erp">
       <RouteProgressBar />
+      <NotificationToaster />
       <RecentMenuTracker />
       <TitleBar
         logoUrl={logoUrl}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
+import { getNotificationSummary } from "@/lib/notifications";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -47,7 +48,6 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  const soonStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate() + 3);
 
   const {
     data: { user },
@@ -63,9 +63,7 @@ export default async function DashboardPage({
     { data: company },
     { data: todaySales },
     { data: todayPurchases },
-    { data: announcements },
-    { data: announcementReads },
-    { data: dueTodos },
+    notifications,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase.from("inventory").select("*", { count: "exact", head: true }).lte("quantity", 0),
@@ -102,28 +100,14 @@ export default async function DashboardPage({
       .from("purchase_order_items")
       .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
       .eq("purchase_orders.purchase_date", todayStr),
-    supabase
-      .from("announcements")
-      .select("id, title, pinned, created_at")
-      .order("pinned", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(30),
     user
-      ? supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id)
-      : Promise.resolve({ data: [] as { announcement_id: string }[] }),
-    supabase
-      .from("todos")
-      .select("id, title, due_date")
-      .eq("done", false)
-      .lte("due_date", soonStr)
-      .order("due_date", { ascending: true })
-      .limit(20),
+      ? getNotificationSummary(supabase, user.id)
+      : Promise.resolve({ announcements: [], todos: [] }),
   ]);
 
-  const readAnnouncementIds = new Set((announcementReads ?? []).map((r) => r.announcement_id));
-  const unreadAnnouncements = (announcements ?? []).filter((a) => !readAnnouncementIds.has(a.id));
-  const overdueTodos = (dueTodos ?? []).filter((t) => t.due_date && t.due_date < todayStr);
-  const dueSoonTodos = (dueTodos ?? []).filter((t) => !t.due_date || t.due_date >= todayStr);
+  const unreadAnnouncements = notifications.announcements;
+  const overdueTodos = notifications.todos.filter((t) => t.due_date && t.due_date < todayStr);
+  const dueSoonTodos = notifications.todos.filter((t) => !t.due_date || t.due_date >= todayStr);
 
   type ItemRow = {
     partnerName: string;

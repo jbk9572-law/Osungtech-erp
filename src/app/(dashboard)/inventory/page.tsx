@@ -17,6 +17,7 @@ export default async function InventoryPage() {
     id: p.id,
     sku: p.sku,
     name: p.name,
+    spec: p.spec,
     reorderPoint: p.reorder_point,
     quantity: p.inventory?.[0]?.quantity ?? 0,
   }));
@@ -57,6 +58,7 @@ export default async function InventoryPage() {
             <tr>
               <th>SKU</th>
               <th>상품명</th>
+              <th>규격</th>
               <th className="num">수량</th>
               <th>상태</th>
             </tr>
@@ -68,6 +70,7 @@ export default async function InventoryPage() {
                 <tr key={row.id}>
                   <td>{row.sku}</td>
                   <td>{row.name}</td>
+                  <td>{row.spec || "-"}</td>
                   <td className="num">{row.quantity.toLocaleString()}</td>
                   <td>
                     <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
@@ -79,7 +82,7 @@ export default async function InventoryPage() {
             })}
             {!stockRows.length && (
               <tr>
-                <td colSpan={4} className="erp-grid-empty">
+                <td colSpan={5} className="erp-grid-empty">
                   등록된 상품이 없습니다.
                 </td>
               </tr>
