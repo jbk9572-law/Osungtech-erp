@@ -4,6 +4,19 @@ import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
+type DisplayRow = {
+  key: string;
+  orderId: string | undefined;
+  date: string | undefined;
+  supplierName: string | undefined;
+  productLabel: string;
+  spec: string;
+  quantity: number;
+  unit: string | null | undefined;
+  unitCost: number | null;
+  amount: number;
+};
+
 export default async function PurchasesPage({
   searchParams,
 }: {
@@ -35,13 +48,57 @@ export default async function PurchasesPage({
       )
     : rawItems;
 
-  const rows = (items ?? []).map((item) => ({
+  const itemRows = (items ?? []).map((item) => ({
     ...item,
     amount: item.quantity * Number(item.unit_cost),
   }));
 
-  const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
-  const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
+  // 검색어 없이 조회할 때는 한 매입 건(purchase_order)을 한 행으로 묶어서
+  // "첫 품목명 외 N건"으로 요약한다. 공급업체/상품 검색어가 있을 때만
+  // 품목별로 전체 펼쳐서 보여준다.
+  const rows: DisplayRow[] = keyword
+    ? itemRows.map((item) => ({
+        key: item.id,
+        orderId: item.purchase_orders?.id,
+        date: item.purchase_orders?.purchase_date,
+        supplierName: item.purchase_orders?.suppliers?.name,
+        productLabel: item.products?.name ?? "-",
+        spec: item.spec || item.products?.spec || "-",
+        quantity: item.quantity,
+        unit: item.products?.unit,
+        unitCost: Number(item.unit_cost),
+        amount: item.amount,
+      }))
+    : Object.values(
+        itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
+          const orderId = item.purchase_orders?.id ?? item.id;
+          if (!acc[orderId]) {
+            acc[orderId] = {
+              key: orderId,
+              orderId,
+              date: item.purchase_orders?.purchase_date,
+              supplierName: item.purchase_orders?.suppliers?.name,
+              productLabel: item.products?.name ?? "-",
+              spec: item.spec || item.products?.spec || "-",
+              quantity: 0,
+              unit: item.products?.unit,
+              unitCost: null,
+              amount: 0,
+              itemCount: 0,
+            };
+          }
+          acc[orderId].itemCount += 1;
+          acc[orderId].quantity += item.quantity;
+          acc[orderId].amount += item.amount;
+          return acc;
+        }, {})
+      ).map((row) => ({
+        ...row,
+        productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+      }));
+
+  const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
+  const totalAmount = itemRows.reduce((sum, row) => sum + row.amount, 0);
   const presets = getDatePresets();
 
   return (
@@ -123,26 +180,21 @@ export default async function PurchasesPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((item) => {
-              const order = item.purchase_orders;
-              return (
-                <ClickableRow key={item.id} href={order ? `/purchases/${order.id}` : "#"}>
-                  <td>{order ? new Date(order.purchase_date).toLocaleDateString("ko-KR") : "-"}</td>
-                  <td>{order?.suppliers?.name}</td>
-                  <td>{item.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {item.spec || item.products?.spec || "-"}
-                  </td>
-                  <td className="num">
-                    {item.quantity.toLocaleString()} {item.products?.unit}
-                  </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {Number(item.unit_cost).toLocaleString()}
-                  </td>
-                  <td className="num">{item.amount.toLocaleString()}</td>
-                </ClickableRow>
-              );
-            })}
+            {rows.map((row) => (
+              <ClickableRow key={row.key} href={row.orderId ? `/purchases/${row.orderId}` : "#"}>
+                <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                <td>{row.supplierName}</td>
+                <td>{row.productLabel}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
+                <td className="num">
+                  {row.quantity.toLocaleString()} {row.unit}
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
+                </td>
+                <td className="num">{row.amount.toLocaleString()}</td>
+              </ClickableRow>
+            ))}
             {!rows.length && (
               <tr>
                 <td colSpan={7} className="erp-grid-empty">

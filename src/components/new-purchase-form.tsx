@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -140,6 +141,7 @@ export function NewPurchaseForm({
     <form
       action={formAction}
       className="space-y-6"
+      onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={() => setMessageDismissed(false)}

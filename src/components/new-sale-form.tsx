@@ -8,6 +8,7 @@ import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -186,6 +187,7 @@ export function NewSaleForm({
     <form
       action={formAction}
       className="space-y-6"
+      onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={() => setMessageDismissed(false)}
