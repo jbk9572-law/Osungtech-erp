@@ -29,6 +29,23 @@ type DayData = {
 
 type Cell = { dateStr: string; day: number } | null;
 
+// 거래처별로 묶어서 보여주기 위한 그룹핑. 목록 안에서 같은 거래처가 여러 번
+// 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를 그대로 유지).
+function groupByPartner(items: ItemRow[]) {
+  const groups: { partnerName: string; items: ItemRow[] }[] = [];
+  const index = new Map<string, number>();
+  for (const item of items) {
+    let i = index.get(item.partnerName);
+    if (i === undefined) {
+      i = groups.length;
+      index.set(item.partnerName, i);
+      groups.push({ partnerName: item.partnerName, items: [] });
+    }
+    groups[i].items.push(item);
+  }
+  return groups;
+}
+
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 export function DashboardCalendar({
@@ -214,24 +231,29 @@ export function DashboardCalendar({
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
               {selectedData.salesItems.length > 0 && (
-                <ul className="space-y-1 text-xs font-medium text-[#1f3b75]">
-                  {selectedData.salesItems.map((item, i) => (
-                    <li key={i} className="flex items-baseline justify-between gap-2">
-                      <span className="min-w-0 truncate">
-                        {item.partnerName}
-                        <span className="text-[#8ea3c9]"> · </span>
-                        {item.productName}
-                        {item.spec && <span className="text-[#8ea3c9]"> ({item.spec})</span>}
-                        <span className="text-[#8ea3c9]">
-                          {" "}
-                          ({item.quantity.toLocaleString()}
-                          {item.unit})
-                        </span>
-                      </span>
-                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                    </li>
+                <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
+                  {groupByPartner(selectedData.salesItems).map((group, gi) => (
+                    <div key={gi}>
+                      <p className="truncate font-bold">- {group.partnerName}</p>
+                      <ul className="space-y-1 pl-3 font-normal">
+                        {group.items.map((item, i) => (
+                          <li key={i} className="flex items-baseline justify-between gap-2">
+                            <span className="min-w-0 truncate">
+                              {item.productName}
+                              {item.spec && <span className="text-[#8ea3c9]"> ({item.spec})</span>}
+                              <span className="text-[#8ea3c9]">
+                                {" "}
+                                · {item.quantity.toLocaleString()}
+                                {item.unit}
+                              </span>
+                            </span>
+                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
 
@@ -240,24 +262,29 @@ export function DashboardCalendar({
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
               {selectedData.purchaseItems.length > 0 && (
-                <ul className="space-y-1 text-xs font-medium text-[#28a745]">
-                  {selectedData.purchaseItems.map((item, i) => (
-                    <li key={i} className="flex items-baseline justify-between gap-2">
-                      <span className="min-w-0 truncate">
-                        {item.partnerName}
-                        <span className="text-[#8fcb9d]"> · </span>
-                        {item.productName}
-                        {item.spec && <span className="text-[#8fcb9d]"> ({item.spec})</span>}
-                        <span className="text-[#8fcb9d]">
-                          {" "}
-                          ({item.quantity.toLocaleString()}
-                          {item.unit})
-                        </span>
-                      </span>
-                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                    </li>
+                <div className="space-y-2 text-xs font-medium text-[#28a745]">
+                  {groupByPartner(selectedData.purchaseItems).map((group, gi) => (
+                    <div key={gi}>
+                      <p className="truncate font-bold">- {group.partnerName}</p>
+                      <ul className="space-y-1 pl-3 font-normal">
+                        {group.items.map((item, i) => (
+                          <li key={i} className="flex items-baseline justify-between gap-2">
+                            <span className="min-w-0 truncate">
+                              {item.productName}
+                              {item.spec && <span className="text-[#8fcb9d]"> ({item.spec})</span>}
+                              <span className="text-[#8fcb9d]">
+                                {" "}
+                                · {item.quantity.toLocaleString()}
+                                {item.unit}
+                              </span>
+                            </span>
+                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
 
