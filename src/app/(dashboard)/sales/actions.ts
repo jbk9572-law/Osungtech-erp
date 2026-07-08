@@ -152,7 +152,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/sales");
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
-  redirect(`/sales/${salesOrderId}/print`);
+  redirect(`/sales/${salesOrderId}`);
 }
 
 export async function updateSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -271,9 +271,10 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   );
 
   revalidatePath("/sales");
+  revalidatePath(`/sales/${id}`);
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
-  redirect(`/sales/${id}/print`);
+  redirect(`/sales/${id}`);
 }
 
 export async function deleteSale(_prevState: FormState, formData: FormData): Promise<FormState> {

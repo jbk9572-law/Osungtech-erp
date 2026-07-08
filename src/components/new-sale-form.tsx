@@ -55,7 +55,7 @@ export function NewSaleForm({
   history,
   action = createSale,
   initial,
-  submitLabel = "거래 등록 및 거래명세표 보기",
+  submitLabel = "매출 등록",
 }: {
   customers: Customer[];
   products: Product[];
