@@ -132,7 +132,9 @@ export function NewPurchaseForm({
       .filter((row) => row.productId && row.quantity > 0)
       .map((row) => ({
         productId: row.productId,
-        spec: row.spec,
+        // 직접입력이 아니면 규격을 스냅샷으로 고정하지 않고 null로 저장해서,
+        // 품목관리에서 마스터 규격을 나중에 고쳐도 계속 최신값을 따라가게 한다.
+        spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
         unitCost: row.unitCost,
       }))
