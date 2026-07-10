@@ -1120,6 +1120,52 @@
   padding: 4px 8px;
 }
 
+.erp-messenger-search {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--erp-border);
+}
+
+.erp-messenger-search input {
+  padding-right: 26px;
+}
+
+.erp-messenger-search-clear {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--erp-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.erp-messenger-search-hit {
+  background: #ffe58f;
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.erp-messenger-date-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.erp-messenger-date-divider span {
+  background: var(--erp-hover);
+  color: var(--erp-text-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
 .erp-messenger-body {
   flex: 1;
   overflow-y: auto;
