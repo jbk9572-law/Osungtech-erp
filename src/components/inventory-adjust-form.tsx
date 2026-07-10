@@ -4,10 +4,17 @@ import { useActionState, useMemo, useRef, useState } from "react";
 import { adjustInventory } from "@/app/(dashboard)/inventory/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
-import { NumberInput } from "@/components/number-input";
+import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
-type Product = { id: string; sku: string; name: string; spec?: string | null };
+type Product = {
+  id: string;
+  sku: string;
+  name: string;
+  spec?: string | null;
+  unit?: string | null;
+  base_package_qty?: number | null;
+};
 type StockLevel = { product_id: string; warehouse_id: string; quantity: number };
 
 export function InventoryAdjustForm({
@@ -35,6 +42,7 @@ export function InventoryAdjustForm({
   }, [productId, warehouseId, stockLevels]);
 
   const signedQuantity = direction === "decrease" ? -amount : amount;
+  const selectedProduct = products.find((p) => p.id === productId);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-4">
@@ -72,7 +80,13 @@ export function InventoryAdjustForm({
           차감
         </button>
       </div>
-      <NumberInput value={amount} onChange={setAmount} placeholder="수량" className="erp-input" />
+      <QuantityWithBoxInput
+        quantity={amount}
+        onQuantityChange={setAmount}
+        basePackageQty={selectedProduct?.base_package_qty}
+        unit={selectedProduct?.unit}
+        className="erp-input"
+      />
       {currentStock !== null && (
         <p className="text-xs sm:col-span-4" style={{ color: "var(--erp-text-muted)" }}>
           현재 재고: {currentStock.toLocaleString()}개 → 조정 후:{" "}

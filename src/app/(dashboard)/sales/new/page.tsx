@@ -8,7 +8,10 @@ export default async function NewSalePage() {
   const [{ data: customers }, { data: products }, { data: warehouse }, { data: prices }, { data: history }] =
     await Promise.all([
       supabase.from("customers").select("id, name").order("name"),
-      supabase.from("products").select("id, sku, name, spec, unit, price, inventory(quantity)").order("name"),
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)")
+        .order("name"),
       supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
       supabase.from("customer_product_prices").select("customer_id, product_id, unit_price"),
       supabase

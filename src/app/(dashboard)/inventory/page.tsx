@@ -9,7 +9,7 @@ export default async function InventoryPage() {
     // 표시하기 위해 products를 기준으로 재고를 왼쪽 조인한다.
     supabase
       .from("products")
-      .select("id, sku, name, spec, reorder_point, inventory(quantity, warehouse_id)")
+      .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity, warehouse_id)")
       .order("name"),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
@@ -46,7 +46,14 @@ export default async function InventoryPage() {
         </div>
         <div className="erp-detail-body">
           <InventoryAdjustForm
-            products={(products ?? []).map((p) => ({ id: p.id, sku: p.sku, name: p.name, spec: p.spec }))}
+            products={(products ?? []).map((p) => ({
+              id: p.id,
+              sku: p.sku,
+              name: p.name,
+              spec: p.spec,
+              unit: p.unit,
+              base_package_qty: p.base_package_qty,
+            }))}
             warehouseId={warehouse?.id ?? ""}
             stockLevels={stockLevels}
           />

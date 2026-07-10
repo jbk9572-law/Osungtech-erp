@@ -6,6 +6,7 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
+import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
@@ -18,6 +19,7 @@ type Product = {
   spec?: string | null;
   unit?: string | null;
   cost: number;
+  base_package_qty?: number | null;
 };
 
 type Row = {
@@ -272,12 +274,12 @@ export function NewPurchaseForm({
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
-                      <NumberInput
-                        placeholder="수량 (=1+1 계산 가능)"
-                        value={row.quantity}
-                        onChange={(n) => updateRow(row.key, { quantity: n })}
+                      <QuantityWithBoxInput
+                        quantity={row.quantity}
+                        onQuantityChange={(n) => updateRow(row.key, { quantity: n })}
+                        basePackageQty={product?.base_package_qty}
+                        unit={product?.unit}
                         allowFormula
-                        className="erp-input w-full"
                       />
                     </td>
                     <td className="num">

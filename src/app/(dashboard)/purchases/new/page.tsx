@@ -7,7 +7,7 @@ export default async function NewPurchasePage() {
   const supabase = await createClient();
   const [{ data: suppliers }, { data: products }, { data: warehouse }] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
-    supabase.from("products").select("id, sku, name, spec, unit, cost").order("name"),
+    supabase.from("products").select("id, sku, name, spec, unit, cost, base_package_qty").order("name"),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
 
