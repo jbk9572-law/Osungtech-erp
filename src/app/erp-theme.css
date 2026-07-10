@@ -1127,6 +1127,149 @@
 .erp-messenger-composer-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
+}
+
+/* ── 첨부파일 카드(메신저 수신 메시지) ───────────────────── */
+.erp-attachment-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  padding: 7px 10px;
+  background: #fff;
+  border: 1px solid var(--erp-border);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.erp-attachment-row:hover {
+  background: var(--erp-hover);
+  border-color: var(--erp-primary);
+}
+
+.erp-attachment-icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--erp-selected);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.erp-attachment-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.erp-attachment-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--erp-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.erp-attachment-meta {
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+}
+
+.erp-attachment-download {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--erp-primary);
+}
+
+.erp-attachment-image-link {
+  display: block;
+  max-width: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--erp-border);
+}
+
+.erp-attachment-image {
+  display: block;
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+}
+
+/* ── 파일 선택 버튼(엑셀 일괄등록 / 메신저 첨부) ───────────────────── */
+.erp-file-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.erp-file-picker-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.erp-file-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--erp-border);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--erp-text);
+  white-space: nowrap;
+}
+
+.erp-file-picker-btn-icon {
+  padding: 6px 9px;
+  font-size: 14px;
+}
+
+.erp-file-picker:hover .erp-file-picker-btn {
+  border-color: var(--erp-primary);
+  color: var(--erp-primary);
+}
+
+.erp-file-picker-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 160px;
+  padding: 4px 8px;
+  background: var(--erp-hover);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--erp-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.erp-file-picker-clear {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--erp-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.erp-file-picker-clear:hover {
+  color: var(--erp-danger);
 }
