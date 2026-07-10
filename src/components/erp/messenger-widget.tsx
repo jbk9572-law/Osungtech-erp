@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { sendMessage, deleteMessage } from "@/app/(dashboard)/messenger/actions";
 
-type Message = {
+export type MessengerMessage = {
   id: string;
   sender_id: string | null;
   content: string;
@@ -15,19 +15,28 @@ type Message = {
   created_at: string;
 };
 
-export function MessengerClient({
+// 좌측 메뉴 대신 우측 하단에 떠 있는 사내메신저 위젯. 평소엔 동그란 버튼으로
+// 최소화돼 있다가 클릭하면 채팅창으로 펼쳐진다.
+export function MessengerWidget({
   initialMessages,
   profileNames,
   currentUserId,
 }: {
-  initialMessages: Message[];
+  initialMessages: MessengerMessage[];
   profileNames: Record<string, string>;
   currentUserId: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const [hasUnseen, setHasUnseen] = useState(false);
   const [messages, setMessages] = useState(initialMessages);
   const [state, formAction, pending] = useActionState(sendMessage, undefined);
   const formRef = useRef<HTMLFormElement>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
+  const openRef = useRef(open);
+
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -37,8 +46,11 @@ export function MessengerClient({
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messenger_messages" },
         (payload) => {
-          const row = payload.new as Message;
+          const row = payload.new as MessengerMessage;
           setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+          if (!openRef.current && row.sender_id !== currentUserId) {
+            setHasUnseen(true);
+          }
         }
       )
       .on(
@@ -54,11 +66,13 @@ export function MessengerClient({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
-    listEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    if (open) {
+      listEndRef.current?.scrollIntoView();
+    }
+  }, [open, messages.length]);
 
   useEffect(() => {
     if (state?.success) {
@@ -71,46 +85,54 @@ export function MessengerClient({
     return profileNames[senderId] ?? "구성원";
   }
 
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="erp-messenger-fab"
+        onClick={() => {
+          setOpen(true);
+          setHasUnseen(false);
+        }}
+        aria-label="사내메신저 열기"
+      >
+        💬
+        {hasUnseen && <span className="erp-messenger-fab-badge" aria-hidden />}
+      </button>
+    );
+  }
+
   return (
-    <div
-      className="erp-detail"
-      style={{ marginTop: 0, display: "flex", flexDirection: "column", height: "70vh" }}
-    >
-      <div className="erp-detail-tabs">
-        <span className="erp-detail-tab active">전체 대화방</span>
+    <div className="erp-messenger-panel">
+      <div className="erp-messenger-header">
+        <span>사내메신저</span>
+        <button type="button" onClick={() => setOpen(false)} aria-label="최소화">
+          ─
+        </button>
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 16,
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-        }}
-      >
+      <div className="erp-messenger-body">
         {messages.map((m) => {
           const mine = m.sender_id === currentUserId;
           return (
-            <div key={m.id} style={{ alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "70%" }}>
+            <div key={m.id} style={{ alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "80%" }}>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 10.5,
                   color: "var(--erp-text-muted)",
                   marginBottom: 2,
                   textAlign: mine ? "right" : "left",
                 }}
               >
-                {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleString("ko-KR")}
+                {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleTimeString("ko-KR")}
               </div>
               <div
                 style={{
                   background: mine ? "var(--erp-primary)" : "#f0f2f5",
                   color: mine ? "#fff" : "var(--erp-text)",
-                  padding: "8px 12px",
+                  padding: "6px 10px",
                   borderRadius: 8,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
                 }}
@@ -125,7 +147,7 @@ export function MessengerClient({
                       style={{
                         color: mine ? "#fff" : "var(--erp-primary)",
                         textDecoration: "underline",
-                        fontSize: 12,
+                        fontSize: 11.5,
                       }}
                     >
                       📎 {m.file_name}
@@ -156,42 +178,30 @@ export function MessengerClient({
           );
         })}
         {!messages.length && (
-          <p className="erp-grid-empty">아직 메시지가 없습니다. 첫 메시지를 남겨보세요.</p>
+          <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+            아직 메시지가 없습니다. 첫 메시지를 남겨보세요.
+          </p>
         )}
         <div ref={listEndRef} />
       </div>
 
-      <form
-        ref={formRef}
-        action={formAction}
-        style={{
-          borderTop: "1px solid var(--erp-border)",
-          display: "flex",
-          gap: 8,
-          alignItems: "flex-end",
-          padding: 12,
-        }}
-      >
+      <form ref={formRef} action={formAction} className="erp-messenger-composer">
         <textarea
           name="content"
           placeholder="메시지를 입력하세요"
           rows={2}
           className="erp-input"
-          style={{ flex: 1, resize: "vertical" }}
+          style={{ flex: 1, resize: "none", fontSize: 12.5 }}
         />
-        <input type="file" name="file" style={{ maxWidth: 160, fontSize: 12 }} />
-        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-          {pending ? (
-            <>
-              <span className="erp-spinner" aria-hidden /> 전송 중...
-            </>
-          ) : (
-            "전송"
-          )}
-        </button>
+        <div className="erp-messenger-composer-actions">
+          <input type="file" name="file" style={{ fontSize: 11, maxWidth: 120 }} />
+          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+            {pending ? <span className="erp-spinner" aria-hidden /> : "전송"}
+          </button>
+        </div>
       </form>
       {state?.error && (
-        <p style={{ padding: "0 12px 12px", color: "var(--erp-danger)", fontSize: 12 }}>
+        <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
           {state.error}
         </p>
       )}

@@ -10,6 +10,7 @@ import { TabBar } from "@/components/erp/tab-bar";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
+import { MessengerWidget, type MessengerMessage } from "@/components/erp/messenger-widget";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
 
@@ -28,6 +29,9 @@ export function ErpShell({
   email,
   unreadAnnouncements,
   dueTodos,
+  initialMessages,
+  profileNames,
+  currentUserId,
   children,
 }: {
   companyName?: string | null;
@@ -35,6 +39,9 @@ export function ErpShell({
   email: string | null;
   unreadAnnouncements: AnnouncementItem[];
   dueTodos: DueTodoItem[];
+  initialMessages: MessengerMessage[];
+  profileNames: Record<string, string>;
+  currentUserId: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -63,6 +70,11 @@ export function ErpShell({
         </div>
       </div>
       <StatusBar email={email} companyName={companyName} />
+      <MessengerWidget
+        initialMessages={initialMessages}
+        profileNames={profileNames}
+        currentUserId={currentUserId}
+      />
     </div>
   );
 }
