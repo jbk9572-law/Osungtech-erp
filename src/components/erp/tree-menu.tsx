@@ -25,6 +25,7 @@ const TREE: GroupItem[] = [
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
+  { label: "사내메신저", items: [{ label: "사내메신저", href: "/messenger" }] },
   {
     label: "환경설정",
     items: [{ label: "회사정보", href: "/settings/company" }],

@@ -791,6 +791,47 @@ export type Database = {
           },
         ];
       };
+      messenger_messages: {
+        Row: {
+          id: string;
+          sender_id: string | null;
+          content: string;
+          file_url: string | null;
+          file_path: string | null;
+          file_name: string | null;
+          file_size: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id?: string | null;
+          content?: string;
+          file_url?: string | null;
+          file_path?: string | null;
+          file_name?: string | null;
+          file_size?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          sender_id?: string | null;
+          content?: string;
+          file_url?: string | null;
+          file_path?: string | null;
+          file_name?: string | null;
+          file_size?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messenger_messages_sender_id_fkey";
+            columns: ["sender_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
