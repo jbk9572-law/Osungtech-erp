@@ -45,7 +45,8 @@ export async function sendMessage(
       .upload(path, file, { contentType: file.type || "application/octet-stream" });
 
     if (uploadError) {
-      return { error: "파일 업로드에 실패했습니다." };
+      console.error("messenger file upload failed:", uploadError);
+      return { error: `파일 업로드에 실패했습니다. (${uploadError.message})` };
     }
 
     const {
@@ -71,7 +72,8 @@ export async function sendMessage(
     .single();
 
   if (error || !inserted) {
-    return { error: "전송에 실패했습니다." };
+    console.error("messenger message insert failed:", error);
+    return { error: `전송에 실패했습니다.${error ? ` (${error.message})` : ""}` };
   }
 
   return { success: "전송했습니다.", message: inserted };
