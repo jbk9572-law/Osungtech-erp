@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnouncementItem, DueTodoItem } from "@/components/erp/notification-bell";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 10분마다 재확인
-const AUTO_HIDE_MS = 10 * 1000;
+const AUTO_HIDE_MS = 60 * 1000; // 1분
 
 type Summary = { announcements: AnnouncementItem[]; todos: DueTodoItem[] };
 

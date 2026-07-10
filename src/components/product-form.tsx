@@ -163,7 +163,7 @@ export function ProductForm({
       />
       <input
         name="base_package_qty"
-        placeholder="포장단위 (1박스당 수량, 예: 50)"
+        placeholder="포장수량 (1박스당 수량, 예: 50)"
         type="number"
         step="0.01"
         defaultValue={initial?.base_package_qty ?? ""}

@@ -21,7 +21,7 @@ export default async function PurchaseDetailPage({
       .maybeSingle(),
     supabase
       .from("purchase_order_items")
-      .select("*, products(sku, name, spec, unit)")
+      .select("*, products(sku, name, spec, unit, base_package_qty)")
       .eq("purchase_order_id", id)
       .order("created_at"),
   ]);
@@ -91,23 +91,31 @@ export default async function PurchaseDetailPage({
         <table className="erp-grid">
           <thead>
             <tr>
+              <th>SKU</th>
               <th>품목명</th>
               <th>규격</th>
+              <th>단위</th>
+              <th className="num">포장수량</th>
               <th className="num">수량</th>
-              <th className="num">매입단가</th>
-              <th className="num">금액</th>
+              <th className="num">구매가</th>
+              <th className="num">합계금액</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.id}>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.sku}</td>
                 <td>{row.products?.name}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>
                   {row.spec || row.products?.spec || "-"}
                 </td>
-                <td className="num">
-                  {row.quantity.toLocaleString()} {row.products?.unit}
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {row.products?.base_package_qty
+                    ? Number(row.products.base_package_qty).toLocaleString()
+                    : "-"}
                 </td>
+                <td className="num">{row.quantity.toLocaleString()}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   {Number(row.unit_cost).toLocaleString()}
                 </td>
@@ -117,7 +125,7 @@ export default async function PurchaseDetailPage({
           </tbody>
           <tfoot>
             <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-              <td colSpan={4} className="num">
+              <td colSpan={7} className="num">
                 합계
               </td>
               <td className="num">{totalAmount.toLocaleString()}</td>
