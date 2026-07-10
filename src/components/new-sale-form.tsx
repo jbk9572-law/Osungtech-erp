@@ -374,9 +374,10 @@ export function NewSaleForm({
                     <td className="num">
                       <button
                         type="button"
+                        className="erp-btn erp-btn-danger"
+                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
                         onClick={() => removeRow(row.key)}
-                        className="text-xs font-medium"
-                        style={{ color: "#dc3545" }}
+                        disabled={rows.length <= 1}
                       >
                         삭제
                       </button>
