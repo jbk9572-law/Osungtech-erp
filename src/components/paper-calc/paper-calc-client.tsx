@@ -119,7 +119,11 @@ export function PaperCalcClient() {
 
   function openPrintView() {
     if (!result) return;
-    sessionStorage.setItem(
+    // localStorage를 쓴다: sessionStorage는 noopener로 연 새 창에는 복제되지
+    // 않아서(오프너와의 연결이 끊기면 새 세션으로 취급됨) 인쇄 페이지가 빈
+    // 화면으로 뜨는 문제가 있었다. localStorage는 오프너 관계와 무관하게
+    // 같은 출처(origin)에서 항상 공유된다.
+    localStorage.setItem(
       "paper-calc-print-input",
       JSON.stringify({ paperW, paperH, items: orderItems })
     );
