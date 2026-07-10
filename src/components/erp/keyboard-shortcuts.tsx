@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-type ShortcutAction = { href: string } | { submitFormSelector: string };
+type ShortcutAction = { href: string; newTab?: boolean } | { submitFormSelector: string };
 
 // 목록/상세 페이지(서버 컴포넌트)에 얹어서 F2/F5/F9/ESC 같은 라벨이 실제
 // 키 입력에도 반응하게 만드는 컴포넌트. 페이지 자체는 서버 컴포넌트로 두고
@@ -21,7 +21,11 @@ export function KeyboardShortcuts({
       if (!action) return;
       e.preventDefault();
       if ("href" in action) {
-        router.push(action.href);
+        if (action.newTab) {
+          window.open(action.href, "_blank", "noopener,noreferrer");
+        } else {
+          router.push(action.href);
+        }
       } else {
         document.querySelector<HTMLFormElement>(action.submitFormSelector)?.requestSubmit();
       }

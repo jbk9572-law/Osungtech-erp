@@ -70,14 +70,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, products(name, unit, spec), sales_orders!inner(order_date, customers(name))"
+        "quantity, unit_price, spec, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
+        "quantity, unit_cost, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -116,6 +116,7 @@ export default async function DashboardPage({
     unit: string;
     quantity: number;
     amount: number;
+    orderId: string;
   };
 
   type DayData = {
@@ -158,6 +159,7 @@ export default async function DashboardPage({
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
       amount,
+      orderId: item.sales_order_id,
     });
   }
 
@@ -174,6 +176,7 @@ export default async function DashboardPage({
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
       amount,
+      orderId: item.purchase_order_id,
     });
   }
 

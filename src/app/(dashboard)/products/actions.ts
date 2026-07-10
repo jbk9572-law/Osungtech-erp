@@ -38,6 +38,9 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
     price: Number(formData.get("price") ?? 0),
     cost: Number(formData.get("cost") ?? 0),
     reorder_point: Number(formData.get("reorder_point") ?? 0),
+    base_package_qty: formData.get("base_package_qty")
+      ? Number(formData.get("base_package_qty"))
+      : null,
   };
 }
 

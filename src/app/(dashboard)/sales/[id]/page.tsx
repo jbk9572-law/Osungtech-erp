@@ -40,7 +40,7 @@ export default async function SaleDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F9: { href: `/sales/${id}/print` },
+          F9: { href: `/sales/${id}/print`, newTab: true },
           F4: { href: `/sales/${id}/edit` },
           Escape: { href: "/sales" },
         }}
@@ -48,7 +48,7 @@ export default async function SaleDetailPage({
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">영업관리 &gt; 수주 상세</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/sales/${id}/print`} className="erp-btn">
+          <Link href={`/sales/${id}/print`} target="_blank" rel="noopener noreferrer" className="erp-btn">
             F9 명세표
           </Link>
           <Link href={`/sales/${id}/edit`} className="erp-btn">

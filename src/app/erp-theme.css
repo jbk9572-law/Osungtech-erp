@@ -1204,21 +1204,27 @@
   object-fit: cover;
 }
 
-/* ── 파일 선택 버튼(엑셀 일괄등록 / 메신저 첨부) ───────────────────── */
-.erp-file-picker {
-  position: relative;
+/* ── 파일 선택 버튼(엑셀 일괄등록 / 브랜딩 이미지 / 메신저 첨부) ───────────────────── */
+.erp-file-picker-group {
   display: inline-flex;
   align-items: center;
-  cursor: pointer;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.erp-file-picker-input {
+/* 실제 클릭은 버튼이 받고(.click()으로 위임), input 자체는 접근성상
+   화면에서만 숨긴다. display:none을 쓰면 required 검증이 무시되므로
+   피하고, 대신 1px로 잘라내는 표준 sr-only 기법을 쓴다. */
+.erp-file-picker-hidden-input {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .erp-file-picker-btn {
@@ -1233,6 +1239,7 @@
   font-weight: 600;
   color: var(--erp-text);
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .erp-file-picker-btn-icon {
@@ -1240,7 +1247,8 @@
   font-size: 14px;
 }
 
-.erp-file-picker:hover .erp-file-picker-btn {
+.erp-file-picker-btn:hover,
+.erp-file-picker-btn:focus-visible {
   border-color: var(--erp-primary);
   color: var(--erp-primary);
 }

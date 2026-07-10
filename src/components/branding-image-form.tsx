@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { uploadBrandingImage } from "@/app/(dashboard)/settings/company/actions";
 import { FormMessage } from "@/components/form-message";
+import { FilePickerInput } from "@/components/file-picker-input";
 
 function BrandingSlot({
   slot,
@@ -20,6 +21,7 @@ function BrandingSlot({
   previewClassName: string;
 }) {
   const [state, formAction, pending] = useActionState(uploadBrandingImage, undefined);
+  const [hasFile, setHasFile] = useState(false);
 
   return (
     <div className="rounded-sm border border-[#eef0f3] p-4">
@@ -29,14 +31,15 @@ function BrandingSlot({
       <img src={currentUrl || defaultUrl} alt={label} className={`mb-3 ${previewClassName}`} />
       <form action={formAction} className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="slot" value={slot} />
-        <input
-          type="file"
+        <FilePickerInput
           name="file"
           accept="image/*"
           required
-          className="text-xs text-[#6b7280] file:mr-2 file:rounded-sm file:border-0 file:bg-[#1f3b75] file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+          icon="🖼️"
+          label="이미지 선택"
+          onFileChange={(f) => setHasFile(!!f)}
         />
-        <button type="submit" disabled={pending} className="erp-btn" style={{ minWidth: 0 }}>
+        <button type="submit" disabled={pending || !hasFile} className="erp-btn" style={{ minWidth: 0 }}>
           {pending ? (
             <>
               <span className="erp-spinner" aria-hidden /> 업로드 중...

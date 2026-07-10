@@ -44,7 +44,8 @@ export default async function PurchasesPage({
         (item) =>
           item.purchase_orders?.suppliers?.name?.toLowerCase().includes(keyword) ||
           item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword)
+          item.products?.sku?.toLowerCase().includes(keyword) ||
+          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword)
       )
     : rawItems;
 
@@ -122,12 +123,12 @@ export default async function PurchasesPage({
           <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>공급업체 / 상품 검색</label>
+          <label>공급업체 / 상품 / 규격 검색</label>
           <input
             type="text"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="공급업체명, 상품명, SKU"
+            placeholder="공급업체명, 상품명, SKU, 규격"
             className="erp-input"
             style={{ width: "100%" }}
           />

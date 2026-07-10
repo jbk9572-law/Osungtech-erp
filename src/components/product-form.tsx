@@ -18,6 +18,7 @@ type ProductInitial = {
   price?: number | null;
   cost?: number | null;
   reorder_point?: number | null;
+  base_package_qty?: number | null;
 };
 
 const UNIT_PRESETS = ["EA", "KG", "G", "L", "ML", "BOX", "SET", "M", "ROLL"];
@@ -159,6 +160,15 @@ export function ProductForm({
         type="number"
         defaultValue={initial?.reorder_point ?? ""}
         className="erp-input"
+      />
+      <input
+        name="base_package_qty"
+        placeholder="포장단위 (1박스당 수량, 예: 50)"
+        type="number"
+        step="0.01"
+        defaultValue={initial?.base_package_qty ?? ""}
+        className="erp-input"
+        title="포장(박스) 1개에 들어가는 기본 수량. 예: 1박스 = 50ea면 50을 입력"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-4">
         {pending ? (

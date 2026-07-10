@@ -45,6 +45,7 @@ export default async function ProductsPage() {
               <th>상품명</th>
               <th>규격</th>
               <th>단위</th>
+              <th>포장단위</th>
               <th>카테고리</th>
               <th>공급업체</th>
               <th className="num">판매가</th>
@@ -59,6 +60,11 @@ export default async function ProductsPage() {
                 <td>{product.name}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.spec ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.unit}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>
+                  {product.base_package_qty
+                    ? `1박스 = ${Number(product.base_package_qty).toLocaleString()}${product.unit}`
+                    : "-"}
+                </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.categories?.name ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.suppliers?.name ?? "-"}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
@@ -74,7 +80,7 @@ export default async function ProductsPage() {
             ))}
             {!products?.length && (
               <tr>
-                <td colSpan={9} className="erp-grid-empty">
+                <td colSpan={10} className="erp-grid-empty">
                   등록된 상품이 없습니다.
                 </td>
               </tr>

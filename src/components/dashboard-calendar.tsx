@@ -15,6 +15,7 @@ type ItemRow = {
   unit: string;
   quantity: number;
   amount: number;
+  orderId: string;
 };
 
 type DayData = {
@@ -29,21 +30,35 @@ type DayData = {
 
 type Cell = { dateStr: string; day: number } | null;
 
-// 거래처별로 묶어서 보여주기 위한 그룹핑. 목록 안에서 같은 거래처가 여러 번
-// 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를 그대로 유지).
-function groupByPartner(items: ItemRow[]) {
-  const groups: { partnerName: string; items: ItemRow[] }[] = [];
-  const index = new Map<string, number>();
+// 거래처 > 품목명 순으로 묶어서 트리 형태로 보여주기 위한 그룹핑. 목록 안에서
+// 같은 거래처/품목이 여러 번 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를
+// 그대로 유지). 같은 품목이라도 규격이 다르면 그 아래에 규격별 줄로 나열된다.
+function groupByPartnerAndProduct(items: ItemRow[]) {
+  type ProductGroup = { productName: string; items: ItemRow[] };
+  type PartnerGroup = { partnerName: string; products: ProductGroup[] };
+
+  const partners: PartnerGroup[] = [];
+  const partnerIndex = new Map<string, number>();
+  const productIndex = new Map<string, number>();
+
   for (const item of items) {
-    let i = index.get(item.partnerName);
-    if (i === undefined) {
-      i = groups.length;
-      index.set(item.partnerName, i);
-      groups.push({ partnerName: item.partnerName, items: [] });
+    let pi = partnerIndex.get(item.partnerName);
+    if (pi === undefined) {
+      pi = partners.length;
+      partnerIndex.set(item.partnerName, pi);
+      partners.push({ partnerName: item.partnerName, products: [] });
     }
-    groups[i].items.push(item);
+    const partner = partners[pi];
+    const productKey = `${pi}:${item.productName}`;
+    let di = productIndex.get(productKey);
+    if (di === undefined) {
+      di = partner.products.length;
+      productIndex.set(productKey, di);
+      partner.products.push({ productName: item.productName, items: [] });
+    }
+    partner.products[di].items.push(item);
   }
-  return groups;
+  return partners;
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -232,25 +247,32 @@ export function DashboardCalendar({
               </p>
               {selectedData.salesItems.length > 0 && (
                 <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
-                  {groupByPartner(selectedData.salesItems).map((group, gi) => (
-                    <div key={gi}>
-                      <p className="font-bold">- {group.partnerName}</p>
-                      <ul className="space-y-1 pl-3 font-normal">
-                        {group.items.map((item, i) => (
-                          <li key={i} className="flex items-start justify-between gap-2">
-                            <span className="min-w-0">
-                              {item.productName}
-                              {item.spec && <span className="text-[#8ea3c9]"> ({item.spec})</span>}
-                              <span className="text-[#8ea3c9]">
-                                {" "}
-                                · {item.quantity.toLocaleString()}
-                                {item.unit}
-                              </span>
-                            </span>
-                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                          </li>
+                  {groupByPartnerAndProduct(selectedData.salesItems).map((partner, pi) => (
+                    <div key={pi}>
+                      <p className="font-bold">- {partner.partnerName}</p>
+                      <div className="space-y-1 pl-3">
+                        {partner.products.map((product, di) => (
+                          <div key={di}>
+                            <p className="font-semibold">- {product.productName}</p>
+                            <ul className="space-y-1 pl-3 font-normal">
+                              {product.items.map((item, i) => (
+                                <li key={i}>
+                                  <Link
+                                    href={`/sales/${item.orderId}`}
+                                    className="flex items-start justify-between gap-2 hover:underline"
+                                  >
+                                    <span className="min-w-0 text-[#8ea3c9]">
+                                      {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                      {item.unit}
+                                    </span>
+                                    <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -263,25 +285,32 @@ export function DashboardCalendar({
               </p>
               {selectedData.purchaseItems.length > 0 && (
                 <div className="space-y-2 text-xs font-medium text-[#28a745]">
-                  {groupByPartner(selectedData.purchaseItems).map((group, gi) => (
-                    <div key={gi}>
-                      <p className="font-bold">- {group.partnerName}</p>
-                      <ul className="space-y-1 pl-3 font-normal">
-                        {group.items.map((item, i) => (
-                          <li key={i} className="flex items-start justify-between gap-2">
-                            <span className="min-w-0">
-                              {item.productName}
-                              {item.spec && <span className="text-[#8fcb9d]"> ({item.spec})</span>}
-                              <span className="text-[#8fcb9d]">
-                                {" "}
-                                · {item.quantity.toLocaleString()}
-                                {item.unit}
-                              </span>
-                            </span>
-                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                          </li>
+                  {groupByPartnerAndProduct(selectedData.purchaseItems).map((partner, pi) => (
+                    <div key={pi}>
+                      <p className="font-bold">- {partner.partnerName}</p>
+                      <div className="space-y-1 pl-3">
+                        {partner.products.map((product, di) => (
+                          <div key={di}>
+                            <p className="font-semibold">- {product.productName}</p>
+                            <ul className="space-y-1 pl-3 font-normal">
+                              {product.items.map((item, i) => (
+                                <li key={i}>
+                                  <Link
+                                    href={`/purchases/${item.orderId}`}
+                                    className="flex items-start justify-between gap-2 hover:underline"
+                                  >
+                                    <span className="min-w-0 text-[#8fcb9d]">
+                                      {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                      {item.unit}
+                                    </span>
+                                    <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   ))}
                 </div>

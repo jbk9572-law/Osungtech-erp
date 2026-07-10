@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { sendMessage, deleteMessage } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage } from "@/lib/messenger-types";
 import { fileKindIcon, formatFileSize, isImageFile } from "@/lib/file-display";
+import { FilePickerInput } from "@/components/file-picker-input";
 
 export type { MessengerMessage };
 
@@ -23,11 +24,11 @@ export function MessengerWidget({
   const [hasUnseen, setHasUnseen] = useState(false);
   const [messages, setMessages] = useState(initialMessages);
   const [sendError, setSendError] = useState<string | undefined>();
-  const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
+  const [hasAttachment, setHasAttachment] = useState(false);
+  const [composerKey, setComposerKey] = useState(0);
   const [sending, startSendTransition] = useTransition();
   const [, startDeleteTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
   const openRef = useRef(open);
 
@@ -85,7 +86,8 @@ export function MessengerWidget({
       }
       setSendError(undefined);
       formRef.current?.reset();
-      setAttachedFileName(null);
+      setHasAttachment(false);
+      setComposerKey((k) => k + 1);
       if (result?.message) {
         const sent = result.message;
         setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]));
@@ -104,9 +106,13 @@ export function MessengerWidget({
   }
 
   function handleComposerKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // 한글 등 IME 조합 중에 눌린 Enter는 무시한다(조합 완료용 Enter가 전송으로
+    // 잘못 튀는 것을 막기 위함). keyCode는 일부 구형 브라우저의 폴백.
+    if (e.nativeEvent.isComposing) return;
+    const isEnter = e.key === "Enter" || e.keyCode === 13;
+    if (isEnter && !e.shiftKey) {
       e.preventDefault();
-      if (e.currentTarget.value.trim() || attachedFileName) {
+      if (e.currentTarget.value.trim() || hasAttachment) {
         formRef.current?.requestSubmit();
       }
     }
@@ -254,32 +260,14 @@ export function MessengerWidget({
           onKeyDown={handleComposerKeyDown}
         />
         <div className="erp-messenger-composer-actions">
-          <label className="erp-file-picker" title="파일 첨부">
-            <input
-              ref={fileInputRef}
-              type="file"
-              name="file"
-              className="erp-file-picker-input"
-              onChange={(e) => setAttachedFileName(e.target.files?.[0]?.name ?? null)}
-            />
-            <span className="erp-file-picker-btn erp-file-picker-btn-icon">📎</span>
-          </label>
-          {attachedFileName && (
-            <span className="erp-file-picker-name">
-              {attachedFileName}
-              <button
-                type="button"
-                onClick={() => {
-                  setAttachedFileName(null);
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-                className="erp-file-picker-clear"
-                aria-label="첨부 취소"
-              >
-                ✕
-              </button>
-            </span>
-          )}
+          <FilePickerInput
+            key={composerKey}
+            name="file"
+            iconOnly
+            icon="📎"
+            label="파일 첨부"
+            onFileChange={(f) => setHasAttachment(!!f)}
+          />
           <span style={{ flex: 1 }} />
           <button type="submit" disabled={sending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
             {sending ? <span className="erp-spinner" aria-hidden /> : "전송"}
