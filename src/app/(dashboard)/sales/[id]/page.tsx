@@ -101,7 +101,7 @@ export default async function SaleDetailPage({
               <th>단위</th>
               <th className="num">포장수량</th>
               <th className="num">수량</th>
-              <th className="num">판매가</th>
+              <th className="num">공급가</th>
               <th className="num">합계금액</th>
             </tr>
           </thead>

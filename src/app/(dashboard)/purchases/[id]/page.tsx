@@ -97,7 +97,7 @@ export default async function PurchaseDetailPage({
               <th>단위</th>
               <th className="num">포장수량</th>
               <th className="num">수량</th>
-              <th className="num">구매가</th>
+              <th className="num">매입가</th>
               <th className="num">합계금액</th>
             </tr>
           </thead>

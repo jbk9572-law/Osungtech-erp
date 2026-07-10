@@ -71,10 +71,13 @@ export default async function PurchasesPage({
           spec: item.spec || item.products?.spec || "-",
           quantity: 0,
           unit: item.products?.unit,
-          unitCost: null,
+          unitCost: Number(item.unit_cost),
           amount: 0,
           itemCount: 0,
         };
+      } else {
+        // 품목이 2건 이상이면 단가를 하나로 대표할 수 없으니 비워둔다.
+        acc[orderId].unitCost = null;
       }
       acc[orderId].itemCount += 1;
       acc[orderId].quantity += item.quantity;
@@ -89,6 +92,7 @@ export default async function PurchasesPage({
   const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
   const totalAmount = itemRows.reduce((sum, row) => sum + row.amount, 0);
   const presets = getDatePresets();
+  const exportHref = q ? `/api/purchases/export?q=${encodeURIComponent(q)}` : "/api/purchases/export";
 
   return (
     <div>
@@ -96,6 +100,7 @@ export default async function PurchasesPage({
         shortcuts={{
           F2: { href: "/purchases/new" },
           F5: { submitFormSelector: "#purchases-search-form" },
+          F8: { href: exportHref, newTab: true },
           Escape: { href: "/dashboard" },
         }}
       />
@@ -147,9 +152,13 @@ export default async function PurchasesPage({
         <Link href="/purchases/new" className="erp-btn erp-btn-primary">
           F2 신규
         </Link>
-        <button type="button" className="erp-btn" disabled>
+        <a
+          href={exportHref}
+          className="erp-btn"
+          title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
+        >
           F8 엑셀
-        </button>
+        </a>
         <Link href="/dashboard" className="erp-btn">
           ESC 닫기
         </Link>
@@ -164,7 +173,7 @@ export default async function PurchasesPage({
               <th>품목명</th>
               <th>규격</th>
               <th className="num">수량</th>
-              <th className="num">매입단가</th>
+              <th className="num">매입가</th>
               <th className="num">금액</th>
             </tr>
           </thead>
