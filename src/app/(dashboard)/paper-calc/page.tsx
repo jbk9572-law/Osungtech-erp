@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PaperCalcClient } from "@/components/paper-calc/paper-calc-client";
 
 export default function PaperCalcPage() {
   return (
@@ -11,16 +12,8 @@ export default function PaperCalcPage() {
           ESC 닫기
         </Link>
       </div>
-      <div className="erp-detail" style={{ marginTop: 12 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">준비 중</span>
-        </div>
-        <div className="erp-detail-body">
-          <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-            모조지 계산 기능은 아직 연결 전입니다. 계산 방식(입력 항목, 계산식, 결과 표시)을
-            확인한 뒤 이 화면에 실제 기능을 구현할 예정입니다.
-          </p>
-        </div>
+      <div style={{ marginTop: 12 }}>
+        <PaperCalcClient />
       </div>
     </div>
   );
