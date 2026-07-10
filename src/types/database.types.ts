@@ -62,6 +62,8 @@ export type Database = {
           phone: string | null;
           address: string | null;
           notes: string | null;
+          purchase_export_template: string;
+          purchase_price_basis: string;
           created_at: string;
         };
         Insert: {
@@ -74,6 +76,8 @@ export type Database = {
           phone?: string | null;
           address?: string | null;
           notes?: string | null;
+          purchase_export_template?: string;
+          purchase_price_basis?: string;
           created_at?: string;
         };
         Update: {
@@ -86,6 +90,8 @@ export type Database = {
           phone?: string | null;
           address?: string | null;
           notes?: string | null;
+          purchase_export_template?: string;
+          purchase_price_basis?: string;
           created_at?: string;
         };
         Relationships: [];

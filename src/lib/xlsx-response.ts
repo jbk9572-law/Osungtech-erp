@@ -2,6 +2,20 @@ import * as XLSX from "xlsx";
 
 export function buildXlsxResponse(rows: Record<string, unknown>[], filename: string): Response {
   const sheet = XLSX.utils.json_to_sheet(rows);
+  return respondWithSheet(sheet, filename);
+}
+
+// 거래처마다 정해진 고정 서식(셀 위치가 중요한 장부 양식)처럼 표 헤더 하나로
+// 표현할 수 없는 레이아웃은 행 배열(aoa)을 직접 그려서 만든다.
+export function buildXlsxResponseFromRows(
+  rows: (string | number | null)[][],
+  filename: string
+): Response {
+  const sheet = XLSX.utils.aoa_to_sheet(rows);
+  return respondWithSheet(sheet, filename);
+}
+
+function respondWithSheet(sheet: XLSX.WorkSheet, filename: string): Response {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
   const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;

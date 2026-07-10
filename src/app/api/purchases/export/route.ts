@@ -1,20 +1,76 @@
 import { createClient } from "@/lib/supabase/server";
-import { buildXlsxResponse, currentMonthRange } from "@/lib/xlsx-response";
+import { buildXlsxResponse, buildXlsxResponseFromRows, currentMonthRange } from "@/lib/xlsx-response";
+import {
+  buildLeadersSpecialSheet,
+  buildStandardLedgerSheet,
+  type LedgerItem,
+} from "@/lib/purchase-export-templates";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
-// 검색어(q)가 있으면 공급업체명/품목명/SKU/규격이 일치하는 건만 뽑는다.
+// 검색어(q)가 등록된 매입처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
+// 경우엔 업체별 고정 서식으로, 그 외엔 일반 컬럼 나열로 내려준다.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
   const { from, to } = currentMonthRange();
+  const now = new Date();
 
   const supabase = await createClient();
+
+  let templatedSupplier: {
+    id: string;
+    name: string;
+    purchase_export_template: string;
+    purchase_price_basis: string;
+  } | null = null;
+
+  if (q) {
+    const { data: suppliers } = await supabase
+      .from("suppliers")
+      .select("id, name, purchase_export_template, purchase_price_basis");
+    const matches = (suppliers ?? []).filter((s) => s.name.toLowerCase().includes(q));
+    if (matches.length === 1 && matches[0].purchase_export_template !== "generic") {
+      templatedSupplier = matches[0];
+    }
+  }
+
   const { data } = await supabase
     .from("purchase_order_items")
-    .select("*, purchase_orders!inner(purchase_date, suppliers(name)), products(sku, name, spec, unit)")
+    .select(
+      "*, purchase_orders!inner(purchase_date, supplier_id, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
+    )
     .gte("purchase_orders.purchase_date", from)
     .lte("purchase_orders.purchase_date", to)
     .order("created_at");
+
+  if (templatedSupplier) {
+    const items: LedgerItem[] = (data ?? [])
+      .filter((item) => item.purchase_orders?.supplier_id === templatedSupplier!.id)
+      .map((item) => ({
+        date: item.purchase_orders?.purchase_date ?? "",
+        productName: item.products?.name ?? "",
+        spec: item.spec || item.products?.spec || "",
+        unit: item.products?.unit ?? "",
+        quantity: item.quantity,
+        unitCost: Number(item.unit_cost),
+        basePackageQty:
+          item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+      }));
+
+    const priceBasis = templatedSupplier.purchase_price_basis === "box" ? "box" : "quantity";
+    const rows =
+      templatedSupplier.purchase_export_template === "leaders_special"
+        ? buildLeadersSpecialSheet(templatedSupplier.name, now.getFullYear(), now.getMonth() + 1, items)
+        : buildStandardLedgerSheet(
+            templatedSupplier.name,
+            now.getFullYear(),
+            now.getMonth() + 1,
+            items,
+            priceBasis
+          );
+
+    return buildXlsxResponseFromRows(rows, `매입내역_${templatedSupplier.name}_${from}_${to}.xlsx`);
+  }
 
   const items = (data ?? []).filter((item) => {
     if (!q) return true;
