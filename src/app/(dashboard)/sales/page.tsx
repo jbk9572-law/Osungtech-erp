@@ -55,53 +55,39 @@ export default async function SalesPage({
     return { ...item, supplyAmount, taxAmount };
   });
 
-  // 검색어 없이 조회할 때는 한 명세표(sales_order)를 한 행으로 묶어서 보여준다.
-  // 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로 요약하고, 나머지 품목은
-  // 리스트에 펼쳐 보이지 않는다. 거래처/상품 검색어가 있을 때만(특정 품목을
-  // 찾는 상황) 품목별로 전체 펼쳐서 보여준다.
-  const rows: DisplayRow[] = keyword
-    ? itemRows.map((item) => ({
-        key: item.id,
-        orderId: item.sales_orders?.id,
-        date: item.sales_orders?.order_date,
-        customerName: item.sales_orders?.customers?.name,
-        productLabel: item.products?.name ?? "-",
-        spec: item.spec || item.products?.spec || "-",
-        quantity: item.quantity,
-        unit: item.products?.unit,
-        unitPrice: Number(item.unit_price),
-        supplyAmount: item.supplyAmount,
-        taxAmount: item.taxAmount,
-      }))
-    : Object.values(
-        itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
-          const orderId = item.sales_orders?.id ?? item.id;
-          if (!acc[orderId]) {
-            acc[orderId] = {
-              key: orderId,
-              orderId,
-              date: item.sales_orders?.order_date,
-              customerName: item.sales_orders?.customers?.name,
-              productLabel: item.products?.name ?? "-",
-              spec: item.spec || item.products?.spec || "-",
-              quantity: 0,
-              unit: item.products?.unit,
-              unitPrice: null,
-              supplyAmount: 0,
-              taxAmount: 0,
-              itemCount: 0,
-            };
-          }
-          acc[orderId].itemCount += 1;
-          acc[orderId].quantity += item.quantity;
-          acc[orderId].supplyAmount += item.supplyAmount;
-          acc[orderId].taxAmount += item.taxAmount;
-          return acc;
-        }, {})
-      ).map((row) => ({
-        ...row,
-        productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
-      }));
+  // 같은 명세표(sales_order)에 속한 품목은 검색 여부와 상관없이 한 행으로
+  // 묶어서 보여준다. 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로
+  // 요약한다. 검색어로 일부 품목만 걸러졌다면(예: 상품명/SKU 검색) 그
+  // 매칭된 품목들만 묶여서 "외 N건"에 반영된다.
+  const rows: DisplayRow[] = Object.values(
+    itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
+      const orderId = item.sales_orders?.id ?? item.id;
+      if (!acc[orderId]) {
+        acc[orderId] = {
+          key: orderId,
+          orderId,
+          date: item.sales_orders?.order_date,
+          customerName: item.sales_orders?.customers?.name,
+          productLabel: item.products?.name ?? "-",
+          spec: item.spec || item.products?.spec || "-",
+          quantity: 0,
+          unit: item.products?.unit,
+          unitPrice: null,
+          supplyAmount: 0,
+          taxAmount: 0,
+          itemCount: 0,
+        };
+      }
+      acc[orderId].itemCount += 1;
+      acc[orderId].quantity += item.quantity;
+      acc[orderId].supplyAmount += item.supplyAmount;
+      acc[orderId].taxAmount += item.taxAmount;
+      return acc;
+    }, {})
+  ).map((row) => ({
+    ...row,
+    productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+  }));
 
   const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);
