@@ -135,7 +135,7 @@ export default async function VouchersPage({
       </form>
 
       <div className="erp-toolbar">
-        <Link href="/dashboard" className="erp-btn">
+        <Link href="/dashboard" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

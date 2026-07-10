@@ -16,7 +16,7 @@ export default async function NewPurchasePage() {
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
       <div className="mb-3 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">새 매입(입고) 등록</h1>
-        <Link href="/purchases" className="erp-btn">
+        <Link href="/purchases" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

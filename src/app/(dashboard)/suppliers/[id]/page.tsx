@@ -24,7 +24,7 @@ export default async function SupplierDetailPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/suppliers" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">{supplier.name}</h1>
-        <Link href="/suppliers" className="erp-btn">
+        <Link href="/suppliers" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

@@ -159,7 +159,7 @@ export default async function PurchasesPage({
         >
           📥 엑셀 다운로드
         </a>
-        <Link href="/dashboard" className="erp-btn">
+        <Link href="/dashboard" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

@@ -59,7 +59,7 @@ export function PaperCalcPrintView() {
   return (
     <div className="mx-auto max-w-4xl p-8 print:p-0">
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href="/paper-calc" className="erp-btn">
+        <Link href="/paper-calc" className="erp-btn erp-btn-danger">
           닫기
         </Link>
         <PrintButton />

@@ -59,7 +59,7 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn">
+            <Link href="/sales" className="erp-btn erp-btn-danger">
               목록으로
             </Link>
             <PrintButton />
@@ -92,7 +92,7 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn">
+            <Link href="/sales" className="erp-btn erp-btn-danger">
               목록으로
             </Link>
             <PrintButton />
@@ -125,7 +125,7 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn">
+            <Link href="/sales" className="erp-btn erp-btn-danger">
               목록으로
             </Link>
             <PrintButton />
@@ -157,7 +157,7 @@ export default async function SalesPrintPage({
     return (
       <div className="mx-auto max-w-3xl print-page-wrapper">
         <div className="mb-4 flex items-center justify-between print:hidden">
-          <Link href="/sales" className="erp-btn">
+          <Link href="/sales" className="erp-btn erp-btn-danger">
             목록으로
           </Link>
           <PrintButton />
@@ -200,7 +200,7 @@ export default async function SalesPrintPage({
   return (
     <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none print-page-wrapper">
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href="/sales" className="erp-btn">
+        <Link href="/sales" className="erp-btn erp-btn-danger">
           목록으로
         </Link>
         <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
