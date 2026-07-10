@@ -37,7 +37,7 @@ export default async function TodoDetailPage({
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">할일관리 &gt; 수정</h1>
 
       <div className="erp-toolbar">
-        <Link href="/todos" className="erp-btn">
+        <Link href="/todos" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
         <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />

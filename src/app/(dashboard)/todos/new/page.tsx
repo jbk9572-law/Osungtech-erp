@@ -8,7 +8,7 @@ export default function NewTodoPage() {
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">할일관리 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
-        <Link href="/todos" className="erp-btn">
+        <Link href="/todos" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
       </div>

@@ -28,7 +28,7 @@ export default async function PaymentRequestsPage() {
         <button type="button" className="erp-btn" disabled title="추후 예정">
           엑셀 다운로드
         </button>
-        <Link href="/dashboard" className="erp-btn">
+        <Link href="/dashboard" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

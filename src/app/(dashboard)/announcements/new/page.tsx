@@ -8,7 +8,7 @@ export default function NewAnnouncementPage() {
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">공지사항 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
-        <Link href="/announcements" className="erp-btn">
+        <Link href="/announcements" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
       </div>

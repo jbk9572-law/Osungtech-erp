@@ -8,7 +8,7 @@ export default function PaperCalcPage() {
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">확장모듈 &gt; 모조지 계산</h1>
-        <Link href="/dashboard" className="erp-btn">
+        <Link href="/dashboard" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

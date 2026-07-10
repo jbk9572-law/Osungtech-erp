@@ -56,7 +56,7 @@ export default async function PurchaseDetailPage({
             id={id}
             confirmMessage="이 매입 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
           />
-          <Link href="/purchases" className="erp-btn">
+          <Link href="/purchases" className="erp-btn erp-btn-danger">
             ESC 닫기
           </Link>
         </div>

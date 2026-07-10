@@ -80,7 +80,7 @@ export default async function InventoryProductHistoryPage({
       </p>
 
       <div className="erp-toolbar">
-        <Link href="/inventory" className="erp-btn">
+        <Link href="/inventory" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
       </div>
