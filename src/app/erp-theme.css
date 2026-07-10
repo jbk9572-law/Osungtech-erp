@@ -924,6 +924,23 @@
   background: var(--erp-hover);
 }
 
+/* 공지사항/할일마감 항목은 제목이 길어 줄바꿈될 수 있으므로, 고정 높이로
+   찌그러지던 걸 min-height + 위아래 여백을 준 자연스러운 여러 줄 표시로
+   바꾼다(즐겨찾기/최근메뉴 드롭다운은 원래 한 줄짜리라 영향 없음). */
+.erp-bell-dropdown .erp-ribbon-dropdown-item {
+  align-items: stretch;
+}
+
+.erp-bell-dropdown .erp-ribbon-dropdown-item button {
+  display: block;
+  height: auto;
+  min-height: 40px;
+  padding: 9px 10px;
+  line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
+}
+
 /* ── 대시보드 알림 배너(공지/할일 마감) ───────────────────────── */
 .erp-alert-banner {
   display: flex;
@@ -969,11 +986,24 @@
 }
 
 /* ── 미확인 알림 팝업(10분마다 재확인) ────────────────────────── */
-.erp-toast {
+/* 항목마다 독립된 박스로 하나씩 쌓인다. column-reverse라 새로 추가된
+   항목이 원점(우측 하단, 메신저 FAB 바로 위)에 붙고 먼저 뜬 항목들은
+   위로 밀려 올라간다. */
+.erp-toast-stack {
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  bottom: 84px;
   z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  max-height: calc(100vh - 104px);
+  overflow: hidden;
+}
+
+.erp-toast {
+  position: relative;
   width: 280px;
   padding: 12px 14px;
   border: 1px solid var(--erp-border);
@@ -1005,18 +1035,9 @@
   padding: 2px;
 }
 
-.erp-toast-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--erp-text);
-  margin-bottom: 8px;
-  padding-right: 16px;
-}
-
 .erp-toast-item {
   display: block;
-  padding: 6px 0;
-  border-top: 1px solid #f0f2f5;
+  padding-right: 16px;
   font-size: 12px;
   color: var(--erp-text);
   text-decoration: none;
@@ -1024,13 +1045,6 @@
 
 .erp-toast-item:hover {
   color: var(--erp-primary);
-}
-
-.erp-toast-more {
-  padding-top: 6px;
-  border-top: 1px solid #f0f2f5;
-  font-size: 11px;
-  color: var(--erp-text-muted);
 }
 
 /* ── 사내메신저 위젯(우측 하단 최소화/팝업) ───────────────────── */

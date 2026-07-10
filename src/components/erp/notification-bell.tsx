@@ -70,10 +70,10 @@ export function NotificationBell({
             todos.map((t) => (
               <div key={t.id} className="erp-ribbon-dropdown-item">
                 <button type="button" onClick={() => go(`/todos/${t.id}`)}>
-                  {t.title}
+                  <span>{t.title}</span>
                   {t.due_date && (
-                    <span style={{ marginLeft: 6, fontSize: 11, color: "var(--erp-text-muted)" }}>
-                      {t.due_date}
+                    <span style={{ display: "block", marginTop: 2, fontSize: 11, color: "var(--erp-text-muted)" }}>
+                      마감 {t.due_date}
                     </span>
                   )}
                 </button>
