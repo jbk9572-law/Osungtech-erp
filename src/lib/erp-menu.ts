@@ -5,14 +5,12 @@ export type MenuItem = { label: string; href: string };
 
 export const MENU_ITEMS: MenuItem[] = [
   { label: "메인 대시보드", href: "/dashboard" },
-  { label: "영업관리 > 매출관리", href: "/sales" },
-  { label: "구매관리 > 매입관리", href: "/purchases" },
+  { label: "매출관리", href: "/sales" },
+  { label: "매입관리", href: "/purchases" },
   { label: "재고관리 > 재고현황", href: "/inventory" },
   { label: "품목관리", href: "/products" },
   { label: "거래처관리 > 판매처관리", href: "/customers" },
   { label: "거래처관리 > 공급처관리", href: "/suppliers" },
-  { label: "회계관리 > 전표관리", href: "/accounting/vouchers" },
-  { label: "보고서 > 지급결의양식", href: "/reports/payment-requests" },
   { label: "할일관리", href: "/todos" },
   { label: "공지사항", href: "/announcements" },
   { label: "환경설정 > 회사정보", href: "/settings/company" },

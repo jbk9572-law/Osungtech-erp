@@ -273,9 +273,10 @@ export function NewPurchaseForm({
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
                       <NumberInput
-                        placeholder="수량"
+                        placeholder="수량 (=1+1 계산 가능)"
                         value={row.quantity}
                         onChange={(n) => updateRow(row.key, { quantity: n })}
+                        allowFormula
                         className="erp-input w-full"
                       />
                     </td>

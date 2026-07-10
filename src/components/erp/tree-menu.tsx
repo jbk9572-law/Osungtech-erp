@@ -9,22 +9,8 @@ type GroupItem = { label: string; items: LeafItem[] };
 
 const TREE: GroupItem[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard" }] },
-  {
-    label: "영업관리",
-    items: [
-      { label: "매출관리", href: "/sales" },
-      { label: "견적관리" },
-      { label: "출하지시" },
-      { label: "세금계산서" },
-    ],
-  },
-  {
-    label: "구매관리",
-    items: [
-      { label: "매입관리", href: "/purchases" },
-      { label: "입고관리" },
-    ],
-  },
+  { label: "매출관리", items: [{ label: "매출관리", href: "/sales" }] },
+  { label: "매입관리", items: [{ label: "매입관리", href: "/purchases" }] },
   {
     label: "재고관리",
     items: [{ label: "재고현황", href: "/inventory" }],
@@ -36,11 +22,6 @@ const TREE: GroupItem[] = [
       { label: "판매처관리", href: "/customers" },
       { label: "공급처관리", href: "/suppliers" },
     ],
-  },
-  { label: "회계관리", items: [{ label: "전표관리", href: "/accounting/vouchers" }] },
-  {
-    label: "보고서",
-    items: [{ label: "영업분석" }, { label: "지급결의양식", href: "/reports/payment-requests" }],
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },

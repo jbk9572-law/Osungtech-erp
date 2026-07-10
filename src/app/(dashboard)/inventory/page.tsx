@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
+import { ClickableRow } from "@/components/clickable-row";
 
 export default async function InventoryPage() {
   const supabase = await createClient();
@@ -67,7 +68,7 @@ export default async function InventoryPage() {
             {stockRows.map((row) => {
               const isLow = row.quantity <= (row.reorderPoint ?? 0);
               return (
-                <tr key={row.id}>
+                <ClickableRow key={row.id} href={`/inventory/${row.id}`}>
                   <td>{row.sku}</td>
                   <td>{row.name}</td>
                   <td>{row.spec || "-"}</td>
@@ -77,7 +78,7 @@ export default async function InventoryPage() {
                       {isLow ? "재주문 필요" : "정상"}
                     </span>
                   </td>
-                </tr>
+                </ClickableRow>
               );
             })}
             {!stockRows.length && (

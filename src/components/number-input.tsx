@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { evalFormula } from "@/lib/eval-formula";
 
 function formatNumber(value: number): string {
   // 0(=아직 입력 안 한 값)을 "0"으로 채워두면 사용자가 지우고 나서야 원하는
@@ -22,6 +23,7 @@ export function NumberInput({
   onChange,
   placeholder,
   allowNegative = false,
+  allowFormula = false,
   disabled = false,
   className = "",
 }: {
@@ -29,6 +31,8 @@ export function NumberInput({
   onChange: (n: number) => void;
   placeholder?: string;
   allowNegative?: boolean;
+  // 엑셀처럼 "=1+1" 형태로 입력하면 포커스를 벗어날 때 계산 결과로 바뀐다.
+  allowFormula?: boolean;
   disabled?: boolean;
   className?: string;
 }) {
@@ -56,12 +60,26 @@ export function NumberInput({
       onFocus={() => setFocused(true)}
       onBlur={() => {
         setFocused(false);
+        if (allowFormula && text.trim().startsWith("=")) {
+          const result = evalFormula(text.trim().slice(1));
+          if (result !== null) {
+            setText(formatNumber(result));
+            onChange(result);
+            return;
+          }
+        }
         setText(formatNumber(value));
       }}
       onChange={(e) => {
+        const rawInput = e.target.value;
+        if (allowFormula && rawInput.trim().startsWith("=")) {
+          // 수식 입력 중에는 그대로 보여주고, 계산은 blur 시점에 한다.
+          setText(rawInput.replace(/[^0-9+\-*/().\s=]/g, ""));
+          return;
+        }
         const raw = allowNegative
-          ? e.target.value.replace(/[^0-9.,-]/g, "")
-          : e.target.value.replace(/[^0-9.,]/g, "");
+          ? rawInput.replace(/[^0-9.,-]/g, "")
+          : rawInput.replace(/[^0-9.,]/g, "");
         setText(raw);
         onChange(parseNumber(raw));
       }}
