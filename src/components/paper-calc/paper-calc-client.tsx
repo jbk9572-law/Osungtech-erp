@@ -1,0 +1,507 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { NumberInput } from "@/components/number-input";
+import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { NestEngine, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+
+type OrderRow = { key: number; width: number; height: number; qty: number };
+
+const BATCHES_PER_PAGE = 2;
+const MAX_ROWS = 10;
+
+function computeAverageUsage(layouts: NestLayout[]): number | null {
+  const weighted = layouts.filter((l) => l.margin.usage != null);
+  const totalW = weighted.reduce((sum, l) => sum + l.sheetCount, 0);
+  if (!weighted.length || totalW <= 0) return null;
+  return weighted.reduce((sum, l) => sum + l.margin.usage * l.sheetCount, 0) / totalW;
+}
+
+function computeTotalMarginArea(layouts: NestLayout[]): number | null {
+  if (!layouts.length) return null;
+  return layouts.reduce((sum, l) => sum + l.margin.area * l.sheetCount, 0);
+}
+
+function formatArea(areaMm2: number): string {
+  if (areaMm2 >= 1_000_000) return `${(areaMm2 / 1_000_000).toFixed(2)} ㎡`;
+  return `${Math.round(areaMm2).toLocaleString()} mm²`;
+}
+
+function buildMergedItems(rows: OrderRow[]): Item[] {
+  // 같은 규격(가로×세로)을 두 줄 이상으로 나눠 입력하는 경우가 있어서, 규격이
+  // 같으면 먼저 수량을 합쳐서 Item을 하나만 만든다. 그렇지 않으면 엔진
+  // 내부의 이름 기준 딕셔너리가 뒤 항목으로 덮어써지며 앞줄 수량이 사라진다.
+  const merged = new Map<string, number>();
+  for (const row of rows) {
+    if (row.width > 0 && row.height > 0 && row.qty > 0) {
+      const key = `${row.width}×${row.height}`;
+      merged.set(key, (merged.get(key) ?? 0) + row.qty);
+    }
+  }
+  return Array.from(merged.entries()).map(([name, qty]) => {
+    const [width, height] = name.split("×").map(Number);
+    return { name, width, height, orderQty: qty };
+  });
+}
+
+export function PaperCalcClient() {
+  const [rows, setRows] = useState<OrderRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
+  const [nextKey, setNextKey] = useState(1);
+  const [paperW, setPaperW] = useState(788);
+  const [paperH, setPaperH] = useState(1091);
+  const [result, setResult] = useState<NestResult | null>(null);
+  const [orderItems, setOrderItems] = useState<Item[]>([]);
+  const [page, setPage] = useState(0);
+  const [pending, setPending] = useState(false);
+  const [warning, setWarning] = useState<string | null>(null);
+
+  function addRow() {
+    if (rows.length >= MAX_ROWS) return;
+    setRows((prev) => [...prev, { key: nextKey, width: 0, height: 0, qty: 0 }]);
+    setNextKey((k) => k + 1);
+  }
+
+  function removeRow(key: number) {
+    setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.key !== key) : prev));
+  }
+
+  function updateRow(key: number, patch: Partial<OrderRow>) {
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+
+  function swapPaper() {
+    setPaperW(paperH);
+    setPaperH(paperW);
+  }
+
+  function resetAll() {
+    setRows([{ key: nextKey, width: 0, height: 0, qty: 0 }]);
+    setNextKey((k) => k + 1);
+    setResult(null);
+    setOrderItems([]);
+    setPage(0);
+    setWarning(null);
+  }
+
+  function runCalculation() {
+    const items = buildMergedItems(rows);
+    if (!items.length) {
+      setWarning("입력값을 확인하세요.");
+      return;
+    }
+
+    setWarning(null);
+    setPending(true);
+    // 다음 tick으로 미뤄서 "계산 중" 표시가 먼저 그려지게 한다 (계산 자체는
+    // 동기적으로 최대 몇 초 걸릴 수 있다).
+    setTimeout(() => {
+      const engine = new NestEngine();
+      engine.sheetWidth = paperW;
+      engine.sheetHeight = paperH;
+      const res = engine.calculate(items);
+
+      setResult(res);
+      setOrderItems(items);
+      setPage(0);
+      setPending(false);
+
+      if (!res.fulfilled) {
+        const shortfall = Object.entries(res.remaining).filter(([, qty]) => qty > 0);
+        if (shortfall.length) {
+          const lines = shortfall.map(([name, qty]) => `- ${name}: ${qty.toLocaleString()}장 부족`).join("\n");
+          setWarning(
+            `다음 품목이 원지 크기 안에서 다 배치되지 못했습니다.\n${lines}\n치수가 원지보다 크지 않은지 확인해주세요.`
+          );
+        }
+      }
+    }, 0);
+  }
+
+  function openPrintView() {
+    if (!result) return;
+    sessionStorage.setItem(
+      "paper-calc-print-input",
+      JSON.stringify({ paperW, paperH, items: orderItems })
+    );
+    window.open("/paper-calc/print", "_blank", "noopener,noreferrer");
+  }
+
+  const layouts = useMemo(() => result?.layouts ?? [], [result]);
+  const usageAvg = useMemo(() => computeAverageUsage(layouts), [layouts]);
+  const marginTotal = useMemo(() => computeTotalMarginArea(layouts), [layouts]);
+  const totalPages = Math.max(1, Math.ceil(layouts.length / BATCHES_PER_PAGE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const pageStart = currentPage * BATCHES_PER_PAGE;
+  const visibleLayouts = layouts.slice(pageStart, pageStart + BATCHES_PER_PAGE);
+
+  const producedTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    for (const layout of layouts) {
+      for (const it of layout.items) totals[it.name] = (totals[it.name] ?? 0) + it.prod;
+    }
+    return totals;
+  }, [layouts]);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">발주 입력</span>
+        </div>
+        <div className="erp-detail-body flex flex-col gap-3">
+          <div className="erp-grid-wrap">
+            <table className="erp-grid">
+              <thead>
+                <tr>
+                  <th style={{ width: 40 }}>#</th>
+                  <th>가로(mm)</th>
+                  <th>세로(mm)</th>
+                  <th>수량(매)</th>
+                  <th style={{ width: 60 }}></th>
+                </tr>
+              </thead>
+              <tbody onKeyDown={focusSameColumnNextRow}>
+                {rows.map((row, i) => (
+                  <tr key={row.key}>
+                    <td className="num">{i + 1}</td>
+                    <td>
+                      <NumberInput
+                        value={row.width}
+                        onChange={(n) => updateRow(row.key, { width: n })}
+                        placeholder="가로"
+                        className="erp-input w-full"
+                      />
+                    </td>
+                    <td>
+                      <NumberInput
+                        value={row.height}
+                        onChange={(n) => updateRow(row.key, { height: n })}
+                        placeholder="세로"
+                        className="erp-input w-full"
+                      />
+                    </td>
+                    <td>
+                      <NumberInput
+                        value={row.qty}
+                        onChange={(n) => updateRow(row.key, { qty: n })}
+                        placeholder="수량"
+                        allowFormula
+                        className="erp-input w-full"
+                      />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="erp-btn erp-btn-danger"
+                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                        onClick={() => removeRow(row.key)}
+                        disabled={rows.length <= 1}
+                      >
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              현재 입력 {rows.length} / {MAX_ROWS}
+            </span>
+            <button type="button" className="erp-btn" onClick={addRow} disabled={rows.length >= MAX_ROWS}>
+              + 새 품목
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-4 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
+            <div className="erp-field">
+              <label>원지 가로(mm)</label>
+              <NumberInput value={paperW} onChange={setPaperW} className="erp-input" />
+            </div>
+            <div className="erp-field">
+              <label>원지 세로(mm)</label>
+              <NumberInput value={paperH} onChange={setPaperH} className="erp-input" />
+            </div>
+            <button type="button" className="erp-btn" onClick={swapPaper}>
+              가로·세로 전환
+            </button>
+            <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              포장단위: 500장 / 연
+            </span>
+
+            <div className="ml-auto flex gap-2">
+              <button type="button" className="erp-btn erp-btn-primary" onClick={runCalculation} disabled={pending}>
+                {pending ? "계산 중..." : "계산 시작"}
+              </button>
+              <button type="button" className="erp-btn" onClick={resetAll} disabled={pending}>
+                초기화
+              </button>
+              <button type="button" className="erp-btn" onClick={openPrintView} disabled={!result?.layouts.length}>
+                인쇄 미리보기
+              </button>
+            </div>
+          </div>
+
+          {warning && (
+            <div
+              className="rounded p-3 text-xs whitespace-pre-line"
+              style={{ background: "#fff3e0", color: "var(--erp-warning)", border: "1px solid #ffd9a8" }}
+            >
+              {warning}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {!result && !pending && (
+        <div className="erp-detail">
+          <div className="erp-detail-body">
+            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              발주 품목(가로/세로/수량)을 입력하고 &apos;계산 시작&apos;을 눌러주세요.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <>
+          <DashboardCards result={result} usageAvg={usageAvg} marginTotal={marginTotal} />
+
+          <div className="erp-detail">
+            <div className="erp-detail-tabs">
+              <span className="erp-detail-tab active">
+                NEST LAYOUT ({currentPage + 1} / {totalPages} 페이지 · 전체 {layouts.length}배치)
+              </span>
+              <div className="ml-auto flex items-center gap-1 pr-2">
+                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage(0)} disabled={currentPage === 0}>
+                  처음
+                </button>
+                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage((p) => p - 1)} disabled={currentPage === 0}>
+                  ◀
+                </button>
+                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage((p) => p + 1)} disabled={currentPage + 1 >= totalPages}>
+                  ▶
+                </button>
+                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage(totalPages - 1)} disabled={currentPage + 1 >= totalPages}>
+                  끝
+                </button>
+              </div>
+            </div>
+            <div className="erp-detail-body">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {visibleLayouts.map((layout, i) => (
+                  <BatchCard key={pageStart + i} layout={layout} index={pageStart + i} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="erp-detail">
+              <div className="erp-detail-tabs">
+                <span className="erp-detail-tab active">여백 정보 (표시 중인 배치)</span>
+              </div>
+              <div className="erp-detail-body flex flex-col gap-3">
+                {visibleLayouts.length === 0 ? (
+                  <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+                    표시할 배치가 없습니다.
+                  </p>
+                ) : (
+                  visibleLayouts.map((layout, i) => (
+                    <div key={pageStart + i} className="text-xs">
+                      <div className="mb-1 font-semibold">배치 {pageStart + i + 1}</div>
+                      <ul className="space-y-0.5" style={{ color: "var(--erp-text-muted)" }}>
+                        <li>사용률: {layout.margin.usage}%</li>
+                        <li>우측 여백: {layout.margin.right} mm</li>
+                        <li>하단 여백: {layout.margin.bottom} mm</li>
+                        <li>남은 면적: {layout.margin.area.toLocaleString()} mm²</li>
+                      </ul>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="erp-detail">
+              <div className="erp-detail-tabs">
+                <span className="erp-detail-tab active">생산 요약</span>
+              </div>
+              <div className="erp-detail-body">
+                <ProductionSummaryTable orderItems={orderItems} producedTotals={producedTotals} />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DashboardCards({
+  result,
+  usageAvg,
+  marginTotal,
+}: {
+  result: NestResult;
+  usageAvg: number | null;
+  marginTotal: number | null;
+}) {
+  const exactReams = result.totalPaper / 500;
+  const cards = [
+    {
+      label: "총 원지",
+      value: result.totalPaper.toLocaleString(),
+      sub: `${result.totalSheet}연 구매 · 실사용 ${exactReams.toFixed(2)}연`,
+    },
+    { label: "총 생산", value: result.totalProd.toLocaleString(), sub: "" },
+    {
+      label: "초과 생산",
+      value: result.overProd.toLocaleString(),
+      sub: "",
+      bg: "#FEF3E6",
+      fg: "#B54708",
+    },
+    {
+      label: "사용률",
+      value: usageAvg != null ? `${usageAvg.toFixed(1)}%` : "-",
+      sub: "",
+      bg: "#E9F7EE",
+      fg: "#0E7A45",
+    },
+    { label: "총 여백", value: marginTotal != null ? formatArea(marginTotal) : "-", sub: "" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      {cards.map((card) => (
+        <div
+          key={card.label}
+          className="rounded p-3"
+          style={{ background: card.bg ?? "#F7F8FA", border: "1px solid var(--erp-border)" }}
+        >
+          <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            {card.label}
+          </div>
+          <div className="text-xl font-bold" style={{ color: card.fg ?? "#222222" }}>
+            {card.value}
+          </div>
+          {card.sub && (
+            <div className="text-xs font-semibold" style={{ color: "#444444" }}>
+              {card.sub}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function BatchCard({ layout, index }: { layout: NestLayout; index: number }) {
+  const legend = useMemo(() => {
+    const seen = new Map<string, { color: string; count: number }>();
+    for (const it of layout.items) {
+      const entry = seen.get(it.name);
+      if (entry) entry.count += it.prod;
+      else seen.set(it.name, { color: it.color, count: it.prod });
+    }
+    return Array.from(seen.entries());
+  }, [layout]);
+
+  return (
+    <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: "#F7F8FA" }}>
+      <div className="text-center text-sm font-bold">배치 {index + 1}</div>
+      <div className="mb-1.5 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        {layout.paperW} × {layout.paperH} mm
+      </div>
+      <svg
+        viewBox={`0 0 ${layout.paperW} ${layout.paperH}`}
+        style={{ width: "100%", height: 300, background: "#F2F2F2" }}
+      >
+        <rect x={0} y={0} width={layout.paperW} height={layout.paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+        {layout.items.map((it, i) => {
+          const showLabel = it.w >= layout.paperW * 0.07 && it.h >= layout.paperH * 0.04;
+          return (
+            <g key={i}>
+              <rect x={it.x} y={it.y} width={it.w} height={it.h} fill={it.color} stroke="#555555" strokeWidth={1} />
+              {showLabel && (
+                <text
+                  x={it.x + it.w / 2}
+                  y={it.y + it.h / 2}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={Math.min(layout.paperW, layout.paperH) * 0.03}
+                  fill="#222222"
+                >
+                  {it.name}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+      <div className="mt-1.5 text-center text-xs" style={{ color: "#555555" }}>
+        {layout.sheetCount.toLocaleString()}장 (약 {layout.batchReams}연) · 사용률 {layout.margin.usage}%
+      </div>
+      <div className="mt-1.5 flex flex-col gap-0.5 text-xs">
+        {legend.map(([name, { color, count }]) => (
+          <div key={name} className="flex items-center gap-1.5">
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: color, display: "inline-block" }} />
+            {name} · {count.toLocaleString()}매
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ProductionSummaryTable({
+  orderItems,
+  producedTotals,
+}: {
+  orderItems: Item[];
+  producedTotals: Record<string, number>;
+}) {
+  const rows = (
+    orderItems.length
+      ? orderItems.map((item) => [item.name, item.orderQty] as const)
+      : Object.entries(producedTotals).map(([name, produced]) => [name, produced] as const)
+  ).map(([name, target]) => ({ name, target, produced: producedTotals[name] ?? 0 }));
+
+  const totalTarget = rows.reduce((sum, r) => sum + r.target, 0);
+  const totalProduced = rows.reduce((sum, r) => sum + r.produced, 0);
+
+  return (
+    <table className="erp-grid w-full">
+      <thead>
+        <tr>
+          <th>품목</th>
+          <th>생산/발주</th>
+          <th>달성률</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ name, target, produced }) => {
+          const pct = target ? (produced / target) * 100 : 0;
+          return (
+            <tr key={name}>
+              <td>{name}</td>
+              <td className="num">
+                {produced.toLocaleString()} / {target.toLocaleString()}
+              </td>
+              <td className="num">{pct.toFixed(0)}%</td>
+            </tr>
+          );
+        })}
+        <tr>
+          <td className="font-bold">총 합계</td>
+          <td className="num font-bold">
+            {totalProduced.toLocaleString()} / {totalTarget.toLocaleString()}
+          </td>
+          <td className="num font-bold">{totalTarget ? ((totalProduced / totalTarget) * 100).toFixed(0) : 0}%</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
