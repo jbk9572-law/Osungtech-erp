@@ -198,7 +198,6 @@ export default async function SalesPage({
                       href={`/sales/${row.orderId}/print`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
                       style={{ color: "var(--erp-primary)", fontWeight: 600 }}
                     >
                       명세표 →
