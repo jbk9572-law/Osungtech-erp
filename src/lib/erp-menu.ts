@@ -14,6 +14,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "할일관리", href: "/todos" },
   { label: "공지사항", href: "/announcements" },
   { label: "환경설정 > 회사정보", href: "/settings/company" },
+  { label: "확장모듈 > 모조지 계산", href: "/paper-calc" },
 ];
 
 export function findMenuItem(pathname: string): MenuItem | undefined {

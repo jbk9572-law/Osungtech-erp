@@ -16,6 +16,7 @@ const SECTION_LABEL: { prefix: string; label: string }[] = [
   { prefix: "/todos", label: "할일관리" },
   { prefix: "/announcements", label: "공지사항" },
   { prefix: "/settings", label: "환경설정" },
+  { prefix: "/paper-calc", label: "확장모듈 > 모조지 계산" },
 ];
 
 export function TitleBar({
