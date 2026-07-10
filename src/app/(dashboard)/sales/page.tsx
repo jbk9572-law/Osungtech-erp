@@ -162,7 +162,7 @@ export default async function SalesPage({
           className="erp-btn"
           title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
         >
-          F8 엑셀
+          📥 엑셀 다운로드
         </a>
         <Link href="/dashboard" className="erp-btn">
           ESC 닫기
