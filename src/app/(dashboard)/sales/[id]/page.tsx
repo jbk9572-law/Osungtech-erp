@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { formatPackageQty } from "@/lib/package-qty";
 
 export default async function SaleDetailPage({
   params,
@@ -115,9 +116,7 @@ export default async function SaleDetailPage({
                 </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {row.products?.base_package_qty
-                    ? Number(row.products.base_package_qty).toLocaleString()
-                    : "-"}
+                  {formatPackageQty(row.products?.base_package_qty, row.quantity)}
                 </td>
                 <td className="num">{row.quantity.toLocaleString()}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
