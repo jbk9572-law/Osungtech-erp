@@ -38,8 +38,12 @@ export async function sendMessage(
   let fileSize: number | null = null;
 
   if (hasFile && file instanceof File) {
-    const safeName = file.name.replace(/[^\w.\-가-힣 ]/g, "_");
-    const path = `${user.id}/${Date.now()}-${safeName}`;
+    // Supabase 스토리지 키는 한글 등 비ASCII 문자를 거부한다("Invalid key" 에러).
+    // 원본 파일명은 file_name 컬럼에 그대로 저장해 화면 표시/다운로드에 쓰고,
+    // 실제 저장 경로는 확장자만 남긴 ASCII 전용 키로 만든다.
+    const extMatch = file.name.match(/\.[A-Za-z0-9]+$/);
+    const ext = extMatch ? extMatch[0].toLowerCase() : "";
+    const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("messenger-attachments")
       .upload(path, file, { contentType: file.type || "application/octet-stream" });
