@@ -106,8 +106,7 @@ export default async function DashboardPage({
   ]);
 
   const unreadAnnouncements = notifications.announcements;
-  const overdueTodos = notifications.todos.filter((t) => t.due_date && t.due_date < todayStr);
-  const dueSoonTodos = notifications.todos.filter((t) => !t.due_date || t.due_date >= todayStr);
+  const dueSoonTodos = notifications.todos;
 
   type ItemRow = {
     partnerName: string;
@@ -202,7 +201,7 @@ export default async function DashboardPage({
     { label: "안전재고 부족", value: `${lowStockCount ?? 0}건`, danger: (lowStockCount ?? 0) > 0 },
   ];
 
-  const hasAlerts = unreadAnnouncements.length > 0 || overdueTodos.length > 0 || dueSoonTodos.length > 0;
+  const hasAlerts = unreadAnnouncements.length > 0 || dueSoonTodos.length > 0;
 
   return (
     <>
@@ -213,12 +212,6 @@ export default async function DashboardPage({
               <span className="erp-alert-tag">공지</span>
               {a.pinned ? "📌 " : ""}
               {a.title}
-            </Link>
-          ))}
-          {overdueTodos.slice(0, 3).map((t) => (
-            <Link key={`o-${t.id}`} href={`/todos/${t.id}`} className="erp-alert-item danger">
-              <span className="erp-alert-tag danger">기한초과</span>
-              {t.title} ({t.due_date})
             </Link>
           ))}
           {dueSoonTodos.slice(0, 3).map((t) => (

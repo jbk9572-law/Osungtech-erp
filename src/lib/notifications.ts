@@ -5,11 +5,16 @@ export type AnnouncementNotice = { id: string; title: string; pinned: boolean };
 export type TodoNotice = { id: string; title: string; due_date: string | null };
 
 // 타이틀바 알림 종/대시보드 배너/알림 팝업이 공유하는 "지금 확인해야 할 것" 조회 로직.
-// 안 읽은 공지사항 + 마감 3일 이내(기한초과 포함)인 미완료 할일을 가져온다.
+// 안 읽은 공지사항 + 마감 3일 이내인 미완료 할일을 가져온다. 마감일이 이미
+// 지난 할일은 알림에서는 자동으로 확인 처리(음소거)해 계속 반복해서 뜨지
+// 않게 하되, 할일 자체는 완료 처리하지 않아 할일 목록에서는 여전히
+// 기한초과 상태로 보인다.
 export async function getNotificationSummary(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<{ announcements: AnnouncementNotice[]; todos: TodoNotice[] }> {
+  const today = new Date();
+  const todayStr = today.toLocaleDateString("sv-SE");
   const soonDate = new Date();
   soonDate.setDate(soonDate.getDate() + 3);
   const soonStr = soonDate.toLocaleDateString("sv-SE");
@@ -26,6 +31,7 @@ export async function getNotificationSummary(
       .from("todos")
       .select("id, title, due_date")
       .eq("done", false)
+      .is("alarm_muted_at", null)
       .lte("due_date", soonStr)
       .order("due_date", { ascending: true })
       .limit(20),
@@ -37,5 +43,16 @@ export async function getNotificationSummary(
     .slice(0, 8)
     .map((a) => ({ id: a.id, title: a.title, pinned: a.pinned }));
 
-  return { announcements: unreadAnnouncements, todos: dueTodos ?? [] };
+  const overdueIds = (dueTodos ?? [])
+    .filter((t) => t.due_date && t.due_date < todayStr)
+    .map((t) => t.id);
+  if (overdueIds.length > 0) {
+    await supabase
+      .from("todos")
+      .update({ alarm_muted_at: new Date().toISOString() })
+      .in("id", overdueIds);
+  }
+  const activeTodos = (dueTodos ?? []).filter((t) => !(t.due_date && t.due_date < todayStr));
+
+  return { announcements: unreadAnnouncements, todos: activeTodos };
 }
