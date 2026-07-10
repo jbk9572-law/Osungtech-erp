@@ -1,27 +1,23 @@
 import * as XLSX from "xlsx";
+import type { Workbook } from "exceljs";
 
 export function buildXlsxResponse(rows: Record<string, unknown>[], filename: string): Response {
   const sheet = XLSX.utils.json_to_sheet(rows);
-  return respondWithSheet(sheet, filename);
-}
-
-// 거래처마다 정해진 고정 서식(셀 위치가 중요한 장부 양식)처럼 표 헤더 하나로
-// 표현할 수 없는 레이아웃은 행 배열(aoa)을 직접 그려서 만든다.
-export function buildXlsxResponseFromRows(
-  rows: (string | number | null)[][],
-  filename: string
-): Response {
-  const sheet = XLSX.utils.aoa_to_sheet(rows);
-  return respondWithSheet(sheet, filename);
-}
-
-function respondWithSheet(sheet: XLSX.WorkSheet, filename: string): Response {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
   const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
-  const bytes = new Uint8Array(buffer);
+  return respondWithBuffer(buffer, filename);
+}
 
-  return new Response(new Blob([bytes]), {
+// 거래처마다 정해진 고정 서식(글꼴 굵기·테두리·채우기색·실제 수식까지 있는
+// 장부 양식)은 표 헤더 하나로 표현할 수 없어 exceljs로 셀 단위로 그린다.
+export async function buildXlsxResponseFromWorkbook(workbook: Workbook, filename: string): Promise<Response> {
+  const buffer = await workbook.xlsx.writeBuffer();
+  return respondWithBuffer(Buffer.from(buffer), filename);
+}
+
+function respondWithBuffer(buffer: Buffer, filename: string): Response {
+  return new Response(new Blob([new Uint8Array(buffer)]), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`,

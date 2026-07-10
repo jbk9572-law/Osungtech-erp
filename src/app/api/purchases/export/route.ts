@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { buildXlsxResponse, buildXlsxResponseFromRows, currentMonthRange } from "@/lib/xlsx-response";
+import { buildXlsxResponse, buildXlsxResponseFromWorkbook, currentMonthRange } from "@/lib/xlsx-response";
 import {
-  buildLeadersSpecialSheet,
-  buildStandardLedgerSheet,
+  buildLeadersSpecialWorkbook,
+  buildStandardLedgerWorkbook,
   type LedgerItem,
 } from "@/lib/purchase-export-templates";
 
@@ -58,10 +58,10 @@ export async function GET(request: Request) {
       }));
 
     const priceBasis = templatedSupplier.purchase_price_basis === "box" ? "box" : "quantity";
-    const rows =
+    const workbook =
       templatedSupplier.purchase_export_template === "leaders_special"
-        ? buildLeadersSpecialSheet(templatedSupplier.name, now.getFullYear(), now.getMonth() + 1, items)
-        : buildStandardLedgerSheet(
+        ? await buildLeadersSpecialWorkbook(templatedSupplier.name, now.getFullYear(), now.getMonth() + 1, items)
+        : await buildStandardLedgerWorkbook(
             templatedSupplier.name,
             now.getFullYear(),
             now.getMonth() + 1,
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
             priceBasis
           );
 
-    return buildXlsxResponseFromRows(rows, `매입내역_${templatedSupplier.name}_${from}_${to}.xlsx`);
+    return buildXlsxResponseFromWorkbook(workbook, `매입내역_${templatedSupplier.name}_${from}_${to}.xlsx`);
   }
 
   const items = (data ?? []).filter((item) => {
