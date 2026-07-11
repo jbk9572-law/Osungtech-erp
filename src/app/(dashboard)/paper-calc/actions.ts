@@ -12,6 +12,7 @@ export async function savePaperCalculation(
   const paperW = Number(formData.get("paperW"));
   const paperH = Number(formData.get("paperH"));
   const inputItemsRaw = String(formData.get("inputItems") ?? "");
+  const layoutsRaw = String(formData.get("layouts") ?? "");
   const totalPaper = Number(formData.get("totalPaper"));
   const totalSheet = Number(formData.get("totalSheet"));
   const totalProd = Number(formData.get("totalProd"));
@@ -19,8 +20,10 @@ export async function savePaperCalculation(
   const fulfilled = formData.get("fulfilled") === "true";
 
   let inputItems: unknown;
+  let layouts: unknown;
   try {
     inputItems = JSON.parse(inputItemsRaw);
+    layouts = JSON.parse(layoutsRaw);
   } catch {
     return { error: "계산 결과를 저장할 수 없습니다. 다시 계산해주세요." };
   }
@@ -39,6 +42,7 @@ export async function savePaperCalculation(
     paper_w: paperW,
     paper_h: paperH,
     input_items: inputItems,
+    layouts: Array.isArray(layouts) ? layouts : [],
     total_paper: totalPaper,
     total_sheet: totalSheet,
     total_prod: totalProd,

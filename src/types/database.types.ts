@@ -657,6 +657,7 @@ export type Database = {
           paper_w: number;
           paper_h: number;
           input_items: Json;
+          layouts: Json;
           total_paper: number;
           total_sheet: number;
           total_prod: number;
@@ -671,6 +672,7 @@ export type Database = {
           paper_w: number;
           paper_h: number;
           input_items: Json;
+          layouts?: Json;
           total_paper: number;
           total_sheet: number;
           total_prod: number;
@@ -685,6 +687,7 @@ export type Database = {
           paper_w?: number;
           paper_h?: number;
           input_items?: Json;
+          layouts?: Json;
           total_paper?: number;
           total_sheet?: number;
           total_prod?: number;

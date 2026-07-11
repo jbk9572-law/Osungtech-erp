@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
@@ -282,6 +283,7 @@ export function PaperCalcClient({
                   <input type="hidden" name="paperW" value={paperW} />
                   <input type="hidden" name="paperH" value={paperH} />
                   <input type="hidden" name="inputItems" value={JSON.stringify(orderItems)} />
+                  <input type="hidden" name="layouts" value={JSON.stringify(result?.layouts ?? [])} />
                   <input type="hidden" name="totalPaper" value={result?.totalPaper ?? 0} />
                   <input type="hidden" name="totalSheet" value={result?.totalSheet ?? 0} />
                   <input type="hidden" name="totalProd" value={result?.totalProd ?? 0} />
@@ -451,23 +453,34 @@ function SavedCalcRow({ calc, salesOrderId }: { calc: SavedCalculation; salesOrd
         )}
       </td>
       <td>
-        <form
-          action={action}
-          onSubmit={(e) => {
-            if (!confirm("이 계산 기록을 삭제하시겠습니까?")) e.preventDefault();
-          }}
-        >
-          <input type="hidden" name="id" value={calc.id} />
-          <input type="hidden" name="salesOrderId" value={salesOrderId} />
-          <button
-            type="submit"
-            className="erp-btn erp-btn-danger"
+        <div className="flex items-center gap-1">
+          <Link
+            href={`/paper-calc/view/${calc.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="erp-btn"
             style={{ minWidth: 0, height: 26, padding: "0 8px" }}
-            disabled={pending}
           >
-            삭제
-          </button>
-        </form>
+            도면 보기
+          </Link>
+          <form
+            action={action}
+            onSubmit={(e) => {
+              if (!confirm("이 계산 기록을 삭제하시겠습니까?")) e.preventDefault();
+            }}
+          >
+            <input type="hidden" name="id" value={calc.id} />
+            <input type="hidden" name="salesOrderId" value={salesOrderId} />
+            <button
+              type="submit"
+              className="erp-btn erp-btn-danger"
+              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              disabled={pending}
+            >
+              삭제
+            </button>
+          </form>
+        </div>
         {state?.error && <FormMessage state={state} />}
       </td>
     </tr>
