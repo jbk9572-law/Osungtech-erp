@@ -28,6 +28,7 @@ type Item = {
 type DisplayRow = {
   key: string;
   category: string;
+  productName: string;
   spec: string;
   sku: string;
   unit: string;
@@ -106,6 +107,7 @@ export function DeliveryNoteDoc({
     ...items.map((item) => ({
       key: item.id,
       category: item.category,
+      productName: item.productName,
       spec: item.spec,
       sku: item.sku,
       unit: item.unit,
@@ -114,6 +116,7 @@ export function DeliveryNoteDoc({
     ...Array.from({ length: blankRows }).map((_, i) => ({
       key: `blank-${i}`,
       category: items[items.length - 1]?.category ?? "",
+      productName: items[items.length - 1]?.productName ?? "",
       spec: "",
       sku: "",
       unit: "",
@@ -121,20 +124,20 @@ export function DeliveryNoteDoc({
     })),
   ];
 
-  // 연속된 같은 품명(대분류)은 세로로 병합한다 (실제 거래명세표처럼 빈 줄까지 이어짐).
+  // 연속된 같은 품명은 세로로 병합한다 (실제 거래명세표처럼 빈 줄까지 이어짐).
   const rowSpans: number[] = new Array(displayRows.length).fill(0);
   for (let i = 0; i < displayRows.length; ) {
     let j = i + 1;
-    while (j < displayRows.length && displayRows[j].category === displayRows[i].category) j++;
+    while (j < displayRows.length && displayRows[j].productName === displayRows[i].productName) j++;
     rowSpans[i] = j - i;
     i = j;
   }
 
   return (
     <div className="border border-black text-[12px] text-black">
-      <div className="flex items-baseline justify-between border-b border-black px-3 py-2">
+      <div className="flex items-baseline border-b border-black px-3 py-2">
         <span className="text-lg font-bold tracking-[0.3em]">거래명세표 (출고)</span>
-        <span className="text-sm font-semibold">{customerName} 귀하</span>
+        <span className="flex-1 text-center text-sm font-semibold">{customerName}</span>
       </div>
 
       <table className="w-full border-collapse">
@@ -212,10 +215,10 @@ export function DeliveryNoteDoc({
             <tr key={row.key}>
               {rowSpans[idx] > 0 && (
                 <td rowSpan={rowSpans[idx]} className="border border-black px-2 py-1 text-center align-top">
-                  {row.category}
+                  {row.productName}
                 </td>
               )}
-              <td className="border border-black px-2 py-1">{row.spec}</td>
+              <td className="border border-black px-2 py-1 text-center">{row.spec}</td>
               <td className="border border-black px-2 py-1 text-center">
                 {zone ? zone.cellB(row) : row.unit}
               </td>

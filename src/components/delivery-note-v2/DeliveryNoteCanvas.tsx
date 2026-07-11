@@ -6,6 +6,8 @@ import { PAGE_W, PAGE_H, FONT, pt, dash, Fill, Line, T, TCenter, TRight, type Co
 type Item = {
   id: string;
   category: string;
+  // 제니스테크 전용: 규격 칸에 품목명과 규격을 같이 보여준다("품목명 / 규격").
+  productName?: string;
   spec: string;
   sku: string;
   unit: string;
@@ -23,6 +25,10 @@ const CATEGORY_X0 = 75.36;
 const CATEGORY_X1 = 158.64;
 const CATEGORY_CENTER = (CATEGORY_X0 + CATEGORY_X1) / 2;
 const SUM_LABEL_CENTER = (CATEGORY_X0 + 278.64) / 2;
+// 규격 컬럼(품명~수량 사이)의 가로 중앙 - 3개 서식 모두 같은 폭을 쓴다.
+const SPEC_CENTER = (CATEGORY_X1 + 278.64) / 2;
+// 제목 줄 오른쪽 박스(342.24~534.48)의 가로 중앙 - 거래처명을 가운데 정렬할 때 쓴다.
+const TITLE_RIGHT_CENTER = (342.24 + 534.48) / 2;
 const SPEC_X = 187.8;
 const COL_B_CENTER = (278.64 + 387.48) / 2;
 const COL_C_CENTER = (387.48 + 460.92) / 2;
@@ -88,9 +94,9 @@ export function SnsFiltechCanvas({
       <T x={161.04} y={78.38} size={12} bold>
         거래명세표 (출고)
       </T>
-      <TRight right={534.48} y={78.38} size={12} bold>
-        {customerName}&nbsp;&nbsp;귀하
-      </TRight>
+      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
+        {customerName}
+      </TCenter>
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
       <T x={99.36} y={104.09} size={9}>등록번호</T>
@@ -104,9 +110,9 @@ export function SnsFiltechCanvas({
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
       <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9} width={50}>{dash(company?.business_type)}</T>
+      <T x={173.04} y={151.73} size={7.5} width={50}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9} width={48}>{dash(company?.business_item)}</T>
+      <T x={291.5} y={151.73} size={7.5} width={48}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
       <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
@@ -121,7 +127,7 @@ export function SnsFiltechCanvas({
 
       {/* 품목 헤더 */}
       <T x={107.4} y={213.8} size={9.96} bold>품명</T>
-      <T x={209.29} y={213.8} size={9.96} bold>규격</T>
+      <TCenter centerX={SPEC_CENTER} y={213.8} size={9.96} bold>규격</TCenter>
       <TCenter centerX={COL_B_CENTER} y={213.8} size={9.96} bold>수량 (box)</TCenter>
       <TCenter centerX={COL_C_CENTER} y={213.8} size={9.96} bold>수량</TCenter>
       <T x={488.88} y={213.8} size={9.96} bold>비고</T>
@@ -143,7 +149,7 @@ export function SnsFiltechCanvas({
         const total = row.basePackageQty != null ? row.quantity * row.basePackageQty : null;
         return (
           <div key={row.id}>
-            <T x={SPEC_X} y={y} size={9.96}>{row.spec}</T>
+            <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>{row.spec}</TCenter>
             {row.quantity > 0 && (
               <TCenter centerX={COL_B_CENTER} y={y} size={9.96}>
                 {row.quantity.toLocaleString()} {row.unit || "Box"}
@@ -188,7 +194,6 @@ export function SnsFiltechCanvas({
 }
 
 // 제니스테크 출고증 좌표 (실측).
-const Z_SPEC_X = 174.0;
 const Z_UNIT_CENTER = (278.64 + 387.48) / 2;
 const Z_EA_RIGHT = 458;
 const Z_REMARK_X = 488.89;
@@ -222,6 +227,7 @@ export function ZenithTechCanvas({
     ...Array.from({ length: blankCount }).map((_, i) => ({
       id: `blank-${i}`,
       category: items[items.length - 1]?.category ?? "",
+      productName: "",
       spec: "",
       sku: "",
       unit: "",
@@ -256,9 +262,9 @@ export function ZenithTechCanvas({
       <T x={161.04} y={78.38} size={12} bold>
         거래명세표 (출고)
       </T>
-      <TRight right={534.48} y={78.38} size={12} bold>
-        {customerName}&nbsp;&nbsp;귀하
-      </TRight>
+      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
+        {customerName}
+      </TCenter>
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
       <T x={99.36} y={104.09} size={9}>등록번호</T>
@@ -272,9 +278,9 @@ export function ZenithTechCanvas({
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
       <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9} width={50}>{dash(company?.business_type)}</T>
+      <T x={173.04} y={151.73} size={7.5} width={50}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9} width={48}>{dash(company?.business_item)}</T>
+      <T x={291.5} y={151.73} size={7.5} width={48}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
       <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
@@ -289,7 +295,7 @@ export function ZenithTechCanvas({
 
       {/* 품목 헤더 */}
       <T x={107.4} y={213.8} size={9.96} bold>품명</T>
-      <T x={209.29} y={213.8} size={9.96} bold>규격</T>
+      <TCenter centerX={SPEC_CENTER} y={213.8} size={9.96} bold>규격</TCenter>
       <TCenter centerX={Z_UNIT_CENTER} y={213.8} size={9.96} bold>단위</TCenter>
       <TRight right={Z_EA_RIGHT} y={213.8} size={9.96} bold>합계 (Ea)</TRight>
       <T x={488.86} y={213.8} size={9.96} bold>비고</T>
@@ -310,7 +316,9 @@ export function ZenithTechCanvas({
         const y = Z_ROW_TOP0 + i * Z_ROW_H;
         return (
           <div key={row.id}>
-            <T x={Z_SPEC_X} y={y} size={9.96}>{row.spec}</T>
+            <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>
+              {row.productName ? `${row.productName} / ${row.spec}` : row.spec}
+            </TCenter>
             {row.spec && (
               <TCenter centerX={Z_UNIT_CENTER} y={y} size={9.96}>{row.unit}</TCenter>
             )}
@@ -422,9 +430,9 @@ export function KtSolutionCanvas({
       <T x={161.04} y={78.38} size={12} bold>
         거래명세표 (출고)
       </T>
-      <TRight right={534.48} y={78.38} size={12} bold>
-        {customerName}&nbsp;&nbsp;귀하
-      </TRight>
+      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
+        {customerName}
+      </TCenter>
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
       <T x={99.36} y={104.09} size={9}>등록번호</T>
@@ -438,9 +446,9 @@ export function KtSolutionCanvas({
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
       <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9} width={50}>{dash(company?.business_type)}</T>
+      <T x={173.04} y={151.73} size={7.5} width={50}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9} width={48}>{dash(company?.business_item)}</T>
+      <T x={291.5} y={151.73} size={7.5} width={48}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
       <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
@@ -455,7 +463,7 @@ export function KtSolutionCanvas({
 
       {/* 품목 헤더 */}
       <T x={107.4} y={213.8} size={9.96} bold>품명</T>
-      <T x={209.29} y={213.8} size={9.96} bold>규격</T>
+      <TCenter centerX={SPEC_CENTER} y={213.8} size={9.96} bold>규격</TCenter>
       <TCenter centerX={KT_LOT_CENTER} y={213.8} size={9.96} bold>관리번호</TCenter>
       <TCenter centerX={KT_QTY_CENTER} y={213.8} size={9.96} bold>수량</TCenter>
       <T x={488.88} y={213.8} size={9.96} bold>비고</T>
@@ -482,7 +490,7 @@ export function KtSolutionCanvas({
         const y = KT_ROW_TOP0 + i * KT_ROW_H;
         return (
           <div key={row.id}>
-            <T x={KT_SPEC_X} y={y} size={9.96}>{row.spec}</T>
+            <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>{row.spec}</TCenter>
             {row.spec && (
               <TCenter centerX={KT_LOT_CENTER} y={y} size={9.96}>{row.lotNo || "-"}</TCenter>
             )}
