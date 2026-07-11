@@ -23,8 +23,8 @@ export async function GET(request: Request) {
   // WOTE(매입처)↔신일베스텍(매출처) 간 원자재 입출고는 매입/매출 양쪽 데이터를
   // 합쳐서 보여주는 전용 관리대장이 필요하다.
   if (isShinilBestechQuery(q)) {
-    const entries = await fetchWoteLedgerEntries(supabase, from, to);
-    const workbook = await buildWoteLedgerWorkbook(now.getFullYear(), now.getMonth() + 1, entries);
+    const entries = await fetchWoteLedgerEntries(supabase, to);
+    const workbook = await buildWoteLedgerWorkbook(now.getFullYear(), now.getMonth() + 1, from, entries);
     return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
   }
 

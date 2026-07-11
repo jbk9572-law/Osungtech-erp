@@ -6,9 +6,10 @@ import ExcelJS from "exceljs";
 // 입력하는 걸 그대로 LOT.NO로 옮겨쓴다.
 //
 // 원본 참고 파일은 날짜별 컬럼 피벗 + SUMIFS로 만들어져 있었지만, 매달 자동
-// 생성하는 용도로는 거래 목록 + 품목별 누적 재고 형태가 더 간단하고 정확하다
-// (원본의 "이월재고" 개념은 우리 시스템에 없어서 이번 달 0에서 시작하는
-// 것으로 근사한다).
+// 생성하는 용도로는 거래 목록 + 품목별 누적 재고 형태가 더 간단하고 정확하다.
+// entries에는 이번 달 이전 전체 내역도 같이 넘어오는데, from 이전 것들은
+// 화면에 줄로 안 뿌리고 합산해서 "이월" 한 줄로만 보여준다(매달 0에서
+// 다시 시작하지 않도록).
 
 export type LedgerEntry = {
   date: string; // YYYY-MM-DD
@@ -24,6 +25,7 @@ const NUM_FORMAT = '_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
 export async function buildWoteLedgerWorkbook(
   year: number,
   month: number,
+  from: string,
   entries: LedgerEntry[]
 ): Promise<ExcelJS.Workbook> {
   const workbook = new ExcelJS.Workbook();
@@ -56,7 +58,8 @@ export async function buildWoteLedgerWorkbook(
     cell.border = { top: { style: "thin" }, bottom: { style: "double" } };
   });
 
-  // 품목별로 묶어서 날짜순으로 나열하고, 품목별 누적 재고(이번 달 0에서 시작)를 계산한다.
+  // 품목별로 묶어서 날짜순으로 나열한다. from 이전 내역은 화면에 줄로 안
+  // 뿌리고 합산해서 이월재고로만 반영한다.
   const byProduct = new Map<string, LedgerEntry[]>();
   for (const entry of entries) {
     const list = byProduct.get(entry.productName) ?? [];
@@ -67,8 +70,21 @@ export async function buildWoteLedgerWorkbook(
   let row = 4;
   for (const [productName, list] of byProduct) {
     const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date));
-    let stock = 0;
-    for (const entry of sorted) {
+    const before = sorted.filter((e) => e.date < from);
+    const thisMonth = sorted.filter((e) => e.date >= from);
+
+    let stock = before.reduce((sum, e) => sum + (e.direction === "in" ? e.quantity : -e.quantity), 0);
+
+    if (before.length > 0) {
+      sheet.getCell(row, 2).value = productName;
+      sheet.getCell(row, 3).value = "이월";
+      const stockCell = sheet.getCell(row, 6);
+      stockCell.value = stock;
+      stockCell.numFmt = NUM_FORMAT;
+      row += 1;
+    }
+
+    for (const entry of thisMonth) {
       const inQty = entry.direction === "in" ? entry.quantity : 0;
       const outQty = entry.direction === "out" ? entry.quantity : 0;
       stock += inQty - outQty;
