@@ -61,6 +61,7 @@ export function SnsFiltechCanvas({
     ...Array.from({ length: blankCount }).map((_, i) => ({
       id: `blank-${i}`,
       category: items[items.length - 1]?.category ?? "",
+      productName: items[items.length - 1]?.productName ?? "",
       spec: "",
       sku: "",
       unit: "",
@@ -69,12 +70,12 @@ export function SnsFiltechCanvas({
     })),
   ];
 
-  // 연속된 같은 대분류(품명)는 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
-  const groups: { category: string; start: number; count: number }[] = [];
+  // 연속된 같은 품명은 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
+  const groups: { productName: string; start: number; count: number }[] = [];
   for (let i = 0; i < rows.length; ) {
     let j = i + 1;
-    while (j < rows.length && rows[j].category === rows[i].category) j++;
-    groups.push({ category: rows[i].category, start: i, count: j - i });
+    while (j < rows.length && rows[j].productName === rows[i].productName) j++;
+    groups.push({ productName: rows[i].productName ?? "", start: i, count: j - i });
     i = j;
   }
 
@@ -95,7 +96,7 @@ export function SnsFiltechCanvas({
         거래명세표 (출고)
       </T>
       <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
-        {customerName}
+        {customerName}&nbsp;&nbsp;귀하
       </TCenter>
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
@@ -118,10 +119,10 @@ export function SnsFiltechCanvas({
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={389.76} y={112.97} size={9} width={144}>{dash(customerAddress)}</T>
+      <T x={389.76} y={112.97} size={7.5} width={144}>{dash(customerAddress)}</T>
       <T x={352.32} y={159.17} size={9}>담당자</T>
       <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
-      <T x={430.44} y={166.97} size={9}>{customerContactName || ""}</T>
+      <T x={430.44} y={166.97} size={9} width={100}>{customerContactName || ""}</T>
       <T x={386.28} y={183.41} size={9} bold>출고일 :</T>
       <T x={474.48} y={183.89} size={9} bold>{new Date(orderDate).toLocaleDateString("sv-SE")}</T>
 
@@ -138,7 +139,7 @@ export function SnsFiltechCanvas({
         const groupHeight = g.count * ROW_H;
         return (
           <TCenter key={g.start} centerX={CATEGORY_CENTER} y={groupTop + groupHeight / 2 - 6} size={9.96}>
-            {g.category}
+            {g.productName}
           </TCenter>
         );
       })}
@@ -152,7 +153,9 @@ export function SnsFiltechCanvas({
             <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>{row.spec}</TCenter>
             {row.quantity > 0 && (
               <TCenter centerX={COL_B_CENTER} y={y} size={9.96}>
-                {row.quantity.toLocaleString()} {row.unit || "Box"}
+                {/* 이 컬럼은 "수량 (box)" 전용 - 옆 칸에 Ea 수량이 따로 있으니
+                    품목 단위(row.unit)가 "Ea" 등으로 들어있어도 항상 Box로 표기. */}
+                {row.quantity.toLocaleString()} Box
               </TCenter>
             )}
             {total != null && total > 0 && (
@@ -263,7 +266,7 @@ export function ZenithTechCanvas({
         거래명세표 (출고)
       </T>
       <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
-        {customerName}
+        {customerName}&nbsp;&nbsp;귀하
       </TCenter>
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
@@ -286,10 +289,10 @@ export function ZenithTechCanvas({
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={405.24} y={119.81} size={9} width={140}>{dash(customerAddress)}</T>
+      <T x={405.24} y={119.81} size={7.5} width={140}>{dash(customerAddress)}</T>
       <T x={352.32} y={159.17} size={9}>담당자</T>
       <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
-      <T x={430.44} y={166.97} size={9}>{customerContactName || ""}</T>
+      <T x={430.44} y={166.97} size={9} width={100}>{customerContactName || ""}</T>
       <T x={386.28} y={183.41} size={9} bold>출고일 :</T>
       <T x={474.48} y={183.89} size={9} bold>{new Date(orderDate).toLocaleDateString("sv-SE")}</T>
 
@@ -392,6 +395,7 @@ export function KtSolutionCanvas({
     ...Array.from({ length: blankCount }).map((_, i) => ({
       id: `blank-${i}`,
       category: items[items.length - 1]?.category ?? "",
+      productName: items[items.length - 1]?.productName ?? "",
       spec: "",
       sku: "",
       unit: "",
@@ -402,12 +406,12 @@ export function KtSolutionCanvas({
     })),
   ];
 
-  // 연속된 같은 대분류(품명)는 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
-  const groups: { category: string; start: number; count: number }[] = [];
+  // 연속된 같은 품명은 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
+  const groups: { productName: string; start: number; count: number }[] = [];
   for (let i = 0; i < rows.length; ) {
     let j = i + 1;
-    while (j < rows.length && rows[j].category === rows[i].category) j++;
-    groups.push({ category: rows[i].category, start: i, count: j - i });
+    while (j < rows.length && rows[j].productName === rows[i].productName) j++;
+    groups.push({ productName: rows[i].productName ?? "", start: i, count: j - i });
     i = j;
   }
 
@@ -431,7 +435,7 @@ export function KtSolutionCanvas({
         거래명세표 (출고)
       </T>
       <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
-        {customerName}
+        {customerName}&nbsp;&nbsp;귀하
       </TCenter>
 
       {/* 공급자(우리 회사) 정보 - 항상 고정 */}
@@ -454,10 +458,10 @@ export function KtSolutionCanvas({
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={392.67} y={119.81} size={9} width={140}>{dash(customerAddress)}</T>
+      <T x={392.67} y={119.81} size={7.5} width={140}>{dash(customerAddress)}</T>
       <T x={352.32} y={159.17} size={9}>담당자</T>
       <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
-      <T x={430.44} y={166.97} size={9}>{customerContactName || ""}</T>
+      <T x={430.44} y={166.97} size={9} width={100}>{customerContactName || ""}</T>
       <T x={386.28} y={183.41} size={9} bold>출고일 :</T>
       <T x={474.48} y={183.89} size={9} bold>{new Date(orderDate).toLocaleDateString("sv-SE")}</T>
 
@@ -480,7 +484,7 @@ export function KtSolutionCanvas({
             size={9.96}
             width={76}
           >
-            {g.category}
+            {g.productName}
           </TCenter>
         );
       })}

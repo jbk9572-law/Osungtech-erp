@@ -49,6 +49,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
+        productName: item.products?.name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -120,6 +121,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
+        productName: item.products?.name ?? "",
         spec: item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
