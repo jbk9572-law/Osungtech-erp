@@ -25,7 +25,15 @@ export type StatementItem = {
 
 const WON_FORMAT = '_-"₩"* #,##0_-;-"₩"* #,##0_-;_-"₩"* "-"_-;_-@_-';
 const NUM_FORMAT = '_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
-const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF2F2F2" } };
+// 원본 파일은 순수 회색 hex가 아니라 테마색(테마 0=배경색)에 살짝 어두운
+// tint를 준 채우기라 셀 단위로 뜯어보니 매번 이 값이었다.
+// exceljs의 Color 타입 선언에는 tint가 빠져 있지만 런타임 xlsx 작성기는
+// theme+tint 조합을 그대로 지원한다(color-xform.js 참고).
+const HEADER_FILL: ExcelJS.Fill = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { theme: 0, tint: -0.0499893185216834 } as unknown as ExcelJS.Color,
+};
 
 function formatDateRange(from: string, to: string): string {
   const fmt = (iso: string) => {
@@ -35,16 +43,47 @@ function formatDateRange(from: string, to: string): string {
   return `${fmt(from)} ~ ${fmt(to)}`;
 }
 
-function headerBorder(): Partial<ExcelJS.Borders> {
-  return { top: { style: "thin" }, bottom: { style: "double" } };
+// 컬럼 헤더 행(11행) 테두리: 위쪽 실선/아래쪽 이중선은 전 컬럼 공통이고,
+// 좌우는 표 바깥쪽 테두리(진짜 왼쪽 끝/오른쪽 끝)만 실선, 안쪽은 실선보다
+// 얇은 hair로 그린다(데이터 행의 applyRowBorder와 같은 규칙).
+function headerCellBorder(col: number, lastCol: number): Partial<ExcelJS.Borders> {
+  return {
+    top: { style: "thin" },
+    bottom: { style: "double" },
+    left: { style: col === 1 ? "thin" : "hair" },
+    right: { style: col === lastCol ? "thin" : "hair" },
+  };
+}
+
+// 1~10행(제목 아래 ~ 합계금액 박스)도 원본은 왼쪽/오른쪽 끝에 실선 테두리가
+// 쳐진 하나의 박스 모양이고, 거래일자 줄(3행) 밑과 합계금액 박스(9~10행)
+// 위/아래에도 실선이 그어져 있다. 값 채우기와 별개로 이 테두리만 한 번에 그린다.
+function applyHeaderBoxBorder(
+  sheet: ExcelJS.Worksheet,
+  row: number,
+  lastCol: number,
+  extra?: Partial<ExcelJS.Borders>
+) {
+  for (let c = 1; c <= lastCol; c++) {
+    const cell = sheet.getCell(row, c);
+    cell.border = {
+      ...extra,
+      left: c === 1 ? { style: "thin" } : undefined,
+      right: c === lastCol ? { style: "thin" } : undefined,
+    };
+  }
 }
 
 // 데이터 행 전체에 가는 격자 테두리를 그린다(원본 파일들이 다 이런 표
 // 모양이었는데, 값/수식만 채우고 테두리는 안 그려서 빠져 있었다).
-function applyRowBorder(sheet: ExcelJS.Worksheet, row: number, lastCol: number) {
+// centerCols: 가운데 정렬할 컬럼 번호만 지정(예: 지류형은 일자/품명/규격/비고만
+// 가운데 정렬이고 나머지 숫자 컬럼은 기본 정렬). 생략하면 전 컬럼 가운데 정렬
+// (필터형 원본이 그렇게 되어 있었다).
+function applyRowBorder(sheet: ExcelJS.Worksheet, row: number, lastCol: number, centerCols?: number[]) {
   for (let c = 1; c <= lastCol; c++) {
     const cell = sheet.getCell(row, c);
-    cell.alignment = { horizontal: "center", vertical: "middle" };
+    const shouldCenter = centerCols ? centerCols.includes(c) : true;
+    cell.alignment = shouldCenter ? { horizontal: "center", vertical: "middle" } : { vertical: "middle" };
     cell.border = {
       top: { style: "hair" },
       bottom: { style: "hair" },
@@ -102,24 +141,60 @@ function drawHeader(
   sheet.getCell(3, 1).value = `거래일자 : ${formatDateRange(from, to)}`;
 
   sheet.getCell(5, 1).value = "수  신   :";
+  sheet.getCell(5, 1).alignment = { horizontal: "right", vertical: "middle" };
   sheet.getCell(5, 2).value = customerName;
   sheet.getCell(7, 1).value = "발  신   :";
+  sheet.getCell(7, 1).alignment = { horizontal: "right", vertical: "middle" };
   sheet.getCell(7, 2).value = companyName;
+
+  // 1행은 lastCol까지 통째로 병합된 한 셀이라, exceljs에서는 병합된 셀들이
+  // 전부 같은 style 객체를 공유한다(merge()가 style 참조를 그대로 복사).
+  // 컬럼별로 나눠서 border를 따로 지정하면 나중 호출이 앞 호출을 덮어써
+  // 버리므로, 병합 범위는 항상 한 번에 최종 모양을 지정해야 한다.
+  nameCell.border = { left: { style: "thin" }, right: { style: "thin" }, top: { style: "thin" } };
+  for (let r = 2; r <= 8; r++) {
+    applyHeaderBoxBorder(sheet, r, lastCol, r === 3 ? { bottom: { style: "thin" } } : undefined);
+  }
 
   sheet.mergeCells(9, 1, 10, 1);
   sheet.mergeCells(9, 2, 10, wordsMergeEndCol);
   const totalLabelCell = sheet.getCell(9, 1);
   totalLabelCell.value = "  합계금액 : ";
+  totalLabelCell.alignment = { horizontal: "center", vertical: "middle" };
+  // 위 1행과 같은 이유로, 9~10행에 걸쳐 세로 병합된 라벨 칸(1열)과 한글금액
+  // 칸(2~wordsMergeEndCol열)은 위/아래 테두리를 각각 한 번에 같이 지정한다.
+  totalLabelCell.border = {
+    left: { style: "thin" },
+    top: { style: "thin" },
+    bottom: { style: "thin" },
+  };
+  sheet.getCell(9, 2).border = { top: { style: "thin" }, bottom: { style: "thin" } };
+
+  // valueMergeEndCol 병합은 border를 채우기 전에 먼저 해둬야 한다 - merge()가
+  // 슬레이브 셀의 style을 마스터 style로 통째로 덮어써서, 병합을 나중에 하면
+  // 방금 지정한 border가 사라진다.
+  if (valueMergeEndCol) {
+    sheet.mergeCells(9, totalsValueCol, 9, valueMergeEndCol);
+    sheet.mergeCells(10, totalsValueCol, 10, valueMergeEndCol);
+  }
+
+  // wordsMergeEndCol 다음 칸부터는 9행·10행이 따로따로인 셀(또는 그 안에서만
+  // 가로 병합)이라 행별로 나눠 지정해도 안전하다.
+  for (let c = wordsMergeEndCol + 1; c <= lastCol; c++) {
+    sheet.getCell(9, c).border = {
+      top: { style: "thin" },
+      right: c === lastCol ? { style: "thin" } : undefined,
+    };
+    sheet.getCell(10, c).border = {
+      bottom: { style: "thin" },
+      right: c === lastCol ? { style: "thin" } : undefined,
+    };
+  }
 
   const totalCellRef = sheet.getCell(totalRow, 2).address;
   const wordsFormula = `NUMBERSTRING(${totalCellRef},1)&"원정 (\\"&TEXT(${totalCellRef},"#,###")&".-)"`;
   const wordsCell = sheet.getCell(9, 2);
   wordsCell.value = { formula: wordsFormula };
-
-  if (valueMergeEndCol) {
-    sheet.mergeCells(9, totalsValueCol, 9, valueMergeEndCol);
-    sheet.mergeCells(10, totalsValueCol, 10, valueMergeEndCol);
-  }
 
   sheet.getCell(9, totalsLabelCol).value = "전체금액";
   const amountValueCell = sheet.getCell(9, totalsValueCol);
@@ -132,12 +207,12 @@ function drawHeader(
   taxValueCell.numFmt = NUM_FORMAT;
 
   headers.forEach((label, i) => {
-    const cell = sheet.getCell(11, i + 1);
+    const col = i + 1;
+    const cell = sheet.getCell(11, col);
     cell.value = label;
-    cell.font = { bold: true };
-    cell.alignment = { horizontal: "center" };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
     cell.fill = HEADER_FILL;
-    cell.border = headerBorder();
+    cell.border = headerCellBorder(col, lastCol);
   });
 }
 
@@ -339,10 +414,14 @@ export async function buildPaperRollStatementWorkbook(
     sheet.getCell(r, 3).value = item.spec || null;
     // 롤수(D)/수량(E)/무게(F)은 우리 시스템에 데이터가 없어 비워둔다. 우리가
     // 저장하는 quantity는 원본 파일의 "무게(합산)"(G, 실제 판매 단가를
-    // 곱하는 기준 수량)에 해당하는 값이라 G에 넣는다.
+    // 곱하는 기준 수량)에 해당하는 값이라 G에 넣는다. 원본 파일은 이 두 컬럼을
+    // 값이 있든 없든 빨간 글자색으로 강조해뒀어서 그대로 맞춘다.
+    const boxQtyCell = sheet.getCell(r, 5);
+    boxQtyCell.font = { color: { argb: "FFFF0000" } };
     const weightCell = sheet.getCell(r, 7);
     weightCell.value = item.quantity;
     weightCell.numFmt = NUM_FORMAT;
+    weightCell.font = { color: { argb: "FFFF0000" } };
     const priceCell = sheet.getCell(r, 8);
     priceCell.value = item.unitPrice;
     priceCell.numFmt = NUM_FORMAT;
@@ -352,7 +431,7 @@ export async function buildPaperRollStatementWorkbook(
     const taxCell = sheet.getCell(r, 10);
     taxCell.value = { formula: `I${r}*0.1` };
     taxCell.numFmt = NUM_FORMAT;
-    applyRowBorder(sheet, r, 11);
+    applyRowBorder(sheet, r, 11, [1, 2, 3, 11]);
   });
 
   sheet.getCell(totalRow, 1).value = "합계";
@@ -367,7 +446,7 @@ export async function buildPaperRollStatementWorkbook(
   grandTotal.value = { formula: `SUM(I${totalRow}+J${totalRow})` };
   grandTotal.numFmt = WON_FORMAT;
   grandTotal.font = { bold: true };
-  applyRowBorder(sheet, totalRow, 11);
+  applyRowBorder(sheet, totalRow, 11, [1, 2, 3, 11]);
 
   return workbook;
 }
