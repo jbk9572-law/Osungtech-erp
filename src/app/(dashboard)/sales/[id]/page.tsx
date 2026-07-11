@@ -61,6 +61,9 @@ export default async function SaleDetailPage({
           <Link href={`/sales/${id}/edit`} className="erp-btn">
             F4 수정
           </Link>
+          <Link href={`/paper-calc?salesOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+            모조지 계산
+          </Link>
           <DeleteButton
             action={deleteSale}
             id={id}
@@ -102,9 +105,6 @@ export default async function SaleDetailPage({
             ) : (
               <span style={{ color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
             )}
-            <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn" style={{ marginLeft: "auto", minWidth: 0, height: 26, padding: "0 10px" }}>
-              모조지 계산 열기
-            </Link>
           </div>
           {order.memo && (
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>
