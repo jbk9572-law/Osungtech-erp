@@ -58,9 +58,14 @@ export default async function EditSalePage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
       <div className="mb-3 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">매출 거래 수정</h1>
-        <Link href={`/sales/${id}`} className="erp-btn erp-btn-danger">
-          ESC 닫기
-        </Link>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={`/paper-calc?salesOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+            모조지 계산
+          </Link>
+          <Link href={`/sales/${id}`} className="erp-btn erp-btn-danger">
+            ESC 닫기
+          </Link>
+        </div>
       </div>
       <NewSaleForm
         customers={customers ?? []}
