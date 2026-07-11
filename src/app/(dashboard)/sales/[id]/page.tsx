@@ -124,6 +124,7 @@ export default async function SaleDetailPage({
               <th className="num">수량</th>
               <th className="num">공급가</th>
               <th className="num">합계금액</th>
+              <th>비고</th>
             </tr>
           </thead>
           <tbody>
@@ -143,6 +144,7 @@ export default async function SaleDetailPage({
                   {Number(row.unit_price).toLocaleString()}
                 </td>
                 <td className="num">{row.amount.toLocaleString()}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -152,6 +154,7 @@ export default async function SaleDetailPage({
                 합계
               </td>
               <td className="num">{totalAmount.toLocaleString()}</td>
+              <td />
             </tr>
           </tfoot>
         </table>

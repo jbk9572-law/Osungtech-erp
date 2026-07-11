@@ -24,6 +24,7 @@ export type InvoiceItem = {
   unitPrice: number;
   supplyAmount: number;
   taxAmount: number;
+  remark?: string | null;
 };
 
 export const COLOR_HEX = {

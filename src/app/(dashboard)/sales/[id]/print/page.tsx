@@ -55,6 +55,7 @@ export default async function SalesPrintPage({
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
         basePackageQty: item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+        remark: item.remark,
       }));
 
       return (
@@ -90,6 +91,7 @@ export default async function SalesPrintPage({
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
         basePackageQty: item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+        remark: item.remark,
       }));
 
       return (
@@ -127,6 +129,7 @@ export default async function SalesPrintPage({
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
         basePackageQty: item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+        remark: item.remark,
         lotNo: item.spec || null,
       }));
 
@@ -160,6 +163,7 @@ export default async function SalesPrintPage({
       sku: item.products?.sku ?? "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
+      remark: item.remark,
     }));
 
     return (
@@ -202,6 +206,7 @@ export default async function SalesPrintPage({
       unitPrice: Number(item.unit_price),
       supplyAmount,
       taxAmount,
+      remark: item.remark,
     };
   });
 

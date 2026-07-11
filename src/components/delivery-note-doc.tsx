@@ -23,6 +23,7 @@ type Item = {
   sku: string;
   unit: string;
   quantity: number;
+  remark?: string | null;
 };
 
 type DisplayRow = {
@@ -33,6 +34,7 @@ type DisplayRow = {
   sku: string;
   unit: string;
   quantity: number | null;
+  remark?: string | null;
 };
 
 // 업체별 실제 출고증 3종(에스엔에스필텍/제니스테크/케이이티솔루션) 벡터 실측 기준:
@@ -112,6 +114,7 @@ export function DeliveryNoteDoc({
       sku: item.sku,
       unit: item.unit,
       quantity: item.quantity,
+      remark: item.remark,
     })),
     ...Array.from({ length: blankRows }).map((_, i) => ({
       key: `blank-${i}`,
@@ -225,7 +228,7 @@ export function DeliveryNoteDoc({
               <td className="border border-black px-2 py-1 text-right">
                 {zone ? zone.cellC(row) : row.quantity != null ? row.quantity.toLocaleString() : ""}
               </td>
-              <td className="border border-black px-2 py-1" />
+              <td className="border border-black px-2 py-1">{row.remark}</td>
             </tr>
           ))}
           {note && (
