@@ -592,6 +592,7 @@ export type Database = {
           spec: string | null;
           quantity: number;
           unit_cost: number;
+          remark: string | null;
           created_at: string;
         };
         Insert: {
@@ -601,6 +602,7 @@ export type Database = {
           spec?: string | null;
           quantity: number;
           unit_cost?: number;
+          remark?: string | null;
           created_at?: string;
         };
         Update: {
@@ -610,6 +612,7 @@ export type Database = {
           spec?: string | null;
           quantity?: number;
           unit_cost?: number;
+          remark?: string | null;
           created_at?: string;
         };
         Relationships: [

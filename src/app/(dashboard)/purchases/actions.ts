@@ -10,6 +10,7 @@ type PurchaseItemInput = {
   spec?: string | null;
   quantity: number;
   unitCost: number;
+  remark?: string | null;
 };
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -25,6 +26,30 @@ function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
 
 function isStockCheckViolation(message: string, code?: string) {
   return code === "23514" || message.includes("check constraint");
+}
+
+// 목록을 매입일자 기준으로 정렬하게 되면 "언제 수정됐는지"는 더 이상
+// 정렬만 봐서는 알 수 없어서, 수정할 때마다 메모 끝에 수정 시각을 남긴다.
+// 다시 수정하면 이전 수정 기록은 지우고 최신 것만 남긴다(누적되면
+// 메모가 지저분해진다).
+function withEditNote(memo: string | null): string {
+  const note = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    hour12: false,
+  })
+    .formatToParts(new Date())
+    .reduce((acc, part) => {
+      if (part.type === "month") return `${acc}${part.value}월`;
+      if (part.type === "day") return `${acc}${part.value}일`;
+      if (part.type === "hour") return `${acc}${part.value}시`;
+      return acc;
+    }, "");
+  // 메모 입력칸이 한 줄짜리 input이라 줄바꿈 대신 " · "로 구분한다.
+  const base = (memo ?? "").replace(/\s*·?\s*\d{1,2}월\d{1,2}일\d{1,2}시 수정됨\s*$/, "").trim();
+  return base ? `${base} · ${note} 수정됨` : `${note} 수정됨`;
 }
 
 // 기존 매입 건의 입고 효과를 재고 조정(adjustment)으로 되돌린다.
@@ -104,6 +129,7 @@ export async function createPurchase(
       spec: item.spec || null,
       quantity: item.quantity,
       unit_cost: item.unitCost,
+      remark: item.remark || null,
     }))
   );
 
@@ -193,7 +219,7 @@ export async function updatePurchase(
       supplier_id: supplierId,
       warehouse_id: warehouseId,
       purchase_date: purchaseDate,
-      memo,
+      memo: withEditNote(memo),
     })
     .eq("id", id);
 
@@ -231,6 +257,7 @@ export async function updatePurchase(
       spec: item.spec || null,
       quantity: item.quantity,
       unit_cost: item.unitCost,
+      remark: item.remark || null,
     }))
   );
   if (itemsError) {
