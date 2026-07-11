@@ -29,6 +29,9 @@ const SUM_LABEL_CENTER = (CATEGORY_X0 + 278.64) / 2;
 const SPEC_CENTER = (CATEGORY_X1 + 278.64) / 2;
 // 제목 줄 오른쪽 박스(342.24~534.48)의 가로 중앙 - 거래처명을 가운데 정렬할 때 쓴다.
 const TITLE_RIGHT_CENTER = (342.24 + 534.48) / 2;
+// 품목 행 텍스트를 행 높이(16.68pt) 안에서 세로 가운데로 오도록 내리는 보정값.
+// (행 top 좌표에 그대로 찍으면 글자가 위쪽에 붙어버려서 상단정렬처럼 보인다)
+const ROW_TEXT_Y_OFFSET = 2.36;
 const SPEC_X = 187.8;
 const COL_B_CENTER = (278.64 + 387.48) / 2;
 const COL_C_CENTER = (387.48 + 460.92) / 2;
@@ -70,14 +73,9 @@ export function SnsFiltechCanvas({
     })),
   ];
 
-  // 연속된 같은 품명은 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
-  const groups: { productName: string; start: number; count: number }[] = [];
-  for (let i = 0; i < rows.length; ) {
-    let j = i + 1;
-    while (j < rows.length && rows[j].productName === rows[i].productName) j++;
-    groups.push({ productName: rows[i].productName ?? "", start: i, count: j - i });
-    i = j;
-  }
+  // 에스엔에스필텍은 취급 품목이 항상 Micro Filter 하나뿐이라, 품목
+  // 마스터 데이터(카테고리/품명)에 기대지 않고 품명 칸을 고정 표기한다.
+  const groups = [{ productName: "Micro Filter", start: 0, count: rows.length }];
 
   const totalBox = items.reduce((sum, it) => sum + it.quantity, 0);
   const totalEa = items.reduce((sum, it) => sum + it.quantity * (it.basePackageQty ?? 0), 0);
@@ -146,7 +144,7 @@ export function SnsFiltechCanvas({
 
       {/* 품목 행 */}
       {rows.map((row, i) => {
-        const y = ROW_TOP0 + i * ROW_H;
+        const y = ROW_TOP0 + i * ROW_H + ROW_TEXT_Y_OFFSET;
         const total = row.basePackageQty != null ? row.quantity * row.basePackageQty : null;
         return (
           <div key={row.id}>
@@ -176,7 +174,7 @@ export function SnsFiltechCanvas({
       {/* 합계 행 */}
       <TCenter centerX={SUM_LABEL_CENTER} y={688.04} size={9.96}>합계</TCenter>
       <TCenter centerX={COL_B_CENTER} y={688.04} size={9.96}>{totalBox.toLocaleString()} Box</TCenter>
-      <TCenter centerX={COL_C_CENTER} y={688.52} size={9.96}>{totalEa.toLocaleString()} Ea</TCenter>
+      <TCenter centerX={COL_C_CENTER} y={688.52} size={9.96}>{totalEa.toLocaleString()}</TCenter>
 
       {/* 하단 도장란 */}
       <T x={102.48} y={730.4} size={9.96} bold>공급자</T>
@@ -213,7 +211,6 @@ export function ZenithTechCanvas({
   customerContactPhone,
   orderDate,
   items,
-  note,
 }: {
   company: Company;
   customerName: string;
@@ -240,14 +237,9 @@ export function ZenithTechCanvas({
     })),
   ];
 
-  // 연속된 같은 대분류(품명)는 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
-  const groups: { category: string; start: number; count: number }[] = [];
-  for (let i = 0; i < rows.length; ) {
-    let j = i + 1;
-    while (j < rows.length && rows[j].category === rows[i].category) j++;
-    groups.push({ category: rows[i].category, start: i, count: j - i });
-    i = j;
-  }
+  // 제니스테크는 취급 품목이 항상 간지 하나뿐이라, 품목 마스터 데이터
+  // (카테고리)에 기대지 않고 품명 칸을 고정 표기한다.
+  const groups = [{ category: "간지", start: 0, count: rows.length }];
 
   // 제니스테크 서식은 박스 단위 없이 합계(Ea) 값을 그대로 수량으로 쓴다.
   const totalEa = items.reduce((sum, it) => sum + it.quantity, 0);
@@ -316,7 +308,7 @@ export function ZenithTechCanvas({
 
       {/* 품목 행 */}
       {rows.map((row, i) => {
-        const y = Z_ROW_TOP0 + i * Z_ROW_H;
+        const y = Z_ROW_TOP0 + i * Z_ROW_H + ROW_TEXT_Y_OFFSET;
         return (
           <div key={row.id}>
             <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>
@@ -333,11 +325,11 @@ export function ZenithTechCanvas({
         );
       })}
 
-      {note && (
-        <TCenter centerX={Z_NOTE_CENTER} y={664.16} size={9.96} bold>
-          {note}
-        </TCenter>
-      )}
+      {/* 제니스테크는 항상 크라프트지/모조지 두 지종을 같이 쓰기 때문에
+          주문 메모 유무와 상관없이 이 문구를 고정으로 보여준다. */}
+      <TCenter centerX={Z_NOTE_CENTER} y={664.16} size={9.96} bold>
+        크라프트지98g / 모조지70g
+      </TCenter>
 
       {/* 합계 행 */}
       <T x={222.12} y={689.36} size={9.96}>합계</T>
@@ -406,14 +398,9 @@ export function KtSolutionCanvas({
     })),
   ];
 
-  // 연속된 같은 품명은 세로로 병합해서 그 구간 중앙에 한 번만 표시한다.
-  const groups: { productName: string; start: number; count: number }[] = [];
-  for (let i = 0; i < rows.length; ) {
-    let j = i + 1;
-    while (j < rows.length && rows[j].productName === rows[i].productName) j++;
-    groups.push({ productName: rows[i].productName ?? "", start: i, count: j - i });
-    i = j;
-  }
+  // 케이이티솔루션은 취급 품목이 항상 COVER TAPE (VC-100) 하나뿐이라, 품목
+  // 마스터 데이터(카테고리/품명)에 기대지 않고 품명 칸을 고정 표기한다.
+  const groups = [{ productName: "COVER TAPE (VC-100)", start: 0, count: rows.length }];
 
   // 케이이티솔루션 서식은 개별 행 수량(RL 등 실단위)의 합계를 박스 환산 단위로 보여준다.
   const totalBox = items.reduce((sum, it) => {
@@ -491,7 +478,7 @@ export function KtSolutionCanvas({
 
       {/* 품목 행 */}
       {rows.map((row, i) => {
-        const y = KT_ROW_TOP0 + i * KT_ROW_H;
+        const y = KT_ROW_TOP0 + i * KT_ROW_H + ROW_TEXT_Y_OFFSET;
         return (
           <div key={row.id}>
             <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>{row.spec}</TCenter>
