@@ -369,6 +369,7 @@ export type Database = {
           notes: string | null;
           document_type: "출고증" | "명세표";
           delivery_note_variant: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
+          sales_export_template: string;
           created_at: string;
         };
         Insert: {
@@ -383,6 +384,7 @@ export type Database = {
           notes?: string | null;
           document_type?: "출고증" | "명세표";
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
+          sales_export_template?: string;
           created_at?: string;
         };
         Update: {
@@ -397,6 +399,7 @@ export type Database = {
           notes?: string | null;
           document_type?: "출고증" | "명세표";
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
+          sales_export_template?: string;
           created_at?: string;
         };
         Relationships: [];
