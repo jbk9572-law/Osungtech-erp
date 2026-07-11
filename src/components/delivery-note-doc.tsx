@@ -137,7 +137,7 @@ export function DeliveryNoteDoc({
     <div className="border border-black text-[12px] text-black">
       <div className="flex items-baseline border-b border-black px-3 py-2">
         <span className="text-lg font-bold tracking-[0.3em]">거래명세표 (출고)</span>
-        <span className="flex-1 text-center text-sm font-semibold">{customerName}</span>
+        <span className="flex-1 text-center text-sm font-semibold">{customerName} 귀하</span>
       </div>
 
       <table className="w-full border-collapse">
