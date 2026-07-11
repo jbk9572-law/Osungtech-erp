@@ -141,6 +141,24 @@ export function NewSaleForm({
     return product ? Number(product.price) : 0;
   }
 
+  // 임시 저장된 모조지 계산이 있으면 등록 버튼을 누르기 전에도 TG0 품목
+  // 줄이 실제로 어떤 수량으로 들어갈지 그리드에 미리 보여준다. 이 줄은
+  // 편집 가능한 rows에는 넣지 않는다 — 실제 저장은 createSale이 주문
+  // 생성 직후 attachPendingPaperCalculation으로 처리하고(재고는 건드리지
+  // 않음), 여기서 rows에 섞으면 일반 품목과 똑같이 재고가 차감돼버린다.
+  const pendingCalcSummary = useMemo(() => {
+    if (!pendingPaperCalc) return null;
+    try {
+      const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
+      return { totalSheet: parsed.totalSheet, totalPaper: parsed.totalPaper };
+    } catch {
+      return null;
+    }
+  }, [pendingPaperCalc]);
+  const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
+  const pendingCalcUnitPrice = tg0Product ? resolvePrice(customerId, tg0Product.id) : 0;
+  const pendingCalcAmount = pendingCalcSummary ? pendingCalcSummary.totalSheet * pendingCalcUnitPrice : 0;
+
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
   }
@@ -192,7 +210,7 @@ export function NewSaleForm({
       .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
   }
 
-  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0);
+  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) + pendingCalcAmount;
   const taxAmount = Math.round(supplyAmount * 0.1);
   const total = supplyAmount + taxAmount;
 
@@ -231,20 +249,11 @@ export function NewSaleForm({
 
       {pendingPaperCalc && (
         <div
-          className="rounded p-2 text-xs flex items-center justify-between"
+          className="rounded p-2 text-xs"
           style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
         >
-          <span>모조지 계산 결과가 이 주문에 자동으로 연결됩니다 (등록 시 TG0 판매 품목에 반영).</span>
-          <button
-            type="button"
-            className="underline"
-            onClick={() => {
-              localStorage.removeItem(PENDING_PAPER_CALC_KEY);
-              setPendingPaperCalc(null);
-            }}
-          >
-            연결 취소
-          </button>
+          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0 자동 반영
+          줄로 표시됩니다. 등록하면 실제로 저장됩니다.
         </div>
       )}
 
@@ -325,6 +334,46 @@ export function NewSaleForm({
               </tr>
             </thead>
             <tbody onKeyDown={focusSameColumnNextRow}>
+              {pendingCalcSummary && (
+                <tr style={{ background: "#eef2ff" }}>
+                  <td>
+                    {tg0Product ? (
+                      <>
+                        {tg0Product.name}
+                        <span
+                          className="ml-1 rounded px-1 text-[10.5px]"
+                          style={{ background: "#c7d2fe", color: "#3730a3" }}
+                        >
+                          자동
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: "#dc3545" }}>
+                        SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
+                  <td className="num">{pendingCalcSummary.totalSheet.toLocaleString()}</td>
+                  <td className="num">{pendingCalcUnitPrice.toLocaleString()}</td>
+                  <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>모조지 계산 자동 반영</td>
+                  <td className="num">
+                    <button
+                      type="button"
+                      className="erp-btn erp-btn-danger"
+                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      onClick={() => {
+                        localStorage.removeItem(PENDING_PAPER_CALC_KEY);
+                        setPendingPaperCalc(null);
+                      }}
+                    >
+                      취소
+                    </button>
+                  </td>
+                </tr>
+              )}
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
