@@ -1,20 +1,67 @@
 import { createClient } from "@/lib/supabase/server";
-import { buildXlsxResponse, currentMonthRange } from "@/lib/xlsx-response";
+import { buildXlsxResponse, buildXlsxResponseFromWorkbook, currentMonthRange } from "@/lib/xlsx-response";
+import {
+  buildFilterBoxStatementWorkbook,
+  buildFilterNoBoxStatementWorkbook,
+  buildPaperRollStatementWorkbook,
+  type StatementItem,
+} from "@/lib/sales-export-templates";
 
 // 매출관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
-// 검색어(q)가 있으면 거래처명/품목명/SKU/규격이 일치하는 건만 뽑는다.
+// 검색어(q)가 등록된 거래처 이름과 매칭되고 그 거래처가 전용 양식을 쓰는
+// 경우엔 거래처별 고정 서식(명세표)으로, 그 외엔 일반 컬럼 나열로 내려준다.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
   const { from, to } = currentMonthRange();
 
   const supabase = await createClient();
+
+  let templatedCustomer: { id: string; name: string; sales_export_template: string } | null = null;
+
+  if (q) {
+    const { data: customers } = await supabase.from("customers").select("id, name, sales_export_template");
+    const matches = (customers ?? []).filter((c) => c.name.toLowerCase().includes(q));
+    if (matches.length === 1 && matches[0].sales_export_template !== "generic") {
+      templatedCustomer = matches[0];
+    }
+  }
+
   const { data } = await supabase
     .from("sales_order_items")
-    .select("*, sales_orders!inner(order_date, customers(name)), products(sku, name, spec, unit)")
+    .select(
+      "*, sales_orders!inner(order_date, customer_id, customers(name)), products(sku, name, spec, unit, base_package_qty)"
+    )
     .gte("sales_orders.order_date", from)
     .lte("sales_orders.order_date", to)
     .order("created_at");
+
+  if (templatedCustomer) {
+    const items: StatementItem[] = (data ?? [])
+      .filter((item) => item.sales_orders?.customer_id === templatedCustomer!.id)
+      .map((item) => ({
+        date: item.sales_orders?.order_date ?? "",
+        productName: item.products?.name ?? "",
+        spec: item.spec || item.products?.spec || "",
+        unit: item.products?.unit ?? "",
+        quantity: item.quantity,
+        unitPrice: Number(item.unit_price),
+        basePackageQty:
+          item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
+      }));
+
+    const { data: company } = await supabase.from("company_profile").select("name").eq("id", 1).maybeSingle();
+    const companyName = company?.name || "㈜오성테크";
+
+    const workbook =
+      templatedCustomer.sales_export_template === "filter_no_box"
+        ? await buildFilterNoBoxStatementWorkbook(templatedCustomer.name, companyName, from, to, items)
+        : templatedCustomer.sales_export_template === "paper_roll"
+          ? await buildPaperRollStatementWorkbook(templatedCustomer.name, companyName, from, to, items)
+          : await buildFilterBoxStatementWorkbook(templatedCustomer.name, companyName, from, to, items);
+
+    return buildXlsxResponseFromWorkbook(workbook, `매출내역_${templatedCustomer.name}_${from}_${to}.xlsx`);
+  }
 
   const items = (data ?? []).filter((item) => {
     if (!q) return true;
