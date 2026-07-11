@@ -249,27 +249,23 @@ export function DeliveryNoteDoc({
         </tfoot>
       </table>
 
-      <div className="flex items-center justify-around border-t border-black px-3 py-4 text-sm">
-        <span className="relative">
-          공급자 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(인)
-          {company?.logo_wordmark_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={company.logo_wordmark_url}
-              alt=""
-              aria-hidden
-              className="pointer-events-none absolute top-1/2 left-0 h-4 w-auto -translate-y-1/2 opacity-90"
-            />
-          )}
+      <div className="flex items-stretch justify-around border-t border-black text-sm">
+        <div className="relative flex flex-1 items-center gap-2 px-3 py-4">
+          <span>공급자</span>
+          <span className="text-xs text-gray-700">㈜오성테크</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={company?.seal_image_url || "/branding/company-seal.png"}
             alt=""
             aria-hidden
-            className="pointer-events-none absolute top-1/2 right-2 h-10 w-10 -translate-y-1/2 opacity-90 mix-blend-multiply"
+            className="pointer-events-none absolute top-1/2 right-10 h-10 w-10 -translate-y-1/2 opacity-90 mix-blend-multiply"
           />
-        </span>
-        <span>인수자 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(인)</span>
+          <span className="ml-auto">(인)</span>
+        </div>
+        <div className="flex flex-1 items-center px-3 py-4">
+          <span>인수자</span>
+          <span className="ml-auto">(인)</span>
+        </div>
       </div>
     </div>
   );

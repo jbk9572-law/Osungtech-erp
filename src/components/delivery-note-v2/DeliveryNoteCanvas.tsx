@@ -104,9 +104,9 @@ export function SnsFiltechCanvas({
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
       <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9}>{dash(company?.business_type)}</T>
+      <T x={173.04} y={151.73} size={9} width={50}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9}>{dash(company?.business_item)}</T>
+      <T x={291.5} y={151.73} size={9} width={48}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
       <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
@@ -171,17 +171,8 @@ export function SnsFiltechCanvas({
 
       {/* 하단 도장란 */}
       <T x={102.48} y={730.4} size={9.96} bold>공급자</T>
-      <TCenter centerX={(159 + 278.64) / 2} y={730.4} size={9.96}>(인)</TCenter>
-      {company?.logo_wordmark_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={company.logo_wordmark_url}
-          alt=""
-          aria-hidden
-          className="pointer-events-none opacity-90"
-          style={{ position: "absolute", left: pt(158.16), top: pt(729.36), width: pt(87.36), height: pt(17.52) }}
-        />
-      )}
+      <TRight right={278.64 - 8} y={730.4} size={9.96}>(인)</TRight>
+      <TCenter centerX={201.84} y={732.72} size={9}>㈜오성테크</TCenter>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={company?.seal_image_url || "/branding/company-seal.png"}
@@ -191,7 +182,7 @@ export function SnsFiltechCanvas({
         style={{ position: "absolute", left: pt(243), top: pt(722.88), width: pt(33.12), height: pt(30.24) }}
       />
       <T x={319.08} y={730.4} size={9.96} bold>인수자</T>
-      <TCenter centerX={(388.08 + 534.48) / 2} y={730.4} size={9.96}>(인)</TCenter>
+      <TRight right={534.48 - 8} y={730.4} size={9.96}>(인)</TRight>
     </div>
   );
 }
@@ -281,9 +272,9 @@ export function ZenithTechCanvas({
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
       <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9}>{dash(company?.business_type)}</T>
+      <T x={173.04} y={151.73} size={9} width={50}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9}>{dash(company?.business_item)}</T>
+      <T x={291.5} y={151.73} size={9} width={48}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
       <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
@@ -343,17 +334,8 @@ export function ZenithTechCanvas({
 
       {/* 하단 도장란 */}
       <T x={102.48} y={732.08} size={9.96} bold>공급자</T>
-      <TCenter centerX={(159 + 278.64) / 2} y={732.08} size={9.96}>(인)</TCenter>
-      {company?.logo_wordmark_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={company.logo_wordmark_url}
-          alt=""
-          aria-hidden
-          className="pointer-events-none opacity-90"
-          style={{ position: "absolute", left: pt(158.16), top: pt(731.04), width: pt(87.36), height: pt(17.52) }}
-        />
-      )}
+      <TRight right={278.64 - 8} y={732.08} size={9.96}>(인)</TRight>
+      <TCenter centerX={201.84} y={734.4} size={9}>㈜오성테크</TCenter>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={company?.seal_image_url || "/branding/company-seal.png"}
@@ -363,7 +345,7 @@ export function ZenithTechCanvas({
         style={{ position: "absolute", left: pt(243), top: pt(724.56), width: pt(33.12), height: pt(30.24) }}
       />
       <T x={319.08} y={732.08} size={9.96} bold>인수자</T>
-      <TCenter centerX={(388.08 + 534.48) / 2} y={732.08} size={9.96}>(인)</TCenter>
+      <TRight right={534.48 - 8} y={732.08} size={9.96}>(인)</TRight>
     </div>
   );
 }
@@ -456,9 +438,9 @@ export function KtSolutionCanvas({
       <T x={235.16} y={136.01} size={9}>팩스번호</T>
       <T x={283.04} y={136.01} size={9}>{dash(company?.fax_number)}</T>
       <T x={108.12} y={151.25} size={9}>업태</T>
-      <T x={173.04} y={151.73} size={9}>{dash(company?.business_type)}</T>
+      <T x={173.04} y={151.73} size={9} width={50}>{dash(company?.business_type)}</T>
       <T x={243.98} y={151.73} size={9}>종목</T>
-      <T x={291.5} y={151.73} size={9}>{dash(company?.business_item)}</T>
+      <T x={291.5} y={151.73} size={9} width={48}>{dash(company?.business_item)}</T>
       <T x={93.36} y={175.61} size={9}>사업장 주소</T>
       <T x={162.84} y={168.77} size={9} width={166}>{dash(company?.address)}</T>
 
@@ -526,17 +508,8 @@ export function KtSolutionCanvas({
 
       {/* 하단 도장란 */}
       <T x={102.48} y={729.92} size={9.96} bold>공급자</T>
-      <TCenter centerX={(159 + 278.64) / 2} y={729.92} size={9.96}>(인)</TCenter>
-      {company?.logo_wordmark_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={company.logo_wordmark_url}
-          alt=""
-          aria-hidden
-          className="pointer-events-none opacity-90"
-          style={{ position: "absolute", left: pt(158.16), top: pt(728.88), width: pt(87.36), height: pt(17.52) }}
-        />
-      )}
+      <TRight right={278.64 - 8} y={729.92} size={9.96}>(인)</TRight>
+      <TCenter centerX={201.84} y={732.24} size={9}>㈜오성테크</TCenter>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={company?.seal_image_url || "/branding/company-seal.png"}
@@ -546,7 +519,7 @@ export function KtSolutionCanvas({
         style={{ position: "absolute", left: pt(243), top: pt(722.4), width: pt(33.12), height: pt(30.24) }}
       />
       <T x={319.08} y={729.92} size={9.96} bold>인수자</T>
-      <TCenter centerX={(388.08 + 534.48) / 2} y={729.92} size={9.96}>(인)</TCenter>
+      <TRight right={534.48 - 8} y={729.92} size={9.96}>(인)</TRight>
     </div>
   );
 }
