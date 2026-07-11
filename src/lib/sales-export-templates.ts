@@ -318,15 +318,17 @@ export async function buildPaperRollStatementWorkbook(
     lastDate = writeDate(sheet.getCell(r, 1), item.date, lastDate);
     sheet.getCell(r, 2).value = item.productName;
     sheet.getCell(r, 3).value = item.spec || null;
-    // 롤수(D)/무게(F)/무게합산(G)은 우리 시스템에 데이터가 없어 비워둔다.
-    const qtyCell = sheet.getCell(r, 5);
-    qtyCell.value = item.quantity;
-    qtyCell.numFmt = NUM_FORMAT;
+    // 롤수(D)/수량(E)/무게(F)은 우리 시스템에 데이터가 없어 비워둔다. 우리가
+    // 저장하는 quantity는 원본 파일의 "무게(합산)"(G, 실제 판매 단가를
+    // 곱하는 기준 수량)에 해당하는 값이라 G에 넣는다.
+    const weightCell = sheet.getCell(r, 7);
+    weightCell.value = item.quantity;
+    weightCell.numFmt = NUM_FORMAT;
     const priceCell = sheet.getCell(r, 8);
     priceCell.value = item.unitPrice;
     priceCell.numFmt = NUM_FORMAT;
     const amountCell = sheet.getCell(r, 9);
-    amountCell.value = { formula: `E${r}*H${r}` };
+    amountCell.value = { formula: `G${r}*H${r}` };
     amountCell.numFmt = NUM_FORMAT;
     const taxCell = sheet.getCell(r, 10);
     taxCell.value = { formula: `I${r}*0.1` };
