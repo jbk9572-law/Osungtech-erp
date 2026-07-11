@@ -51,8 +51,11 @@ export async function fetchWoteLedgerEntries(
   return [...inEntries, ...outEntries];
 }
 
+// 문자 클래스([...])로 쓰면 "주식회사"를 통째로 지우는 게 아니라 주/식/회/사
+// 낱글자를 각각 지워버려서 그 글자가 포함된 이름(예: "나영식테크")이
+// 잘못 깎이는 버그가 있었다. 부분 문자열 교대(alternation)로 고쳤다.
 function normalize(name: string | null | undefined): string {
-  return (name ?? "").replace(/[㈜()주식회사\s]/g, "").toLowerCase();
+  return (name ?? "").replace(/㈜|\(|\)|주식회사|\s/g, "").toLowerCase();
 }
 
 export function isWoteQuery(q: string): boolean {
