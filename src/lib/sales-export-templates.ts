@@ -39,6 +39,21 @@ function headerBorder(): Partial<ExcelJS.Borders> {
   return { top: { style: "thin" }, bottom: { style: "double" } };
 }
 
+// 데이터 행 전체에 가는 격자 테두리를 그린다(원본 파일들이 다 이런 표
+// 모양이었는데, 값/수식만 채우고 테두리는 안 그려서 빠져 있었다).
+function applyRowBorder(sheet: ExcelJS.Worksheet, row: number, lastCol: number) {
+  for (let c = 1; c <= lastCol; c++) {
+    const cell = sheet.getCell(row, c);
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = {
+      top: { style: "hair" },
+      bottom: { style: "hair" },
+      left: { style: c === 1 ? "thin" : "hair" },
+      right: { style: c === lastCol ? "thin" : "hair" },
+    };
+  }
+}
+
 // 1~11행 공통 헤더(회사명/거래일자/수신·발신/합계금액/전체금액·전체세액/컬럼헤더)를 그린다.
 // lastCol: 표 전체 폭(마지막 컬럼 번호). totalsLabelCol/totalsValueCol: 우측의
 // "전체금액/전체세액" 라벨·값이 들어갈 위치. valueMergeEndCol: 값 칸을 그 오른쪽으로
@@ -189,6 +204,7 @@ export async function buildFilterBoxStatementWorkbook(
     const taxCell = sheet.getCell(r, 9);
     taxCell.value = { formula: `H${r}*0.1` };
     taxCell.numFmt = NUM_FORMAT;
+    applyRowBorder(sheet, r, 10);
   });
 
   sheet.getCell(totalRow, 1).value = "합계";
@@ -203,6 +219,7 @@ export async function buildFilterBoxStatementWorkbook(
   grandTotal.value = { formula: `SUM(H${totalRow}:I${totalRow})` };
   grandTotal.numFmt = WON_FORMAT;
   grandTotal.font = { bold: true };
+  applyRowBorder(sheet, totalRow, 10);
 
   return workbook;
 }
@@ -258,6 +275,7 @@ export async function buildFilterNoBoxStatementWorkbook(
     const taxCell = sheet.getCell(r, 8);
     taxCell.value = { formula: `G${r}*0.1` };
     taxCell.numFmt = NUM_FORMAT;
+    applyRowBorder(sheet, r, 9);
   });
 
   sheet.getCell(totalRow, 1).value = "합계";
@@ -272,6 +290,7 @@ export async function buildFilterNoBoxStatementWorkbook(
   grandTotal.value = { formula: `G${totalRow}+H${totalRow}` };
   grandTotal.numFmt = WON_FORMAT;
   grandTotal.font = { bold: true };
+  applyRowBorder(sheet, totalRow, 9);
 
   return workbook;
 }
@@ -333,6 +352,7 @@ export async function buildPaperRollStatementWorkbook(
     const taxCell = sheet.getCell(r, 10);
     taxCell.value = { formula: `I${r}*0.1` };
     taxCell.numFmt = NUM_FORMAT;
+    applyRowBorder(sheet, r, 11);
   });
 
   sheet.getCell(totalRow, 1).value = "합계";
@@ -347,6 +367,7 @@ export async function buildPaperRollStatementWorkbook(
   grandTotal.value = { formula: `SUM(I${totalRow}+J${totalRow})` };
   grandTotal.numFmt = WON_FORMAT;
   grandTotal.font = { bold: true };
+  applyRowBorder(sheet, totalRow, 11);
 
   return workbook;
 }
