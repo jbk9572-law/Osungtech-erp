@@ -318,11 +318,27 @@ export function ZenithTechCanvas({
       {/* 품목 행 */}
       {rows.map((row, i) => {
         const y = Z_ROW_TOP0 + i * Z_ROW_H + ROW_TEXT_Y_OFFSET;
+        const rowTop = Z_ROW_TOP0 + i * Z_ROW_H;
         return (
           <div key={row.id}>
-            <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>
-              {row.productName ? `${row.productName} / ${row.spec}` : row.spec}
-            </TCenter>
+            {/* 품목명+규격을 같이 보여줄 때는 합친 문자열이 칸 폭보다 길어서
+                자동 줄바꿈에 맡기면 두 번째 줄이 행 높이(16.68pt)를 넘어 다음
+                행과 겹쳐 보였다. 두 줄을 좁은 줄간격으로 직접 배치해 항상
+                행 안에 들어오게 한다. */}
+            {row.productName ? (
+              <>
+                <TCenter centerX={SPEC_CENTER} y={rowTop + 1.2} size={8} width={SPEC_WIDTH} lineHeight={1.0}>
+                  {row.productName}
+                </TCenter>
+                <TCenter centerX={SPEC_CENTER} y={rowTop + 9.2} size={8} width={SPEC_WIDTH} lineHeight={1.0}>
+                  {row.spec}
+                </TCenter>
+              </>
+            ) : (
+              <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>
+                {row.spec}
+              </TCenter>
+            )}
             {row.spec && (
               <TCenter centerX={Z_UNIT_CENTER} y={y} size={9.96}>{row.unit}</TCenter>
             )}
