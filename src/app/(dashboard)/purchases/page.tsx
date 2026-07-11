@@ -30,6 +30,9 @@ export default async function PurchasesPage({
     .select(
       "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name)), products(sku, name, spec, unit)"
     )
+    // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 자세한
+    // 이유는 매출 목록(sales/page.tsx)과 동일하다.
+    .order("purchase_date", { foreignTable: "purchase_orders", ascending: false })
     .order("created_at", { ascending: false })
     .limit(200);
 
