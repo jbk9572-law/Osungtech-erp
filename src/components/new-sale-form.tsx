@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
@@ -11,6 +11,7 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -107,6 +108,15 @@ export function NewSaleForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
+  // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 sales_order_id가 있어서
+  // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
+  const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
+  useEffect(() => {
+    if (initial?.id) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
+    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY));
+  }, [initial?.id]);
+
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
     for (const price of prices) {
@@ -196,11 +206,36 @@ export function NewSaleForm({
       onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
-      onSubmit={() => setMessageDismissed(false)}
+      onSubmit={() => {
+        setMessageDismissed(false);
+        // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다.
+        // 등록이 실패해도 계산 자체는 다시 하면 되므로 감수할 만한 트레이드오프다.
+        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
+      }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
+      {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+
+      {pendingPaperCalc && (
+        <div
+          className="rounded p-2 text-xs flex items-center justify-between"
+          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+        >
+          <span>모조지 계산 결과가 이 주문에 자동으로 연결됩니다 (등록 시 TG0 판매 품목에 반영).</span>
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              localStorage.removeItem(PENDING_PAPER_CALC_KEY);
+              setPendingPaperCalc(null);
+            }}
+          >
+            연결 취소
+          </button>
+        </div>
+      )}
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs">

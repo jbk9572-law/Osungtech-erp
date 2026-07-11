@@ -7,6 +7,7 @@ import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { NestEngine, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
+import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
 
 type OrderRow = { key: number; width: number; height: number; qty: number };
 
@@ -76,6 +77,7 @@ export function PaperCalcClient({
   const [pending, setPending] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [saveState, saveAction, savePending] = useActionState(savePaperCalculation, undefined);
+  const [staged, setStaged] = useState(false);
 
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
@@ -150,6 +152,28 @@ export function PaperCalcClient({
       JSON.stringify({ paperW, paperH, items: orderItems })
     );
     window.open("/paper-calc/print", "_blank", "noopener,noreferrer");
+  }
+
+  // 아직 주문이 없는 상태(신규 판매 등록 전)에서는 sales_order_id가 없어서
+  // 바로 저장할 수 없다. localStorage에 잠깐 담아뒀다가, 판매 등록 화면에서
+  // 주문을 실제로 만들 때 이 값을 읽어서 한 번에 저장/연결한다.
+  function stagePendingCalc() {
+    if (!result) return;
+    localStorage.setItem(
+      PENDING_PAPER_CALC_KEY,
+      JSON.stringify({
+        paperW,
+        paperH,
+        inputItems: orderItems,
+        layouts: result.layouts,
+        totalPaper: result.totalPaper,
+        totalSheet: result.totalSheet,
+        totalProd: result.totalProd,
+        overProd: result.overProd,
+        fulfilled: result.fulfilled,
+      })
+    );
+    setStaged(true);
   }
 
   const layouts = useMemo(() => result?.layouts ?? [], [result]);
@@ -298,8 +322,31 @@ export function PaperCalcClient({
                   </button>
                 </form>
               )}
+              {!salesOrderId && (
+                <button
+                  type="button"
+                  className="erp-btn erp-btn-primary"
+                  onClick={stagePendingCalc}
+                  disabled={!result?.layouts.length}
+                >
+                  새 판매 등록에 연결
+                </button>
+              )}
             </div>
           </div>
+
+          {!salesOrderId && staged && (
+            <div
+              className="rounded p-2 text-xs"
+              style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}
+            >
+              계산 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을
+              등록하면 자동으로 이 계산이 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
+              <Link href="/sales/new" className="underline">
+                판매 등록으로 이동
+              </Link>
+            </div>
+          )}
 
           {saveState && <FormMessage state={saveState} />}
 

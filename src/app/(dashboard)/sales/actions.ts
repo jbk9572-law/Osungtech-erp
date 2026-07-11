@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { attachPendingPaperCalculation } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 
 type SaleItemInput = {
@@ -149,9 +150,18 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     )
   );
 
+  // 모조지 계산 화면에서 주문 생성 전에 미리 계산해둔 결과가 있으면
+  // (localStorage에 임시 저장 → new-sale-form이 hidden input으로 넘김)
+  // 방금 만든 주문에 붙여서 저장하고 TG0 판매 품목에도 반영한다.
+  const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "");
+  if (pendingPaperCalc) {
+    await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
+  }
+
   revalidatePath("/sales");
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  revalidatePath("/paper-calc");
   redirect(`/sales/${salesOrderId}`);
 }
 
