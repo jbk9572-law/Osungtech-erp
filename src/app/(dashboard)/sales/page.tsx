@@ -31,6 +31,11 @@ export default async function SalesPage({
     .select(
       "*, sales_orders!inner(id, order_date, memo, customers(name)), products(sku, name, spec, unit)"
     )
+    // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
+    // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
+    // 지웠다가 다시 넣는 방식이라 오래된 거래를 수정만 해도 최상단으로
+    // 튀어올라 거래일자와 무관하게 뒤죽박죽으로 보였다.
+    .order("order_date", { foreignTable: "sales_orders", ascending: false })
     .order("created_at", { ascending: false })
     .limit(200);
 
