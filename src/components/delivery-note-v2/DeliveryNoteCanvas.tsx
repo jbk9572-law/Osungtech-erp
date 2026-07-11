@@ -27,8 +27,13 @@ const CATEGORY_CENTER = (CATEGORY_X0 + CATEGORY_X1) / 2;
 const SUM_LABEL_CENTER = (CATEGORY_X0 + 278.64) / 2;
 // 규격 컬럼(품명~수량 사이)의 가로 중앙 - 3개 서식 모두 같은 폭을 쓴다.
 const SPEC_CENTER = (CATEGORY_X1 + 278.64) / 2;
+// 규격 값이 실제 칸 폭(158.64~278.64 = 120pt)보다 길어서 옆 칸을 침범하지
+// 않도록 폭을 제한하고 넘치면 줄바꿈되게 한다(약간의 여백을 둔다).
+const SPEC_WIDTH = 110;
 // 제목 줄 오른쪽 박스(342.24~534.48)의 가로 중앙 - 거래처명을 가운데 정렬할 때 쓴다.
 const TITLE_RIGHT_CENTER = (342.24 + 534.48) / 2;
+// 거래처명이 박스 폭보다 길 때 옆으로 넘치지 않도록 폭을 제한한다.
+const TITLE_RIGHT_WIDTH = 185;
 // 품목 행 텍스트를 행 높이(16.68pt) 안에서 세로 가운데로 오도록 내리는 보정값.
 // (행 top 좌표에 그대로 찍으면 글자가 위쪽에 붙어버려서 상단정렬처럼 보인다)
 const ROW_TEXT_Y_OFFSET = 2.36;
@@ -77,8 +82,8 @@ export function SnsFiltechCanvas({
   // 마스터 데이터(카테고리/품명)에 기대지 않고 품명 칸을 고정 표기한다.
   const groups = [{ productName: "Micro Filter", start: 0, count: rows.length }];
 
-  const totalBox = items.reduce((sum, it) => sum + it.quantity, 0);
-  const totalEa = items.reduce((sum, it) => sum + it.quantity * (it.basePackageQty ?? 0), 0);
+  const totalBox = items.reduce((sum, it) => sum + (it.basePackageQty ? it.quantity / it.basePackageQty : 0), 0);
+  const totalEa = items.reduce((sum, it) => sum + it.quantity, 0);
 
   return (
     <div style={{ position: "relative", width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
@@ -93,7 +98,7 @@ export function SnsFiltechCanvas({
       <T x={161.04} y={78.38} size={12} bold>
         거래명세표 (출고)
       </T>
-      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
+      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold width={TITLE_RIGHT_WIDTH}>
         {customerName}&nbsp;&nbsp;귀하
       </TCenter>
 
@@ -145,20 +150,21 @@ export function SnsFiltechCanvas({
       {/* 품목 행 */}
       {rows.map((row, i) => {
         const y = ROW_TOP0 + i * ROW_H + ROW_TEXT_Y_OFFSET;
-        const total = row.basePackageQty != null ? row.quantity * row.basePackageQty : null;
+        // 품목 마스터에 등록해둔 기초단위(예: 100*500 규격 = 개당 25 Ea)를
+        // 기준으로, 저장된 quantity는 Ea(낱개) 총수량이고 박스 수량은
+        // 여기서 나눠서 구한다(수량(box) 칸과 수량 칸이 뒤바뀌어 있었다).
+        const box = row.basePackageQty ? row.quantity / row.basePackageQty : null;
         return (
           <div key={row.id}>
-            <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>{row.spec}</TCenter>
-            {row.quantity > 0 && (
+            <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>{row.spec}</TCenter>
+            {box != null && box > 0 && (
               <TCenter centerX={COL_B_CENTER} y={y} size={9.96}>
-                {/* 이 컬럼은 "수량 (box)" 전용 - 옆 칸에 Ea 수량이 따로 있으니
-                    품목 단위(row.unit)가 "Ea" 등으로 들어있어도 항상 Box로 표기. */}
-                {row.quantity.toLocaleString()} Box
+                {Number(box.toFixed(2)).toLocaleString()} Box
               </TCenter>
             )}
-            {total != null && total > 0 && (
+            {row.quantity > 0 && (
               <TCenter centerX={COL_C_CENTER} y={y} size={9.96}>
-                {total.toLocaleString()}
+                {row.quantity.toLocaleString()}
               </TCenter>
             )}
           </div>
@@ -173,7 +179,7 @@ export function SnsFiltechCanvas({
 
       {/* 합계 행 */}
       <TCenter centerX={SUM_LABEL_CENTER} y={688.04} size={9.96}>합계</TCenter>
-      <TCenter centerX={COL_B_CENTER} y={688.04} size={9.96}>{totalBox.toLocaleString()} Box</TCenter>
+      <TCenter centerX={COL_B_CENTER} y={688.04} size={9.96}>{Number(totalBox.toFixed(2)).toLocaleString()} Box</TCenter>
       <TCenter centerX={COL_C_CENTER} y={688.52} size={9.96}>{totalEa.toLocaleString()}</TCenter>
 
       {/* 하단 도장란 */}
@@ -257,7 +263,7 @@ export function ZenithTechCanvas({
       <T x={161.04} y={78.38} size={12} bold>
         거래명세표 (출고)
       </T>
-      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
+      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold width={TITLE_RIGHT_WIDTH}>
         {customerName}&nbsp;&nbsp;귀하
       </TCenter>
 
@@ -311,7 +317,7 @@ export function ZenithTechCanvas({
         const y = Z_ROW_TOP0 + i * Z_ROW_H + ROW_TEXT_Y_OFFSET;
         return (
           <div key={row.id}>
-            <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>
+            <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>
               {row.productName ? `${row.productName} / ${row.spec}` : row.spec}
             </TCenter>
             {row.spec && (
@@ -421,7 +427,7 @@ export function KtSolutionCanvas({
       <T x={161.04} y={78.38} size={12} bold>
         거래명세표 (출고)
       </T>
-      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold>
+      <TCenter centerX={TITLE_RIGHT_CENTER} y={78.38} size={12} bold width={TITLE_RIGHT_WIDTH}>
         {customerName}&nbsp;&nbsp;귀하
       </TCenter>
 
@@ -481,7 +487,7 @@ export function KtSolutionCanvas({
         const y = KT_ROW_TOP0 + i * KT_ROW_H + ROW_TEXT_Y_OFFSET;
         return (
           <div key={row.id}>
-            <TCenter centerX={SPEC_CENTER} y={y} size={9.96}>{row.spec}</TCenter>
+            <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>{row.spec}</TCenter>
             {row.spec && (
               <TCenter centerX={KT_LOT_CENTER} y={y} size={9.96}>{row.lotNo || "-"}</TCenter>
             )}
