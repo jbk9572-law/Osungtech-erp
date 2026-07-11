@@ -650,6 +650,66 @@ export type Database = {
         };
         Relationships: [];
       };
+      paper_calculations: {
+        Row: {
+          id: string;
+          sales_order_id: string | null;
+          paper_w: number;
+          paper_h: number;
+          input_items: Json;
+          total_paper: number;
+          total_sheet: number;
+          total_prod: number;
+          over_prod: number;
+          fulfilled: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sales_order_id?: string | null;
+          paper_w: number;
+          paper_h: number;
+          input_items: Json;
+          total_paper: number;
+          total_sheet: number;
+          total_prod: number;
+          over_prod: number;
+          fulfilled?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          sales_order_id?: string | null;
+          paper_w?: number;
+          paper_h?: number;
+          input_items?: Json;
+          total_paper?: number;
+          total_sheet?: number;
+          total_prod?: number;
+          over_prod?: number;
+          fulfilled?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "paper_calculations_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "paper_calculations_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payment_requests: {
         Row: {
           id: string;

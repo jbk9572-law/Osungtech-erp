@@ -1,11 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { NestEngine, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
+import { FormMessage } from "@/components/form-message";
 
 type OrderRow = { key: number; width: number; height: number; qty: number };
+
+type SavedCalculation = {
+  id: string;
+  total_paper: number;
+  total_sheet: number;
+  total_prod: number;
+  over_prod: number;
+  fulfilled: boolean;
+  created_at: string;
+};
 
 const BATCHES_PER_PAGE = 2;
 const MAX_ROWS = 10;
@@ -44,7 +56,15 @@ function buildMergedItems(rows: OrderRow[]): Item[] {
   });
 }
 
-export function PaperCalcClient() {
+export function PaperCalcClient({
+  salesOrderId = null,
+  salesOrderLabel = null,
+  savedCalculations = [],
+}: {
+  salesOrderId?: string | null;
+  salesOrderLabel?: string | null;
+  savedCalculations?: SavedCalculation[];
+}) {
   const [rows, setRows] = useState<OrderRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
   const [nextKey, setNextKey] = useState(1);
   const [paperW, setPaperW] = useState(788);
@@ -54,6 +74,7 @@ export function PaperCalcClient() {
   const [page, setPage] = useState(0);
   const [pending, setPending] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
+  const [saveState, saveAction, savePending] = useActionState(savePaperCalculation, undefined);
 
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
@@ -148,6 +169,16 @@ export function PaperCalcClient() {
 
   return (
     <div className="flex flex-col gap-3">
+      {salesOrderLabel && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+        >
+          이 출고 건({salesOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
+          상세에서 원지 사용량을 바로 확인할 수 있습니다.
+        </div>
+      )}
+
       <div className="erp-detail">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">발주 입력</span>
@@ -245,8 +276,30 @@ export function PaperCalcClient() {
               <button type="button" className="erp-btn" onClick={openPrintView} disabled={!result?.layouts.length}>
                 인쇄 미리보기
               </button>
+              {salesOrderId && (
+                <form action={saveAction} className="contents">
+                  <input type="hidden" name="salesOrderId" value={salesOrderId} />
+                  <input type="hidden" name="paperW" value={paperW} />
+                  <input type="hidden" name="paperH" value={paperH} />
+                  <input type="hidden" name="inputItems" value={JSON.stringify(orderItems)} />
+                  <input type="hidden" name="totalPaper" value={result?.totalPaper ?? 0} />
+                  <input type="hidden" name="totalSheet" value={result?.totalSheet ?? 0} />
+                  <input type="hidden" name="totalProd" value={result?.totalProd ?? 0} />
+                  <input type="hidden" name="overProd" value={result?.overProd ?? 0} />
+                  <input type="hidden" name="fulfilled" value={String(result?.fulfilled ?? false)} />
+                  <button
+                    type="submit"
+                    className="erp-btn erp-btn-primary"
+                    disabled={!result?.layouts.length || savePending}
+                  >
+                    {savePending ? "저장 중..." : "이 출고 건에 저장"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
+
+          {saveState && <FormMessage state={saveState} />}
 
           {warning && (
             <div
@@ -339,7 +392,85 @@ export function PaperCalcClient() {
           </div>
         </>
       )}
+
+      {salesOrderId && (
+        <div className="erp-detail">
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">
+              이 출고 건에 저장된 계산 이력 ({savedCalculations.length}건)
+            </span>
+          </div>
+          <div className="erp-detail-body">
+            {savedCalculations.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+                저장된 계산이 없습니다. 계산 후 &apos;이 출고 건에 저장&apos;을 눌러주세요.
+              </p>
+            ) : (
+              <table className="erp-grid w-full">
+                <thead>
+                  <tr>
+                    <th>계산일시</th>
+                    <th className="num">총 원지</th>
+                    <th className="num">총 생산</th>
+                    <th className="num">초과 생산</th>
+                    <th>충족여부</th>
+                    <th style={{ width: 60 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {savedCalculations.map((calc) => (
+                    <SavedCalcRow key={calc.id} calc={calc} salesOrderId={salesOrderId} />
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function SavedCalcRow({ calc, salesOrderId }: { calc: SavedCalculation; salesOrderId: string }) {
+  const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
+  const exactReams = calc.total_paper / 500;
+
+  return (
+    <tr>
+      <td>{new Date(calc.created_at).toLocaleString("ko-KR")}</td>
+      <td className="num">
+        {calc.total_paper.toLocaleString()}장 ({calc.total_sheet}연 구매 · 실사용 {exactReams.toFixed(2)}연)
+      </td>
+      <td className="num">{calc.total_prod.toLocaleString()}매</td>
+      <td className="num">{calc.over_prod.toLocaleString()}매</td>
+      <td>
+        {calc.fulfilled ? (
+          <span style={{ color: "#0E7A45" }}>충족</span>
+        ) : (
+          <span style={{ color: "var(--erp-warning)" }}>미충족</span>
+        )}
+      </td>
+      <td>
+        <form
+          action={action}
+          onSubmit={(e) => {
+            if (!confirm("이 계산 기록을 삭제하시겠습니까?")) e.preventDefault();
+          }}
+        >
+          <input type="hidden" name="id" value={calc.id} />
+          <input type="hidden" name="salesOrderId" value={salesOrderId} />
+          <button
+            type="submit"
+            className="erp-btn erp-btn-danger"
+            style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+            disabled={pending}
+          >
+            삭제
+          </button>
+        </form>
+        {state?.error && <FormMessage state={state} />}
+      </td>
+    </tr>
   );
 }
 

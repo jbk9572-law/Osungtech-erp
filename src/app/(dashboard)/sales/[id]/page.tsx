@@ -14,7 +14,7 @@ export default async function SaleDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }] = await Promise.all([
+  const [{ data: order }, { data: items }, { data: paperCalcs }] = await Promise.all([
     supabase
       .from("sales_orders")
       .select("*, customers(*)")
@@ -25,6 +25,12 @@ export default async function SaleDetailPage({
       .select("*, products(sku, name, spec, unit, base_package_qty)")
       .eq("sales_order_id", id)
       .order("created_at"),
+    supabase
+      .from("paper_calculations")
+      .select("id, total_paper, total_sheet, created_at")
+      .eq("sales_order_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   if (!order) {
@@ -82,9 +88,23 @@ export default async function SaleDetailPage({
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>담당자</span>
             <span>{order.customers?.contact_name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>연락처</span>
             <span>{order.customers?.phone ?? "-"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26 }}>
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>모조지 사용량</span>
+            {paperCalcs && paperCalcs.length > 0 ? (
+              <span>
+                {paperCalcs[0].total_paper.toLocaleString()}장 ({paperCalcs[0].total_sheet}연 구매) ·{" "}
+                {new Date(paperCalcs[0].created_at).toLocaleDateString("ko-KR")} 계산
+              </span>
+            ) : (
+              <span style={{ color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
+            )}
+            <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn" style={{ marginLeft: "auto", minWidth: 0, height: 26, padding: "0 10px" }}>
+              모조지 계산 열기
+            </Link>
           </div>
           {order.memo && (
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>
