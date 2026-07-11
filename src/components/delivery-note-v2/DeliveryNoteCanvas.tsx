@@ -12,6 +12,10 @@ type Item = {
   quantity: number;
   basePackageQty: number | null;
   remark?: string | null;
+  // 케이이티솔루션 전용: 이 거래처는 "규격" 입력칸에 실제 규격 대신 배치/롯
+  // 관리번호(예: 260521 - 101)를 적기 때문에, 인쇄 시 규격은 품목 마스터의
+  // 고정 규격을 보여주고 관리번호는 이 값으로 따로 보여준다.
+  lotNo?: string | null;
 };
 
 // 품목 영역 좌표 (모든 출고증 서식 공통, 실측 확인됨).
@@ -119,6 +123,7 @@ export function SnsFiltechCanvas({
       <T x={107.4} y={213.8} size={9.96} bold>품명</T>
       <T x={209.29} y={213.8} size={9.96} bold>규격</T>
       <TCenter centerX={COL_B_CENTER} y={213.8} size={9.96} bold>수량 (box)</TCenter>
+      <TCenter centerX={COL_C_CENTER} y={213.8} size={9.96} bold>수량</TCenter>
       <T x={488.88} y={213.8} size={9.96} bold>비고</T>
 
       {/* 품목 대분류(세로 병합) */}
@@ -403,6 +408,7 @@ export function KtSolutionCanvas({
       quantity: 0,
       basePackageQty: null as number | null,
       remark: null as string | null,
+      lotNo: null as string | null,
     })),
   ];
 
@@ -496,7 +502,7 @@ export function KtSolutionCanvas({
           <div key={row.id}>
             <T x={KT_SPEC_X} y={y} size={9.96}>{row.spec}</T>
             {row.spec && (
-              <TCenter centerX={KT_LOT_CENTER} y={y} size={9.96}>-</TCenter>
+              <TCenter centerX={KT_LOT_CENTER} y={y} size={9.96}>{row.lotNo || "-"}</TCenter>
             )}
             {row.quantity > 0 && (
               <TCenter centerX={KT_QTY_CENTER} y={y} size={9.96}>
