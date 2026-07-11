@@ -79,9 +79,11 @@ export default async function SalesPrintPage({
     }
 
     if (variant === "zenith_tech") {
+      // 제니스테크는 규격 칸에 품목명과 규격을 같이 보여준다("품목명 / 규격").
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
+        productName: item.products?.name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
