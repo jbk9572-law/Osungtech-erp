@@ -40,6 +40,7 @@ type Row = {
   quantity: number;
   unitPrice: number;
   manualPrice: boolean;
+  remark: string;
 };
 
 export type SaleInitial = {
@@ -48,7 +49,13 @@ export type SaleInitial = {
   warehouseId: string;
   orderDate: string;
   memo: string;
-  items: { productId: string; spec?: string | null; quantity: number; unitPrice: number }[];
+  items: {
+    productId: string;
+    spec?: string | null;
+    quantity: number;
+    unitPrice: number;
+    remark?: string | null;
+  }[];
 };
 
 export function NewSaleForm({
@@ -85,6 +92,7 @@ export function NewSaleForm({
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           manualPrice: false,
+          remark: item.remark ?? "",
         }))
       : [
           {
@@ -95,6 +103,7 @@ export function NewSaleForm({
             quantity: 0,
             unitPrice: 0,
             manualPrice: false,
+            remark: "",
           },
         ]
   );
@@ -167,6 +176,7 @@ export function NewSaleForm({
         quantity: 0,
         unitPrice: 0,
         manualPrice: false,
+        remark: "",
       },
     ]);
     setNextKey((k) => k + 1);
@@ -196,6 +206,7 @@ export function NewSaleForm({
         spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
         unitPrice: row.unitPrice,
+        remark: row.remark || null,
       }))
   );
 
@@ -297,19 +308,20 @@ export function NewSaleForm({
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
             <thead>
               <tr>
-                <th style={{ width: "22%" }}>품목</th>
-                <th style={{ width: "12%" }}>규격</th>
-                <th style={{ width: "7%" }}>단위</th>
-                <th className="num" style={{ width: "18%" }}>
+                <th style={{ width: "20%" }}>품목</th>
+                <th style={{ width: "10%" }}>규격</th>
+                <th style={{ width: "6%" }}>단위</th>
+                <th className="num" style={{ width: "16%" }}>
                   수량
                 </th>
-                <th className="num" style={{ width: "17%" }}>
+                <th className="num" style={{ width: "15%" }}>
                   단가
                 </th>
-                <th className="num" style={{ width: "17%" }}>
+                <th className="num" style={{ width: "15%" }}>
                   금액
                 </th>
-                <th style={{ width: "7%" }} />
+                <th style={{ width: "12%" }}>비고</th>
+                <th style={{ width: "6%" }} />
               </tr>
             </thead>
             <tbody onKeyDown={focusSameColumnNextRow}>
@@ -406,6 +418,15 @@ export function NewSaleForm({
                         </p>
                       )}
                     </td>
+                    <td>
+                      <input
+                        type="text"
+                        placeholder="비고"
+                        value={row.remark}
+                        onChange={(e) => updateRow(row.key, { remark: e.target.value })}
+                        className="erp-input w-full"
+                      />
+                    </td>
                     <td className="num">
                       <button
                         type="button"
@@ -426,7 +447,7 @@ export function NewSaleForm({
                 <td colSpan={5} style={{ fontWeight: 700 }}>
                   합계
                 </td>
-                <td className="num" colSpan={2}>
+                <td className="num" colSpan={3}>
                   <div style={{ color: "var(--erp-text-muted)" }}>
                     공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
                   </div>

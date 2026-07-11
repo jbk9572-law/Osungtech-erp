@@ -11,6 +11,7 @@ type SaleItemInput = {
   spec?: string | null;
   quantity: number;
   unitPrice: number;
+  remark?: string | null;
 };
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -112,6 +113,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
         spec: item.spec || null,
         quantity: item.quantity,
         unit_price: item.unitPrice,
+        remark: item.remark || null,
       }))
     );
 
@@ -249,6 +251,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       spec: item.spec || null,
       quantity: item.quantity,
       unit_price: item.unitPrice,
+      remark: item.remark || null,
     }))
   );
   if (itemsError) {

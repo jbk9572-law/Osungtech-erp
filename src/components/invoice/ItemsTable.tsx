@@ -75,7 +75,9 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
               {item.taxAmount.toLocaleString()}
             </span>
           </Cell>
-          <Cell colSpan={ITEM_COLS[7]} hideBorder={["t", "b"]} />
+          <Cell colSpan={ITEM_COLS[7]} hideBorder={["t", "b"]}>
+            {item.remark}
+          </Cell>
         </tr>
       ))}
       {Array.from({ length: blankCount }).map((_, i) => (

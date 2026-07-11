@@ -25,7 +25,7 @@ export default async function EditSalePage({
     supabase.from("sales_orders").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select("product_id, spec, quantity, unit_price")
+      .select("product_id, spec, quantity, unit_price, remark")
       .eq("sales_order_id", id)
       .order("created_at"),
     supabase.from("customers").select("id, name").order("name"),
@@ -86,6 +86,7 @@ export default async function EditSalePage({
             spec: item.spec,
             quantity: item.quantity,
             unitPrice: Number(item.unit_price),
+            remark: item.remark,
           })),
         }}
       />
