@@ -64,6 +64,9 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   const orderDate = String(formData.get("order_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
+  // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
+  const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "");
 
   if (!customerId || !warehouseId || !orderDate) {
     return { error: "거래처, 창고, 거래일자를 모두 입력해주세요." };
@@ -71,7 +74,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };
   }
-  if (items.length === 0) {
+  if (items.length === 0 && !pendingPaperCalc) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
 
@@ -98,62 +101,66 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
 
   const salesOrderId = salesOrder.id;
 
-  const { error: itemsError } = await supabase.from("sales_order_items").insert(
-    items.map((item) => ({
-      sales_order_id: salesOrderId,
-      product_id: item.productId,
-      spec: item.spec || null,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-    }))
-  );
+  // 모조지 계산만 연결하고 수동 품목은 하나도 안 넣은 경우 items가 빈
+  // 배열일 수 있다 — 이 경우 품목/재고 반영 자체를 건너뛴다(빈 배열을
+  // insert하면 불필요한 에러가 날 수 있다).
+  if (items.length > 0) {
+    const { error: itemsError } = await supabase.from("sales_order_items").insert(
+      items.map((item) => ({
+        sales_order_id: salesOrderId,
+        product_id: item.productId,
+        spec: item.spec || null,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+      }))
+    );
 
-  if (itemsError) {
-    await supabase.from("sales_orders").delete().eq("id", salesOrderId);
-    return { error: `품목 등록에 실패하여 거래 등록을 취소했습니다: ${itemsError.message}` };
-  }
+    if (itemsError) {
+      await supabase.from("sales_orders").delete().eq("id", salesOrderId);
+      return { error: `품목 등록에 실패하여 거래 등록을 취소했습니다: ${itemsError.message}` };
+    }
 
-  // 재고 반영(출고)이 실패하면 거래 자체를 취소한다 — 그렇지 않으면 매출은
-  // 등록됐는데 재고는 그대로인 상태(재고 차감 누락)가 조용히 남는다.
-  const { error: invError } = await supabase.from("inventory_transactions").insert(
-    items.map((item) => ({
-      product_id: item.productId,
-      warehouse_id: warehouseId,
-      type: "out" as const,
-      quantity: item.quantity,
-      reference: `sales_order:${salesOrderId}`,
-      sales_order_id: salesOrderId,
-      created_by: user?.id ?? null,
-    }))
-  );
+    // 재고 반영(출고)이 실패하면 거래 자체를 취소한다 — 그렇지 않으면 매출은
+    // 등록됐는데 재고는 그대로인 상태(재고 차감 누락)가 조용히 남는다.
+    const { error: invError } = await supabase.from("inventory_transactions").insert(
+      items.map((item) => ({
+        product_id: item.productId,
+        warehouse_id: warehouseId,
+        type: "out" as const,
+        quantity: item.quantity,
+        reference: `sales_order:${salesOrderId}`,
+        sales_order_id: salesOrderId,
+        created_by: user?.id ?? null,
+      }))
+    );
 
-  if (invError) {
-    await supabase.from("sales_order_items").delete().eq("sales_order_id", salesOrderId);
-    await supabase.from("sales_orders").delete().eq("id", salesOrderId);
-    return {
-      error: isStockCheckViolation(invError.message, invError.code)
-        ? "재고가 부족하여 출고할 수 없습니다. 현재 재고를 확인한 뒤 다시 시도해주세요."
-        : `재고 반영에 실패하여 거래 등록을 취소했습니다: ${invError.message}`,
-    };
-  }
+    if (invError) {
+      await supabase.from("sales_order_items").delete().eq("sales_order_id", salesOrderId);
+      await supabase.from("sales_orders").delete().eq("id", salesOrderId);
+      return {
+        error: isStockCheckViolation(invError.message, invError.code)
+          ? "재고가 부족하여 출고할 수 없습니다. 현재 재고를 확인한 뒤 다시 시도해주세요."
+          : `재고 반영에 실패하여 거래 등록을 취소했습니다: ${invError.message}`,
+      };
+    }
 
-  await Promise.all(
-    items.map((item) =>
-      supabase.from("customer_product_prices").upsert(
-        {
-          customer_id: customerId,
-          product_id: item.productId,
-          unit_price: item.unitPrice,
-        },
-        { onConflict: "customer_id,product_id" }
+    await Promise.all(
+      items.map((item) =>
+        supabase.from("customer_product_prices").upsert(
+          {
+            customer_id: customerId,
+            product_id: item.productId,
+            unit_price: item.unitPrice,
+          },
+          { onConflict: "customer_id,product_id" }
+        )
       )
-    )
-  );
+    );
+  }
 
   // 모조지 계산 화면에서 주문 생성 전에 미리 계산해둔 결과가 있으면
   // (localStorage에 임시 저장 → new-sale-form이 hidden input으로 넘김)
   // 방금 만든 주문에 붙여서 저장하고 TG0 판매 품목에도 반영한다.
-  const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "");
   if (pendingPaperCalc) {
     await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
   }
