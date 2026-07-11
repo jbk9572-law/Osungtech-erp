@@ -6,6 +6,8 @@ import {
   buildPaperRollStatementWorkbook,
   type StatementItem,
 } from "@/lib/sales-export-templates";
+import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
+import { fetchWoteLedgerEntries, isShinilBestechQuery } from "@/lib/wote-ledger-query";
 
 // 매출관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 거래처 이름과 매칭되고 그 거래처가 전용 양식을 쓰는
@@ -14,8 +16,17 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
   const { from, to } = currentMonthRange();
+  const now = new Date();
 
   const supabase = await createClient();
+
+  // WOTE(매입처)↔신일베스텍(매출처) 간 원자재 입출고는 매입/매출 양쪽 데이터를
+  // 합쳐서 보여주는 전용 관리대장이 필요하다.
+  if (isShinilBestechQuery(q)) {
+    const entries = await fetchWoteLedgerEntries(supabase, from, to);
+    const workbook = await buildWoteLedgerWorkbook(now.getFullYear(), now.getMonth() + 1, entries);
+    return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
+  }
 
   let templatedCustomer: { id: string; name: string; sales_export_template: string } | null = null;
 
