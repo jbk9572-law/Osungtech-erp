@@ -40,6 +40,9 @@ const ROW_TEXT_Y_OFFSET = 2.36;
 const SPEC_X = 187.8;
 const COL_B_CENTER = (278.64 + 387.48) / 2;
 const COL_C_CENTER = (387.48 + 460.92) / 2;
+// 거래처 주소 값 칸(388.44~534.48)의 가로 중앙 - 3개 서식 모두 공통.
+const ADDR_CENTER = (388.44 + 534.48) / 2;
+const ADDR_WIDTH = 140;
 const ROW_TOP0 = 238.28;
 const ROW_H = 16.68;
 const ROW_COUNT = 27;
@@ -122,7 +125,7 @@ export function SnsFiltechCanvas({
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={389.76} y={112.97} size={7.5} width={144}>{dash(customerAddress)}</T>
+      <TCenter centerX={ADDR_CENTER} y={112.97} size={9} width={ADDR_WIDTH}>{dash(customerAddress)}</TCenter>
       <T x={352.32} y={159.17} size={9}>담당자</T>
       <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
       <T x={430.44} y={166.97} size={9} width={100}>{customerContactName || ""}</T>
@@ -287,7 +290,7 @@ export function ZenithTechCanvas({
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={405.24} y={119.81} size={7.5} width={140}>{dash(customerAddress)}</T>
+      <TCenter centerX={ADDR_CENTER} y={119.81} size={9} width={ADDR_WIDTH}>{dash(customerAddress)}</TCenter>
       <T x={352.32} y={159.17} size={9}>담당자</T>
       <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
       <T x={430.44} y={166.97} size={9} width={100}>{customerContactName || ""}</T>
@@ -315,11 +318,27 @@ export function ZenithTechCanvas({
       {/* 품목 행 */}
       {rows.map((row, i) => {
         const y = Z_ROW_TOP0 + i * Z_ROW_H + ROW_TEXT_Y_OFFSET;
+        const rowTop = Z_ROW_TOP0 + i * Z_ROW_H;
         return (
           <div key={row.id}>
-            <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>
-              {row.productName ? `${row.productName} / ${row.spec}` : row.spec}
-            </TCenter>
+            {/* 품목명+규격을 같이 보여줄 때는 합친 문자열이 칸 폭보다 길어서
+                자동 줄바꿈에 맡기면 두 번째 줄이 행 높이(16.68pt)를 넘어 다음
+                행과 겹쳐 보였다. 두 줄을 좁은 줄간격으로 직접 배치해 항상
+                행 안에 들어오게 한다. */}
+            {row.productName ? (
+              <>
+                <TCenter centerX={SPEC_CENTER} y={rowTop + 1.2} size={8} width={SPEC_WIDTH} lineHeight={1.0}>
+                  {row.productName}
+                </TCenter>
+                <TCenter centerX={SPEC_CENTER} y={rowTop + 9.2} size={8} width={SPEC_WIDTH} lineHeight={1.0}>
+                  {row.spec}
+                </TCenter>
+              </>
+            ) : (
+              <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>
+                {row.spec}
+              </TCenter>
+            )}
             {row.spec && (
               <TCenter centerX={Z_UNIT_CENTER} y={y} size={9.96}>{row.unit}</TCenter>
             )}
@@ -451,7 +470,7 @@ export function KtSolutionCanvas({
 
       {/* 공급받는자(거래처) 정보 */}
       <T x={356.76} y={119.81} size={9}>주소</T>
-      <T x={392.67} y={119.81} size={7.5} width={140}>{dash(customerAddress)}</T>
+      <TCenter centerX={ADDR_CENTER} y={119.81} size={9} width={ADDR_WIDTH}>{dash(customerAddress)}</TCenter>
       <T x={352.32} y={159.17} size={9}>담당자</T>
       <T x={415.2} y={151.25} size={9}>{customerContactPhone ? `Tel : ${customerContactPhone}` : "-"}</T>
       <T x={430.44} y={166.97} size={9} width={100}>{customerContactName || ""}</T>

@@ -112,6 +112,7 @@ export function TCenter({
   bold,
   children,
   width,
+  lineHeight = 1.2,
 }: {
   centerX: number;
   y: number;
@@ -119,6 +120,7 @@ export function TCenter({
   bold?: boolean;
   children: ReactNode;
   width?: number;
+  lineHeight?: number;
 }) {
   return (
     <div
@@ -133,7 +135,7 @@ export function TCenter({
         fontWeight: bold ? 700 : 400,
         fontFamily: FONT,
         color: "#000",
-        lineHeight: 1.2,
+        lineHeight,
         whiteSpace: width != null ? "normal" : "nowrap",
       }}
     >
