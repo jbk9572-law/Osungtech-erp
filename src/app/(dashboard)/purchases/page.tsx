@@ -30,9 +30,11 @@ export default async function PurchasesPage({
     .select(
       "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name)), products(sku, name, spec, unit)"
     )
-    // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 자세한
-    // 이유는 매출 목록(sales/page.tsx)과 동일하다.
-    .order("purchase_date", { foreignTable: "purchase_orders", ascending: false })
+    // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
+    // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
+    // 실제로 적용되지 않는 postgrest-js의 알려진 제약이라, PostgREST의
+    // `table(column)` 표기를 컬럼명 자리에 직접 써서 우회한다.
+    .order("purchase_orders(purchase_date)", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(200);
 
