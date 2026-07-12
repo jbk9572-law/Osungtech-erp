@@ -35,7 +35,11 @@ export default async function SalesPage({
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
     // 지웠다가 다시 넣는 방식이라 오래된 거래를 수정만 해도 최상단으로
     // 튀어올라 거래일자와 무관하게 뒤죽박죽으로 보였다.
-    .order("order_date", { foreignTable: "sales_orders", ascending: false })
+    // supabase-js의 `{ foreignTable }` 옵션은 상위(base) 테이블을 하위
+    // 임베드 테이블 값으로 정렬하는 방향으로는 실제로 적용되지 않는
+    // postgrest-js의 알려진 제약이라(order 자체가 조용히 무시됨),
+    // PostgREST의 `table(column)` 표기를 컬럼명 자리에 직접 써서 우회한다.
+    .order("sales_orders(order_date)", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(200);
 
