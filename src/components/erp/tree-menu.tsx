@@ -32,7 +32,10 @@ const TREE: GroupItem[] = [
   { label: "시스템관리", items: [{ label: "권한관리" }] },
   {
     label: "확장모듈",
-    items: [{ label: "모조지 계산", href: "/paper-calc" }],
+    items: [
+      { label: "모조지 계산", href: "/paper-calc" },
+      { label: "월별 리포트", href: "/reports/monthly" },
+    ],
   },
 ];
 
