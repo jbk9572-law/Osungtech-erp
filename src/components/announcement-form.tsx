@@ -18,16 +18,16 @@ export function AnnouncementForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input
         name="title"
         placeholder="제목"
         required
         defaultValue={initial?.title}
-        className="erp-input sm:col-span-3"
+        className="erp-input md:col-span-3"
       />
-      <label className="sm:col-span-3 flex items-center gap-2 text-sm" style={{ color: "var(--erp-text)" }}>
+      <label className="md:col-span-3 flex items-center gap-2 text-sm" style={{ color: "var(--erp-text)" }}>
         <input type="checkbox" name="pinned" defaultChecked={initial?.pinned} />
         상단 고정
       </label>
@@ -36,10 +36,10 @@ export function AnnouncementForm({
         placeholder="내용"
         rows={10}
         defaultValue={initial?.content}
-        className="erp-input sm:col-span-3"
+        className="erp-input md:col-span-3"
         style={{ resize: "vertical" }}
       />
-      <div className="sm:col-span-3 flex items-center gap-2">
+      <div className="md:col-span-3 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? (
             <>

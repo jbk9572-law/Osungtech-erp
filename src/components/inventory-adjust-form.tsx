@@ -45,11 +45,11 @@ export function InventoryAdjustForm({
   const selectedProduct = products.find((p) => p.id === productId);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="quantity" value={signedQuantity} />
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2">
         <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
       </div>
       <div className="flex overflow-hidden rounded-sm border border-[#d9d9d9]">
@@ -88,7 +88,7 @@ export function InventoryAdjustForm({
         className="erp-input"
       />
       {currentStock !== null && (
-        <p className="text-xs sm:col-span-4" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="text-xs md:col-span-4" style={{ color: "var(--erp-text-muted)" }}>
           현재 재고: {currentStock.toLocaleString()}개 → 조정 후:{" "}
           {(currentStock + signedQuantity).toLocaleString()}개
         </p>
@@ -96,7 +96,7 @@ export function InventoryAdjustForm({
       <input
         name="note"
         placeholder="사유 (예: 기초재고, 실사 조정)"
-        className="erp-input sm:col-span-3"
+        className="erp-input md:col-span-3"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
         {pending ? (
@@ -107,7 +107,7 @@ export function InventoryAdjustForm({
           "F7 재고 조정 등록"
         )}
       </button>
-      <div className="sm:col-span-4">
+      <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
     </form>

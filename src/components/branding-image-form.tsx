@@ -66,7 +66,7 @@ export function BrandingImageForm({
   sealImageUrl?: string | null;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <BrandingSlot
         slot="logo_wordmark_url"
         label="사이드바 로고"

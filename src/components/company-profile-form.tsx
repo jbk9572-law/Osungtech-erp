@@ -29,7 +29,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
   return (
     <form
       action={formAction}
-      className="erp-detail-body grid grid-cols-1 gap-4 sm:grid-cols-2"
+      className="erp-detail-body grid grid-cols-1 gap-4 md:grid-cols-2"
       style={{ border: "1px solid var(--erp-border)", borderRadius: 2 }}
     >
       <div>
@@ -94,7 +94,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2">
         <label className="mb-1 block text-xs font-medium text-[#6b7280]">주소</label>
         <input
           name="address"
@@ -111,7 +111,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2">
         <label className="mb-1 block text-xs font-medium text-[#6b7280]">
           명세표 하단 인사말
         </label>
@@ -121,7 +121,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-2">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-2">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -130,7 +130,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           "F7 저장"
         )}
       </button>
-      <div className="sm:col-span-2">
+      <div className="md:col-span-2">
         <FormMessage state={state} />
       </div>
     </form>

@@ -18,14 +18,14 @@ export function TodoForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input
         name="title"
         placeholder="할 일"
         required
         defaultValue={initial?.title}
-        className="erp-input sm:col-span-2"
+        className="erp-input md:col-span-2"
       />
       <input name="due_date" type="date" defaultValue={initial?.dueDate ?? ""} className="erp-input" />
       <textarea
@@ -33,10 +33,10 @@ export function TodoForm({
         placeholder="메모"
         rows={6}
         defaultValue={initial?.memo}
-        className="erp-input sm:col-span-3"
+        className="erp-input md:col-span-3"
         style={{ resize: "vertical" }}
       />
-      <div className="sm:col-span-3 flex items-center gap-2">
+      <div className="md:col-span-3 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? (
             <>

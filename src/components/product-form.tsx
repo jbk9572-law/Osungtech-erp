@@ -48,7 +48,7 @@ export function ProductForm({
   const [unitValue, setUnitValue] = useState(initialUnit);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
       {idFieldValue && <input type="hidden" name="id" value={idFieldValue} />}
       <input
         name="sku"
@@ -170,7 +170,7 @@ export function ProductForm({
         className="erp-input"
         title="포장(박스) 1개에 들어가는 기본 수량. 예: 1박스 = 50ea면 50을 입력"
       />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-4">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-4">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -179,7 +179,7 @@ export function ProductForm({
           `F7 ${submitLabel}`
         )}
       </button>
-      <div className="sm:col-span-4">
+      <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
     </form>
