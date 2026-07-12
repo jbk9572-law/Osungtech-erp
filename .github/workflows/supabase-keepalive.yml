@@ -19,8 +19,7 @@ jobs:
     steps:
       - name: Ping Supabase Auth health endpoint
         run: |
-          curl -sS -o response.txt -w "HTTP_STATUS:%{http_code}\n" \
+          curl -sS -f \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/auth/v1/health"
-          echo "---- response body ----"
-          cat response.txt
+            "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+            -o /dev/null
