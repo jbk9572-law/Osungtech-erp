@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FREE_TIER_DB_LIMIT_BYTES,
   FREE_TIER_STORAGE_LIMIT_BYTES,
@@ -148,6 +148,19 @@ export function TreeMenu({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  // 모바일/좁은 화면에서는 240px 고정 사이드바가 화면 폭 대부분을
+  // 차지해버려서, 폭이 768px 아래로 내려가면 자동으로 접는다. 이미
+  // 있는 "접기" 로직(라벨 숨김 등)을 그대로 재사용한다.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from matchMedia on mount
+    setCollapsed(mq.matches);
+    const handleChange = (e: MediaQueryListEvent) => setCollapsed(e.matches);
+    mq.addEventListener("change", handleChange);
+    return () => mq.removeEventListener("change", handleChange);
+  }, []);
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of TREE) {
