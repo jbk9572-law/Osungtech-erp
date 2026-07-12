@@ -45,3 +45,21 @@ export function getDatePresets(now: Date = new Date()): DatePreset[] {
     { label: "작년", from: toDateStr(lastYearStart), to: toDateStr(lastYearEnd) },
   ];
 }
+
+// "YYYY-MM" 월 문자열 <-> 조회기간(from/to) 변환 헬퍼. 월별 리포트에서 사용.
+export function currentMonth(now: Date = new Date()): string {
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+}
+
+export function getMonthRange(month: string): { from: string; to: string } {
+  const [y, m] = month.split("-").map(Number);
+  const from = new Date(y, m - 1, 1);
+  const to = new Date(y, m, 0);
+  return { from: toDateStr(from), to: toDateStr(to) };
+}
+
+export function shiftMonth(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
