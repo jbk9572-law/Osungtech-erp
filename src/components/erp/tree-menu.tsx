@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FREE_TIER_DB_LIMIT_BYTES,
   FREE_TIER_STORAGE_LIMIT_BYTES,
@@ -141,26 +141,18 @@ export function TreeMenu({
   dbSizeBytes,
   storageSizeBytes,
   vpsDisk,
+  collapsed,
+  isMobile,
+  onToggleCollapsed,
 }: {
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
   vpsDisk: VpsDiskUsage | null;
+  collapsed: boolean;
+  isMobile: boolean;
+  onToggleCollapsed: () => void;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-
-  // 모바일/좁은 화면에서는 240px 고정 사이드바가 화면 폭 대부분을
-  // 차지해버려서, 폭이 768px 아래로 내려가면 자동으로 접는다. 이미
-  // 있는 "접기" 로직(라벨 숨김 등)을 그대로 재사용한다.
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from matchMedia on mount
-    setCollapsed(mq.matches);
-    const handleChange = (e: MediaQueryListEvent) => setCollapsed(e.matches);
-    mq.addEventListener("change", handleChange);
-    return () => mq.removeEventListener("change", handleChange);
-  }, []);
-
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of TREE) {
@@ -172,73 +164,78 @@ export function TreeMenu({
   });
 
   return (
-    <nav className={`erp-tree${collapsed ? " collapsed" : ""}`}>
-      <div className="erp-tree-scroll">
-        <button
-          type="button"
-          className="erp-tree-toggle"
-          onClick={() => setCollapsed((c) => !c)}
-          title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
-        >
-          {collapsed ? "»" : "« 메뉴 접기"}
-        </button>
+    <>
+      {isMobile && !collapsed && (
+        <div className="erp-tree-backdrop" onClick={onToggleCollapsed} />
+      )}
+      <nav className={`erp-tree${collapsed ? " collapsed" : ""}`}>
+        <div className="erp-tree-scroll">
+          <button
+            type="button"
+            className="erp-tree-toggle"
+            onClick={onToggleCollapsed}
+            title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
+          >
+            {collapsed ? "»" : "« 메뉴 접기"}
+          </button>
 
-        {TREE.map((group) => {
-          const hasLinks = group.items.some((i) => i.href);
-          const isOpen = openGroups[group.label];
-          return (
-            <div className="erp-tree-group" key={group.label}>
-              <button
-                type="button"
-                className={`erp-tree-group-label${hasLinks ? "" : " disabled"}`}
-                onClick={() =>
-                  setOpenGroups((prev) => ({
-                    ...prev,
-                    [group.label]: !prev[group.label],
-                  }))
-                }
-              >
-                <span className="erp-tree-caret">{isOpen ? "▾" : "▸"}</span>
-                {!collapsed && <span>{group.label}</span>}
-              </button>
-              {isOpen && !collapsed && (
-                <div className="erp-tree-children">
-                  {group.items.map((item) => {
-                    if (!item.href) {
+          {TREE.map((group) => {
+            const hasLinks = group.items.some((i) => i.href);
+            const isOpen = openGroups[group.label];
+            return (
+              <div className="erp-tree-group" key={group.label}>
+                <button
+                  type="button"
+                  className={`erp-tree-group-label${hasLinks ? "" : " disabled"}`}
+                  onClick={() =>
+                    setOpenGroups((prev) => ({
+                      ...prev,
+                      [group.label]: !prev[group.label],
+                    }))
+                  }
+                >
+                  <span className="erp-tree-caret">{isOpen ? "▾" : "▸"}</span>
+                  {!collapsed && <span>{group.label}</span>}
+                </button>
+                {isOpen && !collapsed && (
+                  <div className="erp-tree-children">
+                    {group.items.map((item) => {
+                      if (!item.href) {
+                        return (
+                          <span
+                            className="erp-tree-item disabled"
+                            key={item.label}
+                          >
+                            {item.label}
+                            <span className="erp-tree-badge">준비중</span>
+                          </span>
+                        );
+                      }
+                      const active = pathname.startsWith(item.href);
                       return (
-                        <span
-                          className="erp-tree-item disabled"
+                        <Link
                           key={item.label}
+                          href={item.href}
+                          className={`erp-tree-item${active ? " active" : ""}`}
                         >
                           {item.label}
-                          <span className="erp-tree-badge">준비중</span>
-                        </span>
+                        </Link>
                       );
-                    }
-                    const active = pathname.startsWith(item.href);
-                    return (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        className={`erp-tree-item${active ? " active" : ""}`}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
 
-      <UsageWidget
-        dbSizeBytes={dbSizeBytes}
-        storageSizeBytes={storageSizeBytes}
-        vpsDisk={vpsDisk}
-        collapsed={collapsed}
-      />
-    </nav>
+        <UsageWidget
+          dbSizeBytes={dbSizeBytes}
+          storageSizeBytes={storageSizeBytes}
+          vpsDisk={vpsDisk}
+          collapsed={collapsed}
+        />
+      </nav>
+    </>
   );
 }

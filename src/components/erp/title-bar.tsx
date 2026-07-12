@@ -25,12 +25,16 @@ export function TitleBar({
   email,
   unreadAnnouncements,
   dueTodos,
+  isMobile,
+  onToggleMenu,
 }: {
   logoUrl?: string | null;
   companyName?: string | null;
   email: string | null;
   unreadAnnouncements: AnnouncementItem[];
   dueTodos: DueTodoItem[];
+  isMobile: boolean;
+  onToggleMenu: () => void;
 }) {
   const pathname = usePathname();
   const menuLabel = SECTION_LABEL.find((s) => pathname.startsWith(s.prefix))?.label ?? "";
@@ -44,6 +48,16 @@ export function TitleBar({
   return (
     <header className="erp-titlebar">
       <div className="erp-titlebar-left">
+        {isMobile && (
+          <button
+            type="button"
+            className="erp-titlebar-menu-toggle"
+            onClick={onToggleMenu}
+            aria-label="메뉴 열기/닫기"
+          >
+            ☰
+          </button>
+        )}
         <Link href="/dashboard" className="erp-titlebar-home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl || "/branding/logo-mark.png"} alt="" className="erp-titlebar-logo" />

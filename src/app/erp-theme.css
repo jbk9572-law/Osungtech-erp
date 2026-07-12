@@ -1388,3 +1388,83 @@
 .erp-file-picker-clear:hover {
   color: var(--erp-danger);
 }
+
+/* ── 모바일 반응형 (768px 이하) ─────────────────────────────
+   이 ERP는 원래 데스크톱 전용으로 설계되어 화면 폭에 반응하는
+   로직이 거의 없었다. 좌측 메뉴는 오버레이 방식 드로어로,
+   상단바/리본/상태바는 불필요한 텍스트를 숨겨서 좁은 화면에서도
+   쓸 수 있게 한다. ── */
+
+.erp-titlebar-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.erp-titlebar-menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 리본 버튼이 좁은 화면에서 줄바꿈되지 않고 가로 스크롤되게 한다. */
+.erp-ribbon {
+  overflow-x: auto;
+}
+
+.erp-ribbon-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  /* 상단바: 중복/비필수 텍스트(경로 표시, 날짜, 이메일)를 숨긴다. */
+  .erp-titlebar-menu {
+    display: none;
+  }
+
+  .erp-titlebar-right > span {
+    display: none;
+  }
+
+  /* 하단 상태바는 참고용 정보라 좁은 화면에서는 통째로 숨긴다. */
+  .erp-statusbar {
+    display: none;
+  }
+
+  /* 좌측 메뉴: 고정폭으로 밀어내는 대신, 화면 위에 겹쳐지는
+     오버레이 드로어로 동작한다. */
+  .erp-tree,
+  .erp-tree.collapsed {
+    position: fixed;
+    top: 40px;
+    bottom: 0;
+    left: 0;
+    width: 240px;
+    flex-basis: 240px;
+    z-index: 500;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.18);
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .erp-tree:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  .erp-tree-backdrop {
+    position: fixed;
+    top: 40px;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 499;
+  }
+}
