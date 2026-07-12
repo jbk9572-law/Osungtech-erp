@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { FREE_TIER_DB_LIMIT_BYTES } from "@/lib/db-usage";
+import {
+  FREE_TIER_DB_LIMIT_BYTES,
+  FREE_TIER_STORAGE_LIMIT_BYTES,
+} from "@/lib/db-usage";
+import type { VpsDiskUsage } from "@/lib/vps-usage";
 
 type LeafItem = { label: string; href?: string };
 type GroupItem = { label: string; items: LeafItem[] };
@@ -46,17 +50,15 @@ function formatMB(bytes: number) {
   });
 }
 
-function UsageWidget({
-  dbSizeBytes,
-  collapsed,
-}: {
-  dbSizeBytes: number | null;
-  collapsed: boolean;
-}) {
-  if (dbSizeBytes == null || collapsed) return null;
+type UsageRow = {
+  label: string;
+  usedBytes: number;
+  limitBytes: number;
+  note: string;
+};
 
-  const limitBytes = FREE_TIER_DB_LIMIT_BYTES;
-  const percent = Math.min(100, Math.round((dbSizeBytes / limitBytes) * 100));
+function UsageBar({ label, usedBytes, limitBytes, note }: UsageRow) {
+  const percent = Math.min(100, Math.round((usedBytes / limitBytes) * 100));
   const level =
     percent >= 90 ? "danger" : percent >= 70 ? "warning" : "success";
   const barColor =
@@ -67,9 +69,9 @@ function UsageWidget({
         : "var(--erp-success)";
 
   return (
-    <div className="erp-tree-usage">
+    <div className="erp-tree-usage-row">
       <div className="erp-tree-usage-label">
-        <span>DB 사용량</span>
+        <span>{label}</span>
         <span>{percent}%</span>
       </div>
       <div className="erp-tree-usage-bar">
@@ -79,13 +81,71 @@ function UsageWidget({
         />
       </div>
       <div className="erp-tree-usage-sub">
-        {formatMB(dbSizeBytes)}MB / {formatMB(limitBytes)}MB (무료플랜)
+        {formatMB(usedBytes)}MB / {formatMB(limitBytes)}MB ({note})
       </div>
     </div>
   );
 }
 
-export function TreeMenu({ dbSizeBytes }: { dbSizeBytes: number | null }) {
+function UsageWidget({
+  dbSizeBytes,
+  storageSizeBytes,
+  vpsDisk,
+  collapsed,
+}: {
+  dbSizeBytes: number | null;
+  storageSizeBytes: number | null;
+  vpsDisk: VpsDiskUsage | null;
+  collapsed: boolean;
+}) {
+  if (collapsed) return null;
+
+  const rows: UsageRow[] = [];
+  if (dbSizeBytes != null) {
+    rows.push({
+      label: "DB 용량",
+      usedBytes: dbSizeBytes,
+      limitBytes: FREE_TIER_DB_LIMIT_BYTES,
+      note: "무료플랜",
+    });
+  }
+  if (storageSizeBytes != null) {
+    rows.push({
+      label: "파일저장",
+      usedBytes: storageSizeBytes,
+      limitBytes: FREE_TIER_STORAGE_LIMIT_BYTES,
+      note: "무료플랜",
+    });
+  }
+  if (vpsDisk != null) {
+    rows.push({
+      label: "서버 디스크",
+      usedBytes: vpsDisk.usedBytes,
+      limitBytes: vpsDisk.totalBytes,
+      note: "VPS",
+    });
+  }
+
+  if (!rows.length) return null;
+
+  return (
+    <div className="erp-tree-usage">
+      {rows.map((row) => (
+        <UsageBar key={row.label} {...row} />
+      ))}
+    </div>
+  );
+}
+
+export function TreeMenu({
+  dbSizeBytes,
+  storageSizeBytes,
+  vpsDisk,
+}: {
+  dbSizeBytes: number | null;
+  storageSizeBytes: number | null;
+  vpsDisk: VpsDiskUsage | null;
+}) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -160,7 +220,12 @@ export function TreeMenu({ dbSizeBytes }: { dbSizeBytes: number | null }) {
         })}
       </div>
 
-      <UsageWidget dbSizeBytes={dbSizeBytes} collapsed={collapsed} />
+      <UsageWidget
+        dbSizeBytes={dbSizeBytes}
+        storageSizeBytes={storageSizeBytes}
+        vpsDisk={vpsDisk}
+        collapsed={collapsed}
+      />
     </nav>
   );
 }

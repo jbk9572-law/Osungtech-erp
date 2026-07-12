@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { getNotificationSummary } from "@/lib/notifications";
-import { getDatabaseSizeBytes } from "@/lib/db-usage";
+import { getDatabaseSizeBytes, getStorageSizeBytes } from "@/lib/db-usage";
+import { getVpsDiskUsage } from "@/lib/vps-usage";
 import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
@@ -19,21 +20,35 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const [{ data: company }, notifications, { data: messages }, { data: profiles }, dbSizeBytes] =
-    await Promise.all([
-      supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
-      getNotificationSummary(supabase, user.id),
-      supabase
-        .from("messenger_messages")
-        .select("id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
-        .order("created_at", { ascending: true })
-        .limit(100),
-      supabase.from("profiles").select("id, full_name"),
-      getDatabaseSizeBytes(supabase),
-    ]);
+  const [
+    { data: company },
+    notifications,
+    { data: messages },
+    { data: profiles },
+    dbSizeBytes,
+    storageSizeBytes,
+  ] = await Promise.all([
+    supabase
+      .from("company_profile")
+      .select("name, logo_mark_url")
+      .eq("id", 1)
+      .maybeSingle(),
+    getNotificationSummary(supabase, user.id),
+    supabase
+      .from("messenger_messages")
+      .select(
+        "id, sender_id, content, file_url, file_path, file_name, file_size, created_at",
+      )
+      .order("created_at", { ascending: true })
+      .limit(100),
+    supabase.from("profiles").select("id, full_name"),
+    getDatabaseSizeBytes(supabase),
+    getStorageSizeBytes(supabase),
+  ]);
+  const vpsDisk = getVpsDiskUsage();
 
   const profileNames = Object.fromEntries(
-    (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"])
+    (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]),
   );
 
   return (
@@ -47,6 +62,8 @@ export default async function DashboardLayout({
       profileNames={profileNames}
       currentUserId={user.id}
       dbSizeBytes={dbSizeBytes}
+      storageSizeBytes={storageSizeBytes}
+      vpsDisk={vpsDisk}
     >
       {children}
     </ErpShell>
