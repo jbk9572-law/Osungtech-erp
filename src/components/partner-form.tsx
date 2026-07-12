@@ -38,7 +38,7 @@ export function PartnerForm({
   const [documentType, setDocumentType] = useState(initial?.document_type ?? "명세표");
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {idFieldValue && <input type="hidden" name="id" value={idFieldValue} />}
       <input
         name="name"
@@ -77,14 +77,14 @@ export function PartnerForm({
         name="address"
         placeholder="주소"
         defaultValue={initial?.address ?? ""}
-        className="erp-input sm:col-span-3"
+        className="erp-input md:col-span-3"
       />
       <textarea
         name="notes"
         placeholder="비고 / 특이사항"
         defaultValue={initial?.notes ?? ""}
         rows={2}
-        className="erp-input sm:col-span-3"
+        className="erp-input md:col-span-3"
         style={{ height: "auto", paddingTop: 6, paddingBottom: 6 }}
       />
       {showDocumentType && (
@@ -116,7 +116,7 @@ export function PartnerForm({
           </select>
         </div>
       )}
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary sm:col-span-3">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-3">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -125,7 +125,7 @@ export function PartnerForm({
           `F7 ${submitLabel}`
         )}
       </button>
-      <div className="sm:col-span-3">
+      <div className="md:col-span-3">
         <FormMessage state={state} />
       </div>
     </form>

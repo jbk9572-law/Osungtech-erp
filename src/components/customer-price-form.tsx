@@ -19,7 +19,7 @@ export function CustomerPriceForm({
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
       <input type="hidden" name="customer_id" value={customerId} />
       <select
         name="product_id"
@@ -53,7 +53,7 @@ export function CustomerPriceForm({
           "F7 저장"
         )}
       </button>
-      <div className="sm:col-span-3">
+      <div className="md:col-span-3">
         <FormMessage state={state} />
       </div>
     </form>
