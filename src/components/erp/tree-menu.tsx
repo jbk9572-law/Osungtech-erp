@@ -122,7 +122,7 @@ function UsageWidget({
       label: "서버 디스크",
       usedBytes: vpsDisk.usedBytes,
       limitBytes: vpsDisk.totalBytes,
-      note: "VPS",
+      note: "USD $5 플랜",
     });
   }
 
