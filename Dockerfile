@@ -1,4 +1,4 @@
-syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
 # 오라클 클라우드 무료 ARM 서버에서 그대로 빌드/실행할 수 있도록
 # amd64/arm64 양쪽 다 지원되는 공식 node 이미지를 쓴다.
