@@ -32,6 +32,7 @@ export function ErpShell({
   initialMessages,
   profileNames,
   currentUserId,
+  dbSizeBytes,
   children,
 }: {
   companyName?: string | null;
@@ -42,6 +43,7 @@ export function ErpShell({
   initialMessages: MessengerMessage[];
   profileNames: Record<string, string>;
   currentUserId: string;
+  dbSizeBytes: number | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -63,7 +65,7 @@ export function ErpShell({
       />
       <Ribbon />
       <div className="erp-body">
-        <TreeMenu />
+        <TreeMenu dbSizeBytes={dbSizeBytes} />
         <div className="erp-workspace">
           <TabBar />
           <div className="erp-page">{children}</div>
