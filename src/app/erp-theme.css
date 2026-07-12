@@ -293,15 +293,59 @@
 .erp-tree {
   flex: 0 0 240px;
   width: 240px;
+  display: flex;
+  flex-direction: column;
   background: var(--erp-panel);
   border-right: 1px solid var(--erp-border);
-  overflow-y: auto;
   transition: width 0.15s ease, flex-basis 0.15s ease;
 }
 
 .erp-tree.collapsed {
   flex-basis: 60px;
   width: 60px;
+}
+
+.erp-tree-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.erp-tree-usage {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-top: 1px solid var(--erp-border);
+  background: #fafbfc;
+}
+
+.erp-tree-usage-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--erp-text-muted);
+  margin-bottom: 5px;
+}
+
+.erp-tree-usage-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: #e9edf2;
+  overflow: hidden;
+}
+
+.erp-tree-usage-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.erp-tree-usage-sub {
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .erp-tree-toggle {

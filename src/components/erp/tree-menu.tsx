@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { FREE_TIER_DB_LIMIT_BYTES } from "@/lib/db-usage";
 
 type LeafItem = { label: string; href?: string };
 type GroupItem = { label: string; items: LeafItem[] };
@@ -39,70 +40,127 @@ const TREE: GroupItem[] = [
   },
 ];
 
-export function TreeMenu() {
+function formatMB(bytes: number) {
+  return (bytes / (1024 * 1024)).toLocaleString(undefined, {
+    maximumFractionDigits: 1,
+  });
+}
+
+function UsageWidget({
+  dbSizeBytes,
+  collapsed,
+}: {
+  dbSizeBytes: number | null;
+  collapsed: boolean;
+}) {
+  if (dbSizeBytes == null || collapsed) return null;
+
+  const limitBytes = FREE_TIER_DB_LIMIT_BYTES;
+  const percent = Math.min(100, Math.round((dbSizeBytes / limitBytes) * 100));
+  const level =
+    percent >= 90 ? "danger" : percent >= 70 ? "warning" : "success";
+  const barColor =
+    level === "danger"
+      ? "var(--erp-danger)"
+      : level === "warning"
+        ? "var(--erp-warning)"
+        : "var(--erp-success)";
+
+  return (
+    <div className="erp-tree-usage">
+      <div className="erp-tree-usage-label">
+        <span>DB 사용량</span>
+        <span>{percent}%</span>
+      </div>
+      <div className="erp-tree-usage-bar">
+        <div
+          className="erp-tree-usage-bar-fill"
+          style={{ width: `${percent}%`, background: barColor }}
+        />
+      </div>
+      <div className="erp-tree-usage-sub">
+        {formatMB(dbSizeBytes)}MB / {formatMB(limitBytes)}MB (무료플랜)
+      </div>
+    </div>
+  );
+}
+
+export function TreeMenu({ dbSizeBytes }: { dbSizeBytes: number | null }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of TREE) {
-      initial[group.label] = group.items.some((i) => i.href && pathname.startsWith(i.href));
+      initial[group.label] = group.items.some(
+        (i) => i.href && pathname.startsWith(i.href),
+      );
     }
     return initial;
   });
 
   return (
     <nav className={`erp-tree${collapsed ? " collapsed" : ""}`}>
-      <button
-        type="button"
-        className="erp-tree-toggle"
-        onClick={() => setCollapsed((c) => !c)}
-        title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
-      >
-        {collapsed ? "»" : "« 메뉴 접기"}
-      </button>
+      <div className="erp-tree-scroll">
+        <button
+          type="button"
+          className="erp-tree-toggle"
+          onClick={() => setCollapsed((c) => !c)}
+          title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
+        >
+          {collapsed ? "»" : "« 메뉴 접기"}
+        </button>
 
-      {TREE.map((group) => {
-        const hasLinks = group.items.some((i) => i.href);
-        const isOpen = openGroups[group.label];
-        return (
-          <div className="erp-tree-group" key={group.label}>
-            <button
-              type="button"
-              className={`erp-tree-group-label${hasLinks ? "" : " disabled"}`}
-              onClick={() =>
-                setOpenGroups((prev) => ({ ...prev, [group.label]: !prev[group.label] }))
-              }
-            >
-              <span className="erp-tree-caret">{isOpen ? "▾" : "▸"}</span>
-              {!collapsed && <span>{group.label}</span>}
-            </button>
-            {isOpen && !collapsed && (
-              <div className="erp-tree-children">
-                {group.items.map((item) => {
-                  if (!item.href) {
+        {TREE.map((group) => {
+          const hasLinks = group.items.some((i) => i.href);
+          const isOpen = openGroups[group.label];
+          return (
+            <div className="erp-tree-group" key={group.label}>
+              <button
+                type="button"
+                className={`erp-tree-group-label${hasLinks ? "" : " disabled"}`}
+                onClick={() =>
+                  setOpenGroups((prev) => ({
+                    ...prev,
+                    [group.label]: !prev[group.label],
+                  }))
+                }
+              >
+                <span className="erp-tree-caret">{isOpen ? "▾" : "▸"}</span>
+                {!collapsed && <span>{group.label}</span>}
+              </button>
+              {isOpen && !collapsed && (
+                <div className="erp-tree-children">
+                  {group.items.map((item) => {
+                    if (!item.href) {
+                      return (
+                        <span
+                          className="erp-tree-item disabled"
+                          key={item.label}
+                        >
+                          {item.label}
+                          <span className="erp-tree-badge">준비중</span>
+                        </span>
+                      );
+                    }
+                    const active = pathname.startsWith(item.href);
                     return (
-                      <span className="erp-tree-item disabled" key={item.label}>
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`erp-tree-item${active ? " active" : ""}`}
+                      >
                         {item.label}
-                        <span className="erp-tree-badge">준비중</span>
-                      </span>
+                      </Link>
                     );
-                  }
-                  const active = pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`erp-tree-item${active ? " active" : ""}`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <UsageWidget dbSizeBytes={dbSizeBytes} collapsed={collapsed} />
     </nav>
   );
 }
