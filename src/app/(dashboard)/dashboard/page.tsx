@@ -273,10 +273,10 @@ export default async function DashboardPage({
         </div>
         <div className="erp-home-list">
           <Link className="erp-home-list-item" href="/sales">
-            새 수주 등록
+            새 판매 등록
           </Link>
           <Link className="erp-home-list-item" href="/purchases">
-            새 발주 등록
+            새 입고 등록
           </Link>
           <Link className="erp-home-list-item" href="/products">
             품목 등록
