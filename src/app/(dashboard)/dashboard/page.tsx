@@ -134,7 +134,7 @@ export default async function DashboardPage({
     orderId: string;
   };
 
-  type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number };
+  type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
 
   type DayData = {
     salesCount: number;
@@ -170,16 +170,25 @@ export default async function DashboardPage({
   // 거래처별로 모조지 계산 사이즈를 누적한다. 매출/매입 목록에서 거래처 이름
   // 아래에 "모조지" 카테고리로 같이 묶어 보여주기 위함(어느 거래처로 나간
   // 모조지인지 알 수 있게).
+  function ensurePaperCalcPartner(
+    byPartner: Record<string, PaperCalcPartnerEntry>,
+    partnerName: string
+  ): PaperCalcPartnerEntry {
+    if (!byPartner[partnerName]) {
+      byPartner[partnerName] = { sizes: [], totalSheet: 0, amount: 0 };
+    }
+    return byPartner[partnerName];
+  }
+
   function addPaperCalcForPartner(
     byPartner: Record<string, PaperCalcPartnerEntry>,
     partnerName: string,
     inputItems: unknown,
     totalSheet: number
   ) {
-    const entry = byPartner[partnerName] ?? { sizes: [], totalSheet: 0 };
+    const entry = ensurePaperCalcPartner(byPartner, partnerName);
     entry.sizes = mergePaperCalcInputItems(entry.sizes, inputItems);
     entry.totalSheet += totalSheet;
-    byPartner[partnerName] = entry;
   }
 
   for (const item of salesItems ?? []) {
@@ -189,8 +198,13 @@ export default async function DashboardPage({
     bucket.salesCount += 1;
     bucket.salesTotal += amount;
     // 모조지(TG0) 라인은 계산에서 자동 반영된 것이라 규격이 없다.
-    // 아래 "모조지 사용량" 섹션에서 사이즈별로 정확히 보여주므로 목록에는 넣지 않는다.
-    if (item.products?.sku === PAPER_STOCK_SKU) continue;
+    // 아래 "모조지 사용량" 섹션에서 사이즈별로 정확히 보여주므로 목록에는
+    // 넣지 않되, 이 라인의 실제 금액은 그 섹션의 합계 가격으로 옮겨 담는다.
+    if (item.products?.sku === PAPER_STOCK_SKU) {
+      const partnerName = item.sales_orders.customers?.name ?? "거래처 미상";
+      ensurePaperCalcPartner(bucket.salesPaperCalcByPartner, partnerName).amount += amount;
+      continue;
+    }
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
       productName: item.products?.name ?? "상품 미상",
@@ -208,7 +222,11 @@ export default async function DashboardPage({
     const bucket = ensure(date);
     bucket.purchaseCount += 1;
     bucket.purchaseTotal += amount;
-    if (item.products?.sku === PAPER_STOCK_SKU) continue;
+    if (item.products?.sku === PAPER_STOCK_SKU) {
+      const partnerName = item.purchase_orders.suppliers?.name ?? "공급처 미상";
+      ensurePaperCalcPartner(bucket.purchasePaperCalcByPartner, partnerName).amount += amount;
+      continue;
+    }
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? "상품 미상",
