@@ -138,8 +138,10 @@ export default async function DashboardPage({
     purchaseCount: number;
     purchaseTotal: number;
     purchaseItems: ItemRow[];
-    paperCalcSizes: PaperCalcSizeRow[];
-    paperCalcTotalSheet: number;
+    salesPaperCalcSizes: PaperCalcSizeRow[];
+    salesPaperCalcTotalSheet: number;
+    purchasePaperCalcSizes: PaperCalcSizeRow[];
+    purchasePaperCalcTotalSheet: number;
     note: string;
   };
 
@@ -154,8 +156,10 @@ export default async function DashboardPage({
         purchaseCount: 0,
         purchaseTotal: 0,
         purchaseItems: [],
-        paperCalcSizes: [],
-        paperCalcTotalSheet: 0,
+        salesPaperCalcSizes: [],
+        salesPaperCalcTotalSheet: 0,
+        purchasePaperCalcSizes: [],
+        purchasePaperCalcTotalSheet: 0,
         note: "",
       };
     }
@@ -198,14 +202,14 @@ export default async function DashboardPage({
 
   for (const calc of salesPaperCalcs ?? []) {
     const bucket = ensure(calc.sales_orders.order_date);
-    bucket.paperCalcSizes = mergePaperCalcInputItems(bucket.paperCalcSizes, calc.input_items);
-    bucket.paperCalcTotalSheet += calc.total_sheet;
+    bucket.salesPaperCalcSizes = mergePaperCalcInputItems(bucket.salesPaperCalcSizes, calc.input_items);
+    bucket.salesPaperCalcTotalSheet += calc.total_sheet;
   }
 
   for (const calc of purchasePaperCalcs ?? []) {
     const bucket = ensure(calc.purchase_orders.purchase_date);
-    bucket.paperCalcSizes = mergePaperCalcInputItems(bucket.paperCalcSizes, calc.input_items);
-    bucket.paperCalcTotalSheet += calc.total_sheet;
+    bucket.purchasePaperCalcSizes = mergePaperCalcInputItems(bucket.purchasePaperCalcSizes, calc.input_items);
+    bucket.purchasePaperCalcTotalSheet += calc.total_sheet;
   }
 
   for (const note of notes ?? []) {
@@ -243,7 +247,7 @@ export default async function DashboardPage({
               {a.title}
             </Link>
           ))}
-          {dueSoonTodos.slice(0, 3).map((t) => (
+          {dueSoonTodos.slice(0, 10).map((t) => (
             <Link key={`d-${t.id}`} href={`/todos/${t.id}`} className="erp-alert-item">
               <span className="erp-alert-tag">할 일</span>
               {t.title}

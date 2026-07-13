@@ -26,8 +26,10 @@ type DayData = {
   purchaseCount: number;
   purchaseTotal: number;
   purchaseItems: ItemRow[];
-  paperCalcSizes: PaperCalcSizeRow[];
-  paperCalcTotalSheet: number;
+  salesPaperCalcSizes: PaperCalcSizeRow[];
+  salesPaperCalcTotalSheet: number;
+  purchasePaperCalcSizes: PaperCalcSizeRow[];
+  purchasePaperCalcTotalSheet: number;
   note: string;
 };
 
@@ -66,45 +68,41 @@ function groupByPartnerAndProduct(items: ItemRow[]) {
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-// 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 매출/매입/메모
-// 내용을 사람이 읽기 편한 일반 텍스트로 옮긴다.
-function buildTodoCopyText(dateStr: string, data: DayData) {
-  const lines: string[] = [`${dateStr} 오늘의 업무`, ""];
-
-  function appendItems(items: ItemRow[]) {
-    for (const partner of groupByPartnerAndProduct(items)) {
-      lines.push(`- ${partner.partnerName}`);
-      for (const product of partner.products) {
-        lines.push(`  · ${product.productName}`);
-        for (const item of product.items) {
-          lines.push(
-            `    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit} - ${item.amount.toLocaleString()}원`
-          );
-        }
+// 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
+// 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만 담는다.
+function appendItemLines(items: ItemRow[], lines: string[]) {
+  for (const partner of groupByPartnerAndProduct(items)) {
+    lines.push(`- ${partner.partnerName}`);
+    for (const product of partner.products) {
+      lines.push(`  · ${product.productName}`);
+      for (const item of product.items) {
+        lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit}`);
       }
     }
   }
+}
 
-  lines.push(`[매출] ${data.salesCount}건 · ${data.salesTotal.toLocaleString()}원`);
-  appendItems(data.salesItems);
+function appendPaperCalcLines(sizes: PaperCalcSizeRow[], totalSheet: number, lines: string[]) {
+  if (sizes.length === 0) return;
   lines.push("");
-  lines.push(`[매입] ${data.purchaseCount}건 · ${data.purchaseTotal.toLocaleString()}원`);
-  appendItems(data.purchaseItems);
-
-  if (data.paperCalcSizes.length > 0) {
-    lines.push("");
-    lines.push("[모조지 사용량]");
-    for (const line of formatPaperCalcSizeLines(data.paperCalcSizes)) {
-      lines.push(line);
-    }
-    lines.push(`합계 - ${data.paperCalcTotalSheet.toLocaleString()}연`);
+  lines.push("[모조지 사용량]");
+  for (const line of formatPaperCalcSizeLines(sizes)) {
+    lines.push(line);
   }
+  lines.push(`합계 - ${totalSheet.toLocaleString()}연`);
+}
 
-  if (data.note) {
-    lines.push("");
-    lines.push(`[메모] ${data.note}`);
-  }
+function buildSalesCopyText(dateStr: string, data: DayData) {
+  const lines: string[] = [`${dateStr} 매출`, "", `[매출] ${data.salesCount}건`];
+  appendItemLines(data.salesItems, lines);
+  appendPaperCalcLines(data.salesPaperCalcSizes, data.salesPaperCalcTotalSheet, lines);
+  return lines.join("\n");
+}
 
+function buildPurchaseCopyText(dateStr: string, data: DayData) {
+  const lines: string[] = [`${dateStr} 매입`, "", `[매입] ${data.purchaseCount}건`];
+  appendItemLines(data.purchaseItems, lines);
+  appendPaperCalcLines(data.purchasePaperCalcSizes, data.purchasePaperCalcTotalSheet, lines);
   return lines.join("\n");
 }
 
@@ -149,7 +147,7 @@ export function DashboardCalendar({
     ? todayStr
     : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
-  const [copied, setCopied] = useState(false);
+  const [copiedType, setCopiedType] = useState<"sales" | "purchase" | null>(null);
 
   const selectedData: DayData = (selected && dataByDate[selected]) || {
     salesCount: 0,
@@ -158,16 +156,22 @@ export function DashboardCalendar({
     purchaseCount: 0,
     purchaseTotal: 0,
     purchaseItems: [],
-    paperCalcSizes: [],
-    paperCalcTotalSheet: 0,
+    salesPaperCalcSizes: [],
+    salesPaperCalcTotalSheet: 0,
+    purchasePaperCalcSizes: [],
+    purchasePaperCalcTotalSheet: 0,
     note: "",
   };
 
-  async function handleCopy() {
+  async function handleCopy(type: "sales" | "purchase") {
     if (!selected) return;
-    await copyText(buildTodoCopyText(selected, selectedData));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    const text =
+      type === "sales"
+        ? buildSalesCopyText(selected, selectedData)
+        : buildPurchaseCopyText(selected, selectedData);
+    await copyText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 1500);
   }
 
   return (
@@ -311,13 +315,22 @@ export function DashboardCalendar({
           <>
             <div className="mb-3 flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-[#1c1c1c]">{selected} 오늘의 업무</h3>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="shrink-0 rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
-              >
-                {copied ? "복사됨" : "복사하기"}
-              </button>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleCopy("sales")}
+                  className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+                >
+                  {copiedType === "sales" ? "복사됨" : "매출 복사"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCopy("purchase")}
+                  className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+                >
+                  {copiedType === "purchase" ? "복사됨" : "매입 복사"}
+                </button>
+              </div>
             </div>
 
             <div className="mb-3">
@@ -354,6 +367,17 @@ export function DashboardCalendar({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              {selectedData.salesPaperCalcSizes.length > 0 && (
+                <div className="mt-2 space-y-0.5 text-xs text-[#6b7280]">
+                  <p className="font-bold">모조지 사용량</p>
+                  {formatPaperCalcSizeLines(selectedData.salesPaperCalcSizes).map((line, i) => (
+                    <div key={i}>{line}</div>
+                  ))}
+                  <div className="font-semibold">
+                    합계 - {selectedData.salesPaperCalcTotalSheet.toLocaleString()}연
+                  </div>
                 </div>
               )}
             </div>
@@ -394,21 +418,18 @@ export function DashboardCalendar({
                   ))}
                 </div>
               )}
-            </div>
-
-            {selectedData.paperCalcSizes.length > 0 && (
-              <div className="mb-4">
-                <p className="mb-1 text-xs font-bold text-[#6b7280]">모조지 사용량</p>
-                <div className="space-y-0.5 text-xs text-[#6b7280]">
-                  {formatPaperCalcSizeLines(selectedData.paperCalcSizes).map((line, i) => (
+              {selectedData.purchasePaperCalcSizes.length > 0 && (
+                <div className="mt-2 space-y-0.5 text-xs text-[#6b7280]">
+                  <p className="font-bold">모조지 사용량</p>
+                  {formatPaperCalcSizeLines(selectedData.purchasePaperCalcSizes).map((line, i) => (
                     <div key={i}>{line}</div>
                   ))}
                   <div className="font-semibold">
-                    합계 - {selectedData.paperCalcTotalSheet.toLocaleString()}연
+                    합계 - {selectedData.purchasePaperCalcTotalSheet.toLocaleString()}연
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <NoteForm dateStr={selected} initialContent={selectedData.note} />
           </>
