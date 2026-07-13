@@ -660,6 +660,7 @@ export type Database = {
         Row: {
           id: string;
           sales_order_id: string | null;
+          purchase_order_id: string | null;
           paper_w: number;
           paper_h: number;
           input_items: Json;
@@ -675,6 +676,7 @@ export type Database = {
         Insert: {
           id?: string;
           sales_order_id?: string | null;
+          purchase_order_id?: string | null;
           paper_w: number;
           paper_h: number;
           input_items: Json;
@@ -690,6 +692,7 @@ export type Database = {
         Update: {
           id?: string;
           sales_order_id?: string | null;
+          purchase_order_id?: string | null;
           paper_w?: number;
           paper_h?: number;
           input_items?: Json;
@@ -708,6 +711,13 @@ export type Database = {
             columns: ["sales_order_id"];
             isOneToOne: false;
             referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "paper_calculations_purchase_order_id_fkey";
+            columns: ["purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_orders";
             referencedColumns: ["id"];
           },
           {

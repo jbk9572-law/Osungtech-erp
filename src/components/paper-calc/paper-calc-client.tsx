@@ -7,7 +7,7 @@ import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { NestEngine, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
-import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
+import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 
 type OrderRow = { key: number; width: number; height: number; qty: number };
 
@@ -61,12 +61,19 @@ function buildMergedItems(rows: OrderRow[]): Item[] {
 export function PaperCalcClient({
   salesOrderId = null,
   salesOrderLabel = null,
+  purchaseOrderId = null,
+  purchaseOrderLabel = null,
+  pendingFor = "sales",
   savedCalculations = [],
 }: {
   salesOrderId?: string | null;
   salesOrderLabel?: string | null;
+  purchaseOrderId?: string | null;
+  purchaseOrderLabel?: string | null;
+  pendingFor?: "sales" | "purchase";
   savedCalculations?: SavedCalculation[];
 }) {
+  const hasOrder = Boolean(salesOrderId || purchaseOrderId);
   const [rows, setRows] = useState<OrderRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
   const [nextKey, setNextKey] = useState(1);
   const [paperW, setPaperW] = useState(788);
@@ -154,13 +161,13 @@ export function PaperCalcClient({
     window.open("/paper-calc/print", "_blank", "noopener,noreferrer");
   }
 
-  // 아직 주문이 없는 상태(신규 판매 등록 전)에서는 sales_order_id가 없어서
-  // 바로 저장할 수 없다. localStorage에 잠깐 담아뒀다가, 판매 등록 화면에서
+  // 아직 주문이 없는 상태(신규 판매/매입 등록 전)에서는 order id가 없어서
+  // 바로 저장할 수 없다. localStorage에 잠깐 담아뒀다가, 등록 화면에서
   // 주문을 실제로 만들 때 이 값을 읽어서 한 번에 저장/연결한다.
   function stagePendingCalc() {
     if (!result) return;
     localStorage.setItem(
-      PENDING_PAPER_CALC_KEY,
+      pendingFor === "purchase" ? PENDING_PAPER_CALC_PURCHASE_KEY : PENDING_PAPER_CALC_KEY,
       JSON.stringify({
         paperW,
         paperH,
@@ -200,6 +207,15 @@ export function PaperCalcClient({
           style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
         >
           이 출고 건({salesOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
+          상세에서 원지 사용량을 바로 확인할 수 있습니다.
+        </div>
+      )}
+      {purchaseOrderLabel && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+        >
+          이 매입 건({purchaseOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
           상세에서 원지 사용량을 바로 확인할 수 있습니다.
         </div>
       )}
@@ -322,29 +338,62 @@ export function PaperCalcClient({
                   </button>
                 </form>
               )}
-              {!salesOrderId && (
+              {purchaseOrderId && (
+                <form action={saveAction} className="contents">
+                  <input type="hidden" name="purchaseOrderId" value={purchaseOrderId} />
+                  <input type="hidden" name="paperW" value={paperW} />
+                  <input type="hidden" name="paperH" value={paperH} />
+                  <input type="hidden" name="inputItems" value={JSON.stringify(orderItems)} />
+                  <input type="hidden" name="layouts" value={JSON.stringify(result?.layouts ?? [])} />
+                  <input type="hidden" name="totalPaper" value={result?.totalPaper ?? 0} />
+                  <input type="hidden" name="totalSheet" value={result?.totalSheet ?? 0} />
+                  <input type="hidden" name="totalProd" value={result?.totalProd ?? 0} />
+                  <input type="hidden" name="overProd" value={result?.overProd ?? 0} />
+                  <input type="hidden" name="fulfilled" value={String(result?.fulfilled ?? false)} />
+                  <button
+                    type="submit"
+                    className="erp-btn erp-btn-primary"
+                    disabled={!result?.layouts.length || savePending}
+                  >
+                    {savePending ? "저장 중..." : "이 매입 건에 저장"}
+                  </button>
+                </form>
+              )}
+              {!hasOrder && (
                 <button
                   type="button"
                   className="erp-btn erp-btn-primary"
                   onClick={stagePendingCalc}
                   disabled={!result?.layouts.length}
                 >
-                  새 판매 등록에 연결
+                  {pendingFor === "purchase" ? "새 매입 등록에 연결" : "새 판매 등록에 연결"}
                 </button>
               )}
             </div>
           </div>
 
-          {!salesOrderId && staged && (
+          {!hasOrder && staged && (
             <div
               className="rounded p-2 text-xs"
               style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}
             >
-              계산 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을
-              등록하면 자동으로 이 계산이 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
-              <Link href="/sales/new" className="underline">
-                판매 등록으로 이동
-              </Link>
+              {pendingFor === "purchase" ? (
+                <>
+                  계산 결과를 임시 저장했습니다. 이 화면을 닫고 매입 등록 화면에서 주문을
+                  등록하면 자동으로 이 계산이 연결되고 매입 품목에 TG0 수량이 반영됩니다.{" "}
+                  <Link href="/purchases/new" className="underline">
+                    매입 등록으로 이동
+                  </Link>
+                </>
+              ) : (
+                <>
+                  계산 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을
+                  등록하면 자동으로 이 계산이 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
+                  <Link href="/sales/new" className="underline">
+                    판매 등록으로 이동
+                  </Link>
+                </>
+              )}
             </div>
           )}
 
@@ -442,17 +491,18 @@ export function PaperCalcClient({
         </>
       )}
 
-      {salesOrderId && (
+      {hasOrder && (
         <div className="erp-detail">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">
-              이 출고 건에 저장된 계산 이력 ({savedCalculations.length}건)
+              이 {salesOrderId ? "출고" : "매입"} 건에 저장된 계산 이력 ({savedCalculations.length}건)
             </span>
           </div>
           <div className="erp-detail-body">
             {savedCalculations.length === 0 ? (
               <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-                저장된 계산이 없습니다. 계산 후 &apos;이 출고 건에 저장&apos;을 눌러주세요.
+                저장된 계산이 없습니다. 계산 후 &apos;이 {salesOrderId ? "출고" : "매입"} 건에
+                저장&apos;을 눌러주세요.
               </p>
             ) : (
               <table className="erp-grid w-full">
@@ -468,7 +518,12 @@ export function PaperCalcClient({
                 </thead>
                 <tbody>
                   {savedCalculations.map((calc) => (
-                    <SavedCalcRow key={calc.id} calc={calc} salesOrderId={salesOrderId} />
+                    <SavedCalcRow
+                      key={calc.id}
+                      calc={calc}
+                      salesOrderId={salesOrderId}
+                      purchaseOrderId={purchaseOrderId}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -480,7 +535,15 @@ export function PaperCalcClient({
   );
 }
 
-function SavedCalcRow({ calc, salesOrderId }: { calc: SavedCalculation; salesOrderId: string }) {
+function SavedCalcRow({
+  calc,
+  salesOrderId,
+  purchaseOrderId,
+}: {
+  calc: SavedCalculation;
+  salesOrderId: string | null;
+  purchaseOrderId: string | null;
+}) {
   const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
   const exactReams = calc.total_paper / 500;
 
@@ -517,7 +580,8 @@ function SavedCalcRow({ calc, salesOrderId }: { calc: SavedCalculation; salesOrd
             }}
           >
             <input type="hidden" name="id" value={calc.id} />
-            <input type="hidden" name="salesOrderId" value={salesOrderId} />
+            {salesOrderId && <input type="hidden" name="salesOrderId" value={salesOrderId} />}
+            {purchaseOrderId && <input type="hidden" name="purchaseOrderId" value={purchaseOrderId} />}
             <button
               type="submit"
               className="erp-btn erp-btn-danger"

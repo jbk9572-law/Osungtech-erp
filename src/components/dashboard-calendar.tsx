@@ -7,6 +7,7 @@ import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 import { getHolidayName } from "@/lib/kr-holidays";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { formatPaperCalcSizeLines, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 
 type ItemRow = {
   partnerName: string;
@@ -25,6 +26,8 @@ type DayData = {
   purchaseCount: number;
   purchaseTotal: number;
   purchaseItems: ItemRow[];
+  paperCalcSizes: PaperCalcSizeRow[];
+  paperCalcTotalSheet: number;
   note: string;
 };
 
@@ -88,6 +91,15 @@ function buildTodoCopyText(dateStr: string, data: DayData) {
   lines.push(`[매입] ${data.purchaseCount}건 · ${data.purchaseTotal.toLocaleString()}원`);
   appendItems(data.purchaseItems);
 
+  if (data.paperCalcSizes.length > 0) {
+    lines.push("");
+    lines.push("[모조지 사용량]");
+    for (const line of formatPaperCalcSizeLines(data.paperCalcSizes)) {
+      lines.push(line);
+    }
+    lines.push(`합계 - ${data.paperCalcTotalSheet.toLocaleString()}연`);
+  }
+
   if (data.note) {
     lines.push("");
     lines.push(`[메모] ${data.note}`);
@@ -146,6 +158,8 @@ export function DashboardCalendar({
     purchaseCount: 0,
     purchaseTotal: 0,
     purchaseItems: [],
+    paperCalcSizes: [],
+    paperCalcTotalSheet: 0,
     note: "",
   };
 
@@ -381,6 +395,20 @@ export function DashboardCalendar({
                 </div>
               )}
             </div>
+
+            {selectedData.paperCalcSizes.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-1 text-xs font-bold text-[#6b7280]">모조지 사용량</p>
+                <div className="space-y-0.5 text-xs text-[#6b7280]">
+                  {formatPaperCalcSizeLines(selectedData.paperCalcSizes).map((line, i) => (
+                    <div key={i}>{line}</div>
+                  ))}
+                  <div className="font-semibold">
+                    합계 - {selectedData.paperCalcTotalSheet.toLocaleString()}연
+                  </div>
+                </div>
+              </div>
+            )}
 
             <NoteForm dateStr={selected} initialContent={selectedData.note} />
           </>

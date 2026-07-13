@@ -4,3 +4,7 @@
 // 등록할 때 같은 키로 읽어서 서버 액션에 같이 넘긴다. 두 컴포넌트가 서로
 // 무거운 코드를 끌어오지 않도록 문자열 상수만 따로 뺐다.
 export const PENDING_PAPER_CALC_KEY = "paper-calc-pending-attach";
+
+// 신규 매입 등록 화면용. 판매와 키를 분리해서, 두 등록 화면을 동시에 열어둬도
+// 서로의 임시 저장 계산을 덮어쓰지 않게 한다.
+export const PENDING_PAPER_CALC_PURCHASE_KEY = "paper-calc-pending-attach-purchase";

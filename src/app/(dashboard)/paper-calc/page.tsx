@@ -6,10 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 export default async function PaperCalcPage({
   searchParams,
 }: {
-  searchParams: Promise<{ salesOrderId?: string }>;
+  searchParams: Promise<{ salesOrderId?: string; purchaseOrderId?: string; for?: string }>;
 }) {
-  const { salesOrderId } = await searchParams;
+  const { salesOrderId, purchaseOrderId, for: pendingFor } = await searchParams;
   let salesOrderLabel: string | null = null;
+  let purchaseOrderLabel: string | null = null;
   let savedCalculations: {
     id: string;
     total_paper: number;
@@ -38,9 +39,31 @@ export default async function PaperCalcPage({
       salesOrderLabel = `#${order.doc_no} ${order.customers?.name ?? ""}`.trim();
     }
     savedCalculations = calcs ?? [];
+  } else if (purchaseOrderId) {
+    const supabase = await createClient();
+    const [{ data: order }, { data: calcs }] = await Promise.all([
+      supabase
+        .from("purchase_orders")
+        .select("purchase_date, suppliers(name)")
+        .eq("id", purchaseOrderId)
+        .maybeSingle(),
+      supabase
+        .from("paper_calculations")
+        .select("id, total_paper, total_sheet, total_prod, over_prod, fulfilled, created_at")
+        .eq("purchase_order_id", purchaseOrderId)
+        .order("created_at", { ascending: false }),
+    ]);
+    if (order) {
+      purchaseOrderLabel = `${order.suppliers?.name ?? ""} (${order.purchase_date})`.trim();
+    }
+    savedCalculations = calcs ?? [];
   }
 
-  const closeHref = salesOrderId ? `/sales/${salesOrderId}` : "/dashboard";
+  const closeHref = salesOrderId
+    ? `/sales/${salesOrderId}`
+    : purchaseOrderId
+      ? `/purchases/${purchaseOrderId}`
+      : "/dashboard";
 
   return (
     <div>
@@ -55,6 +78,9 @@ export default async function PaperCalcPage({
         <PaperCalcClient
           salesOrderId={salesOrderId ?? null}
           salesOrderLabel={salesOrderLabel}
+          purchaseOrderId={purchaseOrderId ?? null}
+          purchaseOrderLabel={purchaseOrderLabel}
+          pendingFor={pendingFor === "purchase" ? "purchase" : "sales"}
           savedCalculations={savedCalculations}
         />
       </div>

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { attachPendingPaperCalculationToPurchase } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
@@ -88,6 +89,7 @@ export async function createPurchase(
   const purchaseDate = String(formData.get("purchase_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
 
   if (!supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
@@ -168,11 +170,15 @@ export async function createPurchase(
     )
   );
 
+  if (pendingPaperCalc) {
+    await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
+  }
+
   revalidatePath("/purchases");
   revalidatePath("/inventory");
   revalidatePath("/products");
   revalidatePath("/dashboard");
-  redirect(`/purchases`);
+  redirect(`/purchases/${purchaseOrderId}`);
 }
 
 export async function updatePurchase(

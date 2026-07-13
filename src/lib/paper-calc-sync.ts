@@ -1,4 +1,5 @@
 import type { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/types/database.types";
 
 export const PAPER_STOCK_SKU = "TG0";
 
@@ -83,33 +84,125 @@ export async function attachPendingPaperCalculation(
   salesOrderId: string,
   pendingRaw: string
 ) {
-  let pending: {
-    paperW: number;
-    paperH: number;
-    inputItems: unknown;
-    layouts: unknown;
-    totalPaper: number;
-    totalSheet: number;
-    totalProd: number;
-    overProd: number;
-    fulfilled: boolean;
-  };
-  try {
-    pending = JSON.parse(pendingRaw);
-  } catch {
-    return;
-  }
-
-  if (!pending.paperW || !pending.paperH || !Array.isArray(pending.inputItems) || pending.inputItems.length === 0) {
-    return;
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const pending = parsePendingCalc(pendingRaw);
+  if (!pending) return;
 
   const { error } = await supabase.from("paper_calculations").insert({
     sales_order_id: salesOrderId,
+    ...pendingToRow(pending),
+    created_by: await getUserId(supabase),
+  });
+
+  if (!error) {
+    await syncPaperStockOrderItem(supabase, salesOrderId);
+  }
+}
+
+// 원지(TG0) 사용량을 이 매입 건에 저장된 계산들의 합계(연)로 매입 품목에
+// 자동 반영한다. syncPaperStockOrderItem과 동일한 이유로, 계산 저장/삭제
+// 때마다 "이 주문에 저장된 모든 계산의 합"으로 TG0 한 줄만 다시 갱신한다.
+export async function syncPaperStockPurchaseItem(
+  supabase: SupabaseServerClient,
+  purchaseOrderId: string
+) {
+  const { data: product } = await supabase
+    .from("products")
+    .select("id, cost")
+    .eq("sku", PAPER_STOCK_SKU)
+    .maybeSingle();
+
+  if (!product) {
+    return `품목관리에 SKU '${PAPER_STOCK_SKU}'(모조지) 품목이 없어서 매입 품목에는 반영하지 못했습니다.`;
+  }
+
+  const { data: calcs } = await supabase
+    .from("paper_calculations")
+    .select("total_sheet")
+    .eq("purchase_order_id", purchaseOrderId);
+
+  const totalReams = (calcs ?? []).reduce((sum, c) => sum + c.total_sheet, 0);
+
+  const { data: existingItem } = await supabase
+    .from("purchase_order_items")
+    .select("id")
+    .eq("purchase_order_id", purchaseOrderId)
+    .eq("product_id", product.id)
+    .maybeSingle();
+
+  if (totalReams <= 0) {
+    if (existingItem) {
+      await supabase.from("purchase_order_items").delete().eq("id", existingItem.id);
+    }
+    return null;
+  }
+
+  if (existingItem) {
+    await supabase
+      .from("purchase_order_items")
+      .update({ quantity: totalReams })
+      .eq("id", existingItem.id);
+    return null;
+  }
+
+  await supabase.from("purchase_order_items").insert({
+    purchase_order_id: purchaseOrderId,
+    product_id: product.id,
+    quantity: totalReams,
+    unit_cost: product.cost,
+  });
+
+  return null;
+}
+
+// 새 매입 등록 화면에서는 아직 purchase_order_id가 없어서 모조지 계산을
+// 미리 저장할 수 없다 — attachPendingPaperCalculation과 동일한 방식으로,
+// 주문이 실제로 생성된 직후 이 함수로 한 번에 저장한다.
+export async function attachPendingPaperCalculationToPurchase(
+  supabase: SupabaseServerClient,
+  purchaseOrderId: string,
+  pendingRaw: string
+) {
+  const pending = parsePendingCalc(pendingRaw);
+  if (!pending) return;
+
+  const { error } = await supabase.from("paper_calculations").insert({
+    purchase_order_id: purchaseOrderId,
+    ...pendingToRow(pending),
+    created_by: await getUserId(supabase),
+  });
+
+  if (!error) {
+    await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
+  }
+}
+
+type PendingCalc = {
+  paperW: number;
+  paperH: number;
+  inputItems: Json;
+  layouts: Json;
+  totalPaper: number;
+  totalSheet: number;
+  totalProd: number;
+  overProd: number;
+  fulfilled: boolean;
+};
+
+function parsePendingCalc(pendingRaw: string): PendingCalc | null {
+  let pending: PendingCalc;
+  try {
+    pending = JSON.parse(pendingRaw);
+  } catch {
+    return null;
+  }
+  if (!pending.paperW || !pending.paperH || !Array.isArray(pending.inputItems) || pending.inputItems.length === 0) {
+    return null;
+  }
+  return pending;
+}
+
+function pendingToRow(pending: PendingCalc) {
+  return {
     paper_w: pending.paperW,
     paper_h: pending.paperH,
     input_items: pending.inputItems,
@@ -119,10 +212,12 @@ export async function attachPendingPaperCalculation(
     total_prod: pending.totalProd,
     over_prod: pending.overProd,
     fulfilled: pending.fulfilled,
-    created_by: user?.id ?? null,
-  });
+  };
+}
 
-  if (!error) {
-    await syncPaperStockOrderItem(supabase, salesOrderId);
-  }
+async function getUserId(supabase: SupabaseServerClient) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
 }
