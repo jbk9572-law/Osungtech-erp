@@ -116,8 +116,8 @@ export default async function SaleDetailPage({
                       <div key={i}>{line}</div>
                     ))}
                     <div>
-                      합계 - {paperCalcs[0].total_sheet.toLocaleString()}연
-                      {paperStockAmount > 0 && ` · ${paperStockAmount.toLocaleString()}원`}
+                      합계 - {paperCalcs[0].total_sheet.toLocaleString()}연 ·{" "}
+                      {paperStockAmount.toLocaleString()}원
                     </div>
                   </div>
                 )}
