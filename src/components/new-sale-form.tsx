@@ -128,7 +128,6 @@ export function NewSaleForm({
   const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
   useEffect(() => {
     if (initial?.id) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
     setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY));
 
     // 모조지 계산은 새 탭(target="_blank")에서 저장되므로, 이 탭은 처음 열릴
