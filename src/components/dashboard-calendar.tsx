@@ -331,7 +331,7 @@ export function DashboardCalendar({
       <div className="rounded-sm border border-[#d9d9d9] bg-white p-4">
         {selected ? (
           <>
-            <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-[#1c1c1c]">{selected} 오늘의 업무</h3>
               <div className="flex shrink-0 gap-1">
                 <button
