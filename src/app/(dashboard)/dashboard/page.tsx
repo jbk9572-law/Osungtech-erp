@@ -62,6 +62,7 @@ export default async function DashboardPage({
     { data: purchaseItems },
     { data: salesPaperCalcs },
     { data: purchasePaperCalcs },
+    { data: paperStockProduct },
     { data: notes },
     { data: recentNotes },
     { data: company },
@@ -87,14 +88,15 @@ export default async function DashboardPage({
       .lte("purchase_orders.purchase_date", monthEnd),
     supabase
       .from("paper_calculations")
-      .select("input_items, total_sheet, sales_orders!inner(order_date)")
+      .select("input_items, total_sheet, sales_orders!inner(order_date, customers(name))")
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("paper_calculations")
-      .select("input_items, total_sheet, purchase_orders!inner(purchase_date)")
+      .select("input_items, total_sheet, purchase_orders!inner(purchase_date, suppliers(name))")
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
+    supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle(),
     supabase
       .from("calendar_notes")
       .select("note_date, content")
@@ -132,6 +134,8 @@ export default async function DashboardPage({
     orderId: string;
   };
 
+  type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number };
+
   type DayData = {
     salesCount: number;
     salesTotal: number;
@@ -139,10 +143,8 @@ export default async function DashboardPage({
     purchaseCount: number;
     purchaseTotal: number;
     purchaseItems: ItemRow[];
-    salesPaperCalcSizes: PaperCalcSizeRow[];
-    salesPaperCalcTotalSheet: number;
-    purchasePaperCalcSizes: PaperCalcSizeRow[];
-    purchasePaperCalcTotalSheet: number;
+    salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
+    purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
     note: string;
   };
 
@@ -157,14 +159,27 @@ export default async function DashboardPage({
         purchaseCount: 0,
         purchaseTotal: 0,
         purchaseItems: [],
-        salesPaperCalcSizes: [],
-        salesPaperCalcTotalSheet: 0,
-        purchasePaperCalcSizes: [],
-        purchasePaperCalcTotalSheet: 0,
+        salesPaperCalcByPartner: {},
+        purchasePaperCalcByPartner: {},
         note: "",
       };
     }
     return dataByDate[date];
+  }
+
+  // 거래처별로 모조지 계산 사이즈를 누적한다. 매출/매입 목록에서 거래처 이름
+  // 아래에 "모조지" 카테고리로 같이 묶어 보여주기 위함(어느 거래처로 나간
+  // 모조지인지 알 수 있게).
+  function addPaperCalcForPartner(
+    byPartner: Record<string, PaperCalcPartnerEntry>,
+    partnerName: string,
+    inputItems: unknown,
+    totalSheet: number
+  ) {
+    const entry = byPartner[partnerName] ?? { sizes: [], totalSheet: 0 };
+    entry.sizes = mergePaperCalcInputItems(entry.sizes, inputItems);
+    entry.totalSheet += totalSheet;
+    byPartner[partnerName] = entry;
   }
 
   for (const item of salesItems ?? []) {
@@ -207,14 +222,14 @@ export default async function DashboardPage({
 
   for (const calc of salesPaperCalcs ?? []) {
     const bucket = ensure(calc.sales_orders.order_date);
-    bucket.salesPaperCalcSizes = mergePaperCalcInputItems(bucket.salesPaperCalcSizes, calc.input_items);
-    bucket.salesPaperCalcTotalSheet += calc.total_sheet;
+    const partnerName = calc.sales_orders.customers?.name ?? "거래처 미상";
+    addPaperCalcForPartner(bucket.salesPaperCalcByPartner, partnerName, calc.input_items, calc.total_sheet);
   }
 
   for (const calc of purchasePaperCalcs ?? []) {
     const bucket = ensure(calc.purchase_orders.purchase_date);
-    bucket.purchasePaperCalcSizes = mergePaperCalcInputItems(bucket.purchasePaperCalcSizes, calc.input_items);
-    bucket.purchasePaperCalcTotalSheet += calc.total_sheet;
+    const partnerName = calc.purchase_orders.suppliers?.name ?? "공급처 미상";
+    addPaperCalcForPartner(bucket.purchasePaperCalcByPartner, partnerName, calc.input_items, calc.total_sheet);
   }
 
   for (const note of notes ?? []) {
@@ -287,6 +302,7 @@ export default async function DashboardPage({
         nextMonthHref={nextMonthHref}
         backgroundLogoUrl={company?.logo_mark_url}
         lowStockToday={(lowStockCount ?? 0) > 0}
+        paperStockProductName={paperStockProduct?.name ?? "모조지"}
       />
 
       <div className="erp-home-panel">

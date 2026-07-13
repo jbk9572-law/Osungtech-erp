@@ -19,6 +19,8 @@ type ItemRow = {
   orderId: string;
 };
 
+type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number };
+
 type DayData = {
   salesCount: number;
   salesTotal: number;
@@ -26,34 +28,43 @@ type DayData = {
   purchaseCount: number;
   purchaseTotal: number;
   purchaseItems: ItemRow[];
-  salesPaperCalcSizes: PaperCalcSizeRow[];
-  salesPaperCalcTotalSheet: number;
-  purchasePaperCalcSizes: PaperCalcSizeRow[];
-  purchasePaperCalcTotalSheet: number;
+  salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
+  purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   note: string;
 };
 
 type Cell = { dateStr: string; day: number } | null;
 
+type ProductGroup = { productName: string; items: ItemRow[] };
+type PartnerBlock = { partnerName: string; products: ProductGroup[]; paperCalc?: PaperCalcPartnerEntry };
+
 // 거래처 > 품목명 순으로 묶어서 트리 형태로 보여주기 위한 그룹핑. 목록 안에서
 // 같은 거래처/품목이 여러 번 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를
 // 그대로 유지). 같은 품목이라도 규격이 다르면 그 아래에 규격별 줄로 나열된다.
-function groupByPartnerAndProduct(items: ItemRow[]) {
-  type ProductGroup = { productName: string; items: ItemRow[] };
-  type PartnerGroup = { partnerName: string; products: ProductGroup[] };
-
-  const partners: PartnerGroup[] = [];
+// 모조지 계산은 거래처별로 이미 나뉘어 있으므로, 실제 품목이 없는 거래처라도
+// 모조지만 있으면 그 거래처 블록을 만들어 같이 보여준다 — 어느 거래처로 나간
+// 모조지인지 알 수 있어야 한다는 요구사항 때문.
+function buildPartnerBlocks(
+  items: ItemRow[],
+  paperCalcByPartner: Record<string, PaperCalcPartnerEntry>
+): PartnerBlock[] {
+  const blocks: PartnerBlock[] = [];
   const partnerIndex = new Map<string, number>();
   const productIndex = new Map<string, number>();
 
-  for (const item of items) {
-    let pi = partnerIndex.get(item.partnerName);
+  function ensurePartner(partnerName: string) {
+    let pi = partnerIndex.get(partnerName);
     if (pi === undefined) {
-      pi = partners.length;
-      partnerIndex.set(item.partnerName, pi);
-      partners.push({ partnerName: item.partnerName, products: [] });
+      pi = blocks.length;
+      partnerIndex.set(partnerName, pi);
+      blocks.push({ partnerName, products: [] });
     }
-    const partner = partners[pi];
+    return blocks[pi];
+  }
+
+  for (const item of items) {
+    const partner = ensurePartner(item.partnerName);
+    const pi = partnerIndex.get(item.partnerName)!;
     const productKey = `${pi}:${item.productName}`;
     let di = productIndex.get(productKey);
     if (di === undefined) {
@@ -63,16 +74,26 @@ function groupByPartnerAndProduct(items: ItemRow[]) {
     }
     partner.products[di].items.push(item);
   }
-  return partners;
+
+  for (const [partnerName, entry] of Object.entries(paperCalcByPartner)) {
+    ensurePartner(partnerName).paperCalc = entry;
+  }
+
+  return blocks;
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
 // 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만 담는다.
-function appendItemLines(items: ItemRow[], lines: string[]) {
-  const partners = groupByPartnerAndProduct(items);
-  partners.forEach((partner, i) => {
+function appendItemLines(
+  items: ItemRow[],
+  paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
+  paperStockProductName: string,
+  lines: string[]
+) {
+  const blocks = buildPartnerBlocks(items, paperCalcByPartner);
+  blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
     lines.push(`- ${partner.partnerName}`);
     for (const product of partner.products) {
@@ -81,30 +102,25 @@ function appendItemLines(items: ItemRow[], lines: string[]) {
         lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit}`);
       }
     }
+    if (partner.paperCalc) {
+      lines.push(`  · ${paperStockProductName}`);
+      for (const line of formatPaperCalcSizeLines(partner.paperCalc.sizes)) {
+        lines.push(`    ${line}`);
+      }
+      lines.push(`    합계 - ${partner.paperCalc.totalSheet.toLocaleString()}연`);
+    }
   });
 }
 
-function appendPaperCalcLines(sizes: PaperCalcSizeRow[], totalSheet: number, lines: string[]) {
-  if (sizes.length === 0) return;
-  lines.push("");
-  lines.push("[모조지 사용량]");
-  for (const line of formatPaperCalcSizeLines(sizes)) {
-    lines.push(line);
-  }
-  lines.push(`합계 - ${totalSheet.toLocaleString()}연`);
-}
-
-function buildSalesCopyText(dateStr: string, data: DayData) {
+function buildSalesCopyText(dateStr: string, data: DayData, paperStockProductName: string) {
   const lines: string[] = [`${dateStr} 매출`, "", `[매출] ${data.salesCount}건`];
-  appendItemLines(data.salesItems, lines);
-  appendPaperCalcLines(data.salesPaperCalcSizes, data.salesPaperCalcTotalSheet, lines);
+  appendItemLines(data.salesItems, data.salesPaperCalcByPartner, paperStockProductName, lines);
   return lines.join("\n");
 }
 
-function buildPurchaseCopyText(dateStr: string, data: DayData) {
+function buildPurchaseCopyText(dateStr: string, data: DayData, paperStockProductName: string) {
   const lines: string[] = [`${dateStr} 매입`, "", `[매입] ${data.purchaseCount}건`];
-  appendItemLines(data.purchaseItems, lines);
-  appendPaperCalcLines(data.purchasePaperCalcSizes, data.purchasePaperCalcTotalSheet, lines);
+  appendItemLines(data.purchaseItems, data.purchasePaperCalcByPartner, paperStockProductName, lines);
   return lines.join("\n");
 }
 
@@ -133,6 +149,7 @@ export function DashboardCalendar({
   nextMonthHref,
   backgroundLogoUrl,
   lowStockToday,
+  paperStockProductName,
 }: {
   year: number;
   month: number;
@@ -143,6 +160,7 @@ export function DashboardCalendar({
   nextMonthHref: string;
   backgroundLogoUrl?: string | null;
   lowStockToday?: boolean;
+  paperStockProductName: string;
 }) {
   const router = useRouter();
   const defaultSelected = dataByDate[todayStr] !== undefined || weeks.some((w) => w.some((c) => c?.dateStr === todayStr))
@@ -158,10 +176,8 @@ export function DashboardCalendar({
     purchaseCount: 0,
     purchaseTotal: 0,
     purchaseItems: [],
-    salesPaperCalcSizes: [],
-    salesPaperCalcTotalSheet: 0,
-    purchasePaperCalcSizes: [],
-    purchasePaperCalcTotalSheet: 0,
+    salesPaperCalcByPartner: {},
+    purchasePaperCalcByPartner: {},
     note: "",
   };
 
@@ -169,8 +185,8 @@ export function DashboardCalendar({
     if (!selected) return;
     const text =
       type === "sales"
-        ? buildSalesCopyText(selected, selectedData)
-        : buildPurchaseCopyText(selected, selectedData);
+        ? buildSalesCopyText(selected, selectedData, paperStockProductName)
+        : buildPurchaseCopyText(selected, selectedData, paperStockProductName);
     await copyText(text);
     setCopiedType(type);
     setTimeout(() => setCopiedType(null), 1500);
@@ -339,47 +355,52 @@ export function DashboardCalendar({
               <p className="mb-1 text-xs font-bold text-[#1f3b75]">
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
-              {selectedData.salesItems.length > 0 && (
+              {(selectedData.salesItems.length > 0 ||
+                Object.keys(selectedData.salesPaperCalcByPartner).length > 0) && (
                 <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
-                  {groupByPartnerAndProduct(selectedData.salesItems).map((partner, pi) => (
-                    <div key={pi}>
-                      <p className="font-bold">- {partner.partnerName}</p>
-                      <div className="space-y-1 pl-3">
-                        {partner.products.map((product, di) => (
-                          <div key={di}>
-                            <p className="font-semibold">- {product.productName}</p>
-                            <ul className="space-y-1 pl-3 font-normal">
-                              {product.items.map((item, i) => (
-                                <li key={i}>
-                                  <Link
-                                    href={`/sales/${item.orderId}`}
-                                    className="flex items-start justify-between gap-2 hover:underline"
-                                  >
-                                    <span className="min-w-0 text-[#8ea3c9]">
-                                      {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
-                                      {item.unit}
-                                    </span>
-                                    <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                                  </Link>
+                  {buildPartnerBlocks(selectedData.salesItems, selectedData.salesPaperCalcByPartner).map(
+                    (partner, pi) => (
+                      <div key={pi}>
+                        <p className="font-bold">- {partner.partnerName}</p>
+                        <div className="space-y-1 pl-3">
+                          {partner.products.map((product, di) => (
+                            <div key={di}>
+                              <p className="font-semibold">- {product.productName}</p>
+                              <ul className="space-y-1 pl-3 font-normal">
+                                {product.items.map((item, i) => (
+                                  <li key={i}>
+                                    <Link
+                                      href={`/sales/${item.orderId}`}
+                                      className="flex items-start justify-between gap-2 hover:underline"
+                                    >
+                                      <span className="min-w-0 text-[#8ea3c9]">
+                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                        {item.unit}
+                                      </span>
+                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                          {partner.paperCalc && (
+                            <div>
+                              <p className="font-semibold">- {paperStockProductName}</p>
+                              <ul className="space-y-1 pl-3 font-normal text-[#8ea3c9]">
+                                {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
+                                  <li key={i}>{line}</li>
+                                ))}
+                                <li className="font-semibold text-[#1f3b75]">
+                                  합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                 </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {selectedData.salesPaperCalcSizes.length > 0 && (
-                <div className="mt-2 space-y-0.5 text-xs text-[#6b7280]">
-                  <p className="font-bold">모조지 사용량</p>
-                  {formatPaperCalcSizeLines(selectedData.salesPaperCalcSizes).map((line, i) => (
-                    <div key={i}>{line}</div>
-                  ))}
-                  <div className="font-semibold">
-                    합계 - {selectedData.salesPaperCalcTotalSheet.toLocaleString()}연
-                  </div>
+                    )
+                  )}
                 </div>
               )}
             </div>
@@ -388,47 +409,52 @@ export function DashboardCalendar({
               <p className="mb-1 text-xs font-bold text-[#28a745]">
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
-              {selectedData.purchaseItems.length > 0 && (
+              {(selectedData.purchaseItems.length > 0 ||
+                Object.keys(selectedData.purchasePaperCalcByPartner).length > 0) && (
                 <div className="space-y-2 text-xs font-medium text-[#28a745]">
-                  {groupByPartnerAndProduct(selectedData.purchaseItems).map((partner, pi) => (
-                    <div key={pi}>
-                      <p className="font-bold">- {partner.partnerName}</p>
-                      <div className="space-y-1 pl-3">
-                        {partner.products.map((product, di) => (
-                          <div key={di}>
-                            <p className="font-semibold">- {product.productName}</p>
-                            <ul className="space-y-1 pl-3 font-normal">
-                              {product.items.map((item, i) => (
-                                <li key={i}>
-                                  <Link
-                                    href={`/purchases/${item.orderId}`}
-                                    className="flex items-start justify-between gap-2 hover:underline"
-                                  >
-                                    <span className="min-w-0 text-[#8fcb9d]">
-                                      {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
-                                      {item.unit}
-                                    </span>
-                                    <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                                  </Link>
+                  {buildPartnerBlocks(selectedData.purchaseItems, selectedData.purchasePaperCalcByPartner).map(
+                    (partner, pi) => (
+                      <div key={pi}>
+                        <p className="font-bold">- {partner.partnerName}</p>
+                        <div className="space-y-1 pl-3">
+                          {partner.products.map((product, di) => (
+                            <div key={di}>
+                              <p className="font-semibold">- {product.productName}</p>
+                              <ul className="space-y-1 pl-3 font-normal">
+                                {product.items.map((item, i) => (
+                                  <li key={i}>
+                                    <Link
+                                      href={`/purchases/${item.orderId}`}
+                                      className="flex items-start justify-between gap-2 hover:underline"
+                                    >
+                                      <span className="min-w-0 text-[#8fcb9d]">
+                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                        {item.unit}
+                                      </span>
+                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                          {partner.paperCalc && (
+                            <div>
+                              <p className="font-semibold">- {paperStockProductName}</p>
+                              <ul className="space-y-1 pl-3 font-normal text-[#8fcb9d]">
+                                {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
+                                  <li key={i}>{line}</li>
+                                ))}
+                                <li className="font-semibold text-[#28a745]">
+                                  합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                 </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {selectedData.purchasePaperCalcSizes.length > 0 && (
-                <div className="mt-2 space-y-0.5 text-xs text-[#6b7280]">
-                  <p className="font-bold">모조지 사용량</p>
-                  {formatPaperCalcSizeLines(selectedData.purchasePaperCalcSizes).map((line, i) => (
-                    <div key={i}>{line}</div>
-                  ))}
-                  <div className="font-semibold">
-                    합계 - {selectedData.purchasePaperCalcTotalSheet.toLocaleString()}연
-                  </div>
+                    )
+                  )}
                 </div>
               )}
             </div>
