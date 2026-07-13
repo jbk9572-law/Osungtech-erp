@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { createSale } from "@/app/(dashboard)/sales/actions";
+import { createSale, getPurchaseItemsForDate, type TodayPurchaseItem } from "@/app/(dashboard)/sales/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
@@ -137,6 +137,41 @@ export function NewSaleForm({
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, [initial?.id]);
+
+  // 당일 입고된 품목을 그대로 매출로 옮겨 담는 기능(모조지처럼 당일 입고 후
+  // 바로 당일 출고되는 품목을 이중 입력하지 않게 하려는 용도).
+  const [purchaseCandidates, setPurchaseCandidates] = useState<TodayPurchaseItem[] | null>(null);
+  const [loadingPurchases, setLoadingPurchases] = useState(false);
+  const [addedPurchaseItemIds, setAddedPurchaseItemIds] = useState<Set<string>>(new Set());
+
+  async function loadPurchasesForDate() {
+    setLoadingPurchases(true);
+    setAddedPurchaseItemIds(new Set());
+    try {
+      const items = await getPurchaseItemsForDate(orderDate);
+      setPurchaseCandidates(items);
+    } finally {
+      setLoadingPurchases(false);
+    }
+  }
+
+  function addPurchaseItem(item: TodayPurchaseItem) {
+    const newRow: Row = {
+      key: nextKey,
+      productId: item.productId,
+      spec: item.spec,
+      manualSpec: Boolean(item.spec),
+      quantity: item.quantity,
+      unitPrice: resolvePrice(customerId, item.productId),
+      manualPrice: false,
+      remark: "",
+    };
+    setRows((prev) =>
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+    );
+    setNextKey((k) => k + 1);
+    setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
+  }
 
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -329,11 +364,104 @@ export function NewSaleForm({
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
+        <div className="erp-detail-tabs" style={{ justifyContent: "space-between", position: "relative" }}>
           <span className="erp-detail-tab active">품목</span>
-          <button type="button" onClick={addRow} className="erp-btn" style={{ margin: 4, minWidth: 0 }}>
-            + 품목 추가
-          </button>
+          <div style={{ display: "flex", gap: 4, margin: 4 }}>
+            <button
+              type="button"
+              onClick={loadPurchasesForDate}
+              className="erp-btn"
+              style={{ minWidth: 0 }}
+              disabled={loadingPurchases}
+            >
+              {loadingPurchases ? "불러오는 중..." : `${orderDate} 입고 불러오기`}
+            </button>
+            <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
+              + 품목 추가
+            </button>
+          </div>
+
+          {purchaseCandidates !== null && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 4,
+                zIndex: 20,
+                width: 420,
+                maxWidth: "90vw",
+                maxHeight: 320,
+                overflowY: "auto",
+                background: "#fff",
+                border: "1px solid var(--erp-border)",
+                borderRadius: 2,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "6px 10px",
+                  borderBottom: "1px solid var(--erp-border)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                <span>{orderDate} 입고 품목</span>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseCandidates(null)}
+                  className="erp-btn erp-btn-danger"
+                  style={{ minWidth: 0, height: 22, padding: "0 8px" }}
+                >
+                  닫기
+                </button>
+              </div>
+              {purchaseCandidates.length === 0 ? (
+                <p className="erp-home-empty" style={{ padding: 10 }}>
+                  해당 날짜에 입고된 품목이 없습니다.
+                </p>
+              ) : (
+                purchaseCandidates.map((item) => {
+                  const added = addedPurchaseItemIds.has(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        padding: "6px 10px",
+                        borderBottom: "1px solid #f0f1f3",
+                        fontSize: 12,
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600 }}>{item.productName}</div>
+                        <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                          {item.supplierName} · {item.spec || "규격 미지정"} :{" "}
+                          {item.quantity.toLocaleString()}
+                          {item.unit}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addPurchaseItem(item)}
+                        className="erp-btn"
+                        style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
+                        disabled={added}
+                      >
+                        {added ? "추가됨" : "추가"}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>

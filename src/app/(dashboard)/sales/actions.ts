@@ -29,6 +29,44 @@ function isStockCheckViolation(message: string, code?: string) {
   return code === "23514" || message.includes("check constraint");
 }
 
+export type TodayPurchaseItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  spec: string;
+  quantity: number;
+  unit: string;
+  supplierName: string;
+};
+
+// 당일 입고된 품목을 그대로 매출로 옮겨 담을 수 있게, 새 판매 등록 화면에서
+// 특정 거래일자에 입고된 매입 품목 목록을 불러온다. 모조지처럼 당일 입고 후
+// 바로 당일 출고되는 품목을 이중 입력하지 않아도 되게 하려는 용도다.
+export async function getPurchaseItemsForDate(date: string): Promise<TodayPurchaseItem[]> {
+  if (!date) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("purchase_order_items")
+    .select(
+      "id, product_id, quantity, spec, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+    )
+    .eq("purchase_orders.purchase_date", date)
+    .order("created_at", { ascending: true });
+
+  return (data ?? []).map((item) => ({
+    id: item.id,
+    productId: item.product_id,
+    productName: item.products?.name ?? "상품 미상",
+    sku: item.products?.sku ?? "",
+    spec: item.spec || item.products?.spec || "",
+    quantity: item.quantity,
+    unit: item.products?.unit ?? "",
+    supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
+  }));
+}
+
 // 목록을 거래일자 기준으로 정렬하게 되면 "언제 수정됐는지"는 더 이상
 // 정렬만 봐서는 알 수 없어서, 수정할 때마다 메모 끝에 수정 시각을 남긴다.
 // 다시 수정하면 이전 수정 기록은 지우고 최신 것만 남긴다(누적되면
