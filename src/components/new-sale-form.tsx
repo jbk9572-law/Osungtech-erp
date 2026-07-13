@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { createSale, getPurchaseItemsForDate, type TodayPurchaseItem } from "@/app/(dashboard)/sales/actions";
+import {
+  createSale,
+  getPaperCalculationsForPurchaseOrder,
+  getPurchaseItemsForDate,
+  type TodayPurchaseItem,
+} from "@/app/(dashboard)/sales/actions";
+import type { PendingCalc } from "@/lib/paper-calc-sync";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
@@ -143,6 +149,10 @@ export function NewSaleForm({
   const [purchaseCandidates, setPurchaseCandidates] = useState<TodayPurchaseItem[] | null>(null);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [addedPurchaseItemIds, setAddedPurchaseItemIds] = useState<Set<string>>(new Set());
+  const [addingItemId, setAddingItemId] = useState<string | null>(null);
+  // 모조지(TG0) 입고 품목은 수량만 옮기면 사이즈별 배치 내역이 사라지므로,
+  // 그 매입 건에 연결된 모조지 계산 자체를 통째로 복사해서 등록 시 같이 붙인다.
+  const [copiedPaperCalcs, setCopiedPaperCalcs] = useState<PendingCalc[]>([]);
 
   async function loadPurchasesForDate() {
     setLoadingPurchases(true);
@@ -155,7 +165,21 @@ export function NewSaleForm({
     }
   }
 
-  function addPurchaseItem(item: TodayPurchaseItem) {
+  async function addPurchaseItem(item: TodayPurchaseItem) {
+    if (item.sku === "TG0") {
+      setAddingItemId(item.id);
+      try {
+        const calcs = await getPaperCalculationsForPurchaseOrder(item.purchaseOrderId);
+        if (calcs.length > 0) {
+          setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
+          setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
+          return;
+        }
+      } finally {
+        setAddingItemId(null);
+      }
+    }
+
     const newRow: Row = {
       key: nextKey,
       productId: item.productId,
@@ -199,20 +223,30 @@ export function NewSaleForm({
     return product ? Number(product.price) : 0;
   }
 
-  // 임시 저장된 모조지 계산이 있으면 등록 버튼을 누르기 전에도 TG0 품목
-  // 줄이 실제로 어떤 수량으로 들어갈지 그리드에 미리 보여준다. 이 줄은
-  // 편집 가능한 rows에는 넣지 않는다 — 실제 저장은 createSale이 주문
-  // 생성 직후 attachPendingPaperCalculation으로 처리하고(재고는 건드리지
-  // 않음), 여기서 rows에 섞으면 일반 품목과 똑같이 재고가 차감돼버린다.
+  // 임시 저장된 모조지 계산 + 입고 불러오기로 복사해온 계산들을 합쳐서,
+  // 등록 버튼을 누르기 전에도 TG0 품목 줄이 실제로 어떤 수량으로 들어갈지
+  // 그리드에 미리 보여준다. 이 줄은 편집 가능한 rows에는 넣지 않는다 —
+  // 실제 저장은 createSale이 주문 생성 직후 attachPendingPaperCalculation/
+  // attachCopiedPaperCalculations으로 처리하고(재고는 건드리지 않음), 여기서
+  // rows에 섞으면 일반 품목과 똑같이 재고가 차감돼버린다.
   const pendingCalcSummary = useMemo(() => {
-    if (!pendingPaperCalc) return null;
-    try {
-      const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
-      return { totalSheet: parsed.totalSheet, totalPaper: parsed.totalPaper };
-    } catch {
-      return null;
+    let totalSheet = 0;
+    let totalPaper = 0;
+    if (pendingPaperCalc) {
+      try {
+        const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
+        totalSheet += parsed.totalSheet;
+        totalPaper += parsed.totalPaper;
+      } catch {
+        // 무시: 잘못된 값이면 이 부분은 0으로 취급
+      }
     }
-  }, [pendingPaperCalc]);
+    for (const calc of copiedPaperCalcs) {
+      totalSheet += calc.totalSheet;
+      totalPaper += calc.totalPaper;
+    }
+    return totalSheet > 0 ? { totalSheet, totalPaper } : null;
+  }, [pendingPaperCalc, copiedPaperCalcs]);
   const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
   const pendingCalcUnitPrice = tg0Product ? resolvePrice(customerId, tg0Product.id) : 0;
   const pendingCalcAmount = pendingCalcSummary ? pendingCalcSummary.totalSheet * pendingCalcUnitPrice : 0;
@@ -304,8 +338,11 @@ export function NewSaleForm({
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+      {copiedPaperCalcs.length > 0 && (
+        <input type="hidden" name="copiedPaperCalcs" value={JSON.stringify(copiedPaperCalcs)} />
+      )}
 
-      {pendingPaperCalc && (
+      {(pendingPaperCalc || copiedPaperCalcs.length > 0) && (
         <div
           className="rounded p-2 text-xs"
           style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
@@ -426,6 +463,7 @@ export function NewSaleForm({
               ) : (
                 purchaseCandidates.map((item) => {
                   const added = addedPurchaseItemIds.has(item.id);
+                  const isAdding = addingItemId === item.id;
                   return (
                     <div
                       key={item.id}
@@ -452,9 +490,9 @@ export function NewSaleForm({
                         onClick={() => addPurchaseItem(item)}
                         className="erp-btn"
                         style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
-                        disabled={added}
+                        disabled={added || isAdding}
                       >
-                        {added ? "추가됨" : "추가"}
+                        {added ? "추가됨" : isAdding ? "추가 중..." : "추가"}
                       </button>
                     </div>
                   );
@@ -518,6 +556,7 @@ export function NewSaleForm({
                       onClick={() => {
                         localStorage.removeItem(PENDING_PAPER_CALC_KEY);
                         setPendingPaperCalc(null);
+                        setCopiedPaperCalcs([]);
                       }}
                     >
                       취소

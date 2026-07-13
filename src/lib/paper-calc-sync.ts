@@ -98,6 +98,41 @@ export async function attachPendingPaperCalculation(
   }
 }
 
+// 오늘 입고된 모조지(TG0) 품목을 매출로 그대로 옮겨 담을 때, 그 매입 건에
+// 연결돼 있던 모조지 계산(사이즈별 배치 내역)도 그대로 복사해서 새 매출
+// 건에 붙인다 — attachPendingPaperCalculation과 달리 한 건이 아니라 여러
+// 계산을 한 번에 붙일 수 있다(매입 건 하나에 계산이 여러 번 저장됐을 수 있음).
+export async function attachCopiedPaperCalculations(
+  supabase: SupabaseServerClient,
+  salesOrderId: string,
+  copiedRaw: string
+) {
+  let candidates: unknown[];
+  try {
+    const parsed = JSON.parse(copiedRaw);
+    if (!Array.isArray(parsed)) return;
+    candidates = parsed;
+  } catch {
+    return;
+  }
+
+  const userId = await getUserId(supabase);
+  let insertedAny = false;
+  for (const candidate of candidates) {
+    if (!isPendingCalc(candidate)) continue;
+    const { error } = await supabase.from("paper_calculations").insert({
+      sales_order_id: salesOrderId,
+      ...pendingToRow(candidate),
+      created_by: userId,
+    });
+    if (!error) insertedAny = true;
+  }
+
+  if (insertedAny) {
+    await syncPaperStockOrderItem(supabase, salesOrderId);
+  }
+}
+
 // 원지(TG0) 사용량을 이 매입 건에 저장된 계산들의 합계(연)로 매입 품목에
 // 자동 반영한다. syncPaperStockOrderItem과 동일한 이유로, 계산 저장/삭제
 // 때마다 "이 주문에 저장된 모든 계산의 합"으로 TG0 한 줄만 다시 갱신한다.
@@ -176,7 +211,7 @@ export async function attachPendingPaperCalculationToPurchase(
   }
 }
 
-type PendingCalc = {
+export type PendingCalc = {
   paperW: number;
   paperH: number;
   inputItems: Json;
@@ -188,17 +223,25 @@ type PendingCalc = {
   fulfilled: boolean;
 };
 
+function isPendingCalc(value: unknown): value is PendingCalc {
+  const pending = value as Partial<PendingCalc> | null;
+  return Boolean(
+    pending &&
+      pending.paperW &&
+      pending.paperH &&
+      Array.isArray(pending.inputItems) &&
+      pending.inputItems.length > 0
+  );
+}
+
 function parsePendingCalc(pendingRaw: string): PendingCalc | null {
-  let pending: PendingCalc;
+  let pending: unknown;
   try {
     pending = JSON.parse(pendingRaw);
   } catch {
     return null;
   }
-  if (!pending.paperW || !pending.paperH || !Array.isArray(pending.inputItems) || pending.inputItems.length === 0) {
-    return null;
-  }
-  return pending;
+  return isPendingCalc(pending) ? pending : null;
 }
 
 function pendingToRow(pending: PendingCalc) {

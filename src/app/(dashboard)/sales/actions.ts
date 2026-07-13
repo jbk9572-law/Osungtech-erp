@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { attachPendingPaperCalculation } from "@/lib/paper-calc-sync";
+import {
+  attachCopiedPaperCalculations,
+  attachPendingPaperCalculation,
+  type PendingCalc,
+} from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 
 type SaleItemInput = {
@@ -38,6 +42,7 @@ export type TodayPurchaseItem = {
   quantity: number;
   unit: string;
   supplierName: string;
+  purchaseOrderId: string;
 };
 
 // 당일 입고된 품목을 그대로 매출로 옮겨 담을 수 있게, 새 판매 등록 화면에서
@@ -50,7 +55,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
   const { data } = await supabase
     .from("purchase_order_items")
     .select(
-      "id, product_id, quantity, spec, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+      "id, product_id, quantity, spec, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
     )
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
@@ -64,6 +69,34 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     quantity: item.quantity,
     unit: item.products?.unit ?? "",
     supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
+    purchaseOrderId: item.purchase_order_id,
+  }));
+}
+
+// 입고 불러오기에서 모조지(TG0) 품목을 고르면, 수량만 옮기는 게 아니라 그
+// 매입 건에 저장돼 있던 모조지 계산(사이즈별 배치 내역) 자체를 가져와
+// 새 매출 건에도 그대로 붙일 수 있게 한다.
+export async function getPaperCalculationsForPurchaseOrder(
+  purchaseOrderId: string
+): Promise<PendingCalc[]> {
+  if (!purchaseOrderId) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("paper_calculations")
+    .select("paper_w, paper_h, input_items, layouts, total_paper, total_sheet, total_prod, over_prod, fulfilled")
+    .eq("purchase_order_id", purchaseOrderId);
+
+  return (data ?? []).map((calc) => ({
+    paperW: calc.paper_w,
+    paperH: calc.paper_h,
+    inputItems: calc.input_items,
+    layouts: calc.layouts,
+    totalPaper: calc.total_paper,
+    totalSheet: calc.total_sheet,
+    totalProd: calc.total_prod,
+    overProd: calc.over_prod,
+    fulfilled: calc.fulfilled,
   }));
 }
 
@@ -130,6 +163,8 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
   // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "");
+  // 입고 불러오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
+  const copiedPaperCalcs = String(formData.get("copiedPaperCalcs") ?? "");
 
   if (!customerId || !warehouseId || !orderDate) {
     return { error: "거래처, 창고, 거래일자를 모두 입력해주세요." };
@@ -137,7 +172,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };
   }
-  if (items.length === 0 && !pendingPaperCalc) {
+  if (items.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
 
@@ -227,6 +262,11 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 방금 만든 주문에 붙여서 저장하고 TG0 판매 품목에도 반영한다.
   if (pendingPaperCalc) {
     await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
+  }
+
+  // 입고 불러오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
+  if (copiedPaperCalcs) {
+    await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
   }
 
   revalidatePath("/sales");
