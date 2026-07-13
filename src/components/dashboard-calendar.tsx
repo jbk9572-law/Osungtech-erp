@@ -71,7 +71,9 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
 // 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만 담는다.
 function appendItemLines(items: ItemRow[], lines: string[]) {
-  for (const partner of groupByPartnerAndProduct(items)) {
+  const partners = groupByPartnerAndProduct(items);
+  partners.forEach((partner, i) => {
+    if (i > 0) lines.push("");
     lines.push(`- ${partner.partnerName}`);
     for (const product of partner.products) {
       lines.push(`  · ${product.productName}`);
@@ -79,7 +81,7 @@ function appendItemLines(items: ItemRow[], lines: string[]) {
         lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit}`);
       }
     }
-  }
+  });
 }
 
 function appendPaperCalcLines(sizes: PaperCalcSizeRow[], totalSheet: number, lines: string[]) {

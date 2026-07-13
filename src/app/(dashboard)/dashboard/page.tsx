@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
+import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -73,14 +74,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, customers(name))"
+        "quantity, unit_price, spec, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
+        "quantity, unit_cost, spec, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -172,6 +173,9 @@ export default async function DashboardPage({
     const bucket = ensure(date);
     bucket.salesCount += 1;
     bucket.salesTotal += amount;
+    // 모조지(TG0) 라인은 계산에서 자동 반영된 것이라 규격이 없다.
+    // 아래 "모조지 사용량" 섹션에서 사이즈별로 정확히 보여주므로 목록에는 넣지 않는다.
+    if (item.products?.sku === PAPER_STOCK_SKU) continue;
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
       productName: item.products?.name ?? "상품 미상",
@@ -189,6 +193,7 @@ export default async function DashboardPage({
     const bucket = ensure(date);
     bucket.purchaseCount += 1;
     bucket.purchaseTotal += amount;
+    if (item.products?.sku === PAPER_STOCK_SKU) continue;
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? "상품 미상",
