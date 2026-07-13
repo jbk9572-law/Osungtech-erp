@@ -395,11 +395,9 @@ export function DashboardCalendar({
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
-                                  {partner.paperCalc.amount > 0 && (
-                                    <span className="shrink-0">
-                                      {partner.paperCalc.amount.toLocaleString()}원
-                                    </span>
-                                  )}
+                                  <span className="shrink-0">
+                                    {partner.paperCalc.amount.toLocaleString()}원
+                                  </span>
                                 </li>
                               </ul>
                             </div>
@@ -456,11 +454,9 @@ export function DashboardCalendar({
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
-                                  {partner.paperCalc.amount > 0 && (
-                                    <span className="shrink-0">
-                                      {partner.paperCalc.amount.toLocaleString()}원
-                                    </span>
-                                  )}
+                                  <span className="shrink-0">
+                                    {partner.paperCalc.amount.toLocaleString()}원
+                                  </span>
                                 </li>
                               </ul>
                             </div>
