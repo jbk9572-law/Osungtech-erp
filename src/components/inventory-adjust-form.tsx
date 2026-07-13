@@ -45,7 +45,7 @@ export function InventoryAdjustForm({
   const selectedProduct = products.find((p) => p.id === productId);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="quantity" value={signedQuantity} />
