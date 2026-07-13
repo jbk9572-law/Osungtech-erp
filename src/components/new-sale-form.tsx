@@ -144,7 +144,10 @@ export function NewSaleForm({
   }, [initial?.id]);
 
   // 당일 입고된 품목을 그대로 매출로 옮겨 담는 기능(모조지처럼 당일 입고 후
-  // 바로 당일 출고되는 품목을 이중 입력하지 않게 하려는 용도).
+  // 바로 당일 출고되는 품목을 이중 입력하지 않게 하려는 용도). 거래일자와
+  // 별도로 조회할 날짜를 고를 수 있게 한다 — 매출 등록일과 실제 입고일이
+  // 다른 경우(예: 어제 입고분을 오늘 매출로 처리)도 있기 때문.
+  const [purchaseLookupDate, setPurchaseLookupDate] = useState(orderDate);
   const [purchaseCandidates, setPurchaseCandidates] = useState<TodayPurchaseItem[] | null>(null);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [addedPurchaseItemIds, setAddedPurchaseItemIds] = useState<Set<string>>(new Set());
@@ -157,7 +160,7 @@ export function NewSaleForm({
     setLoadingPurchases(true);
     setAddedPurchaseItemIds(new Set());
     try {
-      const items = await getPurchaseItemsForDate(orderDate);
+      const items = await getPurchaseItemsForDate(purchaseLookupDate);
       setPurchaseCandidates(items);
     } finally {
       setLoadingPurchases(false);
@@ -402,7 +405,14 @@ export function NewSaleForm({
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between", position: "relative" }}>
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", gap: 4, margin: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4 }}>
+            <input
+              type="date"
+              value={purchaseLookupDate}
+              onChange={(e) => setPurchaseLookupDate(e.target.value)}
+              className="erp-input"
+              style={{ width: 130 }}
+            />
             <button
               type="button"
               onClick={loadPurchasesForDate}
@@ -410,7 +420,7 @@ export function NewSaleForm({
               style={{ minWidth: 0 }}
               disabled={loadingPurchases}
             >
-              {loadingPurchases ? "불러오는 중..." : `${orderDate} 입고 불러오기`}
+              {loadingPurchases ? "불러오는 중..." : "입고 불러오기"}
             </button>
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
@@ -445,7 +455,7 @@ export function NewSaleForm({
                   fontWeight: 700,
                 }}
               >
-                <span>{orderDate} 입고 품목</span>
+                <span>{purchaseLookupDate} 입고 품목</span>
                 <button
                   type="button"
                   onClick={() => setPurchaseCandidates(null)}
