@@ -134,6 +134,17 @@ export function NewSaleForm({
     return map;
   }, [prices]);
 
+  // 수정 화면에서는 product.stock이 "이 거래로 이미 출고 처리된 뒤"의 현재
+  // 재고라, 원래 수량 그대로 비교하면 항상 부족한 것처럼 보인다. 이 거래가
+  // 원래 갖고 있던 수량만큼은 되돌려받은 셈 치고 비교해야 한다.
+  const originalQtyByProduct = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of initial?.items ?? []) {
+      map.set(item.productId, (map.get(item.productId) ?? 0) + item.quantity);
+    }
+    return map;
+  }, [initial]);
+
   function resolvePrice(forCustomerId: string, productId: string) {
     const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
     if (fromCustomer !== undefined) return fromCustomer;
@@ -455,17 +466,20 @@ export function NewSaleForm({
                     </td>
                     <td className="num">
                       {(row.quantity * row.unitPrice).toLocaleString()}원
-                      {row.productId && product && (
-                        <p
-                          className="text-[10.5px]"
-                          style={{
-                            color: row.quantity > (product.stock ?? 0) ? "#dc3545" : "var(--erp-text-muted)",
-                          }}
-                        >
-                          재고 {(product.stock ?? 0).toLocaleString()}{product.unit ?? ""}
-                          {row.quantity > (product.stock ?? 0) && " · 부족"}
-                        </p>
-                      )}
+                      {row.productId && product && (() => {
+                        const availableStock =
+                          (product.stock ?? 0) + (originalQtyByProduct.get(row.productId) ?? 0);
+                        const short = row.quantity > availableStock;
+                        return (
+                          <p
+                            className="text-[10.5px]"
+                            style={{ color: short ? "#dc3545" : "var(--erp-text-muted)" }}
+                          >
+                            재고 {(product.stock ?? 0).toLocaleString()}{product.unit ?? ""}
+                            {short && " · 부족"}
+                          </p>
+                        );
+                      })()}
                     </td>
                     <td>
                       <input
