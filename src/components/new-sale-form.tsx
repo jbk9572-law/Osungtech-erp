@@ -124,6 +124,18 @@ export function NewSaleForm({
     if (initial?.id) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
     setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY));
+
+    // 모조지 계산은 새 탭(target="_blank")에서 저장되므로, 이 탭은 처음 열릴
+    // 때 한 번만 확인해서는 그 결과를 알 수 없다. storage 이벤트로 다른 탭의
+    // 저장을 실시간으로 반영해야, 사용자가 "반영이 안 됐나?" 싶어 새로고침
+    // 하면서 입력 중이던 다른 품목들을 날려버리는 일을 막을 수 있다.
+    function handleStorage(e: StorageEvent) {
+      if (e.key === PENDING_PAPER_CALC_KEY) {
+        setPendingPaperCalc(e.newValue);
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, [initial?.id]);
 
   const priceMap = useMemo(() => {
