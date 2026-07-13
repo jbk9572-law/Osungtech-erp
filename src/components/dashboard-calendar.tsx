@@ -391,10 +391,15 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="font-semibold text-[#1f3b75]">
-                                  합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
-                                  {partner.paperCalc.amount > 0 &&
-                                    ` · ${partner.paperCalc.amount.toLocaleString()}원`}
+                                <li className="flex items-start justify-between gap-2 font-semibold text-[#1f3b75]">
+                                  <span className="min-w-0">
+                                    합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
+                                  </span>
+                                  {partner.paperCalc.amount > 0 && (
+                                    <span className="shrink-0">
+                                      {partner.paperCalc.amount.toLocaleString()}원
+                                    </span>
+                                  )}
                                 </li>
                               </ul>
                             </div>
@@ -447,10 +452,15 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="font-semibold text-[#28a745]">
-                                  합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
-                                  {partner.paperCalc.amount > 0 &&
-                                    ` · ${partner.paperCalc.amount.toLocaleString()}원`}
+                                <li className="flex items-start justify-between gap-2 font-semibold text-[#28a745]">
+                                  <span className="min-w-0">
+                                    합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
+                                  </span>
+                                  {partner.paperCalc.amount > 0 && (
+                                    <span className="shrink-0">
+                                      {partner.paperCalc.amount.toLocaleString()}원
+                                    </span>
+                                  )}
                                 </li>
                               </ul>
                             </div>
