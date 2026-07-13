@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MENU_ITEMS } from "@/lib/erp-menu";
 import { getFavorites, getRecentMenus, toggleFavorite } from "@/lib/erp-menu-history";
@@ -32,12 +33,19 @@ export function Ribbon() {
   const [recents, setRecents] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
+  // 모바일에서 리본이 가로 스크롤(overflow-x: auto)되게 하다 보니, 드롭다운을
+  // 예전처럼 버튼 기준 position:absolute로 두면 리본 바깥으로 나가는 부분이
+  // 잘려서 안 보이는 문제가 생긴다. document.body에 포털로 렌더링하고
+  // 버튼의 화면 좌표를 계산해 position:fixed로 붙여서 이 문제를 피한다.
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpenPanel(null);
-      }
+      const target = e.target as Node;
+      if (wrapRef.current?.contains(target)) return;
+      if (dropdownRef.current?.contains(target)) return;
+      setOpenPanel(null);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -54,14 +62,32 @@ export function Ribbon() {
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
-  function openFavorites() {
+  function openFavorites(e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPanelPos({ top: rect.bottom, left: rect.left });
     setFavorites(getFavorites());
     setOpenPanel((p) => (p === "favorites" ? null : "favorites"));
   }
 
-  function openRecents() {
+  function openRecents(e: React.MouseEvent<HTMLButtonElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPanelPos({ top: rect.bottom, left: rect.left });
     setRecents(getRecentMenus());
     setOpenPanel((p) => (p === "recent" ? null : "recent"));
+  }
+
+  function renderDropdown(content: React.ReactNode) {
+    if (!panelPos || typeof document === "undefined") return null;
+    return createPortal(
+      <div
+        ref={dropdownRef}
+        className="erp-ribbon-dropdown"
+        style={{ position: "fixed", top: panelPos.top, left: panelPos.left }}
+      >
+        {content}
+      </div>,
+      document.body
+    );
   }
 
   function handleToggleFavorite(href: string) {
@@ -82,64 +108,55 @@ export function Ribbon() {
         ↻ 새로고침
       </button>
 
-      <div style={{ position: "relative" }}>
-        <button type="button" className="erp-ribbon-btn" onClick={openFavorites}>
-          ★ 즐겨찾기
-        </button>
-        {openPanel === "favorites" && (
-          <div className="erp-ribbon-dropdown">
-            {favorites.length ? (
-              favorites.map((href) => (
+      <button type="button" className="erp-ribbon-btn" onClick={openFavorites}>
+        ★ 즐겨찾기
+      </button>
+      {openPanel === "favorites" &&
+        renderDropdown(
+          favorites.length ? (
+            favorites.map((href) => (
+              <div key={href} className="erp-ribbon-dropdown-item">
+                <button type="button" onClick={() => router.push(href)}>
+                  {labelFor(href)}
+                </button>
+                <span className="erp-ribbon-star active" onClick={() => handleToggleFavorite(href)}>
+                  ★
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="erp-ribbon-dropdown-empty">
+              최근 메뉴 목록에서 ☆를 눌러 즐겨찾기를 추가하세요.
+            </p>
+          )
+        )}
+
+      <button type="button" className="erp-ribbon-btn" onClick={openRecents}>
+        🕘 최근 메뉴
+      </button>
+      {openPanel === "recent" &&
+        renderDropdown(
+          recents.length ? (
+            recents.map((href) => {
+              const isFav = favorites.includes(href) || getFavorites().includes(href);
+              return (
                 <div key={href} className="erp-ribbon-dropdown-item">
                   <button type="button" onClick={() => router.push(href)}>
                     {labelFor(href)}
                   </button>
                   <span
-                    className="erp-ribbon-star active"
+                    className={`erp-ribbon-star${isFav ? " active" : ""}`}
                     onClick={() => handleToggleFavorite(href)}
                   >
-                    ★
+                    {isFav ? "★" : "☆"}
                   </span>
                 </div>
-              ))
-            ) : (
-              <p className="erp-ribbon-dropdown-empty">
-                최근 메뉴 목록에서 ☆를 눌러 즐겨찾기를 추가하세요.
-              </p>
-            )}
-          </div>
+              );
+            })
+          ) : (
+            <p className="erp-ribbon-dropdown-empty">최근 방문한 메뉴가 없습니다.</p>
+          )
         )}
-      </div>
-
-      <div style={{ position: "relative" }}>
-        <button type="button" className="erp-ribbon-btn" onClick={openRecents}>
-          🕘 최근 메뉴
-        </button>
-        {openPanel === "recent" && (
-          <div className="erp-ribbon-dropdown">
-            {recents.length ? (
-              recents.map((href) => {
-                const isFav = favorites.includes(href) || getFavorites().includes(href);
-                return (
-                  <div key={href} className="erp-ribbon-dropdown-item">
-                    <button type="button" onClick={() => router.push(href)}>
-                      {labelFor(href)}
-                    </button>
-                    <span
-                      className={`erp-ribbon-star${isFav ? " active" : ""}`}
-                      onClick={() => handleToggleFavorite(href)}
-                    >
-                      {isFav ? "★" : "☆"}
-                    </span>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="erp-ribbon-dropdown-empty">최근 방문한 메뉴가 없습니다.</p>
-            )}
-          </div>
-        )}
-      </div>
 
       <button
         type="button"
