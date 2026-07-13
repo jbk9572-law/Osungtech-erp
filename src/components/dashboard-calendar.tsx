@@ -391,7 +391,7 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 font-semibold text-[#1f3b75]">
+                                <li className="flex items-start justify-between gap-2 text-[#1f3b75]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
@@ -452,7 +452,7 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 font-semibold text-[#28a745]">
+                                <li className="flex items-start justify-between gap-2 text-[#28a745]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
