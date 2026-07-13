@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPackageQty } from "@/lib/package-qty";
+import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
 
 export default async function SaleDetailPage({
   params,
@@ -27,7 +28,7 @@ export default async function SaleDetailPage({
       .order("created_at"),
     supabase
       .from("paper_calculations")
-      .select("id, total_paper, total_sheet, created_at")
+      .select("id, total_paper, total_sheet, input_items, created_at")
       .eq("sales_order_id", id)
       .order("created_at", { ascending: false })
       .limit(1),
@@ -42,6 +43,10 @@ export default async function SaleDetailPage({
     amount: item.quantity * Number(item.unit_price),
   }));
   const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
+
+  const paperCalcSizeLines = formatPaperCalcSizeLines(
+    mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items)
+  );
 
   return (
     <div>
@@ -95,15 +100,25 @@ export default async function SaleDetailPage({
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>연락처</span>
             <span>{order.customers?.phone ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>모조지 사용량</span>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, minHeight: 26 }}>
+            <span style={{ width: 72, color: "var(--erp-text-muted)", paddingTop: 4 }}>모조지 사용량</span>
             {paperCalcs && paperCalcs.length > 0 ? (
-              <span>
-                {paperCalcs[0].total_paper.toLocaleString()}장 ({paperCalcs[0].total_sheet}연 구매) ·{" "}
-                {new Date(paperCalcs[0].created_at).toLocaleDateString("ko-KR")} 계산
-              </span>
+              <div>
+                <div style={{ paddingTop: 4 }}>
+                  {paperCalcs[0].total_paper.toLocaleString()}장 ({paperCalcs[0].total_sheet}연 구매) ·{" "}
+                  {new Date(paperCalcs[0].created_at).toLocaleDateString("ko-KR")} 계산
+                </div>
+                {paperCalcSizeLines.length > 0 && (
+                  <div style={{ marginTop: 4, color: "var(--erp-text-muted)" }}>
+                    {paperCalcSizeLines.map((line, i) => (
+                      <div key={i}>{line}</div>
+                    ))}
+                    <div>합계 - {paperCalcs[0].total_sheet.toLocaleString()}연</div>
+                  </div>
+                )}
+              </div>
             ) : (
-              <span style={{ color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
+              <span style={{ paddingTop: 4, color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
             )}
           </div>
           {order.memo && (

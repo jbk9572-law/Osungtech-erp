@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
+import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -58,6 +59,8 @@ export default async function DashboardPage({
     { count: lowStockCount },
     { data: salesItems },
     { data: purchaseItems },
+    { data: salesPaperCalcs },
+    { data: purchasePaperCalcs },
     { data: notes },
     { data: recentNotes },
     { data: company },
@@ -79,6 +82,16 @@ export default async function DashboardPage({
       .select(
         "quantity, unit_cost, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
       )
+      .gte("purchase_orders.purchase_date", monthStart)
+      .lte("purchase_orders.purchase_date", monthEnd),
+    supabase
+      .from("paper_calculations")
+      .select("input_items, total_sheet, sales_orders!inner(order_date)")
+      .gte("sales_orders.order_date", monthStart)
+      .lte("sales_orders.order_date", monthEnd),
+    supabase
+      .from("paper_calculations")
+      .select("input_items, total_sheet, purchase_orders!inner(purchase_date)")
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
     supabase
@@ -125,6 +138,8 @@ export default async function DashboardPage({
     purchaseCount: number;
     purchaseTotal: number;
     purchaseItems: ItemRow[];
+    paperCalcSizes: PaperCalcSizeRow[];
+    paperCalcTotalSheet: number;
     note: string;
   };
 
@@ -139,6 +154,8 @@ export default async function DashboardPage({
         purchaseCount: 0,
         purchaseTotal: 0,
         purchaseItems: [],
+        paperCalcSizes: [],
+        paperCalcTotalSheet: 0,
         note: "",
       };
     }
@@ -177,6 +194,18 @@ export default async function DashboardPage({
       amount,
       orderId: item.purchase_order_id,
     });
+  }
+
+  for (const calc of salesPaperCalcs ?? []) {
+    const bucket = ensure(calc.sales_orders.order_date);
+    bucket.paperCalcSizes = mergePaperCalcInputItems(bucket.paperCalcSizes, calc.input_items);
+    bucket.paperCalcTotalSheet += calc.total_sheet;
+  }
+
+  for (const calc of purchasePaperCalcs ?? []) {
+    const bucket = ensure(calc.purchase_orders.purchase_date);
+    bucket.paperCalcSizes = mergePaperCalcInputItems(bucket.paperCalcSizes, calc.input_items);
+    bucket.paperCalcTotalSheet += calc.total_sheet;
   }
 
   for (const note of notes ?? []) {

@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { deletePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPackageQty } from "@/lib/package-qty";
+import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
 
 export default async function PurchaseDetailPage({
   params,
@@ -14,7 +15,7 @@ export default async function PurchaseDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }] = await Promise.all([
+  const [{ data: order }, { data: items }, { data: paperCalcs }] = await Promise.all([
     supabase
       .from("purchase_orders")
       .select("*, suppliers(*)")
@@ -25,6 +26,12 @@ export default async function PurchaseDetailPage({
       .select("*, products(sku, name, spec, unit, base_package_qty)")
       .eq("purchase_order_id", id)
       .order("created_at"),
+    supabase
+      .from("paper_calculations")
+      .select("id, total_paper, total_sheet, input_items, created_at")
+      .eq("purchase_order_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   if (!order) {
@@ -36,6 +43,10 @@ export default async function PurchaseDetailPage({
     amount: item.quantity * Number(item.unit_cost),
   }));
   const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
+
+  const paperCalcSizeLines = formatPaperCalcSizeLines(
+    mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items)
+  );
 
   return (
     <div>
@@ -50,6 +61,9 @@ export default async function PurchaseDetailPage({
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href={`/purchases/${id}/edit`} className="erp-btn">
             F4 수정
+          </Link>
+          <Link href={`/paper-calc?purchaseOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+            모조지 계산
           </Link>
           <DeleteButton
             action={deletePurchase}
@@ -78,9 +92,30 @@ export default async function PurchaseDetailPage({
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>담당자</span>
             <span>{order.suppliers?.contact_name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>연락처</span>
             <span>{order.suppliers?.phone ?? "-"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, minHeight: 26 }}>
+            <span style={{ width: 72, color: "var(--erp-text-muted)", paddingTop: 4 }}>모조지 사용량</span>
+            {paperCalcs && paperCalcs.length > 0 ? (
+              <div>
+                <div style={{ paddingTop: 4 }}>
+                  {paperCalcs[0].total_paper.toLocaleString()}장 ({paperCalcs[0].total_sheet}연 구매) ·{" "}
+                  {new Date(paperCalcs[0].created_at).toLocaleDateString("ko-KR")} 계산
+                </div>
+                {paperCalcSizeLines.length > 0 && (
+                  <div style={{ marginTop: 4, color: "var(--erp-text-muted)" }}>
+                    {paperCalcSizeLines.map((line, i) => (
+                      <div key={i}>{line}</div>
+                    ))}
+                    <div>합계 - {paperCalcs[0].total_sheet.toLocaleString()}연</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span style={{ paddingTop: 4, color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
+            )}
           </div>
           {order.memo && (
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>

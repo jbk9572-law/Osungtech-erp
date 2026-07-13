@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
@@ -10,6 +10,7 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -103,6 +104,43 @@ export function NewPurchaseForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
+  // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 purchase_order_id가 있어서
+  // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
+  const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
+  useEffect(() => {
+    if (initial?.id) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
+    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_PURCHASE_KEY));
+
+    // 모조지 계산은 새 탭(target="_blank")에서 저장되므로, storage 이벤트로
+    // 다른 탭의 저장을 실시간 반영해야 새로고침 때문에 입력 중이던 다른
+    // 품목들을 날리는 일을 막을 수 있다.
+    function handleStorage(e: StorageEvent) {
+      if (e.key === PENDING_PAPER_CALC_PURCHASE_KEY) {
+        setPendingPaperCalc(e.newValue);
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [initial?.id]);
+
+  // 임시 저장된 모조지 계산이 있으면 등록 버튼을 누르기 전에도 TG0 품목
+  // 줄이 실제로 어떤 수량으로 들어갈지 그리드에 미리 보여준다. 이 줄은
+  // 편집 가능한 rows에는 넣지 않는다 — 실제 저장은 createPurchase가 주문
+  // 생성 직후 attachPendingPaperCalculationToPurchase로 처리한다.
+  const pendingCalcSummary = useMemo(() => {
+    if (!pendingPaperCalc) return null;
+    try {
+      const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
+      return { totalSheet: parsed.totalSheet, totalPaper: parsed.totalPaper };
+    } catch {
+      return null;
+    }
+  }, [pendingPaperCalc]);
+  const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
+  const pendingCalcUnitCost = tg0Product ? Number(tg0Product.cost) : 0;
+  const pendingCalcAmount = pendingCalcSummary ? pendingCalcSummary.totalSheet * pendingCalcUnitCost : 0;
+
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
   }
@@ -160,11 +198,27 @@ export function NewPurchaseForm({
       onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
-      onSubmit={() => setMessageDismissed(false)}
+      onSubmit={() => {
+        setMessageDismissed(false);
+        // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다.
+        // 등록이 실패해도 계산 자체는 다시 하면 되므로 감수할 만한 트레이드오프다.
+        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
+      }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
+      {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+
+      {pendingPaperCalc && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+        >
+          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0 자동 반영
+          줄로 표시됩니다. 등록하면 실제로 저장됩니다.
+        </div>
+      )}
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs">
@@ -243,6 +297,46 @@ export function NewPurchaseForm({
               </tr>
             </thead>
             <tbody onKeyDown={focusSameColumnNextRow}>
+              {pendingCalcSummary && (
+                <tr style={{ background: "#eef2ff" }}>
+                  <td>
+                    {tg0Product ? (
+                      <>
+                        {tg0Product.name}
+                        <span
+                          className="ml-1 rounded px-1 text-[10.5px]"
+                          style={{ background: "#c7d2fe", color: "#3730a3" }}
+                        >
+                          자동
+                        </span>
+                      </>
+                    ) : (
+                      <span style={{ color: "#dc3545" }}>
+                        SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
+                  <td className="num">{pendingCalcSummary.totalSheet.toLocaleString()}</td>
+                  <td className="num">{pendingCalcUnitCost.toLocaleString()}</td>
+                  <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>모조지 계산 자동 반영</td>
+                  <td className="num">
+                    <button
+                      type="button"
+                      className="erp-btn erp-btn-danger"
+                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      onClick={() => {
+                        localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
+                        setPendingPaperCalc(null);
+                      }}
+                    >
+                      취소
+                    </button>
+                  </td>
+                </tr>
+              )}
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentCost = product ? Number(product.cost) : 0;

@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { syncPaperStockOrderItem, PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import {
+  syncPaperStockOrderItem,
+  syncPaperStockPurchaseItem,
+  PAPER_STOCK_SKU,
+} from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 
 export async function savePaperCalculation(
@@ -10,6 +14,7 @@ export async function savePaperCalculation(
   formData: FormData
 ): Promise<FormState> {
   const salesOrderId = String(formData.get("salesOrderId") ?? "").trim() || null;
+  const purchaseOrderId = String(formData.get("purchaseOrderId") ?? "").trim() || null;
   const paperW = Number(formData.get("paperW"));
   const paperH = Number(formData.get("paperH"));
   const inputItemsRaw = String(formData.get("inputItems") ?? "");
@@ -40,6 +45,7 @@ export async function savePaperCalculation(
 
   const { error } = await supabase.from("paper_calculations").insert({
     sales_order_id: salesOrderId,
+    purchase_order_id: purchaseOrderId,
     paper_w: paperW,
     paper_h: paperH,
     input_items: inputItems,
@@ -63,13 +69,20 @@ export async function savePaperCalculation(
     revalidatePath(`/sales/${salesOrderId}/print`);
     revalidatePath(`/sales/${salesOrderId}/edit`);
   }
+  if (purchaseOrderId) {
+    warning = await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
+    revalidatePath(`/purchases/${purchaseOrderId}`);
+    revalidatePath(`/purchases/${purchaseOrderId}/edit`);
+  }
   revalidatePath("/paper-calc");
 
   if (warning) return { error: warning };
   return {
     success: salesOrderId
       ? `이 출고 건에 계산 결과를 저장했습니다. 판매 품목의 ${PAPER_STOCK_SKU} 수량도 갱신했습니다.`
-      : "계산 결과를 저장했습니다.",
+      : purchaseOrderId
+        ? `이 매입 건에 계산 결과를 저장했습니다. 매입 품목의 ${PAPER_STOCK_SKU} 수량도 갱신했습니다.`
+        : "계산 결과를 저장했습니다.",
   };
 }
 
@@ -79,6 +92,7 @@ export async function deletePaperCalculation(
 ): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   const salesOrderId = String(formData.get("salesOrderId") ?? "").trim() || null;
+  const purchaseOrderId = String(formData.get("purchaseOrderId") ?? "").trim() || null;
   if (!id) {
     return { error: "잘못된 요청입니다." };
   }
@@ -90,6 +104,11 @@ export async function deletePaperCalculation(
     return { error: "삭제에 실패했습니다." };
   }
 
+  if (purchaseOrderId) {
+    await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
+    revalidatePath(`/purchases/${purchaseOrderId}`);
+    revalidatePath(`/purchases/${purchaseOrderId}/edit`);
+  }
   if (salesOrderId) {
     await syncPaperStockOrderItem(supabase, salesOrderId);
     revalidatePath(`/sales/${salesOrderId}`);
