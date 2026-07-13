@@ -63,6 +63,54 @@ function groupByPartnerAndProduct(items: ItemRow[]) {
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
+// 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 매출/매입/메모
+// 내용을 사람이 읽기 편한 일반 텍스트로 옮긴다.
+function buildTodoCopyText(dateStr: string, data: DayData) {
+  const lines: string[] = [`${dateStr} 오늘의 업무`, ""];
+
+  function appendItems(items: ItemRow[]) {
+    for (const partner of groupByPartnerAndProduct(items)) {
+      lines.push(`- ${partner.partnerName}`);
+      for (const product of partner.products) {
+        lines.push(`  · ${product.productName}`);
+        for (const item of product.items) {
+          lines.push(
+            `    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit} - ${item.amount.toLocaleString()}원`
+          );
+        }
+      }
+    }
+  }
+
+  lines.push(`[매출] ${data.salesCount}건 · ${data.salesTotal.toLocaleString()}원`);
+  appendItems(data.salesItems);
+  lines.push("");
+  lines.push(`[매입] ${data.purchaseCount}건 · ${data.purchaseTotal.toLocaleString()}원`);
+  appendItems(data.purchaseItems);
+
+  if (data.note) {
+    lines.push("");
+    lines.push(`[메모] ${data.note}`);
+  }
+
+  return lines.join("\n");
+}
+
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+  }
+}
+
 export function DashboardCalendar({
   year,
   month,
@@ -89,6 +137,7 @@ export function DashboardCalendar({
     ? todayStr
     : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
+  const [copied, setCopied] = useState(false);
 
   const selectedData: DayData = (selected && dataByDate[selected]) || {
     salesCount: 0,
@@ -99,6 +148,13 @@ export function DashboardCalendar({
     purchaseItems: [],
     note: "",
   };
+
+  async function handleCopy() {
+    if (!selected) return;
+    await copyText(buildTodoCopyText(selected, selectedData));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_300px]">
@@ -239,7 +295,16 @@ export function DashboardCalendar({
       <div className="rounded-sm border border-[#d9d9d9] bg-white p-4">
         {selected ? (
           <>
-            <h3 className="mb-3 text-sm font-bold text-[#1c1c1c]">{selected} 오늘의 업무</h3>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 className="text-sm font-bold text-[#1c1c1c]">{selected} 오늘의 업무</h3>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="shrink-0 rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+              >
+                {copied ? "복사됨" : "복사하기"}
+              </button>
+            </div>
 
             <div className="mb-3">
               <p className="mb-1 text-xs font-bold text-[#1f3b75]">
