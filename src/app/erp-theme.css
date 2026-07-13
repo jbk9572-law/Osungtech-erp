@@ -1478,4 +1478,12 @@
     background: rgba(0, 0, 0, 0.35);
     z-index: 499;
   }
+
+  /* 사내메신저 패널: 고정 340px 폭이 좁은 화면에서는 여백 없이 꽉 끼므로,
+     화면 좌우에 여백만 두고 폭을 화면에 맞춰 늘어나게 한다. */
+  .erp-messenger-panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
 }

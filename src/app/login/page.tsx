@@ -30,9 +30,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#eef1f5] px-4">
-      <div className="flex h-[420px] w-[640px] max-w-full overflow-hidden rounded-sm border border-[#d9d9d9] bg-white shadow-sm">
-        <div className="flex w-[260px] flex-col justify-between bg-[#1f3b75] p-7 text-white">
+    <div className="flex min-h-screen items-center justify-center bg-[#eef1f5] px-4 py-6">
+      <div className="flex w-full max-w-[640px] flex-col overflow-hidden rounded-sm border border-[#d9d9d9] bg-white shadow-sm md:h-[420px] md:w-[640px] md:flex-row">
+        <div className="flex flex-col justify-between bg-[#1f3b75] p-7 text-white md:w-[260px]">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
