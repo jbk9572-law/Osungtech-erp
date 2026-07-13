@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { focusNextCellInRow } from "@/lib/grid-enter-nav";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
@@ -21,6 +22,14 @@ export function ProductSearchSelect({
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  // 매출/매입 등록 표는 erp-grid-wrap(overflow: auto)에 담겨 있어서, 목록을
+  // 예전처럼 입력창 기준 position:absolute로 띄우면 표 아래쪽에 걸린 줄에서
+  // 드롭다운이 표 바깥으로 나가는 부분이 잘려 안 보이는 문제가 있었다.
+  // document.body에 포털로 렌더링하고 입력창의 화면 좌표를 계산해
+  // position:fixed로 붙여서 이 문제를 피한다.
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(
+    null
+  );
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -55,7 +64,9 @@ export function ProductSearchSelect({
               : ""
         }
         placeholder={placeholder}
-        onFocus={() => {
+        onFocus={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
           setQuery("");
           setOpen(true);
           setHighlight(0);
@@ -91,36 +102,47 @@ export function ProductSearchSelect({
         className="erp-input"
         style={{ width: "100%" }}
       />
-      {open && (
-        <ul
-          className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-sm border border-[#d9d9d9] bg-white text-[12.5px] shadow-md"
-        >
-          {results.map((product, i) => (
-            <li key={product.id}>
-              <button
-                type="button"
-                onMouseEnter={() => setHighlight(i)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  selectProduct(product.id);
-                }}
-                className={`block w-full px-2.5 py-2 text-left ${
-                  i === highlight ? "bg-[#eef1f5]" : "hover:bg-[#f3f7fc]"
-                }`}
-              >
-                <span className="font-medium text-[#1c1c1c]">{product.sku}</span>
-                <span className="ml-2 text-[#6b7280]">
-                  {product.name}
-                  {product.spec ? ` (${product.spec})` : ""}
-                </span>
-              </button>
-            </li>
-          ))}
-          {results.length === 0 && (
-            <li className="px-2.5 py-2 text-[#9aa2ad]">검색 결과가 없습니다.</li>
-          )}
-        </ul>
-      )}
+      {open &&
+        dropdownRect &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <ul
+            className="max-h-56 overflow-y-auto rounded-sm border border-[#d9d9d9] bg-white text-[12.5px] shadow-md"
+            style={{
+              position: "fixed",
+              top: dropdownRect.top,
+              left: dropdownRect.left,
+              width: dropdownRect.width,
+              zIndex: 1000,
+            }}
+          >
+            {results.map((product, i) => (
+              <li key={product.id}>
+                <button
+                  type="button"
+                  onMouseEnter={() => setHighlight(i)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    selectProduct(product.id);
+                  }}
+                  className={`block w-full px-2.5 py-2 text-left ${
+                    i === highlight ? "bg-[#eef1f5]" : "hover:bg-[#f3f7fc]"
+                  }`}
+                >
+                  <span className="font-medium text-[#1c1c1c]">{product.sku}</span>
+                  <span className="ml-2 text-[#6b7280]">
+                    {product.name}
+                    {product.spec ? ` (${product.spec})` : ""}
+                  </span>
+                </button>
+              </li>
+            ))}
+            {results.length === 0 && (
+              <li className="px-2.5 py-2 text-[#9aa2ad]">검색 결과가 없습니다.</li>
+            )}
+          </ul>,
+          document.body
+        )}
     </div>
   );
 }
