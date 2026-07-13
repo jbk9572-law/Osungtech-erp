@@ -6,6 +6,7 @@ import { deletePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPackageQty } from "@/lib/package-qty";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
+import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 
 export default async function PurchaseDetailPage({
   params,
@@ -47,6 +48,7 @@ export default async function PurchaseDetailPage({
   const paperCalcSizeLines = formatPaperCalcSizeLines(
     mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items)
   );
+  const paperStockAmount = rows.find((row) => row.products?.sku === PAPER_STOCK_SKU)?.amount ?? 0;
 
   return (
     <div>
@@ -109,7 +111,10 @@ export default async function PurchaseDetailPage({
                     {paperCalcSizeLines.map((line, i) => (
                       <div key={i}>{line}</div>
                     ))}
-                    <div>합계 - {paperCalcs[0].total_sheet.toLocaleString()}연</div>
+                    <div>
+                      합계 - {paperCalcs[0].total_sheet.toLocaleString()}연
+                      {paperStockAmount > 0 && ` · ${paperStockAmount.toLocaleString()}원`}
+                    </div>
                   </div>
                 )}
               </div>

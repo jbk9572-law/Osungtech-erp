@@ -19,7 +19,7 @@ type ItemRow = {
   orderId: string;
 };
 
-type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number };
+type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
 
 type DayData = {
   salesCount: number;
@@ -393,6 +393,8 @@ export function DashboardCalendar({
                                 ))}
                                 <li className="font-semibold text-[#1f3b75]">
                                   합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
+                                  {partner.paperCalc.amount > 0 &&
+                                    ` · ${partner.paperCalc.amount.toLocaleString()}원`}
                                 </li>
                               </ul>
                             </div>
@@ -447,6 +449,8 @@ export function DashboardCalendar({
                                 ))}
                                 <li className="font-semibold text-[#28a745]">
                                   합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
+                                  {partner.paperCalc.amount > 0 &&
+                                    ` · ${partner.paperCalc.amount.toLocaleString()}원`}
                                 </li>
                               </ul>
                             </div>
