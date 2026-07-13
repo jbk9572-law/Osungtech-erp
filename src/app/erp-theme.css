@@ -664,10 +664,11 @@
 
 .erp-grid tbody td {
   height: 30px;
-  padding: 0 10px;
+  padding: 4px 10px;
   border-bottom: 1px solid #eef0f3;
   white-space: nowrap;
   color: var(--erp-text);
+  vertical-align: top;
 }
 
 .erp-grid tbody tr {
