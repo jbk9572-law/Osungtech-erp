@@ -6,18 +6,21 @@ import { useEffect, useRef, useState } from "react";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 export type DueTodoItem = { id: string; title: string; due_date: string | null };
+export type LowStockItem = { id: string; name: string; quantity: number; reorderPoint: number };
 
 export function NotificationBell({
   announcements,
   todos,
+  lowStock,
 }: {
   announcements: AnnouncementItem[];
   todos: DueTodoItem[];
+  lowStock: LowStockItem[];
 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const count = announcements.length + todos.length;
+  const count = announcements.length + todos.length + lowStock.length;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -83,12 +86,33 @@ export function NotificationBell({
             <p className="erp-ribbon-dropdown-empty">마감 임박한 할 일이 없습니다.</p>
           )}
 
+          <div className="erp-bell-section-title">
+            안전재고 부족{lowStock.length > 0 ? ` (${lowStock.length})` : ""}
+          </div>
+          {lowStock.length ? (
+            lowStock.map((p) => (
+              <div key={p.id} className="erp-ribbon-dropdown-item">
+                <button type="button" onClick={() => go(`/inventory/${p.id}`)}>
+                  <span>{p.name}</span>
+                  <span style={{ display: "block", marginTop: 2, fontSize: 11, color: "var(--erp-text-muted)" }}>
+                    현재 {p.quantity.toLocaleString()} / 기준 {p.reorderPoint.toLocaleString()}
+                  </span>
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="erp-ribbon-dropdown-empty">안전재고 이하인 품목이 없습니다.</p>
+          )}
+
           <div className="erp-bell-footer">
             <Link href="/announcements" onClick={() => setOpen(false)}>
               공지사항 전체보기
             </Link>
             <Link href="/todos" onClick={() => setOpen(false)}>
               할일 전체보기
+            </Link>
+            <Link href="/inventory" onClick={() => setOpen(false)}>
+              재고현황 보기
             </Link>
           </div>
         </div>

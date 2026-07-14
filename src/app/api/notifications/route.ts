@@ -11,7 +11,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ announcements: [], todos: [] }, { status: 401 });
+    return NextResponse.json({ announcements: [], todos: [], lowStock: [] }, { status: 401 });
   }
 
   const summary = await getNotificationSummary(supabase, user.id);

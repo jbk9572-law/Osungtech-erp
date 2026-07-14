@@ -6,6 +6,7 @@ import { TitleBar } from "@/components/erp/title-bar";
 import type {
   AnnouncementItem,
   DueTodoItem,
+  LowStockItem,
 } from "@/components/erp/notification-bell";
 import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
@@ -36,6 +37,7 @@ export function ErpShell({
   email,
   unreadAnnouncements,
   dueTodos,
+  lowStock,
   initialMessages,
   profileNames,
   currentUserId,
@@ -49,6 +51,7 @@ export function ErpShell({
   email: string | null;
   unreadAnnouncements: AnnouncementItem[];
   dueTodos: DueTodoItem[];
+  lowStock: LowStockItem[];
   initialMessages: MessengerMessage[];
   profileNames: Record<string, string>;
   currentUserId: string;
@@ -101,6 +104,7 @@ export function ErpShell({
         email={email}
         unreadAnnouncements={unreadAnnouncements}
         dueTodos={dueTodos}
+        lowStock={lowStock}
         isMobile={isMobile}
         onToggleMenu={() => setCollapsed((c) => !c)}
       />

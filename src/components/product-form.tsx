@@ -156,7 +156,7 @@ export function ProductForm({
       />
       <input
         name="reorder_point"
-        placeholder="재주문 기준 수량"
+        placeholder="안전재고 (재주문 기준 수량)"
         type="number"
         defaultValue={initial?.reorder_point ?? ""}
         className="erp-input"
