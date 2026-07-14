@@ -31,6 +31,8 @@ export default async function ProductsPage({
       )
     : allProducts ?? [];
 
+  const exportHref = q ? `/api/products/export?q=${encodeURIComponent(q)}` : "/api/products/export";
+
   return (
     <div>
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">품목관리</h1>
@@ -49,7 +51,11 @@ export default async function ProductsPage({
           <span className="erp-detail-tab active">엑셀 일괄등록</span>
         </div>
         <div className="erp-detail-body">
-          <ExcelImportForm action={importProductsExcel} templateHref="/templates/products-template.xlsx" />
+          <ExcelImportForm
+            action={importProductsExcel}
+            templateHref="/templates/products-template.xlsx"
+            exportHref={exportHref}
+          />
         </div>
       </div>
 
@@ -87,7 +93,7 @@ export default async function ProductsPage({
               <th>카테고리</th>
               <th>공급업체</th>
               <th className="num">판매가</th>
-              <th className="num">재주문 기준</th>
+              <th className="num">안전재고</th>
               <th />
             </tr>
           </thead>

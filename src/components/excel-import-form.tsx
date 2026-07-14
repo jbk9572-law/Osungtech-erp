@@ -8,9 +8,11 @@ import { FilePickerInput } from "@/components/file-picker-input";
 export function ExcelImportForm({
   action,
   templateHref,
+  exportHref,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   templateHref: string;
+  exportHref?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const formRef = useRef<HTMLFormElement>(null);
@@ -31,6 +33,11 @@ export function ExcelImportForm({
       <a href={templateHref} download className="erp-btn">
         ⬇ 템플릿 다운로드
       </a>
+      {exportHref && (
+        <a href={exportHref} className="erp-btn">
+          📥 엑셀로 내보내기
+        </a>
+      )}
       <FilePickerInput
         key={resetKey}
         name="file"
