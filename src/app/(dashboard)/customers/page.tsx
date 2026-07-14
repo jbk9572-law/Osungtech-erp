@@ -11,6 +11,8 @@ export default async function CustomersPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
+  const exportHref = "/api/customers/export";
+
   return (
     <div>
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">거래처관리 &gt; 판매처관리</h1>
@@ -29,7 +31,11 @@ export default async function CustomersPage() {
           <span className="erp-detail-tab active">엑셀 일괄등록</span>
         </div>
         <div className="erp-detail-body">
-          <ExcelImportForm action={importCustomersExcel} templateHref="/templates/customers-template.xlsx" />
+          <ExcelImportForm
+            action={importCustomersExcel}
+            templateHref="/templates/customers-template.xlsx"
+            exportHref={exportHref}
+          />
         </div>
       </div>
 
