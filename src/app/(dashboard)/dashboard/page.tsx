@@ -57,7 +57,6 @@ export default async function DashboardPage({
 
   const [
     { count: productCount },
-    { count: lowStockCount },
     { data: salesItems },
     { data: purchaseItems },
     { data: salesPaperCalcs },
@@ -71,7 +70,6 @@ export default async function DashboardPage({
     notifications,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("inventory").select("*", { count: "exact", head: true }).lte("quantity", 0),
     supabase
       .from("sales_order_items")
       .select(
@@ -118,11 +116,12 @@ export default async function DashboardPage({
       .eq("purchase_orders.purchase_date", todayStr),
     user
       ? getNotificationSummary(supabase, user.id)
-      : Promise.resolve({ announcements: [], todos: [] }),
+      : Promise.resolve({ announcements: [], todos: [], lowStock: [] }),
   ]);
 
   const unreadAnnouncements = notifications.announcements;
   const dueSoonTodos = notifications.todos;
+  const lowStockItems = notifications.lowStock;
 
   type ItemRow = {
     partnerName: string;
@@ -269,10 +268,11 @@ export default async function DashboardPage({
     { label: "오늘 매출", value: `${(todaySales ?? []).length}건 · ${todaySalesTotal.toLocaleString()}원` },
     { label: "오늘 매입", value: `${(todayPurchases ?? []).length}건 · ${todayPurchaseTotal.toLocaleString()}원` },
     { label: "전체 품목 수", value: `${productCount ?? 0}개` },
-    { label: "안전재고 부족", value: `${lowStockCount ?? 0}건`, danger: (lowStockCount ?? 0) > 0 },
+    { label: "안전재고 부족", value: `${lowStockItems.length}건`, danger: lowStockItems.length > 0 },
   ];
 
-  const hasAlerts = unreadAnnouncements.length > 0 || dueSoonTodos.length > 0;
+  const hasAlerts =
+    unreadAnnouncements.length > 0 || dueSoonTodos.length > 0 || lowStockItems.length > 0;
 
   return (
     <>
@@ -290,6 +290,12 @@ export default async function DashboardPage({
               <span className="erp-alert-tag">할 일</span>
               {t.title}
               {t.due_date ? ` (${t.due_date})` : ""}
+            </Link>
+          ))}
+          {lowStockItems.slice(0, 10).map((p) => (
+            <Link key={`s-${p.id}`} href={`/inventory/${p.id}`} className="erp-alert-item danger">
+              <span className="erp-alert-tag danger">재고</span>
+              {p.name} (현재 {p.quantity.toLocaleString()} / 기준 {p.reorderPoint.toLocaleString()})
             </Link>
           ))}
         </div>
@@ -319,7 +325,7 @@ export default async function DashboardPage({
         prevMonthHref={prevMonthHref}
         nextMonthHref={nextMonthHref}
         backgroundLogoUrl={company?.logo_mark_url}
-        lowStockToday={(lowStockCount ?? 0) > 0}
+        lowStockToday={lowStockItems.length > 0}
         paperStockProductName={paperStockProduct?.name ?? "모조지"}
       />
 

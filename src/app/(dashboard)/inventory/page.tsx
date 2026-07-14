@@ -1,8 +1,14 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ClickableRow } from "@/components/clickable-row";
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
   const [{ data: products }, { data: warehouse }] = await Promise.all([
     // 매입/매출/조정이 한 번도 없어 inventory 행이 아예 없는 상품도 수량 0으로
@@ -14,7 +20,7 @@ export default async function InventoryPage() {
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
 
-  const stockRows = (products ?? []).map((p) => ({
+  const allStockRows = (products ?? []).map((p) => ({
     id: p.id,
     sku: p.sku,
     name: p.name,
@@ -22,6 +28,16 @@ export default async function InventoryPage() {
     reorderPoint: p.reorder_point,
     quantity: p.inventory?.[0]?.quantity ?? 0,
   }));
+
+  const keyword = q?.trim().toLowerCase();
+  const stockRows = keyword
+    ? allStockRows.filter(
+        (row) =>
+          row.name.toLowerCase().includes(keyword) ||
+          row.sku.toLowerCase().includes(keyword) ||
+          (row.spec ?? "").toLowerCase().includes(keyword)
+      )
+    : allStockRows;
 
   const stockLevels = (products ?? []).flatMap((p) =>
     p.inventory.map((inv) => ({
@@ -60,6 +76,28 @@ export default async function InventoryPage() {
         </div>
       </div>
 
+      <form method="get" className="erp-search">
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label>품목 / 규격 검색</label>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="상품명, SKU, 규격"
+            className="erp-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          조회
+        </button>
+        {q && (
+          <Link href="/inventory" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+
       <div className="erp-grid-wrap">
         <table className="erp-grid">
           <thead>
@@ -91,7 +129,7 @@ export default async function InventoryPage() {
             {!stockRows.length && (
               <tr>
                 <td colSpan={5} className="erp-grid-empty">
-                  등록된 상품이 없습니다.
+                  {keyword ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
                 </td>
               </tr>
             )}

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AnnouncementItem, DueTodoItem } from "@/components/erp/notification-bell";
+import type { AnnouncementItem, DueTodoItem, LowStockItem } from "@/components/erp/notification-bell";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 10분마다 재확인
 const AUTO_HIDE_MS = 60 * 1000; // 1분
 
-type Summary = { announcements: AnnouncementItem[]; todos: DueTodoItem[] };
+type Summary = { announcements: AnnouncementItem[]; todos: DueTodoItem[]; lowStock: LowStockItem[] };
 
 type ToastEntry = {
   key: string;
@@ -65,6 +65,14 @@ export function NotificationToaster() {
             href: `/todos/${t.id}`,
             title: t.title,
             meta: t.due_date ? `마감 ${t.due_date}` : undefined,
+          });
+        });
+        data.lowStock.forEach((p) => {
+          pushToast({
+            key: `s-${p.id}`,
+            href: `/inventory/${p.id}`,
+            title: `⚠️ ${p.name} 안전재고 부족`,
+            meta: `현재 ${p.quantity.toLocaleString()} / 기준 ${p.reorderPoint.toLocaleString()}`,
           });
         });
       } catch {

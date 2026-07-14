@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
-import { NotificationBell, type AnnouncementItem, type DueTodoItem } from "@/components/erp/notification-bell";
+import {
+  NotificationBell,
+  type AnnouncementItem,
+  type DueTodoItem,
+  type LowStockItem,
+} from "@/components/erp/notification-bell";
 
 const SECTION_LABEL: { prefix: string; label: string }[] = [
   { prefix: "/dashboard", label: "메인 대시보드" },
@@ -25,6 +30,7 @@ export function TitleBar({
   email,
   unreadAnnouncements,
   dueTodos,
+  lowStock,
   isMobile,
   onToggleMenu,
 }: {
@@ -33,6 +39,7 @@ export function TitleBar({
   email: string | null;
   unreadAnnouncements: AnnouncementItem[];
   dueTodos: DueTodoItem[];
+  lowStock: LowStockItem[];
   isMobile: boolean;
   onToggleMenu: () => void;
 }) {
@@ -67,7 +74,7 @@ export function TitleBar({
       </div>
       <div className="erp-titlebar-right">
         <span>{today}</span>
-        <NotificationBell announcements={unreadAnnouncements} todos={dueTodos} />
+        <NotificationBell announcements={unreadAnnouncements} todos={dueTodos} lowStock={lowStock} />
         <span>{email}</span>
         <form action={signOut}>
           <button type="submit">로그아웃</button>

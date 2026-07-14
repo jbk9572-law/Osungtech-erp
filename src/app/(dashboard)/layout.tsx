@@ -58,6 +58,7 @@ export default async function DashboardLayout({
       email={user.email ?? null}
       unreadAnnouncements={notifications.announcements}
       dueTodos={notifications.todos}
+      lowStock={notifications.lowStock}
       initialMessages={messages ?? []}
       profileNames={profileNames}
       currentUserId={user.id}
