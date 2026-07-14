@@ -38,6 +38,16 @@ type Cell = { dateStr: string; day: number } | null;
 type ProductGroup = { productName: string; items: ItemRow[] };
 type PartnerBlock = { partnerName: string; products: ProductGroup[]; paperCalc?: PaperCalcPartnerEntry };
 
+// 같은 품목 아래 규격별 줄이 여러 개 나뉘어 있는 경우(예: 케이아이티솔루션
+// 롤 제품처럼 관리번호별로 줄이 나뉜 경우), 모조지처럼 합계를 보여준다.
+// 줄이 하나뿐이면 바로 위 줄과 똑같은 숫자가 또 나와 불필요하므로 생략한다.
+function productTotals(items: ItemRow[]) {
+  const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+  const amount = items.reduce((sum, item) => sum + item.amount, 0);
+  const unit = items[0]?.unit ?? "";
+  return { quantity, amount, unit };
+}
+
 // 거래처 > 품목명 순으로 묶어서 트리 형태로 보여주기 위한 그룹핑. 목록 안에서
 // 같은 거래처/품목이 여러 번 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를
 // 그대로 유지). 같은 품목이라도 규격이 다르면 그 아래에 규격별 줄로 나열된다.
@@ -100,6 +110,10 @@ function appendItemLines(
       lines.push(`  · ${product.productName}`);
       for (const item of product.items) {
         lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit}`);
+      }
+      if (product.items.length > 1) {
+        const { quantity, unit } = productTotals(product.items);
+        lines.push(`    합계 - ${quantity.toLocaleString()}${unit}`);
       }
     }
     if (partner.paperCalc) {
@@ -381,6 +395,19 @@ export function DashboardCalendar({
                                     </Link>
                                   </li>
                                 ))}
+                                {product.items.length > 1 &&
+                                  (() => {
+                                    const totals = productTotals(product.items);
+                                    return (
+                                      <li className="flex items-start justify-between gap-2">
+                                        <span className="min-w-0">
+                                          합계 - {totals.quantity.toLocaleString()}
+                                          {totals.unit}
+                                        </span>
+                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                      </li>
+                                    );
+                                  })()}
                               </ul>
                             </div>
                           ))}
@@ -440,6 +467,19 @@ export function DashboardCalendar({
                                     </Link>
                                   </li>
                                 ))}
+                                {product.items.length > 1 &&
+                                  (() => {
+                                    const totals = productTotals(product.items);
+                                    return (
+                                      <li className="flex items-start justify-between gap-2">
+                                        <span className="min-w-0">
+                                          합계 - {totals.quantity.toLocaleString()}
+                                          {totals.unit}
+                                        </span>
+                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                      </li>
+                                    );
+                                  })()}
                               </ul>
                             </div>
                           ))}
