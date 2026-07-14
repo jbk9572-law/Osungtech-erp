@@ -327,7 +327,7 @@ export default async function DashboardPage({
                   <Link key={p.id} href={`/inventory/${p.id}`} className="erp-home-stock-row">
                     <span className="name">{p.name}</span>
                     <span className="ratio">
-                      {p.quantity.toLocaleString()} / {p.reorderPoint.toLocaleString()}
+                      현재 {p.quantity.toLocaleString()} / 기준 {p.reorderPoint.toLocaleString()}
                     </span>
                   </Link>
                 ))}
