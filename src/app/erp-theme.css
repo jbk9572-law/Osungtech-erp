@@ -806,6 +806,7 @@
   height: 32px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 10px;
   font-size: 12.5px;
   font-weight: 700;
@@ -858,6 +859,58 @@
   padding: 16px 10px;
   color: var(--erp-text-muted);
   font-size: 12px;
+}
+
+/* ── 대시보드 재고위험 카드: 안전재고 이하 품목이 많아져도 카드 안에서만
+   스크롤되게 해서 달력·메모 등 나머지 레이아웃이 밀리지 않게 한다. ── */
+.erp-home-stock-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.erp-home-stock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 2px;
+  border: 1px solid #f3c6cb;
+  background: #fdeaec;
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--erp-text);
+}
+
+.erp-home-stock-row .name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erp-home-stock-row .ratio {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--erp-danger);
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+.erp-home-stock-footer {
+  padding: 6px 10px 8px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.erp-home-stock-footer a {
+  font-size: 11.5px;
+  color: var(--erp-primary);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 /* ── 로딩 애니메이션(페이지 전환/조회/저장 중) ─────────────────── */

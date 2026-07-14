@@ -268,7 +268,6 @@ export default async function DashboardPage({
     { label: "오늘 매출", value: `${(todaySales ?? []).length}건 · ${todaySalesTotal.toLocaleString()}원` },
     { label: "오늘 매입", value: `${(todayPurchases ?? []).length}건 · ${todayPurchaseTotal.toLocaleString()}원` },
     { label: "전체 품목 수", value: `${productCount ?? 0}개` },
-    { label: "안전재고 부족", value: `${lowStockItems.length}건`, danger: lowStockItems.length > 0 },
   ];
 
   const hasAlerts =
@@ -292,28 +291,55 @@ export default async function DashboardPage({
               {t.due_date ? ` (${t.due_date})` : ""}
             </Link>
           ))}
-          {lowStockItems.slice(0, 10).map((p) => (
-            <Link key={`s-${p.id}`} href={`/inventory/${p.id}`} className="erp-alert-item danger">
+          {lowStockItems.length > 0 && (
+            <Link href="#stock-risk" className="erp-alert-item danger">
               <span className="erp-alert-tag danger">재고</span>
-              {p.name} (현재 {p.quantity.toLocaleString()} / 기준 {p.reorderPoint.toLocaleString()})
+              안전재고 이하 품목이 {lowStockItems.length}건 있습니다 — 자세히 보기 →
             </Link>
-          ))}
+          )}
         </div>
       )}
       <div className="erp-home">
-      <div className="erp-home-panel">
-        <div className="erp-home-panel-title">업무 요약</div>
-        {summaryRows.map((row) => (
-          <div className="erp-home-stat-row" key={row.label}>
-            <span>{row.label}</span>
-            <span
-              className="erp-home-stat-value"
-              style={row.danger ? { color: "var(--erp-danger)" } : undefined}
-            >
-              {row.value}
-            </span>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="erp-home-panel">
+          <div className="erp-home-panel-title">업무 요약</div>
+          {summaryRows.map((row) => (
+            <div className="erp-home-stat-row" key={row.label}>
+              <span>{row.label}</span>
+              <span className="erp-home-stat-value">{row.value}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="erp-home-panel" id="stock-risk">
+          <div className="erp-home-panel-title">
+            <span>재고위험</span>
+            {lowStockItems.length > 0 && (
+              <span style={{ color: "var(--erp-danger)", fontVariantNumeric: "tabular-nums" }}>
+                {lowStockItems.length}건
+              </span>
+            )}
           </div>
-        ))}
+          {lowStockItems.length ? (
+            <>
+              <div className="erp-home-stock-list">
+                {lowStockItems.map((p) => (
+                  <Link key={p.id} href={`/inventory/${p.id}`} className="erp-home-stock-row">
+                    <span className="name">{p.name}</span>
+                    <span className="ratio">
+                      {p.quantity.toLocaleString()} / {p.reorderPoint.toLocaleString()}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <div className="erp-home-stock-footer">
+                <Link href="/inventory">재고현황 전체 보기 →</Link>
+              </div>
+            </>
+          ) : (
+            <p className="erp-home-empty">안전재고 이하 품목이 없습니다.</p>
+          )}
+        </div>
       </div>
 
       <DashboardCalendar

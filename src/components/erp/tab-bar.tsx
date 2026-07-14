@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 
 const SECTIONS: { prefix: string; label: string }[] = [
   { prefix: "/dashboard", label: "메인 대시보드" },
-  { prefix: "/sales", label: "영업관리" },
-  { prefix: "/purchases", label: "구매관리" },
+  { prefix: "/sales", label: "매출관리" },
+  { prefix: "/purchases", label: "매입관리" },
   { prefix: "/inventory", label: "재고관리" },
   { prefix: "/products", label: "품목관리" },
   { prefix: "/customers", label: "판매처관리" },
