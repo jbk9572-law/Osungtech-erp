@@ -59,7 +59,7 @@ export default async function PurchaseDetailPage({
         }}
       />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#1c1c1c]">구매관리 &gt; 발주 상세</h1>
+        <h1 className="text-lg font-bold text-[#1c1c1c]">매입관리 &gt; 발주 상세</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href={`/purchases/${id}/edit`} className="erp-btn">
             F4 수정
