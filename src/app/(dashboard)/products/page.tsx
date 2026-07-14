@@ -1,12 +1,18 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateProductForm } from "@/components/create-product-form";
 import { ClickableRow } from "@/components/clickable-row";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importProductsExcel } from "@/app/(dashboard)/products/actions";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
-  const [{ data: products }, { data: categories }, { data: suppliers }] = await Promise.all([
+  const [{ data: allProducts }, { data: categories }, { data: suppliers }] = await Promise.all([
     supabase
       .from("products")
       .select("*, categories(name), suppliers(name)")
@@ -14,6 +20,16 @@ export default async function ProductsPage() {
     supabase.from("categories").select("id, name").order("name"),
     supabase.from("suppliers").select("id, name").order("name"),
   ]);
+
+  const keyword = q?.trim().toLowerCase();
+  const products = keyword
+    ? (allProducts ?? []).filter(
+        (p) =>
+          p.name.toLowerCase().includes(keyword) ||
+          p.sku.toLowerCase().includes(keyword) ||
+          (p.spec ?? "").toLowerCase().includes(keyword)
+      )
+    : allProducts ?? [];
 
   return (
     <div>
@@ -37,6 +53,28 @@ export default async function ProductsPage() {
         </div>
       </div>
 
+      <form method="get" className="erp-search">
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label>품목 / 규격 검색</label>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="상품명, SKU, 규격"
+            className="erp-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          조회
+        </button>
+        {q && (
+          <Link href="/products" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+
       <div className="erp-grid-wrap">
         <table className="erp-grid">
           <thead>
@@ -54,7 +92,7 @@ export default async function ProductsPage() {
             </tr>
           </thead>
           <tbody>
-            {products?.map((product) => (
+            {products.map((product) => (
               <ClickableRow key={product.id} href={`/products/${product.id}`}>
                 <td>{product.sku}</td>
                 <td>{product.name}</td>
@@ -78,10 +116,10 @@ export default async function ProductsPage() {
                 </td>
               </ClickableRow>
             ))}
-            {!products?.length && (
+            {!products.length && (
               <tr>
                 <td colSpan={10} className="erp-grid-empty">
-                  등록된 상품이 없습니다.
+                  {keyword ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
                 </td>
               </tr>
             )}
