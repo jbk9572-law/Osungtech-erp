@@ -48,17 +48,6 @@ function productTotals(items: ItemRow[]) {
   return { quantity, amount, unit };
 }
 
-// 거래처 하나가 여러 품목(예: 무진지)과 모조지를 같이 주문한 경우, 지금까지는
-// 품목별/모조지별 소계만 각각 보여주고 거래처 전체를 합친 금액은 없었다.
-// 거래처별로 실제 결제/정산 금액을 한눈에 보려면 다 더한 합계가 필요하므로 추가.
-function partnerAmountTotal(partner: PartnerBlock) {
-  const productsAmount = partner.products.reduce(
-    (sum, product) => sum + product.items.reduce((s, item) => s + item.amount, 0),
-    0
-  );
-  return productsAmount + (partner.paperCalc?.amount ?? 0);
-}
-
 // 거래처 > 품목명 순으로 묶어서 트리 형태로 보여주기 위한 그룹핑. 목록 안에서
 // 같은 거래처/품목이 여러 번 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를
 // 그대로 유지). 같은 품목이라도 규격이 다르면 그 아래에 규격별 줄로 나열된다.
@@ -441,12 +430,6 @@ export function DashboardCalendar({
                             </div>
                           )}
                         </div>
-                        {partner.products.length + (partner.paperCalc ? 1 : 0) > 1 && (
-                          <p className="mt-1 flex items-center justify-between gap-2 border-t border-dashed border-[#c7d4ea] pt-1 pl-3 font-bold">
-                            <span>{partner.partnerName} 합계</span>
-                            <span>{partnerAmountTotal(partner).toLocaleString()}원</span>
-                          </p>
-                        )}
                       </div>
                     )
                   )}
@@ -519,12 +502,6 @@ export function DashboardCalendar({
                             </div>
                           )}
                         </div>
-                        {partner.products.length + (partner.paperCalc ? 1 : 0) > 1 && (
-                          <p className="mt-1 flex items-center justify-between gap-2 border-t border-dashed border-[#c3e6cb] pt-1 pl-3 font-bold">
-                            <span>{partner.partnerName} 합계</span>
-                            <span>{partnerAmountTotal(partner).toLocaleString()}원</span>
-                          </p>
-                        )}
                       </div>
                     )
                   )}
