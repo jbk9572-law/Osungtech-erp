@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ClickableRow } from "@/components/clickable-row";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 
 type Detail = {
@@ -25,25 +25,12 @@ type ItemGroup = {
   details: Detail[];
 };
 
-type Transaction = {
-  date: string;
-  type: "in" | "out";
-  companyKey: string;
-  companyName: string;
-  productName: string;
-  spec: string;
-  unit: string | null;
-  quantity: number;
-  amount: number;
-  orderId: string;
-};
-
 export default async function MonthlyReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; q?: string; company?: string }>;
+  searchParams: Promise<{ month?: string; q?: string }>;
 }) {
-  const { month: monthParam, q, company } = await searchParams;
+  const { month: monthParam, q } = await searchParams;
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
   const supabase = await createClient();
@@ -52,7 +39,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customers(id, name)), products(name, spec, unit)"
+        "quantity, unit_price, product_id, sales_orders!inner(order_date, customers(id, name)), products(name, spec, unit)"
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -60,7 +47,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, product_id, purchase_order_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(name, spec, unit)"
+        "quantity, unit_cost, product_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(name, spec, unit)"
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
@@ -70,7 +57,6 @@ export default async function MonthlyReportPage({
   const groups = new Map<string, ItemGroup>();
   const companyIds = new Set<string>();
   const companyNameByKey = new Map<string, string>();
-  const transactions: Transaction[] = [];
 
   function ensureGroup(productId: string, name: string, spec: string, unit: string | null) {
     let group = groups.get(productId);
@@ -107,18 +93,6 @@ export default async function MonthlyReportPage({
           amount,
         });
       }
-      transactions.push({
-        date: row.purchase_orders.purchase_date,
-        type: "in",
-        companyKey,
-        companyName: supplier.name,
-        productName,
-        spec,
-        unit,
-        quantity: row.quantity,
-        amount,
-        orderId: row.purchase_order_id,
-      });
     }
   }
 
@@ -148,18 +122,6 @@ export default async function MonthlyReportPage({
           amount,
         });
       }
-      transactions.push({
-        date: row.sales_orders.order_date,
-        type: "out",
-        companyKey,
-        companyName: customer.name,
-        productName,
-        spec,
-        unit,
-        quantity: row.quantity,
-        amount,
-        orderId: row.sales_order_id,
-      });
     }
   }
 
@@ -183,40 +145,16 @@ export default async function MonthlyReportPage({
   }
 
   // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
-  // 거래처인지 모호하므로 생략), 또는 요약표에서 거래처명을 직접 클릭해
-  // company 파라미터로 특정 거래처를 지정했을 때, 그 거래처의 이번달
-  // 일자별 개별 거래 내역을 별도 표로 추가로 보여준다.
-  let matchedCompanyName: string | null = null;
-  let companyDetailRows: Transaction[] = [];
-  let matchedCompanyKey: string | null = null;
-  if (company && companyNameByKey.has(company)) {
-    matchedCompanyKey = company;
-  } else if (keyword) {
-    const matchedKeys = Array.from(companyNameByKey.entries())
-      .filter(([, name]) => name.toLowerCase().includes(keyword))
-      .map(([key]) => key);
+  // 거래처인지 모호하므로 생략), 요약표를 길게 늘어놓는 대신 그 거래처의
+  // 일자별 상세내역만 보여주는 별도 페이지로 바로 이동시킨다.
+  if (keyword) {
+    const matchedKeys = Array.from(companyNameByKey.keys()).filter((key) =>
+      (companyNameByKey.get(key) ?? "").toLowerCase().includes(keyword)
+    );
     if (matchedKeys.length === 1) {
-      matchedCompanyKey = matchedKeys[0];
+      redirect(`/reports/monthly/company?month=${month}&company=${encodeURIComponent(matchedKeys[0])}`);
     }
   }
-  if (matchedCompanyKey) {
-    matchedCompanyName = companyNameByKey.get(matchedCompanyKey) ?? null;
-    companyDetailRows = transactions
-      .filter((t) => t.companyKey === matchedCompanyKey)
-      .sort((a, b) => a.date.localeCompare(b.date) || a.productName.localeCompare(b.productName));
-  }
-  const companyDetailInQty = companyDetailRows
-    .filter((t) => t.type === "in")
-    .reduce((sum, t) => sum + t.quantity, 0);
-  const companyDetailInAmount = companyDetailRows
-    .filter((t) => t.type === "in")
-    .reduce((sum, t) => sum + t.amount, 0);
-  const companyDetailOutQty = companyDetailRows
-    .filter((t) => t.type === "out")
-    .reduce((sum, t) => sum + t.quantity, 0);
-  const companyDetailOutAmount = companyDetailRows
-    .filter((t) => t.type === "out")
-    .reduce((sum, t) => sum + t.amount, 0);
 
   const totalSalesAmount = itemGroups.reduce((sum, g) => sum + g.outAmount, 0);
   const totalPurchaseAmount = itemGroups.reduce((sum, g) => sum + g.inAmount, 0);
@@ -229,8 +167,7 @@ export default async function MonthlyReportPage({
   const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
-  const qSuffix =
-    (q ? `&q=${encodeURIComponent(q)}` : "") + (company ? `&company=${encodeURIComponent(company)}` : "");
+  const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
 
   return (
     <div>
@@ -276,7 +213,7 @@ export default async function MonthlyReportPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           F5 조회
         </button>
-        {(q || company) && (
+        {q && (
           <Link href={`/reports/monthly?month=${month}`} className="erp-btn">
             초기화
           </Link>
@@ -382,7 +319,7 @@ export default async function MonthlyReportPage({
                   <tr key={`${g.productId}-${d.type}-${d.companyId}`}>
                     <td style={{ paddingLeft: 26 }}>
                       <Link
-                        href={`/reports/monthly?month=${month}&company=${encodeURIComponent(
+                        href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
                           d.type === "in" ? `s:${d.companyId}` : `c:${d.companyId}`
                         )}`}
                         style={{ color: "var(--erp-text-muted)", textDecoration: "underline" }}
@@ -438,79 +375,6 @@ export default async function MonthlyReportPage({
           )}
         </table>
       </div>
-
-      {matchedCompanyName && (
-        <>
-          <div style={{ fontSize: 13, fontWeight: 700, margin: "20px 0 8px" }}>
-            {matchedCompanyName} — 일자별 입출고 상세내역
-          </div>
-          <div className="erp-grid-wrap">
-            <table className="erp-grid">
-              <thead>
-                <tr>
-                  <th style={{ width: 90 }}>날짜</th>
-                  <th style={{ width: 70 }}>구분</th>
-                  <th>품목</th>
-                  <th style={{ width: 160 }}>규격</th>
-                  <th className="num" style={{ width: 110 }}>
-                    수량
-                  </th>
-                  <th className="num" style={{ width: 120 }}>
-                    금액
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {companyDetailRows.map((t, i) => (
-                  <ClickableRow
-                    key={`${t.orderId}-${i}`}
-                    href={t.type === "in" ? `/purchases/${t.orderId}` : `/sales/${t.orderId}`}
-                  >
-                    <td>{t.date}</td>
-                    <td>
-                      <span className={`erp-badge erp-badge-${t.type === "in" ? "success" : "danger"}`}>
-                        {t.type === "in" ? "입고" : "출고"}
-                      </span>
-                    </td>
-                    <td>{t.productName}</td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{t.spec !== "-" ? t.spec : "-"}</td>
-                    <td className="num">
-                      {t.quantity.toLocaleString()} {t.unit}
-                    </td>
-                    <td className="num">{t.amount.toLocaleString()}</td>
-                  </ClickableRow>
-                ))}
-                {!companyDetailRows.length && (
-                  <tr>
-                    <td colSpan={6} className="erp-grid-empty">
-                      해당 월에 거래 내역이 없습니다.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              {companyDetailRows.length > 0 && (
-                <tfoot>
-                  <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                    <td colSpan={4} className="erp-grid-sticky-label">
-                      합계 ({companyDetailRows.length}건)
-                    </td>
-                    <td className="num">
-                      {companyDetailInQty > 0 &&
-                        `입고 ${companyDetailInQty.toLocaleString()}`}
-                      {companyDetailInQty > 0 && companyDetailOutQty > 0 && " / "}
-                      {companyDetailOutQty > 0 &&
-                        `출고 ${companyDetailOutQty.toLocaleString()}`}
-                    </td>
-                    <td className="num">
-                      {(companyDetailInAmount + companyDetailOutAmount).toLocaleString()}
-                    </td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-        </>
-      )}
     </div>
   );
 }
