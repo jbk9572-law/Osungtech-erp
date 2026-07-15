@@ -671,6 +671,15 @@
   vertical-align: top;
 }
 
+.erp-grid tfoot td {
+  height: 30px;
+  padding: 4px 10px;
+  border-top: 2px solid var(--erp-border);
+  white-space: nowrap;
+  color: var(--erp-text);
+  vertical-align: middle;
+}
+
 .erp-grid tbody tr {
   cursor: pointer;
 }
