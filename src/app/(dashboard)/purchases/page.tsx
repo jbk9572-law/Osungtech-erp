@@ -209,7 +209,9 @@ export default async function PurchasesPage({
           {rows.length > 0 && (
             <tfoot>
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={4}>합계 ({rows.length}건)</td>
+                <td colSpan={4} className="erp-grid-sticky-label">
+                  합계 ({rows.length}건)
+                </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />
                 <td className="num">{totalAmount.toLocaleString()}</td>
