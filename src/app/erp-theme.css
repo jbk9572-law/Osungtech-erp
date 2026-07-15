@@ -694,6 +694,15 @@
   color: var(--erp-text-muted);
 }
 
+/* 합계 행의 "합계 (N건)" 라벨 칸. 컬럼이 많아 표를 옆으로 스크롤해야 하는
+   화면에서도 라벨이 왼쪽에 붙어있어, 오른쪽 합계 숫자를 보려고 스크롤해도
+   무슨 합계인지 계속 보이게 한다. */
+.erp-grid-sticky-label {
+  position: sticky;
+  left: 0;
+  background: inherit;
+}
+
 /* ── Status badges ─────────────────────────────────────────── */
 .erp-badge {
   display: inline-flex;

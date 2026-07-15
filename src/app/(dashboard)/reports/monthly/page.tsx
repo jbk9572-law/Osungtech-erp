@@ -41,9 +41,9 @@ type Transaction = {
 export default async function MonthlyReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; q?: string }>;
+  searchParams: Promise<{ month?: string; q?: string; company?: string }>;
 }) {
-  const { month: monthParam, q } = await searchParams;
+  const { month: monthParam, q, company } = await searchParams;
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
   const supabase = await createClient();
@@ -182,22 +182,28 @@ export default async function MonthlyReportPage({
     });
   }
 
-  // 검색어가 거래처 하나로 정확히 특정될 때만(여러 거래처가 매칭되면 어느
-  // 거래처인지 모호하므로 생략) 그 거래처의 이번달 일자별 개별 거래 내역을
-  // 별도 표로 추가로 보여준다.
+  // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
+  // 거래처인지 모호하므로 생략), 또는 요약표에서 거래처명을 직접 클릭해
+  // company 파라미터로 특정 거래처를 지정했을 때, 그 거래처의 이번달
+  // 일자별 개별 거래 내역을 별도 표로 추가로 보여준다.
   let matchedCompanyName: string | null = null;
   let companyDetailRows: Transaction[] = [];
-  if (keyword) {
+  let matchedCompanyKey: string | null = null;
+  if (company && companyNameByKey.has(company)) {
+    matchedCompanyKey = company;
+  } else if (keyword) {
     const matchedKeys = Array.from(companyNameByKey.entries())
       .filter(([, name]) => name.toLowerCase().includes(keyword))
       .map(([key]) => key);
     if (matchedKeys.length === 1) {
-      const [matchedKey] = matchedKeys;
-      matchedCompanyName = companyNameByKey.get(matchedKey) ?? null;
-      companyDetailRows = transactions
-        .filter((t) => t.companyKey === matchedKey)
-        .sort((a, b) => a.date.localeCompare(b.date) || a.productName.localeCompare(b.productName));
+      matchedCompanyKey = matchedKeys[0];
     }
+  }
+  if (matchedCompanyKey) {
+    matchedCompanyName = companyNameByKey.get(matchedCompanyKey) ?? null;
+    companyDetailRows = transactions
+      .filter((t) => t.companyKey === matchedCompanyKey)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.productName.localeCompare(b.productName));
   }
   const companyDetailInQty = companyDetailRows
     .filter((t) => t.type === "in")
@@ -223,7 +229,8 @@ export default async function MonthlyReportPage({
   const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
-  const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
+  const qSuffix =
+    (q ? `&q=${encodeURIComponent(q)}` : "") + (company ? `&company=${encodeURIComponent(company)}` : "");
 
   return (
     <div>
@@ -269,7 +276,7 @@ export default async function MonthlyReportPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           F5 조회
         </button>
-        {q && (
+        {(q || company) && (
           <Link href={`/reports/monthly?month=${month}`} className="erp-btn">
             초기화
           </Link>
@@ -373,7 +380,16 @@ export default async function MonthlyReportPage({
                 </tr>
                 {g.details.map((d) => (
                   <tr key={`${g.productId}-${d.type}-${d.companyId}`}>
-                    <td style={{ paddingLeft: 26, color: "var(--erp-text-muted)" }}>{d.companyName}</td>
+                    <td style={{ paddingLeft: 26 }}>
+                      <Link
+                        href={`/reports/monthly?month=${month}&company=${encodeURIComponent(
+                          d.type === "in" ? `s:${d.companyId}` : `c:${d.companyId}`
+                        )}`}
+                        style={{ color: "var(--erp-text-muted)", textDecoration: "underline" }}
+                      >
+                        {d.companyName}
+                      </Link>
+                    </td>
                     <td>
                       <span className={`erp-badge erp-badge-${d.type === "in" ? "success" : "danger"}`}>
                         {d.type === "in" ? "입고" : "출고"}
@@ -409,7 +425,9 @@ export default async function MonthlyReportPage({
           {itemGroups.length > 0 && (
             <tfoot>
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={2}>합계 ({itemGroups.length}개 품목)</td>
+                <td colSpan={2} className="erp-grid-sticky-label">
+                  합계 ({itemGroups.length}개 품목)
+                </td>
                 <td className="num">{totalInQty.toLocaleString()}</td>
                 <td className="num">{totalInAmount.toLocaleString()}</td>
                 <td className="num">{totalOutQty.toLocaleString()}</td>
@@ -473,7 +491,9 @@ export default async function MonthlyReportPage({
               {companyDetailRows.length > 0 && (
                 <tfoot>
                   <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                    <td colSpan={4}>합계 ({companyDetailRows.length}건)</td>
+                    <td colSpan={4} className="erp-grid-sticky-label">
+                      합계 ({companyDetailRows.length}건)
+                    </td>
                     <td className="num">
                       {companyDetailInQty > 0 &&
                         `입고 ${companyDetailInQty.toLocaleString()}`}
