@@ -443,7 +443,7 @@ export function DashboardCalendar({
                         </div>
                         {partner.products.length + (partner.paperCalc ? 1 : 0) > 1 && (
                           <p className="mt-1 flex items-center justify-between gap-2 border-t border-dashed border-[#c7d4ea] pt-1 pl-3 font-bold">
-                            <span>거래처 합계</span>
+                            <span>{partner.partnerName} 합계</span>
                             <span>{partnerAmountTotal(partner).toLocaleString()}원</span>
                           </p>
                         )}
@@ -521,7 +521,7 @@ export function DashboardCalendar({
                         </div>
                         {partner.products.length + (partner.paperCalc ? 1 : 0) > 1 && (
                           <p className="mt-1 flex items-center justify-between gap-2 border-t border-dashed border-[#c3e6cb] pt-1 pl-3 font-bold">
-                            <span>거래처 합계</span>
+                            <span>{partner.partnerName} 합계</span>
                             <span>{partnerAmountTotal(partner).toLocaleString()}원</span>
                           </p>
                         )}
