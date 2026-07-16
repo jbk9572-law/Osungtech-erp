@@ -47,6 +47,7 @@ export default async function CustomersPage() {
               <th>사업자번호</th>
               <th>담당자</th>
               <th>연락처</th>
+              <th>주소</th>
               <th>발행 문서</th>
               <th />
             </tr>
@@ -58,6 +59,7 @@ export default async function CustomersPage() {
                 <td style={{ color: "var(--erp-text-muted)" }}>{customer.business_number ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{customer.contact_name ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{customer.phone ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{customer.address ?? "-"}</td>
                 <td>
                   <span
                     className={`erp-badge ${
@@ -74,7 +76,7 @@ export default async function CustomersPage() {
             ))}
             {!customers?.length && (
               <tr>
-                <td colSpan={6} className="erp-grid-empty">
+                <td colSpan={7} className="erp-grid-empty">
                   등록된 거래처가 없습니다.
                 </td>
               </tr>

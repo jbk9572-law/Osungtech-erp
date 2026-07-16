@@ -36,6 +36,7 @@ export default async function SuppliersPage() {
               <th>담당자</th>
               <th>이메일</th>
               <th>연락처</th>
+              <th>주소</th>
               <th />
             </tr>
           </thead>
@@ -46,6 +47,7 @@ export default async function SuppliersPage() {
                 <td style={{ color: "var(--erp-text-muted)" }}>{supplier.contact_name ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{supplier.email ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{supplier.phone ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.address ?? "-"}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   수정 →
                 </td>
@@ -53,7 +55,7 @@ export default async function SuppliersPage() {
             ))}
             {!suppliers?.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={6} className="erp-grid-empty">
                   등록된 공급업체가 없습니다.
                 </td>
               </tr>
