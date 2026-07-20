@@ -76,21 +76,41 @@ export type NestResult = {
   effectiveReams: number;
 };
 
+// 가로·세로 둘 다 이 값(mm) 미만이면 "자투리" 취급한다 (isFiller와 같은
+// 기준). 자투리는 남는 여백에 얹혀서 나오는 것뿐이라, 실사용 연수를
+// 계산할 때 "몇 종류를 조합했는지"를 셀 때는 빼고 코어 품목만 센다 —
+// 안 그러면 자투리 하나 끼워넣었다고 해서 실제로는 거의 안 채운 배치도
+// "조합했으니 온전히 다 썼다"고 잘못 인정하게 된다.
+const FILLER_MAX_MM = 300;
+
 // "구매한 연 수는 4연인데 실제 활용도로 따지면 몇 연어치를 쓴 셈이냐"는
 // 질문(거래처와 원지 사용량을 정산/협의할 때 나오는 질문)에 답하기 위한
-// 값이다. 배치별로 다음 기준으로 "온전히 다 쓴 연"인지를 판단한다:
-//   - 사용률이 70% 이상이거나
-//   - 서로 다른 품목을 2종 이상 조합해서 쓴 배치라면(자투리 여백이 남아도
-//     이미 다른 주문 물량과 섞여 있어서 사실상 다시 쓸 수 없다고 봄)
-// 위 조건에 해당하면 1연으로 온전히 인정하고, 아니면 사용률만큼만 인정한다.
+// 값이다. 배치별로 코어 품목(자투리 제외) 조합 종류 수와 사용률을 같이
+// 봐서 "온전히 다 쓴 연"인지를 판단한다 — 조합했다는 사실만으로는
+// 부족하다(조합해도 75%를 버려야 하는 경우가 있을 수 있어서), 그래서
+// 종류가 많을수록 낮은 사용률에서도 인정하되, 그 아래는 항상 사용률
+// 그대로 비례 인정한다:
+//   - 코어 3종 이상 조합 → 사용률과 무관하게 1연
+//   - 코어 2종 조합이면서 사용률 60% 이상 → 1연
+//   - 코어 1종(또는 0종)이면서 사용률 70% 이상 → 1연
+//   - 그 외에는 사용률만큼만(10%당 0.1연) 인정
 // 저장된 계산(layouts JSON)에 대해서도 그대로 쓸 수 있도록 클래스 밖에
 // 독립 함수로 둔다.
 export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500): number {
   if (!sheetPerReam || !layouts.length) return 0;
   const effectiveSheets = layouts.reduce((sum, l) => {
-    const itemTypeCount = new Set(l.items.map((it) => it.name)).size;
-    const fullyUsed = l.margin.usage >= 70 || itemTypeCount >= 2;
-    const fraction = fullyUsed ? 1 : l.margin.usage / 100;
+    const coreNames = new Set(
+      l.items.filter((it) => !(it.w < FILLER_MAX_MM && it.h < FILLER_MAX_MM)).map((it) => it.name)
+    );
+    const coreCount = coreNames.size;
+    const usage = l.margin.usage;
+
+    let fraction: number;
+    if (coreCount >= 3) fraction = 1;
+    else if (coreCount === 2 && usage >= 60) fraction = 1;
+    else if (coreCount <= 1 && usage >= 70) fraction = 1;
+    else fraction = usage / 100;
+
     return sum + fraction * l.sheetCount;
   }, 0);
   return effectiveSheets / sheetPerReam;
@@ -245,8 +265,7 @@ export class NestEngine {
   // 가로·세로 둘 다 300mm 미만이면 "자투리"로 취급한다 — 재사용하지 않는
   // 소형 품목이라 자재비 부담 없이 남는 배치의 여백에 끼워 넣을 수 있다.
   private isFiller(item: Item): boolean {
-    const fillerMaxMm = 300;
-    return item.width < fillerMaxMm && item.height < fillerMaxMm;
+    return item.width < FILLER_MAX_MM && item.height < FILLER_MAX_MM;
   }
 
   // 자유 사각형 목록에서 이 placement가 들어있는 사각형을 찾아 그만큼
