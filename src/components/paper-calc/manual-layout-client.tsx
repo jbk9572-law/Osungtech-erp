@@ -27,6 +27,19 @@ type DragStart = {
 };
 
 const MAX_ROWS = 10;
+const REAM_SHEETS = 500;
+
+// 배치 1건 = 1연(500장)이라, 품목 1개를 원지에 한 번 놓을 때마다 그
+// 배치 전체에서 500개씩 나온다. 그래서 발주수량을 다 채우는 데 필요한
+// 배치 횟수는 500장 단위로 올림한 값이고, 그 이상은 배치할 필요가
+// 없다(오히려 초과생산이 된다).
+function placedCountForItem(sheets: Sheet[], name: string): number {
+  return sheets.reduce((sum, s) => sum + s.placements.filter((p) => p.name === name).length, 0);
+}
+
+function maxCountForItem(item: Item): number {
+  return Math.max(1, Math.ceil(item.orderQty / REAM_SHEETS));
+}
 
 function buildItems(rows: ItemRow[]): Item[] {
   const merged = new Map<string, number>();
@@ -96,6 +109,7 @@ export function ManualLayoutClient() {
   const [warning, setWarning] = useState<string | null>(null);
   const [hoverGhost, setHoverGhost] = useState<Ghost | null>(null);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragStartRef = useRef<DragStart | null>(null);
   const dragGhostRef = useRef<DragGhost | null>(null);
@@ -113,6 +127,29 @@ export function ManualLayoutClient() {
     });
     return map;
   }, [items]);
+
+  // 캐드 도면처럼 50mm 격자선(100mm마다는 조금 진하게)과 100mm 단위
+  // 눈금자를 그려서 실제 치수 감각을 잡기 쉽게 한다.
+  const gridLines = useMemo(() => {
+    const step = 50;
+    const lines: { x1: number; y1: number; x2: number; y2: number; major: boolean }[] = [];
+    for (let x = step; x < paperW; x += step) {
+      lines.push({ x1: x, y1: 0, x2: x, y2: paperH, major: x % 100 === 0 });
+    }
+    for (let y = step; y < paperH; y += step) {
+      lines.push({ x1: 0, y1: y, x2: paperW, y2: y, major: y % 100 === 0 });
+    }
+    return lines;
+  }, [paperW, paperH]);
+
+  const rulerTicksX = useMemo(
+    () => Array.from({ length: Math.floor(paperW / 100) }, (_, i) => (i + 1) * 100),
+    [paperW]
+  );
+  const rulerTicksY = useMemo(
+    () => Array.from({ length: Math.floor(paperH / 100) }, (_, i) => (i + 1) * 100),
+    [paperH]
+  );
 
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
@@ -166,6 +203,15 @@ export function ManualLayoutClient() {
       return;
     }
 
+    const maxCount = maxCountForItem(item);
+    const placedCount = placedCountForItem(sheets, item.name);
+    if (placedCount >= maxCount) {
+      setWarning(
+        `${item.name}은(는) 목표 수량(${item.orderQty.toLocaleString()}개 = ${maxCount}배치)만큼 이미 배치되어 더 배치할 수 없습니다.`
+      );
+      return;
+    }
+
     const snap = Math.max(1, snapMm);
     const x = Math.min(Math.max(Math.round(pt.x / snap) * snap, 0), paperW - w);
     const y = Math.min(Math.max(Math.round(pt.y / snap) * snap, 0), paperH - h);
@@ -188,6 +234,11 @@ export function ManualLayoutClient() {
       color: colorMap[item.name] ?? "#CCCCCC",
     };
     setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [...s.placements, next] } : s)));
+    // 방금 놓은 자리에 그대로 마우스가 남아있으면, 다음 프레임에 미리보기가
+    // "이제 막 다 채워서 더 못 놓는" 상태로 다시 계산되면서 방금 놓은
+    // 조각 위에 빨간 미리보기가 겹쳐 보일 수 있다. 클릭 직후엔 지워서
+    // 마우스가 실제로 움직일 때만 다시 계산되게 한다.
+    setHoverGhost(null);
   }
 
   // 배치할 품목을 골라둔 상태에서 원지 위에 마우스를 올리면, 실제로 클릭하기
@@ -195,13 +246,18 @@ export function ManualLayoutClient() {
   // 초록, 겹치거나 밖으로 나가면 빨강으로 표시해서 정확히 클릭하기 어려운
   // 문제를 덜어준다.
   function handleSvgPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    const svg = svgRef.current;
+    if (svg) {
+      const pt = clientToSheetPoint(svg, e.clientX, e.clientY);
+      setCursorPos({ x: Math.round(pt.x), y: Math.round(pt.y) });
+    }
+
     if (dragStartRef.current) return;
     if (!selectedItemName) {
       setHoverGhost(null);
       return;
     }
     const item = items.find((it) => it.name === selectedItemName);
-    const svg = svgRef.current;
     if (!item || !svg) {
       setHoverGhost(null);
       return;
@@ -216,12 +272,14 @@ export function ManualLayoutClient() {
     const snap = Math.max(1, snapMm);
     const x = Math.min(Math.max(Math.round(pt.x / snap) * snap, 0), paperW - w);
     const y = Math.min(Math.max(Math.round(pt.y / snap) * snap, 0), paperH - h);
-    const valid = !sheets[sheetIndex].placements.some((p) => overlaps({ x, y, w, h }, p));
+    const countExceeded = placedCountForItem(sheets, item.name) >= maxCountForItem(item);
+    const valid = !countExceeded && !sheets[sheetIndex].placements.some((p) => overlaps({ x, y, w, h }, p));
     setHoverGhost({ x, y, w, h, valid });
   }
 
   function handleSvgPointerLeave() {
     setHoverGhost(null);
+    setCursorPos(null);
   }
 
   // 이미 배치된 조각을 눌러서 끄는(드래그) 동작. Pointer Capture를 쓰면
@@ -485,35 +543,42 @@ export function ManualLayoutClient() {
             </p>
           ) : (
             <div className="flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
-              {items.map((item) => (
-                <button
-                  key={item.name}
-                  type="button"
-                  className="erp-btn"
-                  style={{
-                    minWidth: 0,
-                    height: 30,
-                    padding: "0 10px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    outline: selectedItemName === item.name ? "2px solid #1c1c1c" : "none",
-                    outlineOffset: -1,
-                  }}
-                  onClick={() => setSelectedItemName(item.name)}
-                >
-                  <span
+              {items.map((item) => {
+                const placedCount = placedCountForItem(sheets, item.name);
+                const maxCount = maxCountForItem(item);
+                const isDone = placedCount >= maxCount;
+                return (
+                  <button
+                    key={item.name}
+                    type="button"
+                    className="erp-btn"
+                    disabled={isDone}
                     style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 2,
-                      background: colorMap[item.name],
-                      display: "inline-block",
+                      minWidth: 0,
+                      height: 30,
+                      padding: "0 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      outline: selectedItemName === item.name ? "2px solid #1c1c1c" : "none",
+                      outlineOffset: -1,
+                      opacity: isDone ? 0.55 : 1,
                     }}
-                  />
-                  {item.name} ({item.orderQty.toLocaleString()})
-                </button>
-              ))}
+                    onClick={() => setSelectedItemName(item.name)}
+                  >
+                    <span
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 2,
+                        background: colorMap[item.name],
+                        display: "inline-block",
+                      }}
+                    />
+                    {item.name} ({placedCount}/{maxCount}배치{isDone ? " · 완료" : ""})
+                  </button>
+                );
+              })}
               <label className="ml-2 flex items-center gap-1 text-xs">
                 <input type="checkbox" checked={rotated} onChange={(e) => setRotated(e.target.checked)} />
                 회전해서 배치
@@ -565,6 +630,12 @@ export function ManualLayoutClient() {
             <span>
               배치 {sheetIndex + 1} · {paperW} × {paperH} mm · 사용률{" "}
               {layouts[sheetIndex]?.margin.usage ?? 0}%
+              {cursorPos && (
+                <span style={{ color: "var(--erp-text-muted)" }}>
+                  {" "}
+                  · X {cursorPos.x}mm, Y {cursorPos.y}mm
+                </span>
+              )}
             </span>
             <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={clearCurrentSheet}>
               이 배치 비우기
@@ -586,10 +657,40 @@ export function ManualLayoutClient() {
             onPointerLeave={handleSvgPointerLeave}
           >
             <rect x={0} y={0} width={paperW} height={paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+            <g style={{ pointerEvents: "none" }}>
+              {gridLines.map((l, i) => (
+                <line
+                  key={i}
+                  x1={l.x1}
+                  y1={l.y1}
+                  x2={l.x2}
+                  y2={l.y2}
+                  stroke={l.major ? "#d8d8d8" : "#ebebeb"}
+                  strokeWidth={l.major ? 1 : 0.5}
+                />
+              ))}
+              {rulerTicksX.map((x) => (
+                <g key={`rx-${x}`}>
+                  <line x1={x} y1={0} x2={x} y2={12} stroke="#999999" strokeWidth={1} />
+                  <text x={x} y={23} textAnchor="middle" fontSize={Math.min(paperW, paperH) * 0.018} fill="#999999">
+                    {x}
+                  </text>
+                </g>
+              ))}
+              {rulerTicksY.map((y) => (
+                <g key={`ry-${y}`}>
+                  <line x1={0} y1={y} x2={12} y2={y} stroke="#999999" strokeWidth={1} />
+                  <text x={16} y={y + 4} fontSize={Math.min(paperW, paperH) * 0.018} fill="#999999">
+                    {y}
+                  </text>
+                </g>
+              ))}
+            </g>
             {currentSheet.placements.map((it, i) => {
               const isSelected = i === selectedPlacementIndex;
               const isDragging = dragGhost?.index === i;
               const showLabel = it.w >= paperW * 0.07 && it.h >= paperH * 0.04;
+              const dimFontSize = Math.min(paperW, paperH) * 0.02;
               return (
                 <g key={i}>
                   <rect
@@ -608,17 +709,40 @@ export function ManualLayoutClient() {
                     onPointerUp={handleItemPointerUp}
                   />
                   {showLabel && !isDragging && (
-                    <text
-                      x={it.x + it.w / 2}
-                      y={it.y + it.h / 2}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fontSize={Math.min(paperW, paperH) * 0.03}
-                      fill="#222222"
-                      style={{ pointerEvents: "none" }}
-                    >
-                      {it.name}
-                    </text>
+                    <>
+                      <text
+                        x={it.x + it.w / 2}
+                        y={it.y + it.h / 2}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fontSize={Math.min(paperW, paperH) * 0.03}
+                        fill="#222222"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        {it.name}
+                      </text>
+                      <text
+                        x={it.x + it.w / 2}
+                        y={it.y + dimFontSize + 4}
+                        textAnchor="middle"
+                        fontSize={dimFontSize}
+                        fill="#444444"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        {it.w}
+                      </text>
+                      <text
+                        x={it.x + dimFontSize + 4}
+                        y={it.y + it.h / 2}
+                        textAnchor="middle"
+                        fontSize={dimFontSize}
+                        fill="#444444"
+                        transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
+                        style={{ pointerEvents: "none" }}
+                      >
+                        {it.h}
+                      </text>
+                    </>
                   )}
                 </g>
               );
