@@ -699,6 +699,32 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
             </g>
           );
         })}
+        {layout.leftover
+          ?.filter((r) => r.width >= layout.paperW * 0.06 && r.height >= layout.paperH * 0.04)
+          .map((r, i) => (
+            <g key={`leftover-${i}`}>
+              <rect
+                x={r.x}
+                y={r.y}
+                width={r.width}
+                height={r.height}
+                fill="none"
+                stroke="#999999"
+                strokeDasharray="6 4"
+                strokeWidth={1.5}
+              />
+              <text
+                x={r.x + r.width / 2}
+                y={r.y + r.height / 2}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={Math.min(layout.paperW, layout.paperH) * 0.028}
+                fill="#888888"
+              >
+                {`${Math.round(r.width)}×${Math.round(r.height)} 여유`}
+              </text>
+            </g>
+          ))}
       </svg>
       <div className="mt-1.5 text-center text-xs" style={{ color: "#555555" }}>
         {layout.sheetCount.toLocaleString()}장 (약 {layout.batchReams}연) · 사용률 {layout.margin.usage}%
