@@ -2,6 +2,7 @@ import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PaperCalcClient } from "@/components/paper-calc/paper-calc-client";
 import { createClient } from "@/lib/supabase/server";
+import type { NestLayout } from "@/lib/paper-nest-engine";
 
 export default async function PaperCalcPage({
   searchParams,
@@ -19,6 +20,7 @@ export default async function PaperCalcPage({
     over_prod: number;
     fulfilled: boolean;
     created_at: string;
+    layouts: NestLayout[];
   }[] = [];
 
   if (salesOrderId) {
@@ -31,14 +33,14 @@ export default async function PaperCalcPage({
         .maybeSingle(),
       supabase
         .from("paper_calculations")
-        .select("id, total_paper, total_sheet, total_prod, over_prod, fulfilled, created_at")
+        .select("id, total_paper, total_sheet, total_prod, over_prod, fulfilled, created_at, layouts")
         .eq("sales_order_id", salesOrderId)
         .order("created_at", { ascending: false }),
     ]);
     if (order) {
       salesOrderLabel = `#${order.doc_no} ${order.customers?.name ?? ""}`.trim();
     }
-    savedCalculations = calcs ?? [];
+    savedCalculations = (calcs ?? []).map((c) => ({ ...c, layouts: (c.layouts as NestLayout[]) ?? [] }));
   } else if (purchaseOrderId) {
     const supabase = await createClient();
     const [{ data: order }, { data: calcs }] = await Promise.all([
@@ -49,14 +51,14 @@ export default async function PaperCalcPage({
         .maybeSingle(),
       supabase
         .from("paper_calculations")
-        .select("id, total_paper, total_sheet, total_prod, over_prod, fulfilled, created_at")
+        .select("id, total_paper, total_sheet, total_prod, over_prod, fulfilled, created_at, layouts")
         .eq("purchase_order_id", purchaseOrderId)
         .order("created_at", { ascending: false }),
     ]);
     if (order) {
       purchaseOrderLabel = `${order.suppliers?.name ?? ""} (${order.purchase_date})`.trim();
     }
-    savedCalculations = calcs ?? [];
+    savedCalculations = (calcs ?? []).map((c) => ({ ...c, layouts: (c.layouts as NestLayout[]) ?? [] }));
   }
 
   const closeHref = salesOrderId

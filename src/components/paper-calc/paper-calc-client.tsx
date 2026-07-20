@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
-import { NestEngine, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
@@ -19,6 +19,7 @@ type SavedCalculation = {
   over_prod: number;
   fulfilled: boolean;
   created_at: string;
+  layouts: NestLayout[];
 };
 
 const BATCHES_PER_PAGE = 2;
@@ -545,13 +546,13 @@ function SavedCalcRow({
   purchaseOrderId: string | null;
 }) {
   const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
-  const exactReams = calc.total_paper / 500;
+  const effectiveReams = computeEffectiveReams(calc.layouts);
 
   return (
     <tr>
       <td>{new Date(calc.created_at).toLocaleString("ko-KR")}</td>
       <td className="num">
-        {calc.total_paper.toLocaleString()}장 ({calc.total_sheet}연 구매 · 실사용 {exactReams.toFixed(2)}연)
+        {calc.total_paper.toLocaleString()}장 ({calc.total_sheet}연 구매 · 실사용 {effectiveReams.toFixed(2)}연)
       </td>
       <td className="num">{calc.total_prod.toLocaleString()}매</td>
       <td className="num">{calc.over_prod.toLocaleString()}매</td>
@@ -607,12 +608,11 @@ function DashboardCards({
   usageAvg: number | null;
   marginTotal: number | null;
 }) {
-  const exactReams = result.totalPaper / 500;
   const cards = [
     {
       label: "총 원지",
       value: result.totalPaper.toLocaleString(),
-      sub: `${result.totalSheet}연 구매 · 실사용 ${exactReams.toFixed(2)}연`,
+      sub: `${result.totalSheet}연 구매 · 실사용 ${result.effectiveReams.toFixed(2)}연`,
     },
     { label: "총 생산", value: result.totalProd.toLocaleString(), sub: "" },
     {
