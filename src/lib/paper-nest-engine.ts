@@ -240,6 +240,20 @@ export class NestEngine {
     return item.width < fillerMaxMm && item.height < fillerMaxMm;
   }
 
+  // 자유 사각형 목록에서 이 placement가 들어있는 사각형을 찾아 그만큼
+  // 잘라낸다(나머지는 계속 자유 공간으로 남긴다).
+  private consumeRect(freeRects: FreeRect[], placement: Placement): FreeRect[] {
+    const target = freeRects.find(
+      (r) =>
+        placement.x >= r.x &&
+        placement.y >= r.y &&
+        placement.x + placement.width <= r.x + r.width &&
+        placement.y + placement.height <= r.y + r.height
+    );
+    if (!target) return freeRects;
+    return this.placeRect(freeRects, target, placement);
+  }
+
   // 어떤 placements 집합이 시트 위에서 실제로 차지하고 남은 빈 사각형들을
   // 계산한다. buildPatterns에서 쓰는 것과 같은 FreeRect 분할 로직을 그대로
   // 재사용해서, 패턴이 원래 어떻게 만들어졌든(격자든 DFS든) 상관없이 최종
@@ -251,15 +265,7 @@ export class NestEngine {
     ];
 
     for (const placement of placements) {
-      const target = freeRects.find(
-        (r) =>
-          placement.x >= r.x &&
-          placement.y >= r.y &&
-          placement.x + placement.width <= r.x + r.width &&
-          placement.y + placement.height <= r.y + r.height
-      );
-      if (!target) continue;
-      freeRects = this.placeRect(freeRects, target, placement);
+      freeRects = this.consumeRect(freeRects, placement);
     }
 
     return freeRects.filter((r) => r.width > 1 && r.height > 1);
@@ -323,41 +329,42 @@ export class NestEngine {
         const space = ordered[0];
         if (!space || largestArea(space) <= 0) break;
 
-        const fit = this.bestFitInRects(space.freeRects, item);
-        if (!fit) {
+        const maxFit = this.bestFitInRects(space.freeRects, item);
+        if (!maxFit) {
           space.freeRects = [];
           continue;
         }
 
-        const produced = fit.count * space.reps;
+        // 이 자리에 기하학적으로 최대 몇 개까지 들어가든, 남은 발주량을
+        // 채우는 데 필요한 개수만큼만 자른다 — 코어 품목과 똑같이 발주량
+        // 이상으로는 자르지 않는다. 나머지 자리는 빈 여백으로 남는다.
+        const neededCount = Math.ceil(need / space.reps);
+        const placeCount = Math.min(maxFit.count, neededCount);
+
+        const produced = placeCount * space.reps;
         const used = Math.min(produced, need);
         need -= used;
         if (produced > used) fillerOverProduction += produced - used;
 
-        for (let r = 0; r < fit.rows; r++) {
-          for (let c = 0; c < fit.cols; c++) {
-            space.pattern.placements.push({
+        let placed = 0;
+        outer: for (let r = 0; r < maxFit.rows; r++) {
+          for (let c = 0; c < maxFit.cols; c++) {
+            if (placed >= placeCount) break outer;
+            const p: Placement = {
               name: item.name,
-              x: fit.rect.x + c * fit.w,
-              y: fit.rect.y + r * fit.h,
-              width: fit.w,
-              height: fit.h,
-              rotated: fit.w !== item.width,
-            });
+              x: maxFit.rect.x + c * maxFit.w,
+              y: maxFit.rect.y + r * maxFit.h,
+              width: maxFit.w,
+              height: maxFit.h,
+              rotated: maxFit.w !== item.width,
+            };
+            space.pattern.placements.push(p);
+            space.freeRects = this.consumeRect(space.freeRects, p);
+            placed += 1;
           }
         }
-        space.pattern.counts[item.name] = (space.pattern.counts[item.name] ?? 0) + fit.count;
-        space.pattern.coveredArea += fit.count * item.width * item.height;
-
-        const usedBlock: Placement = {
-          name: item.name,
-          x: fit.rect.x,
-          y: fit.rect.y,
-          width: fit.cols * fit.w,
-          height: fit.rows * fit.h,
-          rotated: false,
-        };
-        space.freeRects = this.placeRect(space.freeRects, fit.rect, usedBlock);
+        space.pattern.counts[item.name] = (space.pattern.counts[item.name] ?? 0) + placeCount;
+        space.pattern.coveredArea += placeCount * item.width * item.height;
       }
 
       if (need > 0) {
