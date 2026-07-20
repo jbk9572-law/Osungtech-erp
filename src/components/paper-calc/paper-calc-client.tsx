@@ -599,7 +599,7 @@ function SavedCalcRow({
   );
 }
 
-function DashboardCards({
+export function DashboardCards({
   result,
   usageAvg,
   marginTotal,
