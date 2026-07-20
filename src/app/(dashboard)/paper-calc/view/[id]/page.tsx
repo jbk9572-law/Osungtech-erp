@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PaperCalcReport } from "@/components/paper-calc/paper-calc-report";
-import type { Item, NestLayout, NestResult } from "@/lib/paper-nest-engine";
+import { computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 
 export default async function PaperCalcViewPage({
   params,
@@ -27,14 +27,17 @@ export default async function PaperCalcViewPage({
     items: (calc.input_items as Item[]) ?? [],
   };
 
+  const layouts = (calc.layouts as NestLayout[]) ?? [];
+
   const result: NestResult = {
     totalPaper: calc.total_paper,
     totalSheet: calc.total_sheet,
     totalProd: calc.total_prod,
     overProd: calc.over_prod,
-    layouts: (calc.layouts as NestLayout[]) ?? [],
+    layouts,
     fulfilled: calc.fulfilled,
     remaining: {},
+    effectiveReams: computeEffectiveReams(layouts),
   };
 
   const closeHref = calc.sales_order_id

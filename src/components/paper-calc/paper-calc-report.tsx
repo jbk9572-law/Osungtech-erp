@@ -24,7 +24,6 @@ export function PaperCalcReport({
   const usageValues = result.layouts.filter((l) => l.margin.usage != null);
   const totalW = usageValues.reduce((sum, l) => sum + l.sheetCount, 0);
   const usageAvg = totalW > 0 ? usageValues.reduce((sum, l) => sum + l.margin.usage * l.sheetCount, 0) / totalW : null;
-  const exactReams = result.totalPaper / 500;
 
   return (
     <div className="mx-auto max-w-4xl p-8 print:p-0">
@@ -42,7 +41,7 @@ export function PaperCalcReport({
           {
             label: "총 원지",
             value: `${result.totalPaper.toLocaleString()}장`,
-            sub: `${result.totalSheet}연 구매 (실사용 ${exactReams.toFixed(2)}연)`,
+            sub: `${result.totalSheet}연 구매 (실사용 ${result.effectiveReams.toFixed(2)}연)`,
           },
           { label: "총 생산", value: `${result.totalProd.toLocaleString()}매`, sub: "" },
           { label: "초과 생산", value: `${result.overProd.toLocaleString()}매`, sub: "" },

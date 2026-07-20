@@ -71,7 +71,21 @@ export type NestResult = {
   layouts: NestLayout[];
   fulfilled: boolean;
   remaining: Record<string, number>;
+  // 실제로 유효하게 쓰인 원지가 몇 연어치인지(연 단위 실수). 구매해야 하는
+  // 연 수(totalSheet, 항상 정수로 올림)와 달리 사용률을 그대로 반영한다.
+  effectiveReams: number;
 };
+
+// 배치별 사용률(margin.usage) × 사용 장수를 다 더해서, 실제로 유효하게
+// 쓰인 원지 면적이 몇 연어치인지 계산한다. "구매한 연 수는 4연인데 실제
+// 활용도로 따지면 몇 연어치를 쓴 셈이냐"는 질문(거래처와 원지 사용량을
+// 정산/협의할 때 나오는 질문)에 답하기 위한 값이다. 저장된 계산(layouts
+// JSON)에 대해서도 그대로 쓸 수 있도록 클래스 밖에 독립 함수로 둔다.
+export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500): number {
+  if (!sheetPerReam || !layouts.length) return 0;
+  const effectiveSheets = layouts.reduce((sum, l) => sum + (l.margin.usage / 100) * l.sheetCount, 0);
+  return effectiveSheets / sheetPerReam;
+}
 
 // 범례/도면 색상을 엔진에서 한 번만 정해서 내려준다 (화면·인쇄 색상이 어긋나지 않도록).
 const PALETTE = [
@@ -877,6 +891,7 @@ export class NestEngine {
       layouts,
       fulfilled,
       remaining,
+      effectiveReams: computeEffectiveReams(layouts, this.sheetPerReam),
     };
   }
 
@@ -889,6 +904,7 @@ export class NestEngine {
       layouts: [],
       fulfilled: false,
       remaining: remaining ?? {},
+      effectiveReams: 0,
     };
   }
 }
