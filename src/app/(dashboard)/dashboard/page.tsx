@@ -73,14 +73,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
+        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -131,6 +131,7 @@ export default async function DashboardPage({
     quantity: number;
     amount: number;
     orderId: string;
+    remark: string | null;
   };
 
   type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
@@ -212,6 +213,7 @@ export default async function DashboardPage({
       quantity: item.quantity,
       amount,
       orderId: item.sales_order_id,
+      remark: item.remark,
     });
   }
 
@@ -234,6 +236,7 @@ export default async function DashboardPage({
       quantity: item.quantity,
       amount,
       orderId: item.purchase_order_id,
+      remark: item.remark,
     });
   }
 
