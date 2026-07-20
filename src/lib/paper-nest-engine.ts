@@ -2,6 +2,10 @@
 // Paper Nesting Pro(Streamlit/Python) 버전의 engine.py를 그대로 이식한 것.
 // 1) 품목 조합(1~3종류)마다 "가장 채움률 좋은 배치 패턴"을 미리 만든다
 // 2) 그 패턴들을 그리디(욕심쟁이)로 반복 사용해서 발주량을 채운다
+// 3) (마무리 패스) 품목이 하나씩 다 채워져서 남은 품목 구성이 바뀔 때마다,
+//    그 순간 남은 품목들만 가지고 배치를 새로 탐색해 후보에 추가한다 —
+//    처음부터 만들어둔 패턴만으로는 발주 막바지에 남은 소량 조합을 딱 맞게
+//    채워줄 대안이 없을 수 있어서다.
 // 원지는 항상 500장(1연) 단위로만 사용한다 — 재단기를 다시 세팅하지 않고
 // 한 번에 쌓아 자르는 실제 인쇄소 작업 방식과 맞춰야 하기 때문.
 
@@ -122,13 +126,35 @@ export class NestEngine {
     let totalSheetsUsed = 0;
     const safetyLimit = this.safetySheetLimit(items);
 
+    // 마무리 패스: 발주 전체 품목 조합 기준으로 미리 만들어둔 patterns는
+    // "이 시점에 정확히 뭐가 얼마나 남았는지"를 모른 채로 만들어졌다. 품목이
+    // 하나씩 다 채워져서 남은 품목 구성이 바뀔 때마다, 그 순간 남아있는
+    // 품목들만 가지고 배치를 새로 탐색해서 후보에 더해준다 — 사람이 "이제
+    // 뭐 남았지, 이걸로 마지막 판 짜자" 하는 것과 같은 방식이다. 품목이
+    // 1개만 남으면 이미 기본 patterns에 있는 단일 품목 배치와 같아서 다시
+    // 찾을 필요가 없고, 4개 이상이면 비용이 커서 2~3개일 때만 돌린다.
+    let tailPatterns: Pattern[] = [];
+    let tailActiveKey = "";
+
     while (Object.values(remaining).some((qty) => qty > 0)) {
       if (totalSheetsUsed >= safetyLimit) {
         // 이론상 도달하면 안 되는 상황(무한루프 방지용 안전장치)
         break;
       }
 
-      const pattern = this.selectBestPattern(patterns, remaining);
+      const activeItems = items.filter((it) => (remaining[it.name] ?? 0) > 0);
+      const activeKey = activeItems
+        .map((it) => it.name)
+        .sort()
+        .join(",");
+      if (activeKey !== tailActiveKey && activeItems.length >= 2 && activeItems.length <= 3) {
+        tailActiveKey = activeKey;
+        const tailCombinations = this.generateCombinations(activeItems);
+        tailPatterns = this.buildPatterns(tailCombinations, { perComboMs: 300, globalMs: 1500 });
+      }
+
+      const candidatePatterns = tailPatterns.length ? [...patterns, ...tailPatterns] : patterns;
+      const pattern = this.selectBestPattern(candidatePatterns, remaining);
       if (!pattern) break;
 
       // 패턴 하나를 선택하면 무조건 500장(1연) 단위로 사용한다. 재단 세팅을
@@ -413,8 +439,10 @@ export class NestEngine {
     };
   }
 
-  private buildPatterns(combinations: Item[][]): Pattern[] {
+  private buildPatterns(combinations: Item[][], budget?: { perComboMs: number; globalMs: number }): Pattern[] {
     const patterns: Pattern[] = [];
+    const perComboMs = budget?.perComboMs ?? 800;
+    const globalMs = budget?.globalMs ?? 5000;
 
     // 단일 품목 조합은 시간 예산과 무관하게 먼저 전부 처리한다.
     for (const combo of combinations) {
@@ -427,7 +455,7 @@ export class NestEngine {
     // 조합 전체(최대 175개까지 가능)에 대한 총 시간 상한. 콤보별로 0.8초씩
     // 걸려도 품목이 10개면 최악의 경우 2분 넘게 걸릴 수 있어서, 전체 예산을
     // 넘기면 남은 조합은 건너뛴다.
-    const globalDeadline = Date.now() + 5000;
+    const globalDeadline = Date.now() + globalMs;
 
     for (const combo of combinations) {
       if (combo.length === 1) continue;
@@ -447,7 +475,7 @@ export class NestEngine {
         layoutBuffer,
         seenKeys,
         200,
-        Date.now() + 800
+        Date.now() + perComboMs
       );
 
       if (layoutBuffer.length === 0) continue;
