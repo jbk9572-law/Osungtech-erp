@@ -490,9 +490,18 @@ export class NestEngine {
   // 지금 남아있는 발주량 기준으로 "가장 도움이 되는" 패턴을 고른다 (그
   // 패턴을 썼을 때 실제로 필요한 만큼만 인정해서 점수를 매겨, 이미 다 채운
   // 품목만 잔뜩 만드는 패턴은 낮은 점수를 받는다).
+  //
+  // 패턴 하나를 고르면 무조건 한 연(sheetPerReam장)만큼 찍어낸다. 그래서
+  // "장당 개수"가 아니라 "그 연 전체를 찍었을 때 실제로 쓰이는 개수"를
+  // 기준으로 점수를 매겨야 한다 — 예를 들어 장당 2개 나오는 품목이 딱
+  // 500개만 남았는데 그대로 1연(500장)을 다 찍으면 1,000개가 나와 절반이
+  // 그냥 초과생산으로 버려진다. 장당 개수만 보고 점수를 매기면 이 낭비가
+  // 전혀 페널티로 반영되지 않아, 마지막에 남은 소량을 다른 품목과 같이
+  // 배치하는 혼합 패턴보다도 이 낭비 패턴이 더 높은 점수를 받는 문제가 있었다.
   private selectBestPattern(patterns: Pattern[], remaining: Record<string, number>): Pattern | null {
     const nameToItem = new Map(this.items.map((item) => [item.name, item]));
     const sheetArea = this.sheetWidth * this.sheetHeight;
+    const reps = this.sheetPerReam;
 
     let bestPattern: Pattern | null = null;
     let bestScore = -1;
@@ -507,8 +516,10 @@ export class NestEngine {
         anyNeeded = true;
         const item = nameToItem.get(name);
         if (!item) continue;
-        const usefulCount = Math.min(count, rem);
-        usefulArea += usefulCount * item.width * item.height;
+        // 이 연(reps장) 전체를 찍었을 때 실제로 필요한 만큼만(초과분 제외)
+        // 장당 개수로 환산해서 인정한다.
+        const usefulCountPerSheet = reps ? Math.min(count * reps, rem) / reps : Math.min(count, rem);
+        usefulArea += usefulCountPerSheet * item.width * item.height;
       }
 
       if (!anyNeeded) continue;
