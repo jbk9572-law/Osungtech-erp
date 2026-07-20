@@ -174,14 +174,19 @@ export class NestEngine {
       if (!pattern) break;
 
       // 패턴 하나를 선택하면 무조건 500장(1연) 단위로 사용한다. 재단 세팅을
-      // 한 번 하면 최소 1연은 채워야 실제 인쇄소 운영과 맞기 때문에, 남으면
-      // 초과생산으로 처리한다.
+      // 한 번 하면 최소 1연은 채워야 실제 인쇄소 운영과 맞기 때문에, 원지
+      // 장수는 남으면 안 되고 무조건 다 쓴다. 다만 "그 장수를 몇 개씩 잘라
+      // 낼지"는 다른 문제다 — 이 패턴을 고른 순간 남은 발주량보다 더 많이
+      // 나오는 품목이 있으면(장당 개수를 다 채워서 자르면 초과분이 나오는
+      // 경우), 그만큼만 자르고 나머지 자리는 빈 여백으로 남긴다. 원지
+      // 사용량(연 수)은 그대로인데 불필요하게 더 자르지 않아도 되기 때문.
       const reps = this.sheetPerReam;
+      const trimmedPattern = this.trimPatternToRemaining(pattern, remaining, reps);
 
-      patternUsage.set(pattern, (patternUsage.get(pattern) ?? 0) + reps);
+      patternUsage.set(trimmedPattern, (patternUsage.get(trimmedPattern) ?? 0) + reps);
       totalSheetsUsed += reps;
 
-      for (const [name, count] of Object.entries(pattern.counts)) {
+      for (const [name, count] of Object.entries(trimmedPattern.counts)) {
         if (count <= 0) continue;
         const totalNeeded = count * reps;
         const rem = remaining[name] ?? 0;
@@ -692,6 +697,51 @@ export class NestEngine {
     }
 
     return patterns;
+  }
+
+  // 선택된 패턴을 이 연(reps장)에 실제로 쓸 때, 발주량보다 더 나오는
+  // 품목이 있으면 그만큼만 남기고 나머지 자리는 잘라내지 않는다(빈 여백으로
+  // 남김). 원지 장수(연 수)는 이미 정해진 대로 그대로 쓰지만, 그 안에서
+  // 몇 개씩 잘라낼지는 남은 발주량에 맞춰 줄일 수 있다 — 잘라도 남는 원지
+  // 자체는 어차피 쓰는 거라 자재비 차이는 없지만, 필요 이상으로 잘라내
+  // 봐야 안 팔리는 재고만 늘어난다.
+  private trimPatternToRemaining(pattern: Pattern, remaining: Record<string, number>, reps: number): Pattern {
+    const targetCounts: Record<string, number> = {};
+    let changed = false;
+
+    for (const [name, count] of Object.entries(pattern.counts)) {
+      const rem = remaining[name] ?? 0;
+      if (rem <= 0) {
+        targetCounts[name] = 0;
+        changed = true;
+        continue;
+      }
+      const neededPerSheet = Math.ceil(rem / reps);
+      const target = Math.min(count, neededPerSheet);
+      targetCounts[name] = target;
+      if (target < count) changed = true;
+    }
+
+    if (!changed) return pattern;
+
+    const kept: Record<string, number> = {};
+    const placements: Placement[] = [];
+    for (const p of pattern.placements) {
+      const target = targetCounts[p.name] ?? 0;
+      const already = kept[p.name] ?? 0;
+      if (already >= target) continue;
+      kept[p.name] = already + 1;
+      placements.push(p);
+    }
+
+    const counts: Record<string, number> = {};
+    for (const [name, count] of Object.entries(kept)) {
+      if (count > 0) counts[name] = count;
+    }
+
+    const coveredArea = placements.reduce((sum, p) => sum + p.width * p.height, 0);
+
+    return { placements, counts, coveredArea };
   }
 
   // 지금 남아있는 발주량 기준으로 "가장 도움이 되는" 패턴을 고른다 (그
