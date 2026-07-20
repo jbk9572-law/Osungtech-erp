@@ -6,6 +6,10 @@
 //    그 순간 남은 품목들만 가지고 배치를 새로 탐색해 후보에 추가한다 —
 //    처음부터 만들어둔 패턴만으로는 발주 막바지에 남은 소량 조합을 딱 맞게
 //    채워줄 대안이 없을 수 있어서다.
+// 4) (자투리 배치) 300mm 미만인 소형 품목은 남겨도 재사용하지 않으므로,
+//    코어(300mm 이상) 품목으로 이미 정해진 배치들의 남는 여백 중 가장 넓은
+//    곳부터 채워 넣는다 — 어차피 버려질 자투리라 자재비 부담이 없고, 좁은
+//    구석보다 넓은 여백에서 자르는 게 작업자에게 더 편하기 때문이다.
 // 원지는 항상 500장(1연) 단위로만 사용한다 — 재단기를 다시 세팅하지 않고
 // 한 번에 쌓아 자르는 실제 인쇄소 작업 방식과 맞춰야 하기 때문.
 
@@ -55,6 +59,8 @@ export type NestLayout = {
   margin: { usage: number; right: number; bottom: number; area: number };
   sheetCount: number;
   batchReams: number;
+  // 다 자르고 남는 빈 공간(자투리) — 큰 것부터 최대 2개까지.
+  leftover: { x: number; y: number; width: number; height: number }[];
 };
 
 export type NestResult = {
@@ -107,15 +113,25 @@ export class NestEngine {
 
     if (items.length === 0) return this.emptyReport();
 
-    const remaining: Record<string, number> = {};
-    for (const item of items) remaining[item.name] = item.orderQty;
+    // 300mm 미만(가로·세로 둘 다)인 소형 품목은 "자투리"로 취급해 별도 연을
+    // 새로 만들지 않고, 아래에서 코어 품목 배치가 정해진 뒤 그 남는 여백에
+    // 얹는다. 코어 품목이 하나도 없으면(전부 소형) 기존 방식 그대로 전체
+    // 품목을 대상으로 계산한다.
+    const coreItems = items.filter((it) => !this.isFiller(it));
+    const fillerItems = items.filter((it) => this.isFiller(it));
+    const primaryItems = coreItems.length > 0 ? coreItems : items;
 
-    const combinations = this.generateCombinations(items);
+    const remaining: Record<string, number> = {};
+    for (const item of primaryItems) remaining[item.name] = item.orderQty;
+
+    const combinations = this.generateCombinations(primaryItems);
     const patterns = this.buildPatterns(combinations);
 
     if (patterns.length === 0) {
       // 어떤 품목도 원지 안에 들어가지 않는 경우 (치수 오류 등)
-      return this.emptyReport(remaining);
+      const remainingAll: Record<string, number> = {};
+      for (const item of items) remainingAll[item.name] = item.orderQty;
+      return this.emptyReport(remainingAll);
     }
 
     // Cutting Stock 그리디 탐색: 원지를 한 장씩 쌓지 않고 "이 패턴을 몇 장
@@ -124,7 +140,7 @@ export class NestEngine {
     const patternUsage = new Map<Pattern, number>();
     let overProduction = 0;
     let totalSheetsUsed = 0;
-    const safetyLimit = this.safetySheetLimit(items);
+    const safetyLimit = this.safetySheetLimit(primaryItems);
 
     // 마무리 패스: 발주 전체 품목 조합 기준으로 미리 만들어둔 patterns는
     // "이 시점에 정확히 뭐가 얼마나 남았는지"를 모른 채로 만들어졌다. 품목이
@@ -142,7 +158,7 @@ export class NestEngine {
         break;
       }
 
-      const activeItems = items.filter((it) => (remaining[it.name] ?? 0) > 0);
+      const activeItems = primaryItems.filter((it) => (remaining[it.name] ?? 0) > 0);
       const activeKey = activeItems
         .map((it) => it.name)
         .sort()
@@ -175,13 +191,176 @@ export class NestEngine {
       }
     }
 
-    const fulfilled = Object.values(remaining).every((qty) => qty <= 0);
-
     const batches: [Pattern, number][] = Array.from(patternUsage.entries()).filter(
       ([, count]) => count > 0
     );
 
-    return this.buildReport(batches, totalSheetsUsed, overProduction, fulfilled, remaining);
+    // 자투리 품목(300mm 미만)을 이미 확정된 배치들의 남는 여백에 채워
+    // 넣는다. 코어 품목으로 이미 정해진 연 수에는 영향을 주지 않는다.
+    let allRemaining: Record<string, number> = { ...remaining };
+    let allOverProduction = overProduction;
+    if (fillerItems.length > 0) {
+      const { fillerRemaining, fillerOverProduction, extraSheets } = this.attachFillersToBatches(
+        batches,
+        fillerItems
+      );
+      allRemaining = { ...allRemaining, ...fillerRemaining };
+      allOverProduction += fillerOverProduction;
+      totalSheetsUsed += extraSheets;
+    }
+
+    const fulfilled = Object.values(allRemaining).every((qty) => qty <= 0);
+
+    return this.buildReport(batches, totalSheetsUsed, allOverProduction, fulfilled, allRemaining);
+  }
+
+  // 가로·세로 둘 다 300mm 미만이면 "자투리"로 취급한다 — 재사용하지 않는
+  // 소형 품목이라 자재비 부담 없이 남는 배치의 여백에 끼워 넣을 수 있다.
+  private isFiller(item: Item): boolean {
+    const fillerMaxMm = 300;
+    return item.width < fillerMaxMm && item.height < fillerMaxMm;
+  }
+
+  // 어떤 placements 집합이 시트 위에서 실제로 차지하고 남은 빈 사각형들을
+  // 계산한다. buildPatterns에서 쓰는 것과 같은 FreeRect 분할 로직을 그대로
+  // 재사용해서, 패턴이 원래 어떻게 만들어졌든(격자든 DFS든) 상관없이 최종
+  // placements만으로 여백을 다시 구할 수 있게 한다.
+  private computeFreeRects(placements: Placement[]): FreeRect[] {
+    const m = this.marginMm;
+    let freeRects: FreeRect[] = [
+      { x: m, y: m, width: this.sheetWidth - m * 2, height: this.sheetHeight - m * 2 },
+    ];
+
+    for (const placement of placements) {
+      const target = freeRects.find(
+        (r) =>
+          placement.x >= r.x &&
+          placement.y >= r.y &&
+          placement.x + placement.width <= r.x + r.width &&
+          placement.y + placement.height <= r.y + r.height
+      );
+      if (!target) continue;
+      freeRects = this.placeRect(freeRects, target, placement);
+    }
+
+    return freeRects.filter((r) => r.width > 1 && r.height > 1);
+  }
+
+  // 자유 사각형들 중 이 품목을 가장 많이 채울 수 있는 자리를 찾는다
+  // (buildSingleItemPattern과 같은 격자 계산이지만, 시트 전체가 아니라
+  // 주어진 자유 사각형 하나에 대해서만 계산한다).
+  private bestFitInRects(
+    rects: FreeRect[],
+    item: Item
+  ): { rect: FreeRect; w: number; h: number; cols: number; rows: number; count: number } | null {
+    let best: { rect: FreeRect; w: number; h: number; cols: number; rows: number; count: number } | null = null;
+
+    for (const rect of rects) {
+      for (const rotated of [false, true]) {
+        const w = rotated ? item.height : item.width;
+        const h = rotated ? item.width : item.height;
+        if (w <= 0 || h <= 0 || w > rect.width || h > rect.height) continue;
+        const cols = Math.floor(rect.width / w);
+        const rows = Math.floor(rect.height / h);
+        const count = cols * rows;
+        if (count > 0 && (!best || count > best.count)) {
+          best = { rect, w, h, cols, rows, count };
+        }
+      }
+    }
+
+    return best;
+  }
+
+  // 확정된 코어 배치들의 남는 여백에 자투리 품목을 끼워 넣는다. 여백이 가장
+  // 넓은 배치부터 채우고(작업자 편의 우선), 그래도 다 못 채우면 그 품목만을
+  // 위한 별도 연을 추가해서 발주량을 반드시 충족시킨다.
+  private attachFillersToBatches(
+    batches: [Pattern, number][],
+    fillerItems: Item[]
+  ): { fillerRemaining: Record<string, number>; fillerOverProduction: number; extraSheets: number } {
+    const fillerRemaining: Record<string, number> = {};
+    let fillerOverProduction = 0;
+    let extraSheets = 0;
+
+    type BatchSpace = { pattern: Pattern; reps: number; freeRects: FreeRect[] };
+    const spaces: BatchSpace[] = batches.map(([pattern, reps]) => ({
+      pattern,
+      reps,
+      freeRects: this.computeFreeRects(pattern.placements),
+    }));
+
+    const largestArea = (s: BatchSpace) =>
+      s.freeRects.reduce((max, r) => Math.max(max, r.width * r.height), 0);
+
+    for (const item of fillerItems) {
+      let need = item.orderQty;
+
+      let guard = 0;
+      while (need > 0 && guard < 1000) {
+        guard += 1;
+
+        const ordered = [...spaces].sort((a, b) => largestArea(b) - largestArea(a));
+        const space = ordered[0];
+        if (!space || largestArea(space) <= 0) break;
+
+        const fit = this.bestFitInRects(space.freeRects, item);
+        if (!fit) {
+          space.freeRects = [];
+          continue;
+        }
+
+        const produced = fit.count * space.reps;
+        const used = Math.min(produced, need);
+        need -= used;
+        if (produced > used) fillerOverProduction += produced - used;
+
+        for (let r = 0; r < fit.rows; r++) {
+          for (let c = 0; c < fit.cols; c++) {
+            space.pattern.placements.push({
+              name: item.name,
+              x: fit.rect.x + c * fit.w,
+              y: fit.rect.y + r * fit.h,
+              width: fit.w,
+              height: fit.h,
+              rotated: fit.w !== item.width,
+            });
+          }
+        }
+        space.pattern.counts[item.name] = (space.pattern.counts[item.name] ?? 0) + fit.count;
+        space.pattern.coveredArea += fit.count * item.width * item.height;
+
+        const usedBlock: Placement = {
+          name: item.name,
+          x: fit.rect.x,
+          y: fit.rect.y,
+          width: fit.cols * fit.w,
+          height: fit.rows * fit.h,
+          rotated: false,
+        };
+        space.freeRects = this.placeRect(space.freeRects, fit.rect, usedBlock);
+      }
+
+      if (need > 0) {
+        // 어떤 배치의 여백에도 못 들어가면(극단적으로 여백이 좁은 경우)
+        // 이 품목만을 위한 별도 연을 추가해서 발주량을 반드시 채운다.
+        const pattern = this.buildSingleItemPattern(item);
+        const perSheet = pattern?.counts[item.name] ?? 0;
+        if (pattern && perSheet > 0) {
+          const reps = this.sheetPerReam;
+          const repsNeeded = Math.ceil(need / (perSheet * reps)) * reps;
+          batches.push([pattern, repsNeeded]);
+          extraSheets += repsNeeded;
+          const produced = perSheet * repsNeeded;
+          fillerOverProduction += produced - need;
+          need = 0;
+        }
+      }
+
+      fillerRemaining[item.name] = need;
+    }
+
+    return { fillerRemaining, fillerOverProduction, extraSheets };
   }
 
   private findAllPositions(rect: FreeRect, item: Item): Placement[] {
@@ -620,6 +799,13 @@ export class NestEngine {
 
       totalProd += placements.length * sheetCount;
 
+      // 실제로 다 자르고 남는 빈 사각형(자투리)을 큰 것부터 최대 2개까지
+      // 도면에 표기할 수 있도록 넘긴다.
+      const leftover = this.computeFreeRects(placements)
+        .sort((a, b) => b.width * b.height - a.width * a.height)
+        .slice(0, 2)
+        .map((r) => ({ x: r.x, y: r.y, width: r.width, height: r.height }));
+
       layouts.push({
         paperW: this.sheetWidth,
         paperH: this.sheetHeight,
@@ -627,6 +813,7 @@ export class NestEngine {
         margin: { usage, right: rightMargin, bottom: bottomMargin, area: wasteArea },
         sheetCount,
         batchReams: Math.round(batchReamsExact * 100) / 100,
+        leftover,
       });
     }
 
