@@ -97,7 +97,7 @@ export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500)
 }
 
 // 범례/도면 색상을 엔진에서 한 번만 정해서 내려준다 (화면·인쇄 색상이 어긋나지 않도록).
-const PALETTE = [
+export const PALETTE = [
   "#7CB5EC",
   "#90ED7D",
   "#F7A35C",

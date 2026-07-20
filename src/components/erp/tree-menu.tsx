@@ -39,6 +39,7 @@ const TREE: GroupItem[] = [
     label: "확장모듈",
     items: [
       { label: "모조지 계산", href: "/paper-calc" },
+      { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
       { label: "월별 리포트", href: "/reports/monthly" },
     ],
   },
