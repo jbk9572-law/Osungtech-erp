@@ -17,6 +17,7 @@ type ItemRow = {
   quantity: number;
   amount: number;
   orderId: string;
+  remark: string | null;
 };
 
 type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
@@ -110,6 +111,7 @@ function appendItemLines(
       lines.push(`  · ${product.productName}`);
       for (const item of product.items) {
         lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit}`);
+        if (item.remark) lines.push(`      (비고: ${item.remark})`);
       }
       if (product.items.length > 1) {
         const { quantity, unit } = productTotals(product.items);
@@ -390,6 +392,11 @@ export function DashboardCalendar({
                                       <span className="min-w-0 text-[#8ea3c9]">
                                         {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                         {item.unit}
+                                        {item.remark && (
+                                          <span className="block text-[10px] text-[#8ea3c9]/70">
+                                            비고: {item.remark}
+                                          </span>
+                                        )}
                                       </span>
                                       <span className="shrink-0">{item.amount.toLocaleString()}원</span>
                                     </Link>
@@ -462,6 +469,11 @@ export function DashboardCalendar({
                                       <span className="min-w-0 text-[#8fcb9d]">
                                         {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                         {item.unit}
+                                        {item.remark && (
+                                          <span className="block text-[10px] text-[#8fcb9d]/70">
+                                            비고: {item.remark}
+                                          </span>
+                                        )}
                                       </span>
                                       <span className="shrink-0">{item.amount.toLocaleString()}원</span>
                                     </Link>
