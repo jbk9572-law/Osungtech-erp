@@ -76,14 +76,23 @@ export type NestResult = {
   effectiveReams: number;
 };
 
-// 배치별 사용률(margin.usage) × 사용 장수를 다 더해서, 실제로 유효하게
-// 쓰인 원지 면적이 몇 연어치인지 계산한다. "구매한 연 수는 4연인데 실제
-// 활용도로 따지면 몇 연어치를 쓴 셈이냐"는 질문(거래처와 원지 사용량을
-// 정산/협의할 때 나오는 질문)에 답하기 위한 값이다. 저장된 계산(layouts
-// JSON)에 대해서도 그대로 쓸 수 있도록 클래스 밖에 독립 함수로 둔다.
+// "구매한 연 수는 4연인데 실제 활용도로 따지면 몇 연어치를 쓴 셈이냐"는
+// 질문(거래처와 원지 사용량을 정산/협의할 때 나오는 질문)에 답하기 위한
+// 값이다. 배치별로 다음 기준으로 "온전히 다 쓴 연"인지를 판단한다:
+//   - 사용률이 70% 이상이거나
+//   - 서로 다른 품목을 2종 이상 조합해서 쓴 배치라면(자투리 여백이 남아도
+//     이미 다른 주문 물량과 섞여 있어서 사실상 다시 쓸 수 없다고 봄)
+// 위 조건에 해당하면 1연으로 온전히 인정하고, 아니면 사용률만큼만 인정한다.
+// 저장된 계산(layouts JSON)에 대해서도 그대로 쓸 수 있도록 클래스 밖에
+// 독립 함수로 둔다.
 export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500): number {
   if (!sheetPerReam || !layouts.length) return 0;
-  const effectiveSheets = layouts.reduce((sum, l) => sum + (l.margin.usage / 100) * l.sheetCount, 0);
+  const effectiveSheets = layouts.reduce((sum, l) => {
+    const itemTypeCount = new Set(l.items.map((it) => it.name)).size;
+    const fullyUsed = l.margin.usage >= 70 || itemTypeCount >= 2;
+    const fraction = fullyUsed ? 1 : l.margin.usage / 100;
+    return sum + fraction * l.sheetCount;
+  }, 0);
   return effectiveSheets / sheetPerReam;
 }
 
