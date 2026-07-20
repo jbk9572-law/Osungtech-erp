@@ -15,6 +15,16 @@ import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/components/
 
 type ItemRow = { key: number; width: number; height: number; qty: number };
 type Sheet = { placements: NestLayoutItem[] };
+type Ghost = { x: number; y: number; w: number; h: number; valid: boolean };
+type DragGhost = Ghost & { index: number };
+type DragStart = {
+  index: number;
+  startClientX: number;
+  startClientY: number;
+  offsetX: number;
+  offsetY: number;
+  moved: boolean;
+};
 
 const MAX_ROWS = 10;
 
@@ -84,7 +94,16 @@ export function ManualLayoutClient() {
   const [snapMm, setSnapMm] = useState(5);
   const [selectedPlacementIndex, setSelectedPlacementIndex] = useState<number | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [hoverGhost, setHoverGhost] = useState<Ghost | null>(null);
+  const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const dragStartRef = useRef<DragStart | null>(null);
+  const dragGhostRef = useRef<DragGhost | null>(null);
+
+  function updateDragGhost(g: DragGhost | null) {
+    dragGhostRef.current = g;
+    setDragGhost(g);
+  }
 
   const items = useMemo(() => buildItems(rows), [rows]);
   const colorMap = useMemo(() => {
@@ -171,10 +190,111 @@ export function ManualLayoutClient() {
     setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [...s.placements, next] } : s)));
   }
 
-  function selectPlacement(index: number, e: React.MouseEvent) {
+  // 배치할 품목을 골라둔 상태에서 원지 위에 마우스를 올리면, 실제로 클릭하기
+  // 전에 어디에 놓일지(격자 스냅 적용) 미리 보여준다 — 놓을 수 있으면
+  // 초록, 겹치거나 밖으로 나가면 빨강으로 표시해서 정확히 클릭하기 어려운
+  // 문제를 덜어준다.
+  function handleSvgPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (dragStartRef.current) return;
+    if (!selectedItemName) {
+      setHoverGhost(null);
+      return;
+    }
+    const item = items.find((it) => it.name === selectedItemName);
+    const svg = svgRef.current;
+    if (!item || !svg) {
+      setHoverGhost(null);
+      return;
+    }
+    const w = rotated ? item.height : item.width;
+    const h = rotated ? item.width : item.height;
+    if (w > paperW || h > paperH) {
+      setHoverGhost(null);
+      return;
+    }
+    const pt = clientToSheetPoint(svg, e.clientX, e.clientY);
+    const snap = Math.max(1, snapMm);
+    const x = Math.min(Math.max(Math.round(pt.x / snap) * snap, 0), paperW - w);
+    const y = Math.min(Math.max(Math.round(pt.y / snap) * snap, 0), paperH - h);
+    const valid = !sheets[sheetIndex].placements.some((p) => overlaps({ x, y, w, h }, p));
+    setHoverGhost({ x, y, w, h, valid });
+  }
+
+  function handleSvgPointerLeave() {
+    setHoverGhost(null);
+  }
+
+  // 이미 배치된 조각을 눌러서 끄는(드래그) 동작. Pointer Capture를 쓰면
+  // 손가락/마우스가 이동해도 계속 같은 조각으로 이벤트가 들어와서, 마우스뿐
+  // 아니라 터치로도 정확히 옮길 수 있다. 살짝만 움직이면(4px 미만) 드래그로
+  // 치지 않고 그냥 클릭(선택)으로 처리한다.
+  function handleItemPointerDown(index: number, e: React.PointerEvent<SVGRectElement>) {
     e.stopPropagation();
-    setSelectedPlacementIndex(index);
+    const svg = svgRef.current;
+    const target = sheets[sheetIndex].placements[index];
+    if (!svg || !target) return;
+    const pt = clientToSheetPoint(svg, e.clientX, e.clientY);
+    dragStartRef.current = {
+      index,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      offsetX: pt.x - target.x,
+      offsetY: pt.y - target.y,
+      moved: false,
+    };
+    setHoverGhost(null);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function handleItemPointerMove(e: React.PointerEvent<SVGRectElement>) {
+    const drag = dragStartRef.current;
+    const svg = svgRef.current;
+    if (!drag || !svg) return;
+
+    const dx = e.clientX - drag.startClientX;
+    const dy = e.clientY - drag.startClientY;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = true;
+
+    const target = sheets[sheetIndex].placements[drag.index];
+    if (!target) return;
+    const pt = clientToSheetPoint(svg, e.clientX, e.clientY);
+    const snap = Math.max(1, snapMm);
+    const x = Math.min(Math.max(Math.round((pt.x - drag.offsetX) / snap) * snap, 0), paperW - target.w);
+    const y = Math.min(Math.max(Math.round((pt.y - drag.offsetY) / snap) * snap, 0), paperH - target.h);
+    const others = sheets[sheetIndex].placements.filter((_, idx) => idx !== drag.index);
+    const valid = !others.some((o) => overlaps({ x, y, w: target.w, h: target.h }, o));
+    updateDragGhost({ index: drag.index, x, y, w: target.w, h: target.h, valid });
     setWarning(null);
+  }
+
+  function handleItemPointerUp() {
+    const drag = dragStartRef.current;
+    dragStartRef.current = null;
+    if (!drag) return;
+
+    if (!drag.moved) {
+      setSelectedPlacementIndex(drag.index);
+      setWarning(null);
+      return;
+    }
+
+    const ghost = dragGhostRef.current;
+    if (ghost && ghost.valid) {
+      setSheets((prev) =>
+        prev.map((s, si) => {
+          if (si !== sheetIndex) return s;
+          const placements = [...s.placements];
+          placements[ghost.index] = { ...placements[ghost.index], x: ghost.x, y: ghost.y };
+          return { placements };
+        })
+      );
+      setWarning(null);
+    } else if (ghost) {
+      setWarning("그 자리에는 놓을 수 없어서 원래 위치로 되돌아갑니다.");
+    }
+    updateDragGhost(null);
+    setSelectedPlacementIndex(drag.index);
   }
 
   function rotateSelected() {
@@ -261,8 +381,9 @@ export function ManualLayoutClient() {
         style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
       >
         자동 계산 결과와 직접 비교해볼 수 있는 수동 배치 도구입니다. 아래에서 품목을 등록하고, 원하는 품목을
-        클릭한 뒤 원지 위를 클릭하면 그 자리에 배치됩니다. 이미 배치된 조각을 클릭하면 선택되어
-        회전/삭제할 수 있습니다. 배치 1건 = 1연(500장)으로 계산됩니다.
+        클릭한 뒤 원지 위에 마우스를 올리면 놓일 자리가 미리 보입니다(초록: 배치 가능, 빨강: 겹치거나 밖으로
+        나감) — 그 상태에서 클릭하면 배치됩니다. 이미 배치된 조각은 클릭하면 선택되어 회전/삭제할 수 있고,
+        마우스나 손가락으로 드래그해서 다른 자리로 옮길 수도 있습니다. 배치 1건 = 1연(500장)으로 계산됩니다.
       </div>
 
       <div className="erp-detail">
@@ -458,15 +579,19 @@ export function ManualLayoutClient() {
               height: 460,
               background: "#F2F2F2",
               cursor: selectedItemName ? "crosshair" : "default",
+              touchAction: "none",
             }}
             onClick={handleCanvasClick}
+            onPointerMove={handleSvgPointerMove}
+            onPointerLeave={handleSvgPointerLeave}
           >
             <rect x={0} y={0} width={paperW} height={paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
             {currentSheet.placements.map((it, i) => {
               const isSelected = i === selectedPlacementIndex;
+              const isDragging = dragGhost?.index === i;
               const showLabel = it.w >= paperW * 0.07 && it.h >= paperH * 0.04;
               return (
-                <g key={i} onClick={(e) => selectPlacement(i, e)} style={{ cursor: "pointer" }}>
+                <g key={i}>
                   <rect
                     x={it.x}
                     y={it.y}
@@ -475,8 +600,14 @@ export function ManualLayoutClient() {
                     fill={it.color}
                     stroke={isSelected ? "#1c1c1c" : "#555555"}
                     strokeWidth={isSelected ? 3 : 1}
+                    opacity={isDragging ? 0.25 : 1}
+                    style={{ cursor: "grab", touchAction: "none" }}
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => handleItemPointerDown(i, e)}
+                    onPointerMove={handleItemPointerMove}
+                    onPointerUp={handleItemPointerUp}
                   />
-                  {showLabel && (
+                  {showLabel && !isDragging && (
                     <text
                       x={it.x + it.w / 2}
                       y={it.y + it.h / 2}
@@ -484,6 +615,7 @@ export function ManualLayoutClient() {
                       dominantBaseline="middle"
                       fontSize={Math.min(paperW, paperH) * 0.03}
                       fill="#222222"
+                      style={{ pointerEvents: "none" }}
                     >
                       {it.name}
                     </text>
@@ -491,6 +623,32 @@ export function ManualLayoutClient() {
                 </g>
               );
             })}
+            {dragGhost && (
+              <rect
+                x={dragGhost.x}
+                y={dragGhost.y}
+                width={dragGhost.w}
+                height={dragGhost.h}
+                fill={dragGhost.valid ? "rgba(34,197,94,0.35)" : "rgba(239,68,68,0.35)"}
+                stroke={dragGhost.valid ? "#16a34a" : "#dc2626"}
+                strokeDasharray="6 4"
+                strokeWidth={2}
+                style={{ pointerEvents: "none" }}
+              />
+            )}
+            {!dragGhost && hoverGhost && (
+              <rect
+                x={hoverGhost.x}
+                y={hoverGhost.y}
+                width={hoverGhost.w}
+                height={hoverGhost.h}
+                fill={hoverGhost.valid ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}
+                stroke={hoverGhost.valid ? "#16a34a" : "#dc2626"}
+                strokeDasharray="6 4"
+                strokeWidth={2}
+                style={{ pointerEvents: "none" }}
+              />
+            )}
           </svg>
 
           {selectedPlacement && (
