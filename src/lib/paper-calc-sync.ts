@@ -5,6 +5,26 @@ export const PAPER_STOCK_SKU = "TG0";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+// 이 주문에 현재 적용 중인 수동 오버라이드가 있으면 그 수량을 돌려주고,
+// 없으면 null을 돌려준다. reverted_at이 비어있는 가장 최근 행이 "지금
+// 적용 중"인 값이다.
+async function getActiveOverrideQuantity(
+  supabase: SupabaseServerClient,
+  orderColumn: "sales_order_id" | "purchase_order_id",
+  orderId: string
+): Promise<number | null> {
+  const { data } = await supabase
+    .from("paper_stock_overrides")
+    .select("override_quantity")
+    .eq(orderColumn, orderId)
+    .is("reverted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return data?.override_quantity ?? null;
+}
+
 // 모조지(TG0) 원지 사용량을 이 출고 건에 저장된 계산들의 합계(연)로 판매
 // 품목에 자동 반영한다. 계산은 여러 번 저장/삭제될 수 있으므로 매번
 // "이 주문에 저장된 모든 계산의 합"으로 다시 계산해서 TG0 한 줄만 갱신한다
@@ -42,10 +62,15 @@ export async function syncPaperStockOrderItem(supabase: SupabaseServerClient, sa
   }
 
   if (existingItem) {
-    await supabase
-      .from("sales_order_items")
-      .update({ quantity: totalReams })
-      .eq("id", existingItem.id);
+    // 수동 오버라이드가 적용 중이면(거래처 협의로 다른 수량 청구 등) 자동
+    // 재계산으로 덮어쓰지 않는다 — 오버라이드를 해제해야만 자동값이 다시 반영된다.
+    const overrideQuantity = await getActiveOverrideQuantity(supabase, "sales_order_id", salesOrderId);
+    if (overrideQuantity === null) {
+      await supabase
+        .from("sales_order_items")
+        .update({ quantity: totalReams })
+        .eq("id", existingItem.id);
+    }
     return null;
   }
 
@@ -172,10 +197,13 @@ export async function syncPaperStockPurchaseItem(
   }
 
   if (existingItem) {
-    await supabase
-      .from("purchase_order_items")
-      .update({ quantity: totalReams })
-      .eq("id", existingItem.id);
+    const overrideQuantity = await getActiveOverrideQuantity(supabase, "purchase_order_id", purchaseOrderId);
+    if (overrideQuantity === null) {
+      await supabase
+        .from("purchase_order_items")
+        .update({ quantity: totalReams })
+        .eq("id", existingItem.id);
+    }
     return null;
   }
 
@@ -186,6 +214,137 @@ export async function syncPaperStockPurchaseItem(
     unit_cost: product.cost,
   });
 
+  return null;
+}
+
+// TG0 자동반영 수량을 거래처 협의 등의 이유로 수동값으로 고정한다. 이전에
+// 적용 중이던 오버라이드가 있으면 새 값으로 갈아치우는 셈이라 먼저 되돌림
+// 처리하고, 새 이력을 남긴 뒤 실제 품목 수량도 그 값으로 바로 바꾼다.
+export async function overrideSalesPaperStockQuantity(
+  supabase: SupabaseServerClient,
+  salesOrderId: string,
+  overrideQuantity: number,
+  note: string | null
+): Promise<string | null> {
+  const { data: product } = await supabase
+    .from("products")
+    .select("id")
+    .eq("sku", PAPER_STOCK_SKU)
+    .maybeSingle();
+  if (!product) return `품목관리에 SKU '${PAPER_STOCK_SKU}'(모조지) 품목이 없습니다.`;
+
+  const { data: calcs } = await supabase
+    .from("paper_calculations")
+    .select("total_sheet")
+    .eq("sales_order_id", salesOrderId);
+  const autoQuantity = (calcs ?? []).reduce((sum, c) => sum + c.total_sheet, 0);
+
+  const { data: existingItem } = await supabase
+    .from("sales_order_items")
+    .select("id")
+    .eq("sales_order_id", salesOrderId)
+    .eq("product_id", product.id)
+    .maybeSingle();
+  if (!existingItem) {
+    return "적용할 모조지(TG0) 품목이 이 주문에 없습니다. 모조지 계산을 먼저 저장해주세요.";
+  }
+
+  await supabase
+    .from("paper_stock_overrides")
+    .update({ reverted_at: new Date().toISOString() })
+    .eq("sales_order_id", salesOrderId)
+    .is("reverted_at", null);
+
+  const userId = await getUserId(supabase);
+  const { error } = await supabase.from("paper_stock_overrides").insert({
+    sales_order_id: salesOrderId,
+    auto_quantity: autoQuantity,
+    override_quantity: overrideQuantity,
+    note,
+    created_by: userId,
+  });
+  if (error) return "오버라이드 저장에 실패했습니다.";
+
+  await supabase.from("sales_order_items").update({ quantity: overrideQuantity }).eq("id", existingItem.id);
+  return null;
+}
+
+export async function revertSalesPaperStockOverride(
+  supabase: SupabaseServerClient,
+  salesOrderId: string
+): Promise<string | null> {
+  const { error } = await supabase
+    .from("paper_stock_overrides")
+    .update({ reverted_at: new Date().toISOString() })
+    .eq("sales_order_id", salesOrderId)
+    .is("reverted_at", null);
+  if (error) return "되돌리기에 실패했습니다.";
+
+  await syncPaperStockOrderItem(supabase, salesOrderId);
+  return null;
+}
+
+export async function overridePurchasePaperStockQuantity(
+  supabase: SupabaseServerClient,
+  purchaseOrderId: string,
+  overrideQuantity: number,
+  note: string | null
+): Promise<string | null> {
+  const { data: product } = await supabase
+    .from("products")
+    .select("id")
+    .eq("sku", PAPER_STOCK_SKU)
+    .maybeSingle();
+  if (!product) return `품목관리에 SKU '${PAPER_STOCK_SKU}'(모조지) 품목이 없습니다.`;
+
+  const { data: calcs } = await supabase
+    .from("paper_calculations")
+    .select("total_sheet")
+    .eq("purchase_order_id", purchaseOrderId);
+  const autoQuantity = (calcs ?? []).reduce((sum, c) => sum + c.total_sheet, 0);
+
+  const { data: existingItem } = await supabase
+    .from("purchase_order_items")
+    .select("id")
+    .eq("purchase_order_id", purchaseOrderId)
+    .eq("product_id", product.id)
+    .maybeSingle();
+  if (!existingItem) {
+    return "적용할 모조지(TG0) 품목이 이 주문에 없습니다. 모조지 계산을 먼저 저장해주세요.";
+  }
+
+  await supabase
+    .from("paper_stock_overrides")
+    .update({ reverted_at: new Date().toISOString() })
+    .eq("purchase_order_id", purchaseOrderId)
+    .is("reverted_at", null);
+
+  const userId = await getUserId(supabase);
+  const { error } = await supabase.from("paper_stock_overrides").insert({
+    purchase_order_id: purchaseOrderId,
+    auto_quantity: autoQuantity,
+    override_quantity: overrideQuantity,
+    note,
+    created_by: userId,
+  });
+  if (error) return "오버라이드 저장에 실패했습니다.";
+
+  await supabase.from("purchase_order_items").update({ quantity: overrideQuantity }).eq("id", existingItem.id);
+  return null;
+}
+
+export async function revertPurchasePaperStockOverride(
+  supabase: SupabaseServerClient,
+  purchaseOrderId: string
+): Promise<string | null> {
+  const { error } = await supabase
+    .from("paper_stock_overrides")
+    .update({ reverted_at: new Date().toISOString() })
+    .eq("purchase_order_id", purchaseOrderId)
+    .is("reverted_at", null);
+  if (error) return "되돌리기에 실패했습니다.";
+
+  await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
   return null;
 }
 

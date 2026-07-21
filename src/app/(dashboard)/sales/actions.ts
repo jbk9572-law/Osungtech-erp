@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import {
   attachCopiedPaperCalculations,
   attachPendingPaperCalculation,
+  overrideSalesPaperStockQuantity,
+  revertSalesPaperStockOverride,
   type PendingCalc,
 } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
@@ -443,4 +445,47 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   redirect("/sales");
+}
+
+// 자동계산된 TG0(모조지) 수량을 거래처 협의 등의 이유로 수동값으로 고정한다.
+// 기본 동작(자동 계산값 반영)은 그대로 두고, 이 값이 적용 중인 동안만
+// 재계산이 건너뛰어진다 (paper-calc-sync.ts의 syncPaperStockOrderItem 참고).
+export async function overrideSalesPaperStock(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  const overrideQuantity = Number(formData.get("override_quantity") ?? NaN);
+  const note = String(formData.get("note") ?? "").trim() || null;
+
+  if (!salesOrderId || !Number.isFinite(overrideQuantity) || overrideQuantity <= 0) {
+    return { error: "적용할 수량을 올바르게 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const errorMessage = await overrideSalesPaperStockQuantity(
+    supabase,
+    salesOrderId,
+    overrideQuantity,
+    note
+  );
+  if (errorMessage) return { error: errorMessage };
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  return { success: "모조지 수량을 수동값으로 변경했습니다." };
+}
+
+export async function revertSalesPaperStock(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  if (!salesOrderId) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const errorMessage = await revertSalesPaperStockOverride(supabase, salesOrderId);
+  if (errorMessage) return { error: errorMessage };
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  return { success: "자동 계산값으로 되돌렸습니다." };
 }
