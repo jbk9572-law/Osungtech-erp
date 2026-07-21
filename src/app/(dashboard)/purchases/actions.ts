@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { attachPendingPaperCalculationToPurchase } from "@/lib/paper-calc-sync";
+import {
+  attachPendingPaperCalculationToPurchase,
+  overridePurchasePaperStockQuantity,
+  revertPurchasePaperStockOverride,
+} from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
@@ -352,4 +356,47 @@ export async function deletePurchase(
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   redirect("/purchases");
+}
+
+// 자동계산된 TG0(모조지) 수량을 거래처 협의 등의 이유로 수동값으로 고정한다.
+// 기본 동작(자동 계산값 반영)은 그대로 두고, 이 값이 적용 중인 동안만
+// 재계산이 건너뛰어진다 (paper-calc-sync.ts의 syncPaperStockPurchaseItem 참고).
+export async function overridePurchasePaperStock(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const purchaseOrderId = String(formData.get("purchase_order_id") ?? "");
+  const overrideQuantity = Number(formData.get("override_quantity") ?? NaN);
+  const note = String(formData.get("note") ?? "").trim() || null;
+
+  if (!purchaseOrderId || !Number.isFinite(overrideQuantity) || overrideQuantity <= 0) {
+    return { error: "적용할 수량을 올바르게 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const errorMessage = await overridePurchasePaperStockQuantity(
+    supabase,
+    purchaseOrderId,
+    overrideQuantity,
+    note
+  );
+  if (errorMessage) return { error: errorMessage };
+
+  revalidatePath(`/purchases/${purchaseOrderId}`);
+  return { success: "모조지 수량을 수동값으로 변경했습니다." };
+}
+
+export async function revertPurchasePaperStock(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const purchaseOrderId = String(formData.get("purchase_order_id") ?? "");
+  if (!purchaseOrderId) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const errorMessage = await revertPurchasePaperStockOverride(supabase, purchaseOrderId);
+  if (errorMessage) return { error: errorMessage };
+
+  revalidatePath(`/purchases/${purchaseOrderId}`);
+  return { success: "자동 계산값으로 되돌렸습니다." };
 }

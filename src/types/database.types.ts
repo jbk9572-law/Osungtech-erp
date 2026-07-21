@@ -804,6 +804,64 @@ export type Database = {
           },
         ];
       };
+      paper_stock_overrides: {
+        Row: {
+          id: string;
+          sales_order_id: string | null;
+          purchase_order_id: string | null;
+          auto_quantity: number;
+          override_quantity: number;
+          note: string | null;
+          reverted_at: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sales_order_id?: string | null;
+          purchase_order_id?: string | null;
+          auto_quantity: number;
+          override_quantity: number;
+          note?: string | null;
+          reverted_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          sales_order_id?: string | null;
+          purchase_order_id?: string | null;
+          auto_quantity?: number;
+          override_quantity?: number;
+          note?: string | null;
+          reverted_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "paper_stock_overrides_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "paper_stock_overrides_purchase_order_id_fkey";
+            columns: ["purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "paper_stock_overrides_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payment_requests: {
         Row: {
           id: string;

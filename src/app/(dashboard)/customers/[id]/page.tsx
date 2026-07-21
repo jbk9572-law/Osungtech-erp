@@ -29,7 +29,7 @@ export default async function CustomerDetailPage({
       .select("*, products(sku, name, unit)")
       .eq("customer_id", id)
       .order("updated_at", { ascending: false }),
-    supabase.from("products").select("id, sku, name").order("name"),
+    supabase.from("products").select("id, sku, name, spec").order("name"),
     supabase
       .from("price_change_schedules")
       .select("id, new_unit_price, effective_date, products(sku, name)")

@@ -7,6 +7,8 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPackageQty } from "@/lib/package-qty";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
+import { overrideSalesPaperStock, revertSalesPaperStock } from "@/app/(dashboard)/sales/actions";
 
 export default async function SaleDetailPage({
   params,
@@ -16,7 +18,7 @@ export default async function SaleDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }, { data: paperCalcs }] = await Promise.all([
+  const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }] = await Promise.all([
     supabase
       .from("sales_orders")
       .select("*, customers(*), profiles!created_by(full_name)")
@@ -33,6 +35,11 @@ export default async function SaleDetailPage({
       .eq("sales_order_id", id)
       .order("created_at", { ascending: false })
       .limit(1),
+    supabase
+      .from("paper_stock_overrides")
+      .select("id, auto_quantity, override_quantity, note, created_at, reverted_at, profiles!created_by(full_name)")
+      .eq("sales_order_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!order) {
@@ -130,6 +137,17 @@ export default async function SaleDetailPage({
               <span style={{ paddingTop: 4, color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
             )}
           </div>
+          {paperCalcs && paperCalcs.length > 0 && (
+            <div style={{ marginTop: 8, paddingLeft: 80 }}>
+              <PaperStockOverridePanel
+                orderId={id}
+                idFieldName="sales_order_id"
+                overrideAction={overrideSalesPaperStock}
+                revertAction={revertSalesPaperStock}
+                history={overrideHistory ?? []}
+              />
+            </div>
+          )}
           {order.memo && (
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>
           )}

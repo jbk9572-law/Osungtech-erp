@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { upsertCustomerPrice } from "@/app/(dashboard)/customers/actions";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { ProductSearchSelect } from "@/components/product-search-select";
 
-type Product = { id: string; sku: string; name: string };
+type Product = { id: string; sku: string; name: string; spec?: string | null };
 
 export function CustomerPriceForm({
   customerId,
@@ -17,25 +18,20 @@ export function CustomerPriceForm({
   const [state, formAction, pending] = useActionState(upsertCustomerPrice, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const [productId, setProductId] = useState("");
+
+  useEffect(() => {
+    if (state?.success) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 저장 성공 시 상품 검색창을 비우는 동기화
+      setProductId("");
+    }
+  }, [state]);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
       <input type="hidden" name="customer_id" value={customerId} />
-      <select
-        name="product_id"
-        required
-        defaultValue=""
-        className="erp-input"
-      >
-        <option value="" disabled>
-          상품 선택
-        </option>
-        {products.map((product) => (
-          <option key={product.id} value={product.id}>
-            {product.sku} · {product.name}
-          </option>
-        ))}
-      </select>
+      <input type="hidden" name="product_id" value={productId} required />
+      <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
       <input
         name="unit_price"
         type="number"
