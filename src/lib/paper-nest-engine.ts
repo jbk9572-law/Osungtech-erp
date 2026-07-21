@@ -92,8 +92,8 @@ const FILLER_MAX_MM = 300;
 // 그대로 비례 인정한다:
 //   - 코어 3종 이상 조합 → 사용률과 무관하게 1연
 //   - 코어 2종 조합이면서 사용률 60% 이상 → 1연
-//   - 코어 1종(또는 0종)이면서 사용률 70% 이상 → 1연
-//   - 그 외에는 사용률만큼만(10%당 0.1연) 인정
+//   - 코어 1종(또는 0종)이면서 사용률 60% 이상 → 1연
+//   - 그 외에는 10%당 0.1연 단위로 끊어서 인정 (예: 24.71% → 0.2연)
 // 저장된 계산(layouts JSON)에 대해서도 그대로 쓸 수 있도록 클래스 밖에
 // 독립 함수로 둔다.
 export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500): number {
@@ -107,9 +107,8 @@ export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500)
 
     let fraction: number;
     if (coreCount >= 3) fraction = 1;
-    else if (coreCount === 2 && usage >= 60) fraction = 1;
-    else if (coreCount <= 1 && usage >= 70) fraction = 1;
-    else fraction = usage / 100;
+    else if (usage >= 60) fraction = 1;
+    else fraction = Math.floor(usage / 10) / 10;
 
     return sum + fraction * l.sheetCount;
   }, 0);
