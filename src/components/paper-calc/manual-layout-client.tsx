@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { NumberInput } from "@/components/number-input";
+import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import {
   computeEffectiveReams,
@@ -130,26 +131,9 @@ export function ManualLayoutClient() {
 
   // 캐드 도면처럼 50mm 격자선(100mm마다는 조금 진하게)과 100mm 단위
   // 눈금자를 그려서 실제 치수 감각을 잡기 쉽게 한다.
-  const gridLines = useMemo(() => {
-    const step = 50;
-    const lines: { x1: number; y1: number; x2: number; y2: number; major: boolean }[] = [];
-    for (let x = step; x < paperW; x += step) {
-      lines.push({ x1: x, y1: 0, x2: x, y2: paperH, major: x % 100 === 0 });
-    }
-    for (let y = step; y < paperH; y += step) {
-      lines.push({ x1: 0, y1: y, x2: paperW, y2: y, major: y % 100 === 0 });
-    }
-    return lines;
-  }, [paperW, paperH]);
-
-  const rulerTicksX = useMemo(
-    () => Array.from({ length: Math.floor(paperW / 100) }, (_, i) => (i + 1) * 100),
-    [paperW]
-  );
-  const rulerTicksY = useMemo(
-    () => Array.from({ length: Math.floor(paperH / 100) }, (_, i) => (i + 1) * 100),
-    [paperH]
-  );
+  const gridLines = useMemo(() => computeCadGridLines(paperW, paperH), [paperW, paperH]);
+  const rulerTicksX = useMemo(() => computeCadRulerTicks(paperW), [paperW]);
+  const rulerTicksY = useMemo(() => computeCadRulerTicks(paperH), [paperH]);
 
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
@@ -650,7 +634,12 @@ export function ManualLayoutClient() {
               height: 460,
               background: "#F2F2F2",
               cursor: selectedItemName ? "crosshair" : "default",
-              touchAction: "none",
+              // 캔버스가 화면 가로 폭 전체를 차지하다 보니, 여기를 "none"으로
+              // 막으면 조각이 없는 빈 공간을 스치기만 해도 모바일에서 페이지
+              // 세로 스크롤이 전혀 안 되는 문제가 있었다. 배치된 조각(위
+              // rect)만 개별적으로 touchAction: "none"이라 그 위에서 시작한
+              // 드래그는 그대로 잡히고, 빈 공간에서는 세로 스크롤이 된다.
+              touchAction: "pan-y",
             }}
             onClick={handleCanvasClick}
             onPointerMove={handleSvgPointerMove}

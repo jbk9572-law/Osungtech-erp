@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
@@ -668,6 +669,12 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
     return Array.from(seen.entries());
   }, [layout]);
 
+  const gridLines = useMemo(() => computeCadGridLines(layout.paperW, layout.paperH), [layout.paperW, layout.paperH]);
+  const rulerTicksX = useMemo(() => computeCadRulerTicks(layout.paperW), [layout.paperW]);
+  const rulerTicksY = useMemo(() => computeCadRulerTicks(layout.paperH), [layout.paperH]);
+  const rulerFontSize = Math.min(layout.paperW, layout.paperH) * 0.018;
+  const dimFontSize = Math.min(layout.paperW, layout.paperH) * 0.02;
+
   return (
     <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: "#F7F8FA" }}>
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
@@ -679,22 +686,72 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
         style={{ width: "100%", height: 300, background: "#F2F2F2" }}
       >
         <rect x={0} y={0} width={layout.paperW} height={layout.paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+        <g style={{ pointerEvents: "none" }}>
+          {gridLines.map((l, i) => (
+            <line
+              key={i}
+              x1={l.x1}
+              y1={l.y1}
+              x2={l.x2}
+              y2={l.y2}
+              stroke={l.major ? "#d8d8d8" : "#ebebeb"}
+              strokeWidth={l.major ? 1 : 0.5}
+            />
+          ))}
+          {rulerTicksX.map((x) => (
+            <g key={`rx-${x}`}>
+              <line x1={x} y1={0} x2={x} y2={12} stroke="#999999" strokeWidth={1} />
+              <text x={x} y={23} textAnchor="middle" fontSize={rulerFontSize} fill="#999999">
+                {x}
+              </text>
+            </g>
+          ))}
+          {rulerTicksY.map((y) => (
+            <g key={`ry-${y}`}>
+              <line x1={0} y1={y} x2={12} y2={y} stroke="#999999" strokeWidth={1} />
+              <text x={16} y={y + 4} fontSize={rulerFontSize} fill="#999999">
+                {y}
+              </text>
+            </g>
+          ))}
+        </g>
         {layout.items.map((it, i) => {
           const showLabel = it.w >= layout.paperW * 0.07 && it.h >= layout.paperH * 0.04;
           return (
             <g key={i}>
               <rect x={it.x} y={it.y} width={it.w} height={it.h} fill={it.color} stroke="#555555" strokeWidth={1} />
               {showLabel && (
-                <text
-                  x={it.x + it.w / 2}
-                  y={it.y + it.h / 2}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={Math.min(layout.paperW, layout.paperH) * 0.03}
-                  fill="#222222"
-                >
-                  {it.name}
-                </text>
+                <>
+                  <text
+                    x={it.x + it.w / 2}
+                    y={it.y + it.h / 2}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize={Math.min(layout.paperW, layout.paperH) * 0.03}
+                    fill="#222222"
+                  >
+                    {it.name}
+                  </text>
+                  <text
+                    x={it.x + it.w / 2}
+                    y={it.y + dimFontSize + 4}
+                    textAnchor="middle"
+                    fontSize={dimFontSize}
+                    fill="#444444"
+                  >
+                    {it.w}
+                  </text>
+                  <text
+                    x={it.x + dimFontSize + 4}
+                    y={it.y + it.h / 2}
+                    textAnchor="middle"
+                    fontSize={dimFontSize}
+                    fill="#444444"
+                    transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
+                  >
+                    {it.h}
+                  </text>
+                </>
               )}
             </g>
           );
