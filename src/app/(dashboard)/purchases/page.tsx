@@ -9,6 +9,7 @@ type DisplayRow = {
   orderId: string | undefined;
   date: string | undefined;
   supplierName: string | undefined;
+  authorName: string | null | undefined;
   productLabel: string;
   spec: string;
   quantity: number;
@@ -28,7 +29,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name)), products(sku, name, spec, unit)"
+      "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -72,6 +73,7 @@ export default async function PurchasesPage({
           orderId,
           date: item.purchase_orders?.purchase_date,
           supplierName: item.purchase_orders?.suppliers?.name,
+          authorName: item.purchase_orders?.profiles?.full_name,
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           quantity: 0,
@@ -175,6 +177,7 @@ export default async function PurchasesPage({
             <tr>
               <th>매입일자</th>
               <th>공급업체</th>
+              <th>작성자</th>
               <th>품목명</th>
               <th>규격</th>
               <th className="num">수량</th>
@@ -187,6 +190,7 @@ export default async function PurchasesPage({
               <ClickableRow key={row.key} href={row.orderId ? `/purchases/${row.orderId}` : "#"}>
                 <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
                 <td>{row.supplierName}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                 <td>{row.productLabel}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
                 <td className="num">
@@ -200,7 +204,7 @@ export default async function PurchasesPage({
             ))}
             {!rows.length && (
               <tr>
-                <td colSpan={7} className="erp-grid-empty">
+                <td colSpan={8} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -209,7 +213,7 @@ export default async function PurchasesPage({
           {rows.length > 0 && (
             <tfoot>
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={4} className="erp-grid-sticky-label">
+                <td colSpan={5} className="erp-grid-sticky-label">
                   합계 ({rows.length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>

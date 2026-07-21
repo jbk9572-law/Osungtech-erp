@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
 import {
   computeEffectiveReams,
   PALETTE,
@@ -111,6 +113,7 @@ export function ManualLayoutClient() {
   const [hoverGhost, setHoverGhost] = useState<Ghost | null>(null);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [staged, setStaged] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const dragStartRef = useRef<DragStart | null>(null);
   const dragGhostRef = useRef<DragGhost | null>(null);
@@ -246,6 +249,14 @@ export function ManualLayoutClient() {
       setHoverGhost(null);
       return;
     }
+    // 목표 수량만큼 이미 다 배치된 품목은 원지 위 어디를 가리켜도 놓을 곳이
+    // 없다 — 위치와 무관한 상태라 위치별 초록/빨강 미리보기를 보여주는 게
+    // 의미가 없고, 그동안은 항상 빨간 고스트가 마우스를 계속 따라다니는
+    // 것처럼 보이는 문제가 있었다. 이 경우엔 아예 고스트를 띄우지 않는다.
+    if (placedCountForItem(sheets, item.name) >= maxCountForItem(item)) {
+      setHoverGhost(null);
+      return;
+    }
     const w = rotated ? item.height : item.width;
     const h = rotated ? item.width : item.height;
     if (w > paperW || h > paperH) {
@@ -256,8 +267,7 @@ export function ManualLayoutClient() {
     const snap = Math.max(1, snapMm);
     const x = Math.min(Math.max(Math.round(pt.x / snap) * snap, 0), paperW - w);
     const y = Math.min(Math.max(Math.round(pt.y / snap) * snap, 0), paperH - h);
-    const countExceeded = placedCountForItem(sheets, item.name) >= maxCountForItem(item);
-    const valid = !countExceeded && !sheets[sheetIndex].placements.some((p) => overlaps({ x, y, w, h }, p));
+    const valid = !sheets[sheetIndex].placements.some((p) => overlaps({ x, y, w, h }, p));
     setHoverGhost({ x, y, w, h, valid });
   }
 
@@ -409,6 +419,29 @@ export function ManualLayoutClient() {
       effectiveReams: computeEffectiveReams(layouts),
     };
   }, [layouts, producedTotals, items, sheets.length]);
+
+  // 아직 주문이 없는 상태(신규 판매 등록 전)에서는 order id가 없어서 바로
+  // 저장할 수 없다. 자동 계산 도구(PaperCalcClient)와 완전히 같은 모양으로
+  // localStorage에 잠깐 담아두면, 판매 등록 폼이 주문을 만들 때 이 값을
+  // 그대로 읽어서 저장/연결한다.
+  function stagePendingCalc() {
+    if (!layouts.length) return;
+    localStorage.setItem(
+      PENDING_PAPER_CALC_KEY,
+      JSON.stringify({
+        paperW,
+        paperH,
+        inputItems: items,
+        layouts,
+        totalPaper: result.totalPaper,
+        totalSheet: result.totalSheet,
+        totalProd: result.totalProd,
+        overProd: result.overProd,
+        fulfilled: result.fulfilled,
+      })
+    );
+    setStaged(true);
+  }
 
   const usageAvg = layouts.length ? layouts.reduce((sum, l) => sum + l.margin.usage, 0) / layouts.length : null;
   const marginTotal = layouts.length ? layouts.reduce((sum, l) => sum + l.margin.area * l.sheetCount, 0) : null;
@@ -795,6 +828,30 @@ export function ManualLayoutClient() {
       </div>
 
       <DashboardCards result={result} usageAvg={usageAvg} marginTotal={marginTotal} />
+
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          className="erp-btn erp-btn-primary"
+          onClick={stagePendingCalc}
+          disabled={!layouts.length}
+        >
+          새 판매 등록에 연결
+        </button>
+      </div>
+
+      {staged && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}
+        >
+          배치 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을 등록하면
+          자동으로 이 배치가 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
+          <Link href="/sales/new" className="underline">
+            판매 등록으로 이동
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="erp-detail">

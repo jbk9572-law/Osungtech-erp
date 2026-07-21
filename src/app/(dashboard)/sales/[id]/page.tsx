@@ -19,7 +19,7 @@ export default async function SaleDetailPage({
   const [{ data: order }, { data: items }, { data: paperCalcs }] = await Promise.all([
     supabase
       .from("sales_orders")
-      .select("*, customers(*)")
+      .select("*, customers(*), profiles!created_by(full_name)")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -101,6 +101,10 @@ export default async function SaleDetailPage({
           <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>연락처</span>
             <span>{order.customers?.phone ?? "-"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>작성자</span>
+            <span>{order.profiles?.full_name ?? "-"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 8, minHeight: 26 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)", paddingTop: 4 }}>모조지 사용량</span>
