@@ -238,9 +238,20 @@ export class NestEngine {
       }
     }
 
-    const batches: [Pattern, number][] = Array.from(patternUsage.entries()).filter(
+    const rawBatches: [Pattern, number][] = Array.from(patternUsage.entries()).filter(
       ([, count]) => count > 0
     );
+
+    // 그리디 탐색은 매 순간 "이 연 하나"의 사용률만 최대화하기 때문에,
+    // 마지막에 발주량이 자잘하게 남으면서 사용률 낮은 배치가 여러 개
+    // 남는 경우가 있다. 실사용 연수 계산 기준(코어 3종 이상이거나 사용률
+    // 60% 이상이면 1연 인정)에서 보면, 어차피 원지 낭비량 자체는 그
+    // 낮은 배치들을 어떻게 나누든 똑같으므로 — 가능하면 그 몫을 최대한
+    // 적은 연에 몰아서, 나머지 연들이 60% 기준을 넘기게 만드는 편이
+    // 실사용 인정에 유리하다. 이미 검증된 탐색 함수만 재사용해서, 합쳐도
+    // 더 적거나 같은 연으로 같은 수량을 만들 수 있을 때만 교체한다.
+    const { batches, sheetsSaved } = this.consolidateLowUsageBatches(rawBatches);
+    totalSheetsUsed -= sheetsSaved;
 
     // 자투리 품목(300mm 미만)을 이미 확정된 배치들의 남는 여백에 채워
     // 넣는다. 코어 품목으로 이미 정해진 연 수에는 영향을 주지 않는다.
@@ -259,6 +270,82 @@ export class NestEngine {
     const fulfilled = Object.values(allRemaining).every((qty) => qty <= 0);
 
     return this.buildReport(batches, totalSheetsUsed, allOverProduction, fulfilled, allRemaining);
+  }
+
+  // 코어 품목 개수(패턴에 실제로 등장하는 서로 다른 품목 수)와 사용률로
+  // "이미 실사용 1연으로 인정되는 배치인지"를 판단한다. computeEffectiveReams와
+  // 같은 기준(3종 이상은 무조건, 아니면 60% 이상)을 여기서도 그대로 쓴다.
+  private isFullyCreditedPattern(pattern: Pattern): boolean {
+    const coreCount = Object.values(pattern.counts).filter((c) => c > 0).length;
+    if (coreCount >= 3) return true;
+    const sheetArea = this.sheetWidth * this.sheetHeight;
+    const usage = sheetArea > 0 ? pattern.coveredArea / sheetArea : 0;
+    return usage >= 0.6;
+  }
+
+  private effectiveFractionOf(pattern: Pattern): number {
+    if (this.isFullyCreditedPattern(pattern)) return 1;
+    const sheetArea = this.sheetWidth * this.sheetHeight;
+    const usage = sheetArea > 0 ? (pattern.coveredArea / sheetArea) * 100 : 0;
+    return Math.floor(usage / 10) / 10;
+  }
+
+  private consolidateLowUsageBatches(
+    batches: [Pattern, number][]
+  ): { batches: [Pattern, number][]; sheetsSaved: number } {
+    const reps = this.sheetPerReam;
+    if (!reps) return { batches, sheetsSaved: 0 };
+
+    const lowEntries = batches.filter(([pattern]) => !this.isFullyCreditedPattern(pattern));
+    if (lowEntries.length < 2) return { batches, sheetsSaved: 0 };
+
+    const combinedNeeded: Record<string, number> = {};
+    let combinedReps = 0;
+    for (const [pattern, count] of lowEntries) {
+      combinedReps += count;
+      for (const [name, perSheet] of Object.entries(pattern.counts)) {
+        if (perSheet <= 0) continue;
+        combinedNeeded[name] = (combinedNeeded[name] ?? 0) + perSheet * count;
+      }
+    }
+
+    const involvedItems = Object.keys(combinedNeeded)
+      .map((name) => this.items.find((it) => it.name === name))
+      .filter((it): it is Item => !!it);
+    if (involvedItems.length < 2) return { batches, sheetsSaved: 0 };
+
+    const combos = this.generateCombinations(involvedItems);
+    const candidatePatterns = this.buildPatterns(combos, { perComboMs: 500, globalMs: 3000 });
+    if (candidatePatterns.length === 0) return { batches, sheetsSaved: 0 };
+
+    const remaining: Record<string, number> = { ...combinedNeeded };
+    const newBatches: [Pattern, number][] = [];
+    let newReps = 0;
+    let guard = 0;
+    const guardLimit = combinedReps / reps + 10;
+
+    while (Object.values(remaining).some((qty) => qty > 0) && guard < guardLimit) {
+      guard += 1;
+      const pattern = this.selectBestPattern(candidatePatterns, remaining);
+      if (!pattern) break;
+      const trimmed = this.trimPatternToRemaining(pattern, remaining, reps);
+      newBatches.push([trimmed, reps]);
+      newReps += reps;
+      for (const [name, count] of Object.entries(trimmed.counts)) {
+        if (count <= 0) continue;
+        remaining[name] = Math.max((remaining[name] ?? 0) - count * reps, 0);
+      }
+    }
+
+    const fulfilled = Object.values(remaining).every((qty) => qty <= 0);
+    if (!fulfilled || newReps > combinedReps) return { batches, sheetsSaved: 0 };
+
+    const oldScore = lowEntries.reduce((sum, [p, count]) => sum + this.effectiveFractionOf(p) * count, 0);
+    const newScore = newBatches.reduce((sum, [p, count]) => sum + this.effectiveFractionOf(p) * count, 0);
+    if (newScore <= oldScore) return { batches, sheetsSaved: 0 };
+
+    const untouched = batches.filter(([pattern]) => this.isFullyCreditedPattern(pattern));
+    return { batches: [...untouched, ...newBatches], sheetsSaved: combinedReps - newReps };
   }
 
   // 가로·세로 둘 다 300mm 미만이면 "자투리"로 취급한다 — 재사용하지 않는
