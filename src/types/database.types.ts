@@ -449,6 +449,61 @@ export type Database = {
           },
         ];
       };
+      price_change_schedules: {
+        Row: {
+          id: string;
+          customer_id: string;
+          product_id: string;
+          new_unit_price: number;
+          effective_date: string;
+          applied_at: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          product_id: string;
+          new_unit_price: number;
+          effective_date: string;
+          applied_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          product_id?: string;
+          new_unit_price?: number;
+          effective_date?: string;
+          applied_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "price_change_schedules_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "price_change_schedules_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "price_change_schedules_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sales_orders: {
         Row: {
           id: string;
