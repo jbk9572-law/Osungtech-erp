@@ -4,18 +4,33 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function login(_prevState: { error: string } | undefined, formData: FormData) {
-  const email = String(formData.get("email") ?? "");
+  const loginId = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  if (!email || !password) {
-    return { error: "이메일과 비밀번호를 입력해주세요." };
+  if (!loginId || !password) {
+    return { error: "아이디와 비밀번호를 입력해주세요." };
   }
 
   const supabase = await createClient();
+
+  // "admin"처럼 이메일 형식이 아니면 아이디로 보고, DB에 등록된 이메일을
+  // 찾아서 그 이메일로 로그인한다(Supabase Auth 자체는 이메일 기반이라
+  // 아이디 로그인을 직접 지원하지 않는다).
+  let email = loginId;
+  if (!loginId.includes("@")) {
+    const { data: resolvedEmail } = await supabase.rpc("get_email_for_username", {
+      p_username: loginId,
+    });
+    if (!resolvedEmail) {
+      return { error: "존재하지 않는 아이디입니다." };
+    }
+    email = resolvedEmail;
+  }
+
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { error: "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요." };
+    return { error: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요." };
   }
 
   redirect("/dashboard");

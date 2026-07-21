@@ -13,18 +13,24 @@ export type Database = {
         Row: {
           id: string;
           full_name: string | null;
+          username: string | null;
+          email: string | null;
           role: "admin" | "manager" | "staff";
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
+          username?: string | null;
+          email?: string | null;
           role?: "admin" | "manager" | "staff";
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
+          username?: string | null;
+          email?: string | null;
           role?: "admin" | "manager" | "staff";
           created_at?: string;
         };
@@ -936,7 +942,12 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      get_email_for_username: {
+        Args: { p_username: string };
+        Returns: string | null;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
