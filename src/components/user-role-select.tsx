@@ -26,6 +26,7 @@ export function UserRoleSelect({
       style={{ height: 26, fontSize: 12.5 }}
       defaultValue={role}
       disabled={disabled || pending}
+      onClick={(e) => e.stopPropagation()}
       onChange={(e) => {
         const formData = new FormData();
         formData.set("userId", userId);
