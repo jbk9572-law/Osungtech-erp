@@ -2,7 +2,13 @@ import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ManualLayoutClient } from "@/components/paper-calc/manual-layout-client";
 
-export default function PaperCalcManualPage() {
+export default async function PaperCalcManualPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ for?: string }>;
+}) {
+  const { for: pendingFor } = await searchParams;
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/paper-calc" } }} />
@@ -13,7 +19,7 @@ export default function PaperCalcManualPage() {
         </Link>
       </div>
       <div style={{ marginTop: 12 }}>
-        <ManualLayoutClient />
+        <ManualLayoutClient pendingFor={pendingFor === "purchase" ? "purchase" : "sales"} />
       </div>
     </div>
   );
