@@ -277,7 +277,7 @@ export function NewPurchaseForm({
         </div>
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
+          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 900 }}>
             <thead>
               <tr>
                 <th style={{ width: "20%" }}>품목</th>
