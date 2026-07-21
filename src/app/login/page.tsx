@@ -57,12 +57,12 @@ export default function LoginPage() {
           <form action={handleSubmit} className="flex flex-1 flex-col justify-center gap-3">
             <div>
               <label htmlFor="email" className="mb-1 block text-xs font-medium text-[#6b7280]">
-                아이디 (이메일)
+                아이디
               </label>
               <input
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 required
                 defaultValue={savedEmail}
                 className="h-[30px] w-full rounded-sm border border-[#d9d9d9] px-2.5 text-sm focus:border-[#1f3b75] focus:outline-none"

@@ -34,7 +34,7 @@ const TREE: GroupItem[] = [
     label: "환경설정",
     items: [{ label: "회사정보", href: "/settings/company" }],
   },
-  { label: "시스템관리", items: [{ label: "권한관리" }] },
+  { label: "시스템관리", items: [{ label: "권한관리", href: "/settings/users" }] },
   {
     label: "확장모듈",
     items: [

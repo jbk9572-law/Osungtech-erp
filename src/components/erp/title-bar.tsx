@@ -20,7 +20,9 @@ const SECTION_LABEL: { prefix: string; label: string }[] = [
   { prefix: "/suppliers", label: "거래처관리 > 공급처관리" },
   { prefix: "/todos", label: "할일관리" },
   { prefix: "/announcements", label: "공지사항" },
+  { prefix: "/settings/users", label: "시스템관리 > 권한관리" },
   { prefix: "/settings", label: "환경설정" },
+  { prefix: "/paper-calc/manual", label: "확장모듈 > 재단 배치 시뮬레이터" },
   { prefix: "/paper-calc", label: "확장모듈 > 모조지 계산" },
 ];
 
