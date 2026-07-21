@@ -5,7 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
-import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
+import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 import {
   computeEffectiveReams,
   PALETTE,
@@ -98,7 +98,7 @@ function clientToSheetPoint(svg: SVGSVGElement, clientX: number, clientY: number
   return { x: transformed.x, y: transformed.y };
 }
 
-export function ManualLayoutClient() {
+export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sales" | "purchase" }) {
   const [paperW, setPaperW] = useState(788);
   const [paperH, setPaperH] = useState(1091);
   const [rows, setRows] = useState<ItemRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
@@ -427,7 +427,7 @@ export function ManualLayoutClient() {
   function stagePendingCalc() {
     if (!layouts.length) return;
     localStorage.setItem(
-      PENDING_PAPER_CALC_KEY,
+      pendingFor === "purchase" ? PENDING_PAPER_CALC_PURCHASE_KEY : PENDING_PAPER_CALC_KEY,
       JSON.stringify({
         paperW,
         paperH,
@@ -836,7 +836,7 @@ export function ManualLayoutClient() {
           onClick={stagePendingCalc}
           disabled={!layouts.length}
         >
-          새 판매 등록에 연결
+          {pendingFor === "purchase" ? "새 매입 등록에 연결" : "새 판매 등록에 연결"}
         </button>
       </div>
 
@@ -845,11 +845,23 @@ export function ManualLayoutClient() {
           className="rounded p-2 text-xs"
           style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}
         >
-          배치 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을 등록하면
-          자동으로 이 배치가 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
-          <Link href="/sales/new" className="underline">
-            판매 등록으로 이동
-          </Link>
+          {pendingFor === "purchase" ? (
+            <>
+              배치 결과를 임시 저장했습니다. 이 화면을 닫고 매입 등록 화면에서 주문을 등록하면
+              자동으로 이 배치가 연결되고 매입 품목에 TG0 수량이 반영됩니다.{" "}
+              <Link href="/purchases/new" className="underline">
+                매입 등록으로 이동
+              </Link>
+            </>
+          ) : (
+            <>
+              배치 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을 등록하면
+              자동으로 이 배치가 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
+              <Link href="/sales/new" className="underline">
+                판매 등록으로 이동
+              </Link>
+            </>
+          )}
         </div>
       )}
 

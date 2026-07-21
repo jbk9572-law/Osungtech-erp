@@ -20,6 +20,9 @@ export default async function NewPurchasePage() {
           <Link href="/paper-calc?for=purchase" target="_blank" rel="noopener noreferrer" className="erp-btn">
             모조지 계산
           </Link>
+          <Link href="/paper-calc/manual?for=purchase" target="_blank" rel="noopener noreferrer" className="erp-btn">
+            재단 배치 시뮬레이터
+          </Link>
           <Link href="/purchases" className="erp-btn erp-btn-danger">
             ESC 닫기
           </Link>
