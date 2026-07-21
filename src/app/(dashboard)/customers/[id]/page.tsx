@@ -2,10 +2,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
+import { PriceScheduleForm } from "@/components/price-schedule-form";
+import { CancelPriceScheduleButton } from "@/components/cancel-price-schedule-button";
 import { PartnerForm } from "@/components/partner-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateCustomer, deleteCustomer } from "@/app/(dashboard)/customers/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { applyDuePriceSchedules } from "@/lib/price-schedule";
 
 export default async function CustomerDetailPage({
   params,
@@ -15,7 +18,11 @@ export default async function CustomerDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: customer }, { data: prices }, { data: products }] = await Promise.all([
+  // 이 거래처 화면을 열 때마다, 오늘 이미 도래한 단가 예약을 먼저 반영한다
+  // (별도 크론 없이 "그 날짜가 된 뒤 누군가 화면을 열면 그때 적용"되는 방식).
+  await applyDuePriceSchedules(supabase, id);
+
+  const [{ data: customer }, { data: prices }, { data: products }, { data: schedules }] = await Promise.all([
     supabase.from("customers").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("customer_product_prices")
@@ -23,6 +30,12 @@ export default async function CustomerDetailPage({
       .eq("customer_id", id)
       .order("updated_at", { ascending: false }),
     supabase.from("products").select("id, sku, name").order("name"),
+    supabase
+      .from("price_change_schedules")
+      .select("id, new_unit_price, effective_date, products(sku, name)")
+      .eq("customer_id", id)
+      .is("applied_at", null)
+      .order("effective_date", { ascending: true }),
   ]);
 
   if (!customer) {
@@ -73,6 +86,36 @@ export default async function CustomerDetailPage({
             같은 상품에 새 단가를 등록하면 기존 단가는 최신 단가로 자동 갱신됩니다.
           </p>
           <CustomerPriceForm customerId={customer.id} products={products ?? []} />
+        </div>
+      </div>
+
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">단가 예약 (미래 적용)</span>
+        </div>
+        <div className="erp-detail-body">
+          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            지정한 날짜가 되면 자동으로 위 판매단가에 반영됩니다(그 전까지는 기존 단가 그대로 적용).
+          </p>
+          <PriceScheduleForm customerId={customer.id} products={products ?? []} />
+
+          {schedules && schedules.length > 0 && (
+            <div className="mt-3 flex flex-col gap-1.5">
+              {schedules.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between rounded p-2 text-xs"
+                  style={{ background: "#eef2ff", border: "1px solid #c7d2fe" }}
+                >
+                  <span>
+                    {s.effective_date}부터 {s.products?.sku} · {s.products?.name} →{" "}
+                    <strong>{Number(s.new_unit_price).toLocaleString()}원</strong>
+                  </span>
+                  <CancelPriceScheduleButton id={s.id} customerId={customer.id} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

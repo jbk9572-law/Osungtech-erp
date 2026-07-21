@@ -2,9 +2,15 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { applyDuePriceSchedules } from "@/lib/price-schedule";
 
 export default async function NewSalePage() {
   const supabase = await createClient();
+
+  // 오늘 이미 도래한 단가 예약(거래처별)을 먼저 반영해서, 이 화면의 단가
+  // 자동입력이 예약된 인상/인하가 있으면 그걸 바로 반영하게 한다.
+  await applyDuePriceSchedules(supabase);
+
   const [{ data: customers }, { data: products }, { data: warehouse }, { data: prices }, { data: history }] =
     await Promise.all([
       supabase.from("customers").select("id, name").order("name"),

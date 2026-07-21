@@ -117,6 +117,65 @@ export async function upsertCustomerPrice(
   return { success: "판매단가가 저장되었습니다." };
 }
 
+// 미래 특정 날짜부터 적용할 단가를 예약해둔다. customer_product_prices를
+// 바로 바꾸지 않고 별도 테이블에 쌓아두는 이유는, 그 테이블이 "거래처+상품당
+// 최신 단가 하나"만 남기는 구조라 지금 당장 바꾸면 그 사이 판매에도 새
+// 단가가 잘못 적용되기 때문이다. 실제 반영은 그 날짜가 된 뒤 화면을 열 때
+// applyDuePriceSchedules가 처리한다.
+export async function schedulePriceChange(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const customerId = String(formData.get("customer_id") ?? "");
+  const productId = String(formData.get("product_id") ?? "");
+  const newUnitPrice = Number(formData.get("new_unit_price") ?? 0);
+  const effectiveDate = String(formData.get("effective_date") ?? "");
+
+  if (!customerId || !productId || !effectiveDate) {
+    return { error: "상품과 적용일을 모두 입력해주세요." };
+  }
+  const today = new Date().toLocaleDateString("sv-SE");
+  if (effectiveDate <= today) {
+    return { error: "적용일은 내일 이후 날짜여야 합니다." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("price_change_schedules").insert({
+    customer_id: customerId,
+    product_id: productId,
+    new_unit_price: newUnitPrice,
+    effective_date: effectiveDate,
+    created_by: user?.id ?? null,
+  });
+
+  if (error) {
+    return { error: "예약에 실패했습니다." };
+  }
+
+  revalidatePath(`/customers/${customerId}`);
+  return { success: "단가 변경을 예약했습니다." };
+}
+
+export async function cancelPriceSchedule(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const customerId = String(formData.get("customer_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("price_change_schedules").delete().eq("id", id).is("applied_at", null);
+
+  if (error) {
+    return { error: "취소에 실패했습니다." };
+  }
+
+  if (customerId) revalidatePath(`/customers/${customerId}`);
+  return { success: "예약을 취소했습니다." };
+}
+
 export async function importCustomersExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
