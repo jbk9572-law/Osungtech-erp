@@ -276,10 +276,13 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
     setCursorPos(null);
   }
 
-  // 이미 배치된 조각을 눌러서 끄는(드래그) 동작. Pointer Capture를 쓰면
-  // 손가락/마우스가 이동해도 계속 같은 조각으로 이벤트가 들어와서, 마우스뿐
-  // 아니라 터치로도 정확히 옮길 수 있다. 살짝만 움직이면(4px 미만) 드래그로
-  // 치지 않고 그냥 클릭(선택)으로 처리한다.
+  // 이미 배치된 조각을 눌러서 끄는(드래그) 동작. 모바일에서는 setPointerCapture가
+  // SVG 요소에서 제대로 동작하지 않거나, 손가락이 조각 밖으로 살짝 벗어나면
+  // 이후 move/up 이벤트가 전혀 들어오지 않아 드래그가 그 자리에서 멈춘 것처럼
+  // 보이고(고스트가 안 사라짐), 그 상태에서 다시 시도하면 두 조각이 겹쳐
+  // 보이는 문제가 있었다. rect에만 리스너를 거는 대신 손가락을 든 위치와
+  // 무관하게 항상 이벤트를 받도록 window에 리스너를 걸고, 드래그가 끝나면
+  // (up이든 cancel이든) 반드시 정리한다.
   function handleItemPointerDown(index: number, e: React.PointerEvent<SVGRectElement>) {
     e.stopPropagation();
     const svg = svgRef.current;
@@ -295,22 +298,43 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
       moved: false,
     };
     setHoverGhost(null);
-    e.currentTarget.setPointerCapture(e.pointerId);
+
+    const handleMove = (ev: PointerEvent) => handleItemPointerMove(ev.clientX, ev.clientY);
+    const handleUp = () => {
+      cleanup();
+      commitDrag();
+    };
+    // pointercancel은 손가락이 화면 밖으로 나가거나 브라우저가 제스처를
+    // 가로챌 때 발생한다 — 이 경우 위치를 반영하지 않고 조용히 원래 자리로
+    // 되돌린다(고스트가 화면에 그대로 남는 것을 막는 게 핵심).
+    const handleCancel = () => {
+      cleanup();
+      dragStartRef.current = null;
+      updateDragGhost(null);
+    };
+    function cleanup() {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointercancel", handleCancel);
+    }
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    window.addEventListener("pointercancel", handleCancel);
   }
 
-  function handleItemPointerMove(e: React.PointerEvent<SVGRectElement>) {
+  function handleItemPointerMove(clientX: number, clientY: number) {
     const drag = dragStartRef.current;
     const svg = svgRef.current;
     if (!drag || !svg) return;
 
-    const dx = e.clientX - drag.startClientX;
-    const dy = e.clientY - drag.startClientY;
+    const dx = clientX - drag.startClientX;
+    const dy = clientY - drag.startClientY;
     if (!drag.moved && Math.hypot(dx, dy) < 4) return;
     drag.moved = true;
 
     const target = sheets[sheetIndex].placements[drag.index];
     if (!target) return;
-    const pt = clientToSheetPoint(svg, e.clientX, e.clientY);
+    const pt = clientToSheetPoint(svg, clientX, clientY);
     const snap = Math.max(1, snapMm);
     const x = Math.min(Math.max(Math.round((pt.x - drag.offsetX) / snap) * snap, 0), paperW - target.w);
     const y = Math.min(Math.max(Math.round((pt.y - drag.offsetY) / snap) * snap, 0), paperH - target.h);
@@ -320,7 +344,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
     setWarning(null);
   }
 
-  function handleItemPointerUp() {
+  function commitDrag() {
     const drag = dragStartRef.current;
     dragStartRef.current = null;
     if (!drag) return;
@@ -727,8 +751,6 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                     style={{ cursor: "grab", touchAction: "none" }}
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={(e) => handleItemPointerDown(i, e)}
-                    onPointerMove={handleItemPointerMove}
-                    onPointerUp={handleItemPointerUp}
                   />
                   {showLabel && !isDragging && (
                     <>
