@@ -956,8 +956,18 @@ export class NestEngine {
     const layouts: NestLayout[] = [];
     let totalProd = 0;
 
-    // 사용 장수가 많은 배치부터 보여준다 (주력 패턴을 먼저 확인하도록)
-    const sortedBatches = [...batches].sort((a, b) => b[1] - a[1]);
+    // 실사용연수 인정 등급(1.0연 vs 부분 인정) 순으로 보여준다 — 온전히
+    // 1연으로 인정되는 배치(코어 3종 이상 조합 또는 사용률 60% 이상)를
+    // 앞으로 몰고, 부분 인정만 되는(사용률 낮은) 배치를 맨 뒤로 보낸다.
+    // 같은 등급 안에서는 사용률이 높은 순으로 둔다 — 사용률 숫자 자체가
+    // 아니라 이 인정 등급이 정렬의 1순위 기준이라는 점이 핵심이다.
+    const sortedBatches = [...batches].sort((a, b) => {
+      const fractionDiff = this.effectiveFractionOf(b[0]) - this.effectiveFractionOf(a[0]);
+      if (fractionDiff !== 0) return fractionDiff;
+      const usageA = sheetArea ? a[0].coveredArea / sheetArea : 0;
+      const usageB = sheetArea ? b[0].coveredArea / sheetArea : 0;
+      return usageB - usageA;
+    });
 
     for (const [pattern, sheetCount] of sortedBatches) {
       const { placements, coveredArea: covered } = pattern;
