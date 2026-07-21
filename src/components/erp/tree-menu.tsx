@@ -32,7 +32,10 @@ const TREE: GroupItem[] = [
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
   {
     label: "환경설정",
-    items: [{ label: "회사정보", href: "/settings/company" }],
+    items: [
+      { label: "회사정보", href: "/settings/company" },
+      { label: "비밀번호 변경", href: "/settings/password" },
+    ],
   },
   { label: "시스템관리", items: [{ label: "권한관리", href: "/settings/users" }] },
   {
