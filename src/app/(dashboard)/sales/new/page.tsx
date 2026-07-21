@@ -37,6 +37,9 @@ export default async function NewSalePage() {
           <Link href="/paper-calc" target="_blank" rel="noopener noreferrer" className="erp-btn">
             모조지 계산
           </Link>
+          <Link href="/paper-calc/manual" target="_blank" rel="noopener noreferrer" className="erp-btn">
+            재단 배치 시뮬레이터
+          </Link>
           <Link href="/sales" className="erp-btn erp-btn-danger">
             ESC 닫기
           </Link>

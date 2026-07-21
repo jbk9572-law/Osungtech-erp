@@ -9,6 +9,7 @@ type DisplayRow = {
   orderId: string | undefined;
   date: string | undefined;
   customerName: string | undefined;
+  authorName: string | null | undefined;
   productLabel: string;
   spec: string;
   quantity: number;
@@ -29,7 +30,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, customers(name)), products(sku, name, spec, unit)"
+      "*, sales_orders!inner(id, order_date, memo, customers(name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -78,6 +79,7 @@ export default async function SalesPage({
           orderId,
           date: item.sales_orders?.order_date,
           customerName: item.sales_orders?.customers?.name,
+          authorName: item.sales_orders?.profiles?.full_name,
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           quantity: 0,
@@ -184,6 +186,7 @@ export default async function SalesPage({
             <tr>
               <th>거래일자</th>
               <th>거래처</th>
+              <th>작성자</th>
               <th>품목명</th>
               <th>규격</th>
               <th className="num">수량</th>
@@ -198,6 +201,7 @@ export default async function SalesPage({
               <ClickableRow key={row.key} href={row.orderId ? `/sales/${row.orderId}` : "#"}>
                 <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
                 <td>{row.customerName}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                 <td>{row.productLabel}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
                 <td className="num">
@@ -226,7 +230,7 @@ export default async function SalesPage({
             ))}
             {!rows.length && (
               <tr>
-                <td colSpan={9} className="erp-grid-empty">
+                <td colSpan={10} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -235,7 +239,7 @@ export default async function SalesPage({
           {rows.length > 0 && (
             <tfoot>
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={4} className="erp-grid-sticky-label">
+                <td colSpan={5} className="erp-grid-sticky-label">
                   합계 ({rows.length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
