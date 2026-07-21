@@ -94,6 +94,9 @@ export async function createPurchase(
   const memo = String(formData.get("memo") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
+  // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
+  // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
+  const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
 
   if (!supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
@@ -176,6 +179,13 @@ export async function createPurchase(
 
   if (pendingPaperCalc) {
     await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
+  }
+
+  // TG0 자동 반영 줄이 위에서 이미 만들어진 뒤에만 오버라이드를 적용할 수
+  // 있으므로 반드시 attachPendingPaperCalculationToPurchase 다음에 호출한다.
+  const tg0OverrideQuantity = Number(tg0OverrideRaw);
+  if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
+    await overridePurchasePaperStockQuantity(supabase, purchaseOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
   }
 
   revalidatePath("/purchases");

@@ -251,7 +251,18 @@ export function NewSaleForm({
   }, [pendingPaperCalc, copiedPaperCalcs]);
   const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
   const pendingCalcUnitPrice = tg0Product ? resolvePrice(customerId, tg0Product.id) : 0;
-  const pendingCalcAmount = pendingCalcSummary ? pendingCalcSummary.totalSheet * pendingCalcUnitPrice : 0;
+  // 거래처와 협의해 자동 계산값(예: 3.2연)과 다른 수량(예: 3연)으로 등록해야
+  // 하는 경우, 등록 시점에 바로 고칠 수 있게 한다 — null이면 자동값 그대로.
+  // 저장 시(createSale)에는 이 값이 있을 때만 오버라이드 이력을 남긴다.
+  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(null);
+  const pendingCalcQuantity = pendingCalcSummary
+    ? (tg0OverrideQuantity ?? pendingCalcSummary.totalSheet)
+    : 0;
+  const pendingCalcAmount = pendingCalcQuantity * pendingCalcUnitPrice;
+  const tg0IsOverridden =
+    pendingCalcSummary !== null &&
+    tg0OverrideQuantity !== null &&
+    tg0OverrideQuantity !== pendingCalcSummary.totalSheet;
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -342,6 +353,9 @@ export function NewSaleForm({
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
       {copiedPaperCalcs.length > 0 && (
         <input type="hidden" name="copiedPaperCalcs" value={JSON.stringify(copiedPaperCalcs)} />
+      )}
+      {tg0IsOverridden && (
+        <input type="hidden" name="tg0OverrideQuantity" value={tg0OverrideQuantity ?? ""} />
       )}
 
       {(pendingPaperCalc || copiedPaperCalcs.length > 0) && (
@@ -553,10 +567,20 @@ export function NewSaleForm({
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
-                  <td className="num">{pendingCalcSummary.totalSheet.toLocaleString()}</td>
+                  <td className="num">
+                    <NumberInput
+                      value={pendingCalcQuantity}
+                      onChange={setTg0OverrideQuantity}
+                      className="erp-input w-full"
+                    />
+                  </td>
                   <td className="num">{pendingCalcUnitPrice.toLocaleString()}</td>
                   <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>모조지 계산 자동 반영</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {tg0IsOverridden
+                      ? `자동값 ${pendingCalcSummary.totalSheet.toLocaleString()} → 수동 입력`
+                      : "모조지 계산 자동 반영"}
+                  </td>
                   <td className="num">
                     <button
                       type="button"
@@ -566,6 +590,7 @@ export function NewSaleForm({
                         localStorage.removeItem(PENDING_PAPER_CALC_KEY);
                         setPendingPaperCalc(null);
                         setCopiedPaperCalcs([]);
+                        setTg0OverrideQuantity(null);
                       }}
                     >
                       취소

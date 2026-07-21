@@ -167,6 +167,9 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "");
   // 입고 불러오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
   const copiedPaperCalcs = String(formData.get("copiedPaperCalcs") ?? "");
+  // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
+  // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
+  const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
 
   if (!customerId || !warehouseId || !orderDate) {
     return { error: "거래처, 창고, 거래일자를 모두 입력해주세요." };
@@ -269,6 +272,13 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 입고 불러오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
   if (copiedPaperCalcs) {
     await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
+  }
+
+  // TG0 자동 반영 줄이 위에서 이미 만들어진 뒤에만 오버라이드를 적용할 수
+  // 있으므로 반드시 attachPendingPaperCalculation(들) 다음에 호출한다.
+  const tg0OverrideQuantity = Number(tg0OverrideRaw);
+  if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
+    await overrideSalesPaperStockQuantity(supabase, salesOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
   }
 
   revalidatePath("/sales");
