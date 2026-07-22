@@ -35,6 +35,11 @@ export default async function MonthlyReportPage({
   const { from, to } = getMonthRange(month);
   const supabase = await createClient();
 
+  // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행)에서 조용히
+  // 자르고, order() 없이 limit만 걸면 어떤 행이 잘리는지 보장이 안 된다
+  // (한 달 거래가 한도를 넘으면 매번 다른 행이 빠지면서 합계가 틀어질 수
+  // 있다). 월 집계는 정확도가 중요해서 넉넉한 상한(5000) + 결정적인
+  // 정렬을 같이 건다.
   const [{ data: salesRows }, { data: purchaseRows }] = await Promise.all([
     supabase
       .from("sales_order_items")
@@ -43,7 +48,8 @@ export default async function MonthlyReportPage({
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
-      .limit(2000),
+      .order("sales_orders(order_date)", { ascending: true })
+      .limit(5000),
     supabase
       .from("purchase_order_items")
       .select(
@@ -51,7 +57,8 @@ export default async function MonthlyReportPage({
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
-      .limit(2000),
+      .order("purchase_orders(purchase_date)", { ascending: true })
+      .limit(5000),
   ]);
 
   const groups = new Map<string, ItemGroup>();

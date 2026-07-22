@@ -28,14 +28,17 @@ export default async function InventoryProductHistoryPage({
       .select("id, sku, name, spec, unit, reorder_point, inventory(quantity)")
       .eq("id", productId)
       .maybeSingle(),
+    // 재고 잔량은 전체 이력을 처음부터 누적해야 정확하다. 예전에는 여기
+    // limit(1000)이 있었는데, 오름차순 정렬 + limit 조합이라 거래가 1000건을
+    // 넘는 순간 정작 최신 거래가 잘려서 화면에도 안 보이고 잔량 계산도
+    // 틀어지는 문제가 있었다(오래된 거래는 남고 최신 거래가 사라짐).
     supabase
       .from("inventory_transactions")
       .select(
         "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name))"
       )
       .eq("product_id", productId)
-      .order("created_at", { ascending: true })
-      .limit(1000),
+      .order("created_at", { ascending: true }),
   ]);
 
   if (!product) {
