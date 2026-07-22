@@ -12,6 +12,22 @@ import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/p
 
 type OrderRow = { key: number; width: number; height: number; qty: number };
 
+// 신규 판매/매입 등록 폼이 모조지 계산을 모달로 띄울 때, "적용" 버튼을
+// 누르면 이 모양 그대로 콜백으로 받아서 곧장 폼 상태에 반영한다 —
+// localStorage에 담아 다른 탭이 storage 이벤트로 감지하던 예전 방식과
+// 달리, 같은 컴포넌트 트리 안이라 바로 state로 넘길 수 있다.
+export type PendingCalcPayload = {
+  paperW: number;
+  paperH: number;
+  inputItems: Item[];
+  layouts: NestLayout[];
+  totalPaper: number;
+  totalSheet: number;
+  totalProd: number;
+  overProd: number;
+  fulfilled: boolean;
+};
+
 type SavedCalculation = {
   id: string;
   total_paper: number;
@@ -67,6 +83,7 @@ export function PaperCalcClient({
   purchaseOrderLabel = null,
   pendingFor = "sales",
   savedCalculations = [],
+  onApply,
 }: {
   salesOrderId?: string | null;
   salesOrderLabel?: string | null;
@@ -74,6 +91,9 @@ export function PaperCalcClient({
   purchaseOrderLabel?: string | null;
   pendingFor?: "sales" | "purchase";
   savedCalculations?: SavedCalculation[];
+  // 신규 등록 폼 안의 모달로 띄워졌을 때만 넘어온다. 있으면 localStorage에
+  // 임시 저장하는 대신 이 콜백으로 계산 결과를 바로 돌려준다.
+  onApply?: (payload: PendingCalcPayload) => void;
 }) {
   const hasOrder = Boolean(salesOrderId || purchaseOrderId);
   // 이미 저장된 계산이 있는 주문이면, 들어오자마자 새 계산 입력창부터 보여주는
@@ -421,20 +441,43 @@ export function PaperCalcClient({
                   </button>
                 </form>
               )}
-              {!hasOrder && (
-                <button
-                  type="button"
-                  className="erp-btn erp-btn-primary"
-                  onClick={stagePendingCalc}
-                  disabled={!result?.layouts.length}
-                >
-                  {pendingFor === "purchase" ? "새 매입 등록에 연결" : "새 판매 등록에 연결"}
-                </button>
-              )}
+              {!hasOrder &&
+                (onApply ? (
+                  <button
+                    type="button"
+                    className="erp-btn erp-btn-primary"
+                    onClick={() => {
+                      if (!result) return;
+                      onApply({
+                        paperW,
+                        paperH,
+                        inputItems: orderItems,
+                        layouts: result.layouts,
+                        totalPaper: result.totalPaper,
+                        totalSheet: result.totalSheet,
+                        totalProd: result.totalProd,
+                        overProd: result.overProd,
+                        fulfilled: result.fulfilled,
+                      });
+                    }}
+                    disabled={!result?.layouts.length}
+                  >
+                    이 계산 적용하기
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="erp-btn erp-btn-primary"
+                    onClick={stagePendingCalc}
+                    disabled={!result?.layouts.length}
+                  >
+                    {pendingFor === "purchase" ? "새 매입 등록에 연결" : "새 판매 등록에 연결"}
+                  </button>
+                ))}
             </div>
           </div>
 
-          {!hasOrder && staged && (
+          {!hasOrder && !onApply && staged && (
             <div
               className="rounded p-2 text-xs"
               style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}

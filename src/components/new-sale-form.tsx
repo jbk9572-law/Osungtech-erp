@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import {
   createSale,
   getPaperCalculationsForPurchaseOrder,
@@ -17,7 +17,8 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
-import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
+import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
+import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
@@ -130,23 +131,13 @@ export function NewSaleForm({
 
   // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 sales_order_id가 있어서
   // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
+  // 모조지 계산을 모달로 띄워서 계산하고 "이 계산 적용하기"를 누르면
+  // onApply 콜백으로 바로 이 state에 꽂힌다(localStorage/storage 이벤트로
+  // 다른 탭과 동기화하던 예전 방식 대신 같은 컴포넌트 트리 안에서 직접 전달).
   const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
-  useEffect(() => {
-    if (initial?.id) return;
-    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY));
-
-    // 모조지 계산은 새 탭(target="_blank")에서 저장되므로, 이 탭은 처음 열릴
-    // 때 한 번만 확인해서는 그 결과를 알 수 없다. storage 이벤트로 다른 탭의
-    // 저장을 실시간으로 반영해야, 사용자가 "반영이 안 됐나?" 싶어 새로고침
-    // 하면서 입력 중이던 다른 품목들을 날려버리는 일을 막을 수 있다.
-    function handleStorage(e: StorageEvent) {
-      if (e.key === PENDING_PAPER_CALC_KEY) {
-        setPendingPaperCalc(e.newValue);
-      }
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [initial?.id]);
+  function handlePaperCalcApply(payload: PendingCalcPayload) {
+    setPendingPaperCalc(JSON.stringify(payload));
+  }
 
   // 당일 입고된 품목을 그대로 매출로 옮겨 담는 기능(모조지처럼 당일 입고 후
   // 바로 당일 출고되는 품목을 이중 입력하지 않게 하려는 용도). 거래일자와
@@ -369,9 +360,6 @@ export function NewSaleForm({
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={() => {
         setMessageDismissed(false);
-        // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다.
-        // 등록이 실패해도 계산 자체는 다시 하면 되므로 감수할 만한 트레이드오프다.
-        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
@@ -466,6 +454,9 @@ export function NewSaleForm({
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
             </button>
+            {!initial?.id && (
+              <PaperCalcModalTrigger pendingFor="sales" onApply={handlePaperCalcApply} />
+            )}
           </div>
 
           {purchaseCandidates !== null && (
@@ -614,7 +605,6 @@ export function NewSaleForm({
                       className="erp-btn erp-btn-danger"
                       style={{ minWidth: 0, height: 26, padding: "0 8px" }}
                       onClick={() => {
-                        localStorage.removeItem(PENDING_PAPER_CALC_KEY);
                         setPendingPaperCalc(null);
                         setCopiedPaperCalcs([]);
                         setTg0OverrideQuantity(null);

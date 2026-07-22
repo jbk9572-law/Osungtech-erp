@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
@@ -10,7 +10,8 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
-import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
+import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
+import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
@@ -111,23 +112,13 @@ export function NewPurchaseForm({
 
   // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 purchase_order_id가 있어서
   // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
+  // 모조지 계산을 모달로 띄워서 계산하고 "이 계산 적용하기"를 누르면
+  // onApply 콜백으로 바로 이 state에 꽂힌다(localStorage/storage 이벤트로
+  // 다른 탭과 동기화하던 예전 방식 대신 같은 컴포넌트 트리 안에서 직접 전달).
   const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
-  useEffect(() => {
-    if (initial?.id) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
-    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_PURCHASE_KEY));
-
-    // 모조지 계산은 새 탭(target="_blank")에서 저장되므로, storage 이벤트로
-    // 다른 탭의 저장을 실시간 반영해야 새로고침 때문에 입력 중이던 다른
-    // 품목들을 날리는 일을 막을 수 있다.
-    function handleStorage(e: StorageEvent) {
-      if (e.key === PENDING_PAPER_CALC_PURCHASE_KEY) {
-        setPendingPaperCalc(e.newValue);
-      }
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [initial?.id]);
+  function handlePaperCalcApply(payload: PendingCalcPayload) {
+    setPendingPaperCalc(JSON.stringify(payload));
+  }
 
   // 임시 저장된 모조지 계산이 있으면 등록 버튼을 누르기 전에도 TG0 품목
   // 줄이 실제로 어떤 수량으로 들어갈지 그리드에 미리 보여준다. 이 줄은
@@ -234,9 +225,6 @@ export function NewPurchaseForm({
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={() => {
         setMessageDismissed(false);
-        // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다.
-        // 등록이 실패해도 계산 자체는 다시 하면 되므로 감수할 만한 트레이드오프다.
-        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
@@ -308,9 +296,14 @@ export function NewPurchaseForm({
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
           <span className="erp-detail-tab active">품목</span>
-          <button type="button" onClick={addRow} className="erp-btn" style={{ margin: 4, minWidth: 0 }}>
-            + 품목 추가
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4 }}>
+            <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
+              + 품목 추가
+            </button>
+            {!initial?.id && (
+              <PaperCalcModalTrigger pendingFor="purchase" onApply={handlePaperCalcApply} />
+            )}
+          </div>
         </div>
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
@@ -375,7 +368,6 @@ export function NewPurchaseForm({
                       className="erp-btn erp-btn-danger"
                       style={{ minWidth: 0, height: 26, padding: "0 8px" }}
                       onClick={() => {
-                        localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
                         setPendingPaperCalc(null);
                         setTg0OverrideQuantity(null);
                       }}
