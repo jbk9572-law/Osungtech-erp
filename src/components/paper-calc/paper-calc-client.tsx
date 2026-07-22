@@ -632,8 +632,6 @@ function SavedCalcRow({
         <div className="flex items-center gap-1">
           <Link
             href={`/paper-calc/view/${calc.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="erp-btn"
             style={{ minWidth: 0, height: 26, padding: "0 8px" }}
           >
