@@ -227,6 +227,13 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
+/* 모조지 계산처럼 내용이 넓고 긴 모달용 확장 크기 */
+.erp-modal-lg {
+  width: 1120px;
+  max-width: calc(100vw - 32px);
+  max-height: 90vh;
+}
+
 .erp-modal-title {
   display: flex;
   align-items: center;
