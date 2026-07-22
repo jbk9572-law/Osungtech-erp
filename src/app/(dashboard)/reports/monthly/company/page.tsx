@@ -46,6 +46,7 @@ export default async function MonthlyReportCompanyPage({
         .eq("purchase_orders.supplier_id", id)
         .gte("purchase_orders.purchase_date", from)
         .lte("purchase_orders.purchase_date", to)
+        .order("purchase_orders(purchase_date)", { ascending: true })
         .limit(2000),
     ]);
     companyName = supplier?.name ?? "";
@@ -70,6 +71,7 @@ export default async function MonthlyReportCompanyPage({
         .eq("sales_orders.customer_id", id)
         .gte("sales_orders.order_date", from)
         .lte("sales_orders.order_date", to)
+        .order("sales_orders(order_date)", { ascending: true })
         .limit(2000),
     ]);
     companyName = customer?.name ?? "";

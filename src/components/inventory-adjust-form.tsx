@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { adjustInventory } from "@/app/(dashboard)/inventory/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
@@ -28,10 +28,24 @@ export function InventoryAdjustForm({
 }) {
   const [state, formAction, pending] = useActionState(adjustInventory, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   useKeyShortcut("F7", submitRef);
   const [productId, setProductId] = useState("");
   const [direction, setDirection] = useState<"increase" | "decrease">("increase");
   const [amount, setAmount] = useState(0);
+
+  // 저장에 성공해도 예전엔 방금 고른 상품/수량이 폼에 그대로 남아있어서,
+  // 다음 조정을 하려면 매번 직접 지워야 했고 깜빡하면 같은 조정이 중복
+  // 등록될 위험도 있었다. 성공 시 폼을 초기 상태로 되돌린다.
+  useEffect(() => {
+    if (state?.success) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local UI state in reaction to a server action result, not derived state
+      setProductId("");
+      setDirection("increase");
+      setAmount(0);
+      formRef.current?.reset();
+    }
+  }, [state]);
 
   const currentStock = useMemo(() => {
     if (!productId) return null;
@@ -45,7 +59,7 @@ export function InventoryAdjustForm({
   const selectedProduct = products.find((p) => p.id === productId);
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
+    <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="quantity" value={signedQuantity} />
