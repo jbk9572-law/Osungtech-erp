@@ -233,7 +233,7 @@ export function DeliveryNoteDoc({
           ))}
           {note && (
             <tr>
-              <td colSpan={5} className="border border-black px-2 py-1 text-[11px] text-gray-600">
+              <td colSpan={5} className="border border-black px-2 py-1 text-[11px] text-black">
                 {note}
               </td>
             </tr>
