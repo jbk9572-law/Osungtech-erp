@@ -11,6 +11,7 @@ const SECTIONS: { prefix: string; label: string }[] = [
   { prefix: "/products", label: "품목관리" },
   { prefix: "/customers", label: "판매처관리" },
   { prefix: "/suppliers", label: "공급처관리" },
+  { prefix: "/paper-calc", label: "모조지 계산" },
   { prefix: "/settings", label: "환경설정" },
 ];
 

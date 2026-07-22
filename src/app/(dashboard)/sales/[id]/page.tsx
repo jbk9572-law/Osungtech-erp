@@ -74,7 +74,7 @@ export default async function SaleDetailPage({
           <Link href={`/sales/${id}/edit`} className="erp-btn">
             F4 수정
           </Link>
-          <Link href={`/paper-calc?salesOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+          <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
             {paperCalcs && paperCalcs.length > 0 ? "모조지 계산 이력" : "모조지 계산"}
           </Link>
           <DeleteButton
