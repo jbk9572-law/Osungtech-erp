@@ -6,15 +6,15 @@ export type TodoNotice = { id: string; title: string; due_date: string | null };
 export type LowStockNotice = { id: string; name: string; quantity: number; reorderPoint: number };
 
 // 타이틀바 알림 종/대시보드 배너/알림 팝업이 공유하는 "지금 확인해야 할 것" 조회 로직.
-// 안 읽은 공지사항 + 마감 3일 이내인 미완료 할일 + 안전재고(재주문 기준) 이하로
-// 떨어진 품목을 가져온다. 마감일이 이미 지난 할일은 자동으로 완료 처리해 알림에
-// 계속 반복해서 뜨지 않게 한다.
+// 안 읽은 공지사항 + 마감 3일 이내(지난 것 포함)인 미완료 할일 + 안전재고(재주문
+// 기준) 이하로 떨어진 품목을 가져온다. 마감이 지났다고 해서 할일을 자동으로
+// 완료 처리하지는 않는다 — 실제로 하지 않은 일이 "완료"로 조용히 사라지면
+// 할일 기능 자체의 존재 이유(잊어버리지 않기)가 무너지기 때문에, 사용자가
+// 직접 체크할 때까지 계속 알림에 남는다.
 export async function getNotificationSummary(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<{ announcements: AnnouncementNotice[]; todos: TodoNotice[]; lowStock: LowStockNotice[] }> {
-  const today = new Date();
-  const todayStr = today.toLocaleDateString("sv-SE");
   const soonDate = new Date();
   soonDate.setDate(soonDate.getDate() + 3);
   const soonStr = soonDate.toLocaleDateString("sv-SE");
@@ -46,17 +46,6 @@ export async function getNotificationSummary(
     .slice(0, 8)
     .map((a) => ({ id: a.id, title: a.title, pinned: a.pinned }));
 
-  const overdueIds = (dueTodos ?? [])
-    .filter((t) => t.due_date && t.due_date < todayStr)
-    .map((t) => t.id);
-  if (overdueIds.length > 0) {
-    await supabase
-      .from("todos")
-      .update({ done: true, done_at: new Date().toISOString() })
-      .in("id", overdueIds);
-  }
-  const activeTodos = (dueTodos ?? []).filter((t) => !(t.due_date && t.due_date < todayStr));
-
   const lowStock = (stockedProducts ?? [])
     .map((p) => ({
       id: p.id,
@@ -68,5 +57,5 @@ export async function getNotificationSummary(
     .sort((a, b) => a.quantity - b.quantity)
     .slice(0, 20);
 
-  return { announcements: unreadAnnouncements, todos: activeTodos, lowStock };
+  return { announcements: unreadAnnouncements, todos: dueTodos ?? [], lowStock };
 }

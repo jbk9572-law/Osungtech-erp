@@ -42,6 +42,8 @@ export function NotificationBell({
     router.push(href);
   }
 
+  const todayStr = new Date().toLocaleDateString("sv-SE");
+
   return (
     <div style={{ position: "relative" }} ref={wrapRef}>
       <button type="button" className="erp-bell-btn" onClick={() => setOpen((o) => !o)} aria-label="알림">
@@ -67,23 +69,34 @@ export function NotificationBell({
           )}
 
           <div className="erp-bell-section-title">
-            할 일 마감임박{todos.length > 0 ? ` (${todos.length})` : ""}
+            할 일 마감임박/지연{todos.length > 0 ? ` (${todos.length})` : ""}
           </div>
           {todos.length ? (
-            todos.map((t) => (
-              <div key={t.id} className="erp-ribbon-dropdown-item">
-                <button type="button" onClick={() => go(`/todos/${t.id}`)}>
-                  <span>{t.title}</span>
-                  {t.due_date && (
-                    <span style={{ display: "block", marginTop: 2, fontSize: 11, color: "var(--erp-text-muted)" }}>
-                      마감 {t.due_date}
-                    </span>
-                  )}
-                </button>
-              </div>
-            ))
+            todos.map((t) => {
+              const overdue = !!t.due_date && t.due_date < todayStr;
+              return (
+                <div key={t.id} className="erp-ribbon-dropdown-item">
+                  <button type="button" onClick={() => go(`/todos/${t.id}`)}>
+                    <span>{t.title}</span>
+                    {t.due_date && (
+                      <span
+                        style={{
+                          display: "block",
+                          marginTop: 2,
+                          fontSize: 11,
+                          color: overdue ? "var(--erp-danger)" : "var(--erp-text-muted)",
+                          fontWeight: overdue ? 600 : undefined,
+                        }}
+                      >
+                        {overdue ? "지연" : "마감"} {t.due_date}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              );
+            })
           ) : (
-            <p className="erp-ribbon-dropdown-empty">마감 임박한 할 일이 없습니다.</p>
+            <p className="erp-ribbon-dropdown-empty">마감 임박하거나 지연된 할 일이 없습니다.</p>
           )}
 
           <div className="erp-bell-section-title">

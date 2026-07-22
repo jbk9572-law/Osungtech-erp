@@ -295,13 +295,20 @@ export default async function DashboardPage({
               {a.title}
             </Link>
           ))}
-          {dueSoonTodos.slice(0, 10).map((t) => (
-            <Link key={`d-${t.id}`} href={`/todos/${t.id}`} className="erp-alert-item">
-              <span className="erp-alert-tag">할 일</span>
-              {t.title}
-              {t.due_date ? ` (${t.due_date})` : ""}
-            </Link>
-          ))}
+          {dueSoonTodos.slice(0, 10).map((t) => {
+            const overdue = !!t.due_date && t.due_date < todayStr;
+            return (
+              <Link
+                key={`d-${t.id}`}
+                href={`/todos/${t.id}`}
+                className={`erp-alert-item${overdue ? " danger" : ""}`}
+              >
+                <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>
+                {t.title}
+                {t.due_date ? ` (${t.due_date})` : ""}
+              </Link>
+            );
+          })}
           {lowStockItems.length > 0 && (
             <Link href="#stock-risk" className="erp-alert-item danger">
               <span className="erp-alert-tag danger">재고</span>
