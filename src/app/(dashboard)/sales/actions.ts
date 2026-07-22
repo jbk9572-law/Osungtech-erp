@@ -31,10 +31,6 @@ function parseItems(itemsRaw: string): SaleItemInput[] | null {
   }
 }
 
-function isStockCheckViolation(message: string, code?: string) {
-  return code === "23514" || message.includes("check constraint");
-}
-
 export type TodayPurchaseItem = {
   id: string;
   productId: string;
@@ -162,68 +158,29 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: salesOrder, error } = await supabase
-    .from("sales_orders")
-    .insert({
-      customer_id: customerId,
-      warehouse_id: warehouseId,
-      order_date: orderDate,
-      memo,
-      created_by: user?.id ?? null,
-    })
-    .select("id")
-    .single();
+  // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
+  // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해
+  // 되돌렸는데, 그 되돌리기 자체가 실패하면 고아 데이터가 남을 수 있었다.
+  const { data: salesOrderId, error } = await supabase.rpc("create_sale_with_items", {
+    p_customer_id: customerId,
+    p_warehouse_id: warehouseId,
+    p_order_date: orderDate,
+    p_memo: memo,
+    p_created_by: user?.id ?? null,
+    p_items: items.map((item) => ({
+      productId: item.productId,
+      spec: item.spec || null,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      remark: item.remark || null,
+    })),
+  });
 
-  if (error || !salesOrder) {
-    return { error: "판매 거래 등록에 실패했습니다." };
+  if (error || !salesOrderId) {
+    return { error: `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  const salesOrderId = salesOrder.id;
-
-  // 모조지 계산만 연결하고 수동 품목은 하나도 안 넣은 경우 items가 빈
-  // 배열일 수 있다 — 이 경우 품목/재고 반영 자체를 건너뛴다(빈 배열을
-  // insert하면 불필요한 에러가 날 수 있다).
   if (items.length > 0) {
-    const { error: itemsError } = await supabase.from("sales_order_items").insert(
-      items.map((item) => ({
-        sales_order_id: salesOrderId,
-        product_id: item.productId,
-        spec: item.spec || null,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        remark: item.remark || null,
-      }))
-    );
-
-    if (itemsError) {
-      await supabase.from("sales_orders").delete().eq("id", salesOrderId);
-      return { error: `품목 등록에 실패하여 거래 등록을 취소했습니다: ${itemsError.message}` };
-    }
-
-    // 재고 반영(출고)이 실패하면 거래 자체를 취소한다 — 그렇지 않으면 매출은
-    // 등록됐는데 재고는 그대로인 상태(재고 차감 누락)가 조용히 남는다.
-    const { error: invError } = await supabase.from("inventory_transactions").insert(
-      items.map((item) => ({
-        product_id: item.productId,
-        warehouse_id: warehouseId,
-        type: "out" as const,
-        quantity: item.quantity,
-        reference: `sales_order:${salesOrderId}`,
-        sales_order_id: salesOrderId,
-        created_by: user?.id ?? null,
-      }))
-    );
-
-    if (invError) {
-      await supabase.from("sales_order_items").delete().eq("sales_order_id", salesOrderId);
-      await supabase.from("sales_orders").delete().eq("id", salesOrderId);
-      return {
-        error: isStockCheckViolation(invError.message, invError.code)
-          ? "재고가 부족하여 출고할 수 없습니다. 현재 재고를 확인한 뒤 다시 시도해주세요."
-          : `재고 반영에 실패하여 거래 등록을 취소했습니다: ${invError.message}`,
-      };
-    }
-
     await Promise.all(
       items.map((item) =>
         supabase.from("customer_product_prices").upsert(
@@ -360,11 +317,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     }))
   );
   if (invError) {
-    return {
-      error: isStockCheckViolation(invError.message, invError.code)
-        ? "재고가 부족하여 출고할 수 없습니다. 현재 재고를 확인한 뒤 다시 시도해주세요."
-        : `재고 반영에 실패했습니다: ${invError.message}`,
-    };
+    return { error: `재고 반영에 실패했습니다: ${invError.message}` };
   }
 
   await Promise.all(

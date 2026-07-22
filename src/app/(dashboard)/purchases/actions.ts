@@ -29,10 +29,6 @@ function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
   }
 }
 
-function isStockCheckViolation(message: string, code?: string) {
-  return code === "23514" || message.includes("check constraint");
-}
-
 // 기존 매입 건의 입고 효과를 재고 조정(adjustment)으로 되돌린다.
 // 호출 전에 미리 읽어둔 품목/창고 정보를 받는다 (주문을 지우거나 바꾸고 나면
 // 원래 품목 수량을 알 수 없기 때문에, 실제 삭제/수정이 성공한 뒤에만 호출해야 한다).
@@ -89,62 +85,26 @@ export async function createPurchase(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: purchaseOrder, error } = await supabase
-    .from("purchase_orders")
-    .insert({
-      supplier_id: supplierId,
-      warehouse_id: warehouseId,
-      purchase_date: purchaseDate,
-      memo,
-      created_by: user?.id ?? null,
-    })
-    .select("id")
-    .single();
-
-  if (error || !purchaseOrder) {
-    return { error: "매입 거래 등록에 실패했습니다." };
-  }
-
-  const purchaseOrderId = purchaseOrder.id;
-
-  const { error: itemsError } = await supabase.from("purchase_order_items").insert(
-    items.map((item) => ({
-      purchase_order_id: purchaseOrderId,
-      product_id: item.productId,
+  // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
+  // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해
+  // 되돌렸는데, 그 되돌리기 자체가 실패하면 고아 데이터가 남을 수 있었다.
+  const { data: purchaseOrderId, error } = await supabase.rpc("create_purchase_with_items", {
+    p_supplier_id: supplierId,
+    p_warehouse_id: warehouseId,
+    p_purchase_date: purchaseDate,
+    p_memo: memo,
+    p_created_by: user?.id ?? null,
+    p_items: items.map((item) => ({
+      productId: item.productId,
       spec: item.spec || null,
       quantity: item.quantity,
-      unit_cost: item.unitCost,
+      unitCost: item.unitCost,
       remark: item.remark || null,
-    }))
-  );
+    })),
+  });
 
-  if (itemsError) {
-    await supabase.from("purchase_orders").delete().eq("id", purchaseOrderId);
-    return { error: `품목 등록에 실패하여 거래 등록을 취소했습니다: ${itemsError.message}` };
-  }
-
-  // 재고 반영(입고)이 실패하면 거래 자체를 취소한다 — 그렇지 않으면 매입은
-  // 등록됐는데 재고는 그대로인 상태(재고 반영 누락)가 조용히 남는다.
-  const { error: invError } = await supabase.from("inventory_transactions").insert(
-    items.map((item) => ({
-      product_id: item.productId,
-      warehouse_id: warehouseId,
-      type: "in" as const,
-      quantity: item.quantity,
-      reference: `purchase_order:${purchaseOrderId}`,
-      purchase_order_id: purchaseOrderId,
-      created_by: user?.id ?? null,
-    }))
-  );
-
-  if (invError) {
-    await supabase.from("purchase_order_items").delete().eq("purchase_order_id", purchaseOrderId);
-    await supabase.from("purchase_orders").delete().eq("id", purchaseOrderId);
-    return {
-      error: isStockCheckViolation(invError.message, invError.code)
-        ? "재고 반영에 실패했습니다. 입력한 수량을 확인한 뒤 다시 시도해주세요."
-        : `재고 반영에 실패하여 거래 등록을 취소했습니다: ${invError.message}`,
-    };
+  if (error || !purchaseOrderId) {
+    return { error: `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
   await Promise.all(
@@ -231,11 +191,7 @@ export async function updatePurchase(
     user?.id ?? null
   );
   if (reverseError) {
-    return {
-      error: isStockCheckViolation(reverseError)
-        ? "기존 입고분을 되돌리는 중 재고가 부족해 수정을 중단했습니다. 해당 품목이 이미 출고되었는지 확인해주세요."
-        : `기존 재고 반영을 되돌리지 못해 수정을 중단했습니다: ${reverseError}`,
-    };
+    return { error: `기존 재고 반영을 되돌리지 못해 수정을 중단했습니다: ${reverseError}` };
   }
 
   const { error: deleteItemsError } = await supabase
@@ -272,11 +228,7 @@ export async function updatePurchase(
     }))
   );
   if (invError) {
-    return {
-      error: isStockCheckViolation(invError.message, invError.code)
-        ? "재고 반영에 실패했습니다. 입력한 수량을 확인한 뒤 다시 시도해주세요."
-        : `재고 반영에 실패했습니다: ${invError.message}`,
-    };
+    return { error: `재고 반영에 실패했습니다: ${invError.message}` };
   }
 
   await Promise.all(
@@ -332,9 +284,7 @@ export async function deletePurchase(
   );
   if (reverseError) {
     return {
-      error: isStockCheckViolation(reverseError)
-        ? "거래는 삭제되었지만 재고 차감에 실패했습니다 (재고 부족). 재고 조정 화면에서 직접 확인해주세요."
-        : `거래는 삭제되었지만 재고 반영에 실패했습니다: ${reverseError} — 재고 조정 화면에서 직접 확인해주세요.`,
+      error: `거래는 삭제되었지만 재고 반영에 실패했습니다: ${reverseError} — 재고 조정 화면에서 직접 확인해주세요.`,
     };
   }
 
