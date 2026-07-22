@@ -25,6 +25,10 @@ export type InvoiceItem = {
   supplyAmount: number;
   taxAmount: number;
   remark?: string | null;
+  // 모조지(TG0) 계산에 들어간 사이즈별 수량처럼, 실제로 별도 청구되는
+  // 품목이 아니라 참고용으로만 보여주는 줄. 수량/단가/공급가/세액은
+  // 합계에 넣지 않고 화면에도 "-"로 표시한다.
+  isReference?: boolean;
 };
 
 export const COLOR_HEX = {
