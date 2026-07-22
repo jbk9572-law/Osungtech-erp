@@ -83,6 +83,12 @@ export type NestResult = {
 // "조합했으니 온전히 다 썼다"고 잘못 인정하게 된다.
 const FILLER_MAX_MM = 300;
 
+// 배치 재배열 정밀 탐색(optimizeReamAssignment)은 연수(N)가 늘어날수록
+// 계산량이 N^2에 가깝게 늘어난다. 이 상한을 넘으면 정밀 탐색을 건너뛰고
+// 지금까지의 결과(그리디 + 저사용률 배치 통합)를 그대로 쓴다 — 실측
+// 결과 30연까지는 1초 내외로 끝나 실용적이다.
+const MAX_OPTIMIZE_REAMS = 40;
+
 // "구매한 연 수는 4연인데 실제 활용도로 따지면 몇 연어치를 쓴 셈이냐"는
 // 질문(거래처와 원지 사용량을 정산/협의할 때 나오는 질문)에 답하기 위한
 // 값이다. 배치별로 코어 품목(자투리 제외) 조합 종류 수와 사용률을 같이
@@ -180,7 +186,6 @@ export class NestEngine {
     // 썼는지"만 누적한다. 같은 패턴이 수천 번 반복돼도 결과에는 "패턴 1개 +
     // 사용 장수"로만 남는다.
     const patternUsage = new Map<Pattern, number>();
-    let overProduction = 0;
     let totalSheetsUsed = 0;
     const safetyLimit = this.safetySheetLimit(primaryItems);
 
@@ -234,7 +239,6 @@ export class NestEngine {
         const rem = remaining[name] ?? 0;
         const used = Math.min(totalNeeded, rem);
         remaining[name] = rem - used;
-        if (totalNeeded > used) overProduction += totalNeeded - used;
       }
     }
 
@@ -250,13 +254,44 @@ export class NestEngine {
     // 적은 연에 몰아서, 나머지 연들이 60% 기준을 넘기게 만드는 편이
     // 실사용 인정에 유리하다. 이미 검증된 탐색 함수만 재사용해서, 합쳐도
     // 더 적거나 같은 연으로 같은 수량을 만들 수 있을 때만 교체한다.
-    const { batches, sheetsSaved } = this.consolidateLowUsageBatches(rawBatches);
+    const { batches: consolidated, sheetsSaved } = this.consolidateLowUsageBatches(rawBatches);
     totalSheetsUsed -= sheetsSaved;
+
+    // 배치 재배열 정밀 탐색: 그리디는 매 순간 "이 연 하나"만 보고 고르기
+    // 때문에, 당장은 사용률이 낮아 보이는 조합을 골랐어야 전체적으로 더
+    // 많은 배치가 인정 등급을 넘기는 경우를 놓친다(예: 305×340을 한
+    // 배치에 몰아 쓰지 않고 두 배치에 나눠 각각 60% 이상을 넘기는 경우).
+    // 연 하나씩 다른 조합으로 바꿔보고 그 뒤를 다시 그리디로 채워본 뒤,
+    // 총 인정연수가 더 좋아지면 채택한다 — 연수가 많아지면 느려질 수
+    // 있어 MAX_OPTIMIZE_REAMS까지만 시도한다.
+    const { batches, sheetsSaved: reorderSheetsSaved } = this.optimizeReamAssignment(
+      primaryItems,
+      patterns,
+      consolidated
+    );
+    totalSheetsUsed -= reorderSheetsSaved;
+
+    // 위 두 패스가 배치 구성 자체를 바꿀 수 있어서, 초과생산/잔여 수량은
+    // 누적 추적값을 그대로 믿지 않고 최종 배치들로부터 다시 계산한다.
+    const producedByName: Record<string, number> = {};
+    for (const [pattern, count] of batches) {
+      for (const [name, perSheet] of Object.entries(pattern.counts)) {
+        if (perSheet <= 0) continue;
+        producedByName[name] = (producedByName[name] ?? 0) + perSheet * count;
+      }
+    }
+    const coreRemaining: Record<string, number> = {};
+    let coreOverProduction = 0;
+    for (const item of primaryItems) {
+      const produced = producedByName[item.name] ?? 0;
+      coreRemaining[item.name] = Math.max(item.orderQty - produced, 0);
+      if (produced > item.orderQty) coreOverProduction += produced - item.orderQty;
+    }
 
     // 자투리 품목(300mm 미만)을 이미 확정된 배치들의 남는 여백에 채워
     // 넣는다. 코어 품목으로 이미 정해진 연 수에는 영향을 주지 않는다.
-    let allRemaining: Record<string, number> = { ...remaining };
-    let allOverProduction = overProduction;
+    let allRemaining: Record<string, number> = { ...coreRemaining };
+    let allOverProduction = coreOverProduction;
     if (fillerItems.length > 0) {
       const { fillerRemaining, fillerOverProduction, extraSheets } = this.attachFillersToBatches(
         batches,
@@ -272,12 +307,16 @@ export class NestEngine {
     return this.buildReport(batches, totalSheetsUsed, allOverProduction, fulfilled, allRemaining);
   }
 
-  // 코어 품목 개수(패턴에 실제로 등장하는 서로 다른 품목 수)와 사용률로
-  // "이미 실사용 1연으로 인정되는 배치인지"를 판단한다. computeEffectiveReams와
-  // 같은 기준(3종 이상은 무조건, 아니면 60% 이상)을 여기서도 그대로 쓴다.
+  // 패턴에 실제로 등장하는 서로 다른 품목(코어) 수.
+  private coreCountOf(pattern: Pattern): number {
+    return Object.values(pattern.counts).filter((c) => c > 0).length;
+  }
+
+  // 코어 품목 개수와 사용률로 "이미 실사용 1연으로 인정되는 배치인지"를
+  // 판단한다. computeEffectiveReams와 같은 기준(3종 이상은 무조건, 아니면
+  // 60% 이상)을 여기서도 그대로 쓴다.
   private isFullyCreditedPattern(pattern: Pattern): boolean {
-    const coreCount = Object.values(pattern.counts).filter((c) => c > 0).length;
-    if (coreCount >= 3) return true;
+    if (this.coreCountOf(pattern) >= 3) return true;
     const sheetArea = this.sheetWidth * this.sheetHeight;
     const usage = sheetArea > 0 ? pattern.coveredArea / sheetArea : 0;
     return usage >= 0.6;
@@ -346,6 +385,171 @@ export class NestEngine {
 
     const untouched = batches.filter(([pattern]) => this.isFullyCreditedPattern(pattern));
     return { batches: [...untouched, ...newBatches], sheetsSaved: combinedReps - newReps };
+  }
+
+  // 주어진 remaining 수량을 patterns만으로 그리디로 채운다.
+  // consolidateLowUsageBatches/calculate의 핵심 while-loop과 같은 방식이지만,
+  // (1) 마무리 패스(tailPatterns) 재탐색은 하지 않고 — 이 함수는
+  // optimizeReamAssignment에서 후보 하나당 한 번씩, 아주 많이 호출되므로
+  // DFS를 다시 돌리면 너무 느려진다 — (2) 최대 연수(maxReams)를 넘기면
+  // 즉시 실패로 반환한다("이 후보를 골랐을 때 원래보다 연수가 늘어나는지"를
+  // 빠르게 판별하기 위함).
+  private greedyFillFromRemaining(
+    patterns: Pattern[],
+    remaining: Record<string, number>,
+    reps: number,
+    maxReams: number
+  ): { batches: [Pattern, number][]; fulfilled: boolean } {
+    const state = { ...remaining };
+    const result: [Pattern, number][] = [];
+    let reamsUsed = 0;
+
+    while (Object.values(state).some((qty) => qty > 0)) {
+      if (reamsUsed >= maxReams) return { batches: result, fulfilled: false };
+
+      const pattern = this.selectBestPattern(patterns, state);
+      if (!pattern) return { batches: result, fulfilled: false };
+
+      const trimmed = this.trimPatternToRemaining(pattern, state, reps);
+      result.push([trimmed, reps]);
+      reamsUsed += 1;
+
+      for (const [name, count] of Object.entries(trimmed.counts)) {
+        if (count <= 0) continue;
+        const rem = state[name] ?? 0;
+        state[name] = Math.max(rem - count * reps, 0);
+      }
+    }
+
+    return { batches: result, fulfilled: true };
+  }
+
+  // 두 배치 구성 중 어느 쪽이 "더 나은지" 비교한다. 1순위는 총 인정연수
+  // (실제 청구 근거인 effectiveReams 합) — 이게 실제로 최대화하려는
+  // 값이다. 그게 같으면(동점) 코어 품목 종류 수 합이 더 많은 쪽을
+  // 우선한다(2종/3종 조합을 사용률보다 먼저 본다는 기준의 동점 처리).
+  private isReamAssignmentBetter(candidate: Pattern[], current: Pattern[]): boolean {
+    const fracCandidate = candidate.reduce((sum, p) => sum + this.effectiveFractionOf(p), 0);
+    const fracCurrent = current.reduce((sum, p) => sum + this.effectiveFractionOf(p), 0);
+    if (fracCandidate !== fracCurrent) return fracCandidate > fracCurrent;
+
+    const coreCandidate = candidate.reduce((sum, p) => sum + this.coreCountOf(p), 0);
+    const coreCurrent = current.reduce((sum, p) => sum + this.coreCountOf(p), 0);
+    return coreCandidate > coreCurrent;
+  }
+
+  // 배치 재배열 정밀 탐색. 그리디는 "이 연 하나"만 보고 매번 최선을
+  // 고르기 때문에, 당장은 손해(사용률이 낮음)지만 그 덕분에 뒤에 남는
+  // 품목들이 서로 좋은 조합을 이뤄 전체 인정연수가 더 좋아지는 경우를
+  // 놓친다. 이미 정해진 연들을 한 연씩 다른 조합으로 바꿔보고, 그 뒤를
+  // 같은 그리디로 다시 채워본 뒤 총 인정연수가 더 좋아지면(그리고 연수가
+  // 늘지 않으면) 채택한다 — 여러 번(라운드) 반복해서 더 이상 나아지지
+  // 않을 때까지 시도한다.
+  private optimizeReamAssignment(
+    primaryItems: Item[],
+    patterns: Pattern[],
+    batches: [Pattern, number][]
+  ): { batches: [Pattern, number][]; sheetsSaved: number } {
+    const reps = this.sheetPerReam;
+    if (!reps) return { batches, sheetsSaved: 0 };
+
+    // 배치를 개별 연 단위로 펼친다 — 같은 패턴이 여러 연 반복된 배치도
+    // 한 연씩 독립적으로 다른 조합으로 바꿔볼 수 있어야 하기 때문이다.
+    const reams: Pattern[] = [];
+    for (const [pattern, count] of batches) {
+      const n = Math.round(count / reps);
+      for (let i = 0; i < n; i++) reams.push(pattern);
+    }
+    const totalReams = reams.length;
+    if (totalReams < 2 || totalReams > MAX_OPTIMIZE_REAMS) return { batches, sheetsSaved: 0 };
+
+    const totalNeeded: Record<string, number> = {};
+    for (const item of primaryItems) totalNeeded[item.name] = item.orderQty;
+
+    // remainingBefore[i] = i번째 연을 적용하기 "직전" 시점에 남아있던 수량.
+    const remainingBeforeEach = (currentReams: Pattern[]): Record<string, number>[] => {
+      const states: Record<string, number>[] = [];
+      let state = { ...totalNeeded };
+      for (const pattern of currentReams) {
+        states.push(state);
+        const next = { ...state };
+        for (const [name, count] of Object.entries(pattern.counts)) {
+          if (count <= 0) continue;
+          next[name] = (next[name] ?? 0) - count * reps;
+        }
+        state = next;
+      }
+      return states;
+    };
+
+    let currentReams = reams;
+    let statesBefore = remainingBeforeEach(currentReams);
+    let anyImprovement = false;
+    const maxPasses = 3;
+
+    for (let pass = 0; pass < maxPasses; pass++) {
+      let improved = false;
+
+      for (let i = 0; i < currentReams.length; i++) {
+        const remainingBeforeI = statesBefore[i];
+
+        for (const candidate of patterns) {
+          if (candidate === currentReams[i]) continue;
+
+          // 후보 패턴도 원래 그리디 루프와 똑같이, 이 시점에 남은 수량을
+          // 넘겨서 자르지 않으면(trim) 이미 다 채운 품목을 또 찍어내
+          // 초과생산이 생긴다.
+          const trimmedCandidate = this.trimPatternToRemaining(candidate, remainingBeforeI, reps);
+          if (Object.keys(trimmedCandidate.counts).length === 0) continue;
+
+          const remainingAfterI: Record<string, number> = { ...remainingBeforeI };
+          for (const [name, count] of Object.entries(trimmedCandidate.counts)) {
+            if (count <= 0) continue;
+            remainingAfterI[name] = (remainingAfterI[name] ?? 0) - count * reps;
+          }
+
+          // 남은 자리 수(연수를 늘릴 수 없으므로 이만큼만 허용)만큼만
+          // 다시 채워본다.
+          const maxRestReams = currentReams.length - i - 1;
+          const restResult = this.greedyFillFromRemaining(patterns, remainingAfterI, reps, maxRestReams);
+          if (!restResult.fulfilled) continue;
+
+          const restReams: Pattern[] = [];
+          for (const [p, count] of restResult.batches) {
+            const n = Math.round(count / reps);
+            for (let k = 0; k < n; k++) restReams.push(p);
+          }
+
+          const candidateReams = [...currentReams.slice(0, i), trimmedCandidate, ...restReams];
+          if (candidateReams.length > currentReams.length) continue;
+
+          if (this.isReamAssignmentBetter(candidateReams, currentReams)) {
+            currentReams = candidateReams;
+            statesBefore = remainingBeforeEach(currentReams);
+            improved = true;
+            anyImprovement = true;
+            break;
+          }
+        }
+      }
+
+      if (!improved) break;
+    }
+
+    // 개선을 하나도 못 찾았으면(연수를 줄이지도, 인정연수를 올리지도
+    // 못했으면) 원래 배치를 그대로 돌려준다. 개선을 찾았다면 연수가
+    // 그대로여도(같은 연수, 더 나은 조합) 채택한다 — 애초에 이 탐색의
+    // 핵심 목적은 연수를 줄이는 게 아니라 같은 연수로 인정연수를 올리는
+    // 것이다.
+    if (!anyImprovement) return { batches, sheetsSaved: 0 };
+
+    const grouped = new Map<Pattern, number>();
+    for (const pattern of currentReams) grouped.set(pattern, (grouped.get(pattern) ?? 0) + reps);
+
+    return {
+      batches: Array.from(grouped.entries()),
+      sheetsSaved: (totalReams - currentReams.length) * reps,
+    };
   }
 
   // 가로·세로 둘 다 300mm 미만이면 "자투리"로 취급한다 — 재사용하지 않는
