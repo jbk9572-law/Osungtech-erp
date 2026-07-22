@@ -85,13 +85,29 @@ export async function sendMessage(
 
 export async function deleteMessage(formData: FormData) {
   const id = String(formData.get("id") ?? "");
-  const filePath = String(formData.get("file_path") ?? "");
   if (!id) return;
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
 
-  if (filePath) {
-    await supabase.storage.from("messenger-attachments").remove([filePath]);
+  // messenger_messages의 RLS는 본인 메시지만 삭제할 수 있게 막아두었지만,
+  // 스토리지 버킷 쪽 삭제 정책은 로그인한 사용자면 누구든 파일을 지울 수
+  // 있게 되어 있다(경로 소유자 체크 없음). 그 정책을 좁히기 전까지는
+  // 여기서도 본인 메시지인지 먼저 확인해야, 다른 사람 메시지 첨부파일이
+  // (메시지 행은 안 지워진 채로) 조용히 삭제되는 사고를 막을 수 있다.
+  // file_path도 폼에서 그대로 믿지 않고 DB에서 다시 조회한다.
+  const { data: message } = await supabase
+    .from("messenger_messages")
+    .select("sender_id, file_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!message || message.sender_id !== user.id) return;
+
+  if (message.file_path) {
+    await supabase.storage.from("messenger-attachments").remove([message.file_path]);
   }
   await supabase.from("messenger_messages").delete().eq("id", id);
 }
