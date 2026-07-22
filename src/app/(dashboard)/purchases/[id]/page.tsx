@@ -182,6 +182,9 @@ export default async function PurchaseDetailPage({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                 </tr>
               ));
