@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import { login } from "./actions";
 
@@ -114,13 +113,6 @@ export default function LoginPage() {
                 "로그인"
               )}
             </button>
-
-            <p className="text-center text-xs text-[#6b7280]">
-              계정이 없으신가요?{" "}
-              <Link href="/signup" className="font-medium text-[#1f3b75] hover:underline">
-                회원가입
-              </Link>
-            </p>
           </form>
 
           <div className="flex justify-between border-t border-[#f0f2f5] pt-2 text-[10px] text-[#9aa2ad]">

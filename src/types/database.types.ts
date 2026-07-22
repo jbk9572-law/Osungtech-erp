@@ -1060,6 +1060,28 @@ export type Database = {
         Args: { p_username: string };
         Returns: string | null;
       };
+      create_sale_with_items: {
+        Args: {
+          p_customer_id: string;
+          p_warehouse_id: string;
+          p_order_date: string;
+          p_memo: string | null;
+          p_created_by: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      create_purchase_with_items: {
+        Args: {
+          p_supplier_id: string;
+          p_warehouse_id: string;
+          p_purchase_date: string;
+          p_memo: string | null;
+          p_created_by: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

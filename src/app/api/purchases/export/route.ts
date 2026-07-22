@@ -6,7 +6,7 @@ import {
   type LedgerItem,
 } from "@/lib/purchase-export-templates";
 import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
-import { fetchWoteLedgerEntries, isWoteQuery } from "@/lib/wote-ledger-query";
+import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 매입처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
@@ -18,14 +18,6 @@ export async function GET(request: Request) {
   const now = new Date();
 
   const supabase = await createClient();
-
-  // WOTE(매입처)↔신일베스텍(매출처) 간 원자재 입출고는 매입/매출 양쪽 데이터를
-  // 합쳐서 보여주는 전용 관리대장이 필요하다.
-  if (isWoteQuery(q)) {
-    const entries = await fetchWoteLedgerEntries(supabase, to);
-    const workbook = await buildWoteLedgerWorkbook(now.getFullYear(), now.getMonth() + 1, from, entries);
-    return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
-  }
 
   let templatedSupplier: {
     id: string;
@@ -42,6 +34,14 @@ export async function GET(request: Request) {
     if (matches.length === 1 && matches[0].purchase_export_template !== "generic") {
       templatedSupplier = matches[0];
     }
+  }
+
+  // WOTE(매입처)↔신일베스텍(매출처) 간 원자재 입출고는 매입/매출 양쪽 데이터를
+  // 합쳐서 보여주는 전용 관리대장이 필요하다.
+  if (templatedSupplier?.purchase_export_template === "wote_ledger") {
+    const entries = await fetchWoteLedgerEntries(supabase, to);
+    const workbook = await buildWoteLedgerWorkbook(now.getFullYear(), now.getMonth() + 1, from, entries);
+    return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
   }
 
   const { data } = await supabase
