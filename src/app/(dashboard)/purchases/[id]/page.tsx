@@ -55,7 +55,6 @@ export default async function PurchaseDetailPage({
   const paperCalcSizeLines = formatPaperCalcSizeLines(
     mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items)
   );
-  const paperStockAmount = rows.find((row) => row.products?.sku === PAPER_STOCK_SKU)?.amount ?? 0;
 
   return (
     <div>
@@ -109,32 +108,8 @@ export default async function PurchaseDetailPage({
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>작성자</span>
             <span>{order.profiles?.full_name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, minHeight: 26 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)", paddingTop: 4 }}>모조지 사용량</span>
-            {paperCalcs && paperCalcs.length > 0 ? (
-              <div>
-                <div style={{ paddingTop: 4 }}>
-                  {paperCalcs[0].total_paper.toLocaleString()}장 ({paperCalcs[0].total_sheet}연 구매) ·{" "}
-                  {new Date(paperCalcs[0].created_at).toLocaleDateString("ko-KR")} 계산
-                </div>
-                {paperCalcSizeLines.length > 0 && (
-                  <div style={{ marginTop: 4, color: "var(--erp-text-muted)" }}>
-                    {paperCalcSizeLines.map((line, i) => (
-                      <div key={i}>{line}</div>
-                    ))}
-                    <div>
-                      합계 - {paperCalcs[0].total_sheet.toLocaleString()}연 ·{" "}
-                      {paperStockAmount.toLocaleString()}원
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <span style={{ paddingTop: 4, color: "var(--erp-text-muted)" }}>저장된 계산 없음</span>
-            )}
-          </div>
           {paperCalcs && paperCalcs.length > 0 && (
-            <div style={{ marginTop: 8, paddingLeft: 80 }}>
+            <div style={{ marginTop: 8 }}>
               <PaperStockOverridePanel
                 orderId={id}
                 idFieldName="purchase_order_id"
@@ -166,25 +141,52 @@ export default async function PurchaseDetailPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.sku}</td>
-                <td>{row.products?.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>
-                  {row.spec || row.products?.spec || "-"}
-                </td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {formatPackageQty(row.products?.base_package_qty, row.quantity)}
-                </td>
-                <td className="num">{row.quantity.toLocaleString()}</td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {Number(row.unit_cost).toLocaleString()}
-                </td>
-                <td className="num">{row.amount.toLocaleString()}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
-              </tr>
-            ))}
+            {rows.flatMap((row) => {
+              const mainRow = (
+                <tr key={row.id}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.sku}</td>
+                  <td>{row.products?.name}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.spec || row.products?.spec || "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {formatPackageQty(row.products?.base_package_qty, row.quantity)}
+                  </td>
+                  <td className="num">{row.quantity.toLocaleString()}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {Number(row.unit_cost).toLocaleString()}
+                  </td>
+                  <td className="num">{row.amount.toLocaleString()}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
+                </tr>
+              );
+
+              if (row.products?.sku !== PAPER_STOCK_SKU || paperCalcSizeLines.length === 0) {
+                return [mainRow];
+              }
+
+              const sizeRows = paperCalcSizeLines.map((line, i) => (
+                <tr key={`${row.id}-size-${i}`} style={{ background: "#f7f8fb" }}>
+                  <td />
+                  <td colSpan={2} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                    ㄴ {line}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                </tr>
+              ));
+              return [mainRow, ...sizeRows];
+            })}
           </tbody>
           <tfoot>
             <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
