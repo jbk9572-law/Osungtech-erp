@@ -18,6 +18,11 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
+import {
+  formatPaperCalcSizeLines,
+  mergePaperCalcInputItems,
+  type PaperCalcSizeRow,
+} from "@/lib/paper-calc-summary";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -263,6 +268,28 @@ export function NewSaleForm({
     pendingCalcSummary !== null &&
     tg0OverrideQuantity !== null &&
     tg0OverrideQuantity !== pendingCalcSummary.totalSheet;
+
+  // TG0(모조지) 한 줄은 연 단위 수량/금액만 보여주지만, 실제로 어떤
+  // 사이즈를 몇 장씩 조합해서 그 연수가 나왔는지는 메모 한 줄에 다 담기
+  // 어렵다 — 그래서 계산에 들어간 사이즈별 수량을 품목 표 아래에 참고용
+  // 줄로 그대로 보여준다. 이 줄들은 수량/단가를 세지 않는다(원지
+  // 자체는 연 단위로만 청구하고, 여기 사이즈들은 그 원지를 조합해서
+  // 만드는 최종 상품일 뿐 별도로 판매/청구되는 게 아니기 때문).
+  const paperCalcSizeLines = useMemo(() => {
+    let sizes: PaperCalcSizeRow[] = [];
+    if (pendingPaperCalc) {
+      try {
+        const parsed = JSON.parse(pendingPaperCalc) as { inputItems?: unknown };
+        sizes = mergePaperCalcInputItems(sizes, parsed.inputItems);
+      } catch {
+        // 무시
+      }
+    }
+    for (const calc of copiedPaperCalcs) {
+      sizes = mergePaperCalcInputItems(sizes, calc.inputItems);
+    }
+    return formatPaperCalcSizeLines(sizes);
+  }, [pendingPaperCalc, copiedPaperCalcs]);
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -598,6 +625,25 @@ export function NewSaleForm({
                   </td>
                 </tr>
               )}
+              {paperCalcSizeLines.map((line, i) => (
+                <tr key={`paper-calc-size-${i}`} style={{ background: "#f7f8fb" }}>
+                  <td colSpan={2} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                    ㄴ {line}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td />
+                </tr>
+              ))}
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
