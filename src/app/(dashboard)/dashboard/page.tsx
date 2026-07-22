@@ -86,12 +86,12 @@ export default async function DashboardPage({
       .lte("purchase_orders.purchase_date", monthEnd),
     supabase
       .from("paper_calculations")
-      .select("input_items, total_sheet, sales_orders!inner(order_date, customers(name))")
+      .select("input_items, sales_orders!inner(order_date, customers(name))")
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("paper_calculations")
-      .select("input_items, total_sheet, purchase_orders!inner(purchase_date, suppliers(name))")
+      .select("input_items, purchase_orders!inner(purchase_date, suppliers(name))")
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
     supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle(),
@@ -180,15 +180,19 @@ export default async function DashboardPage({
     return byPartner[partnerName];
   }
 
-  function addPaperCalcForPartner(
+  // paper_calculations.input_items는 사이즈별 내역(참고용 줄)을 보여주는
+  // 데만 쓴다. 자동 계산값(total_sheet)은 여기서 더하지 않는다 — 거래처
+  // 협의로 TG0 수량을 수동 오버라이드한 주문은 sales_order_items.quantity가
+  // 이미 오버라이드된 값으로 반영돼 있는데, 여기서 total_sheet(자동값)를
+  // 따로 또 더하면 대시보드에만 오버라이드 적용 전 수량이 보이는 문제가
+  // 생긴다. 연 합계는 아래 품목 순회에서 실제 quantity로 채운다.
+  function addPaperCalcSizesForPartner(
     byPartner: Record<string, PaperCalcPartnerEntry>,
     partnerName: string,
-    inputItems: unknown,
-    totalSheet: number
+    inputItems: unknown
   ) {
     const entry = ensurePaperCalcPartner(byPartner, partnerName);
     entry.sizes = mergePaperCalcInputItems(entry.sizes, inputItems);
-    entry.totalSheet += totalSheet;
   }
 
   for (const item of salesItems ?? []) {
@@ -202,7 +206,9 @@ export default async function DashboardPage({
     // 넣지 않되, 이 라인의 실제 금액은 그 섹션의 합계 가격으로 옮겨 담는다.
     if (item.products?.sku === PAPER_STOCK_SKU) {
       const partnerName = item.sales_orders.customers?.name ?? "거래처 미상";
-      ensurePaperCalcPartner(bucket.salesPaperCalcByPartner, partnerName).amount += amount;
+      const entry = ensurePaperCalcPartner(bucket.salesPaperCalcByPartner, partnerName);
+      entry.amount += amount;
+      entry.totalSheet += item.quantity;
       continue;
     }
     bucket.salesItems.push({
@@ -225,7 +231,9 @@ export default async function DashboardPage({
     bucket.purchaseTotal += amount;
     if (item.products?.sku === PAPER_STOCK_SKU) {
       const partnerName = item.purchase_orders.suppliers?.name ?? "공급처 미상";
-      ensurePaperCalcPartner(bucket.purchasePaperCalcByPartner, partnerName).amount += amount;
+      const entry = ensurePaperCalcPartner(bucket.purchasePaperCalcByPartner, partnerName);
+      entry.amount += amount;
+      entry.totalSheet += item.quantity;
       continue;
     }
     bucket.purchaseItems.push({
@@ -243,13 +251,13 @@ export default async function DashboardPage({
   for (const calc of salesPaperCalcs ?? []) {
     const bucket = ensure(calc.sales_orders.order_date);
     const partnerName = calc.sales_orders.customers?.name ?? "거래처 미상";
-    addPaperCalcForPartner(bucket.salesPaperCalcByPartner, partnerName, calc.input_items, calc.total_sheet);
+    addPaperCalcSizesForPartner(bucket.salesPaperCalcByPartner, partnerName, calc.input_items);
   }
 
   for (const calc of purchasePaperCalcs ?? []) {
     const bucket = ensure(calc.purchase_orders.purchase_date);
     const partnerName = calc.purchase_orders.suppliers?.name ?? "공급처 미상";
-    addPaperCalcForPartner(bucket.purchasePaperCalcByPartner, partnerName, calc.input_items, calc.total_sheet);
+    addPaperCalcSizesForPartner(bucket.purchasePaperCalcByPartner, partnerName, calc.input_items);
   }
 
   for (const note of notes ?? []) {
