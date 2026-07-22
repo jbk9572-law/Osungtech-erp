@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
@@ -95,6 +96,7 @@ export function PaperCalcClient({
   // 임시 저장하는 대신 이 콜백으로 계산 결과를 바로 돌려준다.
   onApply?: (payload: PendingCalcPayload) => void;
 }) {
+  const router = useRouter();
   const hasOrder = Boolean(salesOrderId || purchaseOrderId);
   // 이미 저장된 계산이 있는 주문이면, 들어오자마자 새 계산 입력창부터 보여주는
   // 대신 저장된 계산 이력을 먼저 보여준다 — 계산이 끝난 뒤에 이 화면에 다시
@@ -111,7 +113,6 @@ export function PaperCalcClient({
   const [pending, setPending] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [saveState, saveAction, savePending] = useActionState(savePaperCalculation, undefined);
-  const [staged, setStaged] = useState(false);
 
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
@@ -190,8 +191,12 @@ export function PaperCalcClient({
 
   // 아직 주문이 없는 상태(신규 판매/매입 등록 전)에서는 order id가 없어서
   // 바로 저장할 수 없다. localStorage에 잠깐 담아뒀다가, 등록 화면에서
-  // 주문을 실제로 만들 때 이 값을 읽어서 한 번에 저장/연결한다.
-  function stagePendingCalc() {
+  // 주문을 실제로 만들 때 이 값을 읽어서 한 번에 저장/연결한다. 여기서
+  // 저장만 하고 사용자가 직접 등록 화면으로 이동해야 했던 예전 방식(배너
+  // + 링크 클릭) 대신, 저장 직후 바로 등록 화면으로 이동해서 클릭 한 번에
+  // 끝나게 한다 — 독립적으로 계산만 미리 해보고("테스트") 마음에 들면
+  // 바로 등록으로 이어가는 흐름이 매끄러워진다.
+  function stagePendingCalcAndGo() {
     if (!result) return;
     localStorage.setItem(
       pendingFor === "purchase" ? PENDING_PAPER_CALC_PURCHASE_KEY : PENDING_PAPER_CALC_KEY,
@@ -207,7 +212,7 @@ export function PaperCalcClient({
         fulfilled: result.fulfilled,
       })
     );
-    setStaged(true);
+    router.push(pendingFor === "purchase" ? "/purchases/new" : "/sales/new");
   }
 
   const layouts = useMemo(() => result?.layouts ?? [], [result]);
@@ -468,7 +473,7 @@ export function PaperCalcClient({
                   <button
                     type="button"
                     className="erp-btn erp-btn-primary"
-                    onClick={stagePendingCalc}
+                    onClick={stagePendingCalcAndGo}
                     disabled={!result?.layouts.length}
                   >
                     {pendingFor === "purchase" ? "새 매입 등록에 연결" : "새 판매 등록에 연결"}
@@ -476,31 +481,6 @@ export function PaperCalcClient({
                 ))}
             </div>
           </div>
-
-          {!hasOrder && !onApply && staged && (
-            <div
-              className="rounded p-2 text-xs"
-              style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}
-            >
-              {pendingFor === "purchase" ? (
-                <>
-                  계산 결과를 임시 저장했습니다. 이 화면을 닫고 매입 등록 화면에서 주문을
-                  등록하면 자동으로 이 계산이 연결되고 매입 품목에 TG0 수량이 반영됩니다.{" "}
-                  <Link href="/purchases/new" className="underline">
-                    매입 등록으로 이동
-                  </Link>
-                </>
-              ) : (
-                <>
-                  계산 결과를 임시 저장했습니다. 이 화면을 닫고 판매 등록 화면에서 주문을
-                  등록하면 자동으로 이 계산이 연결되고 판매 품목에 TG0 수량이 반영됩니다.{" "}
-                  <Link href="/sales/new" className="underline">
-                    판매 등록으로 이동
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
 
           {saveState && <FormMessage state={saveState} />}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
@@ -12,6 +12,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
+import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
@@ -112,13 +113,32 @@ export function NewPurchaseForm({
 
   // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 purchase_order_id가 있어서
   // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
-  // 모조지 계산을 모달로 띄워서 계산하고 "이 계산 적용하기"를 누르면
-  // onApply 콜백으로 바로 이 state에 꽂힌다(localStorage/storage 이벤트로
-  // 다른 탭과 동기화하던 예전 방식 대신 같은 컴포넌트 트리 안에서 직접 전달).
+  // 이 값을 채우는 경로는 두 가지다.
+  // 1) 이 폼 안의 모달(PaperCalcModalTrigger)에서 "이 계산 적용하기"를
+  //    누르면 onApply 콜백으로 바로 이 state에 꽂힌다.
+  // 2) 트리메뉴/탭바를 통해 독립적으로 연 "확장모듈 > 모조지 계산"
+  //    화면에서 미리 테스트 계산을 해보고 "새 매입 등록에 연결"을 누른
+  //    경우 — 그 화면은 이 폼과 다른 페이지라 직접 콜백을 넘길 수 없어,
+  //    localStorage에 잠깐 담아뒀다가 이 폼이 마운트될 때(혹은 이미 열려
+  //    있는 다른 탭에서 나중에 저장했을 때 storage 이벤트로) 읽어온다.
   const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
   function handlePaperCalcApply(payload: PendingCalcPayload) {
     setPendingPaperCalc(JSON.stringify(payload));
   }
+
+  useEffect(() => {
+    if (initial?.id) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
+    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_PURCHASE_KEY));
+
+    function handleStorage(e: StorageEvent) {
+      if (e.key === PENDING_PAPER_CALC_PURCHASE_KEY) {
+        setPendingPaperCalc(e.newValue);
+      }
+    }
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [initial?.id]);
 
   // 임시 저장된 모조지 계산이 있으면 등록 버튼을 누르기 전에도 TG0 품목
   // 줄이 실제로 어떤 수량으로 들어갈지 그리드에 미리 보여준다. 이 줄은
@@ -225,6 +245,11 @@ export function NewPurchaseForm({
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={() => {
         setMessageDismissed(false);
+        // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니
+        // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
+        // 없어 지울 것도 없다). 등록이 실패해도 계산 자체는 다시 하면
+        // 되므로 감수할 만한 트레이드오프다.
+        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
@@ -368,6 +393,7 @@ export function NewPurchaseForm({
                       className="erp-btn erp-btn-danger"
                       style={{ minWidth: 0, height: 26, padding: "0 8px" }}
                       onClick={() => {
+                        localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
                         setPendingPaperCalc(null);
                         setTg0OverrideQuantity(null);
                       }}
