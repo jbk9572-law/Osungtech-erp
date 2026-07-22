@@ -76,6 +76,11 @@ export function PaperCalcClient({
   savedCalculations?: SavedCalculation[];
 }) {
   const hasOrder = Boolean(salesOrderId || purchaseOrderId);
+  // 이미 저장된 계산이 있는 주문이면, 들어오자마자 새 계산 입력창부터 보여주는
+  // 대신 저장된 계산 이력을 먼저 보여준다 — 계산이 끝난 뒤에 이 화면에 다시
+  // 들어올 땐 "또 계산하기"가 아니라 "이미 한 계산 확인하기"가 목적인 경우가
+  // 많아서다. 새로 계산해야 하면 "+ 새로 계산하기" 버튼으로 펼칠 수 있다.
+  const [showNewCalcForm, setShowNewCalcForm] = useState(savedCalculations.length === 0);
   const [rows, setRows] = useState<OrderRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
   const [nextKey, setNextKey] = useState(1);
   const [paperW, setPaperW] = useState(788);
@@ -222,6 +227,61 @@ export function PaperCalcClient({
         </div>
       )}
 
+      {hasOrder && (
+        <div className="erp-detail">
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">
+              이 {salesOrderId ? "출고" : "매입"} 건에 저장된 계산 이력 ({savedCalculations.length}건)
+            </span>
+            {!showNewCalcForm && (
+              <div className="ml-auto flex items-center pr-2">
+                <button
+                  type="button"
+                  className="erp-btn erp-btn-primary"
+                  style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+                  onClick={() => setShowNewCalcForm(true)}
+                >
+                  + 새로 계산하기
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="erp-detail-body">
+            {savedCalculations.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+                저장된 계산이 없습니다. 계산 후 &apos;이 {salesOrderId ? "출고" : "매입"} 건에
+                저장&apos;을 눌러주세요.
+              </p>
+            ) : (
+              <table className="erp-grid w-full">
+                <thead>
+                  <tr>
+                    <th>계산일시</th>
+                    <th className="num">총 원지</th>
+                    <th className="num">총 생산</th>
+                    <th className="num">초과 생산</th>
+                    <th>충족여부</th>
+                    <th style={{ width: 60 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {savedCalculations.map((calc) => (
+                    <SavedCalcRow
+                      key={calc.id}
+                      calc={calc}
+                      salesOrderId={salesOrderId}
+                      purchaseOrderId={purchaseOrderId}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showNewCalcForm && (
+      <>
       <div className="erp-detail">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">발주 입력</span>
@@ -492,46 +552,7 @@ export function PaperCalcClient({
           </div>
         </>
       )}
-
-      {hasOrder && (
-        <div className="erp-detail">
-          <div className="erp-detail-tabs">
-            <span className="erp-detail-tab active">
-              이 {salesOrderId ? "출고" : "매입"} 건에 저장된 계산 이력 ({savedCalculations.length}건)
-            </span>
-          </div>
-          <div className="erp-detail-body">
-            {savedCalculations.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-                저장된 계산이 없습니다. 계산 후 &apos;이 {salesOrderId ? "출고" : "매입"} 건에
-                저장&apos;을 눌러주세요.
-              </p>
-            ) : (
-              <table className="erp-grid w-full">
-                <thead>
-                  <tr>
-                    <th>계산일시</th>
-                    <th className="num">총 원지</th>
-                    <th className="num">총 생산</th>
-                    <th className="num">초과 생산</th>
-                    <th>충족여부</th>
-                    <th style={{ width: 60 }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {savedCalculations.map((calc) => (
-                    <SavedCalcRow
-                      key={calc.id}
-                      calc={calc}
-                      salesOrderId={salesOrderId}
-                      purchaseOrderId={purchaseOrderId}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+      </>
       )}
     </div>
   );
