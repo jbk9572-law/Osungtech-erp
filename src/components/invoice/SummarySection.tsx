@@ -53,7 +53,7 @@ export function SummarySection({ items, memo }: { items: InvoiceItem[]; memo?: s
         <Cell colSpan={2}>
           <span style={{ position: "relative", left: SUMMARY.labelOffsetX }}>메모</span>
         </Cell>
-        <Cell colSpan={24} className="opacity-80" hideBorder={["r"]} style={{ fontSize: DOCUMENT.baseFontSize }}>
+        <Cell colSpan={24} className="text-black" hideBorder={["r"]} style={{ fontSize: DOCUMENT.baseFontSize }}>
           {memo || ""}
         </Cell>
         <Cell
