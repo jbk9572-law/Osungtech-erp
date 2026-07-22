@@ -71,7 +71,7 @@ export default async function PurchaseDetailPage({
             F4 수정
           </Link>
           <Link href={`/paper-calc?purchaseOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
-            모조지 계산
+            {paperCalcs && paperCalcs.length > 0 ? "모조지 계산 이력" : "모조지 계산"}
           </Link>
           <DeleteButton
             action={deletePurchase}
