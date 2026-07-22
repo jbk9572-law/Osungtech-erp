@@ -517,6 +517,35 @@
   padding: 16px;
 }
 
+/* 셸 크롬(타이틀바/리본/트리메뉴/탭바/상태바/메신저/토스트)은 화면
+   전용이고, 인쇄할 땐 .erp-page 안의 본문만 종이에 나와야 한다.
+   "/print"로 끝나는 라우트는 애초에 이 셸 자체를 렌더링하지 않지만,
+   "도면 보기"처럼 화면에서는 셸 안에서 정상적으로 보여야 하는(탭바로
+   열림) 페이지도 인쇄만은 본문 위주로 나와야 해서 전역으로 감춘다.
+   래퍼 div로 감싸지 않고 클래스 셀렉터로 직접 지정하는 이유는, 이
+   요소들이 flex 부모의 flex-basis(예: .erp-tree의 240px, .erp-tabbar의
+   34px)를 직접 컨트롤하고 있어서 감싸는 순간 그 값이 무시되기 때문이다.
+*/
+@media print {
+  .erp-titlebar,
+  .erp-ribbon,
+  .erp-tree,
+  .erp-tree-backdrop,
+  .erp-tabbar,
+  .erp-statusbar,
+  .erp-messenger-fab,
+  .erp-messenger-panel,
+  .erp-progress-bar,
+  .erp-toast-stack {
+    display: none !important;
+  }
+
+  .erp-page {
+    padding: 0;
+    overflow: visible;
+  }
+}
+
 /* ── 4. Search / filter panel ──────────────────────────────── */
 .erp-search {
   display: flex;
