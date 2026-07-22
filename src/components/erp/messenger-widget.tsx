@@ -139,6 +139,7 @@ export function MessengerWidget({
   }
 
   function handleDelete(id: string, filePath: string | null) {
+    if (!confirm("이 메시지를 삭제하시겠습니까?")) return;
     setMessages((prev) => prev.filter((m) => m.id !== id));
     startDeleteTransition(async () => {
       const fd = new FormData();

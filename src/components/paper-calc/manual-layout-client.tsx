@@ -161,12 +161,21 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
 
   function removeSheet(index: number) {
     if (sheets.length <= 1) return;
+    if (sheets[index]?.placements.length && !confirm("이 배치를 삭제하시겠습니까? 배치된 조각이 모두 사라집니다.")) {
+      return;
+    }
     setSheets((prev) => prev.filter((_, i) => i !== index));
     setSheetIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
     setSelectedPlacementIndex(null);
   }
 
   function clearCurrentSheet() {
+    if (
+      sheets[sheetIndex]?.placements.length &&
+      !confirm("이 배치를 비우시겠습니까? 배치된 조각이 모두 사라집니다.")
+    ) {
+      return;
+    }
     setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [] } : s)));
     setSelectedPlacementIndex(null);
     setWarning(null);
