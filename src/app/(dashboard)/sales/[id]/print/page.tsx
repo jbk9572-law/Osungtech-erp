@@ -9,6 +9,9 @@ import {
   KtSolutionCanvas,
 } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
 import { InvoicePage, type InvoiceCopies } from "@/components/invoice/InvoicePage";
+import type { InvoiceItem } from "@/components/invoice/types";
+import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
+import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 
 export default async function SalesPrintPage({
   params,
@@ -23,7 +26,7 @@ export default async function SalesPrintPage({
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }, { data: company }] = await Promise.all([
+  const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
     supabase.from("sales_orders").select("*, customers(*)").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
@@ -31,6 +34,7 @@ export default async function SalesPrintPage({
       .eq("sales_order_id", id)
       .order("created_at"),
     supabase.from("company_profile").select("*").eq("id", 1).maybeSingle(),
+    supabase.from("paper_calculations").select("input_items").eq("sales_order_id", id),
   ]);
 
   if (!order) {
@@ -188,11 +192,20 @@ export default async function SalesPrintPage({
     );
   }
 
-  const invoiceItems = (items ?? []).map((item) => {
+  // 모조지(TG0) 계산에 들어간 사이즈별 수량(가로×세로:수량) — 원지 자체는
+  // 연 단위로만 청구되고 이 사이즈들은 그 원지로 만드는 최종 상품일 뿐이라,
+  // TG0 줄 바로 아래에 참고용(수량/금액 없이)으로만 인쇄에도 보여준다.
+  let paperCalcSizes: { width: number; height: number; qty: number }[] = [];
+  for (const calc of paperCalcs ?? []) {
+    paperCalcSizes = mergePaperCalcInputItems(paperCalcSizes, calc.input_items);
+  }
+  const paperCalcSizeLines = formatPaperCalcSizeLines(paperCalcSizes);
+
+  const invoiceItems: InvoiceItem[] = (items ?? []).flatMap((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
     const taxAmount = Math.round(supplyAmount * 0.1);
     const d = new Date(order.order_date);
-    return {
+    const row: InvoiceItem = {
       id: item.id,
       monthDay: `${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`,
       productLabel: (() => {
@@ -207,6 +220,24 @@ export default async function SalesPrintPage({
       taxAmount,
       remark: item.remark,
     };
+
+    if (item.products?.sku !== PAPER_STOCK_SKU || paperCalcSizeLines.length === 0) {
+      return [row];
+    }
+
+    const referenceRows: InvoiceItem[] = paperCalcSizeLines.map((line, i) => ({
+      id: `${item.id}-size-${i}`,
+      monthDay: "",
+      productLabel: `ㄴ ${line}`,
+      unit: "",
+      quantity: 0,
+      unitPrice: 0,
+      supplyAmount: 0,
+      taxAmount: 0,
+      remark: null,
+      isReference: true,
+    }));
+    return [row, ...referenceRows];
   });
 
   return (

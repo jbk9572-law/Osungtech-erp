@@ -45,7 +45,7 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
       {items.map((item, i) => (
         <tr
           key={item.id}
-          className="text-black"
+          className={item.isReference ? "text-gray-600" : "text-black"}
           style={{ height: TABLE.itemRowHeight, fontSize: TABLE.itemFontSize, ...stripe(i) }}
         >
           <Cell colSpan={ITEM_COLS[0]} align="center" hideBorder={["t", "b"]}>
@@ -55,24 +55,24 @@ export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: Invo
             <span style={{ position: "relative", left: TABLE.productDataOffsetX }}>{item.productLabel}</span>
           </Cell>
           <Cell colSpan={ITEM_COLS[2]} align="center" hideBorder={["t", "b"]}>
-            {item.unit}
+            {item.isReference ? "-" : item.unit}
           </Cell>
           <Cell colSpan={ITEM_COLS[3]} align="right" hideBorder={["t", "b"]}>
             <span style={{ position: "relative", left: TABLE.qtyDataOffsetX }}>
-              {item.quantity.toLocaleString()}
+              {item.isReference ? "-" : item.quantity.toLocaleString()}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[4]} align="right" hideBorder={["t", "b"]}>
             <span style={{ position: "relative", left: TABLE.priceDataOffsetX }}>
-              {item.unitPrice.toLocaleString()}
+              {item.isReference ? "-" : item.unitPrice.toLocaleString()}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[5]} align="right" hideBorder={["t", "b"]}>
-            {item.supplyAmount.toLocaleString()}
+            {item.isReference ? "-" : item.supplyAmount.toLocaleString()}
           </Cell>
           <Cell colSpan={ITEM_COLS[6]} align="right" hideBorder={["t", "b"]}>
             <span style={{ position: "relative", left: TABLE.taxDataOffsetX }}>
-              {item.taxAmount.toLocaleString()}
+              {item.isReference ? "-" : item.taxAmount.toLocaleString()}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[7]} hideBorder={["t", "b"]}>
