@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
+import { countTodoMemoLines } from "@/lib/todo-memo";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 
@@ -297,6 +298,7 @@ export default async function DashboardPage({
           ))}
           {dueSoonTodos.slice(0, 10).map((t) => {
             const overdue = !!t.due_date && t.due_date < todayStr;
+            const itemCount = countTodoMemoLines(t.memo);
             return (
               <Link
                 key={`d-${t.id}`}
@@ -306,6 +308,11 @@ export default async function DashboardPage({
                 <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>
                 {t.title}
                 {t.due_date ? ` (${t.due_date})` : ""}
+                {itemCount > 0 && (
+                  <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                    품목 {itemCount}건
+                  </span>
+                )}
               </Link>
             );
           })}

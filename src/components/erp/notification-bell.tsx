@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { countTodoMemoLines } from "@/lib/todo-memo";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
-export type DueTodoItem = { id: string; title: string; due_date: string | null };
+export type DueTodoItem = { id: string; title: string; due_date: string | null; memo: string | null };
 export type LowStockItem = { id: string; name: string; quantity: number; reorderPoint: number };
 
 export function NotificationBell({
@@ -74,10 +75,16 @@ export function NotificationBell({
           {todos.length ? (
             todos.map((t) => {
               const overdue = !!t.due_date && t.due_date < todayStr;
+              const itemCount = countTodoMemoLines(t.memo);
               return (
                 <div key={t.id} className="erp-ribbon-dropdown-item">
                   <button type="button" onClick={() => go(`/todos/${t.id}`)}>
                     <span>{t.title}</span>
+                    {itemCount > 0 && (
+                      <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                        품목 {itemCount}건
+                      </span>
+                    )}
                     {t.due_date && (
                       <span
                         style={{

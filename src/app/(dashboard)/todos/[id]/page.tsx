@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { TodoForm } from "@/components/todo-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { parseTodoMemoLines } from "@/lib/todo-memo";
 import { deleteTodo, updateTodo } from "../actions";
 
 export default async function TodoDetailPage({
@@ -13,11 +14,14 @@ export default async function TodoDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: row, error } = await supabase
-    .from("todos")
-    .select("id, title, memo, due_date, done, profiles!created_by(full_name)")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: row, error }, { data: products }] = await Promise.all([
+    supabase
+      .from("todos")
+      .select("id, title, memo, due_date, done, profiles!created_by(full_name)")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
+  ]);
 
   if (error) {
     return (
@@ -30,6 +34,9 @@ export default async function TodoDetailPage({
   if (!row) {
     notFound();
   }
+
+  const memoLines = parseTodoMemoLines(row.memo);
+  const memoQtyTotal = memoLines.reduce((sum, line) => sum + Number(line.qty?.replace(/,/g, "") ?? 0), 0);
 
   return (
     <div>
@@ -52,10 +59,49 @@ export default async function TodoDetailPage({
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
             <span>상태: {row.done ? "완료" : "진행중"}</span>
           </div>
+
+          {memoLines.length > 0 && (
+            <div className="erp-grid-wrap mb-4">
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th>품목</th>
+                    <th style={{ width: 140 }}>규격</th>
+                    <th className="num" style={{ width: 100 }}>
+                      수량
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memoLines.map((line, i) => (
+                    <tr key={i}>
+                      <td>{line.name}</td>
+                      <td style={{ color: "var(--erp-text-muted)" }}>{line.spec ?? "-"}</td>
+                      <td className="num">{line.qty ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                {memoQtyTotal > 0 && (
+                  <tfoot>
+                    <tr>
+                      <td colSpan={2} style={{ fontWeight: 700 }}>
+                        합계 ({memoLines.length}건)
+                      </td>
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {memoQtyTotal.toLocaleString()}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          )}
+
           <TodoForm
             action={updateTodo}
             submitLabel="수정"
             initial={{ id: row.id, title: row.title, memo: row.memo, dueDate: row.due_date }}
+            products={products ?? []}
           />
         </div>
       </div>

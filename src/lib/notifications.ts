@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 
 export type AnnouncementNotice = { id: string; title: string; pinned: boolean };
-export type TodoNotice = { id: string; title: string; due_date: string | null };
+export type TodoNotice = { id: string; title: string; due_date: string | null; memo: string | null };
 export type LowStockNotice = { id: string; name: string; quantity: number; reorderPoint: number };
 
 // 타이틀바 알림 종/대시보드 배너/알림 팝업이 공유하는 "지금 확인해야 할 것" 조회 로직.
@@ -30,7 +30,7 @@ export async function getNotificationSummary(
       supabase.from("announcement_reads").select("announcement_id").eq("user_id", userId),
       supabase
         .from("todos")
-        .select("id, title, due_date")
+        .select("id, title, due_date, memo")
         .eq("done", false)
         .lte("due_date", soonStr)
         .order("due_date", { ascending: true })
