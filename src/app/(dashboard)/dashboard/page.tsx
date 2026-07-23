@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
+import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 
@@ -307,8 +308,11 @@ export default async function DashboardPage({
                 <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>
                 {t.title}
                 {t.due_date ? ` (${t.due_date})` : ""}
+                <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                  {todoTypeLabel(t.todoType, t.shipDate, t.due_date)}
+                </span>
                 {itemCount > 0 && (
-                  <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                  <span className="erp-badge erp-badge-muted" style={{ marginLeft: 4 }}>
                     품목 {itemCount}건
                   </span>
                 )}

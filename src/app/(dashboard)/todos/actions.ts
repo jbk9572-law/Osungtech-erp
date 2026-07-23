@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/paper-calc-sync";
+import { parseTodoType } from "@/lib/todo-flow";
 import type { FormState } from "@/components/form-message";
 
 export type TodoItemInput = { productId: string; spec?: string | null; quantity: number };
@@ -13,6 +14,10 @@ export type OpenTodoSummary = {
   title: string;
   due_date: string | null;
   items: TodoItemInput[];
+  todo_type: string;
+  ship_date: string | null;
+  purchase_done_at: string | null;
+  sale_done_at: string | null;
 };
 
 function parseItems(itemsRaw: string): TodoItemInput[] {
@@ -26,13 +31,17 @@ function parseItems(itemsRaw: string): TodoItemInput[] {
 
 // 매입/매출 등록 화면에서 "할일 가져오기"로 쓴다. 미리 적어둔 할일(예: 내일
 // 입고/출고 예정 품목)을 실제 등록 시점에 품목 줄로 그대로 옮겨 담을 수
-// 있게, 아직 완료 처리 안 한 할일 목록을 돌려준다.
-export async function getOpenTodos(): Promise<OpenTodoSummary[]> {
+// 있게, 아직 완료 처리 안 한 할일 목록을 돌려준다. 유형에 따라 필요한
+// 화면에만 나온다: 매입 화면에는 purchase/both, 매출 화면에는 sale/both —
+// 그리고 그 방향을 이미 등록했으면(purchase_done_at 등) 다시 안 나온다.
+export async function getOpenTodos(side: "purchase" | "sale"): Promise<OpenTodoSummary[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("todos")
-    .select("id, title, due_date, items")
+    .select("id, title, due_date, items, todo_type, ship_date, purchase_done_at, sale_done_at")
     .eq("done", false)
+    .in("todo_type", side === "purchase" ? ["purchase", "both"] : ["sale", "both"])
+    .is(side === "purchase" ? "purchase_done_at" : "sale_done_at", null)
     .order("due_date", { ascending: true, nullsFirst: false })
     .limit(50);
 
@@ -41,6 +50,10 @@ export async function getOpenTodos(): Promise<OpenTodoSummary[]> {
     title: row.title,
     due_date: row.due_date,
     items: Array.isArray(row.items) ? (row.items as TodoItemInput[]) : [],
+    todo_type: row.todo_type,
+    ship_date: row.ship_date,
+    purchase_done_at: row.purchase_done_at,
+    sale_done_at: row.sale_done_at,
   }));
 }
 
@@ -75,6 +88,8 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
   const dueDate = String(formData.get("due_date") ?? "").trim();
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
+  const todoType = parseTodoType(formData.get("todo_type"));
+  const shipDateRaw = String(formData.get("ship_date") ?? "").trim();
 
   if (!title) {
     return { error: "제목을 입력해주세요." };
@@ -91,6 +106,8 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
       title,
       memo,
       items,
+      todo_type: todoType,
+      ship_date: todoType === "both" && shipDateRaw ? shipDateRaw : null,
       due_date: dueDate || null,
       created_by: user?.id ?? null,
     })
@@ -116,6 +133,8 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   const memo = String(formData.get("memo") ?? "").trim();
   const dueDate = String(formData.get("due_date") ?? "").trim();
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  const todoType = parseTodoType(formData.get("todo_type"));
+  const shipDateRaw = String(formData.get("ship_date") ?? "").trim();
 
   if (!id || !title) {
     return { error: "제목을 입력해주세요." };
@@ -124,7 +143,14 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   const supabase = await createClient();
   const { error } = await supabase
     .from("todos")
-    .update({ title, memo, items, due_date: dueDate || null })
+    .update({
+      title,
+      memo,
+      items,
+      todo_type: todoType,
+      ship_date: todoType === "both" && shipDateRaw ? shipDateRaw : null,
+      due_date: dueDate || null,
+    })
     .eq("id", id);
 
   if (error) {

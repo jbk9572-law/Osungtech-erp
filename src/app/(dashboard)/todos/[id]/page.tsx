@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
+import { todoTypeLabel } from "@/lib/todo-flow";
 import { deleteTodo, updateTodo } from "../actions";
 
 export default async function TodoDetailPage({
@@ -17,7 +18,9 @@ export default async function TodoDetailPage({
   const [{ data: row, error }, { data: products }, { data: calcs }] = await Promise.all([
     supabase
       .from("todos")
-      .select("id, title, memo, items, due_date, done, profiles!created_by(full_name)")
+      .select(
+        "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name)"
+      )
       .eq("id", id)
       .maybeSingle(),
     supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
@@ -70,7 +73,15 @@ export default async function TodoDetailPage({
         <div className="erp-detail-body">
           <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
-            <span>상태: {row.done ? "완료" : "진행중"}</span>
+            <span>유형: {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</span>
+            <span>
+              상태:{" "}
+              {row.done
+                ? "완료"
+                : row.todo_type === "both"
+                  ? `진행중 (매입 ${row.purchase_done_at ? "완료" : "전"} · 매출 ${row.sale_done_at ? "완료" : "전"})`
+                  : "진행중"}
+            </span>
           </div>
 
           {paperCalcSizeLines.length > 0 && (
@@ -120,7 +131,15 @@ export default async function TodoDetailPage({
           <TodoForm
             action={updateTodo}
             submitLabel="수정"
-            initial={{ id: row.id, title: row.title, memo: row.memo, dueDate: row.due_date, items }}
+            initial={{
+              id: row.id,
+              title: row.title,
+              memo: row.memo,
+              dueDate: row.due_date,
+              items,
+              todoType: row.todo_type,
+              shipDate: row.ship_date,
+            }}
             products={products ?? []}
           />
         </div>

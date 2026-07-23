@@ -3,12 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { TodoCheckbox } from "@/components/todo-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { todoTypeLabel } from "@/lib/todo-flow";
 
 export default async function TodosPage() {
   const supabase = await createClient();
   const { data: rows, error } = await supabase
     .from("todos")
-    .select("id, title, items, due_date, done, profiles!created_by(full_name)")
+    .select(
+      "id, title, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name)"
+    )
     .order("done", { ascending: true })
     .order("due_date", { ascending: true, nullsFirst: false })
     .limit(300);
@@ -41,6 +44,7 @@ export default async function TodosPage() {
             <tr>
               <th style={{ width: 40 }}>완료</th>
               <th>할 일</th>
+              <th style={{ width: 120 }}>유형</th>
               <th style={{ width: 140 }}>작성자</th>
               <th style={{ width: 120 }}>마감일</th>
             </tr>
@@ -62,6 +66,16 @@ export default async function TodosPage() {
                       </span>
                     )}
                   </td>
+                  <td>
+                    <span className="erp-badge erp-badge-muted">
+                      {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}
+                    </span>
+                    {!row.done && row.todo_type === "both" && row.purchase_done_at && (
+                      <span className="erp-badge erp-badge-success" style={{ marginLeft: 4 }}>
+                        매입완료
+                      </span>
+                    )}
+                  </td>
                   <td>{row.profiles?.full_name ?? "-"}</td>
                   <td style={overdue ? { color: "var(--erp-danger)", fontWeight: 600 } : undefined}>
                     {row.due_date ?? "-"}
@@ -71,7 +85,7 @@ export default async function TodosPage() {
             })}
             {!rows?.length && (
               <tr>
-                <td colSpan={4} className="erp-grid-empty">
+                <td colSpan={5} className="erp-grid-empty">
                   등록된 할 일이 없습니다.
                 </td>
               </tr>
