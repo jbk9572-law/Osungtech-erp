@@ -3,13 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { TodoCheckbox } from "@/components/todo-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { countTodoMemoLines } from "@/lib/todo-memo";
 
 export default async function TodosPage() {
   const supabase = await createClient();
   const { data: rows, error } = await supabase
     .from("todos")
-    .select("id, title, memo, due_date, done, profiles!created_by(full_name)")
+    .select("id, title, items, due_date, done, profiles!created_by(full_name)")
     .order("done", { ascending: true })
     .order("due_date", { ascending: true, nullsFirst: false })
     .limit(300);
@@ -49,7 +48,7 @@ export default async function TodosPage() {
           <tbody>
             {(rows ?? []).map((row) => {
               const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
-              const itemCount = countTodoMemoLines(row.memo);
+              const itemCount = Array.isArray(row.items) ? row.items.length : 0;
               return (
                 <ClickableRow key={row.id} href={`/todos/${row.id}`}>
                   <td style={{ textAlign: "center" }}>

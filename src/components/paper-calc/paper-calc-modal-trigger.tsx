@@ -11,7 +11,7 @@ export function PaperCalcModalTrigger({
   pendingFor,
   onApply,
 }: {
-  pendingFor: "sales" | "purchase";
+  pendingFor: "sales" | "purchase" | "todo";
   onApply: (payload: PendingCalcPayload) => void;
 }) {
   const [open, setOpen] = useState(false);

@@ -25,8 +25,11 @@ import {
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
-import { getOpenTodos, type OpenTodoSummary } from "@/app/(dashboard)/todos/actions";
-import { countTodoMemoLines, parseTodoMemoLines } from "@/lib/todo-memo";
+import {
+  getOpenTodos,
+  getPaperCalculationsForTodo,
+  type OpenTodoSummary,
+} from "@/app/(dashboard)/todos/actions";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -218,11 +221,12 @@ export function NewSaleForm({
 
   // 우리 쪽 품목은 대부분 당일 입고 후 바로 당일 출고돼서, 출고 예정을
   // 잊지 않으려고 미리 적어둔 할일이 사실상 이번 매출 품목 목록과 같다.
-  // 할일 메모 줄("품목명 (규격) : 수량")을 그대로 파싱해 품목 행으로
-  // 옮겨 담는다. 품목명이 일치하는 마스터 품목이 있으면 자동 매칭하고,
-  // 없으면 규격/수량만 채운 채로 남겨 사용자가 직접 품목을 골라 채우게 한다.
+  // 할일의 구조화된 items를 그대로 품목 행으로 옮겨 담는다 — 이미 productId
+  // 기준으로 골라둔 데이터라 이름 매칭 같은 추측이 필요 없다. 할일에
+  // 모조지 계산이 붙어있으면 그것도 통째로 복사해온다.
   const [openTodos, setOpenTodos] = useState<OpenTodoSummary[] | null>(null);
   const [loadingTodos, setLoadingTodos] = useState(false);
+  const [importingTodoId, setImportingTodoId] = useState<string | null>(null);
 
   async function loadOpenTodos() {
     setLoadingTodos(true);
@@ -233,10 +237,7 @@ export function NewSaleForm({
     }
   }
 
-  function importTodoItems(todo: OpenTodoSummary) {
-    const lines = parseTodoMemoLines(todo.memo).filter((line) => line.qty);
-    if (!lines.length) return;
-
+  async function importTodoItems(todo: OpenTodoSummary) {
     if (!customerId) {
       const matched = customers.find(
         (c) => c.name.trim().toLowerCase() === todo.title.trim().toLowerCase()
@@ -244,27 +245,37 @@ export function NewSaleForm({
       if (matched) handleCustomerChange(matched.id);
     }
 
-    const newRows: Row[] = lines.map((line, i) => {
-      const product = products.find(
-        (p) => p.name.trim().toLowerCase() === line.name.trim().toLowerCase()
-      );
-      const quantity = Number(line.qty!.replace(/,/g, "")) || 0;
-      return {
-        key: nextKey + i,
-        productId: product?.id ?? "",
-        spec: line.spec ?? product?.spec ?? "",
-        manualSpec: Boolean(line.spec),
-        quantity,
-        unitPrice: product ? resolvePrice(customerId, product.id) : 0,
-        manualPrice: false,
-        remark: "",
-      };
-    });
+    if (todo.items.length > 0) {
+      const newRows: Row[] = todo.items.map((item, i) => {
+        const product = products.find((p) => p.id === item.productId);
+        return {
+          key: nextKey + i,
+          productId: item.productId,
+          spec: item.spec ?? product?.spec ?? "",
+          manualSpec: Boolean(item.spec),
+          quantity: item.quantity,
+          unitPrice: product ? resolvePrice(customerId, product.id) : 0,
+          manualPrice: false,
+          remark: "",
+        };
+      });
 
-    setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
-    );
-    setNextKey((k) => k + newRows.length);
+      setRows((prev) =>
+        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
+      );
+      setNextKey((k) => k + newRows.length);
+    }
+
+    setImportingTodoId(todo.id);
+    try {
+      const calcs = await getPaperCalculationsForTodo(todo.id);
+      if (calcs.length > 0) {
+        setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
+      }
+    } finally {
+      setImportingTodoId(null);
+    }
+
     setOpenTodos(null);
   }
 
@@ -679,7 +690,8 @@ export function NewSaleForm({
                 </p>
               ) : (
                 openTodos.map((todo) => {
-                  const itemCount = countTodoMemoLines(todo.memo);
+                  const itemCount = todo.items.length;
+                  const isImporting = importingTodoId === todo.id;
                   return (
                     <div
                       key={todo.id}
@@ -704,9 +716,9 @@ export function NewSaleForm({
                         onClick={() => importTodoItems(todo)}
                         className="erp-btn"
                         style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
-                        disabled={itemCount === 0}
+                        disabled={isImporting}
                       >
-                        가져오기
+                        {isImporting ? "가져오는 중..." : "가져오기"}
                       </button>
                     </div>
                   );

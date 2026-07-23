@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnouncementItem, DueTodoItem, LowStockItem } from "@/components/erp/notification-bell";
-import { countTodoMemoLines } from "@/lib/todo-memo";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 10분마다 재확인
 const AUTO_HIDE_MS = 60 * 1000; // 1분
@@ -61,10 +60,9 @@ export function NotificationToaster() {
           });
         });
         data.todos.forEach((t) => {
-          const itemCount = countTodoMemoLines(t.memo);
           const metaParts = [
             t.due_date ? `마감 ${t.due_date}` : null,
-            itemCount > 0 ? `품목 ${itemCount}건` : null,
+            t.itemCount > 0 ? `품목 ${t.itemCount}건` : null,
           ].filter(Boolean);
           pushToast({
             key: `t-${t.id}`,

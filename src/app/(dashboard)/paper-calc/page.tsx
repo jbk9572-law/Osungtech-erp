@@ -82,7 +82,7 @@ export default async function PaperCalcPage({
           salesOrderLabel={salesOrderLabel}
           purchaseOrderId={purchaseOrderId ?? null}
           purchaseOrderLabel={purchaseOrderLabel}
-          pendingFor={pendingFor === "purchase" ? "purchase" : "sales"}
+          pendingFor={pendingFor === "purchase" ? "purchase" : pendingFor === "todo" ? "todo" : "sales"}
           savedCalculations={savedCalculations}
         />
       </div>

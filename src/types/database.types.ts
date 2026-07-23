@@ -736,6 +736,7 @@ export type Database = {
           id: string;
           sales_order_id: string | null;
           purchase_order_id: string | null;
+          todo_id: string | null;
           paper_w: number;
           paper_h: number;
           input_items: Json;
@@ -752,6 +753,7 @@ export type Database = {
           id?: string;
           sales_order_id?: string | null;
           purchase_order_id?: string | null;
+          todo_id?: string | null;
           paper_w: number;
           paper_h: number;
           input_items: Json;
@@ -768,6 +770,7 @@ export type Database = {
           id?: string;
           sales_order_id?: string | null;
           purchase_order_id?: string | null;
+          todo_id?: string | null;
           paper_w?: number;
           paper_h?: number;
           input_items?: Json;
@@ -793,6 +796,13 @@ export type Database = {
             columns: ["purchase_order_id"];
             isOneToOne: false;
             referencedRelation: "purchase_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "paper_calculations_todo_id_fkey";
+            columns: ["todo_id"];
+            isOneToOne: false;
+            referencedRelation: "todos";
             referencedColumns: ["id"];
           },
           {
@@ -902,6 +912,7 @@ export type Database = {
           id: string;
           title: string;
           memo: string;
+          items: Json;
           due_date: string | null;
           done: boolean;
           done_at: string | null;
@@ -913,6 +924,7 @@ export type Database = {
           id?: string;
           title: string;
           memo?: string;
+          items?: Json;
           due_date?: string | null;
           done?: boolean;
           done_at?: string | null;
@@ -924,6 +936,7 @@ export type Database = {
           id?: string;
           title?: string;
           memo?: string;
+          items?: Json;
           due_date?: string | null;
           done?: boolean;
           done_at?: string | null;

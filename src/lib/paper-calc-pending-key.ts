@@ -8,3 +8,6 @@ export const PENDING_PAPER_CALC_KEY = "paper-calc-pending-attach";
 // 신규 매입 등록 화면용. 판매와 키를 분리해서, 두 등록 화면을 동시에 열어둬도
 // 서로의 임시 저장 계산을 덮어쓰지 않게 한다.
 export const PENDING_PAPER_CALC_PURCHASE_KEY = "paper-calc-pending-attach-purchase";
+
+// 신규 할일 등록 화면용.
+export const PENDING_PAPER_CALC_TODO_KEY = "paper-calc-pending-attach-todo";
