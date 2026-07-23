@@ -7,6 +7,7 @@ import {
   attachPendingPaperCalculationToPurchase,
   overridePurchasePaperStockQuantity,
   revertPurchasePaperStockOverride,
+  type PendingCalc,
 } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 
@@ -27,6 +28,73 @@ function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
   } catch {
     return null;
   }
+}
+
+export type TodayPurchaseItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  spec: string;
+  quantity: number;
+  unit: string;
+  supplierName: string;
+  purchaseOrderId: string;
+};
+
+// 당일 입고된 품목을 그대로 매출/할일로 옮겨 담을 수 있게, 특정 거래일자에
+// 입고된 매입 품목 목록을 불러온다. 모조지처럼 당일 입고 후 바로 당일
+// 출고되는 품목을 이중 입력하지 않아도 되게 하려는 용도다.
+export async function getPurchaseItemsForDate(date: string): Promise<TodayPurchaseItem[]> {
+  if (!date) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("purchase_order_items")
+    .select(
+      "id, product_id, quantity, spec, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+    )
+    .eq("purchase_orders.purchase_date", date)
+    .order("created_at", { ascending: true });
+
+  return (data ?? []).map((item) => ({
+    id: item.id,
+    productId: item.product_id,
+    productName: item.products?.name ?? "상품 미상",
+    sku: item.products?.sku ?? "",
+    spec: item.spec || item.products?.spec || "",
+    quantity: item.quantity,
+    unit: item.products?.unit ?? "",
+    supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
+    purchaseOrderId: item.purchase_order_id,
+  }));
+}
+
+// 입고 불러오기에서 모조지(TG0) 품목을 고르면, 수량만 옮기는 게 아니라 그
+// 매입 건에 저장돼 있던 모조지 계산(사이즈별 배치 내역) 자체를 가져와
+// 새 매출 건/할일에도 그대로 붙일 수 있게 한다.
+export async function getPaperCalculationsForPurchaseOrder(
+  purchaseOrderId: string
+): Promise<PendingCalc[]> {
+  if (!purchaseOrderId) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("paper_calculations")
+    .select("paper_w, paper_h, input_items, layouts, total_paper, total_sheet, total_prod, over_prod, fulfilled")
+    .eq("purchase_order_id", purchaseOrderId);
+
+  return (data ?? []).map((calc) => ({
+    paperW: calc.paper_w,
+    paperH: calc.paper_h,
+    inputItems: calc.input_items,
+    layouts: calc.layouts,
+    totalPaper: calc.total_paper,
+    totalSheet: calc.total_sheet,
+    totalProd: calc.total_prod,
+    overProd: calc.over_prod,
+    fulfilled: calc.fulfilled,
+  }));
 }
 
 // 기존 매입 건의 입고 효과를 재고 조정(adjustment)으로 되돌린다.
