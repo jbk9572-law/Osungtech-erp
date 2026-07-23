@@ -14,6 +14,7 @@ import {
   type PendingCalc,
 } from "@/lib/paper-calc-sync";
 import { markTodoSideDone } from "@/lib/todo-flow";
+import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
@@ -230,6 +231,12 @@ export async function createPurchase(
     // 매입이 커밋된 뒤 매출 쪽만 실패해서 매입만 영구히 남는 불일치가
     // 생길 수 있다. 단가는 출고처의 거래처 단가(customer_product_prices)를
     // 우선 쓰고, 없으면 품목 기본 판매단가로 채운다.
+    // /sales/new, 거래처 상세 화면과 마찬가지로 오늘 도래한 단가 예약을
+    // 먼저 반영해둔다 — 안 하면 오늘부터 바뀌기로 한 단가가 있어도 이
+    // 화면에서 조회하는 customer_product_prices는 예약이 적용된 적 없는
+    // 옛날 값 그대로일 수 있다(다른 화면을 아무도 안 열었다면).
+    await applyDuePriceSchedules(supabase, saleCustomerId);
+
     const saleProductIds = saleItems.map((item) => item.productId);
     const [{ data: customerPrices }, { data: productRows }] = await Promise.all([
       saleProductIds.length
