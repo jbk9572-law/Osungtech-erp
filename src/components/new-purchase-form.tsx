@@ -18,8 +18,12 @@ import {
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
-import { getOpenTodos, type OpenTodoSummary } from "@/app/(dashboard)/todos/actions";
-import { countTodoMemoLines, parseTodoMemoLines } from "@/lib/todo-memo";
+import type { PendingCalc } from "@/lib/paper-calc-sync";
+import {
+  getOpenTodos,
+  getPaperCalculationsForTodo,
+  type OpenTodoSummary,
+} from "@/app/(dashboard)/todos/actions";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -130,7 +134,6 @@ export function NewPurchaseForm({
 
   useEffect(() => {
     if (initial?.id) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
     setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_PURCHASE_KEY));
 
     function handleStorage(e: StorageEvent) {
@@ -142,19 +145,34 @@ export function NewPurchaseForm({
     return () => window.removeEventListener("storage", handleStorage);
   }, [initial?.id]);
 
-  // 임시 저장된 모조지 계산이 있으면 등록 버튼을 누르기 전에도 TG0 품목
-  // 줄이 실제로 어떤 수량으로 들어갈지 그리드에 미리 보여준다. 이 줄은
-  // 편집 가능한 rows에는 넣지 않는다 — 실제 저장은 createPurchase가 주문
-  // 생성 직후 attachPendingPaperCalculationToPurchase로 처리한다.
+  // 할일에 붙어있던 모조지 계산을 "할일 가져오기"로 통째로 복사해온 것.
+  // TG0 품목은 수량만 옮기면 사이즈별 배치 내역이 사라지므로, 계산 자체를
+  // 그대로 붙여서 등록 시 같이 저장한다(sales의 "입고 불러오기"와 동일).
+  const [copiedPaperCalcs, setCopiedPaperCalcs] = useState<PendingCalc[]>([]);
+
+  // 임시 저장된 모조지 계산(모달로 직접 계산했거나, 할일에서 가져온 것)이
+  // 있으면 등록 버튼을 누르기 전에도 TG0 품목 줄이 실제로 어떤 수량으로
+  // 들어갈지 그리드에 미리 보여준다. 이 줄은 편집 가능한 rows에는 넣지
+  // 않는다 — 실제 저장은 createPurchase가 주문 생성 직후
+  // attachPendingPaperCalculationToPurchase/attachCopiedPaperCalculationsToPurchase로 처리한다.
   const pendingCalcSummary = useMemo(() => {
-    if (!pendingPaperCalc) return null;
-    try {
-      const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
-      return { totalSheet: parsed.totalSheet, totalPaper: parsed.totalPaper };
-    } catch {
-      return null;
+    let totalSheet = 0;
+    let totalPaper = 0;
+    if (pendingPaperCalc) {
+      try {
+        const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
+        totalSheet += parsed.totalSheet;
+        totalPaper += parsed.totalPaper;
+      } catch {
+        // 무시: 잘못된 값이면 이 부분은 0으로 취급
+      }
     }
-  }, [pendingPaperCalc]);
+    for (const calc of copiedPaperCalcs) {
+      totalSheet += calc.totalSheet;
+      totalPaper += calc.totalPaper;
+    }
+    return totalSheet > 0 ? { totalSheet, totalPaper } : null;
+  }, [pendingPaperCalc, copiedPaperCalcs]);
   const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
   const pendingCalcUnitCost = tg0Product ? Number(tg0Product.cost) : 0;
   // 거래처와 협의해 자동 계산값(예: 3.2연)과 다른 수량(예: 3연)으로 등록해야
@@ -177,16 +195,20 @@ export function NewPurchaseForm({
   // 자체는 연 단위로만 청구하고, 여기 사이즈들은 그 원지를 조합해서
   // 만드는 최종 상품일 뿐 별도로 판매/청구되는 게 아니기 때문).
   const paperCalcSizeLines = useMemo(() => {
-    if (!pendingPaperCalc) return [];
     let sizes: PaperCalcSizeRow[] = [];
-    try {
-      const parsed = JSON.parse(pendingPaperCalc) as { inputItems?: unknown };
-      sizes = mergePaperCalcInputItems(sizes, parsed.inputItems);
-    } catch {
-      // 무시
+    if (pendingPaperCalc) {
+      try {
+        const parsed = JSON.parse(pendingPaperCalc) as { inputItems?: unknown };
+        sizes = mergePaperCalcInputItems(sizes, parsed.inputItems);
+      } catch {
+        // 무시
+      }
+    }
+    for (const calc of copiedPaperCalcs) {
+      sizes = mergePaperCalcInputItems(sizes, calc.inputItems);
     }
     return formatPaperCalcSizeLines(sizes);
-  }, [pendingPaperCalc]);
+  }, [pendingPaperCalc, copiedPaperCalcs]);
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
@@ -224,11 +246,12 @@ export function NewPurchaseForm({
 
   // 우리 쪽 품목은 대부분 당일 입고 후 바로 당일 출고돼서, 입고 예정을
   // 잊지 않으려고 미리 적어둔 할일이 사실상 이번 매입 품목 목록과 같다.
-  // 할일 메모 줄("품목명 (규격) : 수량")을 그대로 파싱해 품목 행으로
-  // 옮겨 담는다. 품목명이 일치하는 마스터 품목이 있으면 자동 매칭하고,
-  // 없으면 규격/수량만 채운 채로 남겨 사용자가 직접 품목을 골라 채우게 한다.
+  // 할일의 구조화된 items를 그대로 품목 행으로 옮겨 담는다 — 이미 productId
+  // 기준으로 골라둔 데이터라 이름 매칭 같은 추측이 필요 없다. 할일에
+  // 모조지 계산이 붙어있으면 그것도 통째로 복사해온다.
   const [openTodos, setOpenTodos] = useState<OpenTodoSummary[] | null>(null);
   const [loadingTodos, setLoadingTodos] = useState(false);
+  const [importingTodoId, setImportingTodoId] = useState<string | null>(null);
 
   async function loadOpenTodos() {
     setLoadingTodos(true);
@@ -239,10 +262,7 @@ export function NewPurchaseForm({
     }
   }
 
-  function importTodoItems(todo: OpenTodoSummary) {
-    const lines = parseTodoMemoLines(todo.memo).filter((line) => line.qty);
-    if (!lines.length) return;
-
+  async function importTodoItems(todo: OpenTodoSummary) {
     if (!supplierId) {
       const matched = suppliers.find(
         (s) => s.name.trim().toLowerCase() === todo.title.trim().toLowerCase()
@@ -250,26 +270,37 @@ export function NewPurchaseForm({
       if (matched) setSupplierId(matched.id);
     }
 
-    const newRows: Row[] = lines.map((line, i) => {
-      const product = products.find(
-        (p) => p.name.trim().toLowerCase() === line.name.trim().toLowerCase()
-      );
-      return {
-        key: nextKey + i,
-        productId: product?.id ?? "",
-        spec: line.spec ?? product?.spec ?? "",
-        manualSpec: Boolean(line.spec),
-        quantity: Number(line.qty!.replace(/,/g, "")) || 0,
-        unitCost: product ? Number(product.cost) : 0,
-        manualPrice: false,
-        remark: "",
-      };
-    });
+    if (todo.items.length > 0) {
+      const newRows: Row[] = todo.items.map((item, i) => {
+        const product = products.find((p) => p.id === item.productId);
+        return {
+          key: nextKey + i,
+          productId: item.productId,
+          spec: item.spec ?? product?.spec ?? "",
+          manualSpec: Boolean(item.spec),
+          quantity: item.quantity,
+          unitCost: product ? Number(product.cost) : 0,
+          manualPrice: false,
+          remark: "",
+        };
+      });
 
-    setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
-    );
-    setNextKey((k) => k + newRows.length);
+      setRows((prev) =>
+        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
+      );
+      setNextKey((k) => k + newRows.length);
+    }
+
+    setImportingTodoId(todo.id);
+    try {
+      const calcs = await getPaperCalculationsForTodo(todo.id);
+      if (calcs.length > 0) {
+        setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
+      }
+    } finally {
+      setImportingTodoId(null);
+    }
+
     setOpenTodos(null);
   }
 
@@ -309,6 +340,9 @@ export function NewPurchaseForm({
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+      {copiedPaperCalcs.length > 0 && (
+        <input type="hidden" name="copiedPaperCalcs" value={JSON.stringify(copiedPaperCalcs)} />
+      )}
       {tg0IsOverridden && (
         <input type="hidden" name="tg0OverrideQuantity" value={tg0OverrideQuantity ?? ""} />
       )}
@@ -436,7 +470,8 @@ export function NewPurchaseForm({
                 </p>
               ) : (
                 openTodos.map((todo) => {
-                  const itemCount = countTodoMemoLines(todo.memo);
+                  const itemCount = todo.items.length;
+                  const isImporting = importingTodoId === todo.id;
                   return (
                     <div
                       key={todo.id}
@@ -461,9 +496,9 @@ export function NewPurchaseForm({
                         onClick={() => importTodoItems(todo)}
                         className="erp-btn"
                         style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
-                        disabled={itemCount === 0}
+                        disabled={isImporting}
                       >
-                        가져오기
+                        {isImporting ? "가져오는 중..." : "가져오기"}
                       </button>
                     </div>
                   );
@@ -537,6 +572,7 @@ export function NewPurchaseForm({
                       onClick={() => {
                         localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
                         setPendingPaperCalc(null);
+                        setCopiedPaperCalcs([]);
                         setTg0OverrideQuantity(null);
                       }}
                     >

@@ -370,6 +370,58 @@ export async function attachPendingPaperCalculationToPurchase(
   }
 }
 
+// 매입 등록도 매출과 마찬가지로 "할일 가져오기"에서 할일에 붙어있던 계산을
+// 통째로(여러 건일 수 있음) 복사해올 수 있어야 해서, attachCopiedPaperCalculations와
+// 동일한 방식으로 purchase_order_id 버전을 둔다.
+export async function attachCopiedPaperCalculationsToPurchase(
+  supabase: SupabaseServerClient,
+  purchaseOrderId: string,
+  copiedRaw: string
+) {
+  let candidates: unknown[];
+  try {
+    const parsed = JSON.parse(copiedRaw);
+    if (!Array.isArray(parsed)) return;
+    candidates = parsed;
+  } catch {
+    return;
+  }
+
+  const userId = await getUserId(supabase);
+  let insertedAny = false;
+  for (const candidate of candidates) {
+    if (!isPendingCalc(candidate)) continue;
+    const { error } = await supabase.from("paper_calculations").insert({
+      purchase_order_id: purchaseOrderId,
+      ...pendingToRow(candidate),
+      created_by: userId,
+    });
+    if (!error) insertedAny = true;
+  }
+
+  if (insertedAny) {
+    await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
+  }
+}
+
+// 할일 등록 화면에서도 아직 todo id가 없어서 계산을 미리 저장할 수 없다 —
+// 다른 attachPendingPaperCalculation*과 동일한 방식이지만, 할일은 금액/재고
+// 개념이 없어 주문 품목에 자동 반영할 필요가 없다(참고용 표시 + 도면 보기만).
+export async function attachPendingPaperCalculationToTodo(
+  supabase: SupabaseServerClient,
+  todoId: string,
+  pendingRaw: string
+) {
+  const pending = parsePendingCalc(pendingRaw);
+  if (!pending) return;
+
+  await supabase.from("paper_calculations").insert({
+    todo_id: todoId,
+    ...pendingToRow(pending),
+    created_by: await getUserId(supabase),
+  });
+}
+
 export type PendingCalc = {
   paperW: number;
   paperH: number;

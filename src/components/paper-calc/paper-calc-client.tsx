@@ -9,7 +9,11 @@ import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
-import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
+import {
+  PENDING_PAPER_CALC_KEY,
+  PENDING_PAPER_CALC_PURCHASE_KEY,
+  PENDING_PAPER_CALC_TODO_KEY,
+} from "@/lib/paper-calc-pending-key";
 
 type OrderRow = { key: number; width: number; height: number; qty: number };
 
@@ -90,7 +94,7 @@ export function PaperCalcClient({
   salesOrderLabel?: string | null;
   purchaseOrderId?: string | null;
   purchaseOrderLabel?: string | null;
-  pendingFor?: "sales" | "purchase";
+  pendingFor?: "sales" | "purchase" | "todo";
   savedCalculations?: SavedCalculation[];
   // 신규 등록 폼 안의 모달로 띄워졌을 때만 넘어온다. 있으면 localStorage에
   // 임시 저장하는 대신 이 콜백으로 계산 결과를 바로 돌려준다.
@@ -198,8 +202,14 @@ export function PaperCalcClient({
   // 바로 등록으로 이어가는 흐름이 매끄러워진다.
   function stagePendingCalcAndGo() {
     if (!result) return;
+    const pendingKey =
+      pendingFor === "purchase"
+        ? PENDING_PAPER_CALC_PURCHASE_KEY
+        : pendingFor === "todo"
+          ? PENDING_PAPER_CALC_TODO_KEY
+          : PENDING_PAPER_CALC_KEY;
     localStorage.setItem(
-      pendingFor === "purchase" ? PENDING_PAPER_CALC_PURCHASE_KEY : PENDING_PAPER_CALC_KEY,
+      pendingKey,
       JSON.stringify({
         paperW,
         paperH,
@@ -212,7 +222,9 @@ export function PaperCalcClient({
         fulfilled: result.fulfilled,
       })
     );
-    router.push(pendingFor === "purchase" ? "/purchases/new" : "/sales/new");
+    const destination =
+      pendingFor === "purchase" ? "/purchases/new" : pendingFor === "todo" ? "/todos/new" : "/sales/new";
+    router.push(destination);
   }
 
   const layouts = useMemo(() => result?.layouts ?? [], [result]);
@@ -476,7 +488,11 @@ export function PaperCalcClient({
                     onClick={stagePendingCalcAndGo}
                     disabled={!result?.layouts.length}
                   >
-                    {pendingFor === "purchase" ? "새 매입 등록에 연결" : "새 판매 등록에 연결"}
+                    {pendingFor === "purchase"
+                      ? "새 매입 등록에 연결"
+                      : pendingFor === "todo"
+                        ? "새 할일 등록에 연결"
+                        : "새 판매 등록에 연결"}
                   </button>
                 ))}
             </div>

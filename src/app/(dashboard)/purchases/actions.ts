@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
+  attachCopiedPaperCalculationsToPurchase,
   attachPendingPaperCalculationToPurchase,
   overridePurchasePaperStockQuantity,
   revertPurchasePaperStockOverride,
@@ -134,6 +135,8 @@ export async function createPurchase(
   const memo = String(formData.get("memo") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
+  // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
+  const copiedPaperCalcs = String(formData.get("copiedPaperCalcs") ?? "") || null;
   // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
   // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
   const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
@@ -144,7 +147,9 @@ export async function createPurchase(
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };
   }
-  if (items.length === 0) {
+  // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
+  // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
+  if (items.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
 
@@ -183,6 +188,11 @@ export async function createPurchase(
 
   if (pendingPaperCalc) {
     await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
+  }
+
+  // 할일 가져오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
+  if (copiedPaperCalcs) {
+    await attachCopiedPaperCalculationsToPurchase(supabase, purchaseOrderId, copiedPaperCalcs);
   }
 
   // TG0 자동 반영 줄이 위에서 이미 만들어진 뒤에만 오버라이드를 적용할 수

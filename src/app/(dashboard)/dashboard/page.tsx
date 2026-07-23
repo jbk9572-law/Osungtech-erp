@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
-import { countTodoMemoLines } from "@/lib/todo-memo";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 
@@ -298,7 +297,7 @@ export default async function DashboardPage({
           ))}
           {dueSoonTodos.slice(0, 10).map((t) => {
             const overdue = !!t.due_date && t.due_date < todayStr;
-            const itemCount = countTodoMemoLines(t.memo);
+            const itemCount = t.itemCount;
             return (
               <Link
                 key={`d-${t.id}`}
