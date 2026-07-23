@@ -915,6 +915,8 @@ export type Database = {
           items: Json;
           todo_type: string;
           ship_date: string | null;
+          supplier_id: string | null;
+          customer_id: string | null;
           purchase_done_at: string | null;
           sale_done_at: string | null;
           due_date: string | null;
@@ -931,6 +933,8 @@ export type Database = {
           items?: Json;
           todo_type?: string;
           ship_date?: string | null;
+          supplier_id?: string | null;
+          customer_id?: string | null;
           purchase_done_at?: string | null;
           sale_done_at?: string | null;
           due_date?: string | null;
@@ -947,6 +951,8 @@ export type Database = {
           items?: Json;
           todo_type?: string;
           ship_date?: string | null;
+          supplier_id?: string | null;
+          customer_id?: string | null;
           purchase_done_at?: string | null;
           sale_done_at?: string | null;
           due_date?: string | null;
@@ -962,6 +968,20 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "todos_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "todos_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
             referencedColumns: ["id"];
           },
         ];

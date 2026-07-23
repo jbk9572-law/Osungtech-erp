@@ -268,10 +268,16 @@ export function NewPurchaseForm({
 
   async function importTodoItems(todo: OpenTodoSummary) {
     if (!supplierId) {
-      const matched = suppliers.find(
-        (s) => s.name.trim().toLowerCase() === todo.title.trim().toLowerCase()
-      );
-      if (matched) setSupplierId(matched.id);
+      // 할일에 매입처를 골라뒀으면 그걸 그대로 확정하고, 없으면(예전 데이터)
+      // 제목이 공급업체명과 일치할 때만 추측으로 채운다.
+      const fromTodo = todo.supplier_id && suppliers.some((s) => s.id === todo.supplier_id)
+        ? todo.supplier_id
+        : null;
+      const matched =
+        fromTodo ??
+        suppliers.find((s) => s.name.trim().toLowerCase() === todo.title.trim().toLowerCase())?.id ??
+        null;
+      if (matched) setSupplierId(matched);
     }
 
     if (todo.items.length > 0) {
@@ -501,6 +507,7 @@ export function NewPurchaseForm({
                           </span>
                         </div>
                         <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                          {todo.supplier_name ? `${todo.supplier_name} · ` : ""}
                           {todo.due_date ? `마감 ${todo.due_date} · ` : ""}품목 {itemCount}건
                         </div>
                       </div>

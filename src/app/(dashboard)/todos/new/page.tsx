@@ -5,10 +5,11 @@ import { createTodo } from "@/app/(dashboard)/todos/actions";
 
 export default async function NewTodoPage() {
   const supabase = await createClient();
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, sku, name, spec, unit, base_package_qty")
-    .order("name");
+  const [{ data: products }, { data: suppliers }, { data: customers }] = await Promise.all([
+    supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
+    supabase.from("suppliers").select("id, name").order("name"),
+    supabase.from("customers").select("id, name").order("name"),
+  ]);
 
   return (
     <div>
@@ -25,7 +26,13 @@ export default async function NewTodoPage() {
           <span className="erp-detail-tab active">할 일 등록</span>
         </div>
         <div className="erp-detail-body">
-          <TodoForm action={createTodo} submitLabel="등록" products={products ?? []} />
+          <TodoForm
+            action={createTodo}
+            submitLabel="등록"
+            products={products ?? []}
+            suppliers={suppliers ?? []}
+            customers={customers ?? []}
+          />
         </div>
       </div>
     </div>

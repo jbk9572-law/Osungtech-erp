@@ -15,21 +15,24 @@ export default async function TodoDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: row, error }, { data: products }, { data: calcs }] = await Promise.all([
-    supabase
-      .from("todos")
-      .select(
-        "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name)"
-      )
-      .eq("id", id)
-      .maybeSingle(),
-    supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
-    supabase
-      .from("paper_calculations")
-      .select("id, input_items, total_sheet")
-      .eq("todo_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: row, error }, { data: products }, { data: calcs }, { data: suppliers }, { data: customers }] =
+    await Promise.all([
+      supabase
+        .from("todos")
+        .select(
+          "id, title, memo, items, todo_type, ship_date, supplier_id, customer_id, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)"
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
+      supabase
+        .from("paper_calculations")
+        .select("id, input_items, total_sheet")
+        .eq("todo_id", id)
+        .order("created_at", { ascending: false }),
+      supabase.from("suppliers").select("id, name").order("name"),
+      supabase.from("customers").select("id, name").order("name"),
+    ]);
 
   if (error) {
     return (
@@ -74,6 +77,8 @@ export default async function TodoDetailPage({
           <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
             <span>유형: {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</span>
+            {row.suppliers?.name && <span>매입처: {row.suppliers.name}</span>}
+            {row.customers?.name && <span>출고처: {row.customers.name}</span>}
             <span>
               상태:{" "}
               {row.done
@@ -139,8 +144,12 @@ export default async function TodoDetailPage({
               items,
               todoType: row.todo_type,
               shipDate: row.ship_date,
+              supplierId: row.supplier_id,
+              customerId: row.customer_id,
             }}
             products={products ?? []}
+            suppliers={suppliers ?? []}
+            customers={customers ?? []}
           />
         </div>
       </div>
