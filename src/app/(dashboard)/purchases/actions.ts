@@ -4,9 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
+  attachCopiedPaperCalculations,
   attachCopiedPaperCalculationsToPurchase,
+  attachPendingPaperCalculation,
   attachPendingPaperCalculationToPurchase,
   overridePurchasePaperStockQuantity,
+  overrideSalesPaperStockQuantity,
   revertPurchasePaperStockOverride,
   type PendingCalc,
 } from "@/lib/paper-calc-sync";
@@ -21,6 +24,13 @@ type PurchaseItemInput = {
   remark?: string | null;
 };
 
+type SaleItemInput = {
+  productId: string;
+  spec?: string | null;
+  quantity: number;
+  remark?: string | null;
+};
+
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
@@ -30,6 +40,27 @@ function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
   } catch {
     return null;
   }
+}
+
+function parseSaleItems(itemsRaw: string): SaleItemInput[] | null {
+  try {
+    const items = JSON.parse(itemsRaw) as SaleItemInput[];
+    return items.filter((item) => item.productId && item.quantity > 0);
+  } catch {
+    return null;
+  }
+}
+
+// 품목별 수량 합계 맵 — 출고 수량이 매입 수량을 넘는지 미리(DB까지 가기 전에)
+// 확인해서 더 친절한 오류 메시지를 보여주기 위한 용도. 실제 안전장치는
+// create_purchase_and_sale_with_items 함수 안의 검증이다(여기서는 못 걸러도
+// 거기서 막힌다).
+function sumQuantityByProduct(items: { productId: string; quantity: number }[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const item of items) {
+    map.set(item.productId, (map.get(item.productId) ?? 0) + item.quantity);
+  }
+  return map;
 }
 
 export type TodayPurchaseItem = {
@@ -144,6 +175,14 @@ export async function createPurchase(
   // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
   // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
   const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
+  // 당일 입고 후 바로 출고되는 건을 위해, 매입 등록과 동시에 매출 전표까지
+  // 한 번에 만든다. 출고 수량은 매입 수량과 별도로 받는다 — 매입한 수량
+  // 전부가 아니라 일부만 당일 출고되고 나머지는 재고로 남는 경우가 있기
+  // 때문이다(품목별로 다를 수 있음).
+  const alsoCreateSale = String(formData.get("alsoCreateSale") ?? "") === "1";
+  const saleCustomerId = String(formData.get("sale_customer_id") ?? "").trim();
+  const saleDate = String(formData.get("sale_date") ?? "").trim() || purchaseDate;
+  const saleItems = alsoCreateSale ? parseSaleItems(String(formData.get("sale_items") ?? "[]")) : [];
 
   if (!supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
@@ -156,32 +195,112 @@ export async function createPurchase(
   if (items.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
+  if (alsoCreateSale && !saleCustomerId) {
+    return { error: "매출도 같이 등록하려면 출고처(거래처)를 선택해주세요." };
+  }
+  if (alsoCreateSale && !saleItems) {
+    return { error: "출고 품목 정보를 처리하지 못했습니다." };
+  }
+  if (alsoCreateSale && saleItems && saleItems.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
+    return { error: "출고할 품목을 1개 이상 선택하고 수량을 입력해주세요." };
+  }
+  // 출고 수량이 매입 수량보다 많은 품목이 있으면 실제로 없는 재고를 출고
+  // 처리하게 되므로 미리 막는다 — 최종 안전장치는
+  // create_purchase_and_sale_with_items 함수 안의 검증이고, 여기서는 더
+  // 친절한 메시지를 먼저 보여주기 위한 것이다.
+  if (alsoCreateSale && saleItems && saleItems.length > 0) {
+    const purchaseQtyByProduct = sumQuantityByProduct(items);
+    for (const [productId, saleQty] of sumQuantityByProduct(saleItems)) {
+      if (saleQty > (purchaseQtyByProduct.get(productId) ?? 0)) {
+        return { error: "출고 수량이 매입 수량보다 많은 품목이 있습니다. 수량을 확인해주세요." };
+      }
+    }
+  }
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
-  // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해
-  // 되돌렸는데, 그 되돌리기 자체가 실패하면 고아 데이터가 남을 수 있었다.
-  const { data: purchaseOrderId, error } = await supabase.rpc("create_purchase_with_items", {
-    p_supplier_id: supplierId,
-    p_warehouse_id: warehouseId,
-    p_purchase_date: purchaseDate,
-    p_memo: memo,
-    p_created_by: user?.id ?? null,
-    p_items: items.map((item) => ({
-      productId: item.productId,
-      spec: item.spec || null,
-      quantity: item.quantity,
-      unitCost: item.unitCost,
-      remark: item.remark || null,
-    })),
-  });
+  let purchaseOrderId: string;
+  let salesOrderId: string | null = null;
 
-  if (error || !purchaseOrderId) {
-    return { error: `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+  if (alsoCreateSale && saleItems) {
+    // 매입+매출을 함수 하나로 묶어서 원자적으로 처리한다 — 따로 호출하면
+    // 매입이 커밋된 뒤 매출 쪽만 실패해서 매입만 영구히 남는 불일치가
+    // 생길 수 있다. 단가는 출고처의 거래처 단가(customer_product_prices)를
+    // 우선 쓰고, 없으면 품목 기본 판매단가로 채운다.
+    const saleProductIds = saleItems.map((item) => item.productId);
+    const [{ data: customerPrices }, { data: productRows }] = await Promise.all([
+      saleProductIds.length
+        ? supabase
+            .from("customer_product_prices")
+            .select("product_id, unit_price")
+            .eq("customer_id", saleCustomerId)
+            .in("product_id", saleProductIds)
+        : Promise.resolve({ data: [] as { product_id: string; unit_price: number }[] }),
+      saleProductIds.length
+        ? supabase.from("products").select("id, price").in("id", saleProductIds)
+        : Promise.resolve({ data: [] as { id: string; price: number }[] }),
+    ]);
+    const priceByProduct = new Map((customerPrices ?? []).map((p) => [p.product_id, Number(p.unit_price)]));
+    const defaultPriceByProduct = new Map((productRows ?? []).map((p) => [p.id, Number(p.price)]));
+
+    const { data, error } = await supabase
+      .rpc("create_purchase_and_sale_with_items", {
+        p_supplier_id: supplierId,
+        p_customer_id: saleCustomerId,
+        p_warehouse_id: warehouseId,
+        p_purchase_date: purchaseDate,
+        p_sale_date: saleDate,
+        p_purchase_memo: memo,
+        p_sale_memo: memo,
+        p_created_by: user?.id ?? null,
+        p_purchase_items: items.map((item) => ({
+          productId: item.productId,
+          spec: item.spec || null,
+          quantity: item.quantity,
+          unitCost: item.unitCost,
+          remark: item.remark || null,
+        })),
+        p_sale_items: saleItems.map((item) => ({
+          productId: item.productId,
+          spec: item.spec || null,
+          quantity: item.quantity,
+          unitPrice: priceByProduct.get(item.productId) ?? defaultPriceByProduct.get(item.productId) ?? 0,
+          remark: item.remark || null,
+        })),
+      })
+      .single();
+
+    if (error || !data) {
+      return { error: `매입+매출 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+    }
+    purchaseOrderId = data.purchase_order_id;
+    salesOrderId = data.sale_order_id;
+  } else {
+    // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
+    // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해
+    // 되돌렸는데, 그 되돌리기 자체가 실패하면 고아 데이터가 남을 수 있었다.
+    const { data: newPurchaseId, error } = await supabase.rpc("create_purchase_with_items", {
+      p_supplier_id: supplierId,
+      p_warehouse_id: warehouseId,
+      p_purchase_date: purchaseDate,
+      p_memo: memo,
+      p_created_by: user?.id ?? null,
+      p_items: items.map((item) => ({
+        productId: item.productId,
+        spec: item.spec || null,
+        quantity: item.quantity,
+        unitCost: item.unitCost,
+        remark: item.remark || null,
+      })),
+    });
+
+    if (error || !newPurchaseId) {
+      return { error: `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+    }
+    purchaseOrderId = newPurchaseId;
   }
 
   await Promise.all(
@@ -206,8 +325,25 @@ export async function createPurchase(
     await overridePurchasePaperStockQuantity(supabase, purchaseOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
   }
 
+  // 매출도 같이 만들어졌으면(원자적으로 이미 성공한 상태) 모조지 계산도
+  // 매출 쪽에 똑같이 복사해서 TG0 자동 반영/도면까지 그대로 이어준다.
+  if (salesOrderId) {
+    if (pendingPaperCalc) {
+      await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
+    }
+    if (copiedPaperCalcs) {
+      await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
+    }
+    if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
+      await overrideSalesPaperStockQuantity(supabase, salesOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
+    }
+    revalidatePath("/sales");
+  }
+
   // 할일 가져오기로 채웠던 할일들의 매입 방향을 완료 처리한다. 등록이 실제로
-  // 성공한 이 시점에만 찍는다 — 가져오기만 하고 등록을 취소하면 남아있어야 한다.
+  // 성공한 이 시점에만 찍는다 — 가져오기만 하고 등록을 취소하면 남아있어야
+  // 한다. 매출까지 같이 등록됐으면(원자적으로 이미 확정) 매출 방향도 같이
+  // 완료 처리한다.
   if (importedTodoIdsRaw) {
     try {
       const todoIds = JSON.parse(importedTodoIdsRaw);
@@ -215,6 +351,9 @@ export async function createPurchase(
         for (const todoId of todoIds) {
           if (typeof todoId === "string" && todoId) {
             await markTodoSideDone(supabase, todoId, "purchase");
+            if (salesOrderId) {
+              await markTodoSideDone(supabase, todoId, "sale");
+            }
           }
         }
       }
@@ -228,6 +367,7 @@ export async function createPurchase(
   revalidatePath("/inventory");
   revalidatePath("/products");
   revalidatePath("/dashboard");
+
   redirect(`/purchases/${purchaseOrderId}`);
 }
 
