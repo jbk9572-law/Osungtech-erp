@@ -1,12 +1,12 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { createSale } from "@/app/(dashboard)/sales/actions";
 import {
-  createSale,
   getPaperCalculationsForPurchaseOrder,
   getPurchaseItemsForDate,
   type TodayPurchaseItem,
-} from "@/app/(dashboard)/sales/actions";
+} from "@/app/(dashboard)/purchases/actions";
 import type { PendingCalc } from "@/lib/paper-calc-sync";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
