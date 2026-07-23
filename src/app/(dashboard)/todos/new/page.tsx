@@ -1,8 +1,15 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { TodoForm } from "@/components/todo-form";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
 
-export default function NewTodoPage() {
+export default async function NewTodoPage() {
+  const supabase = await createClient();
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, sku, name, spec, unit, base_package_qty")
+    .order("name");
+
   return (
     <div>
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">할일관리 &gt; 글쓰기</h1>
@@ -18,7 +25,7 @@ export default function NewTodoPage() {
           <span className="erp-detail-tab active">할 일 등록</span>
         </div>
         <div className="erp-detail-body">
-          <TodoForm action={createTodo} submitLabel="등록" />
+          <TodoForm action={createTodo} submitLabel="등록" products={products ?? []} />
         </div>
       </div>
     </div>

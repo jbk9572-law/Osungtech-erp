@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { TodoCheckbox } from "@/components/todo-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { countTodoMemoLines } from "@/lib/todo-memo";
 
 export default async function TodosPage() {
   const supabase = await createClient();
@@ -48,13 +49,19 @@ export default async function TodosPage() {
           <tbody>
             {(rows ?? []).map((row) => {
               const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
+              const itemCount = countTodoMemoLines(row.memo);
               return (
                 <ClickableRow key={row.id} href={`/todos/${row.id}`}>
                   <td style={{ textAlign: "center" }}>
                     <TodoCheckbox id={row.id} done={row.done} />
                   </td>
                   <td style={row.done ? { textDecoration: "line-through", color: "var(--erp-text-muted)" } : undefined}>
-                    {row.title}
+                    <span>{row.title}</span>
+                    {itemCount > 0 && (
+                      <span className="erp-badge erp-badge-muted" style={{ marginLeft: 8 }}>
+                        품목 {itemCount}건
+                      </span>
+                    )}
                   </td>
                   <td>{row.profiles?.full_name ?? "-"}</td>
                   <td style={overdue ? { color: "var(--erp-danger)", fontWeight: 600 } : undefined}>
