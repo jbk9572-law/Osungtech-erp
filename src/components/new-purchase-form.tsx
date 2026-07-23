@@ -24,6 +24,7 @@ import {
   getPaperCalculationsForTodo,
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
+import { todoTypeLabel } from "@/lib/todo-flow";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -252,11 +253,14 @@ export function NewPurchaseForm({
   const [openTodos, setOpenTodos] = useState<OpenTodoSummary[] | null>(null);
   const [loadingTodos, setLoadingTodos] = useState(false);
   const [importingTodoId, setImportingTodoId] = useState<string | null>(null);
+  // 가져온 할일 id들 — 등록이 실제로 성공하면 서버 액션이 이 id들의 매입
+  // 방향을 완료 처리한다(가져오기만 하고 등록을 안 하면 아무 일도 없음).
+  const [importedTodoIds, setImportedTodoIds] = useState<string[]>([]);
 
   async function loadOpenTodos() {
     setLoadingTodos(true);
     try {
-      setOpenTodos(await getOpenTodos());
+      setOpenTodos(await getOpenTodos("purchase"));
     } finally {
       setLoadingTodos(false);
     }
@@ -301,6 +305,7 @@ export function NewPurchaseForm({
       setImportingTodoId(null);
     }
 
+    setImportedTodoIds((prev) => (prev.includes(todo.id) ? prev : [...prev, todo.id]));
     setOpenTodos(null);
   }
 
@@ -342,6 +347,9 @@ export function NewPurchaseForm({
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
       {copiedPaperCalcs.length > 0 && (
         <input type="hidden" name="copiedPaperCalcs" value={JSON.stringify(copiedPaperCalcs)} />
+      )}
+      {importedTodoIds.length > 0 && (
+        <input type="hidden" name="importedTodoIds" value={JSON.stringify(importedTodoIds)} />
       )}
       {tg0IsOverridden && (
         <input type="hidden" name="tg0OverrideQuantity" value={tg0OverrideQuantity ?? ""} />
@@ -486,7 +494,12 @@ export function NewPurchaseForm({
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600 }}>{todo.title}</div>
+                        <div style={{ fontWeight: 600 }}>
+                          {todo.title}
+                          <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                            {todoTypeLabel(todo.todo_type, todo.ship_date, todo.due_date)}
+                          </span>
+                        </div>
                         <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
                           {todo.due_date ? `마감 ${todo.due_date} · ` : ""}품목 {itemCount}건
                         </div>

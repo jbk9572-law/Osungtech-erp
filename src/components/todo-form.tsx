@@ -8,6 +8,7 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_TODO_KEY } from "@/lib/paper-calc-pending-key";
+import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 
 type Product = {
   id: string;
@@ -42,6 +43,8 @@ export function TodoForm({
     memo: string;
     dueDate: string | null;
     items: TodoInitialItem[];
+    todoType?: string;
+    shipDate?: string | null;
   };
   products?: Product[];
 }) {
@@ -50,6 +53,7 @@ export function TodoForm({
   useKeyShortcut("F7", submitRef);
 
   const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [todoType, setTodoType] = useState<TodoType>(parseTodoType(initial?.todoType));
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -153,6 +157,41 @@ export function TodoForm({
           className="erp-input md:col-span-2"
         />
         <input name="due_date" type="date" defaultValue={initial?.dueDate ?? ""} className="erp-input" />
+      </div>
+
+      <div className="erp-search">
+        <div className="erp-field">
+          <label>유형</label>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, height: 30 }}>
+            {(
+              [
+                { value: "purchase", label: "매입" },
+                { value: "sale", label: "매출 (재고분 출고)" },
+                { value: "both", label: "매입+출고" },
+              ] as { value: TodoType; label: string }[]
+            ).map((opt) => (
+              <label
+                key={opt.value}
+                style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer" }}
+              >
+                <input
+                  type="radio"
+                  name="todo_type"
+                  value={opt.value}
+                  checked={todoType === opt.value}
+                  onChange={() => setTodoType(opt.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+        {todoType === "both" && (
+          <div className="erp-field">
+            <label>출고예정일 (비우면 마감일 당일출고)</label>
+            <input name="ship_date" type="date" defaultValue={initial?.shipDate ?? ""} className="erp-input" />
+          </div>
+        )}
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

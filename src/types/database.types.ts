@@ -913,6 +913,10 @@ export type Database = {
           title: string;
           memo: string;
           items: Json;
+          todo_type: string;
+          ship_date: string | null;
+          purchase_done_at: string | null;
+          sale_done_at: string | null;
           due_date: string | null;
           done: boolean;
           done_at: string | null;
@@ -925,6 +929,10 @@ export type Database = {
           title: string;
           memo?: string;
           items?: Json;
+          todo_type?: string;
+          ship_date?: string | null;
+          purchase_done_at?: string | null;
+          sale_done_at?: string | null;
           due_date?: string | null;
           done?: boolean;
           done_at?: string | null;
@@ -937,6 +945,10 @@ export type Database = {
           title?: string;
           memo?: string;
           items?: Json;
+          todo_type?: string;
+          ship_date?: string | null;
+          purchase_done_at?: string | null;
+          sale_done_at?: string | null;
           due_date?: string | null;
           done?: boolean;
           done_at?: string | null;

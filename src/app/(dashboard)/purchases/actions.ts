@@ -10,6 +10,7 @@ import {
   revertPurchasePaperStockOverride,
   type PendingCalc,
 } from "@/lib/paper-calc-sync";
+import { markTodoSideDone } from "@/lib/todo-flow";
 import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
@@ -137,6 +138,9 @@ export async function createPurchase(
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
   const copiedPaperCalcs = String(formData.get("copiedPaperCalcs") ?? "") || null;
+  // 할일 가져오기로 채운 할일 id들 — 등록이 실제로 성공하면 해당 할일의
+  // 매입 방향을 완료 처리한다(유형에 따라 할일 자체가 완료될 수도 있음).
+  const importedTodoIdsRaw = String(formData.get("importedTodoIds") ?? "");
   // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
   // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
   const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
@@ -200,6 +204,24 @@ export async function createPurchase(
   const tg0OverrideQuantity = Number(tg0OverrideRaw);
   if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
     await overridePurchasePaperStockQuantity(supabase, purchaseOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
+  }
+
+  // 할일 가져오기로 채웠던 할일들의 매입 방향을 완료 처리한다. 등록이 실제로
+  // 성공한 이 시점에만 찍는다 — 가져오기만 하고 등록을 취소하면 남아있어야 한다.
+  if (importedTodoIdsRaw) {
+    try {
+      const todoIds = JSON.parse(importedTodoIdsRaw);
+      if (Array.isArray(todoIds)) {
+        for (const todoId of todoIds) {
+          if (typeof todoId === "string" && todoId) {
+            await markTodoSideDone(supabase, todoId, "purchase");
+          }
+        }
+      }
+    } catch {
+      // 무시: 할일 완료 처리는 부가 동작이라 등록 자체를 막지 않는다.
+    }
+    revalidatePath("/todos");
   }
 
   revalidatePath("/purchases");
