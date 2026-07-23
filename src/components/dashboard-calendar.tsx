@@ -96,7 +96,8 @@ function buildPartnerBlocks(
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
-// 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만 담는다.
+// 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만
+// 담고, 단위(EA/KG 등)는 화면에만 보이고 복사 텍스트에는 숫자만 남긴다.
 function appendItemLines(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
@@ -107,18 +108,20 @@ function appendItemLines(
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
     lines.push(`- ${partner.partnerName}`);
-    for (const product of partner.products) {
+    partner.products.forEach((product, pi) => {
+      if (pi > 0) lines.push("");
       lines.push(`  · ${product.productName}`);
       for (const item of product.items) {
-        lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${item.unit}`);
+        lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}`);
         if (item.remark) lines.push(`      (비고: ${item.remark})`);
       }
       if (product.items.length > 1) {
-        const { quantity, unit } = productTotals(product.items);
-        lines.push(`    합계 - ${quantity.toLocaleString()}${unit}`);
+        const { quantity } = productTotals(product.items);
+        lines.push(`    합계 - ${quantity.toLocaleString()}`);
       }
-    }
+    });
     if (partner.paperCalc) {
+      if (partner.products.length > 0) lines.push("");
       lines.push(`  · ${paperStockProductName}`);
       for (const line of formatPaperCalcSizeLines(partner.paperCalc.sizes)) {
         lines.push(`    ${line}`);
