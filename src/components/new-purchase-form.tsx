@@ -46,6 +46,12 @@ type Row = {
   unitCost: number;
   manualPrice: boolean;
   remark: string;
+  // "매출도 같이 등록"을 켰을 때만 쓴다. 기본은 매입수량을 그대로 따라가지만
+  // (전량 당일출고 가정), 일부만 출고하고 나머지는 재고로 남기는 경우를 위해
+  // 독립적으로 고칠 수 있다 — 한 번 직접 고치면(manualSaleQuantity) 이후
+  // 매입수량이 바뀌어도 더 이상 따라가지 않는다.
+  saleQuantity: number;
+  manualSaleQuantity: boolean;
 };
 
 export type PurchaseInitial = {
@@ -70,6 +76,7 @@ export function NewPurchaseForm({
   action = createPurchase,
   initial,
   submitLabel = "매입 등록",
+  customers = [],
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -77,12 +84,19 @@ export function NewPurchaseForm({
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: PurchaseInitial;
   submitLabel?: string;
+  customers?: { id: string; name: string }[];
 }) {
   const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
   const [purchaseDate, setPurchaseDate] = useState(
     () => initial?.purchaseDate ?? new Date().toISOString().slice(0, 10)
   );
   const [memo, setMemo] = useState(initial?.memo ?? "");
+  // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
+  // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
+  // 출고처/출고일도 할일에 적어둔 값으로 채워진다.
+  const [alsoCreateSale, setAlsoCreateSale] = useState(false);
+  const [saleCustomerId, setSaleCustomerId] = useState("");
+  const [saleDate, setSaleDate] = useState("");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -94,6 +108,8 @@ export function NewPurchaseForm({
           unitCost: item.unitCost,
           manualPrice: false,
           remark: item.remark ?? "",
+          saleQuantity: item.quantity,
+          manualSaleQuantity: false,
         }))
       : [
           {
@@ -105,6 +121,8 @@ export function NewPurchaseForm({
             unitCost: 0,
             manualPrice: false,
             remark: "",
+            saleQuantity: 0,
+            manualSaleQuantity: false,
           },
         ]
   );
@@ -236,6 +254,8 @@ export function NewPurchaseForm({
         unitCost: 0,
         manualPrice: false,
         remark: "",
+        saleQuantity: 0,
+        manualSaleQuantity: false,
       },
     ]);
     setNextKey((k) => k + 1);
@@ -280,6 +300,18 @@ export function NewPurchaseForm({
       if (matched) setSupplierId(matched);
     }
 
+    // 매입+출고 유형이면 매출 동시 등록을 자동으로 켜고, 할일에 적어둔
+    // 출고처/출고예정일로 채운다.
+    if (todo.todo_type === "both") {
+      setAlsoCreateSale(true);
+      if (todo.customer_id && customers.some((c) => c.id === todo.customer_id)) {
+        setSaleCustomerId((prev) => prev || todo.customer_id!);
+      }
+      if (todo.ship_date) {
+        setSaleDate((prev) => prev || todo.ship_date!);
+      }
+    }
+
     if (todo.items.length > 0) {
       const newRows: Row[] = todo.items.map((item, i) => {
         const product = products.find((p) => p.id === item.productId);
@@ -292,6 +324,8 @@ export function NewPurchaseForm({
           unitCost: product ? Number(product.cost) : 0,
           manualPrice: false,
           remark: "",
+          saleQuantity: item.quantity,
+          manualSaleQuantity: false,
         };
       });
 
@@ -331,6 +365,20 @@ export function NewPurchaseForm({
       }))
   );
 
+  // "매출도 같이 등록"이 켜졌을 때만 의미가 있다 — 출고수량은 매입수량과
+  // 별도로 관리되므로(일부만 당일출고, 나머지는 재고) 별도의 품목 배열로
+  // 서버에 넘긴다.
+  const saleItemsJson = JSON.stringify(
+    rows
+      .filter((row) => row.productId && row.saleQuantity > 0)
+      .map((row) => ({
+        productId: row.productId,
+        spec: row.manualSpec ? row.spec : null,
+        quantity: row.saleQuantity,
+        remark: row.remark || null,
+      }))
+  );
+
   return (
     <form
       action={formAction}
@@ -356,6 +404,14 @@ export function NewPurchaseForm({
       )}
       {importedTodoIds.length > 0 && (
         <input type="hidden" name="importedTodoIds" value={JSON.stringify(importedTodoIds)} />
+      )}
+      {!initial?.id && alsoCreateSale && (
+        <>
+          <input type="hidden" name="alsoCreateSale" value="1" />
+          <input type="hidden" name="sale_customer_id" value={saleCustomerId} />
+          <input type="hidden" name="sale_date" value={saleDate || purchaseDate} />
+          <input type="hidden" name="sale_items" value={saleItemsJson} />
+        </>
       )}
       {tg0IsOverridden && (
         <input type="hidden" name="tg0OverrideQuantity" value={tg0OverrideQuantity ?? ""} />
@@ -416,6 +472,53 @@ export function NewPurchaseForm({
               style={{ width: "100%" }}
             />
           </div>
+          {!initial?.id && customers.length > 0 && (
+            <>
+              <div className="erp-field">
+                <label>매출 동시 등록</label>
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={alsoCreateSale}
+                    onChange={(e) => setAlsoCreateSale(e.target.checked)}
+                  />
+                  매출도 같이 등록 (당일출고)
+                </label>
+              </div>
+              {alsoCreateSale && (
+                <>
+                  <div className="erp-field">
+                    <label>출고처 (거래처)</label>
+                    <select
+                      value={saleCustomerId}
+                      onChange={(e) => setSaleCustomerId(e.target.value)}
+                      className="erp-select"
+                    >
+                      <option value="" disabled>
+                        출고처 선택
+                      </option>
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="erp-field">
+                    <label>출고일자</label>
+                    <input
+                      type="date"
+                      value={saleDate || purchaseDate}
+                      onChange={(e) => setSaleDate(e.target.value)}
+                      className="erp-input"
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -529,7 +632,10 @@ export function NewPurchaseForm({
         </div>
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 900 }}>
+          <table
+            className="erp-grid"
+            style={{ tableLayout: "fixed", width: "100%", minWidth: alsoCreateSale ? 1020 : 900 }}
+          >
             <thead>
               <tr>
                 <th style={{ width: "20%" }}>품목</th>
@@ -538,6 +644,11 @@ export function NewPurchaseForm({
                 <th className="num" style={{ width: "16%" }}>
                   수량
                 </th>
+                {alsoCreateSale && (
+                  <th className="num" style={{ width: "14%" }}>
+                    출고수량
+                  </th>
+                )}
                 <th className="num" style={{ width: "15%" }}>
                   매입단가
                 </th>
@@ -577,6 +688,11 @@ export function NewPurchaseForm({
                       className="erp-input w-full"
                     />
                   </td>
+                  {alsoCreateSale && (
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      -
+                    </td>
+                  )}
                   <td className="num">{pendingCalcUnitCost.toLocaleString()}</td>
                   <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
@@ -610,6 +726,11 @@ export function NewPurchaseForm({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
+                  {alsoCreateSale && (
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      -
+                    </td>
+                  )}
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
@@ -665,12 +786,33 @@ export function NewPurchaseForm({
                     <td className="num">
                       <QuantityWithBoxInput
                         quantity={row.quantity}
-                        onQuantityChange={(n) => updateRow(row.key, { quantity: n })}
+                        onQuantityChange={(n) =>
+                          updateRow(row.key, {
+                            quantity: n,
+                            ...(row.manualSaleQuantity ? {} : { saleQuantity: n }),
+                          })
+                        }
                         basePackageQty={product?.base_package_qty}
                         unit={product?.unit}
                         allowFormula
                       />
                     </td>
+                    {alsoCreateSale && (
+                      <td className="num">
+                        <QuantityWithBoxInput
+                          quantity={row.saleQuantity}
+                          onQuantityChange={(n) =>
+                            updateRow(row.key, { saleQuantity: n, manualSaleQuantity: true })
+                          }
+                          basePackageQty={product?.base_package_qty}
+                          unit={product?.unit}
+                          allowFormula
+                        />
+                        {row.saleQuantity > row.quantity && (
+                          <div style={{ color: "#dc3545", fontSize: 10.5 }}>매입수량 초과</div>
+                        )}
+                      </td>
+                    )}
                     <td className="num">
                       <NumberInput
                         placeholder="매입단가"
@@ -726,7 +868,7 @@ export function NewPurchaseForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "#eef1f5" }}>
-                <td colSpan={5} style={{ fontWeight: 700 }}>
+                <td colSpan={alsoCreateSale ? 6 : 5} style={{ fontWeight: 700 }}>
                   매입 합계
                 </td>
                 <td className="num text-sm font-bold" colSpan={3} style={{ color: "var(--erp-text)" }}>

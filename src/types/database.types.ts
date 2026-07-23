@@ -1127,6 +1127,21 @@ export type Database = {
         };
         Returns: string;
       };
+      create_purchase_and_sale_with_items: {
+        Args: {
+          p_supplier_id: string;
+          p_customer_id: string;
+          p_warehouse_id: string;
+          p_purchase_date: string;
+          p_sale_date: string;
+          p_purchase_memo: string | null;
+          p_sale_memo: string | null;
+          p_created_by: string | null;
+          p_purchase_items: Json;
+          p_sale_items: Json;
+        };
+        Returns: { purchase_order_id: string; sale_order_id: string }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -5,10 +5,11 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function NewPurchasePage() {
   const supabase = await createClient();
-  const [{ data: suppliers }, { data: products }, { data: warehouse }] = await Promise.all([
+  const [{ data: suppliers }, { data: products }, { data: warehouse }, { data: customers }] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
     supabase.from("products").select("id, sku, name, spec, unit, cost, base_package_qty").order("name"),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
+    supabase.from("customers").select("id, name").order("name"),
   ]);
 
   return (
@@ -29,6 +30,7 @@ export default async function NewPurchasePage() {
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? ""}
+        customers={customers ?? []}
       />
     </div>
   );
