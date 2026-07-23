@@ -92,8 +92,38 @@ export async function getPaperCalculationsForTodo(todoId: string): Promise<Pendi
   }));
 }
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+// 제목을 비워두면 거래처와 유형으로 자동 생성한다:
+// 매입 → "{공급업체} 매입", 매출 → "{거래처} 출고",
+// 매입+출고 → "{매입처} → {출고처}". 거래처도 없으면 유형 라벨만 쓴다.
+async function resolveAutoTitle(
+  supabase: SupabaseServerClient,
+  todoType: "purchase" | "sale" | "both",
+  supplierId: string,
+  customerId: string
+): Promise<string> {
+  const [supplierRes, customerRes] = await Promise.all([
+    supplierId
+      ? supabase.from("suppliers").select("name").eq("id", supplierId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    customerId
+      ? supabase.from("customers").select("name").eq("id", customerId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const supplierName = supplierRes.data?.name ?? null;
+  const customerName = customerRes.data?.name ?? null;
+
+  if (todoType === "purchase") return supplierName ? `${supplierName} 매입` : "매입 할 일";
+  if (todoType === "sale") return customerName ? `${customerName} 출고` : "출고 할 일";
+  if (supplierName && customerName) return `${supplierName} → ${customerName}`;
+  if (supplierName) return `${supplierName} 매입+출고`;
+  if (customerName) return `${customerName} 매입+출고`;
+  return "매입+출고 할 일";
+}
+
 export async function createTodo(_prevState: FormState, formData: FormData): Promise<FormState> {
-  const title = String(formData.get("title") ?? "").trim();
+  const titleRaw = String(formData.get("title") ?? "").trim();
   const memo = String(formData.get("memo") ?? "").trim();
   const dueDate = String(formData.get("due_date") ?? "").trim();
   const items = parseItems(String(formData.get("items") ?? "[]"));
@@ -103,11 +133,9 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
   const supplierId = String(formData.get("supplier_id") ?? "").trim();
   const customerId = String(formData.get("customer_id") ?? "").trim();
 
-  if (!title) {
-    return { error: "제목을 입력해주세요." };
-  }
-
   const supabase = await createClient();
+  const title = titleRaw || (await resolveAutoTitle(supabase, todoType, supplierId, customerId));
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -144,7 +172,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
 
 export async function updateTodo(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
-  const title = String(formData.get("title") ?? "").trim();
+  const titleRaw = String(formData.get("title") ?? "").trim();
   const memo = String(formData.get("memo") ?? "").trim();
   const dueDate = String(formData.get("due_date") ?? "").trim();
   const items = parseItems(String(formData.get("items") ?? "[]"));
@@ -153,11 +181,13 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   const supplierId = String(formData.get("supplier_id") ?? "").trim();
   const customerId = String(formData.get("customer_id") ?? "").trim();
 
-  if (!id || !title) {
-    return { error: "제목을 입력해주세요." };
+  if (!id) {
+    return { error: "잘못된 요청입니다." };
   }
 
   const supabase = await createClient();
+  const title = titleRaw || (await resolveAutoTitle(supabase, todoType, supplierId, customerId));
+
   const { error } = await supabase
     .from("todos")
     .update({
