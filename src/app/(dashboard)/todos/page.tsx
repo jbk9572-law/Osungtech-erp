@@ -10,7 +10,7 @@ export default async function TodosPage() {
   const { data: rows, error } = await supabase
     .from("todos")
     .select(
-      "id, title, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name)"
+      "id, title, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)"
     )
     .order("done", { ascending: true })
     .order("due_date", { ascending: true, nullsFirst: false })
@@ -45,6 +45,7 @@ export default async function TodosPage() {
               <th style={{ width: 40 }}>완료</th>
               <th>할 일</th>
               <th style={{ width: 120 }}>유형</th>
+              <th style={{ width: 160 }}>거래처</th>
               <th style={{ width: 140 }}>작성자</th>
               <th style={{ width: 120 }}>마감일</th>
             </tr>
@@ -76,6 +77,9 @@ export default async function TodosPage() {
                       </span>
                     )}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {[row.suppliers?.name, row.customers?.name].filter(Boolean).join(" → ") || "-"}
+                  </td>
                   <td>{row.profiles?.full_name ?? "-"}</td>
                   <td style={overdue ? { color: "var(--erp-danger)", fontWeight: 600 } : undefined}>
                     {row.due_date ?? "-"}
@@ -85,7 +89,7 @@ export default async function TodosPage() {
             })}
             {!rows?.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={6} className="erp-grid-empty">
                   등록된 할 일이 없습니다.
                 </td>
               </tr>

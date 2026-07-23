@@ -19,6 +19,8 @@ type Product = {
   base_package_qty?: number | null;
 };
 
+type Partner = { id: string; name: string };
+
 type Row = {
   key: number;
   productId: string;
@@ -34,6 +36,8 @@ export function TodoForm({
   submitLabel = "등록",
   initial,
   products = [],
+  suppliers = [],
+  customers = [],
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   submitLabel?: string;
@@ -45,8 +49,12 @@ export function TodoForm({
     items: TodoInitialItem[];
     todoType?: string;
     shipDate?: string | null;
+    supplierId?: string | null;
+    customerId?: string | null;
   };
   products?: Product[];
+  suppliers?: Partner[];
+  customers?: Partner[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -54,6 +62,8 @@ export function TodoForm({
 
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [todoType, setTodoType] = useState<TodoType>(parseTodoType(initial?.todoType));
+  const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
+  const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -186,6 +196,42 @@ export function TodoForm({
             ))}
           </div>
         </div>
+        {todoType !== "sale" && (
+          <div className="erp-field">
+            <label>{todoType === "both" ? "매입처 (공급업체)" : "공급업체"}</label>
+            <select
+              name="supplier_id"
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+              className="erp-select"
+            >
+              <option value="">선택 안 함</option>
+              {suppliers.map((supplier) => (
+                <option key={supplier.id} value={supplier.id}>
+                  {supplier.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {todoType !== "purchase" && (
+          <div className="erp-field">
+            <label>{todoType === "both" ? "출고처 (거래처)" : "거래처"}</label>
+            <select
+              name="customer_id"
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+              className="erp-select"
+            >
+              <option value="">선택 안 함</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {todoType === "both" && (
           <div className="erp-field">
             <label>출고예정일 (비우면 마감일 당일출고)</label>

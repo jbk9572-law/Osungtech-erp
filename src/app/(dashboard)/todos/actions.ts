@@ -18,6 +18,10 @@ export type OpenTodoSummary = {
   ship_date: string | null;
   purchase_done_at: string | null;
   sale_done_at: string | null;
+  supplier_id: string | null;
+  customer_id: string | null;
+  supplier_name: string | null;
+  customer_name: string | null;
 };
 
 function parseItems(itemsRaw: string): TodoItemInput[] {
@@ -38,7 +42,9 @@ export async function getOpenTodos(side: "purchase" | "sale"): Promise<OpenTodoS
   const supabase = await createClient();
   const { data } = await supabase
     .from("todos")
-    .select("id, title, due_date, items, todo_type, ship_date, purchase_done_at, sale_done_at")
+    .select(
+      "id, title, due_date, items, todo_type, ship_date, purchase_done_at, sale_done_at, supplier_id, customer_id, suppliers(name), customers(name)"
+    )
     .eq("done", false)
     .in("todo_type", side === "purchase" ? ["purchase", "both"] : ["sale", "both"])
     .is(side === "purchase" ? "purchase_done_at" : "sale_done_at", null)
@@ -54,6 +60,10 @@ export async function getOpenTodos(side: "purchase" | "sale"): Promise<OpenTodoS
     ship_date: row.ship_date,
     purchase_done_at: row.purchase_done_at,
     sale_done_at: row.sale_done_at,
+    supplier_id: row.supplier_id,
+    customer_id: row.customer_id,
+    supplier_name: row.suppliers?.name ?? null,
+    customer_name: row.customers?.name ?? null,
   }));
 }
 
@@ -90,6 +100,8 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   const todoType = parseTodoType(formData.get("todo_type"));
   const shipDateRaw = String(formData.get("ship_date") ?? "").trim();
+  const supplierId = String(formData.get("supplier_id") ?? "").trim();
+  const customerId = String(formData.get("customer_id") ?? "").trim();
 
   if (!title) {
     return { error: "제목을 입력해주세요." };
@@ -108,6 +120,9 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
       items,
       todo_type: todoType,
       ship_date: todoType === "both" && shipDateRaw ? shipDateRaw : null,
+      // 유형에 맞는 쪽만 저장한다: 매입/매입+출고 → 공급업체, 매출/매입+출고 → 거래처.
+      supplier_id: todoType !== "sale" && supplierId ? supplierId : null,
+      customer_id: todoType !== "purchase" && customerId ? customerId : null,
       due_date: dueDate || null,
       created_by: user?.id ?? null,
     })
@@ -135,6 +150,8 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const todoType = parseTodoType(formData.get("todo_type"));
   const shipDateRaw = String(formData.get("ship_date") ?? "").trim();
+  const supplierId = String(formData.get("supplier_id") ?? "").trim();
+  const customerId = String(formData.get("customer_id") ?? "").trim();
 
   if (!id || !title) {
     return { error: "제목을 입력해주세요." };
@@ -149,6 +166,8 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
       items,
       todo_type: todoType,
       ship_date: todoType === "both" && shipDateRaw ? shipDateRaw : null,
+      supplier_id: todoType !== "sale" && supplierId ? supplierId : null,
+      customer_id: todoType !== "purchase" && customerId ? customerId : null,
       due_date: dueDate || null,
     })
     .eq("id", id);

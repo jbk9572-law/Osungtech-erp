@@ -242,11 +242,22 @@ export function NewSaleForm({
   }
 
   async function importTodoItems(todo: OpenTodoSummary) {
+    // 할일에 출고처를 골라뒀으면 그걸 그대로 확정하고, 없으면(예전 데이터)
+    // 제목이 거래처명과 일치할 때만 추측으로 채운다. setState는 비동기라
+    // 아래 단가 계산에 새 거래처가 바로 반영되도록 값을 따로 들고 간다.
+    let effectiveCustomerId = customerId;
     if (!customerId) {
-      const matched = customers.find(
-        (c) => c.name.trim().toLowerCase() === todo.title.trim().toLowerCase()
-      );
-      if (matched) handleCustomerChange(matched.id);
+      const fromTodo = todo.customer_id && customers.some((c) => c.id === todo.customer_id)
+        ? todo.customer_id
+        : null;
+      const matched =
+        fromTodo ??
+        customers.find((c) => c.name.trim().toLowerCase() === todo.title.trim().toLowerCase())?.id ??
+        null;
+      if (matched) {
+        handleCustomerChange(matched);
+        effectiveCustomerId = matched;
+      }
     }
 
     if (todo.items.length > 0) {
@@ -258,7 +269,7 @@ export function NewSaleForm({
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
           quantity: item.quantity,
-          unitPrice: product ? resolvePrice(customerId, product.id) : 0,
+          unitPrice: product ? resolvePrice(effectiveCustomerId, product.id) : 0,
           manualPrice: false,
           remark: "",
         };
@@ -729,6 +740,7 @@ export function NewSaleForm({
                           )}
                         </div>
                         <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                          {todo.customer_name ? `${todo.customer_name} · ` : ""}
                           {todo.due_date ? `마감 ${todo.due_date} · ` : ""}품목 {itemCount}건
                         </div>
                       </div>
