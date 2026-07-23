@@ -25,6 +25,8 @@ import {
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
+import { getOpenTodos, type OpenTodoSummary } from "@/app/(dashboard)/todos/actions";
+import { countTodoMemoLines, parseTodoMemoLines } from "@/lib/todo-memo";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -212,6 +214,58 @@ export function NewSaleForm({
     );
     setNextKey((k) => k + 1);
     setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
+  }
+
+  // 우리 쪽 품목은 대부분 당일 입고 후 바로 당일 출고돼서, 출고 예정을
+  // 잊지 않으려고 미리 적어둔 할일이 사실상 이번 매출 품목 목록과 같다.
+  // 할일 메모 줄("품목명 (규격) : 수량")을 그대로 파싱해 품목 행으로
+  // 옮겨 담는다. 품목명이 일치하는 마스터 품목이 있으면 자동 매칭하고,
+  // 없으면 규격/수량만 채운 채로 남겨 사용자가 직접 품목을 골라 채우게 한다.
+  const [openTodos, setOpenTodos] = useState<OpenTodoSummary[] | null>(null);
+  const [loadingTodos, setLoadingTodos] = useState(false);
+
+  async function loadOpenTodos() {
+    setLoadingTodos(true);
+    try {
+      setOpenTodos(await getOpenTodos());
+    } finally {
+      setLoadingTodos(false);
+    }
+  }
+
+  function importTodoItems(todo: OpenTodoSummary) {
+    const lines = parseTodoMemoLines(todo.memo).filter((line) => line.qty);
+    if (!lines.length) return;
+
+    if (!customerId) {
+      const matched = customers.find(
+        (c) => c.name.trim().toLowerCase() === todo.title.trim().toLowerCase()
+      );
+      if (matched) handleCustomerChange(matched.id);
+    }
+
+    const newRows: Row[] = lines.map((line, i) => {
+      const product = products.find(
+        (p) => p.name.trim().toLowerCase() === line.name.trim().toLowerCase()
+      );
+      const quantity = Number(line.qty!.replace(/,/g, "")) || 0;
+      return {
+        key: nextKey + i,
+        productId: product?.id ?? "",
+        spec: line.spec ?? product?.spec ?? "",
+        manualSpec: Boolean(line.spec),
+        quantity,
+        unitPrice: product ? resolvePrice(customerId, product.id) : 0,
+        manualPrice: false,
+        remark: "",
+      };
+    });
+
+    setRows((prev) =>
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
+    );
+    setNextKey((k) => k + newRows.length);
+    setOpenTodos(null);
   }
 
   const priceMap = useMemo(() => {
@@ -468,12 +522,27 @@ export function NewSaleForm({
             />
             <button
               type="button"
-              onClick={loadPurchasesForDate}
+              onClick={() => {
+                setOpenTodos(null);
+                loadPurchasesForDate();
+              }}
               className="erp-btn"
               style={{ minWidth: 0 }}
               disabled={loadingPurchases}
             >
               {loadingPurchases ? "불러오는 중..." : "입고 불러오기"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPurchaseCandidates(null);
+                loadOpenTodos();
+              }}
+              className="erp-btn"
+              style={{ minWidth: 0 }}
+              disabled={loadingTodos}
+            >
+              {loadingTodos ? "불러오는 중..." : "할일 가져오기"}
             </button>
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
@@ -558,6 +627,86 @@ export function NewSaleForm({
                         disabled={added || isAdding}
                       >
                         {added ? "추가됨" : isAdding ? "추가 중..." : "추가"}
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {openTodos !== null && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 4,
+                zIndex: 20,
+                width: 420,
+                maxWidth: "90vw",
+                maxHeight: 320,
+                overflowY: "auto",
+                background: "#fff",
+                border: "1px solid var(--erp-border)",
+                borderRadius: 2,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "6px 10px",
+                  borderBottom: "1px solid var(--erp-border)",
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                <span>완료 안 한 할 일</span>
+                <button
+                  type="button"
+                  onClick={() => setOpenTodos(null)}
+                  className="erp-btn erp-btn-danger"
+                  style={{ minWidth: 0, height: 22, padding: "0 8px" }}
+                >
+                  닫기
+                </button>
+              </div>
+              {openTodos.length === 0 ? (
+                <p className="erp-home-empty" style={{ padding: 10 }}>
+                  완료 안 한 할 일이 없습니다.
+                </p>
+              ) : (
+                openTodos.map((todo) => {
+                  const itemCount = countTodoMemoLines(todo.memo);
+                  return (
+                    <div
+                      key={todo.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        padding: "6px 10px",
+                        borderBottom: "1px solid #f0f1f3",
+                        fontSize: 12,
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600 }}>{todo.title}</div>
+                        <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                          {todo.due_date ? `마감 ${todo.due_date} · ` : ""}품목 {itemCount}건
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => importTodoItems(todo)}
+                        className="erp-btn"
+                        style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
+                        disabled={itemCount === 0}
+                      >
+                        가져오기
                       </button>
                     </div>
                   );
