@@ -5,6 +5,23 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 
+export type OpenTodoSummary = { id: string; title: string; due_date: string | null; memo: string };
+
+// 매입 등록 화면에서 "할일 가져오기"로 쓴다. 미리 적어둔 할일(예: 내일
+// 입고 예정 품목 메모)을 실제 매입 등록 시점에 품목 줄로 그대로 옮겨 담을
+// 수 있게, 아직 완료 처리 안 한 할일 목록을 돌려준다.
+export async function getOpenTodos(): Promise<OpenTodoSummary[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("todos")
+    .select("id, title, due_date, memo")
+    .eq("done", false)
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .limit(50);
+
+  return data ?? [];
+}
+
 export async function createTodo(_prevState: FormState, formData: FormData): Promise<FormState> {
   const title = String(formData.get("title") ?? "").trim();
   const memo = String(formData.get("memo") ?? "").trim();
