@@ -16,6 +16,11 @@
   --erp-panel: #ffffff;
 
   height: 100vh;
+  /* 화면 어딘가(뱃지·긴 텍스트 등)가 뷰포트보다 살짝 넓어져도, 그
+     때문에 화면 전체가 좌우로 밀려서 다른 구역까지 잘려 보이는 걸
+     막는 안전장치. 모바일에서 특정 요소를 못 찾아도 최소한 전체
+     레이아웃이 깨지는 것만은 방지한다. */
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   background: var(--erp-bg);
@@ -294,6 +299,7 @@
   flex: 1;
   display: flex;
   min-height: 0;
+  min-width: 0;
 }
 
 /* ── 3. Left Tree Menu ─────────────────────────────────────── */
