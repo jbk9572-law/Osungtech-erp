@@ -74,7 +74,13 @@ export async function getNetlifyUsage(): Promise<NetlifyUsageResult> {
       period_end_date?: unknown;
     };
     if (typeof data.used !== "number" || typeof data.included !== "number") {
-      return { usage: null, error: "bandwidth 응답 형식이 예상과 다릅니다." };
+      // 실제 응답 모양을 넷리파이 로그 없이도 바로 알 수 있도록, 받은
+      // 원문을 그대로 에러 메시지에 담아 사이드바에 보여준다.
+      const preview = JSON.stringify(data).slice(0, 300);
+      return {
+        usage: null,
+        error: `bandwidth 응답 형식이 예상과 다릅니다. 받은 값: ${preview}`,
+      };
     }
 
     return {
