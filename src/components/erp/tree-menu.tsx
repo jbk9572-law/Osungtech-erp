@@ -55,14 +55,25 @@ function formatMB(bytes: number) {
   });
 }
 
-type UsageRow = {
-  label: string;
-  usedBytes: number;
-  limitBytes: number;
-  note: string;
-};
+type UsageRow =
+  | { kind: "bar"; label: string; usedBytes: number; limitBytes: number; note: string }
+  | { kind: "simple"; label: string; usedBytes: number; note: string };
 
-function UsageBar({ label, usedBytes, limitBytes, note }: UsageRow) {
+function UsageBar(row: UsageRow) {
+  if (row.kind === "simple") {
+    return (
+      <div className="erp-tree-usage-row">
+        <div className="erp-tree-usage-label">
+          <span>{row.label}</span>
+        </div>
+        <div className="erp-tree-usage-sub">
+          {formatMB(row.usedBytes)}MB ({row.note})
+        </div>
+      </div>
+    );
+  }
+
+  const { label, usedBytes, limitBytes, note } = row;
   const percent = Math.min(100, Math.round((usedBytes / limitBytes) * 100));
   const level =
     percent >= 90 ? "danger" : percent >= 70 ? "warning" : "success";
@@ -110,6 +121,7 @@ function UsageWidget({
   const rows: UsageRow[] = [];
   if (dbSizeBytes != null) {
     rows.push({
+      kind: "bar",
       label: "DB 용량",
       usedBytes: dbSizeBytes,
       limitBytes: FREE_TIER_DB_LIMIT_BYTES,
@@ -118,6 +130,7 @@ function UsageWidget({
   }
   if (storageSizeBytes != null) {
     rows.push({
+      kind: "bar",
       label: "파일저장",
       usedBytes: storageSizeBytes,
       limitBytes: FREE_TIER_STORAGE_LIMIT_BYTES,
@@ -126,6 +139,7 @@ function UsageWidget({
   }
   if (vpsDisk != null) {
     rows.push({
+      kind: "bar",
       label: "서버 디스크",
       usedBytes: vpsDisk.usedBytes,
       limitBytes: vpsDisk.totalBytes,
@@ -134,13 +148,25 @@ function UsageWidget({
   }
   // 넷리파이 배포본에는 실제 서버 디스크가 없어서, 대신 넷리파이 계정의
   // 대역폭(bandwidth) 사용량을 보여준다(NETLIFY_API_TOKEN 설정 시에만).
+  // 2025년 9월 이후 신규 계정은 크레딧제라 고정 한도(included)가 없어서
+  // (API가 null로 내려줌) 이 경우엔 퍼센트 막대 없이 사용량만 보여준다.
   if (netlifyUsage.usage != null) {
-    rows.push({
-      label: "넷리파이 대역폭",
-      usedBytes: netlifyUsage.usage.usedBytes,
-      limitBytes: netlifyUsage.usage.includedBytes,
-      note: "무료플랜",
-    });
+    if (netlifyUsage.usage.includedBytes != null) {
+      rows.push({
+        kind: "bar",
+        label: "넷리파이 대역폭",
+        usedBytes: netlifyUsage.usage.usedBytes,
+        limitBytes: netlifyUsage.usage.includedBytes,
+        note: "무료플랜",
+      });
+    } else {
+      rows.push({
+        kind: "simple",
+        label: "넷리파이 대역폭",
+        usedBytes: netlifyUsage.usage.usedBytes,
+        note: "크레딧제 요금제 - 고정 한도 없음",
+      });
+    }
   }
 
   if (!rows.length && !netlifyUsage.error) return null;
