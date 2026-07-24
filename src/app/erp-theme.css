@@ -850,6 +850,16 @@
   align-items: start;
 }
 
+/* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
+   최소 폭(min-width: auto)을 가져서, 모바일 1열 레이아웃에서 부모 grid
+   칸 너비를 무시하고 넘쳐버릴 수 있다(실제로 "최근 메모"의 긴 한 줄
+   메모 때문에 발생 확인됨). 자식들과 그 안의 모든 요소에 min-width: 0을
+   줘서 항상 grid 칸 너비에 맞게 줄어들 수 있게 한다. */
+.erp-home,
+.erp-home * {
+  min-width: 0;
+}
+
 @media (max-width: 1100px) {
   .erp-home {
     grid-template-columns: 1fr;
