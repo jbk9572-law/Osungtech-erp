@@ -34,14 +34,14 @@ export function QuantityWithBoxInput({
           className="mt-1 flex items-center justify-end gap-1 text-[10.5px]"
           style={{ color: "var(--erp-text-muted)" }}
         >
-          <span>박스</span>
+          <span style={{ flexShrink: 0 }}>박스</span>
           <NumberInput
             placeholder="박스"
             value={quantity > 0 ? quantity / basePackageQty : 0}
             onChange={(box) => onQuantityChange(box * basePackageQty)}
-            className="erp-input"
+            className="erp-input w-11 shrink-0"
           />
-          <span>
+          <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
             × {basePackageQty.toLocaleString()}
             {unit ?? ""}
           </span>
