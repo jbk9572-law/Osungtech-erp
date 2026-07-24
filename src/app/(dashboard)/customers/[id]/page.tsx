@@ -26,13 +26,13 @@ export default async function CustomerDetailPage({
     supabase.from("customers").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("customer_product_prices")
-      .select("*, products(sku, name, unit)")
+      .select("*, products(sku, name, unit, spec)")
       .eq("customer_id", id)
       .order("updated_at", { ascending: false }),
     supabase.from("products").select("id, sku, name, spec").order("name"),
     supabase
       .from("price_change_schedules")
-      .select("id, new_unit_price, effective_date, products(sku, name)")
+      .select("id, new_unit_price, effective_date, products(sku, name, spec)")
       .eq("customer_id", id)
       .is("applied_at", null)
       .order("effective_date", { ascending: true }),
@@ -108,7 +108,8 @@ export default async function CustomerDetailPage({
                   style={{ background: "#eef2ff", border: "1px solid #c7d2fe" }}
                 >
                   <span>
-                    {s.effective_date}부터 {s.products?.sku} · {s.products?.name} →{" "}
+                    {s.effective_date}부터 {s.products?.sku} · {s.products?.name}
+                    {s.products?.spec ? ` (${s.products.spec})` : ""} →{" "}
                     <strong>{Number(s.new_unit_price).toLocaleString()}원</strong>
                   </span>
                   <CancelPriceScheduleButton id={s.id} customerId={customer.id} />
@@ -125,6 +126,7 @@ export default async function CustomerDetailPage({
             <tr>
               <th>SKU</th>
               <th>상품명</th>
+              <th>규격</th>
               <th className="num">판매단가</th>
               <th>최근 수정</th>
             </tr>
@@ -134,6 +136,7 @@ export default async function CustomerDetailPage({
               <tr key={price.id}>
                 <td>{price.products?.sku}</td>
                 <td>{price.products?.name}</td>
+                <td>{price.products?.spec}</td>
                 <td className="num">{Number(price.unit_price).toLocaleString()}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>
                   {new Date(price.updated_at).toLocaleDateString("ko-KR")}
@@ -142,7 +145,7 @@ export default async function CustomerDetailPage({
             ))}
             {!prices?.length && (
               <tr>
-                <td colSpan={4} className="erp-grid-empty">
+                <td colSpan={5} className="erp-grid-empty">
                   등록된 판매단가가 없습니다.
                 </td>
               </tr>
