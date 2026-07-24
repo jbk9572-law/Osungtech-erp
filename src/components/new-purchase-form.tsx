@@ -634,28 +634,28 @@ export function NewPurchaseForm({
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
           <table
             className="erp-grid"
-            style={{ tableLayout: "fixed", width: "100%", minWidth: alsoCreateSale ? 1020 : 900 }}
+            style={{ tableLayout: "fixed", width: "100%", minWidth: alsoCreateSale ? 960 : 900 }}
           >
             <thead>
               <tr>
-                <th style={{ width: "20%" }}>품목</th>
-                <th style={{ width: "10%" }}>규격</th>
-                <th style={{ width: "6%" }}>단위</th>
-                <th className="num" style={{ width: "16%" }}>
+                <th style={{ width: alsoCreateSale ? "18%" : "20%" }}>품목</th>
+                <th style={{ width: alsoCreateSale ? "9%" : "10%" }}>규격</th>
+                <th style={{ width: alsoCreateSale ? "5%" : "6%" }}>단위</th>
+                <th className="num" style={{ width: alsoCreateSale ? "14%" : "16%" }}>
                   수량
                 </th>
                 {alsoCreateSale && (
-                  <th className="num" style={{ width: "14%" }}>
+                  <th className="num" style={{ width: "9%" }}>
                     출고수량
                   </th>
                 )}
-                <th className="num" style={{ width: "15%" }}>
+                <th className="num" style={{ width: alsoCreateSale ? "13%" : "15%" }}>
                   매입단가
                 </th>
-                <th className="num" style={{ width: "15%" }}>
+                <th className="num" style={{ width: alsoCreateSale ? "13%" : "15%" }}>
                   금액
                 </th>
-                <th style={{ width: "12%" }}>비고</th>
+                <th style={{ width: alsoCreateSale ? "13%" : "12%" }}>비고</th>
                 <th style={{ width: "6%" }} />
               </tr>
             </thead>
@@ -799,14 +799,11 @@ export function NewPurchaseForm({
                     </td>
                     {alsoCreateSale && (
                       <td className="num">
-                        <QuantityWithBoxInput
-                          quantity={row.saleQuantity}
-                          onQuantityChange={(n) =>
-                            updateRow(row.key, { saleQuantity: n, manualSaleQuantity: true })
-                          }
-                          basePackageQty={product?.base_package_qty}
-                          unit={product?.unit}
-                          allowFormula
+                        <NumberInput
+                          placeholder="출고수량"
+                          value={row.saleQuantity}
+                          onChange={(n) => updateRow(row.key, { saleQuantity: n, manualSaleQuantity: true })}
+                          className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
                           <div style={{ color: "#dc3545", fontSize: 10.5 }}>매입수량 초과</div>
