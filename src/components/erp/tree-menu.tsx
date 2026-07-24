@@ -16,7 +16,7 @@ const TREE: GroupItem[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard" }] },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
   { label: "매입관리", items: [{ label: "입고관리", href: "/purchases" }] },
-  { label: "매출관리", items: [{ label: "판매관리", href: "/sales" }] },
+  { label: "매출관리", items: [{ label: "출고관리", href: "/sales" }] },
   {
     label: "재고관리",
     items: [{ label: "재고현황", href: "/inventory" }],
