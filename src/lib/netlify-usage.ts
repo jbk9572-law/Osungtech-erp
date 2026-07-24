@@ -1,6 +1,10 @@
 export type NetlifyUsage = {
   usedBytes: number;
-  includedBytes: number;
+  // 2025년 9월 이후 넷리파이 무료 플랜은 대역폭 전용 고정 한도가 없고
+  // 빌드/함수/대역폭이 공유하는 크레딧제로 바뀌면서, API가 이 값을
+  // null로 내려준다(레거시 계정만 숫자로 옴). null이면 화면에서도
+  // 퍼센트 막대 없이 사용량만 보여준다 — 없는 한도를 지어내지 않는다.
+  includedBytes: number | null;
   periodEndDate: string | null;
 };
 
@@ -73,7 +77,7 @@ export async function getNetlifyUsage(): Promise<NetlifyUsageResult> {
       included?: unknown;
       period_end_date?: unknown;
     };
-    if (typeof data.used !== "number" || typeof data.included !== "number") {
+    if (typeof data.used !== "number") {
       // 실제 응답 모양을 넷리파이 로그 없이도 바로 알 수 있도록, 받은
       // 원문을 그대로 에러 메시지에 담아 사이드바에 보여준다.
       const preview = JSON.stringify(data).slice(0, 300);
@@ -86,7 +90,8 @@ export async function getNetlifyUsage(): Promise<NetlifyUsageResult> {
     return {
       usage: {
         usedBytes: data.used,
-        includedBytes: data.included,
+        // 크레딧제 계정은 included가 null로 온다 - 그대로 둔다.
+        includedBytes: typeof data.included === "number" ? data.included : null,
         periodEndDate: typeof data.period_end_date === "string" ? data.period_end_date : null,
       },
       error: null,
