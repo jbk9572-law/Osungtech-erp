@@ -186,7 +186,33 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   }
 
   const supabase = await createClient();
-  const title = titleRaw || (await resolveAutoTitle(supabase, todoType, supplierId, customerId));
+
+  // 유형이나 거래처를 바꾸면(예: 매입+출고 → 매출로 변경) 예전 자동생성
+  // 제목("공급업체 → 거래처" 등)이 더 이상 맞지 않는 내용을 그대로 달고
+  // 있을 수 있다 — 예를 들어 매입처를 지웠는데 제목엔 여전히 그 이름이
+  // 남아있는 식. 지금 제목이 "수정 전" 상태 기준 자동생성 결과와 똑같다면
+  // (직접 고친 적 없다는 뜻) 새 유형/거래처 기준으로 다시 만들고, 사용자가
+  // 직접 고친 제목이면 그대로 둔다.
+  const { data: oldTodo } = await supabase
+    .from("todos")
+    .select("todo_type, supplier_id, customer_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  let title = titleRaw;
+  if (!titleRaw) {
+    title = await resolveAutoTitle(supabase, todoType, supplierId, customerId);
+  } else if (oldTodo) {
+    const oldAutoTitle = await resolveAutoTitle(
+      supabase,
+      parseTodoType(oldTodo.todo_type),
+      oldTodo.supplier_id ?? "",
+      oldTodo.customer_id ?? ""
+    );
+    if (titleRaw === oldAutoTitle) {
+      title = await resolveAutoTitle(supabase, todoType, supplierId, customerId);
+    }
+  }
 
   const { error } = await supabase
     .from("todos")
