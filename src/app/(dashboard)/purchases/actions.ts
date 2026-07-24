@@ -14,7 +14,6 @@ import {
   type PendingCalc,
 } from "@/lib/paper-calc-sync";
 import { markTodoSideDone } from "@/lib/todo-flow";
-import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
@@ -29,6 +28,7 @@ type SaleItemInput = {
   productId: string;
   spec?: string | null;
   quantity: number;
+  unitPrice: number;
   remark?: string | null;
 };
 
@@ -229,30 +229,9 @@ export async function createPurchase(
   if (alsoCreateSale && saleItems) {
     // 매입+매출을 함수 하나로 묶어서 원자적으로 처리한다 — 따로 호출하면
     // 매입이 커밋된 뒤 매출 쪽만 실패해서 매입만 영구히 남는 불일치가
-    // 생길 수 있다. 단가는 출고처의 거래처 단가(customer_product_prices)를
-    // 우선 쓰고, 없으면 품목 기본 판매단가로 채운다.
-    // /sales/new, 거래처 상세 화면과 마찬가지로 오늘 도래한 단가 예약을
-    // 먼저 반영해둔다 — 안 하면 오늘부터 바뀌기로 한 단가가 있어도 이
-    // 화면에서 조회하는 customer_product_prices는 예약이 적용된 적 없는
-    // 옛날 값 그대로일 수 있다(다른 화면을 아무도 안 열었다면).
-    await applyDuePriceSchedules(supabase, saleCustomerId);
-
-    const saleProductIds = saleItems.map((item) => item.productId);
-    const [{ data: customerPrices }, { data: productRows }] = await Promise.all([
-      saleProductIds.length
-        ? supabase
-            .from("customer_product_prices")
-            .select("product_id, unit_price")
-            .eq("customer_id", saleCustomerId)
-            .in("product_id", saleProductIds)
-        : Promise.resolve({ data: [] as { product_id: string; unit_price: number }[] }),
-      saleProductIds.length
-        ? supabase.from("products").select("id, price").in("id", saleProductIds)
-        : Promise.resolve({ data: [] as { id: string; price: number }[] }),
-    ]);
-    const priceByProduct = new Map((customerPrices ?? []).map((p) => [p.product_id, Number(p.unit_price)]));
-    const defaultPriceByProduct = new Map((productRows ?? []).map((p) => [p.id, Number(p.price)]));
-
+    // 생길 수 있다. 단가는 화면에서 미리 보여준 값을 그대로 신뢰한다
+    // (매출 등록 폼과 동일한 방식) — 서버가 다시 조회해서 화면에 안 보인
+    // 값으로 몰래 바꾸지 않는다.
     const { data, error } = await supabase
       .rpc("create_purchase_and_sale_with_items", {
         p_supplier_id: supplierId,
@@ -274,7 +253,7 @@ export async function createPurchase(
           productId: item.productId,
           spec: item.spec || null,
           quantity: item.quantity,
-          unitPrice: priceByProduct.get(item.productId) ?? defaultPriceByProduct.get(item.productId) ?? 0,
+          unitPrice: item.unitPrice,
           remark: item.remark || null,
         })),
       })
@@ -285,6 +264,21 @@ export async function createPurchase(
     }
     purchaseOrderId = data.purchase_order_id;
     salesOrderId = data.sale_order_id;
+
+    // 매출 등록 폼과 동일하게, 이번에 실제로 적용한 단가를 거래처별 단가로
+    // 저장해둔다 — 다음 등록부터 이 단가가 기본값으로 뜬다.
+    await Promise.all(
+      saleItems.map((item) =>
+        supabase.from("customer_product_prices").upsert(
+          {
+            customer_id: saleCustomerId,
+            product_id: item.productId,
+            unit_price: item.unitPrice,
+          },
+          { onConflict: "customer_id,product_id" }
+        )
+      )
+    );
   } else {
     // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
     // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해

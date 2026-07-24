@@ -762,22 +762,22 @@ export function NewSaleForm({
         </div>
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 900 }}>
+          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 960 }}>
             <thead>
               <tr>
-                <th style={{ width: "20%" }}>품목</th>
-                <th style={{ width: "10%" }}>규격</th>
-                <th style={{ width: "6%" }}>단위</th>
-                <th className="num" style={{ width: "16%" }}>
+                <th style={{ width: "18%" }}>품목</th>
+                <th style={{ width: "8%" }}>규격</th>
+                <th style={{ width: "5%" }}>단위</th>
+                <th className="num" style={{ width: "21%" }}>
                   수량
                 </th>
-                <th className="num" style={{ width: "15%" }}>
+                <th className="num" style={{ width: "14%" }}>
                   단가
                 </th>
-                <th className="num" style={{ width: "15%" }}>
+                <th className="num" style={{ width: "14%" }}>
                   금액
                 </th>
-                <th style={{ width: "12%" }}>비고</th>
+                <th style={{ width: "14%" }}>비고</th>
                 <th style={{ width: "6%" }} />
               </tr>
             </thead>

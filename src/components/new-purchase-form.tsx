@@ -34,6 +34,7 @@ type Product = {
   spec?: string | null;
   unit?: string | null;
   cost: number;
+  price?: number;
   base_package_qty?: number | null;
 };
 
@@ -52,6 +53,11 @@ type Row = {
   // 매입수량이 바뀌어도 더 이상 따라가지 않는다.
   saleQuantity: number;
   manualSaleQuantity: boolean;
+  // 매출 단가 — 출고처의 거래처별 단가(customer_product_prices)를 우선
+  // 쓰고, 없으면 품목 기본 판매단가로 채운다. 등록 전에 화면에서 바로
+  // 보여주고, 필요하면 직접 고칠 수 있다.
+  salePrice: number;
+  manualSalePrice: boolean;
 };
 
 export type PurchaseInitial = {
@@ -77,6 +83,7 @@ export function NewPurchaseForm({
   initial,
   submitLabel = "매입 등록",
   customers = [],
+  prices = [],
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -85,6 +92,9 @@ export function NewPurchaseForm({
   initial?: PurchaseInitial;
   submitLabel?: string;
   customers?: { id: string; name: string }[];
+  // 출고처(거래처)별 판매단가. "매출도 같이 등록"에서 매출단가 미리보기에
+  // 쓴다 — 매출 등록 화면(new-sale-form)과 동일한 방식.
+  prices?: { customer_id: string; product_id: string; unit_price: number }[];
 }) {
   const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
   const [purchaseDate, setPurchaseDate] = useState(
@@ -97,6 +107,16 @@ export function NewPurchaseForm({
   const [alsoCreateSale, setAlsoCreateSale] = useState(false);
   const [saleCustomerId, setSaleCustomerId] = useState("");
   const [saleDate, setSaleDate] = useState("");
+  const priceMap = useMemo(
+    () => new Map(prices.map((p) => [`${p.customer_id}:${p.product_id}`, Number(p.unit_price)])),
+    [prices]
+  );
+  function resolveSalePrice(forCustomerId: string, productId: string) {
+    const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
+    if (fromCustomer !== undefined) return fromCustomer;
+    const product = products.find((p) => p.id === productId);
+    return product?.price ? Number(product.price) : 0;
+  }
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -110,6 +130,8 @@ export function NewPurchaseForm({
           remark: item.remark ?? "",
           saleQuantity: item.quantity,
           manualSaleQuantity: false,
+          salePrice: 0,
+          manualSalePrice: false,
         }))
       : [
           {
@@ -123,6 +145,8 @@ export function NewPurchaseForm({
             remark: "",
             saleQuantity: 0,
             manualSaleQuantity: false,
+            salePrice: 0,
+            manualSalePrice: false,
           },
         ]
   );
@@ -239,7 +263,21 @@ export function NewPurchaseForm({
       productId,
       spec: product?.spec ?? "",
       unitCost: product ? Number(product.cost) : 0,
+      salePrice: resolveSalePrice(saleCustomerId, productId),
     });
+  }
+
+  // 출고처를 고르거나 바꾸면, 아직 단가를 직접 고치지 않은 행들은 그
+  // 거래처 기준 단가로 다시 채운다(거래처 변경 시 매출단가 자동 갱신).
+  function handleSaleCustomerChange(newCustomerId: string) {
+    setSaleCustomerId(newCustomerId);
+    setRows((prev) =>
+      prev.map((row) =>
+        row.productId && !row.manualSalePrice
+          ? { ...row, salePrice: resolveSalePrice(newCustomerId, row.productId) }
+          : row
+      )
+    );
   }
 
   function addRow() {
@@ -256,6 +294,8 @@ export function NewPurchaseForm({
         remark: "",
         saleQuantity: 0,
         manualSaleQuantity: false,
+        salePrice: 0,
+        manualSalePrice: false,
       },
     ]);
     setNextKey((k) => k + 1);
@@ -301,10 +341,15 @@ export function NewPurchaseForm({
     }
 
     // 매입+출고 유형이면 매출 동시 등록을 자동으로 켜고, 할일에 적어둔
-    // 출고처/출고예정일로 채운다.
+    // 출고처/출고예정일로 채운다. setSaleCustomerId는 비동기라 바로 아래
+    // 매출단가 계산에 반영되지 않으므로, 같은 배치에서 쓸 값을 지역
+    // 변수로도 들고 있는다(가져오기 직후 새 rows의 salePrice가 방금
+    // 채운 출고처 기준으로 바로 나오게 하기 위함).
+    let effectiveSaleCustomerId = saleCustomerId;
     if (todo.todo_type === "both") {
       setAlsoCreateSale(true);
       if (todo.customer_id && customers.some((c) => c.id === todo.customer_id)) {
+        effectiveSaleCustomerId = effectiveSaleCustomerId || todo.customer_id;
         setSaleCustomerId((prev) => prev || todo.customer_id!);
       }
       if (todo.ship_date) {
@@ -326,6 +371,8 @@ export function NewPurchaseForm({
           remark: "",
           saleQuantity: item.quantity,
           manualSaleQuantity: false,
+          salePrice: resolveSalePrice(effectiveSaleCustomerId, item.productId),
+          manualSalePrice: false,
         };
       });
 
@@ -375,6 +422,10 @@ export function NewPurchaseForm({
         productId: row.productId,
         spec: row.manualSpec ? row.spec : null,
         quantity: row.saleQuantity,
+        // 화면에 보여준 매출단가를 그대로 서버에 넘긴다 — 매출 등록 폼과
+        // 동일하게, 서버가 다시 조회해서 덮어쓰지 않고 사용자가 확인한
+        // 값을 그대로 저장한다.
+        unitPrice: row.salePrice,
         remark: row.remark || null,
       }))
   );
@@ -493,7 +544,7 @@ export function NewPurchaseForm({
                     <label>출고처 (거래처)</label>
                     <select
                       value={saleCustomerId}
-                      onChange={(e) => setSaleCustomerId(e.target.value)}
+                      onChange={(e) => handleSaleCustomerChange(e.target.value)}
                       className="erp-select"
                     >
                       <option value="" disabled>
@@ -634,28 +685,33 @@ export function NewPurchaseForm({
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
           <table
             className="erp-grid"
-            style={{ tableLayout: "fixed", width: "100%", minWidth: alsoCreateSale ? 960 : 900 }}
+            style={{ tableLayout: "fixed", width: "100%", minWidth: alsoCreateSale ? 1180 : 960 }}
           >
             <thead>
               <tr>
-                <th style={{ width: alsoCreateSale ? "18%" : "20%" }}>품목</th>
-                <th style={{ width: alsoCreateSale ? "9%" : "10%" }}>규격</th>
-                <th style={{ width: alsoCreateSale ? "5%" : "6%" }}>단위</th>
-                <th className="num" style={{ width: alsoCreateSale ? "14%" : "16%" }}>
-                  수량
+                <th style={{ width: alsoCreateSale ? "15%" : "18%" }}>품목</th>
+                <th style={{ width: alsoCreateSale ? "6%" : "8%" }}>규격</th>
+                <th style={{ width: alsoCreateSale ? "4%" : "5%" }}>단위</th>
+                <th className="num" style={{ width: alsoCreateSale ? "16%" : "21%" }}>
+                  입고수량
                 </th>
                 {alsoCreateSale && (
                   <th className="num" style={{ width: "9%" }}>
                     출고수량
                   </th>
                 )}
-                <th className="num" style={{ width: alsoCreateSale ? "13%" : "15%" }}>
+                <th className="num" style={{ width: alsoCreateSale ? "10%" : "14%" }}>
                   매입단가
                 </th>
-                <th className="num" style={{ width: alsoCreateSale ? "13%" : "15%" }}>
+                {alsoCreateSale && (
+                  <th className="num" style={{ width: "10%" }}>
+                    매출단가
+                  </th>
+                )}
+                <th className="num" style={{ width: alsoCreateSale ? "10%" : "14%" }}>
                   금액
                 </th>
-                <th style={{ width: alsoCreateSale ? "13%" : "12%" }}>비고</th>
+                <th style={{ width: alsoCreateSale ? "14%" : "14%" }}>비고</th>
                 <th style={{ width: "6%" }} />
               </tr>
             </thead>
@@ -694,6 +750,11 @@ export function NewPurchaseForm({
                     </td>
                   )}
                   <td className="num">{pendingCalcUnitCost.toLocaleString()}</td>
+                  {alsoCreateSale && (
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      -
+                    </td>
+                  )}
                   <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
@@ -734,6 +795,11 @@ export function NewPurchaseForm({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
+                  {alsoCreateSale && (
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      -
+                    </td>
+                  )}
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
@@ -838,6 +904,16 @@ export function NewPurchaseForm({
                         </label>
                       )}
                     </td>
+                    {alsoCreateSale && (
+                      <td className="num">
+                        <NumberInput
+                          placeholder="매출단가"
+                          value={row.salePrice}
+                          onChange={(n) => updateRow(row.key, { salePrice: n, manualSalePrice: true })}
+                          className="erp-input w-full"
+                        />
+                      </td>
+                    )}
                     <td className="num">{(row.quantity * row.unitCost).toLocaleString()}원</td>
                     <td>
                       <input
@@ -865,7 +941,7 @@ export function NewPurchaseForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "#eef1f5" }}>
-                <td colSpan={alsoCreateSale ? 6 : 5} style={{ fontWeight: 700 }}>
+                <td colSpan={alsoCreateSale ? 7 : 5} style={{ fontWeight: 700 }}>
                   매입 합계
                 </td>
                 <td className="num text-sm font-bold" colSpan={3} style={{ color: "var(--erp-text)" }}>
