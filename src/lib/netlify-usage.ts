@@ -4,6 +4,16 @@ export type NetlifyUsage = {
   periodEndDate: string | null;
 };
 
+export type NetlifyUsageResult = {
+  usage: NetlifyUsage | null;
+  // 토큰이 설정돼 있는데(즉 이 기능을 켜려고 시도했는데) 뭔가 실패했을
+  // 때만 채워진다. 토큰 자체를 안 넣은 경우(Vultr 등 이 기능을 안 쓰는
+  // 배포본)는 error도 null로 둬서 화면에 아무것도 안 보이게 한다.
+  // 넷리파이 로그를 뒤져야만 실패 이유를 알 수 있던 문제를 해결하려고,
+  // 이 이유를 사이드바에 직접(작게) 보여준다.
+  error: string | null;
+};
+
 // 넷리파이 배포본에서는 실제 서버 디스크 개념이 없어서(vps-usage.ts 참고),
 // 대신 넷리파이 계정의 대역폭(bandwidth) 사용량을 보여준다. 빌드 시간(분)
 // 사용량은 넷리파이가 공개 API로 제공하지 않아서(대시보드 Billing >
@@ -16,16 +26,9 @@ export type NetlifyUsage = {
 //   Personal access tokens에서 발급
 // - NETLIFY_TEAM_SLUG: (선택) 팀 슬러그. 안 넣으면 토큰으로 접근 가능한
 //   첫 번째 계정을 자동으로 찾는다.
-//
-// 토큰이 없거나 조회에 실패하면 null을 반환해 위젯을 숨긴다. 실패
-// 이유는 콘솔에 남긴다(넷리파이 Logs & metrics에서 확인 가능) — 위젯이
-// 안 뜰 때 왜 안 뜨는지 알 방법이 없으면 디버깅이 안 되기 때문이다.
-export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
+export async function getNetlifyUsage(): Promise<NetlifyUsageResult> {
   const token = process.env.NETLIFY_API_TOKEN;
-  if (!token) {
-    console.warn("[netlify-usage] NETLIFY_API_TOKEN이 설정되지 않아 위젯을 숨깁니다.");
-    return null;
-  }
+  if (!token) return { usage: null, error: null };
 
   try {
     let slug = process.env.NETLIFY_TEAM_SLUG;
@@ -36,22 +39,20 @@ export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
         cache: "no-store",
       });
       if (!accountsRes.ok) {
-        console.warn(
-          `[netlify-usage] /accounts 조회 실패: HTTP ${accountsRes.status} ${accountsRes.statusText}`
-        );
-        return null;
+        return {
+          usage: null,
+          error: `/accounts 조회 실패: HTTP ${accountsRes.status} ${accountsRes.statusText}`,
+        };
       }
 
       const accounts = (await accountsRes.json()) as unknown;
       if (!Array.isArray(accounts) || accounts.length === 0) {
-        console.warn("[netlify-usage] 토큰으로 접근 가능한 계정이 없습니다.");
-        return null;
+        return { usage: null, error: "토큰으로 접근 가능한 계정이 없습니다." };
       }
 
       const first = accounts[0] as { slug?: unknown };
       if (typeof first.slug !== "string") {
-        console.warn("[netlify-usage] 계정 응답에 slug가 없습니다.");
-        return null;
+        return { usage: null, error: "계정 응답에 slug가 없습니다." };
       }
       slug = first.slug;
     }
@@ -61,10 +62,10 @@ export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
       cache: "no-store",
     });
     if (!res.ok) {
-      console.warn(
-        `[netlify-usage] /accounts/${slug}/bandwidth 조회 실패: HTTP ${res.status} ${res.statusText}`
-      );
-      return null;
+      return {
+        usage: null,
+        error: `/accounts/${slug}/bandwidth 조회 실패: HTTP ${res.status} ${res.statusText}`,
+      };
     }
 
     const data = (await res.json()) as {
@@ -73,17 +74,18 @@ export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
       period_end_date?: unknown;
     };
     if (typeof data.used !== "number" || typeof data.included !== "number") {
-      console.warn("[netlify-usage] bandwidth 응답 형식이 예상과 다릅니다:", data);
-      return null;
+      return { usage: null, error: "bandwidth 응답 형식이 예상과 다릅니다." };
     }
 
     return {
-      usedBytes: data.used,
-      includedBytes: data.included,
-      periodEndDate: typeof data.period_end_date === "string" ? data.period_end_date : null,
+      usage: {
+        usedBytes: data.used,
+        includedBytes: data.included,
+        periodEndDate: typeof data.period_end_date === "string" ? data.period_end_date : null,
+      },
+      error: null,
     };
   } catch (err) {
-    console.warn("[netlify-usage] 조회 중 예외 발생:", err);
-    return null;
+    return { usage: null, error: `조회 중 예외 발생: ${err instanceof Error ? err.message : String(err)}` };
   }
 }
