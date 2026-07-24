@@ -8,7 +8,7 @@ import {
   FREE_TIER_STORAGE_LIMIT_BYTES,
 } from "@/lib/db-usage";
 import type { VpsDiskUsage } from "@/lib/vps-usage";
-import type { NetlifyUsage } from "@/lib/netlify-usage";
+import type { NetlifyUsageResult } from "@/lib/netlify-usage";
 
 type LeafItem = { label: string; href?: string };
 type GroupItem = { label: string; items: LeafItem[] };
@@ -102,7 +102,7 @@ function UsageWidget({
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
   vpsDisk: VpsDiskUsage | null;
-  netlifyUsage: NetlifyUsage | null;
+  netlifyUsage: NetlifyUsageResult;
   collapsed: boolean;
 }) {
   if (collapsed) return null;
@@ -134,22 +134,30 @@ function UsageWidget({
   }
   // 넷리파이 배포본에는 실제 서버 디스크가 없어서, 대신 넷리파이 계정의
   // 대역폭(bandwidth) 사용량을 보여준다(NETLIFY_API_TOKEN 설정 시에만).
-  if (netlifyUsage != null) {
+  if (netlifyUsage.usage != null) {
     rows.push({
       label: "넷리파이 대역폭",
-      usedBytes: netlifyUsage.usedBytes,
-      limitBytes: netlifyUsage.includedBytes,
+      usedBytes: netlifyUsage.usage.usedBytes,
+      limitBytes: netlifyUsage.usage.includedBytes,
       note: "무료플랜",
     });
   }
 
-  if (!rows.length) return null;
+  if (!rows.length && !netlifyUsage.error) return null;
 
   return (
     <div className="erp-tree-usage">
       {rows.map((row) => (
         <UsageBar key={row.label} {...row} />
       ))}
+      {netlifyUsage.error && (
+        <div
+          className="erp-tree-usage-sub"
+          style={{ color: "var(--erp-danger)" }}
+        >
+          넷리파이 사용량 조회 실패: {netlifyUsage.error}
+        </div>
+      )}
     </div>
   );
 }
@@ -166,7 +174,7 @@ export function TreeMenu({
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
   vpsDisk: VpsDiskUsage | null;
-  netlifyUsage: NetlifyUsage | null;
+  netlifyUsage: NetlifyUsageResult;
   collapsed: boolean;
   isMobile: boolean;
   onToggleCollapsed: () => void;

@@ -21,7 +21,7 @@ import {
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
 import type { VpsDiskUsage } from "@/lib/vps-usage";
-import type { NetlifyUsage } from "@/lib/netlify-usage";
+import type { NetlifyUsageResult } from "@/lib/netlify-usage";
 
 function RecentMenuTracker() {
   const pathname = usePathname();
@@ -60,7 +60,7 @@ export function ErpShell({
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
   vpsDisk: VpsDiskUsage | null;
-  netlifyUsage: NetlifyUsage | null;
+  netlifyUsage: NetlifyUsageResult;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
