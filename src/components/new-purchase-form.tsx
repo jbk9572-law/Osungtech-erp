@@ -482,7 +482,7 @@ export function NewPurchaseForm({
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
-        <div className="erp-detail-body erp-search" style={{ border: "none", padding: 0, margin: 0 }}>
+        <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
             <label>공급업체</label>
             <select
