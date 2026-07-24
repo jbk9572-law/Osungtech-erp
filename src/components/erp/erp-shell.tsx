@@ -21,6 +21,7 @@ import {
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
 import type { VpsDiskUsage } from "@/lib/vps-usage";
+import type { NetlifyUsage } from "@/lib/netlify-usage";
 
 function RecentMenuTracker() {
   const pathname = usePathname();
@@ -44,6 +45,7 @@ export function ErpShell({
   dbSizeBytes,
   storageSizeBytes,
   vpsDisk,
+  netlifyUsage,
   children,
 }: {
   companyName?: string | null;
@@ -58,6 +60,7 @@ export function ErpShell({
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
   vpsDisk: VpsDiskUsage | null;
+  netlifyUsage: NetlifyUsage | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -114,6 +117,7 @@ export function ErpShell({
           dbSizeBytes={dbSizeBytes}
           storageSizeBytes={storageSizeBytes}
           vpsDisk={vpsDisk}
+          netlifyUsage={netlifyUsage}
           collapsed={collapsed}
           isMobile={isMobile}
           onToggleCollapsed={() => setCollapsed((c) => !c)}

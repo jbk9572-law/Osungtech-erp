@@ -4,6 +4,7 @@ import { ErpShell } from "@/components/erp/erp-shell";
 import { getNotificationSummary } from "@/lib/notifications";
 import { getDatabaseSizeBytes, getStorageSizeBytes } from "@/lib/db-usage";
 import { getVpsDiskUsage } from "@/lib/vps-usage";
+import { getNetlifyUsage } from "@/lib/netlify-usage";
 import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
@@ -27,6 +28,7 @@ export default async function DashboardLayout({
     { data: profiles },
     dbSizeBytes,
     storageSizeBytes,
+    netlifyUsage,
   ] = await Promise.all([
     supabase
       .from("company_profile")
@@ -44,6 +46,7 @@ export default async function DashboardLayout({
     supabase.from("profiles").select("id, full_name"),
     getDatabaseSizeBytes(supabase),
     getStorageSizeBytes(supabase),
+    getNetlifyUsage(),
   ]);
   const vpsDisk = getVpsDiskUsage();
 
@@ -65,6 +68,7 @@ export default async function DashboardLayout({
       dbSizeBytes={dbSizeBytes}
       storageSizeBytes={storageSizeBytes}
       vpsDisk={vpsDisk}
+      netlifyUsage={netlifyUsage}
     >
       {children}
     </ErpShell>
