@@ -17,10 +17,15 @@ export type NetlifyUsage = {
 // - NETLIFY_TEAM_SLUG: (선택) 팀 슬러그. 안 넣으면 토큰으로 접근 가능한
 //   첫 번째 계정을 자동으로 찾는다.
 //
-// 토큰이 없거나 조회에 실패하면 null을 반환해 위젯을 숨긴다.
+// 토큰이 없거나 조회에 실패하면 null을 반환해 위젯을 숨긴다. 실패
+// 이유는 콘솔에 남긴다(넷리파이 Logs & metrics에서 확인 가능) — 위젯이
+// 안 뜰 때 왜 안 뜨는지 알 방법이 없으면 디버깅이 안 되기 때문이다.
 export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
   const token = process.env.NETLIFY_API_TOKEN;
-  if (!token) return null;
+  if (!token) {
+    console.warn("[netlify-usage] NETLIFY_API_TOKEN이 설정되지 않아 위젯을 숨깁니다.");
+    return null;
+  }
 
   try {
     let slug = process.env.NETLIFY_TEAM_SLUG;
@@ -30,13 +35,24 @@ export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
-      if (!accountsRes.ok) return null;
+      if (!accountsRes.ok) {
+        console.warn(
+          `[netlify-usage] /accounts 조회 실패: HTTP ${accountsRes.status} ${accountsRes.statusText}`
+        );
+        return null;
+      }
 
       const accounts = (await accountsRes.json()) as unknown;
-      if (!Array.isArray(accounts) || accounts.length === 0) return null;
+      if (!Array.isArray(accounts) || accounts.length === 0) {
+        console.warn("[netlify-usage] 토큰으로 접근 가능한 계정이 없습니다.");
+        return null;
+      }
 
       const first = accounts[0] as { slug?: unknown };
-      if (typeof first.slug !== "string") return null;
+      if (typeof first.slug !== "string") {
+        console.warn("[netlify-usage] 계정 응답에 slug가 없습니다.");
+        return null;
+      }
       slug = first.slug;
     }
 
@@ -44,21 +60,30 @@ export async function getNetlifyUsage(): Promise<NetlifyUsage | null> {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(
+        `[netlify-usage] /accounts/${slug}/bandwidth 조회 실패: HTTP ${res.status} ${res.statusText}`
+      );
+      return null;
+    }
 
     const data = (await res.json()) as {
       used?: unknown;
       included?: unknown;
       period_end_date?: unknown;
     };
-    if (typeof data.used !== "number" || typeof data.included !== "number") return null;
+    if (typeof data.used !== "number" || typeof data.included !== "number") {
+      console.warn("[netlify-usage] bandwidth 응답 형식이 예상과 다릅니다:", data);
+      return null;
+    }
 
     return {
       usedBytes: data.used,
       includedBytes: data.included,
       periodEndDate: typeof data.period_end_date === "string" ? data.period_end_date : null,
     };
-  } catch {
+  } catch (err) {
+    console.warn("[netlify-usage] 조회 중 예외 발생:", err);
     return null;
   }
 }
