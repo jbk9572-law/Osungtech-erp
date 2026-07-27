@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardCalendar } from "@/components/dashboard-calendar";
+import { DashboardCalendar, type CarryoverItem } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
@@ -51,6 +51,17 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  // "이월" 판정 기준: 오늘이 실제로 속한 달의 마지막 날. 등록된 매출/매입
+  // 날짜가 이 날짜보다 나중(=다음 달 이후)이면, 아직 그 달이 오지 않았는데도
+  // 미리 등록해둔 "이월 예정" 건으로 본다. 달력에서 다른 달로 이동해도
+  // (monthStart/monthEnd) 이 기준은 항상 "실제 오늘" 기준으로 고정된다 —
+  // 그래야 실제로 그 달이 되는 순간 자동으로(별도 처리 없이) 이 목록에서
+  // 빠지고 평소처럼 그 날짜 밑에만 보이게 된다.
+  const todayMonthEnd = toDateStr(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  );
 
   const {
     data: { user },
@@ -68,6 +79,8 @@ export default async function DashboardPage({
     { data: company },
     { data: todaySales },
     { data: todayPurchases },
+    { data: carryoverSales },
+    { data: carryoverPurchases },
     notifications,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
@@ -115,6 +128,20 @@ export default async function DashboardPage({
       .from("purchase_order_items")
       .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
       .eq("purchase_orders.purchase_date", todayStr),
+    supabase
+      .from("sales_order_items")
+      .select(
+        "quantity, spec, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, customers(name))"
+      )
+      .gt("sales_orders.order_date", todayMonthEnd)
+      .order("order_date", { referencedTable: "sales_orders", ascending: true }),
+    supabase
+      .from("purchase_order_items")
+      .select(
+        "quantity, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
+      )
+      .gt("purchase_orders.purchase_date", todayMonthEnd)
+      .order("purchase_date", { referencedTable: "purchase_orders", ascending: true }),
     user
       ? getNotificationSummary(supabase, user.id)
       : Promise.resolve({ announcements: [], todos: [], lowStock: [] }),
@@ -267,6 +294,29 @@ export default async function DashboardPage({
 
   const weeks = buildWeeks(year, month);
 
+  const carryoverItems: CarryoverItem[] = [
+    ...(carryoverSales ?? []).map((item) => ({
+      type: "sale" as const,
+      orderDate: item.sales_orders.order_date,
+      partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
+      productName: item.products?.name ?? "상품 미상",
+      spec: item.spec || item.products?.spec || "",
+      unit: item.products?.unit ?? "",
+      quantity: item.quantity,
+      orderId: item.sales_order_id,
+    })),
+    ...(carryoverPurchases ?? []).map((item) => ({
+      type: "purchase" as const,
+      orderDate: item.purchase_orders.purchase_date,
+      partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
+      productName: item.products?.name ?? "상품 미상",
+      spec: item.spec || item.products?.spec || "",
+      unit: item.products?.unit ?? "",
+      quantity: item.quantity,
+      orderId: item.purchase_order_id,
+    })),
+  ].sort((a, b) => a.orderDate.localeCompare(b.orderDate));
+
   const todaySalesTotal = (todaySales ?? []).reduce(
     (sum, item) => sum + item.quantity * Number(item.unit_price),
     0
@@ -381,6 +431,7 @@ export default async function DashboardPage({
         backgroundLogoUrl={company?.logo_mark_url}
         lowStockToday={lowStockItems.length > 0}
         paperStockProductName={paperStockProduct?.name ?? "모조지"}
+        carryoverItems={carryoverItems}
       />
 
       <div className="erp-home-panel">
