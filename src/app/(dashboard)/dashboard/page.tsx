@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardCalendar, type CarryoverItem } from "@/components/dashboard-calendar";
+import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { getNotificationSummary } from "@/lib/notifications";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
@@ -134,7 +134,7 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, spec, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
       )
       .gt("sales_orders.order_date", todayMonthEnd)
       .gte("sales_orders.created_at", todayStartIso)
@@ -143,7 +143,7 @@ export default async function DashboardPage({
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
+        "quantity, unit_cost, spec, remark, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
       )
       .gt("purchase_orders.purchase_date", todayMonthEnd)
       .gte("purchase_orders.created_at", todayStartIso)
@@ -301,28 +301,30 @@ export default async function DashboardPage({
 
   const weeks = buildWeeks(year, month);
 
-  const carryoverItems: CarryoverItem[] = [
-    ...(carryoverSales ?? []).map((item) => ({
-      type: "sale" as const,
-      orderDate: item.sales_orders.order_date,
-      partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
-      productName: item.products?.name ?? "상품 미상",
-      spec: item.spec || item.products?.spec || "",
-      unit: item.products?.unit ?? "",
-      quantity: item.quantity,
-      orderId: item.sales_order_id,
-    })),
-    ...(carryoverPurchases ?? []).map((item) => ({
-      type: "purchase" as const,
-      orderDate: item.purchase_orders.purchase_date,
-      partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
-      productName: item.products?.name ?? "상품 미상",
-      spec: item.spec || item.products?.spec || "",
-      unit: item.products?.unit ?? "",
-      quantity: item.quantity,
-      orderId: item.purchase_order_id,
-    })),
-  ].sort((a, b) => a.orderDate.localeCompare(b.orderDate));
+  // 매출/매입 본문과 똑같은 형식(거래처 > 품목 > 규격:수량/금액)으로 보여주고
+  // 카톡 복사에도 같이 담기게, salesItems/purchaseItems와 동일한 ItemRow
+  // 모양으로 만든다.
+  const carryoverSalesItems: ItemRow[] = (carryoverSales ?? []).map((item) => ({
+    partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
+    productName: item.products?.name ?? "상품 미상",
+    spec: item.spec || item.products?.spec || "",
+    unit: item.products?.unit ?? "",
+    quantity: item.quantity,
+    amount: item.quantity * Number(item.unit_price),
+    orderId: item.sales_order_id,
+    remark: item.remark,
+  }));
+
+  const carryoverPurchaseItems: ItemRow[] = (carryoverPurchases ?? []).map((item) => ({
+    partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
+    productName: item.products?.name ?? "상품 미상",
+    spec: item.spec || item.products?.spec || "",
+    unit: item.products?.unit ?? "",
+    quantity: item.quantity,
+    amount: item.quantity * Number(item.unit_cost),
+    orderId: item.purchase_order_id,
+    remark: item.remark,
+  }));
 
   const todaySalesTotal = (todaySales ?? []).reduce(
     (sum, item) => sum + item.quantity * Number(item.unit_price),
@@ -438,7 +440,8 @@ export default async function DashboardPage({
         backgroundLogoUrl={company?.logo_mark_url}
         lowStockToday={lowStockItems.length > 0}
         paperStockProductName={paperStockProduct?.name ?? "모조지"}
-        carryoverItems={carryoverItems}
+        carryoverSalesItems={carryoverSalesItems}
+        carryoverPurchaseItems={carryoverPurchaseItems}
       />
 
       <div className="erp-home-panel">
