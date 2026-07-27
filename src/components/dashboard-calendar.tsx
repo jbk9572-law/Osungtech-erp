@@ -34,6 +34,17 @@ type DayData = {
   note: string;
 };
 
+export type CarryoverItem = {
+  type: "sale" | "purchase";
+  orderDate: string;
+  partnerName: string;
+  productName: string;
+  spec: string;
+  unit: string;
+  quantity: number;
+  orderId: string;
+};
+
 type Cell = { dateStr: string; day: number } | null;
 
 type ProductGroup = { productName: string; items: ItemRow[] };
@@ -169,6 +180,7 @@ export function DashboardCalendar({
   backgroundLogoUrl,
   lowStockToday,
   paperStockProductName,
+  carryoverItems,
 }: {
   year: number;
   month: number;
@@ -180,6 +192,7 @@ export function DashboardCalendar({
   backgroundLogoUrl?: string | null;
   lowStockToday?: boolean;
   paperStockProductName: string;
+  carryoverItems?: CarryoverItem[];
 }) {
   const router = useRouter();
   const defaultSelected = dataByDate[todayStr] !== undefined || weeks.some((w) => w.some((c) => c?.dateStr === todayStr))
@@ -523,6 +536,34 @@ export function DashboardCalendar({
                 </div>
               )}
             </div>
+
+            {selected === todayStr && carryoverItems && carryoverItems.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-1 text-xs font-bold" style={{ color: "var(--erp-warning)" }}>
+                  이월 (다음달 등록 예정) {carryoverItems.length}건
+                </p>
+                <ul className="space-y-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  {carryoverItems.map((c) => (
+                    <li key={`${c.type}-${c.orderId}-${c.productName}-${c.spec}`}>
+                      <Link
+                        href={c.type === "sale" ? `/sales/${c.orderId}` : `/purchases/${c.orderId}`}
+                        className="hover:underline"
+                      >
+                        <span
+                          className="erp-badge erp-badge-muted"
+                          style={{ marginRight: 4 }}
+                        >
+                          {c.type === "sale" ? "매출" : "매입"}
+                        </span>
+                        {c.orderDate} · {c.partnerName} · {c.productName}
+                        {c.spec ? ` (${c.spec})` : ""} : {c.quantity.toLocaleString()}
+                        {c.unit}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <NoteForm dateStr={selected} initialContent={selectedData.note} />
           </>
