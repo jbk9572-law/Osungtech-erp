@@ -51,17 +51,20 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  // "이월" 판정 기준: 오늘이 실제로 속한 달의 마지막 날. 등록된 매출/매입
-  // 날짜가 이 날짜보다 나중(=다음 달 이후)이면, 아직 그 달이 오지 않았는데도
-  // 미리 등록해둔 "이월 예정" 건으로 본다. 달력에서 다른 달로 이동해도
-  // (monthStart/monthEnd) 이 기준은 항상 "실제 오늘" 기준으로 고정된다 —
-  // 그래야 실제로 그 달이 되는 순간 자동으로(별도 처리 없이) 이 목록에서
-  // 빠지고 평소처럼 그 날짜 밑에만 보이게 된다.
+  // "이월"은 "다음 달에 할 일이 있다"는 예고가 아니라, 실제 작업(등록)은
+  // 오늘 끝냈는데 정산/계산 편의상 매출·매입 날짜만 다음 달 날짜로 찍어둔
+  // 것을 뜻한다. 그래서 실제로 작업한 날(등록 시각 = created_at)의
+  // "오늘의 업무"에만 하루짜리로 보여야 하고, 그 뒤(다음날부터, 그리고
+  // 실제로 그 달이 됐을 때도) 다시 보일 필요가 없다 — 이미 오늘 처리
+  // 완료된 것이기 때문이다. 그래서 판정 기준은 "오늘 등록됐고(created_at),
+  // 등록된 날짜(order_date)가 오늘이 속한 달보다 나중"인 것으로 잡는다.
   const todayMonthEnd = toDateStr(
     now.getFullYear(),
     now.getMonth() + 1,
     new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
   );
+  const todayStartIso = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const todayEndIso = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
 
   const {
     data: { user },
@@ -131,16 +134,20 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, spec, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, customers(name))"
+        "quantity, spec, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
       )
       .gt("sales_orders.order_date", todayMonthEnd)
+      .gte("sales_orders.created_at", todayStartIso)
+      .lt("sales_orders.created_at", todayEndIso)
       .order("order_date", { referencedTable: "sales_orders", ascending: true }),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
+        "quantity, spec, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
       )
       .gt("purchase_orders.purchase_date", todayMonthEnd)
+      .gte("purchase_orders.created_at", todayStartIso)
+      .lt("purchase_orders.created_at", todayEndIso)
       .order("purchase_date", { referencedTable: "purchase_orders", ascending: true }),
     user
       ? getNotificationSummary(supabase, user.id)
