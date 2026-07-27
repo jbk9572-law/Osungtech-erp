@@ -9,7 +9,7 @@ import { getHolidayName } from "@/lib/kr-holidays";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatPaperCalcSizeLines, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 
-type ItemRow = {
+export type ItemRow = {
   partnerName: string;
   productName: string;
   spec: string;
@@ -32,17 +32,6 @@ type DayData = {
   salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   note: string;
-};
-
-export type CarryoverItem = {
-  type: "sale" | "purchase";
-  orderDate: string;
-  partnerName: string;
-  productName: string;
-  spec: string;
-  unit: string;
-  quantity: number;
-  orderId: string;
 };
 
 type Cell = { dateStr: string; day: number } | null;
@@ -142,15 +131,33 @@ function appendItemLines(
   });
 }
 
-function buildSalesCopyText(dateStr: string, data: DayData, paperStockProductName: string) {
+function buildSalesCopyText(
+  dateStr: string,
+  data: DayData,
+  paperStockProductName: string,
+  carryoverItems: ItemRow[] = []
+) {
   const lines: string[] = [`${dateStr} 매출`, "", `[매출] ${data.salesCount}건`];
   appendItemLines(data.salesItems, data.salesPaperCalcByPartner, paperStockProductName, lines);
+  if (carryoverItems.length > 0) {
+    lines.push("", `[이월 - 다음달 등록] ${carryoverItems.length}건`);
+    appendItemLines(carryoverItems, {}, paperStockProductName, lines);
+  }
   return lines.join("\n");
 }
 
-function buildPurchaseCopyText(dateStr: string, data: DayData, paperStockProductName: string) {
+function buildPurchaseCopyText(
+  dateStr: string,
+  data: DayData,
+  paperStockProductName: string,
+  carryoverItems: ItemRow[] = []
+) {
   const lines: string[] = [`${dateStr} 매입`, "", `[매입] ${data.purchaseCount}건`];
   appendItemLines(data.purchaseItems, data.purchasePaperCalcByPartner, paperStockProductName, lines);
+  if (carryoverItems.length > 0) {
+    lines.push("", `[이월 - 다음달 등록] ${carryoverItems.length}건`);
+    appendItemLines(carryoverItems, {}, paperStockProductName, lines);
+  }
   return lines.join("\n");
 }
 
@@ -180,7 +187,8 @@ export function DashboardCalendar({
   backgroundLogoUrl,
   lowStockToday,
   paperStockProductName,
-  carryoverItems,
+  carryoverSalesItems = [],
+  carryoverPurchaseItems = [],
 }: {
   year: number;
   month: number;
@@ -192,7 +200,8 @@ export function DashboardCalendar({
   backgroundLogoUrl?: string | null;
   lowStockToday?: boolean;
   paperStockProductName: string;
-  carryoverItems?: CarryoverItem[];
+  carryoverSalesItems?: ItemRow[];
+  carryoverPurchaseItems?: ItemRow[];
 }) {
   const router = useRouter();
   const defaultSelected = dataByDate[todayStr] !== undefined || weeks.some((w) => w.some((c) => c?.dateStr === todayStr))
@@ -213,12 +222,18 @@ export function DashboardCalendar({
     note: "",
   };
 
+  // 이월(다음달로 등록) 건은 오늘 실제로 처리 완료한 것이므로, 오늘 날짜를
+  // 볼 때만 매출/매입 본문과 카톡 복사 텍스트에 같이 담는다.
+  const isToday = selected === todayStr;
+  const activeCarryoverSales = isToday ? carryoverSalesItems : [];
+  const activeCarryoverPurchases = isToday ? carryoverPurchaseItems : [];
+
   async function handleCopy(type: "sales" | "purchase") {
     if (!selected) return;
     const text =
       type === "sales"
-        ? buildSalesCopyText(selected, selectedData, paperStockProductName)
-        : buildPurchaseCopyText(selected, selectedData, paperStockProductName);
+        ? buildSalesCopyText(selected, selectedData, paperStockProductName, activeCarryoverSales)
+        : buildPurchaseCopyText(selected, selectedData, paperStockProductName, activeCarryoverPurchases);
     await copyText(text);
     setCopiedType(type);
     setTimeout(() => setCopiedType(null), 1500);
@@ -458,6 +473,64 @@ export function DashboardCalendar({
                   )}
                 </div>
               )}
+              {activeCarryoverSales.length > 0 && (
+                <div className="mt-2">
+                  <p
+                    className="mb-1 text-[10px] font-bold uppercase tracking-wide"
+                    style={{ color: "var(--erp-warning)" }}
+                  >
+                    이월 (다음달 등록) {activeCarryoverSales.length}건
+                  </p>
+                  <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
+                    {buildPartnerBlocks(activeCarryoverSales, {}).map((partner, pi) => (
+                      <div key={pi}>
+                        <p className="font-bold">- {partner.partnerName}</p>
+                        <div className="space-y-1 pl-3">
+                          {partner.products.map((product, di) => (
+                            <div key={di}>
+                              <p className="font-semibold">- {product.productName}</p>
+                              <ul className="space-y-1 pl-3 font-normal">
+                                {product.items.map((item, i) => (
+                                  <li key={i}>
+                                    <Link
+                                      href={`/sales/${item.orderId}`}
+                                      className="flex items-start justify-between gap-2 hover:underline"
+                                    >
+                                      <span className="min-w-0 text-[#8ea3c9]">
+                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                        {item.unit}
+                                        {item.remark && (
+                                          <span className="block text-[10px] text-[#8ea3c9]/70">
+                                            비고: {item.remark}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                                {product.items.length > 1 &&
+                                  (() => {
+                                    const totals = productTotals(product.items);
+                                    return (
+                                      <li className="flex items-start justify-between gap-2">
+                                        <span className="min-w-0">
+                                          합계 - {totals.quantity.toLocaleString()}
+                                          {totals.unit}
+                                        </span>
+                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                      </li>
+                                    );
+                                  })()}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mb-4">
@@ -535,35 +608,65 @@ export function DashboardCalendar({
                   )}
                 </div>
               )}
+              {activeCarryoverPurchases.length > 0 && (
+                <div className="mt-2">
+                  <p
+                    className="mb-1 text-[10px] font-bold uppercase tracking-wide"
+                    style={{ color: "var(--erp-warning)" }}
+                  >
+                    이월 (다음달 등록) {activeCarryoverPurchases.length}건
+                  </p>
+                  <div className="space-y-2 text-xs font-medium text-[#28a745]">
+                    {buildPartnerBlocks(activeCarryoverPurchases, {}).map((partner, pi) => (
+                      <div key={pi}>
+                        <p className="font-bold">- {partner.partnerName}</p>
+                        <div className="space-y-1 pl-3">
+                          {partner.products.map((product, di) => (
+                            <div key={di}>
+                              <p className="font-semibold">- {product.productName}</p>
+                              <ul className="space-y-1 pl-3 font-normal">
+                                {product.items.map((item, i) => (
+                                  <li key={i}>
+                                    <Link
+                                      href={`/purchases/${item.orderId}`}
+                                      className="flex items-start justify-between gap-2 hover:underline"
+                                    >
+                                      <span className="min-w-0 text-[#8fcb9d]">
+                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                        {item.unit}
+                                        {item.remark && (
+                                          <span className="block text-[10px] text-[#8fcb9d]/70">
+                                            비고: {item.remark}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                                {product.items.length > 1 &&
+                                  (() => {
+                                    const totals = productTotals(product.items);
+                                    return (
+                                      <li className="flex items-start justify-between gap-2">
+                                        <span className="min-w-0">
+                                          합계 - {totals.quantity.toLocaleString()}
+                                          {totals.unit}
+                                        </span>
+                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                      </li>
+                                    );
+                                  })()}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-
-            {selected === todayStr && carryoverItems && carryoverItems.length > 0 && (
-              <div className="mb-4">
-                <p className="mb-1 text-xs font-bold" style={{ color: "var(--erp-warning)" }}>
-                  오늘 이월 처리 완료 (다음달로 등록) {carryoverItems.length}건
-                </p>
-                <ul className="space-y-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                  {carryoverItems.map((c) => (
-                    <li key={`${c.type}-${c.orderId}-${c.productName}-${c.spec}`}>
-                      <Link
-                        href={c.type === "sale" ? `/sales/${c.orderId}` : `/purchases/${c.orderId}`}
-                        className="hover:underline"
-                      >
-                        <span
-                          className="erp-badge erp-badge-muted"
-                          style={{ marginRight: 4 }}
-                        >
-                          {c.type === "sale" ? "매출" : "매입"}
-                        </span>
-                        {c.orderDate} · {c.partnerName} · {c.productName}
-                        {c.spec ? ` (${c.spec})` : ""} : {c.quantity.toLocaleString()}
-                        {c.unit}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
 
             <NoteForm dateStr={selected} initialContent={selectedData.note} />
           </>
