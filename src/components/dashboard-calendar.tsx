@@ -540,7 +540,7 @@ export function DashboardCalendar({
             {selected === todayStr && carryoverItems && carryoverItems.length > 0 && (
               <div className="mb-4">
                 <p className="mb-1 text-xs font-bold" style={{ color: "var(--erp-warning)" }}>
-                  이월 (다음달 등록 예정) {carryoverItems.length}건
+                  오늘 이월 처리 완료 (다음달로 등록) {carryoverItems.length}건
                 </p>
                 <ul className="space-y-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
                   {carryoverItems.map((c) => (
