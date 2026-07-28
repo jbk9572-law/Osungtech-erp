@@ -256,8 +256,8 @@ export default async function DashboardPage({
 
   for (const item of salesItems ?? []) {
     const date = item.sales_orders.order_date;
-    // 이월 건은 달력의 order_date 자리가 아니라 오늘의 업무 쪽에서만
-    // 별도로 보여준다(아래 carryoverSalesItems 참고).
+    // 이월 건은 달력의 order_date 자리가 아니라 입력일(created_at) 쪽에서만
+    // 보여준다(아래 이월 병합 루프 참고).
     if (isCarryover(date, item.sales_orders.created_at)) continue;
     const amount = item.quantity * Number(item.unit_price);
     const bucket = ensure(date);
