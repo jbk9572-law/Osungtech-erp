@@ -14,6 +14,18 @@ function toDateStr(year: number, month: number, day: number) {
   return `${year}-${pad(month)}-${pad(day)}`;
 }
 
+// "이월" 판정: 등록된 매출/매입 날짜(order_date)가, 실제로 그 건을 입력한
+// 달(created_at)보다 나중인지 여부다. "오늘" 기준으로 매번 다시 계산되는
+// 값이 아니라 그 건 자체에 고정된 성질이라, 시간이 아무리 지나도 바뀌지
+// 않는다 — 그래서 오늘의 업무에서는 (달이 바뀌어도) 계속 보여야 하고,
+// 반대로 그 order_date에 해당하는 달력 날짜에는 원래 매출/매입처럼
+// 보이면 안 된다(이미 오늘의 업무 쪽에서 별도로 보여주고 있으므로).
+function isCarryover(orderDate: string, createdAt: string) {
+  const created = new Date(createdAt);
+  const createdMonth = `${created.getFullYear()}-${pad(created.getMonth() + 1)}`;
+  return orderDate.slice(0, 7) > createdMonth;
+}
+
 function buildWeeks(year: number, month: number) {
   const firstWeekday = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -51,20 +63,23 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  // "이월"은 "다음 달에 할 일이 있다"는 예고가 아니라, 실제 작업(등록)은
-  // 오늘 끝냈는데 정산/계산 편의상 매출·매입 날짜만 다음 달 날짜로 찍어둔
-  // 것을 뜻한다. 그래서 실제로 작업한 날(등록 시각 = created_at)의
-  // "오늘의 업무"에만 하루짜리로 보여야 하고, 그 뒤(다음날부터, 그리고
-  // 실제로 그 달이 됐을 때도) 다시 보일 필요가 없다 — 이미 오늘 처리
-  // 완료된 것이기 때문이다. 그래서 판정 기준은 "오늘 등록됐고(created_at),
-  // 등록된 날짜(order_date)가 오늘이 속한 달보다 나중"인 것으로 잡는다.
-  const todayMonthEnd = toDateStr(
-    now.getFullYear(),
-    now.getMonth() + 1,
-    new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  // 이월 후보를 DB에서 걸러낼 때, order_date와 created_at을 직접 비교하는
+  // 조건은 PostgREST 필터로 표현할 수 없어(두 컬럼끼리 비교) 넉넉한 기간
+  // 범위로 먼저 가져온 뒤 isCarryover()로 정확히 골라낸다. 실제로 이월
+  // 등록은 항상 월말 즈음 다음 달 날짜로만 하므로, 지난 6개월~다음 3개월이면
+  // 실사용에서 놓칠 일이 없다.
+  const carryoverRangeStart = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+  const carryoverRangeEnd = new Date(now.getFullYear(), now.getMonth() + 4, 0);
+  const carryoverFrom = toDateStr(
+    carryoverRangeStart.getFullYear(),
+    carryoverRangeStart.getMonth() + 1,
+    1
   );
-  const todayStartIso = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const todayEndIso = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+  const carryoverTo = toDateStr(
+    carryoverRangeEnd.getFullYear(),
+    carryoverRangeEnd.getMonth() + 1,
+    carryoverRangeEnd.getDate()
+  );
 
   const {
     data: { user },
@@ -90,14 +105,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, suppliers(name))"
+        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -136,18 +151,16 @@ export default async function DashboardPage({
       .select(
         "quantity, unit_price, spec, remark, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
       )
-      .gt("sales_orders.order_date", todayMonthEnd)
-      .gte("sales_orders.created_at", todayStartIso)
-      .lt("sales_orders.created_at", todayEndIso)
+      .gte("sales_orders.order_date", carryoverFrom)
+      .lte("sales_orders.order_date", carryoverTo)
       .order("order_date", { referencedTable: "sales_orders", ascending: true }),
     supabase
       .from("purchase_order_items")
       .select(
         "quantity, unit_cost, spec, remark, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
       )
-      .gt("purchase_orders.purchase_date", todayMonthEnd)
-      .gte("purchase_orders.created_at", todayStartIso)
-      .lt("purchase_orders.created_at", todayEndIso)
+      .gte("purchase_orders.purchase_date", carryoverFrom)
+      .lte("purchase_orders.purchase_date", carryoverTo)
       .order("purchase_date", { referencedTable: "purchase_orders", ascending: true }),
     user
       ? getNotificationSummary(supabase, user.id)
@@ -232,6 +245,9 @@ export default async function DashboardPage({
 
   for (const item of salesItems ?? []) {
     const date = item.sales_orders.order_date;
+    // 이월 건은 달력의 order_date 자리가 아니라 오늘의 업무 쪽에서만
+    // 별도로 보여준다(아래 carryoverSalesItems 참고).
+    if (isCarryover(date, item.sales_orders.created_at)) continue;
     const amount = item.quantity * Number(item.unit_price);
     const bucket = ensure(date);
     bucket.salesCount += 1;
@@ -260,6 +276,7 @@ export default async function DashboardPage({
 
   for (const item of purchaseItems ?? []) {
     const date = item.purchase_orders.purchase_date;
+    if (isCarryover(date, item.purchase_orders.created_at)) continue;
     const amount = item.quantity * Number(item.unit_cost);
     const bucket = ensure(date);
     bucket.purchaseCount += 1;
@@ -303,28 +320,33 @@ export default async function DashboardPage({
 
   // 매출/매입 본문과 똑같은 형식(거래처 > 품목 > 규격:수량/금액)으로 보여주고
   // 카톡 복사에도 같이 담기게, salesItems/purchaseItems와 동일한 ItemRow
-  // 모양으로 만든다.
-  const carryoverSalesItems: ItemRow[] = (carryoverSales ?? []).map((item) => ({
-    partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
-    productName: item.products?.name ?? "상품 미상",
-    spec: item.spec || item.products?.spec || "",
-    unit: item.products?.unit ?? "",
-    quantity: item.quantity,
-    amount: item.quantity * Number(item.unit_price),
-    orderId: item.sales_order_id,
-    remark: item.remark,
-  }));
+  // 모양으로 만든다. carryoverFrom~carryoverTo 기간으로 넉넉히 가져온 것 중
+  // 실제로 이월 조건(isCarryover)에 맞는 것만 걸러낸다.
+  const carryoverSalesItems: ItemRow[] = (carryoverSales ?? [])
+    .filter((item) => isCarryover(item.sales_orders.order_date, item.sales_orders.created_at))
+    .map((item) => ({
+      partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
+      productName: item.products?.name ?? "상품 미상",
+      spec: item.spec || item.products?.spec || "",
+      unit: item.products?.unit ?? "",
+      quantity: item.quantity,
+      amount: item.quantity * Number(item.unit_price),
+      orderId: item.sales_order_id,
+      remark: item.remark,
+    }));
 
-  const carryoverPurchaseItems: ItemRow[] = (carryoverPurchases ?? []).map((item) => ({
-    partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
-    productName: item.products?.name ?? "상품 미상",
-    spec: item.spec || item.products?.spec || "",
-    unit: item.products?.unit ?? "",
-    quantity: item.quantity,
-    amount: item.quantity * Number(item.unit_cost),
-    orderId: item.purchase_order_id,
-    remark: item.remark,
-  }));
+  const carryoverPurchaseItems: ItemRow[] = (carryoverPurchases ?? [])
+    .filter((item) => isCarryover(item.purchase_orders.purchase_date, item.purchase_orders.created_at))
+    .map((item) => ({
+      partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
+      productName: item.products?.name ?? "상품 미상",
+      spec: item.spec || item.products?.spec || "",
+      unit: item.products?.unit ?? "",
+      quantity: item.quantity,
+      amount: item.quantity * Number(item.unit_cost),
+      orderId: item.purchase_order_id,
+      remark: item.remark,
+    }));
 
   const todaySalesTotal = (todaySales ?? []).reduce(
     (sum, item) => sum + item.quantity * Number(item.unit_price),
