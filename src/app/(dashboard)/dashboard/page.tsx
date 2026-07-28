@@ -19,10 +19,12 @@ function toDateStr(year: number, month: number, day: number) {
 // created_at의 날짜(실제 입력일)에 표시하되, order_date는 회계상 다음 달
 // 실적으로 잡으려고 일부러 넘겨둔 것이므로 그 금액을 입력일의 매출/매입
 // 합계(salesTotal/purchaseTotal)에 더하면 안 된다 — 그러면 아직 도래하지
-// 않은 달의 실적이 이번 달 실적에 섞여버린다. 그래서 carryoverSalesItems/
-// carryoverPurchaseItems라는 별도 목록에 담아 입력일 쪽에서 "이월"이라고
-// 구분해서만 보여준다(아래 dataByDate 구성 부분 참고). order_date에 해당하는
-// 달력 날짜에는 원래 매출/매입처럼 보이면 안 된다.
+// 않은 달의 실적이 이번 달 실적에 섞여버린다. 그래서 salesItems/
+// purchaseItems 목록에는 다른 품목과 똑같이 끼워 넣어 거래처/품목 트리에
+// 자연스럽게 같이 보이게 하되, isCarryover 플래그만 표시해 화면에서 "이월"
+// 배지로 구분하고, salesCount/salesTotal(정식 합계)에는 넣지 않는다(아래
+// dataByDate 구성 부분 참고). order_date에 해당하는 달력 날짜에는 원래
+// 매출/매입처럼 보이면 안 된다.
 function isCarryover(orderDate: string, createdAt: string) {
   const created = new Date(createdAt);
   const createdMonth = `${created.getFullYear()}-${pad(created.getMonth() + 1)}`;
@@ -188,6 +190,7 @@ export default async function DashboardPage({
     amount: number;
     orderId: string;
     remark: string | null;
+    isCarryover: boolean;
   };
 
   type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
@@ -201,8 +204,6 @@ export default async function DashboardPage({
     purchaseItems: ItemRow[];
     salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
     purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
-    carryoverSalesItems: ItemRow[];
-    carryoverPurchaseItems: ItemRow[];
     note: string;
   };
 
@@ -219,8 +220,6 @@ export default async function DashboardPage({
         purchaseItems: [],
         salesPaperCalcByPartner: {},
         purchasePaperCalcByPartner: {},
-        carryoverSalesItems: [],
-        carryoverPurchaseItems: [],
         note: "",
       };
     }
@@ -283,6 +282,7 @@ export default async function DashboardPage({
       amount,
       orderId: item.sales_order_id,
       remark: item.remark,
+      isCarryover: false,
     });
   }
 
@@ -309,21 +309,24 @@ export default async function DashboardPage({
       amount,
       orderId: item.purchase_order_id,
       remark: item.remark,
+      isCarryover: false,
     });
   }
 
-  // 이월 건: 실제로 입력한 날짜(created_at)의 달력 날짜에서 "이월" 항목으로
-  // 따로 보여준다. order_date(회계상 날짜)는 아직 도래하지 않은 달의 실적으로
-  // 잡으려고 일부러 넘겨둔 것이므로, 이 금액을 입력일의 salesTotal/
-  // purchaseTotal(그날의 실제 매출/매입 합계)에 더하지 않는다 — 더하면 아직
-  // 오지 않은 달의 매출/매입이 이번 달 실적에 섞여버린다. 지금 보고 있는
-  // 달[monthStart, monthEnd] 범위 안에 입력일이 들어올 때만 반영한다(다른
-  // 달을 보는 중이면 여기서 걸러진다).
+  // 이월 건: 실제로 입력한 날짜(created_at)의 달력 날짜에서 다른 품목과
+  // 똑같이 salesItems/purchaseItems 목록에 끼워 넣는다(거래처/품목 트리에
+  // 자연스럽게 같이 보이도록) — 다만 isCarryover 플래그를 달아 화면에서
+  // "이월" 배지로 구분하고, order_date(회계상 날짜)는 아직 도래하지 않은
+  // 달의 실적으로 잡으려고 일부러 넘겨둔 것이므로 이 금액을 입력일의
+  // salesCount/salesTotal(그날의 정식 매출/매입 합계)에는 더하지 않는다 —
+  // 더하면 아직 오지 않은 달의 매출/매입이 이번 달 실적에 섞여버린다. 지금
+  // 보고 있는 달[monthStart, monthEnd] 범위 안에 입력일이 들어올 때만
+  // 반영한다(다른 달을 보는 중이면 여기서 걸러진다).
   for (const item of carryoverSales ?? []) {
     if (!isCarryover(item.sales_orders.order_date, item.sales_orders.created_at)) continue;
     const date = toLocalDateStr(item.sales_orders.created_at);
     if (date < monthStart || date > monthEnd) continue;
-    ensure(date).carryoverSalesItems.push({
+    ensure(date).salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
       productName: item.products?.name ?? "상품 미상",
       spec: item.spec || item.products?.spec || "",
@@ -332,6 +335,7 @@ export default async function DashboardPage({
       amount: item.quantity * Number(item.unit_price),
       orderId: item.sales_order_id,
       remark: item.remark,
+      isCarryover: true,
     });
   }
 
@@ -339,7 +343,7 @@ export default async function DashboardPage({
     if (!isCarryover(item.purchase_orders.purchase_date, item.purchase_orders.created_at)) continue;
     const date = toLocalDateStr(item.purchase_orders.created_at);
     if (date < monthStart || date > monthEnd) continue;
-    ensure(date).carryoverPurchaseItems.push({
+    ensure(date).purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? "상품 미상",
       spec: item.spec || item.products?.spec || "",
@@ -348,6 +352,7 @@ export default async function DashboardPage({
       amount: item.quantity * Number(item.unit_cost),
       orderId: item.purchase_order_id,
       remark: item.remark,
+      isCarryover: true,
     });
   }
 
