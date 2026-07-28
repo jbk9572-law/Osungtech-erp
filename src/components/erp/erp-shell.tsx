@@ -13,6 +13,7 @@ import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
+import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
 import {
   MessengerWidget,
@@ -101,6 +102,7 @@ export function ErpShell({
       <RouteProgressBar />
       <NotificationToaster />
       <RecentMenuTracker />
+      <MidnightRefresh />
       <TitleBar
         logoUrl={logoUrl}
         companyName={companyName}

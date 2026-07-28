@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
@@ -209,6 +209,18 @@ export function DashboardCalendar({
     : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
   const [copiedType, setCopiedType] = useState<"sales" | "purchase" | null>(null);
+
+  // MidnightRefresh가 router.refresh()로 서버 데이터(todayStr 포함)를
+  // 새로 받아와도, 이 상태는 처음 마운트될 때 한 번만 정해지므로 자정이
+  // 지나도 그대로 남아있는다. "오늘"을 보고 있던 경우에 한해(다른 날짜를
+  // 직접 선택해둔 상태라면 건드리지 않는다) 새 오늘 날짜로 따라가게 한다.
+  const prevTodayStrRef = useRef(todayStr);
+  useEffect(() => {
+    if (prevTodayStrRef.current !== todayStr) {
+      setSelected((prev) => (prev === prevTodayStrRef.current ? todayStr : prev));
+      prevTodayStrRef.current = todayStr;
+    }
+  }, [todayStr]);
 
   const selectedData: DayData = (selected && dataByDate[selected]) || {
     salesCount: 0,
