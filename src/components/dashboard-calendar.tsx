@@ -112,14 +112,18 @@ function appendItemLines(
     partner.products.forEach((product, pi) => {
       if (pi > 0) lines.push("");
       lines.push(`  · ${product.productName}`);
-      for (const item of product.items) {
+      // 같은 품목 아래 규격/관리번호별로 줄이 여러 개 나뉜 경우(예: 롤 제품)는
+      // 카톡에 줄줄이 붙여넣기엔 너무 장황하므로 합계 한 줄만 담는다. 줄이
+      // 하나뿐이면 그 줄 자체가 합계이므로 그대로 보여준다.
+      if (product.items.length > 1) {
+        const { quantity } = productTotals(product.items);
+        const anyCarryover = product.items.some((item) => item.isCarryover);
+        lines.push(`    합계 - ${quantity.toLocaleString()}${anyCarryover ? " (이월)" : ""}`);
+      } else {
+        const item = product.items[0];
         const carryoverSuffix = item.isCarryover ? " (이월)" : "";
         lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${carryoverSuffix}`);
         if (item.remark) lines.push(`      (비고: ${item.remark})`);
-      }
-      if (product.items.length > 1) {
-        const { quantity } = productTotals(product.items);
-        lines.push(`    합계 - ${quantity.toLocaleString()}`);
       }
     });
     if (partner.paperCalc) {
@@ -158,6 +162,17 @@ async function copyText(text: string) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
   }
+}
+
+function CarryoverBadge() {
+  return (
+    <span
+      className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+      style={{ background: "#fff1dc", color: "#b26a00" }}
+    >
+      이월
+    </span>
+  );
 }
 
 export function DashboardCalendar({
@@ -390,7 +405,10 @@ export function DashboardCalendar({
               </div>
             </div>
 
-            <div className="mb-3 border-l-[3px] border-l-[#0b57d0] pl-2">
+            <div
+              className="mb-3 border-l-[3px] border-l-[#0b57d0] p-2"
+              style={{ background: "linear-gradient(90deg, #e8f0ff, transparent 60%)" }}
+            >
               <p className="mb-1 text-xs font-bold text-[#0b57d0]">
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
@@ -402,57 +420,80 @@ export function DashboardCalendar({
                       <div key={pi}>
                         <p className="font-bold">- {partner.partnerName}</p>
                         <div className="space-y-1 pl-3">
-                          {partner.products.map((product, di) => (
-                            <div key={di}>
-                              <p className="font-semibold">- {product.productName}</p>
-                              <ul className="space-y-1 pl-3 font-normal">
-                                {product.items.map((item, i) => (
-                                  <li key={i}>
-                                    <Link
-                                      href={`/purchases/${item.orderId}`}
-                                      className="flex items-start justify-between gap-2 hover:underline"
-                                    >
-                                      <span className="min-w-0 text-[#7fa8e6]">
-                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
-                                        {item.unit}
-                                        {item.isCarryover && (
-                                          <span
-                                            className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
-                                            style={{ background: "#fff1dc", color: "var(--erp-warning)" }}
+                          {partner.products.map((product, di) => {
+                            const anyCarryover = product.items.some((item) => item.isCarryover);
+                            return (
+                              <div key={di}>
+                                <p className="font-semibold text-[#1c1c1c]">- {product.productName}</p>
+                                <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
+                                  {product.items.length === 1 ? (
+                                    (() => {
+                                      const item = product.items[0];
+                                      return (
+                                        <li>
+                                          <Link
+                                            href={`/purchases/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
                                           >
-                                            이월
-                                          </span>
-                                        )}
-                                        {item.remark && (
-                                          <span className="block text-[10px] text-[#7fa8e6]/70">
-                                            비고: {item.remark}
-                                          </span>
-                                        )}
-                                      </span>
-                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                                    </Link>
-                                  </li>
-                                ))}
-                                {product.items.length > 1 &&
-                                  (() => {
-                                    const totals = productTotals(product.items);
-                                    return (
-                                      <li className="flex items-start justify-between gap-2">
-                                        <span className="min-w-0">
-                                          합계 - {totals.quantity.toLocaleString()}
-                                          {totals.unit}
-                                        </span>
-                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
-                                      </li>
-                                    );
-                                  })()}
-                              </ul>
-                            </div>
-                          ))}
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.isCarryover && <CarryoverBadge />}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                          </Link>
+                                        </li>
+                                      );
+                                    })()
+                                  ) : (
+                                    <>
+                                      {product.items.map((item, i) => (
+                                        <li key={i}>
+                                          <Link
+                                            href={`/purchases/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
+                                          >
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                          </Link>
+                                        </li>
+                                      ))}
+                                      {(() => {
+                                        const totals = productTotals(product.items);
+                                        return (
+                                          <li className="flex items-start justify-between gap-2">
+                                            <span className="min-w-0">
+                                              합계 - {totals.quantity.toLocaleString()}
+                                              {totals.unit}
+                                              {anyCarryover && <CarryoverBadge />}
+                                            </span>
+                                            <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                          </li>
+                                        );
+                                      })()}
+                                    </>
+                                  )}
+                                </ul>
+                              </div>
+                            );
+                          })}
                           {partner.paperCalc && (
                             <div>
-                              <p className="font-semibold">- {paperStockProductName}</p>
-                              <ul className="space-y-1 pl-3 font-normal text-[#7fa8e6]">
+                              <p className="font-semibold text-[#1c1c1c]">- {paperStockProductName}</p>
+                              <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
@@ -475,7 +516,10 @@ export function DashboardCalendar({
               )}
             </div>
 
-            <div className="mb-4 border-l-[3px] border-l-[#d31e3b] pl-2">
+            <div
+              className="mb-4 border-l-[3px] border-l-[#d31e3b] p-2"
+              style={{ background: "linear-gradient(90deg, #fdeaec, transparent 60%)" }}
+            >
               <p className="mb-1 text-xs font-bold text-[#d31e3b]">
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
@@ -487,57 +531,80 @@ export function DashboardCalendar({
                       <div key={pi}>
                         <p className="font-bold">- {partner.partnerName}</p>
                         <div className="space-y-1 pl-3">
-                          {partner.products.map((product, di) => (
-                            <div key={di}>
-                              <p className="font-semibold">- {product.productName}</p>
-                              <ul className="space-y-1 pl-3 font-normal">
-                                {product.items.map((item, i) => (
-                                  <li key={i}>
-                                    <Link
-                                      href={`/sales/${item.orderId}`}
-                                      className="flex items-start justify-between gap-2 hover:underline"
-                                    >
-                                      <span className="min-w-0 text-[#e2919d]">
-                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
-                                        {item.unit}
-                                        {item.isCarryover && (
-                                          <span
-                                            className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
-                                            style={{ background: "#fff1dc", color: "var(--erp-warning)" }}
+                          {partner.products.map((product, di) => {
+                            const anyCarryover = product.items.some((item) => item.isCarryover);
+                            return (
+                              <div key={di}>
+                                <p className="font-semibold text-[#1c1c1c]">- {product.productName}</p>
+                                <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
+                                  {product.items.length === 1 ? (
+                                    (() => {
+                                      const item = product.items[0];
+                                      return (
+                                        <li>
+                                          <Link
+                                            href={`/sales/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
                                           >
-                                            이월
-                                          </span>
-                                        )}
-                                        {item.remark && (
-                                          <span className="block text-[10px] text-[#e2919d]/70">
-                                            비고: {item.remark}
-                                          </span>
-                                        )}
-                                      </span>
-                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
-                                    </Link>
-                                  </li>
-                                ))}
-                                {product.items.length > 1 &&
-                                  (() => {
-                                    const totals = productTotals(product.items);
-                                    return (
-                                      <li className="flex items-start justify-between gap-2">
-                                        <span className="min-w-0">
-                                          합계 - {totals.quantity.toLocaleString()}
-                                          {totals.unit}
-                                        </span>
-                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
-                                      </li>
-                                    );
-                                  })()}
-                              </ul>
-                            </div>
-                          ))}
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.isCarryover && <CarryoverBadge />}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                          </Link>
+                                        </li>
+                                      );
+                                    })()
+                                  ) : (
+                                    <>
+                                      {product.items.map((item, i) => (
+                                        <li key={i}>
+                                          <Link
+                                            href={`/sales/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
+                                          >
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                          </Link>
+                                        </li>
+                                      ))}
+                                      {(() => {
+                                        const totals = productTotals(product.items);
+                                        return (
+                                          <li className="flex items-start justify-between gap-2">
+                                            <span className="min-w-0">
+                                              합계 - {totals.quantity.toLocaleString()}
+                                              {totals.unit}
+                                              {anyCarryover && <CarryoverBadge />}
+                                            </span>
+                                            <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                          </li>
+                                        );
+                                      })()}
+                                    </>
+                                  )}
+                                </ul>
+                              </div>
+                            );
+                          })}
                           {partner.paperCalc && (
                             <div>
-                              <p className="font-semibold">- {paperStockProductName}</p>
-                              <ul className="space-y-1 pl-3 font-normal text-[#e2919d]">
+                              <p className="font-semibold text-[#1c1c1c]">- {paperStockProductName}</p>
+                              <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
