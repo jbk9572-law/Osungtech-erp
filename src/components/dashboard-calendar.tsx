@@ -334,12 +334,12 @@ export function DashboardCalendar({
                   <div className="mt-0.5 flex gap-0.5">
                     {hasPurchaseDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#28a745]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#0b57d0]"}`}
                       />
                     ) : null}
                     {hasSalesDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#1f3b75]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#d31e3b]"}`}
                       />
                     ) : null}
                     {data?.note ? (
@@ -361,10 +361,10 @@ export function DashboardCalendar({
 
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6b7280]">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#28a745]" /> 매입
+            <span className="h-1.5 w-1.5 rounded-full bg-[#0b57d0]" /> 매입
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#1f3b75]" /> 매출
+            <span className="h-1.5 w-1.5 rounded-full bg-[#d31e3b]" /> 매출
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[#ff9800]" /> 메모
@@ -383,29 +383,29 @@ export function DashboardCalendar({
               <div className="flex shrink-0 gap-1">
                 <button
                   type="button"
-                  onClick={() => handleCopy("sales")}
-                  className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+                  onClick={() => handleCopy("purchase")}
+                  className="rounded-sm border border-[#0b57d0] bg-[#e8f0ff] px-2 py-1 text-xs font-bold text-[#0b57d0] hover:bg-[#d9e6ff]"
                 >
-                  {copiedType === "sales" ? "복사됨" : "매출 복사"}
+                  {copiedType === "purchase" ? "복사됨" : "매입 복사"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleCopy("purchase")}
-                  className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+                  onClick={() => handleCopy("sales")}
+                  className="rounded-sm border border-[#d31e3b] bg-[#fdeaec] px-2 py-1 text-xs font-bold text-[#d31e3b] hover:bg-[#fbd9dd]"
                 >
-                  {copiedType === "purchase" ? "복사됨" : "매입 복사"}
+                  {copiedType === "sales" ? "복사됨" : "매출 복사"}
                 </button>
               </div>
             </div>
 
-            <div className="mb-3">
-              <p className="mb-1 text-xs font-bold text-[#1f3b75]">
-                매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
+            <div className="mb-3 border-l-[3px] border-l-[#0b57d0] pl-2">
+              <p className="mb-1 text-xs font-bold text-[#0b57d0]">
+                매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
-              {(selectedData.salesItems.length > 0 ||
-                Object.keys(selectedData.salesPaperCalcByPartner).length > 0) && (
-                <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
-                  {buildPartnerBlocks(selectedData.salesItems, selectedData.salesPaperCalcByPartner).map(
+              {(selectedData.purchaseItems.length > 0 ||
+                Object.keys(selectedData.purchasePaperCalcByPartner).length > 0) && (
+                <div className="space-y-2 text-xs font-medium text-[#0b57d0]">
+                  {buildPartnerBlocks(selectedData.purchaseItems, selectedData.purchasePaperCalcByPartner).map(
                     (partner, pi) => (
                       <div key={pi}>
                         <p className="font-bold">- {partner.partnerName}</p>
@@ -417,14 +417,14 @@ export function DashboardCalendar({
                                 {product.items.map((item, i) => (
                                   <li key={i}>
                                     <Link
-                                      href={`/sales/${item.orderId}`}
+                                      href={`/purchases/${item.orderId}`}
                                       className="flex items-start justify-between gap-2 hover:underline"
                                     >
-                                      <span className="min-w-0 text-[#8ea3c9]">
+                                      <span className="min-w-0 text-[#7fa8e6]">
                                         {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                         {item.unit}
                                         {item.remark && (
-                                          <span className="block text-[10px] text-[#8ea3c9]/70">
+                                          <span className="block text-[10px] text-[#7fa8e6]/70">
                                             비고: {item.remark}
                                           </span>
                                         )}
@@ -452,11 +452,11 @@ export function DashboardCalendar({
                           {partner.paperCalc && (
                             <div>
                               <p className="font-semibold">- {paperStockProductName}</p>
-                              <ul className="space-y-1 pl-3 font-normal text-[#8ea3c9]">
+                              <ul className="space-y-1 pl-3 font-normal text-[#7fa8e6]">
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 text-[#1f3b75]">
+                                <li className="flex items-start justify-between gap-2 text-[#0b57d0]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
@@ -473,16 +473,16 @@ export function DashboardCalendar({
                   )}
                 </div>
               )}
-              {selectedData.carryoverSalesItems.length > 0 && (
+              {selectedData.carryoverPurchaseItems.length > 0 && (
                 <div className="mt-2">
                   <p
                     className="mb-1 text-[10px] font-bold uppercase tracking-wide"
                     style={{ color: "var(--erp-warning)" }}
                   >
-                    이월 (다음달 등록) {selectedData.carryoverSalesItems.length}건
+                    이월 (다음달 등록) {selectedData.carryoverPurchaseItems.length}건
                   </p>
-                  <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
-                    {buildPartnerBlocks(selectedData.carryoverSalesItems, {}).map((partner, pi) => (
+                  <div className="space-y-2 text-xs font-medium text-[#0b57d0]">
+                    {buildPartnerBlocks(selectedData.carryoverPurchaseItems, {}).map((partner, pi) => (
                       <div key={pi}>
                         <p className="font-bold">- {partner.partnerName}</p>
                         <div className="space-y-1 pl-3">
@@ -493,14 +493,14 @@ export function DashboardCalendar({
                                 {product.items.map((item, i) => (
                                   <li key={i}>
                                     <Link
-                                      href={`/sales/${item.orderId}`}
+                                      href={`/purchases/${item.orderId}`}
                                       className="flex items-start justify-between gap-2 hover:underline"
                                     >
-                                      <span className="min-w-0 text-[#8ea3c9]">
+                                      <span className="min-w-0 text-[#7fa8e6]">
                                         {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                         {item.unit}
                                         {item.remark && (
-                                          <span className="block text-[10px] text-[#8ea3c9]/70">
+                                          <span className="block text-[10px] text-[#7fa8e6]/70">
                                             비고: {item.remark}
                                           </span>
                                         )}
@@ -533,14 +533,14 @@ export function DashboardCalendar({
               )}
             </div>
 
-            <div className="mb-4">
-              <p className="mb-1 text-xs font-bold text-[#28a745]">
-                매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
+            <div className="mb-4 border-l-[3px] border-l-[#d31e3b] pl-2">
+              <p className="mb-1 text-xs font-bold text-[#d31e3b]">
+                매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
-              {(selectedData.purchaseItems.length > 0 ||
-                Object.keys(selectedData.purchasePaperCalcByPartner).length > 0) && (
-                <div className="space-y-2 text-xs font-medium text-[#28a745]">
-                  {buildPartnerBlocks(selectedData.purchaseItems, selectedData.purchasePaperCalcByPartner).map(
+              {(selectedData.salesItems.length > 0 ||
+                Object.keys(selectedData.salesPaperCalcByPartner).length > 0) && (
+                <div className="space-y-2 text-xs font-medium text-[#d31e3b]">
+                  {buildPartnerBlocks(selectedData.salesItems, selectedData.salesPaperCalcByPartner).map(
                     (partner, pi) => (
                       <div key={pi}>
                         <p className="font-bold">- {partner.partnerName}</p>
@@ -552,14 +552,14 @@ export function DashboardCalendar({
                                 {product.items.map((item, i) => (
                                   <li key={i}>
                                     <Link
-                                      href={`/purchases/${item.orderId}`}
+                                      href={`/sales/${item.orderId}`}
                                       className="flex items-start justify-between gap-2 hover:underline"
                                     >
-                                      <span className="min-w-0 text-[#8fcb9d]">
+                                      <span className="min-w-0 text-[#e2919d]">
                                         {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                         {item.unit}
                                         {item.remark && (
-                                          <span className="block text-[10px] text-[#8fcb9d]/70">
+                                          <span className="block text-[10px] text-[#e2919d]/70">
                                             비고: {item.remark}
                                           </span>
                                         )}
@@ -587,11 +587,11 @@ export function DashboardCalendar({
                           {partner.paperCalc && (
                             <div>
                               <p className="font-semibold">- {paperStockProductName}</p>
-                              <ul className="space-y-1 pl-3 font-normal text-[#8fcb9d]">
+                              <ul className="space-y-1 pl-3 font-normal text-[#e2919d]">
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 text-[#28a745]">
+                                <li className="flex items-start justify-between gap-2 text-[#d31e3b]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
@@ -608,16 +608,16 @@ export function DashboardCalendar({
                   )}
                 </div>
               )}
-              {selectedData.carryoverPurchaseItems.length > 0 && (
+              {selectedData.carryoverSalesItems.length > 0 && (
                 <div className="mt-2">
                   <p
                     className="mb-1 text-[10px] font-bold uppercase tracking-wide"
                     style={{ color: "var(--erp-warning)" }}
                   >
-                    이월 (다음달 등록) {selectedData.carryoverPurchaseItems.length}건
+                    이월 (다음달 등록) {selectedData.carryoverSalesItems.length}건
                   </p>
-                  <div className="space-y-2 text-xs font-medium text-[#28a745]">
-                    {buildPartnerBlocks(selectedData.carryoverPurchaseItems, {}).map((partner, pi) => (
+                  <div className="space-y-2 text-xs font-medium text-[#d31e3b]">
+                    {buildPartnerBlocks(selectedData.carryoverSalesItems, {}).map((partner, pi) => (
                       <div key={pi}>
                         <p className="font-bold">- {partner.partnerName}</p>
                         <div className="space-y-1 pl-3">
@@ -628,14 +628,14 @@ export function DashboardCalendar({
                                 {product.items.map((item, i) => (
                                   <li key={i}>
                                     <Link
-                                      href={`/purchases/${item.orderId}`}
+                                      href={`/sales/${item.orderId}`}
                                       className="flex items-start justify-between gap-2 hover:underline"
                                     >
-                                      <span className="min-w-0 text-[#8fcb9d]">
+                                      <span className="min-w-0 text-[#e2919d]">
                                         {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                         {item.unit}
                                         {item.remark && (
-                                          <span className="block text-[10px] text-[#8fcb9d]/70">
+                                          <span className="block text-[10px] text-[#e2919d]/70">
                                             비고: {item.remark}
                                           </span>
                                         )}

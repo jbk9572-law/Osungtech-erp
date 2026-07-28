@@ -388,11 +388,11 @@
   width: 100%;
   height: 34px;
   padding: 0 12px;
-  background: none;
+  background: #fafbfd;
   border: none;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--erp-text);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--erp-primary-dark);
   text-align: left;
 }
 
@@ -420,24 +420,29 @@
   display: flex;
   align-items: center;
   height: 30px;
-  padding: 0 12px 0 28px;
+  padding: 0 12px 0 25px;
   font-size: 12.5px;
-  color: var(--erp-text);
+  font-weight: 500;
+  color: var(--erp-text-muted);
   border: none;
+  border-left: 3px solid transparent;
   background: none;
   text-align: left;
   width: 100%;
   text-decoration: none;
+  transition: color 0.12s, background 0.12s;
 }
 
 .erp-tree-item:hover {
   background: var(--erp-hover);
+  color: var(--erp-text);
 }
 
 .erp-tree-item.active {
   background: var(--erp-selected);
   color: var(--erp-primary);
-  font-weight: 600;
+  font-weight: 700;
+  border-left-color: var(--erp-primary);
 }
 
 .erp-tree-item.disabled {
