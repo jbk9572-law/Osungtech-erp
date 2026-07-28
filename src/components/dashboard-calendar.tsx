@@ -31,6 +31,8 @@ type DayData = {
   purchaseItems: ItemRow[];
   salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
+  carryoverSalesItems: ItemRow[];
+  carryoverPurchaseItems: ItemRow[];
   note: string;
 };
 
@@ -134,12 +136,20 @@ function appendItemLines(
 function buildSalesCopyText(dateStr: string, data: DayData, paperStockProductName: string) {
   const lines: string[] = [`${dateStr} 매출`, "", `[매출] ${data.salesCount}건`];
   appendItemLines(data.salesItems, data.salesPaperCalcByPartner, paperStockProductName, lines);
+  if (data.carryoverSalesItems.length > 0) {
+    lines.push("", `[이월 - 다음달 등록] ${data.carryoverSalesItems.length}건`);
+    appendItemLines(data.carryoverSalesItems, {}, paperStockProductName, lines);
+  }
   return lines.join("\n");
 }
 
 function buildPurchaseCopyText(dateStr: string, data: DayData, paperStockProductName: string) {
   const lines: string[] = [`${dateStr} 매입`, "", `[매입] ${data.purchaseCount}건`];
   appendItemLines(data.purchaseItems, data.purchasePaperCalcByPartner, paperStockProductName, lines);
+  if (data.carryoverPurchaseItems.length > 0) {
+    lines.push("", `[이월 - 다음달 등록] ${data.carryoverPurchaseItems.length}건`);
+    appendItemLines(data.carryoverPurchaseItems, {}, paperStockProductName, lines);
+  }
   return lines.join("\n");
 }
 
@@ -209,6 +219,8 @@ export function DashboardCalendar({
     purchaseItems: [],
     salesPaperCalcByPartner: {},
     purchasePaperCalcByPartner: {},
+    carryoverSalesItems: [],
+    carryoverPurchaseItems: [],
     note: "",
   };
 
@@ -286,9 +298,13 @@ export function DashboardCalendar({
                       ? "text-[#1f3b75]"
                       : "text-[#1c1c1c]";
               const showLowStockDot = isToday && lowStockToday;
+              const hasSalesDot = !!data?.salesCount || !!data?.carryoverSalesItems.length;
+              const hasPurchaseDot = !!data?.purchaseCount || !!data?.carryoverPurchaseItems.length;
               const tooltipParts = [
                 data?.salesCount ? `매출 ${data.salesCount}건` : null,
                 data?.purchaseCount ? `매입 ${data.purchaseCount}건` : null,
+                data?.carryoverSalesItems.length ? `이월 매출 ${data.carryoverSalesItems.length}건` : null,
+                data?.carryoverPurchaseItems.length ? `이월 매입 ${data.carryoverPurchaseItems.length}건` : null,
                 data?.note ? "메모 있음" : null,
                 showLowStockDot ? "안전재고 부족" : null,
               ].filter(Boolean);
@@ -316,12 +332,12 @@ export function DashboardCalendar({
                     </div>
                   ) : null}
                   <div className="mt-0.5 flex gap-0.5">
-                    {data?.purchaseCount ? (
+                    {hasPurchaseDot ? (
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#28a745]"}`}
                       />
                     ) : null}
-                    {data?.salesCount ? (
+                    {hasSalesDot ? (
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#1f3b75]"}`}
                       />
@@ -457,6 +473,64 @@ export function DashboardCalendar({
                   )}
                 </div>
               )}
+              {selectedData.carryoverSalesItems.length > 0 && (
+                <div className="mt-2">
+                  <p
+                    className="mb-1 text-[10px] font-bold uppercase tracking-wide"
+                    style={{ color: "var(--erp-warning)" }}
+                  >
+                    이월 (다음달 등록) {selectedData.carryoverSalesItems.length}건
+                  </p>
+                  <div className="space-y-2 text-xs font-medium text-[#1f3b75]">
+                    {buildPartnerBlocks(selectedData.carryoverSalesItems, {}).map((partner, pi) => (
+                      <div key={pi}>
+                        <p className="font-bold">- {partner.partnerName}</p>
+                        <div className="space-y-1 pl-3">
+                          {partner.products.map((product, di) => (
+                            <div key={di}>
+                              <p className="font-semibold">- {product.productName}</p>
+                              <ul className="space-y-1 pl-3 font-normal">
+                                {product.items.map((item, i) => (
+                                  <li key={i}>
+                                    <Link
+                                      href={`/sales/${item.orderId}`}
+                                      className="flex items-start justify-between gap-2 hover:underline"
+                                    >
+                                      <span className="min-w-0 text-[#8ea3c9]">
+                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                        {item.unit}
+                                        {item.remark && (
+                                          <span className="block text-[10px] text-[#8ea3c9]/70">
+                                            비고: {item.remark}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                                {product.items.length > 1 &&
+                                  (() => {
+                                    const totals = productTotals(product.items);
+                                    return (
+                                      <li className="flex items-start justify-between gap-2">
+                                        <span className="min-w-0">
+                                          합계 - {totals.quantity.toLocaleString()}
+                                          {totals.unit}
+                                        </span>
+                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                      </li>
+                                    );
+                                  })()}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mb-4">
@@ -532,6 +606,64 @@ export function DashboardCalendar({
                       </div>
                     )
                   )}
+                </div>
+              )}
+              {selectedData.carryoverPurchaseItems.length > 0 && (
+                <div className="mt-2">
+                  <p
+                    className="mb-1 text-[10px] font-bold uppercase tracking-wide"
+                    style={{ color: "var(--erp-warning)" }}
+                  >
+                    이월 (다음달 등록) {selectedData.carryoverPurchaseItems.length}건
+                  </p>
+                  <div className="space-y-2 text-xs font-medium text-[#28a745]">
+                    {buildPartnerBlocks(selectedData.carryoverPurchaseItems, {}).map((partner, pi) => (
+                      <div key={pi}>
+                        <p className="font-bold">- {partner.partnerName}</p>
+                        <div className="space-y-1 pl-3">
+                          {partner.products.map((product, di) => (
+                            <div key={di}>
+                              <p className="font-semibold">- {product.productName}</p>
+                              <ul className="space-y-1 pl-3 font-normal">
+                                {product.items.map((item, i) => (
+                                  <li key={i}>
+                                    <Link
+                                      href={`/purchases/${item.orderId}`}
+                                      className="flex items-start justify-between gap-2 hover:underline"
+                                    >
+                                      <span className="min-w-0 text-[#8fcb9d]">
+                                        {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
+                                        {item.unit}
+                                        {item.remark && (
+                                          <span className="block text-[10px] text-[#8fcb9d]/70">
+                                            비고: {item.remark}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="shrink-0">{item.amount.toLocaleString()}원</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                                {product.items.length > 1 &&
+                                  (() => {
+                                    const totals = productTotals(product.items);
+                                    return (
+                                      <li className="flex items-start justify-between gap-2">
+                                        <span className="min-w-0">
+                                          합계 - {totals.quantity.toLocaleString()}
+                                          {totals.unit}
+                                        </span>
+                                        <span className="shrink-0">{totals.amount.toLocaleString()}원</span>
+                                      </li>
+                                    );
+                                  })()}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
