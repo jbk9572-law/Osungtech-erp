@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
 import { PriceScheduleForm } from "@/components/price-schedule-form";
-import { CancelPriceScheduleButton } from "@/components/cancel-price-schedule-button";
+import { PriceScheduleRow } from "@/components/price-schedule-row";
 import { PartnerForm } from "@/components/partner-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateCustomer, deleteCustomer } from "@/app/(dashboard)/customers/actions";
@@ -32,7 +32,7 @@ export default async function CustomerDetailPage({
     supabase.from("products").select("id, sku, name, spec").order("name"),
     supabase
       .from("price_change_schedules")
-      .select("id, new_unit_price, effective_date, products(sku, name, spec)")
+      .select("id, product_id, new_unit_price, effective_date, products(sku, name, spec)")
       .eq("customer_id", id)
       .is("applied_at", null)
       .order("effective_date", { ascending: true }),
@@ -40,6 +40,14 @@ export default async function CustomerDetailPage({
 
   if (!customer) {
     notFound();
+  }
+
+  // 단가 예약 목록에 "기존가 → 변경가 (차액)"을 보여주려면 상품별 현재
+  // 판매단가가 필요하다. customer_product_prices는 거래처+상품당 최신
+  // 단가 하나만 남기는 구조라 이 맵으로 바로 조회할 수 있다.
+  const currentPriceByProduct: Record<string, number> = {};
+  for (const price of prices ?? []) {
+    if (price.product_id) currentPriceByProduct[price.product_id] = Number(price.unit_price);
   }
 
   return (
@@ -102,18 +110,16 @@ export default async function CustomerDetailPage({
           {schedules && schedules.length > 0 && (
             <div className="mt-3 flex flex-col gap-1.5">
               {schedules.map((s) => (
-                <div
+                <PriceScheduleRow
                   key={s.id}
-                  className="flex items-center justify-between rounded p-2 text-xs"
-                  style={{ background: "#eef2ff", border: "1px solid #c7d2fe" }}
-                >
-                  <span>
-                    {s.effective_date}부터 {s.products?.sku} · {s.products?.name}
-                    {s.products?.spec ? ` (${s.products.spec})` : ""} →{" "}
-                    <strong>{Number(s.new_unit_price).toLocaleString()}원</strong>
-                  </span>
-                  <CancelPriceScheduleButton id={s.id} customerId={customer.id} />
-                </div>
+                  id={s.id}
+                  customerId={customer.id}
+                  productId={s.product_id}
+                  productLabel={`${s.products?.sku} · ${s.products?.name}${s.products?.spec ? ` (${s.products.spec})` : ""}`}
+                  currentUnitPrice={currentPriceByProduct[s.product_id] ?? null}
+                  newUnitPrice={Number(s.new_unit_price)}
+                  effectiveDate={s.effective_date}
+                />
               ))}
             </div>
           )}
