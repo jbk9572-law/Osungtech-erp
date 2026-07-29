@@ -4,15 +4,16 @@ import type { Company, InvoiceColor, InvoiceItem, CopyLabel } from "./types";
 export type InvoiceCopies = "both" | "receiver" | "supplier";
 export type InvoiceLayout = "half" | "full";
 
-// 전지 모드(품목이 많은 날 한 부 전체를 A4 한 장에 꽉 채워 찍는 모드)에서
-// 페이지당 담을 수 있는 최대 품목 줄 수. 실측 PDF가 있는 반절판(0707 원본)과
-// 달리 전지판은 별도 실측 대조본이 없어, 남은 페이지 높이(A4 297mm - 상하
-// 여백 22.9mm ≒ 1036px)에서 머리글(46px)+공급자/공급받는자칸(107px)+표
-// 머리글(19px)+합계·메모칸(57px, 마지막 페이지 기준)+꼬리말(24px)을 뺀
-// 값을 줄 높이(24px)로 나눠 잡은 값이다(1036-253=783px → 약 32줄). 실제
-// 인쇄 결과 하단에 여백이 많이 남는다는 피드백을 받아 20 → 32로 올렸다.
-// 더 조정이 필요하면 이 숫자만 바꾸면 된다.
-const FULL_LAYOUT_ITEMS_PER_PAGE = 32;
+// 전지 모드(품목이 많은 날 한 부 전체를 A4 한 장에 꽉 채워 찍는 모드) 실측값.
+// 처음엔 반절판(0707 원본)의 줄 높이(24)를 그대로 재사용했다가 인쇄 결과
+// 하단에 여백이 많이 남는 문제가 있었다 — 전지판은 반절판과 아예 다른
+// 서식이라 줄 높이 자체가 다른데, 줄 수만 늘려서(20→32) 메꾸려 한 게
+// 잘못된 접근이었다. 사용자가 준 실제 전지 서식 PDF를
+// `pdftotext -bbox`로 열어 품목 줄 사이 실제 간격을 재보니 29.3pt였다
+// (품목 20줄 기준 페이지를 꽉 채움). 이를 CSS px로 환산(29.3 × 96/72 ≈ 39)한
+// 값을 그대로 쓴다.
+const FULL_LAYOUT_ITEMS_PER_PAGE = 20;
+const FULL_LAYOUT_ITEM_ROW_HEIGHT = 39;
 
 function chunkItems<T>(items: T[], size: number): T[][] {
   if (items.length === 0) return [[]];
@@ -87,6 +88,7 @@ export function InvoicePage({
               summaryItems={items}
               memo={memo}
               minItemRows={FULL_LAYOUT_ITEMS_PER_PAGE}
+              itemRowHeight={FULL_LAYOUT_ITEM_ROW_HEIGHT}
               pageIndex={p.pageIndex}
               pageCount={p.pageCount}
               showSummary={p.isLastPage}

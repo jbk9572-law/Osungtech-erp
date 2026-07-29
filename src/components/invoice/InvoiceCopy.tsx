@@ -20,6 +20,7 @@ export function InvoiceCopy({
   items,
   memo,
   minItemRows = 10,
+  itemRowHeight,
   pageIndex = 1,
   pageCount = 1,
   showSummary = true,
@@ -38,6 +39,7 @@ export function InvoiceCopy({
   // (summaryItems)이 달라지므로 따로 받는다 — 2연식(한 장짜리)에서는
   // 항상 같으므로 생략하면 items를 그대로 쓴다.
   minItemRows?: number;
+  itemRowHeight?: number;
   pageIndex?: number;
   pageCount?: number;
   showSummary?: boolean;
@@ -65,7 +67,7 @@ export function InvoiceCopy({
             pageCount={pageCount}
           />
           <SupplierSection company={company} customerSlot={<CustomerSection customerName={customerName} />} />
-          <ItemsTable items={items} color={color} minItemRows={minItemRows} />
+          <ItemsTable items={items} color={color} minItemRows={minItemRows} itemRowHeight={itemRowHeight} />
           {showSummary && <SummarySection items={summaryItems ?? items} memo={memo} />}
         </tbody>
       </table>
