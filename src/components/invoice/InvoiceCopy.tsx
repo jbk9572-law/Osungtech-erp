@@ -19,6 +19,11 @@ export function InvoiceCopy({
   docNumber,
   items,
   memo,
+  minItemRows = 10,
+  pageIndex = 1,
+  pageCount = 1,
+  showSummary = true,
+  summaryItems,
 }: {
   copyLabel: CopyLabel;
   color: InvoiceColor;
@@ -28,6 +33,15 @@ export function InvoiceCopy({
   docNumber: string;
   items: InvoiceItem[];
   memo?: string | null;
+  // 전지 모드에서 품목이 페이지당 용량을 넘으면 여러 장으로 나뉜다. 이때
+  // 이 장에 실제로 찍히는 품목(items)과 합계 계산에 쓰이는 전체 품목
+  // (summaryItems)이 달라지므로 따로 받는다 — 2연식(한 장짜리)에서는
+  // 항상 같으므로 생략하면 items를 그대로 쓴다.
+  minItemRows?: number;
+  pageIndex?: number;
+  pageCount?: number;
+  showSummary?: boolean;
+  summaryItems?: InvoiceItem[];
 }) {
   const colorStyle = { color: COLOR_HEX[color], "--invoice-line": COLOR_HEX[color] } as React.CSSProperties;
 
@@ -43,10 +57,16 @@ export function InvoiceCopy({
           ))}
         </colgroup>
         <tbody>
-          <Header copyLabel={copyLabel} orderDate={orderDate} docNumber={docNumber} />
+          <Header
+            copyLabel={copyLabel}
+            orderDate={orderDate}
+            docNumber={docNumber}
+            pageIndex={pageIndex}
+            pageCount={pageCount}
+          />
           <SupplierSection company={company} customerSlot={<CustomerSection customerName={customerName} />} />
-          <ItemsTable items={items} color={color} />
-          <SummarySection items={items} memo={memo} />
+          <ItemsTable items={items} color={color} minItemRows={minItemRows} />
+          {showSummary && <SummarySection items={summaryItems ?? items} memo={memo} />}
         </tbody>
       </table>
       {/* 도장: 0707 원본에서 셀 경계에 갇히지 않고 종사업장/상호/주소 행 경계를
