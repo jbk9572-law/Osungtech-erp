@@ -160,6 +160,40 @@ export async function schedulePriceChange(
   return { success: "단가 변경을 예약했습니다." };
 }
 
+// 아직 적용되지 않은 예약의 변경 단가/적용일을 고친다. 취소 후 다시
+// 등록하는 대신 그 자리에서 바로 고칠 수 있게 한다.
+export async function updatePriceSchedule(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const customerId = String(formData.get("customer_id") ?? "");
+  const newUnitPrice = Number(formData.get("new_unit_price") ?? 0);
+  const effectiveDate = String(formData.get("effective_date") ?? "");
+
+  if (!id || !effectiveDate) {
+    return { error: "적용일을 입력해주세요." };
+  }
+  const today = new Date().toLocaleDateString("sv-SE");
+  if (effectiveDate <= today) {
+    return { error: "적용일은 내일 이후 날짜여야 합니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("price_change_schedules")
+    .update({ new_unit_price: newUnitPrice, effective_date: effectiveDate })
+    .eq("id", id)
+    .is("applied_at", null);
+
+  if (error) {
+    return { error: "수정에 실패했습니다." };
+  }
+
+  if (customerId) revalidatePath(`/customers/${customerId}`);
+  return { success: "단가 예약을 수정했습니다." };
+}
+
 export async function cancelPriceSchedule(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   const customerId = String(formData.get("customer_id") ?? "");
