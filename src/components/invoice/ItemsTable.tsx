@@ -3,8 +3,15 @@ import { TABLE } from "./InvoiceMetrics";
 import { ITEM_COLS, type InvoiceItem, type InvoiceColor } from "./types";
 
 // 0707 원본 품목 헤더: 월일 / 품 명 / 규 격 / 단위 / 수량 / 단 가 / 공급가액 / 세 액 / 비고/합계
-export function ItemsTable({ items, color }: { items: InvoiceItem[]; color: InvoiceColor }) {
-  const minItemRows = 10;
+export function ItemsTable({
+  items,
+  color,
+  minItemRows = 10,
+}: {
+  items: InvoiceItem[];
+  color: InvoiceColor;
+  minItemRows?: number;
+}) {
   const blankCount = Math.max(0, minItemRows - items.length);
   const tint = color === "blue" ? "rgba(0,0,255,0.08)" : "rgba(255,0,0,0.08)";
   // 원본 실제 출력물은 품목 영역 첫 줄이 항상 흰색이고, 그다음 줄부터 번갈아

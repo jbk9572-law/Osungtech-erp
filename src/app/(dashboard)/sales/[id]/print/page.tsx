@@ -8,7 +8,7 @@ import {
   ZenithTechCanvas,
   KtSolutionCanvas,
 } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
-import { InvoicePage, type InvoiceCopies } from "@/components/invoice/InvoicePage";
+import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
 import type { InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
@@ -18,12 +18,13 @@ export default async function SalesPrintPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string }>;
 }) {
   const { id } = await params;
-  const { copies: copiesParam } = await searchParams;
+  const { copies: copiesParam, layout: layoutParam } = await searchParams;
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
+  const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
@@ -241,29 +242,51 @@ export default async function SalesPrintPage({
   });
 
   return (
-    <div className="mx-auto max-w-5xl print:mx-0 print:max-w-none print-page-wrapper">
-      <div className="mb-4 flex items-center justify-between print:hidden">
+    <div
+      className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
+    >
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
         <Link href="/sales" className="erp-btn erp-btn-danger">
           목록으로
         </Link>
-        <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
-          {(
-            [
-              ["both", "양쪽 다"],
-              ["receiver", "공급받는자만"],
-              ["supplier", "공급자만"],
-            ] as const
-          ).map(([value, label]) => (
-            <Link
-              key={value}
-              href={`/sales/${id}/print?copies=${value}`}
-              className={`rounded px-3 py-1.5 ${
-                copies === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+            {(
+              [
+                ["both", "양쪽 다"],
+                ["receiver", "공급받는자만"],
+                ["supplier", "공급자만"],
+              ] as const
+            ).map(([value, label]) => (
+              <Link
+                key={value}
+                href={`/sales/${id}/print?copies=${value}&layout=${layout}`}
+                className={`rounded px-3 py-1.5 ${
+                  copies === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+            {(
+              [
+                ["half", "2연식"],
+                ["full", "전지"],
+              ] as const
+            ).map(([value, label]) => (
+              <Link
+                key={value}
+                href={`/sales/${id}/print?copies=${copies}&layout=${value}`}
+                className={`rounded px-3 py-1.5 ${
+                  layout === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
         <PrintButton />
       </div>
@@ -275,6 +298,7 @@ export default async function SalesPrintPage({
         items={invoiceItems}
         memo={order.memo}
         copies={copies}
+        layout={layout}
       />
     </div>
   );

@@ -7,10 +7,14 @@ export function Header({
   copyLabel,
   orderDate,
   docNumber,
+  pageIndex = 1,
+  pageCount = 1,
 }: {
   copyLabel: CopyLabel;
   orderDate: string;
   docNumber: string;
+  pageIndex?: number;
+  pageCount?: number;
 }) {
   return (
     <tr style={{ height: HEADER.rowHeight }}>
@@ -127,7 +131,7 @@ export function Header({
           className="absolute top-0 border-l border-[var(--invoice-line)]"
           style={{ height: HEADER.dateRowLineOffsetY }}
         />
-        1/1
+        {pageIndex}/{pageCount}
         <span
           aria-hidden
           className="absolute left-0 right-0 border-t border-[var(--invoice-line)]"
