@@ -112,14 +112,18 @@ function appendItemLines(
     partner.products.forEach((product, pi) => {
       if (pi > 0) lines.push("");
       lines.push(`  · ${product.productName}`);
-      for (const item of product.items) {
+      // 같은 품목 아래 규격/관리번호별로 줄이 여러 개 나뉜 경우(예: 롤 제품)는
+      // 카톡에 줄줄이 붙여넣기엔 너무 장황하므로 합계 한 줄만 담는다. 줄이
+      // 하나뿐이면 그 줄 자체가 합계이므로 그대로 보여준다.
+      if (product.items.length > 1) {
+        const { quantity } = productTotals(product.items);
+        const anyCarryover = product.items.some((item) => item.isCarryover);
+        lines.push(`    합계 - ${quantity.toLocaleString()}${anyCarryover ? " (이월)" : ""}`);
+      } else {
+        const item = product.items[0];
         const carryoverSuffix = item.isCarryover ? " (이월)" : "";
         lines.push(`    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${carryoverSuffix}`);
         if (item.remark) lines.push(`      (비고: ${item.remark})`);
-      }
-      if (product.items.length > 1) {
-        const { quantity } = productTotals(product.items);
-        lines.push(`    합계 - ${quantity.toLocaleString()}`);
       }
     });
     if (partner.paperCalc) {
