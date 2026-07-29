@@ -7,10 +7,12 @@ export function ItemsTable({
   items,
   color,
   minItemRows = 10,
+  itemRowHeight = TABLE.itemRowHeight,
 }: {
   items: InvoiceItem[];
   color: InvoiceColor;
   minItemRows?: number;
+  itemRowHeight?: number;
 }) {
   const blankCount = Math.max(0, minItemRows - items.length);
   const tint = color === "blue" ? "rgba(0,0,255,0.08)" : "rgba(255,0,0,0.08)";
@@ -53,7 +55,7 @@ export function ItemsTable({
         <tr
           key={item.id}
           className={item.isReference ? "text-gray-600" : "text-black"}
-          style={{ height: TABLE.itemRowHeight, fontSize: TABLE.itemFontSize, ...stripe(i) }}
+          style={{ height: itemRowHeight, fontSize: TABLE.itemFontSize, ...stripe(i) }}
         >
           <Cell colSpan={ITEM_COLS[0]} align="center" hideBorder={["t", "b"]}>
             {item.monthDay}
@@ -88,7 +90,7 @@ export function ItemsTable({
         </tr>
       ))}
       {Array.from({ length: blankCount }).map((_, i) => (
-        <tr key={`blank-${i}`} style={{ height: TABLE.itemRowHeight, ...stripe(items.length + i) }}>
+        <tr key={`blank-${i}`} style={{ height: itemRowHeight, ...stripe(items.length + i) }}>
           <Cell colSpan={ITEM_COLS[0]} hideBorder={["t", "b"]} />
           <Cell colSpan={ITEM_COLS[1]} hideBorder={["t", "b"]} />
           <Cell colSpan={ITEM_COLS[2]} hideBorder={["t", "b"]} />
