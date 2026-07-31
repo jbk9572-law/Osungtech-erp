@@ -82,6 +82,130 @@ export async function deleteSupplier(_prevState: FormState, formData: FormData):
   redirect("/suppliers");
 }
 
+export async function upsertSupplierPrice(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  const productId = String(formData.get("product_id") ?? "");
+  const unitCost = Number(formData.get("unit_cost") ?? 0);
+  if (!supplierId || !productId) {
+    return { error: "상품을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("supplier_product_prices")
+    .upsert(
+      { supplier_id: supplierId, product_id: productId, unit_cost: unitCost },
+      { onConflict: "supplier_id,product_id" }
+    );
+
+  if (error) {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath(`/suppliers/${supplierId}`);
+  return { success: "매입단가가 저장되었습니다." };
+}
+
+// 미래 특정 날짜부터 적용할 매입단가를 예약해둔다. customers/actions.ts의
+// schedulePriceChange와 동일한 이유로(supplier_product_prices가 "공급처+상품당
+// 최신 단가 하나"만 남기는 구조라서) 별도 테이블에 쌓아두고, 그 날짜가 된 뒤
+// 화면을 열 때 applyDuePurchasePriceSchedules가 반영한다.
+export async function schedulePurchasePriceChange(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  const productId = String(formData.get("product_id") ?? "");
+  const newUnitCost = Number(formData.get("new_unit_cost") ?? 0);
+  const effectiveDate = String(formData.get("effective_date") ?? "");
+
+  if (!supplierId || !productId || !effectiveDate) {
+    return { error: "상품과 적용일을 모두 입력해주세요." };
+  }
+  const today = new Date().toLocaleDateString("sv-SE");
+  if (effectiveDate <= today) {
+    return { error: "적용일은 내일 이후 날짜여야 합니다." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("purchase_price_change_schedules").insert({
+    supplier_id: supplierId,
+    product_id: productId,
+    new_unit_cost: newUnitCost,
+    effective_date: effectiveDate,
+    created_by: user?.id ?? null,
+  });
+
+  if (error) {
+    return { error: "예약에 실패했습니다." };
+  }
+
+  revalidatePath(`/suppliers/${supplierId}`);
+  return { success: "단가 변경을 예약했습니다." };
+}
+
+export async function updatePurchasePriceSchedule(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  const newUnitCost = Number(formData.get("new_unit_cost") ?? 0);
+  const effectiveDate = String(formData.get("effective_date") ?? "");
+
+  if (!id || !effectiveDate) {
+    return { error: "적용일을 입력해주세요." };
+  }
+  const today = new Date().toLocaleDateString("sv-SE");
+  if (effectiveDate <= today) {
+    return { error: "적용일은 내일 이후 날짜여야 합니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("purchase_price_change_schedules")
+    .update({ new_unit_cost: newUnitCost, effective_date: effectiveDate })
+    .eq("id", id)
+    .is("applied_at", null);
+
+  if (error) {
+    return { error: "수정에 실패했습니다." };
+  }
+
+  if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
+  return { success: "단가 예약을 수정했습니다." };
+}
+
+export async function cancelPurchasePriceSchedule(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("purchase_price_change_schedules")
+    .delete()
+    .eq("id", id)
+    .is("applied_at", null);
+
+  if (error) {
+    return { error: "취소에 실패했습니다." };
+  }
+
+  if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
+  return { success: "예약을 취소했습니다." };
+}
+
 export async function importSuppliersExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {

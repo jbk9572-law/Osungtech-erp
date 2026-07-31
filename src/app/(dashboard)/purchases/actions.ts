@@ -310,6 +310,21 @@ export async function createPurchase(
     )
   );
 
+  // 매출 등록과 동일하게, 이번에 실제로 적용한 매입단가를 공급처별 단가로도
+  // 저장해둔다 — 다음부터 같은 공급처+상품 조합은 이 단가가 기본값으로 뜬다.
+  await Promise.all(
+    items.map((item) =>
+      supabase.from("supplier_product_prices").upsert(
+        {
+          supplier_id: supplierId,
+          product_id: item.productId,
+          unit_cost: item.unitCost,
+        },
+        { onConflict: "supplier_id,product_id" }
+      )
+    )
+  );
+
   if (pendingPaperCalc) {
     await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
   }

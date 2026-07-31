@@ -43,3 +43,41 @@ export async function applyDuePriceSchedules(supabase: SupabaseServerClient, cus
       due.map((s) => s.id)
     );
 }
+
+// applyDuePriceSchedules와 동일한 방식의 매입단가(공급처) 버전. 별도 예약
+// 테이블(purchase_price_change_schedules)에 쌓인 예약 중 효력일이 도래한
+// 것을 supplier_product_prices에 반영한다.
+export async function applyDuePurchasePriceSchedules(supabase: SupabaseServerClient, supplierId?: string) {
+  const today = new Date().toLocaleDateString("sv-SE");
+
+  let query = supabase
+    .from("purchase_price_change_schedules")
+    .select("id, supplier_id, product_id, new_unit_cost, effective_date")
+    .is("applied_at", null)
+    .lte("effective_date", today)
+    .order("effective_date", { ascending: true });
+
+  if (supplierId) query = query.eq("supplier_id", supplierId);
+
+  const { data: due } = await query;
+  if (!due || due.length === 0) return;
+
+  for (const schedule of due) {
+    await supabase.from("supplier_product_prices").upsert(
+      {
+        supplier_id: schedule.supplier_id,
+        product_id: schedule.product_id,
+        unit_cost: schedule.new_unit_cost,
+      },
+      { onConflict: "supplier_id,product_id" }
+    );
+  }
+
+  await supabase
+    .from("purchase_price_change_schedules")
+    .update({ applied_at: new Date().toISOString() })
+    .in(
+      "id",
+      due.map((s) => s.id)
+    );
+}
