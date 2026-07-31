@@ -15,6 +15,7 @@ type Detail = {
 
 type ItemGroup = {
   productId: string;
+  sku: string;
   name: string;
   spec: string;
   unit: string | null;
@@ -44,7 +45,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_orders!inner(order_date, customers(id, name)), products(name, spec, unit)"
+        "quantity, unit_price, product_id, sales_orders!inner(order_date, customers(id, name)), products(sku, name, spec, unit)"
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -53,7 +54,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, product_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(name, spec, unit)"
+        "quantity, unit_cost, product_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(sku, name, spec, unit)"
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
@@ -65,10 +66,10 @@ export default async function MonthlyReportPage({
   const companyIds = new Set<string>();
   const companyNameByKey = new Map<string, string>();
 
-  function ensureGroup(productId: string, name: string, spec: string, unit: string | null) {
+  function ensureGroup(productId: string, sku: string, name: string, spec: string, unit: string | null) {
     let group = groups.get(productId);
     if (!group) {
-      group = { productId, name, spec, unit, inQty: 0, inAmount: 0, outQty: 0, outAmount: 0, details: [] };
+      group = { productId, sku, name, spec, unit, inQty: 0, inAmount: 0, outQty: 0, outAmount: 0, details: [] };
       groups.set(productId, group);
     }
     return group;
@@ -77,10 +78,11 @@ export default async function MonthlyReportPage({
   for (const row of purchaseRows ?? []) {
     const supplier = row.purchase_orders?.suppliers;
     const amount = row.quantity * Number(row.unit_cost);
+    const sku = row.products?.sku ?? "-";
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
-    const group = ensureGroup(row.product_id, productName, spec, unit);
+    const group = ensureGroup(row.product_id, sku, productName, spec, unit);
     group.inQty += row.quantity;
     group.inAmount += amount;
     if (supplier) {
@@ -106,10 +108,11 @@ export default async function MonthlyReportPage({
   for (const row of salesRows ?? []) {
     const customer = row.sales_orders?.customers;
     const amount = row.quantity * Number(row.unit_price);
+    const sku = row.products?.sku ?? "-";
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
-    const group = ensureGroup(row.product_id, productName, spec, unit);
+    const group = ensureGroup(row.product_id, sku, productName, spec, unit);
     group.outQty += row.quantity;
     group.outAmount += amount;
     if (customer) {
@@ -137,6 +140,7 @@ export default async function MonthlyReportPage({
   if (keyword) {
     itemGroups = itemGroups.filter(
       (g) =>
+        g.sku.toLowerCase().includes(keyword) ||
         g.name.toLowerCase().includes(keyword) ||
         g.spec.toLowerCase().includes(keyword) ||
         g.details.some((d) => d.companyName.toLowerCase().includes(keyword))
@@ -212,7 +216,7 @@ export default async function MonthlyReportPage({
             type="text"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="품목명, 규격, 거래처명"
+            placeholder="품목명, SKU, 규격, 거래처명"
             className="erp-input"
             style={{ width: "100%" }}
           />
@@ -300,6 +304,9 @@ export default async function MonthlyReportPage({
               <Fragment key={g.productId}>
                 <tr style={{ background: "#f5f7fa" }}>
                   <td style={{ fontWeight: 700 }}>
+                    {g.sku !== "-" && (
+                      <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>{g.sku} · </span>
+                    )}
                     {g.name}
                     {g.spec !== "-" && (
                       <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}> ({g.spec})</span>
