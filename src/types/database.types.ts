@@ -1236,6 +1236,30 @@ export type Database = {
         };
         Returns: string;
       };
+      update_sale_with_items: {
+        Args: {
+          p_id: string;
+          p_customer_id: string;
+          p_warehouse_id: string;
+          p_order_date: string;
+          p_memo: string | null;
+          p_updated_by: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      update_purchase_with_items: {
+        Args: {
+          p_id: string;
+          p_supplier_id: string;
+          p_warehouse_id: string;
+          p_purchase_date: string;
+          p_memo: string | null;
+          p_updated_by: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
       create_purchase_and_sale_with_items: {
         Args: {
           p_supplier_id: string;
