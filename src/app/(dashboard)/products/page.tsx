@@ -5,6 +5,13 @@ import { ClickableRow } from "@/components/clickable-row";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importProductsExcel } from "@/app/(dashboard)/products/actions";
 
+// 판매가/매입가/안전재고를 0으로 등록해두는 경우는 실질적으로 없고("아직
+// 안 정했다"는 뜻으로 쓰이므로), 목록에 "0"이 그대로 찍히면 진짜 0원/0개인
+// 것과 구분이 안 된다. 0이면 "-"로 보여준다.
+function formatNumOrDash(n: number | null | undefined) {
+  return n ? Number(n).toLocaleString() : "-";
+}
+
 export default async function ProductsPage({
   searchParams,
 }: {
@@ -93,6 +100,7 @@ export default async function ProductsPage({
               <th>카테고리</th>
               <th>공급업체</th>
               <th className="num">판매가</th>
+              <th className="num">매입가</th>
               <th className="num">안전재고</th>
               <th />
             </tr>
@@ -112,10 +120,13 @@ export default async function ProductsPage({
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.categories?.name ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.suppliers?.name ?? "-"}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {Number(product.price).toLocaleString()}
+                  {formatNumOrDash(product.price)}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {product.reorder_point.toLocaleString()}
+                  {formatNumOrDash(product.cost)}
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  {formatNumOrDash(product.reorder_point)}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   수정 →
@@ -124,7 +135,7 @@ export default async function ProductsPage({
             ))}
             {!products.length && (
               <tr>
-                <td colSpan={10} className="erp-grid-empty">
+                <td colSpan={11} className="erp-grid-empty">
                   {keyword ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
                 </td>
               </tr>

@@ -143,7 +143,11 @@ export function ProductForm({
         placeholder="판매가"
         type="number"
         step="0.01"
-        defaultValue={initial?.price ?? ""}
+        // 0은 "미입력"과 실질적으로 같은 뜻으로 쓰인다(가격/재고기준을 0으로
+        // 등록해두는 경우가 없으므로) — ?? 대신 ||를 써서 0도 빈칸으로
+        // 보이게 하고, 입력 안 하면 그대로 0으로 저장된다(스키마가 not null
+        // default 0).
+        defaultValue={initial?.price || ""}
         className="erp-input"
       />
       <input
@@ -151,14 +155,14 @@ export function ProductForm({
         placeholder="원가"
         type="number"
         step="0.01"
-        defaultValue={initial?.cost ?? ""}
+        defaultValue={initial?.cost || ""}
         className="erp-input"
       />
       <input
         name="reorder_point"
         placeholder="안전재고 (재주문 기준 수량)"
         type="number"
-        defaultValue={initial?.reorder_point ?? ""}
+        defaultValue={initial?.reorder_point || ""}
         className="erp-input"
       />
       <input
