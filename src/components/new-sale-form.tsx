@@ -937,14 +937,20 @@ export function NewSaleForm({
                       {row.productId && product && (() => {
                         const availableStock =
                           (product.stock ?? 0) + (originalQtyByProduct.get(row.productId) ?? 0);
-                        const short = row.quantity > availableStock;
+                        // "재고 900"만 보여주면 이 출고를 반영하기 전인지 후인지
+                        // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
+                        // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
+                        // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
+                        const remaining = availableStock - row.quantity;
+                        const short = remaining < 0;
+                        const unit = product.unit ?? "";
                         return (
-                          <p
-                            className="text-[10.5px]"
-                            style={{ color: short ? "#dc3545" : "var(--erp-text-muted)" }}
-                          >
-                            재고 {(product.stock ?? 0).toLocaleString()}{product.unit ?? ""}
-                            {short && " · 부족"}
+                          <p className="text-[10.5px]" style={{ color: short ? "#dc3545" : "#0b57d0" }}>
+                            재고 {availableStock.toLocaleString()}
+                            {unit} - 출고 {row.quantity.toLocaleString()}
+                            {unit} = {remaining.toLocaleString()}
+                            {unit}
+                            {short && " (부족)"}
                           </p>
                         );
                       })()}
