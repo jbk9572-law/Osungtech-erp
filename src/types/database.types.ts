@@ -300,6 +300,13 @@ export type Database = {
             referencedRelation: "purchase_orders";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "inventory_transactions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
         ];
       };
       company_profile: {
