@@ -413,78 +413,28 @@ export async function updatePurchase(
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 재고를 건드리기 전에 기존 품목/창고 정보를 먼저 읽어둔다.
-  const [{ data: oldItems }, { data: oldOrder }] = await Promise.all([
-    supabase.from("purchase_order_items").select("product_id, quantity").eq("purchase_order_id", id),
-    supabase.from("purchase_orders").select("warehouse_id").eq("id", id).maybeSingle(),
-  ]);
-
-  if (!oldOrder) {
-    return { error: "매입 거래를 찾을 수 없습니다." };
-  }
-
-  // 헤더 수정이 실제로 성공한 경우에만 재고에 손을 댄다 (RLS 등으로 수정이
-  // 막혀 있으면 재고만 잘못 되돌아가는 사고를 방지).
-  const { error } = await supabase
-    .from("purchase_orders")
-    .update({
-      supplier_id: supplierId,
-      warehouse_id: warehouseId,
-      purchase_date: purchaseDate,
-      memo,
-    })
-    .eq("id", id);
-
-  if (error) {
-    return { error: "매입 거래 수정에 실패했습니다." };
-  }
-
-  const reverseError = await reversePurchaseInventory(
-    supabase,
-    id,
-    oldOrder.warehouse_id,
-    oldItems ?? [],
-    user?.id ?? null
-  );
-  if (reverseError) {
-    return { error: `기존 재고 반영을 되돌리지 못해 수정을 중단했습니다: ${reverseError}` };
-  }
-
-  const { error: deleteItemsError } = await supabase
-    .from("purchase_order_items")
-    .delete()
-    .eq("purchase_order_id", id);
-  if (deleteItemsError) {
-    return { error: `기존 품목 삭제에 실패했습니다: ${deleteItemsError.message}` };
-  }
-
-  const { error: itemsError } = await supabase.from("purchase_order_items").insert(
-    items.map((item) => ({
-      purchase_order_id: id,
-      product_id: item.productId,
+  // 헤더 수정 + 기존 재고 되돌리기 + 품목 교체 + 새 재고 반영을 DB 함수
+  // 하나로 묶어 원자적으로 처리한다 — createPurchase와 같은 이유로, 이전에는
+  // 이 단계들을 개별 요청으로 보내서 중간(특히 "새 품목 삽입")에 실패하면
+  // 헤더/재고는 이미 바뀌었는데 품목이 0개로 남는 불일치가 생길 수 있었다.
+  const { error } = await supabase.rpc("update_purchase_with_items", {
+    p_id: id,
+    p_supplier_id: supplierId,
+    p_warehouse_id: warehouseId,
+    p_purchase_date: purchaseDate,
+    p_memo: memo,
+    p_updated_by: user?.id ?? null,
+    p_items: items.map((item) => ({
+      productId: item.productId,
       spec: item.spec || null,
       quantity: item.quantity,
-      unit_cost: item.unitCost,
+      unitCost: item.unitCost,
       remark: item.remark || null,
-    }))
-  );
-  if (itemsError) {
-    return { error: `품목 등록에 실패했습니다: ${itemsError.message}` };
-  }
+    })),
+  });
 
-  const { error: invError } = await supabase.from("inventory_transactions").insert(
-    items.map((item) => ({
-      product_id: item.productId,
-      warehouse_id: warehouseId,
-      type: "in" as const,
-      quantity: item.quantity,
-      reference: `purchase_order:${id}`,
-      purchase_order_id: id,
-      created_by: user?.id ?? null,
-    }))
-  );
-  if (invError) {
-    return { error: `재고 반영에 실패했습니다: ${invError.message}` };
+  if (error) {
+    return { error: `매입 거래 수정에 실패했습니다: ${error.message}` };
   }
 
   await Promise.all(
