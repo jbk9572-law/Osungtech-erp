@@ -35,7 +35,7 @@ export default async function InventoryProductHistoryPage({
     supabase
       .from("inventory_transactions")
       .select(
-        "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name))"
+        "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)"
       )
       .eq("product_id", productId)
       .order("created_at", { ascending: true }),
@@ -46,7 +46,17 @@ export default async function InventoryProductHistoryPage({
   }
 
   const allTx = (txRaw ?? []).reduce<
-    { id: string; date: string; type: string; signedQty: number; partnerName: string | null; note: string | null; href: string | null; balance: number }[]
+    {
+      id: string;
+      date: string;
+      type: string;
+      signedQty: number;
+      partnerName: string | null;
+      note: string | null;
+      href: string | null;
+      balance: number;
+      authorName: string | null;
+    }[]
   >((acc, t) => {
     const date = t.sales_orders?.order_date ?? t.purchase_orders?.purchase_date ?? t.created_at.slice(0, 10);
     const signedQty = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
@@ -64,6 +74,7 @@ export default async function InventoryProductHistoryPage({
           ? `/purchases/${t.purchase_order_id}`
           : null,
       balance,
+      authorName: t.profiles?.full_name ?? null,
     });
     return acc;
   }, []);
@@ -127,6 +138,7 @@ export default async function InventoryProductHistoryPage({
               <th>구분</th>
               <th>거래처</th>
               <th>비고</th>
+              <th>작성자</th>
               <th className="num">수량</th>
               <th className="num">재고 잔량</th>
             </tr>
@@ -145,6 +157,7 @@ export default async function InventoryProductHistoryPage({
                   </td>
                   <td>{row.partnerName ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.note || "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                   <td className="num" style={{ color: row.signedQty < 0 ? "var(--erp-danger)" : undefined }}>
                     {row.signedQty > 0 ? "+" : ""}
                     {row.signedQty.toLocaleString()}
@@ -162,7 +175,7 @@ export default async function InventoryProductHistoryPage({
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={6} className="erp-grid-empty">
+                <td colSpan={7} className="erp-grid-empty">
                   조건에 맞는 입출고 내역이 없습니다.
                 </td>
               </tr>
