@@ -236,8 +236,21 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
   );
   const byName = new Map((existing ?? []).map((c) => [c.name.trim(), c.id]));
 
+  type ImportPayload = {
+    name: string;
+    business_number: string | null;
+    representative_name: string | null;
+    contact_name: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    notes: string | null;
+    document_type: "출고증" | "명세표";
+  };
+
   const errors: ImportRowError[] = [];
-  let okCount = 0;
+  const toInsert: { rowNum: number; payload: ImportPayload }[] = [];
+  const toUpdate: { rowNum: number; payload: ImportPayload & { id: string } }[] = [];
 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2;
@@ -250,7 +263,7 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
 
     const businessNumber = cell(row, "사업자등록번호") || null;
     const documentTypeRaw = cell(row, "발행문서");
-    const payload = {
+    const payload: ImportPayload = {
       name,
       business_number: businessNumber,
       representative_name: cell(row, "대표자명") || null,
@@ -263,16 +276,39 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
     };
 
     const existingId = (businessNumber && byBusinessNumber.get(businessNumber)) || byName.get(name.trim());
+    if (existingId) {
+      toUpdate.push({ rowNum, payload: { ...payload, id: existingId } });
+    } else {
+      toInsert.push({ rowNum, payload });
+    }
+  }
 
-    const { error } = existingId
-      ? await supabase.from("customers").update(payload).eq("id", existingId)
-      : await supabase.from("customers").insert(payload);
+  // 행마다 update/insert를 따로 보내면 왕복이 행 수만큼 생긴다 — 신규 행은
+  // 청크 단위로 한 번에 insert하고, 기존 행은 id 기준 upsert로 한 번에
+  // 갱신한다(각 행이 서로 다른 id를 가지고 있어도 upsert는 행마다 정확히
+  // 그 id를 갱신한다). 청크 안에서 실패하면 그 청크의 모든 행을 실패로
+  // 표시한다.
+  const CHUNK_SIZE = 500;
+  let okCount = 0;
 
+  for (let i = 0; i < toInsert.length; i += CHUNK_SIZE) {
+    const chunk = toInsert.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase.from("customers").insert(chunk.map((r) => r.payload));
     if (error) {
-      errors.push({ row: rowNum, reason: "저장 실패" });
+      for (const { rowNum } of chunk) errors.push({ row: rowNum, reason: "저장 실패" });
       continue;
     }
-    okCount++;
+    okCount += chunk.length;
+  }
+
+  for (let i = 0; i < toUpdate.length; i += CHUNK_SIZE) {
+    const chunk = toUpdate.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase.from("customers").upsert(chunk.map((r) => r.payload), { onConflict: "id" });
+    if (error) {
+      for (const { rowNum } of chunk) errors.push({ row: rowNum, reason: "저장 실패" });
+      continue;
+    }
+    okCount += chunk.length;
   }
 
   revalidatePath("/customers");
