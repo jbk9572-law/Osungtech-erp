@@ -9,7 +9,7 @@ const SECTIONS: { prefix: string; label: string }[] = [
   { prefix: "/purchases", label: "매입관리" },
   { prefix: "/inventory", label: "재고관리" },
   { prefix: "/products", label: "품목관리" },
-  { prefix: "/customers", label: "판매처관리" },
+  { prefix: "/customers", label: "출고처관리" },
   { prefix: "/suppliers", label: "공급처관리" },
   // "/paper-calc/manual"이 "/paper-calc"의 하위 경로라서, 더 구체적인
   // 규칙을 먼저 둬야 재단 배치 시뮬레이터가 모조지 계산 탭으로 잘못

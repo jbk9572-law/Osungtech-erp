@@ -144,12 +144,12 @@ export default async function SalesPage({
           <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>거래처 / 상품 / 규격 검색</label>
+          <label>출고처 / 상품 / 규격 검색</label>
           <input
             type="text"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="거래처명, 상품명, SKU, 규격"
+            placeholder="출고처명, 상품명, SKU, 규격"
             className="erp-input"
             style={{ width: "100%" }}
           />
@@ -185,7 +185,7 @@ export default async function SalesPage({
           <thead>
             <tr>
               <th>거래일자</th>
-              <th>거래처</th>
+              <th>출고처</th>
               <th>작성자</th>
               <th>품목명</th>
               <th>규격</th>

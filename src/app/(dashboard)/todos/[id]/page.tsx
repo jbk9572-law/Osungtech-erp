@@ -77,7 +77,7 @@ export default async function TodoDetailPage({
           <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
             <span>유형: {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</span>
-            {row.suppliers?.name && <span>매입처: {row.suppliers.name}</span>}
+            {row.suppliers?.name && <span>공급처: {row.suppliers.name}</span>}
             {row.customers?.name && <span>출고처: {row.customers.name}</span>}
             <span>
               상태:{" "}

@@ -30,7 +30,7 @@ function customerFieldsFrom(formData: FormData) {
 export async function createCustomer(_prevState: FormState, formData: FormData): Promise<FormState> {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) {
-    return { error: "거래처명을 입력해주세요." };
+    return { error: "출고처명을 입력해주세요." };
   }
 
   const supabase = await createClient();
@@ -44,14 +44,14 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
   }
 
   revalidatePath("/customers");
-  return { success: "거래처가 등록되었습니다." };
+  return { success: "출고처가 등록되었습니다." };
 }
 
 export async function updateCustomer(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) {
-    return { error: "거래처명을 입력해주세요." };
+    return { error: "출고처명을 입력해주세요." };
   }
 
   const supabase = await createClient();
@@ -66,7 +66,7 @@ export async function updateCustomer(_prevState: FormState, formData: FormData):
 
   revalidatePath("/customers");
   revalidatePath(`/customers/${id}`);
-  return { success: "거래처 정보가 저장되었습니다." };
+  return { success: "출고처 정보가 저장되었습니다." };
 }
 
 export async function deleteCustomer(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -81,7 +81,7 @@ export async function deleteCustomer(_prevState: FormState, formData: FormData):
   if (error) {
     return {
       error: error.message.includes("foreign key")
-        ? "이 거래처와 연결된 매출/판매단가 내역이 있어 삭제할 수 없습니다."
+        ? "이 출고처와 연결된 매출/판매단가 내역이 있어 삭제할 수 없습니다."
         : "삭제에 실패했습니다.",
     };
   }

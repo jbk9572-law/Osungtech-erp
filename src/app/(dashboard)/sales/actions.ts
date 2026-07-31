@@ -80,7 +80,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
 
   if (!customerId || !warehouseId || !orderDate) {
-    return { error: "거래처, 창고, 거래일자를 모두 입력해주세요." };
+    return { error: "출고처, 창고, 거래일자를 모두 입력해주세요." };
   }
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };
@@ -184,7 +184,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !customerId || !warehouseId || !orderDate) {
-    return { error: "거래처, 창고, 거래일자를 모두 입력해주세요." };
+    return { error: "출고처, 창고, 거래일자를 모두 입력해주세요." };
   }
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };

@@ -140,12 +140,26 @@ export function MessengerWidget({
 
   function handleDelete(id: string, filePath: string | null) {
     if (!confirm("이 메시지를 삭제하시겠습니까?")) return;
+    const removed = messages.find((m) => m.id === id);
+    const removedIndex = messages.findIndex((m) => m.id === id);
     setMessages((prev) => prev.filter((m) => m.id !== id));
     startDeleteTransition(async () => {
       const fd = new FormData();
       fd.set("id", id);
       fd.set("file_path", filePath ?? "");
-      await deleteMessage(fd);
+      const result = await deleteMessage(fd);
+      // 삭제가 실패하면(RLS, 일시적 오류 등) 화면에서 지웠던 메시지를 원래
+      // 위치로 되돌린다 — 아니면 삭제 안 됐는데도 내 화면에서만 사라진
+      // 것처럼 보여서 다른 사람에게는 계속 보인다는 걸 알 방법이 없다.
+      if (result.error && removed) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === id)) return prev;
+          const next = [...prev];
+          next.splice(Math.min(removedIndex, next.length), 0, removed);
+          return next;
+        });
+        alert(result.error);
+      }
     });
   }
 

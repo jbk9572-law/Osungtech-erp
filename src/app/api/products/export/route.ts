@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
 import { buildXlsxResponse } from "@/lib/xlsx-response";
+import { requireAuthedApiUser } from "@/lib/require-auth";
 
 // 품목관리 엑셀 다운로드. 엑셀 일괄등록 템플릿과 같은 컬럼 순서로 내려줘서
 // 받은 파일을 그대로 수정해 다시 업로드할 수 있게 한다.
@@ -7,7 +7,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
-  const supabase = await createClient();
+  const { supabase, user } = await requireAuthedApiUser();
+  if (!user) return new Response("Unauthorized", { status: 401 });
   const { data } = await supabase
     .from("products")
     .select("*, suppliers(name)")
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
 
   const rows = products.map((p) => ({
     sku: p.sku,
-    매입처: p.suppliers?.name ?? "",
+    공급처: p.suppliers?.name ?? "",
     품목명: p.name,
     규격: p.spec ?? "",
     기초: p.base_package_qty != null ? Number(p.base_package_qty) : "",

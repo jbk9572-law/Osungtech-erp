@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { buildXlsxResponse, buildXlsxResponseFromWorkbook, currentMonthRange } from "@/lib/xlsx-response";
 import {
   buildLeadersSpecialWorkbook,
@@ -7,9 +6,10 @@ import {
 } from "@/lib/purchase-export-templates";
 import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
 import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
+import { requireAuthedApiUser } from "@/lib/require-auth";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
-// 검색어(q)가 등록된 매입처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
+// 검색어(q)가 등록된 공급처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
 // 경우엔 업체별 고정 서식으로, 그 외엔 일반 컬럼 나열로 내려준다.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +17,8 @@ export async function GET(request: Request) {
   const { from, to } = currentMonthRange();
   const now = new Date();
 
-  const supabase = await createClient();
+  const { supabase, user } = await requireAuthedApiUser();
+  if (!user) return new Response("Unauthorized", { status: 401 });
 
   let templatedSupplier: {
     id: string;
@@ -94,7 +95,7 @@ export async function GET(request: Request) {
 
   const rows = items.map((item) => ({
     매입일자: item.purchase_orders?.purchase_date ?? "",
-    공급업체명: item.purchase_orders?.suppliers?.name ?? "",
+    공급처명: item.purchase_orders?.suppliers?.name ?? "",
     SKU: item.products?.sku ?? "",
     품목명: item.products?.name ?? "",
     규격: item.spec || item.products?.spec || "",

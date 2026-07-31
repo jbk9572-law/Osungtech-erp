@@ -267,14 +267,14 @@ export default async function DashboardPage({
     // 아래 "모조지 사용량" 섹션에서 사이즈별로 정확히 보여주므로 목록에는
     // 넣지 않되, 이 라인의 실제 금액은 그 섹션의 합계 가격으로 옮겨 담는다.
     if (item.products?.sku === PAPER_STOCK_SKU) {
-      const partnerName = item.sales_orders.customers?.name ?? "거래처 미상";
+      const partnerName = item.sales_orders.customers?.name ?? "출고처 미상";
       const entry = ensurePaperCalcPartner(bucket.salesPaperCalcByPartner, partnerName);
       entry.amount += amount;
       entry.totalSheet += item.quantity;
       continue;
     }
     bucket.salesItems.push({
-      partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
+      partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
       productName: item.products?.name ?? "상품 미상",
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
@@ -327,7 +327,7 @@ export default async function DashboardPage({
     const date = toLocalDateStr(item.sales_orders.created_at);
     if (date < monthStart || date > monthEnd) continue;
     ensure(date).salesItems.push({
-      partnerName: item.sales_orders.customers?.name ?? "거래처 미상",
+      partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
       productName: item.products?.name ?? "상품 미상",
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
@@ -358,7 +358,7 @@ export default async function DashboardPage({
 
   for (const calc of salesPaperCalcs ?? []) {
     const bucket = ensure(calc.sales_orders.order_date);
-    const partnerName = calc.sales_orders.customers?.name ?? "거래처 미상";
+    const partnerName = calc.sales_orders.customers?.name ?? "출고처 미상";
     addPaperCalcSizesForPartner(bucket.salesPaperCalcByPartner, partnerName, calc.input_items);
   }
 

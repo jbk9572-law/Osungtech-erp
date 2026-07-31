@@ -103,7 +103,10 @@ export function NewPurchaseForm({
 }) {
   const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
   const [purchaseDate, setPurchaseDate] = useState(
-    () => initial?.purchaseDate ?? new Date().toISOString().slice(0, 10)
+    // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
+    // "어제" 날짜가 잡힌다. 로컬 날짜를 그대로 쓰는 toLocaleDateString("sv-SE")로
+    // 통일한다(price-schedule.ts 등 다른 곳의 "오늘" 계산과 동일한 방식).
+    () => initial?.purchaseDate ?? new Date().toLocaleDateString("sv-SE")
   );
   const [memo, setMemo] = useState(initial?.memo ?? "");
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
@@ -519,7 +522,7 @@ export function NewPurchaseForm({
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
-            <label>공급업체</label>
+            <label>공급처</label>
             <select
               name="supplier_id"
               required
@@ -528,7 +531,7 @@ export function NewPurchaseForm({
               className="erp-select"
             >
               <option value="" disabled>
-                공급업체 선택
+                공급처 선택
               </option>
               {suppliers.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>
@@ -576,7 +579,7 @@ export function NewPurchaseForm({
               {alsoCreateSale && (
                 <>
                   <div className="erp-field">
-                    <label>출고처 (거래처)</label>
+                    <label>출고처</label>
                     <select
                       value={saleCustomerId}
                       onChange={(e) => handleSaleCustomerChange(e.target.value)}

@@ -91,7 +91,7 @@ export function ProductForm({
         defaultValue={initial?.supplier_id ?? ""}
         className="erp-input"
       >
-        <option value="">공급업체 선택</option>
+        <option value="">공급처 선택</option>
         {suppliers.map((supplier) => (
           <option key={supplier.id} value={supplier.id}>
             {supplier.name}

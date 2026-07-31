@@ -111,7 +111,11 @@ export default async function InventoryPage({
           </thead>
           <tbody>
             {stockRows.map((row) => {
-              const isLow = row.quantity <= (row.reorderPoint ?? 0);
+              // 안전재고(재주문 기준)를 실제로 설정해둔(0보다 큰) 품목만 부족
+              // 판정한다 — 알림벨/대시보드(lib/notifications.ts)와 동일한 기준.
+              // 미설정(0) 품목까지 포함하면 재고가 0일 때 이 화면에서만 "재주문
+              // 필요"가 뜨고 알림에는 안 뜨는 불일치가 생긴다.
+              const isLow = (row.reorderPoint ?? 0) > 0 && row.quantity <= (row.reorderPoint ?? 0);
               return (
                 <ClickableRow key={row.id} href={`/inventory/${row.id}`}>
                   <td>{row.sku}</td>

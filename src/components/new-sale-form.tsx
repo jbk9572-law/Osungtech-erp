@@ -98,7 +98,10 @@ export function NewSaleForm({
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
-    () => initial?.orderDate ?? new Date().toISOString().slice(0, 10)
+    // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
+    // "어제" 날짜가 잡힌다. 로컬 날짜를 그대로 쓰는 toLocaleDateString("sv-SE")로
+    // 통일한다(price-schedule.ts 등 다른 곳의 "오늘" 계산과 동일한 방식).
+    () => initial?.orderDate ?? new Date().toLocaleDateString("sv-SE")
   );
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [rows, setRows] = useState<Row[]>(
@@ -497,7 +500,7 @@ export function NewSaleForm({
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
-            <label>거래처</label>
+            <label>출고처</label>
             <select
               name="customer_id"
               required
@@ -506,7 +509,7 @@ export function NewSaleForm({
               className="erp-select"
             >
               <option value="" disabled>
-                거래처 선택
+                출고처 선택
               </option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>

@@ -83,15 +83,19 @@ export async function sendMessage(
   return { success: "전송했습니다.", message: inserted };
 }
 
-export async function deleteMessage(formData: FormData) {
+// 위젯이 삭제 성공 여부를 알아야 실패 시 화면에서 지웠던 메시지를 되돌릴 수
+// 있다 — 이전에는 반환값이 없어서 삭제가 실패해도(RLS, 일시적 오류 등)
+// 보낸 사람 화면에서만 조용히 사라지고 다른 사람에게는 그대로 보이는
+// 불일치가 있었다.
+export async function deleteMessage(formData: FormData): Promise<{ error?: string }> {
   const id = String(formData.get("id") ?? "");
-  if (!id) return;
+  if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "로그인이 필요합니다." };
 
   // messenger_messages의 RLS는 본인 메시지만 삭제할 수 있게 막아두었지만,
   // 스토리지 버킷 쪽 삭제 정책은 로그인한 사용자면 누구든 파일을 지울 수
@@ -104,10 +108,14 @@ export async function deleteMessage(formData: FormData) {
     .select("sender_id, file_path")
     .eq("id", id)
     .maybeSingle();
-  if (!message || message.sender_id !== user.id) return;
+  if (!message || message.sender_id !== user.id) {
+    return { error: "본인 메시지만 삭제할 수 있습니다." };
+  }
 
   if (message.file_path) {
     await supabase.storage.from("messenger-attachments").remove([message.file_path]);
   }
-  await supabase.from("messenger_messages").delete().eq("id", id);
+  const { error } = await supabase.from("messenger_messages").delete().eq("id", id);
+  if (error) return { error: "삭제에 실패했습니다." };
+  return {};
 }

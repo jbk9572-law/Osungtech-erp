@@ -15,11 +15,11 @@ export default async function CustomersPage() {
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">거래처관리 &gt; 판매처관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">거래처관리 &gt; 출고처관리</h1>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">거래처 추가</span>
+          <span className="erp-detail-tab active">출고처 추가</span>
         </div>
         <div className="erp-detail-body">
           <CreateCustomerForm />
@@ -43,7 +43,7 @@ export default async function CustomersPage() {
         <table className="erp-grid">
           <thead>
             <tr>
-              <th>거래처명</th>
+              <th>출고처명</th>
               <th>사업자번호</th>
               <th>담당자</th>
               <th>연락처</th>
@@ -77,7 +77,7 @@ export default async function CustomersPage() {
             {!customers?.length && (
               <tr>
                 <td colSpan={7} className="erp-grid-empty">
-                  등록된 거래처가 없습니다.
+                  등록된 출고처가 없습니다.
                 </td>
               </tr>
             )}
