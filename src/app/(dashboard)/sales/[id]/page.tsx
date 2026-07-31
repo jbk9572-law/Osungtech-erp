@@ -9,13 +9,20 @@ import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
 import { overrideSalesPaperStock, revertSalesPaperStock } from "@/app/(dashboard)/sales/actions";
+import { resolveListHref } from "@/lib/list-return";
 
 export default async function SaleDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
+  const { back } = await searchParams;
+  // 목록에서 검색/필터를 걸어둔 채로 이 화면에 들어왔으면, ESC/닫기로
+  // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
+  const closeHref = resolveListHref("/sales", back);
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }] = await Promise.all([
@@ -62,7 +69,7 @@ export default async function SaleDetailPage({
         shortcuts={{
           F9: { href: `/sales/${id}/print`, newTab: true },
           F4: { href: `/sales/${id}/edit` },
-          Escape: { href: "/sales" },
+          Escape: { href: closeHref },
         }}
       />
       <div className="mb-1 flex items-center justify-between">
@@ -82,7 +89,7 @@ export default async function SaleDetailPage({
             id={id}
             confirmMessage="이 매출 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
           />
-          <Link href="/sales" className="erp-btn erp-btn-danger">
+          <Link href={closeHref} className="erp-btn erp-btn-danger">
             ESC 닫기
           </Link>
         </div>

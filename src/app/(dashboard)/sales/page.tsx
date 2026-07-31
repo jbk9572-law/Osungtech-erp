@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { buildListReturnParam } from "@/lib/list-return";
 
 type DisplayRow = {
   key: string;
@@ -25,6 +26,9 @@ export default async function SalesPage({
   searchParams: Promise<{ from?: string; to?: string; q?: string }>;
 }) {
   const { from, to, q } = await searchParams;
+  // 상세 화면에서 ESC/닫기를 누르면 지금 걸어둔 검색/필터로 되돌아오게,
+  // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
+  const backParam = buildListReturnParam({ q, from, to });
   const supabase = await createClient();
 
   let query = supabase
@@ -198,7 +202,10 @@ export default async function SalesPage({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <ClickableRow key={row.key} href={row.orderId ? `/sales/${row.orderId}` : "#"}>
+              <ClickableRow
+                key={row.key}
+                href={row.orderId ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}` : "#"}
+              >
                 <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
                 <td>{row.customerName}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
