@@ -65,12 +65,12 @@ export default async function SupplierDetailPage({
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
-          <span className="erp-detail-tab active">공급업체 정보 수정</span>
+          <span className="erp-detail-tab active">공급처 정보 수정</span>
           <div style={{ margin: 4 }}>
             <DeleteButton
               action={deleteSupplier}
               id={supplier.id}
-              confirmMessage="이 공급업체를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
+              confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
             />
           </div>
         </div>

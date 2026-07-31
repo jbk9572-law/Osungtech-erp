@@ -16,7 +16,7 @@ const SECTION_LABEL: { prefix: string; label: string }[] = [
   { prefix: "/purchases", label: "매입관리" },
   { prefix: "/inventory", label: "재고관리 > 재고현황" },
   { prefix: "/products", label: "품목관리" },
-  { prefix: "/customers", label: "거래처관리 > 판매처관리" },
+  { prefix: "/customers", label: "거래처관리 > 출고처관리" },
   { prefix: "/suppliers", label: "거래처관리 > 공급처관리" },
   { prefix: "/todos", label: "할일관리" },
   { prefix: "/announcements", label: "공지사항" },

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
+import { numberOrNull } from "@/lib/form-number";
 
 export async function createPaymentRequest(
   _prevState: FormState,
@@ -11,7 +12,6 @@ export async function createPaymentRequest(
 ): Promise<FormState> {
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
-  const amountRaw = String(formData.get("amount") ?? "").trim();
 
   if (!title) {
     return { error: "제목을 입력해주세요." };
@@ -27,7 +27,7 @@ export async function createPaymentRequest(
     .insert({
       title,
       content,
-      amount: amountRaw ? Number(amountRaw) : null,
+      amount: numberOrNull(formData.get("amount")),
       requested_by: user?.id ?? null,
     })
     .select("id")

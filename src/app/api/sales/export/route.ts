@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase/server";
 import { buildXlsxResponse, buildXlsxResponseFromWorkbook, currentMonthRange } from "@/lib/xlsx-response";
 import {
   buildFilterBoxStatementWorkbook,
@@ -8,17 +7,19 @@ import {
 } from "@/lib/sales-export-templates";
 import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
 import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
+import { requireAuthedApiUser } from "@/lib/require-auth";
 
 // 매출관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
-// 검색어(q)가 등록된 거래처 이름과 매칭되고 그 거래처가 전용 양식을 쓰는
-// 경우엔 거래처별 고정 서식(명세표)으로, 그 외엔 일반 컬럼 나열로 내려준다.
+// 검색어(q)가 등록된 출고처 이름과 매칭되고 그 출고처가 전용 양식을 쓰는
+// 경우엔 출고처별 고정 서식(명세표)으로, 그 외엔 일반 컬럼 나열로 내려준다.
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
   const { from, to } = currentMonthRange();
   const now = new Date();
 
-  const supabase = await createClient();
+  const { supabase, user } = await requireAuthedApiUser();
+  if (!user) return new Response("Unauthorized", { status: 401 });
 
   let templatedCustomer: { id: string; name: string; sales_export_template: string } | null = null;
 
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
     const taxAmount = Math.round(supplyAmount * 0.1);
     return {
       거래일자: item.sales_orders?.order_date ?? "",
-      거래처명: item.sales_orders?.customers?.name ?? "",
+      출고처명: item.sales_orders?.customers?.name ?? "",
       SKU: item.products?.sku ?? "",
       품목명: item.products?.name ?? "",
       규격: item.spec || item.products?.spec || "",

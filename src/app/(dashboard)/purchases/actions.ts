@@ -186,7 +186,7 @@ export async function createPurchase(
   const saleItems = alsoCreateSale ? parseSaleItems(String(formData.get("sale_items") ?? "[]")) : [];
 
   if (!supplierId || !warehouseId || !purchaseDate) {
-    return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
+    return { error: "공급처, 창고, 매입일자를 모두 입력해주세요." };
   }
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };
@@ -197,7 +197,7 @@ export async function createPurchase(
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
   if (alsoCreateSale && !saleCustomerId) {
-    return { error: "매출도 같이 등록하려면 출고처(거래처)를 선택해주세요." };
+    return { error: "매출도 같이 등록하려면 출고처를 선택해주세요." };
   }
   if (alsoCreateSale && !saleItems) {
     return { error: "출고 품목 정보를 처리하지 못했습니다." };
@@ -399,7 +399,7 @@ export async function updatePurchase(
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !supplierId || !warehouseId || !purchaseDate) {
-    return { error: "공급업체, 창고, 매입일자를 모두 입력해주세요." };
+    return { error: "공급처, 창고, 매입일자를 모두 입력해주세요." };
   }
   if (!items) {
     return { error: "품목 정보를 처리하지 못했습니다." };

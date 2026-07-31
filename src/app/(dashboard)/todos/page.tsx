@@ -60,7 +60,7 @@ export default async function TodosPage() {
               <th style={{ width: 40 }}>완료</th>
               <th style={{ width: 100 }}>유형</th>
               <th>할 일</th>
-              <th style={{ width: 130 }}>매입처</th>
+              <th style={{ width: 130 }}>공급처</th>
               <th style={{ width: 130 }}>납품처</th>
               <th style={{ width: 170 }}>품목</th>
               <th style={{ width: 110 }}>마감일</th>

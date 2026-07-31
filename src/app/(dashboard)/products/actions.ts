@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
+import { numberOrDefault, numberOrNull } from "@/lib/form-number";
 
 async function resolveCategoryId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -35,12 +36,10 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
     supplier_id: String(formData.get("supplier_id") ?? "") || null,
     spec: String(formData.get("spec") ?? "").trim() || null,
     unit: String(formData.get("unit") ?? "ea") || "ea",
-    price: Number(formData.get("price") ?? 0),
-    cost: Number(formData.get("cost") ?? 0),
-    reorder_point: Number(formData.get("reorder_point") ?? 0),
-    base_package_qty: formData.get("base_package_qty")
-      ? Number(formData.get("base_package_qty"))
-      : null,
+    price: numberOrDefault(formData.get("price"), 0),
+    cost: numberOrDefault(formData.get("cost"), 0),
+    reorder_point: numberOrDefault(formData.get("reorder_point"), 0),
+    base_package_qty: numberOrNull(formData.get("base_package_qty")),
   };
 }
 
@@ -156,7 +155,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       continue;
     }
 
-    const supplierName = cell(row, "매입처");
+    const supplierName = cell(row, "공급처");
     let supplierId: string | null = null;
     if (supplierName) {
       supplierId = supplierByName.get(supplierName) ?? null;
@@ -167,7 +166,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
           .select("id")
           .single();
         if (supplierError || !created) {
-          errors.push({ row: rowNum, reason: `매입처 "${supplierName}" 생성 실패` });
+          errors.push({ row: rowNum, reason: `공급처 "${supplierName}" 생성 실패` });
           continue;
         }
         supplierId = created.id;

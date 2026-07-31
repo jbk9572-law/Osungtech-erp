@@ -197,7 +197,7 @@ export function TodoForm({
         </div>
         {todoType !== "sale" && (
           <div className="erp-field">
-            <label>{todoType === "both" ? "매입처 (공급업체)" : "공급업체"}</label>
+            <label>공급처</label>
             <select
               name="supplier_id"
               value={supplierId}
@@ -215,7 +215,7 @@ export function TodoForm({
         )}
         {todoType !== "purchase" && (
           <div className="erp-field">
-            <label>{todoType === "both" ? "출고처 (거래처)" : "거래처"}</label>
+            <label>출고처</label>
             <select
               name="customer_id"
               value={customerId}

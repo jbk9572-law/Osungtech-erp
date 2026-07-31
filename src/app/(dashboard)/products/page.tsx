@@ -98,7 +98,7 @@ export default async function ProductsPage({
               <th>단위</th>
               <th>포장수량</th>
               <th>카테고리</th>
-              <th>공급업체</th>
+              <th>공급처</th>
               <th className="num">매입가</th>
               <th className="num">판매가</th>
               <th className="num">안전재고</th>

@@ -17,7 +17,7 @@ export default async function SuppliersPage() {
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">공급업체 추가</span>
+          <span className="erp-detail-tab active">공급처 추가</span>
         </div>
         <div className="erp-detail-body">
           <CreateSupplierForm />
@@ -65,7 +65,7 @@ export default async function SuppliersPage() {
             {!suppliers?.length && (
               <tr>
                 <td colSpan={6} className="erp-grid-empty">
-                  등록된 공급업체가 없습니다.
+                  등록된 공급처가 없습니다.
                 </td>
               </tr>
             )}

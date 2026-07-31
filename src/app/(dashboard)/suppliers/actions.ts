@@ -36,7 +36,7 @@ export async function createSupplier(_prevState: FormState, formData: FormData):
   }
 
   revalidatePath("/suppliers");
-  return { success: "공급업체가 등록되었습니다." };
+  return { success: "공급처가 등록되었습니다." };
 }
 
 export async function updateSupplier(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -58,7 +58,7 @@ export async function updateSupplier(_prevState: FormState, formData: FormData):
 
   revalidatePath("/suppliers");
   revalidatePath(`/suppliers/${id}`);
-  return { success: "공급업체 정보가 저장되었습니다." };
+  return { success: "공급처 정보가 저장되었습니다." };
 }
 
 export async function deleteSupplier(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -73,7 +73,7 @@ export async function deleteSupplier(_prevState: FormState, formData: FormData):
   if (error) {
     return {
       error: error.message.includes("foreign key")
-        ? "이 공급업체와 연결된 매입/상품 내역이 있어 삭제할 수 없습니다."
+        ? "이 공급처와 연결된 매입/상품 내역이 있어 삭제할 수 없습니다."
         : "삭제에 실패했습니다.",
     };
   }

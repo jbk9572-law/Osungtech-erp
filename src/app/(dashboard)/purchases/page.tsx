@@ -135,12 +135,12 @@ export default async function PurchasesPage({
           <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>공급업체 / 상품 / 규격 검색</label>
+          <label>공급처 / 상품 / 규격 검색</label>
           <input
             type="text"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="공급업체명, 상품명, SKU, 규격"
+            placeholder="공급처명, 상품명, SKU, 규격"
             className="erp-input"
             style={{ width: "100%" }}
           />
@@ -176,7 +176,7 @@ export default async function PurchasesPage({
           <thead>
             <tr>
               <th>매입일자</th>
-              <th>공급업체</th>
+              <th>공급처</th>
               <th>작성자</th>
               <th>품목명</th>
               <th>규격</th>

@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
 import { buildXlsxResponse } from "@/lib/xlsx-response";
+import { requireAuthedApiUser } from "@/lib/require-auth";
 
 // 공급처관리 엑셀 다운로드.
 export async function GET() {
-  const supabase = await createClient();
+  const { supabase, user } = await requireAuthedApiUser();
+  if (!user) return new Response("Unauthorized", { status: 401 });
   const { data } = await supabase
     .from("suppliers")
     .select("*")

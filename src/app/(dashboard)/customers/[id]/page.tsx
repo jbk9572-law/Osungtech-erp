@@ -65,12 +65,12 @@ export default async function CustomerDetailPage({
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
-          <span className="erp-detail-tab active">거래처 정보 수정</span>
+          <span className="erp-detail-tab active">출고처 정보 수정</span>
           <div style={{ margin: 4 }}>
             <DeleteButton
               action={deleteCustomer}
               id={customer.id}
-              confirmMessage="이 거래처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
+              confirmMessage="이 출고처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
             />
           </div>
         </div>
