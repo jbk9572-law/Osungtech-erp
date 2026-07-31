@@ -1010,7 +1010,10 @@ export function NewSaleForm({
                 const product = products.find((p) => p.id === r.productId);
                 return (
                   <div key={r.key} className="mb-1 flex items-center gap-2 text-xs">
-                    <span style={{ color: "var(--erp-text-muted)" }}>{product?.name}:</span>
+                    <span style={{ color: "var(--erp-text-muted)" }}>
+                      {product?.name}
+                      {product?.spec && ` (${product.spec})`}:
+                    </span>
                     <PriceHistoryHint history={hist} />
                   </div>
                 );
