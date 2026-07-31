@@ -99,8 +99,8 @@ export default async function ProductsPage({
               <th>포장수량</th>
               <th>카테고리</th>
               <th>공급업체</th>
-              <th className="num">판매가</th>
               <th className="num">매입가</th>
+              <th className="num">판매가</th>
               <th className="num">안전재고</th>
               <th />
             </tr>
@@ -120,10 +120,10 @@ export default async function ProductsPage({
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.categories?.name ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{product.suppliers?.name ?? "-"}</td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {formatNumOrDash(product.price)}
+                  {formatNumOrDash(product.cost)}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {formatNumOrDash(product.cost)}
+                  {formatNumOrDash(product.price)}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   {formatNumOrDash(product.reorder_point)}
