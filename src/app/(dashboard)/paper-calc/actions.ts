@@ -104,18 +104,20 @@ export async function deletePaperCalculation(
     return { error: "삭제에 실패했습니다." };
   }
 
+  let warning: string | null = null;
   if (purchaseOrderId) {
-    await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
+    warning = await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
     revalidatePath(`/purchases/${purchaseOrderId}`);
     revalidatePath(`/purchases/${purchaseOrderId}/edit`);
   }
   if (salesOrderId) {
-    await syncPaperStockOrderItem(supabase, salesOrderId);
+    warning = await syncPaperStockOrderItem(supabase, salesOrderId);
     revalidatePath(`/sales/${salesOrderId}`);
     revalidatePath(`/sales/${salesOrderId}/print`);
     revalidatePath(`/sales/${salesOrderId}/edit`);
   }
   revalidatePath("/paper-calc");
 
+  if (warning) return { error: `계산은 삭제했지만 ${PAPER_STOCK_SKU} 품목 수량 갱신에 실패했습니다: ${warning}` };
   return { success: "삭제했습니다." };
 }

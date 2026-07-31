@@ -29,7 +29,10 @@ async function getActiveOverrideQuantity(
 // 품목에 자동 반영한다. 계산은 여러 번 저장/삭제될 수 있으므로 매번
 // "이 주문에 저장된 모든 계산의 합"으로 다시 계산해서 TG0 한 줄만 갱신한다
 // (계산마다 별도 줄을 쌓으면 저장할 때마다 중복 가산되어 버린다).
-export async function syncPaperStockOrderItem(supabase: SupabaseServerClient, salesOrderId: string) {
+export async function syncPaperStockOrderItem(
+  supabase: SupabaseServerClient,
+  salesOrderId: string
+): Promise<string | null> {
   const { data: product } = await supabase
     .from("products")
     .select("id, price")
@@ -56,7 +59,8 @@ export async function syncPaperStockOrderItem(supabase: SupabaseServerClient, sa
 
   if (totalReams <= 0) {
     if (existingItem) {
-      await supabase.from("sales_order_items").delete().eq("id", existingItem.id);
+      const { error } = await supabase.from("sales_order_items").delete().eq("id", existingItem.id);
+      if (error) return `모조지 자동반영 줄 삭제에 실패했습니다: ${error.message}`;
     }
     return null;
   }
@@ -66,10 +70,11 @@ export async function syncPaperStockOrderItem(supabase: SupabaseServerClient, sa
     // 재계산으로 덮어쓰지 않는다 — 오버라이드를 해제해야만 자동값이 다시 반영된다.
     const overrideQuantity = await getActiveOverrideQuantity(supabase, "sales_order_id", salesOrderId);
     if (overrideQuantity === null) {
-      await supabase
+      const { error } = await supabase
         .from("sales_order_items")
         .update({ quantity: totalReams })
         .eq("id", existingItem.id);
+      if (error) return `모조지 자동반영 수량 갱신에 실패했습니다: ${error.message}`;
     }
     return null;
   }
@@ -91,12 +96,13 @@ export async function syncPaperStockOrderItem(supabase: SupabaseServerClient, sa
     if (customerPrice) unitPrice = customerPrice.unit_price;
   }
 
-  await supabase.from("sales_order_items").insert({
+  const { error } = await supabase.from("sales_order_items").insert({
     sales_order_id: salesOrderId,
     product_id: product.id,
     quantity: totalReams,
     unit_price: unitPrice,
   });
+  if (error) return `모조지 자동반영 줄 추가에 실패했습니다: ${error.message}`;
 
   return null;
 }
@@ -164,7 +170,7 @@ export async function attachCopiedPaperCalculations(
 export async function syncPaperStockPurchaseItem(
   supabase: SupabaseServerClient,
   purchaseOrderId: string
-) {
+): Promise<string | null> {
   const { data: product } = await supabase
     .from("products")
     .select("id, cost")
@@ -191,7 +197,8 @@ export async function syncPaperStockPurchaseItem(
 
   if (totalReams <= 0) {
     if (existingItem) {
-      await supabase.from("purchase_order_items").delete().eq("id", existingItem.id);
+      const { error } = await supabase.from("purchase_order_items").delete().eq("id", existingItem.id);
+      if (error) return `모조지 자동반영 줄 삭제에 실패했습니다: ${error.message}`;
     }
     return null;
   }
@@ -199,20 +206,22 @@ export async function syncPaperStockPurchaseItem(
   if (existingItem) {
     const overrideQuantity = await getActiveOverrideQuantity(supabase, "purchase_order_id", purchaseOrderId);
     if (overrideQuantity === null) {
-      await supabase
+      const { error } = await supabase
         .from("purchase_order_items")
         .update({ quantity: totalReams })
         .eq("id", existingItem.id);
+      if (error) return `모조지 자동반영 수량 갱신에 실패했습니다: ${error.message}`;
     }
     return null;
   }
 
-  await supabase.from("purchase_order_items").insert({
+  const { error } = await supabase.from("purchase_order_items").insert({
     purchase_order_id: purchaseOrderId,
     product_id: product.id,
     quantity: totalReams,
     unit_cost: product.cost,
   });
+  if (error) return `모조지 자동반영 줄 추가에 실패했습니다: ${error.message}`;
 
   return null;
 }
@@ -265,7 +274,11 @@ export async function overrideSalesPaperStockQuantity(
   });
   if (error) return "오버라이드 저장에 실패했습니다.";
 
-  await supabase.from("sales_order_items").update({ quantity: overrideQuantity }).eq("id", existingItem.id);
+  const { error: itemError } = await supabase
+    .from("sales_order_items")
+    .update({ quantity: overrideQuantity })
+    .eq("id", existingItem.id);
+  if (itemError) return `오버라이드 수량을 품목에 반영하지 못했습니다: ${itemError.message}`;
   return null;
 }
 
@@ -280,8 +293,7 @@ export async function revertSalesPaperStockOverride(
     .is("reverted_at", null);
   if (error) return "되돌리기에 실패했습니다.";
 
-  await syncPaperStockOrderItem(supabase, salesOrderId);
-  return null;
+  return syncPaperStockOrderItem(supabase, salesOrderId);
 }
 
 export async function overridePurchasePaperStockQuantity(
@@ -329,7 +341,11 @@ export async function overridePurchasePaperStockQuantity(
   });
   if (error) return "오버라이드 저장에 실패했습니다.";
 
-  await supabase.from("purchase_order_items").update({ quantity: overrideQuantity }).eq("id", existingItem.id);
+  const { error: itemError } = await supabase
+    .from("purchase_order_items")
+    .update({ quantity: overrideQuantity })
+    .eq("id", existingItem.id);
+  if (itemError) return `오버라이드 수량을 품목에 반영하지 못했습니다: ${itemError.message}`;
   return null;
 }
 
@@ -344,8 +360,7 @@ export async function revertPurchasePaperStockOverride(
     .is("reverted_at", null);
   if (error) return "되돌리기에 실패했습니다.";
 
-  await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
-  return null;
+  return syncPaperStockPurchaseItem(supabase, purchaseOrderId);
 }
 
 // 새 매입 등록 화면에서는 아직 purchase_order_id가 없어서 모조지 계산을
