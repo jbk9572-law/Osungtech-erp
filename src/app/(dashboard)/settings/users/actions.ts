@@ -75,7 +75,14 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
   }
 
   const { error: roleError } = await admin.from("profiles").update({ role }).eq("id", created.user.id);
-  if (roleError) return { error: roleError.message };
+  if (roleError) {
+    // auth 계정은 이미 만들어졌는데 역할 지정이 실패하면, 기본 역할(staff)
+    // 그대로 로그인 가능한 반쪽짜리 계정이 조용히 남는다 — 관리자에게는
+    // "실패했다"고만 보이므로, 실패를 알리는 것에 그치지 않고 방금 만든
+    // auth 계정 자체를 지워서 되돌린다.
+    await admin.auth.admin.deleteUser(created.user.id);
+    return { error: `역할 지정에 실패해 계정 생성을 취소했습니다: ${roleError.message}` };
+  }
 
   revalidatePath("/settings/users");
   return { success: "계정을 생성했습니다." };
@@ -145,7 +152,16 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
     .from("profiles")
     .update({ username, full_name: fullName, email, role })
     .eq("id", userId);
-  if (profileError) return { error: profileError.message };
+  if (profileError) {
+    // 로그인 정보(auth)는 이미 새 값으로 바뀐 뒤라 되돌릴 수 없다(특히
+    // 비밀번호는 해시만 남아 이전 값 자체를 모른다) — 목록 화면에는 예전
+    // 정보가 그대로 보여서 "아무 일도 안 일어난 것"처럼 보이면 안 되므로,
+    // 로그인 정보는 이미 바뀌었다는 사실을 명확히 알린다. 같은 값으로 다시
+    // 저장을 시도하면 profiles만 갱신되어 정상화된다.
+    return {
+      error: `로그인 정보는 이미 변경됐지만 화면에 표시되는 계정 정보 저장에 실패했습니다: ${profileError.message} — 같은 값으로 다시 저장해주세요.`,
+    };
+  }
 
   revalidatePath("/settings/users");
   revalidatePath(`/settings/users/${userId}`);

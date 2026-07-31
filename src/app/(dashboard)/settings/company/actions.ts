@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
+import { detectRasterImageType } from "@/lib/upload-safety";
 import type { FormState } from "@/components/form-message";
 
 export async function updateCompanyProfile(
@@ -66,8 +67,13 @@ export async function uploadBrandingImage(
   if (!(file instanceof File) || file.size === 0) {
     return { error: "이미지 파일을 선택해주세요." };
   }
-  if (!file.type.startsWith("image/")) {
-    return { error: "이미지 파일만 업로드할 수 있습니다." };
+  // file.type은 클라이언트가 주장하는 값일 뿐이라(예: svg에 image/png를 붙여
+  // 보낼 수도 있음) 그대로 믿지 않고, 실제 파일 바이트(매직 넘버)로 진짜
+  // 래스터 이미지인지 확인한다. 로고/도장은 항상 <img>로 그대로 렌더링되므로
+  // svg/html처럼 브라우저가 실행 가능한 형식이 섞여 들어오면 안 된다.
+  const detectedType = await detectRasterImageType(file);
+  if (!detectedType) {
+    return { error: "PNG, JPG, GIF, WEBP 형식의 이미지 파일만 업로드할 수 있습니다." };
   }
 
   const supabase = await createClient();
@@ -75,7 +81,7 @@ export async function uploadBrandingImage(
 
   const { error: uploadError } = await supabase.storage
     .from("branding")
-    .upload(path, file, { upsert: true, contentType: file.type });
+    .upload(path, file, { upsert: true, contentType: detectedType });
 
   if (uploadError) {
     return { error: "이미지 업로드에 실패했습니다." };

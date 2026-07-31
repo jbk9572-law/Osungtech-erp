@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sanitizeUploadContentType } from "@/lib/upload-safety";
 import type { MessengerMessage } from "@/lib/messenger-types";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -44,9 +45,13 @@ export async function sendMessage(
     const extMatch = file.name.match(/\.[A-Za-z0-9]+$/);
     const ext = extMatch ? extMatch[0].toLowerCase() : "";
     const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}${ext}`;
+    // 첨부파일은 문서/이미지/압축파일 등 어떤 형식이든 허용해야 하지만,
+    // 브라우저가 그대로 실행/렌더링할 수 있는 타입(HTML/SVG/JS)만은 URL을
+    // 직접 열었을 때 저장된 XSS로 이어질 수 있어 안전한 범용 타입으로
+    // 바꿔서 저장한다 — 그 외 정상적인 업무 파일 형식은 그대로 유지된다.
     const { error: uploadError } = await supabase.storage
       .from("messenger-attachments")
-      .upload(path, file, { contentType: file.type || "application/octet-stream" });
+      .upload(path, file, { contentType: sanitizeUploadContentType(file.type) });
 
     if (uploadError) {
       console.error("messenger file upload failed:", uploadError);

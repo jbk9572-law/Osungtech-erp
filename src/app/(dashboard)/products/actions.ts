@@ -131,8 +131,9 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   const supplierByName = new Map((existingSuppliers ?? []).map((s) => [s.name.trim(), s.id]));
 
   const errors: ImportRowError[] = [];
-  const productRows: {
+  const parsedRows: {
     rowNum: number;
+    supplierName: string | null;
     payload: {
       sku: string;
       name: string;
@@ -141,7 +142,6 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       base_package_qty: number | null;
       cost: number;
       price: number;
-      supplier_id: string | null;
     };
   }[] = [];
 
@@ -155,27 +155,9 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       continue;
     }
 
-    const supplierName = cell(row, "공급처");
-    let supplierId: string | null = null;
-    if (supplierName) {
-      supplierId = supplierByName.get(supplierName) ?? null;
-      if (!supplierId) {
-        const { data: created, error: supplierError } = await supabase
-          .from("suppliers")
-          .insert({ name: supplierName })
-          .select("id")
-          .single();
-        if (supplierError || !created) {
-          errors.push({ row: rowNum, reason: `공급처 "${supplierName}" 생성 실패` });
-          continue;
-        }
-        supplierId = created.id;
-        supplierByName.set(supplierName, supplierId);
-      }
-    }
-
-    productRows.push({
+    parsedRows.push({
       rowNum,
+      supplierName: cell(row, "공급처") || null,
       payload: {
         sku,
         name,
@@ -184,19 +166,57 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         base_package_qty: cellNumber(row, "기초"),
         cost: cellNumber(row, "매입단가") ?? 0,
         price: cellNumber(row, "판매가") ?? 0,
-        supplier_id: supplierId,
       },
     });
   }
 
+  // 행마다 공급처를 하나씩 조회/생성하면 수백 행짜리 파일은 그만큼 DB
+  // 왕복이 생긴다 — 아직 없는 공급처 이름을 모아 한 번에 만든다.
+  const newSupplierNames = [
+    ...new Set(
+      parsedRows
+        .map((r) => r.supplierName)
+        .filter((name): name is string => Boolean(name) && !supplierByName.has(name!))
+    ),
+  ];
+  if (newSupplierNames.length > 0) {
+    const { data: createdSuppliers, error: supplierError } = await supabase
+      .from("suppliers")
+      .insert(newSupplierNames.map((name) => ({ name })))
+      .select("id, name");
+    if (supplierError) {
+      return { error: `공급처 일괄 생성에 실패했습니다: ${supplierError.message}` };
+    }
+    for (const s of createdSuppliers ?? []) supplierByName.set(s.name.trim(), s.id);
+  }
+
+  const productRows = parsedRows.map((r) => ({
+    rowNum: r.rowNum,
+    payload: { ...r.payload, supplier_id: r.supplierName ? (supplierByName.get(r.supplierName) ?? null) : null },
+  }));
+
+  // 한 번에 하나씩 upsert하면 왕복이 행 수만큼 생긴다 — 청크 단위로 묶어서
+  // 보낸다. 청크 안에서 실패하면(공유 원인일 가능성이 높음) 그 청크의
+  // 모든 행을 실패로 표시한다 — 행 단위 원인 구분은 못 하지만, 실제로
+  // 실패하는 경우는 드물고(온컨플릭트라 SKU 중복은 갱신으로 처리됨) 왕복
+  // 횟수를 극적으로 줄이는 이득이 더 크다.
+  const CHUNK_SIZE = 500;
   let okCount = 0;
-  for (const { rowNum, payload } of productRows) {
-    const { error } = await supabase.from("products").upsert(payload, { onConflict: "sku" });
+  for (let i = 0; i < productRows.length; i += CHUNK_SIZE) {
+    const chunk = productRows.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase
+      .from("products")
+      .upsert(
+        chunk.map((r) => r.payload),
+        { onConflict: "sku" }
+      );
     if (error) {
-      errors.push({ row: rowNum, reason: error.message.includes("duplicate") ? "SKU 중복" : "저장 실패" });
+      for (const { rowNum } of chunk) {
+        errors.push({ row: rowNum, reason: error.message.includes("duplicate") ? "SKU 중복" : "저장 실패" });
+      }
       continue;
     }
-    okCount++;
+    okCount += chunk.length;
   }
 
   revalidatePath("/products");
