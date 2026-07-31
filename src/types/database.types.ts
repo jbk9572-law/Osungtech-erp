@@ -504,6 +504,100 @@ export type Database = {
           },
         ];
       };
+      supplier_product_prices: {
+        Row: {
+          id: string;
+          supplier_id: string;
+          product_id: string;
+          unit_cost: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          supplier_id: string;
+          product_id: string;
+          unit_cost?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          supplier_id?: string;
+          product_id?: string;
+          unit_cost?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "supplier_product_prices_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "supplier_product_prices_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      purchase_price_change_schedules: {
+        Row: {
+          id: string;
+          supplier_id: string;
+          product_id: string;
+          new_unit_cost: number;
+          effective_date: string;
+          applied_at: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          supplier_id: string;
+          product_id: string;
+          new_unit_cost: number;
+          effective_date: string;
+          applied_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          supplier_id?: string;
+          product_id?: string;
+          new_unit_cost?: number;
+          effective_date?: string;
+          applied_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchase_price_change_schedules_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_price_change_schedules_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_price_change_schedules_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sales_orders: {
         Row: {
           id: string;

@@ -84,6 +84,7 @@ export function NewPurchaseForm({
   submitLabel = "매입 등록",
   customers = [],
   prices = [],
+  supplierPrices = [],
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -95,6 +96,10 @@ export function NewPurchaseForm({
   // 출고처(거래처)별 판매단가. "매출도 같이 등록"에서 매출단가 미리보기에
   // 쓴다 — 매출 등록 화면(new-sale-form)과 동일한 방식.
   prices?: { customer_id: string; product_id: string; unit_price: number }[];
+  // 공급처별 매입단가. 공급처+상품 조합으로 등록해둔 단가가 있으면 그걸
+  // 우선 쓰고, 없으면 품목 기본 매입원가(product.cost)로 채운다 — 거래처별
+  // 판매단가(prices/priceMap)와 동일한 방식.
+  supplierPrices?: { supplier_id: string; product_id: string; unit_cost: number }[];
 }) {
   const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
   const [purchaseDate, setPurchaseDate] = useState(
@@ -116,6 +121,16 @@ export function NewPurchaseForm({
     if (fromCustomer !== undefined) return fromCustomer;
     const product = products.find((p) => p.id === productId);
     return product?.price ? Number(product.price) : 0;
+  }
+  const supplierPriceMap = useMemo(
+    () => new Map(supplierPrices.map((p) => [`${p.supplier_id}:${p.product_id}`, Number(p.unit_cost)])),
+    [supplierPrices]
+  );
+  function resolveCost(forSupplierId: string, productId: string) {
+    const fromSupplier = supplierPriceMap.get(`${forSupplierId}:${productId}`);
+    if (fromSupplier !== undefined) return fromSupplier;
+    const product = products.find((p) => p.id === productId);
+    return product ? Number(product.cost) : 0;
   }
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
@@ -262,7 +277,7 @@ export function NewPurchaseForm({
     updateRow(key, {
       productId,
       spec: product?.spec ?? "",
-      unitCost: product ? Number(product.cost) : 0,
+      unitCost: resolveCost(supplierId, productId),
       salePrice: resolveSalePrice(saleCustomerId, productId),
     });
   }
@@ -275,6 +290,19 @@ export function NewPurchaseForm({
       prev.map((row) =>
         row.productId && !row.manualSalePrice
           ? { ...row, salePrice: resolveSalePrice(newCustomerId, row.productId) }
+          : row
+      )
+    );
+  }
+
+  // 공급업체를 고르거나 바꾸면, 아직 단가를 직접 고치지 않은 행들은 그
+  // 공급처 기준 매입단가로 다시 채운다(handleSaleCustomerChange와 동일한 방식).
+  function handleSupplierChange(newSupplierId: string) {
+    setSupplierId(newSupplierId);
+    setRows((prev) =>
+      prev.map((row) =>
+        row.productId && !row.manualPrice
+          ? { ...row, unitCost: resolveCost(newSupplierId, row.productId) }
           : row
       )
     );
@@ -327,6 +355,10 @@ export function NewPurchaseForm({
   }
 
   async function importTodoItems(todo: OpenTodoSummary) {
+    // setSupplierId는 비동기라 바로 아래 매입단가 계산에 반영되지 않으므로,
+    // 같은 배치에서 쓸 값을 지역 변수로도 들고 있는다(effectiveSaleCustomerId와
+    // 동일한 이유).
+    let effectiveSupplierId = supplierId;
     if (!supplierId) {
       // 할일에 매입처를 골라뒀으면 그걸 그대로 확정하고, 없으면(예전 데이터)
       // 제목이 공급업체명과 일치할 때만 추측으로 채운다.
@@ -337,7 +369,10 @@ export function NewPurchaseForm({
         fromTodo ??
         suppliers.find((s) => s.name.trim().toLowerCase() === todo.title.trim().toLowerCase())?.id ??
         null;
-      if (matched) setSupplierId(matched);
+      if (matched) {
+        effectiveSupplierId = matched;
+        setSupplierId(matched);
+      }
     }
 
     // 매입+출고 유형이면 매출 동시 등록을 자동으로 켜고, 할일에 적어둔
@@ -366,7 +401,7 @@ export function NewPurchaseForm({
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
           quantity: item.quantity,
-          unitCost: product ? Number(product.cost) : 0,
+          unitCost: resolveCost(effectiveSupplierId, item.productId),
           manualPrice: false,
           remark: "",
           saleQuantity: item.quantity,
@@ -489,7 +524,7 @@ export function NewPurchaseForm({
               name="supplier_id"
               required
               value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
+              onChange={(e) => handleSupplierChange(e.target.value)}
               className="erp-select"
             >
               <option value="" disabled>
@@ -809,7 +844,7 @@ export function NewPurchaseForm({
               ))}
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
-                const recentCost = product ? Number(product.cost) : 0;
+                const recentCost = resolveCost(supplierId, row.productId);
                 return (
                   <tr key={row.key}>
                     <td>
