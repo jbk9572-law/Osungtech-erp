@@ -73,6 +73,17 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  // "최근 메모"는 최신 5개를 그대로 보여주기만 하면, 새 메모를 자주 안 쓰는
+  // 달에는 지난달 메모가 계속 상단에 남아있게 된다. 14일 이내로 한 번 더
+  // 걸러서 오래된 메모는 자연스럽게 빠지게 한다. day에 음수를 바로 넣으면
+  // toDateStr은 단순 문자열 조합이라 월 경계를 못 넘으므로, Date 객체로
+  // 먼저 날짜를 굴린 뒤 그 결과를 넘긴다.
+  const fourteenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 14);
+  const recentNotesFrom = toDateStr(
+    fourteenDaysAgo.getFullYear(),
+    fourteenDaysAgo.getMonth() + 1,
+    fourteenDaysAgo.getDate()
+  );
   // 이월 후보를 DB에서 걸러낼 때, order_date와 created_at을 직접 비교하는
   // 조건은 PostgREST 필터로 표현할 수 없어(두 컬럼끼리 비교) 넉넉한 기간
   // 범위로 먼저 가져온 뒤 isCarryover()로 정확히 골라낸다. 실제로 이월
@@ -145,6 +156,7 @@ export default async function DashboardPage({
     supabase
       .from("calendar_notes")
       .select("note_date, content")
+      .gte("note_date", recentNotesFrom)
       .order("note_date", { ascending: false })
       .limit(5),
     supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
