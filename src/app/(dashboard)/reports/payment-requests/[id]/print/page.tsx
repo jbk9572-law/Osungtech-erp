@@ -12,9 +12,11 @@ function printTitle(cardType: string | null): { big: string; sub: string | null 
   return { big: "사 용 내 역", sub: `(${cardType})` };
 }
 
+// 기간 값이 "2026.07.01 ~ 2026.07.31"처럼 길면 칸 너비 안에서 줄바꿈되므로,
+// 연도를 두 자리로 줄여 "26.07.01 ~ 26.07.31"로 짧게 표기한다.
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "";
-  const fmt = (d: string) => d.replaceAll("-", ".");
+  const fmt = (d: string) => d.slice(2).replaceAll("-", ".");
   if (from && to && from === to) return fmt(from);
   return `${from ? fmt(from) : "?"} ~ ${to ? fmt(to) : "?"}`;
 }
@@ -25,13 +27,17 @@ const cellStyle: React.CSSProperties = {
   fontSize: 13,
 };
 
+// 명세표(일자~비고) 본문 행에 쓰는 스타일. 빈 줄(허전해 보이지 않게 채우는
+// 줄)에도 똑같이 써서, 내용이 있는 줄과 높이가 어긋나지 않게 한다.
+const itemCellStyle: React.CSSProperties = { ...cellStyle, height: 24 };
+
 // 강조 표시한 줄은 회색 음영 + 굵게로 인쇄한다. 브라우저는 기본적으로
 // 인쇄 시 배경색을 생략하므로("배경 그래픽" 옵션을 꺼둔 경우가 대부분)
 // print-color-adjust로 강제해 흑백 인쇄에서도 음영이 실제로 찍히게 한다.
 function highlightCellStyle(isHighlighted: boolean): React.CSSProperties {
-  if (!isHighlighted) return cellStyle;
+  if (!isHighlighted) return itemCellStyle;
   return {
-    ...cellStyle,
+    ...itemCellStyle,
     background: "#d4d4d4",
     fontWeight: 700,
     WebkitPrintColorAdjust: "exact",
@@ -78,26 +84,38 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         <PrintButton />
       </div>
 
+      {/* 아래 명세표(일자15% 사용처27% 용도16% 금액18% 비고24%)와 세로선을 완전히
+          맞추려고, 이 표도 같은 5칸 폭을 colgroup으로 그대로 쓴다 — title은
+          일자+사용처(colSpan 2)로, 결제/담당/팀장은 용도·금액·비고 자리 하나씩을
+          그대로 쓴다. 그 덕에 부서명 줄에서도 라벨(일자칸, 15%)보다 값(사용처칸,
+          27%)이 더 넓어진다. table-layout: fixed는 원래 "첫 행" 셀의 width만
+          컬럼 폭으로 인정하므로(부서명 행처럼 이후 행에 준 width는 무시됨),
+          행과 무관하게 폭이 고정되도록 colgroup/col로 직접 지정한다. */}
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
+        <colgroup>
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "27%" }} />
+          <col style={{ width: "16%" }} />
+          <col style={{ width: "21%" }} />
+          <col style={{ width: "21%" }} />
+        </colgroup>
         <tbody>
           <tr>
             <td
+              colSpan={2}
               rowSpan={3}
-              style={{ ...cellStyle, width: "42%", textAlign: "center", fontSize: 20, fontWeight: 700, letterSpacing: 4 }}
+              style={{ ...cellStyle, textAlign: "center", fontSize: 20, fontWeight: 700, letterSpacing: 4 }}
             >
               {title.big}
               {title.sub && (
                 <div style={{ marginTop: 4, fontSize: 11, fontWeight: 400, letterSpacing: 0 }}>{title.sub}</div>
               )}
             </td>
-            {/* 아래 명세표(일자/사용처/용도/금액/비고)와 세로선이 맞도록, 이 4개 칸의
-                너비를 명세표 컬럼 너비 조합과 정확히 맞춘다: 위 title은 일자+사용처
-                (15+27), 결제는 용도(16), 담당은 금액(18), 팀장은 비고(24). */}
-            <td style={{ ...cellStyle, width: "16%", textAlign: "center" }} rowSpan={2}>
+            <td style={{ ...cellStyle, textAlign: "center" }} rowSpan={2}>
               결제
             </td>
-            <td style={{ ...cellStyle, width: "18%", textAlign: "center" }}>담당</td>
-            <td style={{ ...cellStyle, width: "24%", textAlign: "center" }}>팀장</td>
+            <td style={{ ...cellStyle, textAlign: "center" }}>담당</td>
+            <td style={{ ...cellStyle, textAlign: "center" }}>팀장</td>
           </tr>
           <tr>
             <td style={{ ...cellStyle, height: 48 }} />
@@ -115,7 +133,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
               {row.department || "-"}
             </td>
             <td style={{ ...cellStyle, textAlign: "center" }}>기간</td>
-            <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>
+            <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }} colSpan={2}>
               {formatPeriod(row.period_from, row.period_to)}
             </td>
           </tr>
@@ -123,13 +141,20 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
       </table>
 
       <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: -1, color: "#000" }}>
+        <colgroup>
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "27%" }} />
+          <col style={{ width: "16%" }} />
+          <col style={{ width: "21%" }} />
+          <col style={{ width: "21%" }} />
+        </colgroup>
         <thead>
           <tr>
-            <th style={{ ...cellStyle, width: "15%" }}>일자</th>
-            <th style={{ ...cellStyle, width: "27%" }}>사용처</th>
-            <th style={{ ...cellStyle, width: "16%" }}>용도</th>
-            <th style={{ ...cellStyle, width: "18%" }}>금액</th>
-            <th style={{ ...cellStyle, width: "24%" }}>비고</th>
+            <th style={cellStyle}>일자</th>
+            <th style={cellStyle}>사용처</th>
+            <th style={cellStyle}>용도</th>
+            <th style={cellStyle}>금액</th>
+            <th style={cellStyle}>비고</th>
           </tr>
         </thead>
         <tbody>
@@ -147,19 +172,19 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           })}
           {Array.from({ length: blankRowCount }).map((_, i) => (
             <tr key={`blank-${i}`}>
-              <td style={{ ...cellStyle, height: 22 }} />
-              <td style={cellStyle} />
-              <td style={cellStyle} />
-              <td style={cellStyle} />
-              <td style={cellStyle} />
+              <td style={itemCellStyle} />
+              <td style={itemCellStyle} />
+              <td style={itemCellStyle} />
+              <td style={itemCellStyle} />
+              <td style={itemCellStyle} />
             </tr>
           ))}
           <tr>
-            <td style={{ ...cellStyle, textAlign: "center", fontWeight: 700 }} colSpan={3}>
+            <td style={{ ...itemCellStyle, textAlign: "center", fontWeight: 700 }} colSpan={3}>
               합 계
             </td>
-            <td style={{ ...cellStyle, textAlign: "right", fontWeight: 700 }}>{total.toLocaleString()}</td>
-            <td style={cellStyle} />
+            <td style={{ ...itemCellStyle, textAlign: "right", fontWeight: 700 }}>{total.toLocaleString()}</td>
+            <td style={itemCellStyle} />
           </tr>
         </tbody>
       </table>
