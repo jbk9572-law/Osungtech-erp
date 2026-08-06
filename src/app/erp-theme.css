@@ -271,7 +271,7 @@
 }
 
 .erp-modal-body {
-  padding: 14px;
+  padding: 16px;
   overflow-y: auto;
 }
 
@@ -531,7 +531,7 @@
   flex: 1;
   overflow-y: auto;
   background: var(--erp-panel);
-  padding: 16px;
+  padding: 18px;
 }
 
 /* 셸 크롬(타이틀바/리본/트리메뉴/탭바/상태바/메신저/토스트)은 화면
@@ -568,12 +568,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: end;
-  gap: 12px;
-  padding: 12px;
+  gap: 14px;
+  padding: 14px;
   background: #fafbfc;
   border: 1px solid var(--erp-border);
   border-radius: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .erp-date-presets {
@@ -643,7 +643,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .erp-btn {
@@ -724,8 +724,11 @@
   font-weight: 700;
   text-align: left;
   padding: 0 10px;
-  border-bottom: 1px solid var(--erp-border);
+  border-bottom: 1px solid #c9ced8;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .erp-grid tbody td {
@@ -811,7 +814,7 @@
 
 /* ── 7. Detail panel ───────────────────────────────────────── */
 .erp-detail {
-  margin-top: 10px;
+  margin-top: 14px;
   border: 1px solid var(--erp-border);
   border-radius: 6px;
   box-shadow: var(--erp-shadow-sm);
@@ -842,7 +845,7 @@
 }
 
 .erp-detail-body {
-  padding: 14px;
+  padding: 16px;
 }
 
 /* ── 8. Status bar ─────────────────────────────────────────── */
@@ -871,8 +874,8 @@
 .erp-hero-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 1100px) {
@@ -886,7 +889,7 @@
   border: 1px solid var(--erp-border);
   border-left: 3px solid var(--erp-primary);
   border-radius: 6px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   box-shadow: var(--erp-shadow-sm);
 }
 
@@ -907,7 +910,7 @@
 .erp-home {
   display: grid;
   grid-template-columns: 220px 1fr 260px;
-  gap: 14px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -939,7 +942,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 12px;
   font-size: 12.5px;
   font-weight: 700;
   background: #eef1f5;
@@ -950,7 +953,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
+  padding: 9px 12px;
   border-bottom: 1px solid #f0f2f5;
   font-size: 12.5px;
 }
@@ -965,17 +968,17 @@
 }
 
 .erp-home-list {
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .erp-home-list-item {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   border-radius: 5px;
   font-size: 12px;
   text-decoration: none;
@@ -988,7 +991,7 @@
 }
 
 .erp-home-empty {
-  padding: 16px 10px;
+  padding: 16px 12px;
   color: var(--erp-text-muted);
   font-size: 12px;
 }
@@ -998,10 +1001,10 @@
 .erp-home-stock-list {
   max-height: 180px;
   overflow-y: auto;
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .erp-home-stock-row {
@@ -1009,7 +1012,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   border-radius: 5px;
   border: 1px solid #f3c6cb;
   background: #fdeaec;
@@ -1034,7 +1037,7 @@
 }
 
 .erp-home-stock-footer {
-  padding: 6px 10px 8px;
+  padding: 8px 12px 10px;
   border-top: 1px solid #f0f2f5;
 }
 
