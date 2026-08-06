@@ -102,15 +102,15 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           </tr>
           <tr>
             <td style={{ ...cellStyle, textAlign: "center" }}>작성자</td>
-            <td style={cellStyle} colSpan={2}>
+            <td style={{ ...cellStyle, textAlign: "center" }} colSpan={2}>
               {row.profiles?.full_name ?? "-"}
             </td>
           </tr>
           <tr>
             <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
-            <td style={cellStyle}>{row.department || "-"}</td>
+            <td style={{ ...cellStyle, textAlign: "center" }}>{row.department || "-"}</td>
             <td style={{ ...cellStyle, textAlign: "center" }}>기간</td>
-            <td style={cellStyle}>{formatPeriod(row.period_from, row.period_to)}</td>
+            <td style={{ ...cellStyle, textAlign: "center" }}>{formatPeriod(row.period_from, row.period_to)}</td>
           </tr>
         </tbody>
       </table>
