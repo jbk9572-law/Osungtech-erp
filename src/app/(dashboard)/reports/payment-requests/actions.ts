@@ -3,8 +3,53 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { detectRasterImageType } from "@/lib/upload-safety";
 import type { FormState } from "@/components/form-message";
 import { numberOrNull } from "@/lib/form-number";
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+const MAX_RECEIPT_SIZE = 8 * 1024 * 1024; // 8MB (브라우저에서 미리 압축해서 올리므로 여유 있게)
+
+// 영수증 사진을 스토리지에 올리고 payment_request_receipts 행을 만든다.
+// file.type은 클라이언트가 주장하는 값일 뿐이라(브랜딩 이미지와 동일한
+// 이유로) 실제 파일 바이트로 진짜 래스터 이미지인지 다시 확인한다.
+async function uploadReceipt(
+  supabase: SupabaseServerClient,
+  paymentRequestId: string,
+  file: File,
+  sortOrder: number,
+  userId: string | null
+): Promise<string | null> {
+  if (file.size > MAX_RECEIPT_SIZE) return `영수증 파일이 너무 큽니다(${file.name}).`;
+
+  const detectedType = await detectRasterImageType(file);
+  if (!detectedType) return `이미지 파일만 첨부할 수 있습니다(${file.name}).`;
+
+  const path = `${paymentRequestId}/${Date.now()}-${crypto.randomUUID()}.jpg`;
+  const { error: uploadError } = await supabase.storage
+    .from("payment-receipts")
+    .upload(path, file, { contentType: detectedType });
+  if (uploadError) return `영수증 업로드에 실패했습니다: ${uploadError.message}`;
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("payment-receipts").getPublicUrl(path);
+
+  const { error: insertError } = await supabase.from("payment_request_receipts").insert({
+    payment_request_id: paymentRequestId,
+    file_path: path,
+    file_url: publicUrl,
+    sort_order: sortOrder,
+    created_by: userId,
+  });
+  if (insertError) {
+    await supabase.storage.from("payment-receipts").remove([path]);
+    return `영수증 저장에 실패했습니다: ${insertError.message}`;
+  }
+
+  return null;
+}
 
 export async function createPaymentRequest(
   _prevState: FormState,
@@ -12,6 +57,7 @@ export async function createPaymentRequest(
 ): Promise<FormState> {
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
+  const receipts = formData.getAll("receipts").filter((f): f is File => f instanceof File && f.size > 0);
 
   if (!title) {
     return { error: "제목을 입력해주세요." };
@@ -37,8 +83,80 @@ export async function createPaymentRequest(
     return { error: "등록에 실패했습니다." };
   }
 
+  // 영수증 업로드가 일부 실패해도 지급결의서 자체는 이미 등록됐으니 막지
+  // 않되, 조용히 묻히지 않도록 상세 화면으로 경고를 실어 보낸다.
+  let receiptWarning: string | null = null;
+  for (let i = 0; i < receipts.length; i++) {
+    const err = await uploadReceipt(supabase, data.id, receipts[i], i, user?.id ?? null);
+    if (err) receiptWarning ??= err;
+  }
+
   revalidatePath("/reports/payment-requests");
-  redirect(`/reports/payment-requests/${data.id}`);
+  redirect(
+    receiptWarning
+      ? `/reports/payment-requests/${data.id}?warning=${encodeURIComponent(receiptWarning)}`
+      : `/reports/payment-requests/${data.id}`
+  );
+}
+
+export async function addPaymentRequestReceipts(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const paymentRequestId = String(formData.get("payment_request_id") ?? "");
+  const receipts = formData.getAll("receipts").filter((f): f is File => f instanceof File && f.size > 0);
+  if (!paymentRequestId) return { error: "잘못된 요청입니다." };
+  if (receipts.length === 0) return { error: "추가할 영수증을 선택해주세요." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: existing } = await supabase
+    .from("payment_request_receipts")
+    .select("sort_order")
+    .eq("payment_request_id", paymentRequestId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let nextOrder = (existing?.sort_order ?? -1) + 1;
+
+  let firstError: string | null = null;
+  for (const file of receipts) {
+    const err = await uploadReceipt(supabase, paymentRequestId, file, nextOrder, user?.id ?? null);
+    if (err) firstError ??= err;
+    nextOrder += 1;
+  }
+
+  revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  if (firstError) return { error: firstError };
+  return { success: "영수증을 추가했습니다." };
+}
+
+export async function deletePaymentRequestReceipt(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const paymentRequestId = String(formData.get("payment_request_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { data: receipt } = await supabase
+    .from("payment_request_receipts")
+    .select("file_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!receipt) return { error: "이미 삭제된 영수증입니다." };
+
+  const { error } = await supabase.from("payment_request_receipts").delete().eq("id", id);
+  if (error) return { error: "삭제에 실패했습니다." };
+
+  await supabase.storage.from("payment-receipts").remove([receipt.file_path]);
+
+  if (paymentRequestId) revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  return { success: "삭제했습니다." };
 }
 
 export async function deletePaymentRequest(
@@ -51,6 +169,18 @@ export async function deletePaymentRequest(
   }
 
   const supabase = await createClient();
+
+  // payment_request_receipts 행은 on delete cascade로 같이 지워지지만,
+  // 스토리지에 올려둔 실제 파일은 별도로 지워야 한다 — 안 지우면 DB 행은
+  // 사라져도 파일만 계속 Storage 용량을 차지하는 고아 데이터가 된다.
+  const { data: receipts } = await supabase
+    .from("payment_request_receipts")
+    .select("file_path")
+    .eq("payment_request_id", id);
+  if (receipts && receipts.length > 0) {
+    await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
+  }
+
   const { error } = await supabase.from("payment_requests").delete().eq("id", id);
 
   if (error) {

@@ -1016,6 +1016,51 @@ export type Database = {
           },
         ];
       };
+      payment_request_receipts: {
+        Row: {
+          id: string;
+          payment_request_id: string;
+          file_path: string;
+          file_url: string;
+          sort_order: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          payment_request_id: string;
+          file_path: string;
+          file_url: string;
+          sort_order?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          payment_request_id?: string;
+          file_path?: string;
+          file_url?: string;
+          sort_order?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_request_receipts_payment_request_id_fkey";
+            columns: ["payment_request_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_request_receipts_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       todos: {
         Row: {
           id: string;

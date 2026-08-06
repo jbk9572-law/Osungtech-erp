@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { ReceiptPicker } from "@/components/receipt-picker";
 import { createPaymentRequest } from "@/app/(dashboard)/reports/payment-requests/actions";
 
 export function PaymentRequestForm() {
@@ -21,6 +22,7 @@ export function PaymentRequestForm() {
         className="erp-input md:col-span-3"
         style={{ resize: "vertical" }}
       />
+      <ReceiptPicker />
       <div className="md:col-span-3 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? (
