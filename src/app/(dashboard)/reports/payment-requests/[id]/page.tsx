@@ -7,6 +7,13 @@ import { AddReceiptsForm } from "@/components/add-receipts-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { deletePaymentRequest } from "../actions";
 
+function formatPeriod(from: string | null, to: string | null) {
+  if (!from && !to) return "-";
+  const fmt = (d: string) => d.replaceAll("-", ".");
+  if (from && to && from === to) return fmt(from);
+  return `${from ? fmt(from) : "?"} ~ ${to ? fmt(to) : "?"}`;
+}
+
 export default async function PaymentRequestDetailPage({
   params,
   searchParams,
@@ -17,12 +24,17 @@ export default async function PaymentRequestDetailPage({
   const { id } = await params;
   const { warning } = await searchParams;
   const supabase = await createClient();
-  const [{ data: row }, { data: receipts }] = await Promise.all([
+  const [{ data: row }, { data: items }, { data: receipts }] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, title, content, amount, created_at, profiles(full_name)")
+      .select("id, title, content, department, period_from, period_to, created_at, profiles(full_name)")
       .eq("id", id)
       .maybeSingle(),
+    supabase
+      .from("payment_request_line_items")
+      .select("id, used_at, vendor, purpose, amount, card_type, remark")
+      .eq("payment_request_id", id)
+      .order("sort_order", { ascending: true }),
     supabase
       .from("payment_request_receipts")
       .select("id, file_url, sort_order")
@@ -34,14 +46,28 @@ export default async function PaymentRequestDetailPage({
     notFound();
   }
 
+  const total = (items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
+
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/reports/payment-requests" } }} />
+      <KeyboardShortcuts
+        shortcuts={{
+          F4: { href: `/reports/payment-requests/${row.id}/edit` },
+          F9: { href: `/reports/payment-requests/${row.id}/print`, newTab: true },
+          Escape: { href: "/reports/payment-requests" },
+        }}
+      />
       <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">보고서 &gt; 지급결의양식 &gt; 본문</h1>
 
       <div className="erp-toolbar">
         <Link href="/reports/payment-requests" className="erp-btn erp-btn-danger">
           ESC 목록으로
+        </Link>
+        <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn">
+          F4 수정
+        </Link>
+        <Link href={`/reports/payment-requests/${row.id}/print`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+          F9 인쇄
         </Link>
         <DeleteButton action={deletePaymentRequest} id={row.id} confirmMessage="이 지급결의서를 삭제하시겠습니까?" />
       </div>
@@ -57,15 +83,68 @@ export default async function PaymentRequestDetailPage({
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">{row.title}</span>
+          <span className="erp-detail-tab active">{row.department || row.title || "지급결의서"}</span>
         </div>
         <div className="erp-detail-body">
           <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <span>부서명: {row.department ?? "-"}</span>
+            <span>기간: {formatPeriod(row.period_from, row.period_to)}</span>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
             <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
-            {row.amount != null && <span>금액: {Number(row.amount).toLocaleString()}원</span>}
           </div>
-          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{row.content || "(내용 없음)"}</div>
+
+          <div className="erp-grid-wrap" style={{ border: "1px solid var(--erp-border)" }}>
+            <table className="erp-grid">
+              <thead>
+                <tr>
+                  <th style={{ width: 100 }}>일자</th>
+                  <th>사용처</th>
+                  <th style={{ width: 140 }}>용도</th>
+                  <th className="num" style={{ width: 120 }}>
+                    금액
+                  </th>
+                  <th style={{ width: 110 }}>사용카드</th>
+                  <th style={{ width: 140 }}>비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(items ?? []).map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.used_at.replaceAll("-", ".")}</td>
+                    <td>{item.vendor}</td>
+                    <td>{item.purpose || "-"}</td>
+                    <td className="num">{Number(item.amount).toLocaleString()}</td>
+                    <td>{item.card_type}</td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
+                  </tr>
+                ))}
+                {!items?.length && (
+                  <tr>
+                    <td colSpan={6} className="erp-grid-empty">
+                      등록된 사용 내역이 없습니다.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
+                    합계
+                  </td>
+                  <td className="num" style={{ fontWeight: 700 }}>
+                    {total.toLocaleString()}원
+                  </td>
+                  <td colSpan={2} />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {row.content && (
+            <div className="mt-4" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+              {row.content}
+            </div>
+          )}
         </div>
       </div>
 

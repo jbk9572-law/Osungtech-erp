@@ -984,25 +984,34 @@ export type Database = {
       payment_requests: {
         Row: {
           id: string;
-          title: string;
+          title: string | null;
           content: string;
           amount: number | null;
+          department: string | null;
+          period_from: string | null;
+          period_to: string | null;
           requested_by: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          title: string;
+          title?: string | null;
           content?: string;
           amount?: number | null;
+          department?: string | null;
+          period_from?: string | null;
+          period_to?: string | null;
           requested_by?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
-          title?: string;
+          title?: string | null;
           content?: string;
           amount?: number | null;
+          department?: string | null;
+          period_from?: string | null;
+          period_to?: string | null;
           requested_by?: string | null;
           created_at?: string;
         };
@@ -1012,6 +1021,53 @@ export type Database = {
             columns: ["requested_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payment_request_line_items: {
+        Row: {
+          id: string;
+          payment_request_id: string;
+          used_at: string;
+          vendor: string;
+          purpose: string | null;
+          amount: number;
+          card_type: "개인카드" | "법인카드" | "신한법인카드";
+          remark: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          payment_request_id: string;
+          used_at: string;
+          vendor: string;
+          purpose?: string | null;
+          amount?: number;
+          card_type?: "개인카드" | "법인카드" | "신한법인카드";
+          remark?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          payment_request_id?: string;
+          used_at?: string;
+          vendor?: string;
+          purpose?: string | null;
+          amount?: number;
+          card_type?: "개인카드" | "법인카드" | "신한법인카드";
+          remark?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payment_request_line_items_payment_request_id_fkey";
+            columns: ["payment_request_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_requests";
             referencedColumns: ["id"];
           },
         ];
@@ -1327,6 +1383,26 @@ export type Database = {
       delete_purchase_with_items: {
         Args: { p_id: string; p_deleted_by: string | null };
         Returns: void;
+      };
+      create_payment_request_with_items: {
+        Args: {
+          p_department: string | null;
+          p_period_from: string | null;
+          p_period_to: string | null;
+          p_requested_by: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      update_payment_request_with_items: {
+        Args: {
+          p_id: string;
+          p_department: string | null;
+          p_period_from: string | null;
+          p_period_to: string | null;
+          p_items: Json;
+        };
+        Returns: string;
       };
       get_database_size: {
         Args: Record<string, never>;
