@@ -15,7 +15,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
       .maybeSingle(),
     supabase
       .from("payment_request_line_items")
-      .select("id, used_at, vendor, purpose, amount, remark")
+      .select("id, used_at, vendor, purpose, amount, remark, is_highlighted")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
   ]);
@@ -57,6 +57,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
                 purpose: item.purpose ?? "",
                 amount: String(item.amount),
                 remark: item.remark ?? "",
+                highlighted: item.is_highlighted,
               })),
             }}
           />

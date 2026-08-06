@@ -25,6 +25,20 @@ const cellStyle: React.CSSProperties = {
   fontSize: 13,
 };
 
+// 강조 표시한 줄은 회색 음영 + 굵게로 인쇄한다. 브라우저는 기본적으로
+// 인쇄 시 배경색을 생략하므로("배경 그래픽" 옵션을 꺼둔 경우가 대부분)
+// print-color-adjust로 강제해 흑백 인쇄에서도 음영이 실제로 찍히게 한다.
+function highlightCellStyle(isHighlighted: boolean): React.CSSProperties {
+  if (!isHighlighted) return cellStyle;
+  return {
+    ...cellStyle,
+    background: "#d4d4d4",
+    fontWeight: 700,
+    WebkitPrintColorAdjust: "exact",
+    printColorAdjust: "exact",
+  } as React.CSSProperties;
+}
+
 // 회사에서 실제 쓰는 지급결의(사용내역) 종이 양식을 그대로 재현한 인쇄용
 // 페이지. 화면에서 보는 erp-grid 스타일 표와는 별개로, 인쇄물은 실제 서류
 // 그대로(검은 테두리, 결제 담당/팀장 도장란 포함) 나와야 하므로 여기서만
@@ -40,7 +54,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
       .maybeSingle(),
     supabase
       .from("payment_request_line_items")
-      .select("id, used_at, vendor, purpose, amount, remark")
+      .select("id, used_at, vendor, purpose, amount, remark, is_highlighted")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
   ]);
@@ -112,15 +126,18 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           </tr>
         </thead>
         <tbody>
-          {rows.map((item) => (
-            <tr key={item.id}>
-              <td style={cellStyle}>{item.used_at.replaceAll("-", ".")}</td>
-              <td style={cellStyle}>{item.vendor}</td>
-              <td style={cellStyle}>{item.purpose || ""}</td>
-              <td style={{ ...cellStyle, textAlign: "right" }}>{Number(item.amount).toLocaleString()}</td>
-              <td style={cellStyle}>{item.remark || ""}</td>
-            </tr>
-          ))}
+          {rows.map((item) => {
+            const s = highlightCellStyle(item.is_highlighted);
+            return (
+              <tr key={item.id}>
+                <td style={s}>{item.used_at.replaceAll("-", ".")}</td>
+                <td style={s}>{item.vendor}</td>
+                <td style={s}>{item.purpose || ""}</td>
+                <td style={{ ...s, textAlign: "right" }}>{Number(item.amount).toLocaleString()}</td>
+                <td style={s}>{item.remark || ""}</td>
+              </tr>
+            );
+          })}
           {Array.from({ length: blankRowCount }).map((_, i) => (
             <tr key={`blank-${i}`}>
               <td style={{ ...cellStyle, height: 22 }} />

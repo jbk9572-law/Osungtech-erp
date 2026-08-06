@@ -33,7 +33,7 @@ export default async function PaymentRequestDetailPage({
       .maybeSingle(),
     supabase
       .from("payment_request_line_items")
-      .select("id, used_at, vendor, purpose, amount, remark")
+      .select("id, used_at, vendor, purpose, amount, remark, is_highlighted")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
     supabase
@@ -110,7 +110,7 @@ export default async function PaymentRequestDetailPage({
               </thead>
               <tbody>
                 {(items ?? []).map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} style={item.is_highlighted ? { background: "#fff7d6" } : undefined}>
                     <td>{item.used_at.replaceAll("-", ".")}</td>
                     <td>{item.vendor}</td>
                     <td>{item.purpose || "-"}</td>
