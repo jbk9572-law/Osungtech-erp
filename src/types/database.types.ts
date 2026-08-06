@@ -102,6 +102,47 @@ export type Database = {
         };
         Relationships: [];
       };
+      supplier_payments: {
+        Row: {
+          id: string;
+          supplier_id: string;
+          paid_at: string;
+          amount: number;
+          method: string | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          supplier_id: string;
+          paid_at: string;
+          amount: number;
+          method?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          supplier_id?: string;
+          paid_at?: string;
+          amount?: number;
+          method?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       warehouses: {
         Row: {
           id: string;
@@ -416,6 +457,47 @@ export type Database = {
           created_at?: string;
         };
         Relationships: [];
+      };
+      customer_payments: {
+        Row: {
+          id: string;
+          customer_id: string;
+          paid_at: string;
+          amount: number;
+          method: string | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          paid_at: string;
+          amount: number;
+          method?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          paid_at?: string;
+          amount?: number;
+          method?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_payments_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       customer_product_prices: {
         Row: {

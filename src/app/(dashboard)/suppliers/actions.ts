@@ -207,6 +207,53 @@ export async function cancelPurchasePriceSchedule(
   return { success: "예약을 취소했습니다." };
 }
 
+// 이 공급처에 준 돈(지급) 한 건을 기록한다. customer_payments/수금과 대칭
+// 구조 — 잔액은 (매입 누계 - 지급 누계)로 그때그때 계산한다.
+export async function addSupplierPayment(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  const paidAt = String(formData.get("paid_at") ?? "");
+  const amount = Number(formData.get("amount") ?? 0);
+  if (!supplierId || !paidAt || !(amount > 0)) {
+    return { error: "일자와 금액을 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("supplier_payments").insert({
+    supplier_id: supplierId,
+    paid_at: paidAt,
+    amount,
+    method: String(formData.get("method") ?? "") || null,
+    memo: String(formData.get("memo") ?? "") || null,
+    created_by: user?.id ?? null,
+  });
+
+  if (error) {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath(`/suppliers/${supplierId}`);
+  revalidatePath("/payables");
+  return { success: "지급 내역을 등록했습니다." };
+}
+
+export async function deleteSupplierPayment(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("supplier_payments").delete().eq("id", id);
+  if (error) return { error: "삭제에 실패했습니다." };
+
+  if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
+  revalidatePath("/payables");
+  return { success: "삭제했습니다." };
+}
+
 export async function importSuppliersExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
