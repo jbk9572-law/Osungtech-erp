@@ -193,6 +193,7 @@ export async function addPaymentRequestReceipts(
   }
 
   revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  revalidatePath(`/reports/payment-requests/${paymentRequestId}/edit`);
   if (firstError) return { error: firstError };
   return { success: "영수증을 추가했습니다." };
 }
@@ -218,8 +219,46 @@ export async function deletePaymentRequestReceipt(
 
   await supabase.storage.from("payment-receipts").remove([receipt.file_path]);
 
-  if (paymentRequestId) revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  if (paymentRequestId) {
+    revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+    revalidatePath(`/reports/payment-requests/${paymentRequestId}/edit`);
+  }
   return { success: "삭제했습니다." };
+}
+
+// 이미 업로드된 영수증의 스테이플러 순서를 바꾼다. order는 새 순서대로
+// 나열된 영수증 id 배열의 JSON 문자열이다 — 이 문서 소속이 아닌 id가
+// 섞여 들어와도 eq(payment_request_id, ...)로 걸러지므로 안전하다.
+export async function reorderPaymentRequestReceipts(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const paymentRequestId = String(formData.get("payment_request_id") ?? "");
+  if (!paymentRequestId) return { error: "잘못된 요청입니다." };
+
+  let order: string[];
+  try {
+    order = JSON.parse(String(formData.get("order") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(order) || order.length === 0) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const results = await Promise.all(
+    order.map((receiptId, index) =>
+      supabase
+        .from("payment_request_receipts")
+        .update({ sort_order: index })
+        .eq("id", receiptId)
+        .eq("payment_request_id", paymentRequestId)
+    )
+  );
+  if (results.some((r) => r.error)) return { error: "순서 변경에 실패했습니다." };
+
+  revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  revalidatePath(`/reports/payment-requests/${paymentRequestId}/edit`);
+  return { success: "순서를 변경했습니다." };
 }
 
 export async function deletePaymentRequest(
