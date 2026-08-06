@@ -462,7 +462,7 @@ export default async function DashboardPage({
         </div>
       </div>
       <div className="erp-home">
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="erp-home-panel" id="stock-risk">
           <div className="erp-home-panel-title">
             <span>재고위험</span>
