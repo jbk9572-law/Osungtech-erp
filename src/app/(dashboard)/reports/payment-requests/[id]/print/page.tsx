@@ -78,23 +78,26 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         <PrintButton />
       </div>
 
-      <table style={{ borderCollapse: "collapse", width: "100%", color: "#000" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
         <tbody>
           <tr>
             <td
               rowSpan={3}
-              style={{ ...cellStyle, width: "40%", textAlign: "center", fontSize: 20, fontWeight: 700, letterSpacing: 4 }}
+              style={{ ...cellStyle, width: "42%", textAlign: "center", fontSize: 20, fontWeight: 700, letterSpacing: 4 }}
             >
               {title.big}
               {title.sub && (
                 <div style={{ marginTop: 4, fontSize: 11, fontWeight: 400, letterSpacing: 0 }}>{title.sub}</div>
               )}
             </td>
-            <td style={{ ...cellStyle, width: "15%", textAlign: "center" }} rowSpan={2}>
+            {/* 아래 명세표(일자/사용처/용도/금액/비고)와 세로선이 맞도록, 이 4개 칸의
+                너비를 명세표 컬럼 너비 조합과 정확히 맞춘다: 위 title은 일자+사용처
+                (15+27), 결제는 용도(16), 담당은 금액(18), 팀장은 비고(24). */}
+            <td style={{ ...cellStyle, width: "16%", textAlign: "center" }} rowSpan={2}>
               결제
             </td>
-            <td style={{ ...cellStyle, width: "22.5%", textAlign: "center" }}>담당</td>
-            <td style={{ ...cellStyle, width: "22.5%", textAlign: "center" }}>팀장</td>
+            <td style={{ ...cellStyle, width: "18%", textAlign: "center" }}>담당</td>
+            <td style={{ ...cellStyle, width: "24%", textAlign: "center" }}>팀장</td>
           </tr>
           <tr>
             <td style={{ ...cellStyle, height: 48 }} />
@@ -108,14 +111,18 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           </tr>
           <tr>
             <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
-            <td style={{ ...cellStyle, textAlign: "center" }}>{row.department || "-"}</td>
+            <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden" }}>
+              {row.department || "-"}
+            </td>
             <td style={{ ...cellStyle, textAlign: "center" }}>기간</td>
-            <td style={{ ...cellStyle, textAlign: "center" }}>{formatPeriod(row.period_from, row.period_to)}</td>
+            <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }}>
+              {formatPeriod(row.period_from, row.period_to)}
+            </td>
           </tr>
         </tbody>
       </table>
 
-      <table style={{ borderCollapse: "collapse", width: "100%", marginTop: -1, color: "#000" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: -1, color: "#000" }}>
         <thead>
           <tr>
             <th style={{ ...cellStyle, width: "15%" }}>일자</th>
