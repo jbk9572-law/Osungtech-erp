@@ -13,6 +13,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "거래처관리 > 공급처관리", href: "/suppliers" },
   { label: "할일관리", href: "/todos" },
   { label: "공지사항", href: "/announcements" },
+  { label: "보고서 > 지급결의양식", href: "/reports/payment-requests" },
   { label: "환경설정 > 회사정보", href: "/settings/company" },
   { label: "환경설정 > 비밀번호 변경", href: "/settings/password" },
   { label: "시스템관리 > 권한관리", href: "/settings/users" },

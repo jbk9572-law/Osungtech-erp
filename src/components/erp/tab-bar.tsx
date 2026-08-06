@@ -16,6 +16,8 @@ const SECTIONS: { prefix: string; label: string }[] = [
   // 묶이지 않는다(찾을 때 배열 순서상 처음 매칭되는 걸 쓴다).
   { prefix: "/paper-calc/manual", label: "재단 배치 시뮬레이터" },
   { prefix: "/paper-calc", label: "모조지 계산" },
+  { prefix: "/reports/payment-requests", label: "지급결의양식" },
+  { prefix: "/reports/monthly", label: "월별 리포트" },
   { prefix: "/settings", label: "환경설정" },
 ];
 

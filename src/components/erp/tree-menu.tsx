@@ -31,6 +31,7 @@ const TREE: GroupItem[] = [
     ],
   },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
+  { label: "보고서", items: [{ label: "지급결의양식", href: "/reports/payment-requests" }] },
   {
     label: "환경설정",
     items: [

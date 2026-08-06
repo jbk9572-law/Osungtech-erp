@@ -20,6 +20,8 @@ const SECTION_LABEL: { prefix: string; label: string }[] = [
   { prefix: "/suppliers", label: "거래처관리 > 공급처관리" },
   { prefix: "/todos", label: "할일관리" },
   { prefix: "/announcements", label: "공지사항" },
+  { prefix: "/reports/payment-requests", label: "보고서 > 지급결의양식" },
+  { prefix: "/reports/monthly", label: "확장모듈 > 월별 리포트" },
   { prefix: "/settings/users", label: "시스템관리 > 권한관리" },
   { prefix: "/settings/password", label: "환경설정 > 비밀번호 변경" },
   { prefix: "/settings", label: "환경설정" },
