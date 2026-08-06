@@ -109,8 +109,6 @@ export default async function DashboardPage({
     { data: notes },
     { data: recentNotes },
     { data: company },
-    { data: todaySales },
-    { data: todayPurchases },
     { data: carryoverSales },
     { data: carryoverPurchases },
     notifications,
@@ -154,14 +152,6 @@ export default async function DashboardPage({
       .order("note_date", { ascending: false })
       .limit(5),
     supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
-    supabase
-      .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(order_date)")
-      .eq("sales_orders.order_date", todayStr),
-    supabase
-      .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
-      .eq("purchase_orders.purchase_date", todayStr),
     supabase
       .from("sales_order_items")
       .select(
@@ -380,19 +370,13 @@ export default async function DashboardPage({
 
   const weeks = buildWeeks(year, month);
 
-  const todaySalesTotal = (todaySales ?? []).reduce(
-    (sum, item) => sum + item.quantity * Number(item.unit_price),
-    0
-  );
-  const todayPurchaseTotal = (todayPurchases ?? []).reduce(
-    (sum, item) => sum + item.quantity * Number(item.unit_cost),
-    0
-  );
-  // 재고위험은 바로 아래 "재고위험" 패널에 이미 건수·품목까지 자세히
-  // 나와서 요약 카드에도 넣으면 같은 정보가 중복된다. 요약 카드에는
-  // 대신 이번달 누계처럼 다른 데서는 안 보이는 숫자를 보여준다.
+  // 오늘 매출/매입, 재고위험 건수는 전부 바로 아래 달력 옆 "오늘의 업무"
+  // 패널과 "재고위험" 패널에 이미 자세히 나오는 정보라, 요약 카드에는
+  // 그 두 패널에는 없는(달력은 하루치만 보여줌) 이번달 누계만 둔다.
   const monthSalesTotal = Object.values(dataByDate).reduce((sum, day) => sum + day.salesTotal, 0);
   const monthSalesCount = Object.values(dataByDate).reduce((sum, day) => sum + day.salesCount, 0);
+  const monthPurchaseTotal = Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseTotal, 0);
+  const monthPurchaseCount = Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseCount, 0);
 
   const hasAlerts =
     unreadAnnouncements.length > 0 || dueSoonTodos.length > 0 || lowStockItems.length > 0;
@@ -441,26 +425,20 @@ export default async function DashboardPage({
       )}
       <div className="erp-hero-row">
         <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-danger)" }}>
-          <div className="erp-hero-label">오늘 매출</div>
+          <div className="erp-hero-label">이번달 매출</div>
           <div className="erp-hero-value">
-            {(todaySales ?? []).length}건 · {todaySalesTotal.toLocaleString()}원
+            {monthSalesCount}건 · {monthSalesTotal.toLocaleString()}원
           </div>
         </div>
         <div className="erp-hero-card" style={{ borderLeftColor: "#0b57d0" }}>
-          <div className="erp-hero-label">오늘 매입</div>
+          <div className="erp-hero-label">이번달 매입</div>
           <div className="erp-hero-value">
-            {(todayPurchases ?? []).length}건 · {todayPurchaseTotal.toLocaleString()}원
+            {monthPurchaseCount}건 · {monthPurchaseTotal.toLocaleString()}원
           </div>
         </div>
         <div className="erp-hero-card">
           <div className="erp-hero-label">전체 품목 수</div>
           <div className="erp-hero-value">{(productCount ?? 0).toLocaleString()}개</div>
-        </div>
-        <div className="erp-hero-card">
-          <div className="erp-hero-label">이번달 매출</div>
-          <div className="erp-hero-value">
-            {monthSalesCount}건 · {monthSalesTotal.toLocaleString()}원
-          </div>
         </div>
       </div>
       <div className="erp-home">
