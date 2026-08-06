@@ -14,6 +14,8 @@
   --erp-text-muted: #6b7280;
   --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
+  --erp-shadow-sm: 0 1px 2px rgba(20, 26, 38, 0.06);
+  --erp-shadow-md: 0 4px 14px rgba(20, 26, 38, 0.08);
 
   height: 100vh;
   /* 화면 어딘가(뱃지·긴 텍스트 등)가 뷰포트보다 살짝 넓어져도, 그
@@ -45,9 +47,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--erp-primary);
+  background: linear-gradient(180deg, var(--erp-primary), var(--erp-primary-dark));
   color: #fff;
   padding: 0 12px;
+  box-shadow: var(--erp-shadow-md);
+  position: relative;
+  z-index: 20;
 }
 
 .erp-titlebar-left {
@@ -63,7 +68,7 @@
   gap: 10px;
   padding: 4px 6px;
   margin: -4px -6px;
-  border-radius: 2px;
+  border-radius: 6px;
   text-decoration: none;
   color: inherit;
 }
@@ -106,7 +111,7 @@
   color: inherit;
   font-size: 12px;
   padding: 4px 6px;
-  border-radius: 2px;
+  border-radius: 6px;
 }
 
 .erp-titlebar-right button:hover {
@@ -133,7 +138,7 @@
   padding: 0 10px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 6px;
   font-size: 12px;
   color: var(--erp-text);
 }
@@ -159,7 +164,7 @@
   overflow-y: auto;
   background: #fff;
   border: 1px solid var(--erp-border);
-  border-radius: 2px;
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -228,7 +233,7 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 2px;
+  border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
@@ -250,7 +255,7 @@
   font-weight: 700;
   background: var(--erp-primary);
   color: #fff;
-  border-radius: 2px 2px 0 0;
+  border-radius: 10px 10px 0 0;
 }
 
 .erp-modal-close {
@@ -459,7 +464,7 @@
   font-size: 9px;
   color: #9aa2ad;
   border: 1px solid #d9dee5;
-  border-radius: 2px;
+  border-radius: 4px;
   padding: 1px 4px;
 }
 
@@ -492,9 +497,10 @@
   background: #d3d9e1;
   color: var(--erp-text-muted);
   font-size: 12.5px;
-  border-radius: 3px 3px 0 0;
+  border-radius: 6px 6px 0 0;
   text-decoration: none;
   white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .erp-tab.active {
@@ -509,7 +515,7 @@
   justify-content: center;
   width: 16px;
   height: 16px;
-  border-radius: 2px;
+  border-radius: 4px;
   font-size: 12px;
   color: inherit;
   opacity: 0.6;
@@ -566,7 +572,7 @@
   padding: 12px;
   background: #fafbfc;
   border: 1px solid var(--erp-border);
-  border-radius: 2px;
+  border-radius: 6px;
   margin-bottom: 8px;
 }
 
@@ -582,7 +588,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 9px;
-  border-radius: 2px;
+  border-radius: 999px;
   border: 1px solid var(--erp-border);
   background: #fff;
   color: var(--erp-text-muted);
@@ -617,17 +623,19 @@
 .erp-select {
   height: 30px;
   border: 1px solid var(--erp-border);
-  border-radius: 2px;
+  border-radius: 5px;
   padding: 0 8px;
   font-size: 12.5px;
   background: #fff;
   color: var(--erp-text);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .erp-input:focus,
 .erp-select:focus {
   outline: none;
   border-color: var(--erp-primary);
+  box-shadow: 0 0 0 3px rgba(31, 59, 117, 0.12);
 }
 
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
@@ -646,28 +654,38 @@
   height: 32px;
   min-width: 90px;
   padding: 0 12px;
-  border-radius: 2px;
+  border-radius: 6px;
   border: 1px solid var(--erp-border);
   background: #fff;
   color: var(--erp-text);
   font-size: 12.5px;
   font-weight: 500;
   text-decoration: none;
+  box-shadow: var(--erp-shadow-sm);
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
 }
 
 .erp-btn:hover {
   background: var(--erp-hover);
+  border-color: #c3cee0;
+}
+
+.erp-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .erp-btn:disabled {
   color: #b9bfc8;
   cursor: not-allowed;
   background: #f5f6f8;
+  box-shadow: none;
+  transform: none;
 }
 
 .erp-btn-primary {
-  background: var(--erp-primary);
-  border-color: var(--erp-primary);
+  background: linear-gradient(180deg, var(--erp-primary), var(--erp-primary-dark));
+  border-color: var(--erp-primary-dark);
   color: #fff;
 }
 
@@ -688,8 +706,9 @@
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
   border: 1px solid var(--erp-border);
-  border-radius: 2px;
+  border-radius: 6px;
   overflow: auto;
+  box-shadow: var(--erp-shadow-sm);
 }
 
 .erp-grid {
@@ -765,7 +784,7 @@
   align-items: center;
   gap: 4px;
   padding: 1px 7px;
-  border-radius: 2px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
 }
@@ -794,7 +813,8 @@
 .erp-detail {
   margin-top: 10px;
   border: 1px solid var(--erp-border);
-  border-radius: 2px;
+  border-radius: 6px;
+  box-shadow: var(--erp-shadow-sm);
 }
 
 .erp-detail-tabs {
@@ -873,8 +893,9 @@
 
 .erp-home-panel {
   border: 1px solid var(--erp-border);
-  border-radius: 2px;
+  border-radius: 6px;
   background: #fff;
+  box-shadow: var(--erp-shadow-sm);
 }
 
 .erp-home-panel-title {
@@ -919,7 +940,7 @@
   flex-direction: column;
   gap: 2px;
   padding: 6px 8px;
-  border-radius: 2px;
+  border-radius: 5px;
   font-size: 12px;
   text-decoration: none;
   color: var(--erp-text);
@@ -953,7 +974,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 6px 8px;
-  border-radius: 2px;
+  border-radius: 5px;
   border: 1px solid #f3c6cb;
   background: #fdeaec;
   font-size: 12px;
@@ -1131,7 +1152,7 @@
   gap: 8px;
   padding: 7px 10px;
   border: 1px solid #d8e0f0;
-  border-radius: 2px;
+  border-radius: 6px;
   background: #eef3fc;
   color: var(--erp-text);
   font-size: 12.5px;
@@ -1553,7 +1574,7 @@
   border: none;
   color: inherit;
   font-size: 16px;
-  border-radius: 2px;
+  border-radius: 6px;
   flex: 0 0 auto;
 }
 
@@ -1623,4 +1644,22 @@
     right: 12px;
     width: auto;
   }
+}
+
+/* ── 스크롤바(데스크톱 브라우저 전용, .erp 범위 안에서만) ─────────── */
+.erp ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.erp ::-webkit-scrollbar-thumb {
+  background: #ccd2dc;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.erp ::-webkit-scrollbar-thumb:hover {
+  background: #b7bec9;
+  background-clip: padding-box;
 }
