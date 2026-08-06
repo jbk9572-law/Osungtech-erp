@@ -21,6 +21,11 @@ function formatPeriod(from: string | null, to: string | null) {
   return `${from ? fmt(from) : "?"} ~ ${to ? fmt(to) : "?"}`;
 }
 
+// 결재 서류 관례대로 제목처럼 이름 글자 사이도 한 칸씩 띄운다("조준태" → "조 준 태").
+function spaceOut(text: string) {
+  return text.split("").join(" ");
+}
+
 const cellStyle: React.CSSProperties = {
   border: "1px solid #000",
   padding: "6px 8px",
@@ -124,7 +129,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           <tr>
             <td style={{ ...cellStyle, textAlign: "center" }}>작성자</td>
             <td style={{ ...cellStyle, textAlign: "center" }} colSpan={2}>
-              {row.profiles?.full_name ?? "-"}
+              {row.profiles?.full_name ? spaceOut(row.profiles.full_name) : "-"}
             </td>
           </tr>
           <tr>
@@ -150,9 +155,9 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </colgroup>
         <thead>
           <tr>
-            <th style={cellStyle}>일자</th>
+            <th style={{ ...cellStyle, textAlign: "center" }}>일자</th>
             <th style={cellStyle}>사용처</th>
-            <th style={cellStyle}>용도</th>
+            <th style={{ ...cellStyle, textAlign: "center" }}>용도</th>
             <th style={cellStyle}>금액</th>
             <th style={cellStyle}>비고</th>
           </tr>
@@ -162,9 +167,9 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
             const s = highlightCellStyle(item.is_highlighted);
             return (
               <tr key={item.id}>
-                <td style={s}>{item.used_at.replaceAll("-", ".")}</td>
+                <td style={{ ...s, textAlign: "center" }}>{item.used_at.replaceAll("-", ".")}</td>
                 <td style={s}>{item.vendor}</td>
-                <td style={s}>{item.purpose || ""}</td>
+                <td style={{ ...s, textAlign: "center" }}>{item.purpose || ""}</td>
                 <td style={{ ...s, textAlign: "right" }}>{Number(item.amount).toLocaleString()}</td>
                 <td style={s}>{item.remark || ""}</td>
               </tr>
