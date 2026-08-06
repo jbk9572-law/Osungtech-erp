@@ -54,7 +54,7 @@ export default async function CustomerDetailPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/customers" } }} />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#1c1c1c]">{customer.name}</h1>
+        <h1 className="text-lg font-bold text-[#182338]">{customer.name}</h1>
         <Link href="/customers" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>

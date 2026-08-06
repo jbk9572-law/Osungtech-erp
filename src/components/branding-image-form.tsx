@@ -25,7 +25,7 @@ function BrandingSlot({
 
   return (
     <div className="rounded-sm border border-[#eef0f3] p-4">
-      <p className="mb-1 text-xs font-bold text-[#1c1c1c]">{label}</p>
+      <p className="mb-1 text-xs font-bold text-[#182338]">{label}</p>
       <p className="mb-3 text-xs text-[#9aa2ad]">{description}</p>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={currentUrl || defaultUrl} alt={label} className={`mb-3 ${previewClassName}`} />

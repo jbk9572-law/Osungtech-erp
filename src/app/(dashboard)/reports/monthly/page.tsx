@@ -188,7 +188,7 @@ export default async function MonthlyReportPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">확장모듈 &gt; 월별 리포트</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#182338]">확장모듈 &gt; 월별 리포트</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         <Link href={`/reports/monthly?month=${prevMonth}${qSuffix}`} className="erp-date-preset-btn">

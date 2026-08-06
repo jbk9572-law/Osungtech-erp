@@ -29,7 +29,7 @@ export default async function AnnouncementsPage() {
       <KeyboardShortcuts
         shortcuts={{ F2: { href: "/announcements/new" }, Escape: { href: "/dashboard" } }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">공지사항</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#182338]">공지사항</h1>
 
       <div className="erp-toolbar">
         <Link href="/announcements/new" className="erp-btn erp-btn-primary">

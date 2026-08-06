@@ -107,7 +107,7 @@ export function ProductSearchSelect({
         typeof document !== "undefined" &&
         createPortal(
           <ul
-            className="max-h-56 overflow-y-auto rounded-sm border border-[#d9d9d9] bg-white text-[12.5px] shadow-md"
+            className="max-h-56 overflow-y-auto rounded-sm border border-[#e2e5eb] bg-white text-[12.5px] shadow-md"
             style={{
               position: "fixed",
               top: dropdownRect.top,
@@ -129,7 +129,7 @@ export function ProductSearchSelect({
                     i === highlight ? "bg-[#eef1f5]" : "hover:bg-[#f3f7fc]"
                   }`}
                 >
-                  <span className="font-medium text-[#1c1c1c]">{product.sku}</span>
+                  <span className="font-medium text-[#182338]">{product.sku}</span>
                   <span className="ml-2 text-[#6b7280]">
                     {product.name}
                     {product.spec ? ` (${product.spec})` : ""}

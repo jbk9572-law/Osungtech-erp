@@ -610,7 +610,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      outline: selectedItemName === item.name ? "2px solid #1c1c1c" : "none",
+                      outline: selectedItemName === item.name ? "2px solid #182338" : "none",
                       outlineOffset: -1,
                       opacity: isDone ? 0.55 : 1,
                     }}
@@ -754,7 +754,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                     width={it.w}
                     height={it.h}
                     fill={it.color}
-                    stroke={isSelected ? "#1c1c1c" : "#555555"}
+                    stroke={isSelected ? "#182338" : "#555555"}
                     strokeWidth={isSelected ? 3 : 1}
                     opacity={isDragging ? 0.25 : 1}
                     style={{ cursor: "grab", touchAction: "none" }}

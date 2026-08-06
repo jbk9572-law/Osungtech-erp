@@ -66,7 +66,7 @@ export function InventoryAdjustForm({
       <div className="md:col-span-2">
         <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
       </div>
-      <div className="flex overflow-hidden rounded-sm border border-[#d9d9d9]">
+      <div className="flex overflow-hidden rounded-sm border border-[#e2e5eb]">
         <button
           type="button"
           onClick={() => setDirection("increase")}

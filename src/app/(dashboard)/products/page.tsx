@@ -46,7 +46,7 @@ export default async function ProductsPage({
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">품목관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#182338]">품목관리</h1>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">
