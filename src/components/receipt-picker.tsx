@@ -30,9 +30,17 @@ export function ReceiptPicker() {
   const pickerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const dt = new DataTransfer();
-    for (const item of items) dt.items.add(item.file);
-    if (hiddenInputRef.current) hiddenInputRef.current.files = dt.files;
+    // 구형 브라우저(특히 일부 모바일 인앱 브라우저)는 DataTransfer로 만든
+    // FileList를 input.files에 대입하는 걸 지원하지 않아 여기서 던지면
+    // 화면 전체가 깨지는 것처럼 보일 수 있다 — 실패해도 조용히 넘어간다
+    // (사진 목록/미리보기는 정상이고, 이 경우만 제출 시 파일이 비게 된다).
+    try {
+      const dt = new DataTransfer();
+      for (const item of items) dt.items.add(item.file);
+      if (hiddenInputRef.current) hiddenInputRef.current.files = dt.files;
+    } catch {
+      // no-op: 위 주석 참고
+    }
   }, [items]);
 
   useEffect(() => {
@@ -124,7 +132,7 @@ export function ReceiptPicker() {
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
                 className="erp-btn"
-                style={{ padding: "1px 6px", fontSize: 11 }}
+                style={{ minWidth: 0, height: 22, padding: "1px 6px", fontSize: 11 }}
               >
                 ▲
               </button>
@@ -133,7 +141,7 @@ export function ReceiptPicker() {
                 onClick={() => move(index, 1)}
                 disabled={index === items.length - 1}
                 className="erp-btn"
-                style={{ padding: "1px 6px", fontSize: 11 }}
+                style={{ minWidth: 0, height: 22, padding: "1px 6px", fontSize: 11 }}
               >
                 ▼
               </button>
