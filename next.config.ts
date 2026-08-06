@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Server Action 요청 본문의 기본 상한은 1MB라, 영수증 사진을 여러 장
+  // 첨부하면(장당 압축 후에도 150~300KB 안팎, 압축 실패 시 최대 8MB까지
+  // 원본 그대로 전송됨) 금방 넘겨서 "서버 오류"로 요청 자체가 거부된다.
+  // 넉넉하게 올려준다.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "20mb",
+    },
+  },
 };
 
 export default nextConfig;
