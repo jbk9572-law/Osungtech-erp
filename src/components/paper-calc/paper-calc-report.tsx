@@ -36,7 +36,7 @@ export function PaperCalcReport({
 
       <h1 className="mb-4 text-lg font-bold">재단 결과 보고서</h1>
 
-      <div className="mb-6 grid grid-cols-5 gap-3">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
         {[
           {
             label: "총 원지",
@@ -62,7 +62,7 @@ export function PaperCalcReport({
       </div>
 
       <h2 className="mb-2 text-sm font-bold">배치 도면</h2>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {result.layouts.map((layout, i) => (
           <div key={i} className="break-inside-avoid">
             <BatchCard layout={layout} index={i} />

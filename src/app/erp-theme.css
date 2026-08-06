@@ -639,10 +639,16 @@
 }
 
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
+/* .erp는 뷰포트보다 넓어지는 걸 막으려고 overflow-x: hidden을 두고
+   있어서, 버튼이 여러 개인 툴바가 좁은 화면에서 줄바꿈하지 않으면
+   화면 밖으로 밀려난 버튼이 잘려서 아예 눌리지 않게 된다(모바일에서
+   확인됨). 줄바꿈으로 항상 눌러볼 수 있게 한다. */
 .erp-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  row-gap: 8px;
   margin-bottom: 10px;
 }
 
