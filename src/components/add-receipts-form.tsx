@@ -11,7 +11,7 @@ export function AddReceiptsForm({ paymentRequestId }: { paymentRequestId: string
   return (
     <form action={formAction} className="mt-3">
       <input type="hidden" name="payment_request_id" value={paymentRequestId} />
-      <ReceiptPicker />
+      <ReceiptPicker clearOn={state} />
       <div className="mt-2 flex items-center gap-2">
         <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? (
