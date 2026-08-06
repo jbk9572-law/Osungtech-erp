@@ -5,9 +5,27 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import type { FormState } from "@/components/form-message";
-import { numberOrNull } from "@/lib/form-number";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+type LineItemInput = {
+  usedAt: string;
+  vendor: string;
+  purpose?: string;
+  amount: number;
+  cardType?: "개인카드" | "법인카드" | "신한법인카드";
+  remark?: string;
+  sortOrder: number;
+};
+
+function parseLineItems(itemsRaw: string): LineItemInput[] | null {
+  try {
+    const items = JSON.parse(itemsRaw) as LineItemInput[];
+    return items.filter((item) => item.usedAt && item.vendor);
+  } catch {
+    return null;
+  }
+}
 
 const MAX_RECEIPT_SIZE = 8 * 1024 * 1024; // 8MB (브라우저에서 미리 압축해서 올리므로 여유 있게)
 
@@ -55,12 +73,17 @@ export async function createPaymentRequest(
   _prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const title = String(formData.get("title") ?? "").trim();
-  const content = String(formData.get("content") ?? "").trim();
+  const department = String(formData.get("department") ?? "").trim();
+  const periodFrom = String(formData.get("period_from") ?? "").trim();
+  const periodTo = String(formData.get("period_to") ?? "").trim();
+  const items = parseLineItems(String(formData.get("items") ?? "[]"));
   const receipts = formData.getAll("receipts").filter((f): f is File => f instanceof File && f.size > 0);
 
-  if (!title) {
-    return { error: "제목을 입력해주세요." };
+  if (!periodFrom || !periodTo) {
+    return { error: "기간을 입력해주세요." };
+  }
+  if (!items || items.length === 0) {
+    return { error: "사용 내역을 1건 이상 입력해주세요." };
   }
 
   const supabase = await createClient();
@@ -68,35 +91,71 @@ export async function createPaymentRequest(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("payment_requests")
-    .insert({
-      title,
-      content,
-      amount: numberOrNull(formData.get("amount")),
-      requested_by: user?.id ?? null,
-    })
-    .select("id")
-    .single();
+  // 헤더(payment_requests) + 사용내역 줄을 DB 함수 하나로 묶어 원자적으로
+  // 처리한다 — 매출/매입 등록과 동일한 이유로, 헤더만 만들어지고 줄 삽입이
+  // 실패하면 내역 없는 빈 문서가 남는 불일치를 막는다.
+  const { data: id, error } = await supabase.rpc("create_payment_request_with_items", {
+    p_department: department || null,
+    p_period_from: periodFrom,
+    p_period_to: periodTo,
+    p_requested_by: user?.id ?? null,
+    p_items: items,
+  });
 
-  if (error || !data) {
-    return { error: "등록에 실패했습니다." };
+  if (error || !id) {
+    return { error: `등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
   // 영수증 업로드가 일부 실패해도 지급결의서 자체는 이미 등록됐으니 막지
   // 않되, 조용히 묻히지 않도록 상세 화면으로 경고를 실어 보낸다.
   let receiptWarning: string | null = null;
   for (let i = 0; i < receipts.length; i++) {
-    const err = await uploadReceipt(supabase, data.id, receipts[i], i, user?.id ?? null);
+    const err = await uploadReceipt(supabase, id, receipts[i], i, user?.id ?? null);
     if (err) receiptWarning ??= err;
   }
 
   revalidatePath("/reports/payment-requests");
   redirect(
     receiptWarning
-      ? `/reports/payment-requests/${data.id}?warning=${encodeURIComponent(receiptWarning)}`
-      : `/reports/payment-requests/${data.id}`
+      ? `/reports/payment-requests/${id}?warning=${encodeURIComponent(receiptWarning)}`
+      : `/reports/payment-requests/${id}`
   );
+}
+
+export async function updatePaymentRequest(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const department = String(formData.get("department") ?? "").trim();
+  const periodFrom = String(formData.get("period_from") ?? "").trim();
+  const periodTo = String(formData.get("period_to") ?? "").trim();
+  const items = parseLineItems(String(formData.get("items") ?? "[]"));
+
+  if (!id) return { error: "잘못된 요청입니다." };
+  if (!periodFrom || !periodTo) {
+    return { error: "기간을 입력해주세요." };
+  }
+  if (!items || items.length === 0) {
+    return { error: "사용 내역을 1건 이상 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_payment_request_with_items", {
+    p_id: id,
+    p_department: department || null,
+    p_period_from: periodFrom,
+    p_period_to: periodTo,
+    p_items: items,
+  });
+
+  if (error) {
+    return { error: `수정에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/reports/payment-requests");
+  revalidatePath(`/reports/payment-requests/${id}`);
+  redirect(`/reports/payment-requests/${id}`);
 }
 
 export async function addPaymentRequestReceipts(
