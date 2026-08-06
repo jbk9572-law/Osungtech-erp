@@ -9,10 +9,11 @@ export type LineItemRow = {
   purpose: string;
   amount: string;
   remark: string;
+  highlighted: boolean;
 };
 
 function emptyRow(key: string, defaultDate: string): LineItemRow {
-  return { key, usedAt: defaultDate, vendor: "", purpose: "", amount: "", remark: "" };
+  return { key, usedAt: defaultDate, vendor: "", purpose: "", amount: "", remark: "", highlighted: false };
 }
 
 // 지급결의서(사용내역) 회사 실제 양식 그대로 - 일자/사용처/용도/금액/비고
@@ -57,6 +58,7 @@ export function PaymentRequestLineItems({
         amount: Number(row.amount) || 0,
         remark: row.remark.trim(),
         sortOrder: i,
+        isHighlighted: row.highlighted,
       }))
   );
 
@@ -67,19 +69,22 @@ export function PaymentRequestLineItems({
         <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
           <thead>
             <tr>
-              <th style={{ width: "15%" }}>일자</th>
-              <th style={{ width: "24%" }}>사용처</th>
-              <th style={{ width: "18%" }}>용도</th>
-              <th className="num" style={{ width: "16%" }}>
+              <th style={{ width: "13%" }}>일자</th>
+              <th style={{ width: "21%" }}>사용처</th>
+              <th style={{ width: "15%" }}>용도</th>
+              <th className="num" style={{ width: "14%" }}>
                 금액
               </th>
-              <th style={{ width: "20%" }}>비고</th>
-              <th style={{ width: "7%" }} />
+              <th style={{ width: "16%" }}>비고</th>
+              <th className="num" style={{ width: "11%" }} title="인쇄 시 이 줄을 강조(음영) 표시합니다">
+                강조
+              </th>
+              <th style={{ width: "10%" }} />
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.key}>
+              <tr key={row.key} style={row.highlighted ? { background: "#fff7d6" } : undefined}>
                 <td>
                   <input
                     type="date"
@@ -122,6 +127,15 @@ export function PaymentRequestLineItems({
                     value={row.remark}
                     onChange={(e) => updateRow(row.key, { remark: e.target.value })}
                     className="erp-input w-full"
+                  />
+                </td>
+                <td className="num" style={{ textAlign: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={row.highlighted}
+                    onChange={(e) => updateRow(row.key, { highlighted: e.target.checked })}
+                    title="인쇄 시 이 줄을 강조(음영) 표시합니다"
+                    style={{ width: 16, height: 16 }}
                   />
                 </td>
                 <td className="num">

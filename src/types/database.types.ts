@@ -1038,6 +1038,7 @@ export type Database = {
           amount: number;
           remark: string | null;
           sort_order: number;
+          is_highlighted: boolean;
           created_at: string;
         };
         Insert: {
@@ -1049,6 +1050,7 @@ export type Database = {
           amount?: number;
           remark?: string | null;
           sort_order?: number;
+          is_highlighted?: boolean;
           created_at?: string;
         };
         Update: {
@@ -1060,6 +1062,7 @@ export type Database = {
           amount?: number;
           remark?: string | null;
           sort_order?: number;
+          is_highlighted?: boolean;
           created_at?: string;
         };
         Relationships: [

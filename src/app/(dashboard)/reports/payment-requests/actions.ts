@@ -15,6 +15,7 @@ type LineItemInput = {
   amount: number;
   remark?: string;
   sortOrder: number;
+  isHighlighted?: boolean;
 };
 
 function parseLineItems(itemsRaw: string): LineItemInput[] | null {
