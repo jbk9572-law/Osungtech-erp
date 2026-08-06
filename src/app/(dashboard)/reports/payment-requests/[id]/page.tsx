@@ -2,8 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
-import { ReceiptDeleteForm } from "@/components/receipt-delete-form";
-import { AddReceiptsForm } from "@/components/add-receipts-form";
+import { ReceiptGallery } from "@/components/receipt-gallery";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
@@ -153,31 +152,10 @@ export default async function PaymentRequestDetailPage({
           <span className="erp-detail-tab active">영수증 ({receipts?.length ?? 0}장)</span>
         </div>
         <div className="erp-detail-body">
-          {receipts && receipts.length > 0 && (
-            <ul className="mb-3 flex flex-wrap gap-3">
-              {receipts.map((receipt, index) => (
-                <li
-                  key={receipt.id}
-                  className="flex flex-col items-center gap-1 rounded-sm border p-2"
-                  style={{ borderColor: "var(--erp-border)", width: 108 }}
-                >
-                  <a href={receipt.file_url} target="_blank" rel="noopener noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={receipt.file_url}
-                      alt={`영수증 ${index + 1}`}
-                      style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 4 }}
-                    />
-                  </a>
-                  <span className="text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
-                    #{index + 1}
-                  </span>
-                  <ReceiptDeleteForm id={receipt.id} paymentRequestId={row.id} />
-                </li>
-              ))}
-            </ul>
-          )}
-          <AddReceiptsForm paymentRequestId={row.id} />
+          <ReceiptGallery receipts={receipts ?? []} />
+          <p className="mt-3 text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+            영수증 추가·삭제는 F4 수정 화면에서 할 수 있습니다.
+          </p>
         </div>
       </div>
     </div>
