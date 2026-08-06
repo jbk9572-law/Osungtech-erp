@@ -990,6 +990,7 @@ export type Database = {
           department: string | null;
           period_from: string | null;
           period_to: string | null;
+          card_type: "개인카드" | "하나법인카드" | "신한법인카드";
           requested_by: string | null;
           created_at: string;
         };
@@ -1001,6 +1002,7 @@ export type Database = {
           department?: string | null;
           period_from?: string | null;
           period_to?: string | null;
+          card_type?: "개인카드" | "하나법인카드" | "신한법인카드";
           requested_by?: string | null;
           created_at?: string;
         };
@@ -1012,6 +1014,7 @@ export type Database = {
           department?: string | null;
           period_from?: string | null;
           period_to?: string | null;
+          card_type?: "개인카드" | "하나법인카드" | "신한법인카드";
           requested_by?: string | null;
           created_at?: string;
         };
@@ -1033,7 +1036,6 @@ export type Database = {
           vendor: string;
           purpose: string | null;
           amount: number;
-          card_type: "개인카드" | "법인카드" | "신한법인카드";
           remark: string | null;
           sort_order: number;
           created_at: string;
@@ -1045,7 +1047,6 @@ export type Database = {
           vendor: string;
           purpose?: string | null;
           amount?: number;
-          card_type?: "개인카드" | "법인카드" | "신한법인카드";
           remark?: string | null;
           sort_order?: number;
           created_at?: string;
@@ -1057,7 +1058,6 @@ export type Database = {
           vendor?: string;
           purpose?: string | null;
           amount?: number;
-          card_type?: "개인카드" | "법인카드" | "신한법인카드";
           remark?: string | null;
           sort_order?: number;
           created_at?: string;
@@ -1389,6 +1389,7 @@ export type Database = {
           p_department: string | null;
           p_period_from: string | null;
           p_period_to: string | null;
+          p_card_type: string;
           p_requested_by: string | null;
           p_items: Json;
         };
@@ -1400,6 +1401,7 @@ export type Database = {
           p_department: string | null;
           p_period_from: string | null;
           p_period_to: string | null;
+          p_card_type: string;
           p_items: Json;
         };
         Returns: string;

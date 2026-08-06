@@ -80,7 +80,7 @@ export function ReceiptPicker() {
   }
 
   return (
-    <div className="md:col-span-3">
+    <div className="md:col-span-4">
       <input ref={hiddenInputRef} type="file" name="receipts" multiple className="hidden" tabIndex={-1} readOnly />
       <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
         여러 장을 한 번에 고르거나, 촬영 화면에서 연속으로 찍어 한 번에 추가할 수 있습니다. 스테이플러로

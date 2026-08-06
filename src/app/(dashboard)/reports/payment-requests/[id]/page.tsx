@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { ReceiptDeleteForm } from "@/components/receipt-delete-form";
 import { AddReceiptsForm } from "@/components/add-receipts-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
 
 function formatPeriod(from: string | null, to: string | null) {
@@ -27,12 +28,12 @@ export default async function PaymentRequestDetailPage({
   const [{ data: row }, { data: items }, { data: receipts }] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, title, content, department, period_from, period_to, created_at, profiles(full_name)")
+      .select("id, title, content, department, period_from, period_to, card_type, created_at, profiles(full_name)")
       .eq("id", id)
       .maybeSingle(),
     supabase
       .from("payment_request_line_items")
-      .select("id, used_at, vendor, purpose, amount, card_type, remark")
+      .select("id, used_at, vendor, purpose, amount, remark")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
     supabase
@@ -83,12 +84,13 @@ export default async function PaymentRequestDetailPage({
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">{row.department || row.title || "지급결의서"}</span>
+          <span className="erp-detail-tab active">{paymentRequestDocTitle(row.card_type)}</span>
         </div>
         <div className="erp-detail-body">
           <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
             <span>부서명: {row.department ?? "-"}</span>
             <span>기간: {formatPeriod(row.period_from, row.period_to)}</span>
+            <span>사용카드: {row.card_type}</span>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
             <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
@@ -99,12 +101,11 @@ export default async function PaymentRequestDetailPage({
                 <tr>
                   <th style={{ width: 100 }}>일자</th>
                   <th>사용처</th>
-                  <th style={{ width: 140 }}>용도</th>
-                  <th className="num" style={{ width: 120 }}>
+                  <th style={{ width: 160 }}>용도</th>
+                  <th className="num" style={{ width: 130 }}>
                     금액
                   </th>
-                  <th style={{ width: 110 }}>사용카드</th>
-                  <th style={{ width: 140 }}>비고</th>
+                  <th style={{ width: 160 }}>비고</th>
                 </tr>
               </thead>
               <tbody>
@@ -114,13 +115,12 @@ export default async function PaymentRequestDetailPage({
                     <td>{item.vendor}</td>
                     <td>{item.purpose || "-"}</td>
                     <td className="num">{Number(item.amount).toLocaleString()}</td>
-                    <td>{item.card_type}</td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
                   </tr>
                 ))}
                 {!items?.length && (
                   <tr>
-                    <td colSpan={6} className="erp-grid-empty">
+                    <td colSpan={5} className="erp-grid-empty">
                       등록된 사용 내역이 없습니다.
                     </td>
                   </tr>
@@ -134,7 +134,7 @@ export default async function PaymentRequestDetailPage({
                   <td className="num" style={{ fontWeight: 700 }}>
                     {total.toLocaleString()}원
                   </td>
-                  <td colSpan={2} />
+                  <td />
                 </tr>
               </tfoot>
             </table>
