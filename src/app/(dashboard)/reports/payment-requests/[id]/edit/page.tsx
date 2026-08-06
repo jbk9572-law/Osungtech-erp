@@ -8,10 +8,14 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
   const { id } = await params;
   const supabase = await createClient();
   const [{ data: row }, { data: items }] = await Promise.all([
-    supabase.from("payment_requests").select("id, department, period_from, period_to").eq("id", id).maybeSingle(),
+    supabase
+      .from("payment_requests")
+      .select("id, department, period_from, period_to, card_type")
+      .eq("id", id)
+      .maybeSingle(),
     supabase
       .from("payment_request_line_items")
-      .select("id, used_at, vendor, purpose, amount, card_type, remark")
+      .select("id, used_at, vendor, purpose, amount, remark")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
   ]);
@@ -45,13 +49,13 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
               department: row.department ?? "",
               periodFrom: row.period_from ?? today,
               periodTo: row.period_to ?? today,
+              cardType: row.card_type,
               items: (items ?? []).map((item, i) => ({
                 key: `row-${i}`,
                 usedAt: item.used_at,
                 vendor: item.vendor,
                 purpose: item.purpose ?? "",
                 amount: String(item.amount),
-                cardType: item.card_type,
                 remark: item.remark ?? "",
               })),
             }}

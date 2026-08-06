@@ -13,7 +13,6 @@ type LineItemInput = {
   vendor: string;
   purpose?: string;
   amount: number;
-  cardType?: "개인카드" | "법인카드" | "신한법인카드";
   remark?: string;
   sortOrder: number;
 };
@@ -76,6 +75,7 @@ export async function createPaymentRequest(
   const department = String(formData.get("department") ?? "").trim();
   const periodFrom = String(formData.get("period_from") ?? "").trim();
   const periodTo = String(formData.get("period_to") ?? "").trim();
+  const cardType = String(formData.get("card_type") ?? "개인카드");
   const items = parseLineItems(String(formData.get("items") ?? "[]"));
   const receipts = formData.getAll("receipts").filter((f): f is File => f instanceof File && f.size > 0);
 
@@ -98,6 +98,7 @@ export async function createPaymentRequest(
     p_department: department || null,
     p_period_from: periodFrom,
     p_period_to: periodTo,
+    p_card_type: cardType,
     p_requested_by: user?.id ?? null,
     p_items: items,
   });
@@ -130,6 +131,7 @@ export async function updatePaymentRequest(
   const department = String(formData.get("department") ?? "").trim();
   const periodFrom = String(formData.get("period_from") ?? "").trim();
   const periodTo = String(formData.get("period_to") ?? "").trim();
+  const cardType = String(formData.get("card_type") ?? "개인카드");
   const items = parseLineItems(String(formData.get("items") ?? "[]"));
 
   if (!id) return { error: "잘못된 요청입니다." };
@@ -146,6 +148,7 @@ export async function updatePaymentRequest(
     p_department: department || null,
     p_period_from: periodFrom,
     p_period_to: periodTo,
+    p_card_type: cardType,
     p_items: items,
   });
 

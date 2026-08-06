@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "-";
@@ -15,7 +16,7 @@ export default async function PaymentRequestsPage() {
   const { data: rows } = await supabase
     .from("payment_requests")
     .select(
-      "id, title, department, period_from, period_to, created_at, profiles(full_name), payment_request_line_items(amount)"
+      "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -47,13 +48,14 @@ export default async function PaymentRequestsPage() {
           <thead>
             <tr>
               <th style={{ width: 70 }}>번호</th>
-              <th style={{ width: 160 }}>부서명</th>
+              <th style={{ width: 150 }}>구분</th>
+              <th style={{ width: 140 }}>부서명</th>
               <th>기간</th>
-              <th style={{ width: 120 }}>작성자</th>
-              <th className="num" style={{ width: 140 }}>
+              <th style={{ width: 110 }}>작성자</th>
+              <th className="num" style={{ width: 130 }}>
                 합계
               </th>
-              <th style={{ width: 110 }}>작성일</th>
+              <th style={{ width: 100 }}>작성일</th>
             </tr>
           </thead>
           <tbody>
@@ -65,6 +67,7 @@ export default async function PaymentRequestsPage() {
               return (
                 <ClickableRow key={row.id} href={`/reports/payment-requests/${row.id}`}>
                   <td className="num">{(rows?.length ?? 0) - i}</td>
+                  <td>{paymentRequestDocTitle(row.card_type)}</td>
                   <td>{row.department || row.title || "-"}</td>
                   <td>{formatPeriod(row.period_from, row.period_to)}</td>
                   <td>{row.profiles?.full_name ?? "-"}</td>
@@ -75,7 +78,7 @@ export default async function PaymentRequestsPage() {
             })}
             {!rows?.length && (
               <tr>
-                <td colSpan={6} className="erp-grid-empty">
+                <td colSpan={7} className="erp-grid-empty">
                   등록된 지급결의서가 없습니다.
                 </td>
               </tr>
