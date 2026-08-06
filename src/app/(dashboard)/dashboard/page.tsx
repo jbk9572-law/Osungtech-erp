@@ -5,6 +5,7 @@ import { getNotificationSummary } from "@/lib/notifications";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { nowInKst } from "@/lib/kst-date";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -58,10 +59,13 @@ export default async function DashboardPage({
   searchParams: Promise<{ month?: string }>;
 }) {
   const { month: monthParam } = await searchParams;
-  const now = new Date();
+  // 서버는 보통 UTC로 도는데, "오늘"을 그냥 new Date()로 구하면 한국
+  // 자정~오전 9시 사이엔 서버가 아직 어제라고 착각한다 — 한국 기준으로
+  // 고정해서 구한다(자세한 이유는 kst-date.ts 참고).
+  const now = nowInKst();
   const [year, month] = monthParam
     ? monthParam.split("-").map(Number)
-    : [now.getFullYear(), now.getMonth() + 1];
+    : [now.getUTCFullYear(), now.getUTCMonth() + 1];
 
   const monthStart = toDateStr(year, month, 1);
   const monthEnd = toDateStr(year, month, new Date(year, month, 0).getDate());
@@ -72,25 +76,14 @@ export default async function DashboardPage({
   const nextMonthHref = `/dashboard?month=${nextDate.getFullYear()}-${pad(nextDate.getMonth() + 1)}`;
 
   const supabase = await createClient();
-  const todayStr = toDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  // "최근 메모"는 최신 5개를 그대로 보여주기만 하면, 새 메모를 자주 안 쓰는
-  // 달에는 지난달 메모가 계속 상단에 남아있게 된다. 14일 이내로 한 번 더
-  // 걸러서 오래된 메모는 자연스럽게 빠지게 한다. day에 음수를 바로 넣으면
-  // toDateStr은 단순 문자열 조합이라 월 경계를 못 넘으므로, Date 객체로
-  // 먼저 날짜를 굴린 뒤 그 결과를 넘긴다.
-  const fourteenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 14);
-  const recentNotesFrom = toDateStr(
-    fourteenDaysAgo.getFullYear(),
-    fourteenDaysAgo.getMonth() + 1,
-    fourteenDaysAgo.getDate()
-  );
+  const todayStr = toDateStr(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate());
   // 이월 후보를 DB에서 걸러낼 때, order_date와 created_at을 직접 비교하는
   // 조건은 PostgREST 필터로 표현할 수 없어(두 컬럼끼리 비교) 넉넉한 기간
   // 범위로 먼저 가져온 뒤 isCarryover()로 정확히 골라낸다. 실제로 이월
   // 등록은 항상 월말 즈음 다음 달 날짜로만 하므로, 지난 6개월~다음 3개월이면
   // 실사용에서 놓칠 일이 없다.
-  const carryoverRangeStart = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-  const carryoverRangeEnd = new Date(now.getFullYear(), now.getMonth() + 4, 0);
+  const carryoverRangeStart = new Date(now.getUTCFullYear(), now.getUTCMonth() - 6, 1);
+  const carryoverRangeEnd = new Date(now.getUTCFullYear(), now.getUTCMonth() + 4, 0);
   const carryoverFrom = toDateStr(
     carryoverRangeStart.getFullYear(),
     carryoverRangeStart.getMonth() + 1,
@@ -156,7 +149,8 @@ export default async function DashboardPage({
     supabase
       .from("calendar_notes")
       .select("note_date, content")
-      .gte("note_date", recentNotesFrom)
+      .gte("note_date", monthStart)
+      .lte("note_date", monthEnd)
       .order("note_date", { ascending: false })
       .limit(5),
     supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),

@@ -4,6 +4,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { TodoCheckbox } from "@/components/todo-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
+import { todayKstStr } from "@/lib/kst-date";
 
 type TodoItemInput = { productId: string; spec?: string | null; quantity: number };
 
@@ -31,7 +32,7 @@ export default async function TodosPage() {
   ]);
 
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
-  const todayStr = new Date().toLocaleDateString("sv-SE");
+  const todayStr = todayKstStr();
 
   return (
     <div>

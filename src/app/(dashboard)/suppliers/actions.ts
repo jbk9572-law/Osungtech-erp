@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
+import { todayKstStr } from "@/lib/kst-date";
 
 function supplierFieldsFrom(formData: FormData) {
   return {
@@ -125,7 +126,7 @@ export async function schedulePurchasePriceChange(
   if (!supplierId || !productId || !effectiveDate) {
     return { error: "상품과 적용일을 모두 입력해주세요." };
   }
-  const today = new Date().toLocaleDateString("sv-SE");
+  const today = todayKstStr();
   if (effectiveDate <= today) {
     return { error: "적용일은 내일 이후 날짜여야 합니다." };
   }
@@ -163,7 +164,7 @@ export async function updatePurchasePriceSchedule(
   if (!id || !effectiveDate) {
     return { error: "적용일을 입력해주세요." };
   }
-  const today = new Date().toLocaleDateString("sv-SE");
+  const today = todayKstStr();
   if (effectiveDate <= today) {
     return { error: "적용일은 내일 이후 날짜여야 합니다." };
   }

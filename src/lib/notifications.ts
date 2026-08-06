@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
+import { toKstDateStr } from "@/lib/kst-date";
 
 export type AnnouncementNotice = { id: string; title: string; pinned: boolean };
 export type TodoNotice = {
@@ -24,7 +25,7 @@ export async function getNotificationSummary(
 ): Promise<{ announcements: AnnouncementNotice[]; todos: TodoNotice[]; lowStock: LowStockNotice[] }> {
   const soonDate = new Date();
   soonDate.setDate(soonDate.getDate() + 3);
-  const soonStr = soonDate.toLocaleDateString("sv-SE");
+  const soonStr = toKstDateStr(soonDate);
 
   const [{ data: announcements }, { data: reads }, { data: dueTodos }, { data: stockedProducts }] =
     await Promise.all([
