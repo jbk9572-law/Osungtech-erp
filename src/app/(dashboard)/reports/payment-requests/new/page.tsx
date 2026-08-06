@@ -9,7 +9,7 @@ export default async function NewPaymentRequestPage() {
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">보고서 &gt; 지급결의양식 &gt; 글쓰기</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#182338]">보고서 &gt; 지급결의양식 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
         <Link href="/reports/payment-requests" className="erp-btn erp-btn-danger">

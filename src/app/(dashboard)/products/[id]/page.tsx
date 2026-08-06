@@ -33,7 +33,7 @@ export default async function ProductDetailPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#1c1c1c]">{product.name}</h1>
+        <h1 className="text-lg font-bold text-[#182338]">{product.name}</h1>
         <Link href={closeHref} className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>

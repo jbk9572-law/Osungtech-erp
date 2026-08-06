@@ -12,7 +12,7 @@ export default async function CompanySettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[#1c1c1c]">환경설정 &gt; 회사정보</h1>
+      <h1 className="mb-1 text-lg font-bold text-[#182338]">환경설정 &gt; 회사정보</h1>
       <p className="mb-4 text-xs text-[#6b7280]">거래명세표의 공급자 정보로 사용됩니다.</p>
 
       <CompanyProfileForm company={company} />

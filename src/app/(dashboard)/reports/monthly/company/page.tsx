@@ -106,7 +106,7 @@ export default async function MonthlyReportCompanyPage({
           Escape: { href: `/reports/monthly?month=${month}` },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">
+      <h1 className="mb-3 text-lg font-bold text-[#182338]">
         확장모듈 &gt; 월별 리포트 &gt; {companyName || "거래처"} 상세내역
       </h1>
 

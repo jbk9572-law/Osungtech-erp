@@ -32,7 +32,7 @@ export default async function NewPurchasePage() {
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#1c1c1c]">새 매입(입고) 등록</h1>
+        <h1 className="text-lg font-bold text-[#182338]">새 매입(입고) 등록</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href="/paper-calc/manual?for=purchase" target="_blank" rel="noopener noreferrer" className="erp-btn">
             재단 배치 시뮬레이터

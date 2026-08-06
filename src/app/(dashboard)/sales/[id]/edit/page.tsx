@@ -57,7 +57,7 @@ export default async function EditSalePage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#1c1c1c]">매출 거래 수정</h1>
+        <h1 className="text-lg font-bold text-[#182338]">매출 거래 수정</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href={`/paper-calc?salesOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
             모조지 계산

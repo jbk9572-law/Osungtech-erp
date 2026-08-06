@@ -90,7 +90,7 @@ export default async function VouchersPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#1c1c1c]">회계관리 &gt; 전표관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[#182338]">회계관리 &gt; 전표관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
