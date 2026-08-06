@@ -114,19 +114,18 @@ export async function attachPendingPaperCalculation(
   supabase: SupabaseServerClient,
   salesOrderId: string,
   pendingRaw: string
-) {
+): Promise<string | null> {
   const pending = parsePendingCalc(pendingRaw);
-  if (!pending) return;
+  if (!pending) return null;
 
   const { error } = await supabase.from("paper_calculations").insert({
     sales_order_id: salesOrderId,
     ...pendingToRow(pending),
     created_by: await getUserId(supabase),
   });
+  if (error) return `모조지 계산 저장에 실패했습니다: ${error.message}`;
 
-  if (!error) {
-    await syncPaperStockOrderItem(supabase, salesOrderId);
-  }
+  return syncPaperStockOrderItem(supabase, salesOrderId);
 }
 
 // 오늘 입고된 모조지(TG0) 품목을 매출로 그대로 옮겨 담을 때, 그 매입 건에
@@ -137,18 +136,19 @@ export async function attachCopiedPaperCalculations(
   supabase: SupabaseServerClient,
   salesOrderId: string,
   copiedRaw: string
-) {
+): Promise<string | null> {
   let candidates: unknown[];
   try {
     const parsed = JSON.parse(copiedRaw);
-    if (!Array.isArray(parsed)) return;
+    if (!Array.isArray(parsed)) return null;
     candidates = parsed;
   } catch {
-    return;
+    return null;
   }
 
   const userId = await getUserId(supabase);
   let insertedAny = false;
+  let failedAny = false;
   for (const candidate of candidates) {
     if (!isPendingCalc(candidate)) continue;
     const { error } = await supabase.from("paper_calculations").insert({
@@ -156,12 +156,13 @@ export async function attachCopiedPaperCalculations(
       ...pendingToRow(candidate),
       created_by: userId,
     });
-    if (!error) insertedAny = true;
+    if (error) failedAny = true;
+    else insertedAny = true;
   }
 
-  if (insertedAny) {
-    await syncPaperStockOrderItem(supabase, salesOrderId);
-  }
+  const syncError = insertedAny ? await syncPaperStockOrderItem(supabase, salesOrderId) : null;
+  if (syncError) return syncError;
+  return failedAny ? "일부 모조지 계산을 복사하지 못했습니다." : null;
 }
 
 // 원지(TG0) 사용량을 이 매입 건에 저장된 계산들의 합계(연)로 매입 품목에
@@ -370,19 +371,18 @@ export async function attachPendingPaperCalculationToPurchase(
   supabase: SupabaseServerClient,
   purchaseOrderId: string,
   pendingRaw: string
-) {
+): Promise<string | null> {
   const pending = parsePendingCalc(pendingRaw);
-  if (!pending) return;
+  if (!pending) return null;
 
   const { error } = await supabase.from("paper_calculations").insert({
     purchase_order_id: purchaseOrderId,
     ...pendingToRow(pending),
     created_by: await getUserId(supabase),
   });
+  if (error) return `모조지 계산 저장에 실패했습니다: ${error.message}`;
 
-  if (!error) {
-    await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
-  }
+  return syncPaperStockPurchaseItem(supabase, purchaseOrderId);
 }
 
 // 매입 등록도 매출과 마찬가지로 "할일 가져오기"에서 할일에 붙어있던 계산을
@@ -392,18 +392,19 @@ export async function attachCopiedPaperCalculationsToPurchase(
   supabase: SupabaseServerClient,
   purchaseOrderId: string,
   copiedRaw: string
-) {
+): Promise<string | null> {
   let candidates: unknown[];
   try {
     const parsed = JSON.parse(copiedRaw);
-    if (!Array.isArray(parsed)) return;
+    if (!Array.isArray(parsed)) return null;
     candidates = parsed;
   } catch {
-    return;
+    return null;
   }
 
   const userId = await getUserId(supabase);
   let insertedAny = false;
+  let failedAny = false;
   for (const candidate of candidates) {
     if (!isPendingCalc(candidate)) continue;
     const { error } = await supabase.from("paper_calculations").insert({
@@ -411,12 +412,13 @@ export async function attachCopiedPaperCalculationsToPurchase(
       ...pendingToRow(candidate),
       created_by: userId,
     });
-    if (!error) insertedAny = true;
+    if (error) failedAny = true;
+    else insertedAny = true;
   }
 
-  if (insertedAny) {
-    await syncPaperStockPurchaseItem(supabase, purchaseOrderId);
-  }
+  const syncError = insertedAny ? await syncPaperStockPurchaseItem(supabase, purchaseOrderId) : null;
+  if (syncError) return syncError;
+  return failedAny ? "일부 모조지 계산을 복사하지 못했습니다." : null;
 }
 
 // 할일 등록 화면에서도 아직 todo id가 없어서 계산을 미리 저장할 수 없다 —

@@ -20,8 +20,6 @@ type SaleItemInput = {
   remark?: string | null;
 };
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
-
 function parseItems(itemsRaw: string): SaleItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as SaleItemInput[];
@@ -29,36 +27,6 @@ function parseItems(itemsRaw: string): SaleItemInput[] | null {
   } catch {
     return null;
   }
-}
-
-// 기존 판매 건의 출고 효과를 재고 조정(adjustment)으로 되돌린다.
-// 호출 전에 미리 읽어둔 품목/창고 정보를 받는다 (주문을 지우거나 바꾸고 나면
-// 원래 품목 수량을 알 수 없기 때문에, 실제 삭제/수정이 성공한 뒤에만 호출해야 한다).
-// 반환값이 null이 아니면 재고 반영에 실패한 것이므로 반드시 사용자에게 알려야 한다.
-async function reverseSaleInventory(
-  supabase: SupabaseServerClient,
-  salesOrderId: string,
-  warehouseId: string,
-  items: { product_id: string; quantity: number }[],
-  userId: string | null
-): Promise<string | null> {
-  if (!items.length) return null;
-
-  // 매출은 "출고(out)"로 재고를 차감했으므로, 되돌릴 때는 그만큼 다시
-  // 더해줘야 한다 (양수). 여기서 부호가 반대로(음수) 들어가면 삭제/수정할
-  // 때마다 재고가 두 번 깎이는 심각한 버그가 된다.
-  const { error } = await supabase.from("inventory_transactions").insert(
-    items.map((item) => ({
-      product_id: item.product_id,
-      warehouse_id: warehouseId,
-      type: "adjustment" as const,
-      quantity: item.quantity,
-      reference: `sales_order_reversal:${salesOrderId}`,
-      created_by: userId,
-    }))
-  );
-
-  return error ? error.message : null;
 }
 
 export async function createSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -133,14 +101,17 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
 
   // 모조지 계산 화면에서 주문 생성 전에 미리 계산해둔 결과가 있으면
   // (localStorage에 임시 저장 → new-sale-form이 hidden input으로 넘김)
-  // 방금 만든 주문에 붙여서 저장하고 TG0 판매 품목에도 반영한다.
+  // 방금 만든 주문에 붙여서 저장하고 TG0 판매 품목에도 반영한다. 이 단계가
+  // 실패해도 주문 자체는 이미 생성됐으니 등록을 막지 않되, 조용히 묻히지
+  // 않도록 상세 화면으로 경고 메시지를 실어 보낸다.
+  let paperCalcWarning: string | null = null;
   if (pendingPaperCalc) {
-    await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
+    paperCalcWarning = await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
   }
 
   // 입고 불러오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
   if (copiedPaperCalcs) {
-    await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
+    paperCalcWarning ??= await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
   }
 
   // TG0 자동 반영 줄이 위에서 이미 만들어진 뒤에만 오버라이드를 적용할 수
@@ -172,7 +143,11 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   revalidatePath("/paper-calc");
-  redirect(`/sales/${salesOrderId}`);
+  redirect(
+    paperCalcWarning
+      ? `/sales/${salesOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
+      : `/sales/${salesOrderId}`
+  );
 }
 
 export async function updateSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -253,33 +228,17 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 재고를 되돌리기 전에 삭제될 품목/창고 정보를 먼저 읽어둔다.
-  const [{ data: items }, { data: order }] = await Promise.all([
-    supabase.from("sales_order_items").select("product_id, quantity").eq("sales_order_id", id),
-    supabase.from("sales_orders").select("warehouse_id").eq("id", id).maybeSingle(),
-  ]);
+  // 주문 삭제 + 재고 되돌리기를 DB 함수 하나로 묶어 원자적으로 처리한다.
+  // 이전에는 두 단계를 개별 요청으로 보내서, 삭제는 성공했는데 그 다음
+  // 재고 되돌리기가 실패하면 거래 기록은 사라졌지만 재고 수량은 틀어진
+  // 채로 남는 문제가 있었다.
+  const { error } = await supabase.rpc("delete_sale_with_items", {
+    p_id: id,
+    p_deleted_by: user?.id ?? null,
+  });
 
-  if (!order) {
-    return { error: "매출 거래를 찾을 수 없습니다." };
-  }
-
-  // 삭제가 실제로 성공한 경우에만 재고를 되돌린다.
-  const { error } = await supabase.from("sales_orders").delete().eq("id", id);
   if (error) {
-    return { error: "삭제에 실패했습니다." };
-  }
-
-  const reverseError = await reverseSaleInventory(
-    supabase,
-    id,
-    order.warehouse_id,
-    items ?? [],
-    user?.id ?? null
-  );
-  if (reverseError) {
-    return {
-      error: `거래는 삭제되었지만 재고 복구에 실패했습니다: ${reverseError} — 재고 조정 화면에서 직접 확인해주세요.`,
-    };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/sales");

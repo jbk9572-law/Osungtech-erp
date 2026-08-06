@@ -32,8 +32,6 @@ type SaleItemInput = {
   remark?: string | null;
 };
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
-
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as PurchaseItemInput[];
@@ -129,33 +127,6 @@ export async function getPaperCalculationsForPurchaseOrder(
     overProd: calc.over_prod,
     fulfilled: calc.fulfilled,
   }));
-}
-
-// 기존 매입 건의 입고 효과를 재고 조정(adjustment)으로 되돌린다.
-// 호출 전에 미리 읽어둔 품목/창고 정보를 받는다 (주문을 지우거나 바꾸고 나면
-// 원래 품목 수량을 알 수 없기 때문에, 실제 삭제/수정이 성공한 뒤에만 호출해야 한다).
-// 반환값이 null이 아니면 재고 반영에 실패한 것이므로 반드시 사용자에게 알려야 한다.
-async function reversePurchaseInventory(
-  supabase: SupabaseServerClient,
-  purchaseOrderId: string,
-  warehouseId: string,
-  items: { product_id: string; quantity: number }[],
-  userId: string | null
-): Promise<string | null> {
-  if (!items.length) return null;
-
-  const { error } = await supabase.from("inventory_transactions").insert(
-    items.map((item) => ({
-      product_id: item.product_id,
-      warehouse_id: warehouseId,
-      type: "adjustment" as const,
-      quantity: -item.quantity,
-      reference: `purchase_order_reversal:${purchaseOrderId}`,
-      created_by: userId,
-    }))
-  );
-
-  return error ? error.message : null;
 }
 
 export async function createPurchase(
@@ -325,13 +296,20 @@ export async function createPurchase(
     )
   );
 
+  // 이 단계가 실패해도 매입 등록 자체는 이미 성공했으니 등록을 막지 않되,
+  // 조용히 묻히지 않도록 상세 화면으로 경고 메시지를 실어 보낸다.
+  let paperCalcWarning: string | null = null;
   if (pendingPaperCalc) {
-    await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
+    paperCalcWarning = await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
   }
 
   // 할일 가져오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
   if (copiedPaperCalcs) {
-    await attachCopiedPaperCalculationsToPurchase(supabase, purchaseOrderId, copiedPaperCalcs);
+    paperCalcWarning ??= await attachCopiedPaperCalculationsToPurchase(
+      supabase,
+      purchaseOrderId,
+      copiedPaperCalcs
+    );
   }
 
   // TG0 자동 반영 줄이 위에서 이미 만들어진 뒤에만 오버라이드를 적용할 수
@@ -345,10 +323,10 @@ export async function createPurchase(
   // 매출 쪽에 똑같이 복사해서 TG0 자동 반영/도면까지 그대로 이어준다.
   if (salesOrderId) {
     if (pendingPaperCalc) {
-      await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
+      paperCalcWarning ??= await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
     }
     if (copiedPaperCalcs) {
-      await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
+      paperCalcWarning ??= await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
     }
     if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
       await overrideSalesPaperStockQuantity(supabase, salesOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
@@ -384,7 +362,11 @@ export async function createPurchase(
   revalidatePath("/products");
   revalidatePath("/dashboard");
 
-  redirect(`/purchases/${purchaseOrderId}`);
+  redirect(
+    paperCalcWarning
+      ? `/purchases/${purchaseOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
+      : `/purchases/${purchaseOrderId}`
+  );
 }
 
 export async function updatePurchase(
@@ -465,33 +447,17 @@ export async function deletePurchase(
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 재고를 되돌리기 전에 삭제될 품목/창고 정보를 먼저 읽어둔다.
-  const [{ data: items }, { data: order }] = await Promise.all([
-    supabase.from("purchase_order_items").select("product_id, quantity").eq("purchase_order_id", id),
-    supabase.from("purchase_orders").select("warehouse_id").eq("id", id).maybeSingle(),
-  ]);
+  // 주문 삭제 + 재고 되돌리기를 DB 함수 하나로 묶어 원자적으로 처리한다.
+  // 이전에는 두 단계를 개별 요청으로 보내서, 삭제는 성공했는데 그 다음
+  // 재고 되돌리기가 실패하면 거래 기록은 사라졌지만 재고 수량은 틀어진
+  // 채로 남는 문제가 있었다.
+  const { error } = await supabase.rpc("delete_purchase_with_items", {
+    p_id: id,
+    p_deleted_by: user?.id ?? null,
+  });
 
-  if (!order) {
-    return { error: "매입 거래를 찾을 수 없습니다." };
-  }
-
-  // 삭제가 실제로 성공한 경우에만 재고를 되돌린다.
-  const { error } = await supabase.from("purchase_orders").delete().eq("id", id);
   if (error) {
-    return { error: "삭제에 실패했습니다." };
-  }
-
-  const reverseError = await reversePurchaseInventory(
-    supabase,
-    id,
-    order.warehouse_id,
-    items ?? [],
-    user?.id ?? null
-  );
-  if (reverseError) {
-    return {
-      error: `거래는 삭제되었지만 재고 반영에 실패했습니다: ${reverseError} — 재고 조정 화면에서 직접 확인해주세요.`,
-    };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/purchases");

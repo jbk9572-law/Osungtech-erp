@@ -5,13 +5,18 @@ import { ProductForm } from "@/components/product-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateProduct, deleteProduct } from "@/app/(dashboard)/products/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { resolveListHref } from "@/lib/list-return";
 
 export default async function ProductDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
+  const { back } = await searchParams;
+  const closeHref = resolveListHref("/products", back);
   const supabase = await createClient();
 
   const [{ data: product }, { data: categories }, { data: suppliers }] = await Promise.all([
@@ -26,10 +31,10 @@ export default async function ProductDetailPage({
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/products" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#1c1c1c]">{product.name}</h1>
-        <Link href="/products" className="erp-btn erp-btn-danger">
+        <Link href={closeHref} className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>

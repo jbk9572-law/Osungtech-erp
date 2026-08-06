@@ -1,21 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import { detectRasterImageType } from "@/lib/upload-safety";
+import { requireAdmin } from "@/lib/require-admin";
 import type { FormState } from "@/components/form-message";
 
 export async function updateCompanyProfile(
   _prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 회사 정보를 수정할 수 있습니다." };
+
   const name = String(formData.get("name") ?? "").trim();
   if (!name) {
     return { error: "상호명을 입력해주세요." };
   }
 
-  const supabase = await createClient();
   const { error } = await supabase
     .from("company_profile")
     .update({
@@ -58,6 +60,9 @@ export async function uploadBrandingImage(
   _prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 이미지를 변경할 수 있습니다." };
+
   const slot = String(formData.get("slot") ?? "") as BrandingSlot;
   const file = formData.get("file");
 
@@ -76,7 +81,6 @@ export async function uploadBrandingImage(
     return { error: "PNG, JPG, GIF, WEBP 형식의 이미지 파일만 업로드할 수 있습니다." };
   }
 
-  const supabase = await createClient();
   const path = `${BRANDING_SLOTS[slot]}.png`;
 
   const { error: uploadError } = await supabase.storage
