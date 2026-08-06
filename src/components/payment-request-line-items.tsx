@@ -129,13 +129,13 @@ export function PaymentRequestLineItems({
                     className="erp-input w-full"
                   />
                 </td>
-                <td className="num" style={{ textAlign: "center" }}>
+                <td className="num" style={{ textAlign: "center", verticalAlign: "middle" }}>
                   <input
                     type="checkbox"
                     checked={row.highlighted}
                     onChange={(e) => updateRow(row.key, { highlighted: e.target.checked })}
                     title="인쇄 시 이 줄을 강조(음영) 표시합니다"
-                    style={{ width: 16, height: 16 }}
+                    style={{ width: 16, height: 16, verticalAlign: "middle" }}
                   />
                 </td>
                 <td className="num">
