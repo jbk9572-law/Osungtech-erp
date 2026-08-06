@@ -2,15 +2,15 @@
    로그인/인쇄(print) 라우트는 이 테마의 영향을 받지 않는다. */
 
 .erp {
-  --erp-primary: #1f3b75;
+  --erp-primary: #1e3a68;
   --erp-primary-dark: #142a56;
-  --erp-border: #d9d9d9;
+  --erp-border: #e2e5eb;
   --erp-hover: #f3f7fc;
   --erp-selected: #ddebff;
   --erp-success: #28a745;
   --erp-warning: #ff9800;
   --erp-danger: #dc3545;
-  --erp-text: #1c1c1c;
+  --erp-text: #182338;
   --erp-text-muted: #6b7280;
   --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
@@ -867,6 +867,42 @@
   color: #d0d5db;
 }
 
+/* ── 대시보드 상단 요약 카드(오늘 매출/매입 등을 한눈에) ───────────── */
+.erp-hero-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 1100px) {
+  .erp-hero-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.erp-hero-card {
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border);
+  border-left: 3px solid var(--erp-primary);
+  border-radius: 6px;
+  padding: 12px 14px;
+  box-shadow: var(--erp-shadow-sm);
+}
+
+.erp-hero-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+
+.erp-hero-value {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Home Workspace ────────────────────────────────────────── */
 .erp-home {
   display: grid;
@@ -1141,45 +1177,47 @@
 /* ── 대시보드 알림 배너(공지/할일 마감) ───────────────────────── */
 .erp-alert-banner {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
 .erp-alert-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border: 1px solid #d8e0f0;
-  border-radius: 6px;
-  background: #eef3fc;
-  color: var(--erp-text);
-  font-size: 12.5px;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid #f0e1c4;
+  border-radius: 999px;
+  background: #fff;
+  color: #6a4d1c;
+  font-size: 12px;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .erp-alert-item:hover {
-  background: var(--erp-selected);
+  background: #fff7ec;
 }
 
 .erp-alert-item.danger {
   border-color: #f3c6cb;
-  background: #fdeaec;
+  color: var(--erp-danger);
 }
 
 .erp-alert-tag {
   flex: 0 0 auto;
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 999px;
-  background: var(--erp-primary);
-  color: #fff;
-  font-size: 10.5px;
+  background: var(--erp-bg);
+  color: var(--erp-text-muted);
+  font-size: 10px;
   font-weight: 700;
 }
 
 .erp-alert-tag.danger {
-  background: var(--erp-danger);
+  background: #fdeaec;
+  color: var(--erp-danger);
 }
 
 /* ── 미확인 알림 팝업(10분마다 재확인) ────────────────────────── */

@@ -389,12 +389,6 @@ export default async function DashboardPage({
     0
   );
 
-  const summaryRows = [
-    { label: "오늘 매출", value: `${(todaySales ?? []).length}건 · ${todaySalesTotal.toLocaleString()}원` },
-    { label: "오늘 매입", value: `${(todayPurchases ?? []).length}건 · ${todayPurchaseTotal.toLocaleString()}원` },
-    { label: "전체 품목 수", value: `${productCount ?? 0}개` },
-  ];
-
   const hasAlerts =
     unreadAnnouncements.length > 0 || dueSoonTodos.length > 0 || lowStockItems.length > 0;
 
@@ -440,18 +434,35 @@ export default async function DashboardPage({
           )}
         </div>
       )}
+      <div className="erp-hero-row">
+        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-danger)" }}>
+          <div className="erp-hero-label">오늘 매출</div>
+          <div className="erp-hero-value">
+            {(todaySales ?? []).length}건 · {todaySalesTotal.toLocaleString()}원
+          </div>
+        </div>
+        <div className="erp-hero-card" style={{ borderLeftColor: "#0b57d0" }}>
+          <div className="erp-hero-label">오늘 매입</div>
+          <div className="erp-hero-value">
+            {(todayPurchases ?? []).length}건 · {todayPurchaseTotal.toLocaleString()}원
+          </div>
+        </div>
+        <div className="erp-hero-card">
+          <div className="erp-hero-label">전체 품목 수</div>
+          <div className="erp-hero-value">{(productCount ?? 0).toLocaleString()}개</div>
+        </div>
+        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-danger)" }}>
+          <div className="erp-hero-label">재고 위험</div>
+          <div
+            className="erp-hero-value"
+            style={lowStockItems.length > 0 ? { color: "var(--erp-danger)" } : undefined}
+          >
+            {lowStockItems.length}건
+          </div>
+        </div>
+      </div>
       <div className="erp-home">
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div className="erp-home-panel">
-          <div className="erp-home-panel-title">업무 요약</div>
-          {summaryRows.map((row) => (
-            <div className="erp-home-stat-row" key={row.label}>
-              <span>{row.label}</span>
-              <span className="erp-home-stat-value">{row.value}</span>
-            </div>
-          ))}
-        </div>
-
         <div className="erp-home-panel" id="stock-risk">
           <div className="erp-home-panel-title">
             <span>재고위험</span>
