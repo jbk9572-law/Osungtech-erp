@@ -28,6 +28,8 @@ const TREE: GroupItem[] = [
     items: [
       { label: "출고처관리", href: "/customers" },
       { label: "공급처관리", href: "/suppliers" },
+      { label: "미수금현황", href: "/receivables" },
+      { label: "미지급금현황", href: "/payables" },
     ],
   },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },

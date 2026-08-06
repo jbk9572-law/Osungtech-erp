@@ -11,6 +11,8 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "품목관리", href: "/products" },
   { label: "거래처관리 > 출고처관리", href: "/customers" },
   { label: "거래처관리 > 공급처관리", href: "/suppliers" },
+  { label: "거래처관리 > 미수금현황", href: "/receivables" },
+  { label: "거래처관리 > 미지급금현황", href: "/payables" },
   { label: "할일관리", href: "/todos" },
   { label: "공지사항", href: "/announcements" },
   { label: "보고서 > 지급결의양식", href: "/reports/payment-requests" },

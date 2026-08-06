@@ -5,10 +5,14 @@ import { PartnerForm } from "@/components/partner-form";
 import { SupplierPriceForm } from "@/components/supplier-price-form";
 import { PurchasePriceScheduleForm } from "@/components/purchase-price-schedule-form";
 import { PurchasePriceScheduleRow } from "@/components/purchase-price-schedule-row";
+import { PartyPaymentForm } from "@/components/party-payment-form";
+import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { DeleteButton } from "@/components/delete-button";
-import { updateSupplier, deleteSupplier } from "@/app/(dashboard)/suppliers/actions";
+import { updateSupplier, deleteSupplier, addSupplierPayment, deleteSupplierPayment } from "@/app/(dashboard)/suppliers/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
+import { getSupplierBalance } from "@/lib/ar-ap";
+import { todayKstStr } from "@/lib/kst-date";
 
 export default async function SupplierDetailPage({
   params,
@@ -22,21 +26,23 @@ export default async function SupplierDetailPage({
   // 반영한다 (거래처 상세 화면의 applyDuePriceSchedules와 동일한 방식).
   await applyDuePurchasePriceSchedules(supabase, id);
 
-  const [{ data: supplier }, { data: prices }, { data: products }, { data: schedules }] = await Promise.all([
-    supabase.from("suppliers").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("supplier_product_prices")
-      .select("*, products(sku, name, unit, spec)")
-      .eq("supplier_id", id)
-      .order("updated_at", { ascending: false }),
-    supabase.from("products").select("id, sku, name, spec").order("name"),
-    supabase
-      .from("purchase_price_change_schedules")
-      .select("id, product_id, new_unit_cost, effective_date, products(sku, name, spec)")
-      .eq("supplier_id", id)
-      .is("applied_at", null)
-      .order("effective_date", { ascending: true }),
-  ]);
+  const [{ data: supplier }, { data: prices }, { data: products }, { data: schedules }, balance] =
+    await Promise.all([
+      supabase.from("suppliers").select("*").eq("id", id).maybeSingle(),
+      supabase
+        .from("supplier_product_prices")
+        .select("*, products(sku, name, unit, spec)")
+        .eq("supplier_id", id)
+        .order("updated_at", { ascending: false }),
+      supabase.from("products").select("id, sku, name, spec").order("name"),
+      supabase
+        .from("purchase_price_change_schedules")
+        .select("id, product_id, new_unit_cost, effective_date, products(sku, name, spec)")
+        .eq("supplier_id", id)
+        .is("applied_at", null)
+        .order("effective_date", { ascending: true }),
+      getSupplierBalance(supabase, id),
+    ]);
 
   if (!supplier) {
     notFound();
@@ -81,6 +87,65 @@ export default async function SupplierDetailPage({
             initial={supplier}
             submitLabel="저장"
           />
+        </div>
+      </div>
+
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">미지급금 현황</span>
+        </div>
+        <div className="erp-detail-body">
+          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <span>매입 누계: {balance.totalPurchases.toLocaleString()}원</span>
+            <span>지급 누계: {balance.totalPaid.toLocaleString()}원</span>
+            <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
+              잔액: {balance.balance.toLocaleString()}원
+            </span>
+          </div>
+
+          <PartyPaymentForm
+            action={addSupplierPayment}
+            partyIdField="supplier_id"
+            partyId={supplier.id}
+            today={todayKstStr()}
+            label="지급"
+          />
+
+          {balance.payments.length > 0 && (
+            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th style={{ width: 100 }}>일자</th>
+                    <th className="num" style={{ width: 130 }}>
+                      금액
+                    </th>
+                    <th style={{ width: 90 }}>방법</th>
+                    <th>메모</th>
+                    <th style={{ width: 60 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {balance.payments.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.paid_at.replaceAll("-", ".")}</td>
+                      <td className="num">{Number(p.amount).toLocaleString()}</td>
+                      <td>{p.method ?? "-"}</td>
+                      <td style={{ color: "var(--erp-text-muted)" }}>{p.memo ?? "-"}</td>
+                      <td>
+                        <PartyPaymentDeleteForm
+                          action={deleteSupplierPayment}
+                          id={p.id}
+                          partyIdField="supplier_id"
+                          partyId={supplier.id}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 

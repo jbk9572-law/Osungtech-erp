@@ -211,6 +211,54 @@ export async function cancelPriceSchedule(_prevState: FormState, formData: FormD
   return { success: "예약을 취소했습니다." };
 }
 
+// 이 거래처에서 받은 돈(수금) 한 건을 기록한다. 매출/매입 데이터는 건드리지
+// 않고 별도 원장에 쌓아서, 잔액은 항상 (매출 누계 - 수금 누계)로 그때그때
+// 계산한다.
+export async function addCustomerPayment(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const customerId = String(formData.get("customer_id") ?? "");
+  const paidAt = String(formData.get("paid_at") ?? "");
+  const amount = Number(formData.get("amount") ?? 0);
+  if (!customerId || !paidAt || !(amount > 0)) {
+    return { error: "일자와 금액을 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase.from("customer_payments").insert({
+    customer_id: customerId,
+    paid_at: paidAt,
+    amount,
+    method: String(formData.get("method") ?? "") || null,
+    memo: String(formData.get("memo") ?? "") || null,
+    created_by: user?.id ?? null,
+  });
+
+  if (error) {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/receivables");
+  return { success: "수금 내역을 등록했습니다." };
+}
+
+export async function deleteCustomerPayment(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const customerId = String(formData.get("customer_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("customer_payments").delete().eq("id", id);
+  if (error) return { error: "삭제에 실패했습니다." };
+
+  if (customerId) revalidatePath(`/customers/${customerId}`);
+  revalidatePath("/receivables");
+  return { success: "삭제했습니다." };
+}
+
 export async function importCustomersExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
