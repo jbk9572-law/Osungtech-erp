@@ -388,6 +388,11 @@ export default async function DashboardPage({
     (sum, item) => sum + item.quantity * Number(item.unit_cost),
     0
   );
+  // 재고위험은 바로 아래 "재고위험" 패널에 이미 건수·품목까지 자세히
+  // 나와서 요약 카드에도 넣으면 같은 정보가 중복된다. 요약 카드에는
+  // 대신 이번달 누계처럼 다른 데서는 안 보이는 숫자를 보여준다.
+  const monthSalesTotal = Object.values(dataByDate).reduce((sum, day) => sum + day.salesTotal, 0);
+  const monthSalesCount = Object.values(dataByDate).reduce((sum, day) => sum + day.salesCount, 0);
 
   const hasAlerts =
     unreadAnnouncements.length > 0 || dueSoonTodos.length > 0 || lowStockItems.length > 0;
@@ -451,13 +456,10 @@ export default async function DashboardPage({
           <div className="erp-hero-label">전체 품목 수</div>
           <div className="erp-hero-value">{(productCount ?? 0).toLocaleString()}개</div>
         </div>
-        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-danger)" }}>
-          <div className="erp-hero-label">재고 위험</div>
-          <div
-            className="erp-hero-value"
-            style={lowStockItems.length > 0 ? { color: "var(--erp-danger)" } : undefined}
-          >
-            {lowStockItems.length}건
+        <div className="erp-hero-card">
+          <div className="erp-hero-label">이번달 매출</div>
+          <div className="erp-hero-value">
+            {monthSalesCount}건 · {monthSalesTotal.toLocaleString()}원
           </div>
         </div>
       </div>
