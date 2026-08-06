@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/require-admin";
 import type { FormState } from "@/components/form-message";
 
 const ROLES = ["admin", "manager", "staff"] as const;
@@ -10,22 +10,6 @@ type Role = (typeof ROLES)[number];
 
 function isRole(value: string): value is Role {
   return (ROLES as readonly string[]).includes(value);
-}
-
-async function requireAdmin() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { supabase, isAdmin: false, selfId: null as string | null };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  return { supabase, isAdmin: profile?.role === "admin", selfId: user.id };
 }
 
 // 관리자 전용 계정 생성. 이메일 대신 아이디만 입력받고, 실제 Supabase Auth용

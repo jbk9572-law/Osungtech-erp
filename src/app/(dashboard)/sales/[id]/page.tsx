@@ -16,10 +16,10 @@ export default async function SaleDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ back?: string }>;
+  searchParams: Promise<{ back?: string; warning?: string }>;
 }) {
   const { id } = await params;
-  const { back } = await searchParams;
+  const { back, warning } = await searchParams;
   // 목록에서 검색/필터를 걸어둔 채로 이 화면에 들어왔으면, ESC/닫기로
   // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const closeHref = resolveListHref("/sales", back);
@@ -97,6 +97,15 @@ export default async function SaleDetailPage({
       <p className="mb-4 text-xs text-[#6b7280]">
         {new Date(order.order_date).toLocaleDateString("ko-KR")} 출고
       </p>
+
+      {warning && (
+        <p
+          className="mb-4 rounded-sm px-3 py-2 text-xs font-medium"
+          style={{ background: "#fdf3e0", color: "#a15c00" }}
+        >
+          ⚠ 거래는 정상 등록됐지만: {warning}
+        </p>
+      )}
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">

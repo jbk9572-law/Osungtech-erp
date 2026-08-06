@@ -119,7 +119,7 @@ export default async function VouchersPage({
             type="text"
             name="q"
             defaultValue={q ?? ""}
-            placeholder="거래처명, 공급업체명"
+            placeholder="출고처명, 공급처명"
             className="erp-input"
             style={{ width: "100%" }}
           />

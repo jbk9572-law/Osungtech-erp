@@ -1275,6 +1275,22 @@ export type Database = {
         };
         Returns: { purchase_order_id: string; sale_order_id: string }[];
       };
+      delete_sale_with_items: {
+        Args: { p_id: string; p_deleted_by: string | null };
+        Returns: void;
+      };
+      delete_purchase_with_items: {
+        Args: { p_id: string; p_deleted_by: string | null };
+        Returns: void;
+      };
+      get_database_size: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      get_storage_size: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
