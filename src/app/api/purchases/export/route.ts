@@ -7,6 +7,7 @@ import {
 import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
 import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
+import { nowInKst } from "@/lib/kst-date";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 공급처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
   const { from, to } = currentMonthRange();
-  const now = new Date();
+  const now = nowInKst();
 
   const { supabase, user } = await requireAuthedApiUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
   // 합쳐서 보여주는 전용 관리대장이 필요하다.
   if (templatedSupplier?.purchase_export_template === "wote_ledger") {
     const entries = await fetchWoteLedgerEntries(supabase, to);
-    const workbook = await buildWoteLedgerWorkbook(now.getFullYear(), now.getMonth() + 1, from, entries);
+    const workbook = await buildWoteLedgerWorkbook(now.getUTCFullYear(), now.getUTCMonth() + 1, from, entries);
     return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
   }
 
@@ -71,11 +72,16 @@ export async function GET(request: Request) {
     const priceBasis = templatedSupplier.purchase_price_basis === "box" ? "box" : "quantity";
     const workbook =
       templatedSupplier.purchase_export_template === "leaders_special"
-        ? await buildLeadersSpecialWorkbook(templatedSupplier.name, now.getFullYear(), now.getMonth() + 1, items)
+        ? await buildLeadersSpecialWorkbook(
+            templatedSupplier.name,
+            now.getUTCFullYear(),
+            now.getUTCMonth() + 1,
+            items
+          )
         : await buildStandardLedgerWorkbook(
             templatedSupplier.name,
-            now.getFullYear(),
-            now.getMonth() + 1,
+            now.getUTCFullYear(),
+            now.getUTCMonth() + 1,
             items,
             priceBasis
           );

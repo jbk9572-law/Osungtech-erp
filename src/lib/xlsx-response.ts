@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import type { Workbook } from "exceljs";
+import { nowInKst } from "@/lib/kst-date";
 
 export function buildXlsxResponse(rows: Record<string, unknown>[], filename: string): Response {
   const sheet = XLSX.utils.json_to_sheet(rows);
@@ -30,10 +31,12 @@ export function pad(n: number): string {
 }
 
 // "해당달" 엑셀 다운로드는 항상 오늘 기준 이번달 1일~말일 범위를 사용한다.
+// 서버는 보통 UTC로 돌아서 그냥 new Date()를 쓰면 한국 자정~오전 9시
+// 사이엔 "이번달"이 틀릴 수 있어 한국 기준으로 고정한다.
 export function currentMonthRange(): { from: string; to: string } {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  const now = nowInKst();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth() + 1;
   const from = `${year}-${pad(month)}-01`;
   const lastDay = new Date(year, month, 0).getDate();
   const to = `${year}-${pad(month)}-${pad(lastDay)}`;

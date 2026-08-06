@@ -1,3 +1,5 @@
+import { nowInKst } from "@/lib/kst-date";
+
 function pad(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -15,8 +17,12 @@ function addDays(d: Date, n: number) {
 export type DatePreset = { label: string; from: string; to: string };
 
 // 서버 컴포넌트에서 매 요청마다 "오늘" 기준으로 계산하는 조회기간 프리셋.
+// 서버는 보통 UTC로 도는데 now.getFullYear() 등을 그대로 쓰면 한국
+// 자정~오전 9시 사이엔 "오늘"이 아직 어제로 계산된다 — 한국 기준으로
+// 고정해서 구한다.
 export function getDatePresets(now: Date = new Date()): DatePreset[] {
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const kstNow = nowInKst(now);
+  const today = new Date(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
   const dayOfWeek = today.getDay(); // 0=일요일
   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const thisWeekStart = addDays(today, mondayOffset);
@@ -48,7 +54,8 @@ export function getDatePresets(now: Date = new Date()): DatePreset[] {
 
 // "YYYY-MM" 월 문자열 <-> 조회기간(from/to) 변환 헬퍼. 월별 리포트에서 사용.
 export function currentMonth(now: Date = new Date()): string {
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+  const kstNow = nowInKst(now);
+  return `${kstNow.getUTCFullYear()}-${pad(kstNow.getUTCMonth() + 1)}`;
 }
 
 export function getMonthRange(month: string): { from: string; to: string } {

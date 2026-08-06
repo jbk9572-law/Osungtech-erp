@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { todayKstStr } from "@/lib/kst-date";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -10,7 +11,7 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 // 같은 거래처+상품에 예약이 여러 개 겹쳐도 effective_date가 가장 늦은
 // 것부터 순서대로 적용해서 최종적으로는 제일 최근 예약값이 남는다.
 export async function applyDuePriceSchedules(supabase: SupabaseServerClient, customerId?: string) {
-  const today = new Date().toLocaleDateString("sv-SE");
+  const today = todayKstStr();
 
   let query = supabase
     .from("price_change_schedules")
@@ -48,7 +49,7 @@ export async function applyDuePriceSchedules(supabase: SupabaseServerClient, cus
 // 테이블(purchase_price_change_schedules)에 쌓인 예약 중 효력일이 도래한
 // 것을 supplier_product_prices에 반영한다.
 export async function applyDuePurchasePriceSchedules(supabase: SupabaseServerClient, supplierId?: string) {
-  const today = new Date().toLocaleDateString("sv-SE");
+  const today = todayKstStr();
 
   let query = supabase
     .from("purchase_price_change_schedules")
