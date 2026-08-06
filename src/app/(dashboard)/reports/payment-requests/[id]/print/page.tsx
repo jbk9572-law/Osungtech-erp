@@ -82,7 +82,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         <tbody>
           <tr>
             <td
-              rowSpan={2}
+              rowSpan={3}
               style={{ ...cellStyle, width: "40%", textAlign: "center", fontSize: 20, fontWeight: 700, letterSpacing: 4 }}
             >
               {title.big}
@@ -101,16 +101,16 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
             <td style={{ ...cellStyle, height: 48 }} />
           </tr>
           <tr>
-            <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
-            <td style={cellStyle}>{row.department || "-"}</td>
             <td style={{ ...cellStyle, textAlign: "center" }}>작성자</td>
-            <td style={cellStyle}>{row.profiles?.full_name ?? "-"}</td>
+            <td style={cellStyle} colSpan={2}>
+              {row.profiles?.full_name ?? "-"}
+            </td>
           </tr>
           <tr>
+            <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
+            <td style={cellStyle}>{row.department || "-"}</td>
             <td style={{ ...cellStyle, textAlign: "center" }}>기간</td>
-            <td style={cellStyle} colSpan={3}>
-              {formatPeriod(row.period_from, row.period_to)}
-            </td>
+            <td style={cellStyle}>{formatPeriod(row.period_from, row.period_to)}</td>
           </tr>
         </tbody>
       </table>
