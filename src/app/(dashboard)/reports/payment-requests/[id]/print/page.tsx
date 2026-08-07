@@ -76,8 +76,6 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
 
   const total = (items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
   const rows = items ?? [];
-  // 물리 양식처럼 표 아래쪽에 빈 줄을 몇 개 채워서 허전해 보이지 않게 한다.
-  const blankRowCount = Math.max(0, 18 - rows.length);
   const title = printTitle(row.card_type);
 
   return (
@@ -175,15 +173,6 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
               </tr>
             );
           })}
-          {Array.from({ length: blankRowCount }).map((_, i) => (
-            <tr key={`blank-${i}`}>
-              <td style={itemCellStyle} />
-              <td style={itemCellStyle} />
-              <td style={itemCellStyle} />
-              <td style={itemCellStyle} />
-              <td style={itemCellStyle} />
-            </tr>
-          ))}
           <tr>
             <td style={{ ...itemCellStyle, textAlign: "center", fontWeight: 700 }} colSpan={3}>
               합 계
