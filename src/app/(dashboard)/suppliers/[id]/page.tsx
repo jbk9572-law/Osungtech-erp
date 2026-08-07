@@ -9,6 +9,7 @@ import { PartyPaymentForm } from "@/components/party-payment-form";
 import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { DeleteButton } from "@/components/delete-button";
 import { ClickableRow } from "@/components/clickable-row";
+import { AgingBadge } from "@/components/aging-badge";
 import { updateSupplier, deleteSupplier, addSupplierPayment, deleteSupplierPayment } from "@/app/(dashboard)/suppliers/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
@@ -119,6 +120,7 @@ export default async function SupplierDetailPage({
                     <th className="num" style={{ width: 130 }}>
                       미지급 잔액
                     </th>
+                    <th style={{ width: 110 }}>경과</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,6 +130,9 @@ export default async function SupplierDetailPage({
                       <td className="num">{o.total.toLocaleString()}</td>
                       <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
                         {o.outstanding.toLocaleString()}
+                      </td>
+                      <td>
+                        <AgingBadge days={o.daysOverdue} />
                       </td>
                     </ClickableRow>
                   ))}
