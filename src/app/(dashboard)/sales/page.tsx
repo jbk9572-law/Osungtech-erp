@@ -1,24 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
+import { SalesGridTable, type SalesRow } from "@/components/sales-grid-table";
 
-type DisplayRow = {
-  key: string;
-  orderId: string | undefined;
-  date: string | undefined;
-  customerName: string | undefined;
-  authorName: string | null | undefined;
-  productLabel: string;
-  spec: string;
-  quantity: number;
-  unit: string | null | undefined;
-  unitPrice: number | null;
-  supplyAmount: number;
-  taxAmount: number;
-};
+type DisplayRow = SalesRow;
 
 export default async function SalesPage({
   searchParams,
@@ -184,81 +171,13 @@ export default async function SalesPage({
         </Link>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>거래일자</th>
-              <th>출고처</th>
-              <th>작성자</th>
-              <th>품목명</th>
-              <th>규격</th>
-              <th className="num">수량</th>
-              <th className="num">공급가</th>
-              <th className="num">공급가액</th>
-              <th className="num">세액</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <ClickableRow
-                key={row.key}
-                href={row.orderId ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}` : "#"}
-              >
-                <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
-                <td>{row.customerName}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
-                <td>{row.productLabel}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                <td className="num">
-                  {row.quantity.toLocaleString()} {row.unit}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {row.unitPrice != null ? row.unitPrice.toLocaleString() : "-"}
-                </td>
-                <td className="num">{row.supplyAmount.toLocaleString()}</td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {row.taxAmount.toLocaleString()}
-                </td>
-                <td className="num">
-                  {row.orderId && (
-                    <Link
-                      href={`/sales/${row.orderId}/print`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "var(--erp-primary)", fontWeight: 600 }}
-                    >
-                      명세표 →
-                    </Link>
-                  )}
-                </td>
-              </ClickableRow>
-            ))}
-            {!rows.length && (
-              <tr>
-                <td colSpan={10} className="erp-grid-empty">
-                  조건에 맞는 판매 거래가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-          {rows.length > 0 && (
-            <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={5} className="erp-grid-sticky-label">
-                  합계 ({rows.length}건)
-                </td>
-                <td className="num">{totalQuantity.toLocaleString()}</td>
-                <td />
-                <td className="num">{totalSupply.toLocaleString()}</td>
-                <td className="num">{totalTax.toLocaleString()}</td>
-                <td />
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
+      <SalesGridTable
+        rows={rows}
+        totalQuantity={totalQuantity}
+        totalSupply={totalSupply}
+        totalTax={totalTax}
+        backParam={backParam ?? ""}
+      />
     </div>
   );
 }
