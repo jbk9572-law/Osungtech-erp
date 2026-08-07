@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 
 export type LineItemRow = {
   key: string;
@@ -82,7 +83,7 @@ export function PaymentRequestLineItems({
               <th style={{ width: "10%" }} />
             </tr>
           </thead>
-          <tbody>
+          <tbody onKeyDown={focusSameColumnNextRow}>
             {rows.map((row) => (
               <tr key={row.key} style={row.highlighted ? { background: "#fff7d6" } : undefined}>
                 <td>
