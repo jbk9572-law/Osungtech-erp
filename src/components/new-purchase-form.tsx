@@ -544,7 +544,7 @@ export function NewPurchaseForm({
       {pendingPaperCalc && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
         >
           모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0 자동 반영
           줄로 표시됩니다. 등록하면 실제로 저장됩니다.
@@ -824,14 +824,14 @@ export function NewPurchaseForm({
             </thead>
             <tbody onKeyDown={focusSameColumnNextRow}>
               {pendingCalcSummary && (
-                <tr style={{ background: "#eef2ff" }}>
+                <tr style={{ background: "var(--erp-info-bg)" }}>
                   <td>
                     {tg0Product ? (
                       <>
                         {tg0Product.name}
                         <span
                           className="ml-1 rounded px-1 text-[10.5px]"
-                          style={{ background: "#c7d2fe", color: "#3730a3" }}
+                          style={{ background: "var(--erp-info-border)", color: "var(--erp-info-text)" }}
                         >
                           자동
                         </span>

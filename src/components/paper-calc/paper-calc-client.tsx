@@ -248,7 +248,7 @@ export function PaperCalcClient({
       {salesOrderLabel && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
         >
           이 출고 건({salesOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
           상세에서 원지 사용량을 바로 확인할 수 있습니다.
@@ -257,7 +257,7 @@ export function PaperCalcClient({
       {purchaseOrderLabel && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
         >
           이 매입 건({purchaseOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
           상세에서 원지 사용량을 바로 확인할 수 있습니다.
@@ -619,7 +619,7 @@ function SavedCalcRow({
       <td className="num">{calc.over_prod.toLocaleString()}매</td>
       <td>
         {calc.fulfilled ? (
-          <span style={{ color: "#0E7A45" }}>충족</span>
+          <span style={{ color: "var(--erp-success)" }}>충족</span>
         ) : (
           <span style={{ color: "var(--erp-warning)" }}>미충족</span>
         )}
@@ -686,7 +686,7 @@ export function DashboardCards({
       value: usageAvg != null ? `${usageAvg.toFixed(1)}%` : "-",
       sub: "",
       bg: "#E9F7EE",
-      fg: "#0E7A45",
+      fg: "var(--erp-success)",
     },
     { label: "총 여백", value: marginTotal != null ? formatArea(marginTotal) : "-", sub: "" },
   ];

@@ -47,7 +47,7 @@ export function PriceScheduleRow({
 
   if (editing) {
     return (
-      <div className="rounded p-2 text-xs" style={{ background: "#eef2ff", border: "1px solid #c7d2fe" }}>
+      <div className="rounded p-2 text-xs" style={{ background: "var(--erp-info-bg)", border: "1px solid var(--erp-info-border)" }}>
         <p className="mb-1.5 font-medium">{productLabel}</p>
         <form action={updateAction} className="flex flex-wrap items-center gap-1.5">
           <input type="hidden" name="id" value={id} />
@@ -102,7 +102,7 @@ export function PriceScheduleRow({
   return (
     <div
       className="flex items-center justify-between gap-2 rounded p-2 text-xs"
-      style={{ background: "#eef2ff", border: "1px solid #c7d2fe" }}
+      style={{ background: "var(--erp-info-bg)", border: "1px solid var(--erp-info-border)" }}
       data-product-id={productId}
     >
       <span>
