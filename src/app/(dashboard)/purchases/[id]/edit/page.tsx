@@ -51,6 +51,7 @@ export default async function EditPurchasePage({
           warehouseId: order.warehouse_id,
           purchaseDate: order.purchase_date,
           memo: order.memo ?? "",
+          paymentMethod: order.payment_method,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             spec: item.spec,

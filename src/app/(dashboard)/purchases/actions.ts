@@ -137,6 +137,9 @@ export async function createPurchase(
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const purchaseDate = String(formData.get("purchase_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
+  // "항상 외상" 체크박스가 켜져 있으면(기본값) 폼에서 이 필드를 아예 안
+  // 보내서 null(외상)로 저장된다 — 체크를 끄고 결제방법을 고른 경우에만 값이 온다.
+  const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
@@ -227,6 +230,7 @@ export async function createPurchase(
           unitPrice: item.unitPrice,
           remark: item.remark || null,
         })),
+        p_payment_method: paymentMethod,
       })
       .single();
 
@@ -267,6 +271,7 @@ export async function createPurchase(
         unitCost: item.unitCost,
         remark: item.remark || null,
       })),
+      p_payment_method: paymentMethod,
     });
 
     if (error || !newPurchaseId) {
@@ -361,6 +366,8 @@ export async function createPurchase(
   revalidatePath("/inventory");
   revalidatePath("/products");
   revalidatePath("/dashboard");
+  revalidatePath("/payables");
+  revalidatePath(`/suppliers/${supplierId}`);
 
   redirect(
     paperCalcWarning
@@ -378,6 +385,7 @@ export async function updatePurchase(
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const purchaseDate = String(formData.get("purchase_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
+  const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !supplierId || !warehouseId || !purchaseDate) {
@@ -413,6 +421,7 @@ export async function updatePurchase(
       unitCost: item.unitCost,
       remark: item.remark || null,
     })),
+    p_payment_method: paymentMethod,
   });
 
   if (error) {
@@ -430,6 +439,8 @@ export async function updatePurchase(
   revalidatePath("/inventory");
   revalidatePath("/products");
   revalidatePath("/dashboard");
+  revalidatePath("/payables");
+  revalidatePath(`/suppliers/${supplierId}`);
   redirect(`/purchases/${id}`);
 }
 

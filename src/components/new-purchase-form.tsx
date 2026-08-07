@@ -60,12 +60,15 @@ type Row = {
   manualSalePrice: boolean;
 };
 
+const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
+
 export type PurchaseInitial = {
   id: string;
   supplierId: string;
   warehouseId: string;
   purchaseDate: string;
   memo: string;
+  paymentMethod?: string | null;
   items: {
     productId: string;
     spec?: string | null;
@@ -109,6 +112,11 @@ export function NewPurchaseForm({
     () => initial?.purchaseDate ?? new Date().toLocaleDateString("sv-SE")
   );
   const [memo, setMemo] = useState(initial?.memo ?? "");
+  // "항상 외상"이 기본값(체크됨)이라 결제방법 없이 등록하면 미지급금 잔액
+  // 계산 대상에 그대로 잡힌다. 체크를 풀고 결제방법을 고르면 그 자리에서
+  // 결제가 끝난 거래로 보고 미지급금 계산에서 빠진다(lib/ar-ap.ts).
+  const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
+  const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
   // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
   // 출고처/출고일도 할일에 적어둔 값으로 채워진다.
@@ -486,6 +494,7 @@ export function NewPurchaseForm({
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="warehouse_id" value={warehouseId} />
+      <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
       {copiedPaperCalcs.length > 0 && (
@@ -561,6 +570,39 @@ export function NewPurchaseForm({
               style={{ width: "100%" }}
             />
           </div>
+          <div className="erp-field">
+            <label>결제방법</label>
+            <label
+              style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+            >
+              <input
+                type="checkbox"
+                checked={alwaysCredit}
+                onChange={(e) => setAlwaysCredit(e.target.checked)}
+              />
+              항상 외상
+            </label>
+          </div>
+          {!alwaysCredit && (
+            <div className="erp-field">
+              <label>&nbsp;</label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="erp-select"
+                required
+              >
+                <option value="" disabled>
+                  결제방법 선택
+                </option>
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {!initial?.id && customers.length > 0 && (
             <>
               <div className="erp-field">
