@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { quickAddPaymentRequestItem } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { PAYMENT_REQUEST_CARD_TYPES, type PaymentRequestCardType } from "@/lib/payment-request-title";
+import { ReceiptPicker } from "@/components/receipt-picker";
 
 // 월말에 몰아 쓰지 않고 그날그날 한 줄씩 빠르게 기록하는 입력창. 문서를
 // 고르지 않아도 서버 액션이 "부서+카드종류+이번 달" 문서를 찾거나 새로
@@ -62,6 +63,12 @@ export function QuickPaymentRequestForm({
       <div className="erp-field md:col-span-5">
         <label>비고 (선택)</label>
         <input name="remark" className="erp-input w-full" />
+      </div>
+      <div className="md:col-span-6">
+        <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          영수증 사진 (선택)
+        </label>
+        <ReceiptPicker clearOn={state} />
       </div>
       <div className="erp-field flex items-end">
         <button type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">

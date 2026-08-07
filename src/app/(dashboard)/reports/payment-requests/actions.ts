@@ -140,6 +140,7 @@ export async function quickAddPaymentRequestItem(
   const purpose = String(formData.get("purpose") ?? "").trim();
   const amount = Number(formData.get("amount") ?? 0);
   const remark = String(formData.get("remark") ?? "").trim();
+  const receipts = formData.getAll("receipts").filter((f): f is File => f instanceof File && f.size > 0);
 
   if (!department || !usedAt || !vendor || !(amount > 0)) {
     return { error: "일자, 사용처, 금액을 입력해주세요." };
@@ -187,8 +188,32 @@ export async function quickAddPaymentRequestItem(
     return { error: "저장에 실패했습니다." };
   }
 
+  // 영수증은 문서(payment_request) 단위로 붙는다(줄마다 따로 연결하는 구조가
+  // 아님) — 이미 영수증이 있는 기존 문서에 이어서 추가하는 경우일 수 있으니
+  // sort_order는 그 문서의 마지막 영수증 다음부터 이어간다.
+  let receiptWarning: string | null = null;
+  if (receipts.length > 0) {
+    const { data: existingReceipt } = await supabase
+      .from("payment_request_receipts")
+      .select("sort_order")
+      .eq("payment_request_id", paymentRequestId)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    let nextReceiptOrder = (existingReceipt?.sort_order ?? -1) + 1;
+
+    for (const file of receipts) {
+      const err = await uploadReceipt(supabase, paymentRequestId, file, nextReceiptOrder, user?.id ?? null);
+      if (err) receiptWarning ??= err;
+      nextReceiptOrder += 1;
+    }
+  }
+
   revalidatePath("/reports/payment-requests");
   revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  if (receiptWarning) {
+    return { error: `지출 등록은 됐지만 영수증 업로드에 실패했습니다: ${receiptWarning}` };
+  }
   return { success: "오늘 지출을 등록했습니다." };
 }
 
