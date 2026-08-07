@@ -8,6 +8,7 @@ import { PaymentRequestLineItems, type LineItemRow } from "@/components/payment-
 import { PAYMENT_REQUEST_CARD_TYPES, type PaymentRequestCardType } from "@/lib/payment-request-title";
 import { createPaymentRequest, updatePaymentRequest } from "@/app/(dashboard)/reports/payment-requests/actions";
 import type { FormState } from "@/components/form-message";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 
 type Initial = {
   id: string;
@@ -38,7 +39,11 @@ export function PaymentRequestForm({
   const [cardType, setCardType] = useState<PaymentRequestCardType>(initial?.cardType ?? "개인카드");
 
   return (
-    <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
+    <form
+      action={formAction}
+      className="grid grid-cols-1 gap-3 md:grid-cols-4"
+      onKeyDown={preventEnterSubmit}
+    >
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="department" value={department} />
       <input type="hidden" name="period_from" value={periodFrom} />
