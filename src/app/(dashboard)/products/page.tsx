@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateProductForm } from "@/components/create-product-form";
-import { ClickableRow } from "@/components/clickable-row";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importProductsExcel } from "@/app/(dashboard)/products/actions";
 import { buildListReturnParam } from "@/lib/list-return";
-
-// 판매가/매입가/안전재고를 0으로 등록해두는 경우는 실질적으로 없고("아직
-// 안 정했다"는 뜻으로 쓰이므로), 목록에 "0"이 그대로 찍히면 진짜 0원/0개인
-// 것과 구분이 안 된다. 0이면 "-"로 보여준다.
-function formatNumOrDash(n: number | null | undefined) {
-  return n ? Number(n).toLocaleString() : "-";
-}
+import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
 
 export default async function ProductsPage({
   searchParams,
@@ -33,7 +26,7 @@ export default async function ProductsPage({
   ]);
 
   const keyword = q?.trim().toLowerCase();
-  const products = keyword
+  const filteredProducts = keyword
     ? (allProducts ?? []).filter(
         (p) =>
           p.name.toLowerCase().includes(keyword) ||
@@ -41,6 +34,21 @@ export default async function ProductsPage({
           (p.spec ?? "").toLowerCase().includes(keyword)
       )
     : allProducts ?? [];
+
+  const products: ProductGridRow[] = filteredProducts.map((p) => ({
+    id: p.id,
+    sku: p.sku,
+    name: p.name,
+    spec: p.spec,
+    unit: p.unit,
+    basePackageQty: p.base_package_qty,
+    categoryName: p.categories?.name ?? null,
+    supplierName: p.suppliers?.name ?? null,
+    cost: p.cost,
+    price: p.price,
+    reorderPoint: p.reorder_point,
+    quantity: 0,
+  }));
 
   const exportHref = q ? `/api/products/export?q=${encodeURIComponent(q)}` : "/api/products/export";
 
@@ -92,64 +100,7 @@ export default async function ProductsPage({
         )}
       </form>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>상품명</th>
-              <th>규격</th>
-              <th>단위</th>
-              <th>포장수량</th>
-              <th>카테고리</th>
-              <th>공급처</th>
-              <th className="num">매입가</th>
-              <th className="num">판매가</th>
-              <th className="num">안전재고</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => (
-              <ClickableRow
-                key={product.id}
-                href={`/products/${product.id}${backParam ? `?back=${backParam}` : ""}`}
-              >
-                <td>{product.sku}</td>
-                <td>{product.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{product.spec ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{product.unit}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>
-                  {product.base_package_qty
-                    ? `1박스 = ${Number(product.base_package_qty).toLocaleString()}${product.unit}`
-                    : "-"}
-                </td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{product.categories?.name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{product.suppliers?.name ?? "-"}</td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {formatNumOrDash(product.cost)}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {formatNumOrDash(product.price)}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {formatNumOrDash(product.reorder_point)}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  수정 →
-                </td>
-              </ClickableRow>
-            ))}
-            {!products.length && (
-              <tr>
-                <td colSpan={11} className="erp-grid-empty">
-                  {keyword ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ProductGridTable rows={products} mode="products" backParam={backParam ?? ""} keyword={keyword} />
     </div>
   );
 }

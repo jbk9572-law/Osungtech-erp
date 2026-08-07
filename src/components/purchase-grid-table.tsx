@@ -16,10 +16,11 @@ export type PurchaseRow = {
   quantity: number;
   unit: string | null | undefined;
   unitCost: number | null;
-  amount: number;
+  supplyAmount: number;
+  taxAmount: number;
 };
 
-type SortKey = "date" | "supplierName" | "authorName" | "quantity" | "amount";
+type SortKey = "date" | "supplierName" | "authorName" | "quantity" | "supplyAmount" | "taxAmount";
 
 function compareValues(a: PurchaseRow, b: PurchaseRow, key: SortKey): number {
   const av = a[key];
@@ -37,12 +38,14 @@ const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
 export function PurchaseGridTable({
   rows,
   totalQuantity,
-  totalAmount,
+  totalSupply,
+  totalTax,
   backParam,
 }: {
   rows: PurchaseRow[];
   totalQuantity: number;
-  totalAmount: number;
+  totalSupply: number;
+  totalTax: number;
   backParam: string;
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
@@ -164,7 +167,8 @@ export function PurchaseGridTable({
               <th>규격</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">매입가</th>
-              {sortableHeader("금액", "amount", undefined, "num")}
+              {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
+              {sortableHeader("세액", "taxAmount", undefined, "num")}
             </tr>
           </thead>
           <tbody>
@@ -197,13 +201,16 @@ export function PurchaseGridTable({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
                   </td>
-                  <td className="num">{row.amount.toLocaleString()}</td>
+                  <td className="num">{row.supplyAmount.toLocaleString()}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {row.taxAmount.toLocaleString()}
+                  </td>
                 </ClickableRow>
               );
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={9} className="erp-grid-empty">
+                <td colSpan={10} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -221,7 +228,8 @@ export function PurchaseGridTable({
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />
-                <td className="num">{totalAmount.toLocaleString()}</td>
+                <td className="num">{totalSupply.toLocaleString()}</td>
+                <td className="num">{totalTax.toLocaleString()}</td>
               </tr>
             </tfoot>
           )}
