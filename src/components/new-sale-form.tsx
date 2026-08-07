@@ -1014,7 +1014,7 @@ export function NewSaleForm({
                         const short = remaining < 0;
                         const unit = product.unit ?? "";
                         return (
-                          <p className="text-[10.5px]" style={{ color: short ? "#dc3545" : "#0b57d0" }}>
+                          <p className="text-[10.5px]" style={{ color: short ? "#dc3545" : "var(--erp-primary)" }}>
                             재고 {availableStock.toLocaleString()}
                             {unit} - 출고 {row.quantity.toLocaleString()}
                             {unit} = {remaining.toLocaleString()}

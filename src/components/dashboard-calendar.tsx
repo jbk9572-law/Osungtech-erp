@@ -337,7 +337,7 @@ export function DashboardCalendar({
                   <div className="mt-0.5 flex gap-0.5">
                     {hasPurchaseDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#0b57d0]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#4a6fa5]"}`}
                       />
                     ) : null}
                     {hasSalesDot ? (
@@ -364,7 +364,7 @@ export function DashboardCalendar({
 
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6b7280]">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#0b57d0]" /> 매입
+            <span className="h-1.5 w-1.5 rounded-full bg-[#4a6fa5]" /> 매입
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[#d31e3b]" /> 매출
@@ -387,7 +387,7 @@ export function DashboardCalendar({
                 <button
                   type="button"
                   onClick={() => handleCopy("purchase")}
-                  className="rounded-sm border border-[#0b57d0] bg-[#e8f0ff] px-2 py-1 text-xs font-bold text-[#0b57d0] hover:bg-[#d9e6ff]"
+                  className="rounded-sm border border-[#4a6fa5] bg-[#e3eaf4] px-2 py-1 text-xs font-bold text-[#4a6fa5] hover:bg-[#d3e0ee]"
                 >
                   {copiedType === "purchase" ? "복사됨" : "매입 복사"}
                 </button>
@@ -402,15 +402,15 @@ export function DashboardCalendar({
             </div>
 
             <div
-              className="mb-3 border-l-[3px] border-l-[#0b57d0] p-2"
-              style={{ background: "linear-gradient(90deg, #e8f0ff, transparent 60%)" }}
+              className="mb-3 border-l-[3px] border-l-[#4a6fa5] p-2"
+              style={{ background: "linear-gradient(90deg, #e3eaf4, transparent 60%)" }}
             >
-              <p className="mb-1 text-xs font-bold text-[#0b57d0]">
+              <p className="mb-1 text-xs font-bold text-[#4a6fa5]">
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
               {(selectedData.purchaseItems.length > 0 ||
                 Object.keys(selectedData.purchasePaperCalcByPartner).length > 0) && (
-                <div className="space-y-2 text-xs font-medium text-[#0b57d0]">
+                <div className="space-y-2 text-xs font-medium text-[#4a6fa5]">
                   {buildPartnerBlocks(selectedData.purchaseItems, selectedData.purchasePaperCalcByPartner).map(
                     (partner, pi) => (
                       <div key={pi}>
@@ -493,7 +493,7 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 text-[#0b57d0]">
+                                <li className="flex items-start justify-between gap-2 text-[#4a6fa5]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>

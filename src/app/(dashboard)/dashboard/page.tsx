@@ -430,7 +430,7 @@ export default async function DashboardPage({
             {monthSalesCount}건 · {monthSalesTotal.toLocaleString()}원
           </div>
         </div>
-        <div className="erp-hero-card" style={{ borderLeftColor: "#0b57d0" }}>
+        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-primary)" }}>
           <div className="erp-hero-label">이번달 매입</div>
           <div className="erp-hero-value">
             {monthPurchaseCount}건 · {monthPurchaseTotal.toLocaleString()}원
