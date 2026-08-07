@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
-import { ClickableRow } from "@/components/clickable-row";
+import { InventoryGridTable } from "@/components/inventory-grid-table";
 
 export default async function InventoryPage({
   searchParams,
@@ -98,48 +98,7 @@ export default async function InventoryPage({
         )}
       </form>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>상품명</th>
-              <th>규격</th>
-              <th className="num">수량</th>
-              <th>상태</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stockRows.map((row) => {
-              // 안전재고(재주문 기준)를 실제로 설정해둔(0보다 큰) 품목만 부족
-              // 판정한다 — 알림벨/대시보드(lib/notifications.ts)와 동일한 기준.
-              // 미설정(0) 품목까지 포함하면 재고가 0일 때 이 화면에서만 "재주문
-              // 필요"가 뜨고 알림에는 안 뜨는 불일치가 생긴다.
-              const isLow = (row.reorderPoint ?? 0) > 0 && row.quantity <= (row.reorderPoint ?? 0);
-              return (
-                <ClickableRow key={row.id} href={`/inventory/${row.id}`}>
-                  <td>{row.sku}</td>
-                  <td>{row.name}</td>
-                  <td>{row.spec || "-"}</td>
-                  <td className="num">{row.quantity.toLocaleString()}</td>
-                  <td>
-                    <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
-                      {isLow ? "재주문 필요" : "정상"}
-                    </span>
-                  </td>
-                </ClickableRow>
-              );
-            })}
-            {!stockRows.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  {keyword ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <InventoryGridTable rows={stockRows} keyword={keyword} />
     </div>
   );
 }

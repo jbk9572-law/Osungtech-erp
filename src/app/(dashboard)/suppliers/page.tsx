@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CreateSupplierForm } from "@/components/create-supplier-form";
-import { ClickableRow } from "@/components/clickable-row";
+import { SupplierGridTable } from "@/components/supplier-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importSuppliersExcel } from "@/app/(dashboard)/suppliers/actions";
 
@@ -37,41 +37,7 @@ export default async function SuppliersPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>업체명</th>
-              <th>담당자</th>
-              <th>이메일</th>
-              <th>연락처</th>
-              <th>주소</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {suppliers?.map((supplier) => (
-              <ClickableRow key={supplier.id} href={`/suppliers/${supplier.id}`}>
-                <td>{supplier.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.contact_name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.email ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.phone ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{supplier.address ?? "-"}</td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  수정 →
-                </td>
-              </ClickableRow>
-            ))}
-            {!suppliers?.length && (
-              <tr>
-                <td colSpan={6} className="erp-grid-empty">
-                  등록된 공급처가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <SupplierGridTable rows={suppliers ?? []} />
     </div>
   );
 }

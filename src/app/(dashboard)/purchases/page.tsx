@@ -1,23 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
+import { PurchaseGridTable, type PurchaseRow } from "@/components/purchase-grid-table";
 
-type DisplayRow = {
-  key: string;
-  orderId: string | undefined;
-  date: string | undefined;
-  supplierName: string | undefined;
-  authorName: string | null | undefined;
-  productLabel: string;
-  spec: string;
-  quantity: number;
-  unit: string | null | undefined;
-  unitCost: number | null;
-  amount: number;
-};
+type DisplayRow = PurchaseRow;
 
 export default async function PurchasesPage({
   searchParams,
@@ -175,62 +163,12 @@ export default async function PurchasesPage({
         </Link>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>매입일자</th>
-              <th>공급처</th>
-              <th>작성자</th>
-              <th>품목명</th>
-              <th>규격</th>
-              <th className="num">수량</th>
-              <th className="num">매입가</th>
-              <th className="num">금액</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <ClickableRow
-                key={row.key}
-                href={row.orderId ? `/purchases/${row.orderId}${backParam ? `?back=${backParam}` : ""}` : "#"}
-              >
-                <td>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
-                <td>{row.supplierName}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
-                <td>{row.productLabel}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                <td className="num">
-                  {row.quantity.toLocaleString()} {row.unit}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  {row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
-                </td>
-                <td className="num">{row.amount.toLocaleString()}</td>
-              </ClickableRow>
-            ))}
-            {!rows.length && (
-              <tr>
-                <td colSpan={8} className="erp-grid-empty">
-                  조건에 맞는 매입 거래가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-          {rows.length > 0 && (
-            <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={5} className="erp-grid-sticky-label">
-                  합계 ({rows.length}건)
-                </td>
-                <td className="num">{totalQuantity.toLocaleString()}</td>
-                <td />
-                <td className="num">{totalAmount.toLocaleString()}</td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
+      <PurchaseGridTable
+        rows={rows}
+        totalQuantity={totalQuantity}
+        totalAmount={totalAmount}
+        backParam={backParam ?? ""}
+      />
     </div>
   );
 }

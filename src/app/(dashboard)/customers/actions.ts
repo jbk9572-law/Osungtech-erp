@@ -91,6 +91,31 @@ export async function deleteCustomer(_prevState: FormState, formData: FormData):
   redirect("/customers");
 }
 
+export async function bulkDeleteCustomers(_prevState: FormState, formData: FormData): Promise<FormState> {
+  let ids: string[];
+  try {
+    ids = JSON.parse(String(formData.get("ids") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: "삭제할 항목을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+  const results = await Promise.all(ids.map((id) => supabase.from("customers").delete().eq("id", id)));
+  const failCount = results.filter((r) => r.error).length;
+
+  revalidatePath("/customers");
+
+  if (failCount > 0) {
+    return {
+      error: `${ids.length - failCount}건 삭제, ${failCount}건은 연결된 매출/판매단가 내역이 있어 삭제하지 못했습니다.`,
+    };
+  }
+  return { success: `${ids.length}건 삭제했습니다.` };
+}
+
 export async function upsertCustomerPrice(
   _prevState: FormState,
   formData: FormData
