@@ -273,7 +273,7 @@ export function TodoForm({
         {pendingCalcSummary && (
           <div
             className="mb-2 flex items-center justify-between gap-2 rounded p-2 text-xs"
-            style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+            style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
           >
             <span>모조지 계산 연결됨 — {pendingCalcSummary.toLocaleString()}연</span>
             <button

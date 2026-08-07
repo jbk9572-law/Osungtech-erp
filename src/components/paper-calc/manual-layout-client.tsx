@@ -486,7 +486,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
     <div className="flex flex-col gap-3">
       <div
         className="rounded p-2 text-xs"
-        style={{ background: "#eef2ff", color: "#3730a3", border: "1px solid #c7d2fe" }}
+        style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
       >
         자동 계산 결과와 직접 비교해볼 수 있는 수동 배치 도구입니다. 아래에서 품목을 등록하고, 원하는 품목을
         클릭한 뒤 원지 위에 마우스를 올리면 놓일 자리가 미리 보입니다(초록: 배치 가능, 빨강: 겹치거나 밖으로
@@ -807,7 +807,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                 width={dragGhost.w}
                 height={dragGhost.h}
                 fill={dragGhost.valid ? "rgba(34,197,94,0.35)" : "rgba(239,68,68,0.35)"}
-                stroke={dragGhost.valid ? "#16a34a" : "#dc2626"}
+                stroke={dragGhost.valid ? "var(--erp-success)" : "var(--erp-danger)"}
                 strokeDasharray="6 4"
                 strokeWidth={2}
                 style={{ pointerEvents: "none" }}
@@ -820,7 +820,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                 width={hoverGhost.w}
                 height={hoverGhost.h}
                 fill={hoverGhost.valid ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}
-                stroke={hoverGhost.valid ? "#16a34a" : "#dc2626"}
+                stroke={hoverGhost.valid ? "var(--erp-success)" : "var(--erp-danger)"}
                 strokeDasharray="6 4"
                 strokeWidth={2}
                 style={{ pointerEvents: "none" }}
@@ -874,7 +874,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
       {staged && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "#e7f6ea", color: "#0E7A45", border: "1px solid #b7e4c7" }}
+          style={{ background: "#e7f6ea", color: "var(--erp-success)", border: "1px solid #b7e4c7" }}
         >
           {pendingFor === "purchase" ? (
             <>

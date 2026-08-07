@@ -14,6 +14,11 @@
   --erp-success: #28a745;
   --erp-warning: #ff9800;
   --erp-danger: #dc3545;
+  /* 단가예약/할일-품목 이월/용지계산 안내 배지에서 공통으로 쓰는
+     인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
+  --erp-info-bg: #eef2ff;
+  --erp-info-border: #c7d2fe;
+  --erp-info-text: #3730a3;
   --erp-text: #182338;
   --erp-text-muted: #6b7280;
   --erp-bg: #eef1f5;

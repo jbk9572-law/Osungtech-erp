@@ -253,13 +253,13 @@ export function DashboardCalendar({
           <div className="flex gap-1">
             <Link
               href={prevMonthHref}
-              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#eef2f7]"
+              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[var(--erp-hover)]"
             >
               ← 이전달
             </Link>
             <Link
               href={nextMonthHref}
-              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#eef2f7]"
+              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[var(--erp-hover)]"
             >
               다음달 →
             </Link>
@@ -270,7 +270,7 @@ export function DashboardCalendar({
           {WEEKDAYS.map((w, i) => (
             <div
               key={w}
-              className={`py-1 ${i === 0 ? "text-[#dc3545]" : i === 6 ? "text-[#4a6fa5]" : "text-[#9aa2ad]"}`}
+              className={`py-1 ${i === 0 ? "text-[var(--erp-danger)]" : i === 6 ? "text-[var(--erp-primary)]" : "text-[#9aa2ad]"}`}
             >
               {w}
             </div>
@@ -292,11 +292,11 @@ export function DashboardCalendar({
               const dayColorClass = isSelected
                 ? "text-white"
                 : holidayName
-                  ? "text-[#dc3545] font-semibold"
+                  ? "text-[var(--erp-danger)] font-semibold"
                   : isSunday
-                    ? "text-[#dc3545]"
+                    ? "text-[var(--erp-danger)]"
                     : isSaturday
-                      ? "text-[#4a6fa5]"
+                      ? "text-[var(--erp-primary)]"
                       : "text-[#1c1c1c]";
               const showLowStockDot = isToday && lowStockToday;
               const carryoverSalesCount = data?.salesItems.filter((i) => i.isCarryover).length ?? 0;
@@ -320,16 +320,16 @@ export function DashboardCalendar({
                   onDoubleClick={() => router.push(`/sales?from=${cell.dateStr}&to=${cell.dateStr}`)}
                   className={`aspect-square rounded-sm border p-1 text-left text-xs transition-colors ${
                     isSelected
-                      ? "border-[#4a6fa5] bg-[#4a6fa5] text-white"
+                      ? "border-[var(--erp-primary)] bg-[var(--erp-primary)] text-white"
                       : isToday
-                        ? "border-[#4a6fa5] bg-[#e3eaf4]"
-                        : "border-transparent hover:bg-[#eef2f7]"
+                        ? "border-[var(--erp-primary)] bg-[var(--erp-selected)]"
+                        : "border-transparent hover:bg-[var(--erp-hover)]"
                   }`}
                 >
                   <div className={dayColorClass}>{cell.day}</div>
                   {holidayName ? (
                     <div
-                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-[#dc3545]"}`}
+                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-[var(--erp-danger)]"}`}
                     >
                       {holidayName}
                     </div>
@@ -337,7 +337,7 @@ export function DashboardCalendar({
                   <div className="mt-0.5 flex gap-0.5">
                     {hasPurchaseDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#4a6fa5]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-primary)]"}`}
                       />
                     ) : null}
                     {hasSalesDot ? (
@@ -352,7 +352,7 @@ export function DashboardCalendar({
                     ) : null}
                     {showLowStockDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#dc3545]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-danger)]"}`}
                       />
                     ) : null}
                   </div>
@@ -364,7 +364,7 @@ export function DashboardCalendar({
 
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6b7280]">
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#4a6fa5]" /> 매입
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-primary)]" /> 매입
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[#d31e3b]" /> 매출
@@ -373,7 +373,7 @@ export function DashboardCalendar({
             <span className="h-1.5 w-1.5 rounded-full bg-[#ff9800]" /> 메모
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#dc3545]" /> 재고부족
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-danger)]" /> 재고부족
           </span>
         </div>
       </div>
@@ -387,7 +387,7 @@ export function DashboardCalendar({
                 <button
                   type="button"
                   onClick={() => handleCopy("purchase")}
-                  className="rounded-sm border border-[#4a6fa5] bg-[#e3eaf4] px-2 py-1 text-xs font-bold text-[#4a6fa5] hover:bg-[#d3e0ee]"
+                  className="rounded-sm border border-[var(--erp-primary)] bg-[var(--erp-selected)] px-2 py-1 text-xs font-bold text-[var(--erp-primary)] hover:bg-[#d3e0ee]"
                 >
                   {copiedType === "purchase" ? "복사됨" : "매입 복사"}
                 </button>
@@ -402,15 +402,15 @@ export function DashboardCalendar({
             </div>
 
             <div
-              className="mb-3 border-l-[3px] border-l-[#4a6fa5] p-2"
-              style={{ background: "linear-gradient(90deg, #e3eaf4, transparent 60%)" }}
+              className="mb-3 border-l-[3px] border-l-[var(--erp-primary)] p-2"
+              style={{ background: "linear-gradient(90deg, var(--erp-selected), transparent 60%)" }}
             >
-              <p className="mb-1 text-xs font-bold text-[#4a6fa5]">
+              <p className="mb-1 text-xs font-bold text-[var(--erp-primary)]">
                 매입 {selectedData.purchaseCount}건 · {selectedData.purchaseTotal.toLocaleString()}원
               </p>
               {(selectedData.purchaseItems.length > 0 ||
                 Object.keys(selectedData.purchasePaperCalcByPartner).length > 0) && (
-                <div className="space-y-2 text-xs font-medium text-[#4a6fa5]">
+                <div className="space-y-2 text-xs font-medium text-[var(--erp-primary)]">
                   {buildPartnerBlocks(selectedData.purchaseItems, selectedData.purchasePaperCalcByPartner).map(
                     (partner, pi) => (
                       <div key={pi}>
@@ -493,7 +493,7 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 text-[#4a6fa5]">
+                                <li className="flex items-start justify-between gap-2 text-[var(--erp-primary)]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>
