@@ -316,7 +316,7 @@ export default async function SalesPrintPage({
             ))}
           </div>
         </div>
-        <PrintButton />
+        <PrintButton autoPrint={false} />
       </div>
       <InvoicePage
         company={company}

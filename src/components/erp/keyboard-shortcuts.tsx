@@ -2,8 +2,12 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { printInPlace } from "@/lib/print-in-place";
 
-type ShortcutAction = { href: string; newTab?: boolean } | { submitFormSelector: string };
+type ShortcutAction =
+  | { href: string; newTab?: boolean }
+  | { submitFormSelector: string }
+  | { printHref: string };
 
 // 목록/상세 페이지(서버 컴포넌트)에 얹어서 F2/F5/F9/ESC 같은 라벨이 실제
 // 키 입력에도 반응하게 만드는 컴포넌트. 페이지 자체는 서버 컴포넌트로 두고
@@ -26,6 +30,8 @@ export function KeyboardShortcuts({
         } else {
           router.push(action.href);
         }
+      } else if ("printHref" in action) {
+        printInPlace(action.printHref);
       } else {
         document.querySelector<HTMLFormElement>(action.submitFormSelector)?.requestSubmit();
       }
