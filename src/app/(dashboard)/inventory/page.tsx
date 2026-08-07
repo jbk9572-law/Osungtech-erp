@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
-import { InventoryGridTable } from "@/components/inventory-grid-table";
+import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
 
 export default async function InventoryPage({
   searchParams,
@@ -15,16 +15,24 @@ export default async function InventoryPage({
     // 표시하기 위해 products를 기준으로 재고를 왼쪽 조인한다.
     supabase
       .from("products")
-      .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity, warehouse_id)")
+      .select(
+        "id, sku, name, spec, unit, reorder_point, base_package_qty, cost, price, categories(name), suppliers(name), inventory(quantity, warehouse_id)"
+      )
       .order("name"),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
 
-  const allStockRows = (products ?? []).map((p) => ({
+  const allStockRows: ProductGridRow[] = (products ?? []).map((p) => ({
     id: p.id,
     sku: p.sku,
     name: p.name,
     spec: p.spec,
+    unit: p.unit,
+    basePackageQty: p.base_package_qty,
+    categoryName: p.categories?.name ?? null,
+    supplierName: p.suppliers?.name ?? null,
+    cost: p.cost,
+    price: p.price,
     reorderPoint: p.reorder_point,
     quantity: p.inventory?.[0]?.quantity ?? 0,
   }));
@@ -98,7 +106,7 @@ export default async function InventoryPage({
         )}
       </form>
 
-      <InventoryGridTable rows={stockRows} keyword={keyword} />
+      <ProductGridTable rows={stockRows} mode="inventory" keyword={keyword} />
     </div>
   );
 }

@@ -47,10 +47,11 @@ export default async function PurchasesPage({
       )
     : rawItems;
 
-  const itemRows = (items ?? []).map((item) => ({
-    ...item,
-    amount: item.quantity * Number(item.unit_cost),
-  }));
+  const itemRows = (items ?? []).map((item) => {
+    const supplyAmount = item.quantity * Number(item.unit_cost);
+    const taxAmount = Math.round(supplyAmount * 0.1);
+    return { ...item, supplyAmount, taxAmount };
+  });
 
   // 같은 매입 건(purchase_order)에 속한 품목은 검색 여부와 상관없이 한 행으로
   // 묶어서 보여준다. 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로
@@ -71,7 +72,8 @@ export default async function PurchasesPage({
           quantity: 0,
           unit: item.products?.unit,
           unitCost: Number(item.unit_cost),
-          amount: 0,
+          supplyAmount: 0,
+          taxAmount: 0,
           itemCount: 0,
         };
       } else {
@@ -80,7 +82,8 @@ export default async function PurchasesPage({
       }
       acc[orderId].itemCount += 1;
       acc[orderId].quantity += item.quantity;
-      acc[orderId].amount += item.amount;
+      acc[orderId].supplyAmount += item.supplyAmount;
+      acc[orderId].taxAmount += item.taxAmount;
       return acc;
     }, {})
   ).map((row) => ({
@@ -89,7 +92,8 @@ export default async function PurchasesPage({
   }));
 
   const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
-  const totalAmount = itemRows.reduce((sum, row) => sum + row.amount, 0);
+  const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
+  const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);
   const presets = getDatePresets();
   const exportHref = q ? `/api/purchases/export?q=${encodeURIComponent(q)}` : "/api/purchases/export";
 
@@ -166,7 +170,8 @@ export default async function PurchasesPage({
       <PurchaseGridTable
         rows={rows}
         totalQuantity={totalQuantity}
-        totalAmount={totalAmount}
+        totalSupply={totalSupply}
+        totalTax={totalTax}
         backParam={backParam ?? ""}
       />
     </div>

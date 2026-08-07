@@ -53,11 +53,13 @@ export default async function SaleDetailPage({
     notFound();
   }
 
-  const rows = (items ?? []).map((item) => ({
-    ...item,
-    amount: item.quantity * Number(item.unit_price),
-  }));
-  const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
+  const rows = (items ?? []).map((item) => {
+    const supplyAmount = item.quantity * Number(item.unit_price);
+    const taxAmount = Math.round(supplyAmount * 0.1);
+    return { ...item, supplyAmount, taxAmount };
+  });
+  const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
+  const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
 
   const paperCalcSizeLines = formatPaperCalcSizeLines(
     mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items)
@@ -156,7 +158,8 @@ export default async function SaleDetailPage({
               <th className="num">포장수량</th>
               <th className="num">수량</th>
               <th className="num">공급가</th>
-              <th className="num">합계금액</th>
+              <th className="num">공급가액</th>
+              <th className="num">세액</th>
               <th>비고</th>
             </tr>
           </thead>
@@ -177,7 +180,10 @@ export default async function SaleDetailPage({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {Number(row.unit_price).toLocaleString()}
                   </td>
-                  <td className="num">{row.amount.toLocaleString()}</td>
+                  <td className="num">{row.supplyAmount.toLocaleString()}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {row.taxAmount.toLocaleString()}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
                 </tr>
               );
@@ -205,6 +211,9 @@ export default async function SaleDetailPage({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                 </tr>
               ));
@@ -216,7 +225,8 @@ export default async function SaleDetailPage({
               <td colSpan={7} className="num">
                 합계
               </td>
-              <td className="num">{totalAmount.toLocaleString()}</td>
+              <td className="num">{totalSupply.toLocaleString()}</td>
+              <td className="num">{totalTax.toLocaleString()}</td>
               <td />
             </tr>
           </tfoot>
