@@ -118,7 +118,7 @@ export function PaymentRequestLineItems({
                     step="1"
                     value={row.amount}
                     onChange={(e) => updateRow(row.key, { amount: e.target.value })}
-                    placeholder="0"
+                    placeholder="-"
                     className="erp-input w-full text-right"
                   />
                 </td>

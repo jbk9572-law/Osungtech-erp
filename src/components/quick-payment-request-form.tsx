@@ -62,7 +62,7 @@ export function QuickPaymentRequestForm({
       </div>
       <div className="erp-field">
         <label>금액</label>
-        <input type="number" name="amount" step="1" min="1" placeholder="0" className="erp-input w-full" required />
+        <input type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input w-full" required />
       </div>
       <div className="erp-field md:col-span-5">
         <label>비고 (선택)</label>
