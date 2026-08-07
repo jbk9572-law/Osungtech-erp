@@ -5,6 +5,7 @@ import { FormMessage, type FormState } from "@/components/form-message";
 import { quickAddPaymentRequestItem } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { PAYMENT_REQUEST_CARD_TYPES, type PaymentRequestCardType } from "@/lib/payment-request-title";
 import { ReceiptPicker } from "@/components/receipt-picker";
+import { FieldHint } from "@/components/field-hint";
 
 // 월말에 몰아 쓰지 않고 그날그날 한 줄씩 빠르게 기록하는 입력창. 문서를
 // 고르지 않아도 서버 액션이 "부서+카드종류+이번 달" 문서를 찾거나 새로
@@ -39,7 +40,10 @@ export function QuickPaymentRequestForm({
         <input name="department" defaultValue={defaultDepartment} className="erp-input w-full" required />
       </div>
       <div className="erp-field">
-        <label>카드</label>
+        <label>
+          카드
+          <FieldHint text="같은 부서·카드·달에 등록한 내역끼리 자동으로 한 지급결의 문서로 묶입니다. 개인카드는 작성자별로 따로 묶입니다." />
+        </label>
         <select name="card_type" defaultValue={PAYMENT_REQUEST_CARD_TYPES[0]} className="erp-input w-full">
           {PAYMENT_REQUEST_CARD_TYPES.map((type: PaymentRequestCardType) => (
             <option key={type} value={type}>

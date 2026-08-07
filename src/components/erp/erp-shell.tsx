@@ -99,6 +99,9 @@ export function ErpShell({
 
   return (
     <div className="erp">
+      <a href="#erp-main-content" className="erp-skip-link">
+        본문으로 바로가기
+      </a>
       <RouteProgressBar />
       <NotificationToaster />
       <RecentMenuTracker />
@@ -126,7 +129,9 @@ export function ErpShell({
         />
         <div className="erp-workspace">
           <TabBar />
-          <div className="erp-page">{children}</div>
+          <div className="erp-page" id="erp-main-content" tabIndex={-1}>
+            {children}
+          </div>
         </div>
       </div>
       <StatusBar email={email} companyName={companyName} />
