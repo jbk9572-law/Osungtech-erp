@@ -2,15 +2,15 @@
    로그인/인쇄(print) 라우트는 이 테마의 영향을 받지 않는다. */
 
 .erp {
-  /* 빨간 포인트가 눈 피로감이 크다는 피드백으로 파란 계통(다듬은
-     전통형)으로 되돌린다 — 모서리/그림자/여백 등 형태 언어는 그대로
+  /* 파란 포인트가 그래도 너무 쨍하다는 피드백으로 채도를 낮춘 파스텔
+     톤으로 다시 조정한다 — 모서리/그림자/여백 등 형태 언어는 그대로
      둔다. 시맨틱 색(success/warning/danger)은 브랜드 포인트색과
      별개로 그대로 둔다. */
-  --erp-primary: #0b57d0;
-  --erp-primary-dark: #08409e;
+  --erp-primary: #4a6fa5;
+  --erp-primary-dark: #35507d;
   --erp-border: #e2e5eb;
-  --erp-hover: #eef4fc;
-  --erp-selected: #dde9fb;
+  --erp-hover: #eef2f7;
+  --erp-selected: #e3eaf4;
   --erp-success: #28a745;
   --erp-warning: #ff9800;
   --erp-danger: #dc3545;
@@ -639,7 +639,7 @@
 .erp-select:focus {
   outline: none;
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.14);
+  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.16);
 }
 
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
@@ -1073,7 +1073,7 @@
   height: 3px;
   z-index: 9999;
   overflow: hidden;
-  background: rgba(11, 87, 208, 0.12);
+  background: rgba(74, 111, 165, 0.14);
   pointer-events: none;
 }
 
