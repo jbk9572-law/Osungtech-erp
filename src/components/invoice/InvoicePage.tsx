@@ -36,6 +36,7 @@ export function InvoicePage({
   memo,
   copies = "both",
   layout = "half",
+  balance,
 }: {
   company: Company;
   customerName: string;
@@ -45,6 +46,9 @@ export function InvoicePage({
   memo?: string | null;
   copies?: InvoiceCopies;
   layout?: InvoiceLayout;
+  // 이 거래처의 현재 미수금 잔액(이번 거래 포함) — 넘기면 전잔금/총잔금
+  // 칸에 실제 값이 찍힌다. 안 넘기면(기본) 원본 서식처럼 빈 칸으로 남는다.
+  balance?: number;
 }) {
   const showReceiver = copies === "both" || copies === "receiver";
   const showSupplier = copies === "both" || copies === "supplier";
@@ -92,6 +96,7 @@ export function InvoicePage({
               pageIndex={p.pageIndex}
               pageCount={p.pageCount}
               showSummary={p.isLastPage}
+              balance={balance}
             />
           </div>
         ))}
@@ -111,6 +116,7 @@ export function InvoicePage({
           docNumber={docNumber}
           items={items}
           memo={memo}
+          balance={balance}
         />
       )}
       {showReceiver && showSupplier && <CutLine />}
@@ -124,6 +130,7 @@ export function InvoicePage({
           docNumber={docNumber}
           items={items}
           memo={memo}
+          balance={balance}
         />
       )}
     </div>

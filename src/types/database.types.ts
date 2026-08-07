@@ -694,6 +694,7 @@ export type Database = {
           warehouse_id: string;
           order_date: string;
           memo: string | null;
+          payment_method: string | null;
           created_by: string | null;
           created_at: string;
           doc_no: number;
@@ -704,6 +705,7 @@ export type Database = {
           warehouse_id: string;
           order_date?: string;
           memo?: string | null;
+          payment_method?: string | null;
           created_by?: string | null;
           created_at?: string;
           doc_no?: number;
@@ -714,6 +716,7 @@ export type Database = {
           warehouse_id?: string;
           order_date?: string;
           memo?: string | null;
+          payment_method?: string | null;
           created_by?: string | null;
           created_at?: string;
           doc_no?: number;
@@ -797,6 +800,7 @@ export type Database = {
           warehouse_id: string;
           purchase_date: string;
           memo: string | null;
+          payment_method: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -806,6 +810,7 @@ export type Database = {
           warehouse_id: string;
           purchase_date?: string;
           memo?: string | null;
+          payment_method?: string | null;
           created_by?: string | null;
           created_at?: string;
         };
@@ -815,6 +820,7 @@ export type Database = {
           warehouse_id?: string;
           purchase_date?: string;
           memo?: string | null;
+          payment_method?: string | null;
           created_by?: string | null;
           created_at?: string;
         };
@@ -1408,6 +1414,7 @@ export type Database = {
           p_memo: string | null;
           p_created_by: string | null;
           p_items: Json;
+          p_payment_method?: string | null;
         };
         Returns: string;
       };
@@ -1419,6 +1426,7 @@ export type Database = {
           p_memo: string | null;
           p_created_by: string | null;
           p_items: Json;
+          p_payment_method?: string | null;
         };
         Returns: string;
       };
@@ -1431,6 +1439,7 @@ export type Database = {
           p_memo: string | null;
           p_updated_by: string | null;
           p_items: Json;
+          p_payment_method?: string | null;
         };
         Returns: string;
       };
@@ -1443,6 +1452,7 @@ export type Database = {
           p_memo: string | null;
           p_updated_by: string | null;
           p_items: Json;
+          p_payment_method?: string | null;
         };
         Returns: string;
       };
@@ -1458,6 +1468,7 @@ export type Database = {
           p_created_by: string | null;
           p_purchase_items: Json;
           p_sale_items: Json;
+          p_payment_method?: string | null;
         };
         Returns: { purchase_order_id: string; sale_order_id: string }[];
       };

@@ -12,19 +12,23 @@ import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/component
 import type { InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { getCustomerBalance } from "@/lib/ar-ap";
 
 export default async function SalesPrintPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string }>;
 }) {
   const { id } = await params;
-  const { copies: copiesParam, layout: layoutParam } = await searchParams;
+  const { copies: copiesParam, layout: layoutParam, balance: balanceParam } = await searchParams;
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
+  // 실무에서 거의 안 쓰는 기능이라 기본은 "표기 안함" — 명시적으로
+  // ?balance=show를 눌러야만 전잔금/총잔금 칸에 실제 잔액이 찍힌다.
+  const showBalance = balanceParam === "show";
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
@@ -44,6 +48,10 @@ export default async function SalesPrintPage({
 
   const docType = order.customers?.document_type ?? "명세표";
   const docNumber = String(order.doc_no);
+  // 출고증은 금액 자체가 없는 서식이라 미수금 잔액도 의미가 없다 — 명세표
+  // 문서에서 표기를 켰을 때만 조회한다.
+  const customerBalance =
+    showBalance && docType !== "출고증" ? (await getCustomerBalance(supabase, order.customer_id)).balance : undefined;
 
   if (docType === "출고증") {
     const variant = order.customers?.delivery_note_variant ?? null;
@@ -260,7 +268,7 @@ export default async function SalesPrintPage({
             ).map(([value, label]) => (
               <Link
                 key={value}
-                href={`/sales/${id}/print?copies=${value}&layout=${layout}`}
+                href={`/sales/${id}/print?copies=${value}&layout=${layout}&balance=${showBalance ? "show" : "hide"}`}
                 className={`rounded px-3 py-1.5 ${
                   copies === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
@@ -278,9 +286,29 @@ export default async function SalesPrintPage({
             ).map(([value, label]) => (
               <Link
                 key={value}
-                href={`/sales/${id}/print?copies=${copies}&layout=${value}`}
+                href={`/sales/${id}/print?copies=${copies}&layout=${value}&balance=${showBalance ? "show" : "hide"}`}
                 className={`rounded px-3 py-1.5 ${
                   layout === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+            {(
+              [
+                ["hide", "미수금 표기 안함"],
+                ["show", "미수금 표기"],
+              ] as const
+            ).map(([value, label]) => (
+              <Link
+                key={value}
+                href={`/sales/${id}/print?copies=${copies}&layout=${layout}&balance=${value}`}
+                className={`rounded px-3 py-1.5 ${
+                  (showBalance ? "show" : "hide") === value
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {label}
@@ -299,6 +327,7 @@ export default async function SalesPrintPage({
         memo={order.memo}
         copies={copies}
         layout={layout}
+        balance={customerBalance}
       />
     </div>
   );

@@ -10,11 +10,15 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
   const [{ data: items }, { data: payments }] = await Promise.all([
     supabase
       .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(customer_id)")
+      .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method)")
       .eq("sales_orders.customer_id", customerId),
     supabase.from("customer_payments").select("id, paid_at, amount, method, memo").eq("customer_id", customerId).order("paid_at", { ascending: false }),
   ]);
-  const totalSales = (items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0);
+  // 결제방법을 "항상 외상" 대신 현금/계좌이체 등으로 등록한 주문은 그
+  // 자리에서 결제가 끝난 거래이므로 미수금 계산에서 아예 뺀다.
+  const totalSales = (items ?? [])
+    .filter((i) => !i.sales_orders.payment_method)
+    .reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0);
   const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
   return { totalSales, totalPaid, balance: totalSales - totalPaid, payments: payments ?? [] };
 }
@@ -23,11 +27,13 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
   const [{ data: items }, { data: payments }] = await Promise.all([
     supabase
       .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(supplier_id)")
+      .select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)")
       .eq("purchase_orders.supplier_id", supplierId),
     supabase.from("supplier_payments").select("id, paid_at, amount, method, memo").eq("supplier_id", supplierId).order("paid_at", { ascending: false }),
   ]);
-  const totalPurchases = (items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0);
+  const totalPurchases = (items ?? [])
+    .filter((i) => !i.purchase_orders.payment_method)
+    .reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0);
   const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
   return { totalPurchases, totalPaid, balance: totalPurchases - totalPaid, payments: payments ?? [] };
 }
@@ -40,12 +46,13 @@ export type PartyBalance = { id: string; name: string; total: number; paid: numb
 export async function getAllCustomerBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
   const [{ data: customers }, { data: items }, { data: payments }] = await Promise.all([
     supabase.from("customers").select("id, name").order("name"),
-    supabase.from("sales_order_items").select("quantity, unit_price, sales_orders!inner(customer_id)"),
+    supabase.from("sales_order_items").select("quantity, unit_price, sales_orders!inner(customer_id, payment_method)"),
     supabase.from("customer_payments").select("customer_id, amount"),
   ]);
 
   const salesByCustomer: Record<string, number> = {};
   for (const item of items ?? []) {
+    if (item.sales_orders.payment_method) continue;
     const cid = item.sales_orders.customer_id;
     salesByCustomer[cid] = (salesByCustomer[cid] ?? 0) + item.quantity * Number(item.unit_price);
   }
@@ -64,12 +71,13 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
 export async function getAllSupplierBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
   const [{ data: suppliers }, { data: items }, { data: payments }] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
-    supabase.from("purchase_order_items").select("quantity, unit_cost, purchase_orders!inner(supplier_id)"),
+    supabase.from("purchase_order_items").select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)"),
     supabase.from("supplier_payments").select("supplier_id, amount"),
   ]);
 
   const purchasesBySupplier: Record<string, number> = {};
   for (const item of items ?? []) {
+    if (item.purchase_orders.payment_method) continue;
     const sid = item.purchase_orders.supplier_id;
     purchasesBySupplier[sid] = (purchasesBySupplier[sid] ?? 0) + item.quantity * Number(item.unit_cost);
   }

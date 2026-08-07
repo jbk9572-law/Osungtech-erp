@@ -81,6 +81,7 @@ export default async function EditSalePage({
           warehouseId: order.warehouse_id,
           orderDate: order.order_date,
           memo: order.memo ?? "",
+          paymentMethod: order.payment_method,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             spec: item.spec,

@@ -34,6 +34,9 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const orderDate = String(formData.get("order_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
+  // "항상 외상" 체크박스가 켜져 있으면(기본값) 폼에서 이 필드를 아예 안
+  // 보내서 null(외상)로 저장된다 — 체크를 끄고 결제방법을 고른 경우에만 값이 온다.
+  const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
   // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
@@ -78,6 +81,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       unitPrice: item.unitPrice,
       remark: item.remark || null,
     })),
+    p_payment_method: paymentMethod,
   });
 
   if (error || !salesOrderId) {
@@ -143,6 +147,8 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   revalidatePath("/paper-calc");
+  revalidatePath("/receivables");
+  revalidatePath(`/customers/${customerId}`);
   redirect(
     paperCalcWarning
       ? `/sales/${salesOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
@@ -156,6 +162,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const orderDate = String(formData.get("order_date") ?? "");
   const memo = String(formData.get("memo") ?? "") || null;
+  const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !customerId || !warehouseId || !orderDate) {
@@ -191,6 +198,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       unitPrice: item.unitPrice,
       remark: item.remark || null,
     })),
+    p_payment_method: paymentMethod,
   });
 
   if (error) {
@@ -214,6 +222,8 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath(`/sales/${id}`);
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  revalidatePath("/receivables");
+  revalidatePath(`/customers/${customerId}`);
   redirect(`/sales/${id}`);
 }
 

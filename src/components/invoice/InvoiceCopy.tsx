@@ -25,6 +25,7 @@ export function InvoiceCopy({
   pageCount = 1,
   showSummary = true,
   summaryItems,
+  balance,
 }: {
   copyLabel: CopyLabel;
   color: InvoiceColor;
@@ -44,6 +45,7 @@ export function InvoiceCopy({
   pageCount?: number;
   showSummary?: boolean;
   summaryItems?: InvoiceItem[];
+  balance?: number;
 }) {
   const colorStyle = { color: COLOR_HEX[color], "--invoice-line": COLOR_HEX[color] } as React.CSSProperties;
 
@@ -68,7 +70,7 @@ export function InvoiceCopy({
           />
           <SupplierSection company={company} customerSlot={<CustomerSection customerName={customerName} />} />
           <ItemsTable items={items} color={color} minItemRows={minItemRows} itemRowHeight={itemRowHeight} />
-          {showSummary && <SummarySection items={summaryItems ?? items} memo={memo} />}
+          {showSummary && <SummarySection items={summaryItems ?? items} memo={memo} balance={balance} />}
         </tbody>
       </table>
       {/* 도장: 0707 원본에서 셀 경계에 갇히지 않고 종사업장/상호/주소 행 경계를
