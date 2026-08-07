@@ -17,7 +17,7 @@ const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F9", label: "출력" },
   { key: "ESC", label: "닫기" },
   { key: "Ctrl+S", label: "저장" },
-  { key: "Ctrl+F", label: "검색" },
+  { key: "Ctrl+K", label: "빠른 검색" },
   { key: "Ctrl+P", label: "출력" },
 ];
 
@@ -60,6 +60,20 @@ export function Ribbon() {
     }
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  // Ctrl/Cmd+K로 어디서든 빠른 검색을 바로 열 수 있게 한다 — 메뉴 트리를
+  // 마우스로 찾지 않고 타이핑만으로 원하는 화면으로 이동하는 용도.
+  useEffect(() => {
+    function handleShortcut(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setQuery("");
+        setModal("search");
+      }
+    }
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
   function openFavorites(e: React.MouseEvent<HTMLButtonElement>) {
@@ -161,12 +175,13 @@ export function Ribbon() {
       <button
         type="button"
         className="erp-ribbon-btn"
+        title="Ctrl+K"
         onClick={() => {
           setQuery("");
           setModal("search");
         }}
       >
-        🔍 빠른 검색
+        🔍 빠른 검색 <span style={{ opacity: 0.55, fontSize: 10.5 }}>Ctrl+K</span>
       </button>
 
       <button type="button" className="erp-ribbon-btn" onClick={() => setModal("help")}>
