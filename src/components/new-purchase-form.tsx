@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
@@ -340,6 +341,31 @@ export function NewPurchaseForm({
     setNextKey((k) => k + 1);
   }
 
+  // 검색창에서 Enter로 바로 추가할 때 쓴다 — "+ 품목 추가"로 빈 줄을
+  // 만들고 그 안에서 다시 검색하는 2단계 대신, 검색해서 고른 품목이
+  // 바로 채워진 새 줄을 만든다.
+  function quickAddProduct(productId: string) {
+    const product = products.find((p) => p.id === productId);
+    const newRow: Row = {
+      key: nextKey,
+      productId,
+      spec: product?.spec ?? "",
+      manualSpec: false,
+      quantity: 0,
+      unitCost: resolveCost(supplierId, productId),
+      manualPrice: false,
+      remark: "",
+      saleQuantity: 0,
+      manualSaleQuantity: false,
+      salePrice: resolveSalePrice(saleCustomerId, productId),
+      manualSalePrice: false,
+    };
+    setRows((prev) =>
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+    );
+    setNextKey((k) => k + 1);
+  }
+
   function removeRow(key: number) {
     setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
   }
@@ -656,7 +682,8 @@ export function NewPurchaseForm({
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between", position: "relative" }}>
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4, flexWrap: "wrap" }}>
+            <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
             <button
               type="button"
               onClick={loadOpenTodos}

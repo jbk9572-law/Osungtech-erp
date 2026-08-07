@@ -9,6 +9,7 @@ import {
 } from "@/app/(dashboard)/purchases/actions";
 import type { PendingCalc } from "@/lib/paper-calc-sync";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
@@ -417,6 +418,28 @@ export function NewSaleForm({
     );
   }
 
+  // 검색창에서 Enter로 바로 추가할 때 쓴다 — "+ 품목 추가"로 빈 줄을
+  // 만들고 그 안에서 다시 검색하는 2단계 대신, 검색해서 고른 품목이
+  // 바로 채워진 새 줄을 만든다(입고 불러오기의 addPurchaseItem과 동일한
+  // 방식으로, 아직 아무것도 안 고른 첫 빈 줄이면 그 줄을 그대로 채운다).
+  function quickAddProduct(productId: string) {
+    const product = products.find((p) => p.id === productId);
+    const newRow: Row = {
+      key: nextKey,
+      productId,
+      spec: product?.spec ?? "",
+      manualSpec: false,
+      quantity: 0,
+      unitPrice: resolvePrice(customerId, productId),
+      manualPrice: false,
+      remark: "",
+    };
+    setRows((prev) =>
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+    );
+    setNextKey((k) => k + 1);
+  }
+
   function addRow() {
     setRows((prev) => [
       ...prev,
@@ -587,7 +610,8 @@ export function NewSaleForm({
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between", position: "relative" }}>
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4, flexWrap: "wrap" }}>
+            <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
             <input
               type="date"
               value={purchaseLookupDate}

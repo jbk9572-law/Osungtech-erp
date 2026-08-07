@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
@@ -79,6 +80,24 @@ export function TodoForm({
 
   function addRow() {
     setRows((prev) => [...prev, { key: nextKey, productId: "", spec: "", manualSpec: false, quantity: 0 }]);
+    setNextKey((k) => k + 1);
+  }
+
+  // 검색창에서 Enter로 바로 추가할 때 쓴다 — "+ 품목 추가"로 빈 줄을
+  // 만들고 그 안에서 다시 검색하는 2단계 대신, 검색해서 고른 품목이
+  // 바로 채워진 새 줄을 만든다.
+  function quickAddProduct(productId: string) {
+    const product = products.find((p) => p.id === productId);
+    const newRow: Row = {
+      key: nextKey,
+      productId,
+      spec: product?.spec ?? "",
+      manualSpec: false,
+      quantity: 0,
+    };
+    setRows((prev) =>
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+    );
     setNextKey((k) => k + 1);
   }
 
@@ -242,7 +261,8 @@ export function TodoForm({
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4, flexWrap: "wrap" }}>
+            <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
             </button>
