@@ -2,21 +2,21 @@
    로그인/인쇄(print) 라우트는 이 테마의 영향을 받지 않는다. */
 
 .erp {
-  /* "모던 SaaS" 방향 — 도장(빨간 인주) 색을 포인트로 써서 "우리 서류"
-     느낌은 유지하면서, 카드형 레이아웃/둥근 모서리/부드러운 그림자로
-     톤을 바꿨다. 시맨틱 색(success/warning/danger)은 브랜드 포인트색과
+  /* 빨간 포인트가 눈 피로감이 크다는 피드백으로 파란 계통(다듬은
+     전통형)으로 되돌린다 — 모서리/그림자/여백 등 형태 언어는 그대로
+     둔다. 시맨틱 색(success/warning/danger)은 브랜드 포인트색과
      별개로 그대로 둔다. */
-  --erp-primary: #a63d2c;
-  --erp-primary-dark: #7d2d20;
-  --erp-border: #e7e2e6;
-  --erp-hover: #f6f0ee;
-  --erp-selected: #f3d9d2;
+  --erp-primary: #0b57d0;
+  --erp-primary-dark: #08409e;
+  --erp-border: #e2e5eb;
+  --erp-hover: #eef4fc;
+  --erp-selected: #dde9fb;
   --erp-success: #28a745;
   --erp-warning: #ff9800;
   --erp-danger: #dc3545;
   --erp-text: #182338;
   --erp-text-muted: #6b7280;
-  --erp-bg: #f5f4fa;
+  --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
   --erp-shadow-sm: 0 1px 2px rgba(32, 28, 43, 0.05), 0 2px 8px -3px rgba(32, 28, 43, 0.1);
   --erp-shadow-md: 0 4px 16px rgba(32, 28, 43, 0.08), 0 12px 28px -10px rgba(32, 28, 43, 0.16);
@@ -129,7 +129,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #faf8fb;
+  background: #f7f9fc;
   border-bottom: 1px solid var(--erp-border);
   padding: 0 10px;
 }
@@ -337,7 +337,7 @@
   flex: 0 0 auto;
   padding: 10px 12px;
   border-top: 1px solid var(--erp-border);
-  background: #faf8fb;
+  background: #fafbfc;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -381,7 +381,7 @@
   justify-content: center;
   border: none;
   border-bottom: 1px solid var(--erp-border);
-  background: #faf8fb;
+  background: #fafbfc;
   color: var(--erp-text-muted);
   font-size: 12px;
 }
@@ -397,7 +397,7 @@
   width: 100%;
   height: 34px;
   padding: 0 12px;
-  background: #faf8fb;
+  background: #fafbfd;
   border: none;
   font-size: 13px;
   font-weight: 700;
@@ -487,7 +487,7 @@
   gap: 2px;
   height: 34px;
   flex: 0 0 34px;
-  background: #efe8ea;
+  background: #e4e8ee;
   padding: 4px 8px 0;
   overflow-x: auto;
 }
@@ -498,7 +498,7 @@
   gap: 8px;
   height: 30px;
   padding: 0 10px 0 14px;
-  background: #ddd2d5;
+  background: #d3d9e1;
   color: var(--erp-text-muted);
   font-size: 12.5px;
   border-radius: 6px 6px 0 0;
@@ -574,7 +574,7 @@
   align-items: end;
   gap: 14px;
   padding: 14px;
-  background: #faf8fb;
+  background: #fafbfc;
   border: 1px solid var(--erp-border);
   border-radius: 12px;
   margin-bottom: 12px;
@@ -639,7 +639,7 @@
 .erp-select:focus {
   outline: none;
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(166, 61, 44, 0.14);
+  box-shadow: 0 0 0 3px rgba(11, 87, 208, 0.14);
 }
 
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
@@ -729,7 +729,7 @@
 
 .erp-grid thead th {
   height: 32px;
-  background: #faf8fb;
+  background: #eef1f5;
   color: var(--erp-text);
   font-weight: 700;
   text-align: left;
@@ -837,7 +837,7 @@
 .erp-detail-tabs {
   display: flex;
   border-bottom: 1px solid var(--erp-border);
-  background: #faf8fb;
+  background: #fafbfc;
   border-radius: 13px 13px 0 0;
 }
 
@@ -961,7 +961,7 @@
   padding: 0 12px;
   font-size: 12.5px;
   font-weight: 700;
-  background: #faf8fb;
+  background: #eef1f5;
   border-bottom: 1px solid var(--erp-border);
 }
 
@@ -1073,7 +1073,7 @@
   height: 3px;
   z-index: 9999;
   overflow: hidden;
-  background: rgba(166, 61, 44, 0.12);
+  background: rgba(11, 87, 208, 0.12);
   pointer-events: none;
 }
 
@@ -1154,7 +1154,7 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--erp-text-muted);
-  background: #faf8fb;
+  background: #f7f9fc;
   border-bottom: 1px solid #f0f2f5;
 }
 
