@@ -6,36 +6,75 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 // (매출·매입 누계) - (수금·지급 누계)로 계산한다 — 매출/매입 데이터가
 // 나중에 수정/삭제돼도 잔액이 따로 안 맞는 문제가 없다.
 
+export type UnpaidOrder = { id: string; date: string; docNo?: number; total: number; outstanding: number };
+
 export async function getCustomerBalance(supabase: SupabaseServerClient, customerId: string) {
-  const [{ data: items }, { data: payments }] = await Promise.all([
+  const [{ data: orders }, { data: payments }] = await Promise.all([
     supabase
-      .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method)")
-      .eq("sales_orders.customer_id", customerId),
+      .from("sales_orders")
+      .select("id, doc_no, order_date, payment_method, sales_order_items(quantity, unit_price)")
+      .eq("customer_id", customerId)
+      .order("order_date", { ascending: true }),
     supabase.from("customer_payments").select("id, paid_at, amount, method, memo").eq("customer_id", customerId).order("paid_at", { ascending: false }),
   ]);
   // 결제방법을 "항상 외상" 대신 현금/계좌이체 등으로 등록한 주문은 그
   // 자리에서 결제가 끝난 거래이므로 미수금 계산에서 아예 뺀다.
-  const totalSales = (items ?? [])
-    .filter((i) => !i.sales_orders.payment_method)
-    .reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0);
+  const creditOrders = (orders ?? [])
+    .filter((o) => !o.payment_method)
+    .map((o) => ({
+      id: o.id,
+      docNo: o.doc_no,
+      date: o.order_date,
+      total: (o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0),
+    }));
+
+  const totalSales = creditOrders.reduce((sum, o) => sum + o.total, 0);
   const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
-  return { totalSales, totalPaid, balance: totalSales - totalPaid, payments: payments ?? [] };
+  const unpaidOrders = consumeOldestFirst(creditOrders, totalPaid);
+
+  return { totalSales, totalPaid, balance: totalSales - totalPaid, payments: payments ?? [], unpaidOrders };
 }
 
 export async function getSupplierBalance(supabase: SupabaseServerClient, supplierId: string) {
-  const [{ data: items }, { data: payments }] = await Promise.all([
+  const [{ data: orders }, { data: payments }] = await Promise.all([
     supabase
-      .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)")
-      .eq("purchase_orders.supplier_id", supplierId),
+      .from("purchase_orders")
+      .select("id, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
+      .eq("supplier_id", supplierId)
+      .order("purchase_date", { ascending: true }),
     supabase.from("supplier_payments").select("id, paid_at, amount, method, memo").eq("supplier_id", supplierId).order("paid_at", { ascending: false }),
   ]);
-  const totalPurchases = (items ?? [])
-    .filter((i) => !i.purchase_orders.payment_method)
-    .reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0);
+  const creditOrders = (orders ?? [])
+    .filter((o) => !o.payment_method)
+    .map((o) => ({
+      id: o.id,
+      date: o.purchase_date,
+      total: (o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0),
+    }));
+
+  const totalPurchases = creditOrders.reduce((sum, o) => sum + o.total, 0);
   const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
-  return { totalPurchases, totalPaid, balance: totalPurchases - totalPaid, payments: payments ?? [] };
+  const unpaidOrders = consumeOldestFirst(creditOrders, totalPaid);
+
+  return { totalPurchases, totalPaid, balance: totalPurchases - totalPaid, payments: payments ?? [], unpaidOrders };
+}
+
+// 전표별로 얼마가 남았는지는 따로 저장하지 않으므로, 수금/지급 총액을
+// 오래된 전표(이미 date 오름차순으로 정렬된 상태)부터 순서대로 상계해서
+// 계산한다 — 실제로 어느 수금이 어느 전표를 갚았는지 지정하지 않고,
+// "먼저 나간 것부터 먼저 받은 걸로 친다"는 가장 단순한 가정(선입선출)이다.
+function consumeOldestFirst<T extends { total: number }>(orders: T[], totalPaid: number): (T & { outstanding: number })[] {
+  let pool = totalPaid;
+  const unpaid: (T & { outstanding: number })[] = [];
+  for (const order of orders) {
+    if (pool >= order.total) {
+      pool -= order.total;
+    } else {
+      unpaid.push({ ...order, outstanding: order.total - pool });
+      pool = 0;
+    }
+  }
+  return unpaid;
 }
 
 export type PartyBalance = { id: string; name: string; total: number; paid: number; balance: number };

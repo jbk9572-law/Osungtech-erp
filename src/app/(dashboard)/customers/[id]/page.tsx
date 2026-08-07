@@ -8,6 +8,7 @@ import { PartnerForm } from "@/components/partner-form";
 import { PartyPaymentForm } from "@/components/party-payment-form";
 import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { DeleteButton } from "@/components/delete-button";
+import { ClickableRow } from "@/components/clickable-row";
 import { updateCustomer, deleteCustomer, addCustomerPayment, deleteCustomerPayment } from "@/app/(dashboard)/customers/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
@@ -103,6 +104,40 @@ export default async function CustomerDetailPage({
               잔액: {balance.balance.toLocaleString()}원
             </span>
           </div>
+
+          {balance.unpaidOrders.length > 0 && (
+            <div className="erp-grid-wrap" style={{ marginBottom: 12 }}>
+              <p className="mb-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                미결제 전표 (오래된 순, 수금은 오래된 전표부터 상계 처리)
+              </p>
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th style={{ width: 90 }}>일자</th>
+                    <th style={{ width: 90 }}>전표번호</th>
+                    <th className="num" style={{ width: 130 }}>
+                      전표 금액
+                    </th>
+                    <th className="num" style={{ width: 130 }}>
+                      미수 잔액
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {balance.unpaidOrders.map((o) => (
+                    <ClickableRow key={o.id} href={`/sales/${o.id}`}>
+                      <td>{o.date.replaceAll("-", ".")}</td>
+                      <td>{o.docNo}</td>
+                      <td className="num">{o.total.toLocaleString()}</td>
+                      <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
+                        {o.outstanding.toLocaleString()}
+                      </td>
+                    </ClickableRow>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <PartyPaymentForm
             action={addCustomerPayment}
