@@ -253,13 +253,13 @@ export function DashboardCalendar({
           <div className="flex gap-1">
             <Link
               href={prevMonthHref}
-              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#eef2f7]"
             >
               ← 이전달
             </Link>
             <Link
               href={nextMonthHref}
-              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#f3f7fc]"
+              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[#eef2f7]"
             >
               다음달 →
             </Link>
@@ -270,7 +270,7 @@ export function DashboardCalendar({
           {WEEKDAYS.map((w, i) => (
             <div
               key={w}
-              className={`py-1 ${i === 0 ? "text-[#dc3545]" : i === 6 ? "text-[#1f3b75]" : "text-[#9aa2ad]"}`}
+              className={`py-1 ${i === 0 ? "text-[#dc3545]" : i === 6 ? "text-[#4a6fa5]" : "text-[#9aa2ad]"}`}
             >
               {w}
             </div>
@@ -296,7 +296,7 @@ export function DashboardCalendar({
                   : isSunday
                     ? "text-[#dc3545]"
                     : isSaturday
-                      ? "text-[#1f3b75]"
+                      ? "text-[#4a6fa5]"
                       : "text-[#1c1c1c]";
               const showLowStockDot = isToday && lowStockToday;
               const carryoverSalesCount = data?.salesItems.filter((i) => i.isCarryover).length ?? 0;
@@ -320,10 +320,10 @@ export function DashboardCalendar({
                   onDoubleClick={() => router.push(`/sales?from=${cell.dateStr}&to=${cell.dateStr}`)}
                   className={`aspect-square rounded-sm border p-1 text-left text-xs transition-colors ${
                     isSelected
-                      ? "border-[#1f3b75] bg-[#1f3b75] text-white"
+                      ? "border-[#4a6fa5] bg-[#4a6fa5] text-white"
                       : isToday
-                        ? "border-[#1f3b75] bg-[#ddebff]"
-                        : "border-transparent hover:bg-[#f3f7fc]"
+                        ? "border-[#4a6fa5] bg-[#e3eaf4]"
+                        : "border-transparent hover:bg-[#eef2f7]"
                   }`}
                 >
                   <div className={dayColorClass}>{cell.day}</div>
