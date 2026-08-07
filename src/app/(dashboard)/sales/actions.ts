@@ -257,6 +257,41 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
   redirect("/sales");
 }
 
+// 목록에서 여러 건을 체크박스로 골라 한 번에 삭제한다. 각 건은
+// delete_sale_with_items로 개별적으로 원자 처리되므로(주문 삭제 + 재고
+// 되돌리기), 일부만 실패해도 나머지는 정상 삭제된 채로 남는다 — 실패한
+// 건이 있으면 몇 건이 실패했는지만 알려준다.
+export async function bulkDeleteSales(_prevState: FormState, formData: FormData): Promise<FormState> {
+  let ids: string[];
+  try {
+    ids = JSON.parse(String(formData.get("ids") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: "삭제할 항목을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const results = await Promise.all(
+    ids.map((id) => supabase.rpc("delete_sale_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
+  );
+  const failCount = results.filter((r) => r.error).length;
+
+  revalidatePath("/sales");
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+
+  if (failCount > 0) {
+    return { error: `${ids.length - failCount}건 삭제, ${failCount}건 실패했습니다.` };
+  }
+  return { success: `${ids.length}건 삭제했습니다.` };
+}
+
 // 자동계산된 TG0(모조지) 수량을 거래처 협의 등의 이유로 수동값으로 고정한다.
 // 기본 동작(자동 계산값 반영)은 그대로 두고, 이 값이 적용 중인 동안만
 // 재계산이 건너뛰어진다 (paper-calc-sync.ts의 syncPaperStockOrderItem 참고).
