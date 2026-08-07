@@ -124,6 +124,74 @@ export async function createPaymentRequest(
   );
 }
 
+// 매일 한 줄씩 빠르게 기록하는 입력창용 액션. 부서+카드종류+월(month_key)
+// 조합의 문서를 찾거나(없으면 만들어서) 그 문서에 줄 하나를 추가한다.
+// "찾거나 만들기"는 DB 함수(find_or_create_payment_request_bucket)에서
+// insert ... on conflict로 원자적으로 처리하므로, 두 사람이 같은 달·같은
+// 카드로 거의 동시에 처음 입력해도 문서가 중복 생성되지 않는다.
+export async function quickAddPaymentRequestItem(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const department = String(formData.get("department") ?? "").trim();
+  const cardType = String(formData.get("card_type") ?? "개인카드");
+  const usedAt = String(formData.get("used_at") ?? "").trim();
+  const vendor = String(formData.get("vendor") ?? "").trim();
+  const purpose = String(formData.get("purpose") ?? "").trim();
+  const amount = Number(formData.get("amount") ?? 0);
+  const remark = String(formData.get("remark") ?? "").trim();
+
+  if (!department || !usedAt || !vendor || !(amount > 0)) {
+    return { error: "일자, 사용처, 금액을 입력해주세요." };
+  }
+
+  const monthKey = usedAt.slice(0, 7); // "YYYY-MM"
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: paymentRequestId, error: bucketError } = await supabase.rpc(
+    "find_or_create_payment_request_bucket",
+    {
+      p_department: department,
+      p_card_type: cardType,
+      p_month_key: monthKey,
+      p_requested_by: user?.id ?? null,
+    }
+  );
+  if (bucketError || !paymentRequestId) {
+    return { error: `등록에 실패했습니다: ${bucketError?.message ?? "알 수 없는 오류"}` };
+  }
+
+  const { data: existing } = await supabase
+    .from("payment_request_line_items")
+    .select("sort_order")
+    .eq("payment_request_id", paymentRequestId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextOrder = (existing?.sort_order ?? -1) + 1;
+
+  const { error } = await supabase.from("payment_request_line_items").insert({
+    payment_request_id: paymentRequestId,
+    used_at: usedAt,
+    vendor,
+    purpose: purpose || null,
+    amount,
+    remark: remark || null,
+    sort_order: nextOrder,
+  });
+  if (error) {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath("/reports/payment-requests");
+  revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
+  return { success: "오늘 지출을 등록했습니다." };
+}
+
 export async function updatePaymentRequest(
   _prevState: FormState,
   formData: FormData
