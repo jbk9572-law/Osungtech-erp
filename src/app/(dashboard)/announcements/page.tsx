@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ClickableRow } from "@/components/clickable-row";
-import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
+import { AnnouncementGridTable, type AnnouncementRow } from "@/components/announcement-grid-table";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function AnnouncementsPage() {
@@ -23,6 +22,14 @@ export default async function AnnouncementsPage() {
   ]);
 
   const readIds = new Set((reads ?? []).map((r) => r.announcement_id));
+  const gridRows: AnnouncementRow[] = (rows ?? []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    pinned: row.pinned,
+    createdAt: row.created_at,
+    authorName: row.profiles?.full_name ?? null,
+    read: readIds.has(row.id),
+  }));
 
   return (
     <div>
@@ -46,44 +53,7 @@ export default async function AnnouncementsPage() {
         </p>
       )}
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 40 }}>읽음</th>
-              <th style={{ width: 60 }}>구분</th>
-              <th>제목</th>
-              <th style={{ width: 140 }}>작성자</th>
-              <th style={{ width: 120 }}>작성일</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(rows ?? []).map((row) => {
-              const read = readIds.has(row.id);
-              return (
-                <ClickableRow key={row.id} href={`/announcements/${row.id}`}>
-                  <td style={{ textAlign: "center" }}>
-                    <AnnouncementCheckbox id={row.id} read={read} />
-                  </td>
-                  <td style={{ textAlign: "center" }}>{row.pinned ? "📌" : ""}</td>
-                  <td style={!read ? { fontWeight: 700 } : { color: "var(--erp-text-muted)" }}>
-                    {row.title}
-                  </td>
-                  <td>{row.profiles?.full_name ?? "-"}</td>
-                  <td>{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
-                </ClickableRow>
-              );
-            })}
-            {!rows?.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  등록된 공지사항이 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AnnouncementGridTable rows={gridRows} />
     </div>
   );
 }

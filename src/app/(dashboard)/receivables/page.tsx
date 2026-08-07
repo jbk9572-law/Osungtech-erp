@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { ClickableRow } from "@/components/clickable-row";
+import { BalanceGridTable } from "@/components/balance-grid-table";
 import { getAllCustomerBalances } from "@/lib/ar-ap";
 
 export default async function ReceivablesPage() {
@@ -24,41 +24,14 @@ export default async function ReceivablesPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>출고처명</th>
-              <th className="num">매출 누계</th>
-              <th className="num">수금 누계</th>
-              <th className="num">잔액</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {withBalance.map((b) => (
-              <ClickableRow key={b.id} href={`/customers/${b.id}`}>
-                <td>{b.name}</td>
-                <td className="num">{b.total.toLocaleString()}</td>
-                <td className="num">{b.paid.toLocaleString()}</td>
-                <td className="num" style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
-                  {b.balance.toLocaleString()}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  상세 →
-                </td>
-              </ClickableRow>
-            ))}
-            {!withBalance.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  미수금 잔액이 있는 거래처가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <BalanceGridTable
+        rows={withBalance}
+        hrefBase="/customers"
+        partyLabel="출고처명"
+        totalLabel="매출 누계"
+        paidLabel="수금 누계"
+        emptyLabel="미수금 잔액이 있는 거래처가 없습니다."
+      />
     </div>
   );
 }

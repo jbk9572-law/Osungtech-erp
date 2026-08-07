@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { ClickableRow } from "@/components/clickable-row";
+import { BalanceGridTable } from "@/components/balance-grid-table";
 import { getAllSupplierBalances } from "@/lib/ar-ap";
 
 export default async function PayablesPage() {
@@ -24,41 +24,14 @@ export default async function PayablesPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>공급처명</th>
-              <th className="num">매입 누계</th>
-              <th className="num">지급 누계</th>
-              <th className="num">잔액</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {withBalance.map((b) => (
-              <ClickableRow key={b.id} href={`/suppliers/${b.id}`}>
-                <td>{b.name}</td>
-                <td className="num">{b.total.toLocaleString()}</td>
-                <td className="num">{b.paid.toLocaleString()}</td>
-                <td className="num" style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
-                  {b.balance.toLocaleString()}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  상세 →
-                </td>
-              </ClickableRow>
-            ))}
-            {!withBalance.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  미지급금 잔액이 있는 공급처가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <BalanceGridTable
+        rows={withBalance}
+        hrefBase="/suppliers"
+        partyLabel="공급처명"
+        totalLabel="매입 누계"
+        paidLabel="지급 누계"
+        emptyLabel="미지급금 잔액이 있는 공급처가 없습니다."
+      />
     </div>
   );
 }

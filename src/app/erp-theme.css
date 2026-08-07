@@ -740,32 +740,55 @@
   text-align: left;
   padding: 0 10px;
   border-bottom: 1px solid #c9ced8;
+  border-right: 1px solid var(--erp-border);
   white-space: nowrap;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
+.erp-grid thead th:last-child {
+  border-right: none;
+}
+
 .erp-grid tbody td {
   height: 30px;
   padding: 4px 10px;
   border-bottom: 1px solid #eef0f3;
+  border-right: 1px solid #eef0f3;
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: top;
+}
+
+.erp-grid tbody td:last-child {
+  border-right: none;
 }
 
 .erp-grid tfoot td {
   height: 30px;
   padding: 4px 10px;
   border-top: 2px solid var(--erp-border);
+  border-right: 1px solid #eef0f3;
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: middle;
 }
 
+.erp-grid tfoot td:last-child {
+  border-right: none;
+}
+
 .erp-grid tbody tr {
   cursor: pointer;
+}
+
+/* 세로줄만으로는 폭이 넓은 표에서 지금 몇 번째 줄을 보고 있는지 눈이
+   자꾸 놓친다 — 한 줄씩 걸러 옅게 배경을 넣어 가로 방향 가독성을 더한다.
+   특이도가 hover/selected 규칙과 같아서(:nth-child도 가상클래스),
+   아래쪽에 나오는 hover/selected가 소스 순서상 항상 우선한다. */
+.erp-grid tbody tr:nth-child(even) {
+  background: #f7f8fa;
 }
 
 .erp-grid tbody tr:hover {
