@@ -2,7 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { QuickPaymentRequestForm } from "@/components/quick-payment-request-form";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
+import { todayKstStr } from "@/lib/kst-date";
 
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "-";
@@ -49,13 +51,16 @@ function PeriodCell({ from, to }: { from: string | null; to: string | null }) {
 
 export default async function PaymentRequestsPage() {
   const supabase = await createClient();
-  const { data: rows } = await supabase
-    .from("payment_requests")
-    .select(
-      "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
-    )
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [{ data: rows }, { data: company }] = await Promise.all([
+    supabase
+      .from("payment_requests")
+      .select(
+        "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
+      )
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase.from("company_profile").select("name").eq("id", 1).maybeSingle(),
+  ]);
 
   return (
     <div>
@@ -66,6 +71,19 @@ export default async function PaymentRequestsPage() {
         }}
       />
       <h1 className="mb-3 text-lg font-bold text-[#182338]">보고서 &gt; 지급결의양식</h1>
+
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">오늘 지출 빠르게 기록</span>
+        </div>
+        <div className="erp-detail-body">
+          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            문서를 따로 만들지 않아도 됩니다 — 같은 부서·카드로 이번 달에 이미 쓴 문서가 있으면 거기에 이어서
+            추가되고, 없으면 자동으로 새로 만들어집니다.
+          </p>
+          <QuickPaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
+        </div>
+      </div>
 
       <div className="erp-toolbar">
         <Link href="/reports/payment-requests/new" className="erp-btn erp-btn-primary">

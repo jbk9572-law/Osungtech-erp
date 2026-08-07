@@ -36,14 +36,15 @@ const cellStyle: React.CSSProperties = {
 // 줄)에도 똑같이 써서, 내용이 있는 줄과 높이가 어긋나지 않게 한다.
 const itemCellStyle: React.CSSProperties = { ...cellStyle, height: 24 };
 
-// 강조 표시한 줄은 회색 음영 + 굵게로 인쇄한다. 브라우저는 기본적으로
-// 인쇄 시 배경색을 생략하므로("배경 그래픽" 옵션을 꺼둔 경우가 대부분)
-// print-color-adjust로 강제해 흑백 인쇄에서도 음영이 실제로 찍히게 한다.
+// 강조 표시한 줄은 형광펜 느낌의 노란색 음영 + 굵게로 인쇄한다. 회색은
+// 컬러로 인쇄해도 눈에 잘 안 띄어서 노란색으로 바꿨다. 브라우저는 기본적
+// 으로 인쇄 시 배경색을 생략하므로("배경 그래픽" 옵션을 꺼둔 경우가
+// 대부분) print-color-adjust로 강제해 흑백 인쇄에서도 음영이 찍히게 한다.
 function highlightCellStyle(isHighlighted: boolean): React.CSSProperties {
   if (!isHighlighted) return itemCellStyle;
   return {
     ...itemCellStyle,
-    background: "#d4d4d4",
+    background: "#ffe066",
     fontWeight: 700,
     WebkitPrintColorAdjust: "exact",
     printColorAdjust: "exact",

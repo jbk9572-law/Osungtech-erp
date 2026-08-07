@@ -1081,6 +1081,7 @@ export type Database = {
           card_type: "개인카드" | "하나법인카드" | "신한법인카드";
           requested_by: string | null;
           created_at: string;
+          month_key: string | null;
         };
         Insert: {
           id?: string;
@@ -1093,6 +1094,7 @@ export type Database = {
           card_type?: "개인카드" | "하나법인카드" | "신한법인카드";
           requested_by?: string | null;
           created_at?: string;
+          month_key?: string | null;
         };
         Update: {
           id?: string;
@@ -1105,6 +1107,7 @@ export type Database = {
           card_type?: "개인카드" | "하나법인카드" | "신한법인카드";
           requested_by?: string | null;
           created_at?: string;
+          month_key?: string | null;
         };
         Relationships: [
           {
@@ -1499,6 +1502,15 @@ export type Database = {
           p_period_to: string | null;
           p_card_type: string;
           p_items: Json;
+        };
+        Returns: string;
+      };
+      find_or_create_payment_request_bucket: {
+        Args: {
+          p_department: string;
+          p_card_type: string;
+          p_month_key: string;
+          p_requested_by: string | null;
         };
         Returns: string;
       };
