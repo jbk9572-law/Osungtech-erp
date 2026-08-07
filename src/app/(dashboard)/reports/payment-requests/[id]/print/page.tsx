@@ -130,6 +130,21 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
               {row.profiles?.full_name ? spaceOut(row.profiles.full_name) : "-"}
             </td>
           </tr>
+        </tbody>
+      </table>
+
+      {/* 실물 서식처럼 제목/작성자 박스, 부서명 박스, 품목 표를 서로 붙이지
+          않고 구간마다 상하 여백을 두어 구분한다(section 별로 별도 표로
+          쪼갬). */}
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: 10, color: "#000" }}>
+        <colgroup>
+          <col style={{ width: "15%" }} />
+          <col style={{ width: "27%" }} />
+          <col style={{ width: "16%" }} />
+          <col style={{ width: "21%" }} />
+          <col style={{ width: "21%" }} />
+        </colgroup>
+        <tbody>
           <tr>
             <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
             <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden" }}>
@@ -143,7 +158,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </tbody>
       </table>
 
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: -1, color: "#000" }}>
+      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: 10, color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />

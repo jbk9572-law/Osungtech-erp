@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { ReceiptGallery } from "@/components/receipt-gallery";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PrintInPlaceButton } from "@/components/print-in-place-button";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
 
@@ -53,7 +54,7 @@ export default async function PaymentRequestDetailPage({
       <KeyboardShortcuts
         shortcuts={{
           F4: { href: `/reports/payment-requests/${row.id}/edit` },
-          F9: { href: `/reports/payment-requests/${row.id}/print`, newTab: true },
+          F9: { printHref: `/reports/payment-requests/${row.id}/print` },
           Escape: { href: "/reports/payment-requests" },
         }}
       />
@@ -66,9 +67,9 @@ export default async function PaymentRequestDetailPage({
         <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn">
           F4 수정
         </Link>
-        <Link href={`/reports/payment-requests/${row.id}/print`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+        <PrintInPlaceButton href={`/reports/payment-requests/${row.id}/print`} className="erp-btn">
           F9 인쇄
-        </Link>
+        </PrintInPlaceButton>
         <DeleteButton action={deletePaymentRequest} id={row.id} confirmMessage="이 지급결의서를 삭제하시겠습니까?" />
       </div>
 
