@@ -2,20 +2,24 @@
    로그인/인쇄(print) 라우트는 이 테마의 영향을 받지 않는다. */
 
 .erp {
-  --erp-primary: #1e3a68;
-  --erp-primary-dark: #142a56;
-  --erp-border: #e2e5eb;
-  --erp-hover: #f3f7fc;
-  --erp-selected: #ddebff;
+  /* "모던 SaaS" 방향 — 도장(빨간 인주) 색을 포인트로 써서 "우리 서류"
+     느낌은 유지하면서, 카드형 레이아웃/둥근 모서리/부드러운 그림자로
+     톤을 바꿨다. 시맨틱 색(success/warning/danger)은 브랜드 포인트색과
+     별개로 그대로 둔다. */
+  --erp-primary: #a63d2c;
+  --erp-primary-dark: #7d2d20;
+  --erp-border: #e7e2e6;
+  --erp-hover: #f6f0ee;
+  --erp-selected: #f3d9d2;
   --erp-success: #28a745;
   --erp-warning: #ff9800;
   --erp-danger: #dc3545;
   --erp-text: #182338;
   --erp-text-muted: #6b7280;
-  --erp-bg: #eef1f5;
+  --erp-bg: #f5f4fa;
   --erp-panel: #ffffff;
-  --erp-shadow-sm: 0 1px 2px rgba(20, 26, 38, 0.06);
-  --erp-shadow-md: 0 4px 14px rgba(20, 26, 38, 0.08);
+  --erp-shadow-sm: 0 1px 2px rgba(32, 28, 43, 0.05), 0 2px 8px -3px rgba(32, 28, 43, 0.1);
+  --erp-shadow-md: 0 4px 16px rgba(32, 28, 43, 0.08), 0 12px 28px -10px rgba(32, 28, 43, 0.16);
 
   height: 100vh;
   /* 화면 어딘가(뱃지·긴 텍스트 등)가 뷰포트보다 살짝 넓어져도, 그
@@ -164,7 +168,7 @@
   overflow-y: auto;
   background: #fff;
   border: 1px solid var(--erp-border);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -233,7 +237,7 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 10px;
+  border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
@@ -255,7 +259,7 @@
   font-weight: 700;
   background: var(--erp-primary);
   color: #fff;
-  border-radius: 10px 10px 0 0;
+  border-radius: 16px 16px 0 0;
 }
 
 .erp-modal-close {
@@ -572,7 +576,7 @@
   padding: 14px;
   background: #fafbfc;
   border: 1px solid var(--erp-border);
-  border-radius: 6px;
+  border-radius: 12px;
   margin-bottom: 12px;
 }
 
@@ -623,7 +627,7 @@
 .erp-select {
   height: 30px;
   border: 1px solid var(--erp-border);
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 0 8px;
   font-size: 12.5px;
   background: #fff;
@@ -635,7 +639,7 @@
 .erp-select:focus {
   outline: none;
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(31, 59, 117, 0.12);
+  box-shadow: 0 0 0 3px rgba(166, 61, 44, 0.14);
 }
 
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
@@ -660,7 +664,7 @@
   height: 32px;
   min-width: 90px;
   padding: 0 12px;
-  border-radius: 6px;
+  border-radius: 10px;
   border: 1px solid var(--erp-border);
   background: #fff;
   color: var(--erp-text);
@@ -712,7 +716,7 @@
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
   border: 1px solid var(--erp-border);
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: auto;
   box-shadow: var(--erp-shadow-sm);
 }
@@ -725,7 +729,7 @@
 
 .erp-grid thead th {
   height: 32px;
-  background: #eef1f5;
+  background: #faf8fb;
   color: var(--erp-text);
   font-weight: 700;
   text-align: left;
@@ -822,14 +826,19 @@
 .erp-detail {
   margin-top: 14px;
   border: 1px solid var(--erp-border);
-  border-radius: 6px;
+  border-radius: 14px;
   box-shadow: var(--erp-shadow-sm);
 }
 
+/* overflow: hidden은 일부러 안 준다 — 상세박스 안에 "입고 불러오기" 같은
+   절대위치 드롭다운이 패널 아래로 튀어나오는 경우가 있어서, 부모에
+   overflow: hidden을 주면 그 드롭다운이 잘려 보이게 된다. 대신 첫 자식
+   (탭 스트립)만 위쪽 모서리를 부모와 맞춰 둥글게 잘라준다. */
 .erp-detail-tabs {
   display: flex;
   border-bottom: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: #faf8fb;
+  border-radius: 13px 13px 0 0;
 }
 
 .erp-detail-tab {
@@ -894,8 +903,8 @@
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);
   border-left: 3px solid var(--erp-primary);
-  border-radius: 6px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 16px 18px;
   box-shadow: var(--erp-shadow-sm);
 }
 
