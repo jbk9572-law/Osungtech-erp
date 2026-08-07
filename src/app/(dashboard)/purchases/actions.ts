@@ -444,6 +444,37 @@ export async function updatePurchase(
   redirect(`/purchases/${id}`);
 }
 
+export async function bulkDeletePurchases(_prevState: FormState, formData: FormData): Promise<FormState> {
+  let ids: string[];
+  try {
+    ids = JSON.parse(String(formData.get("ids") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: "삭제할 항목을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const results = await Promise.all(
+    ids.map((id) => supabase.rpc("delete_purchase_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
+  );
+  const failCount = results.filter((r) => r.error).length;
+
+  revalidatePath("/purchases");
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+
+  if (failCount > 0) {
+    return { error: `${ids.length - failCount}건 삭제, ${failCount}건 실패했습니다.` };
+  }
+  return { success: `${ids.length}건 삭제했습니다.` };
+}
+
 export async function deletePurchase(
   _prevState: FormState,
   formData: FormData

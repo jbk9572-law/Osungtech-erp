@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
-import { ClickableRow } from "@/components/clickable-row";
+import { CustomerGridTable } from "@/components/customer-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 
@@ -39,51 +39,7 @@ export default async function CustomersPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>출고처명</th>
-              <th>사업자번호</th>
-              <th>담당자</th>
-              <th>연락처</th>
-              <th>주소</th>
-              <th>발행 문서</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {customers?.map((customer) => (
-              <ClickableRow key={customer.id} href={`/customers/${customer.id}`}>
-                <td>{customer.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{customer.business_number ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{customer.contact_name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{customer.phone ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{customer.address ?? "-"}</td>
-                <td>
-                  <span
-                    className={`erp-badge ${
-                      customer.document_type === "출고증" ? "erp-badge-warning" : "erp-badge-success"
-                    }`}
-                  >
-                    {customer.document_type}
-                  </span>
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  수정 →
-                </td>
-              </ClickableRow>
-            ))}
-            {!customers?.length && (
-              <tr>
-                <td colSpan={7} className="erp-grid-empty">
-                  등록된 출고처가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <CustomerGridTable rows={customers ?? []} />
     </div>
   );
 }
