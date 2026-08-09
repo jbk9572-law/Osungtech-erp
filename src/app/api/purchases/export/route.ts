@@ -99,17 +99,23 @@ export async function GET(request: Request) {
     );
   });
 
-  const rows = items.map((item) => ({
-    매입일자: item.purchase_orders?.purchase_date ?? "",
-    공급처명: item.purchase_orders?.suppliers?.name ?? "",
-    SKU: item.products?.sku ?? "",
-    품목명: item.products?.name ?? "",
-    규격: item.spec || item.products?.spec || "",
-    단위: item.products?.unit ?? "",
-    수량: item.quantity,
-    매입가: Number(item.unit_cost),
-    금액: item.quantity * Number(item.unit_cost),
-  }));
+  const rows = items.map((item) => {
+    const supplyAmount = item.quantity * Number(item.unit_cost);
+    const taxAmount = Math.round(supplyAmount * 0.1);
+    return {
+      매입일자: item.purchase_orders?.purchase_date ?? "",
+      공급처명: item.purchase_orders?.suppliers?.name ?? "",
+      SKU: item.products?.sku ?? "",
+      품목명: item.products?.name ?? "",
+      규격: item.spec || item.products?.spec || "",
+      단위: item.products?.unit ?? "",
+      수량: item.quantity,
+      매입가: Number(item.unit_cost),
+      공급가액: supplyAmount,
+      세액: taxAmount,
+      합계: supplyAmount + taxAmount,
+    };
+  });
 
   const suffix = q ? `_${q}` : "";
   return buildXlsxResponse(rows, `매입내역_${from}_${to}${suffix}.xlsx`);
