@@ -300,9 +300,15 @@ export default async function MonthlyReportPage({
             </tr>
           </thead>
           <tbody>
-            {itemGroups.map((g) => (
+            {itemGroups.map((g, groupIndex) => {
+              // 품목(헤더+거래처별 상세행)을 한 덩어리로 보고, 덩어리마다
+              // 번갈아 배경을 넣는다 — 표 전체에 걸리는 일반 zebra(짝수행
+              // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
+              // 헷갈렸다.
+              const groupBg = groupIndex % 2 === 0 ? "#ffffff" : "#eef1f5";
+              return (
               <Fragment key={g.productId}>
-                <tr style={{ background: "#f5f7fa" }}>
+                <tr style={{ background: groupBg }}>
                   <td style={{ fontWeight: 700 }}>
                     {g.sku !== "-" && (
                       <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>{g.sku} · </span>
@@ -330,7 +336,7 @@ export default async function MonthlyReportPage({
                   </td>
                 </tr>
                 {g.details.map((d) => (
-                  <tr key={`${g.productId}-${d.type}-${d.companyId}`}>
+                  <tr key={`${g.productId}-${d.type}-${d.companyId}`} style={{ background: groupBg }}>
                     <td style={{ paddingLeft: 26 }}>
                       <Link
                         href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
@@ -364,7 +370,8 @@ export default async function MonthlyReportPage({
                   </tr>
                 ))}
               </Fragment>
-            ))}
+              );
+            })}
             {!itemGroups.length && (
               <tr>
                 <td colSpan={7} className="erp-grid-empty">
