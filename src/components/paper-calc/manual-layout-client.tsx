@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { NumberInput } from "@/components/number-input";
+import { FieldHint } from "@/components/field-hint";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
@@ -511,7 +512,10 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
             가로·세로 전환
           </button>
           <div className="erp-field">
-            <label>배치 격자 간격(mm)</label>
+            <label>
+              배치 격자 간격(mm)
+              <FieldHint text="아래에서 품목을 드래그로 배치할 때 이 간격 단위로 달라붙습니다(스냅). 값이 작을수록 더 촘촘하게 자유 배치할 수 있습니다." />
+            </label>
             <NumberInput value={snapMm} onChange={(n) => setSnapMm(Math.max(1, n))} className="erp-input" />
           </div>
         </div>

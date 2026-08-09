@@ -9,6 +9,7 @@ import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
+import { FieldHint } from "@/components/field-hint";
 import {
   PENDING_PAPER_CALC_KEY,
   PENDING_PAPER_CALC_PURCHASE_KEY,
@@ -297,7 +298,10 @@ export function PaperCalcClient({
                     <th className="num">총 원지</th>
                     <th className="num">총 생산</th>
                     <th className="num">초과 생산</th>
-                    <th>충족여부</th>
+                    <th>
+                      충족여부
+                      <FieldHint text="총 생산 수량이 발주 수량 이상이면 충족, 못 미치면 미충족입니다." />
+                    </th>
                     <th style={{ width: 60 }}></th>
                   </tr>
                 </thead>
@@ -329,7 +333,10 @@ export function PaperCalcClient({
               <thead>
                 <tr>
                   <th style={{ width: 40 }}>#</th>
-                  <th>가로(mm)</th>
+                  <th>
+                    가로(mm)
+                    <FieldHint text="원지에서 재단해 낼 완성 조각의 가로 길이. 아래 원지 크기와 다른 값입니다." />
+                  </th>
                   <th>세로(mm)</th>
                   <th>수량(매)</th>
                   <th style={{ width: 60 }}></th>
@@ -392,7 +399,10 @@ export function PaperCalcClient({
 
           <div className="flex flex-wrap items-end gap-4 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
             <div className="erp-field">
-              <label>원지 가로(mm)</label>
+              <label>
+                원지 가로(mm)
+                <FieldHint text="완성 조각을 잘라낼 큰 원본 용지(전지)의 크기. 이 안에 위 표의 조각들을 최대한 많이 배치해서 필요한 원지 수량을 계산합니다." />
+              </label>
               <NumberInput value={paperW} onChange={setPaperW} className="erp-input" />
             </div>
             <div className="erp-field">
