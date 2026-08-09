@@ -702,11 +702,11 @@ export function DashboardCards({
           <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             {card.label}
           </div>
-          <div className="text-xl font-bold" style={{ color: card.fg ?? "#222222" }}>
+          <div className="text-xl font-bold" style={{ color: card.fg ?? "var(--erp-text)" }}>
             {card.value}
           </div>
           {card.sub && (
-            <div className="text-xs font-semibold" style={{ color: "#444444" }}>
+            <div className="text-xs font-semibold" style={{ color: "var(--erp-text-muted)" }}>
               {card.sub}
             </div>
           )}
@@ -841,7 +841,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
             </g>
           ))}
       </svg>
-      <div className="mt-1.5 text-center text-xs" style={{ color: "#555555" }}>
+      <div className="mt-1.5 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
         {layout.sheetCount.toLocaleString()}장 (약 {layout.batchReams}연) · 사용률 {layout.margin.usage}%
       </div>
       <div className="mt-1.5 flex flex-col gap-0.5 text-xs">
