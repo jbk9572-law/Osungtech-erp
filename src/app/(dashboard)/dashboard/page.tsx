@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
+import { OnboardingBanner } from "@/components/onboarding-banner";
 import { getNotificationSummary } from "@/lib/notifications";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
@@ -383,6 +384,7 @@ export default async function DashboardPage({
 
   return (
     <>
+      <OnboardingBanner />
       {hasAlerts && (
         <div className="erp-alert-banner">
           {unreadAnnouncements.slice(0, 3).map((a) => (
