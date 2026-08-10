@@ -234,12 +234,34 @@ export function Ribbon() {
         <div className="erp-modal-overlay" onClick={() => setModal(null)}>
           <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
             <div className="erp-modal-title">
-              단축키 도움말
+              도움말
               <button type="button" className="erp-modal-close" onClick={() => setModal(null)}>
                 ✕
               </button>
             </div>
             <div className="erp-modal-body">
+              <p style={{ fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", margin: "0 0 6px" }}>
+                화면 구조
+              </p>
+              <ul
+                style={{
+                  fontSize: 12,
+                  color: "var(--erp-text)",
+                  margin: "0 0 16px",
+                  paddingLeft: 16,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                }}
+              >
+                <li>왼쪽 트리메뉴에서 업무 화면을 고릅니다. Ctrl+K로 검색해 바로 이동할 수도 있어요.</li>
+                <li>연 화면은 위쪽 탭으로 계속 쌓이니, 여러 화면을 오가며 확인할 수 있습니다.</li>
+                <li>목록 화면 오른쪽 위의 버튼들은 아래 F키 단축키와 그대로 대응합니다.</li>
+                <li>물음표(?) 아이콘이 있는 항목에 마우스를 올리면 자세한 설명이 나옵니다.</li>
+              </ul>
+              <p style={{ fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", margin: "0 0 6px" }}>
+                단축키
+              </p>
               <table className="erp-grid" style={{ width: "100%" }}>
                 <tbody>
                   {SHORTCUTS.map((s) => (

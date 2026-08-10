@@ -47,7 +47,7 @@ export function OnboardingBanner() {
           Ctrl+K
         </kbd>{" "}
         로 어디서든 메뉴를 검색할 수 있고, 상단 리본의{" "}
-        <span style={{ fontWeight: 700 }}>? 도움말</span>을 누르면 F키 단축키 목록을 볼 수 있어요.
+        <span style={{ fontWeight: 700 }}>? 도움말</span>을 누르면 화면 구조와 F키 단축키를 한눈에 볼 수 있어요.
       </span>
       <button
         type="button"
