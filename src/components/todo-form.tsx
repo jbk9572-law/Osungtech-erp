@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
@@ -221,37 +222,25 @@ export function TodoForm({
         {todoType !== "sale" && (
           <div className="erp-field">
             <label>공급처</label>
-            <select
+            <PartySearchSelect
               name="supplier_id"
+              parties={suppliers}
               value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
-              className="erp-select"
-            >
-              <option value="">선택 안 함</option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select>
+              onChange={setSupplierId}
+              placeholder="공급처명 검색"
+            />
           </div>
         )}
         {todoType !== "purchase" && (
           <div className="erp-field">
             <label>출고처</label>
-            <select
+            <PartySearchSelect
               name="customer_id"
+              parties={customers}
               value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              className="erp-select"
-            >
-              <option value="">선택 안 함</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
+              onChange={setCustomerId}
+              placeholder="출고처명 검색"
+            />
           </div>
         )}
         {todoType === "both" && (

@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
+import { PartySearchSelect } from "@/components/party-search-select";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Category = { id: string; name: string };
@@ -46,6 +47,8 @@ export function ProductForm({
     UNIT_PRESETS.includes(initialUnit) ? "preset" : "custom"
   );
   const [unitValue, setUnitValue] = useState(initialUnit);
+  const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
+  const [supplierId, setSupplierId] = useState(initial?.supplier_id ?? "");
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -65,19 +68,15 @@ export function ProductForm({
         className="erp-input"
       />
       <div style={{ display: "flex", gap: 4 }}>
-        <select
-          name="category_id"
-          defaultValue={initial?.category_id ?? ""}
-          className="erp-input"
-          style={{ flex: 1 }}
-        >
-          <option value="">카테고리 선택</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <div style={{ flex: 1 }}>
+          <PartySearchSelect
+            name="category_id"
+            parties={categories}
+            value={categoryId}
+            onChange={setCategoryId}
+            placeholder="카테고리 검색"
+          />
+        </div>
         <input
           name="new_category"
           placeholder="새 카테고리 입력"
@@ -86,18 +85,13 @@ export function ProductForm({
           title="입력하면 위 선택을 무시하고 이 이름으로 카테고리를 새로 만들거나 기존 카테고리를 사용합니다."
         />
       </div>
-      <select
+      <PartySearchSelect
         name="supplier_id"
-        defaultValue={initial?.supplier_id ?? ""}
-        className="erp-input"
-      >
-        <option value="">공급처 선택</option>
-        {suppliers.map((supplier) => (
-          <option key={supplier.id} value={supplier.id}>
-            {supplier.name}
-          </option>
-        ))}
-      </select>
+        parties={suppliers}
+        value={supplierId}
+        onChange={setSupplierId}
+        placeholder="공급처명 검색"
+      />
       <input
         name="spec"
         placeholder="규격 (예: wp(150), 150mm)"

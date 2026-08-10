@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
@@ -558,22 +559,13 @@ export function NewPurchaseForm({
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
             <label>공급처</label>
-            <select
+            <PartySearchSelect
               name="supplier_id"
-              required
+              parties={suppliers}
               value={supplierId}
-              onChange={(e) => handleSupplierChange(e.target.value)}
-              className="erp-select"
-            >
-              <option value="" disabled>
-                공급처 선택
-              </option>
-              {suppliers.map((supplier) => (
-                <option key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </option>
-              ))}
-            </select>
+              onChange={handleSupplierChange}
+              placeholder="공급처명 검색"
+            />
           </div>
           <div className="erp-field">
             <label>매입일자</label>
@@ -648,20 +640,12 @@ export function NewPurchaseForm({
                 <>
                   <div className="erp-field">
                     <label>출고처</label>
-                    <select
+                    <PartySearchSelect
+                      parties={customers}
                       value={saleCustomerId}
-                      onChange={(e) => handleSaleCustomerChange(e.target.value)}
-                      className="erp-select"
-                    >
-                      <option value="" disabled>
-                        출고처 선택
-                      </option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={handleSaleCustomerChange}
+                      placeholder="출고처명 검색"
+                    />
                   </div>
                   <div className="erp-field">
                     <label>출고일자</label>
