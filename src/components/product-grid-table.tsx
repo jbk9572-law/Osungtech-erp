@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useActionState, useMemo, useState, type CSSProperties } from "react";
 import { ClickableRow } from "@/components/clickable-row";
+import { FormMessage, type FormState } from "@/components/form-message";
+import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
 
 export type ProductGridRow = {
   id: string;
@@ -36,6 +38,7 @@ function formatNumOrDash(n: number | null | undefined) {
 
 // SKU/상품명 칸은 옆으로 스크롤해도 항상 보이게 고정한다 — 매출/매입
 // 그리드와 동일한 패턴.
+const CHECKBOX_WIDTH = 32;
 const STICKY_1_WIDTH = 90;
 const STICKY_2_WIDTH = 160;
 const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
@@ -52,11 +55,51 @@ export function ProductGridTable({
   keyword?: string;
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmText, setConfirmText] = useState("");
+  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteProducts, undefined);
+
+  // 일괄삭제 성공 시 선택/확인란을 비운다 — 다른 그리드들과 동일한 패턴.
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    if (state?.success) {
+      setSelected(new Set());
+      setConfirmText("");
+    }
+  }
 
   const sortedRows = useMemo(() => {
     if (!sort) return rows;
     return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [rows, sort]);
+
+  const allowBulkDelete = mode === "products";
+  const selectedNames = sortedRows.filter((r) => selected.has(r.id)).map((r) => r.name);
+  const namePreview =
+    selectedNames.length > 3
+      ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
+      : selectedNames.join(", ");
+  // 단순 confirm() 팝업은 실수로 그냥 확인을 눌러버릴 수 있어, 상품은
+  // 선택 건수를 직접 입력해야 삭제 버튼이 눌리게 한 단계 더 둔다 —
+  // 재고/거래처 이력과 얽힌 되돌릴 수 없는 삭제라 다른 그리드보다 신중하게.
+  const confirmMatches = confirmText.trim() === String(selected.size);
+  const allSelected = sortedRows.length > 0 && sortedRows.every((r) => selected.has(r.id));
+
+  function toggleAll() {
+    setSelected(allSelected ? new Set() : new Set(sortedRows.map((r) => r.id)));
+    setConfirmText("");
+  }
+
+  function toggleRow(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setConfirmText("");
+  }
 
   function toggleSort(key: SortKey) {
     setSort((prev) => {
@@ -87,31 +130,81 @@ export function ProductGridTable({
     );
   }
 
-  const thSticky1: CSSProperties = { ...stickyBase, left: 0, width: STICKY_1_WIDTH, background: "#eef1f5", zIndex: 2 };
+  const checkboxOffset = allowBulkDelete ? CHECKBOX_WIDTH : 0;
+  const thCheckbox: CSSProperties = { ...stickyBase, left: 0, width: CHECKBOX_WIDTH, background: "#eef1f5", zIndex: 2 };
+  const tdCheckbox: CSSProperties = { ...stickyBase, left: 0, width: CHECKBOX_WIDTH, background: "#fff" };
+  const thSticky1: CSSProperties = {
+    ...stickyBase,
+    left: checkboxOffset,
+    width: STICKY_1_WIDTH,
+    background: "#eef1f5",
+    zIndex: 2,
+  };
   const thSticky2: CSSProperties = {
     ...stickyBase,
-    left: STICKY_1_WIDTH,
+    left: checkboxOffset + STICKY_1_WIDTH,
     width: STICKY_2_WIDTH,
     background: "#eef1f5",
     zIndex: 2,
     borderRight: "1px solid var(--erp-border)",
   };
-  const tdSticky1: CSSProperties = { ...stickyBase, left: 0, width: STICKY_1_WIDTH, background: "#fff" };
+  const tdSticky1: CSSProperties = { ...stickyBase, left: checkboxOffset, width: STICKY_1_WIDTH, background: "#fff" };
   const tdSticky2: CSSProperties = {
     ...stickyBase,
-    left: STICKY_1_WIDTH,
+    left: checkboxOffset + STICKY_1_WIDTH,
     width: STICKY_2_WIDTH,
     background: "#fff",
     borderRight: "1px solid var(--erp-border)",
   };
 
-  const colCount = mode === "inventory" ? 11 : 11;
+  const colCount = allowBulkDelete ? 12 : 11;
 
   return (
-    <div className="erp-grid-wrap">
-      <table className="erp-grid">
+    <>
+      {allowBulkDelete && selected.size > 0 && (
+        <form
+          action={formAction}
+          className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
+          style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
+        >
+          <input type="hidden" name="ids" value={JSON.stringify([...selected])} />
+          <span style={{ fontWeight: 600 }}>{selected.size}건 선택됨</span>
+          <span style={{ color: "var(--erp-text-muted)" }}>({namePreview})</span>
+          <span style={{ color: "var(--erp-danger)" }}>
+            상품 삭제는 되돌릴 수 없습니다. 매입/매출 이력이 있는 상품은 삭제되지 않습니다.
+          </span>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            확인을 위해 <strong>{selected.size}</strong> 입력
+            <input
+              type="text"
+              inputMode="numeric"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="erp-input"
+              style={{ width: 48, height: 24, padding: "0 6px", fontSize: 11.5 }}
+              aria-label={`삭제를 확인하려면 ${selected.size}을 입력하세요`}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={pending || !confirmMatches}
+            className="erp-btn erp-btn-danger"
+            style={{ minWidth: 0 }}
+          >
+            {pending ? "삭제 중..." : "선택 삭제"}
+          </button>
+          <FormMessage state={state} />
+        </form>
+      )}
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
         <thead>
           <tr>
+            {allowBulkDelete && (
+              <th style={thCheckbox}>
+                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+              </th>
+            )}
             {sortableHeader("SKU", "sku", thSticky1)}
             {sortableHeader("상품명", "name", thSticky2)}
             <th>규격</th>
@@ -139,8 +232,20 @@ export function ProductGridTable({
               mode === "products"
                 ? `/products/${row.id}${backParam ? `?back=${backParam}` : ""}`
                 : `/inventory/${row.id}`;
+            const isRowSelected = selected.has(row.id);
             return (
-              <ClickableRow key={row.id} href={href}>
+              <ClickableRow key={row.id} href={href} className={isRowSelected ? "selected" : undefined}>
+                {allowBulkDelete && (
+                  <td style={tdCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={isRowSelected}
+                      onChange={() => toggleRow(row.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`${row.name} 선택`}
+                    />
+                  </td>
+                )}
                 <td style={tdSticky1}>{row.sku}</td>
                 <td style={tdSticky2}>{row.name}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.spec ?? "-"}</td>
@@ -185,6 +290,7 @@ export function ProductGridTable({
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

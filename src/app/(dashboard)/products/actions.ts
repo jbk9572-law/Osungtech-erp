@@ -109,6 +109,38 @@ export async function deleteProduct(_prevState: FormState, formData: FormData): 
   redirect("/products");
 }
 
+// 상품 삭제는 재고/거래처/과거 매입·매출 기록과 다 얽혀 있어 되돌릴 수 없다.
+// 목록 화면(mode="products")에서만 호출되고, 실제 삭제 가능 여부는 결국
+// FK 제약이 각 건마다 개별 판정한다(매입/매출 이력이 있으면 무조건 실패).
+export async function bulkDeleteProducts(_prevState: FormState, formData: FormData): Promise<FormState> {
+  let ids: string[];
+  try {
+    ids = JSON.parse(String(formData.get("ids") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: "삭제할 항목을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+  const results = await Promise.all(ids.map((id) => supabase.from("products").delete().eq("id", id)));
+  const failCount = results.filter((r) => r.error).length;
+
+  revalidatePath("/products");
+  revalidatePath("/inventory");
+
+  if (failCount > 0) {
+    return {
+      error:
+        failCount === ids.length
+          ? "선택한 항목 전부 매입/매출 내역이 있어 삭제하지 못했습니다."
+          : `${ids.length - failCount}건 삭제, ${failCount}건은 매입/매출 내역이 있어 삭제하지 못했습니다.`,
+    };
+  }
+  return { success: `${ids.length}건 삭제했습니다.` };
+}
+
 export async function importProductsExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
