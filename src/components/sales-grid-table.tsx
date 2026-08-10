@@ -3,7 +3,8 @@
 import { useActionState, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
+import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteSales } from "@/app/(dashboard)/sales/actions";
 
 export type SalesRow = {
@@ -51,6 +52,7 @@ export function SalesGridTable({
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmText, setConfirmText] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteSales, undefined);
 
   // 일괄삭제 성공 시 선택을 비운다 — state 객체 identity가 바뀌었는지로
@@ -58,13 +60,32 @@ export function SalesGridTable({
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
     setLastState(state);
-    if (state?.success) setSelected(new Set());
+    if (state?.success) {
+      setSelected(new Set());
+      setConfirmText("");
+    }
   }
 
   const sortedRows = useMemo(() => {
     if (!sort) return rows;
     return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [rows, sort]);
+
+  const selectedNames = useMemo(() => {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const row of sortedRows) {
+      if (row.orderId && selected.has(row.orderId) && row.customerName && !seen.has(row.orderId)) {
+        seen.add(row.orderId);
+        names.push(row.customerName);
+      }
+    }
+    return names;
+  }, [sortedRows, selected]);
+  const namePreview =
+    selectedNames.length > 3
+      ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
+      : selectedNames.join(", ");
 
   function toggleSort(key: SortKey) {
     setSort((prev) => {
@@ -135,28 +156,16 @@ export function SalesGridTable({
   return (
     <>
       {selected.size > 0 && (
-        <form
-          action={formAction}
-          className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
-          style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
-        >
-          <input type="hidden" name="ids" value={JSON.stringify([...selected])} />
-          <span style={{ fontWeight: 600 }}>{selected.size}건 선택됨</span>
-          <button
-            type="submit"
-            disabled={pending}
-            className="erp-btn erp-btn-danger"
-            style={{ minWidth: 0 }}
-            onClick={(e) => {
-              if (!confirm(`선택한 ${selected.size}건을 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다.`)) {
-                e.preventDefault();
-              }
-            }}
-          >
-            {pending ? "삭제 중..." : "선택 삭제"}
-          </button>
-          <FormMessage state={state} />
-        </form>
+        <BulkDeleteBar
+          formAction={formAction}
+          pending={pending}
+          state={state}
+          selectedIds={[...selected]}
+          namePreview={namePreview}
+          warningText="선택한 매출 건을 삭제하면 재고 수량이 자동으로 되돌아갑니다. 되돌릴 수 없습니다."
+          confirmText={confirmText}
+          onConfirmTextChange={setConfirmText}
+        />
       )}
 
       <div className="erp-grid-wrap">

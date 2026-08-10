@@ -2,7 +2,8 @@
 
 import { useActionState, useMemo, useState, type CSSProperties } from "react";
 import { ClickableRow } from "@/components/clickable-row";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
+import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
 
 export type ProductGridRow = {
@@ -80,10 +81,6 @@ export function ProductGridTable({
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
       : selectedNames.join(", ");
-  // 단순 confirm() 팝업은 실수로 그냥 확인을 눌러버릴 수 있어, 상품은
-  // 선택 건수를 직접 입력해야 삭제 버튼이 눌리게 한 단계 더 둔다 —
-  // 재고/거래처 이력과 얽힌 되돌릴 수 없는 삭제라 다른 그리드보다 신중하게.
-  const confirmMatches = confirmText.trim() === String(selected.size);
   const allSelected = sortedRows.length > 0 && sortedRows.every((r) => selected.has(r.id));
 
   function toggleAll() {
@@ -162,39 +159,16 @@ export function ProductGridTable({
   return (
     <>
       {allowBulkDelete && selected.size > 0 && (
-        <form
-          action={formAction}
-          className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
-          style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
-        >
-          <input type="hidden" name="ids" value={JSON.stringify([...selected])} />
-          <span style={{ fontWeight: 600 }}>{selected.size}건 선택됨</span>
-          <span style={{ color: "var(--erp-text-muted)" }}>({namePreview})</span>
-          <span style={{ color: "var(--erp-danger)" }}>
-            상품 삭제는 되돌릴 수 없습니다. 매입/매출 이력이 있는 상품은 삭제되지 않습니다.
-          </span>
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-            확인을 위해 <strong>{selected.size}</strong> 입력
-            <input
-              type="text"
-              inputMode="numeric"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              className="erp-input"
-              style={{ width: 48, height: 24, padding: "0 6px", fontSize: 11.5 }}
-              aria-label={`삭제를 확인하려면 ${selected.size}을 입력하세요`}
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={pending || !confirmMatches}
-            className="erp-btn erp-btn-danger"
-            style={{ minWidth: 0 }}
-          >
-            {pending ? "삭제 중..." : "선택 삭제"}
-          </button>
-          <FormMessage state={state} />
-        </form>
+        <BulkDeleteBar
+          formAction={formAction}
+          pending={pending}
+          state={state}
+          selectedIds={[...selected]}
+          namePreview={namePreview}
+          warningText="상품 삭제는 되돌릴 수 없습니다. 매입/매출 이력이 있는 상품은 삭제되지 않습니다."
+          confirmText={confirmText}
+          onConfirmTextChange={setConfirmText}
+        />
       )}
       <div className="erp-grid-wrap">
         <table className="erp-grid">

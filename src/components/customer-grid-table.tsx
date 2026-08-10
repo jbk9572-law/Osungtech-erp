@@ -2,7 +2,8 @@
 
 import { useActionState, useMemo, useState } from "react";
 import { ClickableRow } from "@/components/clickable-row";
-import { FormMessage, type FormState } from "@/components/form-message";
+import type { FormState } from "@/components/form-message";
+import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteCustomers } from "@/app/(dashboard)/customers/actions";
 
 export type CustomerRow = {
@@ -24,18 +25,28 @@ function compareValues(a: CustomerRow, b: CustomerRow, key: SortKey): number {
 export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmText, setConfirmText] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteCustomers, undefined);
 
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
     setLastState(state);
-    if (state?.success) setSelected(new Set());
+    if (state?.success) {
+      setSelected(new Set());
+      setConfirmText("");
+    }
   }
 
   const sortedRows = useMemo(() => {
     if (!sort) return rows;
     return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [rows, sort]);
+
+  const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.name);
+  const namePreview =
+    selectedNames.length > 3
+      ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
+      : selectedNames.join(", ");
 
   function toggleSort(key: SortKey) {
     setSort((prev) => {
@@ -77,28 +88,16 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
   return (
     <>
       {selected.size > 0 && (
-        <form
-          action={formAction}
-          className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
-          style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
-        >
-          <input type="hidden" name="ids" value={JSON.stringify([...selected])} />
-          <span style={{ fontWeight: 600 }}>{selected.size}건 선택됨</span>
-          <button
-            type="submit"
-            disabled={pending}
-            className="erp-btn erp-btn-danger"
-            style={{ minWidth: 0 }}
-            onClick={(e) => {
-              if (!confirm(`선택한 ${selected.size}건을 삭제하시겠습니까?`)) {
-                e.preventDefault();
-              }
-            }}
-          >
-            {pending ? "삭제 중..." : "선택 삭제"}
-          </button>
-          <FormMessage state={state} />
-        </form>
+        <BulkDeleteBar
+          formAction={formAction}
+          pending={pending}
+          state={state}
+          selectedIds={[...selected]}
+          namePreview={namePreview}
+          warningText="출고처 삭제는 되돌릴 수 없습니다. 관련 매출 내역이 있으면 삭제되지 않습니다."
+          confirmText={confirmText}
+          onConfirmTextChange={setConfirmText}
+        />
       )}
 
       <div className="erp-grid-wrap">
