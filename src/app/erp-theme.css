@@ -666,6 +666,23 @@
   color: var(--erp-text-muted);
 }
 
+/* 정렬 가능한 그리드 헤더(th) 안에 넣는 버튼. all: unset으로 버튼
+   기본 크롬을 지우되, 포커스 링만은 아래에서 다시 살려준다 — 인라인
+   style로 all:unset을 주면 외부 스타일시트의 :focus-visible 규칙이
+   인라인 스타일에 밀려 무시되므로 반드시 클래스로 분리해야 한다. */
+.erp-th-btn {
+  all: unset;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.erp-th-btn:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 2px;
+}
+
 .erp-hint-dot {
   display: inline-flex;
   align-items: center;

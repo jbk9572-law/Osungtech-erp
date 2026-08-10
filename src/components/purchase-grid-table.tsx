@@ -103,11 +103,7 @@ export function PurchaseGridTable({
         style={extraStyle}
         aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}
       >
-        <button
-          type="button"
-          onClick={() => toggleSort(key)}
-          style={{ all: "unset", cursor: "pointer", userSelect: "none", display: "inline-flex", alignItems: "center" }}
-        >
+        <button type="button" onClick={() => toggleSort(key)} className="erp-th-btn">
           {label}
           {sortIndicator(key)}
         </button>
