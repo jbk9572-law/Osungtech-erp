@@ -1780,6 +1780,30 @@
   }
 }
 
+/* ── 터치 기기 대응: 손가락으로 누르기엔 작은 요소들의 히트 영역을
+   넓힌다. 데스크톱 마우스 포인터에서는 지금 크기 그대로 유지한다
+   (pointer: coarse는 손가락/터치스크린일 때만 걸린다). ─────────── */
+@media (pointer: coarse) {
+  .erp input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .erp-tab-close {
+    width: 22px;
+    height: 22px;
+  }
+
+  .erp-modal-close {
+    padding: 8px 10px;
+  }
+
+  .erp-titlebar-menu-toggle {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 /* ── 스크롤바(데스크톱 브라우저 전용, .erp 범위 안에서만) ─────────── */
 .erp ::-webkit-scrollbar {
   width: 10px;
