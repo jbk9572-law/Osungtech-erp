@@ -270,7 +270,7 @@ export function DashboardCalendar({
           {WEEKDAYS.map((w, i) => (
             <div
               key={w}
-              className={`py-1 ${i === 0 ? "text-[var(--erp-danger)]" : i === 6 ? "text-[var(--erp-primary)]" : "text-[#9aa2ad]"}`}
+              className={`py-1 ${i === 0 ? "text-[var(--erp-danger)]" : i === 6 ? "text-[var(--erp-primary)]" : "text-[var(--erp-text-muted)]"}`}
             >
               {w}
             </div>
@@ -347,7 +347,7 @@ export function DashboardCalendar({
                     ) : null}
                     {data?.note ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#ff9800]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-warning)]"}`}
                       />
                     ) : null}
                     {showLowStockDot ? (
@@ -370,7 +370,7 @@ export function DashboardCalendar({
             <span className="h-1.5 w-1.5 rounded-full bg-[#d31e3b]" /> 매출
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#ff9800]" /> 메모
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-warning)]" /> 메모
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-danger)]" /> 재고부족
@@ -626,7 +626,7 @@ export function DashboardCalendar({
             <NoteForm dateStr={selected} initialContent={selectedData.note} />
           </>
         ) : (
-          <p className="text-sm text-[#9aa2ad]">날짜를 선택해주세요.</p>
+          <p className="text-sm text-[var(--erp-text-muted)]">날짜를 선택해주세요.</p>
         )}
       </div>
     </div>

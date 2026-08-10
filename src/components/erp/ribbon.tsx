@@ -133,9 +133,14 @@ export function Ribbon() {
                 <button type="button" onClick={() => router.push(href)}>
                   {labelFor(href)}
                 </button>
-                <span className="erp-ribbon-star active" onClick={() => handleToggleFavorite(href)}>
+                <button
+                  type="button"
+                  className="erp-ribbon-star active"
+                  onClick={() => handleToggleFavorite(href)}
+                  aria-label={`${labelFor(href)} 즐겨찾기 해제`}
+                >
                   ★
-                </span>
+                </button>
               </div>
             ))
           ) : (
@@ -158,12 +163,14 @@ export function Ribbon() {
                   <button type="button" onClick={() => router.push(href)}>
                     {labelFor(href)}
                   </button>
-                  <span
+                  <button
+                    type="button"
                     className={`erp-ribbon-star${isFav ? " active" : ""}`}
                     onClick={() => handleToggleFavorite(href)}
+                    aria-label={`${labelFor(href)} ${isFav ? "즐겨찾기 해제" : "즐겨찾기 추가"}`}
                   >
                     {isFav ? "★" : "☆"}
-                  </span>
+                  </button>
                 </div>
               );
             })
@@ -193,7 +200,7 @@ export function Ribbon() {
           <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
             <div className="erp-modal-title">
               빠른 검색
-              <button type="button" className="erp-modal-close" onClick={() => setModal(null)}>
+              <button type="button" className="erp-modal-close" onClick={() => setModal(null)} aria-label="닫기">
                 ✕
               </button>
             </div>
@@ -235,7 +242,7 @@ export function Ribbon() {
           <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
             <div className="erp-modal-title">
               도움말
-              <button type="button" className="erp-modal-close" onClick={() => setModal(null)}>
+              <button type="button" className="erp-modal-close" onClick={() => setModal(null)} aria-label="닫기">
                 ✕
               </button>
             </div>

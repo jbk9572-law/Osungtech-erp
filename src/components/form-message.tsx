@@ -8,8 +8,8 @@ export function FormMessage({ state }: { state: FormState }) {
       className="rounded-sm px-3 py-2 text-xs font-medium"
       style={
         state.error
-          ? { background: "#fdeaec", color: "#dc3545" }
-          : { background: "#e7f6ea", color: "#28a745" }
+          ? { background: "#fdeaec", color: "var(--erp-danger)" }
+          : { background: "#e7f6ea", color: "var(--erp-success)" }
       }
     >
       {state.error ?? state.success}

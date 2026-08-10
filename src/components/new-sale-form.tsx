@@ -865,7 +865,7 @@ export function NewSaleForm({
                         </span>
                       </>
                     ) : (
-                      <span style={{ color: "#dc3545" }}>
+                      <span style={{ color: "var(--erp-danger)" }}>
                         SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
                       </span>
                     )}
@@ -941,7 +941,7 @@ export function NewSaleForm({
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
+                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label
@@ -979,7 +979,7 @@ export function NewSaleForm({
                         value={row.unitPrice}
                         onChange={(n) => updateRow(row.key, { unitPrice: n })}
                         disabled={!row.manualPrice}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
+                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && customerId && (
                         <label
@@ -1014,7 +1014,7 @@ export function NewSaleForm({
                         const short = remaining < 0;
                         const unit = product.unit ?? "";
                         return (
-                          <p className="text-[10.5px]" style={{ color: short ? "#dc3545" : "var(--erp-primary)" }}>
+                          <p className="text-[10.5px]" style={{ color: short ? "var(--erp-danger)" : "var(--erp-primary)" }}>
                             재고 {availableStock.toLocaleString()}
                             {unit} - 출고 {row.quantity.toLocaleString()}
                             {unit} = {remaining.toLocaleString()}

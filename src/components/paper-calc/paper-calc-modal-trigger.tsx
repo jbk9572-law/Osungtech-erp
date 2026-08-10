@@ -46,7 +46,7 @@ export function PaperCalcModalTrigger({
           <div className="erp-modal erp-modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="erp-modal-title">
               모조지 계산
-              <button type="button" className="erp-modal-close" onClick={() => setOpen(false)}>
+              <button type="button" className="erp-modal-close" onClick={() => setOpen(false)} aria-label="닫기">
                 ✕
               </button>
             </div>

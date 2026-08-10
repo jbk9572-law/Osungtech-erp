@@ -837,7 +837,7 @@ export function NewPurchaseForm({
                         </span>
                       </>
                     ) : (
-                      <span style={{ color: "#dc3545" }}>
+                      <span style={{ color: "var(--erp-danger)" }}>
                         SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
                       </span>
                     )}
@@ -933,7 +933,7 @@ export function NewPurchaseForm({
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
+                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label
@@ -979,7 +979,7 @@ export function NewPurchaseForm({
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
-                          <div style={{ color: "#dc3545", fontSize: 10.5 }}>매입수량 초과</div>
+                          <div style={{ color: "var(--erp-danger)", fontSize: 10.5 }}>매입수량 초과</div>
                         )}
                       </td>
                     )}
@@ -989,7 +989,7 @@ export function NewPurchaseForm({
                         value={row.unitCost}
                         onChange={(n) => updateRow(row.key, { unitCost: n })}
                         disabled={!row.manualPrice}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[#9aa2ad]"
+                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label
