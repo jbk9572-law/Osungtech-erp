@@ -9,6 +9,7 @@ import {
 } from "@/app/(dashboard)/purchases/actions";
 import type { PendingCalc } from "@/lib/paper-calc-sync";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
@@ -533,22 +534,13 @@ export function NewSaleForm({
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
             <label>출고처</label>
-            <select
+            <PartySearchSelect
               name="customer_id"
-              required
+              parties={customers}
               value={customerId}
-              onChange={(e) => handleCustomerChange(e.target.value)}
-              className="erp-select"
-            >
-              <option value="" disabled>
-                출고처 선택
-              </option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
+              onChange={handleCustomerChange}
+              placeholder="출고처명 검색"
+            />
           </div>
           <div className="erp-field">
             <label>거래일자</label>
