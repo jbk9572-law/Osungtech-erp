@@ -103,7 +103,7 @@ export default async function SaleDetailPage({
       {warning && (
         <p
           className="mb-4 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "#fdf3e0", color: "#a15c00" }}
+          style={{ background: "#fdf3e0", color: "var(--erp-warning)" }}
         >
           ⚠ 거래는 정상 등록됐지만: {warning}
         </p>

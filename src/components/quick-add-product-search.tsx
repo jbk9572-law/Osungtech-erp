@@ -122,7 +122,7 @@ export function QuickAddProductSearch({
               </li>
             ))}
             {results.length === 0 && (
-              <li className="px-2.5 py-2 text-[#9aa2ad]">검색 결과가 없습니다.</li>
+              <li className="px-2.5 py-2 text-[var(--erp-text-muted)]">검색 결과가 없습니다.</li>
             )}
           </ul>,
           document.body

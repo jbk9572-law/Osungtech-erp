@@ -76,7 +76,7 @@ export default async function PaymentRequestDetailPage({
       {warning && (
         <p
           className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "#fdf3e0", color: "#a15c00" }}
+          style={{ background: "#fdf3e0", color: "var(--erp-warning)" }}
         >
           ⚠ {warning}
         </p>

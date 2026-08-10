@@ -96,14 +96,21 @@ export function PurchaseGridTable({
   }
 
   function sortableHeader(label: string, key: SortKey, extraStyle?: CSSProperties, className?: string) {
+    const isSorted = sort?.key === key;
     return (
       <th
         className={className}
-        style={{ cursor: "pointer", userSelect: "none", ...extraStyle }}
-        onClick={() => toggleSort(key)}
+        style={extraStyle}
+        aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}
       >
-        {label}
-        {sortIndicator(key)}
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          style={{ all: "unset", cursor: "pointer", userSelect: "none", display: "inline-flex", alignItems: "center" }}
+        >
+          {label}
+          {sortIndicator(key)}
+        </button>
       </th>
     );
   }

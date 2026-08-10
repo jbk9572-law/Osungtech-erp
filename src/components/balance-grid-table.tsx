@@ -56,10 +56,17 @@ export function BalanceGridTable({
   }
 
   function sortableHeader(label: string, key: SortKey, className?: string) {
+    const isSorted = sort?.key === key;
     return (
-      <th className={className} style={{ cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort(key)}>
-        {label}
-        {sortIndicator(key)}
+      <th className={className} aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}>
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          style={{ all: "unset", cursor: "pointer", userSelect: "none", display: "inline-flex", alignItems: "center" }}
+        >
+          {label}
+          {sortIndicator(key)}
+        </button>
       </th>
     );
   }

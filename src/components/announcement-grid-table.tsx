@@ -56,10 +56,17 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
   }
 
   function sortableHeader(label: string, key: SortKey, style?: CSSProperties) {
+    const isSorted = sort?.key === key;
     return (
-      <th style={{ cursor: "pointer", userSelect: "none", ...style }} onClick={() => toggleSort(key)}>
-        {label}
-        {sortIndicator(key)}
+      <th style={style} aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}>
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          style={{ all: "unset", cursor: "pointer", userSelect: "none", display: "inline-flex", alignItems: "center" }}
+        >
+          {label}
+          {sortIndicator(key)}
+        </button>
       </th>
     );
   }

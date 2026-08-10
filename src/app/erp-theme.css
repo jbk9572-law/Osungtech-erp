@@ -11,9 +11,12 @@
   --erp-border: #e2e5eb;
   --erp-hover: #eef2f7;
   --erp-selected: #e3eaf4;
-  --erp-success: #28a745;
-  --erp-warning: #ff9800;
-  --erp-danger: #dc3545;
+  /* WCAG AA(4.5:1) 명도대비를 배지 배경(erp-badge-*)과 흰 배경 양쪽에서
+     맞추려고 기존 success/warning/danger보다 한 톤씩 어둡게 조정했다 —
+     예전 값은 배지 위에서 대비가 3:1도 안 나오는 경우가 있었다. */
+  --erp-success: #1a7a33;
+  --erp-warning: #a15c00;
+  --erp-danger: #c9302c;
   /* 단가예약/할일-품목 이월/용지계산 안내 배지에서 공통으로 쓰는
      인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
   --erp-info-bg: #eef2ff;
@@ -244,10 +247,12 @@
   padding: 0 10px;
   color: #d0d5db;
   font-size: 13px;
+  background: none;
+  border: none;
 }
 
 .erp-ribbon-star.active {
-  color: #ff9800;
+  color: var(--erp-warning);
 }
 
 .erp-ribbon-dropdown-empty {
@@ -504,7 +509,7 @@
 .erp-tree-badge {
   margin-left: auto;
   font-size: 9px;
-  color: #9aa2ad;
+  color: var(--erp-text-muted);
   border: 1px solid #d9dee5;
   border-radius: 4px;
   padding: 1px 4px;

@@ -9,7 +9,7 @@ export function PriceHistoryHint({ history }: { history: HistoryEntry[] }) {
 
   if (history.length === 0) {
     return (
-      <p className="text-xs" style={{ color: "#9aa2ad" }}>
+      <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
         이전 판매 이력 없음 (신규 단가)
       </p>
     );
@@ -28,7 +28,7 @@ export function PriceHistoryHint({ history }: { history: HistoryEntry[] }) {
         type="button"
         onClick={() => setExpanded((v) => !v)}
         className="font-medium hover:underline"
-        style={{ color: "#28a745" }}
+        style={{ color: "var(--erp-success)" }}
       >
         ✓ 최근단가{" "}
         {previousDifferent && `${previousDifferent.unitPrice.toLocaleString()}원 → `}
