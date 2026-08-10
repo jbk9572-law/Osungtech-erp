@@ -69,7 +69,10 @@ export const TABLE = {
   qtyDataOffsetX: -11.29,
   priceDataOffsetX: -1.63,
   taxDataOffsetX: 3.81,
-  productDataOffsetX: -4.48,
+  // 품명/규격 데이터 칸이 셀 기본 여백(CELL.paddingX=4px)을 거의 다 상쇄해
+  // 글자가 왼쪽 테두리에 바짝 붙어 보인다는 지적으로, 한 칸 정도 더
+  // 띄우도록 양수로 조정했다(원래는 0707 원본 실측값 -4.48).
+  productDataOffsetX: 6,
 };
 
 export const SUMMARY = {
