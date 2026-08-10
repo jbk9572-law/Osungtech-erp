@@ -416,7 +416,7 @@ export function PaperCalcClient({
               포장단위: 500장 / 연
             </span>
 
-            <div className="ml-auto flex flex-wrap gap-2">
+            <div className="ml-auto flex flex-wrap gap-1.5">
               <button type="button" className="erp-btn erp-btn-primary" onClick={runCalculation} disabled={pending}>
                 {pending ? "계산 중..." : "계산 시작"}
               </button>

@@ -864,7 +864,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
 
       <DashboardCards result={result} usageAvg={usageAvg} marginTotal={marginTotal} />
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-1.5">
         <button
           type="button"
           className="erp-btn erp-btn-primary"
