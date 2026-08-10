@@ -5,6 +5,7 @@ import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { FieldHint } from "@/components/field-hint";
 
 export type PartnerFormInitial = {
   name?: string | null;
@@ -103,7 +104,10 @@ export function PartnerForm({
       )}
       {showDocumentType && documentType === "출고증" && (
         <div className="erp-field">
-          <label>출고증 서식</label>
+          <label>
+            출고증 서식
+            <FieldHint text="특정 출고처가 자기 회사 양식으로 출고증을 받길 원할 때만 골라주세요. 대부분은 공용 서식 그대로 두면 됩니다." />
+          </label>
           <select
             name="delivery_note_variant"
             defaultValue={initial?.delivery_note_variant ?? ""}
