@@ -10,6 +10,7 @@ import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_TODO_KEY } from "@/lib/paper-calc-pending-key";
 import { parseTodoType, type TodoType } from "@/lib/todo-flow";
+import { FieldHint } from "@/components/field-hint";
 
 type Product = {
   id: string;
@@ -189,7 +190,10 @@ export function TodoForm({
 
       <div className="erp-search">
         <div className="erp-field">
-          <label>유형</label>
+          <label>
+            유형
+            <FieldHint text="매입/매출 등록 화면에서 '할일 가져오기'로 이 할일을 불러와 등록해야 완료 처리됩니다. 매입+출고는 입고와 출고 둘 다 등록해야 완료됩니다." />
+          </label>
           <div style={{ display: "flex", alignItems: "center", gap: 14, height: 30 }}>
             {(
               [
