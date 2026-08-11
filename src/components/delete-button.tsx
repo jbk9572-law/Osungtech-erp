@@ -4,15 +4,13 @@ import { useActionState, useRef, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-
-const CONFIRM_VALUE = "1";
+import { generateConfirmCode } from "@/lib/confirm-code";
 
 // 단순 confirm() 팝업은 Enter 한 번으로 그냥 넘어갈 수 있어, 되돌릴 수
-// 없는 삭제 앞에서는 직접 입력해야 버튼이 눌리는 단계를 둔다. 일괄삭제
-// 확인란("선택 건수 입력")과 같은 숫자 입력 방식으로 맞춘다 — 단건
-// 삭제는 항상 1건이니 "1"을 입력하게 한다(다른 단어를 쓰면 사용자가
-// 일괄삭제에서 익힌 습관과 어긋나 혼동한다). F6은 이제 즉시 삭제가
-// 아니라 이 확인 입력창을 여는 동작으로 바뀐다.
+// 없는 삭제 앞에서는 직접 입력해야 버튼이 눌리는 단계를 둔다. 매번 새로
+// 뽑는 임의 4자리 코드를 입력하는 방식 — 일괄삭제 확인 바(BulkDeleteBar)
+// 와 동일해서, 화면마다 확인 방식이 달라 헷갈리는 일이 없다. F6은 이제
+// 즉시 삭제가 아니라 이 확인 입력창을 여는 동작으로 바뀐다.
 export function DeleteButton({
   action,
   id,
@@ -27,16 +25,20 @@ export function DeleteButton({
   const [state, formAction, pending] = useActionState(action, undefined);
   const [confirming, setConfirming] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [code, setCode] = useState("");
   const openRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F6", openRef);
-  const confirmMatches = confirmText.trim() === CONFIRM_VALUE;
+  const confirmMatches = confirmText.trim() === code;
 
   if (!confirming) {
     return (
       <button
         ref={openRef}
         type="button"
-        onClick={() => setConfirming(true)}
+        onClick={() => {
+          setCode(generateConfirmCode());
+          setConfirming(true);
+        }}
         className="erp-btn erp-btn-danger"
       >
         {`F6 ${label}`}
@@ -53,15 +55,15 @@ export function DeleteButton({
       <input type="hidden" name="id" value={id} />
       <span style={{ color: "var(--erp-danger)" }}>{confirmMessage}</span>
       <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        확인을 위해 <strong>{CONFIRM_VALUE}</strong> 입력
+        확인 코드 <strong>{code}</strong> 입력
         <input
           type="text"
           inputMode="numeric"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
           className="erp-input"
-          style={{ width: 48, height: 24, padding: "0 6px", fontSize: 11.5 }}
-          aria-label={`삭제를 확인하려면 ${CONFIRM_VALUE}을 입력하세요`}
+          style={{ width: 56, height: 24, padding: "0 6px", fontSize: 11.5 }}
+          aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
           autoFocus
         />
       </label>
