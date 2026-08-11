@@ -54,8 +54,27 @@ export function QuickAddProductSearch({
   // 입력칸 오른쪽에 항상 떠 있는 배지로 따로 표시해서, 입력 중에도
   // "Enter로 바로 추가된다"는 게 계속 눈에 띄게 한다.
   const showEnterBadge = results.length > 0;
+  // 줄 안에 있는 품목 검색칸(ProductSearchSelect)과 생김새가 똑같아서,
+  // 빈 상태에서는 이 검색창이 "빠른 추가용"이라는 게 안 보이고 다들
+  // 아래 줄의 검색칸부터 쓰게 된다. 타이핑 전에도 눈에 띄도록 테두리/배경
+  // 색을 다르게 주고 돋보기 아이콘을 붙여서, 줄 안 검색칸과 확실히
+  // 구분되는 "여기서 바로 추가" 전용 입력칸으로 보이게 한다.
   return (
     <div className="relative" style={{ minWidth: 240, flex: "1 1 240px" }}>
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: 9,
+          transform: "translateY(-50%)",
+          fontSize: 12.5,
+          color: "var(--erp-primary)",
+          pointerEvents: "none",
+        }}
+      >
+        🔍
+      </span>
       <input
         ref={inputRef}
         type="text"
@@ -88,7 +107,13 @@ export function QuickAddProductSearch({
           }
         }}
         className="erp-input"
-        style={{ width: "100%", paddingRight: showEnterBadge ? 56 : undefined }}
+        style={{
+          width: "100%",
+          paddingLeft: 26,
+          paddingRight: showEnterBadge ? 56 : undefined,
+          borderColor: "var(--erp-primary)",
+          background: "var(--erp-info-bg)",
+        }}
       />
       {showEnterBadge && (
         <span
