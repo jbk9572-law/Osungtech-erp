@@ -82,6 +82,7 @@ export default async function EditSalePage({
           orderDate: order.order_date,
           memo: order.memo ?? "",
           paymentMethod: order.payment_method,
+          deliveryMethod: order.delivery_method,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             spec: item.spec,

@@ -27,6 +27,7 @@ import {
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
+import { DELIVERY_METHODS } from "@/lib/delivery-method";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -71,6 +72,7 @@ export type PurchaseInitial = {
   purchaseDate: string;
   memo: string;
   paymentMethod?: string | null;
+  deliveryMethod?: string | null;
   items: {
     productId: string;
     spec?: string | null;
@@ -119,6 +121,7 @@ export function NewPurchaseForm({
   // 결제가 끝난 거래로 보고 미지급금 계산에서 빠진다(lib/ar-ap.ts).
   const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
+  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "");
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
   // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
   // 출고처/출고일도 할일에 적어둔 값으로 채워진다.
@@ -522,6 +525,7 @@ export function NewPurchaseForm({
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
+      <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
       {copiedPaperCalcs.length > 0 && (
@@ -577,6 +581,21 @@ export function NewPurchaseForm({
               onChange={(e) => setPurchaseDate(e.target.value)}
               className="erp-input"
             />
+          </div>
+          <div className="erp-field">
+            <label>입고방법</label>
+            <select
+              value={deliveryMethod}
+              onChange={(e) => setDeliveryMethod(e.target.value)}
+              className="erp-select"
+            >
+              <option value="">-</option>
+              {DELIVERY_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
             <label>메모 (선택)</label>

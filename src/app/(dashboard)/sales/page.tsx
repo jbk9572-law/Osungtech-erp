@@ -21,7 +21,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, customers(name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -38,7 +38,18 @@ export default async function SalesPage({
   if (from) query = query.gte("sales_orders.order_date", from);
   if (to) query = query.lte("sales_orders.order_date", to);
 
-  const { data: rawItems } = await query;
+  // 매출 옆에 수금 내역도 같은 목록에 섞어서 보여준다(구 ERP의 "매출"
+  // 메뉴 안에 매출/수금 전표가 같이 쌓이던 방식과 동일). 실제 정산 로직은
+  // lib/ar-ap.ts 그대로 두고, 여기서는 표시용으로만 합친다.
+  let paymentQuery = supabase
+    .from("customer_payments")
+    .select("id, paid_at, amount, memo, customers(id, name)")
+    .order("paid_at", { ascending: false })
+    .limit(200);
+  if (from) paymentQuery = paymentQuery.gte("paid_at", from);
+  if (to) paymentQuery = paymentQuery.lte("paid_at", to);
+
+  const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([query, paymentQuery]);
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
@@ -61,13 +72,15 @@ export default async function SalesPage({
   // 묶어서 보여준다. 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로
   // 요약한다. 검색어로 일부 품목만 걸러졌다면(예: 상품명/SKU 검색) 그
   // 매칭된 품목들만 묶여서 "외 N건"에 반영된다.
-  const rows: DisplayRow[] = Object.values(
+  const saleRows: DisplayRow[] = Object.values(
     itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
       const orderId = item.sales_orders?.id ?? item.id;
       if (!acc[orderId]) {
         acc[orderId] = {
           key: orderId,
+          kind: "sale",
           orderId,
+          customerId: item.sales_orders?.customers?.id,
           date: item.sales_orders?.order_date,
           customerName: item.sales_orders?.customers?.name,
           authorName: item.sales_orders?.profiles?.full_name,
@@ -78,6 +91,7 @@ export default async function SalesPage({
           unitPrice: Number(item.unit_price),
           supplyAmount: 0,
           taxAmount: 0,
+          deliveryMethod: item.sales_orders?.delivery_method,
           itemCount: 0,
         };
       } else {
@@ -94,6 +108,33 @@ export default async function SalesPage({
     ...row,
     productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
   }));
+
+  const payments = keyword
+    ? rawPayments?.filter(
+        (p) => p.customers?.name?.toLowerCase().includes(keyword) || p.memo?.toLowerCase().includes(keyword)
+      )
+    : rawPayments;
+  const collectionRows: DisplayRow[] = (payments ?? []).map((p) => ({
+    key: `payment-${p.id}`,
+    kind: "collection",
+    orderId: undefined,
+    customerId: p.customers?.id,
+    date: p.paid_at,
+    customerName: p.customers?.name,
+    authorName: undefined,
+    productLabel: p.memo || "수금",
+    spec: "-",
+    quantity: 0,
+    unit: undefined,
+    unitPrice: null,
+    supplyAmount: Number(p.amount),
+    taxAmount: 0,
+    deliveryMethod: null,
+  }));
+
+  const rows: DisplayRow[] = [...saleRows, ...collectionRows].sort((a, b) =>
+    (b.date ?? "").localeCompare(a.date ?? "")
+  );
 
   const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);

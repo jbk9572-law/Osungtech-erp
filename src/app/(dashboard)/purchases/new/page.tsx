@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { NewPurchaseForm } from "@/components/new-purchase-form";
+import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules, applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
+import { todayKstStr } from "@/lib/kst-date";
 
 export default async function NewPurchasePage() {
   const supabase = await createClient();
@@ -42,13 +43,14 @@ export default async function NewPurchasePage() {
           </Link>
         </div>
       </div>
-      <NewPurchaseForm
+      <NewPurchaseTypeSwitcher
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? ""}
         customers={customers ?? []}
         prices={prices ?? []}
         supplierPrices={supplierPrices ?? []}
+        today={todayKstStr()}
       />
     </div>
   );

@@ -9,7 +9,9 @@ import { bulkDeleteSales } from "@/app/(dashboard)/sales/actions";
 
 export type SalesRow = {
   key: string;
+  kind: "sale" | "collection";
   orderId: string | undefined;
+  customerId?: string;
   date: string | undefined;
   customerName: string | undefined;
   authorName: string | null | undefined;
@@ -20,6 +22,7 @@ export type SalesRow = {
   unitPrice: number | null;
   supplyAmount: number;
   taxAmount: number;
+  deliveryMethod?: string | null;
 };
 
 type SortKey = "date" | "customerName" | "authorName" | "quantity" | "supplyAmount" | "taxAmount";
@@ -176,9 +179,11 @@ export function SalesGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
+              <th style={{ width: 64 }}>유형</th>
               {sortableHeader("출고처", "customerName")}
+              <th style={{ width: 76 }}>배송방법</th>
               {sortableHeader("작성자", "authorName")}
-              <th>품목명</th>
+              <th>품목명 / 적요</th>
               <th>규격</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">공급가</th>
@@ -190,12 +195,14 @@ export function SalesGridTable({
           <tbody>
             {sortedRows.map((row) => {
               const isRowSelected = !!row.orderId && selected.has(row.orderId);
+              const isCollection = row.kind === "collection";
+              const href = row.orderId
+                ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
+                : row.customerId
+                  ? `/customers/${row.customerId}`
+                  : "#";
               return (
-                <ClickableRow
-                  key={row.key}
-                  href={row.orderId ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}` : "#"}
-                  className={isRowSelected ? "selected" : undefined}
-                >
+                <ClickableRow key={row.key} href={href} className={isRowSelected ? "selected" : undefined}>
                   <td style={tdSticky1}>
                     {row.orderId && (
                       <input
@@ -207,19 +214,25 @@ export function SalesGridTable({
                     )}
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td>
+                    <span className={`erp-badge ${isCollection ? "erp-badge-warning" : "erp-badge-info"}`}>
+                      {isCollection ? "수금" : "매출"}
+                    </span>
+                  </td>
                   <td>{row.customerName}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.deliveryMethod ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
-                  <td>{row.productLabel}</td>
+                  <td style={isCollection ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
                   <td className="num">
-                    {row.quantity.toLocaleString()} {row.unit}
+                    {isCollection ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
                   </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {row.unitPrice != null ? row.unitPrice.toLocaleString() : "-"}
+                    {!isCollection && row.unitPrice != null ? row.unitPrice.toLocaleString() : "-"}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {row.taxAmount.toLocaleString()}
+                    {isCollection ? "-" : row.taxAmount.toLocaleString()}
                   </td>
                   <td className="num">
                     {row.orderId && (
@@ -238,7 +251,7 @@ export function SalesGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={11} className="erp-grid-empty">
+                <td colSpan={13} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -249,10 +262,10 @@ export function SalesGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={4}
+                  colSpan={6}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
-                  합계 ({sortedRows.length}건)
+                  매출 합계 ({sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />

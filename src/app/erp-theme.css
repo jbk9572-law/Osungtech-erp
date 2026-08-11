@@ -789,6 +789,33 @@
   background: #c22636;
 }
 
+/* ── 유형 토글(매출/수금, 매입/지급 등) ───────────────────── */
+.erp-seg {
+  display: inline-flex;
+  border: 1px solid var(--erp-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.erp-seg-btn {
+  border: none;
+  padding: 8px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  color: var(--erp-text-muted);
+}
+
+.erp-seg-btn + .erp-seg-btn {
+  border-left: 1px solid var(--erp-border);
+}
+
+.erp-seg-btn.active {
+  background: var(--erp-primary);
+  color: #fff;
+}
+
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
   border: 1px solid var(--erp-border);
@@ -919,6 +946,11 @@
 .erp-badge-muted {
   background: #eef0f3;
   color: var(--erp-text-muted);
+}
+
+.erp-badge-info {
+  background: var(--erp-info-bg);
+  color: var(--erp-info-text);
 }
 
 /* ── 7. Detail panel ───────────────────────────────────────── */

@@ -8,7 +8,9 @@ import { bulkDeletePurchases } from "@/app/(dashboard)/purchases/actions";
 
 export type PurchaseRow = {
   key: string;
+  kind: "purchase" | "payment";
   orderId: string | undefined;
+  supplierId?: string;
   date: string | undefined;
   supplierName: string | undefined;
   authorName: string | null | undefined;
@@ -19,6 +21,7 @@ export type PurchaseRow = {
   unitCost: number | null;
   supplyAmount: number;
   taxAmount: number;
+  deliveryMethod?: string | null;
 };
 
 type SortKey = "date" | "supplierName" | "authorName" | "quantity" | "supplyAmount" | "taxAmount";
@@ -173,9 +176,11 @@ export function PurchaseGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("매입일자", "date", thSticky2)}
+              <th style={{ width: 64 }}>유형</th>
               {sortableHeader("공급처", "supplierName")}
+              <th style={{ width: 76 }}>입고방법</th>
               {sortableHeader("작성자", "authorName")}
-              <th>품목명</th>
+              <th>품목명 / 적요</th>
               <th>규격</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">매입가</th>
@@ -186,12 +191,14 @@ export function PurchaseGridTable({
           <tbody>
             {sortedRows.map((row) => {
               const isRowSelected = !!row.orderId && selected.has(row.orderId);
+              const isPayment = row.kind === "payment";
+              const href = row.orderId
+                ? `/purchases/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
+                : row.supplierId
+                  ? `/suppliers/${row.supplierId}`
+                  : "#";
               return (
-                <ClickableRow
-                  key={row.key}
-                  href={row.orderId ? `/purchases/${row.orderId}${backParam ? `?back=${backParam}` : ""}` : "#"}
-                  className={isRowSelected ? "selected" : undefined}
-                >
+                <ClickableRow key={row.key} href={href} className={isRowSelected ? "selected" : undefined}>
                   <td style={tdSticky1}>
                     {row.orderId && (
                       <input
@@ -203,26 +210,30 @@ export function PurchaseGridTable({
                     )}
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
-                  <td>{row.supplierName}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
-                  <td>{row.productLabel}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                  <td className="num">
-                    {row.quantity.toLocaleString()} {row.unit}
+                  <td>
+                    <span className={`erp-badge ${isPayment ? "erp-badge-warning" : "erp-badge-info"}`}>
+                      {isPayment ? "지급" : "매입"}
+                    </span>
                   </td>
+                  <td>{row.supplierName}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.deliveryMethod ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
+                  <td style={isPayment ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
+                  <td className="num">{isPayment ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
+                    {!isPayment && row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {row.taxAmount.toLocaleString()}
+                    {isPayment ? "-" : row.taxAmount.toLocaleString()}
                   </td>
                 </ClickableRow>
               );
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={10} className="erp-grid-empty">
+                <td colSpan={12} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -233,10 +244,10 @@ export function PurchaseGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={4}
+                  colSpan={6}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
-                  합계 ({sortedRows.length}건)
+                  매입 합계 ({sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />
