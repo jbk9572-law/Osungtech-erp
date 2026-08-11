@@ -4,11 +4,13 @@ import { useActionState, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { FormMessage, type FormState } from "@/components/form-message";
 
-const CONFIRM_WORD = "삭제";
+const CONFIRM_VALUE = "1";
 
 // 좁은 표 칸(영수증 썸네일 X버튼, 수금/지급 내역 삭제 등)에서는 확인 폼을
 // 그 자리에 펼치면 표 레이아웃이 깨지므로, 버튼 위치를 기준으로 포털에
 // 작은 확인 패널을 띄운다. PartySearchSelect의 위치 계산 방식과 동일.
+// 확인 입력은 DeleteButton/BulkDeleteBar와 같은 숫자(건수) 방식으로
+// 맞춘다 — 단건 삭제라 항상 "1".
 export function InlineConfirmDelete({
   action,
   hiddenFields,
@@ -29,7 +31,7 @@ export function InlineConfirmDelete({
   const [confirmText, setConfirmText] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<{ top: number; left: number } | null>(null);
-  const confirmMatches = confirmText.trim() === CONFIRM_WORD;
+  const confirmMatches = confirmText.trim() === CONFIRM_VALUE;
 
   // 삭제 성공 시 패널을 닫는다 — 다른 폼들과 동일한 state identity 비교 패턴.
   const [lastState, setLastState] = useState(state);
@@ -81,15 +83,18 @@ export function InlineConfirmDelete({
               ))}
               <p style={{ color: "var(--erp-danger)", marginBottom: 6 }}>{warningText}</p>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                <span>&quot;{CONFIRM_WORD}&quot; 입력</span>
+                <span>
+                  확인을 위해 <strong>{CONFIRM_VALUE}</strong> 입력
+                </span>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   className="erp-input"
-                  style={{ width: 60, height: 24, padding: "0 6px", fontSize: 11.5 }}
+                  style={{ width: 44, height: 24, padding: "0 6px", fontSize: 11.5 }}
                   autoFocus
-                  aria-label={`삭제를 확인하려면 ${CONFIRM_WORD}을 입력하세요`}
+                  aria-label={`삭제를 확인하려면 ${CONFIRM_VALUE}을 입력하세요`}
                 />
               </div>
               <div style={{ display: "flex", gap: 6 }}>
