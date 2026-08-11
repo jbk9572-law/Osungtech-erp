@@ -214,30 +214,29 @@ export function DeliveryNoteDoc({
           </tr>
         </thead>
         <tbody>
-          {displayRows.map((row, idx) => (
-            <tr key={row.key}>
-              {rowSpans[idx] > 0 && (
-                <td rowSpan={rowSpans[idx]} className="border border-black px-2 py-1 text-center align-top">
-                  {row.productName}
+          {displayRows.map((row, idx) => {
+            // 출고증 전체에 대한 메모(order.memo)는 별도 줄로 빼면 마지막 줄이
+            // tfoot 합계 행과 시각적으로 붙어 겹쳐 보인다. 어차피 비어 있는
+            // 첫 행의 비고 칸에 넣어서 그 공간을 그대로 쓴다.
+            const remarkText = [idx === 0 ? note : null, row.remark].filter(Boolean).join("\n");
+            return (
+              <tr key={row.key}>
+                {rowSpans[idx] > 0 && (
+                  <td rowSpan={rowSpans[idx]} className="border border-black px-2 py-1 text-center align-top">
+                    {row.productName}
+                  </td>
+                )}
+                <td className="border border-black px-2 py-1 text-center">{row.spec}</td>
+                <td className="border border-black px-2 py-1 text-center">
+                  {zone ? zone.cellB(row) : row.unit}
                 </td>
-              )}
-              <td className="border border-black px-2 py-1 text-center">{row.spec}</td>
-              <td className="border border-black px-2 py-1 text-center">
-                {zone ? zone.cellB(row) : row.unit}
-              </td>
-              <td className="border border-black px-2 py-1 text-right">
-                {zone ? zone.cellC(row) : row.quantity != null ? row.quantity.toLocaleString() : ""}
-              </td>
-              <td className="border border-black px-2 py-1">{row.remark}</td>
-            </tr>
-          ))}
-          {note && (
-            <tr>
-              <td colSpan={5} className="border border-black px-2 py-1 text-[11px] text-black">
-                {note}
-              </td>
-            </tr>
-          )}
+                <td className="border border-black px-2 py-1 text-right">
+                  {zone ? zone.cellC(row) : row.quantity != null ? row.quantity.toLocaleString() : ""}
+                </td>
+                <td className="border border-black px-2 py-1 whitespace-pre-line">{remarkText}</td>
+              </tr>
+            );
+          })}
         </tbody>
         <tfoot>
           <tr className="bg-gray-50 font-semibold">

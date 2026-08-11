@@ -106,10 +106,11 @@ export default async function SupplierDetailPage({
           </div>
 
           {balance.unpaidOrders.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginBottom: 12 }}>
-              <p className="mb-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <div style={{ marginBottom: 12 }}>
+              <p className="mb-1.5 text-xs" style={{ color: "var(--erp-text-muted)" }}>
                 미결제 전표 (오래된 순, 지급은 오래된 전표부터 상계 처리)
               </p>
+              <div className="erp-grid-wrap">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -138,6 +139,7 @@ export default async function SupplierDetailPage({
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 
