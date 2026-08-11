@@ -385,3 +385,42 @@ export async function deletePaymentRequest(
   revalidatePath("/reports/payment-requests");
   redirect("/reports/payment-requests");
 }
+
+export async function bulkDeletePaymentRequests(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  let ids: string[];
+  try {
+    ids = JSON.parse(String(formData.get("ids") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: "삭제할 항목을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+
+  const results = await Promise.all(
+    ids.map(async (id) => {
+      // 단건 삭제와 동일하게, 영수증 스토리지 파일을 행보다 먼저 지운다.
+      const { data: receipts } = await supabase
+        .from("payment_request_receipts")
+        .select("file_path")
+        .eq("payment_request_id", id);
+      if (receipts && receipts.length > 0) {
+        await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
+      }
+      return supabase.from("payment_requests").delete().eq("id", id);
+    })
+  );
+  const failCount = results.filter((r) => r.error).length;
+
+  revalidatePath("/reports/payment-requests");
+
+  if (failCount > 0) {
+    return { error: `${ids.length - failCount}건 삭제, ${failCount}건 실패했습니다.` };
+  }
+  return { success: `${ids.length}건 삭제했습니다.` };
+}
