@@ -49,6 +49,11 @@ export function QuickAddProductSearch({
     inputRef.current?.focus();
   }
 
+  // placeholder는 타이핑을 시작하는 순간 사라져서, 정작 검색 결과를 보고
+  // "이제 Enter를 누르면 되는지" 확신이 필요한 순간에는 안 보인다.
+  // 입력칸 오른쪽에 항상 떠 있는 배지로 따로 표시해서, 입력 중에도
+  // "Enter로 바로 추가된다"는 게 계속 눈에 띄게 한다.
+  const showEnterBadge = results.length > 0;
   return (
     <div className="relative" style={{ minWidth: 240, flex: "1 1 240px" }}>
       <input
@@ -83,8 +88,31 @@ export function QuickAddProductSearch({
           }
         }}
         className="erp-input"
-        style={{ width: "100%" }}
+        style={{ width: "100%", paddingRight: showEnterBadge ? 56 : undefined }}
       />
+      {showEnterBadge && (
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: 6,
+            transform: "translateY(-50%)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 2,
+            padding: "2px 6px",
+            borderRadius: 4,
+            fontSize: 10.5,
+            fontWeight: 700,
+            background: "var(--erp-info-bg)",
+            color: "var(--erp-info-text)",
+            pointerEvents: "none",
+          }}
+        >
+          ⏎ 추가
+        </span>
+      )}
       {open &&
         query.trim() &&
         dropdownRect &&
