@@ -267,6 +267,7 @@ export async function addCustomerPayment(_prevState: FormState, formData: FormDa
 
   revalidatePath(`/customers/${customerId}`);
   revalidatePath("/receivables");
+  revalidatePath("/sales");
   return { success: "수금 내역을 등록했습니다." };
 }
 
@@ -281,6 +282,7 @@ export async function deleteCustomerPayment(_prevState: FormState, formData: For
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
   revalidatePath("/receivables");
+  revalidatePath("/sales");
   return { success: "삭제했습니다." };
 }
 
@@ -387,4 +389,63 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
 
   revalidatePath("/customers");
   return summarize(rows.length, okCount, errors);
+}
+
+export type PartyTransactionRow = {
+  id: string;
+  kind: "sale" | "collection";
+  date: string;
+  label: string;
+  total: number;
+  balance: number;
+};
+
+// 수금 등록 화면에서 "이 출고처 미결제 전표 조회"에 쓴다 — 실제 정산(어느
+// 수금이 어느 전표를 갚았는지)은 여전히 lib/ar-ap.ts의 오래된 전표부터
+// 상계 로직 그대로다. 여기서는 조회용으로 날짜순 누적잔액만 계산한다.
+// getCustomerBalance와 동일하게, 결제방법을 등록한(그 자리에서 결제가
+// 끝난) 매출은 잔액 계산에서 뺀다.
+export async function getCustomerTransactionHistory(
+  customerId: string,
+  fromDate?: string
+): Promise<PartyTransactionRow[]> {
+  const supabase = await createClient();
+  const [{ data: orders }, { data: payments }] = await Promise.all([
+    supabase
+      .from("sales_orders")
+      .select("id, order_date, payment_method, sales_order_items(quantity, unit_price, products(name))")
+      .eq("customer_id", customerId)
+      .order("order_date", { ascending: true }),
+    supabase
+      .from("customer_payments")
+      .select("id, paid_at, amount, memo")
+      .eq("customer_id", customerId)
+      .order("paid_at", { ascending: true }),
+  ]);
+
+  type Entry = { id: string; kind: "sale" | "collection"; date: string; label: string; total: number };
+  const entries: Entry[] = [];
+
+  for (const o of orders ?? []) {
+    if (o.payment_method) continue;
+    const items = o.sales_order_items ?? [];
+    const total = items.reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0);
+    const label = items.length
+      ? `${items[0].products?.name ?? "-"}${items.length > 1 ? ` 외 ${items.length - 1}건` : ""}`
+      : "매출";
+    entries.push({ id: o.id, kind: "sale", date: o.order_date, label, total });
+  }
+  for (const p of payments ?? []) {
+    entries.push({ id: p.id, kind: "collection", date: p.paid_at, label: p.memo || "수금", total: Number(p.amount) });
+  }
+  entries.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === "sale" ? -1 : 1));
+
+  let running = 0;
+  const withBalance: PartyTransactionRow[] = entries.map((e) => {
+    running += e.kind === "sale" ? e.total : -e.total;
+    return { ...e, balance: running };
+  });
+
+  const filtered = fromDate ? withBalance.filter((r) => r.date >= fromDate) : withBalance;
+  return filtered.reverse();
 }

@@ -262,6 +262,7 @@ export async function addSupplierPayment(_prevState: FormState, formData: FormDa
 
   revalidatePath(`/suppliers/${supplierId}`);
   revalidatePath("/payables");
+  revalidatePath("/purchases");
   return { success: "지급 내역을 등록했습니다." };
 }
 
@@ -276,6 +277,7 @@ export async function deleteSupplierPayment(_prevState: FormState, formData: For
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
   revalidatePath("/payables");
+  revalidatePath("/purchases");
   return { success: "삭제했습니다." };
 }
 
@@ -376,4 +378,61 @@ export async function importSuppliersExcel(_prevState: FormState, formData: Form
 
   revalidatePath("/suppliers");
   return summarize(rows.length, okCount, errors);
+}
+
+export type PartyTransactionRow = {
+  id: string;
+  kind: "purchase" | "payment";
+  date: string;
+  label: string;
+  total: number;
+  balance: number;
+};
+
+// 지급 등록 화면에서 "이 공급처 미결제 전표 조회"에 쓴다 — customers/actions.ts의
+// getCustomerTransactionHistory와 동일한 방식(조회 전용, 실제 정산은
+// lib/ar-ap.ts 그대로).
+export async function getSupplierTransactionHistory(
+  supplierId: string,
+  fromDate?: string
+): Promise<PartyTransactionRow[]> {
+  const supabase = await createClient();
+  const [{ data: orders }, { data: payments }] = await Promise.all([
+    supabase
+      .from("purchase_orders")
+      .select("id, purchase_date, payment_method, purchase_order_items(quantity, unit_cost, products(name))")
+      .eq("supplier_id", supplierId)
+      .order("purchase_date", { ascending: true }),
+    supabase
+      .from("supplier_payments")
+      .select("id, paid_at, amount, memo")
+      .eq("supplier_id", supplierId)
+      .order("paid_at", { ascending: true }),
+  ]);
+
+  type Entry = { id: string; kind: "purchase" | "payment"; date: string; label: string; total: number };
+  const entries: Entry[] = [];
+
+  for (const o of orders ?? []) {
+    if (o.payment_method) continue;
+    const items = o.purchase_order_items ?? [];
+    const total = items.reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0);
+    const label = items.length
+      ? `${items[0].products?.name ?? "-"}${items.length > 1 ? ` 외 ${items.length - 1}건` : ""}`
+      : "매입";
+    entries.push({ id: o.id, kind: "purchase", date: o.purchase_date, label, total });
+  }
+  for (const p of payments ?? []) {
+    entries.push({ id: p.id, kind: "payment", date: p.paid_at, label: p.memo || "지급", total: Number(p.amount) });
+  }
+  entries.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === "purchase" ? -1 : 1));
+
+  let running = 0;
+  const withBalance: PartyTransactionRow[] = entries.map((e) => {
+    running += e.kind === "purchase" ? e.total : -e.total;
+    return { ...e, balance: running };
+  });
+
+  const filtered = fromDate ? withBalance.filter((r) => r.date >= fromDate) : withBalance;
+  return filtered.reverse();
 }

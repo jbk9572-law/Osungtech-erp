@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { NewSaleForm } from "@/components/new-sale-form";
+import { NewSaleTypeSwitcher } from "@/components/new-sale-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
+import { todayKstStr } from "@/lib/kst-date";
 
 export default async function NewSalePage() {
   const supabase = await createClient();
@@ -48,12 +49,13 @@ export default async function NewSalePage() {
           </Link>
         </div>
       </div>
-      <NewSaleForm
+      <NewSaleTypeSwitcher
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({ ...p, stock: p.inventory?.[0]?.quantity ?? 0 }))}
         warehouseId={warehouse?.id ?? ""}
         prices={prices ?? []}
         history={priceHistory}
+        today={todayKstStr()}
       />
     </div>
   );

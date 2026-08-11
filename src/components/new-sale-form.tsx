@@ -33,6 +33,7 @@ import {
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
+import { DELIVERY_METHODS } from "@/lib/delivery-method";
 
 type Customer = { id: string; name: string };
 type Product = {
@@ -73,6 +74,7 @@ export type SaleInitial = {
   orderDate: string;
   memo: string;
   paymentMethod?: string | null;
+  deliveryMethod?: string | null;
   items: {
     productId: string;
     spec?: string | null;
@@ -114,6 +116,7 @@ export function NewSaleForm({
   // 결제가 끝난 거래로 보고 미수금 계산에서 빠진다(lib/ar-ap.ts).
   const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
+  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -505,6 +508,7 @@ export function NewSaleForm({
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
+      <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
       {copiedPaperCalcs.length > 0 && (
@@ -552,6 +556,21 @@ export function NewSaleForm({
               onChange={(e) => setOrderDate(e.target.value)}
               className="erp-input"
             />
+          </div>
+          <div className="erp-field">
+            <label>배송방법</label>
+            <select
+              value={deliveryMethod}
+              onChange={(e) => setDeliveryMethod(e.target.value)}
+              className="erp-select"
+            >
+              <option value="">-</option>
+              {DELIVERY_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
             <label>메모 (선택)</label>

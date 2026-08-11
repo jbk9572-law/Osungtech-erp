@@ -21,7 +21,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, suppliers(name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -34,7 +34,17 @@ export default async function PurchasesPage({
   if (from) query = query.gte("purchase_orders.purchase_date", from);
   if (to) query = query.lte("purchase_orders.purchase_date", to);
 
-  const { data: rawItems } = await query;
+  // 매입 옆에 지급 내역도 같은 목록에 섞어서 보여준다 — sales/page.tsx와
+  // 동일한 방식(표시용으로만 합침, 실제 정산은 lib/ar-ap.ts 그대로).
+  let paymentQuery = supabase
+    .from("supplier_payments")
+    .select("id, paid_at, amount, memo, suppliers(id, name)")
+    .order("paid_at", { ascending: false })
+    .limit(200);
+  if (from) paymentQuery = paymentQuery.gte("paid_at", from);
+  if (to) paymentQuery = paymentQuery.lte("paid_at", to);
+
+  const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([query, paymentQuery]);
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
@@ -57,13 +67,15 @@ export default async function PurchasesPage({
   // 묶어서 보여준다. 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로
   // 요약한다. 검색어로 일부 품목만 걸러졌다면(예: 상품명/SKU 검색) 그
   // 매칭된 품목들만 묶여서 "외 N건"에 반영된다.
-  const rows: DisplayRow[] = Object.values(
+  const purchaseRows: DisplayRow[] = Object.values(
     itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
       const orderId = item.purchase_orders?.id ?? item.id;
       if (!acc[orderId]) {
         acc[orderId] = {
           key: orderId,
+          kind: "purchase",
           orderId,
+          supplierId: item.purchase_orders?.suppliers?.id,
           date: item.purchase_orders?.purchase_date,
           supplierName: item.purchase_orders?.suppliers?.name,
           authorName: item.purchase_orders?.profiles?.full_name,
@@ -74,6 +86,7 @@ export default async function PurchasesPage({
           unitCost: Number(item.unit_cost),
           supplyAmount: 0,
           taxAmount: 0,
+          deliveryMethod: item.purchase_orders?.delivery_method,
           itemCount: 0,
         };
       } else {
@@ -90,6 +103,33 @@ export default async function PurchasesPage({
     ...row,
     productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
   }));
+
+  const payments = keyword
+    ? rawPayments?.filter(
+        (p) => p.suppliers?.name?.toLowerCase().includes(keyword) || p.memo?.toLowerCase().includes(keyword)
+      )
+    : rawPayments;
+  const paymentRows: DisplayRow[] = (payments ?? []).map((p) => ({
+    key: `payment-${p.id}`,
+    kind: "payment",
+    orderId: undefined,
+    supplierId: p.suppliers?.id,
+    date: p.paid_at,
+    supplierName: p.suppliers?.name,
+    authorName: undefined,
+    productLabel: p.memo || "지급",
+    spec: "-",
+    quantity: 0,
+    unit: undefined,
+    unitCost: null,
+    supplyAmount: Number(p.amount),
+    taxAmount: 0,
+    deliveryMethod: null,
+  }));
+
+  const rows: DisplayRow[] = [...purchaseRows, ...paymentRows].sort((a, b) =>
+    (b.date ?? "").localeCompare(a.date ?? "")
+  );
 
   const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
   const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
