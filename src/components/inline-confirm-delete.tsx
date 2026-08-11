@@ -3,14 +3,13 @@
 import { useActionState, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { FormMessage, type FormState } from "@/components/form-message";
-
-const CONFIRM_VALUE = "1";
+import { generateConfirmCode } from "@/lib/confirm-code";
 
 // 좁은 표 칸(영수증 썸네일 X버튼, 수금/지급 내역 삭제 등)에서는 확인 폼을
 // 그 자리에 펼치면 표 레이아웃이 깨지므로, 버튼 위치를 기준으로 포털에
 // 작은 확인 패널을 띄운다. PartySearchSelect의 위치 계산 방식과 동일.
-// 확인 입력은 DeleteButton/BulkDeleteBar와 같은 숫자(건수) 방식으로
-// 맞춘다 — 단건 삭제라 항상 "1".
+// 확인 입력은 DeleteButton/BulkDeleteBar와 같은 임의 4자리 코드 방식으로
+// 맞춘다 — 화면마다 확인 방식이 달라 헷갈리지 않게.
 export function InlineConfirmDelete({
   action,
   hiddenFields,
@@ -29,9 +28,10 @@ export function InlineConfirmDelete({
   const [state, formAction, pending] = useActionState(action, undefined);
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [code, setCode] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<{ top: number; left: number } | null>(null);
-  const confirmMatches = confirmText.trim() === CONFIRM_VALUE;
+  const confirmMatches = confirmText.trim() === code;
 
   // 삭제 성공 시 패널을 닫는다 — 다른 폼들과 동일한 state identity 비교 패턴.
   const [lastState, setLastState] = useState(state);
@@ -51,6 +51,7 @@ export function InlineConfirmDelete({
         onClick={() => {
           const r = triggerRef.current?.getBoundingClientRect();
           if (r) setRect({ top: r.bottom + 4, left: r.left });
+          setCode(generateConfirmCode());
           setOpen(true);
         }}
         className={triggerClassName}
@@ -84,7 +85,7 @@ export function InlineConfirmDelete({
               <p style={{ color: "var(--erp-danger)", marginBottom: 6 }}>{warningText}</p>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                 <span>
-                  확인을 위해 <strong>{CONFIRM_VALUE}</strong> 입력
+                  확인 코드 <strong>{code}</strong> 입력
                 </span>
                 <input
                   type="text"
@@ -92,9 +93,9 @@ export function InlineConfirmDelete({
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   className="erp-input"
-                  style={{ width: 44, height: 24, padding: "0 6px", fontSize: 11.5 }}
+                  style={{ width: 56, height: 24, padding: "0 6px", fontSize: 11.5 }}
                   autoFocus
-                  aria-label={`삭제를 확인하려면 ${CONFIRM_VALUE}을 입력하세요`}
+                  aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
                 />
               </div>
               <div style={{ display: "flex", gap: 6 }}>
