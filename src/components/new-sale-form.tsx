@@ -573,7 +573,7 @@ export function NewSaleForm({
             </select>
           </div>
           <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
-            <label>메모 (선택)</label>
+            <label>적요 (선택)</label>
             <input
               name="memo"
               value={memo}

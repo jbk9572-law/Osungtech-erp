@@ -60,7 +60,7 @@ export function PartyPaymentForm({
         </select>
       </div>
       <div className="erp-field">
-        <label>메모</label>
+        <label>적요 (선택)</label>
         <input type="text" name="memo" className="erp-input w-full" />
       </div>
       <div className="md:col-span-4 flex items-center gap-2">
