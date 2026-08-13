@@ -27,7 +27,7 @@ export function QuantityWithBoxInput({
   if (!hasBox) {
     return (
       <NumberInput
-        placeholder={allowFormula ? "수량 (=1+1 계산 가능)" : "수량"}
+        placeholder={allowFormula ? "수량 (=10+5 계산 가능)" : "수량"}
         value={quantity}
         onChange={onQuantityChange}
         allowFormula={allowFormula}
@@ -39,17 +39,17 @@ export function QuantityWithBoxInput({
   return (
     <div className="flex items-center justify-end gap-1">
       <NumberInput
-        placeholder={allowFormula ? "수량 (=1+1)" : "수량"}
+        placeholder={allowFormula ? "수량 (=10+5)" : "수량"}
         value={quantity}
         onChange={onQuantityChange}
         allowFormula={allowFormula}
         className="erp-input w-full min-w-0"
       />
       <span className="text-[10.5px]" style={{ color: "var(--erp-text-muted)", flexShrink: 0 }}>
-        박스
+        박스수
       </span>
       <NumberInput
-        placeholder="박스"
+        placeholder="0"
         value={quantity > 0 ? quantity / basePackageQty : 0}
         onChange={(box) => onQuantityChange(box * basePackageQty)}
         className="erp-input w-11 shrink-0"

@@ -78,11 +78,15 @@ export function SupplierSection({
         <Cell as="th" colSpan={1} style={{ lineHeight: `${SUPPLIER.verticalLabelLineHeight}px` }}>
           업<br />태
         </Cell>
-        <Cell colSpan={7}>{company?.business_type ?? "-"}</Cell>
+        <Cell colSpan={7} className="text-black">
+          {company?.business_type ?? "-"}
+        </Cell>
         <Cell as="th" colSpan={1} style={{ lineHeight: `${SUPPLIER.verticalLabelLineHeight}px` }}>
           종<br />목
         </Cell>
-        <Cell colSpan={8}>{company?.business_item ?? "-"}</Cell>
+        <Cell colSpan={8} className="text-black">
+          {company?.business_item ?? "-"}
+        </Cell>
         <Cell
           as="th"
           colSpan={1}

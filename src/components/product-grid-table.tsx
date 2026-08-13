@@ -5,6 +5,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 
 export type ProductGridRow = {
   id: string;
@@ -241,7 +242,7 @@ export function ProductGridTable({
                   </td>
                 ) : (
                   <>
-                    <td className="num">{row.quantity.toLocaleString()}</td>
+                    <td className="num">{formatQuantityWithBoxes(row.quantity, row.basePackageQty)}</td>
                     <td>
                       <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
                         {isLow ? "재주문 필요" : "정상"}

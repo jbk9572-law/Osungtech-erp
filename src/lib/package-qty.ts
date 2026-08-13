@@ -12,3 +12,18 @@ export function formatPackageQty(
   const boxLabel = Number.isInteger(boxCount) ? String(boxCount) : boxCount.toFixed(2);
   return `${base.toLocaleString()}*${boxLabel}`;
 }
+
+// 재고수량 옆에 몇 박스 분량인지 괄호로 같이 보여준다(예: "500 (10박스)").
+// 포장수량이 없는 품목은 그냥 수량만 보여준다.
+export function formatQuantityWithBoxes(
+  quantity: number,
+  basePackageQty: number | string | null | undefined
+): string {
+  const qtyLabel = quantity.toLocaleString();
+  const base = basePackageQty != null ? Number(basePackageQty) : null;
+  if (!base) return qtyLabel;
+
+  const boxCount = quantity / base;
+  const boxLabel = Number.isInteger(boxCount) ? boxCount.toLocaleString() : boxCount.toFixed(1);
+  return `${qtyLabel} (${boxLabel}박스)`;
+}

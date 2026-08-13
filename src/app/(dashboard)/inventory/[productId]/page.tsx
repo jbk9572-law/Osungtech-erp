@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 
 const TYPE_LABEL: Record<string, string> = {
   in: "입고",
@@ -25,7 +26,7 @@ export default async function InventoryProductHistoryPage({
   const [{ data: product }, { data: txRaw }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, sku, name, spec, unit, reorder_point, inventory(quantity)")
+      .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity)")
       .eq("id", productId)
       .maybeSingle(),
     // 재고 잔량은 전체 이력을 처음부터 누적해야 정확하다. 예전에는 여기
@@ -89,7 +90,8 @@ export default async function InventoryProductHistoryPage({
       <h1 className="mb-1 text-lg font-bold text-[#182338]">재고관리 &gt; 재고현황 &gt; 입출고내역</h1>
       <p className="mb-4 text-xs text-[#6b7280]">
         {product.sku} · {product.name}
-        {product.spec && ` (${product.spec})`} · 현재 재고 {currentQuantity.toLocaleString()}
+        {product.spec && ` (${product.spec})`} · 현재 재고{" "}
+        {formatQuantityWithBoxes(currentQuantity, product.base_package_qty)}
         {product.unit ?? ""}
       </p>
 
@@ -162,7 +164,7 @@ export default async function InventoryProductHistoryPage({
                     {row.signedQty > 0 ? "+" : ""}
                     {row.signedQty.toLocaleString()}
                   </td>
-                  <td className="num">{row.balance.toLocaleString()}</td>
+                  <td className="num">{formatQuantityWithBoxes(row.balance, product.base_package_qty)}</td>
                 </>
               );
               return row.href ? (

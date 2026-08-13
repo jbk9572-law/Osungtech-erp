@@ -69,7 +69,7 @@ export function Header({
         colSpan={5}
         valign="top"
         hideBorder={["l", "r"]}
-        style={{ paddingTop: HEADER.dateRowTopPadding, position: "relative" }}
+        style={{ paddingTop: HEADER.dateRowTopPadding, paddingLeft: 8, position: "relative" }}
       >
         <span
           aria-hidden
@@ -87,7 +87,7 @@ export function Header({
         colSpan={1}
         valign="top"
         hideBorder={["l", "r"]}
-        style={{ paddingTop: HEADER.dateRowTopPadding, position: "relative" }}
+        style={{ paddingTop: HEADER.dateRowTopPadding, paddingLeft: 8, position: "relative" }}
       >
         <span
           aria-hidden
