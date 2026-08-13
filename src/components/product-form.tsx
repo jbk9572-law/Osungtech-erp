@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { PartySearchSelect } from "@/components/party-search-select";
+import { PackageQtyHistoryHint } from "@/components/package-qty-history-hint";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Category = { id: string; name: string };
@@ -31,6 +32,7 @@ export function ProductForm({
   initial,
   idFieldValue,
   submitLabel = "저장",
+  packageQtyHistory = [],
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   categories: Category[];
@@ -38,6 +40,9 @@ export function ProductForm({
   initial?: ProductInitial;
   idFieldValue?: string;
   submitLabel?: string;
+  // 단가 이력과 같은 개념 — KG처럼 실제 담기는 양에 따라 박스당 수량이
+  // 매번 달라지는 품목을 위해, 이전에 저장했던 값들을 최신순으로 넘긴다.
+  packageQtyHistory?: { basePackageQty: number; changedAt: string }[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -49,6 +54,7 @@ export function ProductForm({
   const [unitValue, setUnitValue] = useState(initialUnit);
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
   const [supplierId, setSupplierId] = useState(initial?.supplier_id ?? "");
+  const [basePackageQty, setBasePackageQty] = useState(initial?.base_package_qty ?? "");
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -159,15 +165,20 @@ export function ProductForm({
         defaultValue={initial?.reorder_point || ""}
         className="erp-input"
       />
-      <input
-        name="base_package_qty"
-        placeholder="포장수량 (1박스당 수량, 예: 50)"
-        type="number"
-        step="0.01"
-        defaultValue={initial?.base_package_qty ?? ""}
-        className="erp-input"
-        title="포장(박스) 1개에 들어가는 기본 수량. 예: 1박스 = 50ea면 50을 입력"
-      />
+      <div>
+        <input
+          name="base_package_qty"
+          placeholder="포장수량 (1박스당 수량, 예: 50)"
+          type="number"
+          step="0.01"
+          value={basePackageQty}
+          onChange={(e) => setBasePackageQty(e.target.value === "" ? "" : Number(e.target.value))}
+          className="erp-input"
+          style={{ width: "100%" }}
+          title="포장(박스) 1개에 들어가는 기본 수량. 예: 1박스 = 50ea면 50을 입력. KG처럼 담기는 양에 따라 달라지는 품목은 아래 이력에서 이전 값으로 다시 채울 수 있습니다."
+        />
+        <PackageQtyHistoryHint history={packageQtyHistory} onSelect={setBasePackageQty} />
+      </div>
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-4">
         {pending ? (
           <>

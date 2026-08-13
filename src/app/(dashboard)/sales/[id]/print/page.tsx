@@ -74,7 +74,7 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn erp-btn-danger">
+            <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
               목록으로
             </Link>
             <PrintButton />
@@ -110,7 +110,7 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn erp-btn-danger">
+            <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
               목록으로
             </Link>
             <PrintButton />
@@ -149,7 +149,7 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn erp-btn-danger">
+            <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
               목록으로
             </Link>
             <PrintButton />
@@ -181,7 +181,7 @@ export default async function SalesPrintPage({
     return (
       <div className="mx-auto max-w-3xl print-page-wrapper">
         <div className="mb-4 flex items-center justify-between print:hidden">
-          <Link href="/sales" className="erp-btn erp-btn-danger">
+          <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
             목록으로
           </Link>
           <PrintButton />
@@ -254,7 +254,7 @@ export default async function SalesPrintPage({
       className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <Link href="/sales" className="erp-btn erp-btn-danger">
+        <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
           목록으로
         </Link>
         <div className="flex flex-wrap items-center gap-2">

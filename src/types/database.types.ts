@@ -233,6 +233,38 @@ export type Database = {
           },
         ];
       };
+      product_package_qty_history: {
+        Row: {
+          id: string;
+          product_id: string;
+          base_package_qty: number;
+          changed_by: string | null;
+          changed_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          base_package_qty: number;
+          changed_by?: string | null;
+          changed_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          base_package_qty?: number;
+          changed_by?: string | null;
+          changed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_package_qty_history_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory: {
         Row: {
           id: string;

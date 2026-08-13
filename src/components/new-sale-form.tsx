@@ -116,7 +116,9 @@ export function NewSaleForm({
   // 결제가 끝난 거래로 보고 미수금 계산에서 빠진다(lib/ar-ap.ts).
   const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
-  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "");
+  // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
+  // 그때만 직접 바꾸면 된다.
+  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "직납");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({

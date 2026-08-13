@@ -19,11 +19,18 @@ export default async function ProductDetailPage({
   const closeHref = resolveListHref("/products", back);
   const supabase = await createClient();
 
-  const [{ data: product }, { data: categories }, { data: suppliers }] = await Promise.all([
-    supabase.from("products").select("*").eq("id", id).maybeSingle(),
-    supabase.from("categories").select("id, name").order("name"),
-    supabase.from("suppliers").select("id, name").order("name"),
-  ]);
+  const [{ data: product }, { data: categories }, { data: suppliers }, { data: packageQtyHistory }] =
+    await Promise.all([
+      supabase.from("products").select("*").eq("id", id).maybeSingle(),
+      supabase.from("categories").select("id, name").order("name"),
+      supabase.from("suppliers").select("id, name").order("name"),
+      supabase
+        .from("product_package_qty_history")
+        .select("base_package_qty, changed_at")
+        .eq("product_id", id)
+        .order("changed_at", { ascending: false })
+        .limit(10),
+    ]);
 
   if (!product) {
     notFound();
@@ -59,6 +66,10 @@ export default async function ProductDetailPage({
             categories={categories ?? []}
             suppliers={suppliers ?? []}
             submitLabel="저장"
+            packageQtyHistory={(packageQtyHistory ?? []).map((h) => ({
+              basePackageQty: Number(h.base_package_qty),
+              changedAt: new Date(h.changed_at).toLocaleDateString("ko-KR"),
+            }))}
           />
         </div>
       </div>

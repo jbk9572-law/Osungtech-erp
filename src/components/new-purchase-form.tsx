@@ -121,7 +121,9 @@ export function NewPurchaseForm({
   // 결제가 끝난 거래로 보고 미지급금 계산에서 빠진다(lib/ar-ap.ts).
   const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
-  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "");
+  // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
+  // 그때만 직접 바꾸면 된다.
+  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "직납");
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
   // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
   // 출고처/출고일도 할일에 적어둔 값으로 채워진다.
