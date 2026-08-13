@@ -43,6 +43,25 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
   };
 }
 
+// KG처럼 실제로 담기는 양에 따라 박스당 수량이 매번 달라지는 품목이
+// 있어서, base_package_qty가 바뀔 때마다 이력을 남긴다(단가 이력과
+// 같은 개념). 실패해도 상품 저장 자체는 이미 끝난 뒤라 조용히 넘어간다
+// — 이력은 참고용 부가 정보다.
+async function recordPackageQtyChange(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productId: string,
+  newQty: number | null,
+  previousQty: number | null
+) {
+  if (newQty == null || newQty === previousQty) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  await supabase
+    .from("product_package_qty_history")
+    .insert({ product_id: productId, base_package_qty: newQty, changed_by: user?.id ?? null });
+}
+
 export async function createProduct(_prevState: FormState, formData: FormData): Promise<FormState> {
   const sku = String(formData.get("sku") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
@@ -51,15 +70,18 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("products").insert({
-    sku,
-    name,
-    ...(await productFieldsFrom(supabase, formData)),
-  });
+  const fields = await productFieldsFrom(supabase, formData);
+  const { data: created, error } = await supabase
+    .from("products")
+    .insert({ sku, name, ...fields })
+    .select("id")
+    .single();
 
-  if (error) {
-    return { error: error.message.includes("duplicate") ? "이미 존재하는 SKU입니다." : "저장에 실패했습니다." };
+  if (error || !created) {
+    return { error: error?.message.includes("duplicate") ? "이미 존재하는 SKU입니다." : "저장에 실패했습니다." };
   }
+
+  await recordPackageQtyChange(supabase, created.id, fields.base_package_qty, null);
 
   revalidatePath("/products");
   return { success: "상품이 등록되었습니다." };
@@ -74,14 +96,27 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
   }
 
   const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("products")
+    .select("base_package_qty")
+    .eq("id", id)
+    .maybeSingle();
+  const fields = await productFieldsFrom(supabase, formData);
   const { error } = await supabase
     .from("products")
-    .update({ sku, name, ...(await productFieldsFrom(supabase, formData)) })
+    .update({ sku, name, ...fields })
     .eq("id", id);
 
   if (error) {
     return { error: error.message.includes("duplicate") ? "이미 존재하는 SKU입니다." : "저장에 실패했습니다." };
   }
+
+  await recordPackageQtyChange(
+    supabase,
+    id,
+    fields.base_package_qty,
+    existing?.base_package_qty != null ? Number(existing.base_package_qty) : null
+  );
 
   revalidatePath("/products");
   revalidatePath(`/products/${id}`);
