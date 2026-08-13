@@ -975,8 +975,6 @@ export function NewPurchaseForm({
                             ...(row.manualSaleQuantity ? {} : { saleQuantity: n }),
                           })
                         }
-                        basePackageQty={product?.base_package_qty}
-                        unit={product?.unit}
                         allowFormula
                       />
                     </td>
