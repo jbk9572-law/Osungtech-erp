@@ -11,7 +11,7 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
-import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
@@ -827,7 +827,12 @@ export function NewPurchaseForm({
                 <th style={{ width: "6%" }} />
               </tr>
             </thead>
-            <tbody onKeyDown={focusSameColumnNextRow}>
+            <tbody
+              onKeyDown={(e) => {
+                focusSameColumnNextRow(e);
+                focusGridArrowNav(e);
+              }}
+            >
               {pendingCalcSummary && (
                 <tr style={{ background: "var(--erp-info-bg)" }}>
                   <td>
@@ -970,8 +975,6 @@ export function NewPurchaseForm({
                             ...(row.manualSaleQuantity ? {} : { saleQuantity: n }),
                           })
                         }
-                        basePackageQty={product?.base_package_qty}
-                        unit={product?.unit}
                         allowFormula
                       />
                     </td>
