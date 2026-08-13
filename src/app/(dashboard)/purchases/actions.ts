@@ -22,6 +22,7 @@ type PurchaseItemInput = {
   quantity: number;
   unitCost: number;
   remark?: string | null;
+  lotNumber?: string | null;
 };
 
 type SaleItemInput = {
@@ -30,6 +31,7 @@ type SaleItemInput = {
   quantity: number;
   unitPrice: number;
   remark?: string | null;
+  lotNumber?: string | null;
 };
 
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
@@ -48,6 +50,15 @@ function parseSaleItems(itemsRaw: string): SaleItemInput[] | null {
   } catch {
     return null;
   }
+}
+
+// "No"(전표번호) 입력칸을 비워두면 자동 채번(DB 시퀀스 기본값)에 맡기고,
+// 값을 직접 입력했을 때만 그 번호를 그대로 쓴다.
+function parseDocNo(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
 }
 
 // 품목별 수량 합계 맵 — 출고 수량이 매입 수량을 넘는지 미리(DB까지 가기 전에)
@@ -141,6 +152,7 @@ export async function createPurchase(
   // 보내서 null(외상)로 저장된다 — 체크를 끄고 결제방법을 고른 경우에만 값이 온다.
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
@@ -223,6 +235,7 @@ export async function createPurchase(
           quantity: item.quantity,
           unitCost: item.unitCost,
           remark: item.remark || null,
+          lotNumber: item.lotNumber || null,
         })),
         p_sale_items: saleItems.map((item) => ({
           productId: item.productId,
@@ -230,9 +243,11 @@ export async function createPurchase(
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           remark: item.remark || null,
+          lotNumber: item.lotNumber || null,
         })),
         p_payment_method: paymentMethod,
         p_delivery_method: deliveryMethod,
+        p_purchase_doc_no: docNo,
       })
       .single();
 
@@ -272,9 +287,11 @@ export async function createPurchase(
         quantity: item.quantity,
         unitCost: item.unitCost,
         remark: item.remark || null,
+        lotNumber: item.lotNumber || null,
       })),
       p_payment_method: paymentMethod,
       p_delivery_method: deliveryMethod,
+      p_doc_no: docNo,
     });
 
     if (error || !newPurchaseId) {
@@ -390,6 +407,7 @@ export async function updatePurchase(
   const memo = String(formData.get("memo") ?? "") || null;
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !supplierId || !warehouseId || !purchaseDate) {
@@ -424,9 +442,11 @@ export async function updatePurchase(
       quantity: item.quantity,
       unitCost: item.unitCost,
       remark: item.remark || null,
+      lotNumber: item.lotNumber || null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
+    p_doc_no: docNo,
   });
 
   if (error) {

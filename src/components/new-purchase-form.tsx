@@ -46,6 +46,7 @@ type Row = {
   productId: string;
   spec: string;
   manualSpec: boolean;
+  lotNumber: string;
   quantity: number;
   unitCost: number;
   manualPrice: boolean;
@@ -73,12 +74,14 @@ export type PurchaseInitial = {
   memo: string;
   paymentMethod?: string | null;
   deliveryMethod?: string | null;
+  docNo?: number | null;
   items: {
     productId: string;
     spec?: string | null;
     quantity: number;
     unitCost: number;
     remark?: string | null;
+    lotNumber?: string | null;
   }[];
 };
 
@@ -124,6 +127,9 @@ export function NewPurchaseForm({
   // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
   // 그때만 직접 바꾸면 된다.
   const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "직납");
+  // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
+  // 전표번호를 직접 입력/수정할 수 있게 한다.
+  const [docNo, setDocNo] = useState(initial?.docNo ? String(initial.docNo) : "");
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
   // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
   // 출고처/출고일도 할일에 적어둔 값으로 채워진다.
@@ -157,6 +163,7 @@ export function NewPurchaseForm({
           productId: item.productId,
           spec: item.spec ?? "",
           manualSpec: Boolean(item.spec),
+          lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitCost: item.unitCost,
           manualPrice: false,
@@ -172,6 +179,7 @@ export function NewPurchaseForm({
             productId: "",
             spec: "",
             manualSpec: false,
+            lotNumber: "",
             quantity: 0,
             unitCost: 0,
             manualPrice: false,
@@ -334,6 +342,7 @@ export function NewPurchaseForm({
         productId: "",
         spec: "",
         manualSpec: false,
+        lotNumber: "",
         quantity: 0,
         unitCost: 0,
         manualPrice: false,
@@ -357,6 +366,7 @@ export function NewPurchaseForm({
       productId,
       spec: product?.spec ?? "",
       manualSpec: false,
+      lotNumber: "",
       quantity: 0,
       unitCost: resolveCost(supplierId, productId),
       manualPrice: false,
@@ -443,6 +453,7 @@ export function NewPurchaseForm({
           productId: item.productId,
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
+          lotNumber: "",
           quantity: item.quantity,
           unitCost: resolveCost(effectiveSupplierId, item.productId),
           manualPrice: false,
@@ -487,6 +498,7 @@ export function NewPurchaseForm({
         quantity: row.quantity,
         unitCost: row.unitCost,
         remark: row.remark || null,
+        lotNumber: row.lotNumber || null,
       }))
   );
 
@@ -525,6 +537,7 @@ export function NewPurchaseForm({
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+      <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
@@ -563,6 +576,19 @@ export function NewPurchaseForm({
           <span className="erp-detail-tab active">기본정보</span>
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
+          <div className="erp-field">
+            <label>No</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="자동"
+              value={docNo}
+              onChange={(e) => setDocNo(e.target.value.replace(/[^0-9]/g, ""))}
+              className="erp-input"
+              style={{ width: 80 }}
+              title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
+            />
+          </div>
           <div className="erp-field">
             <label>공급처</label>
             <PartySearchSelect
@@ -801,30 +827,37 @@ export function NewPurchaseForm({
           >
             <thead>
               <tr>
-                <th style={{ width: alsoCreateSale ? "15%" : "18%" }}>품목</th>
-                <th style={{ width: alsoCreateSale ? "6%" : "8%" }}>규격</th>
-                <th style={{ width: alsoCreateSale ? "4%" : "5%" }}>단위</th>
-                <th className="num" style={{ width: alsoCreateSale ? "16%" : "21%" }}>
+                <th style={{ width: alsoCreateSale ? "15%" : "13%" }}>품목</th>
+                <th style={{ width: alsoCreateSale ? "5%" : "6%" }}>규격</th>
+                <th style={{ width: alsoCreateSale ? "9%" : "8%" }}>관리번호</th>
+                <th style={{ width: alsoCreateSale ? "3%" : "4%" }}>단위</th>
+                <th className="num" style={{ width: alsoCreateSale ? "11%" : "15%" }}>
                   입고수량
                 </th>
                 {alsoCreateSale && (
-                  <th className="num" style={{ width: "9%" }}>
+                  <th className="num" style={{ width: "7%" }}>
                     출고수량
                   </th>
                 )}
-                <th className="num" style={{ width: alsoCreateSale ? "10%" : "14%" }}>
+                <th className="num" style={{ width: alsoCreateSale ? "7%" : "9%" }}>
                   매입단가
                 </th>
                 {alsoCreateSale && (
-                  <th className="num" style={{ width: "10%" }}>
+                  <th className="num" style={{ width: "7%" }}>
                     매출단가
                   </th>
                 )}
-                <th className="num" style={{ width: alsoCreateSale ? "10%" : "14%" }}>
-                  금액
+                <th className="num" style={{ width: alsoCreateSale ? "8%" : "10%" }}>
+                  공급가액
                 </th>
-                <th style={{ width: alsoCreateSale ? "14%" : "14%" }}>비고</th>
-                <th style={{ width: "6%" }} />
+                <th className="num" style={{ width: alsoCreateSale ? "6%" : "8%" }}>
+                  세액
+                </th>
+                <th className="num" style={{ width: alsoCreateSale ? "7%" : "9%" }}>
+                  합계
+                </th>
+                <th style={{ width: alsoCreateSale ? "10%" : "13%" }}>비고</th>
+                <th style={{ width: "5%" }} />
               </tr>
             </thead>
             <tbody
@@ -853,6 +886,7 @@ export function NewPurchaseForm({
                     )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
                   <td className="num">
                     <NumberInput
@@ -873,6 +907,12 @@ export function NewPurchaseForm({
                     </td>
                   )}
                   <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {Math.round(pendingCalcAmount * 0.1).toLocaleString()}원
+                  </td>
+                  <td className="num">
+                    {(pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)).toLocaleString()}원
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
                       ? `자동값 ${pendingCalcSummary.totalSheet.toLocaleString()} → 수동 입력`
@@ -897,7 +937,7 @@ export function NewPurchaseForm({
               )}
               {paperCalcSizeLines.map((line, i) => (
                 <tr key={`paper-calc-size-${i}`} style={{ background: "#f7f8fb" }}>
-                  <td colSpan={2} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
                     ㄴ {line}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
@@ -917,6 +957,12 @@ export function NewPurchaseForm({
                       -
                     </td>
                   )}
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
@@ -964,6 +1010,15 @@ export function NewPurchaseForm({
                           직접입력
                         </label>
                       )}
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        placeholder="관리번호"
+                        value={row.lotNumber}
+                        onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
+                        className="erp-input w-full"
+                      />
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
@@ -1030,6 +1085,12 @@ export function NewPurchaseForm({
                       </td>
                     )}
                     <td className="num">{(row.quantity * row.unitCost).toLocaleString()}원</td>
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      {Math.round(row.quantity * row.unitCost * 0.1).toLocaleString()}원
+                    </td>
+                    <td className="num" style={{ fontWeight: 600 }}>
+                      {Math.round(row.quantity * row.unitCost * 1.1).toLocaleString()}원
+                    </td>
                     <td>
                       <input
                         type="text"
@@ -1056,10 +1117,10 @@ export function NewPurchaseForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "#eef1f5" }}>
-                <td colSpan={alsoCreateSale ? 7 : 5} style={{ fontWeight: 700 }}>
+                <td colSpan={alsoCreateSale ? 8 : 6} style={{ fontWeight: 700 }}>
                   매입 합계
                 </td>
-                <td className="num text-sm font-bold" colSpan={3} style={{ color: "var(--erp-text)" }}>
+                <td className="num text-sm font-bold" colSpan={5} style={{ color: "var(--erp-text)" }}>
                   {total.toLocaleString()}원
                 </td>
               </tr>

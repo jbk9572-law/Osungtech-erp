@@ -56,13 +56,7 @@ export function ProductSearchSelect({
       <input
         ref={inputRef}
         type="text"
-        value={
-          open
-            ? query
-            : selected
-              ? `${selected.sku} · ${selected.name}${selected.spec ? ` (${selected.spec})` : ""}`
-              : ""
-        }
+        value={open ? query : (selected?.name ?? "")}
         placeholder={placeholder}
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();

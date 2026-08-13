@@ -789,6 +789,7 @@ export type Database = {
           quantity: number;
           unit_price: number;
           remark: string | null;
+          lot_number: string | null;
           created_at: string;
         };
         Insert: {
@@ -799,6 +800,7 @@ export type Database = {
           quantity: number;
           unit_price?: number;
           remark?: string | null;
+          lot_number?: string | null;
           created_at?: string;
         };
         Update: {
@@ -809,6 +811,7 @@ export type Database = {
           quantity?: number;
           unit_price?: number;
           remark?: string | null;
+          lot_number?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -839,6 +842,7 @@ export type Database = {
           delivery_method: string | null;
           created_by: string | null;
           created_at: string;
+          doc_no: number;
         };
         Insert: {
           id?: string;
@@ -850,6 +854,7 @@ export type Database = {
           delivery_method?: string | null;
           created_by?: string | null;
           created_at?: string;
+          doc_no?: number;
         };
         Update: {
           id?: string;
@@ -861,6 +866,7 @@ export type Database = {
           delivery_method?: string | null;
           created_by?: string | null;
           created_at?: string;
+          doc_no?: number;
         };
         Relationships: [
           {
@@ -895,6 +901,7 @@ export type Database = {
           quantity: number;
           unit_cost: number;
           remark: string | null;
+          lot_number: string | null;
           created_at: string;
         };
         Insert: {
@@ -905,6 +912,7 @@ export type Database = {
           quantity: number;
           unit_cost?: number;
           remark?: string | null;
+          lot_number?: string | null;
           created_at?: string;
         };
         Update: {
@@ -915,6 +923,7 @@ export type Database = {
           quantity?: number;
           unit_cost?: number;
           remark?: string | null;
+          lot_number?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -1457,6 +1466,7 @@ export type Database = {
           p_items: Json;
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
+          p_doc_no?: number | null;
         };
         Returns: string;
       };
@@ -1470,6 +1480,7 @@ export type Database = {
           p_items: Json;
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
+          p_doc_no?: number | null;
         };
         Returns: string;
       };
@@ -1484,6 +1495,7 @@ export type Database = {
           p_items: Json;
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
+          p_doc_no?: number | null;
         };
         Returns: string;
       };
@@ -1498,6 +1510,7 @@ export type Database = {
           p_items: Json;
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
+          p_doc_no?: number | null;
         };
         Returns: string;
       };
@@ -1515,6 +1528,8 @@ export type Database = {
           p_sale_items: Json;
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
+          p_purchase_doc_no?: number | null;
+          p_sale_doc_no?: number | null;
         };
         Returns: { purchase_order_id: string; sale_order_id: string }[];
       };

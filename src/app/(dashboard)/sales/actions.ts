@@ -18,6 +18,7 @@ type SaleItemInput = {
   quantity: number;
   unitPrice: number;
   remark?: string | null;
+  lotNumber?: string | null;
 };
 
 function parseItems(itemsRaw: string): SaleItemInput[] | null {
@@ -29,6 +30,16 @@ function parseItems(itemsRaw: string): SaleItemInput[] | null {
   }
 }
 
+// "No"(전표번호) 입력칸을 비워두면 자동 채번(DB 시퀀스 기본값)에 맡기고,
+// 값을 직접 입력했을 때만 그 번호를 그대로 쓴다 — 인쇄되는 거래명세표의
+// No와 값을 맞추고 싶을 때 쓰는 용도라 형식 검증은 하지 않는다.
+function parseDocNo(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
+}
+
 export async function createSale(_prevState: FormState, formData: FormData): Promise<FormState> {
   const customerId = String(formData.get("customer_id") ?? "");
   const warehouseId = String(formData.get("warehouse_id") ?? "");
@@ -38,6 +49,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 보내서 null(외상)로 저장된다 — 체크를 끄고 결제방법을 고른 경우에만 값이 온다.
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
   // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
   // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
@@ -81,9 +93,11 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       remark: item.remark || null,
+      lotNumber: item.lotNumber || null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
+    p_doc_no: docNo,
   });
 
   if (error || !salesOrderId) {
@@ -166,6 +180,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const memo = String(formData.get("memo") ?? "") || null;
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !customerId || !warehouseId || !orderDate) {
@@ -200,9 +215,11 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       remark: item.remark || null,
+      lotNumber: item.lotNumber || null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
+    p_doc_no: docNo,
   });
 
   if (error) {
