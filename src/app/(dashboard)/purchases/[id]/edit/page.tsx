@@ -7,10 +7,16 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function EditPurchasePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
+  const { back } = await searchParams;
+  // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
+  // 상세가 아니라 그 검색 조건 그대로의 목록으로 돌아가게 한다(updatePurchase가
+  // 이 값을 읽어 redirect 대상을 정한다). ESC/닫기는 기존처럼 상세로 간다.
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: suppliers }, { data: products }, { data: warehouse }] =
@@ -45,6 +51,7 @@ export default async function EditPurchasePage({
         warehouseId={warehouse?.id ?? order.warehouse_id}
         action={updatePurchase}
         submitLabel="매입 수정"
+        backParam={back}
         initial={{
           id: order.id,
           supplierId: order.supplier_id,

@@ -10,6 +10,7 @@ import {
   revertSalesPaperStockOverride,
 } from "@/lib/paper-calc-sync";
 import { markTodoSideDone } from "@/lib/todo-flow";
+import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 
 type SaleItemInput = {
@@ -192,6 +193,9 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
+  // 상세가 아니라 그 목록으로 돌아간다.
+  const back = String(formData.get("back") ?? "") || undefined;
 
   if (!id || !customerId || !warehouseId || !orderDate) {
     return { error: "출고처, 창고, 거래일자를 모두 입력해주세요." };
@@ -255,7 +259,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/dashboard");
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
-  redirect(`/sales/${id}`);
+  redirect(back ? resolveListHref("/sales", back) : `/sales/${id}`);
 }
 
 export async function deleteSale(_prevState: FormState, formData: FormData): Promise<FormState> {

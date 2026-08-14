@@ -96,6 +96,7 @@ export function NewSaleForm({
   action = createSale,
   initial,
   submitLabel = "매출 등록",
+  backParam,
 }: {
   customers: Customer[];
   products: Product[];
@@ -105,6 +106,9 @@ export function NewSaleForm({
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: SaleInitial;
   submitLabel?: string;
+  // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어온 경우, 저장 후
+  // 그 목록으로 돌아가기 위해 서버 액션(updateSale)에 그대로 넘긴다.
+  backParam?: string;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
@@ -521,6 +525,7 @@ export function NewSaleForm({
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+      {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
