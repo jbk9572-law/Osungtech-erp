@@ -7,7 +7,12 @@ import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/pap
 import { parseTodoType } from "@/lib/todo-flow";
 import type { FormState } from "@/components/form-message";
 
-export type TodoItemInput = { productId: string; spec?: string | null; quantity: number };
+export type TodoItemInput = {
+  productId: string;
+  spec?: string | null;
+  quantity: number;
+  lotNumber?: string | null;
+};
 
 export type OpenTodoSummary = {
   id: string;

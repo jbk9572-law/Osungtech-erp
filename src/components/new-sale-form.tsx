@@ -59,6 +59,7 @@ type Row = {
   productId: string;
   spec: string;
   manualSpec: boolean;
+  lotNumber: string;
   quantity: number;
   unitPrice: number;
   manualPrice: boolean;
@@ -75,12 +76,14 @@ export type SaleInitial = {
   memo: string;
   paymentMethod?: string | null;
   deliveryMethod?: string | null;
+  docNo?: number | null;
   items: {
     productId: string;
     spec?: string | null;
     quantity: number;
     unitPrice: number;
     remark?: string | null;
+    lotNumber?: string | null;
   }[];
 };
 
@@ -119,6 +122,9 @@ export function NewSaleForm({
   // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
   // 그때만 직접 바꾸면 된다.
   const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "직납");
+  // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
+  // 전표번호를 직접 입력/수정할 수 있게 한다.
+  const [docNo, setDocNo] = useState(initial?.docNo ? String(initial.docNo) : "");
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -126,6 +132,7 @@ export function NewSaleForm({
           productId: item.productId,
           spec: item.spec ?? "",
           manualSpec: Boolean(item.spec),
+          lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           manualPrice: false,
@@ -137,6 +144,7 @@ export function NewSaleForm({
             productId: "",
             spec: "",
             manualSpec: false,
+            lotNumber: "",
             quantity: 0,
             unitPrice: 0,
             manualPrice: false,
@@ -226,6 +234,7 @@ export function NewSaleForm({
       productId: item.productId,
       spec: item.spec,
       manualSpec: Boolean(item.spec),
+      lotNumber: item.lotNumber,
       quantity: item.quantity,
       unitPrice: resolvePrice(customerId, item.productId),
       manualPrice: false,
@@ -286,6 +295,7 @@ export function NewSaleForm({
           productId: item.productId,
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
+          lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: product ? resolvePrice(effectiveCustomerId, product.id) : 0,
           manualPrice: false,
@@ -435,6 +445,7 @@ export function NewSaleForm({
       productId,
       spec: product?.spec ?? "",
       manualSpec: false,
+      lotNumber: "",
       quantity: 0,
       unitPrice: resolvePrice(customerId, productId),
       manualPrice: false,
@@ -454,6 +465,7 @@ export function NewSaleForm({
         productId: "",
         spec: "",
         manualSpec: false,
+        lotNumber: "",
         quantity: 0,
         unitPrice: 0,
         manualPrice: false,
@@ -488,6 +500,7 @@ export function NewSaleForm({
         quantity: row.quantity,
         unitPrice: row.unitPrice,
         remark: row.remark || null,
+        lotNumber: row.lotNumber || null,
       }))
   );
 
@@ -508,6 +521,7 @@ export function NewSaleForm({
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+      <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
@@ -538,6 +552,19 @@ export function NewSaleForm({
           <span className="erp-detail-tab active">기본정보</span>
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
+          <div className="erp-field">
+            <label>No</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="자동"
+              value={docNo}
+              onChange={(e) => setDocNo(e.target.value.replace(/[^0-9]/g, ""))}
+              className="erp-input"
+              style={{ width: 80 }}
+              title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
+            />
+          </div>
           <div className="erp-field">
             <label>출고처</label>
             <PartySearchSelect
@@ -847,20 +874,27 @@ export function NewSaleForm({
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 960 }}>
             <thead>
               <tr>
-                <th style={{ width: "18%" }}>품목</th>
-                <th style={{ width: "8%" }}>규격</th>
-                <th style={{ width: "5%" }}>단위</th>
-                <th className="num" style={{ width: "21%" }}>
+                <th style={{ width: "13%" }}>품목</th>
+                <th style={{ width: "6%" }}>규격</th>
+                <th style={{ width: "8%" }}>관리번호</th>
+                <th style={{ width: "4%" }}>단위</th>
+                <th className="num" style={{ width: "15%" }}>
                   수량
                 </th>
-                <th className="num" style={{ width: "14%" }}>
+                <th className="num" style={{ width: "9%" }}>
                   단가
                 </th>
-                <th className="num" style={{ width: "14%" }}>
-                  금액
+                <th className="num" style={{ width: "10%" }}>
+                  공급가액
                 </th>
-                <th style={{ width: "14%" }}>비고</th>
-                <th style={{ width: "6%" }} />
+                <th className="num" style={{ width: "8%" }}>
+                  세액
+                </th>
+                <th className="num" style={{ width: "9%" }}>
+                  합계
+                </th>
+                <th style={{ width: "13%" }}>비고</th>
+                <th style={{ width: "5%" }} />
               </tr>
             </thead>
             <tbody
@@ -889,6 +923,7 @@ export function NewSaleForm({
                     )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
                   <td className="num">
                     <NumberInput
@@ -899,6 +934,12 @@ export function NewSaleForm({
                   </td>
                   <td className="num">{pendingCalcUnitPrice.toLocaleString()}</td>
                   <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {Math.round(pendingCalcAmount * 0.1).toLocaleString()}원
+                  </td>
+                  <td className="num">
+                    {(pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)).toLocaleString()}원
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
                       ? `자동값 ${pendingCalcSummary.totalSheet.toLocaleString()} → 수동 입력`
@@ -923,10 +964,16 @@ export function NewSaleForm({
               )}
               {paperCalcSizeLines.map((line, i) => (
                 <tr key={`paper-calc-size-${i}`} style={{ background: "#f7f8fb" }}>
-                  <td colSpan={2} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
                     ㄴ {line}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    -
+                  </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     -
                   </td>
@@ -980,6 +1027,15 @@ export function NewSaleForm({
                           직접입력
                         </label>
                       )}
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        placeholder="관리번호"
+                        value={row.lotNumber}
+                        onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
+                        className="erp-input w-full"
+                      />
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
@@ -1040,6 +1096,15 @@ export function NewSaleForm({
                         );
                       })()}
                     </td>
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      {Math.round(row.quantity * row.unitPrice * 0.1).toLocaleString()}원
+                    </td>
+                    <td className="num" style={{ fontWeight: 600 }}>
+                      {(
+                        row.quantity * row.unitPrice + Math.round(row.quantity * row.unitPrice * 0.1)
+                      ).toLocaleString()}
+                      원
+                    </td>
                     <td>
                       <input
                         type="text"
@@ -1066,10 +1131,10 @@ export function NewSaleForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "#eef1f5" }}>
-                <td colSpan={5} style={{ fontWeight: 700 }}>
+                <td colSpan={6} style={{ fontWeight: 700 }}>
                   합계
                 </td>
-                <td className="num" colSpan={3}>
+                <td className="num" colSpan={5}>
                   <div style={{ color: "var(--erp-text-muted)" }}>
                     공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
                   </div>

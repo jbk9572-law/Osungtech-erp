@@ -18,7 +18,7 @@ export default async function EditPurchasePage({
       supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
       supabase
         .from("purchase_order_items")
-        .select("product_id, spec, quantity, unit_cost, remark")
+        .select("product_id, spec, quantity, unit_cost, remark, lot_number")
         .eq("purchase_order_id", id)
         .order("created_at"),
       supabase.from("suppliers").select("id, name").order("name"),
@@ -53,12 +53,14 @@ export default async function EditPurchasePage({
           memo: order.memo ?? "",
           paymentMethod: order.payment_method,
           deliveryMethod: order.delivery_method,
+          docNo: order.doc_no,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             spec: item.spec,
             quantity: item.quantity,
             unitCost: Number(item.unit_cost),
             remark: item.remark,
+            lotNumber: item.lot_number,
           })),
         }}
       />

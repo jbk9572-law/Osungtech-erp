@@ -19,16 +19,19 @@ export default async function SalesPrintPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ copies?: string; layout?: string; balance?: string }>;
+  searchParams: Promise<{ copies?: string; layout?: string; balance?: string; lot?: string }>;
 }) {
   const { id } = await params;
-  const { copies: copiesParam, layout: layoutParam, balance: balanceParam } = await searchParams;
+  const { copies: copiesParam, layout: layoutParam, balance: balanceParam, lot: lotParam } = await searchParams;
   const copies: InvoiceCopies =
     copiesParam === "receiver" || copiesParam === "supplier" ? copiesParam : "both";
   const layout: InvoiceLayout = layoutParam === "full" ? "full" : "half";
   // 실무에서 거의 안 쓰는 기능이라 기본은 "표기 안함" — 명시적으로
   // ?balance=show를 눌러야만 전잔금/총잔금 칸에 실제 잔액이 찍힌다.
   const showBalance = balanceParam === "show";
+  // 관리번호(Lot)도 같은 방식 — 필요할 때만 ?lot=show로 켜서 품명/규격
+  // 칸에 같이 찍히게 한다.
+  const showLot = lotParam === "show";
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: company }, { data: paperCalcs }] = await Promise.all([
@@ -220,7 +223,8 @@ export default async function SalesPrintPage({
       productLabel: (() => {
         const name = item.products?.name ?? "";
         const spec = item.spec || item.products?.spec;
-        return spec ? `${name}/${spec}` : name;
+        const base = spec ? `${name}/${spec}` : name;
+        return showLot && item.lot_number ? `${base}/${item.lot_number}` : base;
       })(),
       unit: item.products?.unit ?? "",
       quantity: item.quantity,

@@ -29,10 +29,16 @@ type Row = {
   productId: string;
   spec: string;
   manualSpec: boolean;
+  lotNumber: string;
   quantity: number;
 };
 
-export type TodoInitialItem = { productId: string; spec?: string | null; quantity: number };
+export type TodoInitialItem = {
+  productId: string;
+  spec?: string | null;
+  quantity: number;
+  lotNumber?: string | null;
+};
 
 export function TodoForm({
   action,
@@ -74,6 +80,7 @@ export function TodoForm({
           productId: item.productId,
           spec: item.spec ?? "",
           manualSpec: Boolean(item.spec),
+          lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
         }))
       : []
@@ -81,7 +88,10 @@ export function TodoForm({
   const [nextKey, setNextKey] = useState(rows.length);
 
   function addRow() {
-    setRows((prev) => [...prev, { key: nextKey, productId: "", spec: "", manualSpec: false, quantity: 0 }]);
+    setRows((prev) => [
+      ...prev,
+      { key: nextKey, productId: "", spec: "", manualSpec: false, lotNumber: "", quantity: 0 },
+    ]);
     setNextKey((k) => k + 1);
   }
 
@@ -95,6 +105,7 @@ export function TodoForm({
       productId,
       spec: product?.spec ?? "",
       manualSpec: false,
+      lotNumber: "",
       quantity: 0,
     };
     setRows((prev) =>
@@ -160,6 +171,7 @@ export function TodoForm({
         productId: row.productId,
         spec: row.manualSpec ? row.spec : null,
         quantity: row.quantity,
+        lotNumber: row.lotNumber || null,
       }))
   );
 
@@ -287,13 +299,14 @@ export function TodoForm({
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
             <thead>
               <tr>
-                <th style={{ width: "34%" }}>품목</th>
-                <th style={{ width: "20%" }}>규격</th>
-                <th style={{ width: "10%" }}>단위</th>
-                <th className="num" style={{ width: "24%" }}>
+                <th style={{ width: "28%" }}>품목</th>
+                <th style={{ width: "16%" }}>규격</th>
+                <th style={{ width: "20%" }}>관리번호</th>
+                <th style={{ width: "8%" }}>단위</th>
+                <th className="num" style={{ width: "18%" }}>
                   수량
                 </th>
-                <th style={{ width: "12%" }} />
+                <th style={{ width: "10%" }} />
               </tr>
             </thead>
             <tbody>
@@ -337,6 +350,15 @@ export function TodoForm({
                         </label>
                       )}
                     </td>
+                    <td>
+                      <input
+                        type="text"
+                        placeholder="관리번호"
+                        value={row.lotNumber}
+                        onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
+                        className="erp-input w-full"
+                      />
+                    </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
                     <td className="num">
                       <QuantityWithBoxInput
@@ -360,7 +382,7 @@ export function TodoForm({
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="erp-grid-empty">
+                  <td colSpan={6} className="erp-grid-empty">
                     등록된 품목이 없습니다. &quot;+ 품목 추가&quot;로 추가해주세요.
                   </td>
                 </tr>

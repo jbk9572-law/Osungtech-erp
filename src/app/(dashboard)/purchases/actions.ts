@@ -22,6 +22,7 @@ type PurchaseItemInput = {
   quantity: number;
   unitCost: number;
   remark?: string | null;
+  lotNumber?: string | null;
 };
 
 type SaleItemInput = {
@@ -30,6 +31,7 @@ type SaleItemInput = {
   quantity: number;
   unitPrice: number;
   remark?: string | null;
+  lotNumber?: string | null;
 };
 
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
@@ -48,6 +50,24 @@ function parseSaleItems(itemsRaw: string): SaleItemInput[] | null {
   } catch {
     return null;
   }
+}
+
+// "No"(전표번호) 입력칸을 비워두면 자동 채번(DB 시퀀스 기본값)에 맡기고,
+// 값을 직접 입력했을 때만 그 번호를 그대로 쓴다.
+function parseDocNo(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
+}
+
+// doc_no에는 유니크 제약이 걸려있어, 직접 입력한 번호가 이미 쓰이고
+// 있으면 postgres 원문 에러 대신 알아볼 수 있는 안내로 바꿔준다.
+function docNoErrorMessage(error: { code?: string; message: string } | null, docNo: number | null): string | null {
+  if (error?.code === "23505" && error.message.includes("doc_no") && docNo != null) {
+    return `이미 사용 중인 전표번호(No: ${docNo})입니다. 다른 번호를 입력하거나 비워서 자동 채번하세요.`;
+  }
+  return null;
 }
 
 // 품목별 수량 합계 맵 — 출고 수량이 매입 수량을 넘는지 미리(DB까지 가기 전에)
@@ -72,6 +92,7 @@ export type TodayPurchaseItem = {
   unit: string;
   supplierName: string;
   purchaseOrderId: string;
+  lotNumber: string;
 };
 
 // 당일 입고된 품목을 그대로 매출/할일로 옮겨 담을 수 있게, 특정 거래일자에
@@ -84,7 +105,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
   const { data } = await supabase
     .from("purchase_order_items")
     .select(
-      "id, product_id, quantity, spec, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+      "id, product_id, quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
     )
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
@@ -99,6 +120,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     unit: item.products?.unit ?? "",
     supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
     purchaseOrderId: item.purchase_order_id,
+    lotNumber: item.lot_number ?? "",
   }));
 }
 
@@ -141,6 +163,7 @@ export async function createPurchase(
   // 보내서 null(외상)로 저장된다 — 체크를 끄고 결제방법을 고른 경우에만 값이 온다.
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
@@ -223,6 +246,7 @@ export async function createPurchase(
           quantity: item.quantity,
           unitCost: item.unitCost,
           remark: item.remark || null,
+          lotNumber: item.lotNumber || null,
         })),
         p_sale_items: saleItems.map((item) => ({
           productId: item.productId,
@@ -230,14 +254,23 @@ export async function createPurchase(
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           remark: item.remark || null,
+          lotNumber: item.lotNumber || null,
         })),
         p_payment_method: paymentMethod,
         p_delivery_method: deliveryMethod,
+        p_purchase_doc_no: docNo,
+        // 이 화면엔 매출 전표번호를 따로 입력하는 칸이 없어 항상 자동
+        // 채번에 맡긴다 — 값을 아예 안 보내면(키 자체가 없으면) 옛 버전
+        // 함수 오버로드가 남아있을 때 PostgREST가 어느 쪽을 불러야 할지
+        // 못 정해서 "Could not choose the best candidate function" 오류가
+        // 났었다(00000000000067). null이라도 키를 항상 보내서 이 문제가
+        // 재발하지 않게 한다.
+        p_sale_doc_no: null,
       })
       .single();
 
     if (error || !data) {
-      return { error: `매입+매출 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+      return { error: docNoErrorMessage(error, docNo) ?? `매입+매출 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
     }
     purchaseOrderId = data.purchase_order_id;
     salesOrderId = data.sale_order_id;
@@ -272,13 +305,15 @@ export async function createPurchase(
         quantity: item.quantity,
         unitCost: item.unitCost,
         remark: item.remark || null,
+        lotNumber: item.lotNumber || null,
       })),
       p_payment_method: paymentMethod,
       p_delivery_method: deliveryMethod,
+      p_doc_no: docNo,
     });
 
     if (error || !newPurchaseId) {
-      return { error: `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+      return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
     }
     purchaseOrderId = newPurchaseId;
   }
@@ -390,6 +425,7 @@ export async function updatePurchase(
   const memo = String(formData.get("memo") ?? "") || null;
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
 
   if (!id || !supplierId || !warehouseId || !purchaseDate) {
@@ -424,13 +460,15 @@ export async function updatePurchase(
       quantity: item.quantity,
       unitCost: item.unitCost,
       remark: item.remark || null,
+      lotNumber: item.lotNumber || null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
+    p_doc_no: docNo,
   });
 
   if (error) {
-    return { error: `매입 거래 수정에 실패했습니다: ${error.message}` };
+    return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 수정에 실패했습니다: ${error.message}` };
   }
 
   await Promise.all(
