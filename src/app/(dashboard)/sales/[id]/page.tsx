@@ -23,6 +23,7 @@ export default async function SaleDetailPage({
   // 목록에서 검색/필터를 걸어둔 채로 이 화면에 들어왔으면, ESC/닫기로
   // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const closeHref = resolveListHref("/sales", back);
+  const editHref = `/sales/${id}/edit${back ? `?back=${back}` : ""}`;
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }] = await Promise.all([
@@ -70,7 +71,7 @@ export default async function SaleDetailPage({
       <KeyboardShortcuts
         shortcuts={{
           F9: { href: `/sales/${id}/print`, newTab: true },
-          F4: { href: `/sales/${id}/edit` },
+          F4: { href: editHref },
           Escape: { href: closeHref },
         }}
       />
@@ -80,7 +81,7 @@ export default async function SaleDetailPage({
           <Link href={`/sales/${id}/print`} target="_blank" rel="noopener noreferrer" className="erp-btn">
             F9 명세표
           </Link>
-          <Link href={`/sales/${id}/edit`} className="erp-btn">
+          <Link href={editHref} className="erp-btn">
             F4 수정
           </Link>
           <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">

@@ -92,6 +92,7 @@ export function NewPurchaseForm({
   action = createPurchase,
   initial,
   submitLabel = "매입 등록",
+  backParam,
   customers = [],
   prices = [],
   supplierPrices = [],
@@ -102,6 +103,9 @@ export function NewPurchaseForm({
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: PurchaseInitial;
   submitLabel?: string;
+  // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어온 경우, 저장 후
+  // 그 목록으로 돌아가기 위해 서버 액션(updatePurchase)에 그대로 넘긴다.
+  backParam?: string;
   customers?: { id: string; name: string }[];
   // 출고처(거래처)별 판매단가. "매출도 같이 등록"에서 매출단가 미리보기에
   // 쓴다 — 매출 등록 화면(new-sale-form)과 동일한 방식.
@@ -537,6 +541,7 @@ export function NewPurchaseForm({
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
+      {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />

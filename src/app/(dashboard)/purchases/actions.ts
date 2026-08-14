@@ -14,6 +14,7 @@ import {
   type PendingCalc,
 } from "@/lib/paper-calc-sync";
 import { markTodoSideDone } from "@/lib/todo-flow";
+import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 
 type PurchaseItemInput = {
@@ -427,6 +428,9 @@ export async function updatePurchase(
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
+  // 상세가 아니라 그 목록으로 돌아간다.
+  const back = String(formData.get("back") ?? "") || undefined;
 
   if (!id || !supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급처, 창고, 매입일자를 모두 입력해주세요." };
@@ -484,7 +488,7 @@ export async function updatePurchase(
   revalidatePath("/dashboard");
   revalidatePath("/payables");
   revalidatePath(`/suppliers/${supplierId}`);
-  redirect(`/purchases/${id}`);
+  redirect(back ? resolveListHref("/purchases", back) : `/purchases/${id}`);
 }
 
 export async function bulkDeletePurchases(_prevState: FormState, formData: FormData): Promise<FormState> {

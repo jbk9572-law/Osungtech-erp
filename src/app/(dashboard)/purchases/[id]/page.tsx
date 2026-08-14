@@ -23,6 +23,7 @@ export default async function PurchaseDetailPage({
   // 목록에서 검색/필터를 걸어둔 채로 이 화면에 들어왔으면, ESC/닫기로
   // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const closeHref = resolveListHref("/purchases", back);
+  const editHref = `/purchases/${id}/edit${back ? `?back=${back}` : ""}`;
   const supabase = await createClient();
 
   const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }] = await Promise.all([
@@ -69,14 +70,14 @@ export default async function PurchaseDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F4: { href: `/purchases/${id}/edit` },
+          F4: { href: editHref },
           Escape: { href: closeHref },
         }}
       />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[#182338]">매입관리 &gt; 발주 상세</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/purchases/${id}/edit`} className="erp-btn">
+          <Link href={editHref} className="erp-btn">
             F4 수정
           </Link>
           <Link href={`/paper-calc?purchaseOrderId=${id}`} className="erp-btn">
