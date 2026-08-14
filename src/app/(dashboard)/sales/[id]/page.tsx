@@ -116,6 +116,10 @@ export default async function SaleDetailPage({
         </div>
         <div className="erp-detail-body" style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>No</span>
+            <span>{order.doc_no}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>출고처명</span>
             <span>{order.customers?.name ?? "-"}</span>
           </div>

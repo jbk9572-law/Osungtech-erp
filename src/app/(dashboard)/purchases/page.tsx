@@ -21,7 +21,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, doc_no, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -76,13 +76,13 @@ export default async function PurchasesPage({
           kind: "purchase",
           orderId,
           supplierId: item.purchase_orders?.suppliers?.id,
-          docNo: item.purchase_orders?.doc_no,
           date: item.purchase_orders?.purchase_date,
           supplierName: item.purchase_orders?.suppliers?.name,
           authorName: item.purchase_orders?.profiles?.full_name,
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           lotNumber: item.lot_number,
+          remark: item.remark,
           quantity: 0,
           unit: item.products?.unit,
           unitCost: Number(item.unit_cost),
@@ -92,9 +92,10 @@ export default async function PurchasesPage({
           itemCount: 0,
         };
       } else {
-        // 품목이 2건 이상이면 단가/관리번호를 하나로 대표할 수 없으니 비워둔다.
+        // 품목이 2건 이상이면 단가/관리번호/비고를 하나로 대표할 수 없으니 비워둔다.
         acc[orderId].unitCost = null;
         acc[orderId].lotNumber = null;
+        acc[orderId].remark = null;
       }
       acc[orderId].itemCount += 1;
       acc[orderId].quantity += item.quantity;
@@ -117,13 +118,13 @@ export default async function PurchasesPage({
     kind: "payment",
     orderId: undefined,
     supplierId: p.suppliers?.id,
-    docNo: null,
     date: p.paid_at,
     supplierName: p.suppliers?.name,
     authorName: undefined,
     productLabel: p.memo || "지급",
     spec: "-",
     lotNumber: null,
+    remark: null,
     quantity: 0,
     unit: undefined,
     unitCost: null,

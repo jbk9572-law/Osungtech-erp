@@ -11,13 +11,13 @@ export type PurchaseRow = {
   kind: "purchase" | "payment";
   orderId: string | undefined;
   supplierId?: string;
-  docNo?: number | null;
   date: string | undefined;
   supplierName: string | undefined;
   authorName: string | null | undefined;
   productLabel: string;
   spec: string;
   lotNumber?: string | null;
+  remark?: string | null;
   quantity: number;
   unit: string | null | undefined;
   unitCost: number | null;
@@ -178,9 +178,6 @@ export function PurchaseGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("매입일자", "date", thSticky2)}
-              <th className="num" style={{ width: 56 }}>
-                No
-              </th>
               <th style={{ width: 64 }}>유형</th>
               {sortableHeader("공급처", "supplierName")}
               <th style={{ width: 76 }}>입고방법</th>
@@ -192,6 +189,7 @@ export function PurchaseGridTable({
               <th className="num">매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
+              <th>비고</th>
             </tr>
           </thead>
           <tbody>
@@ -216,9 +214,6 @@ export function PurchaseGridTable({
                     )}
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {row.docNo ?? "-"}
-                  </td>
                   <td>
                     <span className={`erp-badge ${isPayment ? "erp-badge-warning" : "erp-badge-info"}`}>
                       {isPayment ? "지급" : "매입"}
@@ -244,6 +239,7 @@ export function PurchaseGridTable({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {isPayment ? "-" : row.taxAmount.toLocaleString()}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
                 </ClickableRow>
               );
             })}
@@ -260,7 +256,7 @@ export function PurchaseGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={8}
+                  colSpan={7}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
                   매입 합계 ({sortedRows.filter((r) => r.kind === "purchase").length}건)
@@ -269,6 +265,7 @@ export function PurchaseGridTable({
                 <td />
                 <td className="num">{totalSupply.toLocaleString()}</td>
                 <td className="num">{totalTax.toLocaleString()}</td>
+                <td />
               </tr>
             </tfoot>
           )}
