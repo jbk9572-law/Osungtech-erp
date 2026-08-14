@@ -3,17 +3,13 @@
 export function AgingBadge({ days }: { days: number }) {
   const tier =
     days >= 60
-      ? { label: "위험", bg: "#fdeaec", fg: "var(--erp-danger)" }
+      ? { label: "위험", cls: "erp-badge-danger" }
       : days >= 30
-        ? { label: "주의", bg: "#fff3e0", fg: "var(--erp-warning)" }
-        : { label: "정상", bg: "#eef0f3", fg: "var(--erp-text-muted)" };
+        ? { label: "주의", cls: "erp-badge-warning" }
+        : { label: "정상", cls: "erp-badge-muted" };
 
   return (
-    <span
-      className="erp-badge"
-      style={{ background: tier.bg, color: tier.fg }}
-      title={`${days}일 경과`}
-    >
+    <span className={`erp-badge ${tier.cls}`} title={`${days}일 경과`}>
       {days}일 · {tier.label}
     </span>
   );

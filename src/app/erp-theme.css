@@ -26,6 +26,12 @@
   --erp-text-muted: #6b7280;
   --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
+  /* 패널 헤더/서브 배경과 셀 경계선에 거의 같은 회색조가 파일 곳곳에
+     제각각 하드코딩돼 있던 걸(#fafbfc/#fafbfd/#f7f8fa/#f7f9fc,
+     #f0f2f5/#eef0f3 등) 역할별로 두 변수로 묶었다 — 육안으로는 구분
+     안 되는 색이었어서 통일해도 화면상 차이는 없다. */
+  --erp-bg-subtle: #fafbfc;
+  --erp-divider: #eef0f3;
   --erp-shadow-sm: 0 1px 2px rgba(32, 28, 43, 0.05), 0 2px 8px -3px rgba(32, 28, 43, 0.1);
   --erp-shadow-md: 0 4px 16px rgba(32, 28, 43, 0.08), 0 12px 28px -10px rgba(32, 28, 43, 0.16);
 
@@ -170,7 +176,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #f7f9fc;
+  background: var(--erp-bg-subtle);
   border-bottom: 1px solid var(--erp-border);
   padding: 0 10px;
 }
@@ -218,7 +224,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-ribbon-dropdown-item:last-child {
@@ -337,7 +343,7 @@
   padding: 0 10px;
   background: none;
   border: none;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
   font-size: 12.5px;
   color: var(--erp-text);
 }
@@ -380,7 +386,7 @@
   flex: 0 0 auto;
   padding: 10px 12px;
   border-top: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -424,13 +430,13 @@
   justify-content: center;
   border: none;
   border-bottom: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   color: var(--erp-text-muted);
   font-size: 12px;
 }
 
 .erp-tree-group {
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-tree-group-label {
@@ -440,7 +446,7 @@
   width: 100%;
   height: 34px;
   padding: 0 12px;
-  background: #fafbfd;
+  background: var(--erp-bg-subtle);
   border: none;
   font-size: 13px;
   font-weight: 700;
@@ -617,7 +623,7 @@
   align-items: end;
   gap: 14px;
   padding: 14px;
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   border: 1px solid var(--erp-border);
   border-radius: 6px;
   margin-bottom: 12px;
@@ -740,7 +746,7 @@
   height: 32px;
   min-width: 90px;
   padding: 0 12px;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid var(--erp-border);
   background: #fff;
   color: var(--erp-text);
@@ -832,7 +838,7 @@
 
 .erp-grid thead th {
   height: 32px;
-  background: #eef1f5;
+  background: var(--erp-bg);
   color: var(--erp-text);
   font-weight: 700;
   text-align: left;
@@ -852,8 +858,8 @@
 .erp-grid tbody td {
   height: 30px;
   padding: 4px 10px;
-  border-bottom: 1px solid #eef0f3;
-  border-right: 1px solid #eef0f3;
+  border-bottom: 1px solid var(--erp-divider);
+  border-right: 1px solid var(--erp-divider);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: top;
@@ -867,7 +873,7 @@
   height: 30px;
   padding: 4px 10px;
   border-top: 2px solid var(--erp-border);
-  border-right: 1px solid #eef0f3;
+  border-right: 1px solid var(--erp-divider);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: middle;
@@ -886,7 +892,7 @@
    특이도가 hover/selected 규칙과 같아서(:nth-child도 가상클래스),
    아래쪽에 나오는 hover/selected가 소스 순서상 항상 우선한다. */
 .erp-grid tbody tr:nth-child(even) {
-  background: #f7f8fa;
+  background: var(--erp-bg-subtle);
 }
 
 .erp-grid tbody tr:hover {
@@ -968,7 +974,7 @@
 .erp-detail-tabs {
   display: flex;
   border-bottom: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   border-radius: 6px 6px 0 0;
 }
 
@@ -1002,7 +1008,7 @@
   align-items: center;
   gap: 16px;
   padding: 0 12px;
-  background: #f0f2f5;
+  background: var(--erp-bg-subtle);
   border-top: 1px solid var(--erp-border);
   font-size: 11px;
   color: var(--erp-text-muted);
@@ -1092,7 +1098,7 @@
   padding: 0 12px;
   font-size: 12.5px;
   font-weight: 700;
-  background: #eef1f5;
+  background: var(--erp-bg);
   border-bottom: 1px solid var(--erp-border);
 }
 
@@ -1101,7 +1107,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 9px 12px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
   font-size: 12.5px;
 }
 
@@ -1130,7 +1136,7 @@
   font-size: 12px;
   text-decoration: none;
   color: var(--erp-text);
-  border: 1px solid #f0f2f5;
+  border: 1px solid var(--erp-divider);
 }
 
 .erp-home-list-item:hover {
@@ -1185,7 +1191,7 @@
 
 .erp-home-stock-footer {
   padding: 8px 12px 10px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 1px solid var(--erp-divider);
 }
 
 .erp-home-stock-footer a {
@@ -1285,8 +1291,8 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--erp-text-muted);
-  background: #f7f9fc;
-  border-bottom: 1px solid #f0f2f5;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-bell-footer {
