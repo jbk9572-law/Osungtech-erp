@@ -82,7 +82,10 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
   return (
     <div className="mx-auto print-page-margin" style={{ width: 620, maxWidth: "100%" }}>
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href={`/reports/payment-requests/${id}`} className="erp-btn erp-btn-danger">
+        <Link
+          href={`/reports/payment-requests/${id}`}
+          className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+        >
           목록으로
         </Link>
         <PrintButton />

@@ -5,6 +5,7 @@ import { PaymentRequestForm } from "@/components/payment-request-form";
 import { ReceiptReorderList } from "@/components/receipt-reorder-list";
 import { AddReceiptsForm } from "@/components/add-receipts-form";
 import { todayKstStr } from "@/lib/kst-date";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function EditPaymentRequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,6 +36,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
 
   return (
     <div>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
 
       <div className="erp-toolbar">

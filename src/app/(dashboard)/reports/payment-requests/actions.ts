@@ -21,7 +21,7 @@ type LineItemInput = {
 function parseLineItems(itemsRaw: string): LineItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as LineItemInput[];
-    return items.filter((item) => item.usedAt && item.vendor);
+    return items.filter((item) => item.usedAt && item.vendor && Number(item.amount) > 0);
   } catch {
     return null;
   }

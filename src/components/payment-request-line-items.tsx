@@ -51,7 +51,7 @@ export function PaymentRequestLineItems({
 
   const itemsJson = JSON.stringify(
     rows
-      .filter((row) => row.usedAt && row.vendor.trim())
+      .filter((row) => row.usedAt && row.vendor.trim() && Number(row.amount) > 0)
       .map((row, i) => ({
         usedAt: row.usedAt,
         vendor: row.vendor.trim(),
@@ -116,6 +116,7 @@ export function PaymentRequestLineItems({
                   <input
                     type="number"
                     step="1"
+                    min="1"
                     value={row.amount}
                     onChange={(e) => updateRow(row.key, { amount: e.target.value })}
                     placeholder="-"

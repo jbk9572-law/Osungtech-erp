@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PaymentRequestForm } from "@/components/payment-request-form";
 import { todayKstStr } from "@/lib/kst-date";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function NewPaymentRequestPage() {
   const supabase = await createClient();
@@ -9,6 +10,7 @@ export default async function NewPaymentRequestPage() {
 
   return (
     <div>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/reports/payment-requests" } }} />
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
