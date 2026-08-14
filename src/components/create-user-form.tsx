@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { createUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { FormMessage } from "@/components/form-message";
+import { ROLE_OPTIONS } from "@/lib/user-roles";
 
 export function CreateUserForm() {
   const [state, formAction, pending] = useActionState(createUserAccount, undefined);
@@ -29,9 +30,11 @@ export function CreateUserForm() {
       <div className="erp-field">
         <label>역할</label>
         <select name="role" defaultValue="staff" className="erp-select">
-          <option value="staff">일반</option>
-          <option value="manager">매니저</option>
-          <option value="admin">관리자</option>
+          {ROLE_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
         </select>
       </div>
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>

@@ -3,12 +3,7 @@
 import { useActionState } from "react";
 import { updateUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { FormMessage } from "@/components/form-message";
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "관리자",
-  manager: "매니저",
-  staff: "일반",
-};
+import { ROLE_LABELS, ROLE_OPTIONS } from "@/lib/user-roles";
 
 export function EditUserForm({
   userId,
@@ -52,9 +47,11 @@ export function EditUserForm({
           </>
         ) : (
           <select name="role" defaultValue={role} className="erp-select">
-            <option value="staff">일반</option>
-            <option value="manager">매니저</option>
-            <option value="admin">관리자</option>
+            {ROLE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
         )}
       </div>

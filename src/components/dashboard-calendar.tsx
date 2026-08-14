@@ -342,7 +342,7 @@ export function DashboardCalendar({
                     ) : null}
                     {hasSalesDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#d31e3b]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-success)]"}`}
                       />
                     ) : null}
                     {data?.note ? (
@@ -367,7 +367,7 @@ export function DashboardCalendar({
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-primary)]" /> 매입
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#d31e3b]" /> 매출
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-success)]" /> 매출
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-warning)]" /> 메모
@@ -394,7 +394,7 @@ export function DashboardCalendar({
                 <button
                   type="button"
                   onClick={() => handleCopy("sales")}
-                  className="rounded-sm border border-[#d31e3b] bg-[#fdeaec] px-2 py-1 text-xs font-bold text-[#d31e3b] hover:bg-[#fbd9dd]"
+                  className="rounded-sm border border-[var(--erp-success)] bg-[var(--erp-success-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-success)] hover:bg-[var(--erp-success-border)]"
                 >
                   {copiedType === "sales" ? "복사됨" : "매출 복사"}
                 </button>
@@ -513,15 +513,15 @@ export function DashboardCalendar({
             </div>
 
             <div
-              className="mb-4 border-l-[3px] border-l-[#d31e3b] p-2"
-              style={{ background: "linear-gradient(90deg, #fdeaec, transparent 60%)" }}
+              className="mb-4 border-l-[3px] border-l-[var(--erp-success)] p-2"
+              style={{ background: "linear-gradient(90deg, var(--erp-success-bg), transparent 60%)" }}
             >
-              <p className="mb-1 text-xs font-bold text-[#d31e3b]">
+              <p className="mb-1 text-xs font-bold text-[var(--erp-success)]">
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
               {(selectedData.salesItems.length > 0 ||
                 Object.keys(selectedData.salesPaperCalcByPartner).length > 0) && (
-                <div className="space-y-2 text-xs font-medium text-[#d31e3b]">
+                <div className="space-y-2 text-xs font-medium text-[var(--erp-success)]">
                   {buildPartnerBlocks(selectedData.salesItems, selectedData.salesPaperCalcByPartner).map(
                     (partner, pi) => (
                       <div key={pi}>
@@ -604,7 +604,7 @@ export function DashboardCalendar({
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 text-[#d31e3b]">
+                                <li className="flex items-start justify-between gap-2 text-[var(--erp-success)]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>

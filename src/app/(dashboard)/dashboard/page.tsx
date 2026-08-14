@@ -426,13 +426,13 @@ export default async function DashboardPage({
         </div>
       )}
       <div className="erp-hero-row">
-        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-danger)" }}>
+        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-success)" }}>
           <div className="erp-hero-label">이번달 매출</div>
           <div className="erp-hero-value">
             {monthSalesCount}건 · {monthSalesTotal.toLocaleString()}원
           </div>
         </div>
-        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-primary)" }}>
+        <div className="erp-hero-card">
           <div className="erp-hero-label">이번달 매입</div>
           <div className="erp-hero-value">
             {monthPurchaseCount}건 · {monthPurchaseTotal.toLocaleString()}원
