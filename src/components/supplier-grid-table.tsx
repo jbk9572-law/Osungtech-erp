@@ -1,10 +1,13 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState, type CSSProperties } from "react";
 import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteSuppliers } from "@/app/(dashboard)/suppliers/actions";
+import { useSortableRows } from "@/lib/grid-sort";
+import { SortableTh } from "@/components/grid/sortable-th";
+import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
 
 export type SupplierRow = {
   id: string;
@@ -17,12 +20,10 @@ export type SupplierRow = {
 
 type SortKey = "name" | "contact_name" | "email" | "phone" | "address";
 
-function compareValues(a: SupplierRow, b: SupplierRow, key: SortKey): number {
-  return String(a[key] ?? "").localeCompare(String(b[key] ?? ""), "ko");
-}
+const STICKY_WIDTH = 160;
 
 export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<SupplierRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteSuppliers, undefined);
@@ -36,29 +37,11 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
     }
   }
 
-  const sortedRows = useMemo(() => {
-    if (!sort) return rows;
-    return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
-  }, [rows, sort]);
-
   const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.name);
   const namePreview =
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
       : selectedNames.join(", ");
-
-  function toggleSort(key: SortKey) {
-    setSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: 1 };
-      if (prev.dir === 1) return { key, dir: -1 };
-      return null;
-    });
-  }
-
-  function sortIndicator(key: SortKey) {
-    if (!sort || sort.key !== key) return "";
-    return sort.dir === 1 ? " ▲" : " ▼";
-  }
 
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
 
@@ -75,14 +58,25 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
     });
   }
 
-  function sortableHeader(label: string, key: SortKey) {
+  function sortableHeader(label: string, key: SortKey, style?: CSSProperties) {
     return (
-      <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort(key)}>
-        {label}
-        {sortIndicator(key)}
-      </th>
+      <SortableTh
+        label={`${label}${sortIndicator(key)}`}
+        ariaSortValue={ariaSortFor(key)}
+        onClick={() => toggleSort(key)}
+        style={style}
+      />
     );
   }
+
+  const thCheckbox = stickyHeaderStyle(0, GRID_CHECKBOX_WIDTH);
+  const tdCheckbox = stickyCellStyle(0, GRID_CHECKBOX_WIDTH);
+  const thName = stickyHeaderStyle(GRID_CHECKBOX_WIDTH, STICKY_WIDTH, {
+    borderRight: "1px solid var(--erp-border)",
+  });
+  const tdName = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_WIDTH, {
+    borderRight: "1px solid var(--erp-border)",
+  });
 
   return (
     <>
@@ -103,10 +97,10 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 32 }}>
+              <th style={thCheckbox}>
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
-              {sortableHeader("업체명", "name")}
+              {sortableHeader("업체명", "name", thName)}
               {sortableHeader("담당자", "contact_name")}
               {sortableHeader("이메일", "email")}
               {sortableHeader("연락처", "phone")}
@@ -123,7 +117,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                   href={`/suppliers/${supplier.id}`}
                   className={isRowSelected ? "selected" : undefined}
                 >
-                  <td>
+                  <td style={tdCheckbox}>
                     <input
                       type="checkbox"
                       checked={isRowSelected}
@@ -131,7 +125,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>
-                  <td>{supplier.name}</td>
+                  <td style={tdName}>{supplier.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{supplier.contact_name ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{supplier.email ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{supplier.phone ?? "-"}</td>
