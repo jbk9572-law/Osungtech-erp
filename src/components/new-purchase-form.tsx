@@ -453,7 +453,7 @@ export function NewPurchaseForm({
           productId: item.productId,
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
-          lotNumber: "",
+          lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitCost: resolveCost(effectiveSupplierId, item.productId),
           manualPrice: false,
@@ -1089,7 +1089,10 @@ export function NewPurchaseForm({
                       {Math.round(row.quantity * row.unitCost * 0.1).toLocaleString()}원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
-                      {Math.round(row.quantity * row.unitCost * 1.1).toLocaleString()}원
+                      {(
+                        row.quantity * row.unitCost + Math.round(row.quantity * row.unitCost * 0.1)
+                      ).toLocaleString()}
+                      원
                     </td>
                     <td>
                       <input

@@ -40,6 +40,16 @@ function parseDocNo(raw: string): number | null {
   return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
 }
 
+// doc_no에는 유니크 제약이 걸려있어(00000000000020/00000000000066), 직접
+// 입력한 번호가 이미 쓰이고 있으면 postgres 원문 에러("duplicate key
+// value violates unique constraint...") 대신 알아볼 수 있는 안내로 바꿔준다.
+function docNoErrorMessage(error: { code?: string; message: string } | null, docNo: number | null): string | null {
+  if (error?.code === "23505" && error.message.includes("doc_no") && docNo != null) {
+    return `이미 사용 중인 전표번호(No: ${docNo})입니다. 다른 번호를 입력하거나 비워서 자동 채번하세요.`;
+  }
+  return null;
+}
+
 export async function createSale(_prevState: FormState, formData: FormData): Promise<FormState> {
   const customerId = String(formData.get("customer_id") ?? "");
   const warehouseId = String(formData.get("warehouse_id") ?? "");
@@ -101,7 +111,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   });
 
   if (error || !salesOrderId) {
-    return { error: `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+    return { error: docNoErrorMessage(error, docNo) ?? `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
   if (items.length > 0) {
@@ -223,7 +233,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   });
 
   if (error) {
-    return { error: `매출 거래 수정에 실패했습니다: ${error.message}` };
+    return { error: docNoErrorMessage(error, docNo) ?? `매출 거래 수정에 실패했습니다: ${error.message}` };
   }
 
   await Promise.all(

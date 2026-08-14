@@ -234,7 +234,7 @@ export function NewSaleForm({
       productId: item.productId,
       spec: item.spec,
       manualSpec: Boolean(item.spec),
-      lotNumber: "",
+      lotNumber: item.lotNumber,
       quantity: item.quantity,
       unitPrice: resolvePrice(customerId, item.productId),
       manualPrice: false,
@@ -295,7 +295,7 @@ export function NewSaleForm({
           productId: item.productId,
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
-          lotNumber: "",
+          lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: product ? resolvePrice(effectiveCustomerId, product.id) : 0,
           manualPrice: false,
@@ -1100,7 +1100,10 @@ export function NewSaleForm({
                       {Math.round(row.quantity * row.unitPrice * 0.1).toLocaleString()}원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
-                      {Math.round(row.quantity * row.unitPrice * 1.1).toLocaleString()}원
+                      {(
+                        row.quantity * row.unitPrice + Math.round(row.quantity * row.unitPrice * 0.1)
+                      ).toLocaleString()}
+                      원
                     </td>
                     <td>
                       <input

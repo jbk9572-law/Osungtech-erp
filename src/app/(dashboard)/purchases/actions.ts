@@ -61,6 +61,15 @@ function parseDocNo(raw: string): number | null {
   return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
 }
 
+// doc_no에는 유니크 제약이 걸려있어, 직접 입력한 번호가 이미 쓰이고
+// 있으면 postgres 원문 에러 대신 알아볼 수 있는 안내로 바꿔준다.
+function docNoErrorMessage(error: { code?: string; message: string } | null, docNo: number | null): string | null {
+  if (error?.code === "23505" && error.message.includes("doc_no") && docNo != null) {
+    return `이미 사용 중인 전표번호(No: ${docNo})입니다. 다른 번호를 입력하거나 비워서 자동 채번하세요.`;
+  }
+  return null;
+}
+
 // 품목별 수량 합계 맵 — 출고 수량이 매입 수량을 넘는지 미리(DB까지 가기 전에)
 // 확인해서 더 친절한 오류 메시지를 보여주기 위한 용도. 실제 안전장치는
 // create_purchase_and_sale_with_items 함수 안의 검증이다(여기서는 못 걸러도
@@ -83,6 +92,7 @@ export type TodayPurchaseItem = {
   unit: string;
   supplierName: string;
   purchaseOrderId: string;
+  lotNumber: string;
 };
 
 // 당일 입고된 품목을 그대로 매출/할일로 옮겨 담을 수 있게, 특정 거래일자에
@@ -95,7 +105,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
   const { data } = await supabase
     .from("purchase_order_items")
     .select(
-      "id, product_id, quantity, spec, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+      "id, product_id, quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
     )
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
@@ -110,6 +120,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     unit: item.products?.unit ?? "",
     supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
     purchaseOrderId: item.purchase_order_id,
+    lotNumber: item.lot_number ?? "",
   }));
 }
 
@@ -252,7 +263,7 @@ export async function createPurchase(
       .single();
 
     if (error || !data) {
-      return { error: `매입+매출 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+      return { error: docNoErrorMessage(error, docNo) ?? `매입+매출 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
     }
     purchaseOrderId = data.purchase_order_id;
     salesOrderId = data.sale_order_id;
@@ -295,7 +306,7 @@ export async function createPurchase(
     });
 
     if (error || !newPurchaseId) {
-      return { error: `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+      return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
     }
     purchaseOrderId = newPurchaseId;
   }
@@ -450,7 +461,7 @@ export async function updatePurchase(
   });
 
   if (error) {
-    return { error: `매입 거래 수정에 실패했습니다: ${error.message}` };
+    return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 수정에 실패했습니다: ${error.message}` };
   }
 
   await Promise.all(
