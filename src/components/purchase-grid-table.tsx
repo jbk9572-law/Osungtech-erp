@@ -17,6 +17,7 @@ export type PurchaseRow = {
   authorName: string | null | undefined;
   productLabel: string;
   spec: string;
+  lotNumber?: string | null;
   quantity: number;
   unit: string | null | undefined;
   unitCost: number | null;
@@ -186,6 +187,7 @@ export function PurchaseGridTable({
               {sortableHeader("작성자", "authorName")}
               <th>품목명 / 적요</th>
               <th>규격</th>
+              <th>관리번호</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
@@ -233,6 +235,7 @@ export function PurchaseGridTable({
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                   <td style={isPayment ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.lotNumber || "-"}</td>
                   <td className="num">{isPayment ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {!isPayment && row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
@@ -246,7 +249,7 @@ export function PurchaseGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={13} className="erp-grid-empty">
+                <td colSpan={14} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -257,7 +260,7 @@ export function PurchaseGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
                   매입 합계 ({sortedRows.filter((r) => r.kind === "purchase").length}건)

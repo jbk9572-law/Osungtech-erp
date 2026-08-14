@@ -18,6 +18,7 @@ export type SalesRow = {
   authorName: string | null | undefined;
   productLabel: string;
   spec: string;
+  lotNumber?: string | null;
   quantity: number;
   unit: string | null | undefined;
   unitPrice: number | null;
@@ -189,6 +190,7 @@ export function SalesGridTable({
               {sortableHeader("작성자", "authorName")}
               <th>품목명 / 적요</th>
               <th>규격</th>
+              <th>관리번호</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
@@ -237,6 +239,7 @@ export function SalesGridTable({
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                   <td style={isCollection ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.lotNumber || "-"}</td>
                   <td className="num">
                     {isCollection ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
                   </td>
@@ -264,7 +267,7 @@ export function SalesGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={14} className="erp-grid-empty">
+                <td colSpan={15} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -275,7 +278,7 @@ export function SalesGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
                   매출 합계 ({sortedRows.filter((r) => r.kind === "sale").length}건)
