@@ -489,7 +489,9 @@ export function NewPurchaseForm({
     setOpenTodos(null);
   }
 
-  const total = rows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0);
+  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0);
+  const taxAmount = Math.round(supplyAmount * 0.1);
+  const total = supplyAmount + taxAmount;
 
   const itemsJson = JSON.stringify(
     rows
@@ -1128,8 +1130,13 @@ export function NewPurchaseForm({
                 <td colSpan={alsoCreateSale ? 8 : 6} style={{ fontWeight: 700 }}>
                   매입 합계
                 </td>
-                <td className="num text-sm font-bold" colSpan={5} style={{ color: "var(--erp-text)" }}>
-                  {total.toLocaleString()}원
+                <td className="num" colSpan={5}>
+                  <div style={{ color: "var(--erp-text-muted)" }}>
+                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
+                  </div>
+                  <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                    {total.toLocaleString()}원
+                  </div>
                 </td>
               </tr>
             </tfoot>

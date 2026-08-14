@@ -35,9 +35,10 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
 
   const pinnedRows = useMemo(() => searched.filter((r) => r.pinned), [searched]);
 
+  // "전체"/"일반" 둘 다 표에는 일반 공지만 담는다 — 고정 공지는 "전체"일 때
+  // 위 배너에 이미 나오므로, 표에까지 또 넣으면 같은 공지가 두 번 보인다.
   const gridRows = useMemo(() => {
-    const base =
-      filter === "pinned" ? pinnedRows : filter === "general" ? searched.filter((r) => !r.pinned) : searched.filter((r) => !r.pinned);
+    const base = filter === "pinned" ? pinnedRows : searched.filter((r) => !r.pinned);
     if (!sort) return base;
     return [...base].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [searched, pinnedRows, filter, sort]);
@@ -96,7 +97,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
         </div>
       </div>
 
-      {filter !== "general" && pinnedRows.length > 0 && (
+      {filter === "all" && pinnedRows.length > 0 && (
         <div
           className="erp-grid-wrap"
           style={{

@@ -15,6 +15,7 @@ export const MENU_ITEMS: MenuItem[] = [
   { label: "거래처관리 > 미지급금현황", href: "/payables" },
   { label: "할일관리", href: "/todos" },
   { label: "공지사항", href: "/announcements" },
+  { label: "확장모듈 > 월별 리포트", href: "/reports/monthly" },
   { label: "보고서 > 지급결의양식", href: "/reports/payment-requests" },
   { label: "환경설정 > 회사정보", href: "/settings/company" },
   { label: "환경설정 > 비밀번호 변경", href: "/settings/password" },

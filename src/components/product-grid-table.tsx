@@ -113,7 +113,9 @@ export function ProductGridTable({
     borderRight: "1px solid var(--erp-border)",
   });
 
-  const colCount = allowBulkDelete ? 12 : 11;
+  // products 모드는 체크박스 칸이 하나 더 있고, inventory 모드는 대신
+  // 재고수량/상태가 안전재고 한 칸 대신 두 칸이라 결과적으로 항상 12칸이다.
+  const colCount = 12;
 
   return (
     <>

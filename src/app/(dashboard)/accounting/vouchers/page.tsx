@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { GridBadge } from "@/components/grid/badge";
 
 type Voucher = {
   id: string;
@@ -154,14 +155,7 @@ export default async function VouchersPage({
             {rows.map((v) => (
               <ClickableRow key={`${v.type}-${v.id}`} href={v.href}>
                 <td>
-                  <span
-                    style={{
-                      color: v.type === "매출" ? "var(--erp-primary)" : "#b45309",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {v.type}
-                  </span>
+                  <GridBadge tone={v.type === "매출" ? "info" : "muted"}>{v.type}</GridBadge>
                 </td>
                 <td>{new Date(v.date).toLocaleDateString("ko-KR")}</td>
                 <td>{v.partnerName}</td>
@@ -179,11 +173,11 @@ export default async function VouchersPage({
           {rows.length > 0 && (
             <tfoot>
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
-                <td colSpan={3}>합계 ({rows.length}건)</td>
+                <td colSpan={3}>차액 (매출-매입, {rows.length}건)</td>
                 <td className="num">{(totalSales - totalPurchases).toLocaleString()}</td>
               </tr>
               <tr style={{ background: "var(--erp-bg-subtle)", color: "var(--erp-text-muted)" }}>
-                <td colSpan={3}>매출 {totalSales.toLocaleString()} / 매입 {totalPurchases.toLocaleString()}</td>
+                <td colSpan={3}>매출 합계 {totalSales.toLocaleString()} / 매입 합계 {totalPurchases.toLocaleString()}</td>
                 <td />
               </tr>
             </tfoot>
