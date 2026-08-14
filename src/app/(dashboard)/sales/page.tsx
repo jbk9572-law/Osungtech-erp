@@ -21,7 +21,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, doc_no, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -81,13 +81,13 @@ export default async function SalesPage({
           kind: "sale",
           orderId,
           customerId: item.sales_orders?.customers?.id,
-          docNo: item.sales_orders?.doc_no,
           date: item.sales_orders?.order_date,
           customerName: item.sales_orders?.customers?.name,
           authorName: item.sales_orders?.profiles?.full_name,
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           lotNumber: item.lot_number,
+          remark: item.remark,
           quantity: 0,
           unit: item.products?.unit,
           unitPrice: Number(item.unit_price),
@@ -97,9 +97,10 @@ export default async function SalesPage({
           itemCount: 0,
         };
       } else {
-        // 품목이 2건 이상이면 단가/관리번호를 하나로 대표할 수 없으니 비워둔다.
+        // 품목이 2건 이상이면 단가/관리번호/비고를 하나로 대표할 수 없으니 비워둔다.
         acc[orderId].unitPrice = null;
         acc[orderId].lotNumber = null;
+        acc[orderId].remark = null;
       }
       acc[orderId].itemCount += 1;
       acc[orderId].quantity += item.quantity;
@@ -122,13 +123,13 @@ export default async function SalesPage({
     kind: "collection",
     orderId: undefined,
     customerId: p.customers?.id,
-    docNo: null,
     date: p.paid_at,
     customerName: p.customers?.name,
     authorName: undefined,
     productLabel: p.memo || "수금",
     spec: "-",
     lotNumber: null,
+    remark: null,
     quantity: 0,
     unit: undefined,
     unitPrice: null,

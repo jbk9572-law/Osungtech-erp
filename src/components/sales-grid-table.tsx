@@ -12,13 +12,13 @@ export type SalesRow = {
   kind: "sale" | "collection";
   orderId: string | undefined;
   customerId?: string;
-  docNo?: number | null;
   date: string | undefined;
   customerName: string | undefined;
   authorName: string | null | undefined;
   productLabel: string;
   spec: string;
   lotNumber?: string | null;
+  remark?: string | null;
   quantity: number;
   unit: string | null | undefined;
   unitPrice: number | null;
@@ -181,9 +181,6 @@ export function SalesGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
-              <th className="num" style={{ width: 56 }}>
-                No
-              </th>
               <th style={{ width: 64 }}>유형</th>
               {sortableHeader("출고처", "customerName")}
               <th style={{ width: 76 }}>배송방법</th>
@@ -195,6 +192,7 @@ export function SalesGridTable({
               <th className="num">공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
+              <th>비고</th>
               <th />
             </tr>
           </thead>
@@ -220,9 +218,6 @@ export function SalesGridTable({
                     )}
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {row.docNo ?? "-"}
-                  </td>
                   <td>
                     <span className={`erp-badge ${isCollection ? "erp-badge-warning" : "erp-badge-info"}`}>
                       {isCollection ? "수금" : "매출"}
@@ -250,6 +245,7 @@ export function SalesGridTable({
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {isCollection ? "-" : row.taxAmount.toLocaleString()}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
                   <td className="num">
                     {row.orderId && (
                       <Link
@@ -278,7 +274,7 @@ export function SalesGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={8}
+                  colSpan={7}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
                   매출 합계 ({sortedRows.filter((r) => r.kind === "sale").length}건)
@@ -287,6 +283,7 @@ export function SalesGridTable({
                 <td />
                 <td className="num">{totalSupply.toLocaleString()}</td>
                 <td className="num">{totalTax.toLocaleString()}</td>
+                <td />
                 <td />
               </tr>
             </tfoot>
