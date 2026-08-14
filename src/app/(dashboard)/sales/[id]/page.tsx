@@ -154,6 +154,7 @@ export default async function SaleDetailPage({
               <th>SKU</th>
               <th>품목명</th>
               <th>규격</th>
+              <th>관리번호</th>
               <th>단위</th>
               <th className="num">포장수량</th>
               <th className="num">수량</th>
@@ -172,6 +173,7 @@ export default async function SaleDetailPage({
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.spec || row.products?.spec || "-"}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{row.lot_number || "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {formatPackageQty(row.products?.base_package_qty, row.quantity)}
@@ -195,7 +197,7 @@ export default async function SaleDetailPage({
               const sizeRows = paperCalcSizeLines.map((line, i) => (
                 <tr key={`${row.id}-size-${i}`} style={{ background: "#f7f8fb" }}>
                   <td />
-                  <td colSpan={2} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
                     ㄴ {line}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
@@ -222,7 +224,7 @@ export default async function SaleDetailPage({
           </tbody>
           <tfoot>
             <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-              <td colSpan={7} className="num">
+              <td colSpan={8} className="num">
                 합계
               </td>
               <td className="num">{totalSupply.toLocaleString()}</td>

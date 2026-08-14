@@ -87,6 +87,7 @@ export default async function SalesPage({
           authorName: item.sales_orders?.profiles?.full_name,
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
+          lotNumber: item.lot_number,
           quantity: 0,
           unit: item.products?.unit,
           unitPrice: Number(item.unit_price),
@@ -96,8 +97,9 @@ export default async function SalesPage({
           itemCount: 0,
         };
       } else {
-        // 품목이 2건 이상이면 단가를 하나로 대표할 수 없으니 비워둔다.
+        // 품목이 2건 이상이면 단가/관리번호를 하나로 대표할 수 없으니 비워둔다.
         acc[orderId].unitPrice = null;
+        acc[orderId].lotNumber = null;
       }
       acc[orderId].itemCount += 1;
       acc[orderId].quantity += item.quantity;
@@ -126,6 +128,7 @@ export default async function SalesPage({
     authorName: undefined,
     productLabel: p.memo || "수금",
     spec: "-",
+    lotNumber: null,
     quantity: 0,
     unit: undefined,
     unitPrice: null,
