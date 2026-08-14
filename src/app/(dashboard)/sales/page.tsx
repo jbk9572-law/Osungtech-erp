@@ -21,7 +21,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, doc_no, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -81,6 +81,7 @@ export default async function SalesPage({
           kind: "sale",
           orderId,
           customerId: item.sales_orders?.customers?.id,
+          docNo: item.sales_orders?.doc_no,
           date: item.sales_orders?.order_date,
           customerName: item.sales_orders?.customers?.name,
           authorName: item.sales_orders?.profiles?.full_name,
@@ -119,6 +120,7 @@ export default async function SalesPage({
     kind: "collection",
     orderId: undefined,
     customerId: p.customers?.id,
+    docNo: null,
     date: p.paid_at,
     customerName: p.customers?.name,
     authorName: undefined,

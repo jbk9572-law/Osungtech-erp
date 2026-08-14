@@ -12,6 +12,7 @@ export type SalesRow = {
   kind: "sale" | "collection";
   orderId: string | undefined;
   customerId?: string;
+  docNo?: number | null;
   date: string | undefined;
   customerName: string | undefined;
   authorName: string | null | undefined;
@@ -179,6 +180,9 @@ export function SalesGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
+              <th className="num" style={{ width: 56 }}>
+                No
+              </th>
               <th style={{ width: 64 }}>유형</th>
               {sortableHeader("출고처", "customerName")}
               <th style={{ width: 76 }}>배송방법</th>
@@ -214,6 +218,9 @@ export function SalesGridTable({
                     )}
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {row.docNo ?? "-"}
+                  </td>
                   <td>
                     <span className={`erp-badge ${isCollection ? "erp-badge-warning" : "erp-badge-info"}`}>
                       {isCollection ? "수금" : "매출"}
@@ -251,7 +258,7 @@ export function SalesGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={13} className="erp-grid-empty">
+                <td colSpan={14} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -262,7 +269,7 @@ export function SalesGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
                   매출 합계 ({sortedRows.filter((r) => r.kind === "sale").length}건)

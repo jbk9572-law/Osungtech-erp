@@ -11,6 +11,7 @@ export type PurchaseRow = {
   kind: "purchase" | "payment";
   orderId: string | undefined;
   supplierId?: string;
+  docNo?: number | null;
   date: string | undefined;
   supplierName: string | undefined;
   authorName: string | null | undefined;
@@ -176,6 +177,9 @@ export function PurchaseGridTable({
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("매입일자", "date", thSticky2)}
+              <th className="num" style={{ width: 56 }}>
+                No
+              </th>
               <th style={{ width: 64 }}>유형</th>
               {sortableHeader("공급처", "supplierName")}
               <th style={{ width: 76 }}>입고방법</th>
@@ -210,6 +214,9 @@ export function PurchaseGridTable({
                     )}
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    {row.docNo ?? "-"}
+                  </td>
                   <td>
                     <span className={`erp-badge ${isPayment ? "erp-badge-warning" : "erp-badge-info"}`}>
                       {isPayment ? "지급" : "매입"}
@@ -233,7 +240,7 @@ export function PurchaseGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={12} className="erp-grid-empty">
+                <td colSpan={13} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -244,7 +251,7 @@ export function PurchaseGridTable({
               <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
                 <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
                 >
                   매입 합계 ({sortedRows.filter((r) => r.kind === "purchase").length}건)
