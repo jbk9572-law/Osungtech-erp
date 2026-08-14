@@ -259,6 +259,13 @@ export async function createPurchase(
         p_payment_method: paymentMethod,
         p_delivery_method: deliveryMethod,
         p_purchase_doc_no: docNo,
+        // 이 화면엔 매출 전표번호를 따로 입력하는 칸이 없어 항상 자동
+        // 채번에 맡긴다 — 값을 아예 안 보내면(키 자체가 없으면) 옛 버전
+        // 함수 오버로드가 남아있을 때 PostgREST가 어느 쪽을 불러야 할지
+        // 못 정해서 "Could not choose the best candidate function" 오류가
+        // 났었다(00000000000067). null이라도 키를 항상 보내서 이 문제가
+        // 재발하지 않게 한다.
+        p_sale_doc_no: null,
       })
       .single();
 
