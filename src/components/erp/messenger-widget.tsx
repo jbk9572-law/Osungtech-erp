@@ -275,7 +275,7 @@ export function MessengerWidget({
                   <div
                     style={{
                       alignSelf: mine ? "flex-end" : "flex-start",
-                      background: mine ? "var(--erp-primary)" : "#f0f2f5",
+                      background: mine ? "var(--erp-primary)" : "var(--erp-hover)",
                       color: mine ? "#fff" : "var(--erp-text)",
                       padding: "6px 10px",
                       borderRadius: 8,

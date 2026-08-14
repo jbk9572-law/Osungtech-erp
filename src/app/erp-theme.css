@@ -32,6 +32,10 @@
   --erp-info-bg: #eef2ff;
   --erp-info-border: #c7d2fe;
   --erp-info-text: #3730a3;
+  /* 지급결의양식 품목행에 사용자가 직접 표시하는 형광펜 하이라이트 —
+     작성 화면과 인쇄/열람 화면 두 군데서 같은 값을 각자 하드코딩하고
+     있었다. 상태색(success/warning/danger)과는 역할이 달라 별도 변수로 뺐다. */
+  --erp-highlight-bg: #fff7d6;
   --erp-text: #182338;
   --erp-text-muted: #6b7280;
   --erp-bg: #eef1f5;

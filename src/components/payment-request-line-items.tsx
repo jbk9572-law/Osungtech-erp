@@ -85,7 +85,7 @@ export function PaymentRequestLineItems({
           </thead>
           <tbody onKeyDown={focusSameColumnNextRow}>
             {rows.map((row) => (
-              <tr key={row.key} style={row.highlighted ? { background: "#fff7d6" } : undefined}>
+              <tr key={row.key} style={row.highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}>
                 <td>
                   <input
                     type="date"

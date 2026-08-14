@@ -110,7 +110,7 @@ export default async function PaymentRequestDetailPage({
               </thead>
               <tbody>
                 {(items ?? []).map((item) => (
-                  <tr key={item.id} style={item.is_highlighted ? { background: "#fff7d6" } : undefined}>
+                  <tr key={item.id} style={item.is_highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}>
                     <td>{item.used_at.replaceAll("-", ".")}</td>
                     <td>{item.vendor}</td>
                     <td>{item.purpose || "-"}</td>

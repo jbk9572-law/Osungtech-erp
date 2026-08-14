@@ -98,7 +98,7 @@ export default function LoginPage() {
               아이디 저장
             </label>
 
-            {state?.error && <p className="text-xs text-[#dc3545]">{state.error}</p>}
+            {state?.error && <p className="text-xs text-[#c9302c]">{state.error}</p>}
 
             <button
               type="submit"
