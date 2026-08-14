@@ -12,13 +12,14 @@ import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/g
 export type SupplierRow = {
   id: string;
   name: string;
+  business_number: string | null;
   contact_name: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
 };
 
-type SortKey = "name" | "contact_name" | "email" | "phone" | "address";
+type SortKey = "name" | "business_number" | "contact_name" | "email" | "phone" | "address";
 
 const STICKY_WIDTH = 160;
 
@@ -101,6 +102,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
               {sortableHeader("업체명", "name", thName)}
+              {sortableHeader("사업자번호", "business_number")}
               {sortableHeader("담당자", "contact_name")}
               {sortableHeader("이메일", "email")}
               {sortableHeader("연락처", "phone")}
@@ -126,6 +128,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                     />
                   </td>
                   <td style={tdName}>{supplier.name}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{supplier.business_number ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{supplier.contact_name ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{supplier.email ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{supplier.phone ?? "-"}</td>

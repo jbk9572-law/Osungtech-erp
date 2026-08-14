@@ -16,11 +16,12 @@ export type CustomerRow = {
   business_number: string | null;
   contact_name: string | null;
   phone: string | null;
+  email: string | null;
   address: string | null;
   document_type: string;
 };
 
-type SortKey = "name" | "business_number" | "contact_name" | "phone" | "address";
+type SortKey = "name" | "business_number" | "contact_name" | "phone" | "email" | "address";
 
 const STICKY_WIDTH = 160;
 
@@ -106,6 +107,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
               {sortableHeader("사업자번호", "business_number")}
               {sortableHeader("담당자", "contact_name")}
               {sortableHeader("연락처", "phone")}
+              {sortableHeader("이메일", "email")}
               {sortableHeader("주소", "address")}
               <th>발행 문서</th>
               <th />
@@ -132,6 +134,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.business_number ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.contact_name ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.phone ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.email ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.address ?? "-"}</td>
                   <td>
                     <GridBadge tone={customer.document_type === "출고증" ? "warn" : "ok"}>

@@ -115,6 +115,7 @@ export default async function SupplierDetailPage({
                 <thead>
                   <tr>
                     <th style={{ width: 90 }}>일자</th>
+                    <th style={{ width: 90 }}>전표번호</th>
                     <th className="num" style={{ width: 130 }}>
                       전표 금액
                     </th>
@@ -128,6 +129,7 @@ export default async function SupplierDetailPage({
                   {balance.unpaidOrders.map((o) => (
                     <ClickableRow key={o.id} href={`/purchases/${o.id}`}>
                       <td>{o.date.replaceAll("-", ".")}</td>
+                      <td>{o.docNo}</td>
                       <td className="num">{o.total.toLocaleString()}</td>
                       <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
                         {o.outstanding.toLocaleString()}

@@ -54,7 +54,7 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
   const [{ data: orders }, { data: payments }] = await Promise.all([
     supabase
       .from("purchase_orders")
-      .select("id, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
+      .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
       .eq("supplier_id", supplierId)
       .order("purchase_date", { ascending: true }),
     supabase.from("supplier_payments").select("id, paid_at, amount, method, memo").eq("supplier_id", supplierId).order("paid_at", { ascending: false }),
@@ -63,6 +63,7 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
     .filter((o) => !o.payment_method)
     .map((o) => ({
       id: o.id,
+      docNo: o.doc_no,
       date: o.purchase_date,
       total: (o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0),
     }));
