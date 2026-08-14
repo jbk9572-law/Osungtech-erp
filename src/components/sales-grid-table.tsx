@@ -227,7 +227,13 @@ export function SalesGridTable({
                     </span>
                   </td>
                   <td>{row.customerName}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.deliveryMethod ?? "-"}</td>
+                  <td>
+                    {row.deliveryMethod ? (
+                      <span className="erp-badge erp-badge-muted">{row.deliveryMethod}</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+                    )}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                   <td style={isCollection ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>

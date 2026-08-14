@@ -223,7 +223,13 @@ export function PurchaseGridTable({
                     </span>
                   </td>
                   <td>{row.supplierName}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.deliveryMethod ?? "-"}</td>
+                  <td>
+                    {row.deliveryMethod ? (
+                      <span className="erp-badge erp-badge-muted">{row.deliveryMethod}</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+                    )}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                   <td style={isPayment ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>

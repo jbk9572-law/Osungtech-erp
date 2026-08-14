@@ -223,8 +223,8 @@ export default async function SalesPrintPage({
       productLabel: (() => {
         const name = item.products?.name ?? "";
         const spec = item.spec || item.products?.spec;
-        const base = spec ? `${name}/${spec}` : name;
-        return showLot && item.lot_number ? `${base}/${item.lot_number}` : base;
+        const base = spec ? `${name} / ${spec}` : name;
+        return showLot && item.lot_number ? `${base} / ${item.lot_number}` : base;
       })(),
       unit: item.products?.unit ?? "",
       quantity: item.quantity,

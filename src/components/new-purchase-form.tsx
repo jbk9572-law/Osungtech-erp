@@ -126,7 +126,7 @@ export function NewPurchaseForm({
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
   // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
   // 그때만 직접 바꾸면 된다.
-  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "직납");
+  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "방문수령");
   // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
   // 전표번호를 직접 입력/수정할 수 있게 한다.
   const [docNo, setDocNo] = useState(initial?.docNo ? String(initial.docNo) : "");
