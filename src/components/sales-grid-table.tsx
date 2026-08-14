@@ -233,7 +233,7 @@ export function SalesGridTable({
           </tbody>
           {sortedRows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td colSpan={7} style={stickyFooterStyle(GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH)}>
                   매출 합계 ({sortedRows.filter((r) => r.kind === "sale").length}건)

@@ -37,10 +37,10 @@ export function PackageQtyHistoryHint({
       {expanded && (
         <ul
           className="mt-1 max-w-xs space-y-0.5 rounded-sm border p-2"
-          style={{ borderColor: "#e2e5eb", background: "#f7f9fc" }}
+          style={{ borderColor: "var(--erp-border)", background: "var(--erp-bg-subtle)" }}
         >
           {history.slice(0, 5).map((entry, index) => (
-            <li key={index} className="flex items-center justify-between gap-4" style={{ color: "#6b7280" }}>
+            <li key={index} className="flex items-center justify-between gap-4" style={{ color: "var(--erp-text-muted)" }}>
               <span>{entry.changedAt}</span>
               <button
                 type="button"

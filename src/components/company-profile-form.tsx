@@ -33,7 +33,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
       style={{ border: "1px solid var(--erp-border)", borderRadius: 2 }}
     >
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">상호명</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">상호명</label>
         <input
           name="name"
           defaultValue={company?.name ?? ""}
@@ -42,7 +42,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">사업자등록번호</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">사업자등록번호</label>
         <input
           name="business_number"
           defaultValue={company?.business_number ?? ""}
@@ -50,7 +50,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">대표자명</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">대표자명</label>
         <input
           name="representative_name"
           defaultValue={company?.representative_name ?? ""}
@@ -58,15 +58,15 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">연락처</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">연락처</label>
         <PhoneInputGroup namePrefix="phone" defaultValue={company?.phone} />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">팩스번호</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">팩스번호</label>
         <PhoneInputGroup namePrefix="fax" defaultValue={company?.fax_number} />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">담당자 성명</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">담당자 성명</label>
         <input
           name="manager_name"
           defaultValue={company?.manager_name ?? ""}
@@ -75,11 +75,11 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">담당자 연락처</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">담당자 연락처</label>
         <PhoneInputGroup namePrefix="mgrphone" defaultValue={company?.manager_phone} />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">업태</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">업태</label>
         <input
           name="business_type"
           defaultValue={company?.business_type ?? ""}
@@ -87,7 +87,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">종목</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">종목</label>
         <input
           name="business_item"
           defaultValue={company?.business_item ?? ""}
@@ -95,7 +95,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div className="md:col-span-2">
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">주소</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">주소</label>
         <input
           name="address"
           defaultValue={company?.address ?? ""}
@@ -103,7 +103,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">이메일</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">이메일</label>
         <input
           name="email"
           type="email"
@@ -112,7 +112,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div className="md:col-span-2">
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">
+        <label className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">
           명세표 하단 인사말
         </label>
         <input

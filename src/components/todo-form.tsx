@@ -328,7 +328,7 @@ export function TodoForm({
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
+                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label

@@ -90,7 +90,7 @@ export default async function VouchersPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">회계관리 &gt; 전표관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">회계관리 &gt; 전표관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
@@ -178,11 +178,11 @@ export default async function VouchersPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={3}>합계 ({rows.length}건)</td>
                 <td className="num">{(totalSales - totalPurchases).toLocaleString()}</td>
               </tr>
-              <tr style={{ background: "#f5f7fa", color: "var(--erp-text-muted)" }}>
+              <tr style={{ background: "var(--erp-bg-subtle)", color: "var(--erp-text-muted)" }}>
                 <td colSpan={3}>매출 {totalSales.toLocaleString()} / 매입 {totalPurchases.toLocaleString()}</td>
                 <td />
               </tr>

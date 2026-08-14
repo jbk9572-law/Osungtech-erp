@@ -41,7 +41,7 @@ export function PaperStockOverridePanel({
       {activeOverride && (
         <div
           className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded p-2 text-xs"
-          style={{ background: "#fff7e6", border: "1px solid #ffd591" }}
+          style={{ background: "var(--erp-warning-bg)", border: "1px solid var(--erp-warning-border)" }}
         >
           <span>
             수동값 적용 중: <strong>{Number(activeOverride.override_quantity).toLocaleString()}연</strong>{" "}

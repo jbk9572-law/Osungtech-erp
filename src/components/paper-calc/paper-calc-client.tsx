@@ -513,7 +513,7 @@ export function PaperCalcClient({
           {warning && (
             <div
               className="rounded p-3 text-xs whitespace-pre-line"
-              style={{ background: "#fff3e0", color: "var(--erp-warning)", border: "1px solid #ffd9a8" }}
+              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)", border: "1px solid var(--erp-warning-border)" }}
             >
               {warning}
             </div>

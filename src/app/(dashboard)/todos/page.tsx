@@ -37,7 +37,7 @@ export default async function TodosPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/todos/new" }, Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">할일관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리</h1>
 
       <div className="erp-toolbar">
         <Link href="/todos/new" className="erp-btn erp-btn-primary">

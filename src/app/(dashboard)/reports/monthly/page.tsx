@@ -188,7 +188,7 @@ export default async function MonthlyReportPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">확장모듈 &gt; 월별 리포트</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 월별 리포트</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         <Link href={`/reports/monthly?month=${prevMonth}${qSuffix}`} className="erp-date-preset-btn">
@@ -305,7 +305,7 @@ export default async function MonthlyReportPage({
               // 번갈아 배경을 넣는다 — 표 전체에 걸리는 일반 zebra(짝수행
               // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
               // 헷갈렸다.
-              const groupBg = groupIndex % 2 === 0 ? "#ffffff" : "#eef1f5";
+              const groupBg = groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
               return (
               <Fragment key={g.productId}>
                 <tr style={{ background: groupBg }}>
@@ -382,7 +382,7 @@ export default async function MonthlyReportPage({
           </tbody>
           {itemGroups.length > 0 && (
             <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} className="erp-grid-sticky-label">
                   합계 ({itemGroups.length}개 품목)
                 </td>

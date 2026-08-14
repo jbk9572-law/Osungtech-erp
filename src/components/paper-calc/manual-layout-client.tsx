@@ -854,7 +854,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
           {warning && (
             <div
               className="rounded p-2 text-xs"
-              style={{ background: "#fff3e0", color: "var(--erp-warning)", border: "1px solid #ffd9a8" }}
+              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)", border: "1px solid var(--erp-warning-border)" }}
             >
               {warning}
             </div>
@@ -878,7 +878,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
       {staged && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "#e7f6ea", color: "var(--erp-success)", border: "1px solid #b7e4c7" }}
+          style={{ background: "var(--erp-success-bg)", color: "var(--erp-success)", border: "1px solid var(--erp-success-border)" }}
         >
           {pendingFor === "purchase" ? (
             <>

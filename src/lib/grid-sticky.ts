@@ -10,7 +10,7 @@ export const GRID_CHECKBOX_WIDTH = 32;
 const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
 
 export function stickyHeaderStyle(left: number, width: number, extra?: CSSProperties): CSSProperties {
-  return { ...stickyBase, left, width, background: "#eef1f5", zIndex: 2, ...extra };
+  return { ...stickyBase, left, width, background: "var(--erp-bg)", zIndex: 2, ...extra };
 }
 
 export function stickyCellStyle(left: number, width: number, extra?: CSSProperties): CSSProperties {
@@ -20,5 +20,5 @@ export function stickyCellStyle(left: number, width: number, extra?: CSSProperti
 // 매출/매입 그리드의 합계(tfoot) 행에서 스크롤해도 붙어있어야 하는 칸들 —
 // colSpan으로 폭을 정하는 칸이라 width는 지정하지 않는다.
 export function stickyFooterStyle(left: number, extra?: CSSProperties): CSSProperties {
-  return { ...stickyBase, left, background: "#eef1f5", ...extra };
+  return { ...stickyBase, left, background: "var(--erp-bg)", ...extra };
 }

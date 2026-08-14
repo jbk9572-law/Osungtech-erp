@@ -91,7 +91,7 @@ export function PartySearchSelect({
         typeof document !== "undefined" &&
         createPortal(
           <ul
-            className="max-h-56 overflow-y-auto rounded-sm border border-[#e2e5eb] bg-white text-[12.5px] shadow-md"
+            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md"
             style={{
               position: "fixed",
               top: dropdownRect.top,
@@ -110,7 +110,7 @@ export function PartySearchSelect({
                     selectParty(party.id);
                   }}
                   className={`block w-full px-2.5 py-2 text-left ${
-                    i === highlight ? "bg-[#eef1f5]" : "hover:bg-[#f3f7fc]"
+                    i === highlight ? "bg-[var(--erp-bg)]" : "hover:bg-[#f3f7fc]"
                   }`}
                 >
                   {party.name}

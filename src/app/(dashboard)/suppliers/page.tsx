@@ -13,7 +13,7 @@ export default async function SuppliersPage() {
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">거래처관리 &gt; 공급처관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 공급처관리</h1>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">

@@ -17,6 +17,16 @@
   --erp-success: #1a7a33;
   --erp-warning: #a15c00;
   --erp-danger: #c9302c;
+  /* success/warning/danger의 배경·테두리 톤 — 배지(.erp-badge-*)뿐 아니라
+     알림 배너·경고 박스 등 여러 컴포넌트에서 같은 값을 각자 다시
+     하드코딩하고 있던 걸 변수로 묶었다. info 계열은 이미 bg/border/text
+     세 벌이 있었는데 나머지 셋에는 없었던 걸 맞춰준 것이다. */
+  --erp-success-bg: #e7f6ea;
+  --erp-success-border: #b7e4c7;
+  --erp-warning-bg: #fff3e0;
+  --erp-warning-border: #ffd9a8;
+  --erp-danger-bg: #fdeaec;
+  --erp-danger-border: #f3c6cb;
   /* 단가예약/할일-품목 이월/용지계산 안내 배지에서 공통으로 쓰는
      인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
   --erp-info-bg: #eef2ff;
@@ -32,6 +42,9 @@
      안 되는 색이었어서 통일해도 화면상 차이는 없다. */
   --erp-bg-subtle: #fafbfc;
   --erp-divider: #eef0f3;
+  /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
+     disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
+  --erp-bg-disabled: #f5f6f8;
   --erp-shadow-sm: 0 1px 2px rgba(32, 28, 43, 0.05), 0 2px 8px -3px rgba(32, 28, 43, 0.1);
   --erp-shadow-md: 0 4px 16px rgba(32, 28, 43, 0.08), 0 12px 28px -10px rgba(32, 28, 43, 0.16);
 
@@ -770,7 +783,7 @@
 .erp-btn:disabled {
   color: #b9bfc8;
   cursor: not-allowed;
-  background: #f5f6f8;
+  background: var(--erp-bg-disabled);
   box-shadow: none;
   transform: none;
 }
@@ -935,17 +948,17 @@
 }
 
 .erp-badge-success {
-  background: #e7f6ea;
+  background: var(--erp-success-bg);
   color: var(--erp-success);
 }
 
 .erp-badge-warning {
-  background: #fff3e0;
+  background: var(--erp-warning-bg);
   color: var(--erp-warning);
 }
 
 .erp-badge-danger {
-  background: #fdeaec;
+  background: var(--erp-danger-bg);
   color: var(--erp-danger);
 }
 
@@ -1167,8 +1180,8 @@
   gap: 8px;
   padding: 7px 10px;
   border-radius: 8px;
-  border: 1px solid #f3c6cb;
-  background: #fdeaec;
+  border: 1px solid var(--erp-danger-border);
+  background: var(--erp-danger-bg);
   font-size: 12px;
   text-decoration: none;
   color: var(--erp-text);
@@ -1357,7 +1370,7 @@
 }
 
 .erp-alert-item.danger {
-  border-color: #f3c6cb;
+  border-color: var(--erp-danger-border);
   color: var(--erp-danger);
 }
 
@@ -1372,7 +1385,7 @@
 }
 
 .erp-alert-tag.danger {
-  background: #fdeaec;
+  background: var(--erp-danger-bg);
   color: var(--erp-danger);
 }
 

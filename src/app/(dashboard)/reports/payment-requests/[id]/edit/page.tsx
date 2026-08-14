@@ -35,7 +35,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
 
       <div className="erp-toolbar">
         <Link href={`/reports/payment-requests/${id}`} className="erp-btn erp-btn-danger">

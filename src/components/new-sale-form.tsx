@@ -751,7 +751,7 @@ export function NewSaleForm({
                         justifyContent: "space-between",
                         gap: 8,
                         padding: "6px 10px",
-                        borderBottom: "1px solid #f0f1f3",
+                        borderBottom: "1px solid var(--erp-divider)",
                         fontSize: 12,
                       }}
                     >
@@ -834,7 +834,7 @@ export function NewSaleForm({
                         justifyContent: "space-between",
                         gap: 8,
                         padding: "6px 10px",
-                        borderBottom: "1px solid #f0f1f3",
+                        borderBottom: "1px solid var(--erp-divider)",
                         fontSize: 12,
                       }}
                     >
@@ -968,7 +968,7 @@ export function NewSaleForm({
                 </tr>
               )}
               {paperCalcSizeLines.map((line, i) => (
-                <tr key={`paper-calc-size-${i}`} style={{ background: "#f7f8fb" }}>
+                <tr key={`paper-calc-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
                   <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
                     ㄴ {line}
                   </td>
@@ -1011,7 +1011,7 @@ export function NewSaleForm({
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
+                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label
@@ -1056,7 +1056,7 @@ export function NewSaleForm({
                         value={row.unitPrice}
                         onChange={(n) => updateRow(row.key, { unitPrice: n })}
                         disabled={!row.manualPrice}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
+                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && customerId && (
                         <label
@@ -1135,7 +1135,7 @@ export function NewSaleForm({
               })}
             </tbody>
             <tfoot>
-              <tr style={{ background: "#eef1f5" }}>
+              <tr style={{ background: "var(--erp-bg)" }}>
                 <td colSpan={6} style={{ fontWeight: 700 }}>
                   합계
                 </td>

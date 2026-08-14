@@ -58,7 +58,7 @@ export default async function PaymentRequestDetailPage({
           Escape: { href: "/reports/payment-requests" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">보고서 &gt; 지급결의양식 &gt; 본문</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 본문</h1>
 
       <div className="erp-toolbar">
         <Link href="/reports/payment-requests" className="erp-btn erp-btn-danger">
@@ -76,7 +76,7 @@ export default async function PaymentRequestDetailPage({
       {warning && (
         <p
           className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "#fdf3e0", color: "var(--erp-warning)" }}
+          style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
         >
           ⚠ {warning}
         </p>

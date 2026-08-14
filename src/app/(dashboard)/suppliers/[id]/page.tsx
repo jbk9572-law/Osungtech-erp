@@ -62,12 +62,12 @@ export default async function SupplierDetailPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/suppliers" } }} />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#182338]">{supplier.name}</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">{supplier.name}</h1>
         <Link href="/suppliers" className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[#6b7280]">
+      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {supplier.business_number ?? "사업자번호 미등록"} · {supplier.contact_name ?? "담당자 미등록"}
       </p>
 

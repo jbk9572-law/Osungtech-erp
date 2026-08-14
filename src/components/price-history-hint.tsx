@@ -38,7 +38,7 @@ export function PriceHistoryHint({ history }: { history: HistoryEntry[] }) {
       {expanded && (
         <ul
           className="mt-1 max-w-xs space-y-0.5 rounded-sm border p-2"
-          style={{ borderColor: "#e2e5eb", background: "#f7f9fc" }}
+          style={{ borderColor: "var(--erp-border)", background: "var(--erp-bg-subtle)" }}
         >
           {history.slice(0, 5).map((entry, index) => {
             // 그 다음(더 과거) 항목과 비교해 이 시점에 가격이 바뀌었는지
@@ -46,7 +46,7 @@ export function PriceHistoryHint({ history }: { history: HistoryEntry[] }) {
             const older = history[index + 1];
             const changed = older && older.unitPrice !== entry.unitPrice;
             return (
-              <li key={index} className="flex justify-between gap-4" style={{ color: "#6b7280" }}>
+              <li key={index} className="flex justify-between gap-4" style={{ color: "var(--erp-text-muted)" }}>
                 <span>{entry.orderDate}</span>
                 <span>
                   {changed

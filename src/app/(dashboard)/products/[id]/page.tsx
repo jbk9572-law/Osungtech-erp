@@ -40,12 +40,12 @@ export default async function ProductDetailPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#182338]">{product.name}</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">{product.name}</h1>
         <Link href={closeHref} className="erp-btn erp-btn-danger">
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[#6b7280]">{product.sku}</p>
+      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{product.sku}</p>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>

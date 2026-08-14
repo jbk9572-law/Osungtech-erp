@@ -87,8 +87,8 @@ export default async function InventoryProductHistoryPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[#182338]">재고관리 &gt; 재고현황 &gt; 입출고내역</h1>
-      <p className="mb-4 text-xs text-[#6b7280]">
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황 &gt; 입출고내역</h1>
+      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {product.sku} · {product.name}
         {product.spec && ` (${product.spec})`} · 현재 재고{" "}
         {formatQuantityWithBoxes(currentQuantity, product.base_package_qty)}

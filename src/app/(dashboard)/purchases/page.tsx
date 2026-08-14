@@ -153,7 +153,7 @@ export default async function PurchasesPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">매입관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">매입관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
