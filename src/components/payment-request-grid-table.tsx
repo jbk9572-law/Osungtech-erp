@@ -42,18 +42,15 @@ function periodStartMonth(from: string | null): number | null {
   return month >= 1 && month <= 12 ? month : null;
 }
 
+// 색상 자체(hsl 회전)는 이 12색 팔레트에만 필요한 계산이라 인라인으로
+// 남기지만, 배지의 모양(둥근 정도/패딩/글자 크기)은 앱 전역의 .erp-badge와
+// 어긋나지 않도록 그 클래스를 그대로 쓰고 색상만 덮어쓴다.
 function monthBadgeStyle(month: number): CSSProperties {
   const hue = (month - 1) * 30;
   return {
-    display: "inline-flex",
-    alignItems: "center",
     justifyContent: "center",
     minWidth: 28,
-    padding: "1px 6px",
     marginRight: 6,
-    borderRadius: 999,
-    fontSize: 11,
-    fontWeight: 700,
     background: `hsl(${hue}, 70%, 92%)`,
     color: `hsl(${hue}, 55%, 32%)`,
   };
@@ -63,7 +60,11 @@ function PeriodCell({ from, to }: { from: string | null; to: string | null }) {
   const month = periodStartMonth(from);
   return (
     <>
-      {month && <span style={monthBadgeStyle(month)}>{month}월</span>}
+      {month && (
+        <span className="erp-badge" style={monthBadgeStyle(month)}>
+          {month}월
+        </span>
+      )}
       {formatPeriod(from, to)}
     </>
   );
