@@ -92,9 +92,11 @@ export default async function SaleDetailPage({
               F4 수정
             </Link>
           )}
-          <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
-            {paperCalcs && paperCalcs.length > 0 ? "모조지 계산 이력" : "모조지 계산"}
-          </Link>
+          {allowManage && (
+            <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
+              {paperCalcs && paperCalcs.length > 0 ? "모조지 계산 이력" : "모조지 계산"}
+            </Link>
+          )}
           {allowManage && (
             <DeleteButton
               action={deleteSale}
@@ -145,7 +147,7 @@ export default async function SaleDetailPage({
             <span style={{ width: 72, color: "var(--erp-text-muted)" }}>작성자</span>
             <span>{order.profiles?.full_name ?? "-"}</span>
           </div>
-          {paperCalcs && paperCalcs.length > 0 && (
+          {allowManage && paperCalcs && paperCalcs.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <PaperStockOverridePanel
                 orderId={id}
