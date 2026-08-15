@@ -307,8 +307,17 @@ export async function deletePaymentRequestReceipt(
     .maybeSingle();
   if (!receipt) return { error: "이미 삭제된 영수증입니다." };
 
-  const { error } = await supabase.from("payment_request_receipts").delete().eq("id", id);
-  if (error) return { error: "삭제에 실패했습니다." };
+  // .select()로 실제 삭제된 행을 확인한다 — RLS가 막으면(본인 작성 또는
+  // 관리자가 아님) error 없이 조용히 0건 삭제로 끝나므로, 이 확인 없이는
+  // 다음 줄에서 스토리지 파일만 지워지고 행은 남는 불일치가 생긴다.
+  const { data: deleted, error } = await supabase
+    .from("payment_request_receipts")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  if (error || !deleted || deleted.length === 0) {
+    return { error: "삭제에 실패했습니다. 본인이 작성한 지급결의서의 영수증만 삭제할 수 있습니다." };
+  }
 
   await supabase.storage.from("payment-receipts").remove([receipt.file_path]);
 
@@ -365,21 +374,24 @@ export async function deletePaymentRequest(
 
   const supabase = await createClient();
 
-  // payment_request_receipts 행은 on delete cascade로 같이 지워지지만,
-  // 스토리지에 올려둔 실제 파일은 별도로 지워야 한다 — 안 지우면 DB 행은
-  // 사라져도 파일만 계속 Storage 용량을 차지하는 고아 데이터가 된다.
+  // 스토리지 파일을 먼저 지우고 나중에 행을 지우면, RLS가 행 삭제를
+  // 막는 경우(본인 작성이 아님) 파일만 사라지고 행은 그대로 남는 불일치가
+  // 생긴다. 그래서 행 삭제를 먼저 시도해 실제로 지워졌는지 확인한 뒤에만
+  // 스토리지 파일을 지운다 — payment_request_receipts 행 자체는 on delete
+  // cascade로 같이 사라지므로 file_path는 미리 읽어둔다.
   const { data: receipts } = await supabase
     .from("payment_request_receipts")
     .select("file_path")
     .eq("payment_request_id", id);
-  if (receipts && receipts.length > 0) {
-    await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
+
+  const { data: deleted, error } = await supabase.from("payment_requests").delete().eq("id", id).select("id");
+
+  if (error || !deleted || deleted.length === 0) {
+    return { error: "삭제에 실패했습니다. 본인이 작성한 지급결의서만 삭제할 수 있습니다." };
   }
 
-  const { error } = await supabase.from("payment_requests").delete().eq("id", id);
-
-  if (error) {
-    return { error: "삭제에 실패했습니다." };
+  if (receipts && receipts.length > 0) {
+    await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
   }
 
   revalidatePath("/reports/payment-requests");
@@ -404,15 +416,22 @@ export async function bulkDeletePaymentRequests(
 
   const results = await Promise.all(
     ids.map(async (id) => {
-      // 단건 삭제와 동일하게, 영수증 스토리지 파일을 행보다 먼저 지운다.
+      // deletePaymentRequest와 같은 이유로, 행이 실제로 지워졌는지 먼저
+      // 확인한 뒤에만(본인 작성 또는 관리자) 영수증 스토리지 파일을 지운다.
       const { data: receipts } = await supabase
         .from("payment_request_receipts")
         .select("file_path")
         .eq("payment_request_id", id);
+
+      const { data: deleted, error } = await supabase.from("payment_requests").delete().eq("id", id).select("id");
+      if (error || !deleted || deleted.length === 0) {
+        return { error: error ?? new Error("not deleted") };
+      }
+
       if (receipts && receipts.length > 0) {
         await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
       }
-      return supabase.from("payment_requests").delete().eq("id", id);
+      return { error: null };
     })
   );
   const failCount = results.filter((r) => r.error).length;

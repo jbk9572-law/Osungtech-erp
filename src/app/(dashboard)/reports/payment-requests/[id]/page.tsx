@@ -7,6 +7,8 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "-";
@@ -25,10 +27,12 @@ export default async function PaymentRequestDetailPage({
   const { id } = await params;
   const { warning } = await searchParams;
   const supabase = await createClient();
-  const [{ data: row }, { data: items }, { data: receipts }] = await Promise.all([
+  const [{ data: row }, { data: items }, { data: receipts }, actor] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, title, content, department, period_from, period_to, card_type, created_at, profiles(full_name)")
+      .select(
+        "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, profiles(full_name)"
+      )
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -41,19 +45,21 @@ export default async function PaymentRequestDetailPage({
       .select("id, file_url, sort_order")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
+    getCurrentActor(supabase),
   ]);
 
   if (!row) {
     notFound();
   }
 
+  const allowManage = canManage(row.requested_by, actor.userId, actor.isAdmin);
   const total = (items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
 
   return (
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F4: { href: `/reports/payment-requests/${row.id}/edit` },
+          ...(allowManage && { F4: { href: `/reports/payment-requests/${row.id}/edit` } }),
           F9: { printHref: `/reports/payment-requests/${row.id}/print` },
           Escape: { href: "/reports/payment-requests" },
         }}
@@ -64,13 +70,17 @@ export default async function PaymentRequestDetailPage({
         <Link href="/reports/payment-requests" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
-        <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn">
-          F4 수정
-        </Link>
+        {allowManage && (
+          <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn">
+            F4 수정
+          </Link>
+        )}
         <PrintInPlaceButton href={`/reports/payment-requests/${row.id}/print`} className="erp-btn">
           F9 인쇄
         </PrintInPlaceButton>
-        <DeleteButton action={deletePaymentRequest} id={row.id} confirmMessage="이 지급결의서를 삭제하시겠습니까?" />
+        {allowManage && (
+          <DeleteButton action={deletePaymentRequest} id={row.id} confirmMessage="이 지급결의서를 삭제하시겠습니까?" />
+        )}
       </div>
 
       {warning && (
