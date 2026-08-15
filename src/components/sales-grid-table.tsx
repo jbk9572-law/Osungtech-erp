@@ -183,7 +183,7 @@ export function SalesGridTable({
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
                   <td>
-                    <GridBadge tone={isCollection ? "warn" : "info"}>{isCollection ? "수금" : "매출"}</GridBadge>
+                    <GridBadge tone={isCollection ? "muted" : "info"}>{isCollection ? "수금" : "매출"}</GridBadge>
                   </td>
                   <td>{row.customerName}</td>
                   <td>

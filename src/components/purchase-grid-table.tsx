@@ -179,7 +179,7 @@ export function PurchaseGridTable({
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
                   <td>
-                    <GridBadge tone={isPayment ? "warn" : "info"}>{isPayment ? "지급" : "매입"}</GridBadge>
+                    <GridBadge tone={isPayment ? "muted" : "info"}>{isPayment ? "지급" : "매입"}</GridBadge>
                   </td>
                   <td>{row.supplierName}</td>
                   <td>

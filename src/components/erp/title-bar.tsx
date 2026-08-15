@@ -10,6 +10,7 @@ import {
   type LowStockItem,
 } from "@/components/erp/notification-bell";
 import { MENU_ITEMS } from "@/lib/erp-menu";
+import { findByLongestPrefix } from "@/lib/route-match";
 
 // erp-menu.ts의 MENU_ITEMS에서 그대로 파생한다 — 예전엔 여기 따로 목록을
 // 들고 있어서 미수금현황/미지급금현황처럼 실제 있는 라우트가 빠져 있었다
@@ -39,7 +40,7 @@ export function TitleBar({
   onToggleMenu: () => void;
 }) {
   const pathname = usePathname();
-  const menuLabel = SECTION_LABEL.find((s) => pathname.startsWith(s.prefix))?.label ?? "";
+  const menuLabel = findByLongestPrefix(SECTION_LABEL, pathname, (s) => s.prefix)?.label ?? "";
   const today = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "long",

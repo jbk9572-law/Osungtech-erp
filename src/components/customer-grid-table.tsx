@@ -137,7 +137,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.email ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.address ?? "-"}</td>
                   <td>
-                    <GridBadge tone={customer.document_type === "출고증" ? "warn" : "ok"}>
+                    <GridBadge tone={customer.document_type === "출고증" ? "muted" : "ok"}>
                       {customer.document_type}
                     </GridBadge>
                   </td>

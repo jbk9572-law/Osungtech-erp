@@ -1,3 +1,5 @@
+import { findByLongestPrefix } from "@/lib/route-match";
+
 // 실제로 존재하는 메뉴(라우트)의 단일 소스 — 트리메뉴/빠른검색/즐겨찾기/
 // 최근메뉴가 전부 이 목록에서 파생된 걸 쓴다 (같은 프로그램처럼 보이려면
 // 메뉴 소스가 하나여야 한다). 예전엔 트리메뉴가 이 목록과 별개로 자기
@@ -32,12 +34,12 @@ export const MENU_GROUPS: MenuGroup[] = [
   {
     label: "확장모듈",
     items: [
-      // "/paper-calc/manual"이 "/paper-calc"의 하위 경로라서, 더 구체적인
-      // 경로를 먼저 둬야 findMenuItem/최근메뉴가 재단 배치 시뮬레이터를
-      // 모조지 계산으로 잘못 기록하지 않는다(prefix 매칭이라 배열 순서상
-      // 처음 걸리는 걸 쓴다).
-      { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
+      // findMenuItem이 가장 구체적인(긴) href를 우선하므로, 여기 순서는
+      // 라우팅 정확성과 무관하게 순수히 화면 표시 우선순위로 정한다 —
+      // 모조지 계산이 주 기능, 재단 배치 시뮬레이터는 그 안에서 이어지는
+      // 하위 기능이라 뒤에 둔다.
       { label: "모조지 계산", href: "/paper-calc" },
+      { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
       { label: "월별 리포트", href: "/reports/monthly" },
     ],
   },
@@ -67,5 +69,5 @@ function flatten(groups: MenuGroup[]): MenuItem[] {
 export const MENU_ITEMS: MenuItem[] = flatten(MENU_GROUPS);
 
 export function findMenuItem(pathname: string): MenuItem | undefined {
-  return MENU_ITEMS.find((m) => pathname.startsWith(m.href));
+  return findByLongestPrefix(MENU_ITEMS, pathname, (m) => m.href);
 }
