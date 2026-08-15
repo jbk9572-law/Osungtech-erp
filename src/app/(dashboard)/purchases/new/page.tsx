@@ -20,6 +20,7 @@ export default async function NewPurchasePage() {
     { data: customers },
     { data: prices },
     { data: supplierPrices },
+    { data: history },
   ] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
     supabase.from("products").select("id, sku, name, spec, unit, cost, price, base_package_qty").order("name"),
@@ -27,7 +28,19 @@ export default async function NewPurchasePage() {
     supabase.from("customers").select("id, name").order("name"),
     supabase.from("customer_product_prices").select("customer_id, product_id, unit_price"),
     supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost"),
+    supabase
+      .from("purchase_order_items")
+      .select("product_id, unit_cost, purchase_orders!inner(supplier_id, purchase_date)")
+      .order("created_at", { ascending: false })
+      .limit(1000),
   ]);
+
+  const priceHistory = (history ?? []).map((row) => ({
+    supplierId: row.purchase_orders.supplier_id,
+    productId: row.product_id,
+    unitCost: Number(row.unit_cost),
+    purchaseDate: row.purchase_orders.purchase_date,
+  }));
 
   return (
     <div>
@@ -50,6 +63,7 @@ export default async function NewPurchasePage() {
         customers={customers ?? []}
         prices={prices ?? []}
         supplierPrices={supplierPrices ?? []}
+        history={priceHistory}
         today={todayKstStr()}
       />
     </div>

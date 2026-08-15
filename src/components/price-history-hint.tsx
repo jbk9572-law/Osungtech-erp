@@ -4,13 +4,19 @@ import { useState } from "react";
 
 type HistoryEntry = { unitPrice: number; orderDate: string };
 
-export function PriceHistoryHint({ history }: { history: HistoryEntry[] }) {
+export function PriceHistoryHint({
+  history,
+  emptyLabel = "이전 판매 이력 없음 (신규 단가)",
+}: {
+  history: HistoryEntry[];
+  emptyLabel?: string;
+}) {
   const [expanded, setExpanded] = useState(false);
 
   if (history.length === 0) {
     return (
       <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-        이전 판매 이력 없음 (신규 단가)
+        {emptyLabel}
       </p>
     );
   }

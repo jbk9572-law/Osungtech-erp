@@ -28,6 +28,7 @@ import {
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
+import { PriceHistoryHint } from "@/components/price-history-hint";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -64,6 +65,13 @@ type Row = {
   manualSalePrice: boolean;
 };
 
+type PriceHistoryEntry = {
+  supplierId: string;
+  productId: string;
+  unitCost: number;
+  purchaseDate: string;
+};
+
 const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
 
 export type PurchaseInitial = {
@@ -96,6 +104,7 @@ export function NewPurchaseForm({
   customers = [],
   prices = [],
   supplierPrices = [],
+  history = [],
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -114,6 +123,9 @@ export function NewPurchaseForm({
   // 우선 쓰고, 없으면 품목 기본 매입원가(product.cost)로 채운다 — 거래처별
   // 판매단가(prices/priceMap)와 동일한 방식.
   supplierPrices?: { supplier_id: string; product_id: string; unit_cost: number }[];
+  // 최근 매입단가 이력 — 매출 등록 화면의 PriceHistoryHint와 동일하게,
+  // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
+  history?: PriceHistoryEntry[];
 }) {
   const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
   const [purchaseDate, setPurchaseDate] = useState(
@@ -388,6 +400,12 @@ export function NewPurchaseForm({
 
   function removeRow(key: number) {
     setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
+  }
+
+  function getHistoryFor(productId: string) {
+    return history
+      .filter((h) => h.supplierId === supplierId && h.productId === productId)
+      .sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
   }
 
   // 우리 쪽 품목은 대부분 당일 입고 후 바로 당일 출고돼서, 입고 예정을
@@ -1142,6 +1160,30 @@ export function NewPurchaseForm({
             </tfoot>
           </table>
         </div>
+
+        {rows.some((r) => r.productId && supplierId && getHistoryFor(r.productId).length > 0) && (
+          <div className="erp-detail-body" style={{ paddingTop: 8 }}>
+            {rows
+              .filter((r) => r.productId && supplierId)
+              .map((r) => {
+                const hist = getHistoryFor(r.productId);
+                if (!hist.length) return null;
+                const product = products.find((p) => p.id === r.productId);
+                return (
+                  <div key={r.key} className="mb-1 flex items-center gap-2 text-xs">
+                    <span style={{ color: "var(--erp-text-muted)" }}>
+                      {product?.name}
+                      {product?.spec && ` (${product.spec})`}:
+                    </span>
+                    <PriceHistoryHint
+                      history={hist.map((h) => ({ unitPrice: h.unitCost, orderDate: h.purchaseDate }))}
+                      emptyLabel="이전 매입 이력 없음 (신규 단가)"
+                    />
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>
 
       <FormMessage state={messageDismissed ? undefined : state} />
