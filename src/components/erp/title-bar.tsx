@@ -9,25 +9,15 @@ import {
   type DueTodoItem,
   type LowStockItem,
 } from "@/components/erp/notification-bell";
+import { MENU_ITEMS } from "@/lib/erp-menu";
 
-const SECTION_LABEL: { prefix: string; label: string }[] = [
-  { prefix: "/dashboard", label: "메인 대시보드" },
-  { prefix: "/sales", label: "매출관리" },
-  { prefix: "/purchases", label: "매입관리" },
-  { prefix: "/inventory", label: "재고관리 > 재고현황" },
-  { prefix: "/products", label: "품목관리" },
-  { prefix: "/customers", label: "거래처관리 > 출고처관리" },
-  { prefix: "/suppliers", label: "거래처관리 > 공급처관리" },
-  { prefix: "/todos", label: "할일관리" },
-  { prefix: "/announcements", label: "공지사항" },
-  { prefix: "/reports/payment-requests", label: "보고서 > 지급결의양식" },
-  { prefix: "/reports/monthly", label: "확장모듈 > 월별 리포트" },
-  { prefix: "/settings/users", label: "시스템관리 > 권한관리" },
-  { prefix: "/settings/password", label: "환경설정 > 비밀번호 변경" },
-  { prefix: "/settings", label: "환경설정" },
-  { prefix: "/paper-calc/manual", label: "확장모듈 > 재단 배치 시뮬레이터" },
-  { prefix: "/paper-calc", label: "확장모듈 > 모조지 계산" },
-];
+// erp-menu.ts의 MENU_ITEMS에서 그대로 파생한다 — 예전엔 여기 따로 목록을
+// 들고 있어서 미수금현황/미지급금현황처럼 실제 있는 라우트가 빠져 있었다
+// (그 페이지에 들어가면 타이틀바 경로 표시가 비어 있었다).
+const SECTION_LABEL: { prefix: string; label: string }[] = MENU_ITEMS.map(({ href, label }) => ({
+  prefix: href,
+  label,
+}));
 
 export function TitleBar({
   logoUrl,
