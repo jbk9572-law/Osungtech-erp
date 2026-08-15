@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 
 export type PaperStockOverrideEntry = {
@@ -29,6 +29,7 @@ export function PaperStockOverridePanel({
   const [state, formAction, pending] = useActionState(overrideAction, undefined);
   const formRef = useRef<HTMLFormElement>(null);
   const [revertPending, startRevertTransition] = useTransition();
+  const [confirmingRevert, setConfirmingRevert] = useState(false);
 
   useEffect(() => {
     if (state?.success) formRef.current?.reset();
@@ -53,8 +54,13 @@ export function PaperStockOverridePanel({
             className="erp-btn erp-btn-danger"
             style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
             disabled={revertPending}
+            onBlur={() => setConfirmingRevert(false)}
             onClick={() => {
-              if (!confirm("자동 계산값으로 되돌리시겠습니까?")) return;
+              if (!confirmingRevert) {
+                setConfirmingRevert(true);
+                return;
+              }
+              setConfirmingRevert(false);
               const formData = new FormData();
               formData.set(idFieldName, orderId);
               startRevertTransition(() => {
@@ -62,7 +68,7 @@ export function PaperStockOverridePanel({
               });
             }}
           >
-            자동값으로 되돌리기
+            {confirmingRevert ? "한 번 더 누르면 되돌림" : "자동값으로 되돌리기"}
           </button>
         </div>
       )}
@@ -87,7 +93,13 @@ export function PaperStockOverridePanel({
           style={{ flex: 1, minWidth: 160 }}
         />
         <button type="submit" disabled={pending} className="erp-btn">
-          {pending ? "적용 중..." : "수동값 적용"}
+          {pending ? (
+            <>
+              <span className="erp-spinner" aria-hidden /> 적용 중...
+            </>
+          ) : (
+            "수동값 적용"
+          )}
         </button>
       </form>
       <FormMessage state={state} />

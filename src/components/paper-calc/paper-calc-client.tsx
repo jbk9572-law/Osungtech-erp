@@ -618,6 +618,7 @@ function SavedCalcRow({
 }) {
   const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
   const effectiveReams = computeEffectiveReams(calc.layouts);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
     <tr>
@@ -628,11 +629,9 @@ function SavedCalcRow({
       <td className="num">{calc.total_prod.toLocaleString()}매</td>
       <td className="num">{calc.over_prod.toLocaleString()}매</td>
       <td>
-        {calc.fulfilled ? (
-          <span style={{ color: "var(--erp-success)" }}>충족</span>
-        ) : (
-          <span style={{ color: "var(--erp-warning)" }}>미충족</span>
-        )}
+        <span className={`erp-badge ${calc.fulfilled ? "erp-badge-success" : "erp-badge-warning"}`}>
+          {calc.fulfilled ? "충족" : "미충족"}
+        </span>
       </td>
       <td>
         <div className="flex items-center gap-1">
@@ -646,7 +645,10 @@ function SavedCalcRow({
           <form
             action={action}
             onSubmit={(e) => {
-              if (!confirm("이 계산 기록을 삭제하시겠습니까?")) e.preventDefault();
+              if (!confirmingDelete) {
+                e.preventDefault();
+                setConfirmingDelete(true);
+              }
             }}
           >
             <input type="hidden" name="id" value={calc.id} />
@@ -657,8 +659,9 @@ function SavedCalcRow({
               className="erp-btn erp-btn-danger"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               disabled={pending}
+              onBlur={() => setConfirmingDelete(false)}
             >
-              삭제
+              {confirmingDelete ? "한 번 더 누르면 삭제" : "삭제"}
             </button>
           </form>
         </div>

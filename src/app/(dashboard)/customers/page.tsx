@@ -1,15 +1,33 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
 import { CustomerGridTable } from "@/components/customer-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 
-export default async function CustomersPage() {
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
-  const { data: customers } = await supabase
+  const { data: allCustomers } = await supabase
     .from("customers")
     .select("*")
     .order("created_at", { ascending: false });
+
+  const keyword = q?.trim().toLowerCase();
+  const customers = keyword
+    ? (allCustomers ?? []).filter(
+        (c) =>
+          c.name.toLowerCase().includes(keyword) ||
+          (c.business_number ?? "").toLowerCase().includes(keyword) ||
+          (c.contact_name ?? "").toLowerCase().includes(keyword) ||
+          (c.phone ?? "").toLowerCase().includes(keyword) ||
+          (c.email ?? "").toLowerCase().includes(keyword)
+      )
+    : allCustomers ?? [];
 
   const exportHref = "/api/customers/export";
 
@@ -39,7 +57,29 @@ export default async function CustomersPage() {
         </div>
       </div>
 
-      <CustomerGridTable rows={customers ?? []} />
+      <form method="get" className="erp-search">
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label>출고처 검색</label>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="업체명, 사업자번호, 담당자, 연락처, 이메일"
+            className="erp-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          조회
+        </button>
+        {q && (
+          <Link href="/customers" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+
+      <CustomerGridTable rows={customers} />
     </div>
   );
 }

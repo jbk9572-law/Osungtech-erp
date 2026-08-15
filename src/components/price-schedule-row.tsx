@@ -27,6 +27,7 @@ export function PriceScheduleRow({
   const [editing, setEditing] = useState(false);
   const [updateState, updateAction, updatePending] = useActionState(updatePriceSchedule, undefined);
   const [cancelPending, startCancelTransition] = useTransition();
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   useEffect(() => {
     if (updateState?.success) {
@@ -35,8 +36,14 @@ export function PriceScheduleRow({
     }
   }, [updateState]);
 
+  // 브라우저 기본 confirm() 대신, 버튼을 두 번 눌러야 취소되게 한다 —
+  // 메신저 메시지 삭제와 같은 가벼운 확인 방식으로 앱 전체 톤을 맞춘다.
   function handleCancel() {
-    if (!confirm("이 단가 예약을 취소하시겠습니까?")) return;
+    if (!confirmingCancel) {
+      setConfirmingCancel(true);
+      return;
+    }
+    setConfirmingCancel(false);
     const formData = new FormData();
     formData.set("id", id);
     formData.set("customer_id", customerId);
@@ -124,10 +131,11 @@ export function PriceScheduleRow({
           type="button"
           disabled={cancelPending}
           onClick={handleCancel}
+          onBlur={() => setConfirmingCancel(false)}
           className="erp-btn erp-btn-danger"
           style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
         >
-          취소
+          {confirmingCancel ? "한 번 더 누르면 취소" : "취소"}
         </button>
       </div>
     </div>

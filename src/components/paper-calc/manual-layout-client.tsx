@@ -111,6 +111,8 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
   const [snapMm, setSnapMm] = useState(5);
   const [selectedPlacementIndex, setSelectedPlacementIndex] = useState<number | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [confirmingRemoveSheet, setConfirmingRemoveSheet] = useState(false);
+  const [confirmingClearSheet, setConfirmingClearSheet] = useState(false);
   const [hoverGhost, setHoverGhost] = useState<Ghost | null>(null);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
@@ -162,21 +164,22 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
 
   function removeSheet(index: number) {
     if (sheets.length <= 1) return;
-    if (sheets[index]?.placements.length && !confirm("이 배치를 삭제하시겠습니까? 배치된 조각이 모두 사라집니다.")) {
+    if (sheets[index]?.placements.length && !confirmingRemoveSheet) {
+      setConfirmingRemoveSheet(true);
       return;
     }
+    setConfirmingRemoveSheet(false);
     setSheets((prev) => prev.filter((_, i) => i !== index));
     setSheetIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
     setSelectedPlacementIndex(null);
   }
 
   function clearCurrentSheet() {
-    if (
-      sheets[sheetIndex]?.placements.length &&
-      !confirm("이 배치를 비우시겠습니까? 배치된 조각이 모두 사라집니다.")
-    ) {
+    if (sheets[sheetIndex]?.placements.length && !confirmingClearSheet) {
+      setConfirmingClearSheet(true);
       return;
     }
+    setConfirmingClearSheet(false);
     setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [] } : s)));
     setSelectedPlacementIndex(null);
     setWarning(null);
@@ -673,9 +676,10 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
               className="erp-btn erp-btn-danger"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               onClick={() => removeSheet(sheetIndex)}
+              onBlur={() => setConfirmingRemoveSheet(false)}
               disabled={sheets.length <= 1}
             >
-              이 배치 삭제
+              {confirmingRemoveSheet ? "한 번 더 누르면 삭제" : "이 배치 삭제"}
             </button>
           </div>
         </div>
@@ -691,8 +695,14 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                 </span>
               )}
             </span>
-            <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={clearCurrentSheet}>
-              이 배치 비우기
+            <button
+              type="button"
+              className="erp-btn"
+              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              onClick={clearCurrentSheet}
+              onBlur={() => setConfirmingClearSheet(false)}
+            >
+              {confirmingClearSheet ? "한 번 더 누르면 비움" : "이 배치 비우기"}
             </button>
           </div>
 
