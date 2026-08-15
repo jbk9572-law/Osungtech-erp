@@ -14,6 +14,7 @@ export function PhoneInputGroup({
       <input
         name={`${namePrefix}1`}
         placeholder="010"
+        aria-label="전화번호 앞자리"
         defaultValue={part1}
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"
@@ -22,6 +23,7 @@ export function PhoneInputGroup({
       <input
         name={`${namePrefix}2`}
         placeholder="1234"
+        aria-label="전화번호 가운데자리"
         defaultValue={part2}
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"
@@ -30,6 +32,7 @@ export function PhoneInputGroup({
       <input
         name={`${namePrefix}3`}
         placeholder="5678"
+        aria-label="전화번호 뒷자리"
         defaultValue={part3}
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"

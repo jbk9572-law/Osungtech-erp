@@ -504,22 +504,22 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
         </div>
         <div className="erp-detail-body flex flex-wrap items-end gap-4">
           <div className="erp-field">
-            <label>원지 가로(mm)</label>
-            <NumberInput value={paperW} onChange={setPaperW} className="erp-input" />
+            <label htmlFor="ml-paper-w">원지 가로(mm)</label>
+            <NumberInput id="ml-paper-w" value={paperW} onChange={setPaperW} className="erp-input" />
           </div>
           <div className="erp-field">
-            <label>원지 세로(mm)</label>
-            <NumberInput value={paperH} onChange={setPaperH} className="erp-input" />
+            <label htmlFor="ml-paper-h">원지 세로(mm)</label>
+            <NumberInput id="ml-paper-h" value={paperH} onChange={setPaperH} className="erp-input" />
           </div>
           <button type="button" className="erp-btn" onClick={() => { setPaperW(paperH); setPaperH(paperW); }}>
             가로·세로 전환
           </button>
           <div className="erp-field">
-            <label>
+            <label htmlFor="ml-snap-mm">
               배치 격자 간격(mm)
               <FieldHint text="아래에서 품목을 드래그로 배치할 때 이 간격 단위로 달라붙습니다(스냅). 값이 작을수록 더 촘촘하게 자유 배치할 수 있습니다." />
             </label>
-            <NumberInput value={snapMm} onChange={(n) => setSnapMm(Math.max(1, n))} className="erp-input" />
+            <NumberInput id="ml-snap-mm" value={snapMm} onChange={(n) => setSnapMm(Math.max(1, n))} className="erp-input" />
           </div>
         </div>
       </div>

@@ -59,8 +59,9 @@ export default async function CustomersPage({
 
       <form method="get" className="erp-search">
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>출고처 검색</label>
+          <label htmlFor="search-q">출고처 검색</label>
           <input
+            id="search-q"
             type="text"
             name="q"
             defaultValue={q ?? ""}

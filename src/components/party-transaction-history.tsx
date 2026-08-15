@@ -111,8 +111,9 @@ export function PartyTransactionHistory({
         </div>
         {preset === "custom" && (
           <div className="erp-field" style={{ marginBottom: 10, maxWidth: 200 }}>
-            <label>시작일</label>
+            <label htmlFor="pth-custom-from">시작일</label>
             <input
+              id="pth-custom-from"
               type="date"
               value={customFrom}
               onChange={(e) => setCustomFrom(e.target.value)}

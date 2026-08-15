@@ -602,8 +602,9 @@ export function NewPurchaseForm({
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
-            <label>No</label>
+            <label htmlFor="purchase-docno">No</label>
             <input
+              id="purchase-docno"
               type="text"
               inputMode="numeric"
               placeholder="자동"
@@ -615,8 +616,9 @@ export function NewPurchaseForm({
             />
           </div>
           <div className="erp-field">
-            <label>공급처</label>
+            <label htmlFor="purchase-supplier">공급처</label>
             <PartySearchSelect
+              id="purchase-supplier"
               name="supplier_id"
               parties={suppliers}
               value={supplierId}
@@ -625,8 +627,9 @@ export function NewPurchaseForm({
             />
           </div>
           <div className="erp-field">
-            <label>매입일자</label>
+            <label htmlFor="purchase-date">매입일자</label>
             <input
+              id="purchase-date"
               name="purchase_date"
               type="date"
               required
@@ -636,8 +639,9 @@ export function NewPurchaseForm({
             />
           </div>
           <div className="erp-field">
-            <label>입고방법</label>
+            <label htmlFor="purchase-delivery-method">입고방법</label>
             <select
+              id="purchase-delivery-method"
               value={deliveryMethod}
               onChange={(e) => setDeliveryMethod(e.target.value)}
               className="erp-select"
@@ -651,8 +655,9 @@ export function NewPurchaseForm({
             </select>
           </div>
           <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
-            <label>적요 (선택)</label>
+            <label htmlFor="purchase-memo">적요 (선택)</label>
             <input
+              id="purchase-memo"
               name="memo"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
@@ -675,8 +680,9 @@ export function NewPurchaseForm({
           </div>
           {!alwaysCredit && (
             <div className="erp-field">
-              <label>&nbsp;</label>
+              <label aria-hidden="true">&nbsp;</label>
               <select
+                aria-label="결제방법"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="erp-select"
@@ -711,8 +717,9 @@ export function NewPurchaseForm({
               {alsoCreateSale && (
                 <>
                   <div className="erp-field">
-                    <label>출고처</label>
+                    <label htmlFor="purchase-sale-customer">출고처</label>
                     <PartySearchSelect
+                      id="purchase-sale-customer"
                       parties={customers}
                       value={saleCustomerId}
                       onChange={handleSaleCustomerChange}
@@ -720,8 +727,9 @@ export function NewPurchaseForm({
                     />
                   </div>
                   <div className="erp-field">
-                    <label>출고일자</label>
+                    <label htmlFor="purchase-sale-date">출고일자</label>
                     <input
+                      id="purchase-sale-date"
                       type="date"
                       value={saleDate || purchaseDate}
                       onChange={(e) => setSaleDate(e.target.value)}
@@ -1011,6 +1019,7 @@ export function NewPurchaseForm({
                       <input
                         type="text"
                         placeholder="규격"
+                        aria-label="규격"
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
@@ -1040,6 +1049,7 @@ export function NewPurchaseForm({
                       <input
                         type="text"
                         placeholder="관리번호"
+                        aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
                         className="erp-input w-full"
@@ -1123,6 +1133,7 @@ export function NewPurchaseForm({
                       <input
                         type="text"
                         placeholder="비고"
+                        aria-label="비고"
                         value={row.remark}
                         onChange={(e) => updateRow(row.key, { remark: e.target.value })}
                         className="erp-input w-full"

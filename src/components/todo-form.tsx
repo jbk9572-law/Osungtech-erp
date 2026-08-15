@@ -195,10 +195,17 @@ export function TodoForm({
         <input
           name="title"
           placeholder="할 일 (비우면 거래처·유형으로 자동 생성)"
+          aria-label="할 일"
           defaultValue={initial?.title}
           className="erp-input md:col-span-2"
         />
-        <input name="due_date" type="date" defaultValue={initial?.dueDate ?? ""} className="erp-input" />
+        <input
+          name="due_date"
+          type="date"
+          aria-label="마감일"
+          defaultValue={initial?.dueDate ?? ""}
+          className="erp-input"
+        />
       </div>
 
       <div className="erp-search">
@@ -233,8 +240,9 @@ export function TodoForm({
         </div>
         {todoType !== "sale" && (
           <div className="erp-field">
-            <label>공급처</label>
+            <label htmlFor="todo-supplier">공급처</label>
             <PartySearchSelect
+              id="todo-supplier"
               name="supplier_id"
               parties={suppliers}
               value={supplierId}
@@ -245,8 +253,9 @@ export function TodoForm({
         )}
         {todoType !== "purchase" && (
           <div className="erp-field">
-            <label>출고처</label>
+            <label htmlFor="todo-customer">출고처</label>
             <PartySearchSelect
+              id="todo-customer"
               name="customer_id"
               parties={customers}
               value={customerId}
@@ -257,8 +266,8 @@ export function TodoForm({
         )}
         {todoType === "both" && (
           <div className="erp-field">
-            <label>출고예정일 (비우면 마감일 당일출고)</label>
-            <input name="ship_date" type="date" defaultValue={initial?.shipDate ?? ""} className="erp-input" />
+            <label htmlFor="todo-ship-date">출고예정일 (비우면 마감일 당일출고)</label>
+            <input id="todo-ship-date" name="ship_date" type="date" defaultValue={initial?.shipDate ?? ""} className="erp-input" />
           </div>
         )}
       </div>
@@ -325,6 +334,7 @@ export function TodoForm({
                       <input
                         type="text"
                         placeholder="규격"
+                        aria-label="규격"
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
@@ -354,6 +364,7 @@ export function TodoForm({
                       <input
                         type="text"
                         placeholder="관리번호"
+                        aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
                         className="erp-input w-full"
@@ -393,10 +404,11 @@ export function TodoForm({
       </div>
 
       <div>
-        <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <label htmlFor="todo-memo" className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
           메모 (품목과 무관한 참고 메모)
         </label>
         <textarea
+          id="todo-memo"
           name="memo"
           placeholder="메모"
           rows={4}

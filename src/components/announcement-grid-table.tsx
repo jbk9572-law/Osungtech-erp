@@ -72,8 +72,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
     <>
       <div className="erp-search">
         <div className="erp-field">
-          <label>구분</label>
+          <label htmlFor="ann-filter">구분</label>
           <select
+            id="ann-filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value as Filter)}
             className="erp-select"
@@ -85,8 +86,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
           </select>
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>제목 검색</label>
+          <label htmlFor="ann-search-q">제목 검색</label>
           <input
+            id="ann-search-q"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

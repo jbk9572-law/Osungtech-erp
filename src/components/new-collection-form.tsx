@@ -44,8 +44,9 @@ export function NewCollectionForm({
           </div>
           <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
             <div className="erp-field">
-              <label>출고처</label>
+              <label htmlFor="nc-customer">출고처</label>
               <PartySearchSelect
+                id="nc-customer"
                 parties={customers}
                 value={customerId}
                 onChange={setCustomerId}
@@ -53,16 +54,16 @@ export function NewCollectionForm({
               />
             </div>
             <div className="erp-field">
-              <label>일자</label>
-              <input type="date" name="paid_at" defaultValue={today} className="erp-input" required />
+              <label htmlFor="nc-paid-at">일자</label>
+              <input id="nc-paid-at" type="date" name="paid_at" defaultValue={today} className="erp-input" required />
             </div>
             <div className="erp-field">
-              <label>금액</label>
-              <input type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input" required />
+              <label htmlFor="nc-amount">금액</label>
+              <input id="nc-amount" type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input" required />
             </div>
             <div className="erp-field">
-              <label>방법</label>
-              <select name="method" className="erp-input" defaultValue="">
+              <label htmlFor="nc-method">방법</label>
+              <select id="nc-method" name="method" className="erp-input" defaultValue="">
                 <option value="">-</option>
                 {METHODS.map((m) => (
                   <option key={m} value={m}>
@@ -72,8 +73,8 @@ export function NewCollectionForm({
               </select>
             </div>
             <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
-              <label>적요 (선택)</label>
-              <input name="memo" className="erp-input" style={{ width: "100%" }} />
+              <label htmlFor="nc-memo">적요 (선택)</label>
+              <input id="nc-memo" name="memo" className="erp-input" style={{ width: "100%" }} />
             </div>
           </div>
         </div>

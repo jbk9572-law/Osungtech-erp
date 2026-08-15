@@ -207,12 +207,13 @@ export default async function MonthlyReportPage({
 
       <form method="get" id="monthly-report-search-form" className="erp-search">
         <div className="erp-field">
-          <label>기준월</label>
-          <input type="month" name="month" defaultValue={month} className="erp-input" />
+          <label htmlFor="search-month">기준월</label>
+          <input id="search-month" type="month" name="month" defaultValue={month} className="erp-input" />
         </div>
         <div className="erp-field" style={{ minWidth: 240, flex: 1 }}>
-          <label>품목 / 거래처 검색</label>
+          <label htmlFor="search-q">품목 / 거래처 검색</label>
           <input
+            id="search-q"
             type="text"
             name="q"
             defaultValue={q ?? ""}

@@ -58,6 +58,7 @@ export function ProductSearchSelect({
         type="text"
         value={open ? query : (selected?.name ?? "")}
         placeholder={placeholder}
+        aria-label={placeholder}
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });

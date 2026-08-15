@@ -103,6 +103,7 @@ export function InventoryAdjustForm({
       <input
         name="note"
         placeholder="사유 (예: 기초재고, 실사 조정)"
+        aria-label="사유"
         className="erp-input md:col-span-3"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">

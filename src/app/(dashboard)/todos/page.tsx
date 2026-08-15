@@ -65,8 +65,9 @@ export default async function TodosPage({
 
       <form method="get" className="erp-search">
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>할 일 검색</label>
+          <label htmlFor="search-q">할 일 검색</label>
           <input
+            id="search-q"
             type="text"
             name="q"
             defaultValue={q ?? ""}

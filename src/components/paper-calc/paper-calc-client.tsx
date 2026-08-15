@@ -399,15 +399,15 @@ export function PaperCalcClient({
 
           <div className="flex flex-wrap items-end gap-4 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
             <div className="erp-field">
-              <label>
+              <label htmlFor="pc-paper-w">
                 원지 가로(mm)
                 <FieldHint text="완성 조각을 잘라낼 큰 원본 용지(전지)의 크기. 이 안에 위 표의 조각들을 최대한 많이 배치해서 필요한 원지 수량을 계산합니다." />
               </label>
-              <NumberInput value={paperW} onChange={setPaperW} className="erp-input" />
+              <NumberInput id="pc-paper-w" value={paperW} onChange={setPaperW} className="erp-input" />
             </div>
             <div className="erp-field">
-              <label>원지 세로(mm)</label>
-              <NumberInput value={paperH} onChange={setPaperH} className="erp-input" />
+              <label htmlFor="pc-paper-h">원지 세로(mm)</label>
+              <NumberInput id="pc-paper-h" value={paperH} onChange={setPaperH} className="erp-input" />
             </div>
             <button type="button" className="erp-btn" onClick={swapPaper}>
               가로·세로 전환

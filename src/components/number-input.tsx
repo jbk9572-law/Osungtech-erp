@@ -26,6 +26,7 @@ export function NumberInput({
   allowFormula = false,
   disabled = false,
   className = "",
+  id,
 }: {
   value: number;
   onChange: (n: number) => void;
@@ -35,6 +36,7 @@ export function NumberInput({
   allowFormula?: boolean;
   disabled?: boolean;
   className?: string;
+  id?: string;
 }) {
   // 소수점 입력 중(예: "9." -> "9.5") 매 입력마다 천단위 포맷으로 되돌리면
   // 마침표가 즉시 지워져 소수를 아예 입력할 수 없었다. 포커스 중에는 사용자가
@@ -54,7 +56,9 @@ export function NumberInput({
     <input
       type="text"
       inputMode="decimal"
+      id={id}
       placeholder={placeholder}
+      aria-label={placeholder}
       disabled={disabled}
       value={text}
       onFocus={() => setFocused(true)}

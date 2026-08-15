@@ -558,8 +558,9 @@ export function NewSaleForm({
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
-            <label>No</label>
+            <label htmlFor="sale-docno">No</label>
             <input
+              id="sale-docno"
               type="text"
               inputMode="numeric"
               placeholder="자동"
@@ -571,8 +572,9 @@ export function NewSaleForm({
             />
           </div>
           <div className="erp-field">
-            <label>출고처</label>
+            <label htmlFor="sale-customer">출고처</label>
             <PartySearchSelect
+              id="sale-customer"
               name="customer_id"
               parties={customers}
               value={customerId}
@@ -581,8 +583,9 @@ export function NewSaleForm({
             />
           </div>
           <div className="erp-field">
-            <label>거래일자</label>
+            <label htmlFor="sale-order-date">거래일자</label>
             <input
+              id="sale-order-date"
               name="order_date"
               type="date"
               required
@@ -592,8 +595,9 @@ export function NewSaleForm({
             />
           </div>
           <div className="erp-field">
-            <label>배송방법</label>
+            <label htmlFor="sale-delivery-method">배송방법</label>
             <select
+              id="sale-delivery-method"
               value={deliveryMethod}
               onChange={(e) => setDeliveryMethod(e.target.value)}
               className="erp-select"
@@ -607,8 +611,9 @@ export function NewSaleForm({
             </select>
           </div>
           <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
-            <label>적요 (선택)</label>
+            <label htmlFor="sale-memo">적요 (선택)</label>
             <input
+              id="sale-memo"
               name="memo"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
@@ -631,8 +636,9 @@ export function NewSaleForm({
           </div>
           {!alwaysCredit && (
             <div className="erp-field">
-              <label>&nbsp;</label>
+              <label aria-hidden="true">&nbsp;</label>
               <select
+                aria-label="결제방법"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="erp-select"
@@ -1008,6 +1014,7 @@ export function NewSaleForm({
                       <input
                         type="text"
                         placeholder="규격"
+                        aria-label="규격"
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
@@ -1037,6 +1044,7 @@ export function NewSaleForm({
                       <input
                         type="text"
                         placeholder="관리번호"
+                        aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
                         className="erp-input w-full"
@@ -1114,6 +1122,7 @@ export function NewSaleForm({
                       <input
                         type="text"
                         placeholder="비고"
+                        aria-label="비고"
                         value={row.remark}
                         onChange={(e) => updateRow(row.key, { remark: e.target.value })}
                         className="erp-input w-full"

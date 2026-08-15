@@ -14,12 +14,14 @@ export function PartySearchSelect({
   onChange,
   placeholder = "거래처명 검색",
   name,
+  id,
 }: {
   parties: Party[];
   value: string;
   onChange: (partyId: string) => void;
   placeholder?: string;
   name?: string;
+  id?: string;
 }) {
   const selected = parties.find((p) => p.id === value) ?? null;
   const [query, setQuery] = useState("");
@@ -51,9 +53,11 @@ export function PartySearchSelect({
       {name && <input type="hidden" name={name} value={value} />}
       <input
         ref={inputRef}
+        id={id}
         type="text"
         value={open ? query : (selected ? selected.name : "")}
         placeholder={placeholder}
+        aria-label={placeholder}
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
