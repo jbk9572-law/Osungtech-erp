@@ -18,8 +18,8 @@ export type UnpaidOrder = {
 
 // "YYYY-MM-DD" 문자열끼리는 Date.parse가 둘 다 UTC 자정으로 해석해서
 // 빼주므로, 서버 타임존과 무관하게 정확한 일수 차이가 나온다.
-function daysSince(dateStr: string): number {
-  const ms = Date.parse(todayKstStr()) - Date.parse(dateStr);
+export function daysSince(dateStr: string, today: string = todayKstStr()): number {
+  const ms = Date.parse(today) - Date.parse(dateStr);
   return Math.max(0, Math.round(ms / 86400000));
 }
 
@@ -79,9 +79,10 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
 // 오래된 전표(이미 date 오름차순으로 정렬된 상태)부터 순서대로 상계해서
 // 계산한다 — 실제로 어느 수금이 어느 전표를 갚았는지 지정하지 않고,
 // "먼저 나간 것부터 먼저 받은 걸로 친다"는 가장 단순한 가정(선입선출)이다.
-function consumeOldestFirst<T extends { total: number; date: string }>(
+export function consumeOldestFirst<T extends { total: number; date: string }>(
   orders: T[],
-  totalPaid: number
+  totalPaid: number,
+  today: string = todayKstStr()
 ): (T & { outstanding: number; daysOverdue: number })[] {
   let pool = totalPaid;
   const unpaid: (T & { outstanding: number; daysOverdue: number })[] = [];
@@ -89,7 +90,7 @@ function consumeOldestFirst<T extends { total: number; date: string }>(
     if (pool >= order.total) {
       pool -= order.total;
     } else {
-      unpaid.push({ ...order, outstanding: order.total - pool, daysOverdue: daysSince(order.date) });
+      unpaid.push({ ...order, outstanding: order.total - pool, daysOverdue: daysSince(order.date, today) });
       pool = 0;
     }
   }
