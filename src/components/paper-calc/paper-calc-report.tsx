@@ -48,10 +48,22 @@ export function PaperCalcReport({
           { label: "평균 사용률", value: usageAvg != null ? `${usageAvg.toFixed(1)}%` : "-", sub: "" },
           { label: "배치 수", value: `${result.layouts.length}개`, sub: "" },
         ].map((card) => (
-          <div key={card.label} className="rounded border border-gray-300 bg-gray-50 p-3">
-            <div className="text-xs text-gray-500">{card.label}</div>
-            <div className="text-lg font-bold">{card.value}</div>
-            {card.sub && <div className="text-[11px] text-gray-600">{card.sub}</div>}
+          <div
+            key={card.label}
+            className="rounded p-3"
+            style={{ background: "#F7F8FA", border: "1px solid var(--erp-border)" }}
+          >
+            <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              {card.label}
+            </div>
+            <div className="text-lg font-bold" style={{ color: "var(--erp-text)" }}>
+              {card.value}
+            </div>
+            {card.sub && (
+              <div className="text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+                {card.sub}
+              </div>
+            )}
           </div>
         ))}
       </div>
