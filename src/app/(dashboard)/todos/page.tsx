@@ -17,9 +17,14 @@ function summarizeItems(items: TodoItemInput[], productNameById: Map<string, str
   return items.length > 1 ? `${firstName} 외 ${items.length - 1}건` : firstName;
 }
 
-export default async function TodosPage() {
+export default async function TodosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
-  const [{ data: rows, error }, { data: products }] = await Promise.all([
+  const [{ data: allRows, error }, { data: products }] = await Promise.all([
     supabase
       .from("todos")
       .select(
@@ -34,6 +39,16 @@ export default async function TodosPage() {
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
   const todayStr = todayKstStr();
 
+  const keyword = q?.trim().toLowerCase();
+  const rows = keyword
+    ? (allRows ?? []).filter(
+        (r) =>
+          r.title.toLowerCase().includes(keyword) ||
+          (r.suppliers?.name ?? "").toLowerCase().includes(keyword) ||
+          (r.customers?.name ?? "").toLowerCase().includes(keyword)
+      )
+    : allRows ?? [];
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/todos/new" }, Escape: { href: "/dashboard" } }} />
@@ -47,6 +62,28 @@ export default async function TodosPage() {
           ESC 닫기
         </Link>
       </div>
+
+      <form method="get" className="erp-search">
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label>할 일 검색</label>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="제목, 공급처, 납품처"
+            className="erp-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          조회
+        </button>
+        {q && (
+          <Link href="/todos" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
 
       {error && (
         <p className="erp-grid-empty" style={{ marginBottom: 12 }}>
@@ -69,7 +106,7 @@ export default async function TodosPage() {
             </tr>
           </thead>
           <tbody>
-            {(rows ?? []).map((row) => {
+            {rows.map((row) => {
               const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
               const items = Array.isArray(row.items) ? (row.items as TodoItemInput[]) : [];
               return (
@@ -102,10 +139,10 @@ export default async function TodosPage() {
                 </ClickableRow>
               );
             })}
-            {!rows?.length && (
+            {!rows.length && (
               <tr>
                 <td colSpan={8} className="erp-grid-empty">
-                  등록된 할 일이 없습니다.
+                  {q ? "검색 결과가 없습니다." : "등록된 할 일이 없습니다."}
                 </td>
               </tr>
             )}

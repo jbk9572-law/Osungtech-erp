@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CompanyProfileForm } from "@/components/company-profile-form";
 import { BrandingImageForm } from "@/components/branding-image-form";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function CompanySettingsPage() {
   const supabase = await createClient();
@@ -12,7 +14,13 @@ export default async function CompanySettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 회사정보</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 회사정보</h1>
+        <Link href="/dashboard" className="erp-btn erp-btn-danger">
+          ESC 닫기
+        </Link>
+      </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">거래명세표의 공급자 정보로 사용됩니다.</p>
 
       <CompanyProfileForm company={company} />
