@@ -47,25 +47,25 @@ export default async function UserDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/users" } }} />
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-3 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 계정관리 &gt; {target.full_name ?? target.username}</h1>
-        <Link href="/settings/users" className="erp-btn erp-btn-danger">
-          ESC 닫기
-        </Link>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          {!isSelf && (
+            <DeleteButton
+              action={deleteUserAccount}
+              id={target.id}
+              confirmMessage={`${target.full_name ?? target.username} 계정을 삭제하시겠습니까? 되돌릴 수 없습니다.`}
+            />
+          )}
+          <Link href="/settings/users" className="erp-btn erp-btn-danger">
+            ESC 닫기
+          </Link>
+        </div>
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
+        <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">계정 정보 수정</span>
-          {!isSelf && (
-            <div style={{ margin: 4 }}>
-              <DeleteButton
-                action={deleteUserAccount}
-                id={target.id}
-                confirmMessage={`${target.full_name ?? target.username} 계정을 삭제하시겠습니까? 되돌릴 수 없습니다.`}
-              />
-            </div>
-          )}
         </div>
         <div className="erp-detail-body">
           <EditUserForm
