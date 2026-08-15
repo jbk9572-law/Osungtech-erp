@@ -1580,6 +1580,14 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      toggle_todo_done: {
+        Args: { p_id: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

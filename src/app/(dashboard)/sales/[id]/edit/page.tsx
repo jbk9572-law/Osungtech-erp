@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
 import { updateSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 
 export default async function EditSalePage({
   params,
@@ -27,6 +29,7 @@ export default async function EditSalePage({
     { data: warehouse },
     { data: prices },
     { data: history },
+    actor,
   ] = await Promise.all([
     supabase.from("sales_orders").select("*").eq("id", id).maybeSingle(),
     supabase
@@ -46,10 +49,23 @@ export default async function EditSalePage({
       .select("product_id, unit_price, sales_orders!inner(customer_id, order_date)")
       .order("created_at", { ascending: false })
       .limit(1000),
+    getCurrentActor(supabase),
   ]);
 
   if (!order) {
     notFound();
+  }
+
+  if (!canManage(order.created_by, actor.userId, actor.isAdmin)) {
+    return (
+      <div>
+        <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
+        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">매출 거래 수정</h1>
+        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+          본인이 등록한 거래만 수정할 수 있습니다.
+        </p>
+      </div>
+    );
   }
 
   const priceHistory = (history ?? []).map((row) => ({

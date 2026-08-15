@@ -7,6 +7,8 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { deleteTodo, updateTodo } from "../actions";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 
 export default async function TodoDetailPage({
   params,
@@ -15,12 +17,12 @@ export default async function TodoDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: row, error }, { data: products }, { data: calcs }, { data: suppliers }, { data: customers }] =
+  const [{ data: row, error }, { data: products }, { data: calcs }, { data: suppliers }, { data: customers }, actor] =
     await Promise.all([
       supabase
         .from("todos")
         .select(
-          "id, title, memo, items, todo_type, ship_date, supplier_id, customer_id, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)"
+          "id, title, memo, items, todo_type, ship_date, supplier_id, customer_id, purchase_done_at, sale_done_at, due_date, done, created_by, profiles!created_by(full_name), suppliers(name), customers(name)"
         )
         .eq("id", id)
         .maybeSingle(),
@@ -32,6 +34,7 @@ export default async function TodoDetailPage({
         .order("created_at", { ascending: false }),
       supabase.from("suppliers").select("id, name").order("name"),
       supabase.from("customers").select("id, name").order("name"),
+      getCurrentActor(supabase),
     ]);
 
   if (error) {
@@ -56,6 +59,7 @@ export default async function TodoDetailPage({
   }
   const paperCalcSizeLines = formatPaperCalcSizeLines(paperCalcSizes);
   const latestCalcId = calcs?.[0]?.id;
+  const allowManage = canManage(row.created_by, actor.userId, actor.isAdmin);
 
   return (
     <div>
@@ -66,7 +70,9 @@ export default async function TodoDetailPage({
         <Link href="/todos" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
-        <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
+        {allowManage && (
+          <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
+        )}
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
@@ -133,24 +139,30 @@ export default async function TodoDetailPage({
             </div>
           )}
 
-          <TodoForm
-            action={updateTodo}
-            submitLabel="수정"
-            initial={{
-              id: row.id,
-              title: row.title,
-              memo: row.memo,
-              dueDate: row.due_date,
-              items,
-              todoType: row.todo_type,
-              shipDate: row.ship_date,
-              supplierId: row.supplier_id,
-              customerId: row.customer_id,
-            }}
-            products={products ?? []}
-            suppliers={suppliers ?? []}
-            customers={customers ?? []}
-          />
+          {allowManage ? (
+            <TodoForm
+              action={updateTodo}
+              submitLabel="수정"
+              initial={{
+                id: row.id,
+                title: row.title,
+                memo: row.memo,
+                dueDate: row.due_date,
+                items,
+                todoType: row.todo_type,
+                shipDate: row.ship_date,
+                supplierId: row.supplier_id,
+                customerId: row.customer_id,
+              }}
+              products={products ?? []}
+              suppliers={suppliers ?? []}
+              customers={customers ?? []}
+            />
+          ) : (
+            <p className="erp-grid-empty" style={{ marginTop: 12 }}>
+              본인이 등록한 할 일만 수정할 수 있습니다. (완료 체크는 누구나 할 수 있습니다.)
+            </p>
+          )}
         </div>
       </div>
     </div>

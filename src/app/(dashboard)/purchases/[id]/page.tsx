@@ -10,6 +10,8 @@ import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
 import { overridePurchasePaperStock, revertPurchasePaperStock } from "@/app/(dashboard)/purchases/actions";
 import { resolveListHref } from "@/lib/list-return";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 
 export default async function PurchaseDetailPage({
   params,
@@ -26,33 +28,37 @@ export default async function PurchaseDetailPage({
   const editHref = `/purchases/${id}/edit${back ? `?back=${back}` : ""}`;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }] = await Promise.all([
-    supabase
-      .from("purchase_orders")
-      .select("*, suppliers(*), profiles!created_by(full_name)")
-      .eq("id", id)
-      .maybeSingle(),
-    supabase
-      .from("purchase_order_items")
-      .select("*, products(sku, name, spec, unit, base_package_qty)")
-      .eq("purchase_order_id", id)
-      .order("created_at"),
-    supabase
-      .from("paper_calculations")
-      .select("id, total_paper, total_sheet, input_items, created_at")
-      .eq("purchase_order_id", id)
-      .order("created_at", { ascending: false })
-      .limit(1),
-    supabase
-      .from("paper_stock_overrides")
-      .select("id, auto_quantity, override_quantity, note, created_at, reverted_at, profiles!created_by(full_name)")
-      .eq("purchase_order_id", id)
-      .order("created_at", { ascending: false }),
-  ]);
+  const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }, actor] =
+    await Promise.all([
+      supabase
+        .from("purchase_orders")
+        .select("*, suppliers(*), profiles!created_by(full_name)")
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("purchase_order_items")
+        .select("*, products(sku, name, spec, unit, base_package_qty)")
+        .eq("purchase_order_id", id)
+        .order("created_at"),
+      supabase
+        .from("paper_calculations")
+        .select("id, total_paper, total_sheet, input_items, created_at")
+        .eq("purchase_order_id", id)
+        .order("created_at", { ascending: false })
+        .limit(1),
+      supabase
+        .from("paper_stock_overrides")
+        .select("id, auto_quantity, override_quantity, note, created_at, reverted_at, profiles!created_by(full_name)")
+        .eq("purchase_order_id", id)
+        .order("created_at", { ascending: false }),
+      getCurrentActor(supabase),
+    ]);
 
   if (!order) {
     notFound();
   }
+
+  const allowManage = canManage(order.created_by, actor.userId, actor.isAdmin);
 
   const rows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
@@ -70,24 +76,28 @@ export default async function PurchaseDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F4: { href: editHref },
+          ...(allowManage && { F4: { href: editHref } }),
           Escape: { href: closeHref },
         }}
       />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">매입관리 &gt; 발주 상세</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={editHref} className="erp-btn">
-            F4 수정
-          </Link>
+          {allowManage && (
+            <Link href={editHref} className="erp-btn">
+              F4 수정
+            </Link>
+          )}
           <Link href={`/paper-calc?purchaseOrderId=${id}`} className="erp-btn">
             {paperCalcs && paperCalcs.length > 0 ? "모조지 계산 이력" : "모조지 계산"}
           </Link>
-          <DeleteButton
-            action={deletePurchase}
-            id={id}
-            confirmMessage="이 매입 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
-          />
+          {allowManage && (
+            <DeleteButton
+              action={deletePurchase}
+              id={id}
+              confirmMessage="이 매입 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
+            />
+          )}
           <Link href={closeHref} className="erp-btn erp-btn-danger">
             ESC 닫기
           </Link>

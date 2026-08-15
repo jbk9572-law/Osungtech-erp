@@ -5,6 +5,8 @@ import { DeleteButton } from "@/components/delete-button";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { deleteAnnouncement, updateAnnouncement } from "../actions";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 
 export default async function AnnouncementDetailPage({
   params,
@@ -13,11 +15,14 @@ export default async function AnnouncementDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: row, error } = await supabase
-    .from("announcements")
-    .select("id, title, content, pinned, created_at, profiles!created_by(full_name)")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data: row, error }, actor] = await Promise.all([
+    supabase
+      .from("announcements")
+      .select("id, title, content, pinned, created_at, created_by, profiles!created_by(full_name)")
+      .eq("id", id)
+      .maybeSingle(),
+    getCurrentActor(supabase),
+  ]);
 
   if (error) {
     return (
@@ -31,6 +36,8 @@ export default async function AnnouncementDetailPage({
     notFound();
   }
 
+  const allowManage = canManage(row.created_by, actor.userId, actor.isAdmin);
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />
@@ -40,7 +47,9 @@ export default async function AnnouncementDetailPage({
         <Link href="/announcements" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>
-        <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
+        {allowManage && (
+          <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
+        )}
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
@@ -52,11 +61,17 @@ export default async function AnnouncementDetailPage({
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
             <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
-          <AnnouncementForm
-            action={updateAnnouncement}
-            submitLabel="수정"
-            initial={{ id: row.id, title: row.title, content: row.content, pinned: row.pinned }}
-          />
+          {allowManage ? (
+            <AnnouncementForm
+              action={updateAnnouncement}
+              submitLabel="수정"
+              initial={{ id: row.id, title: row.title, content: row.content, pinned: row.pinned }}
+            />
+          ) : (
+            <p className="erp-grid-empty" style={{ marginTop: 12 }}>
+              본인이 등록한 공지사항만 수정할 수 있습니다.
+            </p>
+          )}
         </div>
       </div>
     </div>
