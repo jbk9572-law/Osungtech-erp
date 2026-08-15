@@ -13,10 +13,6 @@ export function StatusBar({
       <span className="sep">|</span>
       <span>회사: {companyName || "오성테크"}</span>
       <span className="sep">|</span>
-      <span>DB: 연결됨</span>
-      <span className="sep">|</span>
-      <span>서버: Production</span>
-      <span className="sep">|</span>
       <span>{now}</span>
       <span style={{ marginLeft: "auto" }}>NEST ERP v1.0</span>
     </div>
