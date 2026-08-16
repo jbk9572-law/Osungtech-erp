@@ -145,25 +145,25 @@ export function ProductForm({
         </button>
       </div>
       <input
-        name="price"
-        placeholder="판매가"
-        aria-label="판매가"
+        name="cost"
+        placeholder="매입가"
+        aria-label="매입가"
         type="number"
         step="0.01"
         // 0은 "미입력"과 실질적으로 같은 뜻으로 쓰인다(가격/재고기준을 0으로
         // 등록해두는 경우가 없으므로) — ?? 대신 ||를 써서 0도 빈칸으로
         // 보이게 하고, 입력 안 하면 그대로 0으로 저장된다(스키마가 not null
         // default 0).
-        defaultValue={initial?.price || ""}
+        defaultValue={initial?.cost || ""}
         className="erp-input"
       />
       <input
-        name="cost"
-        placeholder="원가"
-        aria-label="원가"
+        name="price"
+        placeholder="판매가"
+        aria-label="판매가"
         type="number"
         step="0.01"
-        defaultValue={initial?.cost || ""}
+        defaultValue={initial?.price || ""}
         className="erp-input"
       />
       <input
