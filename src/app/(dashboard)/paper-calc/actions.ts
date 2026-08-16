@@ -8,8 +8,7 @@ import {
   PAPER_STOCK_SKU,
 } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
-import { getCurrentActor } from "@/lib/current-actor";
-import { canManage } from "@/lib/can-manage";
+import { canManageOrder } from "@/lib/can-manage-order";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -24,28 +23,11 @@ async function assertCanManageOrder(
   salesOrderId: string | null,
   purchaseOrderId: string | null
 ): Promise<string | null> {
-  if (!salesOrderId && !purchaseOrderId) return null;
-
-  const actor = await getCurrentActor(supabase);
-  if (salesOrderId) {
-    const { data: order } = await supabase
-      .from("sales_orders")
-      .select("created_by")
-      .eq("id", salesOrderId)
-      .maybeSingle();
-    if (!order || !canManage(order.created_by, actor.userId, actor.isAdmin)) {
-      return "본인이 등록한 매출 건에만 모조지 계산을 반영할 수 있습니다.";
-    }
+  if (salesOrderId && !(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return "본인이 등록한 매출 건에만 모조지 계산을 반영할 수 있습니다.";
   }
-  if (purchaseOrderId) {
-    const { data: order } = await supabase
-      .from("purchase_orders")
-      .select("created_by")
-      .eq("id", purchaseOrderId)
-      .maybeSingle();
-    if (!order || !canManage(order.created_by, actor.userId, actor.isAdmin)) {
-      return "본인이 등록한 매입 건에만 모조지 계산을 반영할 수 있습니다.";
-    }
+  if (purchaseOrderId && !(await canManageOrder(supabase, "purchase_orders", purchaseOrderId))) {
+    return "본인이 등록한 매입 건에만 모조지 계산을 반영할 수 있습니다.";
   }
   return null;
 }

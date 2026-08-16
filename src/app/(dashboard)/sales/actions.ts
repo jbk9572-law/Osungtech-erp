@@ -12,8 +12,7 @@ import {
 import { markTodoSideDone } from "@/lib/todo-flow";
 import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
-import { getCurrentActor } from "@/lib/current-actor";
-import { canManage } from "@/lib/can-manage";
+import { canManageOrder } from "@/lib/can-manage-order";
 
 type SaleItemInput = {
   productId: string;
@@ -346,11 +345,7 @@ export async function overrideSalesPaperStock(
 
   const supabase = await createClient();
 
-  const [{ data: order }, actor] = await Promise.all([
-    supabase.from("sales_orders").select("created_by").eq("id", salesOrderId).maybeSingle(),
-    getCurrentActor(supabase),
-  ]);
-  if (!order || !canManage(order.created_by, actor.userId, actor.isAdmin)) {
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 모조지 수량을 조정할 수 있습니다." };
   }
 
@@ -375,11 +370,7 @@ export async function revertSalesPaperStock(
 
   const supabase = await createClient();
 
-  const [{ data: order }, actor] = await Promise.all([
-    supabase.from("sales_orders").select("created_by").eq("id", salesOrderId).maybeSingle(),
-    getCurrentActor(supabase),
-  ]);
-  if (!order || !canManage(order.created_by, actor.userId, actor.isAdmin)) {
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 모조지 수량을 조정할 수 있습니다." };
   }
 
