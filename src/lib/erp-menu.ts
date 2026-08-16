@@ -30,8 +30,19 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
-  { label: "보고서", items: [{ label: "지급결의양식", href: "/reports/payment-requests" }] },
-  { label: "회계관리", items: [{ label: "전표관리", href: "/accounting/vouchers" }] },
+  {
+    // 성격이 같은 회계/집계 화면 3개(지급결의양식·전표관리·월별 리포트)를
+    // 한 그룹으로 모았다 — 예전엔 이 셋이 "보고서"/"회계관리"/"확장모듈"에
+    // 각각 하나씩 흩어져 있어서, 정작 확장모듈엔 계산 도구가 아닌 월별
+    // 리포트가 섞여 있고 "보고서"/"회계관리"는 항목이 1개뿐인 그룹으로
+    // 쪼개지는 어색함이 있었다.
+    label: "회계·보고서",
+    items: [
+      { label: "지급결의양식", href: "/reports/payment-requests" },
+      { label: "전표관리", href: "/accounting/vouchers" },
+      { label: "월별 리포트", href: "/reports/monthly" },
+    ],
+  },
   {
     label: "확장모듈",
     items: [
@@ -41,7 +52,6 @@ export const MENU_GROUPS: MenuGroup[] = [
       // 하위 기능이라 뒤에 둔다.
       { label: "모조지 계산", href: "/paper-calc" },
       { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
-      { label: "월별 리포트", href: "/reports/monthly" },
     ],
   },
   {
