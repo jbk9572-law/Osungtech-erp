@@ -4,6 +4,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
+import { GridBadge } from "@/components/grid/badge";
 
 export type AnnouncementRow = {
   id: string;
@@ -150,9 +151,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
                 </td>
                 <td style={!row.read ? { fontWeight: 700 } : { color: "var(--erp-text-muted)" }}>
                   {!row.read && (
-                    <span className="erp-badge erp-badge-danger" style={{ marginRight: 6 }}>
+                    <GridBadge tone="danger" style={{ marginRight: 6 }}>
                       안읽음
-                    </span>
+                    </GridBadge>
                   )}
                   {row.title}
                 </td>

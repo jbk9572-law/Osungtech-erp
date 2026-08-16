@@ -9,6 +9,7 @@ import { todoTypeLabel } from "@/lib/todo-flow";
 import { deleteTodo, updateTodo } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { GridBadge } from "@/components/grid/badge";
 
 export default async function TodoDetailPage({
   params,
@@ -101,7 +102,7 @@ export default async function TodoDetailPage({
                 <thead>
                   <tr>
                     <th>
-                      모조지 계산 <span className="erp-badge erp-badge-muted">연결됨</span>
+                      모조지 계산 <GridBadge tone="muted">연결됨</GridBadge>
                     </th>
                     <th style={{ width: 140 }}>규격</th>
                     <th className="num" style={{ width: 100 }}>

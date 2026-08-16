@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 // erp-badge-* 색상 조합을 각 그리드가 삼항연산자로 직접 조립해서 쓰다보니
 // 어떤 상태에 어떤 색을 쓰는지 파일마다 제각각이었다 — 톤 이름으로만
@@ -13,6 +13,18 @@ const TONE_CLASS: Record<BadgeTone, string> = {
   info: "erp-badge-info",
 };
 
-export function GridBadge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {
-  return <span className={`erp-badge ${TONE_CLASS[tone]}`}>{children}</span>;
+export function GridBadge({
+  tone,
+  children,
+  style,
+}: {
+  tone: BadgeTone;
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <span className={`erp-badge ${TONE_CLASS[tone]}`} style={style}>
+      {children}
+    </span>
+  );
 }

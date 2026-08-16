@@ -5,6 +5,7 @@ import { TodoCheckbox } from "@/components/todo-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
+import { GridBadge } from "@/components/grid/badge";
 
 type TodoItemInput = { productId: string; spec?: string | null; quantity: number };
 
@@ -116,13 +117,13 @@ export default async function TodosPage({
                     <TodoCheckbox id={row.id} done={row.done} />
                   </td>
                   <td>
-                    <span className="erp-badge erp-badge-muted">
+                    <GridBadge tone="muted">
                       {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}
-                    </span>
+                    </GridBadge>
                     {!row.done && row.todo_type === "both" && row.purchase_done_at && (
-                      <span className="erp-badge erp-badge-success" style={{ marginLeft: 4 }}>
+                      <GridBadge tone="ok" style={{ marginLeft: 4 }}>
                         매입완료
-                      </span>
+                      </GridBadge>
                     )}
                   </td>
                   <td style={row.done ? { color: "var(--erp-text-muted)" } : undefined}>{row.title}</td>

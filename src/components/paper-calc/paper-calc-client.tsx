@@ -8,6 +8,7 @@ import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+import { GridBadge } from "@/components/grid/badge";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
@@ -630,9 +631,7 @@ function SavedCalcRow({
       <td className="num">{calc.total_prod.toLocaleString()}매</td>
       <td className="num">{calc.over_prod.toLocaleString()}매</td>
       <td>
-        <span className={`erp-badge ${calc.fulfilled ? "erp-badge-success" : "erp-badge-warning"}`}>
-          {calc.fulfilled ? "충족" : "미충족"}
-        </span>
+        <GridBadge tone={calc.fulfilled ? "ok" : "warn"}>{calc.fulfilled ? "충족" : "미충족"}</GridBadge>
       </td>
       <td>
         <div className="flex items-center gap-1">
