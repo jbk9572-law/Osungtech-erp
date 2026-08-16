@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { GridBadge } from "@/components/grid/badge";
 
 type Row = {
   id: string;
@@ -111,8 +112,9 @@ export function PartyTransactionHistory({
         </div>
         {preset === "custom" && (
           <div className="erp-field" style={{ marginBottom: 10, maxWidth: 200 }}>
-            <label>시작일</label>
+            <label htmlFor="pth-custom-from">시작일</label>
             <input
+              id="pth-custom-from"
               type="date"
               value={customFrom}
               onChange={(e) => setCustomFrom(e.target.value)}
@@ -140,9 +142,9 @@ export function PartyTransactionHistory({
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td>
-                    <span className={`erp-badge ${r.kind === positiveKind ? "erp-badge-info" : "erp-badge-warning"}`}>
+                    <GridBadge tone={r.kind === positiveKind ? "info" : "muted"}>
                       {kindLabels[r.kind] ?? r.kind}
-                    </span>
+                    </GridBadge>
                   </td>
                   <td>{r.date.replaceAll("-", ".")}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{r.label}</td>

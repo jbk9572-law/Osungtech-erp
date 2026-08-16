@@ -158,7 +158,7 @@ export default async function SalesPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">매출관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">매출관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
@@ -174,16 +174,17 @@ export default async function SalesPage({
 
       <form method="get" id="sales-search-form" className="erp-search">
         <div className="erp-field">
-          <label>시작일</label>
-          <input type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+          <label htmlFor="search-from">시작일</label>
+          <input id="search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
         </div>
         <div className="erp-field">
-          <label>종료일</label>
-          <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+          <label htmlFor="search-to">종료일</label>
+          <input id="search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>출고처 / 상품 / 규격 검색</label>
+          <label htmlFor="search-q">출고처 / 상품 / 규격 검색</label>
           <input
+            id="search-q"
             type="text"
             name="q"
             defaultValue={q ?? ""}

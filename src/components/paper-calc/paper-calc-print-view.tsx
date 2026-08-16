@@ -34,7 +34,7 @@ export function PaperCalcPrintView() {
 
   if (!data) {
     return (
-      <div className="mx-auto max-w-md p-10 text-center text-sm text-gray-600">
+      <div className="mx-auto max-w-md p-10 text-center text-sm" style={{ color: "var(--erp-text-muted)" }}>
         <p>계산 결과가 없습니다. 모조지 계산 화면에서 먼저 계산해주세요.</p>
         <Link href="/paper-calc" className="erp-btn mt-4 inline-flex">
           모조지 계산으로 이동

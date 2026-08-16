@@ -106,7 +106,7 @@ export default async function MonthlyReportCompanyPage({
           Escape: { href: `/reports/monthly?month=${month}` },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
         확장모듈 &gt; 월별 리포트 &gt; {companyName || "거래처"} 상세내역
       </h1>
 
@@ -183,7 +183,7 @@ export default async function MonthlyReportCompanyPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={4} className="erp-grid-sticky-label">
                   합계 ({rows.length}건)
                 </td>

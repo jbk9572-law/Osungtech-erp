@@ -80,6 +80,7 @@ export function QuickAddProductSearch({
         type="text"
         value={query}
         placeholder={placeholder}
+        aria-label={placeholder}
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: Math.max(rect.width, 280) });
@@ -144,7 +145,7 @@ export function QuickAddProductSearch({
         typeof document !== "undefined" &&
         createPortal(
           <ul
-            className="max-h-56 overflow-y-auto rounded-sm border border-[#e2e5eb] bg-white text-[12.5px] shadow-md"
+            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md"
             style={{
               position: "fixed",
               top: dropdownRect.top,
@@ -163,11 +164,11 @@ export function QuickAddProductSearch({
                     pick(product.id);
                   }}
                   className={`block w-full px-2.5 py-2 text-left ${
-                    i === highlight ? "bg-[#eef1f5]" : "hover:bg-[#f3f7fc]"
+                    i === highlight ? "bg-[var(--erp-bg)]" : "hover:bg-[var(--erp-hover)]"
                   }`}
                 >
-                  <span className="font-medium text-[#182338]">{product.sku}</span>
-                  <span className="ml-2 text-[#6b7280]">
+                  <span className="font-medium text-[var(--erp-text)]">{product.sku}</span>
+                  <span className="ml-2 text-[var(--erp-text-muted)]">
                     {product.name}
                     {product.spec ? ` (${product.spec})` : ""}
                   </span>

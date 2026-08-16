@@ -27,7 +27,7 @@ export async function upsertCalendarNote(
     );
 
   if (error) {
-    return { error: "메모 저장에 실패했습니다." };
+    return { error: `메모 저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/dashboard");

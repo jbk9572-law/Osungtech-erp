@@ -5,6 +5,13 @@ import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { GridBadge, type BadgeTone } from "@/components/grid/badge";
+
+const TYPE_TONE: Record<string, BadgeTone> = {
+  in: "ok",
+  out: "danger",
+  adjustment: "muted",
+};
 
 const TYPE_LABEL: Record<string, string> = {
   in: "입고",
@@ -87,8 +94,8 @@ export default async function InventoryProductHistoryPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[#182338]">재고관리 &gt; 재고현황 &gt; 입출고내역</h1>
-      <p className="mb-4 text-xs text-[#6b7280]">
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황 &gt; 입출고내역</h1>
+      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {product.sku} · {product.name}
         {product.spec && ` (${product.spec})`} · 현재 재고{" "}
         {formatQuantityWithBoxes(currentQuantity, product.base_package_qty)}
@@ -151,11 +158,7 @@ export default async function InventoryProductHistoryPage({
                 <>
                   <td>{new Date(row.date).toLocaleDateString("ko-KR")}</td>
                   <td>
-                    <span
-                      className={`erp-badge ${row.type === "out" ? "erp-badge-danger" : row.type === "in" ? "erp-badge-success" : ""}`}
-                    >
-                      {TYPE_LABEL[row.type] ?? row.type}
-                    </span>
+                    <GridBadge tone={TYPE_TONE[row.type] ?? "muted"}>{TYPE_LABEL[row.type] ?? row.type}</GridBadge>
                   </td>
                   <td>{row.partnerName ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.note || "-"}</td>

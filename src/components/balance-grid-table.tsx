@@ -71,8 +71,9 @@ export function BalanceGridTable({
     <>
       <div className="erp-search">
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>{partyLabel} 검색</label>
+          <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input
+            id="balance-search-q"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

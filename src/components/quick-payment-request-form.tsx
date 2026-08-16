@@ -32,19 +32,19 @@ export function QuickPaymentRequestForm({
   return (
     <form action={formAction} key={formKey} className="grid grid-cols-1 gap-3 md:grid-cols-6">
       <div className="erp-field">
-        <label>일자</label>
-        <input type="date" name="used_at" defaultValue={today} className="erp-input w-full" required />
+        <label htmlFor="qpr-used-at">일자</label>
+        <input id="qpr-used-at" type="date" name="used_at" defaultValue={today} className="erp-input w-full" required />
       </div>
       <div className="erp-field">
-        <label>부서명</label>
-        <input name="department" defaultValue={defaultDepartment} className="erp-input w-full" required />
+        <label htmlFor="qpr-department">부서명</label>
+        <input id="qpr-department" name="department" defaultValue={defaultDepartment} className="erp-input w-full" required />
       </div>
       <div className="erp-field">
-        <label>
+        <label htmlFor="qpr-card-type">
           카드
           <FieldHint text="같은 부서·카드·달에 등록한 내역끼리 자동으로 한 지급결의 문서로 묶입니다. 개인카드는 작성자별로 따로 묶입니다." />
         </label>
-        <select name="card_type" defaultValue={PAYMENT_REQUEST_CARD_TYPES[0]} className="erp-input w-full">
+        <select id="qpr-card-type" name="card_type" defaultValue={PAYMENT_REQUEST_CARD_TYPES[0]} className="erp-input w-full">
           {PAYMENT_REQUEST_CARD_TYPES.map((type: PaymentRequestCardType) => (
             <option key={type} value={type}>
               {type}
@@ -53,20 +53,20 @@ export function QuickPaymentRequestForm({
         </select>
       </div>
       <div className="erp-field">
-        <label>사용처</label>
-        <input name="vendor" className="erp-input w-full" required />
+        <label htmlFor="qpr-vendor">사용처</label>
+        <input id="qpr-vendor" name="vendor" className="erp-input w-full" required />
       </div>
       <div className="erp-field">
-        <label>용도</label>
-        <input name="purpose" placeholder="주유, 식대 등" className="erp-input w-full" />
+        <label htmlFor="qpr-purpose">용도</label>
+        <input id="qpr-purpose" name="purpose" placeholder="주유, 식대 등" className="erp-input w-full" />
       </div>
       <div className="erp-field">
-        <label>금액</label>
-        <input type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input w-full" required />
+        <label htmlFor="qpr-amount">금액</label>
+        <input id="qpr-amount" type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input w-full" required />
       </div>
       <div className="erp-field md:col-span-5">
-        <label>비고 (선택)</label>
-        <input name="remark" className="erp-input w-full" />
+        <label htmlFor="qpr-remark">비고 (선택)</label>
+        <input id="qpr-remark" name="remark" className="erp-input w-full" />
       </div>
       <div className="md:col-span-6">
         <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>

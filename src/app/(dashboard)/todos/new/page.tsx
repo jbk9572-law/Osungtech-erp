@@ -13,7 +13,7 @@ export default async function NewTodoPage() {
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">할일관리 &gt; 글쓰기</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
         <Link href="/todos" className="erp-btn erp-btn-danger">

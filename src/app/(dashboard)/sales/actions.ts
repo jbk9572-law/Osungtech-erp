@@ -12,6 +12,7 @@ import {
 import { markTodoSideDone } from "@/lib/todo-flow";
 import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
+import { canManageOrder } from "@/lib/can-manage-order";
 
 type SaleItemInput = {
   productId: string;
@@ -343,6 +344,11 @@ export async function overrideSalesPaperStock(
   }
 
   const supabase = await createClient();
+
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 모조지 수량을 조정할 수 있습니다." };
+  }
+
   const errorMessage = await overrideSalesPaperStockQuantity(
     supabase,
     salesOrderId,
@@ -363,6 +369,11 @@ export async function revertSalesPaperStock(
   if (!salesOrderId) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 모조지 수량을 조정할 수 있습니다." };
+  }
+
   const errorMessage = await revertSalesPaperStockOverride(supabase, salesOrderId);
   if (errorMessage) return { error: errorMessage };
 

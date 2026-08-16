@@ -33,7 +33,7 @@ export async function createSupplier(_prevState: FormState, formData: FormData):
   });
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/suppliers");
@@ -54,7 +54,7 @@ export async function updateSupplier(_prevState: FormState, formData: FormData):
     .eq("id", id);
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/suppliers");
@@ -75,7 +75,7 @@ export async function deleteSupplier(_prevState: FormState, formData: FormData):
     return {
       error: error.message.includes("foreign key")
         ? "이 공급처와 연결된 매입/상품 내역이 있어 삭제할 수 없습니다."
-        : "삭제에 실패했습니다.",
+        : `삭제에 실패했습니다: ${error.message}`,
     };
   }
 
@@ -128,7 +128,7 @@ export async function upsertSupplierPrice(
     );
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath(`/suppliers/${supplierId}`);
@@ -170,7 +170,7 @@ export async function schedulePurchasePriceChange(
   });
 
   if (error) {
-    return { error: "예약에 실패했습니다." };
+    return { error: `예약에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath(`/suppliers/${supplierId}`);
@@ -202,7 +202,7 @@ export async function updatePurchasePriceSchedule(
     .is("applied_at", null);
 
   if (error) {
-    return { error: "수정에 실패했습니다." };
+    return { error: `수정에 실패했습니다: ${error.message}` };
   }
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
@@ -225,7 +225,7 @@ export async function cancelPurchasePriceSchedule(
     .is("applied_at", null);
 
   if (error) {
-    return { error: "취소에 실패했습니다." };
+    return { error: `취소에 실패했습니다: ${error.message}` };
   }
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
@@ -257,7 +257,7 @@ export async function addSupplierPayment(_prevState: FormState, formData: FormDa
   });
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath(`/suppliers/${supplierId}`);
@@ -273,7 +273,7 @@ export async function deleteSupplierPayment(_prevState: FormState, formData: For
 
   const supabase = await createClient();
   const { error } = await supabase.from("supplier_payments").delete().eq("id", id);
-  if (error) return { error: "삭제에 실패했습니다." };
+  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
   revalidatePath("/payables");

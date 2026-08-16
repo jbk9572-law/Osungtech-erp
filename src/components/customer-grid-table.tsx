@@ -1,10 +1,14 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState, type CSSProperties } from "react";
 import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteCustomers } from "@/app/(dashboard)/customers/actions";
+import { useSortableRows } from "@/lib/grid-sort";
+import { SortableTh } from "@/components/grid/sortable-th";
+import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import { GridBadge } from "@/components/grid/badge";
 
 export type CustomerRow = {
   id: string;
@@ -12,18 +16,17 @@ export type CustomerRow = {
   business_number: string | null;
   contact_name: string | null;
   phone: string | null;
+  email: string | null;
   address: string | null;
   document_type: string;
 };
 
-type SortKey = "name" | "business_number" | "contact_name" | "phone" | "address";
+type SortKey = "name" | "business_number" | "contact_name" | "phone" | "email" | "address";
 
-function compareValues(a: CustomerRow, b: CustomerRow, key: SortKey): number {
-  return String(a[key] ?? "").localeCompare(String(b[key] ?? ""), "ko");
-}
+const STICKY_WIDTH = 160;
 
 export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<CustomerRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteCustomers, undefined);
@@ -37,29 +40,11 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
     }
   }
 
-  const sortedRows = useMemo(() => {
-    if (!sort) return rows;
-    return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
-  }, [rows, sort]);
-
   const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.name);
   const namePreview =
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
       : selectedNames.join(", ");
-
-  function toggleSort(key: SortKey) {
-    setSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: 1 };
-      if (prev.dir === 1) return { key, dir: -1 };
-      return null;
-    });
-  }
-
-  function sortIndicator(key: SortKey) {
-    if (!sort || sort.key !== key) return "";
-    return sort.dir === 1 ? " ▲" : " ▼";
-  }
 
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
 
@@ -76,14 +61,25 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
     });
   }
 
-  function sortableHeader(label: string, key: SortKey) {
+  function sortableHeader(label: string, key: SortKey, style?: CSSProperties) {
     return (
-      <th style={{ cursor: "pointer", userSelect: "none" }} onClick={() => toggleSort(key)}>
-        {label}
-        {sortIndicator(key)}
-      </th>
+      <SortableTh
+        label={`${label}${sortIndicator(key)}`}
+        ariaSortValue={ariaSortFor(key)}
+        onClick={() => toggleSort(key)}
+        style={style}
+      />
     );
   }
+
+  const thCheckbox = stickyHeaderStyle(0, GRID_CHECKBOX_WIDTH);
+  const tdCheckbox = stickyCellStyle(0, GRID_CHECKBOX_WIDTH);
+  const thName = stickyHeaderStyle(GRID_CHECKBOX_WIDTH, STICKY_WIDTH, {
+    borderRight: "1px solid var(--erp-border)",
+  });
+  const tdName = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_WIDTH, {
+    borderRight: "1px solid var(--erp-border)",
+  });
 
   return (
     <>
@@ -104,13 +100,14 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 32 }}>
+              <th style={thCheckbox}>
                 <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
               </th>
-              {sortableHeader("출고처명", "name")}
+              {sortableHeader("출고처명", "name", thName)}
               {sortableHeader("사업자번호", "business_number")}
               {sortableHeader("담당자", "contact_name")}
               {sortableHeader("연락처", "phone")}
+              {sortableHeader("이메일", "email")}
               {sortableHeader("주소", "address")}
               <th>발행 문서</th>
               <th />
@@ -125,7 +122,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                   href={`/customers/${customer.id}`}
                   className={isRowSelected ? "selected" : undefined}
                 >
-                  <td>
+                  <td style={tdCheckbox}>
                     <input
                       type="checkbox"
                       checked={isRowSelected}
@@ -133,19 +130,16 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>
-                  <td>{customer.name}</td>
+                  <td style={tdName}>{customer.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.business_number ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.contact_name ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.phone ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.email ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{customer.address ?? "-"}</td>
                   <td>
-                    <span
-                      className={`erp-badge ${
-                        customer.document_type === "출고증" ? "erp-badge-warning" : "erp-badge-success"
-                      }`}
-                    >
+                    <GridBadge tone={customer.document_type === "출고증" ? "muted" : "ok"}>
                       {customer.document_type}
-                    </span>
+                    </GridBadge>
                   </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     수정 →

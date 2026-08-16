@@ -37,6 +37,7 @@ export function SupplierPriceForm({
         type="number"
         step="0.01"
         placeholder="매입단가"
+        aria-label="매입단가"
         required
         className="erp-input"
       />

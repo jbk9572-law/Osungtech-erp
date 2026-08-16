@@ -17,17 +17,44 @@
   --erp-success: #1a7a33;
   --erp-warning: #a15c00;
   --erp-danger: #c9302c;
+  /* success/warning/danger의 배경·테두리 톤 — 배지(.erp-badge-*)뿐 아니라
+     알림 배너·경고 박스 등 여러 컴포넌트에서 같은 값을 각자 다시
+     하드코딩하고 있던 걸 변수로 묶었다. info 계열은 이미 bg/border/text
+     세 벌이 있었는데 나머지 셋에는 없었던 걸 맞춰준 것이다. */
+  --erp-success-bg: #e7f6ea;
+  --erp-success-border: #b7e4c7;
+  --erp-warning-bg: #fff3e0;
+  --erp-warning-border: #ffd9a8;
+  --erp-danger-bg: #fdeaec;
+  --erp-danger-border: #f3c6cb;
   /* 단가예약/할일-품목 이월/용지계산 안내 배지에서 공통으로 쓰는
      인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
   --erp-info-bg: #eef2ff;
   --erp-info-border: #c7d2fe;
   --erp-info-text: #3730a3;
+  /* 지급결의양식 품목행에 사용자가 직접 표시하는 형광펜 하이라이트 —
+     작성 화면과 인쇄/열람 화면 두 군데서 같은 값을 각자 하드코딩하고
+     있었다. 상태색(success/warning/danger)과는 역할이 달라 별도 변수로 뺐다. */
+  --erp-highlight-bg: #fff7d6;
   --erp-text: #182338;
   --erp-text-muted: #6b7280;
   --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
+  /* 패널 헤더/서브 배경과 셀 경계선에 거의 같은 회색조가 파일 곳곳에
+     제각각 하드코딩돼 있던 걸(#fafbfc/#fafbfd/#f7f8fa/#f7f9fc,
+     #f0f2f5/#eef0f3 등) 역할별로 두 변수로 묶었다 — 육안으로는 구분
+     안 되는 색이었어서 통일해도 화면상 차이는 없다. */
+  --erp-bg-subtle: #fafbfc;
+  --erp-divider: #eef0f3;
+  /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
+     disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
+  --erp-bg-disabled: #f5f6f8;
   --erp-shadow-sm: 0 1px 2px rgba(32, 28, 43, 0.05), 0 2px 8px -3px rgba(32, 28, 43, 0.1);
   --erp-shadow-md: 0 4px 16px rgba(32, 28, 43, 0.08), 0 12px 28px -10px rgba(32, 28, 43, 0.16);
+  /* 모달·토스트·메신저처럼 화면 위에 떠 있는 패널용 — 이 셋과 모바일
+     드로어가 각자 rgba(0,0,0,..)/rgba(20,26,38,..)로 따로 하드코딩한
+     그림자를 하나로 묶었다(육안 차이 없는 톤이었다). */
+  --erp-shadow-lg: 0 8px 24px rgba(32, 28, 43, 0.2), 0 16px 40px -12px rgba(32, 28, 43, 0.28);
 
   height: 100vh;
   /* 화면 어딘가(뱃지·긴 텍스트 등)가 뷰포트보다 살짝 넓어져도, 그
@@ -170,9 +197,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #f7f9fc;
+  background: var(--erp-bg-subtle);
   border-bottom: 1px solid var(--erp-border);
   padding: 0 10px;
+  /* 리본 버튼이 좁은 화면에서 줄바꿈되지 않고 가로 스크롤되게 한다. */
+  overflow-x: auto;
 }
 
 .erp-ribbon-btn {
@@ -210,7 +239,7 @@
   background: #fff;
   border: 1px solid var(--erp-border);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--erp-shadow-md);
 }
 
 .erp-ribbon-dropdown-item {
@@ -218,7 +247,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-ribbon-dropdown-item:last-child {
@@ -281,7 +310,7 @@
   flex-direction: column;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--erp-shadow-lg);
 }
 
 /* 모조지 계산처럼 내용이 넓고 긴 모달용 확장 크기 */
@@ -337,7 +366,7 @@
   padding: 0 10px;
   background: none;
   border: none;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
   font-size: 12.5px;
   color: var(--erp-text);
 }
@@ -380,7 +409,7 @@
   flex: 0 0 auto;
   padding: 10px 12px;
   border-top: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -424,13 +453,13 @@
   justify-content: center;
   border: none;
   border-bottom: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   color: var(--erp-text-muted);
   font-size: 12px;
 }
 
 .erp-tree-group {
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-tree-group-label {
@@ -440,7 +469,7 @@
   width: 100%;
   height: 34px;
   padding: 0 12px;
-  background: #fafbfd;
+  background: var(--erp-bg-subtle);
   border: none;
   font-size: 13px;
   font-weight: 700;
@@ -617,7 +646,7 @@
   align-items: end;
   gap: 14px;
   padding: 14px;
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   border: 1px solid var(--erp-border);
   border-radius: 6px;
   margin-bottom: 12px;
@@ -740,7 +769,7 @@
   height: 32px;
   min-width: 90px;
   padding: 0 12px;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid var(--erp-border);
   background: #fff;
   color: var(--erp-text);
@@ -764,7 +793,7 @@
 .erp-btn:disabled {
   color: #b9bfc8;
   cursor: not-allowed;
-  background: #f5f6f8;
+  background: var(--erp-bg-disabled);
   box-shadow: none;
   transform: none;
 }
@@ -832,7 +861,7 @@
 
 .erp-grid thead th {
   height: 32px;
-  background: #eef1f5;
+  background: var(--erp-bg);
   color: var(--erp-text);
   font-weight: 700;
   text-align: left;
@@ -852,8 +881,8 @@
 .erp-grid tbody td {
   height: 30px;
   padding: 4px 10px;
-  border-bottom: 1px solid #eef0f3;
-  border-right: 1px solid #eef0f3;
+  border-bottom: 1px solid var(--erp-divider);
+  border-right: 1px solid var(--erp-divider);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: top;
@@ -867,7 +896,7 @@
   height: 30px;
   padding: 4px 10px;
   border-top: 2px solid var(--erp-border);
-  border-right: 1px solid #eef0f3;
+  border-right: 1px solid var(--erp-divider);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: middle;
@@ -886,7 +915,7 @@
    특이도가 hover/selected 규칙과 같아서(:nth-child도 가상클래스),
    아래쪽에 나오는 hover/selected가 소스 순서상 항상 우선한다. */
 .erp-grid tbody tr:nth-child(even) {
-  background: #f7f8fa;
+  background: var(--erp-bg-subtle);
 }
 
 .erp-grid tbody tr:hover {
@@ -929,17 +958,17 @@
 }
 
 .erp-badge-success {
-  background: #e7f6ea;
+  background: var(--erp-success-bg);
   color: var(--erp-success);
 }
 
 .erp-badge-warning {
-  background: #fff3e0;
+  background: var(--erp-warning-bg);
   color: var(--erp-warning);
 }
 
 .erp-badge-danger {
-  background: #fdeaec;
+  background: var(--erp-danger-bg);
   color: var(--erp-danger);
 }
 
@@ -968,8 +997,14 @@
 .erp-detail-tabs {
   display: flex;
   border-bottom: 1px solid var(--erp-border);
-  background: #fafbfc;
+  background: var(--erp-bg-subtle);
   border-radius: 6px 6px 0 0;
+  /* 등록 폼의 품목 탭 옆에 버튼(들)이 나란히 붙는 화면(예: 판매 등록의
+     "입고 불러오기" 버튼)에서, 좁은 화면에서 "품목" 글자가 세로로 한
+     글자씩 줄바꿈되는 문제가 있었다. 공간이 부족하면 버튼 쪽을 다음
+     줄로 내려서 탭 글자가 항상 가로로 온전히 보이게 한다. */
+  flex-wrap: wrap;
+  row-gap: 4px;
 }
 
 .erp-detail-tab {
@@ -1002,7 +1037,7 @@
   align-items: center;
   gap: 16px;
   padding: 0 12px;
-  background: #f0f2f5;
+  background: var(--erp-bg-subtle);
   border-top: 1px solid var(--erp-border);
   font-size: 11px;
   color: var(--erp-text-muted);
@@ -1092,26 +1127,8 @@
   padding: 0 12px;
   font-size: 12.5px;
   font-weight: 700;
-  background: #eef1f5;
+  background: var(--erp-bg);
   border-bottom: 1px solid var(--erp-border);
-}
-
-.erp-home-stat-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 12px;
-  border-bottom: 1px solid #f0f2f5;
-  font-size: 12.5px;
-}
-
-.erp-home-stat-row:last-child {
-  border-bottom: none;
-}
-
-.erp-home-stat-value {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 
 .erp-home-list {
@@ -1130,7 +1147,7 @@
   font-size: 12px;
   text-decoration: none;
   color: var(--erp-text);
-  border: 1px solid #f0f2f5;
+  border: 1px solid var(--erp-divider);
 }
 
 .erp-home-list-item:hover {
@@ -1161,8 +1178,8 @@
   gap: 8px;
   padding: 7px 10px;
   border-radius: 8px;
-  border: 1px solid #f3c6cb;
-  background: #fdeaec;
+  border: 1px solid var(--erp-danger-border);
+  background: var(--erp-danger-bg);
   font-size: 12px;
   text-decoration: none;
   color: var(--erp-text);
@@ -1185,7 +1202,7 @@
 
 .erp-home-stock-footer {
   padding: 8px 12px 10px;
-  border-top: 1px solid #f0f2f5;
+  border-top: 1px solid var(--erp-divider);
 }
 
 .erp-home-stock-footer a {
@@ -1285,8 +1302,8 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--erp-text-muted);
-  background: #f7f9fc;
-  border-bottom: 1px solid #f0f2f5;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-bell-footer {
@@ -1351,7 +1368,7 @@
 }
 
 .erp-alert-item.danger {
-  border-color: #f3c6cb;
+  border-color: var(--erp-danger-border);
   color: var(--erp-danger);
 }
 
@@ -1366,7 +1383,7 @@
 }
 
 .erp-alert-tag.danger {
-  background: #fdeaec;
+  background: var(--erp-danger-bg);
   color: var(--erp-danger);
 }
 
@@ -1394,7 +1411,7 @@
   border: 1px solid var(--erp-border);
   border-radius: 6px;
   background: #fff;
-  box-shadow: 0 8px 24px rgba(20, 26, 38, 0.18);
+  box-shadow: var(--erp-shadow-lg);
   animation: erp-toast-in 0.25s ease-out;
 }
 
@@ -1445,7 +1462,7 @@
   background: var(--erp-primary);
   color: #fff;
   font-size: 22px;
-  box-shadow: 0 4px 14px rgba(20, 26, 38, 0.3);
+  box-shadow: var(--erp-shadow-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1477,7 +1494,7 @@
   background: #fff;
   border: 1px solid var(--erp-border);
   border-radius: 8px;
-  box-shadow: 0 8px 28px rgba(20, 26, 38, 0.25);
+  box-shadow: var(--erp-shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1737,15 +1754,6 @@
   row-gap: 8px;
 }
 
-/* 등록 폼의 품목 탭 옆에 버튼(들)이 나란히 붙는 화면(예: 판매 등록의
-   "입고 불러오기" 버튼)에서도 위와 같은 이유로 좁은 화면에서 "품목"
-   글자가 세로로 한 글자씩 줄바꿈되는 문제가 있었다. 공간이 부족하면
-   버튼 쪽을 다음 줄로 내려서 탭 글자가 항상 가로로 온전히 보이게 한다. */
-.erp-detail-tabs {
-  flex-wrap: wrap;
-  row-gap: 4px;
-}
-
 /* ── 모바일 반응형 (768px 이하) ─────────────────────────────
    이 ERP는 원래 데스크톱 전용으로 설계되어 화면 폭에 반응하는
    로직이 거의 없었다. 좌측 메뉴는 오버레이 방식 드로어로,
@@ -1768,11 +1776,6 @@
 
 .erp-titlebar-menu-toggle:hover {
   background: rgba(255, 255, 255, 0.12);
-}
-
-/* 리본 버튼이 좁은 화면에서 줄바꿈되지 않고 가로 스크롤되게 한다. */
-.erp-ribbon {
-  overflow-x: auto;
 }
 
 .erp-ribbon-btn {
@@ -1806,7 +1809,7 @@
     width: 240px;
     flex-basis: 240px;
     z-index: 500;
-    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.18);
+    box-shadow: 2px 0 16px rgba(32, 28, 43, 0.18);
     transform: translateX(-100%);
     transition: transform 0.2s ease;
   }

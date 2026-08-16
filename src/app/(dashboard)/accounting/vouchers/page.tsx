@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { GridBadge } from "@/components/grid/badge";
 
 type Voucher = {
   id: string;
@@ -90,7 +91,7 @@ export default async function VouchersPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">회계관리 &gt; 전표관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">회계관리 &gt; 전표관리</h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
@@ -106,16 +107,17 @@ export default async function VouchersPage({
 
       <form method="get" id="vouchers-search-form" className="erp-search">
         <div className="erp-field">
-          <label>시작일</label>
-          <input type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+          <label htmlFor="search-from">시작일</label>
+          <input id="search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
         </div>
         <div className="erp-field">
-          <label>종료일</label>
-          <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+          <label htmlFor="search-to">종료일</label>
+          <input id="search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>거래처 검색</label>
+          <label htmlFor="search-q">거래처 검색</label>
           <input
+            id="search-q"
             type="text"
             name="q"
             defaultValue={q ?? ""}
@@ -154,14 +156,7 @@ export default async function VouchersPage({
             {rows.map((v) => (
               <ClickableRow key={`${v.type}-${v.id}`} href={v.href}>
                 <td>
-                  <span
-                    style={{
-                      color: v.type === "매출" ? "var(--erp-primary)" : "#b45309",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {v.type}
-                  </span>
+                  <GridBadge tone={v.type === "매출" ? "info" : "muted"}>{v.type}</GridBadge>
                 </td>
                 <td>{new Date(v.date).toLocaleDateString("ko-KR")}</td>
                 <td>{v.partnerName}</td>
@@ -178,12 +173,12 @@ export default async function VouchersPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={3}>합계 ({rows.length}건)</td>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <td colSpan={3}>차액 (매출-매입, {rows.length}건)</td>
                 <td className="num">{(totalSales - totalPurchases).toLocaleString()}</td>
               </tr>
-              <tr style={{ background: "#f5f7fa", color: "var(--erp-text-muted)" }}>
-                <td colSpan={3}>매출 {totalSales.toLocaleString()} / 매입 {totalPurchases.toLocaleString()}</td>
+              <tr style={{ background: "var(--erp-bg-subtle)", color: "var(--erp-text-muted)" }}>
+                <td colSpan={3}>매출 합계 {totalSales.toLocaleString()} / 매입 합계 {totalPurchases.toLocaleString()}</td>
                 <td />
               </tr>
             </tfoot>

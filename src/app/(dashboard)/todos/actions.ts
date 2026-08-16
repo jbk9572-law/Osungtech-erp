@@ -163,7 +163,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
     .single();
 
   if (error || !todo) {
-    return { error: "등록에 실패했습니다." };
+    return { error: `등록에 실패했습니다${error ? `: ${error.message}` : ""}` };
   }
 
   if (pendingPaperCalc) {
@@ -234,7 +234,7 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
     .eq("id", id);
 
   if (error) {
-    return { error: "수정에 실패했습니다." };
+    return { error: `수정에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/todos");
@@ -244,14 +244,14 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
 
 export async function toggleTodo(formData: FormData) {
   const id = String(formData.get("id") ?? "");
-  const done = formData.get("done") === "true";
   if (!id) return;
 
   const supabase = await createClient();
-  await supabase
-    .from("todos")
-    .update({ done: !done, done_at: !done ? new Date().toISOString() : null })
-    .eq("id", id);
+  // 전체 수정/삭제는 작성자·관리자로 제한되지만, 완료 체크는 실제로 그
+  // 일을 처리한 사람이 눌러야 하는 경우가 많아 별도 RPC(누구나 실행 가능)로
+  // 처리한다 — DB가 현재 done 값을 직접 읽어서 뒤집으므로 클라이언트가 보낸
+  // 값에 의존하지 않는다.
+  await supabase.rpc("toggle_todo_done", { p_id: id });
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");
@@ -267,7 +267,7 @@ export async function deleteTodo(_prevState: FormState, formData: FormData): Pro
   const { error } = await supabase.from("todos").delete().eq("id", id);
 
   if (error) {
-    return { error: "삭제에 실패했습니다." };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/todos");

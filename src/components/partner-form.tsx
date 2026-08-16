@@ -44,6 +44,7 @@ export function PartnerForm({
       <input
         name="name"
         placeholder="상호명"
+        aria-label="상호명"
         required
         defaultValue={initial?.name ?? ""}
         className="erp-input"
@@ -51,24 +52,28 @@ export function PartnerForm({
       <input
         name="business_number"
         placeholder="사업자등록번호"
+        aria-label="사업자등록번호"
         defaultValue={initial?.business_number ?? ""}
         className="erp-input"
       />
       <input
         name="representative_name"
         placeholder="대표자명"
+        aria-label="대표자명"
         defaultValue={initial?.representative_name ?? ""}
         className="erp-input"
       />
       <input
         name="contact_name"
         placeholder="담당자"
+        aria-label="담당자"
         defaultValue={initial?.contact_name ?? ""}
         className="erp-input"
       />
       <input
         name="email"
         placeholder="이메일"
+        aria-label="이메일"
         type="email"
         defaultValue={initial?.email ?? ""}
         className="erp-input"
@@ -77,12 +82,14 @@ export function PartnerForm({
       <input
         name="address"
         placeholder="주소"
+        aria-label="주소"
         defaultValue={initial?.address ?? ""}
         className="erp-input md:col-span-3"
       />
       <textarea
         name="notes"
         placeholder="비고 / 특이사항"
+        aria-label="비고 / 특이사항"
         defaultValue={initial?.notes ?? ""}
         rows={2}
         className="erp-input md:col-span-3"
@@ -90,8 +97,9 @@ export function PartnerForm({
       />
       {showDocumentType && (
         <div className="erp-field">
-          <label>발행 문서</label>
+          <label htmlFor="document_type">발행 문서</label>
           <select
+            id="document_type"
             name="document_type"
             value={documentType}
             onChange={(e) => setDocumentType(e.target.value as "출고증" | "명세표")}
@@ -104,11 +112,12 @@ export function PartnerForm({
       )}
       {showDocumentType && documentType === "출고증" && (
         <div className="erp-field">
-          <label>
+          <label htmlFor="delivery_note_variant">
             출고증 서식
             <FieldHint text="특정 출고처가 자기 회사 양식으로 출고증을 받길 원할 때만 골라주세요. 대부분은 공용 서식 그대로 두면 됩니다." />
           </label>
           <select
+            id="delivery_note_variant"
             name="delivery_note_variant"
             defaultValue={initial?.delivery_note_variant ?? ""}
             className="erp-select"

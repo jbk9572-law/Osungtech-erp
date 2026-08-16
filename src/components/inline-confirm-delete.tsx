@@ -70,7 +70,7 @@ export function InlineConfirmDelete({
               top: rect.top,
               left: rect.left,
               zIndex: 1000,
-              background: "#fff",
+              background: "var(--erp-panel)",
               border: "1px solid var(--erp-border)",
               borderRadius: 4,
               padding: 8,

@@ -28,6 +28,7 @@ import {
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
+import { PriceHistoryHint } from "@/components/price-history-hint";
 
 type Supplier = { id: string; name: string };
 type Product = {
@@ -64,6 +65,13 @@ type Row = {
   manualSalePrice: boolean;
 };
 
+type PriceHistoryEntry = {
+  supplierId: string;
+  productId: string;
+  unitCost: number;
+  purchaseDate: string;
+};
+
 const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
 
 export type PurchaseInitial = {
@@ -96,6 +104,7 @@ export function NewPurchaseForm({
   customers = [],
   prices = [],
   supplierPrices = [],
+  history = [],
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -114,6 +123,9 @@ export function NewPurchaseForm({
   // 우선 쓰고, 없으면 품목 기본 매입원가(product.cost)로 채운다 — 거래처별
   // 판매단가(prices/priceMap)와 동일한 방식.
   supplierPrices?: { supplier_id: string; product_id: string; unit_cost: number }[];
+  // 최근 매입단가 이력 — 매출 등록 화면의 PriceHistoryHint와 동일하게,
+  // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
+  history?: PriceHistoryEntry[];
 }) {
   const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
   const [purchaseDate, setPurchaseDate] = useState(
@@ -390,6 +402,12 @@ export function NewPurchaseForm({
     setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
   }
 
+  function getHistoryFor(productId: string) {
+    return history
+      .filter((h) => h.supplierId === supplierId && h.productId === productId)
+      .sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
+  }
+
   // 우리 쪽 품목은 대부분 당일 입고 후 바로 당일 출고돼서, 입고 예정을
   // 잊지 않으려고 미리 적어둔 할일이 사실상 이번 매입 품목 목록과 같다.
   // 할일의 구조화된 items를 그대로 품목 행으로 옮겨 담는다 — 이미 productId
@@ -489,7 +507,9 @@ export function NewPurchaseForm({
     setOpenTodos(null);
   }
 
-  const total = rows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0);
+  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0);
+  const taxAmount = Math.round(supplyAmount * 0.1);
+  const total = supplyAmount + taxAmount;
 
   const itemsJson = JSON.stringify(
     rows
@@ -582,8 +602,9 @@ export function NewPurchaseForm({
         </div>
         <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
           <div className="erp-field">
-            <label>No</label>
+            <label htmlFor="purchase-docno">No</label>
             <input
+              id="purchase-docno"
               type="text"
               inputMode="numeric"
               placeholder="자동"
@@ -595,8 +616,9 @@ export function NewPurchaseForm({
             />
           </div>
           <div className="erp-field">
-            <label>공급처</label>
+            <label htmlFor="purchase-supplier">공급처</label>
             <PartySearchSelect
+              id="purchase-supplier"
               name="supplier_id"
               parties={suppliers}
               value={supplierId}
@@ -605,8 +627,9 @@ export function NewPurchaseForm({
             />
           </div>
           <div className="erp-field">
-            <label>매입일자</label>
+            <label htmlFor="purchase-date">매입일자</label>
             <input
+              id="purchase-date"
               name="purchase_date"
               type="date"
               required
@@ -616,8 +639,9 @@ export function NewPurchaseForm({
             />
           </div>
           <div className="erp-field">
-            <label>입고방법</label>
+            <label htmlFor="purchase-delivery-method">입고방법</label>
             <select
+              id="purchase-delivery-method"
               value={deliveryMethod}
               onChange={(e) => setDeliveryMethod(e.target.value)}
               className="erp-select"
@@ -631,8 +655,9 @@ export function NewPurchaseForm({
             </select>
           </div>
           <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
-            <label>적요 (선택)</label>
+            <label htmlFor="purchase-memo">적요 (선택)</label>
             <input
+              id="purchase-memo"
               name="memo"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
@@ -655,8 +680,9 @@ export function NewPurchaseForm({
           </div>
           {!alwaysCredit && (
             <div className="erp-field">
-              <label>&nbsp;</label>
+              <label aria-hidden="true">&nbsp;</label>
               <select
+                aria-label="결제방법"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="erp-select"
@@ -691,8 +717,9 @@ export function NewPurchaseForm({
               {alsoCreateSale && (
                 <>
                   <div className="erp-field">
-                    <label>출고처</label>
+                    <label htmlFor="purchase-sale-customer">출고처</label>
                     <PartySearchSelect
+                      id="purchase-sale-customer"
                       parties={customers}
                       value={saleCustomerId}
                       onChange={handleSaleCustomerChange}
@@ -700,8 +727,9 @@ export function NewPurchaseForm({
                     />
                   </div>
                   <div className="erp-field">
-                    <label>출고일자</label>
+                    <label htmlFor="purchase-sale-date">출고일자</label>
                     <input
+                      id="purchase-sale-date"
                       type="date"
                       value={saleDate || purchaseDate}
                       onChange={(e) => setSaleDate(e.target.value)}
@@ -748,7 +776,7 @@ export function NewPurchaseForm({
                 maxWidth: "90vw",
                 maxHeight: 320,
                 overflowY: "auto",
-                background: "#fff",
+                background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
                 borderRadius: 2,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
@@ -792,7 +820,7 @@ export function NewPurchaseForm({
                         justifyContent: "space-between",
                         gap: 8,
                         padding: "6px 10px",
-                        borderBottom: "1px solid #f0f1f3",
+                        borderBottom: "1px solid var(--erp-divider)",
                         fontSize: 12,
                       }}
                     >
@@ -941,7 +969,7 @@ export function NewPurchaseForm({
                 </tr>
               )}
               {paperCalcSizeLines.map((line, i) => (
-                <tr key={`paper-calc-size-${i}`} style={{ background: "#f7f8fb" }}>
+                <tr key={`paper-calc-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
                   <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
                     ㄴ {line}
                   </td>
@@ -991,10 +1019,11 @@ export function NewPurchaseForm({
                       <input
                         type="text"
                         placeholder="규격"
+                        aria-label="규격"
                         value={row.spec}
                         onChange={(e) => updateRow(row.key, { spec: e.target.value })}
                         disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
+                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label
@@ -1020,6 +1049,7 @@ export function NewPurchaseForm({
                       <input
                         type="text"
                         placeholder="관리번호"
+                        aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
                         className="erp-input w-full"
@@ -1057,7 +1087,7 @@ export function NewPurchaseForm({
                         value={row.unitCost}
                         onChange={(n) => updateRow(row.key, { unitCost: n })}
                         disabled={!row.manualPrice}
-                        className="erp-input w-full disabled:bg-[#f5f6f8] disabled:text-[var(--erp-text-muted)]"
+                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
                       {row.productId && (
                         <label
@@ -1103,6 +1133,7 @@ export function NewPurchaseForm({
                       <input
                         type="text"
                         placeholder="비고"
+                        aria-label="비고"
                         value={row.remark}
                         onChange={(e) => updateRow(row.key, { remark: e.target.value })}
                         className="erp-input w-full"
@@ -1124,17 +1155,46 @@ export function NewPurchaseForm({
               })}
             </tbody>
             <tfoot>
-              <tr style={{ background: "#eef1f5" }}>
+              <tr style={{ background: "var(--erp-bg)" }}>
                 <td colSpan={alsoCreateSale ? 8 : 6} style={{ fontWeight: 700 }}>
                   매입 합계
                 </td>
-                <td className="num text-sm font-bold" colSpan={5} style={{ color: "var(--erp-text)" }}>
-                  {total.toLocaleString()}원
+                <td className="num" colSpan={5}>
+                  <div style={{ color: "var(--erp-text-muted)" }}>
+                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
+                  </div>
+                  <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                    {total.toLocaleString()}원
+                  </div>
                 </td>
               </tr>
             </tfoot>
           </table>
         </div>
+
+        {rows.some((r) => r.productId && supplierId && getHistoryFor(r.productId).length > 0) && (
+          <div className="erp-detail-body" style={{ paddingTop: 8 }}>
+            {rows
+              .filter((r) => r.productId && supplierId)
+              .map((r) => {
+                const hist = getHistoryFor(r.productId);
+                if (!hist.length) return null;
+                const product = products.find((p) => p.id === r.productId);
+                return (
+                  <div key={r.key} className="mb-1 flex items-center gap-2 text-xs">
+                    <span style={{ color: "var(--erp-text-muted)" }}>
+                      {product?.name}
+                      {product?.spec && ` (${product.spec})`}:
+                    </span>
+                    <PriceHistoryHint
+                      history={hist.map((h) => ({ unitPrice: h.unitCost, orderDate: h.purchaseDate }))}
+                      emptyLabel="이전 매입 이력 없음 (신규 단가)"
+                    />
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>
 
       <FormMessage state={messageDismissed ? undefined : state} />

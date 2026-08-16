@@ -7,6 +7,9 @@ import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+import { GridBadge } from "@/components/grid/badge";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
@@ -399,15 +402,15 @@ export function PaperCalcClient({
 
           <div className="flex flex-wrap items-end gap-4 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
             <div className="erp-field">
-              <label>
+              <label htmlFor="pc-paper-w">
                 원지 가로(mm)
                 <FieldHint text="완성 조각을 잘라낼 큰 원본 용지(전지)의 크기. 이 안에 위 표의 조각들을 최대한 많이 배치해서 필요한 원지 수량을 계산합니다." />
               </label>
-              <NumberInput value={paperW} onChange={setPaperW} className="erp-input" />
+              <NumberInput id="pc-paper-w" value={paperW} onChange={setPaperW} className="erp-input" />
             </div>
             <div className="erp-field">
-              <label>원지 세로(mm)</label>
-              <NumberInput value={paperH} onChange={setPaperH} className="erp-input" />
+              <label htmlFor="pc-paper-h">원지 세로(mm)</label>
+              <NumberInput id="pc-paper-h" value={paperH} onChange={setPaperH} className="erp-input" />
             </div>
             <button type="button" className="erp-btn" onClick={swapPaper}>
               가로·세로 전환
@@ -513,7 +516,7 @@ export function PaperCalcClient({
           {warning && (
             <div
               className="rounded p-3 text-xs whitespace-pre-line"
-              style={{ background: "#fff3e0", color: "var(--erp-warning)", border: "1px solid #ffd9a8" }}
+              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)", border: "1px solid var(--erp-warning-border)" }}
             >
               {warning}
             </div>
@@ -618,6 +621,7 @@ function SavedCalcRow({
 }) {
   const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
   const effectiveReams = computeEffectiveReams(calc.layouts);
+  const confirmDelete = useConfirmTwice();
 
   return (
     <tr>
@@ -628,11 +632,7 @@ function SavedCalcRow({
       <td className="num">{calc.total_prod.toLocaleString()}매</td>
       <td className="num">{calc.over_prod.toLocaleString()}매</td>
       <td>
-        {calc.fulfilled ? (
-          <span style={{ color: "var(--erp-success)" }}>충족</span>
-        ) : (
-          <span style={{ color: "var(--erp-warning)" }}>미충족</span>
-        )}
+        <GridBadge tone={calc.fulfilled ? "ok" : "warn"}>{calc.fulfilled ? "충족" : "미충족"}</GridBadge>
       </td>
       <td>
         <div className="flex items-center gap-1">
@@ -646,7 +646,8 @@ function SavedCalcRow({
           <form
             action={action}
             onSubmit={(e) => {
-              if (!confirm("이 계산 기록을 삭제하시겠습니까?")) e.preventDefault();
+              if (!confirmDelete.isArmed("delete")) e.preventDefault();
+              confirmDelete.press("delete", () => {});
             }}
           >
             <input type="hidden" name="id" value={calc.id} />
@@ -657,8 +658,9 @@ function SavedCalcRow({
               className="erp-btn erp-btn-danger"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               disabled={pending}
+              onBlur={confirmDelete.reset}
             >
-              삭제
+              {confirmDelete.isArmed("delete") ? "한 번 더 누르면 삭제" : "삭제"}
             </button>
           </form>
         </div>
@@ -688,14 +690,14 @@ export function DashboardCards({
       label: "초과 생산",
       value: result.overProd.toLocaleString(),
       sub: "",
-      bg: "#FEF3E6",
-      fg: "#B54708",
+      bg: "var(--erp-warning-bg)",
+      fg: "var(--erp-warning)",
     },
     {
       label: "사용률",
       value: usageAvg != null ? `${usageAvg.toFixed(1)}%` : "-",
       sub: "",
-      bg: "#E9F7EE",
+      bg: "var(--erp-success-bg)",
       fg: "var(--erp-success)",
     },
     { label: "총 여백", value: marginTotal != null ? formatArea(marginTotal) : "-", sub: "" },
@@ -707,7 +709,7 @@ export function DashboardCards({
         <div
           key={card.label}
           className="rounded p-3"
-          style={{ background: card.bg ?? "#F7F8FA", border: "1px solid var(--erp-border)" }}
+          style={{ background: card.bg ?? DIAGRAM_COLORS.cardBg, border: "1px solid var(--erp-border)" }}
         >
           <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             {card.label}
@@ -744,16 +746,24 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
   const dimFontSize = Math.min(layout.paperW, layout.paperH) * 0.02;
 
   return (
-    <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: "#F7F8FA" }}>
+    <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: DIAGRAM_COLORS.cardBg }}>
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
       <div className="mb-1.5 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
         {layout.paperW} × {layout.paperH} mm
       </div>
       <svg
         viewBox={`0 0 ${layout.paperW} ${layout.paperH}`}
-        style={{ width: "100%", height: 300, background: "#F2F2F2" }}
+        style={{ width: "100%", height: 300, background: DIAGRAM_COLORS.canvasBg }}
       >
-        <rect x={0} y={0} width={layout.paperW} height={layout.paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+        <rect
+          x={0}
+          y={0}
+          width={layout.paperW}
+          height={layout.paperH}
+          fill={DIAGRAM_COLORS.paperFill}
+          stroke={DIAGRAM_COLORS.paperStroke}
+          strokeWidth={2}
+        />
         <g style={{ pointerEvents: "none" }}>
           {gridLines.map((l, i) => (
             <line
@@ -762,22 +772,22 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
               y1={l.y1}
               x2={l.x2}
               y2={l.y2}
-              stroke={l.major ? "#d8d8d8" : "#ebebeb"}
+              stroke={l.major ? DIAGRAM_COLORS.gridMajor : DIAGRAM_COLORS.gridMinor}
               strokeWidth={l.major ? 1 : 0.5}
             />
           ))}
           {rulerTicksX.map((x) => (
             <g key={`rx-${x}`}>
-              <line x1={x} y1={0} x2={x} y2={12} stroke="#999999" strokeWidth={1} />
-              <text x={x} y={23} textAnchor="middle" fontSize={rulerFontSize} fill="#999999">
+              <line x1={x} y1={0} x2={x} y2={12} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+              <text x={x} y={23} textAnchor="middle" fontSize={rulerFontSize} fill={DIAGRAM_COLORS.ruler}>
                 {x}
               </text>
             </g>
           ))}
           {rulerTicksY.map((y) => (
             <g key={`ry-${y}`}>
-              <line x1={0} y1={y} x2={12} y2={y} stroke="#999999" strokeWidth={1} />
-              <text x={16} y={y + 4} fontSize={rulerFontSize} fill="#999999">
+              <line x1={0} y1={y} x2={12} y2={y} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+              <text x={16} y={y + 4} fontSize={rulerFontSize} fill={DIAGRAM_COLORS.ruler}>
                 {y}
               </text>
             </g>
@@ -787,7 +797,15 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
           const showLabel = it.w >= layout.paperW * 0.07 && it.h >= layout.paperH * 0.04;
           return (
             <g key={i}>
-              <rect x={it.x} y={it.y} width={it.w} height={it.h} fill={it.color} stroke="#555555" strokeWidth={1} />
+              <rect
+                x={it.x}
+                y={it.y}
+                width={it.w}
+                height={it.h}
+                fill={it.color}
+                stroke={DIAGRAM_COLORS.itemStroke}
+                strokeWidth={1}
+              />
               {showLabel && (
                 <>
                   <text
@@ -796,7 +814,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fontSize={Math.min(layout.paperW, layout.paperH) * 0.03}
-                    fill="#222222"
+                    fill={DIAGRAM_COLORS.labelPrimary}
                   >
                     {it.name}
                   </text>
@@ -805,7 +823,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                     y={it.y + dimFontSize + 4}
                     textAnchor="middle"
                     fontSize={dimFontSize}
-                    fill="#444444"
+                    fill={DIAGRAM_COLORS.labelSecondary}
                   >
                     {it.w}
                   </text>
@@ -814,7 +832,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                     y={it.y + it.h / 2}
                     textAnchor="middle"
                     fontSize={dimFontSize}
-                    fill="#444444"
+                    fill={DIAGRAM_COLORS.labelSecondary}
                     transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
                   >
                     {it.h}
@@ -834,7 +852,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                 width={r.width}
                 height={r.height}
                 fill="none"
-                stroke="#999999"
+                stroke={DIAGRAM_COLORS.ruler}
                 strokeDasharray="6 4"
                 strokeWidth={1.5}
               />
@@ -844,7 +862,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize={Math.min(layout.paperW, layout.paperH) * 0.028}
-                fill="#888888"
+                fill={DIAGRAM_COLORS.leftoverLabel}
               >
                 {`${Math.round(r.width)}×${Math.round(r.height)} 여유`}
               </text>

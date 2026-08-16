@@ -5,6 +5,7 @@ import { TodoCheckbox } from "@/components/todo-checkbox";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
+import { GridBadge } from "@/components/grid/badge";
 
 type TodoItemInput = { productId: string; spec?: string | null; quantity: number };
 
@@ -17,9 +18,14 @@ function summarizeItems(items: TodoItemInput[], productNameById: Map<string, str
   return items.length > 1 ? `${firstName} 외 ${items.length - 1}건` : firstName;
 }
 
-export default async function TodosPage() {
+export default async function TodosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
-  const [{ data: rows, error }, { data: products }] = await Promise.all([
+  const [{ data: allRows, error }, { data: products }] = await Promise.all([
     supabase
       .from("todos")
       .select(
@@ -34,10 +40,20 @@ export default async function TodosPage() {
   const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
   const todayStr = todayKstStr();
 
+  const keyword = q?.trim().toLowerCase();
+  const rows = keyword
+    ? (allRows ?? []).filter(
+        (r) =>
+          r.title.toLowerCase().includes(keyword) ||
+          (r.suppliers?.name ?? "").toLowerCase().includes(keyword) ||
+          (r.customers?.name ?? "").toLowerCase().includes(keyword)
+      )
+    : allRows ?? [];
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/todos/new" }, Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">할일관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리</h1>
 
       <div className="erp-toolbar">
         <Link href="/todos/new" className="erp-btn erp-btn-primary">
@@ -47,6 +63,29 @@ export default async function TodosPage() {
           ESC 닫기
         </Link>
       </div>
+
+      <form method="get" className="erp-search">
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label htmlFor="search-q">할 일 검색</label>
+          <input
+            id="search-q"
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="제목, 공급처, 납품처"
+            className="erp-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          조회
+        </button>
+        {q && (
+          <Link href="/todos" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
 
       {error && (
         <p className="erp-grid-empty" style={{ marginBottom: 12 }}>
@@ -69,7 +108,7 @@ export default async function TodosPage() {
             </tr>
           </thead>
           <tbody>
-            {(rows ?? []).map((row) => {
+            {rows.map((row) => {
               const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
               const items = Array.isArray(row.items) ? (row.items as TodoItemInput[]) : [];
               return (
@@ -78,13 +117,13 @@ export default async function TodosPage() {
                     <TodoCheckbox id={row.id} done={row.done} />
                   </td>
                   <td>
-                    <span className="erp-badge erp-badge-muted">
+                    <GridBadge tone="muted">
                       {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}
-                    </span>
+                    </GridBadge>
                     {!row.done && row.todo_type === "both" && row.purchase_done_at && (
-                      <span className="erp-badge erp-badge-success" style={{ marginLeft: 4 }}>
+                      <GridBadge tone="ok" style={{ marginLeft: 4 }}>
                         매입완료
-                      </span>
+                      </GridBadge>
                     )}
                   </td>
                   <td style={row.done ? { color: "var(--erp-text-muted)" } : undefined}>{row.title}</td>
@@ -102,10 +141,10 @@ export default async function TodosPage() {
                 </ClickableRow>
               );
             })}
-            {!rows?.length && (
+            {!rows.length && (
               <tr>
                 <td colSpan={8} className="erp-grid-empty">
-                  등록된 할 일이 없습니다.
+                  {q ? "검색 결과가 없습니다." : "등록된 할 일이 없습니다."}
                 </td>
               </tr>
             )}

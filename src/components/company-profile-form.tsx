@@ -33,8 +33,9 @@ export function CompanyProfileForm({ company }: { company: Company }) {
       style={{ border: "1px solid var(--erp-border)", borderRadius: 2 }}
     >
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">상호명</label>
+        <label htmlFor="cp-name" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">상호명</label>
         <input
+          id="cp-name"
           name="name"
           defaultValue={company?.name ?? ""}
           required
@@ -42,32 +43,35 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">사업자등록번호</label>
+        <label htmlFor="cp-bizno" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">사업자등록번호</label>
         <input
+          id="cp-bizno"
           name="business_number"
           defaultValue={company?.business_number ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">대표자명</label>
+        <label htmlFor="cp-rep" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">대표자명</label>
         <input
+          id="cp-rep"
           name="representative_name"
           defaultValue={company?.representative_name ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">연락처</label>
+        <span className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">연락처</span>
         <PhoneInputGroup namePrefix="phone" defaultValue={company?.phone} />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">팩스번호</label>
+        <span className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">팩스번호</span>
         <PhoneInputGroup namePrefix="fax" defaultValue={company?.fax_number} />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">담당자 성명</label>
+        <label htmlFor="cp-manager-name" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">담당자 성명</label>
         <input
+          id="cp-manager-name"
           name="manager_name"
           defaultValue={company?.manager_name ?? ""}
           placeholder="예: 강신조 차장님"
@@ -75,36 +79,40 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">담당자 연락처</label>
+        <span className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">담당자 연락처</span>
         <PhoneInputGroup namePrefix="mgrphone" defaultValue={company?.manager_phone} />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">업태</label>
+        <label htmlFor="cp-biztype" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">업태</label>
         <input
+          id="cp-biztype"
           name="business_type"
           defaultValue={company?.business_type ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">종목</label>
+        <label htmlFor="cp-bizitem" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">종목</label>
         <input
+          id="cp-bizitem"
           name="business_item"
           defaultValue={company?.business_item ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
       <div className="md:col-span-2">
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">주소</label>
+        <label htmlFor="cp-address" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">주소</label>
         <input
+          id="cp-address"
           name="address"
           defaultValue={company?.address ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">이메일</label>
+        <label htmlFor="cp-email" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">이메일</label>
         <input
+          id="cp-email"
           name="email"
           type="email"
           defaultValue={company?.email ?? ""}
@@ -112,10 +120,11 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         />
       </div>
       <div className="md:col-span-2">
-        <label className="mb-1 block text-xs font-medium text-[#6b7280]">
+        <label htmlFor="cp-greeting" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">
           명세표 하단 인사말
         </label>
         <input
+          id="cp-greeting"
           name="greeting_message"
           defaultValue={company?.greeting_message ?? "오늘 하루도 행복하십시요."}
           className="erp-input" style={{ width: "100%" }}

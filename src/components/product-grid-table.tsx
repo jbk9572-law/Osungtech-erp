@@ -1,11 +1,15 @@
 "use client";
 
-import { useActionState, useMemo, useState, type CSSProperties } from "react";
+import { useActionState, useState, type CSSProperties } from "react";
 import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { useSortableRows } from "@/lib/grid-sort";
+import { SortableTh } from "@/components/grid/sortable-th";
+import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import { GridBadge } from "@/components/grid/badge";
 
 export type ProductGridRow = {
   id: string;
@@ -24,13 +28,6 @@ export type ProductGridRow = {
 
 type SortKey = "sku" | "name" | "cost" | "price" | "reorderPoint" | "quantity";
 
-function compareValues(a: ProductGridRow, b: ProductGridRow, key: SortKey): number {
-  const av = a[key];
-  const bv = b[key];
-  if (typeof av === "number" && typeof bv === "number") return av - bv;
-  return String(av ?? "").localeCompare(String(bv ?? ""), "ko");
-}
-
 // 판매가/매입가/안전재고를 0으로 등록해두는 경우는 실질적으로 없고("아직
 // 안 정했다"는 뜻으로 쓰이므로), 목록에 "0"이 그대로 찍히면 진짜 0원/0개인
 // 것과 구분이 안 된다. 0이면 "-"로 보여준다.
@@ -40,10 +37,8 @@ function formatNumOrDash(n: number | null | undefined) {
 
 // SKU/상품명 칸은 옆으로 스크롤해도 항상 보이게 고정한다 — 매출/매입
 // 그리드와 동일한 패턴.
-const CHECKBOX_WIDTH = 32;
 const STICKY_1_WIDTH = 90;
 const STICKY_2_WIDTH = 160;
-const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
 
 export function ProductGridTable({
   rows,
@@ -56,7 +51,7 @@ export function ProductGridTable({
   backParam?: string;
   keyword?: string;
 }) {
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<ProductGridRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteProducts, undefined);
@@ -70,11 +65,6 @@ export function ProductGridTable({
       setConfirmText("");
     }
   }
-
-  const sortedRows = useMemo(() => {
-    if (!sort) return rows;
-    return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
-  }, [rows, sort]);
 
   const allowBulkDelete = mode === "products";
   const selectedNames = sortedRows.filter((r) => selected.has(r.id)).map((r) => r.name);
@@ -99,63 +89,33 @@ export function ProductGridTable({
     setConfirmText("");
   }
 
-  function toggleSort(key: SortKey) {
-    setSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: 1 };
-      if (prev.dir === 1) return { key, dir: -1 };
-      return null;
-    });
-  }
-
-  function sortIndicator(key: SortKey) {
-    if (!sort || sort.key !== key) return "";
-    return sort.dir === 1 ? " ▲" : " ▼";
-  }
-
   function sortableHeader(label: string, key: SortKey, extraStyle?: CSSProperties, className?: string) {
-    const isSorted = sort?.key === key;
     return (
-      <th
-        className={className}
+      <SortableTh
+        label={`${label}${sortIndicator(key)}`}
+        ariaSortValue={ariaSortFor(key)}
+        onClick={() => toggleSort(key)}
         style={extraStyle}
-        aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}
-      >
-        <button type="button" onClick={() => toggleSort(key)} className="erp-th-btn">
-          {label}
-          {sortIndicator(key)}
-        </button>
-      </th>
+        className={className}
+      />
     );
   }
 
-  const checkboxOffset = allowBulkDelete ? CHECKBOX_WIDTH : 0;
-  const thCheckbox: CSSProperties = { ...stickyBase, left: 0, width: CHECKBOX_WIDTH, background: "#eef1f5", zIndex: 2 };
-  const tdCheckbox: CSSProperties = { ...stickyBase, left: 0, width: CHECKBOX_WIDTH, background: "#fff" };
-  const thSticky1: CSSProperties = {
-    ...stickyBase,
-    left: checkboxOffset,
-    width: STICKY_1_WIDTH,
-    background: "#eef1f5",
-    zIndex: 2,
-  };
-  const thSticky2: CSSProperties = {
-    ...stickyBase,
-    left: checkboxOffset + STICKY_1_WIDTH,
-    width: STICKY_2_WIDTH,
-    background: "#eef1f5",
-    zIndex: 2,
+  const checkboxOffset = allowBulkDelete ? GRID_CHECKBOX_WIDTH : 0;
+  const thCheckbox = stickyHeaderStyle(0, GRID_CHECKBOX_WIDTH);
+  const tdCheckbox = stickyCellStyle(0, GRID_CHECKBOX_WIDTH);
+  const thSticky1 = stickyHeaderStyle(checkboxOffset, STICKY_1_WIDTH);
+  const thSticky2 = stickyHeaderStyle(checkboxOffset + STICKY_1_WIDTH, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
-  };
-  const tdSticky1: CSSProperties = { ...stickyBase, left: checkboxOffset, width: STICKY_1_WIDTH, background: "#fff" };
-  const tdSticky2: CSSProperties = {
-    ...stickyBase,
-    left: checkboxOffset + STICKY_1_WIDTH,
-    width: STICKY_2_WIDTH,
-    background: "#fff",
+  });
+  const tdSticky1 = stickyCellStyle(checkboxOffset, STICKY_1_WIDTH);
+  const tdSticky2 = stickyCellStyle(checkboxOffset + STICKY_1_WIDTH, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
-  };
+  });
 
-  const colCount = allowBulkDelete ? 12 : 11;
+  // products 모드는 체크박스 칸이 하나 더 있고, inventory 모드는 대신
+  // 재고수량/상태가 안전재고 한 칸 대신 두 칸이라 결과적으로 항상 12칸이다.
+  const colCount = 12;
 
   return (
     <>
@@ -244,9 +204,7 @@ export function ProductGridTable({
                   <>
                     <td className="num">{formatQuantityWithBoxes(row.quantity, row.basePackageQty)}</td>
                     <td>
-                      <span className={`erp-badge ${isLow ? "erp-badge-danger" : "erp-badge-success"}`}>
-                        {isLow ? "재주문 필요" : "정상"}
-                      </span>
+                      <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
                     </td>
                   </>
                 )}

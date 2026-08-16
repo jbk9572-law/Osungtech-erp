@@ -50,8 +50,9 @@ export function PaymentRequestForm({
       <input type="hidden" name="period_to" value={periodTo} />
 
       <div className="erp-field">
-        <label>부서명</label>
+        <label htmlFor="pr-department">부서명</label>
         <input
+          id="pr-department"
           value={department}
           onChange={(e) => setDepartment(e.target.value)}
           placeholder="부서명"
@@ -59,8 +60,9 @@ export function PaymentRequestForm({
         />
       </div>
       <div className="erp-field">
-        <label>기간 시작</label>
+        <label htmlFor="pr-period-from">기간 시작</label>
         <input
+          id="pr-period-from"
           type="date"
           value={periodFrom}
           onChange={(e) => setPeriodFrom(e.target.value)}
@@ -68,8 +70,9 @@ export function PaymentRequestForm({
         />
       </div>
       <div className="erp-field">
-        <label>기간 종료</label>
+        <label htmlFor="pr-period-to">기간 종료</label>
         <input
+          id="pr-period-to"
           type="date"
           value={periodTo}
           onChange={(e) => setPeriodTo(e.target.value)}
@@ -78,8 +81,9 @@ export function PaymentRequestForm({
       </div>
 
       <div className="erp-field">
-        <label>사용카드</label>
+        <label htmlFor="pr-card-type">사용카드</label>
         <select
+          id="pr-card-type"
           name="card_type"
           value={cardType}
           onChange={(e) => setCardType(e.target.value as PaymentRequestCardType)}

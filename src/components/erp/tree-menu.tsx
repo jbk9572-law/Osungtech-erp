@@ -9,48 +9,15 @@ import {
 } from "@/lib/db-usage";
 import type { VpsDiskUsage } from "@/lib/vps-usage";
 import type { NetlifyUsageResult } from "@/lib/netlify-usage";
+import { MENU_GROUPS } from "@/lib/erp-menu";
 
 type LeafItem = { label: string; href?: string };
 type GroupItem = { label: string; items: LeafItem[] };
 
-const TREE: GroupItem[] = [
-  { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard" }] },
-  { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
-  { label: "매입관리", items: [{ label: "입고관리", href: "/purchases" }] },
-  { label: "매출관리", items: [{ label: "출고관리", href: "/sales" }] },
-  {
-    label: "재고관리",
-    items: [{ label: "재고현황", href: "/inventory" }],
-  },
-  { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
-  {
-    label: "거래처관리",
-    items: [
-      { label: "출고처관리", href: "/customers" },
-      { label: "공급처관리", href: "/suppliers" },
-      { label: "미수금현황", href: "/receivables" },
-      { label: "미지급금현황", href: "/payables" },
-    ],
-  },
-  { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
-  { label: "보고서", items: [{ label: "지급결의양식", href: "/reports/payment-requests" }] },
-  {
-    label: "환경설정",
-    items: [
-      { label: "회사정보", href: "/settings/company" },
-      { label: "비밀번호 변경", href: "/settings/password" },
-    ],
-  },
-  { label: "시스템관리", items: [{ label: "권한관리", href: "/settings/users" }] },
-  {
-    label: "확장모듈",
-    items: [
-      { label: "모조지 계산", href: "/paper-calc" },
-      { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
-      { label: "월별 리포트", href: "/reports/monthly" },
-    ],
-  },
-];
+// 트리에 보이는 메뉴 구조는 erp-menu.ts의 MENU_GROUPS를 그대로 쓴다 —
+// 예전엔 여기 따로 목록이 있어서(할일관리가 여기서만 대시보드 바로
+// 다음 순서였다) 빠른검색/최근메뉴의 순서와 어긋나 있었다.
+const TREE: GroupItem[] = MENU_GROUPS;
 
 function formatMB(bytes: number) {
   return (bytes / (1024 * 1024)).toLocaleString(undefined, {

@@ -4,6 +4,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
+import { GridBadge } from "@/components/grid/badge";
 
 export type AnnouncementRow = {
   id: string;
@@ -35,9 +36,10 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
 
   const pinnedRows = useMemo(() => searched.filter((r) => r.pinned), [searched]);
 
+  // "전체"/"일반" 둘 다 표에는 일반 공지만 담는다 — 고정 공지는 "전체"일 때
+  // 위 배너에 이미 나오므로, 표에까지 또 넣으면 같은 공지가 두 번 보인다.
   const gridRows = useMemo(() => {
-    const base =
-      filter === "pinned" ? pinnedRows : filter === "general" ? searched.filter((r) => !r.pinned) : searched.filter((r) => !r.pinned);
+    const base = filter === "pinned" ? pinnedRows : searched.filter((r) => !r.pinned);
     if (!sort) return base;
     return [...base].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [searched, pinnedRows, filter, sort]);
@@ -71,8 +73,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
     <>
       <div className="erp-search">
         <div className="erp-field">
-          <label>구분</label>
+          <label htmlFor="ann-filter">구분</label>
           <select
+            id="ann-filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value as Filter)}
             className="erp-select"
@@ -84,8 +87,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
           </select>
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label>제목 검색</label>
+          <label htmlFor="ann-search-q">제목 검색</label>
           <input
+            id="ann-search-q"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -96,7 +100,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
         </div>
       </div>
 
-      {filter !== "general" && pinnedRows.length > 0 && (
+      {filter === "all" && pinnedRows.length > 0 && (
         <div
           className="erp-grid-wrap"
           style={{
@@ -147,9 +151,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
                 </td>
                 <td style={!row.read ? { fontWeight: 700 } : { color: "var(--erp-text-muted)" }}>
                   {!row.read && (
-                    <span className="erp-badge erp-badge-danger" style={{ marginRight: 6 }}>
+                    <GridBadge tone="danger" style={{ marginRight: 6 }}>
                       안읽음
-                    </span>
+                    </GridBadge>
                   )}
                   {row.title}
                 </td>

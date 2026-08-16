@@ -121,6 +121,6 @@ export async function deleteMessage(formData: FormData): Promise<{ error?: strin
     await supabase.storage.from("messenger-attachments").remove([message.file_path]);
   }
   const { error } = await supabase.from("messenger_messages").delete().eq("id", id);
-  if (error) return { error: "삭제에 실패했습니다." };
+  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
   return {};
 }

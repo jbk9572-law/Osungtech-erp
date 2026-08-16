@@ -164,7 +164,7 @@ function CarryoverBadge() {
   return (
     <span
       className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
-      style={{ background: "#fff1dc", color: "#b26a00" }}
+      style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
     >
       이월
     </span>
@@ -238,7 +238,7 @@ export function DashboardCalendar({
 
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_300px]">
-      <div className="relative overflow-hidden rounded-sm border border-[#d9d9d9] bg-white p-4">
+      <div className="relative overflow-hidden rounded-sm border border-[var(--erp-border)] bg-white p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={backgroundLogoUrl || "/branding/logo-mark.png"}
@@ -247,19 +247,19 @@ export function DashboardCalendar({
           className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.05]"
         />
         <div className="relative mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-[#1c1c1c]">
+          <h2 className="text-sm font-bold text-[var(--erp-text)]">
             {year}년 {month}월
           </h2>
           <div className="flex gap-1">
             <Link
               href={prevMonthHref}
-              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[var(--erp-hover)]"
+              className="rounded-sm border border-[var(--erp-border)] px-2 py-1 text-xs text-[var(--erp-text-muted)] hover:bg-[var(--erp-hover)]"
             >
               ← 이전달
             </Link>
             <Link
               href={nextMonthHref}
-              className="rounded-sm border border-[#d9d9d9] px-2 py-1 text-xs text-[#6b7280] hover:bg-[var(--erp-hover)]"
+              className="rounded-sm border border-[var(--erp-border)] px-2 py-1 text-xs text-[var(--erp-text-muted)] hover:bg-[var(--erp-hover)]"
             >
               다음달 →
             </Link>
@@ -297,7 +297,7 @@ export function DashboardCalendar({
                     ? "text-[var(--erp-danger)]"
                     : isSaturday
                       ? "text-[var(--erp-primary)]"
-                      : "text-[#1c1c1c]";
+                      : "text-[var(--erp-text)]";
               const showLowStockDot = isToday && lowStockToday;
               const carryoverSalesCount = data?.salesItems.filter((i) => i.isCarryover).length ?? 0;
               const carryoverPurchaseCount = data?.purchaseItems.filter((i) => i.isCarryover).length ?? 0;
@@ -342,7 +342,7 @@ export function DashboardCalendar({
                     ) : null}
                     {hasSalesDot ? (
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[#d31e3b]"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-success)]"}`}
                       />
                     ) : null}
                     {data?.note ? (
@@ -362,12 +362,12 @@ export function DashboardCalendar({
           )}
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6b7280]">
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-[var(--erp-text-muted)]">
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-primary)]" /> 매입
           </span>
           <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#d31e3b]" /> 매출
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-success)]" /> 매출
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-warning)]" /> 메모
@@ -378,11 +378,11 @@ export function DashboardCalendar({
         </div>
       </div>
 
-      <div className="rounded-sm border border-[#d9d9d9] bg-white p-4">
+      <div className="rounded-sm border border-[var(--erp-border)] bg-white p-4">
         {selected ? (
           <>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-bold text-[#1c1c1c]">{selected} 오늘의 업무</h3>
+              <h3 className="text-sm font-bold text-[var(--erp-text)]">{selected} 오늘의 업무</h3>
               <div className="flex shrink-0 gap-1">
                 <button
                   type="button"
@@ -394,7 +394,7 @@ export function DashboardCalendar({
                 <button
                   type="button"
                   onClick={() => handleCopy("sales")}
-                  className="rounded-sm border border-[#d31e3b] bg-[#fdeaec] px-2 py-1 text-xs font-bold text-[#d31e3b] hover:bg-[#fbd9dd]"
+                  className="rounded-sm border border-[var(--erp-success)] bg-[var(--erp-success-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-success)] hover:bg-[var(--erp-success-border)]"
                 >
                   {copiedType === "sales" ? "복사됨" : "매출 복사"}
                 </button>
@@ -420,8 +420,8 @@ export function DashboardCalendar({
                             const anyCarryover = product.items.some((item) => item.isCarryover);
                             return (
                               <div key={di}>
-                                <p className="font-semibold text-[#1c1c1c]">- {product.productName}</p>
-                                <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
+                                <p className="font-semibold text-[var(--erp-text)]">- {product.productName}</p>
+                                <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {product.items.length === 1 ? (
                                     (() => {
                                       const item = product.items[0];
@@ -436,7 +436,7 @@ export function DashboardCalendar({
                                               {item.unit}
                                               {item.isCarryover && <CarryoverBadge />}
                                               {item.remark && (
-                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                   비고: {item.remark}
                                                 </span>
                                               )}
@@ -458,7 +458,7 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                               {item.unit}
                                               {item.remark && (
-                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                   비고: {item.remark}
                                                 </span>
                                               )}
@@ -488,8 +488,8 @@ export function DashboardCalendar({
                           })}
                           {partner.paperCalc && (
                             <div>
-                              <p className="font-semibold text-[#1c1c1c]">- {paperStockProductName}</p>
-                              <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
+                              <p className="font-semibold text-[var(--erp-text)]">- {paperStockProductName}</p>
+                              <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
@@ -513,15 +513,15 @@ export function DashboardCalendar({
             </div>
 
             <div
-              className="mb-4 border-l-[3px] border-l-[#d31e3b] p-2"
-              style={{ background: "linear-gradient(90deg, #fdeaec, transparent 60%)" }}
+              className="mb-4 border-l-[3px] border-l-[var(--erp-success)] p-2"
+              style={{ background: "linear-gradient(90deg, var(--erp-success-bg), transparent 60%)" }}
             >
-              <p className="mb-1 text-xs font-bold text-[#d31e3b]">
+              <p className="mb-1 text-xs font-bold text-[var(--erp-success)]">
                 매출 {selectedData.salesCount}건 · {selectedData.salesTotal.toLocaleString()}원
               </p>
               {(selectedData.salesItems.length > 0 ||
                 Object.keys(selectedData.salesPaperCalcByPartner).length > 0) && (
-                <div className="space-y-2 text-xs font-medium text-[#d31e3b]">
+                <div className="space-y-2 text-xs font-medium text-[var(--erp-success)]">
                   {buildPartnerBlocks(selectedData.salesItems, selectedData.salesPaperCalcByPartner).map(
                     (partner, pi) => (
                       <div key={pi}>
@@ -531,8 +531,8 @@ export function DashboardCalendar({
                             const anyCarryover = product.items.some((item) => item.isCarryover);
                             return (
                               <div key={di}>
-                                <p className="font-semibold text-[#1c1c1c]">- {product.productName}</p>
-                                <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
+                                <p className="font-semibold text-[var(--erp-text)]">- {product.productName}</p>
+                                <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {product.items.length === 1 ? (
                                     (() => {
                                       const item = product.items[0];
@@ -547,7 +547,7 @@ export function DashboardCalendar({
                                               {item.unit}
                                               {item.isCarryover && <CarryoverBadge />}
                                               {item.remark && (
-                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                   비고: {item.remark}
                                                 </span>
                                               )}
@@ -569,7 +569,7 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} : {item.quantity.toLocaleString()}
                                               {item.unit}
                                               {item.remark && (
-                                                <span className="block text-[10px] text-[#6b7280]/70">
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                   비고: {item.remark}
                                                 </span>
                                               )}
@@ -599,12 +599,12 @@ export function DashboardCalendar({
                           })}
                           {partner.paperCalc && (
                             <div>
-                              <p className="font-semibold text-[#1c1c1c]">- {paperStockProductName}</p>
-                              <ul className="space-y-1 pl-3 font-normal text-[#6b7280]">
+                              <p className="font-semibold text-[var(--erp-text)]">- {paperStockProductName}</p>
+                              <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                 {formatPaperCalcSizeLines(partner.paperCalc.sizes).map((line, i) => (
                                   <li key={i}>{line}</li>
                                 ))}
-                                <li className="flex items-start justify-between gap-2 text-[#d31e3b]">
+                                <li className="flex items-start justify-between gap-2 text-[var(--erp-success)]">
                                   <span className="min-w-0">
                                     합계 - {partner.paperCalc.totalSheet.toLocaleString()}연
                                   </span>

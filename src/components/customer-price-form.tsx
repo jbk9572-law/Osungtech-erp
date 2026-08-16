@@ -37,6 +37,7 @@ export function CustomerPriceForm({
         type="number"
         step="0.01"
         placeholder="판매단가"
+        aria-label="판매단가"
         required
         className="erp-input"
       />

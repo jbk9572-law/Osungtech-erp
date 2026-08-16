@@ -39,7 +39,7 @@ export default async function NewSalePage() {
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/sales" } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#182338]">새 판매 거래 등록</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">새 판매 거래 등록</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href="/paper-calc/manual" target="_blank" rel="noopener noreferrer" className="erp-btn">
             재단 배치 시뮬레이터

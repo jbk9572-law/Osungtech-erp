@@ -14,12 +14,14 @@ export function PartySearchSelect({
   onChange,
   placeholder = "거래처명 검색",
   name,
+  id,
 }: {
   parties: Party[];
   value: string;
   onChange: (partyId: string) => void;
   placeholder?: string;
   name?: string;
+  id?: string;
 }) {
   const selected = parties.find((p) => p.id === value) ?? null;
   const [query, setQuery] = useState("");
@@ -51,9 +53,11 @@ export function PartySearchSelect({
       {name && <input type="hidden" name={name} value={value} />}
       <input
         ref={inputRef}
+        id={id}
         type="text"
         value={open ? query : (selected ? selected.name : "")}
         placeholder={placeholder}
+        aria-label={placeholder}
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
@@ -91,7 +95,7 @@ export function PartySearchSelect({
         typeof document !== "undefined" &&
         createPortal(
           <ul
-            className="max-h-56 overflow-y-auto rounded-sm border border-[#e2e5eb] bg-white text-[12.5px] shadow-md"
+            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md"
             style={{
               position: "fixed",
               top: dropdownRect.top,
@@ -110,7 +114,7 @@ export function PartySearchSelect({
                     selectParty(party.id);
                   }}
                   className={`block w-full px-2.5 py-2 text-left ${
-                    i === highlight ? "bg-[#eef1f5]" : "hover:bg-[#f3f7fc]"
+                    i === highlight ? "bg-[var(--erp-bg)]" : "hover:bg-[var(--erp-hover)]"
                   }`}
                 >
                   {party.name}

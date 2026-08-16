@@ -40,7 +40,7 @@ export async function updateCompanyProfile(
     return {
       error: error.message.includes("column")
         ? "저장에 실패했습니다. 아직 실행하지 않은 데이터베이스 마이그레이션이 있을 수 있습니다."
-        : "저장에 실패했습니다.",
+        : `저장에 실패했습니다: ${error.message}`,
     };
   }
 
@@ -88,7 +88,7 @@ export async function uploadBrandingImage(
     .upload(path, file, { upsert: true, contentType: detectedType });
 
   if (uploadError) {
-    return { error: "이미지 업로드에 실패했습니다." };
+    return { error: `이미지 업로드에 실패했습니다: ${uploadError.message}` };
   }
 
   const {
@@ -106,7 +106,7 @@ export async function uploadBrandingImage(
   const { error } = await supabase.from("company_profile").update(update).eq("id", 1);
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/", "layout");

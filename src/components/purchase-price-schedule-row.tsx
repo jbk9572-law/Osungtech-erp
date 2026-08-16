@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { cancelPurchasePriceSchedule, updatePurchasePriceSchedule } from "@/app/(dashboard)/suppliers/actions";
 import { FormMessage } from "@/components/form-message";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 // 매입단가 예약 한 줄 — price-schedule-row.tsx(거래처용)와 동일한 UI를
 // 공급처/매입단가 기준으로 미러링한다.
@@ -26,6 +27,7 @@ export function PurchasePriceScheduleRow({
   const [editing, setEditing] = useState(false);
   const [updateState, updateAction, updatePending] = useActionState(updatePurchasePriceSchedule, undefined);
   const [cancelPending, startCancelTransition] = useTransition();
+  const confirmCancel = useConfirmTwice();
 
   useEffect(() => {
     if (updateState?.success) {
@@ -35,12 +37,13 @@ export function PurchasePriceScheduleRow({
   }, [updateState]);
 
   function handleCancel() {
-    if (!confirm("이 단가 예약을 취소하시겠습니까?")) return;
-    const formData = new FormData();
-    formData.set("id", id);
-    formData.set("supplier_id", supplierId);
-    startCancelTransition(() => {
-      cancelPurchasePriceSchedule(undefined, formData);
+    confirmCancel.press("cancel", () => {
+      const formData = new FormData();
+      formData.set("id", id);
+      formData.set("supplier_id", supplierId);
+      startCancelTransition(() => {
+        cancelPurchasePriceSchedule(undefined, formData);
+      });
     });
   }
 
@@ -123,10 +126,11 @@ export function PurchasePriceScheduleRow({
           type="button"
           disabled={cancelPending}
           onClick={handleCancel}
+          onBlur={confirmCancel.reset}
           className="erp-btn erp-btn-danger"
           style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
         >
-          취소
+          {confirmCancel.isArmed("cancel") ? "한 번 더 누르면 취소" : "취소"}
         </button>
       </div>
     </div>

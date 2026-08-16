@@ -6,6 +6,7 @@ import { sendMessage, deleteMessage } from "@/app/(dashboard)/messenger/actions"
 import type { MessengerMessage } from "@/lib/messenger-types";
 import { fileKindIcon, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 export type { MessengerMessage };
 
@@ -66,6 +67,8 @@ export function MessengerWidget({
   const [hasUnseen, setHasUnseen] = useState(false);
   const [messages, setMessages] = useState(initialMessages);
   const [sendError, setSendError] = useState<string | undefined>();
+  const [deleteError, setDeleteError] = useState<string | undefined>();
+  const confirmDelete = useConfirmTwice<string>();
   const [hasAttachment, setHasAttachment] = useState(false);
   const [composerKey, setComposerKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -139,27 +142,32 @@ export function MessengerWidget({
   }
 
   function handleDelete(id: string, filePath: string | null) {
-    if (!confirm("이 메시지를 삭제하시겠습니까?")) return;
-    const removed = messages.find((m) => m.id === id);
-    const removedIndex = messages.findIndex((m) => m.id === id);
-    setMessages((prev) => prev.filter((m) => m.id !== id));
-    startDeleteTransition(async () => {
-      const fd = new FormData();
-      fd.set("id", id);
-      fd.set("file_path", filePath ?? "");
-      const result = await deleteMessage(fd);
-      // 삭제가 실패하면(RLS, 일시적 오류 등) 화면에서 지웠던 메시지를 원래
-      // 위치로 되돌린다 — 아니면 삭제 안 됐는데도 내 화면에서만 사라진
-      // 것처럼 보여서 다른 사람에게는 계속 보인다는 걸 알 방법이 없다.
-      if (result.error && removed) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === id)) return prev;
-          const next = [...prev];
-          next.splice(Math.min(removedIndex, next.length), 0, removed);
-          return next;
-        });
-        alert(result.error);
-      }
+    // 브라우저 기본 confirm() 대신, 다른 곳의 "삭제 누르면 바로 안 지워지고
+    // 한 번 더 확인" 원칙을 가볍게 맞춘 버전 — 좁은 말풍선 안이라 타이핑
+    // 확인 코드까지는 과해서, 버튼을 두 번 눌러야 지워지는 방식으로 뺐다.
+    confirmDelete.press(id, () => {
+      setDeleteError(undefined);
+      const removed = messages.find((m) => m.id === id);
+      const removedIndex = messages.findIndex((m) => m.id === id);
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+      startDeleteTransition(async () => {
+        const fd = new FormData();
+        fd.set("id", id);
+        fd.set("file_path", filePath ?? "");
+        const result = await deleteMessage(fd);
+        // 삭제가 실패하면(RLS, 일시적 오류 등) 화면에서 지웠던 메시지를 원래
+        // 위치로 되돌린다 — 아니면 삭제 안 됐는데도 내 화면에서만 사라진
+        // 것처럼 보여서 다른 사람에게는 계속 보인다는 걸 알 방법이 없다.
+        if (result.error && removed) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === id)) return prev;
+            const next = [...prev];
+            next.splice(Math.min(removedIndex, next.length), 0, removed);
+            return next;
+          });
+          setDeleteError(result.error);
+        }
+      });
     });
   }
 
@@ -275,7 +283,7 @@ export function MessengerWidget({
                   <div
                     style={{
                       alignSelf: mine ? "flex-end" : "flex-start",
-                      background: mine ? "var(--erp-primary)" : "#f0f2f5",
+                      background: mine ? "var(--erp-primary)" : "var(--erp-hover)",
                       color: mine ? "#fff" : "var(--erp-text)",
                       padding: "6px 10px",
                       borderRadius: 8,
@@ -325,21 +333,39 @@ export function MessengerWidget({
                 )}
 
                 {mine && (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(m.id, m.file_path)}
-                    style={{
-                      alignSelf: "flex-end",
-                      fontSize: 10,
-                      color: "var(--erp-text-muted)",
-                      background: "none",
-                      border: "none",
-                      padding: "2px 0",
-                      cursor: "pointer",
-                    }}
-                  >
-                    삭제
-                  </button>
+                  <div style={{ alignSelf: "flex-end", display: "flex", gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(m.id, m.file_path)}
+                      style={{
+                        fontSize: 10,
+                        color: confirmDelete.isArmed(m.id) ? "var(--erp-danger)" : "var(--erp-text-muted)",
+                        fontWeight: confirmDelete.isArmed(m.id) ? 700 : 400,
+                        background: "none",
+                        border: "none",
+                        padding: "2px 0",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {confirmDelete.isArmed(m.id) ? "한 번 더 누르면 삭제" : "삭제"}
+                    </button>
+                    {confirmDelete.isArmed(m.id) && (
+                      <button
+                        type="button"
+                        onClick={confirmDelete.reset}
+                        style={{
+                          fontSize: 10,
+                          color: "var(--erp-text-muted)",
+                          background: "none",
+                          border: "none",
+                          padding: "2px 0",
+                          cursor: "pointer",
+                        }}
+                      >
+                        취소
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </Fragment>
@@ -380,6 +406,11 @@ export function MessengerWidget({
       {sendError && (
         <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
           {sendError}
+        </p>
+      )}
+      {deleteError && (
+        <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
+          삭제 실패: {deleteError}
         </p>
       )}
     </div>

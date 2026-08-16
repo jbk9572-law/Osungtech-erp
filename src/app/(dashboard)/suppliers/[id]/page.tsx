@@ -62,25 +62,25 @@ export default async function SupplierDetailPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/suppliers" } }} />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#182338]">{supplier.name}</h1>
-        <Link href="/suppliers" className="erp-btn erp-btn-danger">
-          ESC 닫기
-        </Link>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">{supplier.name}</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <DeleteButton
+            action={deleteSupplier}
+            id={supplier.id}
+            confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
+          />
+          <Link href="/suppliers" className="erp-btn erp-btn-danger">
+            ESC 닫기
+          </Link>
+        </div>
       </div>
-      <p className="mb-4 text-xs text-[#6b7280]">
+      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {supplier.business_number ?? "사업자번호 미등록"} · {supplier.contact_name ?? "담당자 미등록"}
       </p>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
+        <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">공급처 정보 수정</span>
-          <div style={{ margin: 4 }}>
-            <DeleteButton
-              action={deleteSupplier}
-              id={supplier.id}
-              confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
-            />
-          </div>
         </div>
         <div className="erp-detail-body">
           <PartnerForm
@@ -115,6 +115,7 @@ export default async function SupplierDetailPage({
                 <thead>
                   <tr>
                     <th style={{ width: 90 }}>일자</th>
+                    <th style={{ width: 90 }}>전표번호</th>
                     <th className="num" style={{ width: 130 }}>
                       전표 금액
                     </th>
@@ -128,6 +129,7 @@ export default async function SupplierDetailPage({
                   {balance.unpaidOrders.map((o) => (
                     <ClickableRow key={o.id} href={`/purchases/${o.id}`}>
                       <td>{o.date.replaceAll("-", ".")}</td>
+                      <td>{o.docNo}</td>
                       <td className="num">{o.total.toLocaleString()}</td>
                       <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
                         {o.outstanding.toLocaleString()}

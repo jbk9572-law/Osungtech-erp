@@ -62,6 +62,7 @@ export function ProductForm({
       <input
         name="sku"
         placeholder="SKU"
+        aria-label="SKU"
         required
         defaultValue={initial?.sku ?? ""}
         className="erp-input"
@@ -69,6 +70,7 @@ export function ProductForm({
       <input
         name="name"
         placeholder="상품명"
+        aria-label="상품명"
         required
         defaultValue={initial?.name ?? ""}
         className="erp-input"
@@ -86,6 +88,7 @@ export function ProductForm({
         <input
           name="new_category"
           placeholder="새 카테고리 입력"
+          aria-label="새 카테고리 입력"
           className="erp-input"
           style={{ flex: 1 }}
           title="입력하면 위 선택을 무시하고 이 이름으로 카테고리를 새로 만들거나 기존 카테고리를 사용합니다."
@@ -101,6 +104,7 @@ export function ProductForm({
       <input
         name="spec"
         placeholder="규격 (예: wp(150), 150mm)"
+        aria-label="규격"
         defaultValue={initial?.spec ?? ""}
         className="erp-input"
       />
@@ -108,6 +112,7 @@ export function ProductForm({
         {unitMode === "preset" ? (
           <select
             name="unit"
+            aria-label="단위"
             value={UNIT_PRESETS.includes(unitValue) ? unitValue : "EA"}
             onChange={(e) => setUnitValue(e.target.value)}
             className="erp-select"
@@ -125,6 +130,7 @@ export function ProductForm({
             value={unitValue}
             onChange={(e) => setUnitValue(e.target.value)}
             placeholder="단위 직접입력"
+            aria-label="단위 직접입력"
             className="erp-input"
             style={{ flex: 1 }}
           />
@@ -139,28 +145,31 @@ export function ProductForm({
         </button>
       </div>
       <input
-        name="price"
-        placeholder="판매가"
+        name="cost"
+        placeholder="매입가"
+        aria-label="매입가"
         type="number"
         step="0.01"
         // 0은 "미입력"과 실질적으로 같은 뜻으로 쓰인다(가격/재고기준을 0으로
         // 등록해두는 경우가 없으므로) — ?? 대신 ||를 써서 0도 빈칸으로
         // 보이게 하고, 입력 안 하면 그대로 0으로 저장된다(스키마가 not null
         // default 0).
-        defaultValue={initial?.price || ""}
+        defaultValue={initial?.cost || ""}
         className="erp-input"
       />
       <input
-        name="cost"
-        placeholder="원가"
+        name="price"
+        placeholder="판매가"
+        aria-label="판매가"
         type="number"
         step="0.01"
-        defaultValue={initial?.cost || ""}
+        defaultValue={initial?.price || ""}
         className="erp-input"
       />
       <input
         name="reorder_point"
         placeholder="안전재고 (재주문 기준 수량)"
+        aria-label="안전재고 (재주문 기준 수량)"
         type="number"
         defaultValue={initial?.reorder_point || ""}
         className="erp-input"
@@ -169,6 +178,7 @@ export function ProductForm({
         <input
           name="base_package_qty"
           placeholder="포장수량 (1박스당 수량, 예: 50)"
+          aria-label="포장수량 (1박스당 수량)"
           type="number"
           step="0.01"
           value={basePackageQty}

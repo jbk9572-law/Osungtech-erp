@@ -41,16 +41,16 @@ export function PartyPaymentForm({
     <form action={formAction} key={formKey} className="grid grid-cols-1 gap-3 md:grid-cols-4">
       <input type="hidden" name={partyIdField} value={partyId} />
       <div className="erp-field">
-        <label>일자</label>
-        <input type="date" name="paid_at" defaultValue={today} className="erp-input w-full" required />
+        <label htmlFor="pp-paid-at">일자</label>
+        <input id="pp-paid-at" type="date" name="paid_at" defaultValue={today} className="erp-input w-full" required />
       </div>
       <div className="erp-field">
-        <label>금액</label>
-        <input type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input w-full" required />
+        <label htmlFor="pp-amount">금액</label>
+        <input id="pp-amount" type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input w-full" required />
       </div>
       <div className="erp-field">
-        <label>방법</label>
-        <select name="method" className="erp-input w-full" defaultValue="">
+        <label htmlFor="pp-method">방법</label>
+        <select id="pp-method" name="method" className="erp-input w-full" defaultValue="">
           <option value="">-</option>
           {METHODS.map((m) => (
             <option key={m} value={m}>
@@ -60,8 +60,8 @@ export function PartyPaymentForm({
         </select>
       </div>
       <div className="erp-field">
-        <label>적요 (선택)</label>
-        <input type="text" name="memo" className="erp-input w-full" />
+        <label htmlFor="pp-memo">적요 (선택)</label>
+        <input id="pp-memo" type="text" name="memo" className="erp-input w-full" />
       </div>
       <div className="md:col-span-4 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">

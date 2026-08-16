@@ -20,6 +20,7 @@ export default async function NewPurchasePage() {
     { data: customers },
     { data: prices },
     { data: supplierPrices },
+    { data: history },
   ] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
     supabase.from("products").select("id, sku, name, spec, unit, cost, price, base_package_qty").order("name"),
@@ -27,13 +28,25 @@ export default async function NewPurchasePage() {
     supabase.from("customers").select("id, name").order("name"),
     supabase.from("customer_product_prices").select("customer_id, product_id, unit_price"),
     supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost"),
+    supabase
+      .from("purchase_order_items")
+      .select("product_id, unit_cost, purchase_orders!inner(supplier_id, purchase_date)")
+      .order("created_at", { ascending: false })
+      .limit(1000),
   ]);
+
+  const priceHistory = (history ?? []).map((row) => ({
+    supplierId: row.purchase_orders.supplier_id,
+    productId: row.product_id,
+    unitCost: Number(row.unit_cost),
+    purchaseDate: row.purchase_orders.purchase_date,
+  }));
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[#182338]">새 매입(입고) 등록</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">새 매입(입고) 등록</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href="/paper-calc/manual?for=purchase" target="_blank" rel="noopener noreferrer" className="erp-btn">
             재단 배치 시뮬레이터
@@ -50,6 +63,7 @@ export default async function NewPurchasePage() {
         customers={customers ?? []}
         prices={prices ?? []}
         supplierPrices={supplierPrices ?? []}
+        history={priceHistory}
         today={todayKstStr()}
       />
     </div>

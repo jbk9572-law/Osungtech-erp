@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { NumberInput } from "@/components/number-input";
 import { FieldHint } from "@/components/field-hint";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
@@ -16,6 +17,7 @@ import {
   type NestResult,
 } from "@/lib/paper-nest-engine";
 import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
+import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 
 type ItemRow = { key: number; width: number; height: number; qty: number };
 type Sheet = { placements: NestLayoutItem[] };
@@ -111,6 +113,8 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
   const [snapMm, setSnapMm] = useState(5);
   const [selectedPlacementIndex, setSelectedPlacementIndex] = useState<number | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const confirmRemoveSheet = useConfirmTwice();
+  const confirmClearSheet = useConfirmTwice();
   const [hoverGhost, setHoverGhost] = useState<Ghost | null>(null);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
@@ -162,24 +166,29 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
 
   function removeSheet(index: number) {
     if (sheets.length <= 1) return;
-    if (sheets[index]?.placements.length && !confirm("이 배치를 삭제하시겠습니까? 배치된 조각이 모두 사라집니다.")) {
+    function doRemove() {
+      setSheets((prev) => prev.filter((_, i) => i !== index));
+      setSheetIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
+      setSelectedPlacementIndex(null);
+    }
+    if (!sheets[index]?.placements.length) {
+      doRemove();
       return;
     }
-    setSheets((prev) => prev.filter((_, i) => i !== index));
-    setSheetIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
-    setSelectedPlacementIndex(null);
+    confirmRemoveSheet.press("remove", doRemove);
   }
 
   function clearCurrentSheet() {
-    if (
-      sheets[sheetIndex]?.placements.length &&
-      !confirm("이 배치를 비우시겠습니까? 배치된 조각이 모두 사라집니다.")
-    ) {
+    function doClear() {
+      setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [] } : s)));
+      setSelectedPlacementIndex(null);
+      setWarning(null);
+    }
+    if (!sheets[sheetIndex]?.placements.length) {
+      doClear();
       return;
     }
-    setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [] } : s)));
-    setSelectedPlacementIndex(null);
-    setWarning(null);
+    confirmClearSheet.press("clear", doClear);
   }
 
   function handleCanvasClick(e: React.MouseEvent<SVGSVGElement>) {
@@ -228,7 +237,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
       w,
       h,
       prod: 500,
-      color: colorMap[item.name] ?? "#CCCCCC",
+      color: colorMap[item.name] ?? DIAGRAM_COLORS.itemFallback,
     };
     setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [...s.placements, next] } : s)));
     // 방금 놓은 자리에 그대로 마우스가 남아있으면, 다음 프레임에 미리보기가
@@ -501,22 +510,22 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
         </div>
         <div className="erp-detail-body flex flex-wrap items-end gap-4">
           <div className="erp-field">
-            <label>원지 가로(mm)</label>
-            <NumberInput value={paperW} onChange={setPaperW} className="erp-input" />
+            <label htmlFor="ml-paper-w">원지 가로(mm)</label>
+            <NumberInput id="ml-paper-w" value={paperW} onChange={setPaperW} className="erp-input" />
           </div>
           <div className="erp-field">
-            <label>원지 세로(mm)</label>
-            <NumberInput value={paperH} onChange={setPaperH} className="erp-input" />
+            <label htmlFor="ml-paper-h">원지 세로(mm)</label>
+            <NumberInput id="ml-paper-h" value={paperH} onChange={setPaperH} className="erp-input" />
           </div>
           <button type="button" className="erp-btn" onClick={() => { setPaperW(paperH); setPaperH(paperW); }}>
             가로·세로 전환
           </button>
           <div className="erp-field">
-            <label>
+            <label htmlFor="ml-snap-mm">
               배치 격자 간격(mm)
               <FieldHint text="아래에서 품목을 드래그로 배치할 때 이 간격 단위로 달라붙습니다(스냅). 값이 작을수록 더 촘촘하게 자유 배치할 수 있습니다." />
             </label>
-            <NumberInput value={snapMm} onChange={(n) => setSnapMm(Math.max(1, n))} className="erp-input" />
+            <NumberInput id="ml-snap-mm" value={snapMm} onChange={(n) => setSnapMm(Math.max(1, n))} className="erp-input" />
           </div>
         </div>
       </div>
@@ -673,9 +682,10 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
               className="erp-btn erp-btn-danger"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               onClick={() => removeSheet(sheetIndex)}
+              onBlur={confirmRemoveSheet.reset}
               disabled={sheets.length <= 1}
             >
-              이 배치 삭제
+              {confirmRemoveSheet.isArmed("remove") ? "한 번 더 누르면 삭제" : "이 배치 삭제"}
             </button>
           </div>
         </div>
@@ -691,8 +701,14 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                 </span>
               )}
             </span>
-            <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={clearCurrentSheet}>
-              이 배치 비우기
+            <button
+              type="button"
+              className="erp-btn"
+              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              onClick={clearCurrentSheet}
+              onBlur={confirmClearSheet.reset}
+            >
+              {confirmClearSheet.isArmed("clear") ? "한 번 더 누르면 비움" : "이 배치 비우기"}
             </button>
           </div>
 
@@ -702,7 +718,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
             style={{
               width: "100%",
               height: 460,
-              background: "#F2F2F2",
+              background: DIAGRAM_COLORS.canvasBg,
               cursor: selectedItemName ? "crosshair" : "default",
               // 캔버스가 화면 가로 폭 전체를 차지하다 보니, 여기를 "none"으로
               // 막으면 조각이 없는 빈 공간을 스치기만 해도 모바일에서 페이지
@@ -715,7 +731,15 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
             onPointerMove={handleSvgPointerMove}
             onPointerLeave={handleSvgPointerLeave}
           >
-            <rect x={0} y={0} width={paperW} height={paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+            <rect
+              x={0}
+              y={0}
+              width={paperW}
+              height={paperH}
+              fill={DIAGRAM_COLORS.paperFill}
+              stroke={DIAGRAM_COLORS.paperStroke}
+              strokeWidth={2}
+            />
             <g style={{ pointerEvents: "none" }}>
               {gridLines.map((l, i) => (
                 <line
@@ -724,22 +748,33 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                   y1={l.y1}
                   x2={l.x2}
                   y2={l.y2}
-                  stroke={l.major ? "#d8d8d8" : "#ebebeb"}
+                  stroke={l.major ? DIAGRAM_COLORS.gridMajor : DIAGRAM_COLORS.gridMinor}
                   strokeWidth={l.major ? 1 : 0.5}
                 />
               ))}
               {rulerTicksX.map((x) => (
                 <g key={`rx-${x}`}>
-                  <line x1={x} y1={0} x2={x} y2={12} stroke="#999999" strokeWidth={1} />
-                  <text x={x} y={23} textAnchor="middle" fontSize={Math.min(paperW, paperH) * 0.018} fill="#999999">
+                  <line x1={x} y1={0} x2={x} y2={12} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+                  <text
+                    x={x}
+                    y={23}
+                    textAnchor="middle"
+                    fontSize={Math.min(paperW, paperH) * 0.018}
+                    fill={DIAGRAM_COLORS.ruler}
+                  >
                     {x}
                   </text>
                 </g>
               ))}
               {rulerTicksY.map((y) => (
                 <g key={`ry-${y}`}>
-                  <line x1={0} y1={y} x2={12} y2={y} stroke="#999999" strokeWidth={1} />
-                  <text x={16} y={y + 4} fontSize={Math.min(paperW, paperH) * 0.018} fill="#999999">
+                  <line x1={0} y1={y} x2={12} y2={y} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+                  <text
+                    x={16}
+                    y={y + 4}
+                    fontSize={Math.min(paperW, paperH) * 0.018}
+                    fill={DIAGRAM_COLORS.ruler}
+                  >
                     {y}
                   </text>
                 </g>
@@ -758,7 +793,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                     width={it.w}
                     height={it.h}
                     fill={it.color}
-                    stroke={isSelected ? "var(--erp-primary)" : "#555555"}
+                    stroke={isSelected ? DIAGRAM_COLORS.itemStrokeSelected : DIAGRAM_COLORS.itemStroke}
                     strokeWidth={isSelected ? 3 : 1}
                     opacity={isDragging ? 0.25 : 1}
                     style={{ cursor: "grab", touchAction: "none" }}
@@ -773,7 +808,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fontSize={Math.min(paperW, paperH) * 0.03}
-                        fill="#222222"
+                        fill={DIAGRAM_COLORS.labelPrimary}
                         style={{ pointerEvents: "none" }}
                       >
                         {it.name}
@@ -783,7 +818,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                         y={it.y + dimFontSize + 4}
                         textAnchor="middle"
                         fontSize={dimFontSize}
-                        fill="#444444"
+                        fill={DIAGRAM_COLORS.labelSecondary}
                         style={{ pointerEvents: "none" }}
                       >
                         {it.w}
@@ -793,7 +828,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                         y={it.y + it.h / 2}
                         textAnchor="middle"
                         fontSize={dimFontSize}
-                        fill="#444444"
+                        fill={DIAGRAM_COLORS.labelSecondary}
                         transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
                         style={{ pointerEvents: "none" }}
                       >
@@ -854,7 +889,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
           {warning && (
             <div
               className="rounded p-2 text-xs"
-              style={{ background: "#fff3e0", color: "var(--erp-warning)", border: "1px solid #ffd9a8" }}
+              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)", border: "1px solid var(--erp-warning-border)" }}
             >
               {warning}
             </div>
@@ -878,7 +913,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
       {staged && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "#e7f6ea", color: "var(--erp-success)", border: "1px solid #b7e4c7" }}
+          style={{ background: "var(--erp-success-bg)", color: "var(--erp-success)", border: "1px solid var(--erp-success-border)" }}
         >
           {pendingFor === "purchase" ? (
             <>

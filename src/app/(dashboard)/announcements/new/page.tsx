@@ -5,7 +5,7 @@ import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 export default function NewAnnouncementPage() {
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">공지사항 &gt; 글쓰기</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">공지사항 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
         <Link href="/announcements" className="erp-btn erp-btn-danger">

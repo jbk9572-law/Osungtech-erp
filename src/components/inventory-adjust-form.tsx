@@ -65,7 +65,7 @@ export function InventoryAdjustForm({
       <div className="md:col-span-2">
         <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
       </div>
-      <div className="flex overflow-hidden rounded-sm border border-[#e2e5eb]">
+      <div className="flex overflow-hidden rounded-sm border border-[var(--erp-border)]">
         <button
           type="button"
           onClick={() => setDirection("increase")}
@@ -73,8 +73,8 @@ export function InventoryAdjustForm({
           style={{
             padding: "0 10px",
             height: 30,
-            background: direction === "increase" ? "var(--erp-primary)" : "#fff",
-            color: direction === "increase" ? "#fff" : "var(--erp-text-muted)",
+            background: direction === "increase" ? "var(--erp-primary)" : "var(--erp-panel)",
+            color: direction === "increase" ? "var(--erp-panel)" : "var(--erp-text-muted)",
           }}
         >
           증가
@@ -86,8 +86,8 @@ export function InventoryAdjustForm({
           style={{
             padding: "0 10px",
             height: 30,
-            background: direction === "decrease" ? "var(--erp-primary)" : "#fff",
-            color: direction === "decrease" ? "#fff" : "var(--erp-text-muted)",
+            background: direction === "decrease" ? "var(--erp-primary)" : "var(--erp-panel)",
+            color: direction === "decrease" ? "var(--erp-panel)" : "var(--erp-text-muted)",
           }}
         >
           차감
@@ -103,6 +103,7 @@ export function InventoryAdjustForm({
       <input
         name="note"
         placeholder="사유 (예: 기초재고, 실사 조정)"
+        aria-label="사유"
         className="erp-input md:col-span-3"
       />
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">

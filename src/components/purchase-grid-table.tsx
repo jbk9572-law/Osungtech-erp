@@ -5,6 +5,10 @@ import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePurchases } from "@/app/(dashboard)/purchases/actions";
+import { useSortableRows } from "@/lib/grid-sort";
+import { SortableTh } from "@/components/grid/sortable-th";
+import { stickyHeaderStyle, stickyCellStyle, stickyFooterStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import { GridBadge } from "@/components/grid/badge";
 
 export type PurchaseRow = {
   key: string;
@@ -28,18 +32,9 @@ export type PurchaseRow = {
 
 type SortKey = "date" | "supplierName" | "authorName" | "quantity" | "supplyAmount" | "taxAmount";
 
-function compareValues(a: PurchaseRow, b: PurchaseRow, key: SortKey): number {
-  const av = a[key];
-  const bv = b[key];
-  if (typeof av === "number" && typeof bv === "number") return av - bv;
-  return String(av ?? "").localeCompare(String(bv ?? ""), "ko");
-}
-
-// 첫 두 칸(체크박스/매입일자)은 옆으로 스크롤해도 항상 보이게 고정한다 —
+// 매입일자 칸(체크박스 다음)은 옆으로 스크롤해도 항상 보이게 고정한다 —
 // 매출관리 그리드와 동일한 패턴.
-const STICKY_1_WIDTH = 32;
 const STICKY_2_WIDTH = 92;
-const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
 
 export function PurchaseGridTable({
   rows,
@@ -54,7 +49,7 @@ export function PurchaseGridTable({
   totalTax: number;
   backParam: string;
 }) {
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<PurchaseRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeletePurchases, undefined);
@@ -67,11 +62,6 @@ export function PurchaseGridTable({
       setConfirmText("");
     }
   }
-
-  const sortedRows = useMemo(() => {
-    if (!sort) return rows;
-    return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
-  }, [rows, sort]);
 
   const selectedNames = useMemo(() => {
     const seen = new Set<string>();
@@ -88,19 +78,6 @@ export function PurchaseGridTable({
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
       : selectedNames.join(", ");
-
-  function toggleSort(key: SortKey) {
-    setSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: 1 };
-      if (prev.dir === 1) return { key, dir: -1 };
-      return null;
-    });
-  }
-
-  function sortIndicator(key: SortKey) {
-    if (!sort || sort.key !== key) return "";
-    return sort.dir === 1 ? " ▲" : " ▼";
-  }
 
   const selectableIds = useMemo(
     () => sortedRows.map((r) => r.orderId).filter((id): id is string => !!id),
@@ -122,38 +99,25 @@ export function PurchaseGridTable({
   }
 
   function sortableHeader(label: string, key: SortKey, extraStyle?: CSSProperties, className?: string) {
-    const isSorted = sort?.key === key;
     return (
-      <th
-        className={className}
+      <SortableTh
+        label={`${label}${sortIndicator(key)}`}
+        ariaSortValue={ariaSortFor(key)}
+        onClick={() => toggleSort(key)}
         style={extraStyle}
-        aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}
-      >
-        <button type="button" onClick={() => toggleSort(key)} className="erp-th-btn">
-          {label}
-          {sortIndicator(key)}
-        </button>
-      </th>
+        className={className}
+      />
     );
   }
 
-  const thSticky1: CSSProperties = { ...stickyBase, left: 0, width: STICKY_1_WIDTH, background: "#eef1f5", zIndex: 2 };
-  const thSticky2: CSSProperties = {
-    ...stickyBase,
-    left: STICKY_1_WIDTH,
-    width: STICKY_2_WIDTH,
-    background: "#eef1f5",
-    zIndex: 2,
+  const thSticky1 = stickyHeaderStyle(0, GRID_CHECKBOX_WIDTH);
+  const thSticky2 = stickyHeaderStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
-  };
-  const tdSticky1: CSSProperties = { ...stickyBase, left: 0, width: STICKY_1_WIDTH, background: "#fff" };
-  const tdSticky2: CSSProperties = {
-    ...stickyBase,
-    left: STICKY_1_WIDTH,
-    width: STICKY_2_WIDTH,
-    background: "#fff",
+  });
+  const tdSticky1 = stickyCellStyle(0, GRID_CHECKBOX_WIDTH);
+  const tdSticky2 = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
-  };
+  });
 
   return (
     <>
@@ -215,14 +179,12 @@ export function PurchaseGridTable({
                   </td>
                   <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
                   <td>
-                    <span className={`erp-badge ${isPayment ? "erp-badge-warning" : "erp-badge-info"}`}>
-                      {isPayment ? "지급" : "매입"}
-                    </span>
+                    <GridBadge tone={isPayment ? "muted" : "info"}>{isPayment ? "지급" : "매입"}</GridBadge>
                   </td>
                   <td>{row.supplierName}</td>
                   <td>
                     {row.deliveryMethod ? (
-                      <span className="erp-badge erp-badge-muted">{row.deliveryMethod}</span>
+                      <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>-</span>
                     )}
@@ -253,12 +215,9 @@ export function PurchaseGridTable({
           </tbody>
           {sortedRows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "#eef1f5", fontWeight: 700 }}>
-                <td colSpan={2} style={{ ...stickyBase, left: 0, background: "#eef1f5" }} />
-                <td
-                  colSpan={7}
-                  style={{ ...stickyBase, left: STICKY_1_WIDTH + STICKY_2_WIDTH, background: "#eef1f5" }}
-                >
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <td colSpan={2} style={stickyFooterStyle(0)} />
+                <td colSpan={7} style={stickyFooterStyle(GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH)}>
                   매입 합계 ({sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>

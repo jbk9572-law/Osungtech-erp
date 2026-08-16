@@ -8,6 +8,29 @@ import {
   PAPER_STOCK_SKU,
 } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
+import { canManageOrder } from "@/lib/can-manage-order";
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+// 모조지 계산 결과를 매출/매입 주문에 반영하면 sales_order_items/
+// purchase_order_items를 직접 건드리는데, 그 테이블의 RLS가 "그 주문의
+// 작성자 또는 관리자"로 좁혀져 있다(owner_or_admin_write_restrictions
+// 마이그레이션). 화면에 링크를 숨기는 것만으로는 URL로 직접 들어오는
+// 경우까지 막지 못하므로, 실제로 반영을 시도하기 전에 여기서 한 번 더
+// 확인해서 남의 주문에는 계산 결과가 반영되지 않게 막는다.
+async function assertCanManageOrder(
+  supabase: SupabaseServerClient,
+  salesOrderId: string | null,
+  purchaseOrderId: string | null
+): Promise<string | null> {
+  if (salesOrderId && !(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return "본인이 등록한 매출 건에만 모조지 계산을 반영할 수 있습니다.";
+  }
+  if (purchaseOrderId && !(await canManageOrder(supabase, "purchase_orders", purchaseOrderId))) {
+    return "본인이 등록한 매입 건에만 모조지 계산을 반영할 수 있습니다.";
+  }
+  return null;
+}
 
 export async function savePaperCalculation(
   _prevState: FormState,
@@ -43,6 +66,9 @@ export async function savePaperCalculation(
     data: { user },
   } = await supabase.auth.getUser();
 
+  const permissionError = await assertCanManageOrder(supabase, salesOrderId, purchaseOrderId);
+  if (permissionError) return { error: permissionError };
+
   const { error } = await supabase.from("paper_calculations").insert({
     sales_order_id: salesOrderId,
     purchase_order_id: purchaseOrderId,
@@ -59,7 +85,7 @@ export async function savePaperCalculation(
   });
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   let warning: string | null = null;
@@ -98,10 +124,14 @@ export async function deletePaperCalculation(
   }
 
   const supabase = await createClient();
+
+  const permissionError = await assertCanManageOrder(supabase, salesOrderId, purchaseOrderId);
+  if (permissionError) return { error: permissionError };
+
   const { error } = await supabase.from("paper_calculations").delete().eq("id", id);
 
   if (error) {
-    return { error: "삭제에 실패했습니다." };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   let warning: string | null = null;

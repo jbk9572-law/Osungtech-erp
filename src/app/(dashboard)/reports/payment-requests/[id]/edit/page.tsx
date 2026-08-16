@@ -5,14 +5,17 @@ import { PaymentRequestForm } from "@/components/payment-request-form";
 import { ReceiptReorderList } from "@/components/receipt-reorder-list";
 import { AddReceiptsForm } from "@/components/add-receipts-form";
 import { todayKstStr } from "@/lib/kst-date";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 
 export default async function EditPaymentRequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: row }, { data: items }, { data: receipts }] = await Promise.all([
+  const [{ data: row }, { data: items }, { data: receipts }, actor] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, department, period_from, period_to, card_type")
+      .select("id, department, period_from, period_to, card_type, requested_by")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -25,6 +28,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
       .select("id, file_url, sort_order")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
+    getCurrentActor(supabase),
   ]);
 
   if (!row) {
@@ -33,9 +37,22 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
 
   const today = todayKstStr();
 
+  if (!canManage(row.requested_by, actor.userId, actor.isAdmin)) {
+    return (
+      <div>
+        <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
+        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+          본인이 작성한 지급결의서만 수정할 수 있습니다.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[#182338]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
 
       <div className="erp-toolbar">
         <Link href={`/reports/payment-requests/${id}`} className="erp-btn erp-btn-danger">

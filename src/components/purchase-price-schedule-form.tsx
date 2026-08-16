@@ -31,8 +31,16 @@ export function PurchasePriceScheduleForm({
       <input type="hidden" name="supplier_id" value={supplierId} />
       <input type="hidden" name="product_id" value={productId} required />
       <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
-      <input name="new_unit_cost" type="number" step="0.01" placeholder="변경될 단가" required className="erp-input" />
-      <input name="effective_date" type="date" required className="erp-input" />
+      <input
+        name="new_unit_cost"
+        type="number"
+        step="0.01"
+        placeholder="변경될 단가"
+        aria-label="변경될 단가"
+        required
+        className="erp-input"
+      />
+      <input name="effective_date" type="date" aria-label="적용일자" required className="erp-input" />
       <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
         {pending ? "예약 중..." : "예약"}
       </button>
