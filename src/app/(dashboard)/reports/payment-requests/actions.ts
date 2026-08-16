@@ -185,7 +185,7 @@ export async function quickAddPaymentRequestItem(
     sort_order: nextOrder,
   });
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   // 영수증은 문서(payment_request) 단위로 붙는다(줄마다 따로 연결하는 구조가
@@ -356,7 +356,8 @@ export async function reorderPaymentRequestReceipts(
         .eq("payment_request_id", paymentRequestId)
     )
   );
-  if (results.some((r) => r.error)) return { error: "순서 변경에 실패했습니다." };
+  const firstFailure = results.find((r) => r.error);
+  if (firstFailure) return { error: `순서 변경에 실패했습니다: ${firstFailure.error!.message}` };
 
   revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
   revalidatePath(`/reports/payment-requests/${paymentRequestId}/edit`);

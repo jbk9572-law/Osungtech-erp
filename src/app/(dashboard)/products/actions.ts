@@ -78,7 +78,11 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
     .single();
 
   if (error || !created) {
-    return { error: error?.message.includes("duplicate") ? "이미 존재하는 SKU입니다." : "저장에 실패했습니다." };
+    return {
+      error: error?.message.includes("duplicate")
+        ? "이미 존재하는 SKU입니다."
+        : `저장에 실패했습니다${error ? `: ${error.message}` : ""}`,
+    };
   }
 
   await recordPackageQtyChange(supabase, created.id, fields.base_package_qty, null);
@@ -108,7 +112,9 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
     .eq("id", id);
 
   if (error) {
-    return { error: error.message.includes("duplicate") ? "이미 존재하는 SKU입니다." : "저장에 실패했습니다." };
+    return {
+      error: error.message.includes("duplicate") ? "이미 존재하는 SKU입니다." : `저장에 실패했습니다: ${error.message}`,
+    };
   }
 
   await recordPackageQtyChange(
@@ -136,7 +142,7 @@ export async function deleteProduct(_prevState: FormState, formData: FormData): 
     return {
       error: error.message.includes("foreign key")
         ? "이 상품과 연결된 매입/매출 내역이 있어 삭제할 수 없습니다."
-        : "삭제에 실패했습니다.",
+        : `삭제에 실패했습니다: ${error.message}`,
     };
   }
 

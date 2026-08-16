@@ -29,7 +29,7 @@ export async function createAnnouncement(
     .single();
 
   if (error || !data) {
-    return { error: "등록에 실패했습니다." };
+    return { error: `등록에 실패했습니다${error ? `: ${error.message}` : ""}` };
   }
 
   revalidatePath("/announcements");
@@ -57,7 +57,7 @@ export async function updateAnnouncement(
     .eq("id", id);
 
   if (error) {
-    return { error: "수정에 실패했습니다." };
+    return { error: `수정에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/announcements");
@@ -78,7 +78,7 @@ export async function deleteAnnouncement(
   const { error } = await supabase.from("announcements").delete().eq("id", id);
 
   if (error) {
-    return { error: "삭제에 실패했습니다." };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/announcements");

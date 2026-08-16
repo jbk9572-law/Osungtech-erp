@@ -163,7 +163,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
     .single();
 
   if (error || !todo) {
-    return { error: "등록에 실패했습니다." };
+    return { error: `등록에 실패했습니다${error ? `: ${error.message}` : ""}` };
   }
 
   if (pendingPaperCalc) {
@@ -234,7 +234,7 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
     .eq("id", id);
 
   if (error) {
-    return { error: "수정에 실패했습니다." };
+    return { error: `수정에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/todos");
@@ -267,7 +267,7 @@ export async function deleteTodo(_prevState: FormState, formData: FormData): Pro
   const { error } = await supabase.from("todos").delete().eq("id", id);
 
   if (error) {
-    return { error: "삭제에 실패했습니다." };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/todos");

@@ -41,7 +41,7 @@ export async function createCustomer(_prevState: FormState, formData: FormData):
   });
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/customers");
@@ -62,7 +62,7 @@ export async function updateCustomer(_prevState: FormState, formData: FormData):
     .eq("id", id);
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/customers");
@@ -83,7 +83,7 @@ export async function deleteCustomer(_prevState: FormState, formData: FormData):
     return {
       error: error.message.includes("foreign key")
         ? "이 출고처와 연결된 매출/판매단가 내역이 있어 삭제할 수 없습니다."
-        : "삭제에 실패했습니다.",
+        : `삭제에 실패했습니다: ${error.message}`,
     };
   }
 
@@ -136,7 +136,7 @@ export async function upsertCustomerPrice(
     );
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath(`/customers/${customerId}`);
@@ -179,7 +179,7 @@ export async function schedulePriceChange(
   });
 
   if (error) {
-    return { error: "예약에 실패했습니다." };
+    return { error: `예약에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath(`/customers/${customerId}`);
@@ -213,7 +213,7 @@ export async function updatePriceSchedule(
     .is("applied_at", null);
 
   if (error) {
-    return { error: "수정에 실패했습니다." };
+    return { error: `수정에 실패했습니다: ${error.message}` };
   }
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
@@ -229,7 +229,7 @@ export async function cancelPriceSchedule(_prevState: FormState, formData: FormD
   const { error } = await supabase.from("price_change_schedules").delete().eq("id", id).is("applied_at", null);
 
   if (error) {
-    return { error: "취소에 실패했습니다." };
+    return { error: `취소에 실패했습니다: ${error.message}` };
   }
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
@@ -262,7 +262,7 @@ export async function addCustomerPayment(_prevState: FormState, formData: FormDa
   });
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath(`/customers/${customerId}`);
@@ -278,7 +278,7 @@ export async function deleteCustomerPayment(_prevState: FormState, formData: For
 
   const supabase = await createClient();
   const { error } = await supabase.from("customer_payments").delete().eq("id", id);
-  if (error) return { error: "삭제에 실패했습니다." };
+  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
   revalidatePath("/receivables");

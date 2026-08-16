@@ -85,7 +85,7 @@ export async function savePaperCalculation(
   });
 
   if (error) {
-    return { error: "저장에 실패했습니다." };
+    return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
   let warning: string | null = null;
@@ -131,7 +131,7 @@ export async function deletePaperCalculation(
   const { error } = await supabase.from("paper_calculations").delete().eq("id", id);
 
   if (error) {
-    return { error: "삭제에 실패했습니다." };
+    return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
   let warning: string | null = null;
