@@ -6,6 +6,7 @@ import { sendMessage, deleteMessage } from "@/app/(dashboard)/messenger/actions"
 import type { MessengerMessage } from "@/lib/messenger-types";
 import { fileKindIcon, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 export type { MessengerMessage };
 
@@ -67,7 +68,7 @@ export function MessengerWidget({
   const [messages, setMessages] = useState(initialMessages);
   const [sendError, setSendError] = useState<string | undefined>();
   const [deleteError, setDeleteError] = useState<string | undefined>();
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const confirmDelete = useConfirmTwice<string>();
   const [hasAttachment, setHasAttachment] = useState(false);
   const [composerKey, setComposerKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -144,32 +145,29 @@ export function MessengerWidget({
     // 브라우저 기본 confirm() 대신, 다른 곳의 "삭제 누르면 바로 안 지워지고
     // 한 번 더 확인" 원칙을 가볍게 맞춘 버전 — 좁은 말풍선 안이라 타이핑
     // 확인 코드까지는 과해서, 버튼을 두 번 눌러야 지워지는 방식으로 뺐다.
-    if (confirmDeleteId !== id) {
-      setConfirmDeleteId(id);
-      return;
-    }
-    setConfirmDeleteId(null);
-    setDeleteError(undefined);
-    const removed = messages.find((m) => m.id === id);
-    const removedIndex = messages.findIndex((m) => m.id === id);
-    setMessages((prev) => prev.filter((m) => m.id !== id));
-    startDeleteTransition(async () => {
-      const fd = new FormData();
-      fd.set("id", id);
-      fd.set("file_path", filePath ?? "");
-      const result = await deleteMessage(fd);
-      // 삭제가 실패하면(RLS, 일시적 오류 등) 화면에서 지웠던 메시지를 원래
-      // 위치로 되돌린다 — 아니면 삭제 안 됐는데도 내 화면에서만 사라진
-      // 것처럼 보여서 다른 사람에게는 계속 보인다는 걸 알 방법이 없다.
-      if (result.error && removed) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === id)) return prev;
-          const next = [...prev];
-          next.splice(Math.min(removedIndex, next.length), 0, removed);
-          return next;
-        });
-        setDeleteError(result.error);
-      }
+    confirmDelete.press(id, () => {
+      setDeleteError(undefined);
+      const removed = messages.find((m) => m.id === id);
+      const removedIndex = messages.findIndex((m) => m.id === id);
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+      startDeleteTransition(async () => {
+        const fd = new FormData();
+        fd.set("id", id);
+        fd.set("file_path", filePath ?? "");
+        const result = await deleteMessage(fd);
+        // 삭제가 실패하면(RLS, 일시적 오류 등) 화면에서 지웠던 메시지를 원래
+        // 위치로 되돌린다 — 아니면 삭제 안 됐는데도 내 화면에서만 사라진
+        // 것처럼 보여서 다른 사람에게는 계속 보인다는 걸 알 방법이 없다.
+        if (result.error && removed) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === id)) return prev;
+            const next = [...prev];
+            next.splice(Math.min(removedIndex, next.length), 0, removed);
+            return next;
+          });
+          setDeleteError(result.error);
+        }
+      });
     });
   }
 
@@ -341,20 +339,20 @@ export function MessengerWidget({
                       onClick={() => handleDelete(m.id, m.file_path)}
                       style={{
                         fontSize: 10,
-                        color: confirmDeleteId === m.id ? "var(--erp-danger)" : "var(--erp-text-muted)",
-                        fontWeight: confirmDeleteId === m.id ? 700 : 400,
+                        color: confirmDelete.isArmed(m.id) ? "var(--erp-danger)" : "var(--erp-text-muted)",
+                        fontWeight: confirmDelete.isArmed(m.id) ? 700 : 400,
                         background: "none",
                         border: "none",
                         padding: "2px 0",
                         cursor: "pointer",
                       }}
                     >
-                      {confirmDeleteId === m.id ? "한 번 더 누르면 삭제" : "삭제"}
+                      {confirmDelete.isArmed(m.id) ? "한 번 더 누르면 삭제" : "삭제"}
                     </button>
-                    {confirmDeleteId === m.id && (
+                    {confirmDelete.isArmed(m.id) && (
                       <button
                         type="button"
-                        onClick={() => setConfirmDeleteId(null)}
+                        onClick={confirmDelete.reset}
                         style={{
                           fontSize: 10,
                           color: "var(--erp-text-muted)",

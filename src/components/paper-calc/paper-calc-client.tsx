@@ -9,6 +9,7 @@ import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
 import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 import { GridBadge } from "@/components/grid/badge";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
@@ -620,7 +621,7 @@ function SavedCalcRow({
 }) {
   const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
   const effectiveReams = computeEffectiveReams(calc.layouts);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const confirmDelete = useConfirmTwice();
 
   return (
     <tr>
@@ -645,10 +646,8 @@ function SavedCalcRow({
           <form
             action={action}
             onSubmit={(e) => {
-              if (!confirmingDelete) {
-                e.preventDefault();
-                setConfirmingDelete(true);
-              }
+              if (!confirmDelete.isArmed("delete")) e.preventDefault();
+              confirmDelete.press("delete", () => {});
             }}
           >
             <input type="hidden" name="id" value={calc.id} />
@@ -659,9 +658,9 @@ function SavedCalcRow({
               className="erp-btn erp-btn-danger"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               disabled={pending}
-              onBlur={() => setConfirmingDelete(false)}
+              onBlur={confirmDelete.reset}
             >
-              {confirmingDelete ? "한 번 더 누르면 삭제" : "삭제"}
+              {confirmDelete.isArmed("delete") ? "한 번 더 누르면 삭제" : "삭제"}
             </button>
           </form>
         </div>

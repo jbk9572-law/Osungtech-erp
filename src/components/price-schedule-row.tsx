@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { cancelPriceSchedule, updatePriceSchedule } from "@/app/(dashboard)/customers/actions";
 import { FormMessage } from "@/components/form-message";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 // 단가 예약 한 줄 — 평소엔 "기존가 → 변경가 (차액)"만 보여주다가, 수정
 // 버튼을 누르면 그 자리에서 바로 변경 단가/적용일을 고칠 수 있는 폼으로
@@ -27,7 +28,7 @@ export function PriceScheduleRow({
   const [editing, setEditing] = useState(false);
   const [updateState, updateAction, updatePending] = useActionState(updatePriceSchedule, undefined);
   const [cancelPending, startCancelTransition] = useTransition();
-  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const confirmCancel = useConfirmTwice();
 
   useEffect(() => {
     if (updateState?.success) {
@@ -36,19 +37,14 @@ export function PriceScheduleRow({
     }
   }, [updateState]);
 
-  // 브라우저 기본 confirm() 대신, 버튼을 두 번 눌러야 취소되게 한다 —
-  // 메신저 메시지 삭제와 같은 가벼운 확인 방식으로 앱 전체 톤을 맞춘다.
   function handleCancel() {
-    if (!confirmingCancel) {
-      setConfirmingCancel(true);
-      return;
-    }
-    setConfirmingCancel(false);
-    const formData = new FormData();
-    formData.set("id", id);
-    formData.set("customer_id", customerId);
-    startCancelTransition(() => {
-      cancelPriceSchedule(undefined, formData);
+    confirmCancel.press("cancel", () => {
+      const formData = new FormData();
+      formData.set("id", id);
+      formData.set("customer_id", customerId);
+      startCancelTransition(() => {
+        cancelPriceSchedule(undefined, formData);
+      });
     });
   }
 
@@ -131,11 +127,11 @@ export function PriceScheduleRow({
           type="button"
           disabled={cancelPending}
           onClick={handleCancel}
-          onBlur={() => setConfirmingCancel(false)}
+          onBlur={confirmCancel.reset}
           className="erp-btn erp-btn-danger"
           style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
         >
-          {confirmingCancel ? "한 번 더 누르면 취소" : "취소"}
+          {confirmCancel.isArmed("cancel") ? "한 번 더 누르면 취소" : "취소"}
         </button>
       </div>
     </div>

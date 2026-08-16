@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useTransition } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 export type PaperStockOverrideEntry = {
   id: string;
@@ -29,7 +30,7 @@ export function PaperStockOverridePanel({
   const [state, formAction, pending] = useActionState(overrideAction, undefined);
   const formRef = useRef<HTMLFormElement>(null);
   const [revertPending, startRevertTransition] = useTransition();
-  const [confirmingRevert, setConfirmingRevert] = useState(false);
+  const confirmRevert = useConfirmTwice();
 
   useEffect(() => {
     if (state?.success) formRef.current?.reset();
@@ -54,21 +55,18 @@ export function PaperStockOverridePanel({
             className="erp-btn erp-btn-danger"
             style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
             disabled={revertPending}
-            onBlur={() => setConfirmingRevert(false)}
+            onBlur={confirmRevert.reset}
             onClick={() => {
-              if (!confirmingRevert) {
-                setConfirmingRevert(true);
-                return;
-              }
-              setConfirmingRevert(false);
-              const formData = new FormData();
-              formData.set(idFieldName, orderId);
-              startRevertTransition(() => {
-                revertAction(undefined, formData);
+              confirmRevert.press("revert", () => {
+                const formData = new FormData();
+                formData.set(idFieldName, orderId);
+                startRevertTransition(() => {
+                  revertAction(undefined, formData);
+                });
               });
             }}
           >
-            {confirmingRevert ? "한 번 더 누르면 되돌림" : "자동값으로 되돌리기"}
+            {confirmRevert.isArmed("revert") ? "한 번 더 누르면 되돌림" : "자동값으로 되돌리기"}
           </button>
         </div>
       )}

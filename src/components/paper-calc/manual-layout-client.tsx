@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { NumberInput } from "@/components/number-input";
 import { FieldHint } from "@/components/field-hint";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
@@ -112,8 +113,8 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
   const [snapMm, setSnapMm] = useState(5);
   const [selectedPlacementIndex, setSelectedPlacementIndex] = useState<number | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
-  const [confirmingRemoveSheet, setConfirmingRemoveSheet] = useState(false);
-  const [confirmingClearSheet, setConfirmingClearSheet] = useState(false);
+  const confirmRemoveSheet = useConfirmTwice();
+  const confirmClearSheet = useConfirmTwice();
   const [hoverGhost, setHoverGhost] = useState<Ghost | null>(null);
   const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
@@ -165,25 +166,29 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
 
   function removeSheet(index: number) {
     if (sheets.length <= 1) return;
-    if (sheets[index]?.placements.length && !confirmingRemoveSheet) {
-      setConfirmingRemoveSheet(true);
+    function doRemove() {
+      setSheets((prev) => prev.filter((_, i) => i !== index));
+      setSheetIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
+      setSelectedPlacementIndex(null);
+    }
+    if (!sheets[index]?.placements.length) {
+      doRemove();
       return;
     }
-    setConfirmingRemoveSheet(false);
-    setSheets((prev) => prev.filter((_, i) => i !== index));
-    setSheetIndex((prev) => Math.max(0, prev >= index ? prev - 1 : prev));
-    setSelectedPlacementIndex(null);
+    confirmRemoveSheet.press("remove", doRemove);
   }
 
   function clearCurrentSheet() {
-    if (sheets[sheetIndex]?.placements.length && !confirmingClearSheet) {
-      setConfirmingClearSheet(true);
+    function doClear() {
+      setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [] } : s)));
+      setSelectedPlacementIndex(null);
+      setWarning(null);
+    }
+    if (!sheets[sheetIndex]?.placements.length) {
+      doClear();
       return;
     }
-    setConfirmingClearSheet(false);
-    setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [] } : s)));
-    setSelectedPlacementIndex(null);
-    setWarning(null);
+    confirmClearSheet.press("clear", doClear);
   }
 
   function handleCanvasClick(e: React.MouseEvent<SVGSVGElement>) {
@@ -677,10 +682,10 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
               className="erp-btn erp-btn-danger"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               onClick={() => removeSheet(sheetIndex)}
-              onBlur={() => setConfirmingRemoveSheet(false)}
+              onBlur={confirmRemoveSheet.reset}
               disabled={sheets.length <= 1}
             >
-              {confirmingRemoveSheet ? "한 번 더 누르면 삭제" : "이 배치 삭제"}
+              {confirmRemoveSheet.isArmed("remove") ? "한 번 더 누르면 삭제" : "이 배치 삭제"}
             </button>
           </div>
         </div>
@@ -701,9 +706,9 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
               className="erp-btn"
               style={{ minWidth: 0, height: 26, padding: "0 8px" }}
               onClick={clearCurrentSheet}
-              onBlur={() => setConfirmingClearSheet(false)}
+              onBlur={confirmClearSheet.reset}
             >
-              {confirmingClearSheet ? "한 번 더 누르면 비움" : "이 배치 비우기"}
+              {confirmClearSheet.isArmed("clear") ? "한 번 더 누르면 비움" : "이 배치 비우기"}
             </button>
           </div>
 
