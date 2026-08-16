@@ -16,6 +16,7 @@ import {
   type NestResult,
 } from "@/lib/paper-nest-engine";
 import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
+import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 
 type ItemRow = { key: number; width: number; height: number; qty: number };
 type Sheet = { placements: NestLayoutItem[] };
@@ -231,7 +232,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
       w,
       h,
       prod: 500,
-      color: colorMap[item.name] ?? "#CCCCCC",
+      color: colorMap[item.name] ?? DIAGRAM_COLORS.itemFallback,
     };
     setSheets((prev) => prev.map((s, i) => (i === sheetIndex ? { placements: [...s.placements, next] } : s)));
     // 방금 놓은 자리에 그대로 마우스가 남아있으면, 다음 프레임에 미리보기가
@@ -712,7 +713,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
             style={{
               width: "100%",
               height: 460,
-              background: "#F2F2F2",
+              background: DIAGRAM_COLORS.canvasBg,
               cursor: selectedItemName ? "crosshair" : "default",
               // 캔버스가 화면 가로 폭 전체를 차지하다 보니, 여기를 "none"으로
               // 막으면 조각이 없는 빈 공간을 스치기만 해도 모바일에서 페이지
@@ -725,7 +726,15 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
             onPointerMove={handleSvgPointerMove}
             onPointerLeave={handleSvgPointerLeave}
           >
-            <rect x={0} y={0} width={paperW} height={paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+            <rect
+              x={0}
+              y={0}
+              width={paperW}
+              height={paperH}
+              fill={DIAGRAM_COLORS.paperFill}
+              stroke={DIAGRAM_COLORS.paperStroke}
+              strokeWidth={2}
+            />
             <g style={{ pointerEvents: "none" }}>
               {gridLines.map((l, i) => (
                 <line
@@ -734,22 +743,33 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                   y1={l.y1}
                   x2={l.x2}
                   y2={l.y2}
-                  stroke={l.major ? "#d8d8d8" : "#ebebeb"}
+                  stroke={l.major ? DIAGRAM_COLORS.gridMajor : DIAGRAM_COLORS.gridMinor}
                   strokeWidth={l.major ? 1 : 0.5}
                 />
               ))}
               {rulerTicksX.map((x) => (
                 <g key={`rx-${x}`}>
-                  <line x1={x} y1={0} x2={x} y2={12} stroke="#999999" strokeWidth={1} />
-                  <text x={x} y={23} textAnchor="middle" fontSize={Math.min(paperW, paperH) * 0.018} fill="#999999">
+                  <line x1={x} y1={0} x2={x} y2={12} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+                  <text
+                    x={x}
+                    y={23}
+                    textAnchor="middle"
+                    fontSize={Math.min(paperW, paperH) * 0.018}
+                    fill={DIAGRAM_COLORS.ruler}
+                  >
                     {x}
                   </text>
                 </g>
               ))}
               {rulerTicksY.map((y) => (
                 <g key={`ry-${y}`}>
-                  <line x1={0} y1={y} x2={12} y2={y} stroke="#999999" strokeWidth={1} />
-                  <text x={16} y={y + 4} fontSize={Math.min(paperW, paperH) * 0.018} fill="#999999">
+                  <line x1={0} y1={y} x2={12} y2={y} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+                  <text
+                    x={16}
+                    y={y + 4}
+                    fontSize={Math.min(paperW, paperH) * 0.018}
+                    fill={DIAGRAM_COLORS.ruler}
+                  >
                     {y}
                   </text>
                 </g>
@@ -768,7 +788,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                     width={it.w}
                     height={it.h}
                     fill={it.color}
-                    stroke={isSelected ? "var(--erp-primary)" : "#555555"}
+                    stroke={isSelected ? DIAGRAM_COLORS.itemStrokeSelected : DIAGRAM_COLORS.itemStroke}
                     strokeWidth={isSelected ? 3 : 1}
                     opacity={isDragging ? 0.25 : 1}
                     style={{ cursor: "grab", touchAction: "none" }}
@@ -783,7 +803,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fontSize={Math.min(paperW, paperH) * 0.03}
-                        fill="#222222"
+                        fill={DIAGRAM_COLORS.labelPrimary}
                         style={{ pointerEvents: "none" }}
                       >
                         {it.name}
@@ -793,7 +813,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                         y={it.y + dimFontSize + 4}
                         textAnchor="middle"
                         fontSize={dimFontSize}
-                        fill="#444444"
+                        fill={DIAGRAM_COLORS.labelSecondary}
                         style={{ pointerEvents: "none" }}
                       >
                         {it.w}
@@ -803,7 +823,7 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
                         y={it.y + it.h / 2}
                         textAnchor="middle"
                         fontSize={dimFontSize}
-                        fill="#444444"
+                        fill={DIAGRAM_COLORS.labelSecondary}
                         transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
                         style={{ pointerEvents: "none" }}
                       >

@@ -73,8 +73,8 @@ export function InventoryAdjustForm({
           style={{
             padding: "0 10px",
             height: 30,
-            background: direction === "increase" ? "var(--erp-primary)" : "#fff",
-            color: direction === "increase" ? "#fff" : "var(--erp-text-muted)",
+            background: direction === "increase" ? "var(--erp-primary)" : "var(--erp-panel)",
+            color: direction === "increase" ? "var(--erp-panel)" : "var(--erp-text-muted)",
           }}
         >
           증가
@@ -86,8 +86,8 @@ export function InventoryAdjustForm({
           style={{
             padding: "0 10px",
             height: 30,
-            background: direction === "decrease" ? "var(--erp-primary)" : "#fff",
-            color: direction === "decrease" ? "#fff" : "var(--erp-text-muted)",
+            background: direction === "decrease" ? "var(--erp-primary)" : "var(--erp-panel)",
+            color: direction === "decrease" ? "var(--erp-panel)" : "var(--erp-text-muted)",
           }}
         >
           차감

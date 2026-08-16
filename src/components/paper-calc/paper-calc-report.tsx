@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PrintButton } from "@/components/print-button";
 import type { Item, NestResult } from "@/lib/paper-nest-engine";
 import { BatchCard, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
+import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 
 // 인쇄 미리보기(계산 직후, localStorage 기반)와 저장된 계산 다시 보기(DB
 // 기반) 두 화면이 같은 보고서 레이아웃을 쓰기 때문에 공통 컴포넌트로 뺐다.
@@ -51,7 +52,7 @@ export function PaperCalcReport({
           <div
             key={card.label}
             className="rounded p-3"
-            style={{ background: "#F7F8FA", border: "1px solid var(--erp-border)" }}
+            style={{ background: DIAGRAM_COLORS.cardBg, border: "1px solid var(--erp-border)" }}
           >
             <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
               {card.label}

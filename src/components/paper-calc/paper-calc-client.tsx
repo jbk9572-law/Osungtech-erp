@@ -7,6 +7,7 @@ import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
@@ -710,7 +711,7 @@ export function DashboardCards({
         <div
           key={card.label}
           className="rounded p-3"
-          style={{ background: card.bg ?? "#F7F8FA", border: "1px solid var(--erp-border)" }}
+          style={{ background: card.bg ?? DIAGRAM_COLORS.cardBg, border: "1px solid var(--erp-border)" }}
         >
           <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             {card.label}
@@ -747,16 +748,24 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
   const dimFontSize = Math.min(layout.paperW, layout.paperH) * 0.02;
 
   return (
-    <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: "#F7F8FA" }}>
+    <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: DIAGRAM_COLORS.cardBg }}>
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
       <div className="mb-1.5 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
         {layout.paperW} × {layout.paperH} mm
       </div>
       <svg
         viewBox={`0 0 ${layout.paperW} ${layout.paperH}`}
-        style={{ width: "100%", height: 300, background: "#F2F2F2" }}
+        style={{ width: "100%", height: 300, background: DIAGRAM_COLORS.canvasBg }}
       >
-        <rect x={0} y={0} width={layout.paperW} height={layout.paperH} fill="#fff" stroke="#333333" strokeWidth={2} />
+        <rect
+          x={0}
+          y={0}
+          width={layout.paperW}
+          height={layout.paperH}
+          fill={DIAGRAM_COLORS.paperFill}
+          stroke={DIAGRAM_COLORS.paperStroke}
+          strokeWidth={2}
+        />
         <g style={{ pointerEvents: "none" }}>
           {gridLines.map((l, i) => (
             <line
@@ -765,22 +774,22 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
               y1={l.y1}
               x2={l.x2}
               y2={l.y2}
-              stroke={l.major ? "#d8d8d8" : "#ebebeb"}
+              stroke={l.major ? DIAGRAM_COLORS.gridMajor : DIAGRAM_COLORS.gridMinor}
               strokeWidth={l.major ? 1 : 0.5}
             />
           ))}
           {rulerTicksX.map((x) => (
             <g key={`rx-${x}`}>
-              <line x1={x} y1={0} x2={x} y2={12} stroke="#999999" strokeWidth={1} />
-              <text x={x} y={23} textAnchor="middle" fontSize={rulerFontSize} fill="#999999">
+              <line x1={x} y1={0} x2={x} y2={12} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+              <text x={x} y={23} textAnchor="middle" fontSize={rulerFontSize} fill={DIAGRAM_COLORS.ruler}>
                 {x}
               </text>
             </g>
           ))}
           {rulerTicksY.map((y) => (
             <g key={`ry-${y}`}>
-              <line x1={0} y1={y} x2={12} y2={y} stroke="#999999" strokeWidth={1} />
-              <text x={16} y={y + 4} fontSize={rulerFontSize} fill="#999999">
+              <line x1={0} y1={y} x2={12} y2={y} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
+              <text x={16} y={y + 4} fontSize={rulerFontSize} fill={DIAGRAM_COLORS.ruler}>
                 {y}
               </text>
             </g>
@@ -790,7 +799,15 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
           const showLabel = it.w >= layout.paperW * 0.07 && it.h >= layout.paperH * 0.04;
           return (
             <g key={i}>
-              <rect x={it.x} y={it.y} width={it.w} height={it.h} fill={it.color} stroke="#555555" strokeWidth={1} />
+              <rect
+                x={it.x}
+                y={it.y}
+                width={it.w}
+                height={it.h}
+                fill={it.color}
+                stroke={DIAGRAM_COLORS.itemStroke}
+                strokeWidth={1}
+              />
               {showLabel && (
                 <>
                   <text
@@ -799,7 +816,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fontSize={Math.min(layout.paperW, layout.paperH) * 0.03}
-                    fill="#222222"
+                    fill={DIAGRAM_COLORS.labelPrimary}
                   >
                     {it.name}
                   </text>
@@ -808,7 +825,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                     y={it.y + dimFontSize + 4}
                     textAnchor="middle"
                     fontSize={dimFontSize}
-                    fill="#444444"
+                    fill={DIAGRAM_COLORS.labelSecondary}
                   >
                     {it.w}
                   </text>
@@ -817,7 +834,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                     y={it.y + it.h / 2}
                     textAnchor="middle"
                     fontSize={dimFontSize}
-                    fill="#444444"
+                    fill={DIAGRAM_COLORS.labelSecondary}
                     transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
                   >
                     {it.h}
@@ -837,7 +854,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                 width={r.width}
                 height={r.height}
                 fill="none"
-                stroke="#999999"
+                stroke={DIAGRAM_COLORS.ruler}
                 strokeDasharray="6 4"
                 strokeWidth={1.5}
               />
@@ -847,7 +864,7 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize={Math.min(layout.paperW, layout.paperH) * 0.028}
-                fill="#888888"
+                fill={DIAGRAM_COLORS.leftoverLabel}
               >
                 {`${Math.round(r.width)}×${Math.round(r.height)} 여유`}
               </text>

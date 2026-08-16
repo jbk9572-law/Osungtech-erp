@@ -118,7 +118,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
           <li
             key={item.id}
             className="relative flex flex-col items-center gap-1 rounded-md border p-1.5 shadow-sm"
-            style={{ borderColor: "var(--erp-border)", width: THUMB_SIZE + 12, background: "#fff" }}
+            style={{ borderColor: "var(--erp-border)", width: THUMB_SIZE + 12, background: "var(--erp-panel)" }}
           >
             <span
               className="absolute -left-1.5 -top-1.5 flex items-center justify-center rounded-full text-[10px] font-bold text-white"

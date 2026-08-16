@@ -14,7 +14,7 @@ export function stickyHeaderStyle(left: number, width: number, extra?: CSSProper
 }
 
 export function stickyCellStyle(left: number, width: number, extra?: CSSProperties): CSSProperties {
-  return { ...stickyBase, left, width, background: "#fff", ...extra };
+  return { ...stickyBase, left, width, background: "var(--erp-panel)", ...extra };
 }
 
 // 매출/매입 그리드의 합계(tfoot) 행에서 스크롤해도 붙어있어야 하는 칸들 —

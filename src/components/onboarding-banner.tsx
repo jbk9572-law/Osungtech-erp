@@ -38,7 +38,7 @@ export function OnboardingBanner() {
         <kbd
           style={{
             fontFamily: "inherit",
-            background: "#fff",
+            background: "var(--erp-panel)",
             border: "1px solid var(--erp-info-border)",
             borderRadius: 4,
             padding: "1px 5px",

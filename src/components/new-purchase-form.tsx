@@ -776,7 +776,7 @@ export function NewPurchaseForm({
                 maxWidth: "90vw",
                 maxHeight: 320,
                 overflowY: "auto",
-                background: "#fff",
+                background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
                 borderRadius: 2,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
