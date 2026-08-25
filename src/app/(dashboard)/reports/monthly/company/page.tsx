@@ -5,7 +5,6 @@ import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 type Transaction = {
   date: string;
@@ -43,7 +42,7 @@ export default async function MonthlyReportCompanyPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, product_id, purchase_order_id, purchase_orders!inner(purchase_date, supplier_id), products(name, spec, unit)"
+          "quantity, unit_cost, product_id, purchase_order_id, purchase_orders!inner(purchase_date, supplier_id), products(name, spec, unit)",
         )
         .eq("purchase_orders.supplier_id", id)
         .gte("purchase_orders.purchase_date", from)
@@ -68,7 +67,7 @@ export default async function MonthlyReportCompanyPage({
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customer_id), products(name, spec, unit)"
+          "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customer_id), products(name, spec, unit)",
         )
         .eq("sales_orders.customer_id", id)
         .gte("sales_orders.order_date", from)
@@ -89,12 +88,24 @@ export default async function MonthlyReportCompanyPage({
     }));
   }
 
-  rows.sort((a, b) => a.date.localeCompare(b.date) || a.productName.localeCompare(b.productName));
+  rows.sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      a.productName.localeCompare(b.productName),
+  );
 
-  const inQty = rows.filter((t) => t.type === "in").reduce((sum, t) => sum + t.quantity, 0);
-  const inAmount = rows.filter((t) => t.type === "in").reduce((sum, t) => sum + t.amount, 0);
-  const outQty = rows.filter((t) => t.type === "out").reduce((sum, t) => sum + t.quantity, 0);
-  const outAmount = rows.filter((t) => t.type === "out").reduce((sum, t) => sum + t.amount, 0);
+  const inQty = rows
+    .filter((t) => t.type === "in")
+    .reduce((sum, t) => sum + t.quantity, 0);
+  const inAmount = rows
+    .filter((t) => t.type === "in")
+    .reduce((sum, t) => sum + t.amount, 0);
+  const outQty = rows
+    .filter((t) => t.type === "out")
+    .reduce((sum, t) => sum + t.quantity, 0);
+  const outAmount = rows
+    .filter((t) => t.type === "out")
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
@@ -134,7 +145,10 @@ export default async function MonthlyReportCompanyPage({
       </div>
 
       <div className="erp-toolbar" style={{ marginBottom: 12 }}>
-        <Link href={`/reports/monthly?month=${month}`} className="erp-btn erp-btn-danger">
+        <Link
+          href={`/reports/monthly?month=${month}`}
+          className="erp-btn erp-btn-danger"
+        >
           ESC 목록으로
         </Link>
       </div>
@@ -159,14 +173,20 @@ export default async function MonthlyReportCompanyPage({
             {rows.map((t, i) => (
               <ClickableRow
                 key={`${t.orderId}-${i}`}
-                href={t.type === "in" ? `/purchases/${t.orderId}` : `/sales/${t.orderId}`}
+                href={
+                  t.type === "in"
+                    ? `/purchases/${t.orderId}`
+                    : `/sales/${t.orderId}`
+                }
               >
                 <td>{t.date}</td>
                 <td>
-                  <GridBadge tone={t.type === "in" ? "ok" : "danger"}>{t.type === "in" ? "입고" : "출고"}</GridBadge>
+                  <GridBadge tone={t.type === "in" ? "ok" : "danger"}>
+                    {t.type === "in" ? "입고" : "출고"}
+                  </GridBadge>
                 </td>
-                <td style={dashOrLeftAlign(t.productName !== "-" ? t.productName : null)}>{t.productName}</td>
-                <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(t.spec !== "-" ? t.spec : null) }}>
+                <td>{t.productName}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>
                   {t.spec !== "-" ? t.spec : "-"}
                 </td>
                 <td className="num">
@@ -194,7 +214,9 @@ export default async function MonthlyReportCompanyPage({
                   {inQty > 0 && outQty > 0 && " / "}
                   {outQty > 0 && `출고 ${outQty.toLocaleString()}`}
                 </td>
-                <td className="num">{(inAmount + outAmount).toLocaleString()}</td>
+                <td className="num">
+                  {(inAmount + outAmount).toLocaleString()}
+                </td>
               </tr>
             </tfoot>
           )}

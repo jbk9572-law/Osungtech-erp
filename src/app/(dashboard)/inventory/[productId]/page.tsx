@@ -6,7 +6,6 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 const TYPE_TONE: Record<string, BadgeTone> = {
   in: "ok",
@@ -34,7 +33,9 @@ export default async function InventoryProductHistoryPage({
   const [{ data: product }, { data: txRaw }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity)")
+      .select(
+        "id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity)",
+      )
       .eq("id", productId)
       .maybeSingle(),
     // 재고 잔량은 전체 이력을 처음부터 누적해야 정확하다. 예전에는 여기
@@ -44,7 +45,7 @@ export default async function InventoryProductHistoryPage({
     supabase
       .from("inventory_transactions")
       .select(
-        "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)"
+        "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
       )
       .eq("product_id", productId)
       .order("created_at", { ascending: true }),
@@ -67,7 +68,10 @@ export default async function InventoryProductHistoryPage({
       authorName: string | null;
     }[]
   >((acc, t) => {
-    const date = t.sales_orders?.order_date ?? t.purchase_orders?.purchase_date ?? t.created_at.slice(0, 10);
+    const date =
+      t.sales_orders?.order_date ??
+      t.purchase_orders?.purchase_date ??
+      t.created_at.slice(0, 10);
     const signedQty = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
     const balance = (acc.at(-1)?.balance ?? 0) + signedQty;
     acc.push({
@@ -75,7 +79,10 @@ export default async function InventoryProductHistoryPage({
       date,
       type: t.type,
       signedQty,
-      partnerName: t.sales_orders?.customers?.name ?? t.purchase_orders?.suppliers?.name ?? null,
+      partnerName:
+        t.sales_orders?.customers?.name ??
+        t.purchase_orders?.suppliers?.name ??
+        null,
       note: t.note,
       href: t.sales_order_id
         ? `/sales/${t.sales_order_id}`
@@ -88,14 +95,18 @@ export default async function InventoryProductHistoryPage({
     return acc;
   }, []);
 
-  const rows = allTx.filter((t) => (!from || t.date >= from) && (!to || t.date <= to)).reverse();
+  const rows = allTx
+    .filter((t) => (!from || t.date >= from) && (!to || t.date <= to))
+    .reverse();
   const presets = getDatePresets();
   const currentQuantity = product.inventory?.[0]?.quantity ?? 0;
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황 &gt; 입출고내역</h1>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        재고관리 &gt; 재고현황 &gt; 입출고내역
+      </h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {product.sku} · {product.name}
         {product.spec && ` (${product.spec})`} · 현재 재고{" "}
@@ -124,11 +135,21 @@ export default async function InventoryProductHistoryPage({
       <form method="get" className="erp-search">
         <div className="erp-field">
           <label>시작일</label>
-          <input type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+          <input
+            type="date"
+            name="from"
+            defaultValue={from ?? ""}
+            className="erp-input"
+          />
         </div>
         <div className="erp-field">
           <label>종료일</label>
-          <input type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+          <input
+            type="date"
+            name="to"
+            defaultValue={to ?? ""}
+            className="erp-input"
+          />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
           F5 조회
@@ -159,18 +180,33 @@ export default async function InventoryProductHistoryPage({
                 <>
                   <td>{new Date(row.date).toLocaleDateString("ko-KR")}</td>
                   <td>
-                    <GridBadge tone={TYPE_TONE[row.type] ?? "muted"}>{TYPE_LABEL[row.type] ?? row.type}</GridBadge>
+                    <GridBadge tone={TYPE_TONE[row.type] ?? "muted"}>
+                      {TYPE_LABEL[row.type] ?? row.type}
+                    </GridBadge>
                   </td>
-                  <td style={dashOrLeftAlign(row.partnerName)}>{row.partnerName ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.note) }}>
+                  <td>{row.partnerName ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.note || "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
-                  <td className="num" style={{ color: row.signedQty < 0 ? "var(--erp-danger)" : undefined }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.authorName ?? "-"}
+                  </td>
+                  <td
+                    className="num"
+                    style={{
+                      color:
+                        row.signedQty < 0 ? "var(--erp-danger)" : undefined,
+                    }}
+                  >
                     {row.signedQty > 0 ? "+" : ""}
                     {row.signedQty.toLocaleString()}
                   </td>
-                  <td className="num">{formatQuantityWithBoxes(row.balance, product.base_package_qty)}</td>
+                  <td className="num">
+                    {formatQuantityWithBoxes(
+                      row.balance,
+                      product.base_package_qty,
+                    )}
+                  </td>
                 </>
               );
               return row.href ? (

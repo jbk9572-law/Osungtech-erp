@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
 import { GridBadge } from "@/components/grid/badge";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type AnnouncementRow = {
   id: string;
@@ -19,7 +18,11 @@ export type AnnouncementRow = {
 type SortKey = "title" | "authorName" | "createdAt";
 type Filter = "all" | "pinned" | "general";
 
-function compareValues(a: AnnouncementRow, b: AnnouncementRow, key: SortKey): number {
+function compareValues(
+  a: AnnouncementRow,
+  b: AnnouncementRow,
+  key: SortKey,
+): number {
   const av = a[key];
   const bv = b[key];
   return String(av ?? "").localeCompare(String(bv ?? ""), "ko");
@@ -28,19 +31,26 @@ function compareValues(a: AnnouncementRow, b: AnnouncementRow, key: SortKey): nu
 export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({ key: "createdAt", dir: -1 });
+  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({
+    key: "createdAt",
+    dir: -1,
+  });
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
     return q ? rows.filter((r) => r.title.toLowerCase().includes(q)) : rows;
   }, [rows, query]);
 
-  const pinnedRows = useMemo(() => searched.filter((r) => r.pinned), [searched]);
+  const pinnedRows = useMemo(
+    () => searched.filter((r) => r.pinned),
+    [searched],
+  );
 
   // "전체"/"일반" 둘 다 표에는 일반 공지만 담는다 — 고정 공지는 "전체"일 때
   // 위 배너에 이미 나오므로, 표에까지 또 넣으면 같은 공지가 두 번 보인다.
   const gridRows = useMemo(() => {
-    const base = filter === "pinned" ? pinnedRows : searched.filter((r) => !r.pinned);
+    const base =
+      filter === "pinned" ? pinnedRows : searched.filter((r) => !r.pinned);
     if (!sort) return base;
     return [...base].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [searched, pinnedRows, filter, sort]);
@@ -61,8 +71,17 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
   function sortableHeader(label: string, key: SortKey, style?: CSSProperties) {
     const isSorted = sort?.key === key;
     return (
-      <th style={style} aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}>
-        <button type="button" onClick={() => toggleSort(key)} className="erp-th-btn">
+      <th
+        style={style}
+        aria-sort={
+          isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"
+        }
+      >
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className="erp-th-btn"
+        >
           {label}
           {sortIndicator(key)}
         </button>
@@ -111,7 +130,14 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
             padding: "8px 12px",
           }}
         >
-          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--erp-info-text)", margin: "0 0 6px" }}>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "var(--erp-info-text)",
+              margin: "0 0 6px",
+            }}
+          >
             📌 고정 공지
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -127,7 +153,9 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
                   padding: "2px 0",
                 }}
               >
-                {row.title} · {new Date(row.createdAt).toLocaleDateString("ko-KR")} · {row.authorName ?? "-"}
+                {row.title} ·{" "}
+                {new Date(row.createdAt).toLocaleDateString("ko-KR")} ·{" "}
+                {row.authorName ?? "-"}
               </Link>
             ))}
           </div>
@@ -150,7 +178,13 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
                 <td style={{ textAlign: "center" }}>
                   <AnnouncementCheckbox id={row.id} read={row.read} />
                 </td>
-                <td style={!row.read ? { fontWeight: 700 } : { color: "var(--erp-text-muted)" }}>
+                <td
+                  style={
+                    !row.read
+                      ? { fontWeight: 700 }
+                      : { color: "var(--erp-text-muted)" }
+                  }
+                >
                   {!row.read && (
                     <GridBadge tone="danger" style={{ marginRight: 6 }}>
                       안읽음
@@ -158,14 +192,16 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
                   )}
                   {row.title}
                 </td>
-                <td style={dashOrLeftAlign(row.authorName)}>{row.authorName ?? "-"}</td>
+                <td>{row.authorName ?? "-"}</td>
                 <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
               </ClickableRow>
             ))}
             {!gridRows.length && (
               <tr>
                 <td colSpan={4} className="erp-grid-empty">
-                  {query.trim() ? "검색 결과가 없습니다." : "등록된 공지사항이 없습니다."}
+                  {query.trim()
+                    ? "검색 결과가 없습니다."
+                    : "등록된 공지사항이 없습니다."}
                 </td>
               </tr>
             )}

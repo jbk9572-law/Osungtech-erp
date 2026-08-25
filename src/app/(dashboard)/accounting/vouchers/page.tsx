@@ -4,7 +4,6 @@ import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { GridBadge } from "@/components/grid/badge";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 type Voucher = {
   id: string;
@@ -25,12 +24,16 @@ export default async function VouchersPage({
 
   let salesQuery = supabase
     .from("sales_orders")
-    .select("id, order_date, customers(name), sales_order_items(quantity, unit_price)")
+    .select(
+      "id, order_date, customers(name), sales_order_items(quantity, unit_price)",
+    )
     .order("order_date", { ascending: false })
     .limit(200);
   let purchasesQuery = supabase
     .from("purchase_orders")
-    .select("id, purchase_date, suppliers(name), purchase_order_items(quantity, unit_cost)")
+    .select(
+      "id, purchase_date, suppliers(name), purchase_order_items(quantity, unit_cost)",
+    )
     .order("purchase_date", { ascending: false })
     .limit(200);
 
@@ -56,7 +59,7 @@ export default async function VouchersPage({
       partnerName: o.customers?.name ?? "-",
       amount: (o.sales_order_items ?? []).reduce(
         (sum, item) => sum + item.quantity * Number(item.unit_price),
-        0
+        0,
       ),
       href: `/sales/${o.id}`,
     })),
@@ -67,7 +70,7 @@ export default async function VouchersPage({
       partnerName: o.suppliers?.name ?? "-",
       amount: (o.purchase_order_items ?? []).reduce(
         (sum, item) => sum + item.quantity * Number(item.unit_cost),
-        0
+        0,
       ),
       href: `/purchases/${o.id}`,
     })),
@@ -78,7 +81,9 @@ export default async function VouchersPage({
     ? vouchers.filter((v) => v.partnerName.toLowerCase().includes(keyword))
     : vouchers;
 
-  const totalSales = rows.filter((v) => v.type === "매출").reduce((sum, v) => sum + v.amount, 0);
+  const totalSales = rows
+    .filter((v) => v.type === "매출")
+    .reduce((sum, v) => sum + v.amount, 0);
   const totalPurchases = rows
     .filter((v) => v.type === "매입")
     .reduce((sum, v) => sum + v.amount, 0);
@@ -92,7 +97,9 @@ export default async function VouchersPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">회계관리 &gt; 전표관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        회계관리 &gt; 전표관리
+      </h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
@@ -109,11 +116,23 @@ export default async function VouchersPage({
       <form method="get" id="vouchers-search-form" className="erp-search">
         <div className="erp-field">
           <label htmlFor="search-from">시작일</label>
-          <input id="search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+          <input
+            id="search-from"
+            type="date"
+            name="from"
+            defaultValue={from ?? ""}
+            className="erp-input"
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="search-to">종료일</label>
-          <input id="search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+          <input
+            id="search-to"
+            type="date"
+            name="to"
+            defaultValue={to ?? ""}
+            className="erp-input"
+          />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
           <label htmlFor="search-q">거래처 검색</label>
@@ -157,10 +176,12 @@ export default async function VouchersPage({
             {rows.map((v) => (
               <ClickableRow key={`${v.type}-${v.id}`} href={v.href}>
                 <td>
-                  <GridBadge tone={v.type === "매출" ? "info" : "muted"}>{v.type}</GridBadge>
+                  <GridBadge tone={v.type === "매출" ? "info" : "muted"}>
+                    {v.type}
+                  </GridBadge>
                 </td>
                 <td>{new Date(v.date).toLocaleDateString("ko-KR")}</td>
-                <td style={dashOrLeftAlign(v.partnerName !== "-" ? v.partnerName : null)}>{v.partnerName}</td>
+                <td>{v.partnerName}</td>
                 <td className="num">{v.amount.toLocaleString()}</td>
               </ClickableRow>
             ))}
@@ -176,10 +197,20 @@ export default async function VouchersPage({
             <tfoot>
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={3}>차액 (매출-매입, {rows.length}건)</td>
-                <td className="num">{(totalSales - totalPurchases).toLocaleString()}</td>
+                <td className="num">
+                  {(totalSales - totalPurchases).toLocaleString()}
+                </td>
               </tr>
-              <tr style={{ background: "var(--erp-bg-subtle)", color: "var(--erp-text-muted)" }}>
-                <td colSpan={3}>매출 합계 {totalSales.toLocaleString()} / 매입 합계 {totalPurchases.toLocaleString()}</td>
+              <tr
+                style={{
+                  background: "var(--erp-bg-subtle)",
+                  color: "var(--erp-text-muted)",
+                }}
+              >
+                <td colSpan={3}>
+                  매출 합계 {totalSales.toLocaleString()} / 매입 합계{" "}
+                  {totalPurchases.toLocaleString()}
+                </td>
                 <td />
               </tr>
             </tfoot>

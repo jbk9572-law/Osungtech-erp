@@ -8,10 +8,14 @@ import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteSales } from "@/app/(dashboard)/sales/actions";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
-import { stickyHeaderStyle, stickyCellStyle, stickyFooterStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import {
+  stickyHeaderStyle,
+  stickyCellStyle,
+  stickyFooterStyle,
+  GRID_CHECKBOX_WIDTH,
+} from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type SalesRow = {
   key: string;
@@ -33,7 +37,13 @@ export type SalesRow = {
   deliveryMethod?: string | null;
 };
 
-type SortKey = "date" | "customerName" | "authorName" | "quantity" | "supplyAmount" | "taxAmount";
+type SortKey =
+  | "date"
+  | "customerName"
+  | "authorName"
+  | "quantity"
+  | "supplyAmount"
+  | "taxAmount";
 
 // 거래일자 칸(체크박스 다음)은 옆으로 스크롤해도 항상 보이게 고정한다 —
 // 오른쪽 숫자 칸들을 보다가도 이게 어느 날짜 건인지 놓치지 않게.
@@ -52,10 +62,14 @@ export function SalesGridTable({
   totalTax: number;
   backParam: string;
 }) {
-  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<SalesRow, SortKey>(rows);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
+    useSortableRows<SalesRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
-  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteSales, undefined);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    bulkDeleteSales,
+    undefined,
+  );
 
   // 일괄삭제 성공 시 선택을 비운다 — state 객체 identity가 바뀌었는지로
   // 판단(이 세션 다른 폼들과 동일한 패턴).
@@ -72,7 +86,12 @@ export function SalesGridTable({
     const seen = new Set<string>();
     const names: string[] = [];
     for (const row of sortedRows) {
-      if (row.orderId && selected.has(row.orderId) && row.customerName && !seen.has(row.orderId)) {
+      if (
+        row.orderId &&
+        selected.has(row.orderId) &&
+        row.customerName &&
+        !seen.has(row.orderId)
+      ) {
         seen.add(row.orderId);
         names.push(row.customerName);
       }
@@ -86,9 +105,10 @@ export function SalesGridTable({
 
   const selectableIds = useMemo(
     () => sortedRows.map((r) => r.orderId).filter((id): id is string => !!id),
-    [sortedRows]
+    [sortedRows],
   );
-  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
+  const allSelected =
+    selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
   function toggleAll() {
     setSelected(allSelected ? new Set() : new Set(selectableIds));
@@ -103,7 +123,12 @@ export function SalesGridTable({
     });
   }
 
-  function sortableHeader(label: string, key: SortKey, extraStyle?: CSSProperties, className?: string) {
+  function sortableHeader(
+    label: string,
+    key: SortKey,
+    extraStyle?: CSSProperties,
+    className?: string,
+  ) {
     return (
       <SortableTh
         label={`${label}${sortIndicator(key)}`}
@@ -144,7 +169,12 @@ export function SalesGridTable({
           <thead>
             <tr>
               <th style={thSticky1}>
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="전체 선택"
+                />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
               <th style={{ width: 64 }}>유형</th>
@@ -172,7 +202,11 @@ export function SalesGridTable({
                   ? `/customers/${row.customerId}`
                   : "#";
               return (
-                <ClickableRow key={row.key} href={href} className={isRowSelected ? "selected" : undefined}>
+                <ClickableRow
+                  key={row.key}
+                  href={href}
+                  className={isRowSelected ? "selected" : undefined}
+                >
                   <td style={tdSticky1}>
                     {row.orderId && (
                       <input
@@ -183,37 +217,59 @@ export function SalesGridTable({
                       />
                     )}
                   </td>
-                  <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td style={tdSticky2}>
+                    {row.date
+                      ? new Date(row.date).toLocaleDateString("ko-KR")
+                      : "-"}
+                  </td>
                   <td>
-                    <GridBadge tone={isCollection ? "muted" : "info"}>{isCollection ? "수금" : "매출"}</GridBadge>
+                    <GridBadge tone={isCollection ? "muted" : "info"}>
+                      {isCollection ? "수금" : "매출"}
+                    </GridBadge>
                   </td>
                   <td>{row.customerName}</td>
-                  <td style={dashOrLeftAlign(row.deliveryMethod)}>
+                  <td>
                     {row.deliveryMethod ? (
                       <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>-</span>
                     )}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.authorName) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.authorName ?? "-"}
                   </td>
-                  <td style={isCollection ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
+                  <td
+                    style={
+                      isCollection
+                        ? { color: "var(--erp-text-muted)" }
+                        : undefined
+                    }
+                  >
+                    {row.productLabel}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.lotNumber) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.lotNumber || "-"}
                   </td>
                   <td className="num">
-                    {isCollection ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                    {isCollection
+                      ? "-"
+                      : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {isCollection ? "-" : row.taxAmount.toLocaleString()}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.remark) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}
                   </td>
                   <td className="num">
@@ -243,8 +299,14 @@ export function SalesGridTable({
             <tfoot>
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
-                <td colSpan={7} style={stickyFooterStyle(GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH)}>
-                  매출 합계 ({sortedRows.filter((r) => r.kind === "sale").length}건)
+                <td
+                  colSpan={7}
+                  style={stickyFooterStyle(
+                    GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH,
+                  )}
+                >
+                  매출 합계 (
+                  {sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />

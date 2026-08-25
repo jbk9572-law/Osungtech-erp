@@ -7,8 +7,11 @@ import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteSuppliers } from "@/app/(dashboard)/suppliers/actions";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
-import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
-import { dashOrLeftAlign } from "@/lib/dash-align";
+import {
+  stickyHeaderStyle,
+  stickyCellStyle,
+  GRID_CHECKBOX_WIDTH,
+} from "@/lib/grid-sticky";
 
 export type SupplierRow = {
   id: string;
@@ -20,15 +23,25 @@ export type SupplierRow = {
   address: string | null;
 };
 
-type SortKey = "name" | "business_number" | "contact_name" | "email" | "phone" | "address";
+type SortKey =
+  | "name"
+  | "business_number"
+  | "contact_name"
+  | "email"
+  | "phone"
+  | "address";
 
 const STICKY_WIDTH = 160;
 
 export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
-  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<SupplierRow, SortKey>(rows);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
+    useSortableRows<SupplierRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
-  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteSuppliers, undefined);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    bulkDeleteSuppliers,
+    undefined,
+  );
 
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
@@ -39,7 +52,9 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
     }
   }
 
-  const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.name);
+  const selectedNames = rows
+    .filter((r) => selected.has(r.id))
+    .map((r) => r.name);
   const namePreview =
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
@@ -100,7 +115,12 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
           <thead>
             <tr>
               <th style={thCheckbox}>
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="전체 선택"
+                />
               </th>
               {sortableHeader("업체명", "name", thName)}
               {sortableHeader("사업자번호", "business_number")}
@@ -129,22 +149,25 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                     />
                   </td>
                   <td style={tdName}>{supplier.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.business_number) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {supplier.business_number ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.contact_name) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {supplier.contact_name ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.email) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {supplier.email ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.phone) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {supplier.phone ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.address) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {supplier.address ?? "-"}
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     수정 →
                   </td>
                 </ClickableRow>

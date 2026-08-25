@@ -5,7 +5,6 @@ import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePaymentRequests } from "@/app/(dashboard)/reports/payment-requests/actions";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type PaymentRequestRow = {
   id: string;
@@ -21,7 +20,11 @@ export type PaymentRequestRow = {
 
 type SortKey = "department" | "authorName" | "total" | "createdAt";
 
-function compareValues(a: PaymentRequestRow, b: PaymentRequestRow, key: SortKey): number {
+function compareValues(
+  a: PaymentRequestRow,
+  b: PaymentRequestRow,
+  key: SortKey,
+): number {
   const av = a[key];
   const bv = b[key];
   if (typeof av === "number" && typeof bv === "number") return av - bv;
@@ -71,11 +74,18 @@ function PeriodCell({ from, to }: { from: string | null; to: string | null }) {
   );
 }
 
-export function PaymentRequestGridTable({ rows }: { rows: PaymentRequestRow[] }) {
+export function PaymentRequestGridTable({
+  rows,
+}: {
+  rows: PaymentRequestRow[];
+}) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
-  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeletePaymentRequests, undefined);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    bulkDeletePaymentRequests,
+    undefined,
+  );
 
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
@@ -91,7 +101,9 @@ export function PaymentRequestGridTable({ rows }: { rows: PaymentRequestRow[] })
     return [...rows].sort((a, b) => compareValues(a, b, sort.key) * sort.dir);
   }, [rows, sort]);
 
-  const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.department || r.docTitle);
+  const selectedNames = rows
+    .filter((r) => selected.has(r.id))
+    .map((r) => r.department || r.docTitle);
   const namePreview =
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
@@ -127,15 +139,26 @@ export function PaymentRequestGridTable({ rows }: { rows: PaymentRequestRow[] })
     setConfirmText("");
   }
 
-  function sortableHeader(label: string, key: SortKey, extraStyle?: CSSProperties, className?: string) {
+  function sortableHeader(
+    label: string,
+    key: SortKey,
+    extraStyle?: CSSProperties,
+    className?: string,
+  ) {
     const isSorted = sort?.key === key;
     return (
       <th
         className={className}
         style={extraStyle}
-        aria-sort={isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"}
+        aria-sort={
+          isSorted ? (sort!.dir === 1 ? "ascending" : "descending") : "none"
+        }
       >
-        <button type="button" onClick={() => toggleSort(key)} className="erp-th-btn">
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className="erp-th-btn"
+        >
           {label}
           {sortIndicator(key)}
         </button>
@@ -162,7 +185,12 @@ export function PaymentRequestGridTable({ rows }: { rows: PaymentRequestRow[] })
           <thead>
             <tr>
               <th style={{ width: 32 }}>
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="전체 선택"
+                />
               </th>
               <th className="num" style={{ width: 70 }}>
                 번호
@@ -194,7 +222,7 @@ export function PaymentRequestGridTable({ rows }: { rows: PaymentRequestRow[] })
                   </td>
                   <td className="num">{row.no}</td>
                   <td>{row.docTitle}</td>
-                  <td style={dashOrLeftAlign(row.department)}>{row.department || "-"}</td>
+                  <td>{row.department || "-"}</td>
                   <td>
                     <PeriodCell from={row.periodFrom} to={row.periodTo} />
                   </td>

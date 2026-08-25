@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { CreateUserForm } from "@/components/create-user-form";
 import { UserRoleSelect } from "@/components/user-role-select";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "관리자",
@@ -17,13 +16,19 @@ export default async function UsersSettingsPage() {
   } = await supabase.auth.getUser();
 
   const { data: myProfile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+    ? await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle()
     : { data: null };
 
   if (myProfile?.role !== "admin") {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 계정관리</h1>
+        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+          환경설정 &gt; 계정관리
+        </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>
@@ -38,10 +43,13 @@ export default async function UsersSettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 계정관리</h1>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        환경설정 &gt; 계정관리
+      </h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        새 계정을 만들고 역할(권한)을 지정합니다. 아이디로 로그인하며, 비밀번호는 최초 생성 시 값 그대로
-        유지되니 본인이 직접 로그인 후 바꾸도록 안내해주세요.
+        새 계정을 만들고 역할(권한)을 지정합니다. 아이디로 로그인하며,
+        비밀번호는 최초 생성 시 값 그대로 유지되니 본인이 직접 로그인 후
+        바꾸도록 안내해주세요.
       </p>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
@@ -67,13 +75,17 @@ export default async function UsersSettingsPage() {
           <tbody>
             {(profiles ?? []).map((row) => (
               <ClickableRow key={row.id} href={`/settings/users/${row.id}`}>
-                <td style={dashOrLeftAlign(row.username)}>{row.username ?? "-"}</td>
-                <td style={dashOrLeftAlign(row.full_name)}>{row.full_name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.email) }}>
+                <td>{row.username ?? "-"}</td>
+                <td>{row.full_name ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>
                   {row.email ?? "-"}
                 </td>
                 <td>
-                  <UserRoleSelect userId={row.id} role={row.role} disabled={row.id === user?.id} />
+                  <UserRoleSelect
+                    userId={row.id}
+                    role={row.role}
+                    disabled={row.id === user?.id}
+                  />
                 </td>
                 <td>{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
               </ClickableRow>
@@ -92,8 +104,8 @@ export default async function UsersSettingsPage() {
         {Object.entries(ROLE_LABELS)
           .map(([, label]) => label)
           .join(" · ")}{" "}
-        중 하나로 지정할 수 있습니다. 본인 계정의 역할은 변경할 수 없습니다. 행을 클릭하면 아이디/이름/비밀번호
-        수정 및 계정 삭제가 가능합니다.
+        중 하나로 지정할 수 있습니다. 본인 계정의 역할은 변경할 수 없습니다.
+        행을 클릭하면 아이디/이름/비밀번호 수정 및 계정 삭제가 가능합니다.
       </p>
     </div>
   );

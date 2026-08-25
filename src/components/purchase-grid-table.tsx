@@ -7,10 +7,14 @@ import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePurchases } from "@/app/(dashboard)/purchases/actions";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
-import { stickyHeaderStyle, stickyCellStyle, stickyFooterStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import {
+  stickyHeaderStyle,
+  stickyCellStyle,
+  stickyFooterStyle,
+  GRID_CHECKBOX_WIDTH,
+} from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type PurchaseRow = {
   key: string;
@@ -32,7 +36,13 @@ export type PurchaseRow = {
   deliveryMethod?: string | null;
 };
 
-type SortKey = "date" | "supplierName" | "authorName" | "quantity" | "supplyAmount" | "taxAmount";
+type SortKey =
+  | "date"
+  | "supplierName"
+  | "authorName"
+  | "quantity"
+  | "supplyAmount"
+  | "taxAmount";
 
 // 매입일자 칸(체크박스 다음)은 옆으로 스크롤해도 항상 보이게 고정한다 —
 // 매출관리 그리드와 동일한 패턴.
@@ -51,10 +61,14 @@ export function PurchaseGridTable({
   totalTax: number;
   backParam: string;
 }) {
-  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<PurchaseRow, SortKey>(rows);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
+    useSortableRows<PurchaseRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
-  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeletePurchases, undefined);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    bulkDeletePurchases,
+    undefined,
+  );
 
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
@@ -69,7 +83,12 @@ export function PurchaseGridTable({
     const seen = new Set<string>();
     const names: string[] = [];
     for (const row of sortedRows) {
-      if (row.orderId && selected.has(row.orderId) && row.supplierName && !seen.has(row.orderId)) {
+      if (
+        row.orderId &&
+        selected.has(row.orderId) &&
+        row.supplierName &&
+        !seen.has(row.orderId)
+      ) {
         seen.add(row.orderId);
         names.push(row.supplierName);
       }
@@ -83,9 +102,10 @@ export function PurchaseGridTable({
 
   const selectableIds = useMemo(
     () => sortedRows.map((r) => r.orderId).filter((id): id is string => !!id),
-    [sortedRows]
+    [sortedRows],
   );
-  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
+  const allSelected =
+    selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
   function toggleAll() {
     setSelected(allSelected ? new Set() : new Set(selectableIds));
@@ -100,7 +120,12 @@ export function PurchaseGridTable({
     });
   }
 
-  function sortableHeader(label: string, key: SortKey, extraStyle?: CSSProperties, className?: string) {
+  function sortableHeader(
+    label: string,
+    key: SortKey,
+    extraStyle?: CSSProperties,
+    className?: string,
+  ) {
     return (
       <SortableTh
         label={`${label}${sortIndicator(key)}`}
@@ -141,7 +166,12 @@ export function PurchaseGridTable({
           <thead>
             <tr>
               <th style={thSticky1}>
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="전체 선택"
+                />
               </th>
               {sortableHeader("매입일자", "date", thSticky2)}
               <th style={{ width: 64 }}>유형</th>
@@ -168,7 +198,11 @@ export function PurchaseGridTable({
                   ? `/suppliers/${row.supplierId}`
                   : "#";
               return (
-                <ClickableRow key={row.key} href={href} className={isRowSelected ? "selected" : undefined}>
+                <ClickableRow
+                  key={row.key}
+                  href={href}
+                  className={isRowSelected ? "selected" : undefined}
+                >
                   <td style={tdSticky1}>
                     {row.orderId && (
                       <input
@@ -179,35 +213,57 @@ export function PurchaseGridTable({
                       />
                     )}
                   </td>
-                  <td style={tdSticky2}>{row.date ? new Date(row.date).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td style={tdSticky2}>
+                    {row.date
+                      ? new Date(row.date).toLocaleDateString("ko-KR")
+                      : "-"}
+                  </td>
                   <td>
-                    <GridBadge tone={isPayment ? "muted" : "info"}>{isPayment ? "지급" : "매입"}</GridBadge>
+                    <GridBadge tone={isPayment ? "muted" : "info"}>
+                      {isPayment ? "지급" : "매입"}
+                    </GridBadge>
                   </td>
                   <td>{row.supplierName}</td>
-                  <td style={dashOrLeftAlign(row.deliveryMethod)}>
+                  <td>
                     {row.deliveryMethod ? (
                       <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>-</span>
                     )}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.authorName) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.authorName ?? "-"}
                   </td>
-                  <td style={isPayment ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
+                  <td
+                    style={
+                      isPayment ? { color: "var(--erp-text-muted)" } : undefined
+                    }
+                  >
+                    {row.productLabel}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.lotNumber) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.lotNumber || "-"}
                   </td>
-                  <td className="num">{isPayment ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num">
+                    {isPayment
+                      ? "-"
+                      : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                  </td>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {isPayment ? "-" : formatNumOrDash(row.unitCost)}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {isPayment ? "-" : row.taxAmount.toLocaleString()}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.remark) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}
                   </td>
                 </ClickableRow>
@@ -225,8 +281,14 @@ export function PurchaseGridTable({
             <tfoot>
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
-                <td colSpan={7} style={stickyFooterStyle(GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH)}>
-                  매입 합계 ({sortedRows.filter((r) => r.kind === "purchase").length}건)
+                <td
+                  colSpan={7}
+                  style={stickyFooterStyle(
+                    GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH,
+                  )}
+                >
+                  매입 합계 (
+                  {sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
                 <td className="num">{totalQuantity.toLocaleString()}</td>
                 <td />

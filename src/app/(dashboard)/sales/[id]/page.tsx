@@ -5,15 +5,20 @@ import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPackageQty } from "@/lib/package-qty";
-import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
+import {
+  formatPaperCalcSizeLines,
+  mergePaperCalcInputItems,
+} from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
-import { overrideSalesPaperStock, revertSalesPaperStock } from "@/app/(dashboard)/sales/actions";
+import {
+  overrideSalesPaperStock,
+  revertSalesPaperStock,
+} from "@/app/(dashboard)/sales/actions";
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export default async function SaleDetailPage({
   params,
@@ -30,31 +35,38 @@ export default async function SaleDetailPage({
   const editHref = `/sales/${id}/edit${back ? `?back=${back}` : ""}`;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }, { data: paperCalcs }, { data: overrideHistory }, actor] =
-    await Promise.all([
-      supabase
-        .from("sales_orders")
-        .select("*, customers(*), profiles!created_by(full_name)")
-        .eq("id", id)
-        .maybeSingle(),
-      supabase
-        .from("sales_order_items")
-        .select("*, products(sku, name, spec, unit, base_package_qty)")
-        .eq("sales_order_id", id)
-        .order("created_at"),
-      supabase
-        .from("paper_calculations")
-        .select("id, total_paper, total_sheet, input_items, created_at")
-        .eq("sales_order_id", id)
-        .order("created_at", { ascending: false })
-        .limit(1),
-      supabase
-        .from("paper_stock_overrides")
-        .select("id, auto_quantity, override_quantity, note, created_at, reverted_at, profiles!created_by(full_name)")
-        .eq("sales_order_id", id)
-        .order("created_at", { ascending: false }),
-      getCurrentActor(supabase),
-    ]);
+  const [
+    { data: order },
+    { data: items },
+    { data: paperCalcs },
+    { data: overrideHistory },
+    actor,
+  ] = await Promise.all([
+    supabase
+      .from("sales_orders")
+      .select("*, customers(*), profiles!created_by(full_name)")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("sales_order_items")
+      .select("*, products(sku, name, spec, unit, base_package_qty)")
+      .eq("sales_order_id", id)
+      .order("created_at"),
+    supabase
+      .from("paper_calculations")
+      .select("id, total_paper, total_sheet, input_items, created_at")
+      .eq("sales_order_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("paper_stock_overrides")
+      .select(
+        "id, auto_quantity, override_quantity, note, created_at, reverted_at, profiles!created_by(full_name)",
+      )
+      .eq("sales_order_id", id)
+      .order("created_at", { ascending: false }),
+    getCurrentActor(supabase),
+  ]);
 
   if (!order) {
     notFound();
@@ -71,7 +83,7 @@ export default async function SaleDetailPage({
   const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
 
   const paperCalcSizeLines = formatPaperCalcSizeLines(
-    mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items)
+    mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items),
   );
 
   return (
@@ -84,9 +96,16 @@ export default async function SaleDetailPage({
         }}
       />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">매출관리 &gt; 수주 상세</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+          매출관리 &gt; 수주 상세
+        </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/sales/${id}/print`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+          <Link
+            href={`/sales/${id}/print`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="erp-btn"
+          >
             F9 명세표
           </Link>
           {allowManage && (
@@ -96,7 +115,9 @@ export default async function SaleDetailPage({
           )}
           {allowManage && (
             <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
-              {paperCalcs && paperCalcs.length > 0 ? "모조지 계산 이력" : "모조지 계산"}
+              {paperCalcs && paperCalcs.length > 0
+                ? "모조지 계산 이력"
+                : "모조지 계산"}
             </Link>
           )}
           {allowManage && (
@@ -118,7 +139,10 @@ export default async function SaleDetailPage({
       {warning && (
         <p
           className="mb-4 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
+          style={{
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+          }}
         >
           ⚠ 거래는 정상 등록됐지만: {warning}
         </p>
@@ -128,25 +152,78 @@ export default async function SaleDetailPage({
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
-        <div className="erp-detail-body" style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>No</span>
+        <div
+          className="erp-detail-body"
+          style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minHeight: 26,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
+              No
+            </span>
             <span>{order.doc_no}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>출고처명</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minHeight: 26,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
+              출고처명
+            </span>
             <span>{order.customers?.name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>담당자</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minHeight: 26,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
+              담당자
+            </span>
             <span>{order.customers?.contact_name ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>연락처</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minHeight: 26,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
+              연락처
+            </span>
             <span>{order.customers?.phone ?? "-"}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>작성자</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minHeight: 26,
+              marginBottom: 8,
+            }}
+          >
+            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
+              작성자
+            </span>
             <span>{order.profiles?.full_name ?? "-"}</span>
           </div>
           {allowManage && paperCalcs && paperCalcs.length > 0 && (
@@ -161,7 +238,9 @@ export default async function SaleDetailPage({
             </div>
           )}
           {order.memo && (
-            <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>메모: {order.memo}</p>
+            <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>
+              메모: {order.memo}
+            </p>
           )}
         </div>
       </div>
@@ -187,56 +266,96 @@ export default async function SaleDetailPage({
             {rows.flatMap((row) => {
               const mainRow = (
                 <tr key={row.id}>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.sku}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.products?.sku}
+                  </td>
                   <td>{row.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.spec || row.products?.spec) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.spec || row.products?.spec || "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.lot_number) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.lot_number || "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {formatPackageQty(row.products?.base_package_qty, row.quantity)}
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.products?.unit}
+                  </td>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
+                    {formatPackageQty(
+                      row.products?.base_package_qty,
+                      row.quantity,
+                    )}
                   </td>
                   <td className="num">{row.quantity.toLocaleString()}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {formatNumOrDash(row.unit_price)}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {row.taxAmount.toLocaleString()}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.remark) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}
                   </td>
                 </tr>
               );
 
-              if (row.products?.sku !== PAPER_STOCK_SKU || paperCalcSizeLines.length === 0) {
+              if (
+                row.products?.sku !== PAPER_STOCK_SKU ||
+                paperCalcSizeLines.length === 0
+              ) {
                 return [mainRow];
               }
 
               const sizeRows = paperCalcSizeLines.map((line, i) => (
-                <tr key={`${row.id}-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
+                <tr
+                  key={`${row.id}-size-${i}`}
+                  style={{ background: "var(--erp-bg-subtle)" }}
+                >
                   <td />
-                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                  <td
+                    colSpan={3}
+                    style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}
+                  >
                     ㄴ {line}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>

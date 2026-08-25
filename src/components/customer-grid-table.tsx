@@ -7,9 +7,12 @@ import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteCustomers } from "@/app/(dashboard)/customers/actions";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
-import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import {
+  stickyHeaderStyle,
+  stickyCellStyle,
+  GRID_CHECKBOX_WIDTH,
+} from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type CustomerRow = {
   id: string;
@@ -22,15 +25,25 @@ export type CustomerRow = {
   document_type: string;
 };
 
-type SortKey = "name" | "business_number" | "contact_name" | "phone" | "email" | "address";
+type SortKey =
+  | "name"
+  | "business_number"
+  | "contact_name"
+  | "phone"
+  | "email"
+  | "address";
 
 const STICKY_WIDTH = 160;
 
 export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
-  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<CustomerRow, SortKey>(rows);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
+    useSortableRows<CustomerRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
-  const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteCustomers, undefined);
+  const [state, formAction, pending] = useActionState<FormState, FormData>(
+    bulkDeleteCustomers,
+    undefined,
+  );
 
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
@@ -41,7 +54,9 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
     }
   }
 
-  const selectedNames = rows.filter((r) => selected.has(r.id)).map((r) => r.name);
+  const selectedNames = rows
+    .filter((r) => selected.has(r.id))
+    .map((r) => r.name);
   const namePreview =
     selectedNames.length > 3
       ? `${selectedNames.slice(0, 3).join(", ")} 외 ${selectedNames.length - 3}건`
@@ -102,7 +117,12 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
           <thead>
             <tr>
               <th style={thCheckbox}>
-                <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  aria-label="전체 선택"
+                />
               </th>
               {sortableHeader("출고처명", "name", thName)}
               {sortableHeader("사업자번호", "business_number")}
@@ -132,27 +152,34 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                     />
                   </td>
                   <td style={tdName}>{customer.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.business_number) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {customer.business_number ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.contact_name) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {customer.contact_name ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.phone) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {customer.phone ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.email) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {customer.email ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.address) }}>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {customer.address ?? "-"}
                   </td>
                   <td>
-                    <GridBadge tone={customer.document_type === "출고증" ? "muted" : "ok"}>
+                    <GridBadge
+                      tone={
+                        customer.document_type === "출고증" ? "muted" : "ok"
+                      }
+                    >
                       {customer.document_type}
                     </GridBadge>
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     수정 →
                   </td>
                 </ClickableRow>

@@ -9,7 +9,6 @@ import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
-import { dashOrLeftAlign } from "@/lib/dash-align";
 
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "-";
@@ -28,66 +27,90 @@ export default async function PaymentRequestDetailPage({
   const { id } = await params;
   const { warning } = await searchParams;
   const supabase = await createClient();
-  const [{ data: row }, { data: items }, { data: receipts }, actor] = await Promise.all([
-    supabase
-      .from("payment_requests")
-      .select(
-        "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, profiles(full_name)"
-      )
-      .eq("id", id)
-      .maybeSingle(),
-    supabase
-      .from("payment_request_line_items")
-      .select("id, used_at, vendor, purpose, amount, remark, is_highlighted")
-      .eq("payment_request_id", id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("payment_request_receipts")
-      .select("id, file_url, sort_order")
-      .eq("payment_request_id", id)
-      .order("sort_order", { ascending: true }),
-    getCurrentActor(supabase),
-  ]);
+  const [{ data: row }, { data: items }, { data: receipts }, actor] =
+    await Promise.all([
+      supabase
+        .from("payment_requests")
+        .select(
+          "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, profiles(full_name)",
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      supabase
+        .from("payment_request_line_items")
+        .select("id, used_at, vendor, purpose, amount, remark, is_highlighted")
+        .eq("payment_request_id", id)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("payment_request_receipts")
+        .select("id, file_url, sort_order")
+        .eq("payment_request_id", id)
+        .order("sort_order", { ascending: true }),
+      getCurrentActor(supabase),
+    ]);
 
   if (!row) {
     notFound();
   }
 
   const allowManage = canManage(row.requested_by, actor.userId, actor.isAdmin);
-  const total = (items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
+  const total = (items ?? []).reduce(
+    (sum, item) => sum + Number(item.amount),
+    0,
+  );
 
   return (
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          ...(allowManage && { F4: { href: `/reports/payment-requests/${row.id}/edit` } }),
+          ...(allowManage && {
+            F4: { href: `/reports/payment-requests/${row.id}/edit` },
+          }),
           F9: { printHref: `/reports/payment-requests/${row.id}/print` },
           Escape: { href: "/reports/payment-requests" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 본문</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        보고서 &gt; 지급결의양식 &gt; 본문
+      </h1>
 
       <div className="erp-toolbar">
-        <Link href="/reports/payment-requests" className="erp-btn erp-btn-danger">
+        <Link
+          href="/reports/payment-requests"
+          className="erp-btn erp-btn-danger"
+        >
           ESC 목록으로
         </Link>
         {allowManage && (
-          <Link href={`/reports/payment-requests/${row.id}/edit`} className="erp-btn">
+          <Link
+            href={`/reports/payment-requests/${row.id}/edit`}
+            className="erp-btn"
+          >
             F4 수정
           </Link>
         )}
-        <PrintInPlaceButton href={`/reports/payment-requests/${row.id}/print`} className="erp-btn">
+        <PrintInPlaceButton
+          href={`/reports/payment-requests/${row.id}/print`}
+          className="erp-btn"
+        >
           F9 인쇄
         </PrintInPlaceButton>
         {allowManage && (
-          <DeleteButton action={deletePaymentRequest} id={row.id} confirmMessage="이 지급결의서를 삭제하시겠습니까?" />
+          <DeleteButton
+            action={deletePaymentRequest}
+            id={row.id}
+            confirmMessage="이 지급결의서를 삭제하시겠습니까?"
+          />
         )}
       </div>
 
       {warning && (
         <p
           className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
+          style={{
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+          }}
         >
           ⚠ {warning}
         </p>
@@ -95,18 +118,28 @@ export default async function PaymentRequestDetailPage({
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">{paymentRequestDocTitle(row.card_type)}</span>
+          <span className="erp-detail-tab active">
+            {paymentRequestDocTitle(row.card_type)}
+          </span>
         </div>
         <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+          <div
+            className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm"
+            style={{ color: "var(--erp-text-muted)" }}
+          >
             <span>부서명: {row.department ?? "-"}</span>
             <span>기간: {formatPeriod(row.period_from, row.period_to)}</span>
             <span>사용카드: {row.card_type}</span>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
-            <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
+            <span>
+              작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}
+            </span>
           </div>
 
-          <div className="erp-grid-wrap" style={{ border: "1px solid var(--erp-border)" }}>
+          <div
+            className="erp-grid-wrap"
+            style={{ border: "1px solid var(--erp-border)" }}
+          >
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -121,12 +154,21 @@ export default async function PaymentRequestDetailPage({
               </thead>
               <tbody>
                 {(items ?? []).map((item) => (
-                  <tr key={item.id} style={item.is_highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}>
+                  <tr
+                    key={item.id}
+                    style={
+                      item.is_highlighted
+                        ? { background: "var(--erp-highlight-bg)" }
+                        : undefined
+                    }
+                  >
                     <td>{item.used_at.replaceAll("-", ".")}</td>
                     <td>{item.vendor}</td>
-                    <td style={dashOrLeftAlign(item.purpose)}>{item.purpose || "-"}</td>
-                    <td className="num">{Number(item.amount).toLocaleString()}</td>
-                    <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(item.remark) }}>
+                    <td>{item.purpose || "-"}</td>
+                    <td className="num">
+                      {Number(item.amount).toLocaleString()}
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
                       {item.remark || "-"}
                     </td>
                   </tr>
@@ -154,7 +196,10 @@ export default async function PaymentRequestDetailPage({
           </div>
 
           {row.content && (
-            <div className="mt-4" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+            <div
+              className="mt-4"
+              style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}
+            >
               {row.content}
             </div>
           )}
@@ -163,11 +208,16 @@ export default async function PaymentRequestDetailPage({
 
       <div className="erp-detail" style={{ marginBottom: 12 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">영수증 ({receipts?.length ?? 0}장)</span>
+          <span className="erp-detail-tab active">
+            영수증 ({receipts?.length ?? 0}장)
+          </span>
         </div>
         <div className="erp-detail-body">
           <ReceiptGallery receipts={receipts ?? []} />
-          <p className="mt-3 text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+          <p
+            className="mt-3 text-[11px]"
+            style={{ color: "var(--erp-text-muted)" }}
+          >
             영수증 추가·삭제는 F4 수정 화면에서 할 수 있습니다.
           </p>
         </div>
