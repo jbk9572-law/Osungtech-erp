@@ -3,10 +3,21 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { startRouteProgress } from "@/lib/route-progress";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
-export type DueTodoItem = { id: string; title: string; due_date: string | null; itemCount: number };
-export type LowStockItem = { id: string; name: string; quantity: number; reorderPoint: number };
+export type DueTodoItem = {
+  id: string;
+  title: string;
+  due_date: string | null;
+  itemCount: number;
+};
+export type LowStockItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  reorderPoint: number;
+};
 
 export function NotificationBell({
   announcements,
@@ -24,7 +35,8 @@ export function NotificationBell({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node))
+        setOpen(false);
     }
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -39,6 +51,7 @@ export function NotificationBell({
 
   function go(href: string) {
     setOpen(false);
+    startRouteProgress();
     router.push(href);
   }
 
@@ -46,26 +59,39 @@ export function NotificationBell({
 
   return (
     <div style={{ position: "relative" }} ref={wrapRef}>
-      <button type="button" className="erp-bell-btn" onClick={() => setOpen((o) => !o)} aria-label="알림">
+      <button
+        type="button"
+        className="erp-bell-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="알림"
+      >
         🔔
-        {count > 0 && <span className="erp-bell-badge">{count > 99 ? "99+" : count}</span>}
+        {count > 0 && (
+          <span className="erp-bell-badge">{count > 99 ? "99+" : count}</span>
+        )}
       </button>
       {open && (
         <div className="erp-ribbon-dropdown erp-bell-dropdown">
           <div className="erp-bell-section-title">
-            공지사항{announcements.length > 0 ? ` (${announcements.length})` : ""}
+            공지사항
+            {announcements.length > 0 ? ` (${announcements.length})` : ""}
           </div>
           {announcements.length ? (
             announcements.map((a) => (
               <div key={a.id} className="erp-ribbon-dropdown-item">
-                <button type="button" onClick={() => go(`/announcements/${a.id}`)}>
+                <button
+                  type="button"
+                  onClick={() => go(`/announcements/${a.id}`)}
+                >
                   {a.pinned ? "📌 " : ""}
                   {a.title}
                 </button>
               </div>
             ))
           ) : (
-            <p className="erp-ribbon-dropdown-empty">읽지 않은 공지사항이 없습니다.</p>
+            <p className="erp-ribbon-dropdown-empty">
+              읽지 않은 공지사항이 없습니다.
+            </p>
           )}
 
           <div className="erp-bell-section-title">
@@ -80,7 +106,10 @@ export function NotificationBell({
                   <button type="button" onClick={() => go(`/todos/${t.id}`)}>
                     <span>{t.title}</span>
                     {itemCount > 0 && (
-                      <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                      <span
+                        className="erp-badge erp-badge-muted"
+                        style={{ marginLeft: 6 }}
+                      >
                         품목 {itemCount}건
                       </span>
                     )}
@@ -90,7 +119,9 @@ export function NotificationBell({
                           display: "block",
                           marginTop: 2,
                           fontSize: 11,
-                          color: overdue ? "var(--erp-danger)" : "var(--erp-text-muted)",
+                          color: overdue
+                            ? "var(--erp-danger)"
+                            : "var(--erp-text-muted)",
                           fontWeight: overdue ? 600 : undefined,
                         }}
                       >
@@ -102,7 +133,9 @@ export function NotificationBell({
               );
             })
           ) : (
-            <p className="erp-ribbon-dropdown-empty">마감 임박하거나 지연된 할 일이 없습니다.</p>
+            <p className="erp-ribbon-dropdown-empty">
+              마감 임박하거나 지연된 할 일이 없습니다.
+            </p>
           )}
 
           <div className="erp-bell-section-title">
@@ -113,14 +146,24 @@ export function NotificationBell({
               <div key={p.id} className="erp-ribbon-dropdown-item">
                 <button type="button" onClick={() => go(`/inventory/${p.id}`)}>
                   <span>{p.name}</span>
-                  <span style={{ display: "block", marginTop: 2, fontSize: 11, color: "var(--erp-text-muted)" }}>
-                    현재 {p.quantity.toLocaleString()} / 기준 {p.reorderPoint.toLocaleString()}
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: 2,
+                      fontSize: 11,
+                      color: "var(--erp-text-muted)",
+                    }}
+                  >
+                    현재 {p.quantity.toLocaleString()} / 기준{" "}
+                    {p.reorderPoint.toLocaleString()}
                   </span>
                 </button>
               </div>
             ))
           ) : (
-            <p className="erp-ribbon-dropdown-empty">안전재고 이하인 품목이 없습니다.</p>
+            <p className="erp-ribbon-dropdown-empty">
+              안전재고 이하인 품목이 없습니다.
+            </p>
           )}
 
           <div className="erp-bell-footer">

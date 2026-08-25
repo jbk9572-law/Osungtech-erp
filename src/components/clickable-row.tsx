@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { MouseEvent, ReactNode } from "react";
+import { startRouteProgress } from "@/lib/route-progress";
 
 export function ClickableRow({
   href,
@@ -19,11 +20,15 @@ export function ClickableRow({
   // 그쪽 동작을 우선하고, 행 전체 이동은 건너뛴다.
   function handleClick(e: MouseEvent<HTMLTableRowElement>) {
     if ((e.target as HTMLElement).closest("a")) return;
+    startRouteProgress();
     router.push(href);
   }
 
   return (
-    <tr onClick={handleClick} className={`cursor-pointer${className ? ` ${className}` : ""}`}>
+    <tr
+      onClick={handleClick}
+      className={`cursor-pointer${className ? ` ${className}` : ""}`}
+    >
       {children}
     </tr>
   );

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printInPlace } from "@/lib/print-in-place";
+import { startRouteProgress } from "@/lib/route-progress";
 
 type ShortcutAction =
   | { href: string; newTab?: boolean }
@@ -28,12 +29,15 @@ export function KeyboardShortcuts({
         if (action.newTab) {
           window.open(action.href, "_blank", "noopener,noreferrer");
         } else {
+          startRouteProgress();
           router.push(action.href);
         }
       } else if ("printHref" in action) {
         printInPlace(action.printHref);
       } else {
-        document.querySelector<HTMLFormElement>(action.submitFormSelector)?.requestSubmit();
+        document
+          .querySelector<HTMLFormElement>(action.submitFormSelector)
+          ?.requestSubmit();
       }
     }
     window.addEventListener("keydown", handleKeyDown);

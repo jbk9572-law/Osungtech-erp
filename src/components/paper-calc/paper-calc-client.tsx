@@ -6,11 +6,21 @@ import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
-import { NestEngine, computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+import {
+  NestEngine,
+  computeEffectiveReams,
+  type Item,
+  type NestLayout,
+  type NestResult,
+} from "@/lib/paper-nest-engine";
 import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 import { GridBadge } from "@/components/grid/badge";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
-import { savePaperCalculation, deletePaperCalculation } from "@/app/(dashboard)/paper-calc/actions";
+import { startRouteProgress } from "@/lib/route-progress";
+import {
+  savePaperCalculation,
+  deletePaperCalculation,
+} from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
 import {
@@ -55,7 +65,9 @@ function computeAverageUsage(layouts: NestLayout[]): number | null {
   const weighted = layouts.filter((l) => l.margin.usage != null);
   const totalW = weighted.reduce((sum, l) => sum + l.sheetCount, 0);
   if (!weighted.length || totalW <= 0) return null;
-  return weighted.reduce((sum, l) => sum + l.margin.usage * l.sheetCount, 0) / totalW;
+  return (
+    weighted.reduce((sum, l) => sum + l.margin.usage * l.sheetCount, 0) / totalW
+  );
 }
 
 function computeTotalMarginArea(layouts: NestLayout[]): number | null {
@@ -110,8 +122,12 @@ export function PaperCalcClient({
   // 대신 저장된 계산 이력을 먼저 보여준다 — 계산이 끝난 뒤에 이 화면에 다시
   // 들어올 땐 "또 계산하기"가 아니라 "이미 한 계산 확인하기"가 목적인 경우가
   // 많아서다. 새로 계산해야 하면 "+ 새로 계산하기" 버튼으로 펼칠 수 있다.
-  const [showNewCalcForm, setShowNewCalcForm] = useState(savedCalculations.length === 0);
-  const [rows, setRows] = useState<OrderRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
+  const [showNewCalcForm, setShowNewCalcForm] = useState(
+    savedCalculations.length === 0,
+  );
+  const [rows, setRows] = useState<OrderRow[]>([
+    { key: 0, width: 0, height: 0, qty: 0 },
+  ]);
   const [nextKey, setNextKey] = useState(1);
   const [paperW, setPaperW] = useState(788);
   const [paperH, setPaperH] = useState(1091);
@@ -120,7 +136,10 @@ export function PaperCalcClient({
   const [page, setPage] = useState(0);
   const [pending, setPending] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
-  const [saveState, saveAction, savePending] = useActionState(savePaperCalculation, undefined);
+  const [saveState, saveAction, savePending] = useActionState(
+    savePaperCalculation,
+    undefined,
+  );
 
   function addRow() {
     if (rows.length >= MAX_ROWS) return;
@@ -129,11 +148,15 @@ export function PaperCalcClient({
   }
 
   function removeRow(key: number) {
-    setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.key !== key) : prev));
+    setRows((prev) =>
+      prev.length > 1 ? prev.filter((r) => r.key !== key) : prev,
+    );
   }
 
   function updateRow(key: number, patch: Partial<OrderRow>) {
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+    setRows((prev) =>
+      prev.map((r) => (r.key === key ? { ...r, ...patch } : r)),
+    );
   }
 
   function swapPaper() {
@@ -173,11 +196,15 @@ export function PaperCalcClient({
       setPending(false);
 
       if (!res.fulfilled) {
-        const shortfall = Object.entries(res.remaining).filter(([, qty]) => qty > 0);
+        const shortfall = Object.entries(res.remaining).filter(
+          ([, qty]) => qty > 0,
+        );
         if (shortfall.length) {
-          const lines = shortfall.map(([name, qty]) => `- ${name}: ${qty.toLocaleString()}장 부족`).join("\n");
+          const lines = shortfall
+            .map(([name, qty]) => `- ${name}: ${qty.toLocaleString()}장 부족`)
+            .join("\n");
           setWarning(
-            `다음 품목이 원지 크기 안에서 다 배치되지 못했습니다.\n${lines}\n치수가 원지보다 크지 않은지 확인해주세요.`
+            `다음 품목이 원지 크기 안에서 다 배치되지 못했습니다.\n${lines}\n치수가 원지보다 크지 않은지 확인해주세요.`,
           );
         }
       }
@@ -192,7 +219,7 @@ export function PaperCalcClient({
     // 같은 출처(origin)에서 항상 공유된다.
     localStorage.setItem(
       "paper-calc-print-input",
-      JSON.stringify({ paperW, paperH, items: orderItems })
+      JSON.stringify({ paperW, paperH, items: orderItems }),
     );
     window.open("/paper-calc/print", "_blank", "noopener,noreferrer");
   }
@@ -224,10 +251,15 @@ export function PaperCalcClient({
         totalProd: result.totalProd,
         overProd: result.overProd,
         fulfilled: result.fulfilled,
-      })
+      }),
     );
     const destination =
-      pendingFor === "purchase" ? "/purchases/new" : pendingFor === "todo" ? "/todos/new" : "/sales/new";
+      pendingFor === "purchase"
+        ? "/purchases/new"
+        : pendingFor === "todo"
+          ? "/todos/new"
+          : "/sales/new";
+    startRouteProgress();
     router.push(destination);
   }
 
@@ -242,7 +274,8 @@ export function PaperCalcClient({
   const producedTotals = useMemo(() => {
     const totals: Record<string, number> = {};
     for (const layout of layouts) {
-      for (const it of layout.items) totals[it.name] = (totals[it.name] ?? 0) + it.prod;
+      for (const it of layout.items)
+        totals[it.name] = (totals[it.name] ?? 0) + it.prod;
     }
     return totals;
   }, [layouts]);
@@ -252,19 +285,27 @@ export function PaperCalcClient({
       {salesOrderLabel && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
+          style={{
+            background: "var(--erp-info-bg)",
+            color: "var(--erp-info-text)",
+            border: "1px solid var(--erp-info-border)",
+          }}
         >
-          이 출고 건({salesOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
-          상세에서 원지 사용량을 바로 확인할 수 있습니다.
+          이 출고 건({salesOrderLabel})에 대한 모조지 계산입니다. 계산 후
+          저장하면 주문 상세에서 원지 사용량을 바로 확인할 수 있습니다.
         </div>
       )}
       {purchaseOrderLabel && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
+          style={{
+            background: "var(--erp-info-bg)",
+            color: "var(--erp-info-text)",
+            border: "1px solid var(--erp-info-border)",
+          }}
         >
-          이 매입 건({purchaseOrderLabel})에 대한 모조지 계산입니다. 계산 후 저장하면 주문
-          상세에서 원지 사용량을 바로 확인할 수 있습니다.
+          이 매입 건({purchaseOrderLabel})에 대한 모조지 계산입니다. 계산 후
+          저장하면 주문 상세에서 원지 사용량을 바로 확인할 수 있습니다.
         </div>
       )}
 
@@ -272,7 +313,8 @@ export function PaperCalcClient({
         <div className="erp-detail">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">
-              이 {salesOrderId ? "출고" : "매입"} 건에 저장된 계산 이력 ({savedCalculations.length}건)
+              이 {salesOrderId ? "출고" : "매입"} 건에 저장된 계산 이력 (
+              {savedCalculations.length}건)
             </span>
             {!showNewCalcForm && (
               <div className="ml-auto flex items-center pr-2">
@@ -290,8 +332,8 @@ export function PaperCalcClient({
           <div className="erp-detail-body">
             {savedCalculations.length === 0 ? (
               <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-                저장된 계산이 없습니다. 계산 후 &apos;이 {salesOrderId ? "출고" : "매입"} 건에
-                저장&apos;을 눌러주세요.
+                저장된 계산이 없습니다. 계산 후 &apos;이{" "}
+                {salesOrderId ? "출고" : "매입"} 건에 저장&apos;을 눌러주세요.
               </p>
             ) : (
               <table className="erp-grid w-full">
@@ -325,286 +367,450 @@ export function PaperCalcClient({
       )}
 
       {showNewCalcForm && (
-      <>
-      <div className="erp-detail">
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">발주 입력</span>
-        </div>
-        <div className="erp-detail-body flex flex-col gap-3">
-          <div className="erp-grid-wrap">
-            <table className="erp-grid">
-              <thead>
-                <tr>
-                  <th style={{ width: 40 }}>#</th>
-                  <th>
-                    가로(mm)
-                    <FieldHint text="원지에서 재단해 낼 완성 조각의 가로 길이. 아래 원지 크기와 다른 값입니다." />
-                  </th>
-                  <th>세로(mm)</th>
-                  <th>수량(매)</th>
-                  <th style={{ width: 60 }}></th>
-                </tr>
-              </thead>
-              <tbody onKeyDown={focusSameColumnNextRow}>
-                {rows.map((row, i) => (
-                  <tr key={row.key}>
-                    <td className="num">{i + 1}</td>
-                    <td>
-                      <NumberInput
-                        value={row.width}
-                        onChange={(n) => updateRow(row.key, { width: n })}
-                        placeholder="가로"
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td>
-                      <NumberInput
-                        value={row.height}
-                        onChange={(n) => updateRow(row.key, { height: n })}
-                        placeholder="세로"
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td>
-                      <NumberInput
-                        value={row.qty}
-                        onChange={(n) => updateRow(row.key, { qty: n })}
-                        placeholder="수량"
-                        allowFormula
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="erp-btn erp-btn-danger"
-                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
-                        onClick={() => removeRow(row.key)}
-                        disabled={rows.length <= 1}
-                      >
-                        삭제
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              현재 입력 {rows.length} / {MAX_ROWS}
-            </span>
-            <button type="button" className="erp-btn" onClick={addRow} disabled={rows.length >= MAX_ROWS}>
-              + 새 품목
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-end gap-4 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
-            <div className="erp-field">
-              <label htmlFor="pc-paper-w">
-                원지 가로(mm)
-                <FieldHint text="완성 조각을 잘라낼 큰 원본 용지(전지)의 크기. 이 안에 위 표의 조각들을 최대한 많이 배치해서 필요한 원지 수량을 계산합니다." />
-              </label>
-              <NumberInput id="pc-paper-w" value={paperW} onChange={setPaperW} className="erp-input" />
-            </div>
-            <div className="erp-field">
-              <label htmlFor="pc-paper-h">원지 세로(mm)</label>
-              <NumberInput id="pc-paper-h" value={paperH} onChange={setPaperH} className="erp-input" />
-            </div>
-            <button type="button" className="erp-btn" onClick={swapPaper}>
-              가로·세로 전환
-            </button>
-            <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              포장단위: 500장 / 연
-            </span>
-
-            <div className="ml-auto flex flex-wrap gap-1.5">
-              <button type="button" className="erp-btn erp-btn-primary" onClick={runCalculation} disabled={pending}>
-                {pending ? "계산 중..." : "계산 시작"}
-              </button>
-              <button type="button" className="erp-btn" onClick={resetAll} disabled={pending}>
-                초기화
-              </button>
-              <button type="button" className="erp-btn" onClick={openPrintView} disabled={!result?.layouts.length}>
-                인쇄 미리보기
-              </button>
-              {salesOrderId && (
-                <form action={saveAction} className="contents">
-                  <input type="hidden" name="salesOrderId" value={salesOrderId} />
-                  <input type="hidden" name="paperW" value={paperW} />
-                  <input type="hidden" name="paperH" value={paperH} />
-                  <input type="hidden" name="inputItems" value={JSON.stringify(orderItems)} />
-                  <input type="hidden" name="layouts" value={JSON.stringify(result?.layouts ?? [])} />
-                  <input type="hidden" name="totalPaper" value={result?.totalPaper ?? 0} />
-                  <input type="hidden" name="totalSheet" value={result?.totalSheet ?? 0} />
-                  <input type="hidden" name="totalProd" value={result?.totalProd ?? 0} />
-                  <input type="hidden" name="overProd" value={result?.overProd ?? 0} />
-                  <input type="hidden" name="fulfilled" value={String(result?.fulfilled ?? false)} />
-                  <button
-                    type="submit"
-                    className="erp-btn erp-btn-primary"
-                    disabled={!result?.layouts.length || savePending}
-                  >
-                    {savePending ? "저장 중..." : "이 출고 건에 저장"}
-                  </button>
-                </form>
-              )}
-              {purchaseOrderId && (
-                <form action={saveAction} className="contents">
-                  <input type="hidden" name="purchaseOrderId" value={purchaseOrderId} />
-                  <input type="hidden" name="paperW" value={paperW} />
-                  <input type="hidden" name="paperH" value={paperH} />
-                  <input type="hidden" name="inputItems" value={JSON.stringify(orderItems)} />
-                  <input type="hidden" name="layouts" value={JSON.stringify(result?.layouts ?? [])} />
-                  <input type="hidden" name="totalPaper" value={result?.totalPaper ?? 0} />
-                  <input type="hidden" name="totalSheet" value={result?.totalSheet ?? 0} />
-                  <input type="hidden" name="totalProd" value={result?.totalProd ?? 0} />
-                  <input type="hidden" name="overProd" value={result?.overProd ?? 0} />
-                  <input type="hidden" name="fulfilled" value={String(result?.fulfilled ?? false)} />
-                  <button
-                    type="submit"
-                    className="erp-btn erp-btn-primary"
-                    disabled={!result?.layouts.length || savePending}
-                  >
-                    {savePending ? "저장 중..." : "이 매입 건에 저장"}
-                  </button>
-                </form>
-              )}
-              {!hasOrder &&
-                (onApply ? (
-                  <button
-                    type="button"
-                    className="erp-btn erp-btn-primary"
-                    onClick={() => {
-                      if (!result) return;
-                      onApply({
-                        paperW,
-                        paperH,
-                        inputItems: orderItems,
-                        layouts: result.layouts,
-                        totalPaper: result.totalPaper,
-                        totalSheet: result.totalSheet,
-                        totalProd: result.totalProd,
-                        overProd: result.overProd,
-                        fulfilled: result.fulfilled,
-                      });
-                    }}
-                    disabled={!result?.layouts.length}
-                  >
-                    이 계산 적용하기
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="erp-btn erp-btn-primary"
-                    onClick={stagePendingCalcAndGo}
-                    disabled={!result?.layouts.length}
-                  >
-                    {pendingFor === "purchase"
-                      ? "새 매입 등록에 연결"
-                      : pendingFor === "todo"
-                        ? "새 할일 등록에 연결"
-                        : "새 판매 등록에 연결"}
-                  </button>
-                ))}
-            </div>
-          </div>
-
-          {saveState && <FormMessage state={saveState} />}
-
-          {warning && (
-            <div
-              className="rounded p-3 text-xs whitespace-pre-line"
-              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)", border: "1px solid var(--erp-warning-border)" }}
-            >
-              {warning}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {!result && !pending && (
-        <div className="erp-detail">
-          <div className="erp-detail-body">
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-              발주 품목(가로/세로/수량)을 입력하고 &apos;계산 시작&apos;을 눌러주세요.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {result && (
         <>
-          <DashboardCards result={result} usageAvg={usageAvg} marginTotal={marginTotal} />
-
           <div className="erp-detail">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active">
-                NEST LAYOUT ({currentPage + 1} / {totalPages} 페이지 · 전체 {layouts.length}배치)
-              </span>
-              <div className="ml-auto flex items-center gap-1 pr-2">
-                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage(0)} disabled={currentPage === 0}>
-                  처음
-                </button>
-                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage((p) => p - 1)} disabled={currentPage === 0}>
-                  ◀
-                </button>
-                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage((p) => p + 1)} disabled={currentPage + 1 >= totalPages}>
-                  ▶
-                </button>
-                <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={() => setPage(totalPages - 1)} disabled={currentPage + 1 >= totalPages}>
-                  끝
-                </button>
-              </div>
+              <span className="erp-detail-tab active">발주 입력</span>
             </div>
-            <div className="erp-detail-body">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {visibleLayouts.map((layout, i) => (
-                  <BatchCard key={pageStart + i} layout={layout} index={pageStart + i} />
-                ))}
+            <div className="erp-detail-body flex flex-col gap-3">
+              <div className="erp-grid-wrap">
+                <table className="erp-grid">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 40 }}>#</th>
+                      <th>
+                        가로(mm)
+                        <FieldHint text="원지에서 재단해 낼 완성 조각의 가로 길이. 아래 원지 크기와 다른 값입니다." />
+                      </th>
+                      <th>세로(mm)</th>
+                      <th>수량(매)</th>
+                      <th style={{ width: 60 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody onKeyDown={focusSameColumnNextRow}>
+                    {rows.map((row, i) => (
+                      <tr key={row.key}>
+                        <td className="num">{i + 1}</td>
+                        <td>
+                          <NumberInput
+                            value={row.width}
+                            onChange={(n) => updateRow(row.key, { width: n })}
+                            placeholder="가로"
+                            className="erp-input w-full"
+                          />
+                        </td>
+                        <td>
+                          <NumberInput
+                            value={row.height}
+                            onChange={(n) => updateRow(row.key, { height: n })}
+                            placeholder="세로"
+                            className="erp-input w-full"
+                          />
+                        </td>
+                        <td>
+                          <NumberInput
+                            value={row.qty}
+                            onChange={(n) => updateRow(row.key, { qty: n })}
+                            placeholder="수량"
+                            allowFormula
+                            className="erp-input w-full"
+                          />
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="erp-btn erp-btn-danger"
+                            style={{
+                              minWidth: 0,
+                              height: 26,
+                              padding: "0 8px",
+                            }}
+                            onClick={() => removeRow(row.key)}
+                            disabled={rows.length <= 1}
+                          >
+                            삭제
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+
+              <div className="flex items-center justify-between">
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--erp-text-muted)" }}
+                >
+                  현재 입력 {rows.length} / {MAX_ROWS}
+                </span>
+                <button
+                  type="button"
+                  className="erp-btn"
+                  onClick={addRow}
+                  disabled={rows.length >= MAX_ROWS}
+                >
+                  + 새 품목
+                </button>
+              </div>
+
+              <div
+                className="flex flex-wrap items-end gap-4 border-t pt-3"
+                style={{ borderColor: "var(--erp-border)" }}
+              >
+                <div className="erp-field">
+                  <label htmlFor="pc-paper-w">
+                    원지 가로(mm)
+                    <FieldHint text="완성 조각을 잘라낼 큰 원본 용지(전지)의 크기. 이 안에 위 표의 조각들을 최대한 많이 배치해서 필요한 원지 수량을 계산합니다." />
+                  </label>
+                  <NumberInput
+                    id="pc-paper-w"
+                    value={paperW}
+                    onChange={setPaperW}
+                    className="erp-input"
+                  />
+                </div>
+                <div className="erp-field">
+                  <label htmlFor="pc-paper-h">원지 세로(mm)</label>
+                  <NumberInput
+                    id="pc-paper-h"
+                    value={paperH}
+                    onChange={setPaperH}
+                    className="erp-input"
+                  />
+                </div>
+                <button type="button" className="erp-btn" onClick={swapPaper}>
+                  가로·세로 전환
+                </button>
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--erp-text-muted)" }}
+                >
+                  포장단위: 500장 / 연
+                </span>
+
+                <div className="ml-auto flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    className="erp-btn erp-btn-primary"
+                    onClick={runCalculation}
+                    disabled={pending}
+                  >
+                    {pending ? "계산 중..." : "계산 시작"}
+                  </button>
+                  <button
+                    type="button"
+                    className="erp-btn"
+                    onClick={resetAll}
+                    disabled={pending}
+                  >
+                    초기화
+                  </button>
+                  <button
+                    type="button"
+                    className="erp-btn"
+                    onClick={openPrintView}
+                    disabled={!result?.layouts.length}
+                  >
+                    인쇄 미리보기
+                  </button>
+                  {salesOrderId && (
+                    <form action={saveAction} className="contents">
+                      <input
+                        type="hidden"
+                        name="salesOrderId"
+                        value={salesOrderId}
+                      />
+                      <input type="hidden" name="paperW" value={paperW} />
+                      <input type="hidden" name="paperH" value={paperH} />
+                      <input
+                        type="hidden"
+                        name="inputItems"
+                        value={JSON.stringify(orderItems)}
+                      />
+                      <input
+                        type="hidden"
+                        name="layouts"
+                        value={JSON.stringify(result?.layouts ?? [])}
+                      />
+                      <input
+                        type="hidden"
+                        name="totalPaper"
+                        value={result?.totalPaper ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="totalSheet"
+                        value={result?.totalSheet ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="totalProd"
+                        value={result?.totalProd ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="overProd"
+                        value={result?.overProd ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="fulfilled"
+                        value={String(result?.fulfilled ?? false)}
+                      />
+                      <button
+                        type="submit"
+                        className="erp-btn erp-btn-primary"
+                        disabled={!result?.layouts.length || savePending}
+                      >
+                        {savePending ? "저장 중..." : "이 출고 건에 저장"}
+                      </button>
+                    </form>
+                  )}
+                  {purchaseOrderId && (
+                    <form action={saveAction} className="contents">
+                      <input
+                        type="hidden"
+                        name="purchaseOrderId"
+                        value={purchaseOrderId}
+                      />
+                      <input type="hidden" name="paperW" value={paperW} />
+                      <input type="hidden" name="paperH" value={paperH} />
+                      <input
+                        type="hidden"
+                        name="inputItems"
+                        value={JSON.stringify(orderItems)}
+                      />
+                      <input
+                        type="hidden"
+                        name="layouts"
+                        value={JSON.stringify(result?.layouts ?? [])}
+                      />
+                      <input
+                        type="hidden"
+                        name="totalPaper"
+                        value={result?.totalPaper ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="totalSheet"
+                        value={result?.totalSheet ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="totalProd"
+                        value={result?.totalProd ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="overProd"
+                        value={result?.overProd ?? 0}
+                      />
+                      <input
+                        type="hidden"
+                        name="fulfilled"
+                        value={String(result?.fulfilled ?? false)}
+                      />
+                      <button
+                        type="submit"
+                        className="erp-btn erp-btn-primary"
+                        disabled={!result?.layouts.length || savePending}
+                      >
+                        {savePending ? "저장 중..." : "이 매입 건에 저장"}
+                      </button>
+                    </form>
+                  )}
+                  {!hasOrder &&
+                    (onApply ? (
+                      <button
+                        type="button"
+                        className="erp-btn erp-btn-primary"
+                        onClick={() => {
+                          if (!result) return;
+                          onApply({
+                            paperW,
+                            paperH,
+                            inputItems: orderItems,
+                            layouts: result.layouts,
+                            totalPaper: result.totalPaper,
+                            totalSheet: result.totalSheet,
+                            totalProd: result.totalProd,
+                            overProd: result.overProd,
+                            fulfilled: result.fulfilled,
+                          });
+                        }}
+                        disabled={!result?.layouts.length}
+                      >
+                        이 계산 적용하기
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="erp-btn erp-btn-primary"
+                        onClick={stagePendingCalcAndGo}
+                        disabled={!result?.layouts.length}
+                      >
+                        {pendingFor === "purchase"
+                          ? "새 매입 등록에 연결"
+                          : pendingFor === "todo"
+                            ? "새 할일 등록에 연결"
+                            : "새 판매 등록에 연결"}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {saveState && <FormMessage state={saveState} />}
+
+              {warning && (
+                <div
+                  className="rounded p-3 text-xs whitespace-pre-line"
+                  style={{
+                    background: "var(--erp-warning-bg)",
+                    color: "var(--erp-warning)",
+                    border: "1px solid var(--erp-warning-border)",
+                  }}
+                >
+                  {warning}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {!result && !pending && (
             <div className="erp-detail">
-              <div className="erp-detail-tabs">
-                <span className="erp-detail-tab active">여백 정보 (표시 중인 배치)</span>
-              </div>
-              <div className="erp-detail-body flex flex-col gap-3">
-                {visibleLayouts.length === 0 ? (
-                  <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-                    표시할 배치가 없습니다.
-                  </p>
-                ) : (
-                  visibleLayouts.map((layout, i) => (
-                    <div key={pageStart + i} className="text-xs">
-                      <div className="mb-1 font-semibold">배치 {pageStart + i + 1}</div>
-                      <ul className="space-y-0.5" style={{ color: "var(--erp-text-muted)" }}>
-                        <li>사용률: {layout.margin.usage}%</li>
-                        <li>우측 여백: {layout.margin.right} mm</li>
-                        <li>하단 여백: {layout.margin.bottom} mm</li>
-                        <li>남은 면적: {layout.margin.area.toLocaleString()} mm²</li>
-                      </ul>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="erp-detail">
-              <div className="erp-detail-tabs">
-                <span className="erp-detail-tab active">생산 요약</span>
-              </div>
               <div className="erp-detail-body">
-                <ProductionSummaryTable orderItems={orderItems} producedTotals={producedTotals} />
+                <p
+                  className="text-sm"
+                  style={{ color: "var(--erp-text-muted)" }}
+                >
+                  발주 품목(가로/세로/수량)을 입력하고 &apos;계산 시작&apos;을
+                  눌러주세요.
+                </p>
               </div>
             </div>
-          </div>
+          )}
+
+          {result && (
+            <>
+              <DashboardCards
+                result={result}
+                usageAvg={usageAvg}
+                marginTotal={marginTotal}
+              />
+
+              <div className="erp-detail">
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">
+                    NEST LAYOUT ({currentPage + 1} / {totalPages} 페이지 · 전체{" "}
+                    {layouts.length}배치)
+                  </span>
+                  <div className="ml-auto flex items-center gap-1 pr-2">
+                    <button
+                      type="button"
+                      className="erp-btn"
+                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      onClick={() => setPage(0)}
+                      disabled={currentPage === 0}
+                    >
+                      처음
+                    </button>
+                    <button
+                      type="button"
+                      className="erp-btn"
+                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      onClick={() => setPage((p) => p - 1)}
+                      disabled={currentPage === 0}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="erp-btn"
+                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      onClick={() => setPage((p) => p + 1)}
+                      disabled={currentPage + 1 >= totalPages}
+                    >
+                      ▶
+                    </button>
+                    <button
+                      type="button"
+                      className="erp-btn"
+                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      onClick={() => setPage(totalPages - 1)}
+                      disabled={currentPage + 1 >= totalPages}
+                    >
+                      끝
+                    </button>
+                  </div>
+                </div>
+                <div className="erp-detail-body">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {visibleLayouts.map((layout, i) => (
+                      <BatchCard
+                        key={pageStart + i}
+                        layout={layout}
+                        index={pageStart + i}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="erp-detail">
+                  <div className="erp-detail-tabs">
+                    <span className="erp-detail-tab active">
+                      여백 정보 (표시 중인 배치)
+                    </span>
+                  </div>
+                  <div className="erp-detail-body flex flex-col gap-3">
+                    {visibleLayouts.length === 0 ? (
+                      <p
+                        className="text-sm"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        표시할 배치가 없습니다.
+                      </p>
+                    ) : (
+                      visibleLayouts.map((layout, i) => (
+                        <div key={pageStart + i} className="text-xs">
+                          <div className="mb-1 font-semibold">
+                            배치 {pageStart + i + 1}
+                          </div>
+                          <ul
+                            className="space-y-0.5"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            <li>사용률: {layout.margin.usage}%</li>
+                            <li>우측 여백: {layout.margin.right} mm</li>
+                            <li>하단 여백: {layout.margin.bottom} mm</li>
+                            <li>
+                              남은 면적: {layout.margin.area.toLocaleString()}{" "}
+                              mm²
+                            </li>
+                          </ul>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="erp-detail">
+                  <div className="erp-detail-tabs">
+                    <span className="erp-detail-tab active">생산 요약</span>
+                  </div>
+                  <div className="erp-detail-body">
+                    <ProductionSummaryTable
+                      orderItems={orderItems}
+                      producedTotals={producedTotals}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </>
-      )}
-      </>
       )}
     </div>
   );
@@ -619,7 +825,10 @@ function SavedCalcRow({
   salesOrderId: string | null;
   purchaseOrderId: string | null;
 }) {
-  const [state, action, pending] = useActionState(deletePaperCalculation, undefined);
+  const [state, action, pending] = useActionState(
+    deletePaperCalculation,
+    undefined,
+  );
   const effectiveReams = computeEffectiveReams(calc.layouts);
   const confirmDelete = useConfirmTwice();
 
@@ -627,12 +836,15 @@ function SavedCalcRow({
     <tr>
       <td>{new Date(calc.created_at).toLocaleString("ko-KR")}</td>
       <td className="num">
-        {calc.total_paper.toLocaleString()}장 ({calc.total_sheet}연 구매 · 실사용 {effectiveReams.toFixed(2)}연)
+        {calc.total_paper.toLocaleString()}장 ({calc.total_sheet}연 구매 ·
+        실사용 {effectiveReams.toFixed(2)}연)
       </td>
       <td className="num">{calc.total_prod.toLocaleString()}매</td>
       <td className="num">{calc.over_prod.toLocaleString()}매</td>
       <td>
-        <GridBadge tone={calc.fulfilled ? "ok" : "warn"}>{calc.fulfilled ? "충족" : "미충족"}</GridBadge>
+        <GridBadge tone={calc.fulfilled ? "ok" : "warn"}>
+          {calc.fulfilled ? "충족" : "미충족"}
+        </GridBadge>
       </td>
       <td>
         <div className="flex items-center gap-1">
@@ -651,8 +863,16 @@ function SavedCalcRow({
             }}
           >
             <input type="hidden" name="id" value={calc.id} />
-            {salesOrderId && <input type="hidden" name="salesOrderId" value={salesOrderId} />}
-            {purchaseOrderId && <input type="hidden" name="purchaseOrderId" value={purchaseOrderId} />}
+            {salesOrderId && (
+              <input type="hidden" name="salesOrderId" value={salesOrderId} />
+            )}
+            {purchaseOrderId && (
+              <input
+                type="hidden"
+                name="purchaseOrderId"
+                value={purchaseOrderId}
+              />
+            )}
             <button
               type="submit"
               className="erp-btn erp-btn-danger"
@@ -660,7 +880,9 @@ function SavedCalcRow({
               disabled={pending}
               onBlur={confirmDelete.reset}
             >
-              {confirmDelete.isArmed("delete") ? "한 번 더 누르면 삭제" : "삭제"}
+              {confirmDelete.isArmed("delete")
+                ? "한 번 더 누르면 삭제"
+                : "삭제"}
             </button>
           </form>
         </div>
@@ -700,7 +922,11 @@ export function DashboardCards({
       bg: "var(--erp-success-bg)",
       fg: "var(--erp-success)",
     },
-    { label: "총 여백", value: marginTotal != null ? formatArea(marginTotal) : "-", sub: "" },
+    {
+      label: "총 여백",
+      value: marginTotal != null ? formatArea(marginTotal) : "-",
+      sub: "",
+    },
   ];
 
   return (
@@ -709,16 +935,25 @@ export function DashboardCards({
         <div
           key={card.label}
           className="rounded p-3"
-          style={{ background: card.bg ?? DIAGRAM_COLORS.cardBg, border: "1px solid var(--erp-border)" }}
+          style={{
+            background: card.bg ?? DIAGRAM_COLORS.cardBg,
+            border: "1px solid var(--erp-border)",
+          }}
         >
           <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             {card.label}
           </div>
-          <div className="text-xl font-bold" style={{ color: card.fg ?? "var(--erp-text)" }}>
+          <div
+            className="text-xl font-bold"
+            style={{ color: card.fg ?? "var(--erp-text)" }}
+          >
             {card.value}
           </div>
           {card.sub && (
-            <div className="text-xs font-semibold" style={{ color: "var(--erp-text-muted)" }}>
+            <div
+              className="text-xs font-semibold"
+              style={{ color: "var(--erp-text-muted)" }}
+            >
               {card.sub}
             </div>
           )}
@@ -728,7 +963,13 @@ export function DashboardCards({
   );
 }
 
-export function BatchCard({ layout, index }: { layout: NestLayout; index: number }) {
+export function BatchCard({
+  layout,
+  index,
+}: {
+  layout: NestLayout;
+  index: number;
+}) {
   const legend = useMemo(() => {
     const seen = new Map<string, { color: string; count: number }>();
     for (const it of layout.items) {
@@ -739,21 +980,43 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
     return Array.from(seen.entries());
   }, [layout]);
 
-  const gridLines = useMemo(() => computeCadGridLines(layout.paperW, layout.paperH), [layout.paperW, layout.paperH]);
-  const rulerTicksX = useMemo(() => computeCadRulerTicks(layout.paperW), [layout.paperW]);
-  const rulerTicksY = useMemo(() => computeCadRulerTicks(layout.paperH), [layout.paperH]);
+  const gridLines = useMemo(
+    () => computeCadGridLines(layout.paperW, layout.paperH),
+    [layout.paperW, layout.paperH],
+  );
+  const rulerTicksX = useMemo(
+    () => computeCadRulerTicks(layout.paperW),
+    [layout.paperW],
+  );
+  const rulerTicksY = useMemo(
+    () => computeCadRulerTicks(layout.paperH),
+    [layout.paperH],
+  );
   const rulerFontSize = Math.min(layout.paperW, layout.paperH) * 0.018;
   const dimFontSize = Math.min(layout.paperW, layout.paperH) * 0.02;
 
   return (
-    <div className="rounded border p-3" style={{ borderColor: "var(--erp-border)", background: DIAGRAM_COLORS.cardBg }}>
+    <div
+      className="rounded border p-3"
+      style={{
+        borderColor: "var(--erp-border)",
+        background: DIAGRAM_COLORS.cardBg,
+      }}
+    >
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
-      <div className="mb-1.5 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <div
+        className="mb-1.5 text-center text-xs"
+        style={{ color: "var(--erp-text-muted)" }}
+      >
         {layout.paperW} × {layout.paperH} mm
       </div>
       <svg
         viewBox={`0 0 ${layout.paperW} ${layout.paperH}`}
-        style={{ width: "100%", height: 300, background: DIAGRAM_COLORS.canvasBg }}
+        style={{
+          width: "100%",
+          height: 300,
+          background: DIAGRAM_COLORS.canvasBg,
+        }}
       >
         <rect
           x={0}
@@ -772,29 +1035,57 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
               y1={l.y1}
               x2={l.x2}
               y2={l.y2}
-              stroke={l.major ? DIAGRAM_COLORS.gridMajor : DIAGRAM_COLORS.gridMinor}
+              stroke={
+                l.major ? DIAGRAM_COLORS.gridMajor : DIAGRAM_COLORS.gridMinor
+              }
               strokeWidth={l.major ? 1 : 0.5}
             />
           ))}
           {rulerTicksX.map((x) => (
             <g key={`rx-${x}`}>
-              <line x1={x} y1={0} x2={x} y2={12} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
-              <text x={x} y={23} textAnchor="middle" fontSize={rulerFontSize} fill={DIAGRAM_COLORS.ruler}>
+              <line
+                x1={x}
+                y1={0}
+                x2={x}
+                y2={12}
+                stroke={DIAGRAM_COLORS.ruler}
+                strokeWidth={1}
+              />
+              <text
+                x={x}
+                y={23}
+                textAnchor="middle"
+                fontSize={rulerFontSize}
+                fill={DIAGRAM_COLORS.ruler}
+              >
                 {x}
               </text>
             </g>
           ))}
           {rulerTicksY.map((y) => (
             <g key={`ry-${y}`}>
-              <line x1={0} y1={y} x2={12} y2={y} stroke={DIAGRAM_COLORS.ruler} strokeWidth={1} />
-              <text x={16} y={y + 4} fontSize={rulerFontSize} fill={DIAGRAM_COLORS.ruler}>
+              <line
+                x1={0}
+                y1={y}
+                x2={12}
+                y2={y}
+                stroke={DIAGRAM_COLORS.ruler}
+                strokeWidth={1}
+              />
+              <text
+                x={16}
+                y={y + 4}
+                fontSize={rulerFontSize}
+                fill={DIAGRAM_COLORS.ruler}
+              >
                 {y}
               </text>
             </g>
           ))}
         </g>
         {layout.items.map((it, i) => {
-          const showLabel = it.w >= layout.paperW * 0.07 && it.h >= layout.paperH * 0.04;
+          const showLabel =
+            it.w >= layout.paperW * 0.07 && it.h >= layout.paperH * 0.04;
           return (
             <g key={i}>
               <rect
@@ -843,7 +1134,11 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
           );
         })}
         {layout.leftover
-          ?.filter((r) => r.width >= layout.paperW * 0.06 && r.height >= layout.paperH * 0.04)
+          ?.filter(
+            (r) =>
+              r.width >= layout.paperW * 0.06 &&
+              r.height >= layout.paperH * 0.04,
+          )
           .map((r, i) => (
             <g key={`leftover-${i}`}>
               <rect
@@ -869,13 +1164,25 @@ export function BatchCard({ layout, index }: { layout: NestLayout; index: number
             </g>
           ))}
       </svg>
-      <div className="mt-1.5 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
-        {layout.sheetCount.toLocaleString()}장 (약 {layout.batchReams}연) · 사용률 {layout.margin.usage}%
+      <div
+        className="mt-1.5 text-center text-xs"
+        style={{ color: "var(--erp-text-muted)" }}
+      >
+        {layout.sheetCount.toLocaleString()}장 (약 {layout.batchReams}연) ·
+        사용률 {layout.margin.usage}%
       </div>
       <div className="mt-1.5 flex flex-col gap-0.5 text-xs">
         {legend.map(([name, { color, count }]) => (
           <div key={name} className="flex items-center gap-1.5">
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: color, display: "inline-block" }} />
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                background: color,
+                display: "inline-block",
+              }}
+            />
             {name} · {count.toLocaleString()}매
           </div>
         ))}
@@ -894,8 +1201,14 @@ export function ProductionSummaryTable({
   const rows = (
     orderItems.length
       ? orderItems.map((item) => [item.name, item.orderQty] as const)
-      : Object.entries(producedTotals).map(([name, produced]) => [name, produced] as const)
-  ).map(([name, target]) => ({ name, target, produced: producedTotals[name] ?? 0 }));
+      : Object.entries(producedTotals).map(
+          ([name, produced]) => [name, produced] as const,
+        )
+  ).map(([name, target]) => ({
+    name,
+    target,
+    produced: producedTotals[name] ?? 0,
+  }));
 
   const totalTarget = rows.reduce((sum, r) => sum + r.target, 0);
   const totalProduced = rows.reduce((sum, r) => sum + r.produced, 0);
@@ -927,7 +1240,10 @@ export function ProductionSummaryTable({
           <td className="num font-bold">
             {totalProduced.toLocaleString()} / {totalTarget.toLocaleString()}
           </td>
-          <td className="num font-bold">{totalTarget ? ((totalProduced / totalTarget) * 100).toFixed(0) : 0}%</td>
+          <td className="num font-bold">
+            {totalTarget ? ((totalProduced / totalTarget) * 100).toFixed(0) : 0}
+            %
+          </td>
         </tr>
       </tbody>
     </table>

@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MENU_ITEMS } from "@/lib/erp-menu";
-import { getFavorites, getRecentMenus, toggleFavorite } from "@/lib/erp-menu-history";
+import {
+  getFavorites,
+  getRecentMenus,
+  toggleFavorite,
+} from "@/lib/erp-menu-history";
+import { startRouteProgress } from "@/lib/route-progress";
 
 const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F2", label: "신규" },
@@ -27,7 +32,9 @@ function labelFor(href: string) {
 
 export function Ribbon() {
   const router = useRouter();
-  const [openPanel, setOpenPanel] = useState<"favorites" | "recent" | null>(null);
+  const [openPanel, setOpenPanel] = useState<"favorites" | "recent" | null>(
+    null,
+  );
   const [modal, setModal] = useState<"search" | "help" | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recents, setRecents] = useState<string[]>([]);
@@ -37,7 +44,10 @@ export function Ribbon() {
   // 예전처럼 버튼 기준 position:absolute로 두면 리본 바깥으로 나가는 부분이
   // 잘려서 안 보이는 문제가 생긴다. document.body에 포털로 렌더링하고
   // 버튼의 화면 좌표를 계산해 position:fixed로 붙여서 이 문제를 피한다.
-  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null);
+  const [panelPos, setPanelPos] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -100,7 +110,7 @@ export function Ribbon() {
       >
         {content}
       </div>,
-      document.body
+      document.body,
     );
   }
 
@@ -109,7 +119,7 @@ export function Ribbon() {
   }
 
   const filteredMenus = MENU_ITEMS.filter((m) =>
-    m.label.toLowerCase().includes(query.trim().toLowerCase())
+    m.label.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
   return (
@@ -130,7 +140,13 @@ export function Ribbon() {
           favorites.length ? (
             favorites.map((href) => (
               <div key={href} className="erp-ribbon-dropdown-item">
-                <button type="button" onClick={() => router.push(href)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    startRouteProgress();
+                    router.push(href);
+                  }}
+                >
                   {labelFor(href)}
                 </button>
                 <button
@@ -147,7 +163,7 @@ export function Ribbon() {
             <p className="erp-ribbon-dropdown-empty">
               최근 메뉴 목록에서 ☆를 눌러 즐겨찾기를 추가하세요.
             </p>
-          )
+          ),
         )}
 
       <button type="button" className="erp-ribbon-btn" onClick={openRecents}>
@@ -157,10 +173,17 @@ export function Ribbon() {
         renderDropdown(
           recents.length ? (
             recents.map((href) => {
-              const isFav = favorites.includes(href) || getFavorites().includes(href);
+              const isFav =
+                favorites.includes(href) || getFavorites().includes(href);
               return (
                 <div key={href} className="erp-ribbon-dropdown-item">
-                  <button type="button" onClick={() => router.push(href)}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      startRouteProgress();
+                      router.push(href);
+                    }}
+                  >
                     {labelFor(href)}
                   </button>
                   <button
@@ -175,8 +198,10 @@ export function Ribbon() {
               );
             })
           ) : (
-            <p className="erp-ribbon-dropdown-empty">최근 방문한 메뉴가 없습니다.</p>
-          )
+            <p className="erp-ribbon-dropdown-empty">
+              최근 방문한 메뉴가 없습니다.
+            </p>
+          ),
         )}
 
       <button
@@ -188,10 +213,15 @@ export function Ribbon() {
           setModal("search");
         }}
       >
-        🔍 빠른 검색 <span style={{ opacity: 0.55, fontSize: 10.5 }}>Ctrl+K</span>
+        🔍 빠른 검색{" "}
+        <span style={{ opacity: 0.55, fontSize: 10.5 }}>Ctrl+K</span>
       </button>
 
-      <button type="button" className="erp-ribbon-btn" onClick={() => setModal("help")}>
+      <button
+        type="button"
+        className="erp-ribbon-btn"
+        onClick={() => setModal("help")}
+      >
         ? 도움말
       </button>
 
@@ -200,7 +230,12 @@ export function Ribbon() {
           <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
             <div className="erp-modal-title">
               빠른 검색
-              <button type="button" className="erp-modal-close" onClick={() => setModal(null)} aria-label="닫기">
+              <button
+                type="button"
+                className="erp-modal-close"
+                onClick={() => setModal(null)}
+                aria-label="닫기"
+              >
                 ✕
               </button>
             </div>
@@ -221,6 +256,7 @@ export function Ribbon() {
                     type="button"
                     className="erp-ribbon-searchitem"
                     onClick={() => {
+                      startRouteProgress();
                       router.push(m.href);
                       setModal(null);
                     }}
@@ -229,7 +265,9 @@ export function Ribbon() {
                   </button>
                 ))}
                 {!filteredMenus.length && (
-                  <p className="erp-ribbon-dropdown-empty">검색 결과가 없습니다.</p>
+                  <p className="erp-ribbon-dropdown-empty">
+                    검색 결과가 없습니다.
+                  </p>
                 )}
               </div>
             </div>
@@ -242,12 +280,24 @@ export function Ribbon() {
           <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
             <div className="erp-modal-title">
               도움말
-              <button type="button" className="erp-modal-close" onClick={() => setModal(null)} aria-label="닫기">
+              <button
+                type="button"
+                className="erp-modal-close"
+                onClick={() => setModal(null)}
+                aria-label="닫기"
+              >
                 ✕
               </button>
             </div>
             <div className="erp-modal-body">
-              <p style={{ fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", margin: "0 0 6px" }}>
+              <p
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "var(--erp-text-muted)",
+                  margin: "0 0 6px",
+                }}
+              >
                 화면 구조
               </p>
               <ul
@@ -261,12 +311,31 @@ export function Ribbon() {
                   gap: 4,
                 }}
               >
-                <li>왼쪽 트리메뉴에서 업무 화면을 고릅니다. Ctrl+K로 검색해 바로 이동할 수도 있어요.</li>
-                <li>연 화면은 위쪽 탭으로 계속 쌓이니, 여러 화면을 오가며 확인할 수 있습니다.</li>
-                <li>목록 화면 오른쪽 위의 버튼들은 아래 F키 단축키와 그대로 대응합니다.</li>
-                <li>물음표(?) 아이콘이 있는 항목에 마우스를 올리면 자세한 설명이 나옵니다.</li>
+                <li>
+                  왼쪽 트리메뉴에서 업무 화면을 고릅니다. Ctrl+K로 검색해 바로
+                  이동할 수도 있어요.
+                </li>
+                <li>
+                  연 화면은 위쪽 탭으로 계속 쌓이니, 여러 화면을 오가며 확인할
+                  수 있습니다.
+                </li>
+                <li>
+                  목록 화면 오른쪽 위의 버튼들은 아래 F키 단축키와 그대로
+                  대응합니다.
+                </li>
+                <li>
+                  물음표(?) 아이콘이 있는 항목에 마우스를 올리면 자세한 설명이
+                  나옵니다.
+                </li>
               </ul>
-              <p style={{ fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", margin: "0 0 6px" }}>
+              <p
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "var(--erp-text-muted)",
+                  margin: "0 0 6px",
+                }}
+              >
                 단축키
               </p>
               <table className="erp-grid" style={{ width: "100%" }}>
