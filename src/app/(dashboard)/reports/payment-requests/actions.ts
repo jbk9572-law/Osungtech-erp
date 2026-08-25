@@ -140,6 +140,7 @@ export async function quickAddPaymentRequestItem(
   const purpose = String(formData.get("purpose") ?? "").trim();
   const amount = Number(formData.get("amount") ?? 0);
   const remark = String(formData.get("remark") ?? "").trim();
+  const isHighlighted = formData.get("is_highlighted") === "on";
   const receipts = formData.getAll("receipts").filter((f): f is File => f instanceof File && f.size > 0);
 
   if (!department || !usedAt || !vendor || !(amount > 0)) {
@@ -183,6 +184,7 @@ export async function quickAddPaymentRequestItem(
     amount,
     remark: remark || null,
     sort_order: nextOrder,
+    is_highlighted: isHighlighted,
   });
   if (error) {
     return { error: `저장에 실패했습니다: ${error.message}` };

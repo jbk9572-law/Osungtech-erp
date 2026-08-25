@@ -24,9 +24,13 @@ export function QuickPaymentRequestForm({
   // 메시지가 연속으로 와도 놓치지 않기 위함).
   const [lastState, setLastState] = useState(state);
   const [formKey, setFormKey] = useState(0);
+  const [highlighted, setHighlighted] = useState(false);
   if (state !== lastState) {
     setLastState(state);
-    if (state?.success) setFormKey((k) => k + 1);
+    if (state?.success) {
+      setFormKey((k) => k + 1);
+      setHighlighted(false);
+    }
   }
 
   return (
@@ -64,9 +68,25 @@ export function QuickPaymentRequestForm({
         <label htmlFor="qpr-amount">금액</label>
         <input id="qpr-amount" type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input w-full" required />
       </div>
-      <div className="erp-field md:col-span-5">
+      <div className="erp-field md:col-span-4">
         <label htmlFor="qpr-remark">비고 (선택)</label>
         <input id="qpr-remark" name="remark" className="erp-input w-full" />
+      </div>
+      <div className="erp-field">
+        <label htmlFor="qpr-highlighted">강조 표시</label>
+        <label
+          style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+        >
+          <input
+            id="qpr-highlighted"
+            type="checkbox"
+            name="is_highlighted"
+            checked={highlighted}
+            onChange={(e) => setHighlighted(e.target.checked)}
+            title="인쇄 시 이 줄을 강조(음영) 표시합니다"
+          />
+          인쇄 시 강조
+        </label>
       </div>
       <div className="md:col-span-6">
         <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
