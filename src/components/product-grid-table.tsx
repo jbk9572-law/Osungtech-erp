@@ -138,7 +138,7 @@ export function ProductGridTable({
             {sortableHeader("상품명", "name", thSticky2)}
             <th>규격</th>
             <th>단위</th>
-            <th>포장수량</th>
+            <th className="num">포장수량</th>
             <th>카테고리</th>
             <th>공급처</th>
             {sortableHeader("매입가", "cost", undefined, "num")}

@@ -8,6 +8,7 @@ import { bulkDeleteSuppliers } from "@/app/(dashboard)/suppliers/actions";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
 import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type SupplierRow = {
   id: string;
@@ -128,11 +129,21 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                     />
                   </td>
                   <td style={tdName}>{supplier.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{supplier.business_number ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{supplier.contact_name ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{supplier.email ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{supplier.phone ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{supplier.address ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.business_number) }}>
+                    {supplier.business_number ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.contact_name) }}>
+                    {supplier.contact_name ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.email) }}>
+                    {supplier.email ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.phone) }}>
+                    {supplier.phone ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(supplier.address) }}>
+                    {supplier.address ?? "-"}
+                  </td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     수정 →
                   </td>

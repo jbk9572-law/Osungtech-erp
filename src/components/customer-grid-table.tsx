@@ -9,6 +9,7 @@ import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
 import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type CustomerRow = {
   id: string;
@@ -131,11 +132,21 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                     />
                   </td>
                   <td style={tdName}>{customer.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.business_number ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.contact_name ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.phone ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.email ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{customer.address ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.business_number) }}>
+                    {customer.business_number ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.contact_name) }}>
+                    {customer.contact_name ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.phone) }}>
+                    {customer.phone ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.email) }}>
+                    {customer.email ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(customer.address) }}>
+                    {customer.address ?? "-"}
+                  </td>
                   <td>
                     <GridBadge tone={customer.document_type === "출고증" ? "muted" : "ok"}>
                       {customer.document_type}

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { GridBadge } from "@/components/grid/badge";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 type Transaction = {
   date: string;
@@ -161,12 +163,12 @@ export default async function MonthlyReportCompanyPage({
               >
                 <td>{t.date}</td>
                 <td>
-                  <span className={`erp-badge erp-badge-${t.type === "in" ? "success" : "danger"}`}>
-                    {t.type === "in" ? "입고" : "출고"}
-                  </span>
+                  <GridBadge tone={t.type === "in" ? "ok" : "danger"}>{t.type === "in" ? "입고" : "출고"}</GridBadge>
                 </td>
-                <td>{t.productName}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{t.spec !== "-" ? t.spec : "-"}</td>
+                <td style={dashOrLeftAlign(t.productName !== "-" ? t.productName : null)}>{t.productName}</td>
+                <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(t.spec !== "-" ? t.spec : null) }}>
+                  {t.spec !== "-" ? t.spec : "-"}
+                </td>
                 <td className="num">
                   {t.quantity.toLocaleString()} {t.unit}
                 </td>

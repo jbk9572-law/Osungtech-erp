@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { GridBadge } from "@/components/grid/badge";
 
 type Detail = {
   type: "in" | "out";
@@ -349,9 +350,7 @@ export default async function MonthlyReportPage({
                       </Link>
                     </td>
                     <td>
-                      <span className={`erp-badge erp-badge-${d.type === "in" ? "success" : "danger"}`}>
-                        {d.type === "in" ? "입고" : "출고"}
-                      </span>
+                      <GridBadge tone={d.type === "in" ? "ok" : "danger"}>{d.type === "in" ? "입고" : "출고"}</GridBadge>
                     </td>
                     <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                       {d.type === "in" ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}` : "-"}

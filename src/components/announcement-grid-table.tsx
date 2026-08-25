@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
 import { GridBadge } from "@/components/grid/badge";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type AnnouncementRow = {
   id: string;
@@ -157,7 +158,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
                   )}
                   {row.title}
                 </td>
-                <td>{row.authorName ?? "-"}</td>
+                <td style={dashOrLeftAlign(row.authorName)}>{row.authorName ?? "-"}</td>
                 <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
               </ClickableRow>
             ))}

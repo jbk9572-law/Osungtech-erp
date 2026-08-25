@@ -4,6 +4,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { GridBadge } from "@/components/grid/badge";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 type Voucher = {
   id: string;
@@ -159,7 +160,7 @@ export default async function VouchersPage({
                   <GridBadge tone={v.type === "매출" ? "info" : "muted"}>{v.type}</GridBadge>
                 </td>
                 <td>{new Date(v.date).toLocaleDateString("ko-KR")}</td>
-                <td>{v.partnerName}</td>
+                <td style={dashOrLeftAlign(v.partnerName !== "-" ? v.partnerName : null)}>{v.partnerName}</td>
                 <td className="num">{v.amount.toLocaleString()}</td>
               </ClickableRow>
             ))}

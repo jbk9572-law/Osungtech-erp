@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { CreateUserForm } from "@/components/create-user-form";
 import { UserRoleSelect } from "@/components/user-role-select";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "관리자",
@@ -66,9 +67,11 @@ export default async function UsersSettingsPage() {
           <tbody>
             {(profiles ?? []).map((row) => (
               <ClickableRow key={row.id} href={`/settings/users/${row.id}`}>
-                <td>{row.username ?? "-"}</td>
-                <td>{row.full_name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.email ?? "-"}</td>
+                <td style={dashOrLeftAlign(row.username)}>{row.username ?? "-"}</td>
+                <td style={dashOrLeftAlign(row.full_name)}>{row.full_name ?? "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.email) }}>
+                  {row.email ?? "-"}
+                </td>
                 <td>
                   <UserRoleSelect userId={row.id} role={row.role} disabled={row.id === user?.id} />
                 </td>

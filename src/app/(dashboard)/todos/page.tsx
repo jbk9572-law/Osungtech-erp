@@ -6,6 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 type TodoItemInput = { productId: string; spec?: string | null; quantity: number };
 
@@ -127,17 +128,36 @@ export default async function TodosPage({
                     )}
                   </td>
                   <td style={row.done ? { color: "var(--erp-text-muted)" } : undefined}>{row.title}</td>
-                  <td style={{ fontWeight: row.suppliers?.name ? 600 : 400, color: row.suppliers?.name ? "var(--erp-text)" : "var(--erp-text-muted)" }}>
+                  <td
+                    style={{
+                      fontWeight: row.suppliers?.name ? 600 : 400,
+                      color: row.suppliers?.name ? "var(--erp-text)" : "var(--erp-text-muted)",
+                      ...dashOrLeftAlign(row.suppliers?.name),
+                    }}
+                  >
                     {row.suppliers?.name ?? "-"}
                   </td>
-                  <td style={{ fontWeight: row.customers?.name ? 600 : 400, color: row.customers?.name ? "var(--erp-text)" : "var(--erp-text-muted)" }}>
+                  <td
+                    style={{
+                      fontWeight: row.customers?.name ? 600 : 400,
+                      color: row.customers?.name ? "var(--erp-text)" : "var(--erp-text-muted)",
+                      ...dashOrLeftAlign(row.customers?.name),
+                    }}
+                  >
                     {row.customers?.name ?? "-"}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{summarizeItems(items, productNameById)}</td>
-                  <td style={overdue ? { color: "var(--erp-danger)", fontWeight: 600 } : undefined}>
+                  <td
+                    style={{
+                      ...(overdue ? { color: "var(--erp-danger)", fontWeight: 600 } : undefined),
+                      ...dashOrLeftAlign(row.due_date),
+                    }}
+                  >
                     {row.due_date ?? "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.profiles?.full_name ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.profiles?.full_name) }}>
+                    {row.profiles?.full_name ?? "-"}
+                  </td>
                 </ClickableRow>
               );
             })}

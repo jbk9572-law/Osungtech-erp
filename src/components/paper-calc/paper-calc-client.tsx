@@ -905,8 +905,8 @@ export function ProductionSummaryTable({
       <thead>
         <tr>
           <th>품목</th>
-          <th>생산/발주</th>
-          <th>달성률</th>
+          <th className="num">생산/발주</th>
+          <th className="num">달성률</th>
         </tr>
       </thead>
       <tbody>
