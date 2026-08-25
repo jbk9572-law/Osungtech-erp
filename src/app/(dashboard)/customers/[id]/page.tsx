@@ -15,6 +15,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { todayKstStr } from "@/lib/kst-date";
+import { formatNumOrDash } from "@/lib/format-num-or-dash";
 
 export default async function CustomerDetailPage({
   params,
@@ -250,7 +251,7 @@ export default async function CustomerDetailPage({
                 <td>{price.products?.sku}</td>
                 <td>{price.products?.name}</td>
                 <td>{price.products?.spec}</td>
-                <td className="num">{Number(price.unit_price).toLocaleString()}</td>
+                <td className="num">{formatNumOrDash(price.unit_price)}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>
                   {new Date(price.updated_at).toLocaleDateString("ko-KR")}
                 </td>

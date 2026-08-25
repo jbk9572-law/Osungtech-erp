@@ -5,6 +5,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePaymentRequests } from "@/app/(dashboard)/reports/payment-requests/actions";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type PaymentRequestRow = {
   id: string;
@@ -193,7 +194,7 @@ export function PaymentRequestGridTable({ rows }: { rows: PaymentRequestRow[] })
                   </td>
                   <td className="num">{row.no}</td>
                   <td>{row.docTitle}</td>
-                  <td>{row.department || "-"}</td>
+                  <td style={dashOrLeftAlign(row.department)}>{row.department || "-"}</td>
                   <td>
                     <PeriodCell from={row.periodFrom} to={row.periodTo} />
                   </td>

@@ -6,6 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 const TYPE_TONE: Record<string, BadgeTone> = {
   in: "ok",
@@ -160,8 +161,10 @@ export default async function InventoryProductHistoryPage({
                   <td>
                     <GridBadge tone={TYPE_TONE[row.type] ?? "muted"}>{TYPE_LABEL[row.type] ?? row.type}</GridBadge>
                   </td>
-                  <td>{row.partnerName ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.note || "-"}</td>
+                  <td style={dashOrLeftAlign(row.partnerName)}>{row.partnerName ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.note) }}>
+                    {row.note || "-"}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
                   <td className="num" style={{ color: row.signedQty < 0 ? "var(--erp-danger)" : undefined }}>
                     {row.signedQty > 0 ? "+" : ""}

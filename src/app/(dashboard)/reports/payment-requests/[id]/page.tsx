@@ -9,6 +9,7 @@ import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "-";
@@ -123,9 +124,11 @@ export default async function PaymentRequestDetailPage({
                   <tr key={item.id} style={item.is_highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}>
                     <td>{item.used_at.replaceAll("-", ".")}</td>
                     <td>{item.vendor}</td>
-                    <td>{item.purpose || "-"}</td>
+                    <td style={dashOrLeftAlign(item.purpose)}>{item.purpose || "-"}</td>
                     <td className="num">{Number(item.amount).toLocaleString()}</td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
+                    <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(item.remark) }}>
+                      {item.remark || "-"}
+                    </td>
                   </tr>
                 ))}
                 {!items?.length && (

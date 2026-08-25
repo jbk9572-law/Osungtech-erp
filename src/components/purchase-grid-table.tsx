@@ -9,6 +9,8 @@ import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
 import { stickyHeaderStyle, stickyCellStyle, stickyFooterStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export type PurchaseRow = {
   key: string;
@@ -182,26 +184,32 @@ export function PurchaseGridTable({
                     <GridBadge tone={isPayment ? "muted" : "info"}>{isPayment ? "지급" : "매입"}</GridBadge>
                   </td>
                   <td>{row.supplierName}</td>
-                  <td>
+                  <td style={dashOrLeftAlign(row.deliveryMethod)}>
                     {row.deliveryMethod ? (
                       <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>-</span>
                     )}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.authorName ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.authorName) }}>
+                    {row.authorName ?? "-"}
+                  </td>
                   <td style={isPayment ? { color: "var(--erp-text-muted)" } : undefined}>{row.productLabel}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.lotNumber || "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.lotNumber) }}>
+                    {row.lotNumber || "-"}
+                  </td>
                   <td className="num">{isPayment ? "-" : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {!isPayment && row.unitCost != null ? row.unitCost.toLocaleString() : "-"}
+                    {isPayment ? "-" : formatNumOrDash(row.unitCost)}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {isPayment ? "-" : row.taxAmount.toLocaleString()}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.remark) }}>
+                    {row.remark || "-"}
+                  </td>
                 </ClickableRow>
               );
             })}

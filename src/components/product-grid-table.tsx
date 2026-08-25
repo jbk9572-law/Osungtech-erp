@@ -6,6 +6,7 @@ import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
 import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
@@ -27,13 +28,6 @@ export type ProductGridRow = {
 };
 
 type SortKey = "sku" | "name" | "cost" | "price" | "reorderPoint" | "quantity";
-
-// 판매가/매입가/안전재고를 0으로 등록해두는 경우는 실질적으로 없고("아직
-// 안 정했다"는 뜻으로 쓰이므로), 목록에 "0"이 그대로 찍히면 진짜 0원/0개인
-// 것과 구분이 안 된다. 0이면 "-"로 보여준다.
-function formatNumOrDash(n: number | null | undefined) {
-  return n ? Number(n).toLocaleString() : "-";
-}
 
 // SKU/상품명 칸은 옆으로 스크롤해도 항상 보이게 고정한다 — 매출/매입
 // 그리드와 동일한 패턴.

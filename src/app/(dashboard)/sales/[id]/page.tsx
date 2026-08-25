@@ -12,6 +12,8 @@ import { overrideSalesPaperStock, revertSalesPaperStock } from "@/app/(dashboard
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { dashOrLeftAlign } from "@/lib/dash-align";
 
 export default async function SaleDetailPage({
   params,
@@ -187,23 +189,27 @@ export default async function SaleDetailPage({
                 <tr key={row.id}>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.sku}</td>
                   <td>{row.products?.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.spec || row.products?.spec) }}>
                     {row.spec || row.products?.spec || "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.lot_number || "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.lot_number) }}>
+                    {row.lot_number || "-"}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.products?.unit}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {formatPackageQty(row.products?.base_package_qty, row.quantity)}
                   </td>
                   <td className="num">{row.quantity.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {Number(row.unit_price).toLocaleString()}
+                    {formatNumOrDash(row.unit_price)}
                   </td>
                   <td className="num">{row.supplyAmount.toLocaleString()}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                     {row.taxAmount.toLocaleString()}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)", ...dashOrLeftAlign(row.remark) }}>
+                    {row.remark || "-"}
+                  </td>
                 </tr>
               );
 
