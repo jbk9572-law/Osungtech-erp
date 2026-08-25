@@ -102,7 +102,6 @@ export function ErpShell({
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>
-      <RouteProgressBar />
       <NotificationToaster />
       <RecentMenuTracker />
       <MidnightRefresh />
@@ -128,6 +127,7 @@ export function ErpShell({
           onToggleCollapsed={() => setCollapsed((c) => !c)}
         />
         <div className="erp-workspace">
+          <RouteProgressBar />
           <TabBar />
           <div className="erp-page" id="erp-main-content" tabIndex={-1}>
             {children}
