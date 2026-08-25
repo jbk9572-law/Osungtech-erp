@@ -35,31 +35,38 @@ function isInternalNavClick(e: MouseEvent) {
   return true;
 }
 
+type Phase = "idle" | "loading" | "done";
+
 function ProgressWatcher() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [active, setActive] = useState(false);
+  const [phase, setPhase] = useState<Phase>("idle");
   const routeKeyRef = useRef(`${pathname}?${searchParams.toString()}`);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doneTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const key = `${pathname}?${searchParams.toString()}`;
     if (routeKeyRef.current !== key) {
       routeKeyRef.current = key;
-      setActive(false);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      // 게이지를 90% 언저리에서 바로 지우지 않고, 순간적으로 100%까지 채운
+      // 뒤 옅어지며 사라지게 한다 — 실제로 "이동이 끝났다"는 느낌을 준다.
+      setPhase("done");
+      doneTimeoutRef.current = setTimeout(() => setPhase("idle"), 500);
     }
   }, [pathname, searchParams]);
 
   useEffect(() => {
     function start() {
-      setActive(true);
+      if (doneTimeoutRef.current) clearTimeout(doneTimeoutRef.current);
+      setPhase("loading");
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       // 같은 경로에 머무는 저장/제출처럼 URL이 바뀌지 않는 경우나, 느린
       // 배포 환경에서 이동이 오래 걸리는 경우를 대비한 안전장치. 너무 짧으면
       // 실제로는 아직 이동 중인데 바가 먼저 꺼져버려서 "멈춘 것처럼" 보이므로
       // 넉넉하게 잡는다 — 정상 이동이면 pathname 변경 effect가 먼저 꺼준다.
-      timeoutRef.current = setTimeout(() => setActive(false), 15000);
+      timeoutRef.current = setTimeout(() => setPhase("idle"), 15000);
     }
     function onClick(e: MouseEvent) {
       if (isInternalNavClick(e)) start();
@@ -79,11 +86,12 @@ function ProgressWatcher() {
       document.removeEventListener("submit", onSubmit, true);
       window.removeEventListener(ROUTE_PROGRESS_EVENT, start);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (doneTimeoutRef.current) clearTimeout(doneTimeoutRef.current);
     };
   }, []);
 
-  if (!active) return null;
-  return <div className="erp-progress-bar" aria-hidden />;
+  if (phase === "idle") return null;
+  return <div className={`erp-progress-bar ${phase}`} aria-hidden />;
 }
 
 export function RouteProgressBar() {
