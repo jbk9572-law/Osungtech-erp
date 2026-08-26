@@ -11,7 +11,10 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
-import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
+import {
+  focusSameColumnNextRow,
+  focusGridArrowNav,
+} from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
@@ -122,7 +125,11 @@ export function NewPurchaseForm({
   // 공급처별 매입단가. 공급처+상품 조합으로 등록해둔 단가가 있으면 그걸
   // 우선 쓰고, 없으면 품목 기본 매입원가(product.cost)로 채운다 — 거래처별
   // 판매단가(prices/priceMap)와 동일한 방식.
-  supplierPrices?: { supplier_id: string; product_id: string; unit_cost: number }[];
+  supplierPrices?: {
+    supplier_id: string;
+    product_id: string;
+    unit_cost: number;
+  }[];
   // 최근 매입단가 이력 — 매출 등록 화면의 PriceHistoryHint와 동일하게,
   // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
   history?: PriceHistoryEntry[];
@@ -132,20 +139,26 @@ export function NewPurchaseForm({
     // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
     // "어제" 날짜가 잡힌다. 로컬 날짜를 그대로 쓰는 toLocaleDateString("sv-SE")로
     // 통일한다(price-schedule.ts 등 다른 곳의 "오늘" 계산과 동일한 방식).
-    () => initial?.purchaseDate ?? new Date().toLocaleDateString("sv-SE")
+    () => initial?.purchaseDate ?? new Date().toLocaleDateString("sv-SE"),
   );
   const [memo, setMemo] = useState(initial?.memo ?? "");
   // "항상 외상"이 기본값(체크됨)이라 결제방법 없이 등록하면 미지급금 잔액
   // 계산 대상에 그대로 잡힌다. 체크를 풀고 결제방법을 고르면 그 자리에서
   // 결제가 끝난 거래로 보고 미지급금 계산에서 빠진다(lib/ar-ap.ts).
   const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
-  const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
+  const [paymentMethod, setPaymentMethod] = useState(
+    initial?.paymentMethod ?? "",
+  );
   // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
   // 그때만 직접 바꾸면 된다.
-  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "방문수령");
+  const [deliveryMethod, setDeliveryMethod] = useState(
+    initial?.deliveryMethod ?? "방문수령",
+  );
   // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
   // 전표번호를 직접 입력/수정할 수 있게 한다.
-  const [docNo, setDocNo] = useState(initial?.docNo ? String(initial.docNo) : "");
+  const [docNo, setDocNo] = useState(
+    initial?.docNo ? String(initial.docNo) : "",
+  );
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
   // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
   // 출고처/출고일도 할일에 적어둔 값으로 채워진다.
@@ -153,8 +166,14 @@ export function NewPurchaseForm({
   const [saleCustomerId, setSaleCustomerId] = useState("");
   const [saleDate, setSaleDate] = useState("");
   const priceMap = useMemo(
-    () => new Map(prices.map((p) => [`${p.customer_id}:${p.product_id}`, Number(p.unit_price)])),
-    [prices]
+    () =>
+      new Map(
+        prices.map((p) => [
+          `${p.customer_id}:${p.product_id}`,
+          Number(p.unit_price),
+        ]),
+      ),
+    [prices],
   );
   function resolveSalePrice(forCustomerId: string, productId: string) {
     const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
@@ -163,8 +182,14 @@ export function NewPurchaseForm({
     return product?.price ? Number(product.price) : 0;
   }
   const supplierPriceMap = useMemo(
-    () => new Map(supplierPrices.map((p) => [`${p.supplier_id}:${p.product_id}`, Number(p.unit_cost)])),
-    [supplierPrices]
+    () =>
+      new Map(
+        supplierPrices.map((p) => [
+          `${p.supplier_id}:${p.product_id}`,
+          Number(p.unit_cost),
+        ]),
+      ),
+    [supplierPrices],
   );
   function resolveCost(forSupplierId: string, productId: string) {
     const fromSupplier = supplierPriceMap.get(`${forSupplierId}:${productId}`);
@@ -205,7 +230,7 @@ export function NewPurchaseForm({
             salePrice: 0,
             manualSalePrice: false,
           },
-        ]
+        ],
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -260,7 +285,10 @@ export function NewPurchaseForm({
     let totalPaper = 0;
     if (pendingPaperCalc) {
       try {
-        const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
+        const parsed = JSON.parse(pendingPaperCalc) as {
+          totalSheet: number;
+          totalPaper: number;
+        };
         totalSheet += parsed.totalSheet;
         totalPaper += parsed.totalPaper;
       } catch {
@@ -273,12 +301,17 @@ export function NewPurchaseForm({
     }
     return totalSheet > 0 ? { totalSheet, totalPaper } : null;
   }, [pendingPaperCalc, copiedPaperCalcs]);
-  const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
+  const tg0Product = useMemo(
+    () => products.find((p) => p.sku === "TG0"),
+    [products],
+  );
   const pendingCalcUnitCost = tg0Product ? Number(tg0Product.cost) : 0;
   // 거래처와 협의해 자동 계산값(예: 3.2연)과 다른 수량(예: 3연)으로 등록해야
   // 하는 경우, 등록 시점에 바로 고칠 수 있게 한다 — null이면 자동값 그대로.
   // 저장 시(createPurchase)에는 이 값이 있을 때만 오버라이드 이력을 남긴다.
-  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(null);
+  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(
+    null,
+  );
   const pendingCalcQuantity = pendingCalcSummary
     ? (tg0OverrideQuantity ?? pendingCalcSummary.totalSheet)
     : 0;
@@ -311,7 +344,9 @@ export function NewPurchaseForm({
   }, [pendingPaperCalc, copiedPaperCalcs]);
 
   function updateRow(key: number, patch: Partial<Row>) {
-    setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+    setRows((prev) =>
+      prev.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+    );
   }
 
   function handleProductChange(key: number, productId: string) {
@@ -331,9 +366,12 @@ export function NewPurchaseForm({
     setRows((prev) =>
       prev.map((row) =>
         row.productId && !row.manualSalePrice
-          ? { ...row, salePrice: resolveSalePrice(newCustomerId, row.productId) }
-          : row
-      )
+          ? {
+              ...row,
+              salePrice: resolveSalePrice(newCustomerId, row.productId),
+            }
+          : row,
+      ),
     );
   }
 
@@ -345,8 +383,8 @@ export function NewPurchaseForm({
       prev.map((row) =>
         row.productId && !row.manualPrice
           ? { ...row, unitCost: resolveCost(newSupplierId, row.productId) }
-          : row
-      )
+          : row,
+      ),
     );
   }
 
@@ -393,13 +431,46 @@ export function NewPurchaseForm({
       manualSalePrice: false,
     };
     setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
+        ? [newRow]
+        : [...prev, newRow],
     );
     setNextKey((k) => k + 1);
   }
 
+  // 맨 아래에만 추가되던 "+ 품목 추가"와 달리, 이미 입력해둔 줄들 사이에
+  // 빠뜨린 품목을 끼워 넣고 싶을 때를 위한 것 — 그 줄 바로 아래에 빈 줄을
+  // 삽입한다.
+  function insertRowAfter(key: number) {
+    setRows((prev) => {
+      const idx = prev.findIndex((row) => row.key === key);
+      if (idx === -1) return prev;
+      const newRow: Row = {
+        key: nextKey,
+        productId: "",
+        spec: "",
+        manualSpec: false,
+        lotNumber: "",
+        quantity: 0,
+        unitCost: 0,
+        manualPrice: false,
+        remark: "",
+        saleQuantity: 0,
+        manualSaleQuantity: false,
+        salePrice: 0,
+        manualSalePrice: false,
+      };
+      const next = [...prev];
+      next.splice(idx + 1, 0, newRow);
+      return next;
+    });
+    setNextKey((k) => k + 1);
+  }
+
   function removeRow(key: number) {
-    setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
+    setRows((prev) =>
+      prev.length > 1 ? prev.filter((row) => row.key !== key) : prev,
+    );
   }
 
   function getHistoryFor(productId: string) {
@@ -437,12 +508,16 @@ export function NewPurchaseForm({
     if (!supplierId) {
       // 할일에 매입처를 골라뒀으면 그걸 그대로 확정하고, 없으면(예전 데이터)
       // 제목이 공급업체명과 일치할 때만 추측으로 채운다.
-      const fromTodo = todo.supplier_id && suppliers.some((s) => s.id === todo.supplier_id)
-        ? todo.supplier_id
-        : null;
+      const fromTodo =
+        todo.supplier_id && suppliers.some((s) => s.id === todo.supplier_id)
+          ? todo.supplier_id
+          : null;
       const matched =
         fromTodo ??
-        suppliers.find((s) => s.name.trim().toLowerCase() === todo.title.trim().toLowerCase())?.id ??
+        suppliers.find(
+          (s) =>
+            s.name.trim().toLowerCase() === todo.title.trim().toLowerCase(),
+        )?.id ??
         null;
       if (matched) {
         effectiveSupplierId = matched;
@@ -458,7 +533,10 @@ export function NewPurchaseForm({
     let effectiveSaleCustomerId = saleCustomerId;
     if (todo.todo_type === "both") {
       setAlsoCreateSale(true);
-      if (todo.customer_id && customers.some((c) => c.id === todo.customer_id)) {
+      if (
+        todo.customer_id &&
+        customers.some((c) => c.id === todo.customer_id)
+      ) {
         effectiveSaleCustomerId = effectiveSaleCustomerId || todo.customer_id;
         setSaleCustomerId((prev) => prev || todo.customer_id!);
       }
@@ -488,7 +566,9 @@ export function NewPurchaseForm({
       });
 
       setRows((prev) =>
-        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
+        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
+          ? newRows
+          : [...prev, ...newRows],
       );
       setNextKey((k) => k + newRows.length);
     }
@@ -503,11 +583,16 @@ export function NewPurchaseForm({
       setImportingTodoId(null);
     }
 
-    setImportedTodoIds((prev) => (prev.includes(todo.id) ? prev : [...prev, todo.id]));
+    setImportedTodoIds((prev) =>
+      prev.includes(todo.id) ? prev : [...prev, todo.id],
+    );
     setOpenTodos(null);
   }
 
-  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0);
+  const supplyAmount = rows.reduce(
+    (sum, row) => sum + row.quantity * row.unitCost,
+    0,
+  );
   const taxAmount = Math.round(supplyAmount * 0.1);
   const total = supplyAmount + taxAmount;
 
@@ -523,7 +608,7 @@ export function NewPurchaseForm({
         unitCost: row.unitCost,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
-      }))
+      })),
   );
 
   // "매출도 같이 등록"이 켜졌을 때만 의미가 있다 — 출고수량은 매입수량과
@@ -541,7 +626,7 @@ export function NewPurchaseForm({
         // 값을 그대로 저장한다.
         unitPrice: row.salePrice,
         remark: row.remark || null,
-      }))
+      })),
   );
 
   return (
@@ -557,42 +642,69 @@ export function NewPurchaseForm({
         // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
         // 없어 지울 것도 없다). 등록이 실패해도 계산 자체는 다시 하면
         // 되므로 감수할 만한 트레이드오프다.
-        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
+        if (pendingPaperCalc)
+          localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
       }}
     >
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
-      <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
+      <input
+        type="hidden"
+        name="payment_method"
+        value={alwaysCredit ? "" : paymentMethod}
+      />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="items" value={itemsJson} />
-      {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+      {pendingPaperCalc && (
+        <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
+      )}
       {copiedPaperCalcs.length > 0 && (
-        <input type="hidden" name="copiedPaperCalcs" value={JSON.stringify(copiedPaperCalcs)} />
+        <input
+          type="hidden"
+          name="copiedPaperCalcs"
+          value={JSON.stringify(copiedPaperCalcs)}
+        />
       )}
       {importedTodoIds.length > 0 && (
-        <input type="hidden" name="importedTodoIds" value={JSON.stringify(importedTodoIds)} />
+        <input
+          type="hidden"
+          name="importedTodoIds"
+          value={JSON.stringify(importedTodoIds)}
+        />
       )}
       {!initial?.id && alsoCreateSale && (
         <>
           <input type="hidden" name="alsoCreateSale" value="1" />
           <input type="hidden" name="sale_customer_id" value={saleCustomerId} />
-          <input type="hidden" name="sale_date" value={saleDate || purchaseDate} />
+          <input
+            type="hidden"
+            name="sale_date"
+            value={saleDate || purchaseDate}
+          />
           <input type="hidden" name="sale_items" value={saleItemsJson} />
         </>
       )}
       {tg0IsOverridden && (
-        <input type="hidden" name="tg0OverrideQuantity" value={tg0OverrideQuantity ?? ""} />
+        <input
+          type="hidden"
+          name="tg0OverrideQuantity"
+          value={tg0OverrideQuantity ?? ""}
+        />
       )}
 
       {pendingPaperCalc && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
+          style={{
+            background: "var(--erp-info-bg)",
+            color: "var(--erp-info-text)",
+            border: "1px solid var(--erp-info-border)",
+          }}
         >
-          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0 자동 반영
-          줄로 표시됩니다. 등록하면 실제로 저장됩니다.
+          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0
+          자동 반영 줄로 표시됩니다. 등록하면 실제로 저장됩니다.
         </div>
       )}
 
@@ -600,7 +712,10 @@ export function NewPurchaseForm({
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
-        <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
+        <div
+          className="erp-detail-body erp-search"
+          style={{ border: "none", padding: 14, margin: 0 }}
+        >
           <div className="erp-field">
             <label htmlFor="purchase-docno">No</label>
             <input
@@ -668,7 +783,14 @@ export function NewPurchaseForm({
           <div className="erp-field">
             <label>결제방법</label>
             <label
-              style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                height: 30,
+                fontSize: 12.5,
+                cursor: "pointer",
+              }}
             >
               <input
                 type="checkbox"
@@ -704,7 +826,14 @@ export function NewPurchaseForm({
               <div className="erp-field">
                 <label>매출 동시 등록</label>
                 <label
-                  style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    height: 30,
+                    fontSize: 12.5,
+                    cursor: "pointer",
+                  }}
                 >
                   <input
                     type="checkbox"
@@ -744,10 +873,24 @@ export function NewPurchaseForm({
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between", position: "relative" }}>
+        <div
+          className="erp-detail-tabs"
+          style={{ justifyContent: "space-between", position: "relative" }}
+        >
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4, flexWrap: "wrap" }}>
-            <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              margin: 4,
+              flexWrap: "wrap",
+            }}
+          >
+            <QuickAddProductSearch
+              products={products}
+              onAdd={quickAddProduct}
+            />
             <button
               type="button"
               onClick={loadOpenTodos}
@@ -757,11 +900,19 @@ export function NewPurchaseForm({
             >
               {loadingTodos ? "불러오는 중..." : "할일 가져오기"}
             </button>
-            <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
+            <button
+              type="button"
+              onClick={addRow}
+              className="erp-btn"
+              style={{ minWidth: 0 }}
+            >
               + 품목 추가
             </button>
             {!initial?.id && (
-              <PaperCalcModalTrigger pendingFor="purchase" onApply={handlePaperCalcApply} />
+              <PaperCalcModalTrigger
+                pendingFor="purchase"
+                onApply={handlePaperCalcApply}
+              />
             )}
           </div>
 
@@ -827,20 +978,39 @@ export function NewPurchaseForm({
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600 }}>
                           {todo.title}
-                          <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
-                            {todoTypeLabel(todo.todo_type, todo.ship_date, todo.due_date)}
+                          <span
+                            className="erp-badge erp-badge-muted"
+                            style={{ marginLeft: 6 }}
+                          >
+                            {todoTypeLabel(
+                              todo.todo_type,
+                              todo.ship_date,
+                              todo.due_date,
+                            )}
                           </span>
                         </div>
-                        <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                        <div
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            fontSize: 11,
+                          }}
+                        >
                           {todo.supplier_name ? `${todo.supplier_name} · ` : ""}
-                          {todo.due_date ? `마감 ${todo.due_date} · ` : ""}품목 {itemCount}건
+                          {todo.due_date
+                            ? `마감 ${todo.due_date} · `
+                            : ""}품목 {itemCount}건
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => importTodoItems(todo)}
                         className="erp-btn"
-                        style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
+                        style={{
+                          minWidth: 0,
+                          height: 24,
+                          padding: "0 8px",
+                          flexShrink: 0,
+                        }}
                         disabled={isImporting}
                       >
                         {isImporting ? "가져오는 중..." : "가져오기"}
@@ -853,18 +1023,30 @@ export function NewPurchaseForm({
           )}
         </div>
 
-        <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
+        <div
+          className="erp-grid-wrap"
+          style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}
+        >
           <table
             className="erp-grid"
-            style={{ tableLayout: "fixed", width: "100%", minWidth: alsoCreateSale ? 1180 : 960 }}
+            style={{
+              tableLayout: "fixed",
+              width: "100%",
+              minWidth: alsoCreateSale ? 1180 : 960,
+            }}
           >
             <thead>
               <tr>
                 <th style={{ width: alsoCreateSale ? "15%" : "13%" }}>품목</th>
                 <th style={{ width: alsoCreateSale ? "5%" : "6%" }}>규격</th>
-                <th style={{ width: alsoCreateSale ? "9%" : "8%" }}>관리번호</th>
+                <th style={{ width: alsoCreateSale ? "9%" : "8%" }}>
+                  관리번호
+                </th>
                 <th style={{ width: alsoCreateSale ? "3%" : "4%" }}>단위</th>
-                <th className="num" style={{ width: alsoCreateSale ? "11%" : "15%" }}>
+                <th
+                  className="num"
+                  style={{ width: alsoCreateSale ? "11%" : "15%" }}
+                >
                   입고수량
                 </th>
                 {alsoCreateSale && (
@@ -872,7 +1054,10 @@ export function NewPurchaseForm({
                     출고수량
                   </th>
                 )}
-                <th className="num" style={{ width: alsoCreateSale ? "7%" : "9%" }}>
+                <th
+                  className="num"
+                  style={{ width: alsoCreateSale ? "7%" : "9%" }}
+                >
                   매입단가
                 </th>
                 {alsoCreateSale && (
@@ -880,13 +1065,22 @@ export function NewPurchaseForm({
                     매출단가
                   </th>
                 )}
-                <th className="num" style={{ width: alsoCreateSale ? "8%" : "10%" }}>
+                <th
+                  className="num"
+                  style={{ width: alsoCreateSale ? "8%" : "10%" }}
+                >
                   공급가액
                 </th>
-                <th className="num" style={{ width: alsoCreateSale ? "6%" : "8%" }}>
+                <th
+                  className="num"
+                  style={{ width: alsoCreateSale ? "6%" : "8%" }}
+                >
                   세액
                 </th>
-                <th className="num" style={{ width: alsoCreateSale ? "7%" : "9%" }}>
+                <th
+                  className="num"
+                  style={{ width: alsoCreateSale ? "7%" : "9%" }}
+                >
                   합계
                 </th>
                 <th style={{ width: alsoCreateSale ? "10%" : "13%" }}>비고</th>
@@ -907,7 +1101,10 @@ export function NewPurchaseForm({
                         {tg0Product.name}
                         <span
                           className="ml-1 rounded px-1 text-[10.5px]"
-                          style={{ background: "var(--erp-info-border)", color: "var(--erp-info-text)" }}
+                          style={{
+                            background: "var(--erp-info-border)",
+                            color: "var(--erp-info-text)",
+                          }}
                         >
                           자동
                         </span>
@@ -920,7 +1117,9 @@ export function NewPurchaseForm({
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {tg0Product?.unit ?? "-"}
+                  </td>
                   <td className="num">
                     <NumberInput
                       value={pendingCalcQuantity}
@@ -929,22 +1128,38 @@ export function NewPurchaseForm({
                     />
                   </td>
                   {alsoCreateSale && (
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
                       -
                     </td>
                   )}
-                  <td className="num">{pendingCalcUnitCost.toLocaleString()}</td>
+                  <td className="num">
+                    {pendingCalcUnitCost.toLocaleString()}
+                  </td>
                   {alsoCreateSale && (
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
                       -
                     </td>
                   )}
-                  <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num">
+                    {pendingCalcAmount.toLocaleString()}원
+                  </td>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {Math.round(pendingCalcAmount * 0.1).toLocaleString()}원
                   </td>
                   <td className="num">
-                    {(pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)).toLocaleString()}원
+                    {(
+                      pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)
+                    ).toLocaleString()}
+                    원
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
@@ -957,7 +1172,9 @@ export function NewPurchaseForm({
                       className="erp-btn erp-btn-danger"
                       style={{ minWidth: 0, height: 26, padding: "0 8px" }}
                       onClick={() => {
-                        localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
+                        localStorage.removeItem(
+                          PENDING_PAPER_CALC_PURCHASE_KEY,
+                        );
                         setPendingPaperCalc(null);
                         setCopiedPaperCalcs([]);
                         setTg0OverrideQuantity(null);
@@ -969,34 +1186,61 @@ export function NewPurchaseForm({
                 </tr>
               )}
               {paperCalcSizeLines.map((line, i) => (
-                <tr key={`paper-calc-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
-                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                <tr
+                  key={`paper-calc-size-${i}`}
+                  style={{ background: "var(--erp-bg-subtle)" }}
+                >
+                  <td
+                    colSpan={3}
+                    style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}
+                  >
                     ㄴ {line}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
                   {alsoCreateSale && (
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
                       -
                     </td>
                   )}
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
                   {alsoCreateSale && (
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
                       -
                     </td>
                   )}
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
@@ -1012,7 +1256,9 @@ export function NewPurchaseForm({
                       <ProductSearchSelect
                         products={products}
                         value={row.productId}
-                        onChange={(productId) => handleProductChange(row.key, productId)}
+                        onChange={(productId) =>
+                          handleProductChange(row.key, productId)
+                        }
                       />
                     </td>
                     <td>
@@ -1021,7 +1267,9 @@ export function NewPurchaseForm({
                         placeholder="규격"
                         aria-label="규격"
                         value={row.spec}
-                        onChange={(e) => updateRow(row.key, { spec: e.target.value })}
+                        onChange={(e) =>
+                          updateRow(row.key, { spec: e.target.value })
+                        }
                         disabled={!row.manualSpec}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
@@ -1037,7 +1285,9 @@ export function NewPurchaseForm({
                               const manualSpec = e.target.checked;
                               updateRow(row.key, {
                                 manualSpec,
-                                ...(manualSpec ? {} : { spec: product?.spec ?? "" }),
+                                ...(manualSpec
+                                  ? {}
+                                  : { spec: product?.spec ?? "" }),
                               });
                             }}
                           />
@@ -1051,18 +1301,24 @@ export function NewPurchaseForm({
                         placeholder="관리번호"
                         aria-label="관리번호"
                         value={row.lotNumber}
-                        onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
+                        onChange={(e) =>
+                          updateRow(row.key, { lotNumber: e.target.value })
+                        }
                         className="erp-input w-full"
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
+                      {product?.unit ?? "-"}
+                    </td>
                     <td className="num">
                       <QuantityWithBoxInput
                         quantity={row.quantity}
                         onQuantityChange={(n) =>
                           updateRow(row.key, {
                             quantity: n,
-                            ...(row.manualSaleQuantity ? {} : { saleQuantity: n }),
+                            ...(row.manualSaleQuantity
+                              ? {}
+                              : { saleQuantity: n }),
                           })
                         }
                         allowFormula
@@ -1073,11 +1329,23 @@ export function NewPurchaseForm({
                         <NumberInput
                           placeholder="출고수량"
                           value={row.saleQuantity}
-                          onChange={(n) => updateRow(row.key, { saleQuantity: n, manualSaleQuantity: true })}
+                          onChange={(n) =>
+                            updateRow(row.key, {
+                              saleQuantity: n,
+                              manualSaleQuantity: true,
+                            })
+                          }
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
-                          <div style={{ color: "var(--erp-danger)", fontSize: 10.5 }}>매입수량 초과</div>
+                          <div
+                            style={{
+                              color: "var(--erp-danger)",
+                              fontSize: 10.5,
+                            }}
+                          >
+                            매입수량 초과
+                          </div>
                         )}
                       </td>
                     )}
@@ -1101,7 +1369,9 @@ export function NewPurchaseForm({
                               const manualPrice = e.target.checked;
                               updateRow(row.key, {
                                 manualPrice,
-                                ...(manualPrice ? {} : { unitCost: recentCost }),
+                                ...(manualPrice
+                                  ? {}
+                                  : { unitCost: recentCost }),
                               });
                             }}
                           />
@@ -1114,18 +1384,32 @@ export function NewPurchaseForm({
                         <NumberInput
                           placeholder="매출단가"
                           value={row.salePrice}
-                          onChange={(n) => updateRow(row.key, { salePrice: n, manualSalePrice: true })}
+                          onChange={(n) =>
+                            updateRow(row.key, {
+                              salePrice: n,
+                              manualSalePrice: true,
+                            })
+                          }
                           className="erp-input w-full"
                         />
                       </td>
                     )}
-                    <td className="num">{(row.quantity * row.unitCost).toLocaleString()}원</td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      {Math.round(row.quantity * row.unitCost * 0.1).toLocaleString()}원
+                    <td className="num">
+                      {(row.quantity * row.unitCost).toLocaleString()}원
+                    </td>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
+                      {Math.round(
+                        row.quantity * row.unitCost * 0.1,
+                      ).toLocaleString()}
+                      원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
                       {(
-                        row.quantity * row.unitCost + Math.round(row.quantity * row.unitCost * 0.1)
+                        row.quantity * row.unitCost +
+                        Math.round(row.quantity * row.unitCost * 0.1)
                       ).toLocaleString()}
                       원
                     </td>
@@ -1135,11 +1419,27 @@ export function NewPurchaseForm({
                         placeholder="비고"
                         aria-label="비고"
                         value={row.remark}
-                        onChange={(e) => updateRow(row.key, { remark: e.target.value })}
+                        onChange={(e) =>
+                          updateRow(row.key, { remark: e.target.value })
+                        }
                         className="erp-input w-full"
                       />
                     </td>
-                    <td className="num">
+                    <td className="num" style={{ whiteSpace: "nowrap" }}>
+                      <button
+                        type="button"
+                        className="erp-btn"
+                        style={{
+                          minWidth: 0,
+                          height: 26,
+                          padding: "0 8px",
+                          marginRight: 4,
+                        }}
+                        onClick={() => insertRowAfter(row.key)}
+                        title="이 줄 아래에 빈 줄 삽입"
+                      >
+                        + 삽입
+                      </button>
                       <button
                         type="button"
                         className="erp-btn erp-btn-danger"
@@ -1156,14 +1456,21 @@ export function NewPurchaseForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "var(--erp-bg)" }}>
-                <td colSpan={alsoCreateSale ? 8 : 6} style={{ fontWeight: 700 }}>
+                <td
+                  colSpan={alsoCreateSale ? 8 : 6}
+                  style={{ fontWeight: 700 }}
+                >
                   매입 합계
                 </td>
                 <td className="num" colSpan={5}>
                   <div style={{ color: "var(--erp-text-muted)" }}>
-                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
+                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세{" "}
+                    {taxAmount.toLocaleString()}원
                   </div>
-                  <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                  <div
+                    className="text-sm font-bold"
+                    style={{ color: "var(--erp-text)" }}
+                  >
                     {total.toLocaleString()}원
                   </div>
                 </td>
@@ -1172,7 +1479,10 @@ export function NewPurchaseForm({
           </table>
         </div>
 
-        {rows.some((r) => r.productId && supplierId && getHistoryFor(r.productId).length > 0) && (
+        {rows.some(
+          (r) =>
+            r.productId && supplierId && getHistoryFor(r.productId).length > 0,
+        ) && (
           <div className="erp-detail-body" style={{ paddingTop: 8 }}>
             {rows
               .filter((r) => r.productId && supplierId)
@@ -1181,13 +1491,19 @@ export function NewPurchaseForm({
                 if (!hist.length) return null;
                 const product = products.find((p) => p.id === r.productId);
                 return (
-                  <div key={r.key} className="mb-1 flex items-center gap-2 text-xs">
+                  <div
+                    key={r.key}
+                    className="mb-1 flex items-center gap-2 text-xs"
+                  >
                     <span style={{ color: "var(--erp-text-muted)" }}>
                       {product?.name}
                       {product?.spec && ` (${product.spec})`}:
                     </span>
                     <PriceHistoryHint
-                      history={hist.map((h) => ({ unitPrice: h.unitCost, orderDate: h.purchaseDate }))}
+                      history={hist.map((h) => ({
+                        unitPrice: h.unitCost,
+                        orderDate: h.purchaseDate,
+                      }))}
                       emptyLabel="이전 매입 이력 없음 (신규 단가)"
                     />
                   </div>
@@ -1199,7 +1515,12 @@ export function NewPurchaseForm({
 
       <FormMessage state={messageDismissed ? undefined : state} />
 
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <button
+        ref={submitRef}
+        type="submit"
+        disabled={pending}
+        className="erp-btn erp-btn-primary"
+      >
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...

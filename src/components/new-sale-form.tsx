@@ -18,7 +18,10 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
-import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
+import {
+  focusSameColumnNextRow,
+  focusGridArrowNav,
+} from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
@@ -46,7 +49,11 @@ type Product = {
   stock?: number;
   base_package_qty?: number | null;
 };
-type CustomerPrice = { customer_id: string; product_id: string; unit_price: number };
+type CustomerPrice = {
+  customer_id: string;
+  product_id: string;
+  unit_price: number;
+};
 type PriceHistoryEntry = {
   customerId: string;
   productId: string;
@@ -115,20 +122,26 @@ export function NewSaleForm({
     // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
     // "어제" 날짜가 잡힌다. 로컬 날짜를 그대로 쓰는 toLocaleDateString("sv-SE")로
     // 통일한다(price-schedule.ts 등 다른 곳의 "오늘" 계산과 동일한 방식).
-    () => initial?.orderDate ?? new Date().toLocaleDateString("sv-SE")
+    () => initial?.orderDate ?? new Date().toLocaleDateString("sv-SE"),
   );
   const [memo, setMemo] = useState(initial?.memo ?? "");
   // "항상 외상"이 기본값(체크됨)이라 결제방법 없이 등록하면 미수금 잔액
   // 계산 대상에 그대로 잡힌다. 체크를 풀고 결제방법을 고르면 그 자리에서
   // 결제가 끝난 거래로 보고 미수금 계산에서 빠진다(lib/ar-ap.ts).
   const [alwaysCredit, setAlwaysCredit] = useState(!initial?.paymentMethod);
-  const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? "");
+  const [paymentMethod, setPaymentMethod] = useState(
+    initial?.paymentMethod ?? "",
+  );
   // 대부분 직납이라 매번 고를 필요 없게 기본값으로 채워둔다 — 다른 방법이면
   // 그때만 직접 바꾸면 된다.
-  const [deliveryMethod, setDeliveryMethod] = useState(initial?.deliveryMethod ?? "직납");
+  const [deliveryMethod, setDeliveryMethod] = useState(
+    initial?.deliveryMethod ?? "직납",
+  );
   // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
   // 전표번호를 직접 입력/수정할 수 있게 한다.
-  const [docNo, setDocNo] = useState(initial?.docNo ? String(initial.docNo) : "");
+  const [docNo, setDocNo] = useState(
+    initial?.docNo ? String(initial.docNo) : "",
+  );
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -154,7 +167,7 @@ export function NewSaleForm({
             manualPrice: false,
             remark: "",
           },
-        ]
+        ],
   );
   const [nextKey, setNextKey] = useState(rows.length);
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -199,9 +212,13 @@ export function NewSaleForm({
   // 별도로 조회할 날짜를 고를 수 있게 한다 — 매출 등록일과 실제 입고일이
   // 다른 경우(예: 어제 입고분을 오늘 매출로 처리)도 있기 때문.
   const [purchaseLookupDate, setPurchaseLookupDate] = useState(orderDate);
-  const [purchaseCandidates, setPurchaseCandidates] = useState<TodayPurchaseItem[] | null>(null);
+  const [purchaseCandidates, setPurchaseCandidates] = useState<
+    TodayPurchaseItem[] | null
+  >(null);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
-  const [addedPurchaseItemIds, setAddedPurchaseItemIds] = useState<Set<string>>(new Set());
+  const [addedPurchaseItemIds, setAddedPurchaseItemIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [addingItemId, setAddingItemId] = useState<string | null>(null);
   // 모조지(TG0) 입고 품목은 수량만 옮기면 사이즈별 배치 내역이 사라지므로,
   // 그 매입 건에 연결된 모조지 계산 자체를 통째로 복사해서 등록 시 같이 붙인다.
@@ -222,7 +239,9 @@ export function NewSaleForm({
     if (item.sku === "TG0") {
       setAddingItemId(item.id);
       try {
-        const calcs = await getPaperCalculationsForPurchaseOrder(item.purchaseOrderId);
+        const calcs = await getPaperCalculationsForPurchaseOrder(
+          item.purchaseOrderId,
+        );
         if (calcs.length > 0) {
           setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
           setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
@@ -245,7 +264,9 @@ export function NewSaleForm({
       remark: "",
     };
     setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
+        ? [newRow]
+        : [...prev, newRow],
     );
     setNextKey((k) => k + 1);
     setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
@@ -278,12 +299,16 @@ export function NewSaleForm({
     // 아래 단가 계산에 새 거래처가 바로 반영되도록 값을 따로 들고 간다.
     let effectiveCustomerId = customerId;
     if (!customerId) {
-      const fromTodo = todo.customer_id && customers.some((c) => c.id === todo.customer_id)
-        ? todo.customer_id
-        : null;
+      const fromTodo =
+        todo.customer_id && customers.some((c) => c.id === todo.customer_id)
+          ? todo.customer_id
+          : null;
       const matched =
         fromTodo ??
-        customers.find((c) => c.name.trim().toLowerCase() === todo.title.trim().toLowerCase())?.id ??
+        customers.find(
+          (c) =>
+            c.name.trim().toLowerCase() === todo.title.trim().toLowerCase(),
+        )?.id ??
         null;
       if (matched) {
         handleCustomerChange(matched);
@@ -301,14 +326,18 @@ export function NewSaleForm({
           manualSpec: Boolean(item.spec),
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
-          unitPrice: product ? resolvePrice(effectiveCustomerId, product.id) : 0,
+          unitPrice: product
+            ? resolvePrice(effectiveCustomerId, product.id)
+            : 0,
           manualPrice: false,
           remark: "",
         };
       });
 
       setRows((prev) =>
-        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]
+        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
+          ? newRows
+          : [...prev, ...newRows],
       );
       setNextKey((k) => k + newRows.length);
     }
@@ -323,14 +352,19 @@ export function NewSaleForm({
       setImportingTodoId(null);
     }
 
-    setImportedTodoIds((prev) => (prev.includes(todo.id) ? prev : [...prev, todo.id]));
+    setImportedTodoIds((prev) =>
+      prev.includes(todo.id) ? prev : [...prev, todo.id],
+    );
     setOpenTodos(null);
   }
 
   const priceMap = useMemo(() => {
     const map = new Map<string, number>();
     for (const price of prices) {
-      map.set(`${price.customer_id}:${price.product_id}`, Number(price.unit_price));
+      map.set(
+        `${price.customer_id}:${price.product_id}`,
+        Number(price.unit_price),
+      );
     }
     return map;
   }, [prices]);
@@ -364,7 +398,10 @@ export function NewSaleForm({
     let totalPaper = 0;
     if (pendingPaperCalc) {
       try {
-        const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number; totalPaper: number };
+        const parsed = JSON.parse(pendingPaperCalc) as {
+          totalSheet: number;
+          totalPaper: number;
+        };
         totalSheet += parsed.totalSheet;
         totalPaper += parsed.totalPaper;
       } catch {
@@ -377,12 +414,19 @@ export function NewSaleForm({
     }
     return totalSheet > 0 ? { totalSheet, totalPaper } : null;
   }, [pendingPaperCalc, copiedPaperCalcs]);
-  const tg0Product = useMemo(() => products.find((p) => p.sku === "TG0"), [products]);
-  const pendingCalcUnitPrice = tg0Product ? resolvePrice(customerId, tg0Product.id) : 0;
+  const tg0Product = useMemo(
+    () => products.find((p) => p.sku === "TG0"),
+    [products],
+  );
+  const pendingCalcUnitPrice = tg0Product
+    ? resolvePrice(customerId, tg0Product.id)
+    : 0;
   // 거래처와 협의해 자동 계산값(예: 3.2연)과 다른 수량(예: 3연)으로 등록해야
   // 하는 경우, 등록 시점에 바로 고칠 수 있게 한다 — null이면 자동값 그대로.
   // 저장 시(createSale)에는 이 값이 있을 때만 오버라이드 이력을 남긴다.
-  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(null);
+  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(
+    null,
+  );
   const pendingCalcQuantity = pendingCalcSummary
     ? (tg0OverrideQuantity ?? pendingCalcSummary.totalSheet)
     : 0;
@@ -415,7 +459,9 @@ export function NewSaleForm({
   }, [pendingPaperCalc, copiedPaperCalcs]);
 
   function updateRow(key: number, patch: Partial<Row>) {
-    setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+    setRows((prev) =>
+      prev.map((row) => (row.key === key ? { ...row, ...patch } : row)),
+    );
   }
 
   function handleProductChange(key: number, productId: string) {
@@ -433,8 +479,8 @@ export function NewSaleForm({
       prev.map((row) =>
         row.productId && !row.manualPrice
           ? { ...row, unitPrice: resolvePrice(newCustomerId, row.productId) }
-          : row
-      )
+          : row,
+      ),
     );
   }
 
@@ -456,7 +502,9 @@ export function NewSaleForm({
       remark: "",
     };
     setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]
+      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
+        ? [newRow]
+        : [...prev, newRow],
     );
     setNextKey((k) => k + 1);
   }
@@ -479,8 +527,35 @@ export function NewSaleForm({
     setNextKey((k) => k + 1);
   }
 
+  // 맨 아래에만 추가되던 "+ 품목 추가"와 달리, 이미 입력해둔 줄들 사이에
+  // 빠뜨린 품목을 끼워 넣고 싶을 때를 위한 것 — 그 줄 바로 아래에 빈 줄을
+  // 삽입한다.
+  function insertRowAfter(key: number) {
+    setRows((prev) => {
+      const idx = prev.findIndex((row) => row.key === key);
+      if (idx === -1) return prev;
+      const newRow: Row = {
+        key: nextKey,
+        productId: "",
+        spec: "",
+        manualSpec: false,
+        lotNumber: "",
+        quantity: 0,
+        unitPrice: 0,
+        manualPrice: false,
+        remark: "",
+      };
+      const next = [...prev];
+      next.splice(idx + 1, 0, newRow);
+      return next;
+    });
+    setNextKey((k) => k + 1);
+  }
+
   function removeRow(key: number) {
-    setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
+    setRows((prev) =>
+      prev.length > 1 ? prev.filter((row) => row.key !== key) : prev,
+    );
   }
 
   function getHistoryFor(productId: string) {
@@ -489,7 +564,9 @@ export function NewSaleForm({
       .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
   }
 
-  const supplyAmount = rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) + pendingCalcAmount;
+  const supplyAmount =
+    rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) +
+    pendingCalcAmount;
   const taxAmount = Math.round(supplyAmount * 0.1);
   const total = supplyAmount + taxAmount;
 
@@ -505,7 +582,7 @@ export function NewSaleForm({
         unitPrice: row.unitPrice,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
-      }))
+      })),
   );
 
   return (
@@ -528,27 +605,49 @@ export function NewSaleForm({
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
-      <input type="hidden" name="payment_method" value={alwaysCredit ? "" : paymentMethod} />
+      <input
+        type="hidden"
+        name="payment_method"
+        value={alwaysCredit ? "" : paymentMethod}
+      />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="items" value={itemsJson} />
-      {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+      {pendingPaperCalc && (
+        <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
+      )}
       {copiedPaperCalcs.length > 0 && (
-        <input type="hidden" name="copiedPaperCalcs" value={JSON.stringify(copiedPaperCalcs)} />
+        <input
+          type="hidden"
+          name="copiedPaperCalcs"
+          value={JSON.stringify(copiedPaperCalcs)}
+        />
       )}
       {importedTodoIds.length > 0 && (
-        <input type="hidden" name="importedTodoIds" value={JSON.stringify(importedTodoIds)} />
+        <input
+          type="hidden"
+          name="importedTodoIds"
+          value={JSON.stringify(importedTodoIds)}
+        />
       )}
       {tg0IsOverridden && (
-        <input type="hidden" name="tg0OverrideQuantity" value={tg0OverrideQuantity ?? ""} />
+        <input
+          type="hidden"
+          name="tg0OverrideQuantity"
+          value={tg0OverrideQuantity ?? ""}
+        />
       )}
 
       {(pendingPaperCalc || copiedPaperCalcs.length > 0) && (
         <div
           className="rounded p-2 text-xs"
-          style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
+          style={{
+            background: "var(--erp-info-bg)",
+            color: "var(--erp-info-text)",
+            border: "1px solid var(--erp-info-border)",
+          }}
         >
-          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0 자동 반영
-          줄로 표시됩니다. 등록하면 실제로 저장됩니다.
+          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0
+          자동 반영 줄로 표시됩니다. 등록하면 실제로 저장됩니다.
         </div>
       )}
 
@@ -556,7 +655,10 @@ export function NewSaleForm({
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
-        <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
+        <div
+          className="erp-detail-body erp-search"
+          style={{ border: "none", padding: 14, margin: 0 }}
+        >
           <div className="erp-field">
             <label htmlFor="sale-docno">No</label>
             <input
@@ -624,7 +726,14 @@ export function NewSaleForm({
           <div className="erp-field">
             <label>결제방법</label>
             <label
-              style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                height: 30,
+                fontSize: 12.5,
+                cursor: "pointer",
+              }}
             >
               <input
                 type="checkbox"
@@ -659,10 +768,24 @@ export function NewSaleForm({
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between", position: "relative" }}>
+        <div
+          className="erp-detail-tabs"
+          style={{ justifyContent: "space-between", position: "relative" }}
+        >
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4, flexWrap: "wrap" }}>
-            <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              margin: 4,
+              flexWrap: "wrap",
+            }}
+          >
+            <QuickAddProductSearch
+              products={products}
+              onAdd={quickAddProduct}
+            />
             <input
               type="date"
               value={purchaseLookupDate}
@@ -694,11 +817,19 @@ export function NewSaleForm({
             >
               {loadingTodos ? "불러오는 중..." : "할일 가져오기"}
             </button>
-            <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
+            <button
+              type="button"
+              onClick={addRow}
+              className="erp-btn"
+              style={{ minWidth: 0 }}
+            >
               + 품목 추가
             </button>
             {!initial?.id && (
-              <PaperCalcModalTrigger pendingFor="sales" onApply={handlePaperCalcApply} />
+              <PaperCalcModalTrigger
+                pendingFor="sales"
+                onApply={handlePaperCalcApply}
+              />
             )}
           </div>
 
@@ -762,8 +893,15 @@ export function NewSaleForm({
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600 }}>{item.productName}</div>
-                        <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                        <div style={{ fontWeight: 600 }}>
+                          {item.productName}
+                        </div>
+                        <div
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            fontSize: 11,
+                          }}
+                        >
                           {item.supplierName} · {item.spec || "규격 미지정"} :{" "}
                           {item.quantity.toLocaleString()}
                           {item.unit}
@@ -773,7 +911,12 @@ export function NewSaleForm({
                         type="button"
                         onClick={() => addPurchaseItem(item)}
                         className="erp-btn"
-                        style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
+                        style={{
+                          minWidth: 0,
+                          height: 24,
+                          padding: "0 8px",
+                          flexShrink: 0,
+                        }}
                         disabled={added || isAdding}
                       >
                         {added ? "추가됨" : isAdding ? "추가 중..." : "추가"}
@@ -847,8 +990,15 @@ export function NewSaleForm({
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600 }}>
                           {todo.title}
-                          <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
-                            {todoTypeLabel(todo.todo_type, todo.ship_date, todo.due_date)}
+                          <span
+                            className="erp-badge erp-badge-muted"
+                            style={{ marginLeft: 6 }}
+                          >
+                            {todoTypeLabel(
+                              todo.todo_type,
+                              todo.ship_date,
+                              todo.due_date,
+                            )}
                           </span>
                           {todo.todo_type === "both" && (
                             <span
@@ -859,16 +1009,28 @@ export function NewSaleForm({
                             </span>
                           )}
                         </div>
-                        <div style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                        <div
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            fontSize: 11,
+                          }}
+                        >
                           {todo.customer_name ? `${todo.customer_name} · ` : ""}
-                          {todo.due_date ? `마감 ${todo.due_date} · ` : ""}품목 {itemCount}건
+                          {todo.due_date
+                            ? `마감 ${todo.due_date} · `
+                            : ""}품목 {itemCount}건
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => importTodoItems(todo)}
                         className="erp-btn"
-                        style={{ minWidth: 0, height: 24, padding: "0 8px", flexShrink: 0 }}
+                        style={{
+                          minWidth: 0,
+                          height: 24,
+                          padding: "0 8px",
+                          flexShrink: 0,
+                        }}
                         disabled={isImporting}
                       >
                         {isImporting ? "가져오는 중..." : "가져오기"}
@@ -881,8 +1043,14 @@ export function NewSaleForm({
           )}
         </div>
 
-        <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}>
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 960 }}>
+        <div
+          className="erp-grid-wrap"
+          style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}
+        >
+          <table
+            className="erp-grid"
+            style={{ tableLayout: "fixed", width: "100%", minWidth: 960 }}
+          >
             <thead>
               <tr>
                 <th style={{ width: "13%" }}>품목</th>
@@ -922,7 +1090,10 @@ export function NewSaleForm({
                         {tg0Product.name}
                         <span
                           className="ml-1 rounded px-1 text-[10.5px]"
-                          style={{ background: "var(--erp-info-border)", color: "var(--erp-info-text)" }}
+                          style={{
+                            background: "var(--erp-info-border)",
+                            color: "var(--erp-info-text)",
+                          }}
                         >
                           자동
                         </span>
@@ -935,7 +1106,9 @@ export function NewSaleForm({
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{tg0Product?.unit ?? "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {tg0Product?.unit ?? "-"}
+                  </td>
                   <td className="num">
                     <NumberInput
                       value={pendingCalcQuantity}
@@ -943,13 +1116,23 @@ export function NewSaleForm({
                       className="erp-input w-full"
                     />
                   </td>
-                  <td className="num">{pendingCalcUnitPrice.toLocaleString()}</td>
-                  <td className="num">{pendingCalcAmount.toLocaleString()}원</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num">
+                    {pendingCalcUnitPrice.toLocaleString()}
+                  </td>
+                  <td className="num">
+                    {pendingCalcAmount.toLocaleString()}원
+                  </td>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     {Math.round(pendingCalcAmount * 0.1).toLocaleString()}원
                   </td>
                   <td className="num">
-                    {(pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)).toLocaleString()}원
+                    {(
+                      pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)
+                    ).toLocaleString()}
+                    원
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
@@ -974,24 +1157,45 @@ export function NewSaleForm({
                 </tr>
               )}
               {paperCalcSizeLines.map((line, i) => (
-                <tr key={`paper-calc-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
-                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                <tr
+                  key={`paper-calc-size-${i}`}
+                  style={{ background: "var(--erp-bg-subtle)" }}
+                >
+                  <td
+                    colSpan={3}
+                    style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}
+                  >
                     ㄴ {line}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
                     -
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>-</td>
@@ -1000,14 +1204,18 @@ export function NewSaleForm({
               ))}
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
-                const recentPrice = row.productId ? resolvePrice(customerId, row.productId) : 0;
+                const recentPrice = row.productId
+                  ? resolvePrice(customerId, row.productId)
+                  : 0;
                 return (
                   <tr key={row.key}>
                     <td>
                       <ProductSearchSelect
                         products={products}
                         value={row.productId}
-                        onChange={(productId) => handleProductChange(row.key, productId)}
+                        onChange={(productId) =>
+                          handleProductChange(row.key, productId)
+                        }
                       />
                     </td>
                     <td>
@@ -1016,7 +1224,9 @@ export function NewSaleForm({
                         placeholder="규격"
                         aria-label="규격"
                         value={row.spec}
-                        onChange={(e) => updateRow(row.key, { spec: e.target.value })}
+                        onChange={(e) =>
+                          updateRow(row.key, { spec: e.target.value })
+                        }
                         disabled={!row.manualSpec}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
@@ -1032,7 +1242,9 @@ export function NewSaleForm({
                               const manualSpec = e.target.checked;
                               updateRow(row.key, {
                                 manualSpec,
-                                ...(manualSpec ? {} : { spec: product?.spec ?? "" }),
+                                ...(manualSpec
+                                  ? {}
+                                  : { spec: product?.spec ?? "" }),
                               });
                             }}
                           />
@@ -1046,15 +1258,21 @@ export function NewSaleForm({
                         placeholder="관리번호"
                         aria-label="관리번호"
                         value={row.lotNumber}
-                        onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
+                        onChange={(e) =>
+                          updateRow(row.key, { lotNumber: e.target.value })
+                        }
                         className="erp-input w-full"
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
+                      {product?.unit ?? "-"}
+                    </td>
                     <td className="num">
                       <QuantityWithBoxInput
                         quantity={row.quantity}
-                        onQuantityChange={(n) => updateRow(row.key, { quantity: n })}
+                        onQuantityChange={(n) =>
+                          updateRow(row.key, { quantity: n })
+                        }
                         allowFormula
                       />
                     </td>
@@ -1078,7 +1296,9 @@ export function NewSaleForm({
                               const manualPrice = e.target.checked;
                               updateRow(row.key, {
                                 manualPrice,
-                                ...(manualPrice ? {} : { unitPrice: recentPrice }),
+                                ...(manualPrice
+                                  ? {}
+                                  : { unitPrice: recentPrice }),
                               });
                             }}
                           />
@@ -1088,33 +1308,50 @@ export function NewSaleForm({
                     </td>
                     <td className="num">
                       {(row.quantity * row.unitPrice).toLocaleString()}원
-                      {row.productId && product && (() => {
-                        const availableStock =
-                          (product.stock ?? 0) + (originalQtyByProduct.get(row.productId) ?? 0);
-                        // "재고 900"만 보여주면 이 출고를 반영하기 전인지 후인지
-                        // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
-                        // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
-                        // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
-                        const remaining = availableStock - row.quantity;
-                        const short = remaining < 0;
-                        const unit = product.unit ?? "";
-                        return (
-                          <p className="text-[10.5px]" style={{ color: short ? "var(--erp-danger)" : "var(--erp-primary)" }}>
-                            재고 {availableStock.toLocaleString()}
-                            {unit} - 출고 {row.quantity.toLocaleString()}
-                            {unit} = {remaining.toLocaleString()}
-                            {unit}
-                            {short && " (부족)"}
-                          </p>
-                        );
-                      })()}
+                      {row.productId &&
+                        product &&
+                        (() => {
+                          const availableStock =
+                            (product.stock ?? 0) +
+                            (originalQtyByProduct.get(row.productId) ?? 0);
+                          // "재고 900"만 보여주면 이 출고를 반영하기 전인지 후인지
+                          // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
+                          // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
+                          // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
+                          const remaining = availableStock - row.quantity;
+                          const short = remaining < 0;
+                          const unit = product.unit ?? "";
+                          return (
+                            <p
+                              className="text-[10.5px]"
+                              style={{
+                                color: short
+                                  ? "var(--erp-danger)"
+                                  : "var(--erp-primary)",
+                              }}
+                            >
+                              재고 {availableStock.toLocaleString()}
+                              {unit} - 출고 {row.quantity.toLocaleString()}
+                              {unit} = {remaining.toLocaleString()}
+                              {unit}
+                              {short && " (부족)"}
+                            </p>
+                          );
+                        })()}
                     </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      {Math.round(row.quantity * row.unitPrice * 0.1).toLocaleString()}원
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
+                      {Math.round(
+                        row.quantity * row.unitPrice * 0.1,
+                      ).toLocaleString()}
+                      원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
                       {(
-                        row.quantity * row.unitPrice + Math.round(row.quantity * row.unitPrice * 0.1)
+                        row.quantity * row.unitPrice +
+                        Math.round(row.quantity * row.unitPrice * 0.1)
                       ).toLocaleString()}
                       원
                     </td>
@@ -1124,11 +1361,27 @@ export function NewSaleForm({
                         placeholder="비고"
                         aria-label="비고"
                         value={row.remark}
-                        onChange={(e) => updateRow(row.key, { remark: e.target.value })}
+                        onChange={(e) =>
+                          updateRow(row.key, { remark: e.target.value })
+                        }
                         className="erp-input w-full"
                       />
                     </td>
-                    <td className="num">
+                    <td className="num" style={{ whiteSpace: "nowrap" }}>
+                      <button
+                        type="button"
+                        className="erp-btn"
+                        style={{
+                          minWidth: 0,
+                          height: 26,
+                          padding: "0 8px",
+                          marginRight: 4,
+                        }}
+                        onClick={() => insertRowAfter(row.key)}
+                        title="이 줄 아래에 빈 줄 삽입"
+                      >
+                        + 삽입
+                      </button>
                       <button
                         type="button"
                         className="erp-btn erp-btn-danger"
@@ -1150,9 +1403,13 @@ export function NewSaleForm({
                 </td>
                 <td className="num" colSpan={5}>
                   <div style={{ color: "var(--erp-text-muted)" }}>
-                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세 {taxAmount.toLocaleString()}원
+                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세{" "}
+                    {taxAmount.toLocaleString()}원
                   </div>
-                  <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                  <div
+                    className="text-sm font-bold"
+                    style={{ color: "var(--erp-text)" }}
+                  >
                     {total.toLocaleString()}원
                   </div>
                 </td>
@@ -1161,7 +1418,10 @@ export function NewSaleForm({
           </table>
         </div>
 
-        {rows.some((r) => r.productId && customerId && getHistoryFor(r.productId).length > 0) && (
+        {rows.some(
+          (r) =>
+            r.productId && customerId && getHistoryFor(r.productId).length > 0,
+        ) && (
           <div className="erp-detail-body" style={{ paddingTop: 8 }}>
             {rows
               .filter((r) => r.productId && customerId)
@@ -1170,7 +1430,10 @@ export function NewSaleForm({
                 if (!hist.length) return null;
                 const product = products.find((p) => p.id === r.productId);
                 return (
-                  <div key={r.key} className="mb-1 flex items-center gap-2 text-xs">
+                  <div
+                    key={r.key}
+                    className="mb-1 flex items-center gap-2 text-xs"
+                  >
                     <span style={{ color: "var(--erp-text-muted)" }}>
                       {product?.name}
                       {product?.spec && ` (${product.spec})`}:
@@ -1185,7 +1448,12 @@ export function NewSaleForm({
 
       <FormMessage state={messageDismissed ? undefined : state} />
 
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <button
+        ref={submitRef}
+        type="submit"
+        disabled={pending}
+        className="erp-btn erp-btn-primary"
+      >
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
