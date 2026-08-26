@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
-import { PurchaseGridTable, type PurchaseRow } from "@/components/purchase-grid-table";
+import {
+  PurchaseGridTable,
+  type PurchaseRow,
+  type PurchaseRowItem,
+} from "@/components/purchase-grid-table";
 
 type DisplayRow = PurchaseRow;
 
@@ -21,7 +25,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)"
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -44,16 +48,21 @@ export default async function PurchasesPage({
   if (from) paymentQuery = paymentQuery.gte("paid_at", from);
   if (to) paymentQuery = paymentQuery.lte("paid_at", to);
 
-  const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([query, paymentQuery]);
+  const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
+    query,
+    paymentQuery,
+  ]);
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
     ? rawItems?.filter(
         (item) =>
-          item.purchase_orders?.suppliers?.name?.toLowerCase().includes(keyword) ||
+          item.purchase_orders?.suppliers?.name
+            ?.toLowerCase()
+            .includes(keyword) ||
           item.products?.name?.toLowerCase().includes(keyword) ||
           item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword)
+          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
       )
     : rawItems;
 
@@ -68,49 +77,71 @@ export default async function PurchasesPage({
   // 요약한다. 검색어로 일부 품목만 걸러졌다면(예: 상품명/SKU 검색) 그
   // 매칭된 품목들만 묶여서 "외 N건"에 반영된다.
   const purchaseRows: DisplayRow[] = Object.values(
-    itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
-      const orderId = item.purchase_orders?.id ?? item.id;
-      if (!acc[orderId]) {
-        acc[orderId] = {
-          key: orderId,
-          kind: "purchase",
-          orderId,
-          supplierId: item.purchase_orders?.suppliers?.id,
-          date: item.purchase_orders?.purchase_date,
-          supplierName: item.purchase_orders?.suppliers?.name,
-          authorName: item.purchase_orders?.profiles?.full_name,
+    itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>(
+      (acc, item) => {
+        const orderId = item.purchase_orders?.id ?? item.id;
+        const itemDetail: PurchaseRowItem = {
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           lotNumber: item.lot_number,
           remark: item.remark,
-          quantity: 0,
+          quantity: item.quantity,
           unit: item.products?.unit,
           unitCost: Number(item.unit_cost),
-          supplyAmount: 0,
-          taxAmount: 0,
-          deliveryMethod: item.purchase_orders?.delivery_method,
-          itemCount: 0,
+          supplyAmount: item.supplyAmount,
+          taxAmount: item.taxAmount,
         };
-      } else {
-        // 품목이 2건 이상이면 단가/관리번호/비고를 하나로 대표할 수 없으니 비워둔다.
-        acc[orderId].unitCost = null;
-        acc[orderId].lotNumber = null;
-        acc[orderId].remark = null;
-      }
-      acc[orderId].itemCount += 1;
-      acc[orderId].quantity += item.quantity;
-      acc[orderId].supplyAmount += item.supplyAmount;
-      acc[orderId].taxAmount += item.taxAmount;
-      return acc;
-    }, {})
+        if (!acc[orderId]) {
+          acc[orderId] = {
+            key: orderId,
+            kind: "purchase",
+            orderId,
+            supplierId: item.purchase_orders?.suppliers?.id,
+            date: item.purchase_orders?.purchase_date,
+            supplierName: item.purchase_orders?.suppliers?.name,
+            authorName: item.purchase_orders?.profiles?.full_name,
+            productLabel: item.products?.name ?? "-",
+            spec: item.spec || item.products?.spec || "-",
+            lotNumber: item.lot_number,
+            remark: item.remark,
+            quantity: 0,
+            unit: item.products?.unit,
+            unitCost: Number(item.unit_cost),
+            supplyAmount: 0,
+            taxAmount: 0,
+            deliveryMethod: item.purchase_orders?.delivery_method,
+            itemCount: 0,
+            // 품목이 2건 이상일 때만 드롭다운으로 펼쳐 보여주는 데 쓴다.
+            items: [itemDetail],
+          };
+        } else {
+          // 품목이 2건 이상이면 단가/관리번호/비고를 하나로 대표할 수 없으니 비워둔다.
+          acc[orderId].unitCost = null;
+          acc[orderId].lotNumber = null;
+          acc[orderId].remark = null;
+          acc[orderId].items!.push(itemDetail);
+        }
+        acc[orderId].itemCount += 1;
+        acc[orderId].quantity += item.quantity;
+        acc[orderId].supplyAmount += item.supplyAmount;
+        acc[orderId].taxAmount += item.taxAmount;
+        return acc;
+      },
+      {},
+    ),
   ).map((row) => ({
     ...row,
-    productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+    productLabel:
+      row.itemCount > 1
+        ? `${row.productLabel} 외 ${row.itemCount - 1}건`
+        : row.productLabel,
   }));
 
   const payments = keyword
     ? rawPayments?.filter(
-        (p) => p.suppliers?.name?.toLowerCase().includes(keyword) || p.memo?.toLowerCase().includes(keyword)
+        (p) =>
+          p.suppliers?.name?.toLowerCase().includes(keyword) ||
+          p.memo?.toLowerCase().includes(keyword),
       )
     : rawPayments;
   const paymentRows: DisplayRow[] = (payments ?? []).map((p) => ({
@@ -134,14 +165,16 @@ export default async function PurchasesPage({
   }));
 
   const rows: DisplayRow[] = [...purchaseRows, ...paymentRows].sort((a, b) =>
-    (b.date ?? "").localeCompare(a.date ?? "")
+    (b.date ?? "").localeCompare(a.date ?? ""),
   );
 
   const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
   const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);
   const presets = getDatePresets();
-  const exportHref = q ? `/api/purchases/export?q=${encodeURIComponent(q)}` : "/api/purchases/export";
+  const exportHref = q
+    ? `/api/purchases/export?q=${encodeURIComponent(q)}`
+    : "/api/purchases/export";
 
   return (
     <div>
@@ -153,7 +186,9 @@ export default async function PurchasesPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">매입관리</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        매입관리
+      </h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         {presets.map((preset) => (
@@ -170,11 +205,23 @@ export default async function PurchasesPage({
       <form method="get" id="purchases-search-form" className="erp-search">
         <div className="erp-field">
           <label htmlFor="search-from">시작일</label>
-          <input id="search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
+          <input
+            id="search-from"
+            type="date"
+            name="from"
+            defaultValue={from ?? ""}
+            className="erp-input"
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="search-to">종료일</label>
-          <input id="search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
+          <input
+            id="search-to"
+            type="date"
+            name="to"
+            defaultValue={to ?? ""}
+            className="erp-input"
+          />
         </div>
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
           <label htmlFor="search-q">공급처 / 상품 / 규격 검색</label>
@@ -205,7 +252,11 @@ export default async function PurchasesPage({
         <a
           href={exportHref}
           className="erp-btn"
-          title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
+          title={
+            q
+              ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드`
+              : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"
+          }
         >
           📥 엑셀 다운로드
         </a>

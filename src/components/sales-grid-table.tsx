@@ -1,6 +1,13 @@
 "use client";
 
-import { useActionState, useMemo, useState, type CSSProperties } from "react";
+import {
+  Fragment,
+  useActionState,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
@@ -16,6 +23,18 @@ import {
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+
+export type SalesRowItem = {
+  productLabel: string;
+  spec: string;
+  lotNumber: string | null;
+  remark: string | null;
+  quantity: number;
+  unit: string | null | undefined;
+  unitPrice: number | null;
+  supplyAmount: number;
+  taxAmount: number;
+};
 
 export type SalesRow = {
   key: string;
@@ -35,6 +54,10 @@ export type SalesRow = {
   supplyAmount: number;
   taxAmount: number;
   deliveryMethod?: string | null;
+  // 품목이 2건 이상인 명세표만 채워진다 — 목록에서 "품목A 외 N건"으로
+  // 뭉뚱그려진 걸 상세 페이지로 넘어가지 않고 행 아래에 펼쳐서 볼 수
+  // 있게 하기 위함.
+  items?: SalesRowItem[];
 };
 
 type SortKey =
@@ -65,7 +88,18 @@ export function SalesGridTable({
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
     useSortableRows<SalesRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
+
+  function toggleExpand(key: string, e: MouseEvent) {
+    e.stopPropagation();
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     bulkDeleteSales,
     undefined,
@@ -201,90 +235,169 @@ export function SalesGridTable({
                 : row.customerId
                   ? `/customers/${row.customerId}`
                   : "#";
+              const hasMultipleItems = !!row.items && row.items.length > 1;
+              const isExpanded = expanded.has(row.key);
               return (
-                <ClickableRow
-                  key={row.key}
-                  href={href}
-                  className={isRowSelected ? "selected" : undefined}
-                >
-                  <td style={tdSticky1}>
-                    {row.orderId && (
-                      <input
-                        type="checkbox"
-                        checked={isRowSelected}
-                        onChange={() => toggleRow(row.orderId!)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    )}
-                  </td>
-                  <td style={tdSticky2}>
-                    {row.date
-                      ? new Date(row.date).toLocaleDateString("ko-KR")
-                      : "-"}
-                  </td>
-                  <td>
-                    <GridBadge tone={isCollection ? "muted" : "info"}>
-                      {isCollection ? "수금" : "매출"}
-                    </GridBadge>
-                  </td>
-                  <td>{row.customerName}</td>
-                  <td>
-                    {row.deliveryMethod ? (
-                      <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
-                    ) : (
-                      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.authorName ?? "-"}
-                  </td>
-                  <td
-                    style={
-                      isCollection
-                        ? { color: "var(--erp-text-muted)" }
-                        : undefined
-                    }
+                <Fragment key={row.key}>
+                  <ClickableRow
+                    href={href}
+                    className={isRowSelected ? "selected" : undefined}
                   >
-                    {row.productLabel}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.spec}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.lotNumber || "-"}
-                  </td>
-                  <td className="num">
-                    {isCollection
-                      ? "-"
-                      : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
-                  </td>
-                  <td className="num">{row.supplyAmount.toLocaleString()}</td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {isCollection ? "-" : row.taxAmount.toLocaleString()}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.remark || "-"}
-                  </td>
-                  <td className="num">
-                    {row.orderId && (
-                      <Link
-                        href={`/sales/${row.orderId}/print`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: "var(--erp-primary)", fontWeight: 600 }}
+                    <td style={tdSticky1}>
+                      {row.orderId && (
+                        <input
+                          type="checkbox"
+                          checked={isRowSelected}
+                          onChange={() => toggleRow(row.orderId!)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
+                    </td>
+                    <td style={tdSticky2}>
+                      {row.date
+                        ? new Date(row.date).toLocaleDateString("ko-KR")
+                        : "-"}
+                    </td>
+                    <td>
+                      <GridBadge tone={isCollection ? "muted" : "info"}>
+                        {isCollection ? "수금" : "매출"}
+                      </GridBadge>
+                    </td>
+                    <td>{row.customerName}</td>
+                    <td>
+                      {row.deliveryMethod ? (
+                        <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
+                      ) : (
+                        <span style={{ color: "var(--erp-text-muted)" }}>
+                          -
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
+                      {row.authorName ?? "-"}
+                    </td>
+                    <td
+                      style={
+                        isCollection
+                          ? { color: "var(--erp-text-muted)" }
+                          : undefined
+                      }
+                    >
+                      {hasMultipleItems && (
+                        <button
+                          type="button"
+                          onClick={(e) => toggleExpand(row.key, e)}
+                          aria-label={isExpanded ? "품목 접기" : "품목 펼치기"}
+                          aria-expanded={isExpanded}
+                          style={{
+                            marginRight: 6,
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: "var(--erp-text-muted)",
+                            fontSize: 11,
+                            padding: 0,
+                          }}
+                        >
+                          {isExpanded ? "▾" : "▸"}
+                        </button>
+                      )}
+                      {row.productLabel}
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
+                      {row.spec}
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
+                      {row.lotNumber || "-"}
+                    </td>
+                    <td className="num">
+                      {isCollection
+                        ? "-"
+                        : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                    </td>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
+                      {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
+                    </td>
+                    <td className="num">{row.supplyAmount.toLocaleString()}</td>
+                    <td
+                      className="num"
+                      style={{ color: "var(--erp-text-muted)" }}
+                    >
+                      {isCollection ? "-" : row.taxAmount.toLocaleString()}
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>
+                      {row.remark || "-"}
+                    </td>
+                    <td className="num">
+                      {row.orderId && (
+                        <Link
+                          href={`/sales/${row.orderId}/print`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "var(--erp-primary)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          명세표 →
+                        </Link>
+                      )}
+                    </td>
+                  </ClickableRow>
+                  {isExpanded &&
+                    row.items?.map((item, i) => (
+                      <tr
+                        key={`${row.key}-item-${i}`}
+                        style={{ background: "var(--erp-bg-subtle)" }}
                       >
-                        명세표 →
-                      </Link>
-                    )}
-                  </td>
-                </ClickableRow>
+                        <td style={tdSticky1} />
+                        <td style={tdSticky2} />
+                        <td />
+                        <td />
+                        <td />
+                        <td />
+                        <td
+                          style={{
+                            paddingLeft: 26,
+                            color: "var(--erp-text-muted)",
+                          }}
+                        >
+                          {item.productLabel}
+                        </td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>
+                          {item.spec}
+                        </td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>
+                          {item.lotNumber || "-"}
+                        </td>
+                        <td className="num">
+                          {item.quantity.toLocaleString()} {item.unit ?? ""}
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          {formatNumOrDash(item.unitPrice)}
+                        </td>
+                        <td className="num">
+                          {item.supplyAmount.toLocaleString()}
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          {item.taxAmount.toLocaleString()}
+                        </td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>
+                          {item.remark || "-"}
+                        </td>
+                        <td />
+                      </tr>
+                    ))}
+                </Fragment>
               );
             })}
             {!sortedRows.length && (
