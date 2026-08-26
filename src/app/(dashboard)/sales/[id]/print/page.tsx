@@ -133,20 +133,20 @@ export default async function SalesPrintPage({
     }
 
     if (variant === "ket_solution") {
-      // 케이이티솔루션은 주문 등록 시 "규격" 입력칸에 실제 규격 대신 배치/롯
-      // 관리번호(예: 260521 - 101)를 적기 때문에, 규격 칸은 품목명을 보여주고
-      // 사용자가 입력한 값은 관리번호로 보여준다. 메모는 이 서식에는 넣지 않는다.
+      // 규격 칸은 실제 규격(입력값 우선, 없으면 품목 기본 규격), 관리번호
+      // 칸은 관리번호 전용 필드(lot_number)를 그대로 보여준다. 메모는 이
+      // 서식에는 넣지 않는다.
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
         productName: item.products?.name ?? "",
-        spec: item.products?.name || "",
+        spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
         basePackageQty: item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
         remark: item.remark,
-        lotNo: item.spec || null,
+        lotNo: item.lot_number || null,
       }));
 
       return (
