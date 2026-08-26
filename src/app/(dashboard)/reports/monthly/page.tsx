@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
+import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 
 type Detail = {
   type: "in" | "out";
@@ -46,7 +47,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_orders!inner(order_date, customers(id, name)), products(sku, name, spec, unit)"
+        "quantity, unit_price, product_id, sales_orders!inner(order_date, customers(id, name)), products(sku, name, spec, unit)",
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -55,7 +56,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, product_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(sku, name, spec, unit)"
+        "quantity, unit_cost, product_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(sku, name, spec, unit)",
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
@@ -67,10 +68,27 @@ export default async function MonthlyReportPage({
   const companyIds = new Set<string>();
   const companyNameByKey = new Map<string, string>();
 
-  function ensureGroup(productId: string, sku: string, name: string, spec: string, unit: string | null) {
+  function ensureGroup(
+    productId: string,
+    sku: string,
+    name: string,
+    spec: string,
+    unit: string | null,
+  ) {
     let group = groups.get(productId);
     if (!group) {
-      group = { productId, sku, name, spec, unit, inQty: 0, inAmount: 0, outQty: 0, outAmount: 0, details: [] };
+      group = {
+        productId,
+        sku,
+        name,
+        spec,
+        unit,
+        inQty: 0,
+        inAmount: 0,
+        outQty: 0,
+        outAmount: 0,
+        details: [],
+      };
       groups.set(productId, group);
     }
     return group;
@@ -90,7 +108,9 @@ export default async function MonthlyReportPage({
       const companyKey = `s:${supplier.id}`;
       companyIds.add(companyKey);
       companyNameByKey.set(companyKey, supplier.name);
-      const existing = group.details.find((d) => d.type === "in" && d.companyId === supplier.id);
+      const existing = group.details.find(
+        (d) => d.type === "in" && d.companyId === supplier.id,
+      );
       if (existing) {
         existing.quantity += row.quantity;
         existing.amount += amount;
@@ -120,7 +140,9 @@ export default async function MonthlyReportPage({
       const companyKey = `c:${customer.id}`;
       companyIds.add(companyKey);
       companyNameByKey.set(companyKey, customer.name);
-      const existing = group.details.find((d) => d.type === "out" && d.companyId === customer.id);
+      const existing = group.details.find(
+        (d) => d.type === "out" && d.companyId === customer.id,
+      );
       if (existing) {
         existing.quantity += row.quantity;
         existing.amount += amount;
@@ -144,32 +166,50 @@ export default async function MonthlyReportPage({
         g.sku.toLowerCase().includes(keyword) ||
         g.name.toLowerCase().includes(keyword) ||
         g.spec.toLowerCase().includes(keyword) ||
-        g.details.some((d) => d.companyName.toLowerCase().includes(keyword))
+        g.details.some((d) => d.companyName.toLowerCase().includes(keyword)),
     );
   }
 
-  itemGroups.sort((a, b) => b.inAmount + b.outAmount - (a.inAmount + a.outAmount));
   for (const g of itemGroups) {
     g.details.sort((a, b) => {
       if (a.type !== b.type) return a.type === "in" ? -1 : 1;
       return b.amount - a.amount;
     });
   }
+  // 품목 하나의 거래금액 순으로만 정렬하면, 같은 출고처로 나가는 품목끼리도
+  // 다른 품목을 사이에 두고 떨어져 보인다("KD238VA-R3"와 "KD240BI"가 둘 다
+  // 신일베스텍으로 나가는데 목록에서 멀리 떨어지는 식). 품목마다 제일 비중
+  // 큰 출고처를 기준으로 묶어서, 같은 출고처가 주력인 품목들이 붙어
+  // 나오게 한다.
+  itemGroups = clusterByDominantPartner(
+    itemGroups.map((g) => ({
+      ...g,
+      totalAmount: g.inAmount + g.outAmount,
+      outPartners: g.details
+        .filter((d) => d.type === "out")
+        .map((d) => ({ id: d.companyId, amount: d.amount })),
+    })),
+  );
 
   // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
   // 거래처인지 모호하므로 생략), 요약표를 길게 늘어놓는 대신 그 거래처의
   // 일자별 상세내역만 보여주는 별도 페이지로 바로 이동시킨다.
   if (keyword) {
     const matchedKeys = Array.from(companyNameByKey.keys()).filter((key) =>
-      (companyNameByKey.get(key) ?? "").toLowerCase().includes(keyword)
+      (companyNameByKey.get(key) ?? "").toLowerCase().includes(keyword),
     );
     if (matchedKeys.length === 1) {
-      redirect(`/reports/monthly/company?month=${month}&company=${encodeURIComponent(matchedKeys[0])}`);
+      redirect(
+        `/reports/monthly/company?month=${month}&company=${encodeURIComponent(matchedKeys[0])}`,
+      );
     }
   }
 
   const totalSalesAmount = itemGroups.reduce((sum, g) => sum + g.outAmount, 0);
-  const totalPurchaseAmount = itemGroups.reduce((sum, g) => sum + g.inAmount, 0);
+  const totalPurchaseAmount = itemGroups.reduce(
+    (sum, g) => sum + g.inAmount,
+    0,
+  );
   const totalInQty = itemGroups.reduce((sum, g) => sum + g.inQty, 0);
   const totalInAmount = itemGroups.reduce((sum, g) => sum + g.inAmount, 0);
   const totalOutQty = itemGroups.reduce((sum, g) => sum + g.outQty, 0);
@@ -189,10 +229,15 @@ export default async function MonthlyReportPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 월별 리포트</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        확장모듈 &gt; 월별 리포트
+      </h1>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
-        <Link href={`/reports/monthly?month=${prevMonth}${qSuffix}`} className="erp-date-preset-btn">
+        <Link
+          href={`/reports/monthly?month=${prevMonth}${qSuffix}`}
+          className="erp-date-preset-btn"
+        >
           ◀ 이전달
         </Link>
         <Link
@@ -201,7 +246,10 @@ export default async function MonthlyReportPage({
         >
           이번달
         </Link>
-        <Link href={`/reports/monthly?month=${nextMonth}${qSuffix}`} className="erp-date-preset-btn">
+        <Link
+          href={`/reports/monthly?month=${nextMonth}${qSuffix}`}
+          className="erp-date-preset-btn"
+        >
           다음달 ▶
         </Link>
       </div>
@@ -209,7 +257,13 @@ export default async function MonthlyReportPage({
       <form method="get" id="monthly-report-search-form" className="erp-search">
         <div className="erp-field">
           <label htmlFor="search-month">기준월</label>
-          <input id="search-month" type="month" name="month" defaultValue={month} className="erp-input" />
+          <input
+            id="search-month"
+            type="month"
+            name="month"
+            defaultValue={month}
+            className="erp-input"
+          />
         </div>
         <div className="erp-field" style={{ minWidth: 240, flex: 1 }}>
           <label htmlFor="search-q">품목 / 거래처 검색</label>
@@ -245,34 +299,86 @@ export default async function MonthlyReportPage({
         }}
       >
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--erp-text-muted)",
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
             {year}년 {Number(monthNum)}월 매출액
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
             {totalSalesAmount.toLocaleString()}원
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--erp-text-muted)",
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
             {year}년 {Number(monthNum)}월 매입액
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
             {totalPurchaseAmount.toLocaleString()}원
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--erp-text-muted)",
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
             거래 품목 수
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
             {itemGroups.length.toLocaleString()}개
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--erp-text-muted)",
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
             거래처 수
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
             {companyIds.size.toLocaleString()}곳
           </div>
         </div>
@@ -307,69 +413,114 @@ export default async function MonthlyReportPage({
               // 번갈아 배경을 넣는다 — 표 전체에 걸리는 일반 zebra(짝수행
               // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
               // 헷갈렸다.
-              const groupBg = groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+              const groupBg =
+                groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
               return (
-              <Fragment key={g.productId}>
-                <tr style={{ background: groupBg }}>
-                  <td style={{ fontWeight: 700 }}>
-                    {g.sku !== "-" && (
-                      <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>{g.sku} · </span>
-                    )}
-                    {g.name}
-                    {g.spec !== "-" && (
-                      <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}> ({g.spec})</span>
-                    )}
-                  </td>
-                  <td />
-                  <td className="num" style={{ fontWeight: 700 }}>
-                    {g.inQty.toLocaleString()} {g.unit}
-                  </td>
-                  <td className="num" style={{ fontWeight: 700 }}>
-                    {g.inAmount.toLocaleString()}
-                  </td>
-                  <td className="num" style={{ fontWeight: 700 }}>
-                    {g.outQty.toLocaleString()} {g.unit}
-                  </td>
-                  <td className="num" style={{ fontWeight: 700 }}>
-                    {g.outAmount.toLocaleString()}
-                  </td>
-                  <td className="num" style={{ fontWeight: 700 }}>
-                    {(g.inQty - g.outQty).toLocaleString()} {g.unit}
-                  </td>
-                </tr>
-                {g.details.map((d) => (
-                  <tr key={`${g.productId}-${d.type}-${d.companyId}`} style={{ background: groupBg }}>
-                    <td style={{ paddingLeft: 26 }}>
-                      <Link
-                        href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
-                          d.type === "in" ? `s:${d.companyId}` : `c:${d.companyId}`
-                        )}`}
-                        style={{ color: "var(--erp-text-muted)", textDecoration: "underline" }}
-                      >
-                        {d.companyName}
-                      </Link>
+                <Fragment key={g.productId}>
+                  <tr style={{ background: groupBg }}>
+                    <td style={{ fontWeight: 700 }}>
+                      {g.sku !== "-" && (
+                        <span
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {g.sku} ·{" "}
+                        </span>
+                      )}
+                      {g.name}
+                      {g.spec !== "-" && (
+                        <span
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {" "}
+                          ({g.spec})
+                        </span>
+                      )}
                     </td>
-                    <td>
-                      <GridBadge tone={d.type === "in" ? "ok" : "danger"}>{d.type === "in" ? "입고" : "출고"}</GridBadge>
+                    <td />
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {g.inQty.toLocaleString()} {g.unit}
                     </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      {d.type === "in" ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}` : "-"}
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {g.inAmount.toLocaleString()}
                     </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      {d.type === "in" ? d.amount.toLocaleString() : "-"}
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {g.outQty.toLocaleString()} {g.unit}
                     </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      {d.type === "out" ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}` : "-"}
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {g.outAmount.toLocaleString()}
                     </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      {d.type === "out" ? d.amount.toLocaleString() : "-"}
-                    </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                      -
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {(g.inQty - g.outQty).toLocaleString()} {g.unit}
                     </td>
                   </tr>
-                ))}
-              </Fragment>
+                  {g.details.map((d) => (
+                    <tr
+                      key={`${g.productId}-${d.type}-${d.companyId}`}
+                      style={{ background: groupBg }}
+                    >
+                      <td style={{ paddingLeft: 26 }}>
+                        <Link
+                          href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
+                            d.type === "in"
+                              ? `s:${d.companyId}`
+                              : `c:${d.companyId}`,
+                          )}`}
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          {d.companyName}
+                        </Link>
+                      </td>
+                      <td>
+                        <GridBadge tone={d.type === "in" ? "ok" : "danger"}>
+                          {d.type === "in" ? "입고" : "출고"}
+                        </GridBadge>
+                      </td>
+                      <td
+                        className="num"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        {d.type === "in"
+                          ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
+                          : "-"}
+                      </td>
+                      <td
+                        className="num"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        {d.type === "in" ? d.amount.toLocaleString() : "-"}
+                      </td>
+                      <td
+                        className="num"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        {d.type === "out"
+                          ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
+                          : "-"}
+                      </td>
+                      <td
+                        className="num"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        {d.type === "out" ? d.amount.toLocaleString() : "-"}
+                      </td>
+                      <td
+                        className="num"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        -
+                      </td>
+                    </tr>
+                  ))}
+                </Fragment>
               );
             })}
             {!itemGroups.length && (
@@ -390,7 +541,9 @@ export default async function MonthlyReportPage({
                 <td className="num">{totalInAmount.toLocaleString()}</td>
                 <td className="num">{totalOutQty.toLocaleString()}</td>
                 <td className="num">{totalOutAmount.toLocaleString()}</td>
-                <td className="num">{(totalInQty - totalOutQty).toLocaleString()}</td>
+                <td className="num">
+                  {(totalInQty - totalOutQty).toLocaleString()}
+                </td>
               </tr>
             </tfoot>
           )}
