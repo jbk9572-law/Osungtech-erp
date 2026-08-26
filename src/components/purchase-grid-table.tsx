@@ -289,15 +289,7 @@ export function PurchaseGridTable({
                           onClick={(e) => toggleExpand(row.key, e)}
                           aria-label={isExpanded ? "품목 접기" : "품목 펼치기"}
                           aria-expanded={isExpanded}
-                          style={{
-                            marginRight: 6,
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            color: "var(--erp-text-muted)",
-                            fontSize: 11,
-                            padding: 0,
-                          }}
+                          className="erp-expand-toggle"
                         >
                           {isExpanded ? "▾" : "▸"}
                         </button>
