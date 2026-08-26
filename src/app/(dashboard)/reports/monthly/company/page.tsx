@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -5,6 +6,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
+import { groupByProductKey } from "@/lib/group-by-product";
 
 type Transaction = {
   date: string;
@@ -107,6 +109,16 @@ export default async function MonthlyReportCompanyPage({
     .filter((t) => t.type === "out")
     .reduce((sum, t) => sum + t.amount, 0);
 
+  // 날짜순으로만 죽 나열하면 같은 품목이 여기저기 흩어져서 "이 품목을
+  // 총 몇 번, 얼마나 거래했는지" 한눈에 안 보였다. 품목별로 묶어서 그
+  // 안에서 날짜순으로 보여주고, 소계를 같이 낸다.
+  const productGroups = groupByProductKey(
+    rows,
+    (t) => `${t.productName}|${t.spec}`,
+    (t) => t.quantity,
+    (t) => t.amount,
+  );
+
   const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
@@ -170,31 +182,70 @@ export default async function MonthlyReportCompanyPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((t, i) => (
-              <ClickableRow
-                key={`${t.orderId}-${i}`}
-                href={
-                  t.type === "in"
-                    ? `/purchases/${t.orderId}`
-                    : `/sales/${t.orderId}`
-                }
-              >
-                <td>{t.date}</td>
-                <td>
-                  <GridBadge tone={t.type === "in" ? "ok" : "danger"}>
-                    {t.type === "in" ? "입고" : "출고"}
-                  </GridBadge>
-                </td>
-                <td>{t.productName}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>
-                  {t.spec !== "-" ? t.spec : "-"}
-                </td>
-                <td className="num">
-                  {t.quantity.toLocaleString()} {t.unit}
-                </td>
-                <td className="num">{t.amount.toLocaleString()}</td>
-              </ClickableRow>
-            ))}
+            {productGroups.map((group) => {
+              const first = group.items[0];
+              return (
+                <Fragment key={group.key}>
+                  <tr style={{ background: "var(--erp-bg-subtle)" }}>
+                    <td colSpan={4} style={{ fontWeight: 700 }}>
+                      {first.productName}
+                      {first.spec !== "-" && (
+                        <span
+                          style={{
+                            color: "var(--erp-text-muted)",
+                            fontWeight: 400,
+                          }}
+                        >
+                          {" "}
+                          · {first.spec}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontWeight: 400,
+                          fontSize: 11,
+                          color: "var(--erp-text-muted)",
+                        }}
+                      >
+                        {group.items.length}건
+                      </span>
+                    </td>
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {group.totalQuantity.toLocaleString()} {first.unit}
+                    </td>
+                    <td className="num" style={{ fontWeight: 700 }}>
+                      {group.totalAmount.toLocaleString()}
+                    </td>
+                  </tr>
+                  {group.items.map((t, i) => (
+                    <ClickableRow
+                      key={`${group.key}-${t.orderId}-${i}`}
+                      href={
+                        t.type === "in"
+                          ? `/purchases/${t.orderId}`
+                          : `/sales/${t.orderId}`
+                      }
+                    >
+                      <td>{t.date}</td>
+                      <td>
+                        <GridBadge tone={t.type === "in" ? "ok" : "danger"}>
+                          {t.type === "in" ? "입고" : "출고"}
+                        </GridBadge>
+                      </td>
+                      <td>{t.productName}</td>
+                      <td style={{ color: "var(--erp-text-muted)" }}>
+                        {t.spec !== "-" ? t.spec : "-"}
+                      </td>
+                      <td className="num">
+                        {t.quantity.toLocaleString()} {t.unit}
+                      </td>
+                      <td className="num">{t.amount.toLocaleString()}</td>
+                    </ClickableRow>
+                  ))}
+                </Fragment>
+              );
+            })}
             {!rows.length && (
               <tr>
                 <td colSpan={6} className="erp-grid-empty">
