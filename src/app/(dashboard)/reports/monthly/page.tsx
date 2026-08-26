@@ -6,6 +6,55 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
+import { groupByProductKey } from "@/lib/group-by-product";
+
+type View = "product" | "supplier" | "customer";
+
+type CompanyProductRow = {
+  companyId: string;
+  companyName: string;
+  sku: string;
+  productName: string;
+  spec: string;
+  unit: string | null;
+  quantity: number;
+  amount: number;
+};
+
+function matchesKeyword(row: CompanyProductRow, keyword: string): boolean {
+  return (
+    row.sku.toLowerCase().includes(keyword) ||
+    row.productName.toLowerCase().includes(keyword) ||
+    row.spec.toLowerCase().includes(keyword) ||
+    row.companyName.toLowerCase().includes(keyword)
+  );
+}
+
+// 매입처별/매출처별 보기 — 거래처를 먼저 묶고 그 안에서 품목별 소계를
+// 낸다. 품목별 보기(ItemGroup)와 반대 방향으로 같은 데이터를 한 번 더
+// 묶는 것이라, 이미 있는 groupByProductKey를 두 단계(거래처 → 품목)로
+// 재사용한다.
+function buildCompanyGroups(rows: CompanyProductRow[]) {
+  return groupByProductKey(
+    rows,
+    (r) => r.companyId,
+    (r) => r.quantity,
+    (r) => r.amount,
+  )
+    .map((g) => ({
+      companyId: g.key,
+      companyName: g.items[0].companyName,
+      totalQuantity: g.totalQuantity,
+      totalAmount: g.totalAmount,
+      products: groupByProductKey(
+        g.items,
+        (r) => `${r.productName}|${r.spec}`,
+        (r) => r.quantity,
+        (r) => r.amount,
+      ),
+    }))
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+}
 
 type Detail = {
   type: "in" | "out";
@@ -31,9 +80,13 @@ type ItemGroup = {
 export default async function MonthlyReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; q?: string }>;
+  searchParams: Promise<{ month?: string; q?: string; view?: string }>;
 }) {
-  const { month: monthParam, q } = await searchParams;
+  const { month: monthParam, q, view: viewParam } = await searchParams;
+  const view: View =
+    viewParam === "supplier" || viewParam === "customer"
+      ? viewParam
+      : "product";
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
   const supabase = await createClient();
@@ -191,6 +244,52 @@ export default async function MonthlyReportPage({
     })),
   );
 
+  // 매입처별/매출처별 보기용 — 위에서 이미 받아온 원본 행을 거래처 기준으로
+  // 다시 정리한다. 새로 쿼리하지 않고 같은 데이터를 재사용한다.
+  const purchaseCompanyRows: CompanyProductRow[] = (purchaseRows ?? [])
+    .filter((row) => row.purchase_orders?.suppliers)
+    .map((row) => ({
+      companyId: row.purchase_orders!.suppliers!.id,
+      companyName: row.purchase_orders!.suppliers!.name,
+      sku: row.products?.sku ?? "-",
+      productName: row.products?.name ?? "-",
+      spec: row.products?.spec ?? "-",
+      unit: row.products?.unit ?? null,
+      quantity: row.quantity,
+      amount: row.quantity * Number(row.unit_cost),
+    }));
+  const salesCompanyRows: CompanyProductRow[] = (salesRows ?? [])
+    .filter((row) => row.sales_orders?.customers)
+    .map((row) => ({
+      companyId: row.sales_orders!.customers!.id,
+      companyName: row.sales_orders!.customers!.name,
+      sku: row.products?.sku ?? "-",
+      productName: row.products?.name ?? "-",
+      spec: row.products?.spec ?? "-",
+      unit: row.products?.unit ?? null,
+      quantity: row.quantity,
+      amount: row.quantity * Number(row.unit_price),
+    }));
+
+  const supplierGroups =
+    view === "supplier"
+      ? buildCompanyGroups(
+          keyword
+            ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
+            : purchaseCompanyRows,
+        )
+      : [];
+  const customerGroups =
+    view === "customer"
+      ? buildCompanyGroups(
+          keyword
+            ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
+            : salesCompanyRows,
+        )
+      : [];
+  const companyGroups = view === "supplier" ? supplierGroups : customerGroups;
+  const companyKeyPrefix = view === "supplier" ? "s" : "c";
+
   // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
   // 거래처인지 모호하므로 생략), 요약표를 길게 늘어놓는 대신 그 거래처의
   // 일자별 상세내역만 보여주는 별도 페이지로 바로 이동시킨다.
@@ -220,6 +319,8 @@ export default async function MonthlyReportPage({
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
   const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
+  const viewSuffix = view !== "product" ? `&view=${view}` : "";
+  const suffix = `${qSuffix}${viewSuffix}`;
 
   return (
     <div>
@@ -235,26 +336,48 @@ export default async function MonthlyReportPage({
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         <Link
-          href={`/reports/monthly?month=${prevMonth}${qSuffix}`}
+          href={`/reports/monthly?month=${prevMonth}${suffix}`}
           className="erp-date-preset-btn"
         >
           ◀ 이전달
         </Link>
         <Link
-          href={`/reports/monthly?month=${thisMonth}${qSuffix}`}
+          href={`/reports/monthly?month=${thisMonth}${suffix}`}
           className={`erp-date-preset-btn${month === thisMonth ? " active" : ""}`}
         >
           이번달
         </Link>
         <Link
-          href={`/reports/monthly?month=${nextMonth}${qSuffix}`}
+          href={`/reports/monthly?month=${nextMonth}${suffix}`}
           className="erp-date-preset-btn"
         >
           다음달 ▶
         </Link>
       </div>
 
+      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+        <Link
+          href={`/reports/monthly?month=${month}${qSuffix}`}
+          className={`erp-date-preset-btn${view === "product" ? " active" : ""}`}
+        >
+          품목별
+        </Link>
+        <Link
+          href={`/reports/monthly?month=${month}${qSuffix}&view=supplier`}
+          className={`erp-date-preset-btn${view === "supplier" ? " active" : ""}`}
+        >
+          매입처별
+        </Link>
+        <Link
+          href={`/reports/monthly?month=${month}${qSuffix}&view=customer`}
+          className={`erp-date-preset-btn${view === "customer" ? " active" : ""}`}
+        >
+          매출처별
+        </Link>
+      </div>
+
       <form method="get" id="monthly-report-search-form" className="erp-search">
+        <input type="hidden" name="view" value={view} />
         <div className="erp-field">
           <label htmlFor="search-month">기준월</label>
           <input
@@ -281,7 +404,10 @@ export default async function MonthlyReportPage({
           F5 조회
         </button>
         {q && (
-          <Link href={`/reports/monthly?month=${month}`} className="erp-btn">
+          <Link
+            href={`/reports/monthly?month=${month}${viewSuffix}`}
+            className="erp-btn"
+          >
             초기화
           </Link>
         )}
@@ -384,171 +510,280 @@ export default async function MonthlyReportPage({
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>품목 / 거래처</th>
-              <th style={{ width: 70 }}>구분</th>
-              <th className="num" style={{ width: 110 }}>
-                입고수량
-              </th>
-              <th className="num" style={{ width: 120 }}>
-                입고금액
-              </th>
-              <th className="num" style={{ width: 110 }}>
-                출고수량
-              </th>
-              <th className="num" style={{ width: 120 }}>
-                출고금액
-              </th>
-              <th className="num" style={{ width: 110 }}>
-                재고 순증감
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {itemGroups.map((g, groupIndex) => {
-              // 품목(헤더+거래처별 상세행)을 한 덩어리로 보고, 덩어리마다
-              // 번갈아 배경을 넣는다 — 표 전체에 걸리는 일반 zebra(짝수행
-              // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
-              // 헷갈렸다.
-              const groupBg =
-                groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
-              return (
-                <Fragment key={g.productId}>
-                  <tr style={{ background: groupBg }}>
-                    <td style={{ fontWeight: 700 }}>
-                      {g.sku !== "-" && (
-                        <span
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            fontWeight: 400,
-                          }}
-                        >
-                          {g.sku} ·{" "}
-                        </span>
-                      )}
-                      {g.name}
-                      {g.spec !== "-" && (
-                        <span
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            fontWeight: 400,
-                          }}
-                        >
-                          {" "}
-                          ({g.spec})
-                        </span>
-                      )}
-                    </td>
-                    <td />
-                    <td className="num" style={{ fontWeight: 700 }}>
-                      {g.inQty.toLocaleString()} {g.unit}
-                    </td>
-                    <td className="num" style={{ fontWeight: 700 }}>
-                      {g.inAmount.toLocaleString()}
-                    </td>
-                    <td className="num" style={{ fontWeight: 700 }}>
-                      {g.outQty.toLocaleString()} {g.unit}
-                    </td>
-                    <td className="num" style={{ fontWeight: 700 }}>
-                      {g.outAmount.toLocaleString()}
-                    </td>
-                    <td className="num" style={{ fontWeight: 700 }}>
-                      {(g.inQty - g.outQty).toLocaleString()} {g.unit}
-                    </td>
-                  </tr>
-                  {g.details.map((d) => (
-                    <tr
-                      key={`${g.productId}-${d.type}-${d.companyId}`}
-                      style={{ background: groupBg }}
-                    >
-                      <td style={{ paddingLeft: 26 }}>
-                        <Link
-                          href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
-                            d.type === "in"
-                              ? `s:${d.companyId}`
-                              : `c:${d.companyId}`,
-                          )}`}
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            textDecoration: "underline",
-                          }}
-                        >
-                          {d.companyName}
-                        </Link>
+      {view === "product" && (
+        <div className="erp-grid-wrap">
+          <table className="erp-grid">
+            <thead>
+              <tr>
+                <th>품목 / 거래처</th>
+                <th style={{ width: 70 }}>구분</th>
+                <th className="num" style={{ width: 110 }}>
+                  입고수량
+                </th>
+                <th className="num" style={{ width: 120 }}>
+                  입고금액
+                </th>
+                <th className="num" style={{ width: 110 }}>
+                  출고수량
+                </th>
+                <th className="num" style={{ width: 120 }}>
+                  출고금액
+                </th>
+                <th className="num" style={{ width: 110 }}>
+                  재고 순증감
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {itemGroups.map((g, groupIndex) => {
+                // 품목(헤더+거래처별 상세행)을 한 덩어리로 보고, 덩어리마다
+                // 번갈아 배경을 넣는다 — 표 전체에 걸리는 일반 zebra(짝수행
+                // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
+                // 헷갈렸다.
+                const groupBg =
+                  groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                return (
+                  <Fragment key={g.productId}>
+                    <tr style={{ background: groupBg }}>
+                      <td style={{ fontWeight: 700 }}>
+                        {g.sku !== "-" && (
+                          <span
+                            style={{
+                              color: "var(--erp-text-muted)",
+                              fontWeight: 400,
+                            }}
+                          >
+                            {g.sku} ·{" "}
+                          </span>
+                        )}
+                        {g.name}
+                        {g.spec !== "-" && (
+                          <span
+                            style={{
+                              color: "var(--erp-text-muted)",
+                              fontWeight: 400,
+                            }}
+                          >
+                            {" "}
+                            ({g.spec})
+                          </span>
+                        )}
                       </td>
-                      <td>
-                        <GridBadge tone={d.type === "in" ? "ok" : "danger"}>
-                          {d.type === "in" ? "입고" : "출고"}
-                        </GridBadge>
+                      <td />
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {g.inQty.toLocaleString()} {g.unit}
                       </td>
-                      <td
-                        className="num"
-                        style={{ color: "var(--erp-text-muted)" }}
-                      >
-                        {d.type === "in"
-                          ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
-                          : "-"}
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {g.inAmount.toLocaleString()}
                       </td>
-                      <td
-                        className="num"
-                        style={{ color: "var(--erp-text-muted)" }}
-                      >
-                        {d.type === "in" ? d.amount.toLocaleString() : "-"}
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {g.outQty.toLocaleString()} {g.unit}
                       </td>
-                      <td
-                        className="num"
-                        style={{ color: "var(--erp-text-muted)" }}
-                      >
-                        {d.type === "out"
-                          ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
-                          : "-"}
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {g.outAmount.toLocaleString()}
                       </td>
-                      <td
-                        className="num"
-                        style={{ color: "var(--erp-text-muted)" }}
-                      >
-                        {d.type === "out" ? d.amount.toLocaleString() : "-"}
-                      </td>
-                      <td
-                        className="num"
-                        style={{ color: "var(--erp-text-muted)" }}
-                      >
-                        -
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {(g.inQty - g.outQty).toLocaleString()} {g.unit}
                       </td>
                     </tr>
-                  ))}
-                </Fragment>
-              );
-            })}
-            {!itemGroups.length && (
-              <tr>
-                <td colSpan={7} className="erp-grid-empty">
-                  조건에 맞는 입출고 내역이 없습니다.
-                </td>
-              </tr>
+                    {g.details.map((d) => (
+                      <tr
+                        key={`${g.productId}-${d.type}-${d.companyId}`}
+                        style={{ background: groupBg }}
+                      >
+                        <td style={{ paddingLeft: 26 }}>
+                          <Link
+                            href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
+                              d.type === "in"
+                                ? `s:${d.companyId}`
+                                : `c:${d.companyId}`,
+                            )}`}
+                            style={{
+                              color: "var(--erp-text-muted)",
+                              textDecoration: "underline",
+                            }}
+                          >
+                            {d.companyName}
+                          </Link>
+                        </td>
+                        <td>
+                          <GridBadge tone={d.type === "in" ? "ok" : "danger"}>
+                            {d.type === "in" ? "입고" : "출고"}
+                          </GridBadge>
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          {d.type === "in"
+                            ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
+                            : "-"}
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          {d.type === "in" ? d.amount.toLocaleString() : "-"}
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          {d.type === "out"
+                            ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
+                            : "-"}
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          {d.type === "out" ? d.amount.toLocaleString() : "-"}
+                        </td>
+                        <td
+                          className="num"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          -
+                        </td>
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
+              {!itemGroups.length && (
+                <tr>
+                  <td colSpan={7} className="erp-grid-empty">
+                    조건에 맞는 입출고 내역이 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {itemGroups.length > 0 && (
+              <tfoot>
+                <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                  <td colSpan={2} className="erp-grid-sticky-label">
+                    합계 ({itemGroups.length}개 품목)
+                  </td>
+                  <td className="num">{totalInQty.toLocaleString()}</td>
+                  <td className="num">{totalInAmount.toLocaleString()}</td>
+                  <td className="num">{totalOutQty.toLocaleString()}</td>
+                  <td className="num">{totalOutAmount.toLocaleString()}</td>
+                  <td className="num">
+                    {(totalInQty - totalOutQty).toLocaleString()}
+                  </td>
+                </tr>
+              </tfoot>
             )}
-          </tbody>
-          {itemGroups.length > 0 && (
-            <tfoot>
-              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
-                <td colSpan={2} className="erp-grid-sticky-label">
-                  합계 ({itemGroups.length}개 품목)
-                </td>
-                <td className="num">{totalInQty.toLocaleString()}</td>
-                <td className="num">{totalInAmount.toLocaleString()}</td>
-                <td className="num">{totalOutQty.toLocaleString()}</td>
-                <td className="num">{totalOutAmount.toLocaleString()}</td>
-                <td className="num">
-                  {(totalInQty - totalOutQty).toLocaleString()}
-                </td>
+          </table>
+        </div>
+      )}
+
+      {(view === "supplier" || view === "customer") && (
+        <div className="erp-grid-wrap">
+          <table className="erp-grid">
+            <thead>
+              <tr>
+                <th>{view === "supplier" ? "매입처" : "매출처"} / 품목</th>
+                <th style={{ width: 160 }}>규격</th>
+                <th className="num" style={{ width: 110 }}>
+                  수량
+                </th>
+                <th className="num" style={{ width: 120 }}>
+                  금액
+                </th>
               </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {companyGroups.map((cg, groupIndex) => {
+                const groupBg =
+                  groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                return (
+                  <Fragment key={cg.companyId}>
+                    <tr style={{ background: groupBg }}>
+                      <td colSpan={2} style={{ fontWeight: 700 }}>
+                        <Link
+                          href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
+                            `${companyKeyPrefix}:${cg.companyId}`,
+                          )}`}
+                          style={{ color: "var(--erp-text)" }}
+                        >
+                          {cg.companyName}
+                        </Link>
+                      </td>
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {cg.totalQuantity.toLocaleString()}
+                      </td>
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {cg.totalAmount.toLocaleString()}
+                      </td>
+                    </tr>
+                    {cg.products.map((pg) => {
+                      const first = pg.items[0];
+                      return (
+                        <tr
+                          key={`${cg.companyId}-${pg.key}`}
+                          style={{ background: groupBg }}
+                        >
+                          <td
+                            style={{
+                              paddingLeft: 26,
+                              color: "var(--erp-text-muted)",
+                            }}
+                          >
+                            {first.sku !== "-" && <span>{first.sku} · </span>}
+                            {first.productName}
+                          </td>
+                          <td style={{ color: "var(--erp-text-muted)" }}>
+                            {first.spec !== "-" ? first.spec : "-"}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            {pg.totalQuantity.toLocaleString()} {first.unit}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            {pg.totalAmount.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </Fragment>
+                );
+              })}
+              {!companyGroups.length && (
+                <tr>
+                  <td colSpan={4} className="erp-grid-empty">
+                    조건에 맞는 내역이 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {companyGroups.length > 0 && (
+              <tfoot>
+                <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                  <td colSpan={2} className="erp-grid-sticky-label">
+                    합계 ({companyGroups.length}곳)
+                  </td>
+                  <td className="num">
+                    {companyGroups
+                      .reduce((sum, g) => sum + g.totalQuantity, 0)
+                      .toLocaleString()}
+                  </td>
+                  <td className="num">
+                    {companyGroups
+                      .reduce((sum, g) => sum + g.totalAmount, 0)
+                      .toLocaleString()}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      )}
     </div>
   );
 }
