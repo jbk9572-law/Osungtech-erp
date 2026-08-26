@@ -62,6 +62,24 @@ function productTotals(items: ItemRow[]) {
   return { quantity, amount, unit };
 }
 
+// 커버테이프처럼 관리번호(롯)별로 줄이 나뉘어 있어도 규격 자체는 전부
+// 똑같은 경우, 카톡 복사 텍스트에서는 그 규격을 여러 번 반복해서 보여줄
+// 필요가 없다 — 규격 하나에 합계 수량만 보여주면 충분하다. 규격이 실제로
+// 다른 품목(사이즈가 여러 종류인 경우)은 그대로 규격별로 나눠서 보여준다.
+function groupItemsBySpec(items: ItemRow[]) {
+  const order: string[] = [];
+  const bySpec = new Map<string, ItemRow[]>();
+  for (const item of items) {
+    const key = item.spec || "규격 미지정";
+    if (!bySpec.has(key)) {
+      order.push(key);
+      bySpec.set(key, []);
+    }
+    bySpec.get(key)!.push(item);
+  }
+  return order.map((spec) => ({ spec, items: bySpec.get(spec)! }));
+}
+
 // 거래처 > 품목명 순으로 묶어서 트리 형태로 보여주기 위한 그룹핑. 목록 안에서
 // 같은 거래처/품목이 여러 번 나와도 한 번만 묶어서 보여준다(처음 등장한 순서를
 // 그대로 유지). 같은 품목이라도 규격이 다르면 그 아래에 규격별 줄로 나열된다.
@@ -124,14 +142,20 @@ function appendItemLines(
     partner.products.forEach((product, pi) => {
       if (pi > 0) lines.push("");
       lines.push(`  · ${product.productName}`);
-      for (const item of product.items) {
-        const carryoverSuffix = item.isCarryover ? " (이월)" : "";
+      const specGroups = groupItemsBySpec(product.items);
+      for (const group of specGroups) {
+        const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
+        const carryoverSuffix = group.items.some((it) => it.isCarryover)
+          ? " (이월)"
+          : "";
         lines.push(
-          `    ${item.spec || "규격 미지정"} : ${item.quantity.toLocaleString()}${carryoverSuffix}`,
+          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}`,
         );
-        if (item.remark) lines.push(`      (비고: ${item.remark})`);
+        for (const item of group.items) {
+          if (item.remark) lines.push(`      (비고: ${item.remark})`);
+        }
       }
-      if (product.items.length > 1) {
+      if (specGroups.length > 1) {
         const { quantity } = productTotals(product.items);
         lines.push(`    합계 - ${quantity.toLocaleString()}`);
       }

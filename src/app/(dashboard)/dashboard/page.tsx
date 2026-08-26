@@ -24,9 +24,10 @@ function toDateStr(year: number, month: number, day: number) {
 // 않은 달의 실적이 이번 달 실적에 섞여버린다. 그래서 salesItems/
 // purchaseItems 목록에는 다른 품목과 똑같이 끼워 넣어 거래처/품목 트리에
 // 자연스럽게 같이 보이게 하되, isCarryover 플래그만 표시해 화면에서 "이월"
-// 배지로 구분하고, salesCount/salesTotal(정식 합계)에는 넣지 않는다(아래
-// dataByDate 구성 부분 참고). order_date에 해당하는 달력 날짜에는 원래
-// 매출/매입처럼 보이면 안 된다.
+// 배지로 구분하고, 금액은 salesTotal/purchaseTotal(정식 합계)에는 넣지
+// 않는다(아래 dataByDate 구성 부분 참고) — 다만 실제로 오늘 처리한 건은
+// 맞으므로 건수(salesCount/purchaseCount)에는 반영한다. order_date에
+// 해당하는 달력 날짜에는 원래 매출/매입처럼 보이면 안 된다.
 function isCarryover(orderDate: string, createdAt: string) {
   const created = new Date(createdAt);
   const createdMonth = `${created.getFullYear()}-${pad(created.getMonth() + 1)}`;
@@ -323,7 +324,12 @@ export default async function DashboardPage({
     if (!isCarryover(item.sales_orders.order_date, item.sales_orders.created_at)) continue;
     const date = toLocalDateStr(item.sales_orders.created_at);
     if (date < monthStart || date > monthEnd) continue;
-    ensure(date).salesItems.push({
+    const bucket = ensure(date);
+    // 금액은 회계상 다음 달 실적이라 이번 달 salesTotal에는 안 더하지만,
+    // 실제로 오늘 처리한 건이므로 건수(salesCount)에는 반영한다 — 카톡
+    // 복사 텍스트의 "[매출] N건"이 아래 나열된 품목 수와 어긋나지 않게.
+    bucket.salesCount += 1;
+    bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
       productName: item.products?.name ?? "상품 미상",
       spec: item.spec || item.products?.spec || "",
@@ -340,7 +346,11 @@ export default async function DashboardPage({
     if (!isCarryover(item.purchase_orders.purchase_date, item.purchase_orders.created_at)) continue;
     const date = toLocalDateStr(item.purchase_orders.created_at);
     if (date < monthStart || date > monthEnd) continue;
-    ensure(date).purchaseItems.push({
+    const bucket = ensure(date);
+    // 위 매출 이월과 동일한 이유로, 금액은 purchaseTotal에 안 더하지만
+    // 건수(purchaseCount)에는 반영한다.
+    bucket.purchaseCount += 1;
+    bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? "상품 미상",
       spec: item.spec || item.products?.spec || "",

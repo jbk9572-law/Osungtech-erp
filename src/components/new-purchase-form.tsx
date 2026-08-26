@@ -745,9 +745,32 @@ export function NewPurchaseForm({
       )}
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
+        <div
+          className="erp-detail-tabs"
+          style={{ justifyContent: "space-between" }}
+        >
           <span className="erp-detail-tab active">기본정보</span>
+          <button
+            ref={submitRef}
+            type="submit"
+            disabled={pending}
+            className="erp-btn erp-btn-primary"
+            style={{ minWidth: 0, margin: 4 }}
+          >
+            {pending ? (
+              <>
+                <span className="erp-spinner" aria-hidden /> 저장 중...
+              </>
+            ) : (
+              `F7 ${submitLabel}`
+            )}
+          </button>
         </div>
+        {!!(messageDismissed ? undefined : state) && (
+          <div style={{ padding: "8px 14px 0" }}>
+            <FormMessage state={messageDismissed ? undefined : state} />
+          </div>
+        )}
         <div
           className="erp-detail-body erp-search"
           style={{ border: "none", padding: 14, margin: 0 }}
@@ -1554,22 +1577,6 @@ export function NewPurchaseForm({
         )}
       </div>
 
-      <FormMessage state={messageDismissed ? undefined : state} />
-
-      <button
-        ref={submitRef}
-        type="submit"
-        disabled={pending}
-        className="erp-btn erp-btn-primary"
-      >
-        {pending ? (
-          <>
-            <span className="erp-spinner" aria-hidden /> 저장 중...
-          </>
-        ) : (
-          `F7 ${submitLabel}`
-        )}
-      </button>
     </form>
   );
 }
