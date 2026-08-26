@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets } from "@/lib/date-presets";
+import { getDatePresets, previousMonthStart } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
@@ -17,15 +17,24 @@ import {
 
 type DisplayRow = SalesRow;
 
+const DEFAULT_LIST_LIMIT = 300;
+const LIST_LIMIT_STEP = 300;
+
 export default async function SalesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; q?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string }>;
 }) {
-  const { from, to, q } = await searchParams;
+  const { from, to, q, limit: limitParam } = await searchParams;
+  const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
+  const limit =
+    Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
+  // 날짜를 직접 안 걸었으면 지난달 1일부터만 보여준다 — 그 이전 내역은
+  // 날짜 필터로 직접 조회한다.
+  const effectiveFrom = from || previousMonthStart();
   // 상세 화면에서 ESC/닫기를 누르면 지금 걸어둔 검색/필터로 되돌아오게,
   // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
-  const backParam = buildListReturnParam({ q, from, to });
+  const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
   const supabase = await createClient();
 
   let query = supabase
@@ -43,9 +52,8 @@ export default async function SalesPage({
     // PostgREST의 `table(column)` 표기를 컬럼명 자리에 직접 써서 우회한다.
     .order("sales_orders(order_date)", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(200);
-
-  if (from) query = query.gte("sales_orders.order_date", from);
+    .gte("sales_orders.order_date", effectiveFrom)
+    .limit(limit);
   if (to) query = query.lte("sales_orders.order_date", to);
 
   // 매출 옆에 수금 내역도 같은 목록에 섞어서 보여준다(구 ERP의 "매출"
@@ -55,14 +63,18 @@ export default async function SalesPage({
     .from("customer_payments")
     .select("id, paid_at, amount, memo, customers(id, name)")
     .order("paid_at", { ascending: false })
-    .limit(200);
-  if (from) paymentQuery = paymentQuery.gte("paid_at", from);
+    .gte("paid_at", effectiveFrom)
+    .limit(limit);
   if (to) paymentQuery = paymentQuery.lte("paid_at", to);
 
   const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
     query,
     paymentQuery,
   ]);
+  // 조회기간 안에 상한(limit)만큼 꽉 채워 왔다면 그 이상 더 있을 수 있다는
+  // 뜻이므로 "더보기"를 보여준다.
+  const hasMore =
+    (rawItems?.length ?? 0) >= limit || (rawPayments?.length ?? 0) >= limit;
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
@@ -221,6 +233,12 @@ export default async function SalesPage({
   const exportHref = q
     ? `/api/sales/export?q=${encodeURIComponent(q)}`
     : "/api/sales/export";
+  const moreParams = new URLSearchParams();
+  if (from) moreParams.set("from", from);
+  if (to) moreParams.set("to", to);
+  if (q) moreParams.set("q", q);
+  moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
+  const moreHref = `/sales?${moreParams.toString()}`;
 
   return (
     <div>
@@ -255,7 +273,7 @@ export default async function SalesPage({
             id="search-from"
             type="date"
             name="from"
-            defaultValue={from ?? ""}
+            defaultValue={from ?? effectiveFrom}
             className="erp-input"
           />
         </div>
@@ -284,12 +302,16 @@ export default async function SalesPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           F5 조회
         </button>
-        {(from || to || q) && (
+        {(from || to || q || limitParam) && (
           <Link href="/sales" className="erp-btn">
             초기화
           </Link>
         )}
       </form>
+      <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--erp-text-muted)" }}>
+        {from ? "" : `날짜를 지정하지 않으면 지난달 1일(${effectiveFrom})부터 표시됩니다. `}
+        최근 {limit.toLocaleString()}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+      </p>
 
       <div className="erp-toolbar">
         <Link href="/sales/new" className="erp-btn erp-btn-primary">
@@ -318,6 +340,14 @@ export default async function SalesPage({
         totalTax={totalTax}
         backParam={backParam ?? ""}
       />
+
+      {hasMore && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+          <Link href={moreHref} className="erp-btn">
+            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}줄)
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
