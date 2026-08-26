@@ -59,6 +59,7 @@ type PriceHistoryEntry = {
   productId: string;
   unitPrice: number;
   orderDate: string;
+  lotNumber?: string | null;
 };
 
 type Row = {
@@ -387,6 +388,25 @@ export function NewSaleForm({
     return product ? Number(product.price) : 0;
   }
 
+  // 케이아이티솔루션·제니스테크·타이거일렉처럼 같은 거래처+품목 조합에
+  // 매번 같은 관리번호를 써온 경우, 지난번 값을 다시 찾아 입력할 필요
+  // 없게 가장 최근 값을 그대로 이어서 채운다.
+  function getRecentLotNumber(
+    forCustomerId: string,
+    productId: string,
+  ): string | null {
+    if (!forCustomerId) return null;
+    const entries = history
+      .filter(
+        (h) =>
+          h.customerId === forCustomerId &&
+          h.productId === productId &&
+          h.lotNumber,
+      )
+      .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
+    return entries[0]?.lotNumber ?? null;
+  }
+
   // 임시 저장된 모조지 계산 + 입고 불러오기로 복사해온 계산들을 합쳐서,
   // 등록 버튼을 누르기 전에도 TG0 품목 줄이 실제로 어떤 수량으로 들어갈지
   // 그리드에 미리 보여준다. 이 줄은 편집 가능한 rows에는 넣지 않는다 —
@@ -466,21 +486,37 @@ export function NewSaleForm({
 
   function handleProductChange(key: number, productId: string) {
     const product = products.find((p) => p.id === productId);
+    const currentRow = rows.find((r) => r.key === key);
+    const recentLotNumber = getRecentLotNumber(customerId, productId);
     updateRow(key, {
       productId,
       spec: product?.spec ?? "",
       unitPrice: resolvePrice(customerId, productId),
+      ...(recentLotNumber && !currentRow?.lotNumber
+        ? { lotNumber: recentLotNumber }
+        : {}),
     });
   }
 
   function handleCustomerChange(newCustomerId: string) {
     setCustomerId(newCustomerId);
     setRows((prev) =>
-      prev.map((row) =>
-        row.productId && !row.manualPrice
-          ? { ...row, unitPrice: resolvePrice(newCustomerId, row.productId) }
-          : row,
-      ),
+      prev.map((row) => {
+        if (!row.productId) return row;
+        const recentLotNumber = getRecentLotNumber(
+          newCustomerId,
+          row.productId,
+        );
+        return {
+          ...row,
+          ...(row.manualPrice
+            ? {}
+            : { unitPrice: resolvePrice(newCustomerId, row.productId) }),
+          ...(recentLotNumber && !row.lotNumber
+            ? { lotNumber: recentLotNumber }
+            : {}),
+        };
+      }),
     );
   }
 
@@ -495,7 +531,7 @@ export function NewSaleForm({
       productId,
       spec: product?.spec ?? "",
       manualSpec: false,
-      lotNumber: "",
+      lotNumber: getRecentLotNumber(customerId, productId) ?? "",
       quantity: 0,
       unitPrice: resolvePrice(customerId, productId),
       manualPrice: false,
@@ -1439,6 +1475,11 @@ export function NewSaleForm({
                       {product?.spec && ` (${product.spec})`}:
                     </span>
                     <PriceHistoryHint history={hist} />
+                    {hist[0]?.lotNumber && (
+                      <span style={{ color: "var(--erp-text-muted)" }}>
+                        · 최근 관리번호 {hist[0].lotNumber}
+                      </span>
+                    )}
                   </div>
                 );
               })}

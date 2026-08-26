@@ -12,36 +12,60 @@ export default async function NewSalePage() {
   // 자동입력이 예약된 인상/인하가 있으면 그걸 바로 반영하게 한다.
   await applyDuePriceSchedules(supabase);
 
-  const [{ data: customers }, { data: products }, { data: warehouse }, { data: prices }, { data: history }] =
-    await Promise.all([
-      supabase.from("customers").select("id, name").order("name"),
-      supabase
-        .from("products")
-        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)")
-        .order("name"),
-      supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
-      supabase.from("customer_product_prices").select("customer_id, product_id, unit_price"),
-      supabase
-        .from("sales_order_items")
-        .select("product_id, unit_price, sales_orders!inner(customer_id, order_date)")
-        .order("created_at", { ascending: false })
-        .limit(1000),
-    ]);
+  const [
+    { data: customers },
+    { data: products },
+    { data: warehouse },
+    { data: prices },
+    { data: history },
+  ] = await Promise.all([
+    supabase.from("customers").select("id, name").order("name"),
+    supabase
+      .from("products")
+      .select(
+        "id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)",
+      )
+      .order("name"),
+    supabase
+      .from("warehouses")
+      .select("id")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("customer_product_prices")
+      .select("customer_id, product_id, unit_price"),
+    supabase
+      .from("sales_order_items")
+      .select(
+        "product_id, unit_price, lot_number, sales_orders!inner(customer_id, order_date)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(1000),
+  ]);
 
   const priceHistory = (history ?? []).map((row) => ({
     customerId: row.sales_orders.customer_id,
     productId: row.product_id,
     unitPrice: Number(row.unit_price),
     orderDate: row.sales_orders.order_date,
+    lotNumber: row.lot_number,
   }));
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/sales" } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">새 판매 거래 등록</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+          새 판매 거래 등록
+        </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href="/paper-calc/manual" target="_blank" rel="noopener noreferrer" className="erp-btn">
+          <Link
+            href="/paper-calc/manual"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="erp-btn"
+          >
             재단 배치 시뮬레이터
           </Link>
           <Link href="/sales" className="erp-btn erp-btn-danger">
@@ -51,7 +75,10 @@ export default async function NewSalePage() {
       </div>
       <NewSaleTypeSwitcher
         customers={customers ?? []}
-        products={(products ?? []).map((p) => ({ ...p, stock: p.inventory?.[0]?.quantity ?? 0 }))}
+        products={(products ?? []).map((p) => ({
+          ...p,
+          stock: p.inventory?.[0]?.quantity ?? 0,
+        }))}
         warehouseId={warehouse?.id ?? ""}
         prices={prices ?? []}
         history={priceHistory}

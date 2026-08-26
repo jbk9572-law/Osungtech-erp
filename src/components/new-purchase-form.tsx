@@ -73,6 +73,7 @@ type PriceHistoryEntry = {
   productId: string;
   unitCost: number;
   purchaseDate: string;
+  lotNumber?: string | null;
 };
 
 const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
@@ -196,6 +197,25 @@ export function NewPurchaseForm({
     if (fromSupplier !== undefined) return fromSupplier;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.cost) : 0;
+  }
+
+  // 케이아이티솔루션·제니스테크·타이거일렉처럼 같은 공급처+품목 조합에
+  // 매번 같은 관리번호를 써온 경우, 지난번 값을 다시 찾아 입력할 필요
+  // 없게 가장 최근 값을 그대로 이어서 채운다.
+  function getRecentLotNumber(
+    forSupplierId: string,
+    productId: string,
+  ): string | null {
+    if (!forSupplierId) return null;
+    const entries = history
+      .filter(
+        (h) =>
+          h.supplierId === forSupplierId &&
+          h.productId === productId &&
+          h.lotNumber,
+      )
+      .sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
+    return entries[0]?.lotNumber ?? null;
   }
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
@@ -351,11 +371,16 @@ export function NewPurchaseForm({
 
   function handleProductChange(key: number, productId: string) {
     const product = products.find((p) => p.id === productId);
+    const currentRow = rows.find((r) => r.key === key);
+    const recentLotNumber = getRecentLotNumber(supplierId, productId);
     updateRow(key, {
       productId,
       spec: product?.spec ?? "",
       unitCost: resolveCost(supplierId, productId),
       salePrice: resolveSalePrice(saleCustomerId, productId),
+      ...(recentLotNumber && !currentRow?.lotNumber
+        ? { lotNumber: recentLotNumber }
+        : {}),
     });
   }
 
@@ -380,11 +405,22 @@ export function NewPurchaseForm({
   function handleSupplierChange(newSupplierId: string) {
     setSupplierId(newSupplierId);
     setRows((prev) =>
-      prev.map((row) =>
-        row.productId && !row.manualPrice
-          ? { ...row, unitCost: resolveCost(newSupplierId, row.productId) }
-          : row,
-      ),
+      prev.map((row) => {
+        if (!row.productId) return row;
+        const recentLotNumber = getRecentLotNumber(
+          newSupplierId,
+          row.productId,
+        );
+        return {
+          ...row,
+          ...(row.manualPrice
+            ? {}
+            : { unitCost: resolveCost(newSupplierId, row.productId) }),
+          ...(recentLotNumber && !row.lotNumber
+            ? { lotNumber: recentLotNumber }
+            : {}),
+        };
+      }),
     );
   }
 
@@ -420,7 +456,7 @@ export function NewPurchaseForm({
       productId,
       spec: product?.spec ?? "",
       manualSpec: false,
-      lotNumber: "",
+      lotNumber: getRecentLotNumber(supplierId, productId) ?? "",
       quantity: 0,
       unitCost: resolveCost(supplierId, productId),
       manualPrice: false,
@@ -1506,6 +1542,11 @@ export function NewPurchaseForm({
                       }))}
                       emptyLabel="이전 매입 이력 없음 (신규 단가)"
                     />
+                    {hist[0]?.lotNumber && (
+                      <span style={{ color: "var(--erp-text-muted)" }}>
+                        · 최근 관리번호 {hist[0].lotNumber}
+                      </span>
+                    )}
                   </div>
                 );
               })}

@@ -21,24 +21,41 @@ export default async function EditPurchasePage({
   // 이 값을 읽어 redirect 대상을 정한다). ESC/닫기는 기존처럼 상세로 간다.
   const supabase = await createClient();
 
-  const [{ data: order }, { data: items }, { data: suppliers }, { data: products }, { data: warehouse }, { data: history }, actor] =
-    await Promise.all([
-      supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("purchase_order_items")
-        .select("product_id, spec, quantity, unit_cost, remark, lot_number")
-        .eq("purchase_order_id", id)
-        .order("created_at"),
-      supabase.from("suppliers").select("id, name").order("name"),
-      supabase.from("products").select("id, sku, name, spec, unit, cost, base_package_qty").order("name"),
-      supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
-      supabase
-        .from("purchase_order_items")
-        .select("product_id, unit_cost, purchase_orders!inner(supplier_id, purchase_date)")
-        .order("created_at", { ascending: false })
-        .limit(1000),
-      getCurrentActor(supabase),
-    ]);
+  const [
+    { data: order },
+    { data: items },
+    { data: suppliers },
+    { data: products },
+    { data: warehouse },
+    { data: history },
+    actor,
+  ] = await Promise.all([
+    supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("purchase_order_items")
+      .select("product_id, spec, quantity, unit_cost, remark, lot_number")
+      .eq("purchase_order_id", id)
+      .order("created_at"),
+    supabase.from("suppliers").select("id, name").order("name"),
+    supabase
+      .from("products")
+      .select("id, sku, name, spec, unit, cost, base_package_qty")
+      .order("name"),
+    supabase
+      .from("warehouses")
+      .select("id")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("purchase_order_items")
+      .select(
+        "product_id, unit_cost, lot_number, purchase_orders!inner(supplier_id, purchase_date)",
+      )
+      .order("created_at", { ascending: false })
+      .limit(1000),
+    getCurrentActor(supabase),
+  ]);
 
   if (!order) {
     notFound();
@@ -47,8 +64,12 @@ export default async function EditPurchasePage({
   if (!canManage(order.created_by, actor.userId, actor.isAdmin)) {
     return (
       <div>
-        <KeyboardShortcuts shortcuts={{ Escape: { href: `/purchases/${id}` } }} />
-        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">매입 거래 수정</h1>
+        <KeyboardShortcuts
+          shortcuts={{ Escape: { href: `/purchases/${id}` } }}
+        />
+        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">
+          매입 거래 수정
+        </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           본인이 등록한 거래만 수정할 수 있습니다.
         </p>
@@ -61,15 +82,23 @@ export default async function EditPurchasePage({
     productId: row.product_id,
     unitCost: Number(row.unit_cost),
     purchaseDate: row.purchase_orders.purchase_date,
+    lotNumber: row.lot_number,
   }));
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/purchases/${id}` } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">매입 거래 수정</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+          매입 거래 수정
+        </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/paper-calc?purchaseOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+          <Link
+            href={`/paper-calc?purchaseOrderId=${id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="erp-btn"
+          >
             모조지 계산
           </Link>
           <Link href={`/purchases/${id}`} className="erp-btn erp-btn-danger">

@@ -40,13 +40,24 @@ export default async function EditSalePage({
     supabase.from("customers").select("id, name").order("name"),
     supabase
       .from("products")
-      .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)")
+      .select(
+        "id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)",
+      )
       .order("name"),
-    supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
-    supabase.from("customer_product_prices").select("customer_id, product_id, unit_price"),
+    supabase
+      .from("warehouses")
+      .select("id")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("customer_product_prices")
+      .select("customer_id, product_id, unit_price"),
     supabase
       .from("sales_order_items")
-      .select("product_id, unit_price, sales_orders!inner(customer_id, order_date)")
+      .select(
+        "product_id, unit_price, lot_number, sales_orders!inner(customer_id, order_date)",
+      )
       .order("created_at", { ascending: false })
       .limit(1000),
     getCurrentActor(supabase),
@@ -60,7 +71,9 @@ export default async function EditSalePage({
     return (
       <div>
         <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
-        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">매출 거래 수정</h1>
+        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">
+          매출 거래 수정
+        </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           본인이 등록한 거래만 수정할 수 있습니다.
         </p>
@@ -73,15 +86,23 @@ export default async function EditSalePage({
     productId: row.product_id,
     unitPrice: Number(row.unit_price),
     orderDate: row.sales_orders.order_date,
+    lotNumber: row.lot_number,
   }));
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">매출 거래 수정</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+          매출 거래 수정
+        </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/paper-calc?salesOrderId=${id}`} target="_blank" rel="noopener noreferrer" className="erp-btn">
+          <Link
+            href={`/paper-calc?salesOrderId=${id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="erp-btn"
+          >
             모조지 계산
           </Link>
           <Link href={`/sales/${id}`} className="erp-btn erp-btn-danger">
@@ -91,7 +112,10 @@ export default async function EditSalePage({
       </div>
       <NewSaleForm
         customers={customers ?? []}
-        products={(products ?? []).map((p) => ({ ...p, stock: p.inventory?.[0]?.quantity ?? 0 }))}
+        products={(products ?? []).map((p) => ({
+          ...p,
+          stock: p.inventory?.[0]?.quantity ?? 0,
+        }))}
         warehouseId={warehouse?.id ?? order.warehouse_id}
         prices={prices ?? []}
         history={priceHistory}
