@@ -1,17 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { MouseEvent, ReactNode } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { startRouteProgress } from "@/lib/route-progress";
 
 export function ClickableRow({
   href,
   children,
   className,
+  style,
 }: {
   href: string;
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }) {
   const router = useRouter();
 
@@ -28,6 +30,7 @@ export function ClickableRow({
     <tr
       onClick={handleClick}
       className={`cursor-pointer${className ? ` ${className}` : ""}`}
+      style={style}
     >
       {children}
     </tr>

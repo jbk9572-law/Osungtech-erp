@@ -954,6 +954,13 @@
   background: var(--erp-selected);
 }
 
+/* 품목이 여러 건이라 드롭다운으로 펼친 명세표의 맨 위 합계 행 — 아래
+   품목별 상세 행들과 구분되게 배경을 넣고 굵게 표시한다. */
+.erp-grid tbody tr.summary-emphasis {
+  background: var(--erp-info-bg);
+  font-weight: 700;
+}
+
 .erp-grid .num {
   text-align: right;
   font-variant-numeric: tabular-nums;

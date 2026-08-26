@@ -237,11 +237,18 @@ export function PurchaseGridTable({
                   : "#";
               const hasMultipleItems = !!row.items && row.items.length > 1;
               const isExpanded = expanded.has(row.key);
+              const isSummaryEmphasized = isExpanded && hasMultipleItems;
               return (
                 <Fragment key={row.key}>
                   <ClickableRow
                     href={href}
-                    className={isRowSelected ? "selected" : undefined}
+                    className={
+                      isRowSelected
+                        ? "selected"
+                        : isSummaryEmphasized
+                          ? "summary-emphasis"
+                          : undefined
+                    }
                   >
                     <td style={tdSticky1}>
                       {row.orderId && (
@@ -295,6 +302,11 @@ export function PurchaseGridTable({
                         </button>
                       )}
                       {row.productLabel}
+                      {isSummaryEmphasized && (
+                        <GridBadge tone="warn" style={{ marginLeft: 6 }}>
+                          합계
+                        </GridBadge>
+                      )}
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>
                       {row.spec}
