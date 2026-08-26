@@ -34,6 +34,10 @@ export type SalesRowItem = {
   unitPrice: number | null;
   supplyAmount: number;
   taxAmount: number;
+  // 모조지(TG0) 품목 줄에만 채워진다 — 이 수량이 어떤 규격들로 재단됐는지
+  // "가로×세로 : 수량" 형태로. 값이 있으면 드롭다운에서 이 줄 아래 한 단계
+  // 더 들여써서 보여준다.
+  paperCalcSizeLines?: string[];
 };
 
 export type SalesRow = {
@@ -349,53 +353,87 @@ export function SalesGridTable({
                   </ClickableRow>
                   {isExpanded &&
                     row.items?.map((item, i) => (
-                      <tr
-                        key={`${row.key}-item-${i}`}
-                        style={{ background: "var(--erp-bg-subtle)" }}
-                      >
-                        <td style={tdSticky1} />
-                        <td style={tdSticky2} />
-                        <td />
-                        <td />
-                        <td />
-                        <td />
-                        <td
-                          style={{
-                            paddingLeft: 26,
-                            color: "var(--erp-text-muted)",
-                          }}
-                        >
-                          {item.productLabel}
-                        </td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>
-                          {item.spec}
-                        </td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>
-                          {item.lotNumber || "-"}
-                        </td>
-                        <td className="num">
-                          {item.quantity.toLocaleString()} {item.unit ?? ""}
-                        </td>
-                        <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
-                        >
-                          {formatNumOrDash(item.unitPrice)}
-                        </td>
-                        <td className="num">
-                          {item.supplyAmount.toLocaleString()}
-                        </td>
-                        <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
-                        >
-                          {item.taxAmount.toLocaleString()}
-                        </td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>
-                          {item.remark || "-"}
-                        </td>
-                        <td />
-                      </tr>
+                      <Fragment key={`${row.key}-item-${i}`}>
+                        <tr style={{ background: "var(--erp-bg-subtle)" }}>
+                          <td style={tdSticky1} />
+                          <td style={tdSticky2} />
+                          <td />
+                          <td />
+                          <td />
+                          <td />
+                          <td
+                            style={{
+                              paddingLeft: 26,
+                              color: "var(--erp-text-muted)",
+                            }}
+                          >
+                            {item.productLabel}
+                            {!!item.paperCalcSizeLines?.length && (
+                              <GridBadge tone="info" style={{ marginLeft: 6 }}>
+                                계산 연결됨
+                              </GridBadge>
+                            )}
+                          </td>
+                          <td style={{ color: "var(--erp-text-muted)" }}>
+                            {item.spec}
+                          </td>
+                          <td style={{ color: "var(--erp-text-muted)" }}>
+                            {item.lotNumber || "-"}
+                          </td>
+                          <td className="num">
+                            {item.quantity.toLocaleString()} {item.unit ?? ""}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            {formatNumOrDash(item.unitPrice)}
+                          </td>
+                          <td className="num">
+                            {item.supplyAmount.toLocaleString()}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            {item.taxAmount.toLocaleString()}
+                          </td>
+                          <td style={{ color: "var(--erp-text-muted)" }}>
+                            {item.remark || "-"}
+                          </td>
+                          <td />
+                        </tr>
+                        {item.paperCalcSizeLines?.map((line, lineIndex) => (
+                          <tr
+                            key={`${row.key}-item-${i}-size-${lineIndex}`}
+                            style={{ background: "var(--erp-bg-subtle)" }}
+                          >
+                            <td style={tdSticky1} />
+                            <td style={tdSticky2} />
+                            <td />
+                            <td />
+                            <td />
+                            <td />
+                            <td
+                              style={{
+                                paddingLeft: 44,
+                                color: "var(--erp-text-muted)",
+                                fontSize: 11.5,
+                              }}
+                            >
+                              ㄴ {line}
+                            </td>
+                            <td />
+                            <td />
+                            <td />
+                            <td />
+                            <td />
+                            <td />
+                            <td />
+                            <td />
+                          </tr>
+                        ))}
+                      </Fragment>
                     ))}
                 </Fragment>
               );

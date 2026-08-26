@@ -8,6 +8,12 @@ import {
   type SalesRow,
   type SalesRowItem,
 } from "@/components/sales-grid-table";
+import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import {
+  formatPaperCalcSizeLines,
+  mergePaperCalcInputItems,
+  type PaperCalcSizeRow,
+} from "@/lib/paper-calc-summary";
 
 type DisplayRow = SalesRow;
 
@@ -75,6 +81,34 @@ export default async function SalesPage({
     return { ...item, supplyAmount, taxAmount };
   });
 
+  // 모조지(TG0) 품목 줄이 있는 명세표만, 그 규격별 배치 내역을 같이 불러와서
+  // 드롭다운을 펼쳤을 때 "이 연수가 어떤 규격들로 재단됐는지" 보여준다.
+  const orderIdsWithPaperStock = Array.from(
+    new Set(
+      itemRows
+        .filter((item) => item.products?.sku === PAPER_STOCK_SKU)
+        .map((item) => item.sales_orders?.id)
+        .filter((id): id is string => !!id),
+    ),
+  );
+  const { data: paperCalcRows } = orderIdsWithPaperStock.length
+    ? await supabase
+        .from("paper_calculations")
+        .select("sales_order_id, input_items")
+        .in("sales_order_id", orderIdsWithPaperStock)
+    : { data: [] as { sales_order_id: string; input_items: unknown }[] };
+  const paperCalcSizesByOrderId = new Map<string, PaperCalcSizeRow[]>();
+  for (const calc of paperCalcRows ?? []) {
+    if (!calc.sales_order_id) continue;
+    paperCalcSizesByOrderId.set(
+      calc.sales_order_id,
+      mergePaperCalcInputItems(
+        paperCalcSizesByOrderId.get(calc.sales_order_id) ?? [],
+        calc.input_items,
+      ),
+    );
+  }
+
   // 같은 명세표(sales_order)에 속한 품목은 검색 여부와 상관없이 한 행으로
   // 묶어서 보여준다. 품목이 여러 개면 품목명 칸에 "첫 품목명 외 N건"으로
   // 요약한다. 검색어로 일부 품목만 걸러졌다면(예: 상품명/SKU 검색) 그
@@ -83,6 +117,12 @@ export default async function SalesPage({
     itemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>(
       (acc, item) => {
         const orderId = item.sales_orders?.id ?? item.id;
+        const paperCalcSizeLines =
+          item.products?.sku === PAPER_STOCK_SKU
+            ? formatPaperCalcSizeLines(
+                paperCalcSizesByOrderId.get(orderId) ?? [],
+              )
+            : [];
         const itemDetail: SalesRowItem = {
           productLabel: item.products?.name ?? "-",
           spec: item.spec || item.products?.spec || "-",
@@ -93,6 +133,9 @@ export default async function SalesPage({
           unitPrice: Number(item.unit_price),
           supplyAmount: item.supplyAmount,
           taxAmount: item.taxAmount,
+          paperCalcSizeLines: paperCalcSizeLines.length
+            ? paperCalcSizeLines
+            : undefined,
         };
         if (!acc[orderId]) {
           acc[orderId] = {
