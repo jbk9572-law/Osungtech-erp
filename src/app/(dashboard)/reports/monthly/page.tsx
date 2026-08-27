@@ -13,12 +13,14 @@ type View = "product" | "supplier" | "customer";
 type CompanyProductRow = {
   companyId: string;
   companyName: string;
+  orderId: string;
   sku: string;
   productName: string;
   spec: string;
   unit: string | null;
   quantity: number;
   amount: number;
+  taxAmount: number;
 };
 
 function matchesKeyword(row: CompanyProductRow, keyword: string): boolean {
@@ -46,14 +48,31 @@ function buildCompanyGroups(rows: CompanyProductRow[]) {
       companyName: g.items[0].companyName,
       totalQuantity: g.totalQuantity,
       totalAmount: g.totalAmount,
+      totalTax: g.items.reduce((sum, r) => sum + r.taxAmount, 0),
+      transactionCount: new Set(g.items.map((r) => r.orderId)).size,
       products: groupByProductKey(
         g.items,
         (r) => `${r.productName}|${r.spec}`,
         (r) => r.quantity,
         (r) => r.amount,
-      ),
+      ).map((pg) => ({
+        ...pg,
+        totalTax: pg.items.reduce((sum, r) => sum + r.taxAmount, 0),
+        avgUnitPrice: pg.totalQuantity ? pg.totalAmount / pg.totalQuantity : 0,
+      })),
     }))
     .sort((a, b) => b.totalAmount - a.totalAmount);
+}
+
+// 전월 대비 증감률 — 전월 실적이 0이면(신규 시작 등) 비율 계산이 무의미해
+// 배지를 아예 표시하지 않는다.
+function monthOverMonthDelta(
+  current: number,
+  prev: number,
+): { pct: number; isUp: boolean } | null {
+  if (!prev) return null;
+  const pct = ((current - prev) / prev) * 100;
+  return { pct: Math.abs(pct), isUp: pct >= 0 };
 }
 
 type Detail = {
@@ -89,6 +108,8 @@ export default async function MonthlyReportPage({
       : "product";
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
+  const prevMonth = shiftMonth(month, -1);
+  const { from: prevFrom, to: prevTo } = getMonthRange(prevMonth);
   const supabase = await createClient();
 
   // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행)에서 조용히
@@ -96,11 +117,16 @@ export default async function MonthlyReportPage({
   // (한 달 거래가 한도를 넘으면 매번 다른 행이 빠지면서 합계가 틀어질 수
   // 있다). 월 집계는 정확도가 중요해서 넉넉한 상한(5000) + 결정적인
   // 정렬을 같이 건다.
-  const [{ data: salesRows }, { data: purchaseRows }] = await Promise.all([
+  const [
+    { data: salesRows },
+    { data: purchaseRows },
+    { data: prevSalesRows },
+    { data: prevPurchaseRows },
+  ] = await Promise.all([
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_orders!inner(order_date, customers(id, name)), products(sku, name, spec, unit)",
+        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, customers(id, name)), products(sku, name, spec, unit)",
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -109,13 +135,36 @@ export default async function MonthlyReportPage({
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, product_id, purchase_orders!inner(purchase_date, suppliers(id, name)), products(sku, name, spec, unit)",
+        "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, suppliers(id, name)), products(sku, name, spec, unit)",
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
       .order("purchase_orders(purchase_date)", { ascending: true })
       .limit(5000),
+    // 요약카드의 전월 대비 증감(%) 계산용 — 품목/거래처 상세는 필요 없고
+    // 총액만 필요하므로 가벼운 컬럼만 가져온다.
+    supabase
+      .from("sales_order_items")
+      .select("quantity, unit_price, sales_orders!inner(order_date)")
+      .gte("sales_orders.order_date", prevFrom)
+      .lte("sales_orders.order_date", prevTo)
+      .limit(5000),
+    supabase
+      .from("purchase_order_items")
+      .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
+      .gte("purchase_orders.purchase_date", prevFrom)
+      .lte("purchase_orders.purchase_date", prevTo)
+      .limit(5000),
   ]);
+
+  const prevSalesTotal = (prevSalesRows ?? []).reduce(
+    (sum, r) => sum + r.quantity * Number(r.unit_price),
+    0,
+  );
+  const prevPurchaseTotal = (prevPurchaseRows ?? []).reduce(
+    (sum, r) => sum + r.quantity * Number(r.unit_cost),
+    0,
+  );
 
   const groups = new Map<string, ItemGroup>();
   const companyIds = new Set<string>();
@@ -248,28 +297,38 @@ export default async function MonthlyReportPage({
   // 다시 정리한다. 새로 쿼리하지 않고 같은 데이터를 재사용한다.
   const purchaseCompanyRows: CompanyProductRow[] = (purchaseRows ?? [])
     .filter((row) => row.purchase_orders?.suppliers)
-    .map((row) => ({
-      companyId: row.purchase_orders!.suppliers!.id,
-      companyName: row.purchase_orders!.suppliers!.name,
-      sku: row.products?.sku ?? "-",
-      productName: row.products?.name ?? "-",
-      spec: row.products?.spec ?? "-",
-      unit: row.products?.unit ?? null,
-      quantity: row.quantity,
-      amount: row.quantity * Number(row.unit_cost),
-    }));
+    .map((row) => {
+      const amount = row.quantity * Number(row.unit_cost);
+      return {
+        companyId: row.purchase_orders!.suppliers!.id,
+        companyName: row.purchase_orders!.suppliers!.name,
+        orderId: row.purchase_orders!.id,
+        sku: row.products?.sku ?? "-",
+        productName: row.products?.name ?? "-",
+        spec: row.products?.spec ?? "-",
+        unit: row.products?.unit ?? null,
+        quantity: row.quantity,
+        amount,
+        taxAmount: Math.round(amount * 0.1),
+      };
+    });
   const salesCompanyRows: CompanyProductRow[] = (salesRows ?? [])
     .filter((row) => row.sales_orders?.customers)
-    .map((row) => ({
-      companyId: row.sales_orders!.customers!.id,
-      companyName: row.sales_orders!.customers!.name,
-      sku: row.products?.sku ?? "-",
-      productName: row.products?.name ?? "-",
-      spec: row.products?.spec ?? "-",
-      unit: row.products?.unit ?? null,
-      quantity: row.quantity,
-      amount: row.quantity * Number(row.unit_price),
-    }));
+    .map((row) => {
+      const amount = row.quantity * Number(row.unit_price);
+      return {
+        companyId: row.sales_orders!.customers!.id,
+        companyName: row.sales_orders!.customers!.name,
+        orderId: row.sales_orders!.id,
+        sku: row.products?.sku ?? "-",
+        productName: row.products?.name ?? "-",
+        spec: row.products?.spec ?? "-",
+        unit: row.products?.unit ?? null,
+        quantity: row.quantity,
+        amount,
+        taxAmount: Math.round(amount * 0.1),
+      };
+    });
 
   const supplierGroups =
     view === "supplier"
@@ -314,8 +373,13 @@ export default async function MonthlyReportPage({
   const totalOutQty = itemGroups.reduce((sum, g) => sum + g.outQty, 0);
   const totalOutAmount = itemGroups.reduce((sum, g) => sum + g.outAmount, 0);
 
+  const salesDelta = monthOverMonthDelta(totalSalesAmount, prevSalesTotal);
+  const purchaseDelta = monthOverMonthDelta(
+    totalPurchaseAmount,
+    prevPurchaseTotal,
+  );
+
   const [year, monthNum] = month.split("-");
-  const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
   const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
@@ -444,6 +508,25 @@ export default async function MonthlyReportPage({
           >
             {totalSalesAmount.toLocaleString()}원
           </div>
+          {salesDelta && (
+            <div
+              style={{
+                marginTop: 5,
+                fontSize: 11,
+                fontWeight: 700,
+                color: salesDelta.isUp
+                  ? "var(--erp-success)"
+                  : "var(--erp-danger)",
+              }}
+            >
+              {salesDelta.isUp ? "▲" : "▼"} {salesDelta.pct.toFixed(1)}%{" "}
+              <span
+                style={{ fontWeight: 500, color: "var(--erp-text-muted)" }}
+              >
+                전월대비
+              </span>
+            </div>
+          )}
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div
@@ -465,6 +548,25 @@ export default async function MonthlyReportPage({
           >
             {totalPurchaseAmount.toLocaleString()}원
           </div>
+          {purchaseDelta && (
+            <div
+              style={{
+                marginTop: 5,
+                fontSize: 11,
+                fontWeight: 700,
+                color: purchaseDelta.isUp
+                  ? "var(--erp-success)"
+                  : "var(--erp-danger)",
+              }}
+            >
+              {purchaseDelta.isUp ? "▲" : "▼"} {purchaseDelta.pct.toFixed(1)}%{" "}
+              <span
+                style={{ fontWeight: 500, color: "var(--erp-text-muted)" }}
+              >
+                전월대비
+              </span>
+            </div>
+          )}
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div
@@ -684,12 +786,24 @@ export default async function MonthlyReportPage({
             <thead>
               <tr>
                 <th>{view === "supplier" ? "매입처" : "매출처"} / 품목</th>
-                <th style={{ width: 160 }}>규격</th>
-                <th className="num" style={{ width: 110 }}>
+                <th style={{ width: 150 }}>규격</th>
+                <th className="num" style={{ width: 90 }}>
                   수량
                 </th>
-                <th className="num" style={{ width: 120 }}>
+                <th className="num" style={{ width: 70 }}>
+                  건수
+                </th>
+                <th className="num" style={{ width: 100 }}>
+                  평균단가
+                </th>
+                <th className="num" style={{ width: 110 }}>
                   금액
+                </th>
+                <th className="num" style={{ width: 100 }}>
+                  세액
+                </th>
+                <th className="num" style={{ width: 80 }}>
+                  비중
                 </th>
               </tr>
             </thead>
@@ -697,24 +811,124 @@ export default async function MonthlyReportPage({
               {companyGroups.map((cg, groupIndex) => {
                 const groupBg =
                   groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                const rank = groupIndex + 1;
+                const rankStyle =
+                  rank === 1
+                    ? { background: "var(--erp-primary)", color: "#fff" }
+                    : rank === 2
+                      ? {
+                          background: "var(--erp-selected)",
+                          color: "var(--erp-primary)",
+                        }
+                      : {
+                          background: "#eef0f3",
+                          color: "var(--erp-text-muted)",
+                        };
+                const grandTotal =
+                  view === "supplier" ? totalPurchaseAmount : totalSalesAmount;
+                const share = grandTotal ? (cg.totalAmount / grandTotal) * 100 : 0;
                 return (
                   <Fragment key={cg.companyId}>
                     <tr style={{ background: groupBg }}>
                       <td colSpan={2} style={{ fontWeight: 700 }}>
-                        <Link
-                          href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
-                            `${companyKeyPrefix}:${cg.companyId}`,
-                          )}`}
-                          style={{ color: "var(--erp-text)" }}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
                         >
-                          {cg.companyName}
-                        </Link>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 20,
+                              height: 20,
+                              borderRadius: "50%",
+                              fontSize: 11,
+                              fontWeight: 800,
+                              flexShrink: 0,
+                              ...rankStyle,
+                            }}
+                          >
+                            {rank}
+                          </span>
+                          <Link
+                            href={`/reports/monthly/company?month=${month}&company=${encodeURIComponent(
+                              `${companyKeyPrefix}:${cg.companyId}`,
+                            )}`}
+                            style={{ color: "var(--erp-text)" }}
+                          >
+                            {cg.companyName}
+                          </Link>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            marginTop: 4,
+                            marginLeft: 28,
+                            maxWidth: 200,
+                          }}
+                        >
+                          <div
+                            style={{
+                              flex: 1,
+                              height: 5,
+                              borderRadius: 999,
+                              background: "var(--erp-divider)",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                borderRadius: 999,
+                                background: "var(--erp-primary)",
+                                width: `${Math.min(share, 100)}%`,
+                              }}
+                            />
+                          </div>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: "var(--erp-primary)",
+                              minWidth: 34,
+                              textAlign: "right",
+                            }}
+                          >
+                            {share.toFixed(1)}%
+                          </span>
+                        </div>
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
                         {cg.totalQuantity.toLocaleString()}
                       </td>
+                      <td className="num">
+                        <GridBadge tone="info">
+                          {cg.transactionCount}건
+                        </GridBadge>
+                      </td>
+                      <td
+                        className="num"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        -
+                      </td>
                       <td className="num" style={{ fontWeight: 700 }}>
                         {cg.totalAmount.toLocaleString()}
+                      </td>
+                      <td className="num" style={{ fontWeight: 700 }}>
+                        {cg.totalTax.toLocaleString()}
+                      </td>
+                      <td
+                        className="num"
+                        style={{ fontWeight: 700, color: "var(--erp-primary)" }}
+                      >
+                        {share.toFixed(1)}%
                       </td>
                     </tr>
                     {cg.products.map((pg) => {
@@ -726,7 +940,7 @@ export default async function MonthlyReportPage({
                         >
                           <td
                             style={{
-                              paddingLeft: 26,
+                              paddingLeft: 34,
                               color: "var(--erp-text-muted)",
                             }}
                           >
@@ -746,7 +960,31 @@ export default async function MonthlyReportPage({
                             className="num"
                             style={{ color: "var(--erp-text-muted)" }}
                           >
+                            -
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            {Math.round(pg.avgUnitPrice).toLocaleString()}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
                             {pg.totalAmount.toLocaleString()}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            {pg.totalTax.toLocaleString()}
+                          </td>
+                          <td
+                            className="num"
+                            style={{ color: "var(--erp-text-muted)" }}
+                          >
+                            -
                           </td>
                         </tr>
                       );
@@ -756,7 +994,7 @@ export default async function MonthlyReportPage({
               })}
               {!companyGroups.length && (
                 <tr>
-                  <td colSpan={4} className="erp-grid-empty">
+                  <td colSpan={8} className="erp-grid-empty">
                     조건에 맞는 내역이 없습니다.
                   </td>
                 </tr>
@@ -775,9 +1013,22 @@ export default async function MonthlyReportPage({
                   </td>
                   <td className="num">
                     {companyGroups
+                      .reduce((sum, g) => sum + g.transactionCount, 0)
+                      .toLocaleString()}
+                    건
+                  </td>
+                  <td className="num">-</td>
+                  <td className="num">
+                    {companyGroups
                       .reduce((sum, g) => sum + g.totalAmount, 0)
                       .toLocaleString()}
                   </td>
+                  <td className="num">
+                    {companyGroups
+                      .reduce((sum, g) => sum + g.totalTax, 0)
+                      .toLocaleString()}
+                  </td>
+                  <td className="num">100%</td>
                 </tr>
               </tfoot>
             )}
