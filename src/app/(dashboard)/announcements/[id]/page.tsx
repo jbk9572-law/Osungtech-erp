@@ -68,9 +68,25 @@ export default async function AnnouncementDetailPage({
               initial={{ id: row.id, title: row.title, content: row.content, pinned: row.pinned }}
             />
           ) : (
-            <p className="erp-grid-empty" style={{ marginTop: 12 }}>
-              본인이 등록한 공지사항만 수정할 수 있습니다.
-            </p>
+            <div>
+              <p
+                style={{
+                  whiteSpace: "pre-wrap",
+                  fontSize: 13.5,
+                  lineHeight: 1.7,
+                  color: "var(--erp-text)",
+                  margin: 0,
+                }}
+              >
+                {row.content || "-"}
+              </p>
+              <p
+                className="mt-4 text-xs"
+                style={{ color: "var(--erp-text-muted)" }}
+              >
+                본인이 등록한 공지사항만 수정할 수 있습니다.
+              </p>
+            </div>
           )}
         </div>
       </div>
