@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 
-type Party = { id: string; name: string };
+type Party = { id: string; name: string; notes?: string | null };
 
 // 출고처/공급처를 드롭다운으로만 고르면, 거래처가 많아질수록 원하는 이름을
 // 찾으려고 목록을 계속 스크롤해야 했다. ProductSearchSelect(품목 검색)와
@@ -92,6 +92,21 @@ export function PartySearchSelect({
         className="erp-input"
         style={{ width: "100%" }}
       />
+      {!open && selected?.notes && (
+        <p
+          style={{
+            marginTop: 4,
+            padding: "4px 8px",
+            fontSize: 11.5,
+            color: "var(--erp-info-text)",
+            background: "var(--erp-info-bg)",
+            border: "1px solid var(--erp-info-border)",
+            borderRadius: 4,
+          }}
+        >
+          특이사항: {selected.notes}
+        </p>
+      )}
       {open &&
         dropdownRect &&
         typeof document !== "undefined" &&
@@ -123,6 +138,11 @@ export function PartySearchSelect({
                   }`}
                 >
                   {party.name}
+                  {party.notes && (
+                    <span className="block truncate text-[11px] text-[var(--erp-text-muted)]">
+                      {party.notes}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}

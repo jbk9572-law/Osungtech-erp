@@ -28,7 +28,7 @@ export default async function NewPurchasePage() {
     { data: supplierPrices },
     { data: history },
   ] = await Promise.all([
-    supabase.from("suppliers").select("id, name").order("name"),
+    supabase.from("suppliers").select("id, name, notes").order("name"),
     supabase
       .from("products")
       .select("id, sku, name, spec, unit, cost, price, base_package_qty")
@@ -39,7 +39,7 @@ export default async function NewPurchasePage() {
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    supabase.from("customers").select("id, name").order("name"),
+    supabase.from("customers").select("id, name, notes").order("name"),
     supabase
       .from("customer_product_prices")
       .select("customer_id, product_id, unit_price"),

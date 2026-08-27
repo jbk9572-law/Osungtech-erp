@@ -36,7 +36,7 @@ export default async function EditPurchasePage({
       .select("product_id, spec, quantity, unit_cost, remark, lot_number")
       .eq("purchase_order_id", id)
       .order("created_at"),
-    supabase.from("suppliers").select("id, name").order("name"),
+    supabase.from("suppliers").select("id, name, notes").order("name"),
     supabase
       .from("products")
       .select("id, sku, name, spec, unit, cost, base_package_qty")

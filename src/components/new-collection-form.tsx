@@ -16,7 +16,7 @@ export function NewCollectionForm({
   customers,
   today,
 }: {
-  customers: { id: string; name: string }[];
+  customers: { id: string; name: string; notes?: string | null }[];
   today: string;
 }) {
   const [customerId, setCustomerId] = useState("");

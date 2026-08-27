@@ -19,7 +19,7 @@ export default async function NewSalePage() {
     { data: prices },
     { data: history },
   ] = await Promise.all([
-    supabase.from("customers").select("id, name").order("name"),
+    supabase.from("customers").select("id, name, notes").order("name"),
     supabase
       .from("products")
       .select(

@@ -33,7 +33,7 @@ import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 
-type Supplier = { id: string; name: string };
+type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
   id: string;
   sku: string;

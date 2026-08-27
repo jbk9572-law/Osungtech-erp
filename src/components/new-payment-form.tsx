@@ -15,7 +15,7 @@ export function NewPaymentForm({
   suppliers,
   today,
 }: {
-  suppliers: { id: string; name: string }[];
+  suppliers: { id: string; name: string; notes?: string | null }[];
   today: string;
 }) {
   const [supplierId, setSupplierId] = useState("");
