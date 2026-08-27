@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 
 type Party = { id: string; name: string };
 
@@ -34,6 +35,7 @@ export function PartySearchSelect({
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(
     null
   );
+  const itemRefs = useHighlightScroll(highlight, open);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -107,6 +109,9 @@ export function PartySearchSelect({
             {results.map((party, i) => (
               <li key={party.id}>
                 <button
+                  ref={(el) => {
+                    itemRefs.current[i] = el;
+                  }}
                   type="button"
                   onMouseEnter={() => setHighlight(i)}
                   onMouseDown={(e) => {

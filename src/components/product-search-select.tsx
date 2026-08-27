@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { focusNextCellInRow } from "@/lib/grid-enter-nav";
+import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -30,6 +31,7 @@ export function ProductSearchSelect({
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(
     null
   );
+  const itemRefs = useHighlightScroll(highlight, open);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -114,6 +116,9 @@ export function ProductSearchSelect({
             {results.map((product, i) => (
               <li key={product.id}>
                 <button
+                  ref={(el) => {
+                    itemRefs.current[i] = el;
+                  }}
                   type="button"
                   onMouseEnter={() => setHighlight(i)}
                   onMouseDown={(e) => {
