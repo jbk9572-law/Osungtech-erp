@@ -790,8 +790,12 @@ export default async function MonthlyReportPage({
                 <th className="num" style={{ width: 90 }}>
                   수량
                 </th>
-                <th className="num" style={{ width: 70 }}>
-                  건수
+                <th
+                  className="num"
+                  style={{ width: 70 }}
+                  title="품목 종류 수가 아니라, 이 거래처와 거래한 전표(주문) 건수입니다."
+                >
+                  전표수
                 </th>
                 <th className="num" style={{ width: 100 }}>
                   평균단가
