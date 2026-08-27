@@ -21,7 +21,6 @@ const SECTIONS: { prefix: string; label: string }[] = [
   // 매칭 정확성과 무관하게 자유롭게 정할 수 있다 — erp-menu.ts의
   // "회계·보고서"/"확장모듈" 그룹 순서와 맞춰 읽기 쉽게 배치한다.
   { prefix: "/reports/payment-requests", label: "지급결의양식" },
-  { prefix: "/accounting/vouchers", label: "전표관리" },
   { prefix: "/reports/monthly", label: "월별 리포트" },
   { prefix: "/paper-calc", label: "모조지 계산" },
   { prefix: "/paper-calc/manual", label: "재단 배치 시뮬레이터" },
