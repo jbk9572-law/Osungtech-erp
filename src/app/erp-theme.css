@@ -1166,6 +1166,113 @@
   border-bottom: 1px solid var(--erp-border);
 }
 
+/* 공지사항/할일관리 목록의 카드형 목록 항목 — 표 대신 클릭 가능한 카드로
+   보여줄 때 쓴다(제목 옆에 미리보기 한 줄, 배지 등을 자유롭게 배치할 수
+   있어 표보다 여백 있는 목록에 적합하다). */
+.erp-item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--erp-border);
+  border-radius: 6px;
+  box-shadow: var(--erp-shadow-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-item-card:hover {
+  background: var(--erp-hover);
+}
+
+.erp-item-card.unread {
+  border-left: 3px solid var(--erp-primary);
+}
+
+/* 작성자 이니셜 원형 아바타 — 공지사항/할일 카드에서 누가 썼는지 한눈에
+   구분되게 한다. */
+.erp-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--erp-selected);
+  color: var(--erp-primary);
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.erp-avatar.muted {
+  background: var(--erp-bg-subtle);
+  color: var(--erp-text-muted);
+}
+
+/* 공지사항/할일 상세 — 탭바 형태 대신 실제 게시글처럼 제목/작성자를
+   보여주는 헤더+본문 카드. */
+.erp-post-header {
+  background: #fff;
+  border: 1px solid var(--erp-border);
+  border-radius: 6px 6px 0 0;
+  padding: 16px 18px 12px;
+  box-shadow: var(--erp-shadow-sm);
+}
+
+.erp-post-title {
+  font-size: 16.5px;
+  font-weight: 800;
+  color: var(--erp-text);
+  margin: 6px 0 10px;
+}
+
+.erp-post-byline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--erp-text-muted);
+}
+
+.erp-post-body {
+  background: #fff;
+  border: 1px solid var(--erp-border);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  padding: 18px;
+}
+
+/* 상세 화면에서 "작성자: OO / 유형: OO" 식으로 한 줄에 텍스트를 나열하던
+   것을, 항목별로 구분되는 카드 그리드로 보여준다. */
+.erp-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.erp-info-cell {
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.erp-info-label {
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.erp-info-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--erp-text);
+}
+
 .erp-home-list {
   padding: 10px 12px;
   display: flex;

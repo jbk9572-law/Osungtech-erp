@@ -7,6 +7,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { deleteAnnouncement, updateAnnouncement } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { GridBadge } from "@/components/grid/badge";
 
 export default async function AnnouncementDetailPage({
   params,
@@ -41,7 +42,9 @@ export default async function AnnouncementDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">공지사항 &gt; 수정</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        공지사항 &gt; {allowManage ? "수정" : "상세"}
+      </h1>
 
       <div className="erp-toolbar">
         <Link href="/announcements" className="erp-btn erp-btn-danger">
@@ -52,43 +55,44 @@ export default async function AnnouncementDetailPage({
         )}
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">{row.title}</span>
+      <div className="erp-post-header">
+        {row.pinned && (
+          <GridBadge tone="info">고정</GridBadge>
+        )}
+        <div className="erp-post-title">{row.title}</div>
+        <div className="erp-post-byline">
+          <span className="erp-avatar">{row.profiles?.full_name?.trim()?.[0] ?? "?"}</span>
+          {row.profiles?.full_name ?? "-"} · {new Date(row.created_at).toLocaleDateString("ko-KR")}
         </div>
-        <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
-            <span>작성자: {row.profiles?.full_name ?? "-"}</span>
-            <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
+      </div>
+      <div className="erp-post-body">
+        {allowManage ? (
+          <AnnouncementForm
+            action={updateAnnouncement}
+            submitLabel="수정"
+            initial={{ id: row.id, title: row.title, content: row.content, pinned: row.pinned }}
+          />
+        ) : (
+          <div>
+            <p
+              style={{
+                whiteSpace: "pre-wrap",
+                fontSize: 13.5,
+                lineHeight: 1.7,
+                color: "var(--erp-text)",
+                margin: 0,
+              }}
+            >
+              {row.content || "-"}
+            </p>
+            <p
+              className="mt-4 text-xs"
+              style={{ color: "var(--erp-text-muted)" }}
+            >
+              본인이 등록한 공지사항만 수정할 수 있습니다.
+            </p>
           </div>
-          {allowManage ? (
-            <AnnouncementForm
-              action={updateAnnouncement}
-              submitLabel="수정"
-              initial={{ id: row.id, title: row.title, content: row.content, pinned: row.pinned }}
-            />
-          ) : (
-            <div>
-              <p
-                style={{
-                  whiteSpace: "pre-wrap",
-                  fontSize: 13.5,
-                  lineHeight: 1.7,
-                  color: "var(--erp-text)",
-                  margin: 0,
-                }}
-              >
-                {row.content || "-"}
-              </p>
-              <p
-                className="mt-4 text-xs"
-                style={{ color: "var(--erp-text-muted)" }}
-              >
-                본인이 등록한 공지사항만 수정할 수 있습니다.
-              </p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

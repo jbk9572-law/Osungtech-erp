@@ -12,7 +12,7 @@ export default async function AnnouncementsPage() {
   const [{ data: rows, error }, { data: reads }] = await Promise.all([
     supabase
       .from("announcements")
-      .select("id, title, pinned, created_at, profiles!created_by(full_name)")
+      .select("id, title, content, pinned, created_at, profiles!created_by(full_name)")
       .order("pinned", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(300),
@@ -25,6 +25,7 @@ export default async function AnnouncementsPage() {
   const gridRows: AnnouncementRow[] = (rows ?? []).map((row) => ({
     id: row.id,
     title: row.title,
+    content: row.content,
     pinned: row.pinned,
     createdAt: row.created_at,
     authorName: row.profiles?.full_name ?? null,

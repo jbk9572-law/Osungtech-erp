@@ -6,6 +6,7 @@ import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { todoTypeLabel } from "@/lib/todo-flow";
+import { todayKstStr } from "@/lib/kst-date";
 import { deleteTodo, updateTodo } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
@@ -61,11 +62,19 @@ export default async function TodoDetailPage({
   const paperCalcSizeLines = formatPaperCalcSizeLines(paperCalcSizes);
   const latestCalcId = calcs?.[0]?.id;
   const allowManage = canManage(row.created_by, actor.userId, actor.isAdmin);
+  const overdue = !row.done && !!row.due_date && row.due_date < todayKstStr();
+  const statusLabel = row.done
+    ? "완료"
+    : row.todo_type === "both"
+      ? `진행중 (매입 ${row.purchase_done_at ? "완료" : "전"} · 매출 ${row.sale_done_at ? "완료" : "전"})`
+      : "진행중";
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리 &gt; 수정</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        할일관리 &gt; {allowManage ? "수정" : "상세"}
+      </h1>
 
       <div className="erp-toolbar">
         <Link href="/todos" className="erp-btn erp-btn-danger">
@@ -76,25 +85,43 @@ export default async function TodoDetailPage({
         )}
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">{row.title}</span>
+      <div className="erp-post-header">
+        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+          <GridBadge tone="muted">{todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</GridBadge>
+          {overdue && <GridBadge tone="danger">기한초과</GridBadge>}
+          {row.done && <GridBadge tone="ok">완료</GridBadge>}
         </div>
-        <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
-            <span>작성자: {row.profiles?.full_name ?? "-"}</span>
-            <span>유형: {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</span>
-            {row.suppliers?.name && <span>공급처: {row.suppliers.name}</span>}
-            {row.customers?.name && <span>출고처: {row.customers.name}</span>}
-            <span>
-              상태:{" "}
-              {row.done
-                ? "완료"
-                : row.todo_type === "both"
-                  ? `진행중 (매입 ${row.purchase_done_at ? "완료" : "전"} · 매출 ${row.sale_done_at ? "완료" : "전"})`
-                  : "진행중"}
-            </span>
+        <div className="erp-post-title">{row.title}</div>
+      </div>
+      <div className="erp-post-body">
+        <div className="erp-info-grid">
+          <div className="erp-info-cell">
+            <div className="erp-info-label">작성자</div>
+            <div className="erp-info-value">{row.profiles?.full_name ?? "-"}</div>
           </div>
+          {row.suppliers?.name && (
+            <div className="erp-info-cell">
+              <div className="erp-info-label">공급처</div>
+              <div className="erp-info-value">{row.suppliers.name}</div>
+            </div>
+          )}
+          {row.customers?.name && (
+            <div className="erp-info-cell">
+              <div className="erp-info-label">출고처</div>
+              <div className="erp-info-value">{row.customers.name}</div>
+            </div>
+          )}
+          <div className="erp-info-cell">
+            <div className="erp-info-label">마감일</div>
+            <div className="erp-info-value" style={overdue ? { color: "var(--erp-danger)" } : undefined}>
+              {row.due_date ? new Date(row.due_date).toLocaleDateString("ko-KR") : "-"}
+            </div>
+          </div>
+          <div className="erp-info-cell">
+            <div className="erp-info-label">상태</div>
+            <div className="erp-info-value">{statusLabel}</div>
+          </div>
+        </div>
 
           {paperCalcSizeLines.length > 0 && (
             <div className="erp-grid-wrap mb-4">
@@ -232,7 +259,6 @@ export default async function TodoDetailPage({
               </p>
             </div>
           )}
-        </div>
       </div>
     </div>
   );
