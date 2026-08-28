@@ -318,10 +318,18 @@ export default async function SalesPage({
           </Link>
         )}
       </form>
-      <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--erp-text-muted)" }}>
+      <div
+        className="rounded p-2 text-xs"
+        style={{
+          marginBottom: 8,
+          background: "var(--erp-info-bg)",
+          color: "var(--erp-info-text)",
+          border: "1px solid var(--erp-info-border)",
+        }}
+      >
         {from ? "" : `날짜를 지정하지 않으면 지난달 1일(${effectiveFrom})부터 표시됩니다. `}
         최근 {limit.toLocaleString()}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </p>
+      </div>
 
       <div className="erp-toolbar">
         <Link href="/sales/new" className="erp-btn erp-btn-primary">
