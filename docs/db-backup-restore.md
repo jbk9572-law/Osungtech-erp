@@ -5,11 +5,19 @@ Pro 플랜부터 제공). 그래서 이 저장소 안에 자체 백업 체계를
 
 ## 어떻게 동작하나
 
-- `.github/workflows/db-backup.yml`이 매일 새벽 2시(KST)에 자동 실행돼
-  Supabase Postgres 전체를 `pg_dump`(custom format)로 떠서 `db-backups`
-  브랜치에 커밋한다. `main` 브랜치 히스토리와는 완전히 분리돼 있어서
-  평소 클론/배포/`git log`에는 전혀 나타나지 않는다.
-- 최근 30개(약 한 달치)만 남기고 오래된 파일은 자동으로 정리된다.
+- `.github/workflows/db-backup.yml`이 **매시 정각(하루 24회)** 자동
+  실행돼 Supabase Postgres 전체를 `pg_dump`(custom format)로 떠서
+  `db-backups` 브랜치에 커밋한다. `main` 브랜치 히스토리와는 완전히
+  분리돼 있어서 평소 클론/배포/`git log`에는 전혀 나타나지 않는다.
+  - 이 주기는 하루 거래량이 적은(매출+매입 합쳐 10건 안팎) 지금 규모를
+    기준으로 정한 것이다 — GitHub Actions 무료 시간(2,000분/월 중
+    약 720분만 사용)과 Supabase 무료 트래픽 한도(5GB/월, 매번 DB
+    전체를 내려받으므로 DB 용량 × 실행 횟수만큼 소진됨) 둘 다 여유가
+    있다고 판단했다. **거래량이나 DB 용량(특히 파일 첨부 등)이 크게
+    늘어나면 이 계산을 다시 해봐야 한다** — 그렇지 않으면 트래픽
+    무료 한도를 넘어 요금이 나올 수 있다.
+- 최근 720개(1시간 간격 기준 약 30일치)만 남기고 오래된 파일은 자동으로
+  정리된다.
 - Actions 탭 > "Nightly DB backup"에서 "Run workflow"로 언제든 수동
   실행도 가능하다.
 
@@ -58,9 +66,9 @@ git show origin/db-backups:backups/2026-08-28T170000Z.dump > /tmp/restore-target
 
 ## 한계 / 앞으로 더 할 수 있는 것
 
-- 백업은 하루 1회다. 그 사이에 발생한 변경분은 복구되지 않는다 — 더
-  촘촘한 주기가 필요하면 cron만 바꾸면 된다(`db-backup.yml`의
-  `schedule`).
+- 백업은 1시간 간격이다. 그 사이에 발생한 변경분은 복구되지 않는다 —
+  더 촘촘한 주기가 필요하면 cron만 바꾸면 된다(`db-backup.yml`의
+  `schedule`) — 다만 위에서 설명한 트래픽 한도를 먼저 확인할 것.
 - 지금은 별도 암호화 없이 이 저장소(비공개 저장소로 가정) 안에만
   보관한다. 외부 스토리지(예: S3)에 추가로 올려 이중화하고 싶으면
   `db-backup.yml`의 "Commit and push" 단계 뒤에 업로드 스텝을 추가하면
