@@ -61,7 +61,13 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "비밀번호 변경", href: "/settings/password" },
     ],
   },
-  { label: "시스템관리", items: [{ label: "권한관리", href: "/settings/users" }] },
+  {
+    label: "시스템관리",
+    items: [
+      { label: "권한관리", href: "/settings/users" },
+      { label: "백업/복원", href: "/settings/backup" },
+    ],
+  },
 ];
 
 export type MenuItem = { label: string; href: string };
