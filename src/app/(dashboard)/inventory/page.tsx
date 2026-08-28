@@ -57,11 +57,16 @@ export default async function InventoryPage({
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황</h1>
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황</h1>
+        <Link href="/inventory/count" className="erp-btn erp-btn-primary">
+          재고 실사
+        </Link>
+      </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        재고 수량은 매입(입고) · 매출(출고) · 아래 재고 조정 내역의 합으로 자동 계산됩니다. 직접
-        수량을 바꿀 수는 없고, 기초재고를 등록하거나 실사 후 수량을 맞출 때는 아래 재고 조정을
-        사용하세요.
+        재고 수량은 매입(입고) · 매출(출고) · 재고 조정 내역의 합으로 자동 계산됩니다. 직접 수량을
+        바꿀 수는 없고, 기초재고를 등록할 때는 아래 재고 조정을, 전체 품목을 한 번에 실사해 맞출
+        때는 우측 상단 &quot;재고 실사&quot;를 사용하세요.
       </p>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
