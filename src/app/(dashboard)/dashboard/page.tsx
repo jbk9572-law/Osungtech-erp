@@ -418,6 +418,8 @@ export default async function DashboardPage({
               </div>
               <div className="erp-home-stock-footer">
                 <Link href="/inventory">재고현황 전체 보기 →</Link>
+                {" · "}
+                <Link href="/inventory/reorder-suggestions">발주 제안 보기 →</Link>
               </div>
             </>
           ) : (

@@ -59,9 +59,14 @@ export default async function InventoryPage({
     <div>
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황</h1>
-        <Link href="/inventory/count" className="erp-btn erp-btn-primary">
-          재고 실사
-        </Link>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href="/inventory/reorder-suggestions" className="erp-btn">
+            재고 부족 자동 발주 제안
+          </Link>
+          <Link href="/inventory/count" className="erp-btn erp-btn-primary">
+            재고 실사
+          </Link>
+        </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         재고 수량은 매입(입고) · 매출(출고) · 재고 조정 내역의 합으로 자동 계산됩니다. 직접 수량을

@@ -8,7 +8,30 @@ import {
 } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 
-export default async function NewPurchasePage() {
+export default async function NewPurchasePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ supplier_id?: string; reorder_items?: string }>;
+}) {
+  const { supplier_id: prefillSupplierId, reorder_items: reorderItemsRaw } = await searchParams;
+  // 재고 부족 자동 발주 제안(/inventory/reorder-suggestions)의 "매입
+  // 등록으로 보내기"에서만 넘어온다 — 잘못된 값이 와도 등록 자체는 막지
+  // 않고 그냥 빈 폼으로 시작한다.
+  let prefillItems: { productId: string; quantity: number }[] | undefined;
+  if (reorderItemsRaw) {
+    try {
+      const parsed = JSON.parse(reorderItemsRaw);
+      if (Array.isArray(parsed)) {
+        prefillItems = parsed.filter(
+          (item): item is { productId: string; quantity: number } =>
+            typeof item?.productId === "string" && typeof item?.quantity === "number",
+        );
+      }
+    } catch {
+      // 무시: 프리필은 부가 기능이라 실패해도 등록 자체는 그대로 진행한다.
+    }
+  }
+
   const supabase = await createClient();
 
   // "매출도 같이 등록"에서 매출단가를 미리보기로 보여주므로, /sales/new와
@@ -93,6 +116,8 @@ export default async function NewPurchasePage() {
         supplierPrices={supplierPrices ?? []}
         history={priceHistory}
         today={todayKstStr()}
+        prefillSupplierId={prefillSupplierId}
+        prefillItems={prefillItems}
       />
     </div>
   );

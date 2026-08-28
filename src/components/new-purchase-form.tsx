@@ -111,6 +111,8 @@ export function NewPurchaseForm({
   prices = [],
   supplierPrices = [],
   history = [],
+  prefillSupplierId,
+  prefillItems,
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -122,6 +124,11 @@ export function NewPurchaseForm({
   // 그 목록으로 돌아가기 위해 서버 액션(updatePurchase)에 그대로 넘긴다.
   backParam?: string;
   customers?: { id: string; name: string }[];
+  // 재고 부족 자동 발주 제안 화면(/inventory/reorder-suggestions)에서
+  // "매입 등록으로 보내기"로 넘어온 경우에만 쓴다 — 신규 등록(initial 없음)
+  // 일 때만 적용하고, 수정 화면에서는 무시한다.
+  prefillSupplierId?: string;
+  prefillItems?: { productId: string; quantity: number }[];
   // 출고처(거래처)별 판매단가. "매출도 같이 등록"에서 매출단가 미리보기에
   // 쓴다 — 매출 등록 화면(new-sale-form)과 동일한 방식.
   prices?: { customer_id: string; product_id: string; unit_price: number }[];
@@ -137,7 +144,9 @@ export function NewPurchaseForm({
   // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
   history?: PriceHistoryEntry[];
 }) {
-  const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
+  const [supplierId, setSupplierId] = useState(
+    initial?.supplierId ?? prefillSupplierId ?? "",
+  );
   const [purchaseDate, setPurchaseDate] = useState(
     // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
     // "어제" 날짜가 잡힌다. 로컬 날짜를 그대로 쓰는 toLocaleDateString("sv-SE")로
@@ -243,7 +252,26 @@ export function NewPurchaseForm({
           salePrice: 0,
           manualSalePrice: false,
         }))
-      : [
+      : prefillItems?.length
+        ? prefillItems.map((item, i) => {
+            const product = products.find((p) => p.id === item.productId);
+            return {
+              key: i,
+              productId: item.productId,
+              spec: product?.spec ?? "",
+              manualSpec: false,
+              lotNumber: "",
+              quantity: item.quantity,
+              unitCost: resolveCost(prefillSupplierId ?? "", item.productId),
+              manualPrice: false,
+              remark: "재고 부족 자동 발주 제안",
+              saleQuantity: 0,
+              manualSaleQuantity: false,
+              salePrice: 0,
+              manualSalePrice: false,
+            };
+          })
+        : [
           {
             key: 0,
             productId: "",
