@@ -7,9 +7,12 @@ name: Nightly DB backup
 #
 # 사용 전 준비 (1회):
 #   1. Supabase 대시보드 > Project Settings > Database > Connection string에서
-#      "Connection pooling" 탭의 URI를 복사한다(Transaction mode, IPv4 호환 —
-#      GitHub Actions 러너가 IPv4라 direct connection은 안 될 수 있다).
-#      비밀번호 자리([YOUR-PASSWORD])는 실제 DB 비밀번호로 바꿔서 복사한다.
+#      반드시 "Session pooler" URI를 복사한다 (IPv4 호환 — GitHub Actions
+#      러너가 IPv4라 direct connection은 안 될 수 있다). "Transaction pooler"는
+#      쓰지 않는다 — pg_dump가 기대하는 세션 상태를 유지해주지 않아서
+#      Supabase 공식 문서도 pg_dump/pg_restore에는 transaction 모드를
+#      쓰지 말라고 명시한다. 비밀번호 자리([YOUR-PASSWORD])는 실제 DB
+#      비밀번호로 바꿔서 복사한다.
 #   2. 이 저장소 Settings > Secrets and variables > Actions에서
 #      New repository secret으로 이름 SUPABASE_DB_URL, 값은 위 URI로 등록한다.
 #      (절대 이 값을 코드나 채팅에 직접 붙여넣지 않는다 — GitHub Secrets에만 등록)

@@ -16,10 +16,15 @@ Pro 플랜부터 제공). 그래서 이 저장소 안에 자체 백업 체계를
 ## 최초 설정 (1회만)
 
 1. Supabase 대시보드 > **Project Settings > Database > Connection string**
-   에서 **Connection pooling** 탭의 URI를 복사한다 (Transaction mode).
-   - Direct connection이 아니라 꼭 pooling 쪽을 써야 한다 — GitHub Actions
+   에서 **Session pooler** URI를 복사한다.
+   - Direct connection이 아니라 꼭 pooler 쪽을 써야 한다 — GitHub Actions
      러너는 IPv4만 지원하는데 Supabase의 direct connection host는
      IPv6 전용이라 그대로 쓰면 접속이 안 될 수 있다.
+   - **Transaction pooler는 쓰지 않는다.** pg_dump는 세션 단위 상태를
+     기대하는데 transaction 모드 풀링은 그걸 보장해주지 않아서, Supabase
+     공식 문서도 pg_dump/pg_restore에는 session pooler(또는 direct
+     connection)를 쓰라고 명시한다. Session pooler도 IPv4 호환이라
+     GitHub Actions에서 문제없이 접속된다.
    - `[YOUR-PASSWORD]` 부분은 실제 DB 비밀번호로 바꿔서 복사한다.
 2. 이 저장소 **Settings > Secrets and variables > Actions**에서
    **New repository secret**으로 이름 `SUPABASE_DB_URL`, 값은 위 URI를
