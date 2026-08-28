@@ -106,6 +106,7 @@ export function NewSaleForm({
   initial,
   submitLabel = "매출 등록",
   backParam,
+  initialIsReturn = false,
 }: {
   customers: Customer[];
   products: Product[];
@@ -118,6 +119,9 @@ export function NewSaleForm({
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어온 경우, 저장 후
   // 그 목록으로 돌아가기 위해 서버 액션(updateSale)에 그대로 넘긴다.
   backParam?: string;
+  // 신규 등록 화면에서 매출/수금/반품 3버튼 중 "반품"으로 들어온 경우에만
+  // 쓴다(NewSaleTypeSwitcher 참고) — 수정 화면은 initial.isReturn을 그대로 쓴다.
+  initialIsReturn?: boolean;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
@@ -147,7 +151,7 @@ export function NewSaleForm({
   // 반품(잘못 납품해 되돌아온 건)으로 등록하면 이 매출과 똑같은 폼/품목
   // 구조를 그대로 쓰되, 서버 액션이 재고를 출고(out) 대신 입고(in)로
   // 반영하고, 매출 합계·미수금·리포트에서는 이 건의 금액을 차감 처리한다.
-  const [isReturn, setIsReturn] = useState(initial?.isReturn ?? false);
+  const isReturn = initial?.isReturn ?? initialIsReturn;
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -693,23 +697,6 @@ export function NewSaleForm({
         </div>
       )}
 
-      <div className="erp-seg" style={{ marginBottom: 12 }}>
-        <button
-          type="button"
-          className={`erp-seg-btn${!isReturn ? " active" : ""}`}
-          onClick={() => setIsReturn(false)}
-        >
-          매출
-        </button>
-        <button
-          type="button"
-          className={`erp-seg-btn${isReturn ? " active" : ""}`}
-          style={isReturn ? { background: "var(--erp-danger)", borderColor: "var(--erp-danger)" } : undefined}
-          onClick={() => setIsReturn(true)}
-        >
-          반품
-        </button>
-      </div>
       {isReturn && (
         <div
           className="rounded p-2 text-xs"
