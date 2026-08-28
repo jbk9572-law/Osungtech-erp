@@ -126,7 +126,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, customers(id, name)), products(sku, name, spec, unit)",
+        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, customers(id, name)), products(sku, name, spec, unit)",
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -387,6 +387,26 @@ export default async function MonthlyReportPage({
     prevPurchaseTotal,
   );
 
+  // 반품 사유별 통계 — 어떤 사유가 반복되는지 파악용. 품목 단위(salesRows)를
+  // 사유별로 묶되, 전표(주문) 수는 같은 주문의 여러 품목이 중복 집계되지
+  // 않게 Set으로 센다.
+  const returnReasonStats = (() => {
+    const map = new Map<string, { orderIds: Set<string>; quantity: number; amount: number }>();
+    for (const row of salesRows ?? []) {
+      if (!row.sales_orders?.is_return) continue;
+      const reason = row.sales_orders.return_reason || "미지정";
+      const entry = map.get(reason) ?? { orderIds: new Set<string>(), quantity: 0, amount: 0 };
+      entry.orderIds.add(row.sales_orders.id);
+      entry.quantity += row.quantity;
+      entry.amount += row.quantity * Number(row.unit_price);
+      map.set(reason, entry);
+    }
+    return Array.from(map.entries())
+      .map(([reason, e]) => ({ reason, count: e.orderIds.size, quantity: e.quantity, amount: e.amount }))
+      .sort((a, b) => b.amount - a.amount);
+  })();
+  const totalReturnAmount = returnReasonStats.reduce((sum, r) => sum + r.amount, 0);
+
   const [year, monthNum] = month.split("-");
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
@@ -619,6 +639,51 @@ export default async function MonthlyReportPage({
           </div>
         </div>
       </div>
+
+      {returnReasonStats.length > 0 && (
+        <div className="erp-grid-wrap" style={{ marginBottom: 12 }}>
+          <table className="erp-grid">
+            <thead>
+              <tr>
+                <th>반품 사유</th>
+                <th className="num" style={{ width: 90 }}>
+                  전표수
+                </th>
+                <th className="num" style={{ width: 110 }}>
+                  수량
+                </th>
+                <th className="num" style={{ width: 130 }}>
+                  금액
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {returnReasonStats.map((r) => (
+                <tr key={r.reason}>
+                  <td>
+                    <GridBadge tone="danger">{r.reason}</GridBadge>
+                  </td>
+                  <td className="num">{r.count.toLocaleString()}건</td>
+                  <td className="num">{r.quantity.toLocaleString()}</td>
+                  <td className="num">{r.amount.toLocaleString()}원</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <td>합계 (매출에서 차감됨)</td>
+                <td className="num">
+                  {returnReasonStats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}건
+                </td>
+                <td className="num">
+                  {returnReasonStats.reduce((sum, r) => sum + r.quantity, 0).toLocaleString()}
+                </td>
+                <td className="num">{totalReturnAmount.toLocaleString()}원</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
 
       {view === "product" && (
         <div className="erp-grid-wrap">

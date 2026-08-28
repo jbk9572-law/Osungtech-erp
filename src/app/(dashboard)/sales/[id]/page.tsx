@@ -239,6 +239,11 @@ export default async function SaleDetailPage({
               />
             </div>
           )}
+          {order.is_return && order.return_reason && (
+            <p style={{ marginTop: 12, color: "var(--erp-danger)" }}>
+              반품 사유: {order.return_reason}
+            </p>
+          )}
           {order.memo && (
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>
               메모: {order.memo}

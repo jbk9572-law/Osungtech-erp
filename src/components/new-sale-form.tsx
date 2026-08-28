@@ -37,6 +37,7 @@ import {
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
+import { RETURN_REASONS } from "@/lib/return-reason";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -86,6 +87,7 @@ export type SaleInitial = {
   deliveryMethod?: string | null;
   docNo?: number | null;
   isReturn?: boolean;
+  returnReason?: string | null;
   items: {
     productId: string;
     spec?: string | null;
@@ -152,6 +154,9 @@ export function NewSaleForm({
   // 구조를 그대로 쓰되, 서버 액션이 재고를 출고(out) 대신 입고(in)로
   // 반영하고, 매출 합계·미수금·리포트에서는 이 건의 금액을 차감 처리한다.
   const isReturn = initial?.isReturn ?? initialIsReturn;
+  const [returnReason, setReturnReason] = useState(
+    initial?.returnReason ?? RETURN_REASONS[0],
+  );
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -657,6 +662,7 @@ export function NewSaleForm({
       />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="is_return" value={isReturn ? "1" : ""} />
+      {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
@@ -707,7 +713,31 @@ export function NewSaleForm({
             border: "1px solid var(--erp-danger-border)",
           }}
         >
-          반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
+          <div style={{ marginBottom: 8 }}>
+            반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
+          </div>
+          <label
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontWeight: 700,
+            }}
+          >
+            반품 사유
+            <select
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              className="erp-select"
+              style={{ height: 26, fontSize: 12.5 }}
+            >
+              {RETURN_REASONS.map((reason) => (
+                <option key={reason} value={reason}>
+                  {reason}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       )}
 

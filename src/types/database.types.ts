@@ -732,6 +732,7 @@ export type Database = {
           created_at: string;
           doc_no: number;
           is_return: boolean;
+          return_reason: string | null;
         };
         Insert: {
           id?: string;
@@ -745,6 +746,7 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_return?: boolean;
+          return_reason?: string | null;
         };
         Update: {
           id?: string;
@@ -758,6 +760,7 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_return?: boolean;
+          return_reason?: string | null;
         };
         Relationships: [
           {
@@ -1471,6 +1474,7 @@ export type Database = {
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
           p_is_return?: boolean;
+          p_return_reason?: string | null;
         };
         Returns: string;
       };
@@ -1501,6 +1505,7 @@ export type Database = {
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
           p_is_return?: boolean | null;
+          p_return_reason?: string | null;
         };
         Returns: string;
       };
