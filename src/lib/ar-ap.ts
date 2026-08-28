@@ -50,7 +50,18 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
 
   const totalSales = creditOrders.reduce((sum, o) => sum + o.total, 0);
   const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
-  const unpaidOrders = consumeOldestFirst(creditOrders, totalPaid);
+  // 반품(음수 total)을 그대로 날짜순 목록에 섞어서 훑으면, 반품이 원본
+  // 매출보다 나중 날짜일 때(가장 흔한 경우) 이미 "미결제"로 확정해버린
+  // 더 이전 전표의 미수금을 되돌리지 못한다 — pool은 그 시점 이후로만
+  // 적용되기 때문이다. 그래서 반품 금액은 처음부터 결제 풀에 합쳐 넣고,
+  // FIFO 소진 자체는 실제 매출 전표(양수)에만 적용한다 — balance(총
+  // 잔액)는 어차피 totalSales에 이미 반품이 반영돼 있어 그대로 정확하고,
+  // "미결제 전표" 목록도 그 총 잔액과 일치하게 된다.
+  const totalReturns = creditOrders
+    .filter((o) => o.total < 0)
+    .reduce((sum, o) => sum - o.total, 0);
+  const positiveOrders = creditOrders.filter((o) => o.total > 0);
+  const unpaidOrders = consumeOldestFirst(positiveOrders, totalPaid + totalReturns);
 
   return { totalSales, totalPaid, balance: totalSales - totalPaid, payments: payments ?? [], unpaidOrders };
 }

@@ -2,7 +2,7 @@
 
 import { requireAdmin } from "@/lib/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { BACKUP_TABLES, BACKUP_FORMAT_VERSION, type BackupFile } from "@/lib/backup-tables";
+import { BACKUP_TABLES, BACKUP_FORMAT_VERSION, RESTORE_SKIP_TABLES, type BackupFile } from "@/lib/backup-tables";
 import type { FormState } from "@/components/form-message";
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -62,6 +62,7 @@ export async function restoreBackup(_prevState: FormState, formData: FormData): 
   const results: { table: string; restored: number; error?: string }[] = [];
 
   for (const table of BACKUP_TABLES) {
+    if ((RESTORE_SKIP_TABLES as readonly string[]).includes(table)) continue;
     const rows = parsed.tables[table];
     if (!rows || rows.length === 0) continue;
 

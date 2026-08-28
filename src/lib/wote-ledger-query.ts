@@ -27,7 +27,7 @@ export async function fetchWoteLedgerEntries(
     supabase
       .from("sales_order_items")
       .select(
-        "*, sales_orders!inner(order_date, customers(name, sales_export_template)), products(name)"
+        "*, sales_orders!inner(order_date, is_return, customers(name, sales_export_template)), products(name)"
       )
       .lte("sales_orders.order_date", to)
       .order("created_at"),
@@ -50,7 +50,10 @@ export async function fetchWoteLedgerEntries(
       date: item.sales_orders?.order_date ?? "",
       productName: item.products?.name ?? "",
       lotNo: item.spec || "",
-      direction: "out" as const,
+      // 반품은 재고가 되돌아오는(입고) 방향이라 out이 아니라 in으로 잡아야
+      // 관리대장의 재고 잔량 계산(direction === "in" ? +quantity : -quantity)이
+      // 실제 재고 흐름과 맞는다.
+      direction: item.sales_orders?.is_return ? ("in" as const) : ("out" as const),
       partnerName: item.sales_orders?.customers?.name ?? "신일베스텍",
       quantity: item.quantity,
     }));

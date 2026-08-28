@@ -31,16 +31,34 @@ export async function GET() {
   // 값을 담는 용도로 한정해 타입을 느슨하게 쓴다.
   const db = admin as unknown as {
     from: (table: string) => {
-      select: (cols: string) => Promise<{ data: Record<string, unknown>[] | null; error: { message: string } | null }>;
+      select: (
+        cols: string
+      ) => {
+        range: (
+          from: number,
+          to: number
+        ) => Promise<{ data: Record<string, unknown>[] | null; error: { message: string } | null }>;
+      };
     };
   };
 
+  // PostgREST는 supabase/config.toml의 max_rows(1000)를 넘으면 별도 에러
+  // 없이 결과를 그 값까지만 잘라서 돌려준다 — .range()로 직접 페이지를
+  // 넘기며 전부 받아와야 1000건 넘는 테이블(거래 이력 등)이 뒷부분만
+  // 조용히 누락되는 일을 막을 수 있다.
+  const PAGE_SIZE = 1000;
   for (const table of BACKUP_TABLES) {
-    const { data, error } = await db.from(table).select("*");
-    if (error) {
-      return new Response(`백업 중 오류 (${table}): ${error.message}`, { status: 500 });
+    const rows: Record<string, unknown>[] = [];
+    for (let page = 0; ; page++) {
+      const from = page * PAGE_SIZE;
+      const { data, error } = await db.from(table).select("*").range(from, from + PAGE_SIZE - 1);
+      if (error) {
+        return new Response(`백업 중 오류 (${table}): ${error.message}`, { status: 500 });
+      }
+      rows.push(...(data ?? []));
+      if (!data || data.length < PAGE_SIZE) break;
     }
-    backup.tables[table] = data ?? [];
+    backup.tables[table] = rows;
   }
 
   const stamp = backup.createdAt.replace(/[:.]/g, "-");
