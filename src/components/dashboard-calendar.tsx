@@ -23,6 +23,9 @@ export type ItemRow = {
   orderId: string;
   remark: string | null;
   isCarryover: boolean;
+  // 반품 건이면 amount가 이미 음수로 뒤집혀 들어온다(dashboard/page.tsx
+  // 참고) — 여기서는 표시용 배지/부호만 추가로 붙인다.
+  isReturn: boolean;
 };
 
 type PaperCalcPartnerEntry = {
@@ -148,8 +151,11 @@ function appendItemLines(
         const carryoverSuffix = group.items.some((it) => it.isCarryover)
           ? " (이월)"
           : "";
+        const returnSuffix = group.items.some((it) => it.isReturn)
+          ? " (반품)"
+          : "";
         lines.push(
-          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}`,
+          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}`,
         );
         for (const item of group.items) {
           if (item.remark) lines.push(`      (비고: ${item.remark})`);
@@ -236,6 +242,20 @@ function CarryoverBadge() {
       }}
     >
       이월
+    </span>
+  );
+}
+
+function ReturnBadge() {
+  return (
+    <span
+      className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+      style={{
+        background: "var(--erp-danger-bg)",
+        color: "var(--erp-danger)",
+      }}
+    >
+      반품
     </span>
   );
 }
@@ -689,6 +709,7 @@ export function DashboardCalendar({
                                             {item.isCarryover && (
                                               <CarryoverBadge />
                                             )}
+                                            {item.isReturn && <ReturnBadge />}
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}
@@ -714,6 +735,7 @@ export function DashboardCalendar({
                                             {item.spec || "규격 미지정"} :{" "}
                                             {item.quantity.toLocaleString()}
                                             {item.unit}
+                                            {item.isReturn && <ReturnBadge />}
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}

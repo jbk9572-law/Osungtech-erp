@@ -40,7 +40,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -168,6 +168,7 @@ export default async function SalesPage({
             supplyAmount: 0,
             taxAmount: 0,
             deliveryMethod: item.sales_orders?.delivery_method,
+            isReturn: item.sales_orders?.is_return ?? false,
             itemCount: 0,
             // 품목이 2건 이상일 때만 드롭다운으로 펼쳐 보여주는 데 쓴다.
             items: [itemDetail],
@@ -220,14 +221,23 @@ export default async function SalesPage({
     supplyAmount: Number(p.amount),
     taxAmount: 0,
     deliveryMethod: null,
+    isReturn: false,
   }));
 
   const rows: DisplayRow[] = [...saleRows, ...collectionRows].sort((a, b) =>
     (b.date ?? "").localeCompare(a.date ?? ""),
   );
 
-  const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
-  const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);
+  // 반품 건은 매출 합계·세액에서 차감한다(재고는 별도로 늘어나므로
+  // totalQuantity는 반품 수량도 그대로 더한다 — "이동한 총 수량"의 의미).
+  const totalSupply = itemRows.reduce(
+    (sum, row) => sum + (row.sales_orders?.is_return ? -row.supplyAmount : row.supplyAmount),
+    0,
+  );
+  const totalTax = itemRows.reduce(
+    (sum, row) => sum + (row.sales_orders?.is_return ? -row.taxAmount : row.taxAmount),
+    0,
+  );
   const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
   const presets = getDatePresets();
   const exportHref = q

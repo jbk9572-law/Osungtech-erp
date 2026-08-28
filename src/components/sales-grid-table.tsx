@@ -48,6 +48,9 @@ export type SalesRow = {
   date: string | undefined;
   customerName: string | undefined;
   authorName: string | null | undefined;
+  // 반품(잘못 납품해 되돌아온 매출) 건이면 배지/부호를 반대로 보여준다 —
+  // 재고는 늘어나고(+), 매출 합계에서는 차감된다(-).
+  isReturn?: boolean;
   productLabel: string;
   spec: string;
   lotNumber?: string | null;
@@ -270,8 +273,10 @@ export function SalesGridTable({
                         : "-"}
                     </td>
                     <td>
-                      <GridBadge tone={isCollection ? "muted" : "info"}>
-                        {isCollection ? "수금" : "매출"}
+                      <GridBadge
+                        tone={isCollection ? "muted" : row.isReturn ? "danger" : "info"}
+                      >
+                        {isCollection ? "수금" : row.isReturn ? "반품" : "매출"}
                       </GridBadge>
                     </td>
                     <td>{row.customerName}</td>
@@ -318,10 +323,13 @@ export function SalesGridTable({
                     <td style={{ color: "var(--erp-text-muted)" }}>
                       {row.lotNumber || "-"}
                     </td>
-                    <td className="num">
+                    <td
+                      className="num"
+                      style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+                    >
                       {isCollection
                         ? "-"
-                        : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                        : `${row.isReturn ? "+" : ""}${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
                     </td>
                     <td
                       className="num"
@@ -329,12 +337,18 @@ export function SalesGridTable({
                     >
                       {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
                     </td>
-                    <td className="num">{row.supplyAmount.toLocaleString()}</td>
                     <td
                       className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
                     >
-                      {isCollection ? "-" : row.taxAmount.toLocaleString()}
+                      {row.isReturn ? "-" : ""}
+                      {row.supplyAmount.toLocaleString()}
+                    </td>
+                    <td
+                      className="num"
+                      style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
+                    >
+                      {isCollection ? "-" : `${row.isReturn ? "-" : ""}${row.taxAmount.toLocaleString()}`}
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>
                       {row.remark || "-"}
@@ -384,7 +398,11 @@ export function SalesGridTable({
                           <td style={{ color: "var(--erp-text-muted)" }}>
                             {item.lotNumber || "-"}
                           </td>
-                          <td className="num">
+                          <td
+                            className="num"
+                            style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+                          >
+                            {row.isReturn ? "+" : ""}
                             {item.quantity.toLocaleString()} {item.unit ?? ""}
                           </td>
                           <td
@@ -393,13 +411,18 @@ export function SalesGridTable({
                           >
                             {formatNumOrDash(item.unitPrice)}
                           </td>
-                          <td className="num">
+                          <td
+                            className="num"
+                            style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+                          >
+                            {row.isReturn ? "-" : ""}
                             {item.supplyAmount.toLocaleString()}
                           </td>
                           <td
                             className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                           >
+                            {row.isReturn ? "-" : ""}
                             {item.taxAmount.toLocaleString()}
                           </td>
                           <td style={{ color: "var(--erp-text-muted)" }}>

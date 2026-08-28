@@ -119,7 +119,7 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, created_at, is_return, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
@@ -157,7 +157,7 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, is_return, customers(name))"
       )
       .gte("sales_orders.order_date", carryoverFrom)
       .lte("sales_orders.order_date", carryoverTo)
@@ -189,6 +189,7 @@ export default async function DashboardPage({
     orderId: string;
     remark: string | null;
     isCarryover: boolean;
+    isReturn: boolean;
   };
 
   type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
@@ -257,7 +258,12 @@ export default async function DashboardPage({
     // 이월 건은 달력의 order_date 자리가 아니라 입력일(created_at) 쪽에서만
     // 보여준다(아래 이월 병합 루프 참고).
     if (isCarryover(date, item.sales_orders.created_at)) continue;
-    const amount = item.quantity * Number(item.unit_price);
+    const isReturn = item.sales_orders.is_return;
+    // 반품 건은 재고가 늘어나는 반대 방향 거래라 매출 합계에서 차감해야
+    // 하므로, 이 라인의 금액 자체를 음수로 뒤집어서 담는다 — 그러면
+    // salesTotal 누계에도, 화면에 그대로 찍히는 개별 금액에도 부호가
+    // 자연스럽게 반영된다.
+    const amount = item.quantity * Number(item.unit_price) * (isReturn ? -1 : 1);
     const bucket = ensure(date);
     bucket.salesCount += 1;
     bucket.salesTotal += amount;
@@ -281,6 +287,7 @@ export default async function DashboardPage({
       orderId: item.sales_order_id,
       remark: item.remark,
       isCarryover: false,
+      isReturn,
     });
   }
 
@@ -308,6 +315,7 @@ export default async function DashboardPage({
       orderId: item.purchase_order_id,
       remark: item.remark,
       isCarryover: false,
+      isReturn: false,
     });
   }
 
@@ -335,10 +343,11 @@ export default async function DashboardPage({
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
-      amount: item.quantity * Number(item.unit_price),
+      amount: item.quantity * Number(item.unit_price) * (item.sales_orders.is_return ? -1 : 1),
       orderId: item.sales_order_id,
       remark: item.remark,
       isCarryover: true,
+      isReturn: item.sales_orders.is_return,
     });
   }
 
@@ -360,6 +369,7 @@ export default async function DashboardPage({
       orderId: item.purchase_order_id,
       remark: item.remark,
       isCarryover: true,
+      isReturn: false,
     });
   }
 

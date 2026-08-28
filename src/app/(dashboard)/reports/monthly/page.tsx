@@ -126,7 +126,7 @@ export default async function MonthlyReportPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, customers(id, name)), products(sku, name, spec, unit)",
+        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, customers(id, name)), products(sku, name, spec, unit)",
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -145,7 +145,7 @@ export default async function MonthlyReportPage({
     // 총액만 필요하므로 가벼운 컬럼만 가져온다.
     supabase
       .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(order_date)")
+      .select("quantity, unit_price, sales_orders!inner(order_date, is_return)")
       .gte("sales_orders.order_date", prevFrom)
       .lte("sales_orders.order_date", prevTo)
       .limit(5000),
@@ -158,7 +158,8 @@ export default async function MonthlyReportPage({
   ]);
 
   const prevSalesTotal = (prevSalesRows ?? []).reduce(
-    (sum, r) => sum + r.quantity * Number(r.unit_price),
+    (sum, r) =>
+      sum + r.quantity * Number(r.unit_price) * (r.sales_orders?.is_return ? -1 : 1),
     0,
   );
   const prevPurchaseTotal = (prevPurchaseRows ?? []).reduce(
@@ -230,13 +231,18 @@ export default async function MonthlyReportPage({
 
   for (const row of salesRows ?? []) {
     const customer = row.sales_orders?.customers;
-    const amount = row.quantity * Number(row.unit_price);
+    // 반품 건은 수량/금액을 음수로 뒤집어서 반영한다 — 그래야 "출고수량"이
+    // 실제로 순유출된 양을 뜻하고, "재고 순증감"(입고-출고) 계산도 반품으로
+    // 늘어난 재고를 정확히 반영한다.
+    const sign = row.sales_orders?.is_return ? -1 : 1;
+    const quantity = row.quantity * sign;
+    const amount = row.quantity * Number(row.unit_price) * sign;
     const sku = row.products?.sku ?? "-";
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
     const group = ensureGroup(row.product_id, sku, productName, spec, unit);
-    group.outQty += row.quantity;
+    group.outQty += quantity;
     group.outAmount += amount;
     if (customer) {
       const companyKey = `c:${customer.id}`;
@@ -246,14 +252,14 @@ export default async function MonthlyReportPage({
         (d) => d.type === "out" && d.companyId === customer.id,
       );
       if (existing) {
-        existing.quantity += row.quantity;
+        existing.quantity += quantity;
         existing.amount += amount;
       } else {
         group.details.push({
           type: "out",
           companyId: customer.id,
           companyName: customer.name,
-          quantity: row.quantity,
+          quantity,
           amount,
         });
       }
@@ -315,7 +321,9 @@ export default async function MonthlyReportPage({
   const salesCompanyRows: CompanyProductRow[] = (salesRows ?? [])
     .filter((row) => row.sales_orders?.customers)
     .map((row) => {
-      const amount = row.quantity * Number(row.unit_price);
+      // 반품은 이 거래처와의 순거래액에서 차감되도록 음수로 반영한다.
+      const sign = row.sales_orders?.is_return ? -1 : 1;
+      const amount = row.quantity * Number(row.unit_price) * sign;
       return {
         companyId: row.sales_orders!.customers!.id,
         companyName: row.sales_orders!.customers!.name,
@@ -324,7 +332,7 @@ export default async function MonthlyReportPage({
         productName: row.products?.name ?? "-",
         spec: row.products?.spec ?? "-",
         unit: row.products?.unit ?? null,
-        quantity: row.quantity,
+        quantity: row.quantity * sign,
         amount,
         taxAmount: Math.round(amount * 0.1),
       };

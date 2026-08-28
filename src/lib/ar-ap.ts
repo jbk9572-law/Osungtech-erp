@@ -27,20 +27,25 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
   const [{ data: orders }, { data: payments }] = await Promise.all([
     supabase
       .from("sales_orders")
-      .select("id, doc_no, order_date, payment_method, sales_order_items(quantity, unit_price)")
+      .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
       .eq("customer_id", customerId)
       .order("order_date", { ascending: true }),
     supabase.from("customer_payments").select("id, paid_at, amount, method, memo").eq("customer_id", customerId).order("paid_at", { ascending: false }),
   ]);
   // 결제방법을 "항상 외상" 대신 현금/계좌이체 등으로 등록한 주문은 그
-  // 자리에서 결제가 끝난 거래이므로 미수금 계산에서 아예 뺀다.
+  // 자리에서 결제가 끝난 거래이므로 미수금 계산에서 아예 뺀다. 반품은
+  // 미수금을 그만큼 깎아주는 것이므로 금액을 음수로 뒤집어서 더한다 —
+  // consumeOldestFirst의 FIFO 소진 로직이 그대로 "추가 상계분"으로
+  // 처리해준다(음수 total은 항상 pool보다 작아서 즉시 상계됨).
   const creditOrders = (orders ?? [])
     .filter((o) => !o.payment_method)
     .map((o) => ({
       id: o.id,
       docNo: o.doc_no,
       date: o.order_date,
-      total: (o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0),
+      total:
+        (o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0) *
+        (o.is_return ? -1 : 1),
     }));
 
   const totalSales = creditOrders.reduce((sum, o) => sum + o.total, 0);
@@ -105,7 +110,9 @@ export type PartyBalance = { id: string; name: string; total: number; paid: numb
 export async function getAllCustomerBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
   const [{ data: customers }, { data: items }, { data: payments }] = await Promise.all([
     supabase.from("customers").select("id, name").order("name"),
-    supabase.from("sales_order_items").select("quantity, unit_price, sales_orders!inner(customer_id, payment_method)"),
+    supabase
+      .from("sales_order_items")
+      .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method, is_return)"),
     supabase.from("customer_payments").select("customer_id, amount"),
   ]);
 
@@ -113,7 +120,8 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
   for (const item of items ?? []) {
     if (item.sales_orders.payment_method) continue;
     const cid = item.sales_orders.customer_id;
-    salesByCustomer[cid] = (salesByCustomer[cid] ?? 0) + item.quantity * Number(item.unit_price);
+    const amount = item.quantity * Number(item.unit_price) * (item.sales_orders.is_return ? -1 : 1);
+    salesByCustomer[cid] = (salesByCustomer[cid] ?? 0) + amount;
   }
   const paidByCustomer: Record<string, number> = {};
   for (const p of payments ?? []) {

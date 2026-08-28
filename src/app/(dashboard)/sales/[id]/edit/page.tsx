@@ -131,6 +131,7 @@ export default async function EditSalePage({
           paymentMethod: order.payment_method,
           deliveryMethod: order.delivery_method,
           docNo: order.doc_no,
+          isReturn: order.is_return,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             spec: item.spec,

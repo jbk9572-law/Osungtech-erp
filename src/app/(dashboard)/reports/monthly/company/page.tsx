@@ -17,6 +17,7 @@ type Transaction = {
   quantity: number;
   amount: number;
   orderId: string;
+  isReturn?: boolean;
 };
 
 export default async function MonthlyReportCompanyPage({
@@ -69,7 +70,7 @@ export default async function MonthlyReportCompanyPage({
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customer_id), products(name, spec, unit)",
+          "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customer_id, is_return), products(name, spec, unit)",
         )
         .eq("sales_orders.customer_id", id)
         .gte("sales_orders.order_date", from)
@@ -78,16 +79,23 @@ export default async function MonthlyReportCompanyPage({
         .limit(2000),
     ]);
     companyName = customer?.name ?? "";
-    rows = (data ?? []).map((row) => ({
-      date: row.sales_orders.order_date,
-      type: "out" as const,
-      productName: row.products?.name ?? "-",
-      spec: row.products?.spec ?? "-",
-      unit: row.products?.unit ?? null,
-      quantity: row.quantity,
-      amount: row.quantity * Number(row.unit_price),
-      orderId: row.sales_order_id,
-    }));
+    // 반품 건은 수량/금액을 음수로 뒤집어서 이 거래처와의 순거래 합계에
+    // 정확히 반영되게 한다(sales-grid-table/월별 리포트 목록과 동일한 처리).
+    rows = (data ?? []).map((row) => {
+      const isReturn = row.sales_orders.is_return;
+      const sign = isReturn ? -1 : 1;
+      return {
+        date: row.sales_orders.order_date,
+        type: "out" as const,
+        productName: row.products?.name ?? "-",
+        spec: row.products?.spec ?? "-",
+        unit: row.products?.unit ?? null,
+        quantity: row.quantity * sign,
+        amount: row.quantity * Number(row.unit_price) * sign,
+        orderId: row.sales_order_id,
+        isReturn,
+      };
+    });
   }
 
   rows.sort(
@@ -230,7 +238,7 @@ export default async function MonthlyReportCompanyPage({
                       <td>{t.date}</td>
                       <td>
                         <GridBadge tone={t.type === "in" ? "ok" : "danger"}>
-                          {t.type === "in" ? "입고" : "출고"}
+                          {t.type === "in" ? "입고" : t.isReturn ? "반품" : "출고"}
                         </GridBadge>
                       </td>
                       <td>{t.productName}</td>

@@ -19,6 +19,7 @@ import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { GridBadge } from "@/components/grid/badge";
 
 export default async function SaleDetailPage({
   params,
@@ -96,8 +97,9 @@ export default async function SaleDetailPage({
         }}
       />
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="flex items-center gap-2 text-lg font-bold text-[var(--erp-text)]">
           매출관리 &gt; 수주 상세
+          {order.is_return && <GridBadge tone="danger">반품</GridBadge>}
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link

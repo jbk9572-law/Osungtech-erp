@@ -85,6 +85,7 @@ export type SaleInitial = {
   paymentMethod?: string | null;
   deliveryMethod?: string | null;
   docNo?: number | null;
+  isReturn?: boolean;
   items: {
     productId: string;
     spec?: string | null;
@@ -143,6 +144,10 @@ export function NewSaleForm({
   const [docNo, setDocNo] = useState(
     initial?.docNo ? String(initial.docNo) : "",
   );
+  // 반품(잘못 납품해 되돌아온 건)으로 등록하면 이 매출과 똑같은 폼/품목
+  // 구조를 그대로 쓰되, 서버 액션이 재고를 출고(out) 대신 입고(in)로
+  // 반영하고, 매출 합계·미수금·리포트에서는 이 건의 금액을 차감 처리한다.
+  const [isReturn, setIsReturn] = useState(initial?.isReturn ?? false);
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -647,6 +652,7 @@ export function NewSaleForm({
         value={alwaysCredit ? "" : paymentMethod}
       />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
+      <input type="hidden" name="is_return" value={isReturn ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
@@ -687,6 +693,37 @@ export function NewSaleForm({
         </div>
       )}
 
+      <div className="erp-seg" style={{ marginBottom: 12 }}>
+        <button
+          type="button"
+          className={`erp-seg-btn${!isReturn ? " active" : ""}`}
+          onClick={() => setIsReturn(false)}
+        >
+          매출
+        </button>
+        <button
+          type="button"
+          className={`erp-seg-btn${isReturn ? " active" : ""}`}
+          style={isReturn ? { background: "var(--erp-danger)", borderColor: "var(--erp-danger)" } : undefined}
+          onClick={() => setIsReturn(true)}
+        >
+          반품
+        </button>
+      </div>
+      {isReturn && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{
+            marginBottom: 12,
+            background: "var(--erp-danger-bg)",
+            color: "var(--erp-danger)",
+            border: "1px solid var(--erp-danger-border)",
+          }}
+        >
+          반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
+        </div>
+      )}
+
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div
           className="erp-detail-tabs"
@@ -705,7 +742,7 @@ export function NewSaleForm({
                 <span className="erp-spinner" aria-hidden /> 저장 중...
               </>
             ) : (
-              `F7 ${submitLabel}`
+              `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
             )}
           </button>
         </div>
@@ -1373,13 +1410,29 @@ export function NewSaleForm({
                           const availableStock =
                             (product.stock ?? 0) +
                             (originalQtyByProduct.get(row.productId) ?? 0);
+                          const unit = product.unit ?? "";
+                          // 반품은 출고가 아니라 입고(재고 증가)이므로 부족
+                          // 여부를 따질 필요가 없다 — 늘어난 뒤 수량만 보여준다.
+                          if (isReturn) {
+                            const afterReturn = availableStock + row.quantity;
+                            return (
+                              <p
+                                className="text-[10.5px]"
+                                style={{ color: "var(--erp-danger)" }}
+                              >
+                                재고 {availableStock.toLocaleString()}
+                                {unit} + 반품 {row.quantity.toLocaleString()}
+                                {unit} = {afterReturn.toLocaleString()}
+                                {unit}
+                              </p>
+                            );
+                          }
                           // "재고 900"만 보여주면 이 출고를 반영하기 전인지 후인지
                           // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
                           // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
                           // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
                           const remaining = availableStock - row.quantity;
                           const short = remaining < 0;
-                          const unit = product.unit ?? "";
                           return (
                             <p
                               className="text-[10.5px]"

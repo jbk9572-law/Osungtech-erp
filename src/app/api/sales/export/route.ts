@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   const { data } = await supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(order_date, customer_id, customers(name)), products(sku, name, spec, unit, base_package_qty)"
+      "*, sales_orders!inner(order_date, customer_id, is_return, customers(name)), products(sku, name, spec, unit, base_package_qty)"
     )
     .gte("sales_orders.order_date", from)
     .lte("sales_orders.order_date", to)
@@ -87,16 +87,21 @@ export async function GET(request: Request) {
   });
 
   const rows = items.map((item) => {
-    const supplyAmount = item.quantity * Number(item.unit_price);
+    // 반품 건은 수량/금액에 마이너스를 붙여서 내려준다 — 이 시트를 그대로
+    // 합계 내더라도(피벗 등) 반품이 매출에서 자동으로 차감되게 하기 위함.
+    const isReturn = item.sales_orders?.is_return ?? false;
+    const sign = isReturn ? -1 : 1;
+    const supplyAmount = item.quantity * Number(item.unit_price) * sign;
     const taxAmount = Math.round(supplyAmount * 0.1);
     return {
       거래일자: item.sales_orders?.order_date ?? "",
+      구분: isReturn ? "반품" : "매출",
       출고처명: item.sales_orders?.customers?.name ?? "",
       SKU: item.products?.sku ?? "",
       품목명: item.products?.name ?? "",
       규격: item.spec || item.products?.spec || "",
       단위: item.products?.unit ?? "",
-      수량: item.quantity,
+      수량: item.quantity * sign,
       공급가: Number(item.unit_price),
       공급가액: supplyAmount,
       세액: taxAmount,
