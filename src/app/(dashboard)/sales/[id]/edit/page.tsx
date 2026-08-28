@@ -133,6 +133,7 @@ export default async function EditSalePage({
           docNo: order.doc_no,
           isReturn: order.is_return,
           returnReason: order.return_reason,
+          isCarryover: order.is_carryover,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             spec: item.spec,

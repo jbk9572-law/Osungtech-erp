@@ -166,6 +166,7 @@ export async function createPurchase(
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
+  const isCarryover = formData.get("is_carryover") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
@@ -312,6 +313,7 @@ export async function createPurchase(
       p_payment_method: paymentMethod,
       p_delivery_method: deliveryMethod,
       p_doc_no: docNo,
+      p_is_carryover: isCarryover,
     });
 
     if (error || !newPurchaseId) {
@@ -428,6 +430,7 @@ export async function updatePurchase(
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
+  const isCarryover = formData.get("is_carryover") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
   // 상세가 아니라 그 목록으로 돌아간다.
@@ -470,6 +473,7 @@ export async function updatePurchase(
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
     p_doc_no: docNo,
+    p_is_carryover: isCarryover,
   });
 
   if (error) {

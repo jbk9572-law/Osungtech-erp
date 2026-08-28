@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { effectiveMonth } from "@/lib/carryover";
 import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
@@ -107,55 +108,54 @@ export default async function MonthlyReportPage({
       ? viewParam
       : "product";
   const month = monthParam || currentMonth();
-  const { from, to } = getMonthRange(month);
+  const { to } = getMonthRange(month);
   const prevMonth = shiftMonth(month, -1);
-  const { from: prevFrom, to: prevTo } = getMonthRange(prevMonth);
+  // 이월(is_carryover) 건은 거래일자가 실제로는 전월인데 이번 달 실적으로
+  // 잡히므로, 조회 범위를 전월 1일까지 넓혀서 가져온 뒤 실적월(effectiveMonth)
+  // 기준으로 이번 달/전월 몫을 각각 걸러낸다 — 전월 대비 비교(prevMonth)도
+  // 같은 방식으로 걸러야 해서 한 달 더(lookbackMonth) 여유를 둔다.
+  const lookbackMonth = shiftMonth(month, -2);
+  const { from: lookbackFrom } = getMonthRange(lookbackMonth);
   const supabase = await createClient();
 
   // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행)에서 조용히
   // 자르고, order() 없이 limit만 걸면 어떤 행이 잘리는지 보장이 안 된다
-  // (한 달 거래가 한도를 넘으면 매번 다른 행이 빠지면서 합계가 틀어질 수
+  // (거래가 한도를 넘으면 매번 다른 행이 빠지면서 합계가 틀어질 수
   // 있다). 월 집계는 정확도가 중요해서 넉넉한 상한(5000) + 결정적인
   // 정렬을 같이 건다.
-  const [
-    { data: salesRows },
-    { data: purchaseRows },
-    { data: prevSalesRows },
-    { data: prevPurchaseRows },
-  ] = await Promise.all([
+  const [{ data: allSalesRows }, { data: allPurchaseRows }] = await Promise.all([
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, customers(id, name)), products(sku, name, spec, unit)",
+        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit)",
       )
-      .gte("sales_orders.order_date", from)
+      .gte("sales_orders.order_date", lookbackFrom)
       .lte("sales_orders.order_date", to)
       .order("sales_orders(order_date)", { ascending: true })
       .limit(5000),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, suppliers(id, name)), products(sku, name, spec, unit)",
+        "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit)",
       )
-      .gte("purchase_orders.purchase_date", from)
+      .gte("purchase_orders.purchase_date", lookbackFrom)
       .lte("purchase_orders.purchase_date", to)
       .order("purchase_orders(purchase_date)", { ascending: true })
       .limit(5000),
-    // 요약카드의 전월 대비 증감(%) 계산용 — 품목/거래처 상세는 필요 없고
-    // 총액만 필요하므로 가벼운 컬럼만 가져온다.
-    supabase
-      .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(order_date, is_return)")
-      .gte("sales_orders.order_date", prevFrom)
-      .lte("sales_orders.order_date", prevTo)
-      .limit(5000),
-    supabase
-      .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
-      .gte("purchase_orders.purchase_date", prevFrom)
-      .lte("purchase_orders.purchase_date", prevTo)
-      .limit(5000),
   ]);
+
+  const salesRows = (allSalesRows ?? []).filter(
+    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === month,
+  );
+  const prevSalesRows = (allSalesRows ?? []).filter(
+    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === prevMonth,
+  );
+  const purchaseRows = (allPurchaseRows ?? []).filter(
+    (r) => effectiveMonth(r.purchase_orders?.purchase_date ?? "", r.purchase_orders?.is_carryover ?? false) === month,
+  );
+  const prevPurchaseRows = (allPurchaseRows ?? []).filter(
+    (r) => effectiveMonth(r.purchase_orders?.purchase_date ?? "", r.purchase_orders?.is_carryover ?? false) === prevMonth,
+  );
 
   const prevSalesTotal = (prevSalesRows ?? []).reduce(
     (sum, r) =>

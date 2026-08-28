@@ -21,6 +21,7 @@ import {
   GRID_CHECKBOX_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { nextMonthLabel } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 
 export type PurchaseRowItem = {
@@ -57,6 +58,9 @@ export type PurchaseRow = {
   supplyAmount: number;
   taxAmount: number;
   deliveryMethod?: string | null;
+  // 매입일자(date)는 실제 처리일 그대로지만, 이 건이 월별 집계에서는
+  // 다음 달 실적으로 잡힌다는 걸 날짜 옆 배지로 보여주기 위함.
+  isCarryover?: boolean;
   // 품목이 2건 이상인 명세표만 채워진다 — 목록에서 "품목A 외 N건"으로
   // 뭉뚱그려진 걸 상세 페이지로 넘어가지 않고 행 아래에 펼쳐서 볼 수
   // 있게 하기 위함.
@@ -264,6 +268,11 @@ export function PurchaseGridTable({
                       {row.date
                         ? new Date(row.date).toLocaleDateString("ko-KR")
                         : "-"}
+                      {row.isCarryover && row.date && (
+                        <GridBadge tone="warn" style={{ marginLeft: 4 }}>
+                          이월→{nextMonthLabel(row.date)}
+                        </GridBadge>
+                      )}
                     </td>
                     <td>
                       <GridBadge tone={isPayment ? "muted" : "info"}>

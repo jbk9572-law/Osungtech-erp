@@ -23,6 +23,7 @@ import {
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { nextMonthLabel } from "@/lib/carryover";
 
 export type SalesRowItem = {
   productLabel: string;
@@ -51,6 +52,9 @@ export type SalesRow = {
   // 반품(잘못 납품해 되돌아온 매출) 건이면 배지/부호를 반대로 보여준다 —
   // 재고는 늘어나고(+), 매출 합계에서는 차감된다(-).
   isReturn?: boolean;
+  // 거래일자(date)는 실제 처리일 그대로지만, 이 건이 월별 집계에서는
+  // 다음 달 실적으로 잡힌다는 걸 날짜 옆 배지로 보여주기 위함.
+  isCarryover?: boolean;
   productLabel: string;
   spec: string;
   lotNumber?: string | null;
@@ -271,6 +275,11 @@ export function SalesGridTable({
                       {row.date
                         ? new Date(row.date).toLocaleDateString("ko-KR")
                         : "-"}
+                      {row.isCarryover && row.date && (
+                        <GridBadge tone="warn" style={{ marginLeft: 4 }}>
+                          이월→{nextMonthLabel(row.date)}
+                        </GridBadge>
+                      )}
                     </td>
                     <td>
                       <GridBadge

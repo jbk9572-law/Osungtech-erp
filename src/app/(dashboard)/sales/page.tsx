@@ -40,7 +40,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, is_carryover, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -169,6 +169,7 @@ export default async function SalesPage({
             taxAmount: 0,
             deliveryMethod: item.sales_orders?.delivery_method,
             isReturn: item.sales_orders?.is_return ?? false,
+            isCarryover: item.sales_orders?.is_carryover ?? false,
             itemCount: 0,
             // 품목이 2건 이상일 때만 드롭다운으로 펼쳐 보여주는 데 쓴다.
             items: [itemDetail],

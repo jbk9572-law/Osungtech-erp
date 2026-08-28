@@ -38,6 +38,7 @@ import {
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { RETURN_REASONS } from "@/lib/return-reason";
+import { nextMonthLabel } from "@/lib/carryover";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -88,6 +89,7 @@ export type SaleInitial = {
   docNo?: number | null;
   isReturn?: boolean;
   returnReason?: string | null;
+  isCarryover?: boolean;
   items: {
     productId: string;
     spec?: string | null;
@@ -156,6 +158,13 @@ export function NewSaleForm({
   const isReturn = initial?.isReturn ?? initialIsReturn;
   const [returnReason, setReturnReason] = useState(
     initial?.returnReason ?? RETURN_REASONS[0],
+  );
+  // 거래일자는 항상 실제 처리일 그대로 두고, "다음 달 실적으로 잡을지"만
+  // 이 체크박스로 명시적으로 관리한다(예전에는 거래일자 자체를 미래 날짜로
+  // 입력해서 이월을 표현했다 — 그 방식은 달력/명세표에 실제 날짜가 안
+  // 보이는 문제가 있었다).
+  const [isCarryover, setIsCarryover] = useState(
+    initial?.isCarryover ?? false,
   );
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
@@ -663,6 +672,7 @@ export function NewSaleForm({
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="is_return" value={isReturn ? "1" : ""} />
       {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
+      <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
@@ -741,6 +751,22 @@ export function NewSaleForm({
         </div>
       )}
 
+      {isCarryover && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{
+            marginBottom: 12,
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+            border: "1px solid var(--erp-warning-border)",
+          }}
+        >
+          거래일자는 {orderDate} 그대로 저장되고, 월별 리포트·대시보드 집계에서만{" "}
+          {nextMonthLabel(orderDate)} 실적으로 잡힙니다. 목록/달력에는 오늘 처리한 건으로
+          그대로 표시됩니다.
+        </div>
+      )}
+
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div
           className="erp-detail-tabs"
@@ -808,6 +834,37 @@ export function NewSaleForm({
               onChange={(e) => setOrderDate(e.target.value)}
               className="erp-input"
             />
+          </div>
+          <div className="erp-field">
+            <label aria-hidden="true">&nbsp;</label>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                height: 34,
+                padding: "0 14px",
+                borderRadius: 6,
+                background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
+                border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={isCarryover}
+                onChange={(e) => setIsCarryover(e.target.checked)}
+              />
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)",
+                }}
+              >
+                {nextMonthLabel(orderDate)} 실적으로 이월
+              </span>
+            </label>
           </div>
           <div className="erp-field">
             <label htmlFor="sale-delivery-method">배송방법</label>

@@ -733,6 +733,7 @@ export type Database = {
           doc_no: number;
           is_return: boolean;
           return_reason: string | null;
+          is_carryover: boolean;
         };
         Insert: {
           id?: string;
@@ -747,6 +748,7 @@ export type Database = {
           doc_no?: number;
           is_return?: boolean;
           return_reason?: string | null;
+          is_carryover?: boolean;
         };
         Update: {
           id?: string;
@@ -761,6 +763,7 @@ export type Database = {
           doc_no?: number;
           is_return?: boolean;
           return_reason?: string | null;
+          is_carryover?: boolean;
         };
         Relationships: [
           {
@@ -849,6 +852,7 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           doc_no: number;
+          is_carryover: boolean;
         };
         Insert: {
           id?: string;
@@ -861,6 +865,7 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           doc_no?: number;
+          is_carryover?: boolean;
         };
         Update: {
           id?: string;
@@ -873,6 +878,7 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           doc_no?: number;
+          is_carryover?: boolean;
         };
         Relationships: [
           {
@@ -1475,6 +1481,7 @@ export type Database = {
           p_doc_no?: number | null;
           p_is_return?: boolean;
           p_return_reason?: string | null;
+          p_is_carryover?: boolean;
         };
         Returns: string;
       };
@@ -1489,6 +1496,7 @@ export type Database = {
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
+          p_is_carryover?: boolean;
         };
         Returns: string;
       };
@@ -1506,6 +1514,7 @@ export type Database = {
           p_doc_no?: number | null;
           p_is_return?: boolean | null;
           p_return_reason?: string | null;
+          p_is_carryover?: boolean | null;
         };
         Returns: string;
       };
@@ -1521,6 +1530,7 @@ export type Database = {
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
+          p_is_carryover?: boolean | null;
         };
         Returns: string;
       };

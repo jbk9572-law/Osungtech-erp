@@ -40,7 +40,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -167,6 +167,7 @@ export default async function PurchasesPage({
             supplyAmount: 0,
             taxAmount: 0,
             deliveryMethod: item.purchase_orders?.delivery_method,
+            isCarryover: item.purchase_orders?.is_carryover ?? false,
             itemCount: 0,
             // 품목이 2건 이상일 때만 드롭다운으로 펼쳐 보여주는 데 쓴다.
             items: [itemDetail],
