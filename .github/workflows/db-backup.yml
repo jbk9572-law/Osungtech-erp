@@ -1,0 +1,84 @@
+name: Nightly DB backup
+
+# Supabase Free 플랜에는 자동 백업(Backups) 메뉴 자체가 없다(Pro부터 제공).
+# 그래서 이 저장소 자체를 백업 저장소로 써서, 매일 밤 DB 전체를
+# pg_dump로 떠서 db-backups 브랜치에 커밋해둔다. main 브랜치 히스토리와는
+# 분리된 별도 브랜치라 평소 클론/배포에는 영향이 없다.
+#
+# 사용 전 준비 (1회):
+#   1. Supabase 대시보드 > Project Settings > Database > Connection string에서
+#      "Connection pooling" 탭의 URI를 복사한다(Transaction mode, IPv4 호환 —
+#      GitHub Actions 러너가 IPv4라 direct connection은 안 될 수 있다).
+#      비밀번호 자리([YOUR-PASSWORD])는 실제 DB 비밀번호로 바꿔서 복사한다.
+#   2. 이 저장소 Settings > Secrets and variables > Actions에서
+#      New repository secret으로 이름 SUPABASE_DB_URL, 값은 위 URI로 등록한다.
+#      (절대 이 값을 코드나 채팅에 직접 붙여넣지 않는다 — GitHub Secrets에만 등록)
+#   3. 최초 1회는 Actions 탭에서 이 워크플로우를 "Run workflow"로 수동 실행해
+#      정상적으로 도는지 확인한다.
+#
+# 복원 방법은 scripts/restore-db-backup.sh 참고.
+
+on:
+  schedule:
+    - cron: "0 17 * * *" # 매일 02:00 KST
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify secret is configured
+        run: |
+          if [ -z "${{ secrets.SUPABASE_DB_URL }}" ]; then
+            echo "::error::SUPABASE_DB_URL secret이 설정되어 있지 않습니다. 워크플로우 파일 상단 안내를 참고해 등록해주세요."
+            exit 1
+          fi
+
+      - name: Dump database (via postgres:17 client image, custom format)
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p backups
+          STAMP=$(date -u +%Y-%m-%dT%H%M%SZ)
+          docker run --rm -v "$PWD/backups:/backups" -e PGCONNECT_TIMEOUT=30 postgres:17 \
+            pg_dump "$DB_URL" --no-owner --no-privileges --format=custom -f "/backups/${STAMP}.dump"
+          echo "DUMP_FILE=backups/${STAMP}.dump" >> "$GITHUB_ENV"
+
+      - name: Switch to db-backups branch (create if missing)
+        run: |
+          set -euo pipefail
+          git config user.name "db-backup-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git stash -u
+          if git ls-remote --exit-code --heads origin db-backups >/dev/null 2>&1; then
+            git fetch origin db-backups
+            git checkout db-backups
+          else
+            git checkout --orphan db-backups
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          git stash pop
+
+      - name: Prune old backups (keep most recent 30)
+        run: |
+          set -euo pipefail
+          mkdir -p backups
+          cd backups
+          ls -1 *.dump 2>/dev/null | sort | head -n -30 | xargs -r rm -f
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git add backups
+          if git diff --cached --quiet; then
+            echo "변경된 백업 파일이 없습니다 (덤프 실패 가능성 있음, 위 단계 로그 확인)."
+            exit 1
+          fi
+          git commit -m "DB backup $(date -u +%F)"
+          git push origin db-backups
