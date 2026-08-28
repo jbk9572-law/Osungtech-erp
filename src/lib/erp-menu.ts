@@ -72,6 +72,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "권한관리", href: "/settings/users" },
       { label: "백업/복원", href: "/settings/backup" },
+      { label: "변경 이력", href: "/settings/audit-log" },
     ],
   },
 ];
