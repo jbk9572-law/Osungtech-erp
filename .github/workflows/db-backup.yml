@@ -26,6 +26,12 @@ on:
     - cron: "0 17 * * *" # 매일 02:00 KST
   workflow_dispatch: {}
 
+# 기본 GITHUB_TOKEN은 요즘 조직 설정에 따라 읽기 전용으로 발급되는 경우가
+# 많다 — db-backups 브랜치에 커밋을 push하려면 명시적으로 쓰기 권한이
+# 필요하다.
+permissions:
+  contents: write
+
 jobs:
   backup:
     runs-on: ubuntu-latest
