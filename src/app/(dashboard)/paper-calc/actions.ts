@@ -117,38 +117,37 @@ export async function deletePaperCalculation(
   formData: FormData
 ): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
-  const salesOrderId = String(formData.get("salesOrderId") ?? "").trim() || null;
-  const purchaseOrderId = String(formData.get("purchaseOrderId") ?? "").trim() || null;
   if (!id) {
     return { error: "잘못된 요청입니다." };
   }
 
   const supabase = await createClient();
 
-  const permissionError = await assertCanManageOrder(supabase, salesOrderId, purchaseOrderId);
-  if (permissionError) return { error: permissionError };
-
-  // assertCanManageOrder는 폼으로 제출된 salesOrderId/purchaseOrderId의
-  // 소유권만 확인한다 — 지울 계산 행(id)이 실제로 그 주문 소속인지는
-  // 별도로 확인해야, 본인 소유 주문의 id를 붙여서 남의 계산 행 id를
-  // 지우는 요청을 막을 수 있다.
+  // 권한 판정은 폼에서 제출된 salesOrderId/purchaseOrderId가 아니라, 지울
+  // 계산 행(id) 자체가 DB에 실제로 가지고 있는 주문 id로만 해야 한다 —
+  // 둘 다 비워서 제출하면 assertCanManageOrder가 아무 검사도 하지 않고
+  // 통과시켜, 계산 id만으로 남의 주문에 딸린 계산을 지울 수 있었다.
   const { data: calc } = await supabase
     .from("paper_calculations")
     .select("sales_order_id, purchase_order_id")
     .eq("id", id)
     .maybeSingle();
-  if (
-    !calc ||
-    (salesOrderId && calc.sales_order_id !== salesOrderId) ||
-    (purchaseOrderId && calc.purchase_order_id !== purchaseOrderId)
-  ) {
+  if (!calc) {
     return { error: "잘못된 요청입니다." };
   }
+  const salesOrderId = calc.sales_order_id;
+  const purchaseOrderId = calc.purchase_order_id;
 
-  const { error } = await supabase.from("paper_calculations").delete().eq("id", id);
+  const permissionError = await assertCanManageOrder(supabase, salesOrderId, purchaseOrderId);
+  if (permissionError) return { error: permissionError };
+
+  const { data: deleted, error } = await supabase.from("paper_calculations").delete().eq("id", id).select("id");
 
   if (error) {
     return { error: `삭제에 실패했습니다: ${error.message}` };
+  }
+  if (!deleted || deleted.length === 0) {
+    return { error: "본인이 등록한 계산만 삭제할 수 있습니다." };
   }
 
   let warning: string | null = null;

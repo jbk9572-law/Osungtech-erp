@@ -4,6 +4,10 @@ import { CreateCustomerForm } from "@/components/create-customer-form";
 import { CustomerGridTable } from "@/components/customer-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import type { Database } from "@/types/database.types";
+
+type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 
 export default async function CustomersPage({
   searchParams,
@@ -12,14 +16,13 @@ export default async function CustomersPage({
 }) {
   const { q } = await searchParams;
   const supabase = await createClient();
-  const { data: allCustomers } = await supabase
-    .from("customers")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const allCustomers = await fetchAllRows<CustomerRow>((from, to) =>
+    supabase.from("customers").select("*").order("created_at", { ascending: false }).range(from, to),
+  );
 
   const keyword = q?.trim().toLowerCase();
   const customers = keyword
-    ? (allCustomers ?? []).filter(
+    ? allCustomers.filter(
         (c) =>
           c.name.toLowerCase().includes(keyword) ||
           (c.business_number ?? "").toLowerCase().includes(keyword) ||
@@ -27,7 +30,7 @@ export default async function CustomersPage({
           (c.phone ?? "").toLowerCase().includes(keyword) ||
           (c.email ?? "").toLowerCase().includes(keyword)
       )
-    : allCustomers ?? [];
+    : allCustomers;
 
   const exportHref = "/api/customers/export";
 

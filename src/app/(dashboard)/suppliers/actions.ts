@@ -7,6 +7,7 @@ import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 function supplierFieldsFrom(formData: FormData) {
   return {
@@ -319,11 +320,13 @@ export async function importSuppliersExcel(_prevState: FormState, formData: Form
 
   // 사업자등록번호가 있으면 그걸로, 없으면 업체명으로 기존 공급처를 찾아 갱신하고
   // 못 찾으면 새로 등록한다.
-  const { data: existing } = await supabase.from("suppliers").select("id, name, business_number");
-  const byBusinessNumber = new Map(
-    (existing ?? []).filter((s) => s.business_number).map((s) => [s.business_number as string, s.id])
+  const existing = await fetchAllRows<{ id: string; name: string; business_number: string | null }>((from, to) =>
+    supabase.from("suppliers").select("id, name, business_number").range(from, to),
   );
-  const byName = new Map((existing ?? []).map((s) => [s.name.trim(), s.id]));
+  const byBusinessNumber = new Map(
+    existing.filter((s) => s.business_number).map((s) => [s.business_number as string, s.id])
+  );
+  const byName = new Map(existing.map((s) => [s.name.trim(), s.id]));
 
   type ImportPayload = {
     name: string;

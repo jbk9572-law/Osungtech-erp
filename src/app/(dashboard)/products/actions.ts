@@ -43,6 +43,16 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
   };
 }
 
+function validateProductFields(fields: Awaited<ReturnType<typeof productFieldsFrom>>): string | null {
+  if (fields.price < 0 || fields.cost < 0 || fields.reorder_point < 0) {
+    return "판매가·매입가·재주문점은 0 이상이어야 합니다.";
+  }
+  if (fields.base_package_qty != null && fields.base_package_qty < 0) {
+    return "기초수량은 0 이상이어야 합니다.";
+  }
+  return null;
+}
+
 // KG처럼 실제로 담기는 양에 따라 박스당 수량이 매번 달라지는 품목이
 // 있어서, base_package_qty가 바뀔 때마다 이력을 남긴다(단가 이력과
 // 같은 개념). 실패해도 상품 저장 자체는 이미 끝난 뒤라 조용히 넘어간다
@@ -71,6 +81,8 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
 
   const supabase = await createClient();
   const fields = await productFieldsFrom(supabase, formData);
+  const fieldError = validateProductFields(fields);
+  if (fieldError) return { error: fieldError };
   const { data: created, error } = await supabase
     .from("products")
     .insert({ sku, name, ...fields })
@@ -106,6 +118,8 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
     .eq("id", id)
     .maybeSingle();
   const fields = await productFieldsFrom(supabase, formData);
+  const fieldError = validateProductFields(fields);
+  if (fieldError) return { error: fieldError };
   const { error } = await supabase
     .from("products")
     .update({ sku, name, ...fields })

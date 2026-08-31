@@ -120,8 +120,10 @@ export type PartyBalance = { id: string; name: string; total: number; paid: numb
 // 생기므로, 전체 매출/전체 수금을 한 번씩만 불러와 메모리에서 거래처별로
 // 합산한다.
 export async function getAllCustomerBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [{ data: customers }, items, payments] = await Promise.all([
-    supabase.from("customers").select("id, name").order("name"),
+  const [customers, items, payments] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("customers").select("id, name").order("name").range(from, to),
+    ),
     fetchAllRows<{
       quantity: number;
       unit_price: string | number;
@@ -149,7 +151,7 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
     paidByCustomer[p.customer_id] = (paidByCustomer[p.customer_id] ?? 0) + Number(p.amount);
   }
 
-  return (customers ?? []).map((c) => {
+  return customers.map((c) => {
     const total = salesByCustomer[c.id] ?? 0;
     const paid = paidByCustomer[c.id] ?? 0;
     return { id: c.id, name: c.name, total, paid, balance: total - paid };
@@ -157,8 +159,10 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
 }
 
 export async function getAllSupplierBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [{ data: suppliers }, items, payments] = await Promise.all([
-    supabase.from("suppliers").select("id, name").order("name"),
+  const [suppliers, items, payments] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
     fetchAllRows<{
       quantity: number;
       unit_cost: string | number;
@@ -185,7 +189,7 @@ export async function getAllSupplierBalances(supabase: SupabaseServerClient): Pr
     paidBySupplier[p.supplier_id] = (paidBySupplier[p.supplier_id] ?? 0) + Number(p.amount);
   }
 
-  return (suppliers ?? []).map((s) => {
+  return suppliers.map((s) => {
     const total = purchasesBySupplier[s.id] ?? 0;
     const paid = paidBySupplier[s.id] ?? 0;
     return { id: s.id, name: s.name, total, paid, balance: total - paid };

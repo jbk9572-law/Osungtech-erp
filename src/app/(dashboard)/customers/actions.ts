@@ -7,6 +7,7 @@ import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 const DELIVERY_NOTE_VARIANTS = ["sns_filtech", "zenith_tech", "ket_solution"] as const;
 
@@ -328,11 +329,13 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
 
   // 사업자등록번호가 있으면 그걸로, 없으면 상호명으로 기존 거래처를 찾아 갱신하고
   // 못 찾으면 새로 등록한다.
-  const { data: existing } = await supabase.from("customers").select("id, name, business_number");
-  const byBusinessNumber = new Map(
-    (existing ?? []).filter((c) => c.business_number).map((c) => [c.business_number as string, c.id])
+  const existing = await fetchAllRows<{ id: string; name: string; business_number: string | null }>((from, to) =>
+    supabase.from("customers").select("id, name, business_number").range(from, to),
   );
-  const byName = new Map((existing ?? []).map((c) => [c.name.trim(), c.id]));
+  const byBusinessNumber = new Map(
+    existing.filter((c) => c.business_number).map((c) => [c.business_number as string, c.id])
+  );
+  const byName = new Map(existing.map((c) => [c.name.trim(), c.id]));
 
   type ImportPayload = {
     name: string;

@@ -58,6 +58,7 @@ export function PurchasePriceScheduleRow({
             name="new_unit_cost"
             type="number"
             step="0.01"
+            min="0"
             defaultValue={newUnitCost}
             required
             className="erp-input"
