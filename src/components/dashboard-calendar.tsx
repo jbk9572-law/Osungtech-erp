@@ -155,13 +155,48 @@ function matchDestinations(
   }));
 }
 
+// 전량이 한 거래처로만 나갔으면 숫자를 다시 안 보여준다 — 앞에 이미 나온
+// 입고 수량과 같은 값이라 반복일 뿐이다(거래처 이름만으로 "전량 그리로
+// 나갔다"는 뜻이 충분히 전달된다). 여러 곳으로 나뉘었거나 일부만 나간
+// 경우에만 각자 얼마씩 나갔는지 알아야 하므로 숫자를 그대로 보여준다.
 function destinationTextSuffix(
   destinations: { partnerName: string; quantity: number }[],
+  incomingQuantity: number,
 ): string {
   if (!destinations.length) return "";
+  if (destinations.length === 1 && destinations[0].quantity === incomingQuantity) {
+    return ` → ${destinations[0].partnerName}`;
+  }
   return ` → ${destinations
     .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}`)
     .join(" / ")}`;
+}
+
+// 이 매입처가 그날 산 모든 품목·규격이 전량 하나의 동일한 거래처로만
+// 나갔는지 확인한다. 그렇다면 품목마다 "→ 거래처"를 반복하는 대신
+// 매입처 이름 옆에 한 번만 표기할 수 있다. 하나라도 나가지 않았거나,
+// 일부만 나갔거나, 서로 다른 거래처로 나뉘었으면 null을 돌려줘서 기존
+// 방식(줄마다 표기)을 그대로 쓰게 한다.
+function uniformPartnerDestination(
+  partner: PartnerBlock,
+  matchAgainst: ItemRow[],
+): string | null {
+  let destination: string | null = null;
+  for (const product of partner.products) {
+    for (const group of groupItemsBySpec(product.items)) {
+      const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
+      const destinations = matchDestinations(product.productName, group.spec, matchAgainst);
+      if (destinations.length !== 1 || destinations[0].quantity !== quantity) {
+        return null;
+      }
+      if (destination === null) {
+        destination = destinations[0].partnerName;
+      } else if (destination !== destinations[0].partnerName) {
+        return null;
+      }
+    }
+  }
+  return destination;
 }
 
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
@@ -180,7 +215,16 @@ function appendItemLines(
   const blocks = buildPartnerBlocks(items, paperCalcByPartner);
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
-    lines.push(`- ${partner.partnerName}`);
+    // 이 매입처가 그날 산 게 전부 한 거래처로만 나갔으면, 품목마다
+    // "→ 거래처"를 반복하지 않고 매입처 이름 옆에 한 번만 표기한다.
+    const uniformDestination = matchAgainst
+      ? uniformPartnerDestination(partner, matchAgainst)
+      : null;
+    lines.push(
+      uniformDestination
+        ? `- ${partner.partnerName} → ${uniformDestination}`
+        : `- ${partner.partnerName}`,
+    );
     partner.products.forEach((product, pi) => {
       if (pi > 0) lines.push("");
       lines.push(`  · ${product.productName}`);
@@ -193,11 +237,13 @@ function appendItemLines(
         const returnSuffix = group.items.some((it) => it.isReturn)
           ? " (반품)"
           : "";
-        const destinationSuffix = matchAgainst
-          ? destinationTextSuffix(
-              matchDestinations(product.productName, group.spec, matchAgainst),
-            )
-          : "";
+        const destinationSuffix =
+          matchAgainst && !uniformDestination
+            ? destinationTextSuffix(
+                matchDestinations(product.productName, group.spec, matchAgainst),
+                quantity,
+              )
+            : "";
         lines.push(
           `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}`,
         );
@@ -298,22 +344,30 @@ function DestinationHint({
   productName,
   spec,
   unit,
+  quantity,
   salesItems,
 }: {
   productName: string;
   spec: string;
   unit?: string;
+  quantity: number;
   salesItems: ItemRow[];
 }) {
   const destinations = matchDestinations(productName, spec, salesItems);
   if (!destinations.length) return null;
+  // 전량이 한 거래처로만 나갔으면 숫자는 생략한다 — 카톡복사 텍스트와
+  // 동일한 규칙(destinationTextSuffix 참고), 화면과 복사 결과가 서로
+  // 다르게 보이지 않게 맞춘다.
+  const isFullSingleMatch = destinations.length === 1 && destinations[0].quantity === quantity;
   return (
     <span className="font-semibold text-[var(--erp-success)]">
       {" "}
       →{" "}
-      {destinations
-        .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
-        .join(" / ")}
+      {isFullSingleMatch
+        ? destinations[0].partnerName
+        : destinations
+            .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
+            .join(" / ")}
     </span>
   );
 }
@@ -645,6 +699,7 @@ export function DashboardCalendar({
                                               productName={product.productName}
                                               spec={item.spec}
                                               unit={item.unit}
+                                              quantity={item.quantity}
                                               salesItems={selectedData.salesItems}
                                             />
                                             {item.remark && (
@@ -676,6 +731,7 @@ export function DashboardCalendar({
                                               productName={product.productName}
                                               spec={item.spec}
                                               unit={item.unit}
+                                              quantity={item.quantity}
                                               salesItems={selectedData.salesItems}
                                             />
                                             {item.remark && (
