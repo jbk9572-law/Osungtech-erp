@@ -14,6 +14,7 @@ import {
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type DisplayRow = SalesRow;
 
@@ -229,17 +230,51 @@ export default async function SalesPage({
     (b.date ?? "").localeCompare(a.date ?? ""),
   );
 
+  // 합계(매출 합계/세액/수량)는 위 itemRows(더보기 limit로 잘린 화면 표시용)가
+  // 아니라 조회기간 전체를 다시 훑어서 계산한다 — itemRows로 계산하면 기간 내
+  // 건수가 limit(300)을 넘는 순간 "더 있을 수 있습니다" 안내와 무관하게
+  // 합계 자체가 화면에 보이는 것만으로 조용히 줄어든다.
+  const totalsRows = await fetchAllRows<{
+    quantity: number;
+    unit_price: string | number;
+    spec: string | null;
+    sales_orders: {
+      is_return: boolean;
+      customers: { name: string | null } | null;
+    } | null;
+    products: { name: string | null; sku: string | null; spec: string | null } | null;
+  }>((rangeFrom, rangeTo) => {
+    let totalsQuery = supabase
+      .from("sales_order_items")
+      .select(
+        "quantity, unit_price, spec, sales_orders!inner(is_return, customers(name)), products(name, sku, spec)",
+      )
+      .gte("sales_orders.order_date", effectiveFrom)
+      .range(rangeFrom, rangeTo);
+    if (to) totalsQuery = totalsQuery.lte("sales_orders.order_date", to);
+    return totalsQuery;
+  });
+  const filteredTotalsRows = keyword
+    ? totalsRows.filter(
+        (item) =>
+          item.sales_orders?.customers?.name?.toLowerCase().includes(keyword) ||
+          item.products?.name?.toLowerCase().includes(keyword) ||
+          item.products?.sku?.toLowerCase().includes(keyword) ||
+          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+      )
+    : totalsRows;
+
   // 반품 건은 매출 합계·세액에서 차감한다(재고는 별도로 늘어나므로
   // totalQuantity는 반품 수량도 그대로 더한다 — "이동한 총 수량"의 의미).
-  const totalSupply = itemRows.reduce(
-    (sum, row) => sum + (row.sales_orders?.is_return ? -row.supplyAmount : row.supplyAmount),
-    0,
-  );
-  const totalTax = itemRows.reduce(
-    (sum, row) => sum + (row.sales_orders?.is_return ? -row.taxAmount : row.taxAmount),
-    0,
-  );
-  const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
+  const totalSupply = filteredTotalsRows.reduce((sum, row) => {
+    const supplyAmount = row.quantity * Number(row.unit_price);
+    return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
+  }, 0);
+  const totalTax = filteredTotalsRows.reduce((sum, row) => {
+    const taxAmount = Math.round(row.quantity * Number(row.unit_price) * 0.1);
+    return sum + (row.sales_orders?.is_return ? -taxAmount : taxAmount);
+  }, 0);
+  const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);
   const presets = getDatePresets();
   const exportHref = q
     ? `/api/sales/export?q=${encodeURIComponent(q)}`

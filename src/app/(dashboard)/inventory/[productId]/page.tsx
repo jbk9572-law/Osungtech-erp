@@ -6,6 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 const TYPE_TONE: Record<string, BadgeTone> = {
   in: "ok",
@@ -30,7 +31,7 @@ export default async function InventoryProductHistoryPage({
   const { from, to } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: product }, { data: txRaw }] = await Promise.all([
+  const [{ data: product }, txRaw] = await Promise.all([
     supabase
       .from("products")
       .select(
@@ -41,21 +42,37 @@ export default async function InventoryProductHistoryPage({
     // 재고 잔량은 전체 이력을 처음부터 누적해야 정확하다. 예전에는 여기
     // limit(1000)이 있었는데, 오름차순 정렬 + limit 조합이라 거래가 1000건을
     // 넘는 순간 정작 최신 거래가 잘려서 화면에도 안 보이고 잔량 계산도
-    // 틀어지는 문제가 있었다(오래된 거래는 남고 최신 거래가 사라짐).
-    supabase
-      .from("inventory_transactions")
-      .select(
-        "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
-      )
-      .eq("product_id", productId)
-      .order("created_at", { ascending: true }),
+    // 틀어지는 문제가 있었다(오래된 거래는 남고 최신 거래가 사라짐). 그
+    // limit을 없앤 뒤에도 PostgREST의 max_rows(1000, supabase/config.toml)가
+    // 여전히 조용히 같은 상한을 적용하므로, fetchAllRows로 전량을 받아온다.
+    fetchAllRows<{
+      id: string;
+      type: string;
+      quantity: number;
+      note: string | null;
+      created_at: string;
+      sales_order_id: string | null;
+      purchase_order_id: string | null;
+      sales_orders: { order_date: string; customers: { name: string | null } | null } | null;
+      purchase_orders: { purchase_date: string; suppliers: { name: string | null } | null } | null;
+      profiles: { full_name: string | null } | null;
+    }>((from, to) =>
+      supabase
+        .from("inventory_transactions")
+        .select(
+          "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
+        )
+        .eq("product_id", productId)
+        .order("created_at", { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   if (!product) {
     notFound();
   }
 
-  const allTx = (txRaw ?? []).reduce<
+  const allTx = txRaw.reduce<
     {
       id: string;
       date: string;

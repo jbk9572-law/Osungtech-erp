@@ -356,10 +356,17 @@ export async function reorderPaymentRequestReceipts(
         .update({ sort_order: index })
         .eq("id", receiptId)
         .eq("payment_request_id", paymentRequestId)
+        .select("id")
     )
   );
   const firstFailure = results.find((r) => r.error);
   if (firstFailure) return { error: `순서 변경에 실패했습니다: ${firstFailure.error!.message}` };
+  // .select()로 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는
+  // 관리자가 아님) error 없이 조용히 0건 갱신으로 끝나므로, 이 확인 없이는
+  // "순서를 변경했습니다"라고 응답해놓고 실제로는 아무것도 안 바뀐다.
+  if (results.some((r) => !r.data || r.data.length === 0)) {
+    return { error: "순서 변경에 실패했습니다. 본인이 작성한 지급결의서만 순서를 바꿀 수 있습니다." };
+  }
 
   revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
   revalidatePath(`/reports/payment-requests/${paymentRequestId}/edit`);

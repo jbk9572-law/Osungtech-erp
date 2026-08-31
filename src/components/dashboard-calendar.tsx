@@ -143,6 +143,10 @@ function matchDestinations(
   for (const item of salesItems) {
     if (item.productName !== productName) continue;
     if ((item.spec || "규격 미지정") !== key) continue;
+    // 반품은 그 거래처로 나간 게 아니라 되돌아온 것이므로 "출고처"
+    // 합산에서 제외한다 — 안 그러면 반품이 마치 그날 그 거래처로
+    // 출고된 것처럼 보인다.
+    if (item.isReturn) continue;
     byPartner.set(item.partnerName, (byPartner.get(item.partnerName) ?? 0) + item.quantity);
   }
   return Array.from(byPartner.entries()).map(([partnerName, quantity]) => ({

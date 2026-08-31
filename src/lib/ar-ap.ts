@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -119,17 +120,24 @@ export type PartyBalance = { id: string; name: string; total: number; paid: numb
 // 생기므로, 전체 매출/전체 수금을 한 번씩만 불러와 메모리에서 거래처별로
 // 합산한다.
 export async function getAllCustomerBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [{ data: customers }, { data: items }, { data: payments }] = await Promise.all([
+  const [{ data: customers }, items, { data: payments }] = await Promise.all([
     supabase.from("customers").select("id, name").order("name"),
-    supabase
-      .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method, is_return)"),
+    fetchAllRows<{
+      quantity: number;
+      unit_price: string | number;
+      sales_orders: { customer_id: string; payment_method: string | null; is_return: boolean } | null;
+    }>((from, to) =>
+      supabase
+        .from("sales_order_items")
+        .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method, is_return)")
+        .range(from, to),
+    ),
     supabase.from("customer_payments").select("customer_id, amount"),
   ]);
 
   const salesByCustomer: Record<string, number> = {};
-  for (const item of items ?? []) {
-    if (item.sales_orders.payment_method) continue;
+  for (const item of items) {
+    if (!item.sales_orders || item.sales_orders.payment_method) continue;
     const cid = item.sales_orders.customer_id;
     const amount = item.quantity * Number(item.unit_price) * (item.sales_orders.is_return ? -1 : 1);
     salesByCustomer[cid] = (salesByCustomer[cid] ?? 0) + amount;
@@ -147,15 +155,24 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
 }
 
 export async function getAllSupplierBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [{ data: suppliers }, { data: items }, { data: payments }] = await Promise.all([
+  const [{ data: suppliers }, items, { data: payments }] = await Promise.all([
     supabase.from("suppliers").select("id, name").order("name"),
-    supabase.from("purchase_order_items").select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)"),
+    fetchAllRows<{
+      quantity: number;
+      unit_cost: string | number;
+      purchase_orders: { supplier_id: string; payment_method: string | null } | null;
+    }>((from, to) =>
+      supabase
+        .from("purchase_order_items")
+        .select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)")
+        .range(from, to),
+    ),
     supabase.from("supplier_payments").select("supplier_id, amount"),
   ]);
 
   const purchasesBySupplier: Record<string, number> = {};
-  for (const item of items ?? []) {
-    if (item.purchase_orders.payment_method) continue;
+  for (const item of items) {
+    if (!item.purchase_orders || item.purchase_orders.payment_method) continue;
     const sid = item.purchase_orders.supplier_id;
     purchasesBySupplier[sid] = (purchasesBySupplier[sid] ?? 0) + item.quantity * Number(item.unit_cost);
   }

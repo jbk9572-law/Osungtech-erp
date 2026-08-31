@@ -51,13 +51,19 @@ export async function updateAnnouncement(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("announcements")
     .update({ title, content, pinned })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id");
 
   if (error) {
     return { error: `수정에 실패했습니다: ${error.message}` };
+  }
+  // .select()로 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는
+  // 관리자가 아님) error 없이 조용히 0건 갱신으로 끝난다.
+  if (!updated || updated.length === 0) {
+    return { error: "수정에 실패했습니다. 본인이 등록한 공지만 수정할 수 있습니다." };
   }
 
   revalidatePath("/announcements");
@@ -75,10 +81,13 @@ export async function deleteAnnouncement(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("announcements").delete().eq("id", id);
+  const { data: deleted, error } = await supabase.from("announcements").delete().eq("id", id).select("id");
 
   if (error) {
     return { error: `삭제에 실패했습니다: ${error.message}` };
+  }
+  if (!deleted || deleted.length === 0) {
+    return { error: "삭제에 실패했습니다. 본인이 등록한 공지만 삭제할 수 있습니다." };
   }
 
   revalidatePath("/announcements");

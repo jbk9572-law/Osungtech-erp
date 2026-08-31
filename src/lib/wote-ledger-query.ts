@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { LedgerEntry } from "@/lib/wote-ledger-template";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 // WOTE(매입처)에서 원자재를 받아 신일베스텍(매출처)으로 내보내는 흐름은
 // 매입/매출 양쪽 테이블을 같이 봐야 해서, 두 export 라우트(매입/매출)가
@@ -16,24 +17,53 @@ export async function fetchWoteLedgerEntries(
   supabase: SupabaseClient<any>,
   to: string
 ): Promise<LedgerEntry[]> {
-  const [{ data: purchaseItems }, { data: saleItems }] = await Promise.all([
-    supabase
-      .from("purchase_order_items")
-      .select(
-        "*, purchase_orders!inner(purchase_date, suppliers(name, purchase_export_template)), products(name)"
-      )
-      .lte("purchase_orders.purchase_date", to)
-      .order("created_at"),
-    supabase
-      .from("sales_order_items")
-      .select(
-        "*, sales_orders!inner(order_date, is_return, customers(name, sales_export_template)), products(name)"
-      )
-      .lte("sales_orders.order_date", to)
-      .order("created_at"),
+  const [purchaseItems, saleItems] = await Promise.all([
+    fetchAllRows<{
+      quantity: number;
+      spec: string | null;
+      purchase_orders: {
+        purchase_date: string;
+        suppliers: { name: string | null; purchase_export_template: string | null } | null;
+      } | null;
+      products: { name: string | null } | null;
+    }>((from, rangeTo) => {
+      const q = supabase
+        .from("purchase_order_items")
+        .select(
+          "quantity, spec, purchase_orders!inner(purchase_date, suppliers(name, purchase_export_template)), products(name)"
+        )
+        .lte("purchase_orders.purchase_date", to)
+        .order("created_at")
+        .range(from, rangeTo);
+      // supabase가 SupabaseClient<any>라 관계 임베드 카디널리티를 알 수 없어
+      // 배열로 추론된다 — 실제로는 !inner라 단일 객체임을 알고 캐스팅한다.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return q as any;
+    }),
+    fetchAllRows<{
+      quantity: number;
+      spec: string | null;
+      sales_orders: {
+        order_date: string;
+        is_return: boolean;
+        customers: { name: string | null; sales_export_template: string | null } | null;
+      } | null;
+      products: { name: string | null } | null;
+    }>((from, rangeTo) => {
+      const q = supabase
+        .from("sales_order_items")
+        .select(
+          "quantity, spec, sales_orders!inner(order_date, is_return, customers(name, sales_export_template)), products(name)"
+        )
+        .lte("sales_orders.order_date", to)
+        .order("created_at")
+        .range(from, rangeTo);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return q as any;
+    }),
   ]);
 
-  const inEntries: LedgerEntry[] = (purchaseItems ?? [])
+  const inEntries: LedgerEntry[] = purchaseItems
     .filter((item) => item.purchase_orders?.suppliers?.purchase_export_template === "wote_ledger")
     .map((item) => ({
       date: item.purchase_orders?.purchase_date ?? "",
@@ -44,7 +74,7 @@ export async function fetchWoteLedgerEntries(
       quantity: item.quantity,
     }));
 
-  const outEntries: LedgerEntry[] = (saleItems ?? [])
+  const outEntries: LedgerEntry[] = saleItems
     .filter((item) => item.sales_orders?.customers?.sales_export_template === "wote_ledger")
     .map((item) => ({
       date: item.sales_orders?.order_date ?? "",
