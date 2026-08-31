@@ -126,6 +126,9 @@ export async function upsertCustomerPrice(
   if (!customerId || !productId) {
     return { error: "상품을 선택해주세요." };
   }
+  if (unitPrice < 0) {
+    return { error: "단가는 0 이상이어야 합니다." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -159,6 +162,9 @@ export async function schedulePriceChange(
 
   if (!customerId || !productId || !effectiveDate) {
     return { error: "상품과 적용일을 모두 입력해주세요." };
+  }
+  if (newUnitPrice < 0) {
+    return { error: "단가는 0 이상이어야 합니다." };
   }
   const today = todayKstStr();
   if (effectiveDate <= today) {
@@ -200,20 +206,27 @@ export async function updatePriceSchedule(
   if (!id || !effectiveDate) {
     return { error: "적용일을 입력해주세요." };
   }
+  if (newUnitPrice < 0) {
+    return { error: "단가는 0 이상이어야 합니다." };
+  }
   const today = todayKstStr();
   if (effectiveDate <= today) {
     return { error: "적용일은 내일 이후 날짜여야 합니다." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("price_change_schedules")
     .update({ new_unit_price: newUnitPrice, effective_date: effectiveDate })
     .eq("id", id)
-    .is("applied_at", null);
+    .is("applied_at", null)
+    .select("id");
 
   if (error) {
     return { error: `수정에 실패했습니다: ${error.message}` };
+  }
+  if (!data || data.length === 0) {
+    return { error: "본인이 등록한 예약만 수정할 수 있습니다." };
   }
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
@@ -226,10 +239,18 @@ export async function cancelPriceSchedule(_prevState: FormState, formData: FormD
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("price_change_schedules").delete().eq("id", id).is("applied_at", null);
+  const { data, error } = await supabase
+    .from("price_change_schedules")
+    .delete()
+    .eq("id", id)
+    .is("applied_at", null)
+    .select("id");
 
   if (error) {
     return { error: `취소에 실패했습니다: ${error.message}` };
+  }
+  if (!data || data.length === 0) {
+    return { error: "본인이 등록한 예약만 취소할 수 있습니다." };
   }
 
   if (customerId) revalidatePath(`/customers/${customerId}`);

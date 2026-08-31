@@ -1653,6 +1653,14 @@ export type Database = {
         Args: { p_id: string; p_side: string };
         Returns: undefined;
       };
+      apply_due_price_schedules: {
+        Args: { p_customer_id: string | null };
+        Returns: undefined;
+      };
+      apply_due_purchase_price_schedules: {
+        Args: { p_supplier_id: string | null };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

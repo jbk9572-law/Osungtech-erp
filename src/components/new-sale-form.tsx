@@ -623,15 +623,17 @@ export function NewSaleForm({
       .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
   }
 
+  // 화면에 보여주는 합계가 실제 제출되는(itemsJson) 값과 항상 같도록,
+  // 제출에서 제외되는 행(품목 미선택, 수량 0 이하)은 합계에서도 뺀다.
+  const submittedRows = rows.filter((row) => row.productId && row.quantity > 0);
   const supplyAmount =
-    rows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) +
+    submittedRows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) +
     pendingCalcAmount;
   const taxAmount = Math.round(supplyAmount * 0.1);
   const total = supplyAmount + taxAmount;
 
   const itemsJson = JSON.stringify(
-    rows
-      .filter((row) => row.productId && row.quantity > 0)
+    submittedRows
       .map((row) => ({
         productId: row.productId,
         // 직접입력이 아니면 규격을 스냅샷으로 고정하지 않고 null로 저장해서,

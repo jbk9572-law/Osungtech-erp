@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { todayKstStr } from "@/lib/kst-date";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -8,77 +7,17 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 // 등록)에 들어올 때마다 이 함수를 먼저 호출해서 "그 시점 기준으로 이미
 // 지난 예약은 항상 반영돼 있게" 만든다 — 서버가 그날 하필 안 켜져 있어도
 // 다음에 누가 화면을 열기만 하면 그때 적용되므로 놓칠 일이 없다.
-// 같은 거래처+상품에 예약이 여러 개 겹쳐도 effective_date가 가장 늦은
-// 것부터 순서대로 적용해서 최종적으로는 제일 최근 예약값이 남는다.
+//
+// 예약을 등록한 사람이 아닌 다른 직원이 화면을 열어도 반영돼야 하는
+// 정상적인 흐름이라, RLS(본인/관리자만 수정 가능)를 우회해야 한다 —
+// apply_due_price_schedules는 그래서 security definer RPC로 구현돼 있다
+// (migration 79). 같은 거래처+상품에 예약이 여러 개 겹쳐도 effective_date가
+// 가장 늦은 것이 최종값으로 반영된다.
 export async function applyDuePriceSchedules(supabase: SupabaseServerClient, customerId?: string) {
-  const today = todayKstStr();
-
-  let query = supabase
-    .from("price_change_schedules")
-    .select("id, customer_id, product_id, new_unit_price, effective_date")
-    .is("applied_at", null)
-    .lte("effective_date", today)
-    .order("effective_date", { ascending: true });
-
-  if (customerId) query = query.eq("customer_id", customerId);
-
-  const { data: due } = await query;
-  if (!due || due.length === 0) return;
-
-  for (const schedule of due) {
-    await supabase.from("customer_product_prices").upsert(
-      {
-        customer_id: schedule.customer_id,
-        product_id: schedule.product_id,
-        unit_price: schedule.new_unit_price,
-      },
-      { onConflict: "customer_id,product_id" }
-    );
-  }
-
-  await supabase
-    .from("price_change_schedules")
-    .update({ applied_at: new Date().toISOString() })
-    .in(
-      "id",
-      due.map((s) => s.id)
-    );
+  await supabase.rpc("apply_due_price_schedules", { p_customer_id: customerId ?? null });
 }
 
-// applyDuePriceSchedules와 동일한 방식의 매입단가(공급처) 버전. 별도 예약
-// 테이블(purchase_price_change_schedules)에 쌓인 예약 중 효력일이 도래한
-// 것을 supplier_product_prices에 반영한다.
+// applyDuePriceSchedules와 동일한 방식의 매입단가(공급처) 버전.
 export async function applyDuePurchasePriceSchedules(supabase: SupabaseServerClient, supplierId?: string) {
-  const today = todayKstStr();
-
-  let query = supabase
-    .from("purchase_price_change_schedules")
-    .select("id, supplier_id, product_id, new_unit_cost, effective_date")
-    .is("applied_at", null)
-    .lte("effective_date", today)
-    .order("effective_date", { ascending: true });
-
-  if (supplierId) query = query.eq("supplier_id", supplierId);
-
-  const { data: due } = await query;
-  if (!due || due.length === 0) return;
-
-  for (const schedule of due) {
-    await supabase.from("supplier_product_prices").upsert(
-      {
-        supplier_id: schedule.supplier_id,
-        product_id: schedule.product_id,
-        unit_cost: schedule.new_unit_cost,
-      },
-      { onConflict: "supplier_id,product_id" }
-    );
-  }
-
-  await supabase
-    .from("purchase_price_change_schedules")
-    .update({ applied_at: new Date().toISOString() })
-    .in(
-      "id",
-      due.map((s) => s.id)
-    );
+  await supabase.rpc("apply_due_purchase_price_schedules", { p_supplier_id: supplierId ?? null });
 }
