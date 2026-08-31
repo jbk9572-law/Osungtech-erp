@@ -128,6 +128,23 @@ export async function deletePaperCalculation(
   const permissionError = await assertCanManageOrder(supabase, salesOrderId, purchaseOrderId);
   if (permissionError) return { error: permissionError };
 
+  // assertCanManageOrder는 폼으로 제출된 salesOrderId/purchaseOrderId의
+  // 소유권만 확인한다 — 지울 계산 행(id)이 실제로 그 주문 소속인지는
+  // 별도로 확인해야, 본인 소유 주문의 id를 붙여서 남의 계산 행 id를
+  // 지우는 요청을 막을 수 있다.
+  const { data: calc } = await supabase
+    .from("paper_calculations")
+    .select("sales_order_id, purchase_order_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (
+    !calc ||
+    (salesOrderId && calc.sales_order_id !== salesOrderId) ||
+    (purchaseOrderId && calc.purchase_order_id !== purchaseOrderId)
+  ) {
+    return { error: "잘못된 요청입니다." };
+  }
+
   const { error } = await supabase.from("paper_calculations").delete().eq("id", id);
 
   if (error) {

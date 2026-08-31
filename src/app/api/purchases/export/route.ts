@@ -8,6 +8,7 @@ import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
 import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 공급처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
@@ -46,17 +47,20 @@ export async function GET(request: Request) {
     return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
   }
 
-  const { data } = await supabase
-    .from("purchase_order_items")
-    .select(
-      "*, purchase_orders!inner(purchase_date, supplier_id, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
-    )
-    .gte("purchase_orders.purchase_date", from)
-    .lte("purchase_orders.purchase_date", to)
-    .order("created_at");
+  const data = await fetchAllRows((rangeFrom, rangeTo) =>
+    supabase
+      .from("purchase_order_items")
+      .select(
+        "*, purchase_orders!inner(purchase_date, supplier_id, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
+      )
+      .gte("purchase_orders.purchase_date", from)
+      .lte("purchase_orders.purchase_date", to)
+      .order("created_at")
+      .range(rangeFrom, rangeTo)
+  );
 
   if (templatedSupplier) {
-    const items: LedgerItem[] = (data ?? [])
+    const items: LedgerItem[] = data
       .filter((item) => item.purchase_orders?.supplier_id === templatedSupplier!.id)
       .map((item) => ({
         date: item.purchase_orders?.purchase_date ?? "",
@@ -89,7 +93,7 @@ export async function GET(request: Request) {
     return buildXlsxResponseFromWorkbook(workbook, `매입내역_${templatedSupplier.name}_${from}_${to}.xlsx`);
   }
 
-  const items = (data ?? []).filter((item) => {
+  const items = data.filter((item) => {
     if (!q) return true;
     return (
       item.purchase_orders?.suppliers?.name?.toLowerCase().includes(q) ||

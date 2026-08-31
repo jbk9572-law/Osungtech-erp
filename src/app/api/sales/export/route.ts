@@ -9,6 +9,7 @@ import { buildWoteLedgerWorkbook } from "@/lib/wote-ledger-template";
 import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 // 매출관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 출고처 이름과 매칭되고 그 출고처가 전용 양식을 쓰는
@@ -40,17 +41,20 @@ export async function GET(request: Request) {
     return buildXlsxResponseFromWorkbook(workbook, `WOTE_관리대장_${from}_${to}.xlsx`);
   }
 
-  const { data } = await supabase
-    .from("sales_order_items")
-    .select(
-      "*, sales_orders!inner(order_date, customer_id, is_return, customers(name)), products(sku, name, spec, unit, base_package_qty)"
-    )
-    .gte("sales_orders.order_date", from)
-    .lte("sales_orders.order_date", to)
-    .order("created_at");
+  const data = await fetchAllRows((rangeFrom, rangeTo) =>
+    supabase
+      .from("sales_order_items")
+      .select(
+        "*, sales_orders!inner(order_date, customer_id, is_return, customers(name)), products(sku, name, spec, unit, base_package_qty)"
+      )
+      .gte("sales_orders.order_date", from)
+      .lte("sales_orders.order_date", to)
+      .order("created_at")
+      .range(rangeFrom, rangeTo)
+  );
 
   if (templatedCustomer) {
-    const items: StatementItem[] = (data ?? [])
+    const items: StatementItem[] = data
       .filter((item) => item.sales_orders?.customer_id === templatedCustomer!.id)
       .map((item) => ({
         date: item.sales_orders?.order_date ?? "",
@@ -76,7 +80,7 @@ export async function GET(request: Request) {
     return buildXlsxResponseFromWorkbook(workbook, `매출내역_${templatedCustomer.name}_${from}_${to}.xlsx`);
   }
 
-  const items = (data ?? []).filter((item) => {
+  const items = data.filter((item) => {
     if (!q) return true;
     return (
       item.sales_orders?.customers?.name?.toLowerCase().includes(q) ||

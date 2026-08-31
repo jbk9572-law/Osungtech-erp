@@ -35,31 +35,9 @@ export async function markTodoSideDone(
   todoId: string,
   side: "purchase" | "sale"
 ) {
-  const { data: todo } = await supabase
-    .from("todos")
-    .select("todo_type, purchase_done_at, sale_done_at, done")
-    .eq("id", todoId)
-    .maybeSingle();
-  if (!todo || todo.done) return;
-
-  const now = new Date().toISOString();
-  const purchaseDoneAt = side === "purchase" ? now : todo.purchase_done_at;
-  const saleDoneAt = side === "sale" ? now : todo.sale_done_at;
-
-  const type = parseTodoType(todo.todo_type);
-  const complete =
-    type === "purchase"
-      ? Boolean(purchaseDoneAt)
-      : type === "sale"
-        ? Boolean(saleDoneAt)
-        : Boolean(purchaseDoneAt && saleDoneAt);
-
-  await supabase
-    .from("todos")
-    .update({
-      purchase_done_at: purchaseDoneAt,
-      sale_done_at: saleDoneAt,
-      ...(complete ? { done: true, done_at: now } : {}),
-    })
-    .eq("id", todoId);
+  // 본인이 만들지 않은(다른 직원의) 할일도 "할일 가져오기"로 가져와 실제
+  // 매입/매출을 등록할 수 있는 게 이 앱의 정상 흐름이라, 완료 표시 자체는
+  // RLS(본인 또는 관리자만 수정 가능)를 우회하는 security definer RPC로
+  // 처리한다 — 일반 update로는 RLS에 막혀 조용히 아무 일도 안 일어난다.
+  await supabase.rpc("mark_todo_side_done", { p_id: todoId, p_side: side });
 }

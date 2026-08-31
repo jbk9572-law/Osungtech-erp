@@ -11,6 +11,8 @@ const TABLE_LABELS: Record<string, string> = {
   customers: "출고처",
   suppliers: "매입처",
   profiles: "계정",
+  customer_payments: "수금",
+  supplier_payments: "지급",
 };
 
 const IDENTITY_FIELD: Record<string, string> = {
@@ -20,6 +22,8 @@ const IDENTITY_FIELD: Record<string, string> = {
   customers: "name",
   suppliers: "name",
   profiles: "full_name",
+  customer_payments: "amount",
+  supplier_payments: "amount",
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -100,6 +104,22 @@ const FIELD_LABELS: Record<string, Record<string, string>> = {
     email: "이메일",
     role: "권한",
   },
+  customer_payments: {
+    customer_id: "출고처",
+    paid_at: "수금일자",
+    amount: "금액",
+    method: "수금방법",
+    memo: "메모",
+    created_by: "작성자",
+  },
+  supplier_payments: {
+    supplier_id: "매입처",
+    paid_at: "지급일자",
+    amount: "금액",
+    method: "지급방법",
+    memo: "메모",
+    created_by: "작성자",
+  },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -144,10 +164,13 @@ function formatValue(tableName: string, key: string, v: unknown, lookups: Lookup
   if (key === "role") return ROLE_LABELS[String(v)] ?? String(v);
   if (key === "purchase_price_basis") return PRICE_BASIS_LABELS[String(v)] ?? String(v);
   if (typeof v === "boolean") return v ? "예" : "아니오";
-  if (tableName === "products" && (key === "price" || key === "cost")) {
+  if (
+    (tableName === "products" && (key === "price" || key === "cost")) ||
+    ((tableName === "customer_payments" || tableName === "supplier_payments") && key === "amount")
+  ) {
     return `₩${Number(v).toLocaleString()}`;
   }
-  if (key === "order_date" || key === "purchase_date") {
+  if (key === "order_date" || key === "purchase_date" || key === "paid_at") {
     return new Date(String(v)).toLocaleDateString("ko-KR");
   }
   if (typeof v === "object") return JSON.stringify(v);
@@ -183,7 +206,9 @@ function identitySummary(tableName: string, data: Record<string, unknown> | null
   if (!data) return "-";
   const field = IDENTITY_FIELD[tableName];
   const value = field ? data[field] : undefined;
-  return value != null && value !== "" ? String(value) : "-";
+  if (value == null || value === "") return "-";
+  if (field === "amount") return `₩${Number(value).toLocaleString()}`;
+  return String(value);
 }
 
 const DEFAULT_LIMIT = 300;

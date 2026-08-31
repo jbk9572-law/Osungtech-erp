@@ -1649,6 +1649,10 @@ export type Database = {
         Args: { p_id: string };
         Returns: undefined;
       };
+      mark_todo_side_done: {
+        Args: { p_id: string; p_side: string };
+        Returns: undefined;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
