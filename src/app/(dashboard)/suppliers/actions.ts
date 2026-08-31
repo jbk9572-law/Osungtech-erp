@@ -418,17 +418,28 @@ export async function getSupplierTransactionHistory(
   fromDate?: string
 ): Promise<PartyTransactionRow[]> {
   const supabase = await createClient();
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("purchase_orders")
-      .select("id, purchase_date, payment_method, purchase_order_items(quantity, unit_cost, products(name))")
-      .eq("supplier_id", supplierId)
-      .order("purchase_date", { ascending: true }),
-    supabase
-      .from("supplier_payments")
-      .select("id, paid_at, amount, memo")
-      .eq("supplier_id", supplierId)
-      .order("paid_at", { ascending: true }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      purchase_date: string;
+      payment_method: string | null;
+      purchase_order_items: { quantity: number; unit_cost: string | number; products: { name: string } | null }[];
+    }>((from, to) =>
+      supabase
+        .from("purchase_orders")
+        .select("id, purchase_date, payment_method, purchase_order_items(quantity, unit_cost, products(name))")
+        .eq("supplier_id", supplierId)
+        .order("purchase_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; memo: string | null }>((from, to) =>
+      supabase
+        .from("supplier_payments")
+        .select("id, paid_at, amount, memo")
+        .eq("supplier_id", supplierId)
+        .order("paid_at", { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   type Entry = { id: string; kind: "purchase" | "payment"; date: string; label: string; total: number };

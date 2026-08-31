@@ -25,13 +25,31 @@ export function daysSince(dateStr: string, today: string = todayKstStr()): numbe
 }
 
 export async function getCustomerBalance(supabase: SupabaseServerClient, customerId: string) {
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("sales_orders")
-      .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
-      .eq("customer_id", customerId)
-      .order("order_date", { ascending: true }),
-    supabase.from("customer_payments").select("id, paid_at, amount, method, memo").eq("customer_id", customerId).order("paid_at", { ascending: false }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      doc_no: number | null;
+      order_date: string;
+      payment_method: string | null;
+      is_return: boolean;
+      sales_order_items: { quantity: number; unit_price: string | number }[];
+    }>((from, to) =>
+      supabase
+        .from("sales_orders")
+        .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
+        .eq("customer_id", customerId)
+        .order("order_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
+      (from, to) =>
+        supabase
+          .from("customer_payments")
+          .select("id, paid_at, amount, method, memo")
+          .eq("customer_id", customerId)
+          .order("paid_at", { ascending: false })
+          .range(from, to),
+    ),
   ]);
   // 결제방법을 "항상 외상" 대신 현금/계좌이체 등으로 등록한 주문은 그
   // 자리에서 결제가 끝난 거래이므로 미수금 계산에서 아예 뺀다. 반품은
@@ -68,13 +86,30 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
 }
 
 export async function getSupplierBalance(supabase: SupabaseServerClient, supplierId: string) {
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("purchase_orders")
-      .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
-      .eq("supplier_id", supplierId)
-      .order("purchase_date", { ascending: true }),
-    supabase.from("supplier_payments").select("id, paid_at, amount, method, memo").eq("supplier_id", supplierId).order("paid_at", { ascending: false }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      doc_no: number | null;
+      purchase_date: string;
+      payment_method: string | null;
+      purchase_order_items: { quantity: number; unit_cost: string | number }[];
+    }>((from, to) =>
+      supabase
+        .from("purchase_orders")
+        .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
+        .eq("supplier_id", supplierId)
+        .order("purchase_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
+      (from, to) =>
+        supabase
+          .from("supplier_payments")
+          .select("id, paid_at, amount, method, memo")
+          .eq("supplier_id", supplierId)
+          .order("paid_at", { ascending: false })
+          .range(from, to),
+    ),
   ]);
   const creditOrders = (orders ?? [])
     .filter((o) => !o.payment_method)

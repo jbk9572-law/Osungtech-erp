@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type SuggestionRow = {
   productId: string;
@@ -27,13 +28,27 @@ export default async function ReorderSuggestionsPage() {
   // 안전재고를 설정해둔(0보다 큰) 품목만 대상으로 한다 — 대시보드 알림과
   // 동일한 기준(lib/notifications.ts)이라 "재고위험"에 뜨는 품목과 여기
   // 목록이 항상 일치한다.
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, sku, name, spec, unit, reorder_point, cost, supplier_id, suppliers(id, name), inventory(quantity)")
-    .gt("reorder_point", 0)
-    .order("name");
+  const products = await fetchAllRows<{
+    id: string;
+    sku: string;
+    name: string;
+    spec: string | null;
+    unit: string | null;
+    reorder_point: number;
+    cost: number;
+    supplier_id: string | null;
+    suppliers: { id: string; name: string } | null;
+    inventory: { quantity: number }[];
+  }>((from, to) =>
+    supabase
+      .from("products")
+      .select("id, sku, name, spec, unit, reorder_point, cost, supplier_id, suppliers(id, name), inventory(quantity)")
+      .gt("reorder_point", 0)
+      .order("name")
+      .range(from, to),
+  );
 
-  const lowStock: SuggestionRow[] = (products ?? [])
+  const lowStock: SuggestionRow[] = products
     .map((p) => {
       const quantity = p.inventory?.[0]?.quantity ?? 0;
       const reorderPoint = p.reorder_point;

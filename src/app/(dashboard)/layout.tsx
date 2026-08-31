@@ -41,7 +41,9 @@ export default async function DashboardLayout({
       .select(
         "id, sender_id, content, file_url, file_path, file_name, file_size, created_at",
       )
-      .order("created_at", { ascending: true })
+      // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로 오는
+      // 순서로 보여줘야 하므로 아래에서 다시 뒤집는다.
+      .order("created_at", { ascending: false })
       .limit(100),
     supabase.from("profiles").select("id, full_name"),
     getDatabaseSizeBytes(supabase),
@@ -62,7 +64,7 @@ export default async function DashboardLayout({
       unreadAnnouncements={notifications.announcements}
       dueTodos={notifications.todos}
       lowStock={notifications.lowStock}
-      initialMessages={messages ?? []}
+      initialMessages={(messages ?? []).slice().reverse()}
       profileNames={profileNames}
       currentUserId={user.id}
       dbSizeBytes={dbSizeBytes}

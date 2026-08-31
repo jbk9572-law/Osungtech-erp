@@ -435,17 +435,29 @@ export async function getCustomerTransactionHistory(
   fromDate?: string
 ): Promise<PartyTransactionRow[]> {
   const supabase = await createClient();
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("sales_orders")
-      .select("id, order_date, payment_method, is_return, sales_order_items(quantity, unit_price, products(name))")
-      .eq("customer_id", customerId)
-      .order("order_date", { ascending: true }),
-    supabase
-      .from("customer_payments")
-      .select("id, paid_at, amount, memo")
-      .eq("customer_id", customerId)
-      .order("paid_at", { ascending: true }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      order_date: string;
+      payment_method: string | null;
+      is_return: boolean;
+      sales_order_items: { quantity: number; unit_price: string | number; products: { name: string } | null }[];
+    }>((from, to) =>
+      supabase
+        .from("sales_orders")
+        .select("id, order_date, payment_method, is_return, sales_order_items(quantity, unit_price, products(name))")
+        .eq("customer_id", customerId)
+        .order("order_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; memo: string | null }>((from, to) =>
+      supabase
+        .from("customer_payments")
+        .select("id, paid_at, amount, memo")
+        .eq("customer_id", customerId)
+        .order("paid_at", { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   type Entry = { id: string; kind: "sale" | "collection"; date: string; label: string; total: number };
