@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
@@ -118,33 +119,37 @@ export default async function MonthlyReportPage({
   const { from: lookbackFrom } = getMonthRange(lookbackMonth);
   const supabase = await createClient();
 
-  // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행)에서 조용히
-  // 자르고, order() 없이 limit만 걸면 어떤 행이 잘리는지 보장이 안 된다
-  // (거래가 한도를 넘으면 매번 다른 행이 빠지면서 합계가 틀어질 수
-  // 있다). 월 집계는 정확도가 중요해서 넉넉한 상한(5000) + 결정적인
-  // 정렬을 같이 건다.
-  const [{ data: allSalesRows }, { data: allPurchaseRows }] = await Promise.all([
-    supabase
-      .from("sales_order_items")
-      .select(
-        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit)",
-      )
-      .gte("sales_orders.order_date", lookbackFrom)
-      .lte("sales_orders.order_date", to)
-      .order("sales_orders(order_date)", { ascending: true })
-      .limit(5000),
-    supabase
-      .from("purchase_order_items")
-      .select(
-        "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit)",
-      )
-      .gte("purchase_orders.purchase_date", lookbackFrom)
-      .lte("purchase_orders.purchase_date", to)
-      .order("purchase_orders(purchase_date)", { ascending: true })
-      .limit(5000),
+  // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행, config.toml의
+  // max_rows)에서 조용히 자른다 — 예전엔 .limit(5000)이면 넉넉하다고
+  // 봤지만 실제 서버 상한은 1000이라 애초에 무의미했고, 이월 조회를 위해
+  // 조회 범위를 3개월치로 넓히면서 그 상한에 걸릴 가능성이 더 커졌다.
+  // .range()로 직접 페이지를 넘기며 끝까지 받아온다.
+  const [allSalesRows, allPurchaseRows] = await Promise.all([
+    fetchAllRows((from, to2) =>
+      supabase
+        .from("sales_order_items")
+        .select(
+          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit)",
+        )
+        .gte("sales_orders.order_date", lookbackFrom)
+        .lte("sales_orders.order_date", to)
+        .order("sales_orders(order_date)", { ascending: true })
+        .range(from, to2),
+    ),
+    fetchAllRows((from, to2) =>
+      supabase
+        .from("purchase_order_items")
+        .select(
+          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit)",
+        )
+        .gte("purchase_orders.purchase_date", lookbackFrom)
+        .lte("purchase_orders.purchase_date", to)
+        .order("purchase_orders(purchase_date)", { ascending: true })
+        .range(from, to2),
+    ),
   ]);
 
-  const salesRows = (allSalesRows ?? []).filter(
+  const salesRows = allSalesRows.filter(
     (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === month,
   );
   const prevSalesRows = (allSalesRows ?? []).filter(
