@@ -16,29 +16,6 @@ function toDateStr(year: number, month: number, day: number) {
   return `${year}-${pad(month)}-${pad(day)}`;
 }
 
-// "이월" 판정: 등록된 매출/매입 날짜(order_date)가, 실제로 그 건을 입력한
-// 달(created_at)보다 나중인지 여부다. 실제 업무는 입력한 당일에 한 것이므로
-// created_at의 날짜(실제 입력일)에 표시하되, order_date는 회계상 다음 달
-// 실적으로 잡으려고 일부러 넘겨둔 것이므로 그 금액을 입력일의 매출/매입
-// 합계(salesTotal/purchaseTotal)에 더하면 안 된다 — 그러면 아직 도래하지
-// 않은 달의 실적이 이번 달 실적에 섞여버린다. 그래서 salesItems/
-// purchaseItems 목록에는 다른 품목과 똑같이 끼워 넣어 거래처/품목 트리에
-// 자연스럽게 같이 보이게 하되, isCarryover 플래그만 표시해 화면에서 "이월"
-// 배지로 구분하고, 금액은 salesTotal/purchaseTotal(정식 합계)에는 넣지
-// 않는다(아래 dataByDate 구성 부분 참고) — 다만 실제로 오늘 처리한 건은
-// 맞으므로 건수(salesCount/purchaseCount)에는 반영한다. order_date에
-// 해당하는 달력 날짜에는 원래 매출/매입처럼 보이면 안 된다.
-function isCarryover(orderDate: string, createdAt: string) {
-  const created = new Date(createdAt);
-  const createdMonth = `${created.getFullYear()}-${pad(created.getMonth() + 1)}`;
-  return orderDate.slice(0, 7) > createdMonth;
-}
-
-function toLocalDateStr(iso: string) {
-  const d = new Date(iso);
-  return toDateStr(d.getFullYear(), d.getMonth() + 1, d.getDate());
-}
-
 function buildWeeks(year: number, month: number) {
   const firstWeekday = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -79,22 +56,15 @@ export default async function DashboardPage({
 
   const supabase = await createClient();
   const todayStr = toDateStr(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate());
-  // 이월 후보를 DB에서 걸러낼 때, order_date와 created_at을 직접 비교하는
-  // 조건은 PostgREST 필터로 표현할 수 없어(두 컬럼끼리 비교) 넉넉한 기간
-  // 범위로 먼저 가져온 뒤 isCarryover()로 정확히 골라낸다. 실제로 이월
-  // 등록은 항상 월말 즈음 다음 달 날짜로만 하므로, 지난 6개월~다음 3개월이면
-  // 실사용에서 놓칠 일이 없다.
-  const carryoverRangeStart = new Date(now.getUTCFullYear(), now.getUTCMonth() - 6, 1);
-  const carryoverRangeEnd = new Date(now.getUTCFullYear(), now.getUTCMonth() + 4, 0);
-  const carryoverFrom = toDateStr(
-    carryoverRangeStart.getFullYear(),
-    carryoverRangeStart.getMonth() + 1,
-    1
-  );
-  const carryoverTo = toDateStr(
-    carryoverRangeEnd.getFullYear(),
-    carryoverRangeEnd.getMonth() + 1,
-    carryoverRangeEnd.getDate()
+  // 지금 보는 달에 이월(is_carryover)로 들어온 전월 실적을 이번 달 매출/매입
+  // 합계에 더해야 해서, 전월 구간도 따로 조회한다 — 그 건들은 실제 처리일
+  // (order_date)이 전월이라 달력에는 전월 쪽에 표시되고, 금액만 이번 달
+  // 합계로 잡힌다.
+  const prevMonthStart = toDateStr(prevDate.getFullYear(), prevDate.getMonth() + 1, 1);
+  const prevMonthEnd = toDateStr(
+    prevDate.getFullYear(),
+    prevDate.getMonth() + 1,
+    new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate()
   );
 
   const {
@@ -111,22 +81,22 @@ export default async function DashboardPage({
     { data: notes },
     { data: recentNotes },
     { data: company },
-    { data: carryoverSales },
-    { data: carryoverPurchases },
+    { data: carryoverInSales },
+    { data: carryoverInPurchases },
     notifications,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, created_at, is_return, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
+        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -156,20 +126,16 @@ export default async function DashboardPage({
     supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(name, unit, spec), sales_orders!inner(order_date, created_at, is_return, customers(name))"
-      )
-      .gte("sales_orders.order_date", carryoverFrom)
-      .lte("sales_orders.order_date", carryoverTo)
-      .order("order_date", { referencedTable: "sales_orders", ascending: true }),
+      .select("quantity, unit_price, sales_orders!inner(order_date, is_return, is_carryover)")
+      .eq("sales_orders.is_carryover", true)
+      .gte("sales_orders.order_date", prevMonthStart)
+      .lte("sales_orders.order_date", prevMonthEnd),
     supabase
       .from("purchase_order_items")
-      .select(
-        "quantity, unit_cost, spec, remark, purchase_order_id, products(name, unit, spec), purchase_orders!inner(purchase_date, created_at, suppliers(name))"
-      )
-      .gte("purchase_orders.purchase_date", carryoverFrom)
-      .lte("purchase_orders.purchase_date", carryoverTo)
-      .order("purchase_date", { referencedTable: "purchase_orders", ascending: true }),
+      .select("quantity, unit_cost, purchase_orders!inner(purchase_date, is_carryover)")
+      .eq("purchase_orders.is_carryover", true)
+      .gte("purchase_orders.purchase_date", prevMonthStart)
+      .lte("purchase_orders.purchase_date", prevMonthEnd),
     user
       ? getNotificationSummary(supabase, user.id)
       : Promise.resolve({ announcements: [], todos: [], lowStock: [] }),
@@ -178,6 +144,17 @@ export default async function DashboardPage({
   const unreadAnnouncements = notifications.announcements;
   const dueSoonTodos = notifications.todos;
   const lowStockItems = notifications.lowStock;
+
+  // 전월에 이월로 등록된 건(실제 처리일은 전월, 실적은 이번 달)의 금액을
+  // 이번 달 매출/매입 합계에 더한다 — 반품은 부호를 뒤집는다(다른 곳과 동일).
+  const carryoverInSalesTotal = (carryoverInSales ?? []).reduce(
+    (sum, r) => sum + r.quantity * Number(r.unit_price) * (r.sales_orders?.is_return ? -1 : 1),
+    0
+  );
+  const carryoverInPurchaseTotal = (carryoverInPurchases ?? []).reduce(
+    (sum, r) => sum + r.quantity * Number(r.unit_cost),
+    0
+  );
 
   type ItemRow = {
     partnerName: string;
@@ -255,10 +232,8 @@ export default async function DashboardPage({
 
   for (const item of salesItems ?? []) {
     const date = item.sales_orders.order_date;
-    // 이월 건은 달력의 order_date 자리가 아니라 입력일(created_at) 쪽에서만
-    // 보여준다(아래 이월 병합 루프 참고).
-    if (isCarryover(date, item.sales_orders.created_at)) continue;
     const isReturn = item.sales_orders.is_return;
+    const itemIsCarryover = item.sales_orders.is_carryover;
     // 반품 건은 재고가 늘어나는 반대 방향 거래라 매출 합계에서 차감해야
     // 하므로, 이 라인의 금액 자체를 음수로 뒤집어서 담는다 — 그러면
     // salesTotal 누계에도, 화면에 그대로 찍히는 개별 금액에도 부호가
@@ -266,7 +241,11 @@ export default async function DashboardPage({
     const amount = item.quantity * Number(item.unit_price) * (isReturn ? -1 : 1);
     const bucket = ensure(date);
     bucket.salesCount += 1;
-    bucket.salesTotal += amount;
+    // 이월(is_carryover) 건은 실제로 오늘 처리한 거래라 건수에는 반영하되,
+    // 금액은 다음 달 실적으로 잡히므로 이번 달 salesTotal에는 더하지
+    // 않는다(그만큼은 위에서 구한 carryoverInSalesTotal이 "다음 달"의
+    // monthSalesTotal에 더해준다).
+    if (!itemIsCarryover) bucket.salesTotal += amount;
     // 모조지(TG0) 라인은 계산에서 자동 반영된 것이라 규격이 없다.
     // 아래 "모조지 사용량" 섹션에서 사이즈별로 정확히 보여주므로 목록에는
     // 넣지 않되, 이 라인의 실제 금액은 그 섹션의 합계 가격으로 옮겨 담는다.
@@ -286,18 +265,18 @@ export default async function DashboardPage({
       amount,
       orderId: item.sales_order_id,
       remark: item.remark,
-      isCarryover: false,
+      isCarryover: itemIsCarryover,
       isReturn,
     });
   }
 
   for (const item of purchaseItems ?? []) {
     const date = item.purchase_orders.purchase_date;
-    if (isCarryover(date, item.purchase_orders.created_at)) continue;
+    const itemIsCarryover = item.purchase_orders.is_carryover;
     const amount = item.quantity * Number(item.unit_cost);
     const bucket = ensure(date);
     bucket.purchaseCount += 1;
-    bucket.purchaseTotal += amount;
+    if (!itemIsCarryover) bucket.purchaseTotal += amount;
     if (item.products?.sku === PAPER_STOCK_SKU) {
       const partnerName = item.purchase_orders.suppliers?.name ?? "공급처 미상";
       const entry = ensurePaperCalcPartner(bucket.purchasePaperCalcByPartner, partnerName);
@@ -314,61 +293,7 @@ export default async function DashboardPage({
       amount,
       orderId: item.purchase_order_id,
       remark: item.remark,
-      isCarryover: false,
-      isReturn: false,
-    });
-  }
-
-  // 이월 건: 실제로 입력한 날짜(created_at)의 달력 날짜에서 다른 품목과
-  // 똑같이 salesItems/purchaseItems 목록에 끼워 넣는다(거래처/품목 트리에
-  // 자연스럽게 같이 보이도록) — 다만 isCarryover 플래그를 달아 화면에서
-  // "이월" 배지로 구분하고, order_date(회계상 날짜)는 아직 도래하지 않은
-  // 달의 실적으로 잡으려고 일부러 넘겨둔 것이므로 이 금액을 입력일의
-  // salesCount/salesTotal(그날의 정식 매출/매입 합계)에는 더하지 않는다 —
-  // 더하면 아직 오지 않은 달의 매출/매입이 이번 달 실적에 섞여버린다. 지금
-  // 보고 있는 달[monthStart, monthEnd] 범위 안에 입력일이 들어올 때만
-  // 반영한다(다른 달을 보는 중이면 여기서 걸러진다).
-  for (const item of carryoverSales ?? []) {
-    if (!isCarryover(item.sales_orders.order_date, item.sales_orders.created_at)) continue;
-    const date = toLocalDateStr(item.sales_orders.created_at);
-    if (date < monthStart || date > monthEnd) continue;
-    const bucket = ensure(date);
-    // 금액은 회계상 다음 달 실적이라 이번 달 salesTotal에는 안 더하지만,
-    // 실제로 오늘 처리한 건이므로 건수(salesCount)에는 반영한다 — 카톡
-    // 복사 텍스트의 "[매출] N건"이 아래 나열된 품목 수와 어긋나지 않게.
-    bucket.salesCount += 1;
-    bucket.salesItems.push({
-      partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
-      productName: item.products?.name ?? "상품 미상",
-      spec: item.spec || item.products?.spec || "",
-      unit: item.products?.unit ?? "",
-      quantity: item.quantity,
-      amount: item.quantity * Number(item.unit_price) * (item.sales_orders.is_return ? -1 : 1),
-      orderId: item.sales_order_id,
-      remark: item.remark,
-      isCarryover: true,
-      isReturn: item.sales_orders.is_return,
-    });
-  }
-
-  for (const item of carryoverPurchases ?? []) {
-    if (!isCarryover(item.purchase_orders.purchase_date, item.purchase_orders.created_at)) continue;
-    const date = toLocalDateStr(item.purchase_orders.created_at);
-    if (date < monthStart || date > monthEnd) continue;
-    const bucket = ensure(date);
-    // 위 매출 이월과 동일한 이유로, 금액은 purchaseTotal에 안 더하지만
-    // 건수(purchaseCount)에는 반영한다.
-    bucket.purchaseCount += 1;
-    bucket.purchaseItems.push({
-      partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
-      productName: item.products?.name ?? "상품 미상",
-      spec: item.spec || item.products?.spec || "",
-      unit: item.products?.unit ?? "",
-      quantity: item.quantity,
-      amount: item.quantity * Number(item.unit_cost),
-      orderId: item.purchase_order_id,
-      remark: item.remark,
-      isCarryover: true,
+      isCarryover: itemIsCarryover,
       isReturn: false,
     });
   }
@@ -394,9 +319,14 @@ export default async function DashboardPage({
   // 오늘 매출/매입, 재고위험 건수는 전부 바로 아래 달력 옆 "오늘의 업무"
   // 패널과 "재고위험" 패널에 이미 자세히 나오는 정보라, 요약 카드에는
   // 그 두 패널에는 없는(달력은 하루치만 보여줌) 이번달 누계만 둔다.
-  const monthSalesTotal = Object.values(dataByDate).reduce((sum, day) => sum + day.salesTotal, 0);
+  // 이번 달 합계에는 전월에서 넘어온 이월(carryoverIn) 금액도 더한다 —
+  // 그 건들은 실제 처리일이 전월이라 dataByDate(이번 달 달력)에는 잡히지
+  // 않지만, 회계상 실적은 이번 달 몫이다.
+  const monthSalesTotal =
+    Object.values(dataByDate).reduce((sum, day) => sum + day.salesTotal, 0) + carryoverInSalesTotal;
   const monthSalesCount = Object.values(dataByDate).reduce((sum, day) => sum + day.salesCount, 0);
-  const monthPurchaseTotal = Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseTotal, 0);
+  const monthPurchaseTotal =
+    Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseTotal, 0) + carryoverInPurchaseTotal;
   const monthPurchaseCount = Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseCount, 0);
 
   const hasAlerts =
@@ -488,6 +418,8 @@ export default async function DashboardPage({
               </div>
               <div className="erp-home-stock-footer">
                 <Link href="/inventory">재고현황 전체 보기 →</Link>
+                {" · "}
+                <Link href="/inventory/reorder-suggestions">발주 제안 보기 →</Link>
               </div>
             </>
           ) : (

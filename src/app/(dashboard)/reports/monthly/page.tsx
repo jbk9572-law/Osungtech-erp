@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { effectiveMonth } from "@/lib/carryover";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
@@ -107,55 +109,58 @@ export default async function MonthlyReportPage({
       ? viewParam
       : "product";
   const month = monthParam || currentMonth();
-  const { from, to } = getMonthRange(month);
+  const { to } = getMonthRange(month);
   const prevMonth = shiftMonth(month, -1);
-  const { from: prevFrom, to: prevTo } = getMonthRange(prevMonth);
+  // 이월(is_carryover) 건은 거래일자가 실제로는 전월인데 이번 달 실적으로
+  // 잡히므로, 조회 범위를 전월 1일까지 넓혀서 가져온 뒤 실적월(effectiveMonth)
+  // 기준으로 이번 달/전월 몫을 각각 걸러낸다 — 전월 대비 비교(prevMonth)도
+  // 같은 방식으로 걸러야 해서 한 달 더(lookbackMonth) 여유를 둔다.
+  const lookbackMonth = shiftMonth(month, -2);
+  const { from: lookbackFrom } = getMonthRange(lookbackMonth);
   const supabase = await createClient();
 
-  // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행)에서 조용히
-  // 자르고, order() 없이 limit만 걸면 어떤 행이 잘리는지 보장이 안 된다
-  // (한 달 거래가 한도를 넘으면 매번 다른 행이 빠지면서 합계가 틀어질 수
-  // 있다). 월 집계는 정확도가 중요해서 넉넉한 상한(5000) + 결정적인
-  // 정렬을 같이 건다.
-  const [
-    { data: salesRows },
-    { data: purchaseRows },
-    { data: prevSalesRows },
-    { data: prevPurchaseRows },
-  ] = await Promise.all([
-    supabase
-      .from("sales_order_items")
-      .select(
-        "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, customers(id, name)), products(sku, name, spec, unit)",
-      )
-      .gte("sales_orders.order_date", from)
-      .lte("sales_orders.order_date", to)
-      .order("sales_orders(order_date)", { ascending: true })
-      .limit(5000),
-    supabase
-      .from("purchase_order_items")
-      .select(
-        "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, suppliers(id, name)), products(sku, name, spec, unit)",
-      )
-      .gte("purchase_orders.purchase_date", from)
-      .lte("purchase_orders.purchase_date", to)
-      .order("purchase_orders(purchase_date)", { ascending: true })
-      .limit(5000),
-    // 요약카드의 전월 대비 증감(%) 계산용 — 품목/거래처 상세는 필요 없고
-    // 총액만 필요하므로 가벼운 컬럼만 가져온다.
-    supabase
-      .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(order_date, is_return)")
-      .gte("sales_orders.order_date", prevFrom)
-      .lte("sales_orders.order_date", prevTo)
-      .limit(5000),
-    supabase
-      .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(purchase_date)")
-      .gte("purchase_orders.purchase_date", prevFrom)
-      .lte("purchase_orders.purchase_date", prevTo)
-      .limit(5000),
+  // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행, config.toml의
+  // max_rows)에서 조용히 자른다 — 예전엔 .limit(5000)이면 넉넉하다고
+  // 봤지만 실제 서버 상한은 1000이라 애초에 무의미했고, 이월 조회를 위해
+  // 조회 범위를 3개월치로 넓히면서 그 상한에 걸릴 가능성이 더 커졌다.
+  // .range()로 직접 페이지를 넘기며 끝까지 받아온다.
+  const [allSalesRows, allPurchaseRows] = await Promise.all([
+    fetchAllRows((from, to2) =>
+      supabase
+        .from("sales_order_items")
+        .select(
+          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit)",
+        )
+        .gte("sales_orders.order_date", lookbackFrom)
+        .lte("sales_orders.order_date", to)
+        .order("sales_orders(order_date)", { ascending: true })
+        .range(from, to2),
+    ),
+    fetchAllRows((from, to2) =>
+      supabase
+        .from("purchase_order_items")
+        .select(
+          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit)",
+        )
+        .gte("purchase_orders.purchase_date", lookbackFrom)
+        .lte("purchase_orders.purchase_date", to)
+        .order("purchase_orders(purchase_date)", { ascending: true })
+        .range(from, to2),
+    ),
   ]);
+
+  const salesRows = allSalesRows.filter(
+    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === month,
+  );
+  const prevSalesRows = (allSalesRows ?? []).filter(
+    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === prevMonth,
+  );
+  const purchaseRows = (allPurchaseRows ?? []).filter(
+    (r) => effectiveMonth(r.purchase_orders?.purchase_date ?? "", r.purchase_orders?.is_carryover ?? false) === month,
+  );
+  const prevPurchaseRows = (allPurchaseRows ?? []).filter(
+    (r) => effectiveMonth(r.purchase_orders?.purchase_date ?? "", r.purchase_orders?.is_carryover ?? false) === prevMonth,
+  );
 
   const prevSalesTotal = (prevSalesRows ?? []).reduce(
     (sum, r) =>
@@ -386,6 +391,26 @@ export default async function MonthlyReportPage({
     totalPurchaseAmount,
     prevPurchaseTotal,
   );
+
+  // 반품 사유별 통계 — 어떤 사유가 반복되는지 파악용. 품목 단위(salesRows)를
+  // 사유별로 묶되, 전표(주문) 수는 같은 주문의 여러 품목이 중복 집계되지
+  // 않게 Set으로 센다.
+  const returnReasonStats = (() => {
+    const map = new Map<string, { orderIds: Set<string>; quantity: number; amount: number }>();
+    for (const row of salesRows ?? []) {
+      if (!row.sales_orders?.is_return) continue;
+      const reason = row.sales_orders.return_reason || "미지정";
+      const entry = map.get(reason) ?? { orderIds: new Set<string>(), quantity: 0, amount: 0 };
+      entry.orderIds.add(row.sales_orders.id);
+      entry.quantity += row.quantity;
+      entry.amount += row.quantity * Number(row.unit_price);
+      map.set(reason, entry);
+    }
+    return Array.from(map.entries())
+      .map(([reason, e]) => ({ reason, count: e.orderIds.size, quantity: e.quantity, amount: e.amount }))
+      .sort((a, b) => b.amount - a.amount);
+  })();
+  const totalReturnAmount = returnReasonStats.reduce((sum, r) => sum + r.amount, 0);
 
   const [year, monthNum] = month.split("-");
   const nextMonth = shiftMonth(month, 1);
@@ -619,6 +644,51 @@ export default async function MonthlyReportPage({
           </div>
         </div>
       </div>
+
+      {returnReasonStats.length > 0 && (
+        <div className="erp-grid-wrap" style={{ marginBottom: 12 }}>
+          <table className="erp-grid">
+            <thead>
+              <tr>
+                <th>반품 사유</th>
+                <th className="num" style={{ width: 90 }}>
+                  전표수
+                </th>
+                <th className="num" style={{ width: 110 }}>
+                  수량
+                </th>
+                <th className="num" style={{ width: 130 }}>
+                  금액
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {returnReasonStats.map((r) => (
+                <tr key={r.reason}>
+                  <td>
+                    <GridBadge tone="danger">{r.reason}</GridBadge>
+                  </td>
+                  <td className="num">{r.count.toLocaleString()}건</td>
+                  <td className="num">{r.quantity.toLocaleString()}</td>
+                  <td className="num">{r.amount.toLocaleString()}원</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <td>합계 (매출에서 차감됨)</td>
+                <td className="num">
+                  {returnReasonStats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}건
+                </td>
+                <td className="num">
+                  {returnReasonStats.reduce((sum, r) => sum + r.quantity, 0).toLocaleString()}
+                </td>
+                <td className="num">{totalReturnAmount.toLocaleString()}원</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
 
       {view === "product" && (
         <div className="erp-grid-wrap">

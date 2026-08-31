@@ -5,8 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { effectiveMonth } from "@/lib/carryover";
 import { GridBadge } from "@/components/grid/badge";
 import { groupByProductKey } from "@/lib/group-by-product";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type Transaction = {
   date: string;
@@ -27,7 +29,10 @@ export default async function MonthlyReportCompanyPage({
 }) {
   const { month: monthParam, company } = await searchParams;
   const month = monthParam || currentMonth();
-  const { from, to } = getMonthRange(month);
+  const { to } = getMonthRange(month);
+  // 이월(is_carryover) 건은 거래일자가 전월인데 이번 달 실적으로 잡히므로,
+  // 조회 범위를 전월 1일까지 넓혀서 가져온 뒤 실적월 기준으로 걸러낸다.
+  const { from: lookbackFrom } = getMonthRange(shiftMonth(month, -1));
 
   const [type, id] = company?.split(":") ?? [];
   if (type !== "s" && type !== "c") {
@@ -40,62 +45,75 @@ export default async function MonthlyReportCompanyPage({
   let rows: Transaction[] = [];
 
   if (type === "s") {
-    const [{ data: supplier }, { data }] = await Promise.all([
+    const [{ data: supplier }, data] = await Promise.all([
       supabase.from("suppliers").select("name").eq("id", id).maybeSingle(),
-      supabase
-        .from("purchase_order_items")
-        .select(
-          "quantity, unit_cost, product_id, purchase_order_id, purchase_orders!inner(purchase_date, supplier_id), products(name, spec, unit)",
-        )
-        .eq("purchase_orders.supplier_id", id)
-        .gte("purchase_orders.purchase_date", from)
-        .lte("purchase_orders.purchase_date", to)
-        .order("purchase_orders(purchase_date)", { ascending: true })
-        .limit(2000),
+      fetchAllRows((from, to2) =>
+        supabase
+          .from("purchase_order_items")
+          .select(
+            "quantity, unit_cost, product_id, purchase_order_id, purchase_orders!inner(purchase_date, supplier_id, is_carryover), products(name, spec, unit)",
+          )
+          .eq("purchase_orders.supplier_id", id)
+          .gte("purchase_orders.purchase_date", lookbackFrom)
+          .lte("purchase_orders.purchase_date", to)
+          .order("purchase_orders(purchase_date)", { ascending: true })
+          .range(from, to2),
+      ),
     ]);
     companyName = supplier?.name ?? "";
-    rows = (data ?? []).map((row) => ({
-      date: row.purchase_orders.purchase_date,
-      type: "in" as const,
-      productName: row.products?.name ?? "-",
-      spec: row.products?.spec ?? "-",
-      unit: row.products?.unit ?? null,
-      quantity: row.quantity,
-      amount: row.quantity * Number(row.unit_cost),
-      orderId: row.purchase_order_id,
-    }));
+    rows = data
+      .filter(
+        (row) =>
+          effectiveMonth(row.purchase_orders.purchase_date, row.purchase_orders.is_carryover) === month,
+      )
+      .map((row) => ({
+        date: row.purchase_orders.purchase_date,
+        type: "in" as const,
+        productName: row.products?.name ?? "-",
+        spec: row.products?.spec ?? "-",
+        unit: row.products?.unit ?? null,
+        quantity: row.quantity,
+        amount: row.quantity * Number(row.unit_cost),
+        orderId: row.purchase_order_id,
+      }));
   } else {
-    const [{ data: customer }, { data }] = await Promise.all([
+    const [{ data: customer }, data] = await Promise.all([
       supabase.from("customers").select("name").eq("id", id).maybeSingle(),
-      supabase
-        .from("sales_order_items")
-        .select(
-          "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customer_id, is_return), products(name, spec, unit)",
-        )
-        .eq("sales_orders.customer_id", id)
-        .gte("sales_orders.order_date", from)
-        .lte("sales_orders.order_date", to)
-        .order("sales_orders(order_date)", { ascending: true })
-        .limit(2000),
+      fetchAllRows((from, to2) =>
+        supabase
+          .from("sales_order_items")
+          .select(
+            "quantity, unit_price, product_id, sales_order_id, sales_orders!inner(order_date, customer_id, is_return, is_carryover), products(name, spec, unit)",
+          )
+          .eq("sales_orders.customer_id", id)
+          .gte("sales_orders.order_date", lookbackFrom)
+          .lte("sales_orders.order_date", to)
+          .order("sales_orders(order_date)", { ascending: true })
+          .range(from, to2),
+      ),
     ]);
     companyName = customer?.name ?? "";
     // 반품 건은 수량/금액을 음수로 뒤집어서 이 거래처와의 순거래 합계에
     // 정확히 반영되게 한다(sales-grid-table/월별 리포트 목록과 동일한 처리).
-    rows = (data ?? []).map((row) => {
-      const isReturn = row.sales_orders.is_return;
-      const sign = isReturn ? -1 : 1;
-      return {
-        date: row.sales_orders.order_date,
-        type: "out" as const,
-        productName: row.products?.name ?? "-",
-        spec: row.products?.spec ?? "-",
-        unit: row.products?.unit ?? null,
-        quantity: row.quantity * sign,
-        amount: row.quantity * Number(row.unit_price) * sign,
-        orderId: row.sales_order_id,
-        isReturn,
-      };
-    });
+    rows = data
+      .filter(
+        (row) => effectiveMonth(row.sales_orders.order_date, row.sales_orders.is_carryover) === month,
+      )
+      .map((row) => {
+        const isReturn = row.sales_orders.is_return;
+        const sign = isReturn ? -1 : 1;
+        return {
+          date: row.sales_orders.order_date,
+          type: "out" as const,
+          productName: row.products?.name ?? "-",
+          spec: row.products?.spec ?? "-",
+          unit: row.products?.unit ?? null,
+          quantity: row.quantity * sign,
+          amount: row.quantity * Number(row.unit_price) * sign,
+          orderId: row.sales_order_id,
+          isReturn,
+        };
+      });
   }
 
   rows.sort(

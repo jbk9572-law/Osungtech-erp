@@ -169,7 +169,7 @@ export function QuickAddProductSearch({
                     pick(product.id);
                   }}
                   className={`block w-full px-2.5 py-2 text-left ${
-                    i === highlight ? "bg-[var(--erp-bg)]" : "hover:bg-[var(--erp-hover)]"
+                    i === highlight ? "bg-[var(--erp-selected)]" : "hover:bg-[var(--erp-selected)]"
                   }`}
                 >
                   <span className="font-medium text-[var(--erp-text)]">{product.sku}</span>

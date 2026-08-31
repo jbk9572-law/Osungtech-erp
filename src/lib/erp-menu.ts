@@ -17,7 +17,14 @@ export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
   { label: "매출관리", items: [{ label: "출고관리", href: "/sales", flatLabel: "매출관리" }] },
   { label: "매입관리", items: [{ label: "입고관리", href: "/purchases", flatLabel: "매입관리" }] },
-  { label: "재고관리", items: [{ label: "재고현황", href: "/inventory" }] },
+  {
+    label: "재고관리",
+    items: [
+      { label: "재고현황", href: "/inventory" },
+      { label: "재고 실사", href: "/inventory/count" },
+      { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
+    ],
+  },
   { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
   {
     label: "거래처관리",
@@ -66,6 +73,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "권한관리", href: "/settings/users" },
       { label: "백업/복원", href: "/settings/backup" },
+      { label: "변경 이력", href: "/settings/audit-log" },
     ],
   },
 ];

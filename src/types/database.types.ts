@@ -732,6 +732,8 @@ export type Database = {
           created_at: string;
           doc_no: number;
           is_return: boolean;
+          return_reason: string | null;
+          is_carryover: boolean;
         };
         Insert: {
           id?: string;
@@ -745,6 +747,8 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_return?: boolean;
+          return_reason?: string | null;
+          is_carryover?: boolean;
         };
         Update: {
           id?: string;
@@ -758,6 +762,8 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_return?: boolean;
+          return_reason?: string | null;
+          is_carryover?: boolean;
         };
         Relationships: [
           {
@@ -846,6 +852,7 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           doc_no: number;
+          is_carryover: boolean;
         };
         Insert: {
           id?: string;
@@ -858,6 +865,7 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           doc_no?: number;
+          is_carryover?: boolean;
         };
         Update: {
           id?: string;
@@ -870,6 +878,7 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           doc_no?: number;
+          is_carryover?: boolean;
         };
         Relationships: [
           {
@@ -1452,6 +1461,47 @@ export type Database = {
           },
         ];
       };
+      audit_logs: {
+        Row: {
+          id: string;
+          table_name: string;
+          record_id: string;
+          action: string;
+          actor: string | null;
+          old_data: Json | null;
+          new_data: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          table_name: string;
+          record_id: string;
+          action: string;
+          actor?: string | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          table_name?: string;
+          record_id?: string;
+          action?: string;
+          actor?: string | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_fkey";
+            columns: ["actor"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -1471,6 +1521,8 @@ export type Database = {
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
           p_is_return?: boolean;
+          p_return_reason?: string | null;
+          p_is_carryover?: boolean;
         };
         Returns: string;
       };
@@ -1485,6 +1537,7 @@ export type Database = {
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
+          p_is_carryover?: boolean;
         };
         Returns: string;
       };
@@ -1501,6 +1554,8 @@ export type Database = {
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
           p_is_return?: boolean | null;
+          p_return_reason?: string | null;
+          p_is_carryover?: boolean | null;
         };
         Returns: string;
       };
@@ -1516,6 +1571,7 @@ export type Database = {
           p_payment_method?: string | null;
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
+          p_is_carryover?: boolean | null;
         };
         Returns: string;
       };

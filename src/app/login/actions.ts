@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function login(_prevState: { error: string } | undefined, formData: FormData) {
   const loginId = String(formData.get("email") ?? "").trim();
@@ -18,7 +19,19 @@ export async function login(_prevState: { error: string } | undefined, formData:
   // 아이디 로그인을 직접 지원하지 않는다).
   let email = loginId;
   if (!loginId.includes("@")) {
-    const { data: resolvedEmail, error: lookupError } = await supabase.rpc("get_email_for_username", {
+    // get_email_for_username은 로그인 전(비로그인/anon) 상태에서 호출돼야
+    // 하는데, anon에게 직접 실행 권한을 주면 앱을 거치지 않고 공개된 anon
+    // key만으로 REST API를 직접 두드려 아이디 존재 여부/이메일을 무제한
+    // 조회(계정 목록 수집)할 수 있다. 그래서 이 함수는 service_role에게만
+    // 실행 권한이 있고(migration 75), 서버 액션 안에서 관리자 클라이언트로만
+    // 호출한다 — 클라이언트(브라우저)는 이 조회 자체에 관여하지 않는다.
+    let admin;
+    try {
+      admin = createAdminClient();
+    } catch {
+      return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
+    }
+    const { data: resolvedEmail, error: lookupError } = await admin.rpc("get_email_for_username", {
       p_username: loginId,
     });
     // 조회 자체가 실패한 경우(네트워크 오류 등)와 "그런 아이디가 없음"을

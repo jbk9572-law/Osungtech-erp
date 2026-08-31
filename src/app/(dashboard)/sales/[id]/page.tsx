@@ -100,6 +100,7 @@ export default async function SaleDetailPage({
         <h1 className="flex items-center gap-2 text-lg font-bold text-[var(--erp-text)]">
           매출관리 &gt; 수주 상세
           {order.is_return && <GridBadge tone="danger">반품</GridBadge>}
+          {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link
@@ -238,6 +239,11 @@ export default async function SaleDetailPage({
                 history={overrideHistory ?? []}
               />
             </div>
+          )}
+          {order.is_return && order.return_reason && (
+            <p style={{ marginTop: 12, color: "var(--erp-danger)" }}>
+              반품 사유: {order.return_reason}
+            </p>
           )}
           {order.memo && (
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>

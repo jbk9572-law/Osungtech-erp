@@ -40,7 +40,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, is_carryover, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -169,6 +169,7 @@ export default async function SalesPage({
             taxAmount: 0,
             deliveryMethod: item.sales_orders?.delivery_method,
             isReturn: item.sales_orders?.is_return ?? false,
+            isCarryover: item.sales_orders?.is_carryover ?? false,
             itemCount: 0,
             // 품목이 2건 이상일 때만 드롭다운으로 펼쳐 보여주는 데 쓴다.
             items: [itemDetail],
@@ -318,10 +319,18 @@ export default async function SalesPage({
           </Link>
         )}
       </form>
-      <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--erp-text-muted)" }}>
+      <div
+        className="rounded p-2 text-xs"
+        style={{
+          marginBottom: 8,
+          background: "var(--erp-info-bg)",
+          color: "var(--erp-info-text)",
+          border: "1px solid var(--erp-info-border)",
+        }}
+      >
         {from ? "" : `날짜를 지정하지 않으면 지난달 1일(${effectiveFrom})부터 표시됩니다. `}
         최근 {limit.toLocaleString()}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </p>
+      </div>
 
       <div className="erp-toolbar">
         <Link href="/sales/new" className="erp-btn erp-btn-primary">

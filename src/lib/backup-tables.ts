@@ -40,6 +40,17 @@ export const BACKUP_TABLES = [
 
 export type BackupTable = (typeof BACKUP_TABLES)[number];
 
+// inventory는 백업(내보내기)엔 참고용으로 포함하지만, 복원할 때는 절대
+// 그대로 다시 넣으면 안 된다 — inventory.quantity는 inventory_transactions
+// 행이 insert될 때마다 DB 트리거(apply_inventory_transaction)가 그
+// 델타만큼 더해서 만드는 값이다. inventory 행을 최종 수량 그대로
+// 복원한 "뒤에" inventory_transactions까지 복원하면, 트리거가 그
+// 트랜잭션들의 델타를 이미 정확한 수량 위에 또 한 번 더해버려서
+// 재고가 실제보다 부풀려진다. inventory_transactions만 복원해도
+// 트리거가 있어서 inventory 행은 (없으면 생성까지) 자동으로
+// 정확하게 재구성된다.
+export const RESTORE_SKIP_TABLES: readonly BackupTable[] = ["inventory"];
+
 // 백업 파일 구조가 나중에 바뀔 경우(테이블 추가/제거 등) 예전 백업 파일을
 // 복원하려 할 때 알아챌 수 있게 버전을 찍어둔다.
 export const BACKUP_FORMAT_VERSION = 1;

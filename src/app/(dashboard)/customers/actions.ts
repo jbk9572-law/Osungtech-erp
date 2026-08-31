@@ -413,7 +413,7 @@ export async function getCustomerTransactionHistory(
   const [{ data: orders }, { data: payments }] = await Promise.all([
     supabase
       .from("sales_orders")
-      .select("id, order_date, payment_method, sales_order_items(quantity, unit_price, products(name))")
+      .select("id, order_date, payment_method, is_return, sales_order_items(quantity, unit_price, products(name))")
       .eq("customer_id", customerId)
       .order("order_date", { ascending: true }),
     supabase
@@ -429,10 +429,12 @@ export async function getCustomerTransactionHistory(
   for (const o of orders ?? []) {
     if (o.payment_method) continue;
     const items = o.sales_order_items ?? [];
-    const total = items.reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0);
-    const label = items.length
+    const sign = o.is_return ? -1 : 1;
+    const total = items.reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0) * sign;
+    const namePart = items.length
       ? `${items[0].products?.name ?? "-"}${items.length > 1 ? ` 외 ${items.length - 1}건` : ""}`
       : "매출";
+    const label = o.is_return ? `[반품] ${namePart}` : namePart;
     entries.push({ id: o.id, kind: "sale", date: o.order_date, label, total });
   }
   for (const p of payments ?? []) {
@@ -440,6 +442,8 @@ export async function getCustomerTransactionHistory(
   }
   entries.sort((a, b) => a.date.localeCompare(b.date) || (a.kind === "sale" ? -1 : 1));
 
+  // total은 이미 매출/반품 부호가 반영된 값(반품은 음수)이라, 수금만
+  // 반대 부호로 뒤집으면 된다.
   let running = 0;
   const withBalance: PartyTransactionRow[] = entries.map((e) => {
     running += e.kind === "sale" ? e.total : -e.total;

@@ -72,6 +72,7 @@ export function TitleBar({
         <span>{today}</span>
         <NotificationBell announcements={unreadAnnouncements} todos={dueTodos} lowStock={lowStock} />
         <span>{email}</span>
+        <Link href="/settings/backup">백업/복원</Link>
         <Link href="/settings/password">비밀번호 변경</Link>
         <form action={signOut}>
           <button type="submit">로그아웃</button>

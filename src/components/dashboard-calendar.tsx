@@ -129,14 +129,49 @@ function buildPartnerBlocks(
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
+// 매입 품목이 같은 날 어디로 나갔는지(당일 입고 즉시 출고) 한눈에 보이게,
+// 같은 품목명+같은 규격의 매출 내역을 거래처별로 합산한다. 규격까지 정확히
+// 맞아야만 매칭해서, 오늘 사지 않은 규격에서 나간 매출(재고에서 나간 것)이
+// 엉뚱하게 엮이지 않게 한다.
+function matchDestinations(
+  productName: string,
+  spec: string,
+  salesItems: ItemRow[],
+): { partnerName: string; quantity: number }[] {
+  const key = spec || "규격 미지정";
+  const byPartner = new Map<string, number>();
+  for (const item of salesItems) {
+    if (item.productName !== productName) continue;
+    if ((item.spec || "규격 미지정") !== key) continue;
+    byPartner.set(item.partnerName, (byPartner.get(item.partnerName) ?? 0) + item.quantity);
+  }
+  return Array.from(byPartner.entries()).map(([partnerName, quantity]) => ({
+    partnerName,
+    quantity,
+  }));
+}
+
+function destinationTextSuffix(
+  destinations: { partnerName: string; quantity: number }[],
+): string {
+  if (!destinations.length) return "";
+  return ` → ${destinations
+    .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}`)
+    .join(" / ")}`;
+}
+
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
 // 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만
 // 담고, 단위(EA/KG 등)는 화면에만 보이고 복사 텍스트에는 숫자만 남긴다.
+// matchAgainst를 넘기면(매입 복사에서만 사용) 새 줄을 늘리는 대신 규격 줄
+// 끝에 "→ 거래처 수량"만 덧붙인다 — 별도 섹션 없이 원래 줄 그대로 정보 하나만
+// 더 붙는 방식이라 줄 수가 늘지 않는다.
 function appendItemLines(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
   paperStockProductName: string,
   lines: string[],
+  matchAgainst?: ItemRow[],
 ) {
   const blocks = buildPartnerBlocks(items, paperCalcByPartner);
   blocks.forEach((partner, i) => {
@@ -154,8 +189,13 @@ function appendItemLines(
         const returnSuffix = group.items.some((it) => it.isReturn)
           ? " (반품)"
           : "";
+        const destinationSuffix = matchAgainst
+          ? destinationTextSuffix(
+              matchDestinations(product.productName, group.spec, matchAgainst),
+            )
+          : "";
         lines.push(
-          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}`,
+          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}`,
         );
         for (const item of group.items) {
           if (item.remark) lines.push(`      (비고: ${item.remark})`);
@@ -213,6 +253,7 @@ function buildPurchaseCopyText(
     data.purchasePaperCalcByPartner,
     paperStockProductName,
     lines,
+    data.salesItems,
   );
   return lines.join("\n");
 }
@@ -242,6 +283,33 @@ function CarryoverBadge() {
       }}
     >
       이월
+    </span>
+  );
+}
+
+// 매입 화면(오늘의 업무 패널)에서만 쓴다 — 카톡 복사 텍스트와 똑같이,
+// 새 줄 없이 규격 줄 끝에 그대로 이어붙인다(matchDestinations는 위에서
+// 카톡 복사 텍스트 생성에도 재사용).
+function DestinationHint({
+  productName,
+  spec,
+  unit,
+  salesItems,
+}: {
+  productName: string;
+  spec: string;
+  unit?: string;
+  salesItems: ItemRow[];
+}) {
+  const destinations = matchDestinations(productName, spec, salesItems);
+  if (!destinations.length) return null;
+  return (
+    <span className="font-semibold text-[var(--erp-success)]">
+      {" "}
+      →{" "}
+      {destinations
+        .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
+        .join(" / ")}
     </span>
   );
 }
@@ -569,6 +637,12 @@ export function DashboardCalendar({
                                             {item.isCarryover && (
                                               <CarryoverBadge />
                                             )}
+                                            <DestinationHint
+                                              productName={product.productName}
+                                              spec={item.spec}
+                                              unit={item.unit}
+                                              salesItems={selectedData.salesItems}
+                                            />
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}
@@ -594,6 +668,12 @@ export function DashboardCalendar({
                                             {item.spec || "규격 미지정"} :{" "}
                                             {item.quantity.toLocaleString()}
                                             {item.unit}
+                                            <DestinationHint
+                                              productName={product.productName}
+                                              spec={item.spec}
+                                              unit={item.unit}
+                                              salesItems={selectedData.salesItems}
+                                            />
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}

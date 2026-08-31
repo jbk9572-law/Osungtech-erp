@@ -32,6 +32,7 @@ import {
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { PriceHistoryHint } from "@/components/price-history-hint";
+import { nextMonthLabel } from "@/lib/carryover";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -87,6 +88,7 @@ export type PurchaseInitial = {
   paymentMethod?: string | null;
   deliveryMethod?: string | null;
   docNo?: number | null;
+  isCarryover?: boolean;
   items: {
     productId: string;
     spec?: string | null;
@@ -109,6 +111,8 @@ export function NewPurchaseForm({
   prices = [],
   supplierPrices = [],
   history = [],
+  prefillSupplierId,
+  prefillItems,
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -120,6 +124,11 @@ export function NewPurchaseForm({
   // 그 목록으로 돌아가기 위해 서버 액션(updatePurchase)에 그대로 넘긴다.
   backParam?: string;
   customers?: { id: string; name: string }[];
+  // 재고 부족 자동 발주 제안 화면(/inventory/reorder-suggestions)에서
+  // "매입 등록으로 보내기"로 넘어온 경우에만 쓴다 — 신규 등록(initial 없음)
+  // 일 때만 적용하고, 수정 화면에서는 무시한다.
+  prefillSupplierId?: string;
+  prefillItems?: { productId: string; quantity: number }[];
   // 출고처(거래처)별 판매단가. "매출도 같이 등록"에서 매출단가 미리보기에
   // 쓴다 — 매출 등록 화면(new-sale-form)과 동일한 방식.
   prices?: { customer_id: string; product_id: string; unit_price: number }[];
@@ -135,7 +144,9 @@ export function NewPurchaseForm({
   // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
   history?: PriceHistoryEntry[];
 }) {
-  const [supplierId, setSupplierId] = useState(initial?.supplierId ?? "");
+  const [supplierId, setSupplierId] = useState(
+    initial?.supplierId ?? prefillSupplierId ?? "",
+  );
   const [purchaseDate, setPurchaseDate] = useState(
     // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
     // "어제" 날짜가 잡힌다. 로컬 날짜를 그대로 쓰는 toLocaleDateString("sv-SE")로
@@ -159,6 +170,13 @@ export function NewPurchaseForm({
   // 전표번호를 직접 입력/수정할 수 있게 한다.
   const [docNo, setDocNo] = useState(
     initial?.docNo ? String(initial.docNo) : "",
+  );
+  // 매입일자는 항상 실제 입고일 그대로 두고, "다음 달 실적으로 잡을지"만
+  // 이 체크박스로 명시적으로 관리한다(매출 등록 폼과 동일한 방식).
+  // "매출도 같이 등록"(당일 즉시 출고)과는 개념이 겹치지 않아 같이 켤 필요가
+  // 없으므로, 아래 alsoCreateSale이 켜지면 이 체크박스는 숨긴다.
+  const [isCarryover, setIsCarryover] = useState(
+    initial?.isCarryover ?? false,
   );
   // 당일 입고 후 바로 출고되는 건: 매입 등록과 동시에 같은 품목으로 매출
   // 전표까지 한 번에 만든다. 매입+출고 유형 할일을 가져오면 자동으로 켜지고
@@ -234,7 +252,26 @@ export function NewPurchaseForm({
           salePrice: 0,
           manualSalePrice: false,
         }))
-      : [
+      : prefillItems?.length
+        ? prefillItems.map((item, i) => {
+            const product = products.find((p) => p.id === item.productId);
+            return {
+              key: i,
+              productId: item.productId,
+              spec: product?.spec ?? "",
+              manualSpec: false,
+              lotNumber: "",
+              quantity: item.quantity,
+              unitCost: resolveCost(prefillSupplierId ?? "", item.productId),
+              manualPrice: false,
+              remark: "재고 부족 자동 발주 제안",
+              saleQuantity: 0,
+              manualSaleQuantity: false,
+              salePrice: 0,
+              manualSalePrice: false,
+            };
+          })
+        : [
           {
             key: 0,
             productId: "",
@@ -692,6 +729,9 @@ export function NewPurchaseForm({
         value={alwaysCredit ? "" : paymentMethod}
       />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
+      {!alsoCreateSale && (
+        <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
+      )}
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
@@ -728,6 +768,22 @@ export function NewPurchaseForm({
           name="tg0OverrideQuantity"
           value={tg0OverrideQuantity ?? ""}
         />
+      )}
+
+      {isCarryover && !alsoCreateSale && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{
+            marginBottom: 12,
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+            border: "1px solid var(--erp-warning-border)",
+          }}
+        >
+          매입일자는 {purchaseDate} 그대로 저장되고, 월별 리포트·대시보드 집계에서만{" "}
+          {nextMonthLabel(purchaseDate)} 실적으로 잡힙니다. 목록/달력에는 오늘 처리한 건으로
+          그대로 표시됩니다.
+        </div>
       )}
 
       {pendingPaperCalc && (
@@ -812,6 +868,39 @@ export function NewPurchaseForm({
               className="erp-input"
             />
           </div>
+          {!alsoCreateSale && (
+            <div className="erp-field">
+              <label aria-hidden="true">&nbsp;</label>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  height: 34,
+                  padding: "0 14px",
+                  borderRadius: 6,
+                  background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
+                  border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
+                  cursor: "pointer",
+                  fontSize: 13,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isCarryover}
+                  onChange={(e) => setIsCarryover(e.target.checked)}
+                />
+                <span
+                  style={{
+                    fontWeight: 700,
+                    color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)",
+                  }}
+                >
+                  {nextMonthLabel(purchaseDate)} 실적으로 이월
+                </span>
+              </label>
+            </div>
+          )}
           <div className="erp-field">
             <label htmlFor="purchase-delivery-method">입고방법</label>
             <select

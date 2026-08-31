@@ -37,6 +37,8 @@ import {
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
+import { RETURN_REASONS } from "@/lib/return-reason";
+import { nextMonthLabel } from "@/lib/carryover";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -86,6 +88,8 @@ export type SaleInitial = {
   deliveryMethod?: string | null;
   docNo?: number | null;
   isReturn?: boolean;
+  returnReason?: string | null;
+  isCarryover?: boolean;
   items: {
     productId: string;
     spec?: string | null;
@@ -106,6 +110,7 @@ export function NewSaleForm({
   initial,
   submitLabel = "매출 등록",
   backParam,
+  initialIsReturn = false,
 }: {
   customers: Customer[];
   products: Product[];
@@ -118,6 +123,9 @@ export function NewSaleForm({
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어온 경우, 저장 후
   // 그 목록으로 돌아가기 위해 서버 액션(updateSale)에 그대로 넘긴다.
   backParam?: string;
+  // 신규 등록 화면에서 매출/수금/반품 3버튼 중 "반품"으로 들어온 경우에만
+  // 쓴다(NewSaleTypeSwitcher 참고) — 수정 화면은 initial.isReturn을 그대로 쓴다.
+  initialIsReturn?: boolean;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
@@ -147,7 +155,17 @@ export function NewSaleForm({
   // 반품(잘못 납품해 되돌아온 건)으로 등록하면 이 매출과 똑같은 폼/품목
   // 구조를 그대로 쓰되, 서버 액션이 재고를 출고(out) 대신 입고(in)로
   // 반영하고, 매출 합계·미수금·리포트에서는 이 건의 금액을 차감 처리한다.
-  const [isReturn, setIsReturn] = useState(initial?.isReturn ?? false);
+  const isReturn = initial?.isReturn ?? initialIsReturn;
+  const [returnReason, setReturnReason] = useState(
+    initial?.returnReason ?? RETURN_REASONS[0],
+  );
+  // 거래일자는 항상 실제 처리일 그대로 두고, "다음 달 실적으로 잡을지"만
+  // 이 체크박스로 명시적으로 관리한다(예전에는 거래일자 자체를 미래 날짜로
+  // 입력해서 이월을 표현했다 — 그 방식은 달력/명세표에 실제 날짜가 안
+  // 보이는 문제가 있었다).
+  const [isCarryover, setIsCarryover] = useState(
+    initial?.isCarryover ?? false,
+  );
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
@@ -653,6 +671,8 @@ export function NewSaleForm({
       />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
       <input type="hidden" name="is_return" value={isReturn ? "1" : ""} />
+      {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
+      <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
@@ -693,23 +713,6 @@ export function NewSaleForm({
         </div>
       )}
 
-      <div className="erp-seg" style={{ marginBottom: 12 }}>
-        <button
-          type="button"
-          className={`erp-seg-btn${!isReturn ? " active" : ""}`}
-          onClick={() => setIsReturn(false)}
-        >
-          매출
-        </button>
-        <button
-          type="button"
-          className={`erp-seg-btn${isReturn ? " active" : ""}`}
-          style={isReturn ? { background: "var(--erp-danger)", borderColor: "var(--erp-danger)" } : undefined}
-          onClick={() => setIsReturn(true)}
-        >
-          반품
-        </button>
-      </div>
       {isReturn && (
         <div
           className="rounded p-2 text-xs"
@@ -720,7 +723,47 @@ export function NewSaleForm({
             border: "1px solid var(--erp-danger-border)",
           }}
         >
-          반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
+          <div style={{ marginBottom: 8 }}>
+            반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
+          </div>
+          <label
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontWeight: 700,
+            }}
+          >
+            반품 사유
+            <select
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+              className="erp-select"
+              style={{ height: 26, fontSize: 12.5 }}
+            >
+              {RETURN_REASONS.map((reason) => (
+                <option key={reason} value={reason}>
+                  {reason}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {isCarryover && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{
+            marginBottom: 12,
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+            border: "1px solid var(--erp-warning-border)",
+          }}
+        >
+          거래일자는 {orderDate} 그대로 저장되고, 월별 리포트·대시보드 집계에서만{" "}
+          {nextMonthLabel(orderDate)} 실적으로 잡힙니다. 목록/달력에는 오늘 처리한 건으로
+          그대로 표시됩니다.
         </div>
       )}
 
@@ -791,6 +834,37 @@ export function NewSaleForm({
               onChange={(e) => setOrderDate(e.target.value)}
               className="erp-input"
             />
+          </div>
+          <div className="erp-field">
+            <label aria-hidden="true">&nbsp;</label>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                height: 34,
+                padding: "0 14px",
+                borderRadius: 6,
+                background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
+                border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={isCarryover}
+                onChange={(e) => setIsCarryover(e.target.checked)}
+              />
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)",
+                }}
+              >
+                {nextMonthLabel(orderDate)} 실적으로 이월
+              </span>
+            </label>
           </div>
           <div className="erp-field">
             <label htmlFor="sale-delivery-method">배송방법</label>

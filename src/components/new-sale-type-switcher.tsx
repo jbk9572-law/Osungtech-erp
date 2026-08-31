@@ -6,11 +6,11 @@ import { NewCollectionForm } from "@/components/new-collection-form";
 
 type SaleFormProps = ComponentProps<typeof NewSaleForm>;
 
-// 새 매출 등록 화면 진입점 — "유형" 토글로 매출 등록 폼과 수금 등록 폼을
-// 바꿔 낀다. 수정 화면에는 안 쓴다(이미 만들어진 매출을 수금으로 바꿀 일은
-// 없으므로 /sales/new 전용).
+// 새 매출 등록 화면 진입점 — "유형" 토글로 매출/수금/반품 등록 폼을 바꿔
+// 낀다. 반품은 매출과 품목 구조가 동일해 NewSaleForm을 그대로 재사용하되
+// initialIsReturn만 켜서 들어간다. 수정 화면에는 안 쓴다(/sales/new 전용).
 export function NewSaleTypeSwitcher({ today, ...saleProps }: SaleFormProps & { today: string }) {
-  const [type, setType] = useState<"sale" | "collection">("sale");
+  const [type, setType] = useState<"sale" | "collection" | "return">("sale");
 
   return (
     <div>
@@ -29,11 +29,19 @@ export function NewSaleTypeSwitcher({ today, ...saleProps }: SaleFormProps & { t
         >
           수금
         </button>
+        <button
+          type="button"
+          className={`erp-seg-btn${type === "return" ? " active" : ""}`}
+          style={type === "return" ? { background: "var(--erp-danger)", borderColor: "var(--erp-danger)" } : undefined}
+          onClick={() => setType("return")}
+        >
+          반품
+        </button>
       </div>
-      {type === "sale" ? (
-        <NewSaleForm {...saleProps} />
-      ) : (
-        <NewCollectionForm customers={saleProps.customers} today={today} />
+      {type === "sale" && <NewSaleForm {...saleProps} />}
+      {type === "collection" && <NewCollectionForm customers={saleProps.customers} today={today} />}
+      {type === "return" && (
+        <NewSaleForm {...saleProps} initialIsReturn submitLabel="반품 등록" />
       )}
     </div>
   );
