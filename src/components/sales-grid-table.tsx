@@ -277,7 +277,7 @@ export function SalesGridTable({
                         : "-"}
                       {row.isCarryover && row.date && (
                         <GridBadge tone="warn" style={{ marginLeft: 4 }}>
-                          이월→{nextMonthLabel(row.date)}
+                          이월({nextMonthLabel(row.date)})
                         </GridBadge>
                       )}
                     </td>

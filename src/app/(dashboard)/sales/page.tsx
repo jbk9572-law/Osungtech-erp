@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets, previousMonthStart } from "@/lib/date-presets";
+import { getDatePresets, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
@@ -279,8 +279,15 @@ export default async function SalesPage({
   const exportHref = q
     ? `/api/sales/export?q=${encodeURIComponent(q)}`
     : "/api/sales/export";
+  // "더보기"는 단순히 같은 조회기간 안에서 더 많은 줄을 보여주는 게
+  // 아니라, 조회 시작월을 한 달 더 앞으로 당긴다 — 안 그러면 지난달
+  // 1일 이전 내역은 limit을 아무리 늘려도 애초에 쿼리 범위 밖이라 절대
+  // 나오지 않는다. limit도 함께 늘려서, 늘어난 기간만큼 더 받아온
+  // 데이터가 기존 상한에 다시 잘리지 않게 한다.
+  const effectiveFromMonth = effectiveFrom.slice(0, 7);
+  const moreFrom = getMonthRange(shiftMonth(effectiveFromMonth, -1)).from;
   const moreParams = new URLSearchParams();
-  if (from) moreParams.set("from", from);
+  moreParams.set("from", moreFrom);
   if (to) moreParams.set("to", to);
   if (q) moreParams.set("q", q);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
