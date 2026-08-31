@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
+import { addCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 import { getHolidayName } from "@/lib/kr-holidays";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
@@ -43,7 +43,7 @@ type DayData = {
   purchaseItems: ItemRow[];
   salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
-  note: string;
+  notes: { authorName: string; content: string; createdAt: string }[];
 };
 
 type Cell = { dateStr: string; day: number } | null;
@@ -308,6 +308,20 @@ function buildPurchaseCopyText(
   return lines.join("\n");
 }
 
+// 메모 로그를 카톡 등에 붙여넣을 수 있는 텍스트로 옮긴다. 화면에는
+// 작성자·시각이 같이 보이지만, 복사 텍스트에는 시각까지는 필요 없다는
+// 피드백에 따라 "작성자: 내용"만 담는다.
+function buildMemoCopyText(
+  dateStr: string,
+  notes: { authorName: string; content: string }[],
+) {
+  const lines: string[] = [`${dateStr} 메모`, ""];
+  for (const note of notes) {
+    lines.push(`${note.authorName}: ${note.content}`);
+  }
+  return lines.join("\n");
+}
+
 async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);
@@ -416,9 +430,9 @@ export function DashboardCalendar({
       ? todayStr
       : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
-  const [copiedType, setCopiedType] = useState<"sales" | "purchase" | null>(
-    null,
-  );
+  const [copiedType, setCopiedType] = useState<
+    "sales" | "purchase" | "memo" | null
+  >(null);
 
   // MidnightRefresh가 router.refresh()로 서버 데이터(todayStr 포함)를
   // 새로 받아와도, 이 상태는 처음 마운트될 때 한 번만 정해지므로 자정이
@@ -443,15 +457,17 @@ export function DashboardCalendar({
     purchaseItems: [],
     salesPaperCalcByPartner: {},
     purchasePaperCalcByPartner: {},
-    note: "",
+    notes: [],
   };
 
-  async function handleCopy(type: "sales" | "purchase") {
+  async function handleCopy(type: "sales" | "purchase" | "memo") {
     if (!selected) return;
     const text =
       type === "sales"
         ? buildSalesCopyText(selected, selectedData, paperStockProductName)
-        : buildPurchaseCopyText(selected, selectedData, paperStockProductName);
+        : type === "purchase"
+          ? buildPurchaseCopyText(selected, selectedData, paperStockProductName)
+          : buildMemoCopyText(selected, selectedData.notes);
     await copyText(text);
     setCopiedType(type);
     setTimeout(() => setCopiedType(null), 1500);
@@ -541,7 +557,7 @@ export function DashboardCalendar({
                 carryoverPurchaseCount
                   ? `이월 매입 ${carryoverPurchaseCount}건`
                   : null,
-                data?.note ? "메모 있음" : null,
+                data?.notes.length ? "메모 있음" : null,
                 showLowStockDot ? "안전재고 부족" : null,
               ].filter(Boolean);
               return (
@@ -585,7 +601,7 @@ export function DashboardCalendar({
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-success)]"}`}
                       />
                     ) : null}
-                    {data?.note ? (
+                    {data?.notes.length ? (
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-warning)]"}`}
                       />
@@ -643,6 +659,13 @@ export function DashboardCalendar({
                   className="rounded-sm border border-[var(--erp-success)] bg-[var(--erp-success-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-success)] hover:bg-[var(--erp-success-border)]"
                 >
                   {copiedType === "sales" ? "복사됨" : "매출 복사"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCopy("memo")}
+                  className="rounded-sm border border-[var(--erp-info-border)] bg-[var(--erp-info-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-info-text)] hover:opacity-80"
+                >
+                  {copiedType === "memo" ? "복사됨" : "메모 복사"}
                 </button>
               </div>
             </div>
@@ -943,7 +966,7 @@ export function DashboardCalendar({
               )}
             </div>
 
-            <NoteForm dateStr={selected} initialContent={selectedData.note} />
+            <NoteForm dateStr={selected} notes={selectedData.notes} />
           </>
         ) : (
           <p className="text-sm text-[var(--erp-text-muted)]">
@@ -957,50 +980,94 @@ export function DashboardCalendar({
 
 function NoteForm({
   dateStr,
-  initialContent,
+  notes,
 }: {
   dateStr: string;
-  initialContent: string;
+  notes: { authorName: string; content: string; createdAt: string }[];
 }) {
   const [state, formAction, pending] = useActionState(
-    upsertCalendarNote,
+    addCalendarNote,
     undefined,
   );
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} key={dateStr} className="space-y-2">
-      <input type="hidden" name="note_date" value={dateStr} />
+    <div className="space-y-2">
       <label
         className="block text-xs font-medium"
         style={{ color: "var(--erp-text-muted)" }}
       >
         메모
       </label>
-      <textarea
-        name="content"
-        defaultValue={initialContent}
-        rows={4}
-        placeholder="이 날짜에 대한 메모를 남겨보세요"
-        className="erp-input w-full"
-        style={{ height: "auto" }}
-      />
-      <button
-        ref={submitRef}
-        type="submit"
-        disabled={pending}
-        className="erp-btn erp-btn-primary"
+      {notes.length > 0 && (
+        <ul className="space-y-2">
+          {notes.map((note, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
+                style={{
+                  background: "var(--erp-selected)",
+                  color: "var(--erp-primary)",
+                }}
+              >
+                {note.authorName.slice(0, 1)}
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xs font-bold text-[var(--erp-text)]">
+                    {note.authorName}
+                  </span>
+                  <span
+                    className="text-[10.5px]"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
+                    {new Date(note.createdAt).toLocaleTimeString("ko-KR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--erp-text)]">
+                  {note.content}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* notes.length가 바뀌면(추가 성공 시) 폼을 다시 마운트해서 입력칸을
+          비운다 — 이 메모는 그날의 한 칸을 편집하는 게 아니라 매번 새
+          로그 한 줄을 등록하는 것이라, 등록 후에는 항상 빈 칸이어야 한다. */}
+      <form
+        action={formAction}
+        key={`${dateStr}-${notes.length}`}
+        className="space-y-2"
       >
-        {pending ? (
-          <>
-            <span className="erp-spinner" aria-hidden /> 저장 중...
-          </>
-        ) : (
-          "F7 메모 저장"
-        )}
-      </button>
-      <FormMessage state={state} />
-    </form>
+        <input type="hidden" name="note_date" value={dateStr} />
+        <textarea
+          name="content"
+          rows={2}
+          placeholder="새 메모를 입력하세요"
+          className="erp-input w-full"
+          style={{ height: "auto" }}
+        />
+        <button
+          ref={submitRef}
+          type="submit"
+          disabled={pending}
+          className="erp-btn erp-btn-primary"
+        >
+          {pending ? (
+            <>
+              <span className="erp-spinner" aria-hidden /> 저장 중...
+            </>
+          ) : (
+            "F7 메모 추가"
+          )}
+        </button>
+        <FormMessage state={state} />
+      </form>
+    </div>
   );
 }
