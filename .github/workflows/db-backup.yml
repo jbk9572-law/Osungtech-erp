@@ -10,6 +10,13 @@ name: Hourly DB backup
 # 트래픽 한도(5GB/월)를 DB 용량 × 실행 횟수만큼 소진한다. 데이터가 크게
 # 늘어나면(파일 첨부 등) 주기를 다시 점검해야 한다.
 #
+# 다만 시간마다 도는 것과, 시간마다 "새 커밋을 남기는 것"은 다르다 —
+# 직전 백업 이후 실제로 데이터가 하나도 안 바뀌었으면(예: 새벽 시간대)
+# 덤프는 뜨되 커밋/푸시는 건너뛴다(아래 "Skip if nothing changed" 단계).
+# 그래서 최근 720개 보관 정책이 실제로는 30일보다 훨씬 더 오래 갈 수
+# 있다 — 파일 개수가 아니라 "실제로 데이터가 바뀐 시점의 개수"만큼만
+# 쌓이기 때문이다.
+#
 # 사용 전 준비 (1회):
 #   1. Supabase 대시보드 > Project Settings > Database > Connection string에서
 #      반드시 "Session pooler" URI를 복사한다 (IPv4 호환 — GitHub Actions
@@ -66,6 +73,15 @@ jobs:
           docker run --rm -v "$PWD/backups:/backups" -e PGCONNECT_TIMEOUT=30 postgres:17 \
             pg_dump "$DB_URL" --no-owner --no-privileges --format=custom -f "/backups/${STAMP}.dump"
           echo "DUMP_FILE=backups/${STAMP}.dump" >> "$GITHUB_ENV"
+          # pg_dump custom format 아카이브는 plain(SQL 텍스트) 형식과 달리
+          # "-- Started on <타임스탬프>" 같은 생성 시각 배너를 담지 않는다 —
+          # 그래서 실제 데이터가 하나도 안 바뀌면 이 덤프 파일 자체가 이전
+          # 실행과 바이트 단위로 동일하다. 이 해시를 직전 실행의 해시와
+          # 비교해서, 진짜 변경이 없으면 커밋 자체를 건너뛴다(매시간 똑같은
+          # 스냅샷을 계속 새로 쌓아서 저장소 용량과 diff 이력만 불리는 걸
+          # 막기 위함). 새로 pg_dump를 한 번 더 돌리는 게 아니라 이미 만든
+          # 파일을 해시하는 것뿐이라 추가 DB 트래픽은 없다.
+          sha256sum "$DUMP_FILE" | cut -d' ' -f1 > /tmp/new-hash.txt
 
       - name: Switch to db-backups branch (create if missing)
         run: |
@@ -82,7 +98,21 @@ jobs:
           fi
           git stash pop
 
-      - name: Prune old backups (keep most recent 720 = ~30 days of hourly)
+      - name: Skip if nothing changed since last backup
+        id: check
+        run: |
+          set -euo pipefail
+          if [ -f backups/.last-hash.txt ] && diff -q backups/.last-hash.txt /tmp/new-hash.txt >/dev/null 2>&1; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "직전 백업 이후 데이터 변경이 없어 이번 회차는 건너뜁니다."
+            rm -f "$DUMP_FILE"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            cp /tmp/new-hash.txt backups/.last-hash.txt
+          fi
+
+      - name: Prune old backups (keep most recent 720 = ~30 days worth of change points)
+        if: steps.check.outputs.changed == 'true'
         run: |
           set -euo pipefail
           mkdir -p backups
@@ -90,6 +120,7 @@ jobs:
           ls -1 *.dump 2>/dev/null | sort | head -n -720 | xargs -r rm -f
 
       - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
         run: |
           set -euo pipefail
           git add backups
