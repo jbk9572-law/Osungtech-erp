@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets, previousMonthStart } from "@/lib/date-presets";
+import { getDatePresets, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
@@ -270,8 +270,12 @@ export default async function PurchasesPage({
   const exportHref = q
     ? `/api/purchases/export?q=${encodeURIComponent(q)}`
     : "/api/purchases/export";
+  // "더보기"는 같은 조회기간에서 더 많은 줄을 보여주는 게 아니라 조회
+  // 시작월을 한 달 더 앞으로 당긴다 — sales/page.tsx와 동일한 이유.
+  const effectiveFromMonth = effectiveFrom.slice(0, 7);
+  const moreFrom = getMonthRange(shiftMonth(effectiveFromMonth, -1)).from;
   const moreParams = new URLSearchParams();
-  if (from) moreParams.set("from", from);
+  moreParams.set("from", moreFrom);
   if (to) moreParams.set("to", to);
   if (q) moreParams.set("q", q);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
