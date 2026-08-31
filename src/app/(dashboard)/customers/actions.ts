@@ -277,8 +277,9 @@ export async function deleteCustomerPayment(_prevState: FormState, formData: For
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("customer_payments").delete().eq("id", id);
+  const { data, error } = await supabase.from("customer_payments").delete().eq("id", id).select("id");
   if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
+  if (!data || data.length === 0) return { error: "본인이 등록한 수금 내역만 삭제할 수 있습니다." };
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
   revalidatePath("/receivables");
