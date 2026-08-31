@@ -14,6 +14,7 @@ import {
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type DisplayRow = PurchaseRow;
 
@@ -226,9 +227,45 @@ export default async function PurchasesPage({
     (b.date ?? "").localeCompare(a.date ?? ""),
   );
 
-  const totalQuantity = itemRows.reduce((sum, row) => sum + row.quantity, 0);
-  const totalSupply = itemRows.reduce((sum, row) => sum + row.supplyAmount, 0);
-  const totalTax = itemRows.reduce((sum, row) => sum + row.taxAmount, 0);
+  // 합계는 위 itemRows(더보기 limit로 잘린 화면 표시용)가 아니라 조회기간
+  // 전체를 다시 훑어서 계산한다 — sales/page.tsx와 동일한 이유로, itemRows
+  // 기준이면 기간 내 건수가 limit(300)을 넘는 순간 합계가 조용히 줄어든다.
+  const totalsRows = await fetchAllRows<{
+    quantity: number;
+    unit_cost: string | number;
+    spec: string | null;
+    purchase_orders: { suppliers: { name: string | null } | null } | null;
+    products: { name: string | null; sku: string | null; spec: string | null } | null;
+  }>((rangeFrom, rangeTo) => {
+    let totalsQuery = supabase
+      .from("purchase_order_items")
+      .select(
+        "quantity, unit_cost, spec, purchase_orders!inner(suppliers(name)), products(name, sku, spec)",
+      )
+      .gte("purchase_orders.purchase_date", effectiveFrom)
+      .range(rangeFrom, rangeTo);
+    if (to) totalsQuery = totalsQuery.lte("purchase_orders.purchase_date", to);
+    return totalsQuery;
+  });
+  const filteredTotalsRows = keyword
+    ? totalsRows.filter(
+        (item) =>
+          item.purchase_orders?.suppliers?.name?.toLowerCase().includes(keyword) ||
+          item.products?.name?.toLowerCase().includes(keyword) ||
+          item.products?.sku?.toLowerCase().includes(keyword) ||
+          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+      )
+    : totalsRows;
+
+  const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);
+  const totalSupply = filteredTotalsRows.reduce(
+    (sum, row) => sum + row.quantity * Number(row.unit_cost),
+    0,
+  );
+  const totalTax = filteredTotalsRows.reduce(
+    (sum, row) => sum + Math.round(row.quantity * Number(row.unit_cost) * 0.1),
+    0,
+  );
   const presets = getDatePresets();
   const exportHref = q
     ? `/api/purchases/export?q=${encodeURIComponent(q)}`
