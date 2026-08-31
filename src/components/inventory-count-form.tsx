@@ -56,7 +56,7 @@ export function InventoryCountForm({
     <form action={formAction}>
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="rows" value={payload} />
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="erp-search" style={{ alignItems: "center", justifyContent: "space-between" }}>
         <label
           className="flex items-center gap-2 text-xs"
           style={{ color: "var(--erp-text-muted)" }}
