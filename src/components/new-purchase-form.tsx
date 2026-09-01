@@ -1440,6 +1440,8 @@ export function NewPurchaseForm({
                               background: "var(--erp-info-bg)",
                               border: "1px solid var(--erp-info-border)",
                               borderRadius: 4,
+                              whiteSpace: "normal",
+                              wordBreak: "break-word",
                             }}
                           >
                             품목 특이사항: {resolveSupplierNote(supplierId, row.productId)}
