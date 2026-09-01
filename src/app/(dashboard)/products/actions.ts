@@ -113,6 +113,7 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   await recordPackageQtyChange(supabase, created.id, fields.base_package_qty, null);
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
   return { success: "상품이 등록되었습니다." };
 }
 
@@ -153,6 +154,7 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
 
   revalidatePath("/products");
   revalidatePath(`/products/${id}`);
+  revalidatePath("/inventory");
   return { success: "상품 정보가 저장되었습니다." };
 }
 
@@ -174,6 +176,7 @@ export async function deleteProduct(_prevState: FormState, formData: FormData): 
   }
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
   redirect("/products");
 }
 
@@ -322,5 +325,6 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   }
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
   return summarize(rows.length, okCount, errors);
 }
