@@ -286,6 +286,8 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: order } = await supabase.from("sales_orders").select("customer_id").eq("id", id).maybeSingle();
+
   // 주문 삭제 + 재고 되돌리기를 DB 함수 하나로 묶어 원자적으로 처리한다.
   // 이전에는 두 단계를 개별 요청으로 보내서, 삭제는 성공했는데 그 다음
   // 재고 되돌리기가 실패하면 거래 기록은 사라졌지만 재고 수량은 틀어진
@@ -302,6 +304,8 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/sales");
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  revalidatePath("/receivables");
+  if (order?.customer_id) revalidatePath(`/customers/${order.customer_id}`);
   redirect("/sales");
 }
 
@@ -325,6 +329,8 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: orders } = await supabase.from("sales_orders").select("customer_id").in("id", ids);
+
   const results = await Promise.all(
     ids.map((id) => supabase.rpc("delete_sale_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
   );
@@ -333,6 +339,10 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
   revalidatePath("/sales");
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  revalidatePath("/receivables");
+  for (const customerId of new Set((orders ?? []).map((o) => o.customer_id))) {
+    revalidatePath(`/customers/${customerId}`);
+  }
 
   if (failCount > 0) {
     return { error: `${ids.length - failCount}건 삭제, ${failCount}건 실패했습니다.` };

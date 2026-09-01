@@ -61,11 +61,19 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
     }
   }, [items]);
 
+  // 마운트 시 한 번만 등록되는 cleanup이라 [] 의존성 자체는 맞지만, 그
+  // 클로저가 마운트 시점의 items(빈 배열)를 그대로 붙잡고 있어서 이후
+  // 쌓인 항목은 언마운트 때 하나도 해제되지 못했다 — ref로 최신 items를
+  // 따로 들고 있다가 cleanup에서 그걸 읽는다.
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
   useEffect(() => {
     return () => {
-      for (const item of items) URL.revokeObjectURL(item.previewUrl);
+      for (const item of itemsRef.current) URL.revokeObjectURL(item.previewUrl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleFilesSelected(fileList: FileList | null) {

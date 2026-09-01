@@ -21,12 +21,24 @@ async function resolveCategoryId(
       .maybeSingle();
     if (existing) return existing.id;
 
-    const { data: created } = await supabase
+    const { data: created, error } = await supabase
       .from("categories")
       .insert({ name: newCategoryName })
       .select("id")
       .single();
-    return created?.id ?? null;
+    if (created) return created.id;
+    // 이 조회~삽입 사이에 다른 사람이 같은 이름으로 먼저 만들었으면(동시
+    // 등록) name의 unique 제약에 걸려 삽입이 실패한다 — 실패로 끝내지
+    // 말고 그 사이 생긴 카테고리를 다시 조회해서 그걸 쓴다.
+    if (error) {
+      const { data: retry } = await supabase
+        .from("categories")
+        .select("id")
+        .ilike("name", newCategoryName)
+        .maybeSingle();
+      if (retry) return retry.id;
+    }
+    return null;
   }
   return String(formData.get("category_id") ?? "") || null;
 }

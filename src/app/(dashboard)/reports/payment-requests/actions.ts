@@ -32,11 +32,14 @@ const MAX_RECEIPT_SIZE = 8 * 1024 * 1024; // 8MB (브라우저에서 미리 압�
 // 영수증 사진을 스토리지에 올리고 payment_request_receipts 행을 만든다.
 // file.type은 클라이언트가 주장하는 값일 뿐이라(브랜딩 이미지와 동일한
 // 이유로) 실제 파일 바이트로 진짜 래스터 이미지인지 다시 확인한다.
+// sort_order는 "그 문서의 마지막 영수증 다음"으로 서버에서 직접 조회해
+// 정하는 대신, insert_payment_request_receipt RPC가 같은 문서 단위로
+// advisory lock을 잡고 조회+삽입을 한 번에 처리한다 — 다른 사람이 같은
+// 문서에 동시에 영수증을 추가해도 sort_order가 겹치지 않게 하기 위함이다.
 async function uploadReceipt(
   supabase: SupabaseServerClient,
   paymentRequestId: string,
   file: File,
-  sortOrder: number,
   userId: string | null
 ): Promise<string | null> {
   if (file.size > MAX_RECEIPT_SIZE) return `영수증 파일이 너무 큽니다(${file.name}).`;
@@ -54,12 +57,11 @@ async function uploadReceipt(
     data: { publicUrl },
   } = supabase.storage.from("payment-receipts").getPublicUrl(path);
 
-  const { error: insertError } = await supabase.from("payment_request_receipts").insert({
-    payment_request_id: paymentRequestId,
-    file_path: path,
-    file_url: publicUrl,
-    sort_order: sortOrder,
-    created_by: userId,
+  const { error: insertError } = await supabase.rpc("insert_payment_request_receipt", {
+    p_payment_request_id: paymentRequestId,
+    p_file_path: path,
+    p_file_url: publicUrl,
+    p_created_by: userId,
   });
   if (insertError) {
     await supabase.storage.from("payment-receipts").remove([path]);
@@ -111,8 +113,8 @@ export async function createPaymentRequest(
   // 영수증 업로드가 일부 실패해도 지급결의서 자체는 이미 등록됐으니 막지
   // 않되, 조용히 묻히지 않도록 상세 화면으로 경고를 실어 보낸다.
   let receiptWarning: string | null = null;
-  for (let i = 0; i < receipts.length; i++) {
-    const err = await uploadReceipt(supabase, id, receipts[i], i, user?.id ?? null);
+  for (const file of receipts) {
+    const err = await uploadReceipt(supabase, id, file, user?.id ?? null);
     if (err) receiptWarning ??= err;
   }
 
@@ -167,24 +169,14 @@ export async function quickAddPaymentRequestItem(
     return { error: `등록에 실패했습니다: ${bucketError?.message ?? "알 수 없는 오류"}` };
   }
 
-  const { data: existing } = await supabase
-    .from("payment_request_line_items")
-    .select("sort_order")
-    .eq("payment_request_id", paymentRequestId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const nextOrder = (existing?.sort_order ?? -1) + 1;
-
-  const { error } = await supabase.from("payment_request_line_items").insert({
-    payment_request_id: paymentRequestId,
-    used_at: usedAt,
-    vendor,
-    purpose: purpose || null,
-    amount,
-    remark: remark || null,
-    sort_order: nextOrder,
-    is_highlighted: isHighlighted,
+  const { error } = await supabase.rpc("insert_payment_request_line_item", {
+    p_payment_request_id: paymentRequestId,
+    p_used_at: usedAt,
+    p_vendor: vendor,
+    p_purpose: purpose || null,
+    p_amount: amount,
+    p_remark: remark || null,
+    p_is_highlighted: isHighlighted,
   });
   if (error) {
     return { error: `저장에 실패했습니다: ${error.message}` };
@@ -192,23 +184,12 @@ export async function quickAddPaymentRequestItem(
 
   // 영수증은 문서(payment_request) 단위로 붙는다(줄마다 따로 연결하는 구조가
   // 아님) — 이미 영수증이 있는 기존 문서에 이어서 추가하는 경우일 수 있으니
-  // sort_order는 그 문서의 마지막 영수증 다음부터 이어간다.
+  // sort_order는 uploadReceipt 안에서(RPC로) 그 문서의 마지막 영수증
+  // 다음부터 이어가도록 처리된다.
   let receiptWarning: string | null = null;
-  if (receipts.length > 0) {
-    const { data: existingReceipt } = await supabase
-      .from("payment_request_receipts")
-      .select("sort_order")
-      .eq("payment_request_id", paymentRequestId)
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    let nextReceiptOrder = (existingReceipt?.sort_order ?? -1) + 1;
-
-    for (const file of receipts) {
-      const err = await uploadReceipt(supabase, paymentRequestId, file, nextReceiptOrder, user?.id ?? null);
-      if (err) receiptWarning ??= err;
-      nextReceiptOrder += 1;
-    }
+  for (const file of receipts) {
+    const err = await uploadReceipt(supabase, paymentRequestId, file, user?.id ?? null);
+    if (err) receiptWarning ??= err;
   }
 
   revalidatePath("/reports/payment-requests");
@@ -271,20 +252,10 @@ export async function addPaymentRequestReceipts(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: existing } = await supabase
-    .from("payment_request_receipts")
-    .select("sort_order")
-    .eq("payment_request_id", paymentRequestId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  let nextOrder = (existing?.sort_order ?? -1) + 1;
-
   let firstError: string | null = null;
   for (const file of receipts) {
-    const err = await uploadReceipt(supabase, paymentRequestId, file, nextOrder, user?.id ?? null);
+    const err = await uploadReceipt(supabase, paymentRequestId, file, user?.id ?? null);
     if (err) firstError ??= err;
-    nextOrder += 1;
   }
 
   revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
