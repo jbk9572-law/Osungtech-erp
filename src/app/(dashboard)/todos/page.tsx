@@ -5,6 +5,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type TodoItemInput = {
   productId: string;
@@ -31,7 +32,7 @@ export default async function TodosPage({
 }) {
   const { q } = await searchParams;
   const supabase = await createClient();
-  const [{ data: allRows, error }, { data: products }] = await Promise.all([
+  const [{ data: allRows, error }, products] = await Promise.all([
     supabase
       .from("todos")
       .select(
@@ -40,10 +41,12 @@ export default async function TodosPage({
       .order("done", { ascending: true })
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(300),
-    supabase.from("products").select("id, name"),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("products").select("id, name").range(from, to),
+    ),
   ]);
 
-  const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
+  const productNameById = new Map(products.map((p) => [p.id, p.name]));
   const todayStr = todayKstStr();
 
   const keyword = q?.trim().toLowerCase();

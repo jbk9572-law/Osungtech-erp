@@ -26,8 +26,10 @@ export async function GET(request: Request) {
   let templatedCustomer: { id: string; name: string; sales_export_template: string } | null = null;
 
   if (q) {
-    const { data: customers } = await supabase.from("customers").select("id, name, sales_export_template");
-    const matches = (customers ?? []).filter((c) => c.name.toLowerCase().includes(q));
+    const customers = await fetchAllRows<{ id: string; name: string; sales_export_template: string }>((from, to) =>
+      supabase.from("customers").select("id, name, sales_export_template").range(from, to),
+    );
+    const matches = customers.filter((c) => c.name.toLowerCase().includes(q));
     if (matches.length === 1 && matches[0].sales_export_template !== "generic") {
       templatedCustomer = matches[0];
     }

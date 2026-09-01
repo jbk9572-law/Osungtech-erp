@@ -6,6 +6,7 @@ import { updateSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function EditSalePage({
   params,
@@ -24,10 +25,10 @@ export default async function EditSalePage({
   const [
     { data: order },
     { data: items },
-    { data: customers },
-    { data: products },
+    customers,
+    products,
     { data: warehouse },
-    { data: prices },
+    prices,
     { data: history },
     actor,
   ] = await Promise.all([
@@ -37,22 +38,34 @@ export default async function EditSalePage({
       .select("product_id, spec, quantity, unit_price, remark, lot_number")
       .eq("sales_order_id", id)
       .order("created_at"),
-    supabase.from("customers").select("id, name, notes").order("name"),
-    supabase
-      .from("products")
-      .select(
-        "id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)",
-      )
-      .order("name"),
+    fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
+      supabase.from("customers").select("id, name, notes").order("name").range(from, to),
+    ),
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      price: number;
+      base_package_qty: number | null;
+      inventory: { quantity: number }[];
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)")
+        .order("name")
+        .range(from, to),
+    ),
     supabase
       .from("warehouses")
       .select("id")
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    supabase
-      .from("customer_product_prices")
-      .select("customer_id, product_id, unit_price"),
+    fetchAllRows<{ customer_id: string; product_id: string; unit_price: number }>((from, to) =>
+      supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to),
+    ),
     supabase
       .from("sales_order_items")
       .select(

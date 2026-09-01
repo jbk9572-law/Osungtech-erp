@@ -16,6 +16,7 @@ import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function CustomerDetailPage({
   params,
@@ -29,7 +30,7 @@ export default async function CustomerDetailPage({
   // (별도 크론 없이 "그 날짜가 된 뒤 누군가 화면을 열면 그때 적용"되는 방식).
   await applyDuePriceSchedules(supabase, id);
 
-  const [{ data: customer }, { data: prices }, { data: products }, { data: schedules }, balance] =
+  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance] =
     await Promise.all([
       supabase.from("customers").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -37,7 +38,9 @@ export default async function CustomerDetailPage({
         .select("*, products(sku, name, unit, spec)")
         .eq("customer_id", id)
         .order("updated_at", { ascending: false }),
-      supabase.from("products").select("id, sku, name, spec").order("name"),
+      fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
+        supabase.from("products").select("id, sku, name, spec").order("name").range(from, to),
+      ),
       supabase
         .from("price_change_schedules")
         .select("id, product_id, new_unit_price, effective_date, products(sku, name, spec)")

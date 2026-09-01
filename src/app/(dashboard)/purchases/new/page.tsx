@@ -7,6 +7,7 @@ import {
   applyDuePurchasePriceSchedules,
 } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function NewPurchasePage({
   searchParams,
@@ -42,41 +43,50 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [
-    { data: suppliers },
-    { data: products },
-    { data: warehouse },
-    { data: customers },
-    { data: prices },
-    { data: supplierPrices },
-    { data: history },
-  ] = await Promise.all([
-    supabase.from("suppliers").select("id, name, notes").order("name"),
-    supabase
-      .from("products")
-      .select("id, sku, name, spec, unit, cost, price, base_package_qty")
-      .order("name"),
-    supabase
-      .from("warehouses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
-    supabase.from("customers").select("id, name, notes").order("name"),
-    supabase
-      .from("customer_product_prices")
-      .select("customer_id, product_id, unit_price"),
-    supabase
-      .from("supplier_product_prices")
-      .select("supplier_id, product_id, unit_cost"),
-    supabase
-      .from("purchase_order_items")
-      .select(
-        "product_id, unit_cost, lot_number, purchase_orders!inner(supplier_id, purchase_date)",
-      )
-      .order("created_at", { ascending: false })
-      .limit(1000),
-  ]);
+  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }] =
+    await Promise.all([
+      fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
+        supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
+      ),
+      fetchAllRows<{
+        id: string;
+        sku: string;
+        name: string;
+        spec: string | null;
+        unit: string;
+        cost: number;
+        price: number;
+        base_package_qty: number | null;
+      }>((from, to) =>
+        supabase
+          .from("products")
+          .select("id, sku, name, spec, unit, cost, price, base_package_qty")
+          .order("name")
+          .range(from, to),
+      ),
+      supabase
+        .from("warehouses")
+        .select("id")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
+        supabase.from("customers").select("id, name, notes").order("name").range(from, to),
+      ),
+      fetchAllRows<{ customer_id: string; product_id: string; unit_price: number }>((from, to) =>
+        supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to),
+      ),
+      fetchAllRows<{ supplier_id: string; product_id: string; unit_cost: number }>((from, to) =>
+        supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost").range(from, to),
+      ),
+      supabase
+        .from("purchase_order_items")
+        .select(
+          "product_id, unit_cost, lot_number, purchase_orders!inner(supplier_id, purchase_date)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(1000),
+    ]);
 
   const priceHistory = (history ?? []).map((row) => ({
     supplierId: row.purchase_orders.supplier_id,

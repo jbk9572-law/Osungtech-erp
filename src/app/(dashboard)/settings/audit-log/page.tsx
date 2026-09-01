@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 const TABLE_LABELS: Record<string, string> = {
   sales_orders: "매출",
@@ -249,19 +250,26 @@ export default async function AuditLogPage({
   // 실제 이름으로 바꿔 보여주기 위해, 관련 마스터 테이블을 통째로 미리
   // 불러와 조회맵을 만든다 — 이력 건수만큼 매번 개별 조회하는 대신 한
   // 번씩만 불러온다.
-  const [{ data }, { data: customers }, { data: suppliers }, { data: categories }, { data: profiles }] =
-    await Promise.all([
-      query,
-      supabase.from("customers").select("id, name"),
-      supabase.from("suppliers").select("id, name"),
-      supabase.from("categories").select("id, name"),
-      supabase.from("profiles").select("id, full_name"),
-    ]);
+  const [{ data }, customers, suppliers, categories, profiles] = await Promise.all([
+    query,
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("customers").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("categories").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+      supabase.from("profiles").select("id, full_name").range(from, to),
+    ),
+  ]);
   const lookups: Lookups = {
-    customers: new Map((customers ?? []).map((c) => [c.id, c.name])),
-    suppliers: new Map((suppliers ?? []).map((s) => [s.id, s.name])),
-    categories: new Map((categories ?? []).map((c) => [c.id, c.name])),
-    profiles: new Map((profiles ?? []).map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
+    customers: new Map(customers.map((c) => [c.id, c.name])),
+    suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
+    categories: new Map(categories.map((c) => [c.id, c.name])),
+    profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
   };
 
   const rows = data ?? [];

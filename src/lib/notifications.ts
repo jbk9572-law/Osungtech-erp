@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import { toKstDateStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export type AnnouncementNotice = { id: string; title: string; pinned: boolean };
 export type TodoNotice = {
@@ -27,26 +28,44 @@ export async function getNotificationSummary(
   soonDate.setDate(soonDate.getDate() + 3);
   const soonStr = toKstDateStr(soonDate);
 
-  const [{ data: announcements }, { data: reads }, { data: dueTodos }, { data: stockedProducts }] =
-    await Promise.all([
-      supabase
-        .from("announcements")
-        .select("id, title, pinned, created_at")
-        .order("pinned", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(30),
-      supabase.from("announcement_reads").select("announcement_id").eq("user_id", userId),
-      supabase
-        .from("todos")
-        .select("id, title, due_date, items, todo_type, ship_date")
-        .eq("done", false)
-        .lte("due_date", soonStr)
-        .order("due_date", { ascending: true })
-        .limit(20),
-      // 안전재고를 실제로 설정해둔(0보다 큰) 품목만 대상으로 한다 — 미설정(0)
-      // 품목까지 포함하면 재고가 조금만 있어도 항상 알림이 뜨게 된다.
-      supabase.from("products").select("id, name, reorder_point, inventory(quantity)").gt("reorder_point", 0),
-    ]);
+  const [{ data: announcements }, { data: dueTodos }, stockedProducts] = await Promise.all([
+    supabase
+      .from("announcements")
+      .select("id, title, pinned, created_at")
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("todos")
+      .select("id, title, due_date, items, todo_type, ship_date")
+      .eq("done", false)
+      .lte("due_date", soonStr)
+      .order("due_date", { ascending: true })
+      .limit(20),
+    // 안전재고를 실제로 설정해둔(0보다 큰) 품목만 대상으로 한다 — 미설정(0)
+    // 품목까지 포함하면 재고가 조금만 있어도 항상 알림이 뜨게 된다.
+    fetchAllRows<{ id: string; name: string; reorder_point: number; inventory: { quantity: number }[] }>(
+      (from, to) =>
+        supabase
+          .from("products")
+          .select("id, name, reorder_point, inventory(quantity)")
+          .gt("reorder_point", 0)
+          .range(from, to),
+    ),
+  ]);
+
+  // 안 읽음 여부는 지금 보여줄 최근 30건에 대해서만 필요하므로, 그 30건의
+  // id로만 좁혀서 조회한다 — 이 사용자가 지금까지 읽은 공지 전체를 가져오면
+  // 오래 쓸수록(1000건 초과 시) 조용히 잘려서 최근 글의 읽음 여부가 틀릴 수
+  // 있다.
+  const announcementIds = (announcements ?? []).map((a) => a.id);
+  const { data: reads } = announcementIds.length
+    ? await supabase
+        .from("announcement_reads")
+        .select("announcement_id")
+        .eq("user_id", userId)
+        .in("announcement_id", announcementIds)
+    : { data: [] as { announcement_id: string }[] };
 
   const readIds = new Set((reads ?? []).map((r) => r.announcement_id));
   const unreadAnnouncements = (announcements ?? [])

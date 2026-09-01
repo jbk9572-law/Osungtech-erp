@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 import { numberOrDefault, numberOrNull } from "@/lib/form-number";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 async function resolveCategoryId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -214,8 +215,10 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
 
   const supabase = await createClient();
 
-  const { data: existingSuppliers } = await supabase.from("suppliers").select("id, name");
-  const supplierByName = new Map((existingSuppliers ?? []).map((s) => [s.name.trim(), s.id]));
+  const existingSuppliers = await fetchAllRows<{ id: string; name: string }>((from, to) =>
+    supabase.from("suppliers").select("id, name").range(from, to),
+  );
+  const supplierByName = new Map(existingSuppliers.map((s) => [s.name.trim(), s.id]));
 
   const errors: ImportRowError[] = [];
   const parsedRows: {

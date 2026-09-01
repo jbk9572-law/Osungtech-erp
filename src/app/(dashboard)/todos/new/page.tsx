@@ -2,13 +2,27 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TodoForm } from "@/components/todo-form";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function NewTodoPage() {
   const supabase = await createClient();
-  const [{ data: products }, { data: suppliers }, { data: customers }] = await Promise.all([
-    supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
-    supabase.from("suppliers").select("id, name").order("name"),
-    supabase.from("customers").select("id, name").order("name"),
+  const [products, suppliers, customers] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      base_package_qty: number | null;
+    }>((from, to) =>
+      supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("customers").select("id, name").order("name").range(from, to),
+    ),
   ]);
 
   return (
@@ -29,9 +43,9 @@ export default async function NewTodoPage() {
           <TodoForm
             action={createTodo}
             submitLabel="등록"
-            products={products ?? []}
-            suppliers={suppliers ?? []}
-            customers={customers ?? []}
+            products={products}
+            suppliers={suppliers}
+            customers={customers}
           />
         </div>
       </div>

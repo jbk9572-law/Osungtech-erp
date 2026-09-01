@@ -30,10 +30,18 @@ export async function GET(request: Request) {
   } | null = null;
 
   if (q) {
-    const { data: suppliers } = await supabase
-      .from("suppliers")
-      .select("id, name, purchase_export_template, purchase_price_basis");
-    const matches = (suppliers ?? []).filter((s) => s.name.toLowerCase().includes(q));
+    const suppliers = await fetchAllRows<{
+      id: string;
+      name: string;
+      purchase_export_template: string;
+      purchase_price_basis: string;
+    }>((from, to) =>
+      supabase
+        .from("suppliers")
+        .select("id, name, purchase_export_template, purchase_price_basis")
+        .range(from, to),
+    );
+    const matches = suppliers.filter((s) => s.name.toLowerCase().includes(q));
     if (matches.length === 1 && matches[0].purchase_export_template !== "generic") {
       templatedSupplier = matches[0];
     }

@@ -17,7 +17,7 @@ export default async function ProductsPage({
   // 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const backParam = buildListReturnParam({ q });
   const supabase = await createClient();
-  const [allProducts, { data: categories }, { data: suppliers }] = await Promise.all([
+  const [allProducts, categories, suppliers] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -37,8 +37,12 @@ export default async function ProductsPage({
         .order("created_at", { ascending: false })
         .range(from, to),
     ),
-    supabase.from("categories").select("id, name").order("name"),
-    supabase.from("suppliers").select("id, name").order("name"),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("categories").select("id, name").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
   ]);
 
   const keyword = q?.trim().toLowerCase();
