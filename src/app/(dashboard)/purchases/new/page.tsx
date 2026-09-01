@@ -73,11 +73,13 @@ export default async function NewPurchasePage({
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("customers").select("id, name, notes").order("name").range(from, to),
       ),
-      fetchAllRows<{ customer_id: string; product_id: string; unit_price: number }>((from, to) =>
-        supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to),
+      fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
+        (from, to) =>
+          supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
       ),
-      fetchAllRows<{ supplier_id: string; product_id: string; unit_cost: number }>((from, to) =>
-        supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost").range(from, to),
+      fetchAllRows<{ supplier_id: string; product_id: string; unit_cost: number; notes: string | null }>(
+        (from, to) =>
+          supabase.from("supplier_product_prices").select("supplier_id, product_id, unit_cost, notes").range(from, to),
       ),
       supabase
         .from("purchase_order_items")

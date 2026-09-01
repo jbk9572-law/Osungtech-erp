@@ -147,6 +147,32 @@ export async function upsertCustomerPrice(
   return { success: "판매단가가 저장되었습니다." };
 }
 
+// 이 거래처+상품 조합에만 해당하는 특이사항(예: "여유분 5매 추가해서
+// 나감"). 거래처 전체 특이사항(customers.notes)과는 별도로, 매출 등록
+// 화면에서 이 거래처와 이 상품을 함께 고르면 자동으로 보여준다.
+export async function updateCustomerProductPriceNotes(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const customerId = String(formData.get("customer_id") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customer_product_prices")
+    .update({ notes: notes || null })
+    .eq("id", id);
+
+  if (error) {
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  if (customerId) revalidatePath(`/customers/${customerId}`);
+  return { success: "특이사항을 저장했습니다." };
+}
+
 // 미래 특정 날짜부터 적용할 단가를 예약해둔다. customer_product_prices를
 // 바로 바꾸지 않고 별도 테이블에 쌓아두는 이유는, 그 테이블이 "거래처+상품당
 // 최신 단가 하나"만 남기는 구조라 지금 당장 바꾸면 그 사이 판매에도 새

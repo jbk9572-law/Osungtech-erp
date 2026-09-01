@@ -10,7 +10,14 @@ import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { DeleteButton } from "@/components/delete-button";
 import { ClickableRow } from "@/components/clickable-row";
 import { AgingBadge } from "@/components/aging-badge";
-import { updateCustomer, deleteCustomer, addCustomerPayment, deleteCustomerPayment } from "@/app/(dashboard)/customers/actions";
+import {
+  updateCustomer,
+  deleteCustomer,
+  addCustomerPayment,
+  deleteCustomerPayment,
+  updateCustomerProductPriceNotes,
+} from "@/app/(dashboard)/customers/actions";
+import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
@@ -245,6 +252,7 @@ export default async function CustomerDetailPage({
               <th>상품명</th>
               <th>규격</th>
               <th className="num">판매단가</th>
+              <th>특이사항</th>
               <th>최근 수정</th>
             </tr>
           </thead>
@@ -255,6 +263,15 @@ export default async function CustomerDetailPage({
                 <td>{price.products?.name}</td>
                 <td>{price.products?.spec}</td>
                 <td className="num">{formatNumOrDash(price.unit_price)}</td>
+                <td>
+                  <PartyProductNoteForm
+                    action={updateCustomerProductPriceNotes}
+                    id={price.id}
+                    partyIdFieldName="customer_id"
+                    partyId={customer.id}
+                    initialNotes={price.notes}
+                  />
+                </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>
                   {new Date(price.updated_at).toLocaleDateString("ko-KR")}
                 </td>
@@ -262,7 +279,7 @@ export default async function CustomerDetailPage({
             ))}
             {!prices?.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={6} className="erp-grid-empty">
                   등록된 판매단가가 없습니다.
                 </td>
               </tr>

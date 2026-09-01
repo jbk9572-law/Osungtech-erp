@@ -537,6 +537,7 @@ export type Database = {
           customer_id: string;
           product_id: string;
           unit_price: number;
+          notes: string | null;
           updated_at: string;
         };
         Insert: {
@@ -544,6 +545,7 @@ export type Database = {
           customer_id: string;
           product_id: string;
           unit_price?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -551,6 +553,7 @@ export type Database = {
           customer_id?: string;
           product_id?: string;
           unit_price?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -631,6 +634,7 @@ export type Database = {
           supplier_id: string;
           product_id: string;
           unit_cost: number;
+          notes: string | null;
           updated_at: string;
         };
         Insert: {
@@ -638,6 +642,7 @@ export type Database = {
           supplier_id: string;
           product_id: string;
           unit_cost?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -645,6 +650,7 @@ export type Database = {
           supplier_id?: string;
           product_id?: string;
           unit_cost?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Relationships: [

@@ -39,8 +39,9 @@ export default async function NewSalePage() {
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
-    fetchAllRows<{ customer_id: string; product_id: string; unit_price: number }>((from, to) =>
-      supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to),
+    fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
+      (from, to) =>
+        supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
     ),
     supabase
       .from("sales_order_items")

@@ -139,6 +139,33 @@ export async function upsertSupplierPrice(
   return { success: "매입단가가 저장되었습니다." };
 }
 
+// 이 공급처+상품 조합에만 해당하는 특이사항. customers/actions.ts의
+// updateCustomerProductPriceNotes와 동일한 방식 — 공급처 전체 특이사항
+// (suppliers.notes)과는 별도로, 매입 등록 화면에서 이 공급처와 이 상품을
+// 함께 고르면 자동으로 보여준다.
+export async function updateSupplierProductPriceNotes(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const supplierId = String(formData.get("supplier_id") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("supplier_product_prices")
+    .update({ notes: notes || null })
+    .eq("id", id);
+
+  if (error) {
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
+  return { success: "특이사항을 저장했습니다." };
+}
+
 // 미래 특정 날짜부터 적용할 매입단가를 예약해둔다. customers/actions.ts의
 // schedulePriceChange와 동일한 이유로(supplier_product_prices가 "공급처+상품당
 // 최신 단가 하나"만 남기는 구조라서) 별도 테이블에 쌓아두고, 그 날짜가 된 뒤
