@@ -1446,6 +1446,7 @@ export function NewSaleForm({
                           updateRow(row.key, { quantity: n })
                         }
                         allowFormula
+                        basePackageQty={product?.base_package_qty}
                       />
                     </td>
                     <td className="num">

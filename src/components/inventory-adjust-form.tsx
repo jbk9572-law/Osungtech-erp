@@ -56,6 +56,7 @@ export function InventoryAdjustForm({
   }, [productId, warehouseId, stockLevels]);
 
   const signedQuantity = direction === "decrease" ? -amount : amount;
+  const selectedProduct = products.find((p) => p.id === productId);
 
   return (
     <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
@@ -93,7 +94,12 @@ export function InventoryAdjustForm({
           차감
         </button>
       </div>
-      <QuantityWithBoxInput quantity={amount} onQuantityChange={setAmount} className="erp-input" />
+      <QuantityWithBoxInput
+        quantity={amount}
+        onQuantityChange={setAmount}
+        basePackageQty={selectedProduct?.base_package_qty}
+        className="erp-input"
+      />
       {currentStock !== null && (
         <p className="text-xs md:col-span-4" style={{ color: "var(--erp-text-muted)" }}>
           현재 재고: {currentStock.toLocaleString()}개 → 조정 후:{" "}

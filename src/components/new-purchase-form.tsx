@@ -1472,19 +1472,21 @@ export function NewPurchaseForm({
                           })
                         }
                         allowFormula
+                        basePackageQty={product?.base_package_qty}
                       />
                     </td>
                     {alsoCreateSale && (
                       <td className="num">
-                        <NumberInput
-                          placeholder="출고수량"
-                          value={row.saleQuantity}
-                          onChange={(n) =>
+                        <QuantityWithBoxInput
+                          quantity={row.saleQuantity}
+                          onQuantityChange={(n) =>
                             updateRow(row.key, {
                               saleQuantity: n,
                               manualSaleQuantity: true,
                             })
                           }
+                          basePackageQty={product?.base_package_qty}
+                          label="출고수량"
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
