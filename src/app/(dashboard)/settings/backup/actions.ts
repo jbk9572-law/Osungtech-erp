@@ -3,7 +3,12 @@
 import { requireAdmin } from "@/lib/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BACKUP_TABLES, BACKUP_FORMAT_VERSION, RESTORE_SKIP_TABLES, type BackupFile } from "@/lib/backup-tables";
+import { dispatchServerRestore } from "@/lib/github-restore";
 import type { FormState } from "@/components/form-message";
+
+// db-backups 브랜치의 파일명은 항상 이 형식의 UTC 타임스탬프다
+// (.github/workflows/db-backup.yml의 `date -u +%Y-%m-%dT%H%M%SZ`).
+const SNAPSHOT_FILENAME_RE = /^\d{4}-\d{2}-\d{2}T\d{6}Z\.dump$/;
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -95,4 +100,34 @@ export async function restoreBackup(_prevState: FormState, formData: FormData): 
   }
 
   return { success: summary };
+}
+
+// 재해복구(서버에서 시점 복원) — 백업 시점 그대로 DB를 통째로 되돌리는
+// 파괴적 작업(pg_restore --clean)이라, 이 앱에서 직접 실행하지 않고
+// GitHub Actions 워크플로우(db-restore.yml)를 호출만 한다. 실제 복원은
+// 거기서 일어난다 — 자세한 배경은 docs/db-backup-restore.md 참고.
+export async function restoreFromServerSnapshot(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 복원할 수 있습니다." };
+
+  const snapshot = formData.get("snapshot");
+  if (typeof snapshot !== "string" || !SNAPSHOT_FILENAME_RE.test(snapshot)) {
+    return { error: "복원할 백업 시점을 선택해주세요." };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const result = await dispatchServerRestore(snapshot, user?.email ?? user?.id ?? "알 수 없음");
+  if (!result.ok) {
+    return { error: result.error ?? "복원 요청에 실패했습니다." };
+  }
+
+  return {
+    success: `복원 요청을 GitHub Actions로 보냈습니다 (${snapshot}). 완료까지 몇 분 걸릴 수 있으니 Actions 탭에서 진행 상황을 확인하세요.`,
+  };
 }

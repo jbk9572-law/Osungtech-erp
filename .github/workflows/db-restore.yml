@@ -1,0 +1,68 @@
+name: DB restore (manual, destructive)
+
+# 재해복구용 전체 복원 워크플로우 — 백업 시점 그대로 DB를 통째로
+# 되돌리는 파괴적 작업(pg_restore --clean)이다. 절차는
+# docs/db-backup-restore.md 참고.
+#
+# 앱의 환경설정 > 백업/복원 > "재해복구(서버에서 시점 복원)" 화면에서
+# 관리자가 확인 코드를 입력해야만 dispatchServerRestore()가 이 워크플로우를
+# 호출한다(src/lib/github-restore.ts). 이 탭에서 직접 "Run workflow"로도
+# 실행할 수는 있지만, confirm 입력값이 정확히 RESTORE가 아니면 첫 단계에서
+# 바로 실패한다 — 앱을 거치지 않고 실수로 실행되는 걸 막기 위한 마지막
+# 안전장치다.
+#
+# 실행 전 준비물: db-backup.yml과 같은 SUPABASE_DB_URL secret
+# (Session pooler URI). 이미 백업용으로 등록돼 있으면 그대로 쓴다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      snapshot:
+        description: "복원할 백업 파일명 (db-backups 브랜치 backups/ 안의 파일명, 예: 2026-08-28T170000Z.dump)"
+        required: true
+      confirm:
+        description: '반드시 정확히 "RESTORE"를 입력해야 실행됩니다.'
+        required: true
+      requested_by:
+        description: "요청한 관리자 (앱에서 자동으로 채움 — 기록용, 비워둬도 됨)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 확인 문구 검증
+        run: |
+          if [ "${{ inputs.confirm }}" != "RESTORE" ]; then
+            echo "::error::confirm 입력값이 정확히 RESTORE가 아니어서 취소합니다."
+            exit 1
+          fi
+
+      - name: SUPABASE_DB_URL secret 확인
+        run: |
+          if [ -z "${{ secrets.SUPABASE_DB_URL }}" ]; then
+            echo "::error::SUPABASE_DB_URL secret이 설정되어 있지 않습니다. docs/db-backup-restore.md 참고."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 백업 시점 파일 추출
+        run: |
+          set -euo pipefail
+          git fetch origin db-backups
+          mkdir -p /tmp/restore
+          git show "origin/db-backups:backups/${{ inputs.snapshot }}" > /tmp/restore/target.dump
+
+      - name: DB 복원 (pg_restore --clean, 요청자 ${{ inputs.requested_by }})
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          docker run --rm -v /tmp/restore:/restore -e PGCONNECT_TIMEOUT=30 postgres:17 \
+            pg_restore --clean --if-exists --no-owner --no-privileges -d "$DB_URL" /restore/target.dump
+          echo "복원 완료: ${{ inputs.snapshot }}"
