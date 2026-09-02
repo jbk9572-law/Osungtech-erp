@@ -328,8 +328,13 @@ export default async function MonthlyReportPage({
     .filter((row) => row.sales_orders?.customers)
     .map((row) => {
       // 반품은 이 거래처와의 순거래액에서 차감되도록 음수로 반영한다.
+      // 세액은 양수 공급가액 기준으로 반올림한 뒤 부호를 적용한다 —
+      // Math.round는 음수 .5를 0쪽으로 반올림해서(예: -2.5 → -2),
+      // 서명된 금액에 그대로 반올림을 걸면 목록 화면(sales/page.tsx)의
+      // 세액 합계와 1원 어긋나는 경우가 생긴다.
       const sign = row.sales_orders?.is_return ? -1 : 1;
-      const amount = row.quantity * Number(row.unit_price) * sign;
+      const supplyAmount = row.quantity * Number(row.unit_price);
+      const amount = supplyAmount * sign;
       return {
         companyId: row.sales_orders!.customers!.id,
         companyName: row.sales_orders!.customers!.name,
@@ -340,7 +345,7 @@ export default async function MonthlyReportPage({
         unit: row.products?.unit ?? null,
         quantity: row.quantity * sign,
         amount,
-        taxAmount: calcVat(amount),
+        taxAmount: calcVat(supplyAmount) * sign,
       };
     });
 

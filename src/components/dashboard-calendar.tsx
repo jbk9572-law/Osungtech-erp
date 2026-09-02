@@ -92,18 +92,26 @@ function productTotals(items: ItemRow[]) {
 // 똑같은 경우, 카톡 복사 텍스트에서는 그 규격을 여러 번 반복해서 보여줄
 // 필요가 없다 — 규격 하나에 합계 수량만 보여주면 충분하다. 규격이 실제로
 // 다른 품목(사이즈가 여러 종류인 경우)은 그대로 규격별로 나눠서 보여준다.
+// 반품은 수량이 정상 매출/매입과 반대 의미(나간 게 아니라 되돌아온
+// 것)라, 같은 규격이라도 정상 건과 한 줄로 합치면 안 된다 — 합치면
+// "정상 10개 + 반품 3개"가 합계 13개짜리 "전량 반품" 줄처럼 보이는
+// 사고가 난다.
 function groupItemsBySpec(items: ItemRow[]) {
   const order: string[] = [];
   const bySpec = new Map<string, ItemRow[]>();
   for (const item of items) {
-    const key = item.spec || "규격 미지정";
+    const spec = item.spec || "규격 미지정";
+    const key = item.isReturn ? `${spec}|반품` : spec;
     if (!bySpec.has(key)) {
       order.push(key);
       bySpec.set(key, []);
     }
     bySpec.get(key)!.push(item);
   }
-  return order.map((spec) => ({ spec, items: bySpec.get(spec)! }));
+  return order.map((key) => {
+    const groupItems = bySpec.get(key)!;
+    return { spec: groupItems[0].spec || "규격 미지정", items: groupItems };
+  });
 }
 
 // 거래처 > 품목명 순으로 묶어서 트리 형태로 보여주기 위한 그룹핑. 목록 안에서

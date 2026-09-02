@@ -421,6 +421,20 @@ export function NewSaleForm({
     return map;
   }, [initial]);
 
+  // 관리번호(롯)별로 같은 상품을 여러 줄에 나눠 입력하는 경우(코드베이스
+  // 전반에서 흔한 패턴), 재고 부족 여부는 그 줄 하나가 아니라 이 주문에
+  // 걸린 같은 상품의 모든 줄을 합쳐서 따져야 한다 — 줄마다 따로 보면
+  // 재고 50개인데 30개씩 두 줄(합계 60개)을 넣어도 각 줄은 "여유 있음"
+  // 으로 보여 실제로는 부족한데 경고가 안 뜬다.
+  const rowQtyByProduct = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of rows) {
+      if (!row.productId) continue;
+      map.set(row.productId, (map.get(row.productId) ?? 0) + row.quantity);
+    }
+    return map;
+  }, [rows]);
+
   function resolvePrice(forCustomerId: string, productId: string) {
     const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
     if (fromCustomer !== undefined) return fromCustomer;
@@ -1543,7 +1557,12 @@ export function NewSaleForm({
                           // 헷갈린다는 지적이 있어, 계산식 그대로 보여준다 —
                           // 재고에서 이번 출고량을 뺀 잔여 수량이 마이너스면
                           // 그 자체로 초과분을 뜻하므로 빨간색으로 강조한다.
-                          const remaining = availableStock - row.quantity;
+                          // 같은 상품이 이 주문 안에서 여러 줄로 나뉘어 있으면
+                          // (관리번호별 분할 등) 그 줄들의 합계로 부족 여부를
+                          // 판단해야 실제 재고를 넘는 걸 놓치지 않는다.
+                          const totalQty =
+                            rowQtyByProduct.get(row.productId) ?? row.quantity;
+                          const remaining = availableStock - totalQty;
                           const short = remaining < 0;
                           return (
                             <p
@@ -1556,7 +1575,11 @@ export function NewSaleForm({
                             >
                               재고 {availableStock.toLocaleString()}
                               {unit} - 출고 {row.quantity.toLocaleString()}
-                              {unit} = {remaining.toLocaleString()}
+                              {unit}
+                              {totalQty !== row.quantity &&
+                                ` (합계 ${totalQty.toLocaleString()}${unit})`}
+                              {" = "}
+                              {remaining.toLocaleString()}
                               {unit}
                               {short && " (부족)"}
                             </p>
