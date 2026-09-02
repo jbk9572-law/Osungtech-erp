@@ -4,6 +4,9 @@ import { useActionState, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { generateConfirmCode } from "@/lib/confirm-code";
+import { clampDropdownLeft } from "@/lib/dropdown-position";
+
+const PANEL_WIDTH = 220;
 
 // 좁은 표 칸(영수증 썸네일 X버튼, 수금/지급 내역 삭제 등)에서는 확인 폼을
 // 그 자리에 펼치면 표 레이아웃이 깨지므로, 버튼 위치를 기준으로 포털에
@@ -50,7 +53,7 @@ export function InlineConfirmDelete({
         type="button"
         onClick={() => {
           const r = triggerRef.current?.getBoundingClientRect();
-          if (r) setRect({ top: r.bottom + 4, left: r.left });
+          if (r) setRect({ top: r.bottom + 4, left: clampDropdownLeft(r.left, PANEL_WIDTH) });
           setCode(generateConfirmCode());
           setOpen(true);
         }}
@@ -74,7 +77,7 @@ export function InlineConfirmDelete({
               border: "1px solid var(--erp-border)",
               borderRadius: 4,
               padding: 8,
-              width: 220,
+              width: PANEL_WIDTH,
               boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             }}
           >

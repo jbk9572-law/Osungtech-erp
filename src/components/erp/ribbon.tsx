@@ -12,6 +12,7 @@ import {
 import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { clampDropdownLeft } from "@/lib/dropdown-position";
 
 const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F2", label: "신규" },
@@ -79,22 +80,18 @@ export function Ribbon() {
   // 있는데, 드롭다운(최소 220px)을 그 버튼 왼쪽 좌표에 그대로 붙이면
   // 오른쪽 끝이 화면 밖으로 나갈 수 있다 — 알림종 드롭다운에서 겪었던
   // 것과 같은 종류의 문제라, 화면 오른쪽 여백을 넘지 않게 미리 당겨준다.
-  function clampPanelLeft(left: number) {
-    const minWidth = 220;
-    const margin = 8;
-    return Math.max(margin, Math.min(left, window.innerWidth - minWidth - margin));
-  }
+  const DROPDOWN_MIN_WIDTH = 220;
 
   function openFavorites(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    setPanelPos({ top: rect.bottom, left: clampPanelLeft(rect.left) });
+    setPanelPos({ top: rect.bottom, left: clampDropdownLeft(rect.left, DROPDOWN_MIN_WIDTH) });
     setFavorites(getFavorites());
     setOpenPanel((p) => (p === "favorites" ? null : "favorites"));
   }
 
   function openRecents(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    setPanelPos({ top: rect.bottom, left: clampPanelLeft(rect.left) });
+    setPanelPos({ top: rect.bottom, left: clampDropdownLeft(rect.left, DROPDOWN_MIN_WIDTH) });
     setRecents(getRecentMenus());
     setOpenPanel((p) => (p === "recent" ? null : "recent"));
   }
