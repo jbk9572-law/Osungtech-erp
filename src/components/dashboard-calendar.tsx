@@ -354,65 +354,90 @@ type LineGroup = {
   unit: string;
 };
 
-// 한 품목 안의 규격 줄들을, 목적지(또는 재고 여부) 라벨이 같은 것끼리
-// 묶는다. 같은 품목이라도 규격별로 다른 곳(거래처 또는 재고)으로 갔으면
-// "품목명 (라벨)" 헤더를 라벨마다 따로 만들어 그 아래 규격:수량만
-// 나열한다 — 매 줄 끝에 화살표를 반복해 붙이는 대신, 어디로 갔는지가
-// 같은 규격끼리 한 덩어리로 보이게 한다. 화면(productTotals)과 동일하게,
-// 규격 줄이 2개 이상인 그룹에는 맨 아래에 합계를 붙인다 — 줄이 하나뿐이면
-// 바로 위 줄과 같은 숫자가 또 나와 불필요하므로 생략한다.
-function buildProductLineGroups(
+type ItemLabelGroup = { label: string | null; items: ItemRow[] };
+
+// 한 품목 안의 규격들을, 목적지(또는 재고 여부) 라벨이 같은 것끼리 묶는다.
+// 규격마다 화살표를 반복해서 보여주면 한 품목이 통째로 한 거래처로만
+// 나가도 그걸 알아보기 어렵다 — 같은 라벨끼리는 "품목명 (라벨)" 헤더
+// 하나로 묶어서 보여준다(규격이 여러 개라도 같은 곳으로 갔으면 헤더도
+// 하나). 카톡복사 텍스트(buildProductLineGroups)와 화면 표시
+// (대시보드 오늘의 업무 패널)가 이 그룹핑을 그대로 같이 쓴다 — 문자열이
+// 아니라 원본 ItemRow를 담아서, 화면 쪽은 항목별 링크·금액을 그대로
+// 보여줄 수 있다.
+function groupProductItemsByLabel(
   product: ProductGroup,
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
-): LineGroup[] {
-  const groups: LineGroup[] = [];
+): ItemLabelGroup[] {
+  const groups: ItemLabelGroup[] = [];
   const indexByLabel = new Map<string | null, number>();
 
-  for (const group of groupItemsBySpec(product.items)) {
-    const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
-    const unit = group.items[0]?.unit ?? "";
-    const isReturn = group.items.some((it) => it.isReturn);
-    const carryoverSuffix = group.items.some((it) => it.isCarryover) ? " (이월)" : "";
-    const returnSuffix = isReturn ? " (반품)" : "";
+  for (const specGroup of groupItemsBySpec(product.items)) {
+    const quantity = specGroup.items.reduce((sum, it) => sum + it.quantity, 0);
+    const unit = specGroup.items[0]?.unit ?? "";
+    const isReturn = specGroup.items.some((it) => it.isReturn);
 
     let label: string | null = null;
     if (matchPool) {
       const destinations = destinationsIncludingStock(
         product.productName,
-        group.spec,
+        specGroup.spec,
         quantity,
         matchPool,
       );
       label = destinationGroupLabel(destinations, quantity, unit);
     } else if (reversePool && !isReturn) {
-      label = stockGroupLabel(product.productName, group.spec, quantity, reversePool, unit);
+      label = stockGroupLabel(product.productName, specGroup.spec, quantity, reversePool, unit);
     }
 
     let idx = indexByLabel.get(label);
     if (idx === undefined) {
       idx = groups.length;
       indexByLabel.set(label, idx);
-      groups.push({ label, lines: [], specCount: 0, totalQuantity: 0, unit });
+      groups.push({ label, items: [] });
     }
-    groups[idx].lines.push(
-      `    ${group.spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}`,
-    );
-    groups[idx].specCount += 1;
-    groups[idx].totalQuantity += quantity;
-    groups[idx].unit = unit;
-    for (const item of group.items) {
-      if (item.remark) groups[idx].lines.push(`      (비고: ${item.remark})`);
-    }
-  }
-
-  for (const group of groups) {
-    if (group.specCount > 1) {
-      group.lines.push(`    합계 - ${group.totalQuantity.toLocaleString()}${group.unit}`);
-    }
+    groups[idx].items.push(...specGroup.items);
   }
 
   return groups;
+}
+
+// 라벨별로 묶인 항목들을, 카톡복사 텍스트로 쓸 수 있게 규격:수량 줄로
+// 다시 펼친다. 화면(productTotals)과 동일하게, 규격 줄이 2개 이상인
+// 그룹에는 맨 아래에 합계를 붙인다 — 줄이 하나뿐이면 바로 위 줄과 같은
+// 숫자가 또 나와 불필요하므로 생략한다.
+function buildProductLineGroups(
+  product: ProductGroup,
+  matchPool: DestinationPool | undefined,
+  reversePool: DestinationPool | undefined,
+): LineGroup[] {
+  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, items }) => {
+    const group: LineGroup = { label, lines: [], specCount: 0, totalQuantity: 0, unit: items[0]?.unit ?? "" };
+
+    for (const specGroup of groupItemsBySpec(items)) {
+      const quantity = specGroup.items.reduce((sum, it) => sum + it.quantity, 0);
+      const unit = specGroup.items[0]?.unit ?? "";
+      const isReturn = specGroup.items.some((it) => it.isReturn);
+      const carryoverSuffix = specGroup.items.some((it) => it.isCarryover) ? " (이월)" : "";
+      const returnSuffix = isReturn ? " (반품)" : "";
+
+      group.lines.push(
+        `    ${specGroup.spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}`,
+      );
+      group.specCount += 1;
+      group.totalQuantity += quantity;
+      group.unit = unit;
+      for (const item of specGroup.items) {
+        if (item.remark) group.lines.push(`      (비고: ${item.remark})`);
+      }
+    }
+
+    if (group.specCount > 1) {
+      group.lines.push(`    합계 - ${group.totalQuantity.toLocaleString()}${group.unit}`);
+    }
+
+    return group;
+  });
 }
 
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
@@ -547,88 +572,6 @@ function CarryoverBadge() {
       }}
     >
       이월
-    </span>
-  );
-}
-
-// 매입 화면(오늘의 업무 패널)에서만 쓴다 — destinationsIncludingStock을
-// 카톡 복사 텍스트 생성과 그대로 같이 쓴다. 당일 매출 어디로도 안 나간
-// 품목(=재고용 매입)은 배지로, 실제 거래처로 나간 경우는 화살표 텍스트로
-// 구분해서 보여준다.
-function DestinationHint({
-  productName,
-  spec,
-  unit,
-  quantity,
-  pool,
-}: {
-  productName: string;
-  spec: string;
-  unit?: string;
-  quantity: number;
-  pool: DestinationPool;
-}) {
-  const destinations = destinationsIncludingStock(productName, spec, quantity, pool);
-  if (!destinations.length) return null;
-  // 전량이 한 곳으로만 갔으면 숫자는 생략한다 — 카톡복사 텍스트와 동일한
-  // 규칙(destinationGroupLabel 참고), 화면과 복사 결과가 서로 다르게
-  // 보이지 않게 맞춘다.
-  const isFullSingleMatch = destinations.length === 1 && destinations[0].quantity === quantity;
-  const isPureStock = isFullSingleMatch && destinations[0].partnerName === STOCK_PURCHASE_LABEL;
-
-  if (isPureStock) {
-    return (
-      <span
-        className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
-        style={{ background: "var(--erp-bg-disabled)", color: "var(--erp-text-muted)" }}
-      >
-        {STOCK_PURCHASE_LABEL}
-      </span>
-    );
-  }
-
-  return (
-    <span className="font-semibold text-[var(--erp-success)]">
-      {" "}
-      →{" "}
-      {isFullSingleMatch
-        ? destinations[0].partnerName
-        : destinations
-            .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
-            .join(" / ")}
-    </span>
-  );
-}
-
-// 매출 화면(오늘의 업무 패널)에서만 쓴다 — DestinationHint와 대칭으로,
-// 이 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간
-// 것이면 "재고분 출고"를 붙인다(stockGroupLabel은 위에서 카톡 복사
-// 텍스트 생성에도 재사용).
-function StockOriginHint({
-  productName,
-  spec,
-  unit,
-  quantity,
-  pool,
-}: {
-  productName: string;
-  spec: string;
-  unit?: string;
-  quantity: number;
-  pool: DestinationPool;
-}) {
-  const purchasedQuantity = drawFromPool(pool, productName, spec, quantity).reduce(
-    (sum, d) => sum + d.quantity,
-    0,
-  );
-  if (purchasedQuantity >= quantity) return null;
-  const stockQuantity = quantity - purchasedQuantity;
-  return (
-    <span className="font-semibold text-[var(--erp-text-muted)]">
-      {" "}
-      → {STOCK_SALE_LABEL}
-      {purchasedQuantity > 0 &&
-        ` (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`}
     </span>
   );
 }
@@ -953,110 +896,103 @@ export function DashboardCalendar({
                   ).map((partner, pi) => (
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
-                      <div className="space-y-1 pl-3">
-                        {partner.products.map((product, di) => {
-                          const anyCarryover = product.items.some(
-                            (item) => item.isCarryover,
-                          );
-                          return (
-                            <div key={di}>
-                              <p className="font-semibold text-[var(--erp-text)]">
-                                - {product.productName}
-                              </p>
-                              <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                                {product.items.length === 1 ? (
-                                  (() => {
-                                    const item = product.items[0];
-                                    return (
-                                      <li>
-                                        <Link
-                                          href={`/purchases/${item.orderId}`}
-                                          className="flex items-start justify-between gap-2 hover:underline"
-                                        >
-                                          <span className="min-w-0">
-                                            {item.spec || "규격 미지정"} :{" "}
-                                            {item.quantity.toLocaleString()}
-                                            {item.unit}
-                                            {item.isCarryover && (
-                                              <CarryoverBadge />
-                                            )}
-                                            <DestinationHint
-                                              productName={product.productName}
-                                              spec={item.spec}
-                                              unit={item.unit}
-                                              quantity={item.quantity}
-                                              pool={purchaseDestPool}
-                                            />
-                                            {item.remark && (
-                                              <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                비고: {item.remark}
-                                              </span>
-                                            )}
-                                          </span>
-                                          <span className="shrink-0">
-                                            {item.amount.toLocaleString()}원
-                                          </span>
-                                        </Link>
-                                      </li>
-                                    );
-                                  })()
-                                ) : (
-                                  <>
-                                    {product.items.map((item, i) => (
-                                      <li key={i}>
-                                        <Link
-                                          href={`/purchases/${item.orderId}`}
-                                          className="flex items-start justify-between gap-2 hover:underline"
-                                        >
-                                          <span className="min-w-0">
-                                            {item.spec || "규격 미지정"} :{" "}
-                                            {item.quantity.toLocaleString()}
-                                            {item.unit}
-                                            <DestinationHint
-                                              productName={product.productName}
-                                              spec={item.spec}
-                                              unit={item.unit}
-                                              quantity={item.quantity}
-                                              pool={purchaseDestPool}
-                                            />
-                                            {item.remark && (
-                                              <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                비고: {item.remark}
-                                              </span>
-                                            )}
-                                          </span>
-                                          <span className="shrink-0">
-                                            {item.amount.toLocaleString()}원
-                                          </span>
-                                        </Link>
-                                      </li>
-                                    ))}
-                                    {(() => {
-                                      const totals = productTotals(
-                                        product.items,
-                                      );
+                      <div className="space-y-3 pl-3">
+                        {partner.products.flatMap((product, di) =>
+                          groupProductItemsByLabel(
+                            product,
+                            purchaseDestPool,
+                            undefined,
+                          ).map((group, gi) => {
+                            const anyCarryover = group.items.some(
+                              (item) => item.isCarryover,
+                            );
+                            return (
+                              <div key={`${di}-${gi}`}>
+                                <p className="font-semibold text-[var(--erp-text)]">
+                                  - {product.productName}
+                                  {group.label && ` (${group.label})`}
+                                </p>
+                                <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
+                                  {group.items.length === 1 ? (
+                                    (() => {
+                                      const item = group.items[0];
                                       return (
-                                        <li className="flex items-start justify-between gap-2">
-                                          <span className="min-w-0">
-                                            합계 -{" "}
-                                            {totals.quantity.toLocaleString()}
-                                            {totals.unit}
-                                            {anyCarryover && <CarryoverBadge />}
-                                          </span>
-                                          <span className="shrink-0">
-                                            {totals.amount.toLocaleString()}원
-                                          </span>
+                                        <li>
+                                          <Link
+                                            href={`/purchases/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
+                                          >
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} :{" "}
+                                              {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.isCarryover && (
+                                                <CarryoverBadge />
+                                              )}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">
+                                              {item.amount.toLocaleString()}원
+                                            </span>
+                                          </Link>
                                         </li>
                                       );
-                                    })()}
-                                  </>
-                                )}
-                              </ul>
-                            </div>
-                          );
-                        })}
+                                    })()
+                                  ) : (
+                                    <>
+                                      {group.items.map((item, i) => (
+                                        <li key={i}>
+                                          <Link
+                                            href={`/purchases/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
+                                          >
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} :{" "}
+                                              {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">
+                                              {item.amount.toLocaleString()}원
+                                            </span>
+                                          </Link>
+                                        </li>
+                                      ))}
+                                      {(() => {
+                                        const totals = productTotals(
+                                          group.items,
+                                        );
+                                        return (
+                                          <li className="flex items-start justify-between gap-2">
+                                            <span className="min-w-0">
+                                              합계 -{" "}
+                                              {totals.quantity.toLocaleString()}
+                                              {totals.unit}
+                                              {anyCarryover && <CarryoverBadge />}
+                                            </span>
+                                            <span className="shrink-0">
+                                              {totals.amount.toLocaleString()}원
+                                            </span>
+                                          </li>
+                                        );
+                                      })()}
+                                    </>
+                                  )}
+                                </ul>
+                              </div>
+                            );
+                          }),
+                        )}
                         {partner.paperCalcBlocks.map((block, bi) => (
-                          <div key={bi}>
+                          <div key={`pc-${bi}`}>
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
                               {block.label && ` (${block.label})`}
@@ -1104,116 +1040,105 @@ export function DashboardCalendar({
                   ).map((partner, pi) => (
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
-                      <div className="space-y-1 pl-3">
-                        {partner.products.map((product, di) => {
-                          const anyCarryover = product.items.some(
-                            (item) => item.isCarryover,
-                          );
-                          return (
-                            <div key={di}>
-                              <p className="font-semibold text-[var(--erp-text)]">
-                                - {product.productName}
-                              </p>
-                              <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                                {product.items.length === 1 ? (
-                                  (() => {
-                                    const item = product.items[0];
-                                    return (
-                                      <li>
-                                        <Link
-                                          href={`/sales/${item.orderId}`}
-                                          className="flex items-start justify-between gap-2 hover:underline"
-                                        >
-                                          <span className="min-w-0">
-                                            {item.spec || "규격 미지정"} :{" "}
-                                            {item.quantity.toLocaleString()}
-                                            {item.unit}
-                                            {item.isCarryover && (
-                                              <CarryoverBadge />
-                                            )}
-                                            {item.isReturn && <ReturnBadge />}
-                                            {!item.isReturn && (
-                                              <StockOriginHint
-                                                productName={product.productName}
-                                                spec={item.spec}
-                                                unit={item.unit}
-                                                quantity={item.quantity}
-                                                pool={saleOriginPool}
-                                              />
-                                            )}
-                                            {item.remark && (
-                                              <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                비고: {item.remark}
-                                              </span>
-                                            )}
-                                          </span>
-                                          <span className="shrink-0">
-                                            {item.amount.toLocaleString()}원
-                                          </span>
-                                        </Link>
-                                      </li>
-                                    );
-                                  })()
-                                ) : (
-                                  <>
-                                    {product.items.map((item, i) => (
-                                      <li key={i}>
-                                        <Link
-                                          href={`/sales/${item.orderId}`}
-                                          className="flex items-start justify-between gap-2 hover:underline"
-                                        >
-                                          <span className="min-w-0">
-                                            {item.spec || "규격 미지정"} :{" "}
-                                            {item.quantity.toLocaleString()}
-                                            {item.unit}
-                                            {item.isReturn && <ReturnBadge />}
-                                            {!item.isReturn && (
-                                              <StockOriginHint
-                                                productName={product.productName}
-                                                spec={item.spec}
-                                                unit={item.unit}
-                                                quantity={item.quantity}
-                                                pool={saleOriginPool}
-                                              />
-                                            )}
-                                            {item.remark && (
-                                              <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                비고: {item.remark}
-                                              </span>
-                                            )}
-                                          </span>
-                                          <span className="shrink-0">
-                                            {item.amount.toLocaleString()}원
-                                          </span>
-                                        </Link>
-                                      </li>
-                                    ))}
-                                    {(() => {
-                                      const totals = productTotals(
-                                        product.items,
-                                      );
+                      <div className="space-y-3 pl-3">
+                        {partner.products.flatMap((product, di) =>
+                          groupProductItemsByLabel(
+                            product,
+                            undefined,
+                            saleOriginPool,
+                          ).map((group, gi) => {
+                            const anyCarryover = group.items.some(
+                              (item) => item.isCarryover,
+                            );
+                            return (
+                              <div key={`${di}-${gi}`}>
+                                <p className="font-semibold text-[var(--erp-text)]">
+                                  - {product.productName}
+                                  {group.label && ` (${group.label})`}
+                                </p>
+                                <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
+                                  {group.items.length === 1 ? (
+                                    (() => {
+                                      const item = group.items[0];
                                       return (
-                                        <li className="flex items-start justify-between gap-2">
-                                          <span className="min-w-0">
-                                            합계 -{" "}
-                                            {totals.quantity.toLocaleString()}
-                                            {totals.unit}
-                                            {anyCarryover && <CarryoverBadge />}
-                                          </span>
-                                          <span className="shrink-0">
-                                            {totals.amount.toLocaleString()}원
-                                          </span>
+                                        <li>
+                                          <Link
+                                            href={`/sales/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
+                                          >
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} :{" "}
+                                              {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.isCarryover && (
+                                                <CarryoverBadge />
+                                              )}
+                                              {item.isReturn && <ReturnBadge />}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">
+                                              {item.amount.toLocaleString()}원
+                                            </span>
+                                          </Link>
                                         </li>
                                       );
-                                    })()}
-                                  </>
-                                )}
-                              </ul>
-                            </div>
-                          );
-                        })}
+                                    })()
+                                  ) : (
+                                    <>
+                                      {group.items.map((item, i) => (
+                                        <li key={i}>
+                                          <Link
+                                            href={`/sales/${item.orderId}`}
+                                            className="flex items-start justify-between gap-2 hover:underline"
+                                          >
+                                            <span className="min-w-0">
+                                              {item.spec || "규격 미지정"} :{" "}
+                                              {item.quantity.toLocaleString()}
+                                              {item.unit}
+                                              {item.isReturn && <ReturnBadge />}
+                                              {item.remark && (
+                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
+                                                  비고: {item.remark}
+                                                </span>
+                                              )}
+                                            </span>
+                                            <span className="shrink-0">
+                                              {item.amount.toLocaleString()}원
+                                            </span>
+                                          </Link>
+                                        </li>
+                                      ))}
+                                      {(() => {
+                                        const totals = productTotals(
+                                          group.items,
+                                        );
+                                        return (
+                                          <li className="flex items-start justify-between gap-2">
+                                            <span className="min-w-0">
+                                              합계 -{" "}
+                                              {totals.quantity.toLocaleString()}
+                                              {totals.unit}
+                                              {anyCarryover && <CarryoverBadge />}
+                                            </span>
+                                            <span className="shrink-0">
+                                              {totals.amount.toLocaleString()}원
+                                            </span>
+                                          </li>
+                                        );
+                                      })()}
+                                    </>
+                                  )}
+                                </ul>
+                              </div>
+                            );
+                          }),
+                        )}
                         {partner.paperCalcBlocks.map((block, bi) => (
-                          <div key={bi}>
+                          <div key={`pc-${bi}`}>
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
                               {block.label && ` (${block.label})`}
