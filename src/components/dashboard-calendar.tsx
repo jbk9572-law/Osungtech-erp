@@ -292,27 +292,17 @@ function drawFromPool(
 const STOCK_PURCHASE_LABEL = "재고용 매입";
 const STOCK_SALE_LABEL = "재고분 출고";
 
-// destinations 목록을 사람이 읽을 라벨로 만든다. 전량이 한 곳으로만
-// 갔으면 그 이름만, 여러 곳/일부만 갔으면 목적지별 수량을 붙여 나열한다.
-// 화면의 화살표 힌트와 카톡복사의 그룹 헤더가 이 라벨을 그대로 같이 쓴다.
-function destinationGroupLabel(
-  destinations: { partnerName: string; quantity: number }[],
-  incomingQuantity: number,
-  unit: string,
-): string | null {
-  if (!destinations.length) return null;
-  if (destinations.length === 1 && destinations[0].quantity === incomingQuantity) {
-    return destinations[0].partnerName;
-  }
-  return destinations
-    .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit}`)
-    .join(" / ");
+// 회사명 자체에 이미 "(주)"처럼 괄호가 들어있는 경우가 많아, 목적지
+// 표시는 대괄호로 감싸 구분한다. 실제 거래처로 나간 것이면 화살표를
+// 붙이고, 재고로 남는 것이면(그 어디로도 안 나간 몫) 화살표 없이
+// 라벨만 붙인다.
+function formatDestinationLabel(label: string, isStock: boolean): string {
+  return isStock ? `[${label}]` : `-> [${label}]`;
 }
 
 // 매입 품목이 당일 매출로 전부/일부 나가고 남는 수량이 있으면, 그 남는
-// 만큼을 "재고용 매입"이라는 가상의 목적지로 채워 넣는다. 그러면
-// destinationGroupLabel을 그대로 재사용해서 "전량 재고면 이름만, 일부만
-// 재고면 다른 목적지들과 같이 수량을 붙여" 표시할 수 있다.
+// 만큼을 "재고용 매입"이라는 가상의 목적지로 채워 넣는다 — groupProductItemsByLabel이
+// 실제 거래처 몫과 재고 몫을 구분해 나눌 수 있게 한다.
 function destinationsIncludingStock(
   productName: string,
   spec: string,
@@ -326,77 +316,118 @@ function destinationsIncludingStock(
   return [...destinations, { partnerName: STOCK_PURCHASE_LABEL, quantity: leftover }];
 }
 
-// 매출 품목이 당일 매입과 완전히 일치하면 라벨 없음(당일 사입 그대로
-// 나간 것이라 따로 표시할 필요 없음), 전량 재고면 "재고분 출고", 일부만
-// 재고면 몇 개가 재고에서 나갔는지 붙인다.
-function stockGroupLabel(
-  productName: string,
-  spec: string,
-  soldQuantity: number,
-  pool: DestinationPool,
-  unit: string,
-): string | null {
-  const purchasedQuantity = drawFromPool(pool, productName, spec, soldQuantity).reduce(
-    (sum, d) => sum + d.quantity,
-    0,
-  );
-  if (purchasedQuantity >= soldQuantity) return null;
-  if (purchasedQuantity <= 0) return STOCK_SALE_LABEL;
-  const stockQuantity = soldQuantity - purchasedQuantity;
-  return `${stockQuantity.toLocaleString()}${unit}는 ${STOCK_SALE_LABEL}`;
+// 규격 하나의 원본 항목들에서 앞에서부터 quantity만큼만 잘라낸다. 경계에
+// 걸친 항목은 두 조각으로 나뉘고, 금액은 수량 비율대로 쪼갠다 — 이 파일
+// 안에서 이미 쓰고 있는 방식(splitPaperCalcByDestination)과 같은 원리다.
+// 실제로 어느 물리적 항목이 어느 목적지로 갔는지는 알 방법이 없으니(예:
+// 롯 번호별로 나뉜 줄), 목록 순서대로 우선 채운다는 표시상의 규칙이다.
+function takeItems(items: ItemRow[], quantity: number): { taken: ItemRow[]; rest: ItemRow[] } {
+  const taken: ItemRow[] = [];
+  const rest: ItemRow[] = [];
+  let remaining = quantity;
+  for (const item of items) {
+    if (remaining <= 0) {
+      rest.push(item);
+      continue;
+    }
+    if (item.quantity <= remaining) {
+      taken.push(item);
+      remaining -= item.quantity;
+    } else {
+      const takeQty = remaining;
+      const takeAmount = Math.round((item.amount * takeQty) / item.quantity);
+      taken.push({ ...item, quantity: takeQty, amount: takeAmount });
+      rest.push({ ...item, quantity: item.quantity - takeQty, amount: item.amount - takeAmount });
+      remaining = 0;
+    }
+  }
+  return { taken, rest };
 }
 
 type LineGroup = {
   label: string | null;
+  isStock: boolean;
   lines: string[];
   specCount: number;
   totalQuantity: number;
   unit: string;
 };
 
-type ItemLabelGroup = { label: string | null; items: ItemRow[] };
+type LabeledItem = { item: ItemRow; note: string | null };
+type ItemLabelGroup = { label: string | null; isStock: boolean; items: LabeledItem[] };
 
-// 한 품목 안의 규격들을, 목적지(또는 재고 여부) 라벨이 같은 것끼리 묶는다.
-// 규격마다 화살표를 반복해서 보여주면 한 품목이 통째로 한 거래처로만
-// 나가도 그걸 알아보기 어렵다 — 같은 라벨끼리는 "품목명 (라벨)" 헤더
-// 하나로 묶어서 보여준다(규격이 여러 개라도 같은 곳으로 갔으면 헤더도
-// 하나). 카톡복사 텍스트(buildProductLineGroups)와 화면 표시
-// (대시보드 오늘의 업무 패널)가 이 그룹핑을 그대로 같이 쓴다 — 문자열이
-// 아니라 원본 ItemRow를 담아서, 화면 쪽은 항목별 링크·금액을 그대로
-// 보여줄 수 있다.
+// 한 품목 안의 규격들을, 목적지(또는 재고 여부)별로 묶는다. 규격 하나가
+// 통째로 한 거래처(또는 재고)로만 갔으면 그 그룹 하나로, 일부는 거래처로
+// 나머지는 재고로 나뉘면 실제로 나간 만큼만 그 거래처 그룹에 넣고(남는
+// 몫은 그 줄에 "(NNN는 재고)" 메모로만 붙인다 — 재고 그룹 자체의 합계에는
+// 안 섞여서, "전량 재고로 남은 규격들끼리의 합"이라는 의미가 흐려지지
+// 않는다). 카톡복사 텍스트(buildProductLineGroups)와 화면 표시(대시보드
+// 오늘의 업무 패널)가 이 그룹핑을 그대로 같이 쓴다 — 문자열이 아니라
+// 원본 ItemRow를 담아서, 화면 쪽은 항목별 링크·금액을 그대로 보여줄 수
+// 있다.
 function groupProductItemsByLabel(
   product: ProductGroup,
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
 ): ItemLabelGroup[] {
   const groups: ItemLabelGroup[] = [];
-  const indexByLabel = new Map<string | null, number>();
+  const indexByKey = new Map<string, number>();
+
+  function bucket(label: string | null, isStock: boolean): ItemLabelGroup {
+    const key = `${isStock ? "s" : "r"}:${label ?? ""}`;
+    let idx = indexByKey.get(key);
+    if (idx === undefined) {
+      idx = groups.length;
+      indexByKey.set(key, idx);
+      groups.push({ label, isStock, items: [] });
+    }
+    return groups[idx];
+  }
+
+  function push(label: string | null, isStock: boolean, items: ItemRow[], note: string | null = null) {
+    bucket(label, isStock).items.push(...items.map((item) => ({ item, note })));
+  }
 
   for (const specGroup of groupItemsBySpec(product.items)) {
     const quantity = specGroup.items.reduce((sum, it) => sum + it.quantity, 0);
     const unit = specGroup.items[0]?.unit ?? "";
     const isReturn = specGroup.items.some((it) => it.isReturn);
 
-    let label: string | null = null;
     if (matchPool) {
-      const destinations = destinationsIncludingStock(
-        product.productName,
-        specGroup.spec,
-        quantity,
-        matchPool,
-      );
-      label = destinationGroupLabel(destinations, quantity, unit);
-    } else if (reversePool && !isReturn) {
-      label = stockGroupLabel(product.productName, specGroup.spec, quantity, reversePool, unit);
-    }
+      const destinations = destinationsIncludingStock(product.productName, specGroup.spec, quantity, matchPool);
+      const real = destinations.filter((d) => d.partnerName !== STOCK_PURCHASE_LABEL);
+      const stock = destinations.find((d) => d.partnerName === STOCK_PURCHASE_LABEL) ?? null;
 
-    let idx = indexByLabel.get(label);
-    if (idx === undefined) {
-      idx = groups.length;
-      indexByLabel.set(label, idx);
-      groups.push({ label, items: [] });
+      if (!real.length) {
+        push(stock?.partnerName ?? null, true, specGroup.items);
+        continue;
+      }
+
+      let remaining = specGroup.items;
+      real.forEach((d, i) => {
+        const { taken, rest } = takeItems(remaining, d.quantity);
+        remaining = rest;
+        const isLast = i === real.length - 1;
+        const note = isLast && stock ? `${stock.quantity.toLocaleString()}${unit}는 재고` : null;
+        push(d.partnerName, false, taken, note);
+      });
+    } else if (reversePool && !isReturn) {
+      const purchasedQuantity = drawFromPool(reversePool, product.productName, specGroup.spec, quantity).reduce(
+        (sum, d) => sum + d.quantity,
+        0,
+      );
+      if (purchasedQuantity >= quantity) {
+        push(null, false, specGroup.items);
+      } else if (purchasedQuantity <= 0) {
+        push(STOCK_SALE_LABEL, true, specGroup.items);
+      } else {
+        const { taken, rest } = takeItems(specGroup.items, purchasedQuantity);
+        push(null, false, taken);
+        push(STOCK_SALE_LABEL, true, rest);
+      }
+    } else {
+      push(null, false, specGroup.items);
     }
-    groups[idx].items.push(...specGroup.items);
   }
 
   return groups;
@@ -411,24 +442,45 @@ function buildProductLineGroups(
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
 ): LineGroup[] {
-  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, items }) => {
-    const group: LineGroup = { label, lines: [], specCount: 0, totalQuantity: 0, unit: items[0]?.unit ?? "" };
+  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, isStock, items }) => {
+    const group: LineGroup = {
+      label,
+      isStock,
+      lines: [],
+      specCount: 0,
+      totalQuantity: 0,
+      unit: items[0]?.item.unit ?? "",
+    };
 
-    for (const specGroup of groupItemsBySpec(items)) {
-      const quantity = specGroup.items.reduce((sum, it) => sum + it.quantity, 0);
-      const unit = specGroup.items[0]?.unit ?? "";
-      const isReturn = specGroup.items.some((it) => it.isReturn);
-      const carryoverSuffix = specGroup.items.some((it) => it.isCarryover) ? " (이월)" : "";
+    const order: string[] = [];
+    const bySpec = new Map<string, LabeledItem[]>();
+    for (const li of items) {
+      const key = li.item.spec || "규격 미지정";
+      if (!bySpec.has(key)) {
+        order.push(key);
+        bySpec.set(key, []);
+      }
+      bySpec.get(key)!.push(li);
+    }
+
+    for (const spec of order) {
+      const lis = bySpec.get(spec)!;
+      const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
+      const unit = lis[0]?.item.unit ?? "";
+      const isReturn = lis.some((li) => li.item.isReturn);
+      const carryoverSuffix = lis.some((li) => li.item.isCarryover) ? " (이월)" : "";
       const returnSuffix = isReturn ? " (반품)" : "";
+      const note = lis.map((li) => li.note).find((n) => n) ?? null;
+      const noteSuffix = note ? ` (${note})` : "";
 
       group.lines.push(
-        `    ${specGroup.spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}`,
+        `    ${spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
       );
       group.specCount += 1;
       group.totalQuantity += quantity;
       group.unit = unit;
-      for (const item of specGroup.items) {
-        if (item.remark) group.lines.push(`      (비고: ${item.remark})`);
+      for (const li of lis) {
+        if (li.item.remark) group.lines.push(`      (비고: ${li.item.remark})`);
       }
     }
 
@@ -467,6 +519,10 @@ function appendItemLines(
     if (i > 0) lines.push("");
     lines.push(`- ${partner.partnerName}`);
 
+    // 매입 쪽은 오늘 들어온 걸 기준으로 "입고합계", 매출 쪽은 오늘 나간
+    // 걸 기준으로 "출고합계" — 방향에 맞는 말로 부른다.
+    const grandTotalLabel = matchAgainst ? "입고합계" : "출고합계";
+
     let isFirstGroup = true;
     partner.products.forEach((product) => {
       const productGroups = buildProductLineGroups(product, matchPool, reversePool);
@@ -475,10 +531,17 @@ function appendItemLines(
         isFirstGroup = false;
         lines.push(
           group.label
-            ? `  · ${product.productName} (${group.label})`
+            ? `  · ${product.productName} ${formatDestinationLabel(group.label, group.isStock)}`
             : `  · ${product.productName}`,
         );
         lines.push(...group.lines);
+      }
+      // 한 품목이 목적지별로 여러 줄로 나뉘면, 전체를 합친 숫자를 한 번
+      // 더 보여준다 — 그룹 하나뿐이면 그 그룹의 합계가 곧 전체이므로 생략.
+      if (productGroups.length > 1) {
+        const grandTotal = productTotals(product.items);
+        lines.push("");
+        lines.push(`  ${grandTotalLabel} - ${grandTotal.quantity.toLocaleString()}${grandTotal.unit}`);
       }
     });
 
@@ -487,7 +550,7 @@ function appendItemLines(
       isFirstGroup = false;
       lines.push(
         paperCalcBlock.label
-          ? `  · ${paperStockProductName} (${paperCalcBlock.label})`
+          ? `  · ${paperStockProductName} ${formatDestinationLabel(paperCalcBlock.label, paperCalcBlock.label === STOCK_PURCHASE_LABEL)}`
           : `  · ${paperStockProductName}`,
       );
       for (const line of formatPaperCalcSizeLines(paperCalcBlock.sizes)) {
@@ -897,25 +960,27 @@ export function DashboardCalendar({
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
                       <div className="space-y-3 pl-3">
-                        {partner.products.flatMap((product, di) =>
-                          groupProductItemsByLabel(
+                        {partner.products.flatMap((product, di) => {
+                          const groups = groupProductItemsByLabel(
                             product,
                             purchaseDestPool,
                             undefined,
-                          ).map((group, gi) => {
+                          );
+                          const blocks = groups.map((group, gi) => {
                             const anyCarryover = group.items.some(
-                              (item) => item.isCarryover,
+                              ({ item }) => item.isCarryover,
                             );
                             return (
                               <div key={`${di}-${gi}`}>
                                 <p className="font-semibold text-[var(--erp-text)]">
                                   - {product.productName}
-                                  {group.label && ` (${group.label})`}
+                                  {group.label &&
+                                    ` ${formatDestinationLabel(group.label, group.isStock)}`}
                                 </p>
                                 <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {group.items.length === 1 ? (
                                     (() => {
-                                      const item = group.items[0];
+                                      const { item, note } = group.items[0];
                                       return (
                                         <li>
                                           <Link
@@ -926,6 +991,12 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {item.quantity.toLocaleString()}
                                               {item.unit}
+                                              {note && (
+                                                <span className="text-[10px]">
+                                                  {" "}
+                                                  ({note})
+                                                </span>
+                                              )}
                                               {item.isCarryover && (
                                                 <CarryoverBadge />
                                               )}
@@ -944,7 +1015,7 @@ export function DashboardCalendar({
                                     })()
                                   ) : (
                                     <>
-                                      {group.items.map((item, i) => (
+                                      {group.items.map(({ item, note }, i) => (
                                         <li key={i}>
                                           <Link
                                             href={`/purchases/${item.orderId}`}
@@ -954,6 +1025,12 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {item.quantity.toLocaleString()}
                                               {item.unit}
+                                              {note && (
+                                                <span className="text-[10px]">
+                                                  {" "}
+                                                  ({note})
+                                                </span>
+                                              )}
                                               {item.remark && (
                                                 <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                   비고: {item.remark}
@@ -968,7 +1045,7 @@ export function DashboardCalendar({
                                       ))}
                                       {(() => {
                                         const totals = productTotals(
-                                          group.items,
+                                          group.items.map(({ item }) => item),
                                         );
                                         return (
                                           <li className="flex items-start justify-between gap-2">
@@ -989,13 +1066,33 @@ export function DashboardCalendar({
                                 </ul>
                               </div>
                             );
-                          }),
-                        )}
+                          });
+                          if (groups.length > 1) {
+                            const grand = productTotals(product.items);
+                            blocks.push(
+                              <div
+                                key={`${di}-grand`}
+                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)]"
+                                style={{ borderColor: "var(--erp-border)" }}
+                              >
+                                <span className="min-w-0">
+                                  입고합계 - {grand.quantity.toLocaleString()}
+                                  {grand.unit}
+                                </span>
+                                <span className="shrink-0">
+                                  {grand.amount.toLocaleString()}원
+                                </span>
+                              </div>,
+                            );
+                          }
+                          return blocks;
+                        })}
                         {partner.paperCalcBlocks.map((block, bi) => (
                           <div key={`pc-${bi}`}>
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
-                              {block.label && ` (${block.label})`}
+                              {block.label &&
+                                ` ${formatDestinationLabel(block.label, block.label === STOCK_PURCHASE_LABEL)}`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                               {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
@@ -1041,25 +1138,27 @@ export function DashboardCalendar({
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
                       <div className="space-y-3 pl-3">
-                        {partner.products.flatMap((product, di) =>
-                          groupProductItemsByLabel(
+                        {partner.products.flatMap((product, di) => {
+                          const groups = groupProductItemsByLabel(
                             product,
                             undefined,
                             saleOriginPool,
-                          ).map((group, gi) => {
+                          );
+                          const blocks = groups.map((group, gi) => {
                             const anyCarryover = group.items.some(
-                              (item) => item.isCarryover,
+                              ({ item }) => item.isCarryover,
                             );
                             return (
                               <div key={`${di}-${gi}`}>
                                 <p className="font-semibold text-[var(--erp-text)]">
                                   - {product.productName}
-                                  {group.label && ` (${group.label})`}
+                                  {group.label &&
+                                    ` ${formatDestinationLabel(group.label, group.isStock)}`}
                                 </p>
                                 <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {group.items.length === 1 ? (
                                     (() => {
-                                      const item = group.items[0];
+                                      const { item, note } = group.items[0];
                                       return (
                                         <li>
                                           <Link
@@ -1070,6 +1169,12 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {item.quantity.toLocaleString()}
                                               {item.unit}
+                                              {note && (
+                                                <span className="text-[10px]">
+                                                  {" "}
+                                                  ({note})
+                                                </span>
+                                              )}
                                               {item.isCarryover && (
                                                 <CarryoverBadge />
                                               )}
@@ -1089,7 +1194,7 @@ export function DashboardCalendar({
                                     })()
                                   ) : (
                                     <>
-                                      {group.items.map((item, i) => (
+                                      {group.items.map(({ item, note }, i) => (
                                         <li key={i}>
                                           <Link
                                             href={`/sales/${item.orderId}`}
@@ -1099,6 +1204,12 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {item.quantity.toLocaleString()}
                                               {item.unit}
+                                              {note && (
+                                                <span className="text-[10px]">
+                                                  {" "}
+                                                  ({note})
+                                                </span>
+                                              )}
                                               {item.isReturn && <ReturnBadge />}
                                               {item.remark && (
                                                 <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
@@ -1114,7 +1225,7 @@ export function DashboardCalendar({
                                       ))}
                                       {(() => {
                                         const totals = productTotals(
-                                          group.items,
+                                          group.items.map(({ item }) => item),
                                         );
                                         return (
                                           <li className="flex items-start justify-between gap-2">
@@ -1135,13 +1246,33 @@ export function DashboardCalendar({
                                 </ul>
                               </div>
                             );
-                          }),
-                        )}
+                          });
+                          if (groups.length > 1) {
+                            const grand = productTotals(product.items);
+                            blocks.push(
+                              <div
+                                key={`${di}-grand`}
+                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)]"
+                                style={{ borderColor: "var(--erp-border)" }}
+                              >
+                                <span className="min-w-0">
+                                  출고합계 - {grand.quantity.toLocaleString()}
+                                  {grand.unit}
+                                </span>
+                                <span className="shrink-0">
+                                  {grand.amount.toLocaleString()}원
+                                </span>
+                              </div>,
+                            );
+                          }
+                          return blocks;
+                        })}
                         {partner.paperCalcBlocks.map((block, bi) => (
                           <div key={`pc-${bi}`}>
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
-                              {block.label && ` (${block.label})`}
+                              {block.label &&
+                                ` ${formatDestinationLabel(block.label, block.label === STOCK_SALE_LABEL)}`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                               {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
