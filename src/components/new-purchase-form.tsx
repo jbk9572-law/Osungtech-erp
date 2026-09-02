@@ -33,6 +33,7 @@ import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { nextMonthLabel } from "@/lib/carryover";
+import { calcVat } from "@/lib/tax";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -688,7 +689,7 @@ export function NewPurchaseForm({
     (sum, row) => sum + row.quantity * row.unitCost,
     0,
   );
-  const taxAmount = Math.round(supplyAmount * 0.1);
+  const taxAmount = calcVat(supplyAmount);
   const total = supplyAmount + taxAmount;
 
   const itemsJson = JSON.stringify(
@@ -1322,11 +1323,11 @@ export function NewPurchaseForm({
                     className="num"
                     style={{ color: "var(--erp-text-muted)" }}
                   >
-                    {Math.round(pendingCalcAmount * 0.1).toLocaleString()}원
+                    {calcVat(pendingCalcAmount).toLocaleString()}원
                   </td>
                   <td className="num">
                     {(
-                      pendingCalcAmount + Math.round(pendingCalcAmount * 0.1)
+                      pendingCalcAmount + calcVat(pendingCalcAmount)
                     ).toLocaleString()}
                     원
                   </td>
@@ -1590,15 +1591,13 @@ export function NewPurchaseForm({
                       className="num"
                       style={{ color: "var(--erp-text-muted)" }}
                     >
-                      {Math.round(
-                        row.quantity * row.unitCost * 0.1,
-                      ).toLocaleString()}
+                      {calcVat(row.quantity * row.unitCost).toLocaleString()}
                       원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
                       {(
                         row.quantity * row.unitCost +
-                        Math.round(row.quantity * row.unitCost * 0.1)
+                        calcVat(row.quantity * row.unitCost)
                       ).toLocaleString()}
                       원
                     </td>

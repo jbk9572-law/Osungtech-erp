@@ -9,6 +9,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
+import { calcVat } from "@/lib/tax";
 
 type View = "product" | "supplier" | "customer";
 
@@ -320,7 +321,7 @@ export default async function MonthlyReportPage({
         unit: row.products?.unit ?? null,
         quantity: row.quantity,
         amount,
-        taxAmount: Math.round(amount * 0.1),
+        taxAmount: calcVat(amount),
       };
     });
   const salesCompanyRows: CompanyProductRow[] = (salesRows ?? [])
@@ -339,7 +340,7 @@ export default async function MonthlyReportPage({
         unit: row.products?.unit ?? null,
         quantity: row.quantity * sign,
         amount,
-        taxAmount: Math.round(amount * 0.1),
+        taxAmount: calcVat(amount),
       };
     });
 

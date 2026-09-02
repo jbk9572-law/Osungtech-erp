@@ -15,6 +15,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { calcVat } from "@/lib/tax";
 
 type DisplayRow = PurchaseRow;
 
@@ -88,7 +89,7 @@ export default async function PurchasesPage({
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = Math.round(supplyAmount * 0.1);
+    const taxAmount = calcVat(supplyAmount);
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -263,7 +264,7 @@ export default async function PurchasesPage({
     0,
   );
   const totalTax = filteredTotalsRows.reduce(
-    (sum, row) => sum + Math.round(row.quantity * Number(row.unit_cost) * 0.1),
+    (sum, row) => sum + calcVat(row.quantity * Number(row.unit_cost)),
     0,
   );
   const presets = getDatePresets();

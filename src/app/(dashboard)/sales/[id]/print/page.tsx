@@ -13,6 +13,7 @@ import type { InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 import { getCustomerBalance } from "@/lib/ar-ap";
+import { calcVat } from "@/lib/tax";
 
 export default async function SalesPrintPage({
   params,
@@ -215,7 +216,7 @@ export default async function SalesPrintPage({
 
   const invoiceItems: InvoiceItem[] = (items ?? []).flatMap((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = Math.round(supplyAmount * 0.1);
+    const taxAmount = calcVat(supplyAmount);
     const d = new Date(order.order_date);
     const row: InvoiceItem = {
       id: item.id,

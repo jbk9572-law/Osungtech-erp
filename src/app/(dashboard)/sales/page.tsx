@@ -15,6 +15,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { calcVat } from "@/lib/tax";
 
 type DisplayRow = SalesRow;
 
@@ -90,7 +91,7 @@ export default async function SalesPage({
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = Math.round(supplyAmount * 0.1);
+    const taxAmount = calcVat(supplyAmount);
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -271,7 +272,7 @@ export default async function SalesPage({
     return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
   }, 0);
   const totalTax = filteredTotalsRows.reduce((sum, row) => {
-    const taxAmount = Math.round(row.quantity * Number(row.unit_price) * 0.1);
+    const taxAmount = calcVat(row.quantity * Number(row.unit_price));
     return sum + (row.sales_orders?.is_return ? -taxAmount : taxAmount);
   }, 0);
   const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);

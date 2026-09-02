@@ -10,6 +10,7 @@ import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { calcVat } from "@/lib/tax";
 
 // 매출관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 출고처 이름과 매칭되고 그 출고처가 전용 양식을 쓰는
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
     const isReturn = item.sales_orders?.is_return ?? false;
     const sign = isReturn ? -1 : 1;
     const supplyAmount = item.quantity * Number(item.unit_price) * sign;
-    const taxAmount = Math.round(supplyAmount * 0.1);
+    const taxAmount = calcVat(supplyAmount);
     return {
       거래일자: item.sales_orders?.order_date ?? "",
       구분: isReturn ? "반품" : "매출",

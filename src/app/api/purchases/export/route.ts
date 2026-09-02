@@ -9,6 +9,7 @@ import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { calcVat } from "@/lib/tax";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 공급처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
@@ -113,7 +114,7 @@ export async function GET(request: Request) {
 
   const rows = items.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = Math.round(supplyAmount * 0.1);
+    const taxAmount = calcVat(supplyAmount);
     return {
       매입일자: item.purchase_orders?.purchase_date ?? "",
       공급처명: item.purchase_orders?.suppliers?.name ?? "",

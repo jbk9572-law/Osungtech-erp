@@ -20,6 +20,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
+import { calcVat } from "@/lib/tax";
 
 export default async function SaleDetailPage({
   params,
@@ -57,8 +58,7 @@ export default async function SaleDetailPage({
       .from("paper_calculations")
       .select("id, total_paper, total_sheet, input_items, created_at")
       .eq("sales_order_id", id)
-      .order("created_at", { ascending: false })
-      .limit(1),
+      .order("created_at", { ascending: false }),
     supabase
       .from("paper_stock_overrides")
       .select(
@@ -77,14 +77,22 @@ export default async function SaleDetailPage({
 
   const rows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = Math.round(supplyAmount * 0.1);
+    const taxAmount = calcVat(supplyAmount);
     return { ...item, supplyAmount, taxAmount };
   });
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
 
+  // 이 주문에 모조지 계산이 여러 건 저장돼 있을 수 있다(계산을 나눠서
+  // 여러 번 저장했거나, 할일/입고에서 여러 계산을 한 번에 복사해온 경우) —
+  // 최신 한 건만 보면 TG0 품목 줄에 찍힌 합계 수량(모든 계산의 합)과 이
+  // 아래 규격별 내역이 서로 안 맞게 된다. 목록/인쇄 화면과 동일하게 전부
+  // 합쳐서 보여준다.
   const paperCalcSizeLines = formatPaperCalcSizeLines(
-    mergePaperCalcInputItems([], paperCalcs?.[0]?.input_items),
+    (paperCalcs ?? []).reduce(
+      (sizes, calc) => mergePaperCalcInputItems(sizes, calc.input_items),
+      [] as ReturnType<typeof mergePaperCalcInputItems>,
+    ),
   );
 
   return (
