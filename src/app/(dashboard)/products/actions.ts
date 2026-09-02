@@ -243,7 +243,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       sku: string;
       name: string;
       spec: string | null;
-      unit: string;
+      unit: string | null;
       base_package_qty: number | null;
       cost: number | null;
       price: number | null;
@@ -260,10 +260,10 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       continue;
     }
 
-    // 매입단가/판매가/기초(포장수량) 칸은 여기서 바로 0/null로 확정하지
-    // 않는다 — 아래에서 기존 품목 값과 합쳐서, 이미 등록된 SKU인데 이번
-    // 파일엔 그 칸이 비어있으면 기존 값을 그대로 유지한다(신규 SKU만
-    // 진짜 기본값 0/null을 쓴다).
+    // 규격/단위/공급처/매입단가/판매가/기초(포장수량) 칸은 여기서 바로
+    // 확정하지 않는다 — 아래에서 기존 품목 값과 합쳐서, 이미 등록된
+    // SKU인데 이번 파일엔 그 칸이 비어있으면 기존 값을 그대로
+    // 유지한다(신규 SKU만 진짜 기본값을 쓴다).
     const cost = cellNumber(row, "매입단가");
     const price = cellNumber(row, "판매가");
     const basePackageQty = cellNumber(row, "기초");
@@ -282,7 +282,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         sku,
         name,
         spec: cell(row, "규격") || null,
-        unit: cell(row, "단위") || "ea",
+        unit: cell(row, "단위") || null,
         base_package_qty: basePackageQty,
         cost,
         price,
@@ -300,13 +300,16 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   const existingProducts = skusInFile.length
     ? await fetchAllRows<{
         sku: string;
+        spec: string | null;
+        unit: string;
         cost: number | null;
         price: number | null;
         base_package_qty: number | null;
+        supplier_id: string | null;
       }>((from, to) =>
         supabase
           .from("products")
-          .select("sku, cost, price, base_package_qty")
+          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id")
           .in("sku", skusInFile)
           .range(from, to),
       )
@@ -342,10 +345,14 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       rowNum: r.rowNum,
       payload: {
         ...r.payload,
+        spec: r.payload.spec ?? existing?.spec ?? null,
+        unit: r.payload.unit ?? existing?.unit ?? "ea",
         cost: r.payload.cost ?? existing?.cost ?? 0,
         price: r.payload.price ?? existing?.price ?? 0,
         base_package_qty: r.payload.base_package_qty ?? existing?.base_package_qty ?? null,
-        supplier_id: r.supplierName ? (supplierByName.get(r.supplierName) ?? null) : null,
+        supplier_id: r.supplierName
+          ? (supplierByName.get(r.supplierName) ?? null)
+          : (existing?.supplier_id ?? null),
       },
     };
   });

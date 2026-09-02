@@ -435,6 +435,7 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
       // 사라질 수 있다. 비어있는 칸은 기존 값을 그대로 유지한다.
       const prev = existingById.get(existingId);
       const merged = fillBlankFieldsFromExisting(payload, prev, [
+        "business_number",
         "representative_name",
         "contact_name",
         "email",
