@@ -17,6 +17,7 @@ import { markTodoSideDone } from "@/lib/todo-flow";
 import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
+import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
 
 type PurchaseItemInput = {
   productId: string;
@@ -56,22 +57,6 @@ function parseSaleItems(itemsRaw: string): SaleItemInput[] | null {
 
 // "No"(전표번호) 입력칸을 비워두면 자동 채번(DB 시퀀스 기본값)에 맡기고,
 // 값을 직접 입력했을 때만 그 번호를 그대로 쓴다.
-function parseDocNo(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const n = Number(trimmed);
-  return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
-}
-
-// doc_no에는 유니크 제약이 걸려있어, 직접 입력한 번호가 이미 쓰이고
-// 있으면 postgres 원문 에러 대신 알아볼 수 있는 안내로 바꿔준다.
-function docNoErrorMessage(error: { code?: string; message: string } | null, docNo: number | null): string | null {
-  if (error?.code === "23505" && error.message.includes("doc_no") && docNo != null) {
-    return `이미 사용 중인 전표번호(No: ${docNo})입니다. 다른 번호를 입력하거나 비워서 자동 채번하세요.`;
-  }
-  return null;
-}
-
 // 품목별 수량 합계 맵 — 출고 수량이 매입 수량을 넘는지 미리(DB까지 가기 전에)
 // 확인해서 더 친절한 오류 메시지를 보여주기 위한 용도. 실제 안전장치는
 // create_purchase_and_sale_with_items 함수 안의 검증이다(여기서는 못 걸러도
@@ -415,6 +400,10 @@ export async function createPurchase(
   revalidatePath("/dashboard");
   revalidatePath("/payables");
   revalidatePath(`/suppliers/${supplierId}`);
+  // salesOrderId가 없는(매출도 같이 등록하지 않은) 평범한 매입에 모조지
+  // 계산이 붙어 있는 경우, 여기 오기 전까지는 /paper-calc가 재검증되지
+  // 않아서 방금 저장한 계산이 캐시된 화면에 안 보일 수 있었다.
+  revalidatePath("/paper-calc");
 
   redirect(
     paperCalcWarning

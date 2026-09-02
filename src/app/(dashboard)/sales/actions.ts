@@ -13,6 +13,7 @@ import { markTodoSideDone } from "@/lib/todo-flow";
 import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
+import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
 
 type SaleItemInput = {
   productId: string;
@@ -32,25 +33,6 @@ function parseItems(itemsRaw: string): SaleItemInput[] | null {
   }
 }
 
-// "No"(전표번호) 입력칸을 비워두면 자동 채번(DB 시퀀스 기본값)에 맡기고,
-// 값을 직접 입력했을 때만 그 번호를 그대로 쓴다 — 인쇄되는 거래명세표의
-// No와 값을 맞추고 싶을 때 쓰는 용도라 형식 검증은 하지 않는다.
-function parseDocNo(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const n = Number(trimmed);
-  return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
-}
-
-// doc_no에는 유니크 제약이 걸려있어(00000000000020/00000000000066), 직접
-// 입력한 번호가 이미 쓰이고 있으면 postgres 원문 에러("duplicate key
-// value violates unique constraint...") 대신 알아볼 수 있는 안내로 바꿔준다.
-function docNoErrorMessage(error: { code?: string; message: string } | null, docNo: number | null): string | null {
-  if (error?.code === "23505" && error.message.includes("doc_no") && docNo != null) {
-    return `이미 사용 중인 전표번호(No: ${docNo})입니다. 다른 번호를 입력하거나 비워서 자동 채번하세요.`;
-  }
-  return null;
-}
 
 export async function createSale(_prevState: FormState, formData: FormData): Promise<FormState> {
   const customerId = String(formData.get("customer_id") ?? "");

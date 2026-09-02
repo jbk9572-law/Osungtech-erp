@@ -42,7 +42,9 @@ export default async function PaperCalcViewPage({
 
   const closeHref = calc.sales_order_id
     ? `/paper-calc?salesOrderId=${calc.sales_order_id}`
-    : "/paper-calc";
+    : calc.purchase_order_id
+      ? `/paper-calc?purchaseOrderId=${calc.purchase_order_id}`
+      : "/paper-calc";
 
   return <PaperCalcReport input={input} result={result} closeHref={closeHref} />;
 }
