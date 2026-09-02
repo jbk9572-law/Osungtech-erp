@@ -66,10 +66,16 @@ type DayData = {
 type Cell = { dateStr: string; day: number } | null;
 
 type ProductGroup = { productName: string; items: ItemRow[] };
+type PaperCalcBlock = {
+  label: string | null;
+  sizes: PaperCalcSizeRow[];
+  totalSheet: number;
+  amount: number;
+};
 type PartnerBlock = {
   partnerName: string;
   products: ProductGroup[];
-  paperCalc?: PaperCalcPartnerEntry;
+  paperCalcBlocks: PaperCalcBlock[];
 };
 
 // 같은 품목 아래 규격별 줄이 여러 개 나뉘어 있는 경우(예: 케이아이티솔루션
@@ -106,9 +112,90 @@ function groupItemsBySpec(items: ItemRow[]) {
 // 모조지 계산은 거래처별로 이미 나뉘어 있으므로, 실제 품목이 없는 거래처라도
 // 모조지만 있으면 그 거래처 블록을 만들어 같이 보여준다 — 어느 거래처로 나간
 // 모조지인지 알 수 있어야 한다는 요구사항 때문.
+// 같은 공급처에서 오늘 산 모조지 원지라도, 실제로는 서로 다른 거래처
+// 주문을 위해 각각 재단된 것일 수 있다(공급처 쪽엔 거래처 구분이 없지만,
+// 매출 쪽 모조지 계산은 거래처별로 이미 나뉘어 있다). 사이즈(가로×세로)를
+// 열쇠 삼아 매입 쪽 합산 사이즈를, 오늘 매출 쪽 거래처별 모조지 계산과
+// 대조해서 원래 어느 거래처 몫이었는지 되짚어 나눈다 — 일반 품목을
+// 품목명+규격으로 매칭하는 matchDestinations와 같은 원리다. 어느 거래처
+// 것으로도 안 잡히고 남는 사이즈는 "재고용 매입"으로 묶는다.
+function splitPaperCalcByDestination(
+  entry: PaperCalcPartnerEntry,
+  otherSidePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
+): PaperCalcBlock[] {
+  const remaining = new Map<string, number>();
+  for (const size of entry.sizes) {
+    const key = `${size.width}x${size.height}`;
+    remaining.set(key, (remaining.get(key) ?? 0) + size.qty);
+  }
+
+  // sizes 안의 qty는 "몇 장을 잘라내는지"(생산 수량)이지 "원지를 몇 연
+  // 썼는지"(totalSheet)가 아니다 — 배치 효율에 따라 둘이 다르므로, 조각
+  // 수량 비율로 연수를 나누면 안 된다. 거래처 몫이 사이즈 그대로 전부
+  // 확보되면(부분 매칭이 아니면) 그 거래처 자신의 모조지 계산이 이미
+  // 정확한 totalSheet를 갖고 있으니 그 값을 그대로 쓴다. 일부만 확보되는
+  // 드문 경우에만 조각 수량 비율로 근사한다.
+  const blocks: PaperCalcBlock[] = [];
+  let allocatedSheets = 0;
+  for (const [partnerName, otherEntry] of Object.entries(otherSidePaperCalcByPartner)) {
+    const matchedSizes: PaperCalcSizeRow[] = [];
+    let matchedPieceQty = 0;
+    let fullyMatched = true;
+    for (const size of otherEntry.sizes) {
+      const key = `${size.width}x${size.height}`;
+      const available = remaining.get(key) ?? 0;
+      const take = Math.min(available, size.qty);
+      if (take < size.qty) fullyMatched = false;
+      if (take <= 0) continue;
+      matchedSizes.push({ width: size.width, height: size.height, qty: take });
+      matchedPieceQty += take;
+      remaining.set(key, available - take);
+    }
+    if (!matchedSizes.length) continue;
+    const otherPieceQty = otherEntry.sizes.reduce((sum, s) => sum + s.qty, 0);
+    const totalSheet = fullyMatched
+      ? otherEntry.totalSheet
+      : otherPieceQty > 0
+        ? Math.round((otherEntry.totalSheet * matchedPieceQty) / otherPieceQty)
+        : 0;
+    allocatedSheets += totalSheet;
+    blocks.push({
+      label: partnerName,
+      sizes: matchedSizes,
+      totalSheet,
+      amount: entry.totalSheet > 0 ? Math.round((entry.amount * totalSheet) / entry.totalSheet) : 0,
+    });
+  }
+
+  // remaining에는 어느 거래처 몫으로도 안 잡히고 남은 사이즈별 수량이
+  // 그대로 남아있다 — 사이즈(가로×세로) 하나당 한 번씩만 담는다.
+  const seenKeys = new Set<string>();
+  const leftoverSizes: PaperCalcSizeRow[] = [];
+  for (const size of entry.sizes) {
+    const key = `${size.width}x${size.height}`;
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    const left = remaining.get(key) ?? 0;
+    if (left > 0) leftoverSizes.push({ width: size.width, height: size.height, qty: left });
+  }
+
+  const leftoverSheets = Math.max(entry.totalSheet - allocatedSheets, 0);
+  if (leftoverSizes.length || leftoverSheets > 0) {
+    blocks.push({
+      label: STOCK_PURCHASE_LABEL,
+      sizes: leftoverSizes,
+      totalSheet: leftoverSheets,
+      amount: entry.totalSheet > 0 ? Math.round((entry.amount * leftoverSheets) / entry.totalSheet) : 0,
+    });
+  }
+
+  return blocks;
+}
+
 function buildPartnerBlocks(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
+  otherSidePaperCalcByPartner?: Record<string, PaperCalcPartnerEntry>,
 ): PartnerBlock[] {
   const blocks: PartnerBlock[] = [];
   const partnerIndex = new Map<string, number>();
@@ -119,7 +206,7 @@ function buildPartnerBlocks(
     if (pi === undefined) {
       pi = blocks.length;
       partnerIndex.set(partnerName, pi);
-      blocks.push({ partnerName, products: [] });
+      blocks.push({ partnerName, products: [], paperCalcBlocks: [] });
     }
     return blocks[pi];
   }
@@ -138,7 +225,9 @@ function buildPartnerBlocks(
   }
 
   for (const [partnerName, entry] of Object.entries(paperCalcByPartner)) {
-    ensurePartner(partnerName).paperCalc = entry;
+    ensurePartner(partnerName).paperCalcBlocks = otherSidePaperCalcByPartner
+      ? splitPaperCalcByDestination(entry, otherSidePaperCalcByPartner)
+      : [{ label: null, sizes: entry.sizes, totalSheet: entry.totalSheet, amount: entry.amount }];
   }
 
   return blocks;
@@ -229,13 +318,21 @@ function stockGroupLabel(
   return `${stockQuantity.toLocaleString()}${unit}는 ${STOCK_SALE_LABEL}`;
 }
 
-type LineGroup = { label: string | null; lines: string[] };
+type LineGroup = {
+  label: string | null;
+  lines: string[];
+  specCount: number;
+  totalQuantity: number;
+  unit: string;
+};
 
 // 한 품목 안의 규격 줄들을, 목적지(또는 재고 여부) 라벨이 같은 것끼리
 // 묶는다. 같은 품목이라도 규격별로 다른 곳(거래처 또는 재고)으로 갔으면
 // "품목명 (라벨)" 헤더를 라벨마다 따로 만들어 그 아래 규격:수량만
 // 나열한다 — 매 줄 끝에 화살표를 반복해 붙이는 대신, 어디로 갔는지가
-// 같은 규격끼리 한 덩어리로 보이게 한다.
+// 같은 규격끼리 한 덩어리로 보이게 한다. 화면(productTotals)과 동일하게,
+// 규격 줄이 2개 이상인 그룹에는 맨 아래에 합계를 붙인다 — 줄이 하나뿐이면
+// 바로 위 줄과 같은 숫자가 또 나와 불필요하므로 생략한다.
 function buildProductLineGroups(
   product: ProductGroup,
   matchAgainst: ItemRow[] | undefined,
@@ -268,13 +365,22 @@ function buildProductLineGroups(
     if (idx === undefined) {
       idx = groups.length;
       indexByLabel.set(label, idx);
-      groups.push({ label, lines: [] });
+      groups.push({ label, lines: [], specCount: 0, totalQuantity: 0, unit });
     }
     groups[idx].lines.push(
       `    ${group.spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}`,
     );
+    groups[idx].specCount += 1;
+    groups[idx].totalQuantity += quantity;
+    groups[idx].unit = unit;
     for (const item of group.items) {
       if (item.remark) groups[idx].lines.push(`      (비고: ${item.remark})`);
+    }
+  }
+
+  for (const group of groups) {
+    if (group.specCount > 1) {
+      group.lines.push(`    합계 - ${group.totalQuantity.toLocaleString()}${group.unit}`);
     }
   }
 
@@ -295,8 +401,9 @@ function appendItemLines(
   lines: string[],
   matchAgainst?: ItemRow[],
   reverseMatchAgainst?: ItemRow[],
+  otherSidePaperCalcByPartner?: Record<string, PaperCalcPartnerEntry>,
 ) {
-  const blocks = buildPartnerBlocks(items, paperCalcByPartner);
+  const blocks = buildPartnerBlocks(items, paperCalcByPartner, otherSidePaperCalcByPartner);
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
     lines.push(`- ${partner.partnerName}`);
@@ -316,13 +423,18 @@ function appendItemLines(
       }
     });
 
-    if (partner.paperCalc) {
+    for (const paperCalcBlock of partner.paperCalcBlocks) {
       if (!isFirstGroup) lines.push("");
-      lines.push(`  · ${paperStockProductName}`);
-      for (const line of formatPaperCalcSizeLines(partner.paperCalc.sizes)) {
+      isFirstGroup = false;
+      lines.push(
+        paperCalcBlock.label
+          ? `  · ${paperStockProductName} (${paperCalcBlock.label})`
+          : `  · ${paperStockProductName}`,
+      );
+      for (const line of formatPaperCalcSizeLines(paperCalcBlock.sizes)) {
         lines.push(`    ${line}`);
       }
-      lines.push(`    합계 : ${partner.paperCalc.totalSheet.toLocaleString()}연`);
+      lines.push(`    합계 - ${paperCalcBlock.totalSheet.toLocaleString()}연`);
     }
   });
 }
@@ -332,7 +444,7 @@ function buildSalesCopyText(
   data: DayData,
   paperStockProductName: string,
 ) {
-  const lines: string[] = [`${dateStr} 매출`, "", "[매출]", ""];
+  const lines: string[] = [`${dateStr} 매출`, "", `[매출] ${data.salesCount}건`, ""];
   appendItemLines(
     data.salesItems,
     data.salesPaperCalcByPartner,
@@ -349,13 +461,15 @@ function buildPurchaseCopyText(
   data: DayData,
   paperStockProductName: string,
 ) {
-  const lines: string[] = [`${dateStr} 매입`, "", "[매입]", ""];
+  const lines: string[] = [`${dateStr} 매입`, "", `[매입] ${data.purchaseCount}건`, ""];
   appendItemLines(
     data.purchaseItems,
     data.purchasePaperCalcByPartner,
     paperStockProductName,
     lines,
     data.salesItems,
+    undefined,
+    data.salesPaperCalcByPartner,
   );
   return lines.join("\n");
 }
@@ -791,6 +905,7 @@ export function DashboardCalendar({
                   {buildPartnerBlocks(
                     selectedData.purchaseItems,
                     selectedData.purchasePaperCalcByPartner,
+                    selectedData.salesPaperCalcByPartner,
                   ).map((partner, pi) => (
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
@@ -896,30 +1011,27 @@ export function DashboardCalendar({
                             </div>
                           );
                         })}
-                        {partner.paperCalc && (
-                          <div>
+                        {partner.paperCalcBlocks.map((block, bi) => (
+                          <div key={bi}>
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
+                              {block.label && ` (${block.label})`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                              {formatPaperCalcSizeLines(
-                                partner.paperCalc.sizes,
-                              ).map((line, i) => (
+                              {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
                                 <li key={i}>{line}</li>
                               ))}
                               <li className="flex items-start justify-between gap-2 text-[var(--erp-primary)]">
                                 <span className="min-w-0">
-                                  합계 -{" "}
-                                  {partner.paperCalc.totalSheet.toLocaleString()}
-                                  연
+                                  합계 - {block.totalSheet.toLocaleString()}연
                                 </span>
                                 <span className="shrink-0">
-                                  {partner.paperCalc.amount.toLocaleString()}원
+                                  {block.amount.toLocaleString()}원
                                 </span>
                               </li>
                             </ul>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -1056,30 +1168,27 @@ export function DashboardCalendar({
                             </div>
                           );
                         })}
-                        {partner.paperCalc && (
-                          <div>
+                        {partner.paperCalcBlocks.map((block, bi) => (
+                          <div key={bi}>
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
+                              {block.label && ` (${block.label})`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                              {formatPaperCalcSizeLines(
-                                partner.paperCalc.sizes,
-                              ).map((line, i) => (
+                              {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
                                 <li key={i}>{line}</li>
                               ))}
                               <li className="flex items-start justify-between gap-2 text-[var(--erp-success)]">
                                 <span className="min-w-0">
-                                  합계 -{" "}
-                                  {partner.paperCalc.totalSheet.toLocaleString()}
-                                  연
+                                  합계 - {block.totalSheet.toLocaleString()}연
                                 </span>
                                 <span className="shrink-0">
-                                  {partner.paperCalc.amount.toLocaleString()}원
+                                  {block.amount.toLocaleString()}원
                                 </span>
                               </li>
                             </ul>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
                   ))}
