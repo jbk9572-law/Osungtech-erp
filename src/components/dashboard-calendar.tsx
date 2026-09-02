@@ -181,13 +181,14 @@ const STOCK_SALE_LABEL = "재고분 출고";
 function destinationGroupLabel(
   destinations: { partnerName: string; quantity: number }[],
   incomingQuantity: number,
+  unit: string,
 ): string | null {
   if (!destinations.length) return null;
   if (destinations.length === 1 && destinations[0].quantity === incomingQuantity) {
     return destinations[0].partnerName;
   }
   return destinations
-    .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}`)
+    .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit}`)
     .join(" / ");
 }
 
@@ -216,6 +217,7 @@ function stockGroupLabel(
   spec: string,
   soldQuantity: number,
   purchaseItems: ItemRow[],
+  unit: string,
 ): string | null {
   const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
     (sum, d) => sum + d.quantity,
@@ -224,7 +226,7 @@ function stockGroupLabel(
   if (purchasedQuantity >= soldQuantity) return null;
   if (purchasedQuantity <= 0) return STOCK_SALE_LABEL;
   const stockQuantity = soldQuantity - purchasedQuantity;
-  return `${stockQuantity.toLocaleString()}개는 ${STOCK_SALE_LABEL}`;
+  return `${stockQuantity.toLocaleString()}${unit}는 ${STOCK_SALE_LABEL}`;
 }
 
 type LineGroup = { label: string | null; lines: string[] };
@@ -244,6 +246,7 @@ function buildProductLineGroups(
 
   for (const group of groupItemsBySpec(product.items)) {
     const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
+    const unit = group.items[0]?.unit ?? "";
     const isReturn = group.items.some((it) => it.isReturn);
     const carryoverSuffix = group.items.some((it) => it.isCarryover) ? " (이월)" : "";
     const returnSuffix = isReturn ? " (반품)" : "";
@@ -256,9 +259,9 @@ function buildProductLineGroups(
         quantity,
         matchAgainst,
       );
-      label = destinationGroupLabel(destinations, quantity);
+      label = destinationGroupLabel(destinations, quantity, unit);
     } else if (reverseMatchAgainst && !isReturn) {
-      label = stockGroupLabel(product.productName, group.spec, quantity, reverseMatchAgainst);
+      label = stockGroupLabel(product.productName, group.spec, quantity, reverseMatchAgainst, unit);
     }
 
     let idx = indexByLabel.get(label);
@@ -268,7 +271,7 @@ function buildProductLineGroups(
       groups.push({ label, lines: [] });
     }
     groups[idx].lines.push(
-      `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}`,
+      `    ${group.spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}`,
     );
     for (const item of group.items) {
       if (item.remark) groups[idx].lines.push(`      (비고: ${item.remark})`);
@@ -319,6 +322,7 @@ function appendItemLines(
       for (const line of formatPaperCalcSizeLines(partner.paperCalc.sizes)) {
         lines.push(`    ${line}`);
       }
+      lines.push(`    합계 : ${partner.paperCalc.totalSheet.toLocaleString()}연`);
     }
   });
 }
