@@ -172,6 +172,27 @@ function destinationTextSuffix(
     .join(" / ")}`;
 }
 
+// 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간 것이면
+// "→ 재고"를 붙인다. 매입 쪽 "→ 거래처명"과 대칭되는 반대 방향 매칭이라
+// matchDestinations를 그대로 재사용해서(품목명+규격 일치) 당일 매입
+// 수량을 합산한 뒤, 판매 수량에 못 미치는 만큼을 재고 출고로 본다.
+function stockOriginSuffix(
+  productName: string,
+  spec: string,
+  soldQuantity: number,
+  purchaseItems: ItemRow[],
+  unit?: string,
+): string {
+  const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
+    (sum, d) => sum + d.quantity,
+    0,
+  );
+  if (purchasedQuantity >= soldQuantity) return "";
+  if (purchasedQuantity <= 0) return " → 재고";
+  const stockQuantity = soldQuantity - purchasedQuantity;
+  return ` → 재고 (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`;
+}
+
 // 이 매입처가 그날 산 모든 품목·규격이 전량 하나의 동일한 거래처로만
 // 나갔는지 확인한다. 그렇다면 품목마다 "→ 거래처"를 반복하는 대신
 // 매입처 이름 옆에 한 번만 표기할 수 있다. 하나라도 나가지 않았거나,
@@ -204,13 +225,15 @@ function uniformPartnerDestination(
 // 담고, 단위(EA/KG 등)는 화면에만 보이고 복사 텍스트에는 숫자만 남긴다.
 // matchAgainst를 넘기면(매입 복사에서만 사용) 새 줄을 늘리는 대신 규격 줄
 // 끝에 "→ 거래처 수량"만 덧붙인다 — 별도 섹션 없이 원래 줄 그대로 정보 하나만
-// 더 붙는 방식이라 줄 수가 늘지 않는다.
+// 더 붙는 방식이라 줄 수가 늘지 않는다. reverseMatchAgainst를 넘기면(매출
+// 복사에서만 사용) 반대로 당일 매입과 매칭 안 되는 만큼 "→ 재고"를 붙인다.
 function appendItemLines(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
   paperStockProductName: string,
   lines: string[],
   matchAgainst?: ItemRow[],
+  reverseMatchAgainst?: ItemRow[],
 ) {
   const blocks = buildPartnerBlocks(items, paperCalcByPartner);
   blocks.forEach((partner, i) => {
@@ -244,8 +267,12 @@ function appendItemLines(
                 quantity,
               )
             : "";
+        const stockSuffix =
+          reverseMatchAgainst && !group.items.some((it) => it.isReturn)
+            ? stockOriginSuffix(product.productName, group.spec, quantity, reverseMatchAgainst)
+            : "";
         lines.push(
-          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}`,
+          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}${stockSuffix}`,
         );
         for (const item of group.items) {
           if (item.remark) lines.push(`      (비고: ${item.remark})`);
@@ -284,6 +311,8 @@ function buildSalesCopyText(
     data.salesPaperCalcByPartner,
     paperStockProductName,
     lines,
+    undefined,
+    data.purchaseItems,
   );
   return lines.join("\n");
 }
@@ -382,6 +411,39 @@ function DestinationHint({
         : destinations
             .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
             .join(" / ")}
+    </span>
+  );
+}
+
+// 매출 화면(오늘의 업무 패널)에서만 쓴다 — DestinationHint와 대칭으로,
+// 이 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간
+// 것이면 "→ 재고"를 붙인다(stockOriginSuffix는 위에서 카톡 복사 텍스트
+// 생성에도 재사용).
+function StockOriginHint({
+  productName,
+  spec,
+  unit,
+  quantity,
+  purchaseItems,
+}: {
+  productName: string;
+  spec: string;
+  unit?: string;
+  quantity: number;
+  purchaseItems: ItemRow[];
+}) {
+  const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
+    (sum, d) => sum + d.quantity,
+    0,
+  );
+  if (purchasedQuantity >= quantity) return null;
+  const stockQuantity = quantity - purchasedQuantity;
+  return (
+    <span className="font-semibold text-[var(--erp-text-muted)]">
+      {" "}
+      → 재고
+      {purchasedQuantity > 0 &&
+        ` (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`}
     </span>
   );
 }
@@ -873,6 +935,15 @@ export function DashboardCalendar({
                                               <CarryoverBadge />
                                             )}
                                             {item.isReturn && <ReturnBadge />}
+                                            {!item.isReturn && (
+                                              <StockOriginHint
+                                                productName={product.productName}
+                                                spec={item.spec}
+                                                unit={item.unit}
+                                                quantity={item.quantity}
+                                                purchaseItems={selectedData.purchaseItems}
+                                              />
+                                            )}
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}
@@ -899,6 +970,15 @@ export function DashboardCalendar({
                                             {item.quantity.toLocaleString()}
                                             {item.unit}
                                             {item.isReturn && <ReturnBadge />}
+                                            {!item.isReturn && (
+                                              <StockOriginHint
+                                                productName={product.productName}
+                                                spec={item.spec}
+                                                unit={item.unit}
+                                                quantity={item.quantity}
+                                                purchaseItems={selectedData.purchaseItems}
+                                              />
+                                            )}
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}
