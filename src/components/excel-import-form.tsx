@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { FilePickerInput } from "@/components/file-picker-input";
@@ -19,17 +19,20 @@ export function ExcelImportForm({
   const [hasFile, setHasFile] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
+  // 실패해도(엑셀을 못 읽음, 데이터 행 없음 등) 제출 즉시 파일 선택이
+  // 지워져서, 에러 메시지를 보고 나면 파일을 처음부터 다시 골라야 했다.
+  // 성공했을 때만 비운다.
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local UI state in reaction to a server action result, not derived state
+      setHasFile(false);
+      setResetKey((k) => k + 1);
+    }
+  }, [state]);
+
   return (
-    <form
-      ref={formRef}
-      action={(formData) => {
-        formAction(formData);
-        formRef.current?.reset();
-        setHasFile(false);
-        setResetKey((k) => k + 1);
-      }}
-      className="flex flex-wrap items-center gap-2"
-    >
+    <form ref={formRef} action={formAction} className="flex flex-wrap items-center gap-2">
       <a href={templateHref} download className="erp-btn">
         ⬇ 템플릿 다운로드
       </a>
