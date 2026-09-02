@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint && npm run check:pagination",
+    "check:pagination": "node scripts/check-pagination.mjs",
     "test": "vitest run"
   },
   "dependencies": {
