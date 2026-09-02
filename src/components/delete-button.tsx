@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { generateConfirmCode } from "@/lib/confirm-code";
+import { useConfirmCode } from "@/lib/use-confirm-code";
 
 // 단순 confirm() 팝업은 Enter 한 번으로 그냥 넘어갈 수 있어, 되돌릴 수
 // 없는 삭제 앞에서는 직접 입력해야 버튼이 눌리는 단계를 둔다. 매번 새로
@@ -24,11 +24,9 @@ export function DeleteButton({
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const [confirming, setConfirming] = useState(false);
-  const [confirmText, setConfirmText] = useState("");
-  const [code, setCode] = useState("");
+  const { code, confirmText, setConfirmText, confirmMatches, regenerate, reset } = useConfirmCode();
   const openRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F6", openRef);
-  const confirmMatches = confirmText.trim() === code;
 
   if (!confirming) {
     return (
@@ -36,7 +34,7 @@ export function DeleteButton({
         ref={openRef}
         type="button"
         onClick={() => {
-          setCode(generateConfirmCode());
+          regenerate();
           setConfirming(true);
         }}
         className="erp-btn erp-btn-danger"
@@ -85,7 +83,7 @@ export function DeleteButton({
         type="button"
         onClick={() => {
           setConfirming(false);
-          setConfirmText("");
+          reset();
         }}
         className="erp-btn"
         style={{ minWidth: 0 }}

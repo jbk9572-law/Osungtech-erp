@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { restoreFromServerSnapshot } from "@/app/(dashboard)/settings/backup/actions";
 import { FormMessage } from "@/components/form-message";
-import { generateConfirmCode } from "@/lib/confirm-code";
+import { useConfirmCode } from "@/lib/use-confirm-code";
 
 // 위 "복원하기"(안전한 병합 복원)와 달리 이건 DB를 통째로 지우고 백업
 // 시점 그대로 되돌리는 파괴적 작업이라, 같은 확인 코드 방식이라도 시점을
@@ -12,10 +12,7 @@ import { generateConfirmCode } from "@/lib/confirm-code";
 export function ServerRestoreForm({ snapshots }: { snapshots: string[] }) {
   const [state, formAction, pending] = useActionState(restoreFromServerSnapshot, undefined);
   const [snapshot, setSnapshot] = useState("");
-  const [code, setCode] = useState<string | null>(null);
-  const [confirmText, setConfirmText] = useState("");
-
-  const confirmMatches = code !== null && confirmText.trim() === code;
+  const { code, confirmText, setConfirmText, confirmMatches, regenerate, reset } = useConfirmCode();
 
   return (
     <form
@@ -35,8 +32,8 @@ export function ServerRestoreForm({ snapshots }: { snapshots: string[] }) {
           onChange={(e) => {
             const v = e.target.value;
             setSnapshot(v);
-            setCode(v ? generateConfirmCode() : null);
-            setConfirmText("");
+            if (v) regenerate();
+            else reset();
           }}
           className="erp-input"
         >

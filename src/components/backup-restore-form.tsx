@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { restoreBackup } from "@/app/(dashboard)/settings/backup/actions";
 import { FormMessage } from "@/components/form-message";
-import { generateConfirmCode } from "@/lib/confirm-code";
+import { useConfirmCode } from "@/lib/use-confirm-code";
 
 // 복원은 되돌릴 수 없는 쓰기 작업이라(이미 있는 데이터는 안 건드리지만
 // 새 데이터는 실제로 DB에 들어간다), 삭제 버튼과 같은 확인 코드 입력
@@ -12,10 +12,7 @@ import { generateConfirmCode } from "@/lib/confirm-code";
 export function BackupRestoreForm() {
   const [state, formAction, pending] = useActionState(restoreBackup, undefined);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [code, setCode] = useState<string | null>(null);
-  const [confirmText, setConfirmText] = useState("");
-
-  const confirmMatches = code !== null && confirmText.trim() === code;
+  const { code, confirmText, setConfirmText, confirmMatches, regenerate, reset } = useConfirmCode();
 
   return (
     <form
@@ -36,8 +33,8 @@ export function BackupRestoreForm() {
           onChange={(e) => {
             const f = e.target.files?.[0];
             setFileName(f ? f.name : null);
-            setCode(f ? generateConfirmCode() : null);
-            setConfirmText("");
+            if (f) regenerate();
+            else reset();
           }}
           className="erp-input"
         />
