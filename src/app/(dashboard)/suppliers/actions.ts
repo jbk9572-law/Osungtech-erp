@@ -8,6 +8,7 @@ import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 
 function supplierFieldsFrom(formData: FormData) {
   return {
@@ -232,19 +233,18 @@ export async function updatePurchasePriceSchedule(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const result = await supabase
     .from("purchase_price_change_schedules")
     .update({ new_unit_cost: newUnitCost, effective_date: effectiveDate })
     .eq("id", id)
     .is("applied_at", null)
     .select("id");
 
-  if (error) {
-    return { error: `수정에 실패했습니다: ${error.message}` };
-  }
-  if (!data || data.length === 0) {
-    return { error: "본인이 등록한 예약만 수정할 수 있습니다." };
-  }
+  const mutationError = requireMutatedRow(result, {
+    onError: "수정에 실패했습니다",
+    onForbidden: "본인이 등록한 예약만 수정할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
   return { success: "단가 예약을 수정했습니다." };
@@ -259,19 +259,18 @@ export async function cancelPurchasePriceSchedule(
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const result = await supabase
     .from("purchase_price_change_schedules")
     .delete()
     .eq("id", id)
     .is("applied_at", null)
     .select("id");
 
-  if (error) {
-    return { error: `취소에 실패했습니다: ${error.message}` };
-  }
-  if (!data || data.length === 0) {
-    return { error: "본인이 등록한 예약만 취소할 수 있습니다." };
-  }
+  const mutationError = requireMutatedRow(result, {
+    onError: "취소에 실패했습니다",
+    onForbidden: "본인이 등록한 예약만 취소할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
   return { success: "예약을 취소했습니다." };
@@ -317,9 +316,12 @@ export async function deleteSupplierPayment(_prevState: FormState, formData: For
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.from("supplier_payments").delete().eq("id", id).select("id");
-  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
-  if (!data || data.length === 0) return { error: "본인이 등록한 지급 내역만 삭제할 수 있습니다." };
+  const result = await supabase.from("supplier_payments").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, {
+    onError: "삭제에 실패했습니다",
+    onForbidden: "본인이 등록한 지급 내역만 삭제할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
 
   if (supplierId) revalidatePath(`/suppliers/${supplierId}`);
   revalidatePath("/payables");

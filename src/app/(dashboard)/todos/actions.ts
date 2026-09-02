@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/paper-calc-sync";
 import { parseTodoType } from "@/lib/todo-flow";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 export type TodoItemInput = {
@@ -220,7 +221,7 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
     }
   }
 
-  const { data: updated, error } = await supabase
+  const updateResult = await supabase
     .from("todos")
     .update({
       title,
@@ -235,15 +236,11 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
     .eq("id", id)
     .select("id");
 
-  if (error) {
-    return { error: `수정에 실패했습니다: ${error.message}` };
-  }
-  // .select()로 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는
-  // 관리자가 아님) error 없이 조용히 0건 갱신으로 끝나므로, 이 확인 없이는
-  // 수정에 실패했는데도 성공한 것처럼 상세화면으로 이동해버린다.
-  if (!updated || updated.length === 0) {
-    return { error: "수정에 실패했습니다. 본인이 등록한 할일만 수정할 수 있습니다." };
-  }
+  const updateError = requireMutatedRow(updateResult, {
+    onError: "수정에 실패했습니다",
+    onForbidden: "수정에 실패했습니다. 본인이 등록한 할일만 수정할 수 있습니다.",
+  });
+  if (updateError) return updateError;
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");
@@ -275,14 +272,13 @@ export async function deleteTodo(_prevState: FormState, formData: FormData): Pro
   }
 
   const supabase = await createClient();
-  const { data: deleted, error } = await supabase.from("todos").delete().eq("id", id).select("id");
+  const result = await supabase.from("todos").delete().eq("id", id).select("id");
 
-  if (error) {
-    return { error: `삭제에 실패했습니다: ${error.message}` };
-  }
-  if (!deleted || deleted.length === 0) {
-    return { error: "삭제에 실패했습니다. 본인이 등록한 할일만 삭제할 수 있습니다." };
-  }
+  const deleteError = requireMutatedRow(result, {
+    onError: "삭제에 실패했습니다",
+    onForbidden: "삭제에 실패했습니다. 본인이 등록한 할일만 삭제할 수 있습니다.",
+  });
+  if (deleteError) return deleteError;
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");

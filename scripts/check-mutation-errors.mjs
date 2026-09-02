@@ -134,10 +134,54 @@ function hasErrorBinding(mutationCallNode) {
         return ts.isIdentifier(boundName) && boundName.text === "error";
       });
     }
-    return false; // 구조분해가 아니면(단순 변수 등) error를 못 받는 것
+    // 구조분해가 아니라 `const result = await mutationCall;`처럼 통째로
+    // 받은 경우, require-mutated-row.ts의 공용 헬퍼(requireMutatedRow/
+    // wasRowMutated)에 그 변수를 그대로 넘기는 것도 error+행수를 함께
+    // 확인하는 안전한 패턴으로 인정한다.
+    if (ts.isIdentifier(name) && isPassedToMutationHelper(parent, name.text)) {
+      return true;
+    }
+    return false;
   }
 
   return null; // 판단 보류
+}
+
+const MUTATION_HELPER_NAMES = new Set(["requireMutatedRow", "wasRowMutated"]);
+
+// declaration이 속한 함수(또는 최상위) 안에서, variableName을 첫 인자로
+// requireMutatedRow(...)/wasRowMutated(...)를 호출하는 곳이 있는지 찾는다.
+function isPassedToMutationHelper(declarationNode, variableName) {
+  let scope = declarationNode.parent;
+  while (
+    scope &&
+    !ts.isFunctionDeclaration(scope) &&
+    !ts.isFunctionExpression(scope) &&
+    !ts.isArrowFunction(scope) &&
+    !ts.isSourceFile(scope)
+  ) {
+    scope = scope.parent;
+  }
+  if (!scope) return false;
+
+  let found = false;
+  function visit(node) {
+    if (found) return;
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      MUTATION_HELPER_NAMES.has(node.expression.text) &&
+      node.arguments[0] &&
+      ts.isIdentifier(node.arguments[0]) &&
+      node.arguments[0].text === variableName
+    ) {
+      found = true;
+      return;
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(scope);
+  return found;
 }
 
 // mutationCall이 Promise.all([...]) / arr.map(...) 안에서 쓰이는지 —

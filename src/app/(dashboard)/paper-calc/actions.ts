@@ -9,6 +9,7 @@ import {
 } from "@/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -141,14 +142,12 @@ export async function deletePaperCalculation(
   const permissionError = await assertCanManageOrder(supabase, salesOrderId, purchaseOrderId);
   if (permissionError) return { error: permissionError };
 
-  const { data: deleted, error } = await supabase.from("paper_calculations").delete().eq("id", id).select("id");
-
-  if (error) {
-    return { error: `삭제에 실패했습니다: ${error.message}` };
-  }
-  if (!deleted || deleted.length === 0) {
-    return { error: "본인이 등록한 계산만 삭제할 수 있습니다." };
-  }
+  const result = await supabase.from("paper_calculations").delete().eq("id", id).select("id");
+  const deleteError = requireMutatedRow(result, {
+    onError: "삭제에 실패했습니다",
+    onForbidden: "본인이 등록한 계산만 삭제할 수 있습니다.",
+  });
+  if (deleteError) return deleteError;
 
   let warning: string | null = null;
   if (purchaseOrderId) {

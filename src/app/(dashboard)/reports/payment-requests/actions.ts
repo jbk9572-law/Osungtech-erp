@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
+import { requireMutatedRow, wasRowMutated } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -283,14 +284,16 @@ export async function deletePaymentRequestReceipt(
   // .select()로 실제 삭제된 행을 확인한다 — RLS가 막으면(본인 작성 또는
   // 관리자가 아님) error 없이 조용히 0건 삭제로 끝나므로, 이 확인 없이는
   // 다음 줄에서 스토리지 파일만 지워지고 행은 남는 불일치가 생긴다.
-  const { data: deleted, error } = await supabase
+  const result = await supabase
     .from("payment_request_receipts")
     .delete()
     .eq("id", id)
     .select("id");
-  if (error || !deleted || deleted.length === 0) {
-    return { error: "삭제에 실패했습니다. 본인이 작성한 지급결의서의 영수증만 삭제할 수 있습니다." };
-  }
+  const deleteError = requireMutatedRow(
+    result,
+    "삭제에 실패했습니다. 본인이 작성한 지급결의서의 영수증만 삭제할 수 있습니다."
+  );
+  if (deleteError) return deleteError;
 
   await supabase.storage.from("payment-receipts").remove([receipt.file_path]);
 
@@ -332,10 +335,10 @@ export async function reorderPaymentRequestReceipts(
   );
   const firstFailure = results.find((r) => r.error);
   if (firstFailure) return { error: `순서 변경에 실패했습니다: ${firstFailure.error!.message}` };
-  // .select()로 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는
-  // 관리자가 아님) error 없이 조용히 0건 갱신으로 끝나므로, 이 확인 없이는
-  // "순서를 변경했습니다"라고 응답해놓고 실제로는 아무것도 안 바뀐다.
-  if (results.some((r) => !r.data || r.data.length === 0)) {
+  // 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는 관리자가 아님)
+  // error 없이 조용히 0건 갱신으로 끝나므로, 이 확인 없이는 "순서를
+  // 변경했습니다"라고 응답해놓고 실제로는 아무것도 안 바뀐다.
+  if (results.some((r) => !wasRowMutated(r))) {
     return { error: "순서 변경에 실패했습니다. 본인이 작성한 지급결의서만 순서를 바꿀 수 있습니다." };
   }
 
@@ -365,11 +368,12 @@ export async function deletePaymentRequest(
     .select("file_path")
     .eq("payment_request_id", id);
 
-  const { data: deleted, error } = await supabase.from("payment_requests").delete().eq("id", id).select("id");
-
-  if (error || !deleted || deleted.length === 0) {
-    return { error: "삭제에 실패했습니다. 본인이 작성한 지급결의서만 삭제할 수 있습니다." };
-  }
+  const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
+  const deleteError = requireMutatedRow(
+    result,
+    "삭제에 실패했습니다. 본인이 작성한 지급결의서만 삭제할 수 있습니다."
+  );
+  if (deleteError) return deleteError;
 
   if (receipts && receipts.length > 0) {
     await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
@@ -404,9 +408,9 @@ export async function bulkDeletePaymentRequests(
         .select("file_path")
         .eq("payment_request_id", id);
 
-      const { data: deleted, error } = await supabase.from("payment_requests").delete().eq("id", id).select("id");
-      if (error || !deleted || deleted.length === 0) {
-        return { error: error ?? new Error("not deleted") };
+      const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
+      if (!wasRowMutated(result)) {
+        return { error: result.error ?? new Error("not deleted") };
       }
 
       if (receipts && receipts.length > 0) {
