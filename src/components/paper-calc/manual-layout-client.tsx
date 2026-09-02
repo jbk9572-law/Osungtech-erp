@@ -101,7 +101,16 @@ function clientToSheetPoint(svg: SVGSVGElement, clientX: number, clientY: number
   return { x: transformed.x, y: transformed.y };
 }
 
-export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sales" | "purchase" }) {
+export function ManualLayoutClient({
+  pendingFor: initialPendingFor = "sales",
+}: {
+  pendingFor?: "sales" | "purchase";
+}) {
+  // 메뉴에서 바로 들어오면(특정 매출/매입 건 없이) URL에 ?for=purchase가 안
+  // 붙어있어 기본값(판매)으로 시작하지만, 여기서 직접 골라 바꿀 수 있다 —
+  // 이전에는 이 값이 고정이라 매입 등록 화면을 거치지 않고는 "새 매입
+  // 등록에 연결" 버튼을 볼 방법이 없었다.
+  const [pendingFor, setPendingFor] = useState<"sales" | "purchase">(initialPendingFor);
   const [paperW, setPaperW] = useState(788);
   const [paperH, setPaperH] = useState(1091);
   const [rows, setRows] = useState<ItemRow[]>([{ key: 0, width: 0, height: 0, qty: 0 }]);
@@ -502,6 +511,28 @@ export function ManualLayoutClient({ pendingFor = "sales" }: { pendingFor?: "sal
         클릭한 뒤 원지 위에 마우스를 올리면 놓일 자리가 미리 보입니다(초록: 배치 가능, 빨강: 겹치거나 밖으로
         나감) — 그 상태에서 클릭하면 배치됩니다. 이미 배치된 조각은 클릭하면 선택되어 회전/삭제할 수 있고,
         마우스나 손가락으로 드래그해서 다른 자리로 옮길 수도 있습니다. 배치 1건 = 1연(500장)으로 계산됩니다.
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          연결할 등록 유형
+        </span>
+        <div className="erp-seg">
+          <button
+            type="button"
+            className={`erp-seg-btn${pendingFor === "sales" ? " active" : ""}`}
+            onClick={() => setPendingFor("sales")}
+          >
+            판매
+          </button>
+          <button
+            type="button"
+            className={`erp-seg-btn${pendingFor === "purchase" ? " active" : ""}`}
+            onClick={() => setPendingFor("purchase")}
+          >
+            매입
+          </button>
+        </div>
       </div>
 
       <div className="erp-detail">

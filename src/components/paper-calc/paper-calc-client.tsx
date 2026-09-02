@@ -102,7 +102,7 @@ export function PaperCalcClient({
   salesOrderLabel = null,
   purchaseOrderId = null,
   purchaseOrderLabel = null,
-  pendingFor = "sales",
+  pendingFor: initialPendingFor = "sales",
   savedCalculations = [],
   onApply,
 }: {
@@ -118,6 +118,13 @@ export function PaperCalcClient({
 }) {
   const router = useRouter();
   const hasOrder = Boolean(salesOrderId || purchaseOrderId);
+  // 메뉴에서 바로 들어오면(특정 매출/매입 건 없이) 기본값(판매)으로
+  // 시작하지만, 아래에서 직접 골라 바꿀 수 있다 — 이전에는 이 값이 고정이라
+  // 매입 등록 화면을 거치지 않고는 "새 매입 등록에 연결" 버튼을 볼 방법이
+  // 없었다. 이미 특정 주문에 연결된 채로 열렸거나(hasOrder) 등록 폼 모달
+  // 안이면(onApply) 유형이 이미 정해져 있으므로 토글을 보여주지 않는다.
+  const [pendingFor, setPendingFor] = useState(initialPendingFor);
+  const canSwitchPendingFor = !hasOrder && !onApply;
   // 이미 저장된 계산이 있는 주문이면, 들어오자마자 새 계산 입력창부터 보여주는
   // 대신 저장된 계산 이력을 먼저 보여준다 — 계산이 끝난 뒤에 이 화면에 다시
   // 들어올 땐 "또 계산하기"가 아니라 "이미 한 계산 확인하기"가 목적인 경우가
@@ -306,6 +313,30 @@ export function PaperCalcClient({
         >
           이 매입 건({purchaseOrderLabel})에 대한 모조지 계산입니다. 계산 후
           저장하면 주문 상세에서 원지 사용량을 바로 확인할 수 있습니다.
+        </div>
+      )}
+
+      {canSwitchPendingFor && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            연결할 등록 유형
+          </span>
+          <div className="erp-seg">
+            <button
+              type="button"
+              className={`erp-seg-btn${pendingFor === "sales" ? " active" : ""}`}
+              onClick={() => setPendingFor("sales")}
+            >
+              판매
+            </button>
+            <button
+              type="button"
+              className={`erp-seg-btn${pendingFor === "purchase" ? " active" : ""}`}
+              onClick={() => setPendingFor("purchase")}
+            >
+              매입
+            </button>
+          </div>
         </div>
       )}
 
