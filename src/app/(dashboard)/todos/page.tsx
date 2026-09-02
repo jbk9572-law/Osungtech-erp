@@ -28,9 +28,9 @@ function summarizeItems(
 export default async function TodosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; warning?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, warning } = await searchParams;
   const supabase = await createClient();
   const [{ data: allRows, error }, products] = await Promise.all([
     supabase
@@ -79,6 +79,18 @@ export default async function TodosPage({
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
         할일관리
       </h1>
+
+      {warning && (
+        <p
+          className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
+          style={{
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+          }}
+        >
+          ⚠ 할일은 정상 등록됐지만: {warning}
+        </p>
+      )}
 
       <div className="erp-toolbar">
         <Link href="/todos/new" className="erp-btn erp-btn-primary">

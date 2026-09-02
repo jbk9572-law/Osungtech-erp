@@ -166,13 +166,14 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
     return { error: `등록에 실패했습니다${error ? `: ${error.message}` : ""}` };
   }
 
+  let paperCalcWarning: string | null = null;
   if (pendingPaperCalc) {
-    await attachPendingPaperCalculationToTodo(supabase, todo.id, pendingPaperCalc);
+    paperCalcWarning = await attachPendingPaperCalculationToTodo(supabase, todo.id, pendingPaperCalc);
   }
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");
-  redirect("/todos");
+  redirect(paperCalcWarning ? `/todos?warning=${encodeURIComponent(paperCalcWarning)}` : "/todos");
 }
 
 export async function updateTodo(_prevState: FormState, formData: FormData): Promise<FormState> {
