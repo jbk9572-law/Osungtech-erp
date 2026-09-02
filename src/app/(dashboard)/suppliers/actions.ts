@@ -349,13 +349,27 @@ export async function importSuppliersExcel(_prevState: FormState, formData: Form
 
   // 사업자등록번호가 있으면 그걸로, 없으면 업체명으로 기존 공급처를 찾아 갱신하고
   // 못 찾으면 새로 등록한다.
-  const existing = await fetchAllRows<{ id: string; name: string; business_number: string | null }>((from, to) =>
-    supabase.from("suppliers").select("id, name, business_number").range(from, to),
+  const existing = await fetchAllRows<{
+    id: string;
+    name: string;
+    business_number: string | null;
+    representative_name: string | null;
+    contact_name: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    notes: string | null;
+  }>((from, to) =>
+    supabase
+      .from("suppliers")
+      .select("id, name, business_number, representative_name, contact_name, email, phone, address, notes")
+      .range(from, to),
   );
   const byBusinessNumber = new Map(
     existing.filter((s) => s.business_number).map((s) => [s.business_number as string, s.id])
   );
   const byName = new Map(existing.map((s) => [s.name.trim(), s.id]));
+  const existingById = new Map(existing.map((s) => [s.id, s]));
 
   type ImportPayload = {
     name: string;
@@ -395,7 +409,23 @@ export async function importSuppliersExcel(_prevState: FormState, formData: Form
 
     const existingId = (businessNumber && byBusinessNumber.get(businessNumber)) || byName.get(name.trim());
     if (existingId) {
-      toUpdate.push({ rowNum, payload: { ...payload, id: existingId } });
+      // customers/actions.ts의 importCustomersExcel과 동일한 이유 — 이번
+      // 파일에서 비워둔 칸까지 그대로 반영하면 기존 연락처가 null로
+      // 지워진다. 비어있는 칸은 기존 값을 그대로 유지한다.
+      const prev = existingById.get(existingId);
+      toUpdate.push({
+        rowNum,
+        payload: {
+          ...payload,
+          representative_name: payload.representative_name ?? prev?.representative_name ?? null,
+          contact_name: payload.contact_name ?? prev?.contact_name ?? null,
+          email: payload.email ?? prev?.email ?? null,
+          phone: payload.phone ?? prev?.phone ?? null,
+          address: payload.address ?? prev?.address ?? null,
+          notes: payload.notes ?? prev?.notes ?? null,
+          id: existingId,
+        },
+      });
     } else {
       toInsert.push({ rowNum, payload });
     }

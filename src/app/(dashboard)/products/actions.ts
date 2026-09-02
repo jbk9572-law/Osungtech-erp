@@ -245,8 +245,8 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       spec: string | null;
       unit: string;
       base_package_qty: number | null;
-      cost: number;
-      price: number;
+      cost: number | null;
+      price: number | null;
     };
   }[] = [];
 
@@ -260,6 +260,10 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       continue;
     }
 
+    // 매입단가/판매가/기초(포장수량) 칸은 여기서 바로 0/null로 확정하지
+    // 않는다 — 아래에서 기존 품목 값과 합쳐서, 이미 등록된 SKU인데 이번
+    // 파일엔 그 칸이 비어있으면 기존 값을 그대로 유지한다(신규 SKU만
+    // 진짜 기본값 0/null을 쓴다).
     parsedRows.push({
       rowNum,
       supplierName: cell(row, "공급처") || null,
@@ -269,11 +273,34 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         spec: cell(row, "규격") || null,
         unit: cell(row, "단위") || "ea",
         base_package_qty: cellNumber(row, "기초"),
-        cost: cellNumber(row, "매입단가") ?? 0,
-        price: cellNumber(row, "판매가") ?? 0,
+        cost: cellNumber(row, "매입단가"),
+        price: cellNumber(row, "판매가"),
       },
     });
   }
+
+  // 내보내기 파일을 그대로 재업로드하면 모든 칸이 채워져 있어 문제가
+  // 없지만, "공급처만 일괄로 바꾸려고" SKU+공급처만 채운 축소된 시트를
+  // 올리는 경우가 있다 — 이때 매입단가/판매가 칸이 비어있다고 그냥 0으로
+  // upsert하면 기존 상품의 가격이 통째로 0원이 돼버린다. 이미 존재하는
+  // SKU는 빈 칸을 기존 값으로 채워서, "적어낸 칸만 바뀌고 나머지는 그대로
+  // 유지"되게 한다.
+  const skusInFile = parsedRows.map((r) => r.payload.sku);
+  const existingProducts = skusInFile.length
+    ? await fetchAllRows<{
+        sku: string;
+        cost: number | null;
+        price: number | null;
+        base_package_qty: number | null;
+      }>((from, to) =>
+        supabase
+          .from("products")
+          .select("sku, cost, price, base_package_qty")
+          .in("sku", skusInFile)
+          .range(from, to),
+      )
+    : [];
+  const existingBySku = new Map(existingProducts.map((p) => [p.sku, p]));
 
   // 행마다 공급처를 하나씩 조회/생성하면 수백 행짜리 파일은 그만큼 DB
   // 왕복이 생긴다 — 아직 없는 공급처 이름을 모아 한 번에 만든다.
@@ -295,10 +322,19 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
     for (const s of createdSuppliers ?? []) supplierByName.set(s.name.trim(), s.id);
   }
 
-  const productRows = parsedRows.map((r) => ({
-    rowNum: r.rowNum,
-    payload: { ...r.payload, supplier_id: r.supplierName ? (supplierByName.get(r.supplierName) ?? null) : null },
-  }));
+  const productRows = parsedRows.map((r) => {
+    const existing = existingBySku.get(r.payload.sku);
+    return {
+      rowNum: r.rowNum,
+      payload: {
+        ...r.payload,
+        cost: r.payload.cost ?? existing?.cost ?? 0,
+        price: r.payload.price ?? existing?.price ?? 0,
+        base_package_qty: r.payload.base_package_qty ?? existing?.base_package_qty ?? null,
+        supplier_id: r.supplierName ? (supplierByName.get(r.supplierName) ?? null) : null,
+      },
+    };
+  });
 
   // 한 번에 하나씩 upsert하면 왕복이 행 수만큼 생긴다 — 청크 단위로 묶어서
   // 보낸다. 청크 안에서 실패하면(공유 원인일 가능성이 높음) 그 청크의
