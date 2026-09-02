@@ -349,24 +349,28 @@ export default async function MonthlyReportPage({
       };
     });
 
+  // 매입처별/매출처별 "비중(%)"의 분모는 반드시 이 목록(전표 단위로 검색어를
+  // 적용한 것)의 합계여야 한다 — 품목별 보기용 itemGroups는 품목 하나에 딸린
+  // 거래처 중 하나라도 검색어에 걸리면 그 품목의 "다른 거래처 몫까지 포함한"
+  // 전체 금액을 그대로 살려두므로(합계 카드용으로는 맞지만), 그걸 분모로
+  // 쓰면 검색어와 무관한 거래처 금액까지 분모에 섞여 비중이 실제보다 작게
+  // 나온다.
+  const purchaseCompanyRowsFiltered = keyword
+    ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    : purchaseCompanyRows;
+  const salesCompanyRowsFiltered = keyword
+    ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    : salesCompanyRows;
   const supplierGroups =
-    view === "supplier"
-      ? buildCompanyGroups(
-          keyword
-            ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
-            : purchaseCompanyRows,
-        )
-      : [];
+    view === "supplier" ? buildCompanyGroups(purchaseCompanyRowsFiltered) : [];
   const customerGroups =
-    view === "customer"
-      ? buildCompanyGroups(
-          keyword
-            ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
-            : salesCompanyRows,
-        )
-      : [];
+    view === "customer" ? buildCompanyGroups(salesCompanyRowsFiltered) : [];
   const companyGroups = view === "supplier" ? supplierGroups : customerGroups;
   const companyKeyPrefix = view === "supplier" ? "s" : "c";
+  const companyViewGrandTotal =
+    view === "supplier"
+      ? purchaseCompanyRowsFiltered.reduce((sum, r) => sum + r.amount, 0)
+      : salesCompanyRowsFiltered.reduce((sum, r) => sum + r.amount, 0);
 
   // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
   // 거래처인지 모호하므로 생략), 요약표를 길게 늘어놓는 대신 그 거래처의
@@ -912,9 +916,9 @@ export default async function MonthlyReportPage({
                           background: "#eef0f3",
                           color: "var(--erp-text-muted)",
                         };
-                const grandTotal =
-                  view === "supplier" ? totalPurchaseAmount : totalSalesAmount;
-                const share = grandTotal ? (cg.totalAmount / grandTotal) * 100 : 0;
+                const share = companyViewGrandTotal
+                  ? (cg.totalAmount / companyViewGrandTotal) * 100
+                  : 0;
                 return (
                   <Fragment key={cg.companyId}>
                     <tr style={{ background: groupBg }}>
