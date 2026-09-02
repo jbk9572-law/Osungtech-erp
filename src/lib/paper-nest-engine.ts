@@ -1094,6 +1094,22 @@ export class NestEngine {
     return { placements, counts, coveredArea };
   }
 
+  // 코어 품목 3종 이상이 한 장에 섞이면, 절단선이 서로 어긋나서 재단
+  // 작업자가 전지를 쌓아놓고 가로/세로로 한 번에 관통해서 자르는 방식
+  // (길로틴 재단)으로 대량 작업을 할 수 없다 — 조각마다 따로 잘라야 해서
+  // 실제 현장에서는 비효율적이다. 그래서 사용률이 아무리 높게 나와도 이
+  // 상한을 넘는 이득은 선택 점수·리포트 양쪽에서 인정하지 않는다. 이렇게
+  // 해야 알고리즘이 "숫자상으로만 좋아 보이는" 3종 이상 조합을, 자르기
+  // 쉬운 1~2종 조합보다 애써 고르는 일이 없다.
+  private static readonly COMPLEX_CUT_USAGE_CAP = 85;
+
+  private cappedUsageFraction(pattern: Pattern, rawFraction: number): number {
+    if (this.coreCountOf(pattern) >= 3) {
+      return Math.min(rawFraction, NestEngine.COMPLEX_CUT_USAGE_CAP / 100);
+    }
+    return rawFraction;
+  }
+
   // 지금 남아있는 발주량 기준으로 "가장 도움이 되는" 패턴을 고른다 (그
   // 패턴을 썼을 때 실제로 필요한 만큼만 인정해서 점수를 매겨, 이미 다 채운
   // 품목만 잔뜩 만드는 패턴은 낮은 점수를 받는다).
@@ -1131,7 +1147,8 @@ export class NestEngine {
 
       if (!anyNeeded) continue;
 
-      const score = sheetArea ? usefulArea / sheetArea : 0;
+      const rawScore = sheetArea ? usefulArea / sheetArea : 0;
+      const score = this.cappedUsageFraction(pattern, rawScore);
       if (score > bestScore) {
         bestScore = score;
         bestPattern = pattern;
@@ -1186,7 +1203,8 @@ export class NestEngine {
 
     for (const [pattern, sheetCount] of sortedBatches) {
       const { placements, coveredArea: covered } = pattern;
-      const usage = sheetArea ? Math.round((covered / sheetArea) * 100 * 100) / 100 : 0;
+      const rawUsage = sheetArea ? Math.round((covered / sheetArea) * 100 * 100) / 100 : 0;
+      const usage = this.cappedUsageFraction(pattern, rawUsage / 100) * 100;
 
       const rightExtent = placements.length ? Math.max(...placements.map((p) => p.x + p.width)) : 0;
       const bottomExtent = placements.length ? Math.max(...placements.map((p) => p.y + p.height)) : 0;

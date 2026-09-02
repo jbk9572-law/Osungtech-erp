@@ -130,6 +130,27 @@ describe("NestEngine.calculate", () => {
     expect(bestUsage).toBeGreaterThanOrEqual(83);
   });
 
+  it("코어 품목 3종 이상이 한 장에 섞이면 사용률을 85%로 상한한다 (길로틴 재단 불가 배치 억제)", () => {
+    // 3종 이상 섞인 배치는 절단선이 어긋나서 대량 길로틴 재단이 안 되므로,
+    // 실제 사용률이 85%를 넘어도 선택 점수/리포트 양쪽에서 85%까지만
+    // 인정해야 한다(사용자 지적: "3조합 이상일경우는 그냥 85프로 사용률로
+    // 제한하자").
+    type PrivateEngine = {
+      cappedUsageFraction: (
+        pattern: { counts: Record<string, number> },
+        rawFraction: number
+      ) => number;
+    };
+    const engine = new NestEngine() as unknown as PrivateEngine;
+
+    const threeItemPattern = { counts: { A: 1, B: 1, C: 1 } };
+    expect(engine.cappedUsageFraction(threeItemPattern, 0.95)).toBeCloseTo(0.85, 5);
+
+    // 코어 2종 이하는 상한이 적용되지 않는다.
+    const twoItemPattern = { counts: { A: 1, B: 1 } };
+    expect(engine.cappedUsageFraction(twoItemPattern, 0.95)).toBeCloseTo(0.95, 5);
+  });
+
   it("305x340 하나만 발주해도 한 원지에 6개(2열x3행)까지 채운다", () => {
     const engine = new NestEngine();
     engine.sheetWidth = 788;
