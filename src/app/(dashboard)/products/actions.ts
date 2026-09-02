@@ -388,7 +388,12 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       })
       .filter((row): row is NonNullable<typeof row> => row !== null);
     if (historyRows.length > 0) {
-      await supabase.from("product_package_qty_history").insert(historyRows);
+      const { error: historyError } = await supabase
+        .from("product_package_qty_history")
+        .insert(historyRows);
+      if (historyError) {
+        console.error("박스입수 변경 이력 저장 실패:", historyError.message);
+      }
     }
   }
 
