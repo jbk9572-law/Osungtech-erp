@@ -5,7 +5,13 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
-import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
+import {
+  readExcelRows,
+  cell,
+  summarize,
+  fillBlankFieldsFromExisting,
+  type ImportRowError,
+} from "@/lib/excel-import";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
@@ -413,19 +419,15 @@ export async function importSuppliersExcel(_prevState: FormState, formData: Form
       // 파일에서 비워둔 칸까지 그대로 반영하면 기존 연락처가 null로
       // 지워진다. 비어있는 칸은 기존 값을 그대로 유지한다.
       const prev = existingById.get(existingId);
-      toUpdate.push({
-        rowNum,
-        payload: {
-          ...payload,
-          representative_name: payload.representative_name ?? prev?.representative_name ?? null,
-          contact_name: payload.contact_name ?? prev?.contact_name ?? null,
-          email: payload.email ?? prev?.email ?? null,
-          phone: payload.phone ?? prev?.phone ?? null,
-          address: payload.address ?? prev?.address ?? null,
-          notes: payload.notes ?? prev?.notes ?? null,
-          id: existingId,
-        },
-      });
+      const merged = fillBlankFieldsFromExisting(payload, prev, [
+        "representative_name",
+        "contact_name",
+        "email",
+        "phone",
+        "address",
+        "notes",
+      ]);
+      toUpdate.push({ rowNum, payload: { ...merged, id: existingId } });
     } else {
       toInsert.push({ rowNum, payload });
     }

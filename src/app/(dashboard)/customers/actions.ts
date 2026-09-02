@@ -5,7 +5,13 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
-import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
+import {
+  readExcelRows,
+  cell,
+  summarize,
+  fillBlankFieldsFromExisting,
+  type ImportRowError,
+} from "@/lib/excel-import";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
@@ -428,16 +434,18 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
       // 칸만 채운 축소된 시트를 올리는 경우 담당자/연락처가 통째로
       // 사라질 수 있다. 비어있는 칸은 기존 값을 그대로 유지한다.
       const prev = existingById.get(existingId);
+      const merged = fillBlankFieldsFromExisting(payload, prev, [
+        "representative_name",
+        "contact_name",
+        "email",
+        "phone",
+        "address",
+        "notes",
+      ]);
       toUpdate.push({
         rowNum,
         payload: {
-          ...payload,
-          representative_name: payload.representative_name ?? prev?.representative_name ?? null,
-          contact_name: payload.contact_name ?? prev?.contact_name ?? null,
-          email: payload.email ?? prev?.email ?? null,
-          phone: payload.phone ?? prev?.phone ?? null,
-          address: payload.address ?? prev?.address ?? null,
-          notes: payload.notes ?? prev?.notes ?? null,
+          ...merged,
           document_type: documentTypeRaw
             ? payload.document_type
             : ((prev?.document_type as "출고증" | "명세표" | undefined) ?? payload.document_type),

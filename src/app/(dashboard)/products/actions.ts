@@ -264,6 +264,17 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
     // 않는다 — 아래에서 기존 품목 값과 합쳐서, 이미 등록된 SKU인데 이번
     // 파일엔 그 칸이 비어있으면 기존 값을 그대로 유지한다(신규 SKU만
     // 진짜 기본값 0/null을 쓴다).
+    const cost = cellNumber(row, "매입단가");
+    const price = cellNumber(row, "판매가");
+    const basePackageQty = cellNumber(row, "기초");
+    // 수기 입력 폼(validateProductFields)과 동일하게, 음수 값은 여기서
+    // 바로 걸러낸다 — 안 그러면 엑셀로는 폼의 검증을 그냥 건너뛰고
+    // 매입단가/판매가가 음수인 상품이 등록될 수 있다.
+    if ((cost != null && cost < 0) || (price != null && price < 0) || (basePackageQty != null && basePackageQty < 0)) {
+      errors.push({ row: rowNum, reason: "매입단가·판매가·기초수량은 0 이상이어야 합니다." });
+      continue;
+    }
+
     parsedRows.push({
       rowNum,
       supplierName: cell(row, "공급처") || null,
@@ -272,9 +283,9 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         name,
         spec: cell(row, "규격") || null,
         unit: cell(row, "단위") || "ea",
-        base_package_qty: cellNumber(row, "기초"),
-        cost: cellNumber(row, "매입단가"),
-        price: cellNumber(row, "판매가"),
+        base_package_qty: basePackageQty,
+        cost,
+        price,
       },
     });
   }
@@ -300,6 +311,9 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
           .range(from, to),
       )
     : [];
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const existingBySku = new Map(existingProducts.map((p) => [p.sku, p]));
 
   // 행마다 공급처를 하나씩 조회/생성하면 수백 행짜리 파일은 그만큼 DB
@@ -345,12 +359,13 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   let okCount = 0;
   for (let i = 0; i < productRows.length; i += CHUNK_SIZE) {
     const chunk = productRows.slice(i, i + CHUNK_SIZE);
-    const { error } = await supabase
+    const { data: upserted, error } = await supabase
       .from("products")
       .upsert(
         chunk.map((r) => r.payload),
         { onConflict: "sku" }
-      );
+      )
+      .select("id, sku");
     if (error) {
       for (const { rowNum } of chunk) {
         errors.push({ row: rowNum, reason: error.message.includes("duplicate") ? "SKU 중복" : "저장 실패" });
@@ -358,6 +373,23 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
       continue;
     }
     okCount += chunk.length;
+
+    // 수기 등록/수정과 동일하게, 이 일괄등록으로 base_package_qty가
+    // 실제로 바뀐 행은 이력에 남긴다 — 행마다 따로 기록하면 500행 청크에
+    // 왕복이 그만큼 늘어나니 청크당 한 번에 모아 넣는다.
+    const idBySku = new Map((upserted ?? []).map((p) => [p.sku, p.id]));
+    const historyRows = chunk
+      .map((r) => {
+        const productId = idBySku.get(r.payload.sku);
+        const previousQty = existingBySku.get(r.payload.sku)?.base_package_qty ?? null;
+        const newQty = r.payload.base_package_qty;
+        if (!productId || newQty == null || newQty === previousQty) return null;
+        return { product_id: productId, base_package_qty: newQty, changed_by: user?.id ?? null };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+    if (historyRows.length > 0) {
+      await supabase.from("product_package_qty_history").insert(historyRows);
+    }
   }
 
   revalidatePath("/products");

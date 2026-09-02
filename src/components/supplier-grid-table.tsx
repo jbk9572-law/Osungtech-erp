@@ -146,6 +146,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                       checked={isRowSelected}
                       onChange={() => toggleRow(supplier.id)}
                       onClick={(e) => e.stopPropagation()}
+                      aria-label={`${supplier.name} 선택`}
                     />
                   </td>
                   <td style={tdName}>{supplier.name}</td>

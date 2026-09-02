@@ -149,6 +149,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                       checked={isRowSelected}
                       onChange={() => toggleRow(customer.id)}
                       onClick={(e) => e.stopPropagation()}
+                      aria-label={`${customer.name} 선택`}
                     />
                   </td>
                   <td style={tdName}>{customer.name}</td>
