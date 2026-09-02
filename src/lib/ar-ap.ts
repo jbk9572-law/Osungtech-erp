@@ -151,6 +151,15 @@ export function consumeOldestFirst<T extends { total: number; date: string }>(
 
 export type PartyBalance = { id: string; name: string; total: number; paid: number; balance: number };
 
+// 미수금/미지급금현황 "전체 합계"용 — 잔액이 음수(과입금/과지급으로
+// 생긴 크레딧)인 거래처를 그대로 더하면, 한 거래처의 크레딧이 다른
+// 거래처가 실제로 갚아야/받아야 할 금액을 상쇄해서 합계가 실제보다
+// 적게 보인다. 크레딧은 그 거래처만의 별개 문제이므로 양수 잔액만
+// 더한다.
+export function sumOutstandingBalance(balances: { balance: number }[]): number {
+  return balances.filter((b) => b.balance > 0).reduce((sum, b) => sum + b.balance, 0);
+}
+
 // 미수금현황 목록용 — 거래처마다 따로 조회하면 거래처 수만큼 왕복이
 // 생기므로, 전체 매출/전체 수금을 한 번씩만 불러와 메모리에서 거래처별로
 // 합산한다.
