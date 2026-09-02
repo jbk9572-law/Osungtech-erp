@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 
 // audit_logs 트리거는 매출/매입/품목 같은 마스터·전표 테이블에만 붙어있고
@@ -268,17 +268,31 @@ export default async function AuditLogPage({
     // 가져온다. 매출/매입 처리 중 자동으로 생기는 입출고(in/out)는 원래
     // 그 전표 화면에서 확인 가능하니 여기선 제외하고, 수기 조정(재고조정
     // 화면, 재고실사)만 대상으로 한다.
-    const { data: adjustments } = await supabase
-      .from("inventory_transactions")
-      .select(
-        "id, product_id, quantity, note, created_at, products(sku, name), profiles!created_by(full_name)",
-      )
-      .eq("type", "adjustment")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    const rows = adjustments ?? [];
-    hasMore = rows.length >= limit;
+    // PostgREST는 한 요청당 최대 1000행만 돌려주므로(config.toml
+    // max_rows), "더보기"로 limit이 1000을 넘어가면 .limit(limit)만으로는
+    // 응답이 조용히 1000건에서 잘려 hasMore 판정이 틀어진다 —
+    // fetchLimitedRows로 페이지 단위로 나눠 받는다.
+    const { rows, hasMore: adjustmentsHasMore } = await fetchLimitedRows<{
+      id: string;
+      product_id: string;
+      quantity: number;
+      note: string | null;
+      created_at: string;
+      products: { sku: string; name: string } | null;
+      profiles: { full_name: string | null } | null;
+    }>(
+      (from, to) =>
+        supabase
+          .from("inventory_transactions")
+          .select(
+            "id, product_id, quantity, note, created_at, products(sku, name), profiles!created_by(full_name)",
+          )
+          .eq("type", "adjustment")
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      limit,
+    );
+    hasMore = adjustmentsHasMore;
 
     // 각 조정의 "전/후 수량"은 그 조정분(delta)만으로는 알 수 없다 — 화면에
     // 나온 품목들의 전체 입출고 이력을 처음부터 누적해야 그 시점의 정확한
@@ -321,32 +335,43 @@ export default async function AuditLogPage({
       };
     });
   } else {
-    let query = supabase
-      .from("audit_logs")
-      .select("id, table_name, record_id, action, old_data, new_data, created_at, profiles!actor(full_name)")
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    if (tableParam) query = query.eq("table_name", tableParam);
-
     // 변경 내용에 등장하는 customer_id/supplier_id/category_id/created_by를
     // 실제 이름으로 바꿔 보여주기 위해, 관련 마스터 테이블을 통째로 미리
     // 불러와 조회맵을 만든다 — 이력 건수만큼 매번 개별 조회하는 대신 한
     // 번씩만 불러온다.
-    const [{ data }, customers, suppliers, categories, profiles] = await Promise.all([
-      query,
-      fetchAllRows<{ id: string; name: string }>((from, to) =>
-        supabase.from("customers").select("id, name").range(from, to),
-      ),
-      fetchAllRows<{ id: string; name: string }>((from, to) =>
-        supabase.from("suppliers").select("id, name").range(from, to),
-      ),
-      fetchAllRows<{ id: string; name: string }>((from, to) =>
-        supabase.from("categories").select("id, name").range(from, to),
-      ),
-      fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
-        supabase.from("profiles").select("id, full_name").range(from, to),
-      ),
-    ]);
+    const [{ rows: fetchedRows, hasMore: auditHasMore }, customers, suppliers, categories, profiles] =
+      await Promise.all([
+        fetchLimitedRows<{
+          id: string;
+          table_name: string;
+          record_id: string;
+          action: string;
+          old_data: unknown;
+          new_data: unknown;
+          created_at: string;
+          profiles: { full_name: string | null } | null;
+        }>((from, to) => {
+          let query = supabase
+            .from("audit_logs")
+            .select("id, table_name, record_id, action, old_data, new_data, created_at, profiles!actor(full_name)")
+            .order("created_at", { ascending: false })
+            .range(from, to);
+          if (tableParam) query = query.eq("table_name", tableParam);
+          return query;
+        }, limit),
+        fetchAllRows<{ id: string; name: string }>((from, to) =>
+          supabase.from("customers").select("id, name").range(from, to),
+        ),
+        fetchAllRows<{ id: string; name: string }>((from, to) =>
+          supabase.from("suppliers").select("id, name").range(from, to),
+        ),
+        fetchAllRows<{ id: string; name: string }>((from, to) =>
+          supabase.from("categories").select("id, name").range(from, to),
+        ),
+        fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+          supabase.from("profiles").select("id, full_name").range(from, to),
+        ),
+      ]);
     const lookups: Lookups = {
       customers: new Map(customers.map((c) => [c.id, c.name])),
       suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
@@ -354,8 +379,8 @@ export default async function AuditLogPage({
       profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
     };
 
-    const rows = data ?? [];
-    hasMore = rows.length >= limit;
+    const rows = fetchedRows;
+    hasMore = auditHasMore;
 
     viewRows = rows.map((row) => {
       const oldData = row.old_data as Record<string, unknown> | null;
