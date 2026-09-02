@@ -11,6 +11,7 @@ import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
 import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { RowCheckbox } from "@/components/grid/row-checkbox";
 
 export type ProductGridRow = {
   id: string;
@@ -166,12 +167,10 @@ export function ProductGridTable({
               <ClickableRow key={row.id} href={href} className={isRowSelected ? "selected" : undefined}>
                 {allowBulkDelete && (
                   <td style={tdCheckbox}>
-                    <input
-                      type="checkbox"
+                    <RowCheckbox
                       checked={isRowSelected}
                       onChange={() => toggleRow(row.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`${row.name} 선택`}
+                      label={`${row.name} 선택`}
                     />
                   </td>
                 )}

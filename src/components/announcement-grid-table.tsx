@@ -228,7 +228,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
             >
               <div>{row.authorName ?? "-"}</div>
               <div>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</div>
-              <AnnouncementCheckbox id={row.id} read={row.read} />
+              <AnnouncementCheckbox id={row.id} read={row.read} label={row.title} />
             </div>
           </Link>
         ))}

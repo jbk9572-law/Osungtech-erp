@@ -177,7 +177,7 @@ export default async function TodosPage({
           const partner = row.suppliers?.name ?? row.customers?.name ?? null;
           return (
             <Link key={row.id} href={`/todos/${row.id}`} className="erp-item-card">
-              <TodoCheckbox id={row.id} done={row.done} />
+              <TodoCheckbox id={row.id} done={row.done} label={row.title} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
                   <span

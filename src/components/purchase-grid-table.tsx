@@ -21,6 +21,7 @@ import {
   GRID_CHECKBOX_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { nextMonthLabel } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 
@@ -256,11 +257,10 @@ export function PurchaseGridTable({
                   >
                     <td style={tdSticky1}>
                       {row.orderId && (
-                        <input
-                          type="checkbox"
+                        <RowCheckbox
                           checked={isRowSelected}
                           onChange={() => toggleRow(row.orderId!)}
-                          onClick={(e) => e.stopPropagation()}
+                          label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.supplierName ?? ""} 선택`}
                         />
                       )}
                     </td>

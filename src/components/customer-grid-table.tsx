@@ -13,6 +13,7 @@ import {
   GRID_CHECKBOX_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { RowCheckbox } from "@/components/grid/row-checkbox";
 
 export type CustomerRow = {
   id: string;
@@ -144,12 +145,10 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                   className={isRowSelected ? "selected" : undefined}
                 >
                   <td style={tdCheckbox}>
-                    <input
-                      type="checkbox"
+                    <RowCheckbox
                       checked={isRowSelected}
                       onChange={() => toggleRow(customer.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`${customer.name} 선택`}
+                      label={`${customer.name} 선택`}
                     />
                   </td>
                   <td style={tdName}>{customer.name}</td>

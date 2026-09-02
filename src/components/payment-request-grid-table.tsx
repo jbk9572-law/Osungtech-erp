@@ -5,6 +5,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePaymentRequests } from "@/app/(dashboard)/reports/payment-requests/actions";
+import { RowCheckbox } from "@/components/grid/row-checkbox";
 
 export type PaymentRequestRow = {
   id: string;
@@ -213,11 +214,10 @@ export function PaymentRequestGridTable({
                   className={isRowSelected ? "selected" : undefined}
                 >
                   <td>
-                    <input
-                      type="checkbox"
+                    <RowCheckbox
                       checked={isRowSelected}
                       onChange={() => toggleRow(row.id)}
-                      onClick={(e) => e.stopPropagation()}
+                      label={`${row.no}번 ${row.docTitle} 선택`}
                     />
                   </td>
                   <td className="num">{row.no}</td>

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toggleTodo } from "@/app/(dashboard)/todos/actions";
 
-export function TodoCheckbox({ id, done }: { id: string; done: boolean }) {
+export function TodoCheckbox({ id, done, label }: { id: string; done: boolean; label: string }) {
   const [prevDone, setPrevDone] = useState(done);
   const [checked, setChecked] = useState(done);
   const [pending, startTransition] = useTransition();
@@ -22,6 +22,7 @@ export function TodoCheckbox({ id, done }: { id: string; done: boolean }) {
       type="checkbox"
       checked={checked}
       disabled={pending}
+      aria-label={`${label} 완료 처리`}
       onClick={(e) => e.stopPropagation()}
       onChange={() => {
         const previous = checked;

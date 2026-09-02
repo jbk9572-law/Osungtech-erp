@@ -12,6 +12,7 @@ import {
   stickyCellStyle,
   GRID_CHECKBOX_WIDTH,
 } from "@/lib/grid-sticky";
+import { RowCheckbox } from "@/components/grid/row-checkbox";
 
 export type SupplierRow = {
   id: string;
@@ -141,12 +142,10 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                   className={isRowSelected ? "selected" : undefined}
                 >
                   <td style={tdCheckbox}>
-                    <input
-                      type="checkbox"
+                    <RowCheckbox
                       checked={isRowSelected}
                       onChange={() => toggleRow(supplier.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`${supplier.name} 선택`}
+                      label={`${supplier.name} 선택`}
                     />
                   </td>
                   <td style={tdName}>{supplier.name}</td>

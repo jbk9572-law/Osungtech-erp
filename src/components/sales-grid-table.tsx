@@ -22,6 +22,7 @@ import {
   GRID_CHECKBOX_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { nextMonthLabel } from "@/lib/carryover";
 
@@ -263,11 +264,10 @@ export function SalesGridTable({
                   >
                     <td style={tdSticky1}>
                       {row.orderId && (
-                        <input
-                          type="checkbox"
+                        <RowCheckbox
                           checked={isRowSelected}
                           onChange={() => toggleRow(row.orderId!)}
-                          onClick={(e) => e.stopPropagation()}
+                          label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.customerName ?? ""} 선택`}
                         />
                       )}
                     </td>

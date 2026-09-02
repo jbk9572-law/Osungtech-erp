@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toggleAnnouncementRead } from "@/app/(dashboard)/announcements/actions";
 
-export function AnnouncementCheckbox({ id, read }: { id: string; read: boolean }) {
+export function AnnouncementCheckbox({ id, read, label }: { id: string; read: boolean; label: string }) {
   const [prevRead, setPrevRead] = useState(read);
   const [checked, setChecked] = useState(read);
   const [pending, startTransition] = useTransition();
@@ -20,6 +20,7 @@ export function AnnouncementCheckbox({ id, read }: { id: string; read: boolean }
       type="checkbox"
       checked={checked}
       disabled={pending}
+      aria-label={`${label} 읽음 처리`}
       onClick={(e) => e.stopPropagation()}
       onChange={() => {
         const previous = checked;
