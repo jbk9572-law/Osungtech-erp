@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -29,6 +30,7 @@ export function QuickAddProductSearch({
     null
   );
   const itemRefs = useHighlightScroll(highlight, open);
+  useEscapeToClose(open, () => setOpen(false));
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -106,8 +108,6 @@ export function QuickAddProductSearch({
           } else if (e.key === "Enter" && results[highlight]) {
             e.preventDefault();
             pick(results[highlight].id);
-          } else if (e.key === "Escape") {
-            setOpen(false);
           }
         }}
         className="erp-input"

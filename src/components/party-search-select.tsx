@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 type Party = { id: string; name: string; notes?: string | null };
 
@@ -36,6 +37,11 @@ export function PartySearchSelect({
     null
   );
   const itemRefs = useHighlightScroll(highlight, open);
+  // 이 자체완성 드롭다운을 Escape로 닫으려던 것뿐인데, 그 이벤트가 그대로
+  // 버블돼 페이지 전역 ESC 단축키(KeyboardShortcuts)까지 도달하면 입력
+  // 중이던 등록 폼 전체를 나가버리는 사고가 난다 — 캡처 단계에서 먼저
+  // 가로챈다.
+  useEscapeToClose(open, () => setOpen(false));
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -86,8 +92,6 @@ export function PartySearchSelect({
           } else if (e.key === "Enter" && results[highlight]) {
             e.preventDefault();
             selectParty(results[highlight].id);
-          } else if (e.key === "Escape") {
-            setOpen(false);
           }
         }}
         className="erp-input"

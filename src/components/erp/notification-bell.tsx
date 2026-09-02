@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { startRouteProgress } from "@/lib/route-progress";
+import { useClickOutside } from "@/lib/use-click-outside";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 export type DueTodoItem = {
@@ -32,22 +34,12 @@ export function NotificationBell({
   const wrapRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const count = announcements.length + todos.length + lowStock.length;
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node))
-        setOpen(false);
-    }
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, []);
+  const close = useCallback(() => setOpen(false), []);
+  useClickOutside(open, wrapRef, close);
+  // 캡처 단계에서 먼저 가로채 stopPropagation한다 — 안 그러면 이 Escape가
+  // 그대로 버블돼 페이지 전역 ESC 단축키(KeyboardShortcuts)까지 도달해서
+  // 드롭다운만 닫으려던 것뿐인데 페이지를 나가버리는 사고가 난다.
+  useEscapeToClose(open, close);
 
   function go(href: string) {
     setOpen(false);

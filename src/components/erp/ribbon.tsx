@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MENU_ITEMS } from "@/lib/erp-menu";
@@ -10,6 +10,8 @@ import {
   toggleFavorite,
 } from "@/lib/erp-menu-history";
 import { startRouteProgress } from "@/lib/route-progress";
+import { useClickOutside } from "@/lib/use-click-outside";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F2", label: "신규" },
@@ -50,27 +52,14 @@ export function Ribbon() {
   } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (wrapRef.current?.contains(target)) return;
-      if (dropdownRef.current?.contains(target)) return;
-      setOpenPanel(null);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    function handleEsc(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setModal(null);
-        setOpenPanel(null);
-      }
-    }
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
+  const closePanel = useCallback(() => setOpenPanel(null), []);
+  const closeModal = useCallback(() => setModal(null), []);
+  useClickOutside(openPanel !== null, [wrapRef, dropdownRef], closePanel);
+  // 캡처 단계에서 먼저 가로채 stopPropagation한다 — 안 그러면 이 Escape가
+  // 그대로 버블돼 페이지 전역 ESC 단축키(KeyboardShortcuts)까지 도달해서
+  // 패널/모달만 닫으려던 것뿐인데 페이지를 나가버리는 사고가 난다.
+  useEscapeToClose(openPanel !== null, closePanel);
+  useEscapeToClose(modal !== null, closeModal);
 
   // Ctrl/Cmd+K로 어디서든 빠른 검색을 바로 열 수 있게 한다 — 메뉴 트리를
   // 마우스로 찾지 않고 타이핑만으로 원하는 화면으로 이동하는 용도.
@@ -86,16 +75,26 @@ export function Ribbon() {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
+  // 리본이 좁은 화면에서 가로 스크롤돼 버튼이 화면 중간쯤에 있을 수
+  // 있는데, 드롭다운(최소 220px)을 그 버튼 왼쪽 좌표에 그대로 붙이면
+  // 오른쪽 끝이 화면 밖으로 나갈 수 있다 — 알림종 드롭다운에서 겪었던
+  // 것과 같은 종류의 문제라, 화면 오른쪽 여백을 넘지 않게 미리 당겨준다.
+  function clampPanelLeft(left: number) {
+    const minWidth = 220;
+    const margin = 8;
+    return Math.max(margin, Math.min(left, window.innerWidth - minWidth - margin));
+  }
+
   function openFavorites(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    setPanelPos({ top: rect.bottom, left: rect.left });
+    setPanelPos({ top: rect.bottom, left: clampPanelLeft(rect.left) });
     setFavorites(getFavorites());
     setOpenPanel((p) => (p === "favorites" ? null : "favorites"));
   }
 
   function openRecents(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    setPanelPos({ top: rect.bottom, left: rect.left });
+    setPanelPos({ top: rect.bottom, left: clampPanelLeft(rect.left) });
     setRecents(getRecentMenus());
     setOpenPanel((p) => (p === "recent" ? null : "recent"));
   }

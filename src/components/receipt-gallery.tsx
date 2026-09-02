@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export type GalleryReceipt = { id: string; file_url: string };
 
@@ -11,10 +12,14 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const touchStartX = useRef(0);
 
+  // 캡처 단계에서 먼저 가로채 stopPropagation한다 — 안 그러면 이 Escape가
+  // 그대로 버블돼 페이지 전역 ESC 단축키(KeyboardShortcuts)까지 도달해서
+  // 전체화면 뷰어만 닫으려던 것뿐인데 페이지를 나가버리는 사고가 난다.
+  useEscapeToClose(openIndex !== null, useCallback(() => setOpenIndex(null), []));
+
   useEffect(() => {
     if (openIndex === null) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpenIndex(null);
       if (e.key === "ArrowLeft") go(-1);
       if (e.key === "ArrowRight") go(1);
     }
