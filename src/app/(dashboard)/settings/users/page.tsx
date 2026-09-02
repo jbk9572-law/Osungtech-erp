@@ -2,28 +2,14 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { CreateUserForm } from "@/components/create-user-form";
 import { UserRoleSelect } from "@/components/user-role-select";
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "관리자",
-  manager: "매니저",
-  staff: "일반",
-};
+import { ROLE_LABELS } from "@/lib/user-roles";
+import { getCurrentActor } from "@/lib/current-actor";
 
 export default async function UsersSettingsPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { userId, isAdmin } = await getCurrentActor(supabase);
 
-  const { data: myProfile } = user
-    ? await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle()
-    : { data: null };
-
-  if (myProfile?.role !== "admin") {
+  if (!isAdmin) {
     return (
       <div>
         <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
@@ -84,7 +70,7 @@ export default async function UsersSettingsPage() {
                   <UserRoleSelect
                     userId={row.id}
                     role={row.role}
-                    disabled={row.id === user?.id}
+                    disabled={row.id === userId}
                   />
                 </td>
                 <td>{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>

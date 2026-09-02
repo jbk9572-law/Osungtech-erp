@@ -39,6 +39,16 @@ export default async function AnnouncementDetailPage({
 
   const allowManage = canManage(row.created_by, actor.userId, actor.isAdmin);
 
+  // 목록의 "안읽음" 체크박스를 따로 눌러야만 읽음 처리가 되고, 정작 이
+  // 상세 화면에서 내용을 다 읽어도 읽음으로 남지 않던 문제 — 알림종/대시보드
+  // 배지가 이미 읽은 공지도 계속 안읽음으로 보여줬다. 상세 화면을 열람하는
+  // 것 자체를 읽음 처리로 본다.
+  if (actor.userId) {
+    await supabase
+      .from("announcement_reads")
+      .upsert({ announcement_id: id, user_id: actor.userId }, { onConflict: "announcement_id,user_id" });
+  }
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />

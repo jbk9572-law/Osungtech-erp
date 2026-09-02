@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { EditUserForm } from "@/components/edit-user-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { deleteUserAccount } from "@/app/(dashboard)/settings/users/actions";
+import { getCurrentActor } from "@/lib/current-actor";
 
 export default async function UserDetailPage({
   params,
@@ -13,15 +14,9 @@ export default async function UserDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { userId, isAdmin } = await getCurrentActor(supabase);
 
-  const { data: myProfile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
-    : { data: null };
-
-  if (myProfile?.role !== "admin") {
+  if (!isAdmin) {
     return (
       <div>
         <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 계정관리</h1>
@@ -42,7 +37,7 @@ export default async function UserDetailPage({
     notFound();
   }
 
-  const isSelf = target.id === user?.id;
+  const isSelf = target.id === userId;
 
   return (
     <div>

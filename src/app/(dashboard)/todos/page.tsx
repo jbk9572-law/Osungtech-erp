@@ -125,7 +125,7 @@ export default async function TodosPage({
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            기한임박
+            기한초과
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: overdueCount ? "var(--erp-danger)" : undefined }}>
             {overdueCount.toLocaleString()}건
