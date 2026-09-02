@@ -102,6 +102,13 @@ export async function savePaperCalculation(
     revalidatePath(`/purchases/${purchaseOrderId}/edit`);
   }
   revalidatePath("/paper-calc");
+  // syncPaperStockOrderItem/syncPaperStockPurchaseItem이 실제로
+  // inventory_transactions를 insert해서 재고 수량을 바꾼다 — createSale/
+  // createPurchase 등 재고를 바꾸는 다른 모든 액션과 마찬가지로 재고
+  // 현황·대시보드도 갱신해야 한다(빠져있으면 방금 반영된 수량이 그
+  // 화면들엔 안 보일 수 있었다).
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
 
   if (warning) return { error: warning };
   return {
@@ -162,6 +169,8 @@ export async function deletePaperCalculation(
     revalidatePath(`/sales/${salesOrderId}/edit`);
   }
   revalidatePath("/paper-calc");
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
 
   if (warning) return { error: `계산은 삭제했지만 ${PAPER_STOCK_SKU} 품목 수량 갱신에 실패했습니다: ${warning}` };
   return { success: "삭제했습니다." };

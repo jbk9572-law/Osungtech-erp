@@ -605,6 +605,11 @@ export async function overridePurchasePaperStock(
   if (errorMessage) return { error: errorMessage };
 
   revalidatePath(`/purchases/${purchaseOrderId}`);
+  // overridePurchasePaperStockQuantity가 inventory_transactions를 insert해서
+  // 실제 재고 수량을 바꾼다 — 다른 재고 변경 액션들과 마찬가지로 재고
+  // 현황·대시보드도 갱신해야 한다.
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
   return { success: "모조지 수량을 수동값으로 변경했습니다." };
 }
 
@@ -625,5 +630,7 @@ export async function revertPurchasePaperStock(
   if (errorMessage) return { error: errorMessage };
 
   revalidatePath(`/purchases/${purchaseOrderId}`);
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
   return { success: "자동 계산값으로 되돌렸습니다." };
 }
