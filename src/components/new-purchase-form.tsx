@@ -131,7 +131,12 @@ export function NewPurchaseForm({
   prefillItems?: { productId: string; quantity: number }[];
   // 출고처(거래처)별 판매단가. "매출도 같이 등록"에서 매출단가 미리보기에
   // 쓴다 — 매출 등록 화면(new-sale-form)과 동일한 방식.
-  prices?: { customer_id: string; product_id: string; unit_price: number }[];
+  prices?: {
+    customer_id: string;
+    product_id: string;
+    unit_price: number;
+    notes?: string | null;
+  }[];
   // 공급처별 매입단가. 공급처+상품 조합으로 등록해둔 단가가 있으면 그걸
   // 우선 쓰고, 없으면 품목 기본 매입원가(product.cost)로 채운다 — 거래처별
   // 판매단가(prices/priceMap)와 동일한 방식.
@@ -139,6 +144,7 @@ export function NewPurchaseForm({
     supplier_id: string;
     product_id: string;
     unit_cost: number;
+    notes?: string | null;
   }[];
   // 최근 매입단가 이력 — 매출 등록 화면의 PriceHistoryHint와 동일하게,
   // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
@@ -215,6 +221,19 @@ export function NewPurchaseForm({
     if (fromSupplier !== undefined) return fromSupplier;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.cost) : 0;
+  }
+  const supplierNoteMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of supplierPrices) {
+      if (p.notes) map.set(`${p.supplier_id}:${p.product_id}`, p.notes);
+    }
+    return map;
+  }, [supplierPrices]);
+  function resolveSupplierNote(
+    forSupplierId: string,
+    productId: string,
+  ): string | null {
+    return supplierNoteMap.get(`${forSupplierId}:${productId}`) ?? null;
   }
 
   // 케이아이티솔루션·제니스테크·타이거일렉처럼 같은 공급처+품목 조합에
@@ -662,7 +681,10 @@ export function NewPurchaseForm({
     setOpenTodos(null);
   }
 
-  const supplyAmount = rows.reduce(
+  // 화면에 보여주는 합계가 실제 제출되는(itemsJson) 값과 항상 같도록,
+  // 제출에서 제외되는 행(품목 미선택, 수량 0 이하)은 합계에서도 뺀다.
+  const submittedRows = rows.filter((row) => row.productId && row.quantity > 0);
+  const supplyAmount = submittedRows.reduce(
     (sum, row) => sum + row.quantity * row.unitCost,
     0,
   );
@@ -670,8 +692,7 @@ export function NewPurchaseForm({
   const total = supplyAmount + taxAmount;
 
   const itemsJson = JSON.stringify(
-    rows
-      .filter((row) => row.productId && row.quantity > 0)
+    submittedRows
       .map((row) => ({
         productId: row.productId,
         // 직접입력이 아니면 규격을 스냅샷으로 고정하지 않고 null로 저장해서,
@@ -1408,6 +1429,24 @@ export function NewPurchaseForm({
                           handleProductChange(row.key, productId)
                         }
                       />
+                      {row.productId &&
+                        resolveSupplierNote(supplierId, row.productId) && (
+                          <div
+                            className="mt-1"
+                            style={{
+                              padding: "4px 8px",
+                              fontSize: 11.5,
+                              color: "var(--erp-info-text)",
+                              background: "var(--erp-info-bg)",
+                              border: "1px solid var(--erp-info-border)",
+                              borderRadius: 4,
+                              whiteSpace: "normal",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            품목 특이사항: {resolveSupplierNote(supplierId, row.productId)}
+                          </div>
+                        )}
                     </td>
                     <td>
                       <input
@@ -1470,19 +1509,21 @@ export function NewPurchaseForm({
                           })
                         }
                         allowFormula
+                        basePackageQty={product?.base_package_qty}
                       />
                     </td>
                     {alsoCreateSale && (
                       <td className="num">
-                        <NumberInput
-                          placeholder="출고수량"
-                          value={row.saleQuantity}
-                          onChange={(n) =>
+                        <QuantityWithBoxInput
+                          quantity={row.saleQuantity}
+                          onQuantityChange={(n) =>
                             updateRow(row.key, {
                               saleQuantity: n,
                               manualSaleQuantity: true,
                             })
                           }
+                          basePackageQty={product?.base_package_qty}
+                          label="출고수량"
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (

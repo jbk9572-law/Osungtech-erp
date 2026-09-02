@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 const TABLE_LABELS: Record<string, string> = {
   sales_orders: "매출",
@@ -11,6 +12,8 @@ const TABLE_LABELS: Record<string, string> = {
   customers: "출고처",
   suppliers: "매입처",
   profiles: "계정",
+  customer_payments: "수금",
+  supplier_payments: "지급",
 };
 
 const IDENTITY_FIELD: Record<string, string> = {
@@ -20,6 +23,8 @@ const IDENTITY_FIELD: Record<string, string> = {
   customers: "name",
   suppliers: "name",
   profiles: "full_name",
+  customer_payments: "amount",
+  supplier_payments: "amount",
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -100,6 +105,22 @@ const FIELD_LABELS: Record<string, Record<string, string>> = {
     email: "이메일",
     role: "권한",
   },
+  customer_payments: {
+    customer_id: "출고처",
+    paid_at: "수금일자",
+    amount: "금액",
+    method: "수금방법",
+    memo: "메모",
+    created_by: "작성자",
+  },
+  supplier_payments: {
+    supplier_id: "매입처",
+    paid_at: "지급일자",
+    amount: "금액",
+    method: "지급방법",
+    memo: "메모",
+    created_by: "작성자",
+  },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -144,10 +165,13 @@ function formatValue(tableName: string, key: string, v: unknown, lookups: Lookup
   if (key === "role") return ROLE_LABELS[String(v)] ?? String(v);
   if (key === "purchase_price_basis") return PRICE_BASIS_LABELS[String(v)] ?? String(v);
   if (typeof v === "boolean") return v ? "예" : "아니오";
-  if (tableName === "products" && (key === "price" || key === "cost")) {
+  if (
+    (tableName === "products" && (key === "price" || key === "cost")) ||
+    ((tableName === "customer_payments" || tableName === "supplier_payments") && key === "amount")
+  ) {
     return `₩${Number(v).toLocaleString()}`;
   }
-  if (key === "order_date" || key === "purchase_date") {
+  if (key === "order_date" || key === "purchase_date" || key === "paid_at") {
     return new Date(String(v)).toLocaleDateString("ko-KR");
   }
   if (typeof v === "object") return JSON.stringify(v);
@@ -183,7 +207,9 @@ function identitySummary(tableName: string, data: Record<string, unknown> | null
   if (!data) return "-";
   const field = IDENTITY_FIELD[tableName];
   const value = field ? data[field] : undefined;
-  return value != null && value !== "" ? String(value) : "-";
+  if (value == null || value === "") return "-";
+  if (field === "amount") return `₩${Number(value).toLocaleString()}`;
+  return String(value);
 }
 
 const DEFAULT_LIMIT = 300;
@@ -224,19 +250,26 @@ export default async function AuditLogPage({
   // 실제 이름으로 바꿔 보여주기 위해, 관련 마스터 테이블을 통째로 미리
   // 불러와 조회맵을 만든다 — 이력 건수만큼 매번 개별 조회하는 대신 한
   // 번씩만 불러온다.
-  const [{ data }, { data: customers }, { data: suppliers }, { data: categories }, { data: profiles }] =
-    await Promise.all([
-      query,
-      supabase.from("customers").select("id, name"),
-      supabase.from("suppliers").select("id, name"),
-      supabase.from("categories").select("id, name"),
-      supabase.from("profiles").select("id, full_name"),
-    ]);
+  const [{ data }, customers, suppliers, categories, profiles] = await Promise.all([
+    query,
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("customers").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("categories").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+      supabase.from("profiles").select("id, full_name").range(from, to),
+    ),
+  ]);
   const lookups: Lookups = {
-    customers: new Map((customers ?? []).map((c) => [c.id, c.name])),
-    suppliers: new Map((suppliers ?? []).map((s) => [s.id, s.name])),
-    categories: new Map((categories ?? []).map((c) => [c.id, c.name])),
-    profiles: new Map((profiles ?? []).map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
+    customers: new Map(customers.map((c) => [c.id, c.name])),
+    suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
+    categories: new Map(categories.map((c) => [c.id, c.name])),
+    profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
   };
 
   const rows = data ?? [];

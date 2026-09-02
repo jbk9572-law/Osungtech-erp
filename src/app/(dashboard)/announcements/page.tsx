@@ -9,17 +9,21 @@ export default async function AnnouncementsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: rows, error }, { data: reads }] = await Promise.all([
-    supabase
-      .from("announcements")
-      .select("id, title, content, pinned, created_at, profiles!created_by(full_name)")
-      .order("pinned", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(300),
-    user
-      ? supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id)
-      : Promise.resolve({ data: [] as { announcement_id: string }[] }),
-  ]);
+  const { data: rows, error } = await supabase
+    .from("announcements")
+    .select("id, title, content, pinned, created_at, profiles!created_by(full_name)")
+    .order("pinned", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(300);
+
+  // 안 읽음 여부는 지금 목록에 보여줄 것들에 대해서만 필요하므로, 그 id로만
+  // 좁혀서 조회한다 — 이 사용자가 지금까지 읽은 공지 전체를 가져오면 오래
+  // 쓸수록(1000건 초과 시) 조용히 잘려서 최근 글의 읽음 여부가 틀릴 수 있다.
+  const rowIds = (rows ?? []).map((r) => r.id);
+  const { data: reads } =
+    user && rowIds.length
+      ? await supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id).in("announcement_id", rowIds)
+      : { data: [] as { announcement_id: string }[] };
 
   const readIds = new Set((reads ?? []).map((r) => r.announcement_id));
   const gridRows: AnnouncementRow[] = (rows ?? []).map((row) => ({

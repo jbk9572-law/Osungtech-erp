@@ -6,6 +6,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { updateProduct, deleteProduct } from "@/app/(dashboard)/products/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { resolveListHref } from "@/lib/list-return";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function ProductDetailPage({
   params,
@@ -19,11 +20,15 @@ export default async function ProductDetailPage({
   const closeHref = resolveListHref("/products", back);
   const supabase = await createClient();
 
-  const [{ data: product }, { data: categories }, { data: suppliers }, { data: packageQtyHistory }] =
+  const [{ data: product }, categories, suppliers, { data: packageQtyHistory }] =
     await Promise.all([
       supabase.from("products").select("*").eq("id", id).maybeSingle(),
-      supabase.from("categories").select("id, name").order("name"),
-      supabase.from("suppliers").select("id, name").order("name"),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("categories").select("id, name").order("name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("suppliers").select("id, name").order("name").range(from, to),
+      ),
       supabase
         .from("product_package_qty_history")
         .select("base_package_qty, changed_at")

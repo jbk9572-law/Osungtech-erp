@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 export async function createAnnouncement(
@@ -51,20 +52,17 @@ export async function updateAnnouncement(
   }
 
   const supabase = await createClient();
-  const { data: updated, error } = await supabase
+  const result = await supabase
     .from("announcements")
     .update({ title, content, pinned })
     .eq("id", id)
     .select("id");
 
-  if (error) {
-    return { error: `수정에 실패했습니다: ${error.message}` };
-  }
-  // .select()로 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는
-  // 관리자가 아님) error 없이 조용히 0건 갱신으로 끝난다.
-  if (!updated || updated.length === 0) {
-    return { error: "수정에 실패했습니다. 본인이 등록한 공지만 수정할 수 있습니다." };
-  }
+  const updateError = requireMutatedRow(result, {
+    onError: "수정에 실패했습니다",
+    onForbidden: "수정에 실패했습니다. 본인이 등록한 공지만 수정할 수 있습니다.",
+  });
+  if (updateError) return updateError;
 
   revalidatePath("/announcements");
   revalidatePath("/dashboard");
@@ -81,41 +79,38 @@ export async function deleteAnnouncement(
   }
 
   const supabase = await createClient();
-  const { data: deleted, error } = await supabase.from("announcements").delete().eq("id", id).select("id");
+  const result = await supabase.from("announcements").delete().eq("id", id).select("id");
 
-  if (error) {
-    return { error: `삭제에 실패했습니다: ${error.message}` };
-  }
-  if (!deleted || deleted.length === 0) {
-    return { error: "삭제에 실패했습니다. 본인이 등록한 공지만 삭제할 수 있습니다." };
-  }
+  const deleteError = requireMutatedRow(result, {
+    onError: "삭제에 실패했습니다",
+    onForbidden: "삭제에 실패했습니다. 본인이 등록한 공지만 삭제할 수 있습니다.",
+  });
+  if (deleteError) return deleteError;
 
   revalidatePath("/announcements");
   revalidatePath("/dashboard");
   redirect("/announcements");
 }
 
-export async function toggleAnnouncementRead(formData: FormData) {
+export async function toggleAnnouncementRead(formData: FormData): Promise<{ error: string } | undefined> {
   const id = String(formData.get("id") ?? "");
   const currentlyRead = formData.get("read") === "true";
-  if (!id) return;
+  if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "로그인이 필요합니다." };
 
-  if (currentlyRead) {
-    await supabase
-      .from("announcement_reads")
-      .delete()
-      .eq("announcement_id", id)
-      .eq("user_id", user.id);
-  } else {
-    await supabase
-      .from("announcement_reads")
-      .upsert({ announcement_id: id, user_id: user.id }, { onConflict: "announcement_id,user_id" });
+  const { error } = currentlyRead
+    ? await supabase.from("announcement_reads").delete().eq("announcement_id", id).eq("user_id", user.id)
+    : await supabase
+        .from("announcement_reads")
+        .upsert({ announcement_id: id, user_id: user.id }, { onConflict: "announcement_id,user_id" });
+
+  if (error) {
+    return { error: `읽음 처리에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/announcements");

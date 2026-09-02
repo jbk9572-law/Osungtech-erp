@@ -36,6 +36,7 @@ export function CustomerPriceForm({
         name="unit_price"
         type="number"
         step="0.01"
+        min="0"
         placeholder="판매단가"
         aria-label="판매단가"
         required

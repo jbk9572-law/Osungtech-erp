@@ -59,6 +59,7 @@ export function PriceScheduleRow({
             name="new_unit_price"
             type="number"
             step="0.01"
+            min="0"
             defaultValue={newUnitPrice}
             required
             className="erp-input"

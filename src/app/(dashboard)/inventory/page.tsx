@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function InventoryPage({
   searchParams,
@@ -10,19 +11,35 @@ export default async function InventoryPage({
 }) {
   const { q } = await searchParams;
   const supabase = await createClient();
-  const [{ data: products }, { data: warehouse }] = await Promise.all([
+  const [products, { data: warehouse }] = await Promise.all([
     // 매입/매출/조정이 한 번도 없어 inventory 행이 아예 없는 상품도 수량 0으로
     // 표시하기 위해 products를 기준으로 재고를 왼쪽 조인한다.
-    supabase
-      .from("products")
-      .select(
-        "id, sku, name, spec, unit, reorder_point, base_package_qty, cost, price, categories(name), suppliers(name), inventory(quantity, warehouse_id)"
-      )
-      .order("name"),
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      reorder_point: number | null;
+      base_package_qty: number | null;
+      cost: number;
+      price: number;
+      categories: { name: string } | null;
+      suppliers: { name: string } | null;
+      inventory: { quantity: number; warehouse_id: string }[];
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select(
+          "id, sku, name, spec, unit, reorder_point, base_package_qty, cost, price, categories(name), suppliers(name), inventory(quantity, warehouse_id)"
+        )
+        .order("name")
+        .range(from, to),
+    ),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
 
-  const allStockRows: ProductGridRow[] = (products ?? []).map((p) => ({
+  const allStockRows: ProductGridRow[] = products.map((p) => ({
     id: p.id,
     sku: p.sku,
     name: p.name,

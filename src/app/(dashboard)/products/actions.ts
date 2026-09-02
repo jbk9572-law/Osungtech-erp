@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 import { numberOrDefault, numberOrNull } from "@/lib/form-number";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 async function resolveCategoryId(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -20,12 +21,24 @@ async function resolveCategoryId(
       .maybeSingle();
     if (existing) return existing.id;
 
-    const { data: created } = await supabase
+    const { data: created, error } = await supabase
       .from("categories")
       .insert({ name: newCategoryName })
       .select("id")
       .single();
-    return created?.id ?? null;
+    if (created) return created.id;
+    // 이 조회~삽입 사이에 다른 사람이 같은 이름으로 먼저 만들었으면(동시
+    // 등록) name의 unique 제약에 걸려 삽입이 실패한다 — 실패로 끝내지
+    // 말고 그 사이 생긴 카테고리를 다시 조회해서 그걸 쓴다.
+    if (error) {
+      const { data: retry } = await supabase
+        .from("categories")
+        .select("id")
+        .ilike("name", newCategoryName)
+        .maybeSingle();
+      if (retry) return retry.id;
+    }
+    return null;
   }
   return String(formData.get("category_id") ?? "") || null;
 }
@@ -41,6 +54,16 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
     reorder_point: numberOrDefault(formData.get("reorder_point"), 0),
     base_package_qty: numberOrNull(formData.get("base_package_qty")),
   };
+}
+
+function validateProductFields(fields: Awaited<ReturnType<typeof productFieldsFrom>>): string | null {
+  if (fields.price < 0 || fields.cost < 0 || fields.reorder_point < 0) {
+    return "판매가·매입가·재주문점은 0 이상이어야 합니다.";
+  }
+  if (fields.base_package_qty != null && fields.base_package_qty < 0) {
+    return "기초수량은 0 이상이어야 합니다.";
+  }
+  return null;
 }
 
 // KG처럼 실제로 담기는 양에 따라 박스당 수량이 매번 달라지는 품목이
@@ -71,6 +94,8 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
 
   const supabase = await createClient();
   const fields = await productFieldsFrom(supabase, formData);
+  const fieldError = validateProductFields(fields);
+  if (fieldError) return { error: fieldError };
   const { data: created, error } = await supabase
     .from("products")
     .insert({ sku, name, ...fields })
@@ -88,6 +113,7 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   await recordPackageQtyChange(supabase, created.id, fields.base_package_qty, null);
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
   return { success: "상품이 등록되었습니다." };
 }
 
@@ -106,6 +132,8 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
     .eq("id", id)
     .maybeSingle();
   const fields = await productFieldsFrom(supabase, formData);
+  const fieldError = validateProductFields(fields);
+  if (fieldError) return { error: fieldError };
   const { error } = await supabase
     .from("products")
     .update({ sku, name, ...fields })
@@ -126,6 +154,7 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
 
   revalidatePath("/products");
   revalidatePath(`/products/${id}`);
+  revalidatePath("/inventory");
   return { success: "상품 정보가 저장되었습니다." };
 }
 
@@ -147,6 +176,7 @@ export async function deleteProduct(_prevState: FormState, formData: FormData): 
   }
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
   redirect("/products");
 }
 
@@ -200,8 +230,10 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
 
   const supabase = await createClient();
 
-  const { data: existingSuppliers } = await supabase.from("suppliers").select("id, name");
-  const supplierByName = new Map((existingSuppliers ?? []).map((s) => [s.name.trim(), s.id]));
+  const existingSuppliers = await fetchAllRows<{ id: string; name: string }>((from, to) =>
+    supabase.from("suppliers").select("id, name").range(from, to),
+  );
+  const supplierByName = new Map(existingSuppliers.map((s) => [s.name.trim(), s.id]));
 
   const errors: ImportRowError[] = [];
   const parsedRows: {
@@ -293,5 +325,6 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   }
 
   revalidatePath("/products");
+  revalidatePath("/inventory");
   return summarize(rows.length, okCount, errors);
 }

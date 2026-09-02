@@ -7,6 +7,8 @@ import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, summarize, type ImportRowError } from "@/lib/excel-import";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 
 const DELIVERY_NOTE_VARIANTS = ["sns_filtech", "zenith_tech", "ket_solution"] as const;
 
@@ -126,6 +128,9 @@ export async function upsertCustomerPrice(
   if (!customerId || !productId) {
     return { error: "상품을 선택해주세요." };
   }
+  if (unitPrice < 0) {
+    return { error: "단가는 0 이상이어야 합니다." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -141,6 +146,32 @@ export async function upsertCustomerPrice(
 
   revalidatePath(`/customers/${customerId}`);
   return { success: "판매단가가 저장되었습니다." };
+}
+
+// 이 거래처+상품 조합에만 해당하는 특이사항(예: "여유분 5매 추가해서
+// 나감"). 거래처 전체 특이사항(customers.notes)과는 별도로, 매출 등록
+// 화면에서 이 거래처와 이 상품을 함께 고르면 자동으로 보여준다.
+export async function updateCustomerProductPriceNotes(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const customerId = String(formData.get("customer_id") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim();
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("customer_product_prices")
+    .update({ notes: notes || null })
+    .eq("id", id);
+
+  if (error) {
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  if (customerId) revalidatePath(`/customers/${customerId}`);
+  return { success: "특이사항을 저장했습니다." };
 }
 
 // 미래 특정 날짜부터 적용할 단가를 예약해둔다. customer_product_prices를
@@ -159,6 +190,9 @@ export async function schedulePriceChange(
 
   if (!customerId || !productId || !effectiveDate) {
     return { error: "상품과 적용일을 모두 입력해주세요." };
+  }
+  if (newUnitPrice < 0) {
+    return { error: "단가는 0 이상이어야 합니다." };
   }
   const today = todayKstStr();
   if (effectiveDate <= today) {
@@ -200,21 +234,27 @@ export async function updatePriceSchedule(
   if (!id || !effectiveDate) {
     return { error: "적용일을 입력해주세요." };
   }
+  if (newUnitPrice < 0) {
+    return { error: "단가는 0 이상이어야 합니다." };
+  }
   const today = todayKstStr();
   if (effectiveDate <= today) {
     return { error: "적용일은 내일 이후 날짜여야 합니다." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const result = await supabase
     .from("price_change_schedules")
     .update({ new_unit_price: newUnitPrice, effective_date: effectiveDate })
     .eq("id", id)
-    .is("applied_at", null);
+    .is("applied_at", null)
+    .select("id");
 
-  if (error) {
-    return { error: `수정에 실패했습니다: ${error.message}` };
-  }
+  const mutationError = requireMutatedRow(result, {
+    onError: "수정에 실패했습니다",
+    onForbidden: "본인이 등록한 예약만 수정할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
   return { success: "단가 예약을 수정했습니다." };
@@ -226,11 +266,18 @@ export async function cancelPriceSchedule(_prevState: FormState, formData: FormD
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("price_change_schedules").delete().eq("id", id).is("applied_at", null);
+  const result = await supabase
+    .from("price_change_schedules")
+    .delete()
+    .eq("id", id)
+    .is("applied_at", null)
+    .select("id");
 
-  if (error) {
-    return { error: `취소에 실패했습니다: ${error.message}` };
-  }
+  const mutationError = requireMutatedRow(result, {
+    onError: "취소에 실패했습니다",
+    onForbidden: "본인이 등록한 예약만 취소할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
   return { success: "예약을 취소했습니다." };
@@ -277,8 +324,12 @@ export async function deleteCustomerPayment(_prevState: FormState, formData: For
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("customer_payments").delete().eq("id", id);
-  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
+  const result = await supabase.from("customer_payments").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, {
+    onError: "삭제에 실패했습니다",
+    onForbidden: "본인이 등록한 수금 내역만 삭제할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
 
   if (customerId) revalidatePath(`/customers/${customerId}`);
   revalidatePath("/receivables");
@@ -306,11 +357,13 @@ export async function importCustomersExcel(_prevState: FormState, formData: Form
 
   // 사업자등록번호가 있으면 그걸로, 없으면 상호명으로 기존 거래처를 찾아 갱신하고
   // 못 찾으면 새로 등록한다.
-  const { data: existing } = await supabase.from("customers").select("id, name, business_number");
-  const byBusinessNumber = new Map(
-    (existing ?? []).filter((c) => c.business_number).map((c) => [c.business_number as string, c.id])
+  const existing = await fetchAllRows<{ id: string; name: string; business_number: string | null }>((from, to) =>
+    supabase.from("customers").select("id, name, business_number").range(from, to),
   );
-  const byName = new Map((existing ?? []).map((c) => [c.name.trim(), c.id]));
+  const byBusinessNumber = new Map(
+    existing.filter((c) => c.business_number).map((c) => [c.business_number as string, c.id])
+  );
+  const byName = new Map(existing.map((c) => [c.name.trim(), c.id]));
 
   type ImportPayload = {
     name: string;
@@ -410,17 +463,29 @@ export async function getCustomerTransactionHistory(
   fromDate?: string
 ): Promise<PartyTransactionRow[]> {
   const supabase = await createClient();
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("sales_orders")
-      .select("id, order_date, payment_method, is_return, sales_order_items(quantity, unit_price, products(name))")
-      .eq("customer_id", customerId)
-      .order("order_date", { ascending: true }),
-    supabase
-      .from("customer_payments")
-      .select("id, paid_at, amount, memo")
-      .eq("customer_id", customerId)
-      .order("paid_at", { ascending: true }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      order_date: string;
+      payment_method: string | null;
+      is_return: boolean;
+      sales_order_items: { quantity: number; unit_price: string | number; products: { name: string } | null }[];
+    }>((from, to) =>
+      supabase
+        .from("sales_orders")
+        .select("id, order_date, payment_method, is_return, sales_order_items(quantity, unit_price, products(name))")
+        .eq("customer_id", customerId)
+        .order("order_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; memo: string | null }>((from, to) =>
+      supabase
+        .from("customer_payments")
+        .select("id, paid_at, amount, memo")
+        .eq("customer_id", customerId)
+        .order("paid_at", { ascending: true })
+        .range(from, to),
+    ),
   ]);
 
   type Entry = { id: string; kind: "sale" | "collection"; date: string; label: string; total: number };

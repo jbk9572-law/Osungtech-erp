@@ -25,13 +25,31 @@ export function daysSince(dateStr: string, today: string = todayKstStr()): numbe
 }
 
 export async function getCustomerBalance(supabase: SupabaseServerClient, customerId: string) {
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("sales_orders")
-      .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
-      .eq("customer_id", customerId)
-      .order("order_date", { ascending: true }),
-    supabase.from("customer_payments").select("id, paid_at, amount, method, memo").eq("customer_id", customerId).order("paid_at", { ascending: false }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      doc_no: number | null;
+      order_date: string;
+      payment_method: string | null;
+      is_return: boolean;
+      sales_order_items: { quantity: number; unit_price: string | number }[];
+    }>((from, to) =>
+      supabase
+        .from("sales_orders")
+        .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
+        .eq("customer_id", customerId)
+        .order("order_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
+      (from, to) =>
+        supabase
+          .from("customer_payments")
+          .select("id, paid_at, amount, method, memo")
+          .eq("customer_id", customerId)
+          .order("paid_at", { ascending: false })
+          .range(from, to),
+    ),
   ]);
   // 결제방법을 "항상 외상" 대신 현금/계좌이체 등으로 등록한 주문은 그
   // 자리에서 결제가 끝난 거래이므로 미수금 계산에서 아예 뺀다. 반품은
@@ -68,13 +86,30 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
 }
 
 export async function getSupplierBalance(supabase: SupabaseServerClient, supplierId: string) {
-  const [{ data: orders }, { data: payments }] = await Promise.all([
-    supabase
-      .from("purchase_orders")
-      .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
-      .eq("supplier_id", supplierId)
-      .order("purchase_date", { ascending: true }),
-    supabase.from("supplier_payments").select("id, paid_at, amount, method, memo").eq("supplier_id", supplierId).order("paid_at", { ascending: false }),
+  const [orders, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      doc_no: number | null;
+      purchase_date: string;
+      payment_method: string | null;
+      purchase_order_items: { quantity: number; unit_cost: string | number }[];
+    }>((from, to) =>
+      supabase
+        .from("purchase_orders")
+        .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
+        .eq("supplier_id", supplierId)
+        .order("purchase_date", { ascending: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
+      (from, to) =>
+        supabase
+          .from("supplier_payments")
+          .select("id, paid_at, amount, method, memo")
+          .eq("supplier_id", supplierId)
+          .order("paid_at", { ascending: false })
+          .range(from, to),
+    ),
   ]);
   const creditOrders = (orders ?? [])
     .filter((o) => !o.payment_method)
@@ -120,8 +155,10 @@ export type PartyBalance = { id: string; name: string; total: number; paid: numb
 // 생기므로, 전체 매출/전체 수금을 한 번씩만 불러와 메모리에서 거래처별로
 // 합산한다.
 export async function getAllCustomerBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [{ data: customers }, items, { data: payments }] = await Promise.all([
-    supabase.from("customers").select("id, name").order("name"),
+  const [customers, items, payments] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("customers").select("id, name").order("name").range(from, to),
+    ),
     fetchAllRows<{
       quantity: number;
       unit_price: string | number;
@@ -132,7 +169,9 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
         .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method, is_return)")
         .range(from, to),
     ),
-    supabase.from("customer_payments").select("customer_id, amount"),
+    fetchAllRows<{ customer_id: string; amount: string | number }>((from, to) =>
+      supabase.from("customer_payments").select("customer_id, amount").range(from, to),
+    ),
   ]);
 
   const salesByCustomer: Record<string, number> = {};
@@ -143,11 +182,11 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
     salesByCustomer[cid] = (salesByCustomer[cid] ?? 0) + amount;
   }
   const paidByCustomer: Record<string, number> = {};
-  for (const p of payments ?? []) {
+  for (const p of payments) {
     paidByCustomer[p.customer_id] = (paidByCustomer[p.customer_id] ?? 0) + Number(p.amount);
   }
 
-  return (customers ?? []).map((c) => {
+  return customers.map((c) => {
     const total = salesByCustomer[c.id] ?? 0;
     const paid = paidByCustomer[c.id] ?? 0;
     return { id: c.id, name: c.name, total, paid, balance: total - paid };
@@ -155,8 +194,10 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
 }
 
 export async function getAllSupplierBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [{ data: suppliers }, items, { data: payments }] = await Promise.all([
-    supabase.from("suppliers").select("id, name").order("name"),
+  const [suppliers, items, payments] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
     fetchAllRows<{
       quantity: number;
       unit_cost: string | number;
@@ -167,7 +208,9 @@ export async function getAllSupplierBalances(supabase: SupabaseServerClient): Pr
         .select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)")
         .range(from, to),
     ),
-    supabase.from("supplier_payments").select("supplier_id, amount"),
+    fetchAllRows<{ supplier_id: string; amount: string | number }>((from, to) =>
+      supabase.from("supplier_payments").select("supplier_id, amount").range(from, to),
+    ),
   ]);
 
   const purchasesBySupplier: Record<string, number> = {};
@@ -177,11 +220,11 @@ export async function getAllSupplierBalances(supabase: SupabaseServerClient): Pr
     purchasesBySupplier[sid] = (purchasesBySupplier[sid] ?? 0) + item.quantity * Number(item.unit_cost);
   }
   const paidBySupplier: Record<string, number> = {};
-  for (const p of payments ?? []) {
+  for (const p of payments) {
     paidBySupplier[p.supplier_id] = (paidBySupplier[p.supplier_id] ?? 0) + Number(p.amount);
   }
 
-  return (suppliers ?? []).map((s) => {
+  return suppliers.map((s) => {
     const total = purchasesBySupplier[s.id] ?? 0;
     const paid = paidBySupplier[s.id] ?? 0;
     return { id: s.id, name: s.name, total, paid, balance: total - paid };

@@ -11,6 +11,7 @@ import { deleteTodo, updateTodo } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function TodoDetailPage({
   params,
@@ -19,25 +20,37 @@ export default async function TodoDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: row, error }, { data: products }, { data: calcs }, { data: suppliers }, { data: customers }, actor] =
-    await Promise.all([
-      supabase
-        .from("todos")
-        .select(
-          "id, title, memo, items, todo_type, ship_date, supplier_id, customer_id, purchase_done_at, sale_done_at, due_date, done, created_by, profiles!created_by(full_name), suppliers(name), customers(name)"
-        )
-        .eq("id", id)
-        .maybeSingle(),
-      supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name"),
-      supabase
-        .from("paper_calculations")
-        .select("id, input_items, total_sheet")
-        .eq("todo_id", id)
-        .order("created_at", { ascending: false }),
-      supabase.from("suppliers").select("id, name").order("name"),
-      supabase.from("customers").select("id, name").order("name"),
-      getCurrentActor(supabase),
-    ]);
+  const [{ data: row, error }, products, { data: calcs }, suppliers, customers, actor] = await Promise.all([
+    supabase
+      .from("todos")
+      .select(
+        "id, title, memo, items, todo_type, ship_date, supplier_id, customer_id, purchase_done_at, sale_done_at, due_date, done, created_by, profiles!created_by(full_name), suppliers(name), customers(name)"
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      base_package_qty: number | null;
+    }>((from, to) =>
+      supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name").range(from, to),
+    ),
+    supabase
+      .from("paper_calculations")
+      .select("id, input_items, total_sheet")
+      .eq("todo_id", id)
+      .order("created_at", { ascending: false }),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("customers").select("id, name").order("name").range(from, to),
+    ),
+    getCurrentActor(supabase),
+  ]);
 
   if (error) {
     return (

@@ -4,6 +4,10 @@ import { CreateSupplierForm } from "@/components/create-supplier-form";
 import { SupplierGridTable } from "@/components/supplier-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importSuppliersExcel } from "@/app/(dashboard)/suppliers/actions";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import type { Database } from "@/types/database.types";
+
+type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
 
 export default async function SuppliersPage({
   searchParams,
@@ -12,14 +16,13 @@ export default async function SuppliersPage({
 }) {
   const { q } = await searchParams;
   const supabase = await createClient();
-  const { data: allSuppliers } = await supabase
-    .from("suppliers")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const allSuppliers = await fetchAllRows<SupplierRow>((from, to) =>
+    supabase.from("suppliers").select("*").order("created_at", { ascending: false }).range(from, to),
+  );
 
   const keyword = q?.trim().toLowerCase();
   const suppliers = keyword
-    ? (allSuppliers ?? []).filter(
+    ? allSuppliers.filter(
         (s) =>
           s.name.toLowerCase().includes(keyword) ||
           (s.business_number ?? "").toLowerCase().includes(keyword) ||
@@ -27,7 +30,7 @@ export default async function SuppliersPage({
           (s.phone ?? "").toLowerCase().includes(keyword) ||
           (s.email ?? "").toLowerCase().includes(keyword)
       )
-    : allSuppliers ?? [];
+    : allSuppliers;
 
   return (
     <div>

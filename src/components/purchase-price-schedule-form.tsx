@@ -35,6 +35,7 @@ export function PurchasePriceScheduleForm({
         name="new_unit_cost"
         type="number"
         step="0.01"
+        min="0"
         placeholder="변경될 단가"
         aria-label="변경될 단가"
         required

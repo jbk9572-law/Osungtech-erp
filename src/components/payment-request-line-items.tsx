@@ -47,11 +47,13 @@ export function PaymentRequestLineItems({
     setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
   }
 
-  const total = rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  // 화면에 보여주는 합계가 실제 제출되는(itemsJson) 값과 항상 같도록,
+  // 제출에서 제외되는 행(사용처/사용일 누락, 금액 0 이하)은 합계에서도 뺀다.
+  const submittedRows = rows.filter((row) => row.usedAt && row.vendor.trim() && Number(row.amount) > 0);
+  const total = submittedRows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
 
   const itemsJson = JSON.stringify(
-    rows
-      .filter((row) => row.usedAt && row.vendor.trim() && Number(row.amount) > 0)
+    submittedRows
       .map((row, i) => ({
         usedAt: row.usedAt,
         vendor: row.vendor.trim(),

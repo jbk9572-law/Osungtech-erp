@@ -113,15 +113,16 @@ export default async function DashboardPage({
     supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle(),
     supabase
       .from("calendar_notes")
-      .select("note_date, content")
-      .gte("note_date", monthStart)
-      .lte("note_date", monthEnd),
-    supabase
-      .from("calendar_notes")
-      .select("note_date, content")
+      .select("note_date, content, created_at, profiles!created_by(full_name)")
       .gte("note_date", monthStart)
       .lte("note_date", monthEnd)
-      .order("note_date", { ascending: false })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("calendar_notes")
+      .select("id, note_date, content, profiles!created_by(full_name)")
+      .gte("note_date", monthStart)
+      .lte("note_date", monthEnd)
+      .order("created_at", { ascending: false })
       .limit(5),
     supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
     supabase
@@ -180,7 +181,7 @@ export default async function DashboardPage({
     purchaseItems: ItemRow[];
     salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
     purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
-    note: string;
+    notes: { authorName: string; content: string; createdAt: string }[];
   };
 
   const dataByDate: Record<string, DayData> = {};
@@ -196,7 +197,7 @@ export default async function DashboardPage({
         purchaseItems: [],
         salesPaperCalcByPartner: {},
         purchasePaperCalcByPartner: {},
-        note: "",
+        notes: [],
       };
     }
     return dataByDate[date];
@@ -311,7 +312,11 @@ export default async function DashboardPage({
   }
 
   for (const note of notes ?? []) {
-    ensure(note.note_date).note = note.content;
+    ensure(note.note_date).notes.push({
+      authorName: note.profiles?.full_name ?? "익명",
+      content: note.content,
+      createdAt: note.created_at,
+    });
   }
 
   const weeks = buildWeeks(year, month);
@@ -446,9 +451,9 @@ export default async function DashboardPage({
         {recentNotes?.length ? (
           <div className="erp-home-list">
             {recentNotes.map((note) => (
-              <div className="erp-home-list-item" key={note.note_date}>
+              <div className="erp-home-list-item" key={note.id}>
                 <span style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
-                  {note.note_date}
+                  {note.note_date} · {note.profiles?.full_name ?? "익명"}
                 </span>
                 <span className="truncate">{note.content}</span>
               </div>

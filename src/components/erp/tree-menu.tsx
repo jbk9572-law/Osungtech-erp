@@ -120,6 +120,14 @@ function UsageWidget({
   // 대역폭(bandwidth) 사용량을 보여준다(NETLIFY_API_TOKEN 설정 시에만).
   // 2025년 9월 이후 신규 계정은 크레딧제라 고정 한도(included)가 없어서
   // (API가 null로 내려줌) 이 경우엔 퍼센트 막대 없이 사용량만 보여준다.
+  //
+  // 이 크레딧제에서는 대역폭뿐 아니라 배포(Production deploys)·컴퓨트
+  // (Compute)·요청 수(Web requests)도 같은 크레딧 풀(무료 플랜 월 300개)을
+  // 나눠쓴다 — 실측 기준 배포 1회가 약 15크레딧으로 대역폭보다 훨씬 크게
+  // 소모된다. 넷리파이 공개 API(openapi 스펙 기준, 2026-08 확인)에는 계정
+  // 전체 잔여 크레딧을 돌려주는 엔드포인트가 없어서(대역폭만 조회 가능),
+  // 여기서는 대역폭만 보여줄 수 있다 — 전체 크레딧 잔량은 넷리파이 대시보드
+  // Billing 화면에서 직접 확인해야 한다는 걸 note에 명시해 오해를 막는다.
   if (netlifyUsage.usage != null) {
     if (netlifyUsage.usage.includedBytes != null) {
       rows.push({
@@ -134,7 +142,7 @@ function UsageWidget({
         kind: "simple",
         label: "넷리파이 대역폭",
         usedBytes: netlifyUsage.usage.usedBytes,
-        note: "크레딧제 요금제 - 고정 한도 없음",
+        note: "크레딧제 - 대역폭 외 배포/컴퓨트도 크레딧 소모, 전체 잔량은 대시보드에서 확인",
       });
     }
   }

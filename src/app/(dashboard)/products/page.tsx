@@ -5,6 +5,7 @@ import { ExcelImportForm } from "@/components/excel-import-form";
 import { importProductsExcel } from "@/app/(dashboard)/products/actions";
 import { buildListReturnParam } from "@/lib/list-return";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function ProductsPage({
   searchParams,
@@ -16,24 +17,43 @@ export default async function ProductsPage({
   // 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const backParam = buildListReturnParam({ q });
   const supabase = await createClient();
-  const [{ data: allProducts }, { data: categories }, { data: suppliers }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("*, categories(name), suppliers(name)")
-      .order("created_at", { ascending: false }),
-    supabase.from("categories").select("id, name").order("name"),
-    supabase.from("suppliers").select("id, name").order("name"),
+  const [allProducts, categories, suppliers] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      base_package_qty: number | null;
+      cost: number;
+      price: number;
+      reorder_point: number | null;
+      categories: { name: string } | null;
+      suppliers: { name: string } | null;
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select("*, categories(name), suppliers(name)")
+        .order("created_at", { ascending: false })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("categories").select("id, name").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
   ]);
 
   const keyword = q?.trim().toLowerCase();
   const filteredProducts = keyword
-    ? (allProducts ?? []).filter(
+    ? allProducts.filter(
         (p) =>
           p.name.toLowerCase().includes(keyword) ||
           p.sku.toLowerCase().includes(keyword) ||
           (p.spec ?? "").toLowerCase().includes(keyword)
       )
-    : allProducts ?? [];
+    : allProducts;
 
   const products: ProductGridRow[] = filteredProducts.map((p) => ({
     id: p.id,

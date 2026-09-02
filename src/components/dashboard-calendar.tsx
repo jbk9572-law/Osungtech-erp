@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { upsertCalendarNote } from "@/app/(dashboard)/dashboard/actions";
+import { addCalendarNote } from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 import { getHolidayName } from "@/lib/kr-holidays";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
@@ -43,7 +43,7 @@ type DayData = {
   purchaseItems: ItemRow[];
   salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
-  note: string;
+  notes: { authorName: string; content: string; createdAt: string }[];
 };
 
 type Cell = { dateStr: string; day: number } | null;
@@ -155,13 +155,69 @@ function matchDestinations(
   }));
 }
 
+// 전량이 한 거래처로만 나갔으면 숫자를 다시 안 보여준다 — 앞에 이미 나온
+// 입고 수량과 같은 값이라 반복일 뿐이다(거래처 이름만으로 "전량 그리로
+// 나갔다"는 뜻이 충분히 전달된다). 여러 곳으로 나뉘었거나 일부만 나간
+// 경우에만 각자 얼마씩 나갔는지 알아야 하므로 숫자를 그대로 보여준다.
 function destinationTextSuffix(
   destinations: { partnerName: string; quantity: number }[],
+  incomingQuantity: number,
 ): string {
   if (!destinations.length) return "";
+  if (destinations.length === 1 && destinations[0].quantity === incomingQuantity) {
+    return ` → ${destinations[0].partnerName}`;
+  }
   return ` → ${destinations
     .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}`)
     .join(" / ")}`;
+}
+
+// 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간 것이면
+// "→ 재고"를 붙인다. 매입 쪽 "→ 거래처명"과 대칭되는 반대 방향 매칭이라
+// matchDestinations를 그대로 재사용해서(품목명+규격 일치) 당일 매입
+// 수량을 합산한 뒤, 판매 수량에 못 미치는 만큼을 재고 출고로 본다.
+function stockOriginSuffix(
+  productName: string,
+  spec: string,
+  soldQuantity: number,
+  purchaseItems: ItemRow[],
+  unit?: string,
+): string {
+  const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
+    (sum, d) => sum + d.quantity,
+    0,
+  );
+  if (purchasedQuantity >= soldQuantity) return "";
+  if (purchasedQuantity <= 0) return " → 재고";
+  const stockQuantity = soldQuantity - purchasedQuantity;
+  return ` → 재고 (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`;
+}
+
+// 이 매입처가 그날 산 모든 품목·규격이 전량 하나의 동일한 거래처로만
+// 나갔는지 확인한다. 그렇다면 품목마다 "→ 거래처"를 반복하는 대신
+// 매입처 이름 옆에 한 번만 표기할 수 있다. 하나라도 나가지 않았거나,
+// 일부만 나갔거나, 서로 다른 거래처로 나뉘었으면 null을 돌려줘서 기존
+// 방식(줄마다 표기)을 그대로 쓰게 한다.
+function uniformPartnerDestination(
+  partner: PartnerBlock,
+  matchAgainst: ItemRow[],
+): string | null {
+  let destination: string | null = null;
+  for (const product of partner.products) {
+    for (const group of groupItemsBySpec(product.items)) {
+      const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
+      const destinations = matchDestinations(product.productName, group.spec, matchAgainst);
+      if (destinations.length !== 1 || destinations[0].quantity !== quantity) {
+        return null;
+      }
+      if (destination === null) {
+        destination = destinations[0].partnerName;
+      } else if (destination !== destinations[0].partnerName) {
+        return null;
+      }
+    }
+  }
+  return destination;
 }
 
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
@@ -169,18 +225,29 @@ function destinationTextSuffix(
 // 담고, 단위(EA/KG 등)는 화면에만 보이고 복사 텍스트에는 숫자만 남긴다.
 // matchAgainst를 넘기면(매입 복사에서만 사용) 새 줄을 늘리는 대신 규격 줄
 // 끝에 "→ 거래처 수량"만 덧붙인다 — 별도 섹션 없이 원래 줄 그대로 정보 하나만
-// 더 붙는 방식이라 줄 수가 늘지 않는다.
+// 더 붙는 방식이라 줄 수가 늘지 않는다. reverseMatchAgainst를 넘기면(매출
+// 복사에서만 사용) 반대로 당일 매입과 매칭 안 되는 만큼 "→ 재고"를 붙인다.
 function appendItemLines(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
   paperStockProductName: string,
   lines: string[],
   matchAgainst?: ItemRow[],
+  reverseMatchAgainst?: ItemRow[],
 ) {
   const blocks = buildPartnerBlocks(items, paperCalcByPartner);
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
-    lines.push(`- ${partner.partnerName}`);
+    // 이 매입처가 그날 산 게 전부 한 거래처로만 나갔으면, 품목마다
+    // "→ 거래처"를 반복하지 않고 매입처 이름 옆에 한 번만 표기한다.
+    const uniformDestination = matchAgainst
+      ? uniformPartnerDestination(partner, matchAgainst)
+      : null;
+    lines.push(
+      uniformDestination
+        ? `- ${partner.partnerName} → ${uniformDestination}`
+        : `- ${partner.partnerName}`,
+    );
     partner.products.forEach((product, pi) => {
       if (pi > 0) lines.push("");
       lines.push(`  · ${product.productName}`);
@@ -193,13 +260,19 @@ function appendItemLines(
         const returnSuffix = group.items.some((it) => it.isReturn)
           ? " (반품)"
           : "";
-        const destinationSuffix = matchAgainst
-          ? destinationTextSuffix(
-              matchDestinations(product.productName, group.spec, matchAgainst),
-            )
-          : "";
+        const destinationSuffix =
+          matchAgainst && !uniformDestination
+            ? destinationTextSuffix(
+                matchDestinations(product.productName, group.spec, matchAgainst),
+                quantity,
+              )
+            : "";
+        const stockSuffix =
+          reverseMatchAgainst && !group.items.some((it) => it.isReturn)
+            ? stockOriginSuffix(product.productName, group.spec, quantity, reverseMatchAgainst)
+            : "";
         lines.push(
-          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}`,
+          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}${stockSuffix}`,
         );
         for (const item of group.items) {
           if (item.remark) lines.push(`      (비고: ${item.remark})`);
@@ -238,6 +311,8 @@ function buildSalesCopyText(
     data.salesPaperCalcByPartner,
     paperStockProductName,
     lines,
+    undefined,
+    data.purchaseItems,
   );
   return lines.join("\n");
 }
@@ -259,6 +334,20 @@ function buildPurchaseCopyText(
     lines,
     data.salesItems,
   );
+  return lines.join("\n");
+}
+
+// 메모 로그를 카톡 등에 붙여넣을 수 있는 텍스트로 옮긴다. 화면에는
+// 작성자·시각이 같이 보이지만, 복사 텍스트에는 시각까지는 필요 없다는
+// 피드백에 따라 "작성자: 내용"만 담는다.
+function buildMemoCopyText(
+  dateStr: string,
+  notes: { authorName: string; content: string }[],
+) {
+  const lines: string[] = [`${dateStr} 메모`, ""];
+  for (const note of notes) {
+    lines.push(`${note.authorName}: ${note.content}`);
+  }
   return lines.join("\n");
 }
 
@@ -298,22 +387,63 @@ function DestinationHint({
   productName,
   spec,
   unit,
+  quantity,
   salesItems,
 }: {
   productName: string;
   spec: string;
   unit?: string;
+  quantity: number;
   salesItems: ItemRow[];
 }) {
   const destinations = matchDestinations(productName, spec, salesItems);
   if (!destinations.length) return null;
+  // 전량이 한 거래처로만 나갔으면 숫자는 생략한다 — 카톡복사 텍스트와
+  // 동일한 규칙(destinationTextSuffix 참고), 화면과 복사 결과가 서로
+  // 다르게 보이지 않게 맞춘다.
+  const isFullSingleMatch = destinations.length === 1 && destinations[0].quantity === quantity;
   return (
     <span className="font-semibold text-[var(--erp-success)]">
       {" "}
       →{" "}
-      {destinations
-        .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
-        .join(" / ")}
+      {isFullSingleMatch
+        ? destinations[0].partnerName
+        : destinations
+            .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}${unit ?? ""}`)
+            .join(" / ")}
+    </span>
+  );
+}
+
+// 매출 화면(오늘의 업무 패널)에서만 쓴다 — DestinationHint와 대칭으로,
+// 이 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간
+// 것이면 "→ 재고"를 붙인다(stockOriginSuffix는 위에서 카톡 복사 텍스트
+// 생성에도 재사용).
+function StockOriginHint({
+  productName,
+  spec,
+  unit,
+  quantity,
+  purchaseItems,
+}: {
+  productName: string;
+  spec: string;
+  unit?: string;
+  quantity: number;
+  purchaseItems: ItemRow[];
+}) {
+  const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
+    (sum, d) => sum + d.quantity,
+    0,
+  );
+  if (purchasedQuantity >= quantity) return null;
+  const stockQuantity = quantity - purchasedQuantity;
+  return (
+    <span className="font-semibold text-[var(--erp-text-muted)]">
+      {" "}
+      → 재고
+      {purchasedQuantity > 0 &&
+        ` (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`}
     </span>
   );
 }
@@ -362,9 +492,9 @@ export function DashboardCalendar({
       ? todayStr
       : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
-  const [copiedType, setCopiedType] = useState<"sales" | "purchase" | null>(
-    null,
-  );
+  const [copiedType, setCopiedType] = useState<
+    "sales" | "purchase" | "memo" | null
+  >(null);
 
   // MidnightRefresh가 router.refresh()로 서버 데이터(todayStr 포함)를
   // 새로 받아와도, 이 상태는 처음 마운트될 때 한 번만 정해지므로 자정이
@@ -389,15 +519,17 @@ export function DashboardCalendar({
     purchaseItems: [],
     salesPaperCalcByPartner: {},
     purchasePaperCalcByPartner: {},
-    note: "",
+    notes: [],
   };
 
-  async function handleCopy(type: "sales" | "purchase") {
+  async function handleCopy(type: "sales" | "purchase" | "memo") {
     if (!selected) return;
     const text =
       type === "sales"
         ? buildSalesCopyText(selected, selectedData, paperStockProductName)
-        : buildPurchaseCopyText(selected, selectedData, paperStockProductName);
+        : type === "purchase"
+          ? buildPurchaseCopyText(selected, selectedData, paperStockProductName)
+          : buildMemoCopyText(selected, selectedData.notes);
     await copyText(text);
     setCopiedType(type);
     setTimeout(() => setCopiedType(null), 1500);
@@ -487,7 +619,7 @@ export function DashboardCalendar({
                 carryoverPurchaseCount
                   ? `이월 매입 ${carryoverPurchaseCount}건`
                   : null,
-                data?.note ? "메모 있음" : null,
+                data?.notes.length ? "메모 있음" : null,
                 showLowStockDot ? "안전재고 부족" : null,
               ].filter(Boolean);
               return (
@@ -531,7 +663,7 @@ export function DashboardCalendar({
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-success)]"}`}
                       />
                     ) : null}
-                    {data?.note ? (
+                    {data?.notes.length ? (
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-warning)]"}`}
                       />
@@ -590,6 +722,13 @@ export function DashboardCalendar({
                 >
                   {copiedType === "sales" ? "복사됨" : "매출 복사"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => handleCopy("memo")}
+                  className="rounded-sm border border-[var(--erp-info-border)] bg-[var(--erp-info-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-info-text)] hover:opacity-80"
+                >
+                  {copiedType === "memo" ? "복사됨" : "메모 복사"}
+                </button>
               </div>
             </div>
 
@@ -645,6 +784,7 @@ export function DashboardCalendar({
                                               productName={product.productName}
                                               spec={item.spec}
                                               unit={item.unit}
+                                              quantity={item.quantity}
                                               salesItems={selectedData.salesItems}
                                             />
                                             {item.remark && (
@@ -676,6 +816,7 @@ export function DashboardCalendar({
                                               productName={product.productName}
                                               spec={item.spec}
                                               unit={item.unit}
+                                              quantity={item.quantity}
                                               salesItems={selectedData.salesItems}
                                             />
                                             {item.remark && (
@@ -794,6 +935,15 @@ export function DashboardCalendar({
                                               <CarryoverBadge />
                                             )}
                                             {item.isReturn && <ReturnBadge />}
+                                            {!item.isReturn && (
+                                              <StockOriginHint
+                                                productName={product.productName}
+                                                spec={item.spec}
+                                                unit={item.unit}
+                                                quantity={item.quantity}
+                                                purchaseItems={selectedData.purchaseItems}
+                                              />
+                                            )}
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}
@@ -820,6 +970,15 @@ export function DashboardCalendar({
                                             {item.quantity.toLocaleString()}
                                             {item.unit}
                                             {item.isReturn && <ReturnBadge />}
+                                            {!item.isReturn && (
+                                              <StockOriginHint
+                                                productName={product.productName}
+                                                spec={item.spec}
+                                                unit={item.unit}
+                                                quantity={item.quantity}
+                                                purchaseItems={selectedData.purchaseItems}
+                                              />
+                                            )}
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
                                                 비고: {item.remark}
@@ -887,7 +1046,7 @@ export function DashboardCalendar({
               )}
             </div>
 
-            <NoteForm dateStr={selected} initialContent={selectedData.note} />
+            <NoteForm dateStr={selected} notes={selectedData.notes} />
           </>
         ) : (
           <p className="text-sm text-[var(--erp-text-muted)]">
@@ -901,50 +1060,94 @@ export function DashboardCalendar({
 
 function NoteForm({
   dateStr,
-  initialContent,
+  notes,
 }: {
   dateStr: string;
-  initialContent: string;
+  notes: { authorName: string; content: string; createdAt: string }[];
 }) {
   const [state, formAction, pending] = useActionState(
-    upsertCalendarNote,
+    addCalendarNote,
     undefined,
   );
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
   return (
-    <form action={formAction} key={dateStr} className="space-y-2">
-      <input type="hidden" name="note_date" value={dateStr} />
+    <div className="space-y-2">
       <label
         className="block text-xs font-medium"
         style={{ color: "var(--erp-text-muted)" }}
       >
         메모
       </label>
-      <textarea
-        name="content"
-        defaultValue={initialContent}
-        rows={4}
-        placeholder="이 날짜에 대한 메모를 남겨보세요"
-        className="erp-input w-full"
-        style={{ height: "auto" }}
-      />
-      <button
-        ref={submitRef}
-        type="submit"
-        disabled={pending}
-        className="erp-btn erp-btn-primary"
+      {notes.length > 0 && (
+        <ul className="space-y-2">
+          {notes.map((note, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
+                style={{
+                  background: "var(--erp-selected)",
+                  color: "var(--erp-primary)",
+                }}
+              >
+                {note.authorName.slice(0, 1)}
+              </span>
+              <div className="min-w-0">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xs font-bold text-[var(--erp-text)]">
+                    {note.authorName}
+                  </span>
+                  <span
+                    className="text-[10.5px]"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
+                    {new Date(note.createdAt).toLocaleTimeString("ko-KR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--erp-text)]">
+                  {note.content}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* notes.length가 바뀌면(추가 성공 시) 폼을 다시 마운트해서 입력칸을
+          비운다 — 이 메모는 그날의 한 칸을 편집하는 게 아니라 매번 새
+          로그 한 줄을 등록하는 것이라, 등록 후에는 항상 빈 칸이어야 한다. */}
+      <form
+        action={formAction}
+        key={`${dateStr}-${notes.length}`}
+        className="space-y-2"
       >
-        {pending ? (
-          <>
-            <span className="erp-spinner" aria-hidden /> 저장 중...
-          </>
-        ) : (
-          "F7 메모 저장"
-        )}
-      </button>
-      <FormMessage state={state} />
-    </form>
+        <input type="hidden" name="note_date" value={dateStr} />
+        <textarea
+          name="content"
+          rows={2}
+          placeholder="새 메모를 입력하세요"
+          className="erp-input w-full"
+          style={{ height: "auto" }}
+        />
+        <button
+          ref={submitRef}
+          type="submit"
+          disabled={pending}
+          className="erp-btn erp-btn-primary"
+        >
+          {pending ? (
+            <>
+              <span className="erp-spinner" aria-hidden /> 저장 중...
+            </>
+          ) : (
+            "F7 메모 추가"
+          )}
+        </button>
+        <FormMessage state={state} />
+      </form>
+    </div>
   );
 }

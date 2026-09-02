@@ -150,6 +150,7 @@ export function ProductForm({
         aria-label="매입가"
         type="number"
         step="0.01"
+        min="0"
         // 0은 "미입력"과 실질적으로 같은 뜻으로 쓰인다(가격/재고기준을 0으로
         // 등록해두는 경우가 없으므로) — ?? 대신 ||를 써서 0도 빈칸으로
         // 보이게 하고, 입력 안 하면 그대로 0으로 저장된다(스키마가 not null
@@ -163,6 +164,7 @@ export function ProductForm({
         aria-label="판매가"
         type="number"
         step="0.01"
+        min="0"
         defaultValue={initial?.price || ""}
         className="erp-input"
       />
@@ -171,6 +173,7 @@ export function ProductForm({
         placeholder="안전재고 (재주문 기준 수량)"
         aria-label="안전재고 (재주문 기준 수량)"
         type="number"
+        min="0"
         defaultValue={initial?.reorder_point || ""}
         className="erp-input"
       />
@@ -181,6 +184,7 @@ export function ProductForm({
           aria-label="포장수량 (1박스당 수량)"
           type="number"
           step="0.01"
+          min="0"
           value={basePackageQty}
           onChange={(e) => setBasePackageQty(e.target.value === "" ? "" : Number(e.target.value))}
           className="erp-input"

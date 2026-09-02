@@ -6,6 +6,7 @@ import { updatePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function EditPurchasePage({
   params,
@@ -24,8 +25,8 @@ export default async function EditPurchasePage({
   const [
     { data: order },
     { data: items },
-    { data: suppliers },
-    { data: products },
+    suppliers,
+    products,
     { data: warehouse },
     { data: history },
     actor,
@@ -36,11 +37,24 @@ export default async function EditPurchasePage({
       .select("product_id, spec, quantity, unit_cost, remark, lot_number")
       .eq("purchase_order_id", id)
       .order("created_at"),
-    supabase.from("suppliers").select("id, name, notes").order("name"),
-    supabase
-      .from("products")
-      .select("id, sku, name, spec, unit, cost, base_package_qty")
-      .order("name"),
+    fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
+      supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
+    ),
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      cost: number;
+      base_package_qty: number | null;
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, cost, base_package_qty")
+        .order("name")
+        .range(from, to),
+    ),
     supabase
       .from("warehouses")
       .select("id")

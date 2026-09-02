@@ -36,6 +36,7 @@ export function SupplierPriceForm({
         name="unit_cost"
         type="number"
         step="0.01"
+        min="0"
         placeholder="매입단가"
         aria-label="매입단가"
         required

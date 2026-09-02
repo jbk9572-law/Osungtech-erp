@@ -375,6 +375,7 @@ export function TodoForm({
                       <QuantityWithBoxInput
                         quantity={row.quantity}
                         onQuantityChange={(n) => updateRow(row.key, { quantity: n })}
+                        basePackageQty={product?.base_package_qty}
                         className="erp-input w-full"
                       />
                     </td>

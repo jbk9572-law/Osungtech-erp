@@ -537,6 +537,7 @@ export type Database = {
           customer_id: string;
           product_id: string;
           unit_price: number;
+          notes: string | null;
           updated_at: string;
         };
         Insert: {
@@ -544,6 +545,7 @@ export type Database = {
           customer_id: string;
           product_id: string;
           unit_price?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -551,6 +553,7 @@ export type Database = {
           customer_id?: string;
           product_id?: string;
           unit_price?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -631,6 +634,7 @@ export type Database = {
           supplier_id: string;
           product_id: string;
           unit_cost: number;
+          notes: string | null;
           updated_at: string;
         };
         Insert: {
@@ -638,6 +642,7 @@ export type Database = {
           supplier_id: string;
           product_id: string;
           unit_cost?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -645,6 +650,7 @@ export type Database = {
           supplier_id?: string;
           product_id?: string;
           unit_cost?: number;
+          notes?: string | null;
           updated_at?: string;
         };
         Relationships: [
@@ -961,21 +967,21 @@ export type Database = {
           note_date: string;
           content: string;
           created_by: string | null;
-          updated_at: string;
+          created_at: string;
         };
         Insert: {
           id?: string;
           note_date: string;
           content?: string;
           created_by?: string | null;
-          updated_at?: string;
+          created_at?: string;
         };
         Update: {
           id?: string;
           note_date?: string;
           content?: string;
           created_by?: string | null;
-          updated_at?: string;
+          created_at?: string;
         };
         Relationships: [
           {
@@ -1648,6 +1654,39 @@ export type Database = {
       toggle_todo_done: {
         Args: { p_id: string };
         Returns: undefined;
+      };
+      mark_todo_side_done: {
+        Args: { p_id: string; p_side: string };
+        Returns: undefined;
+      };
+      apply_due_price_schedules: {
+        Args: { p_customer_id: string | null };
+        Returns: undefined;
+      };
+      apply_due_purchase_price_schedules: {
+        Args: { p_supplier_id: string | null };
+        Returns: undefined;
+      };
+      insert_payment_request_line_item: {
+        Args: {
+          p_payment_request_id: string;
+          p_used_at: string;
+          p_vendor: string;
+          p_purpose: string | null;
+          p_amount: number;
+          p_remark: string | null;
+          p_is_highlighted: boolean;
+        };
+        Returns: string;
+      };
+      insert_payment_request_receipt: {
+        Args: {
+          p_payment_request_id: string;
+          p_file_path: string;
+          p_file_url: string;
+          p_created_by: string | null;
+        };
+        Returns: string;
       };
     };
     Enums: Record<string, never>;

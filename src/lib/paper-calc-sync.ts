@@ -347,11 +347,16 @@ export async function overrideSalesPaperStockQuantity(
     return "적용할 모조지(TG0) 품목이 이 주문에 없습니다. 모조지 계산을 먼저 저장해주세요.";
   }
 
-  await supabase
+  const { error: revertError } = await supabase
     .from("paper_stock_overrides")
     .update({ reverted_at: new Date().toISOString() })
     .eq("sales_order_id", salesOrderId)
     .is("reverted_at", null);
+  if (revertError) {
+    // 이 단계가 실패한 채로 아래에서 새 오버라이드를 또 insert하면, 같은
+    // 주문에 "활성" 오버라이드가 둘 이상 남는 불일치가 생길 수 있다.
+    return `기존 오버라이드 정리에 실패했습니다: ${revertError.message}`;
+  }
 
   const userId = await getUserId(supabase);
   const { error } = await supabase.from("paper_stock_overrides").insert({
@@ -428,11 +433,16 @@ export async function overridePurchasePaperStockQuantity(
     return "적용할 모조지(TG0) 품목이 이 주문에 없습니다. 모조지 계산을 먼저 저장해주세요.";
   }
 
-  await supabase
+  const { error: revertError } = await supabase
     .from("paper_stock_overrides")
     .update({ reverted_at: new Date().toISOString() })
     .eq("purchase_order_id", purchaseOrderId)
     .is("reverted_at", null);
+  if (revertError) {
+    // 이 단계가 실패한 채로 아래에서 새 오버라이드를 또 insert하면, 같은
+    // 주문에 "활성" 오버라이드가 둘 이상 남는 불일치가 생길 수 있다.
+    return `기존 오버라이드 정리에 실패했습니다: ${revertError.message}`;
+  }
 
   const userId = await getUserId(supabase);
   const { error } = await supabase.from("paper_stock_overrides").insert({
@@ -537,15 +547,18 @@ export async function attachPendingPaperCalculationToTodo(
   supabase: SupabaseServerClient,
   todoId: string,
   pendingRaw: string
-) {
+): Promise<string | null> {
   const pending = parsePendingCalc(pendingRaw);
-  if (!pending) return;
+  if (!pending) return null;
 
-  await supabase.from("paper_calculations").insert({
+  const { error } = await supabase.from("paper_calculations").insert({
     todo_id: todoId,
     ...pendingToRow(pending),
     created_by: await getUserId(supabase),
   });
+  if (error) return `모조지 계산 저장에 실패했습니다: ${error.message}`;
+
+  return null;
 }
 
 export type PendingCalc = {

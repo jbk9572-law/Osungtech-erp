@@ -66,7 +66,7 @@ export function NumberInput({
         setFocused(false);
         if (allowFormula && text.trim().startsWith("=")) {
           const result = evalFormula(text.trim().slice(1));
-          if (result !== null) {
+          if (result !== null && (allowNegative || result >= 0)) {
             setText(formatNumber(result));
             onChange(result);
             return;

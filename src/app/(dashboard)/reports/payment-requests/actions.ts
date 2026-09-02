@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
+import { requireMutatedRow, wasRowMutated } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -32,11 +33,14 @@ const MAX_RECEIPT_SIZE = 8 * 1024 * 1024; // 8MB (브라우저에서 미리 압�
 // 영수증 사진을 스토리지에 올리고 payment_request_receipts 행을 만든다.
 // file.type은 클라이언트가 주장하는 값일 뿐이라(브랜딩 이미지와 동일한
 // 이유로) 실제 파일 바이트로 진짜 래스터 이미지인지 다시 확인한다.
+// sort_order는 "그 문서의 마지막 영수증 다음"으로 서버에서 직접 조회해
+// 정하는 대신, insert_payment_request_receipt RPC가 같은 문서 단위로
+// advisory lock을 잡고 조회+삽입을 한 번에 처리한다 — 다른 사람이 같은
+// 문서에 동시에 영수증을 추가해도 sort_order가 겹치지 않게 하기 위함이다.
 async function uploadReceipt(
   supabase: SupabaseServerClient,
   paymentRequestId: string,
   file: File,
-  sortOrder: number,
   userId: string | null
 ): Promise<string | null> {
   if (file.size > MAX_RECEIPT_SIZE) return `영수증 파일이 너무 큽니다(${file.name}).`;
@@ -54,12 +58,11 @@ async function uploadReceipt(
     data: { publicUrl },
   } = supabase.storage.from("payment-receipts").getPublicUrl(path);
 
-  const { error: insertError } = await supabase.from("payment_request_receipts").insert({
-    payment_request_id: paymentRequestId,
-    file_path: path,
-    file_url: publicUrl,
-    sort_order: sortOrder,
-    created_by: userId,
+  const { error: insertError } = await supabase.rpc("insert_payment_request_receipt", {
+    p_payment_request_id: paymentRequestId,
+    p_file_path: path,
+    p_file_url: publicUrl,
+    p_created_by: userId,
   });
   if (insertError) {
     await supabase.storage.from("payment-receipts").remove([path]);
@@ -111,8 +114,8 @@ export async function createPaymentRequest(
   // 영수증 업로드가 일부 실패해도 지급결의서 자체는 이미 등록됐으니 막지
   // 않되, 조용히 묻히지 않도록 상세 화면으로 경고를 실어 보낸다.
   let receiptWarning: string | null = null;
-  for (let i = 0; i < receipts.length; i++) {
-    const err = await uploadReceipt(supabase, id, receipts[i], i, user?.id ?? null);
+  for (const file of receipts) {
+    const err = await uploadReceipt(supabase, id, file, user?.id ?? null);
     if (err) receiptWarning ??= err;
   }
 
@@ -167,24 +170,14 @@ export async function quickAddPaymentRequestItem(
     return { error: `등록에 실패했습니다: ${bucketError?.message ?? "알 수 없는 오류"}` };
   }
 
-  const { data: existing } = await supabase
-    .from("payment_request_line_items")
-    .select("sort_order")
-    .eq("payment_request_id", paymentRequestId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const nextOrder = (existing?.sort_order ?? -1) + 1;
-
-  const { error } = await supabase.from("payment_request_line_items").insert({
-    payment_request_id: paymentRequestId,
-    used_at: usedAt,
-    vendor,
-    purpose: purpose || null,
-    amount,
-    remark: remark || null,
-    sort_order: nextOrder,
-    is_highlighted: isHighlighted,
+  const { error } = await supabase.rpc("insert_payment_request_line_item", {
+    p_payment_request_id: paymentRequestId,
+    p_used_at: usedAt,
+    p_vendor: vendor,
+    p_purpose: purpose || null,
+    p_amount: amount,
+    p_remark: remark || null,
+    p_is_highlighted: isHighlighted,
   });
   if (error) {
     return { error: `저장에 실패했습니다: ${error.message}` };
@@ -192,23 +185,12 @@ export async function quickAddPaymentRequestItem(
 
   // 영수증은 문서(payment_request) 단위로 붙는다(줄마다 따로 연결하는 구조가
   // 아님) — 이미 영수증이 있는 기존 문서에 이어서 추가하는 경우일 수 있으니
-  // sort_order는 그 문서의 마지막 영수증 다음부터 이어간다.
+  // sort_order는 uploadReceipt 안에서(RPC로) 그 문서의 마지막 영수증
+  // 다음부터 이어가도록 처리된다.
   let receiptWarning: string | null = null;
-  if (receipts.length > 0) {
-    const { data: existingReceipt } = await supabase
-      .from("payment_request_receipts")
-      .select("sort_order")
-      .eq("payment_request_id", paymentRequestId)
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    let nextReceiptOrder = (existingReceipt?.sort_order ?? -1) + 1;
-
-    for (const file of receipts) {
-      const err = await uploadReceipt(supabase, paymentRequestId, file, nextReceiptOrder, user?.id ?? null);
-      if (err) receiptWarning ??= err;
-      nextReceiptOrder += 1;
-    }
+  for (const file of receipts) {
+    const err = await uploadReceipt(supabase, paymentRequestId, file, user?.id ?? null);
+    if (err) receiptWarning ??= err;
   }
 
   revalidatePath("/reports/payment-requests");
@@ -271,20 +253,10 @@ export async function addPaymentRequestReceipts(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: existing } = await supabase
-    .from("payment_request_receipts")
-    .select("sort_order")
-    .eq("payment_request_id", paymentRequestId)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  let nextOrder = (existing?.sort_order ?? -1) + 1;
-
   let firstError: string | null = null;
   for (const file of receipts) {
-    const err = await uploadReceipt(supabase, paymentRequestId, file, nextOrder, user?.id ?? null);
+    const err = await uploadReceipt(supabase, paymentRequestId, file, user?.id ?? null);
     if (err) firstError ??= err;
-    nextOrder += 1;
   }
 
   revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
@@ -312,14 +284,16 @@ export async function deletePaymentRequestReceipt(
   // .select()로 실제 삭제된 행을 확인한다 — RLS가 막으면(본인 작성 또는
   // 관리자가 아님) error 없이 조용히 0건 삭제로 끝나므로, 이 확인 없이는
   // 다음 줄에서 스토리지 파일만 지워지고 행은 남는 불일치가 생긴다.
-  const { data: deleted, error } = await supabase
+  const result = await supabase
     .from("payment_request_receipts")
     .delete()
     .eq("id", id)
     .select("id");
-  if (error || !deleted || deleted.length === 0) {
-    return { error: "삭제에 실패했습니다. 본인이 작성한 지급결의서의 영수증만 삭제할 수 있습니다." };
-  }
+  const deleteError = requireMutatedRow(
+    result,
+    "삭제에 실패했습니다. 본인이 작성한 지급결의서의 영수증만 삭제할 수 있습니다."
+  );
+  if (deleteError) return deleteError;
 
   await supabase.storage.from("payment-receipts").remove([receipt.file_path]);
 
@@ -361,10 +335,10 @@ export async function reorderPaymentRequestReceipts(
   );
   const firstFailure = results.find((r) => r.error);
   if (firstFailure) return { error: `순서 변경에 실패했습니다: ${firstFailure.error!.message}` };
-  // .select()로 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는
-  // 관리자가 아님) error 없이 조용히 0건 갱신으로 끝나므로, 이 확인 없이는
-  // "순서를 변경했습니다"라고 응답해놓고 실제로는 아무것도 안 바뀐다.
-  if (results.some((r) => !r.data || r.data.length === 0)) {
+  // 실제 갱신된 행을 확인한다 — RLS가 막으면(본인 작성 또는 관리자가 아님)
+  // error 없이 조용히 0건 갱신으로 끝나므로, 이 확인 없이는 "순서를
+  // 변경했습니다"라고 응답해놓고 실제로는 아무것도 안 바뀐다.
+  if (results.some((r) => !wasRowMutated(r))) {
     return { error: "순서 변경에 실패했습니다. 본인이 작성한 지급결의서만 순서를 바꿀 수 있습니다." };
   }
 
@@ -394,11 +368,12 @@ export async function deletePaymentRequest(
     .select("file_path")
     .eq("payment_request_id", id);
 
-  const { data: deleted, error } = await supabase.from("payment_requests").delete().eq("id", id).select("id");
-
-  if (error || !deleted || deleted.length === 0) {
-    return { error: "삭제에 실패했습니다. 본인이 작성한 지급결의서만 삭제할 수 있습니다." };
-  }
+  const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
+  const deleteError = requireMutatedRow(
+    result,
+    "삭제에 실패했습니다. 본인이 작성한 지급결의서만 삭제할 수 있습니다."
+  );
+  if (deleteError) return deleteError;
 
   if (receipts && receipts.length > 0) {
     await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
@@ -433,9 +408,9 @@ export async function bulkDeletePaymentRequests(
         .select("file_path")
         .eq("payment_request_id", id);
 
-      const { data: deleted, error } = await supabase.from("payment_requests").delete().eq("id", id).select("id");
-      if (error || !deleted || deleted.length === 0) {
-        return { error: error ?? new Error("not deleted") };
+      const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
+      if (!wasRowMutated(result)) {
+        return { error: result.error ?? new Error("not deleted") };
       }
 
       if (receipts && receipts.length > 0) {

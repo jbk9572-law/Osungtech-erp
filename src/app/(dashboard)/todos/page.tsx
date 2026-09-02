@@ -5,6 +5,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type TodoItemInput = {
   productId: string;
@@ -27,11 +28,11 @@ function summarizeItems(
 export default async function TodosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; warning?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, warning } = await searchParams;
   const supabase = await createClient();
-  const [{ data: allRows, error }, { data: products }] = await Promise.all([
+  const [{ data: allRows, error }, products] = await Promise.all([
     supabase
       .from("todos")
       .select(
@@ -40,10 +41,12 @@ export default async function TodosPage({
       .order("done", { ascending: true })
       .order("due_date", { ascending: true, nullsFirst: false })
       .limit(300),
-    supabase.from("products").select("id, name"),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("products").select("id, name").range(from, to),
+    ),
   ]);
 
-  const productNameById = new Map((products ?? []).map((p) => [p.id, p.name]));
+  const productNameById = new Map(products.map((p) => [p.id, p.name]));
   const todayStr = todayKstStr();
 
   const keyword = q?.trim().toLowerCase();
@@ -76,6 +79,18 @@ export default async function TodosPage({
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
         할일관리
       </h1>
+
+      {warning && (
+        <p
+          className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
+          style={{
+            background: "var(--erp-warning-bg)",
+            color: "var(--erp-warning)",
+          }}
+        >
+          ⚠ 할일은 정상 등록됐지만: {warning}
+        </p>
+      )}
 
       <div className="erp-toolbar">
         <Link href="/todos/new" className="erp-btn erp-btn-primary">

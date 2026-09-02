@@ -10,12 +10,20 @@ import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { DeleteButton } from "@/components/delete-button";
 import { ClickableRow } from "@/components/clickable-row";
 import { AgingBadge } from "@/components/aging-badge";
-import { updateCustomer, deleteCustomer, addCustomerPayment, deleteCustomerPayment } from "@/app/(dashboard)/customers/actions";
+import {
+  updateCustomer,
+  deleteCustomer,
+  addCustomerPayment,
+  deleteCustomerPayment,
+  updateCustomerProductPriceNotes,
+} from "@/app/(dashboard)/customers/actions";
+import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function CustomerDetailPage({
   params,
@@ -29,7 +37,7 @@ export default async function CustomerDetailPage({
   // (별도 크론 없이 "그 날짜가 된 뒤 누군가 화면을 열면 그때 적용"되는 방식).
   await applyDuePriceSchedules(supabase, id);
 
-  const [{ data: customer }, { data: prices }, { data: products }, { data: schedules }, balance] =
+  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance] =
     await Promise.all([
       supabase.from("customers").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -37,7 +45,9 @@ export default async function CustomerDetailPage({
         .select("*, products(sku, name, unit, spec)")
         .eq("customer_id", id)
         .order("updated_at", { ascending: false }),
-      supabase.from("products").select("id, sku, name, spec").order("name"),
+      fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
+        supabase.from("products").select("id, sku, name, spec").order("name").range(from, to),
+      ),
       supabase
         .from("price_change_schedules")
         .select("id, product_id, new_unit_price, effective_date, products(sku, name, spec)")
@@ -242,6 +252,7 @@ export default async function CustomerDetailPage({
               <th>상품명</th>
               <th>규격</th>
               <th className="num">판매단가</th>
+              <th>특이사항</th>
               <th>최근 수정</th>
             </tr>
           </thead>
@@ -252,6 +263,15 @@ export default async function CustomerDetailPage({
                 <td>{price.products?.name}</td>
                 <td>{price.products?.spec}</td>
                 <td className="num">{formatNumOrDash(price.unit_price)}</td>
+                <td>
+                  <PartyProductNoteForm
+                    action={updateCustomerProductPriceNotes}
+                    id={price.id}
+                    partyIdFieldName="customer_id"
+                    partyId={customer.id}
+                    initialNotes={price.notes}
+                  />
+                </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>
                   {new Date(price.updated_at).toLocaleDateString("ko-KR")}
                 </td>
@@ -259,7 +279,7 @@ export default async function CustomerDetailPage({
             ))}
             {!prices?.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={6} className="erp-grid-empty">
                   등록된 판매단가가 없습니다.
                 </td>
               </tr>
