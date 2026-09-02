@@ -32,13 +32,24 @@ const IMAGE_SIGNATURES: { type: string; magic: number[] }[] = [
   { type: "image/png", magic: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
   { type: "image/jpeg", magic: [0xff, 0xd8, 0xff] },
   { type: "image/gif", magic: [0x47, 0x49, 0x46, 0x38] },
-  { type: "image/webp", magic: [0x52, 0x49, 0x46, 0x46] }, // RIFF....WEBP
 ];
+
+// WEBP는 RIFF 컨테이너 형식이라 앞 4바이트("RIFF")만으로는 WAV/AVI 등
+// 다른 RIFF 파일과 구분이 안 된다 — 오프셋 8~11의 "WEBP" fourCC까지 같이
+// 확인해야 진짜 WEBP 이미지인지 알 수 있다.
+const RIFF_MAGIC = [0x52, 0x49, 0x46, 0x46]; // "RIFF"
+const WEBP_FOURCC = [0x57, 0x45, 0x42, 0x50]; // "WEBP" (오프셋 8)
 
 export async function detectRasterImageType(file: File): Promise<string | null> {
   const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
   for (const { type, magic } of IMAGE_SIGNATURES) {
     if (magic.every((byte, i) => head[i] === byte)) return type;
+  }
+  if (
+    RIFF_MAGIC.every((byte, i) => head[i] === byte) &&
+    WEBP_FOURCC.every((byte, i) => head[8 + i] === byte)
+  ) {
+    return "image/webp";
   }
   return null;
 }

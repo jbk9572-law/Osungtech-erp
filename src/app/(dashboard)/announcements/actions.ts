@@ -95,27 +95,25 @@ export async function deleteAnnouncement(
   redirect("/announcements");
 }
 
-export async function toggleAnnouncementRead(formData: FormData) {
+export async function toggleAnnouncementRead(formData: FormData): Promise<{ error: string } | undefined> {
   const id = String(formData.get("id") ?? "");
   const currentlyRead = formData.get("read") === "true";
-  if (!id) return;
+  if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: "로그인이 필요합니다." };
 
-  if (currentlyRead) {
-    await supabase
-      .from("announcement_reads")
-      .delete()
-      .eq("announcement_id", id)
-      .eq("user_id", user.id);
-  } else {
-    await supabase
-      .from("announcement_reads")
-      .upsert({ announcement_id: id, user_id: user.id }, { onConflict: "announcement_id,user_id" });
+  const { error } = currentlyRead
+    ? await supabase.from("announcement_reads").delete().eq("announcement_id", id).eq("user_id", user.id)
+    : await supabase
+        .from("announcement_reads")
+        .upsert({ announcement_id: id, user_id: user.id }, { onConflict: "announcement_id,user_id" });
+
+  if (error) {
+    return { error: `읽음 처리에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/announcements");

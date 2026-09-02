@@ -379,6 +379,11 @@ export async function createPurchase(
       await overrideSalesPaperStockQuantity(supabase, salesOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
     }
     revalidatePath("/sales");
+    // createSale과 동일하게, 이 매출도 거래처 미수금 잔액과 모조지 계산
+    // 목록에 영향을 주므로 그쪽 화면도 같이 갱신한다.
+    revalidatePath("/paper-calc");
+    revalidatePath("/receivables");
+    revalidatePath(`/customers/${saleCustomerId}`);
   }
 
   // 할일 가져오기로 채웠던 할일들의 매입 방향을 완료 처리한다. 등록이 실제로

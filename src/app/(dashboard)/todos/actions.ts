@@ -249,16 +249,19 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   redirect(`/todos/${id}`);
 }
 
-export async function toggleTodo(formData: FormData) {
+export async function toggleTodo(formData: FormData): Promise<{ error: string } | undefined> {
   const id = String(formData.get("id") ?? "");
-  if (!id) return;
+  if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
   // 전체 수정/삭제는 작성자·관리자로 제한되지만, 완료 체크는 실제로 그
   // 일을 처리한 사람이 눌러야 하는 경우가 많아 별도 RPC(누구나 실행 가능)로
   // 처리한다 — DB가 현재 done 값을 직접 읽어서 뒤집으므로 클라이언트가 보낸
   // 값에 의존하지 않는다.
-  await supabase.rpc("toggle_todo_done", { p_id: id });
+  const { error } = await supabase.rpc("toggle_todo_done", { p_id: id });
+  if (error) {
+    return { error: `완료 처리에 실패했습니다: ${error.message}` };
+  }
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");

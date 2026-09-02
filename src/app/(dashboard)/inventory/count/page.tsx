@@ -2,14 +2,25 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryCountForm, type CountRow } from "@/components/inventory-count-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function InventoryCountPage() {
   const supabase = await createClient();
-  const [{ data: products }, { data: warehouse }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("id, sku, name, spec, unit, inventory(quantity)")
-      .order("name"),
+  const [products, { data: warehouse }] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      inventory: { quantity: number }[];
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, inventory(quantity)")
+        .order("name")
+        .range(from, to),
+    ),
     supabase
       .from("warehouses")
       .select("id")
@@ -18,7 +29,7 @@ export default async function InventoryCountPage() {
       .maybeSingle(),
   ]);
 
-  const rows: CountRow[] = (products ?? []).map((p) => ({
+  const rows: CountRow[] = products.map((p) => ({
     productId: p.id,
     sku: p.sku,
     name: p.name,

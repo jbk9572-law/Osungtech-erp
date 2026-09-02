@@ -74,15 +74,20 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
 
 // 이미 만들어진 계정의 역할(권한)을 변경한다. service_role 없이도 RLS 정책
 // (profiles_update_by_admin)으로 관리자 본인 세션에서 바로 처리된다.
-export async function updateUserRole(formData: FormData) {
+export async function updateUserRole(formData: FormData): Promise<{ error: string } | undefined> {
   const { supabase, isAdmin, selfId } = await requireAdmin();
-  if (!isAdmin) return;
+  if (!isAdmin) return { error: "관리자만 변경할 수 있습니다." };
 
   const userId = String(formData.get("userId") ?? "");
   const role = String(formData.get("role") ?? "");
-  if (!userId || userId === selfId || !isRole(role)) return;
+  if (!userId || userId === selfId || !isRole(role)) {
+    return { error: "잘못된 요청입니다." };
+  }
 
-  await supabase.from("profiles").update({ role }).eq("id", userId);
+  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
+  if (error) {
+    return { error: `역할 변경에 실패했습니다: ${error.message}` };
+  }
   revalidatePath("/settings/users");
 }
 
@@ -92,14 +97,14 @@ export async function updateUserRole(formData: FormData) {
 // 비밀번호 재설정도 auth.users를 직접 건드려야 해서 이 두 경우에만
 // service_role 클라이언트가 필요하다.
 export async function updateUserAccount(_prevState: FormState, formData: FormData): Promise<FormState> {
-  const { isAdmin } = await requireAdmin();
+  const { supabase, isAdmin, selfId } = await requireAdmin();
   if (!isAdmin) return { error: "관리자만 계정을 수정할 수 있습니다." };
 
   const userId = String(formData.get("userId") ?? "");
   const username = String(formData.get("username") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const newPassword = String(formData.get("newPassword") ?? "");
-  const role = String(formData.get("role") ?? "staff");
+  const submittedRole = String(formData.get("role") ?? "staff");
 
   if (!userId || !username || !fullName) {
     return { error: "아이디와 이름은 비워둘 수 없습니다." };
@@ -110,8 +115,23 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
   if (newPassword && newPassword.length < 6) {
     return { error: "새 비밀번호는 6자 이상이어야 합니다." };
   }
-  if (!isRole(role)) {
+  if (!isRole(submittedRole)) {
     return { error: "역할 값이 올바르지 않습니다." };
+  }
+  let role: Role = submittedRole;
+  // updateUserRole과 동일한 규칙: 본인 계정의 역할은 바꿀 수 없다. 화면은
+  // 숨김 input으로 현재 역할을 그대로 되돌려 보내지만, 그건 클라이언트
+  // 값이라 변조될 수 있으므로 서버에서도 강제한다 — 폼 값을 무시하고 DB에
+  // 이미 저장된 역할을 그대로 유지한다.
+  if (userId === selfId) {
+    const { data: currentProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (currentProfile && isRole(currentProfile.role)) {
+      role = currentProfile.role;
+    }
   }
 
   let admin;
