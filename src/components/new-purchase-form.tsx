@@ -191,6 +191,11 @@ export function NewPurchaseForm({
   const [alsoCreateSale, setAlsoCreateSale] = useState(false);
   const [saleCustomerId, setSaleCustomerId] = useState("");
   const [saleDate, setSaleDate] = useState("");
+  // 입고방법(deliveryMethod)과는 별개다 — 매입은 대부분 방문수령이지만
+  // 같이 등록되는 매출은 매출 단독 등록 화면과 동일하게 직납이 기본값이다.
+  // 예전엔 이 폼에 값이 하나뿐이라 매입 쪽 입고방법이 매출 납품방법에도
+  // 그대로 들어가 매번 방문수령으로 잘못 저장됐었다.
+  const [saleDeliveryMethod, setSaleDeliveryMethod] = useState("직납");
   const priceMap = useMemo(
     () =>
       new Map(
@@ -781,6 +786,7 @@ export function NewPurchaseForm({
             name="sale_date"
             value={saleDate || purchaseDate}
           />
+          <input type="hidden" name="sale_delivery_method" value={saleDeliveryMethod} />
           <input type="hidden" name="sale_items" value={saleItemsJson} />
         </>
       )}
@@ -1034,6 +1040,22 @@ export function NewPurchaseForm({
                       onChange={(e) => setSaleDate(e.target.value)}
                       className="erp-input"
                     />
+                  </div>
+                  <div className="erp-field">
+                    <label htmlFor="purchase-sale-delivery-method">납품방법</label>
+                    <select
+                      id="purchase-sale-delivery-method"
+                      value={saleDeliveryMethod}
+                      onChange={(e) => setSaleDeliveryMethod(e.target.value)}
+                      className="erp-select"
+                    >
+                      <option value="">-</option>
+                      {DELIVERY_METHODS.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}

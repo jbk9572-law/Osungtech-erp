@@ -150,6 +150,10 @@ export async function createPurchase(
   // 보내서 null(외상)로 저장된다 — 체크를 끄고 결제방법을 고른 경우에만 값이 온다.
   const paymentMethod = String(formData.get("payment_method") ?? "") || null;
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
+  // 매입(입고방법)과 매출(납품방법)은 서로 다른 개념이라 값도 따로 받는다 —
+  // 같이 등록되는 매출에 매입 쪽 입고방법(기본 방문수령)이 그대로 들어가면
+  // 매출 단독 등록의 기본값(직납)과 어긋난다.
+  const saleDeliveryMethod = String(formData.get("sale_delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const isCarryover = formData.get("is_carryover") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
@@ -254,6 +258,7 @@ export async function createPurchase(
         // 났었다(00000000000067). null이라도 키를 항상 보내서 이 문제가
         // 재발하지 않게 한다.
         p_sale_doc_no: null,
+        p_sale_delivery_method: saleDeliveryMethod,
       })
       .single();
 
