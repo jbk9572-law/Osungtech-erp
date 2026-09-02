@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { getNotificationSummary } from "@/lib/notifications";
+import { getCurrentActor } from "@/lib/current-actor";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
@@ -70,6 +71,7 @@ export default async function DashboardPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const { userId: currentUserId, isAdmin } = await getCurrentActor(supabase);
 
   const [
     { count: productCount },
@@ -113,7 +115,7 @@ export default async function DashboardPage({
     supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle(),
     supabase
       .from("calendar_notes")
-      .select("note_date, content, created_at, profiles!created_by(full_name)")
+      .select("id, note_date, content, created_at, created_by, profiles!created_by(full_name)")
       .gte("note_date", monthStart)
       .lte("note_date", monthEnd)
       .order("created_at", { ascending: true }),
@@ -181,7 +183,13 @@ export default async function DashboardPage({
     purchaseItems: ItemRow[];
     salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
     purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
-    notes: { authorName: string; content: string; createdAt: string }[];
+    notes: {
+      id: string;
+      authorName: string;
+      content: string;
+      createdAt: string;
+      createdBy: string | null;
+    }[];
   };
 
   const dataByDate: Record<string, DayData> = {};
@@ -313,9 +321,11 @@ export default async function DashboardPage({
 
   for (const note of notes ?? []) {
     ensure(note.note_date).notes.push({
+      id: note.id,
       authorName: note.profiles?.full_name ?? "익명",
       content: note.content,
       createdAt: note.created_at,
+      createdBy: note.created_by,
     });
   }
 
@@ -444,6 +454,8 @@ export default async function DashboardPage({
         backgroundLogoUrl={company?.logo_mark_url}
         lowStockToday={lowStockItems.length > 0}
         paperStockProductName={paperStockProduct?.name ?? "모조지"}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
       />
 
       <div className="erp-home-panel">
