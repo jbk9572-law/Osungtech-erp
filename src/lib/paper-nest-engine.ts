@@ -569,7 +569,7 @@ export class NestEngine {
         placement.y + placement.height <= r.y + r.height
     );
     if (!target) return freeRects;
-    return this.placeRect(freeRects, target, placement);
+    return this.placeRect(freeRects, placement);
   }
 
   // 어떤 placements 집합이 시트 위에서 실제로 차지하고 남은 빈 사각형들을
@@ -735,6 +735,15 @@ export class NestEngine {
     return positions;
   }
 
+  // 배치 조각을 뺀 나머지 공간을, 위/아래는 원래 사각형 폭 그대로, 좌/우는
+  // 원래 사각형 높이 그대로 남긴다(MaxRects 방식 — 네 조각이 서로 겹쳐도
+  // 된다, removeDuplicateRects가 포함관계인 것만 정리한다). 이전에는 위/
+  // 아래 조각의 폭을 배치 조각의 폭만큼만 남겼는데, 그러면 배치 조각이
+  // 원래 사각형 폭을 다 안 채운 경우(거의 항상 그렇다) 그 옆으로 이어
+  // 붙일 수 있는 공간이 통째로 사라졌다 — 예를 들어 788×1091 원지에
+  // 690×610 하나를 놓고 남은 788×481 공간에, 폭 370짜리 품목을 하나
+  // 놓으면 원래는 옆에 하나 더(370+370=740≤788) 들어가야 하는데, 아래
+  // 조각의 폭이 690으로 잘려 있어 두 번째 자리가 아예 탐색되지 않았다.
   private splitRect(freeRect: FreeRect, placement: Placement): FreeRect[] {
     const result: FreeRect[] = [];
     const { x: fx, y: fy, width: fw, height: fh } = freeRect;
@@ -754,20 +763,12 @@ export class NestEngine {
     }
 
     if (py > fy) {
-      const left = Math.max(fx, px);
-      const right2 = Math.min(fx + fw, px + pw);
-      if (right2 > left) {
-        result.push({ x: left, y: fy, width: right2 - left, height: py - fy });
-      }
+      result.push({ x: fx, y: fy, width: fw, height: py - fy });
     }
 
     const bottom = py + ph;
     if (bottom < fy + fh) {
-      const left = Math.max(fx, px);
-      const right2 = Math.min(fx + fw, px + pw);
-      if (right2 > left) {
-        result.push({ x: left, y: bottom, width: right2 - left, height: fy + fh - bottom });
-      }
+      result.push({ x: fx, y: bottom, width: fw, height: fy + fh - bottom });
     }
 
     return result;
@@ -807,9 +808,19 @@ export class NestEngine {
     return result;
   }
 
-  private placeRect(freeRects: FreeRect[], targetRect: FreeRect, placement: Placement): FreeRect[] {
-    const next = freeRects.filter((r) => r !== targetRect);
-    next.push(...this.splitRect(targetRect, placement));
+  // splitRect를 자유 사각형 목록 "전체"에 적용한다 — splitRect의 위/아래는
+  // 원래 사각형 폭 그대로, 좌/우는 원래 사각형 높이 그대로 남기므로(위 주석
+  // 참고) 서로 겹치는 자유 사각형이 여러 개 있을 수 있다. 방금 놓인 조각과
+  // 실제로 겹치는 다른 자유 사각형도 그만큼 잘라내지 않으면, 그 뒤에 또
+  // 다른 품목을 놓을 때 이미 채워진 자리 위에 겹쳐 놓는 것도 "빈 자리"로
+  // 착각해 허용해버린다(겹침/면적 100% 초과 버그로 이어진다) — 그래서
+  // targetRect 하나만이 아니라 전체를 대상으로 splitRect를 적용한다
+  // (겹치지 않는 사각형은 splitRect가 그대로 돌려준다).
+  private placeRect(freeRects: FreeRect[], placement: Placement): FreeRect[] {
+    const next: FreeRect[] = [];
+    for (const rect of freeRects) {
+      next.push(...this.splitRect(rect, placement));
+    }
     return this.removeDuplicateRects(next);
   }
 
@@ -888,7 +899,7 @@ export class NestEngine {
         for (const pos of sortedPositions) {
           if (Date.now() > deadline) return;
 
-          const nextFreeRects = this.placeRect(freeRects, rect, pos);
+          const nextFreeRects = this.placeRect(freeRects, pos);
           const nextPlacements = [...placements, pos];
 
           this.storeCandidate(nextPlacements, layoutBuffer, seenKeys, hardLimit);
