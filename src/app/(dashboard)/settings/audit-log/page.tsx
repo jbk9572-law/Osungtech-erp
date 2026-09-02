@@ -4,6 +4,14 @@ import { requireAdmin } from "@/lib/require-admin";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { computeBalanceAfterById } from "@/lib/inventory-balance";
+
+// audit_logs 트리거는 매출/매입/품목 같은 마스터·전표 테이블에만 붙어있고
+// inventory_transactions에는 없다(재고 조정은 그 테이블 자체가 이미
+// 이력 로그라서). 그래서 "재고" 탭은 TABLE_LABELS로 audit_logs를 필터링하는
+// 다른 탭들과 달리, 아예 다른 테이블(inventory_transactions)을 조회하는
+// 별도 경로로 처리한다.
+const INVENTORY_TAB = "inventory";
 
 const TABLE_LABELS: Record<string, string> = {
   sales_orders: "매출",
@@ -237,43 +245,139 @@ export default async function AuditLogPage({
   const { table: tableParam, limit: limitParam } = await searchParams;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIMIT;
+  const isInventoryTab = tableParam === INVENTORY_TAB;
 
   const supabase = await createClient();
-  let query = supabase
-    .from("audit_logs")
-    .select("id, table_name, record_id, action, old_data, new_data, created_at, profiles!actor(full_name)")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (tableParam) query = query.eq("table_name", tableParam);
 
-  // 변경 내용에 등장하는 customer_id/supplier_id/category_id/created_by를
-  // 실제 이름으로 바꿔 보여주기 위해, 관련 마스터 테이블을 통째로 미리
-  // 불러와 조회맵을 만든다 — 이력 건수만큼 매번 개별 조회하는 대신 한
-  // 번씩만 불러온다.
-  const [{ data }, customers, suppliers, categories, profiles] = await Promise.all([
-    query,
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("customers").select("id, name").range(from, to),
-    ),
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("suppliers").select("id, name").range(from, to),
-    ),
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("categories").select("id, name").range(from, to),
-    ),
-    fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
-      supabase.from("profiles").select("id, full_name").range(from, to),
-    ),
-  ]);
-  const lookups: Lookups = {
-    customers: new Map(customers.map((c) => [c.id, c.name])),
-    suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
-    categories: new Map(categories.map((c) => [c.id, c.name])),
-    profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
+  type ViewRow = {
+    id: string;
+    createdAt: string;
+    tableLabel: string;
+    actionLabel: string;
+    actionTone: "ok" | "danger" | "info";
+    target: string;
+    author: string;
+    summary: string;
   };
 
-  const rows = data ?? [];
-  const hasMore = rows.length >= limit;
+  let viewRows: ViewRow[] = [];
+  let hasMore = false;
+
+  if (isInventoryTab) {
+    // audit_logs 트리거가 없는 재고 조정은 inventory_transactions에서 직접
+    // 가져온다. 매출/매입 처리 중 자동으로 생기는 입출고(in/out)는 원래
+    // 그 전표 화면에서 확인 가능하니 여기선 제외하고, 수기 조정(재고조정
+    // 화면, 재고실사)만 대상으로 한다.
+    const { data: adjustments } = await supabase
+      .from("inventory_transactions")
+      .select(
+        "id, product_id, quantity, note, created_at, products(sku, name), profiles!created_by(full_name)",
+      )
+      .eq("type", "adjustment")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    const rows = adjustments ?? [];
+    hasMore = rows.length >= limit;
+
+    // 각 조정의 "전/후 수량"은 그 조정분(delta)만으로는 알 수 없다 — 화면에
+    // 나온 품목들의 전체 입출고 이력을 처음부터 누적해야 그 시점의 정확한
+    // 잔량이 나온다(/inventory/[productId]와 같은 계산 방식).
+    const productIds = Array.from(new Set(rows.map((r) => r.product_id)));
+    const fullHistory = productIds.length
+      ? await fetchAllRows<{ id: string; product_id: string; type: string; quantity: number }>(
+          (from, to) =>
+            supabase
+              .from("inventory_transactions")
+              .select("id, product_id, type, quantity, created_at")
+              .in("product_id", productIds)
+              .order("created_at", { ascending: true })
+              .range(from, to),
+        )
+      : [];
+    const byProduct = new Map<string, typeof fullHistory>();
+    for (const t of fullHistory) {
+      const arr = byProduct.get(t.product_id) ?? [];
+      arr.push(t);
+      byProduct.set(t.product_id, arr);
+    }
+
+    viewRows = rows.map((row) => {
+      const history = byProduct.get(row.product_id) ?? [];
+      const balanceAfterById = computeBalanceAfterById(history);
+      const after = balanceAfterById.get(row.id) ?? 0;
+      const before = after - row.quantity;
+      return {
+        id: row.id,
+        createdAt: row.created_at,
+        tableLabel: "재고",
+        actionLabel: "조정",
+        actionTone: "info",
+        target: row.products?.name ?? "(삭제된 품목)",
+        author: row.profiles?.full_name ?? "-",
+        summary: `전산 재고: ${before.toLocaleString()} → ${after.toLocaleString()} (${
+          row.quantity > 0 ? "+" : ""
+        }${row.quantity.toLocaleString()}) · 사유: ${row.note || "-"}`,
+      };
+    });
+  } else {
+    let query = supabase
+      .from("audit_logs")
+      .select("id, table_name, record_id, action, old_data, new_data, created_at, profiles!actor(full_name)")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (tableParam) query = query.eq("table_name", tableParam);
+
+    // 변경 내용에 등장하는 customer_id/supplier_id/category_id/created_by를
+    // 실제 이름으로 바꿔 보여주기 위해, 관련 마스터 테이블을 통째로 미리
+    // 불러와 조회맵을 만든다 — 이력 건수만큼 매번 개별 조회하는 대신 한
+    // 번씩만 불러온다.
+    const [{ data }, customers, suppliers, categories, profiles] = await Promise.all([
+      query,
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("customers").select("id, name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("suppliers").select("id, name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("categories").select("id, name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+        supabase.from("profiles").select("id, full_name").range(from, to),
+      ),
+    ]);
+    const lookups: Lookups = {
+      customers: new Map(customers.map((c) => [c.id, c.name])),
+      suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
+      categories: new Map(categories.map((c) => [c.id, c.name])),
+      profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
+    };
+
+    const rows = data ?? [];
+    hasMore = rows.length >= limit;
+
+    viewRows = rows.map((row) => {
+      const oldData = row.old_data as Record<string, unknown> | null;
+      const newData = row.new_data as Record<string, unknown> | null;
+      const summary =
+        row.action === "insert"
+          ? `등록됨: ${identitySummary(row.table_name, newData)}`
+          : row.action === "delete"
+            ? `삭제됨: ${identitySummary(row.table_name, oldData)}`
+            : diffSummary(row.table_name, oldData, newData, lookups);
+      return {
+        id: row.id,
+        createdAt: row.created_at,
+        tableLabel: TABLE_LABELS[row.table_name] ?? row.table_name,
+        actionLabel: ACTION_LABELS[row.action] ?? row.action,
+        actionTone: row.action === "insert" ? "ok" : row.action === "delete" ? "danger" : "info",
+        target: identitySummary(row.table_name, newData ?? oldData),
+        author: row.profiles?.full_name ?? "-",
+        summary,
+      };
+    });
+  }
 
   const tableSuffix = tableParam ? `&table=${encodeURIComponent(tableParam)}` : "";
   const moreHref = `/settings/audit-log?limit=${limit + LIMIT_STEP}${tableSuffix}`;
@@ -290,7 +394,8 @@ export default async function AuditLogPage({
         </Link>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        매출·매입·품목·거래처·계정 권한의 등록/수정/삭제 이력입니다. 관리자만 볼 수 있습니다.
+        매출·매입·품목·거래처·계정 권한의 등록/수정/삭제 이력과 재고 조정 이력입니다. 관리자만 볼 수
+        있습니다.
       </p>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
@@ -309,6 +414,12 @@ export default async function AuditLogPage({
             {label}
           </Link>
         ))}
+        <Link
+          href={`/settings/audit-log?table=${INVENTORY_TAB}`}
+          className={`erp-date-preset-btn${isInventoryTab ? " active" : ""}`}
+        >
+          재고
+        </Link>
       </div>
 
       <div
@@ -336,51 +447,29 @@ export default async function AuditLogPage({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
-              const oldData = row.old_data as Record<string, unknown> | null;
-              const newData = row.new_data as Record<string, unknown> | null;
-              const summary =
-                row.action === "insert"
-                  ? `등록됨: ${identitySummary(row.table_name, newData)}`
-                  : row.action === "delete"
-                    ? `삭제됨: ${identitySummary(row.table_name, oldData)}`
-                    : diffSummary(row.table_name, oldData, newData, lookups);
-              return (
-                <tr key={row.id}>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {new Date(row.created_at).toLocaleString("ko-KR")}
-                  </td>
-                  <td>{TABLE_LABELS[row.table_name] ?? row.table_name}</td>
-                  <td>
-                    <GridBadge
-                      tone={
-                        row.action === "insert"
-                          ? "ok"
-                          : row.action === "delete"
-                            ? "danger"
-                            : "info"
-                      }
-                    >
-                      {ACTION_LABELS[row.action] ?? row.action}
-                    </GridBadge>
-                  </td>
-                  <td>{identitySummary(row.table_name, newData ?? oldData)}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.profiles?.full_name ?? "-"}
-                  </td>
-                  <td
-                    style={{
-                      color: "var(--erp-text-muted)",
-                      fontSize: 11.5,
-                      wordBreak: "break-all",
-                    }}
-                  >
-                    {summary}
-                  </td>
-                </tr>
-              );
-            })}
-            {!rows.length && (
+            {viewRows.map((row) => (
+              <tr key={row.id}>
+                <td style={{ color: "var(--erp-text-muted)" }}>
+                  {new Date(row.createdAt).toLocaleString("ko-KR")}
+                </td>
+                <td>{row.tableLabel}</td>
+                <td>
+                  <GridBadge tone={row.actionTone}>{row.actionLabel}</GridBadge>
+                </td>
+                <td>{row.target}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{row.author}</td>
+                <td
+                  style={{
+                    color: "var(--erp-text-muted)",
+                    fontSize: 11.5,
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {row.summary}
+                </td>
+              </tr>
+            ))}
+            {!viewRows.length && (
               <tr>
                 <td colSpan={6} className="erp-grid-empty">
                   변경 이력이 없습니다.
