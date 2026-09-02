@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TodoForm } from "@/components/todo-form";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function NewTodoPage() {
   const supabase = await createClient();
@@ -27,6 +28,7 @@ export default async function NewTodoPage() {
 
   return (
     <div>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">

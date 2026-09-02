@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default function NewAnnouncementPage() {
   return (
     <div>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">공지사항 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
