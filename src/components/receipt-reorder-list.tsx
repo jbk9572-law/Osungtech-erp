@@ -20,6 +20,7 @@ export function ReceiptReorderList({
   const [order, setOrder] = useState(receipts);
   const [knownKey, setKnownKey] = useState(() => receipts.map((r) => r.id).join(","));
   const [isPending, startTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const receiptsKey = receipts.map((r) => r.id).join(",");
   if (receiptsKey !== knownKey) {
@@ -30,6 +31,7 @@ export function ReceiptReorderList({
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= order.length) return;
+    const previous = order;
     const next = [...order];
     [next[index], next[target]] = [next[target], next[index]];
     setOrder(next);
@@ -37,14 +39,27 @@ export function ReceiptReorderList({
       const formData = new FormData();
       formData.set("payment_request_id", paymentRequestId);
       formData.set("order", JSON.stringify(next.map((r) => r.id)));
-      await reorderPaymentRequestReceipts(undefined, formData);
+      const result = await reorderPaymentRequestReceipts(undefined, formData);
+      // 실패하면(RLS, 동시 삭제 등) 화살표로 이미 바꿔놓은 순서가 실제
+      // 저장된 순서와 어긋난 채로 남지 않도록 되돌린다 — 이전엔 이 결과를
+      // 확인하지 않아서 실패해도 화면 순서만 계속 틀려 보이는 문제가 있었다.
+      if (result?.error) {
+        setOrder(previous);
+        setErrorMessage(result.error);
+      } else {
+        setErrorMessage(null);
+      }
     });
   }
 
   if (!order.length) return null;
 
   return (
-    <ul className="mb-3 flex flex-wrap gap-3">
+    <>
+      {errorMessage && (
+        <p className="mb-2 text-xs font-medium text-[var(--erp-danger)]">{errorMessage}</p>
+      )}
+      <ul className="mb-3 flex flex-wrap gap-3">
       {order.map((receipt, index) => (
         <li
           key={receipt.id}
@@ -85,6 +100,7 @@ export function ReceiptReorderList({
           <ReceiptDeleteForm id={receipt.id} paymentRequestId={paymentRequestId} />
         </li>
       ))}
-    </ul>
+      </ul>
+    </>
   );
 }
