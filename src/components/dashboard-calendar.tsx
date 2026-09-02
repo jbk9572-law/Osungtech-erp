@@ -1,12 +1,23 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addCalendarNote } from "@/app/(dashboard)/dashboard/actions";
+import {
+  addCalendarNote,
+  deleteCalendarNote,
+} from "@/app/(dashboard)/dashboard/actions";
 import { FormMessage } from "@/components/form-message";
 import { getHolidayName } from "@/lib/kr-holidays";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
+import { canManage } from "@/lib/can-manage";
 import { startRouteProgress } from "@/lib/route-progress";
 import {
   formatPaperCalcSizeLines,
@@ -43,7 +54,13 @@ type DayData = {
   purchaseItems: ItemRow[];
   salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
-  notes: { authorName: string; content: string; createdAt: string }[];
+  notes: {
+    id: string;
+    authorName: string;
+    content: string;
+    createdAt: string;
+    createdBy: string | null;
+  }[];
 };
 
 type Cell = { dateStr: string; day: number } | null;
@@ -155,78 +172,119 @@ function matchDestinations(
   }));
 }
 
-// 전량이 한 거래처로만 나갔으면 숫자를 다시 안 보여준다 — 앞에 이미 나온
-// 입고 수량과 같은 값이라 반복일 뿐이다(거래처 이름만으로 "전량 그리로
-// 나갔다"는 뜻이 충분히 전달된다). 여러 곳으로 나뉘었거나 일부만 나간
-// 경우에만 각자 얼마씩 나갔는지 알아야 하므로 숫자를 그대로 보여준다.
-function destinationTextSuffix(
+const STOCK_PURCHASE_LABEL = "재고용 매입";
+const STOCK_SALE_LABEL = "재고분 출고";
+
+// destinations 목록을 사람이 읽을 라벨로 만든다. 전량이 한 곳으로만
+// 갔으면 그 이름만, 여러 곳/일부만 갔으면 목적지별 수량을 붙여 나열한다.
+// 화면의 화살표 힌트와 카톡복사의 그룹 헤더가 이 라벨을 그대로 같이 쓴다.
+function destinationGroupLabel(
   destinations: { partnerName: string; quantity: number }[],
   incomingQuantity: number,
-): string {
-  if (!destinations.length) return "";
+): string | null {
+  if (!destinations.length) return null;
   if (destinations.length === 1 && destinations[0].quantity === incomingQuantity) {
-    return ` → ${destinations[0].partnerName}`;
+    return destinations[0].partnerName;
   }
-  return ` → ${destinations
+  return destinations
     .map((d) => `${d.partnerName} ${d.quantity.toLocaleString()}`)
-    .join(" / ")}`;
+    .join(" / ");
 }
 
-// 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간 것이면
-// "→ 재고"를 붙인다. 매입 쪽 "→ 거래처명"과 대칭되는 반대 방향 매칭이라
-// matchDestinations를 그대로 재사용해서(품목명+규격 일치) 당일 매입
-// 수량을 합산한 뒤, 판매 수량에 못 미치는 만큼을 재고 출고로 본다.
-function stockOriginSuffix(
+// 매입 품목이 당일 매출로 전부/일부 나가고 남는 수량이 있으면, 그 남는
+// 만큼을 "재고용 매입"이라는 가상의 목적지로 채워 넣는다. 그러면
+// destinationGroupLabel을 그대로 재사용해서 "전량 재고면 이름만, 일부만
+// 재고면 다른 목적지들과 같이 수량을 붙여" 표시할 수 있다.
+function destinationsIncludingStock(
+  productName: string,
+  spec: string,
+  incomingQuantity: number,
+  salesItems: ItemRow[],
+): { partnerName: string; quantity: number }[] {
+  const destinations = matchDestinations(productName, spec, salesItems);
+  const shipped = destinations.reduce((sum, d) => sum + d.quantity, 0);
+  const leftover = incomingQuantity - shipped;
+  if (leftover <= 0) return destinations;
+  return [...destinations, { partnerName: STOCK_PURCHASE_LABEL, quantity: leftover }];
+}
+
+// 매출 품목이 당일 매입과 완전히 일치하면 라벨 없음(당일 사입 그대로
+// 나간 것이라 따로 표시할 필요 없음), 전량 재고면 "재고분 출고", 일부만
+// 재고면 몇 개가 재고에서 나갔는지 붙인다.
+function stockGroupLabel(
   productName: string,
   spec: string,
   soldQuantity: number,
   purchaseItems: ItemRow[],
-  unit?: string,
-): string {
+): string | null {
   const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
     (sum, d) => sum + d.quantity,
     0,
   );
-  if (purchasedQuantity >= soldQuantity) return "";
-  if (purchasedQuantity <= 0) return " → 재고";
+  if (purchasedQuantity >= soldQuantity) return null;
+  if (purchasedQuantity <= 0) return STOCK_SALE_LABEL;
   const stockQuantity = soldQuantity - purchasedQuantity;
-  return ` → 재고 (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`;
+  return `${stockQuantity.toLocaleString()}개는 ${STOCK_SALE_LABEL}`;
 }
 
-// 이 매입처가 그날 산 모든 품목·규격이 전량 하나의 동일한 거래처로만
-// 나갔는지 확인한다. 그렇다면 품목마다 "→ 거래처"를 반복하는 대신
-// 매입처 이름 옆에 한 번만 표기할 수 있다. 하나라도 나가지 않았거나,
-// 일부만 나갔거나, 서로 다른 거래처로 나뉘었으면 null을 돌려줘서 기존
-// 방식(줄마다 표기)을 그대로 쓰게 한다.
-function uniformPartnerDestination(
-  partner: PartnerBlock,
-  matchAgainst: ItemRow[],
-): string | null {
-  let destination: string | null = null;
-  for (const product of partner.products) {
-    for (const group of groupItemsBySpec(product.items)) {
-      const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
-      const destinations = matchDestinations(product.productName, group.spec, matchAgainst);
-      if (destinations.length !== 1 || destinations[0].quantity !== quantity) {
-        return null;
-      }
-      if (destination === null) {
-        destination = destinations[0].partnerName;
-      } else if (destination !== destinations[0].partnerName) {
-        return null;
-      }
+type LineGroup = { label: string | null; lines: string[] };
+
+// 한 품목 안의 규격 줄들을, 목적지(또는 재고 여부) 라벨이 같은 것끼리
+// 묶는다. 같은 품목이라도 규격별로 다른 곳(거래처 또는 재고)으로 갔으면
+// "품목명 (라벨)" 헤더를 라벨마다 따로 만들어 그 아래 규격:수량만
+// 나열한다 — 매 줄 끝에 화살표를 반복해 붙이는 대신, 어디로 갔는지가
+// 같은 규격끼리 한 덩어리로 보이게 한다.
+function buildProductLineGroups(
+  product: ProductGroup,
+  matchAgainst: ItemRow[] | undefined,
+  reverseMatchAgainst: ItemRow[] | undefined,
+): LineGroup[] {
+  const groups: LineGroup[] = [];
+  const indexByLabel = new Map<string | null, number>();
+
+  for (const group of groupItemsBySpec(product.items)) {
+    const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
+    const isReturn = group.items.some((it) => it.isReturn);
+    const carryoverSuffix = group.items.some((it) => it.isCarryover) ? " (이월)" : "";
+    const returnSuffix = isReturn ? " (반품)" : "";
+
+    let label: string | null = null;
+    if (matchAgainst) {
+      const destinations = destinationsIncludingStock(
+        product.productName,
+        group.spec,
+        quantity,
+        matchAgainst,
+      );
+      label = destinationGroupLabel(destinations, quantity);
+    } else if (reverseMatchAgainst && !isReturn) {
+      label = stockGroupLabel(product.productName, group.spec, quantity, reverseMatchAgainst);
+    }
+
+    let idx = indexByLabel.get(label);
+    if (idx === undefined) {
+      idx = groups.length;
+      indexByLabel.set(label, idx);
+      groups.push({ label, lines: [] });
+    }
+    groups[idx].lines.push(
+      `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}`,
+    );
+    for (const item of group.items) {
+      if (item.remark) groups[idx].lines.push(`      (비고: ${item.remark})`);
     }
   }
-  return destination;
+
+  return groups;
 }
 
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
 // 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만
 // 담고, 단위(EA/KG 등)는 화면에만 보이고 복사 텍스트에는 숫자만 남긴다.
-// matchAgainst를 넘기면(매입 복사에서만 사용) 새 줄을 늘리는 대신 규격 줄
-// 끝에 "→ 거래처 수량"만 덧붙인다 — 별도 섹션 없이 원래 줄 그대로 정보 하나만
-// 더 붙는 방식이라 줄 수가 늘지 않는다. reverseMatchAgainst를 넘기면(매출
-// 복사에서만 사용) 반대로 당일 매입과 매칭 안 되는 만큼 "→ 재고"를 붙인다.
+// matchAgainst를 넘기면(매입 복사에서만 사용) 품목이 어느 거래처로
+// 나갔는지(또는 재고용 매입인지)를 품목명 옆 괄호로 묶어서 보여주고,
+// reverseMatchAgainst를 넘기면(매출 복사에서만 사용) 반대로 당일 매입과
+// 매칭 안 되는 만큼을 "재고분 출고"로 묶어서 보여준다.
 function appendItemLines(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
@@ -238,60 +296,29 @@ function appendItemLines(
   const blocks = buildPartnerBlocks(items, paperCalcByPartner);
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
-    // 이 매입처가 그날 산 게 전부 한 거래처로만 나갔으면, 품목마다
-    // "→ 거래처"를 반복하지 않고 매입처 이름 옆에 한 번만 표기한다.
-    const uniformDestination = matchAgainst
-      ? uniformPartnerDestination(partner, matchAgainst)
-      : null;
-    lines.push(
-      uniformDestination
-        ? `- ${partner.partnerName} → ${uniformDestination}`
-        : `- ${partner.partnerName}`,
-    );
-    partner.products.forEach((product, pi) => {
-      if (pi > 0) lines.push("");
-      lines.push(`  · ${product.productName}`);
-      const specGroups = groupItemsBySpec(product.items);
-      for (const group of specGroups) {
-        const quantity = group.items.reduce((sum, it) => sum + it.quantity, 0);
-        const carryoverSuffix = group.items.some((it) => it.isCarryover)
-          ? " (이월)"
-          : "";
-        const returnSuffix = group.items.some((it) => it.isReturn)
-          ? " (반품)"
-          : "";
-        const destinationSuffix =
-          matchAgainst && !uniformDestination
-            ? destinationTextSuffix(
-                matchDestinations(product.productName, group.spec, matchAgainst),
-                quantity,
-              )
-            : "";
-        const stockSuffix =
-          reverseMatchAgainst && !group.items.some((it) => it.isReturn)
-            ? stockOriginSuffix(product.productName, group.spec, quantity, reverseMatchAgainst)
-            : "";
+    lines.push(`- ${partner.partnerName}`);
+
+    let isFirstGroup = true;
+    partner.products.forEach((product) => {
+      const productGroups = buildProductLineGroups(product, matchAgainst, reverseMatchAgainst);
+      for (const group of productGroups) {
+        if (!isFirstGroup) lines.push("");
+        isFirstGroup = false;
         lines.push(
-          `    ${group.spec} : ${quantity.toLocaleString()}${carryoverSuffix}${returnSuffix}${destinationSuffix}${stockSuffix}`,
+          group.label
+            ? `  · ${product.productName} (${group.label})`
+            : `  · ${product.productName}`,
         );
-        for (const item of group.items) {
-          if (item.remark) lines.push(`      (비고: ${item.remark})`);
-        }
-      }
-      if (specGroups.length > 1) {
-        const { quantity } = productTotals(product.items);
-        lines.push(`    합계 - ${quantity.toLocaleString()}`);
+        lines.push(...group.lines);
       }
     });
+
     if (partner.paperCalc) {
-      if (partner.products.length > 0) lines.push("");
+      if (!isFirstGroup) lines.push("");
       lines.push(`  · ${paperStockProductName}`);
       for (const line of formatPaperCalcSizeLines(partner.paperCalc.sizes)) {
         lines.push(`    ${line}`);
       }
-      lines.push(
-        `    합계 - ${partner.paperCalc.totalSheet.toLocaleString()}연`,
-      );
     }
   });
 }
@@ -301,11 +328,7 @@ function buildSalesCopyText(
   data: DayData,
   paperStockProductName: string,
 ) {
-  const lines: string[] = [
-    `${dateStr} 매출`,
-    "",
-    `[매출] ${data.salesCount}건`,
-  ];
+  const lines: string[] = [`${dateStr} 매출`, "", "[매출]", ""];
   appendItemLines(
     data.salesItems,
     data.salesPaperCalcByPartner,
@@ -322,11 +345,7 @@ function buildPurchaseCopyText(
   data: DayData,
   paperStockProductName: string,
 ) {
-  const lines: string[] = [
-    `${dateStr} 매입`,
-    "",
-    `[매입] ${data.purchaseCount}건`,
-  ];
+  const lines: string[] = [`${dateStr} 매입`, "", "[매입]", ""];
   appendItemLines(
     data.purchaseItems,
     data.purchasePaperCalcByPartner,
@@ -380,9 +399,10 @@ function CarryoverBadge() {
   );
 }
 
-// 매입 화면(오늘의 업무 패널)에서만 쓴다 — 카톡 복사 텍스트와 똑같이,
-// 새 줄 없이 규격 줄 끝에 그대로 이어붙인다(matchDestinations는 위에서
-// 카톡 복사 텍스트 생성에도 재사용).
+// 매입 화면(오늘의 업무 패널)에서만 쓴다 — destinationsIncludingStock을
+// 카톡 복사 텍스트 생성과 그대로 같이 쓴다. 당일 매출 어디로도 안 나간
+// 품목(=재고용 매입)은 배지로, 실제 거래처로 나간 경우는 화살표 텍스트로
+// 구분해서 보여준다.
 function DestinationHint({
   productName,
   spec,
@@ -396,12 +416,25 @@ function DestinationHint({
   quantity: number;
   salesItems: ItemRow[];
 }) {
-  const destinations = matchDestinations(productName, spec, salesItems);
+  const destinations = destinationsIncludingStock(productName, spec, quantity, salesItems);
   if (!destinations.length) return null;
-  // 전량이 한 거래처로만 나갔으면 숫자는 생략한다 — 카톡복사 텍스트와
-  // 동일한 규칙(destinationTextSuffix 참고), 화면과 복사 결과가 서로
-  // 다르게 보이지 않게 맞춘다.
+  // 전량이 한 곳으로만 갔으면 숫자는 생략한다 — 카톡복사 텍스트와 동일한
+  // 규칙(destinationGroupLabel 참고), 화면과 복사 결과가 서로 다르게
+  // 보이지 않게 맞춘다.
   const isFullSingleMatch = destinations.length === 1 && destinations[0].quantity === quantity;
+  const isPureStock = isFullSingleMatch && destinations[0].partnerName === STOCK_PURCHASE_LABEL;
+
+  if (isPureStock) {
+    return (
+      <span
+        className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+        style={{ background: "var(--erp-bg-disabled)", color: "var(--erp-text-muted)" }}
+      >
+        {STOCK_PURCHASE_LABEL}
+      </span>
+    );
+  }
+
   return (
     <span className="font-semibold text-[var(--erp-success)]">
       {" "}
@@ -417,8 +450,8 @@ function DestinationHint({
 
 // 매출 화면(오늘의 업무 패널)에서만 쓴다 — DestinationHint와 대칭으로,
 // 이 매출 품목이 당일 매입으로 들어온 게 아니라 기존 재고에서 나간
-// 것이면 "→ 재고"를 붙인다(stockOriginSuffix는 위에서 카톡 복사 텍스트
-// 생성에도 재사용).
+// 것이면 "재고분 출고"를 붙인다(stockGroupLabel은 위에서 카톡 복사
+// 텍스트 생성에도 재사용).
 function StockOriginHint({
   productName,
   spec,
@@ -441,7 +474,7 @@ function StockOriginHint({
   return (
     <span className="font-semibold text-[var(--erp-text-muted)]">
       {" "}
-      → 재고
+      → {STOCK_SALE_LABEL}
       {purchasedQuantity > 0 &&
         ` (${stockQuantity.toLocaleString()}${unit ?? ""}만 출고)`}
     </span>
@@ -473,6 +506,8 @@ export function DashboardCalendar({
   backgroundLogoUrl,
   lowStockToday,
   paperStockProductName,
+  currentUserId,
+  isAdmin,
 }: {
   year: number;
   month: number;
@@ -484,6 +519,8 @@ export function DashboardCalendar({
   backgroundLogoUrl?: string | null;
   lowStockToday?: boolean;
   paperStockProductName: string;
+  currentUserId: string | null;
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const defaultSelected =
@@ -1046,7 +1083,12 @@ export function DashboardCalendar({
               )}
             </div>
 
-            <NoteForm dateStr={selected} notes={selectedData.notes} />
+            <NoteForm
+              dateStr={selected}
+              notes={selectedData.notes}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+            />
           </>
         ) : (
           <p className="text-sm text-[var(--erp-text-muted)]">
@@ -1061,9 +1103,19 @@ export function DashboardCalendar({
 function NoteForm({
   dateStr,
   notes,
+  currentUserId,
+  isAdmin,
 }: {
   dateStr: string;
-  notes: { authorName: string; content: string; createdAt: string }[];
+  notes: {
+    id: string;
+    authorName: string;
+    content: string;
+    createdAt: string;
+    createdBy: string | null;
+  }[];
+  currentUserId: string | null;
+  isAdmin: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     addCalendarNote,
@@ -1071,6 +1123,10 @@ function NoteForm({
   );
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const { isArmed, press } = useConfirmTwice<string>();
 
   return (
     <div className="space-y-2">
@@ -1082,8 +1138,8 @@ function NoteForm({
       </label>
       {notes.length > 0 && (
         <ul className="space-y-2">
-          {notes.map((note, i) => (
-            <li key={i} className="flex items-start gap-2">
+          {notes.map((note) => (
+            <li key={note.id} className="flex items-start gap-2">
               <span
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
                 style={{
@@ -1093,7 +1149,7 @@ function NoteForm({
               >
                 {note.authorName.slice(0, 1)}
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-xs font-bold text-[var(--erp-text)]">
                     {note.authorName}
@@ -1107,6 +1163,35 @@ function NoteForm({
                       minute: "2-digit",
                     })}
                   </span>
+                  {canManage(note.createdBy, currentUserId, isAdmin) && (
+                    <button
+                      type="button"
+                      disabled={isPending && deletingId === note.id}
+                      onClick={() =>
+                        press(note.id, () => {
+                          setDeleteError(null);
+                          setDeletingId(note.id);
+                          startTransition(async () => {
+                            const result = await deleteCalendarNote(note.id);
+                            if (result?.error) setDeleteError(result.error);
+                            setDeletingId(null);
+                          });
+                        })
+                      }
+                      className="ml-auto shrink-0 text-[10.5px] font-semibold"
+                      style={{
+                        color: isArmed(note.id)
+                          ? "var(--erp-danger)"
+                          : "var(--erp-text-muted)",
+                      }}
+                    >
+                      {isPending && deletingId === note.id
+                        ? "삭제 중..."
+                        : isArmed(note.id)
+                          ? "정말 삭제?"
+                          : "삭제"}
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-[var(--erp-text)]">
                   {note.content}
@@ -1115,6 +1200,11 @@ function NoteForm({
             </li>
           ))}
         </ul>
+      )}
+      {deleteError && (
+        <p className="text-xs font-medium text-[var(--erp-danger)]">
+          {deleteError}
+        </p>
       )}
       {/* notes.length가 바뀌면(추가 성공 시) 폼을 다시 마운트해서 입력칸을
           비운다 — 이 메모는 그날의 한 칸을 편집하는 게 아니라 매번 새
