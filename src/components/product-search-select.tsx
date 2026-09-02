@@ -61,6 +61,7 @@ export function ProductSearchSelect({
         value={open ? query : (selected?.name ?? "")}
         placeholder={placeholder}
         aria-label={placeholder}
+        autoComplete="off"
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });

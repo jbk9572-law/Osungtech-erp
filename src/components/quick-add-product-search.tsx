@@ -83,6 +83,7 @@ export function QuickAddProductSearch({
         value={query}
         placeholder={placeholder}
         aria-label={placeholder}
+        autoComplete="off"
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: Math.max(rect.width, 280) });
