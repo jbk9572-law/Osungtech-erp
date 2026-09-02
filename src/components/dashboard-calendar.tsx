@@ -117,7 +117,7 @@ function groupItemsBySpec(items: ItemRow[]) {
 // 매출 쪽 모조지 계산은 거래처별로 이미 나뉘어 있다). 사이즈(가로×세로)를
 // 열쇠 삼아 매입 쪽 합산 사이즈를, 오늘 매출 쪽 거래처별 모조지 계산과
 // 대조해서 원래 어느 거래처 몫이었는지 되짚어 나눈다 — 일반 품목을
-// 품목명+규격으로 매칭하는 matchDestinations와 같은 원리다. 어느 거래처
+// 품목명+규격으로 매칭하는 buildDestinationPool/drawFromPool과 같은 원리다. 어느 거래처
 // 것으로도 안 잡히고 남는 사이즈는 "재고용 매입"으로 묶는다.
 function splitPaperCalcByDestination(
   entry: PaperCalcPartnerEntry,
@@ -236,29 +236,57 @@ function buildPartnerBlocks(
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 // 매입 품목이 같은 날 어디로 나갔는지(당일 입고 즉시 출고) 한눈에 보이게,
-// 같은 품목명+같은 규격의 매출 내역을 거래처별로 합산한다. 규격까지 정확히
-// 맞아야만 매칭해서, 오늘 사지 않은 규격에서 나간 매출(재고에서 나간 것)이
-// 엉뚱하게 엮이지 않게 한다.
-function matchDestinations(
-  productName: string,
-  spec: string,
-  salesItems: ItemRow[],
-): { partnerName: string; quantity: number }[] {
-  const key = spec || "규격 미지정";
-  const byPartner = new Map<string, number>();
-  for (const item of salesItems) {
-    if (item.productName !== productName) continue;
-    if ((item.spec || "규격 미지정") !== key) continue;
-    // 반품은 그 거래처로 나간 게 아니라 되돌아온 것이므로 "출고처"
-    // 합산에서 제외한다 — 안 그러면 반품이 마치 그날 그 거래처로
-    // 출고된 것처럼 보인다.
+// 같은 품목명+같은 규격의 매출 내역을 거래처별로 미리 모아 "수요 풀"을
+// 만든다. 규격까지 정확히 맞아야만 매칭해서, 오늘 사지 않은 규격에서
+// 나간 매출(재고에서 나간 것)이 엉뚱하게 엮이지 않게 한다.
+//
+// 예전엔 이 매칭을 매입 파트너 블록마다 독립적으로(전체 매출 목록을
+// 매번 다시 훑어서) 계산했다 — 그러면 같은 품목+규격을 오늘 서로 다른
+// 공급처에서 나눠 샀을 때, 같은 매출 수요가 여러 매입 블록에 동시에
+// "나갔다"고 중복으로 잡히는 문제가 있었다(예: A에서 100개, B에서
+// 50개 사고 고객 C가 80개 사면, A 블록도 "C 80개", B 블록도 "C 80개"로
+// 표시되어 실제로는 50개만 산 B가 80개나 나간 것처럼 보임). 하루치
+// 수요를 풀 하나로 미리 모아두고, drawFromPool로 순서대로 빼 쓰면서
+// 뽑힌 만큼 풀에서 바로 차감해 이 중복을 막는다.
+type DestinationPool = Map<string, Map<string, number>>;
+
+function buildDestinationPool(items: ItemRow[]): DestinationPool {
+  const pool: DestinationPool = new Map();
+  for (const item of items) {
+    // 반품은 그 거래처로 나간 게 아니라 되돌아온 것이므로 수요 풀에서
+    // 제외한다 — 안 그러면 반품이 마치 그날 그 거래처로 나간 것처럼 잡힌다.
     if (item.isReturn) continue;
+    const key = `${item.productName}||${item.spec || "규격 미지정"}`;
+    let byPartner = pool.get(key);
+    if (!byPartner) {
+      byPartner = new Map();
+      pool.set(key, byPartner);
+    }
     byPartner.set(item.partnerName, (byPartner.get(item.partnerName) ?? 0) + item.quantity);
   }
-  return Array.from(byPartner.entries()).map(([partnerName, quantity]) => ({
-    partnerName,
-    quantity,
-  }));
+  return pool;
+}
+
+function drawFromPool(
+  pool: DestinationPool,
+  productName: string,
+  spec: string,
+  neededQuantity: number,
+): { partnerName: string; quantity: number }[] {
+  const key = `${productName}||${spec || "규격 미지정"}`;
+  const byPartner = pool.get(key);
+  if (!byPartner) return [];
+  const drawn: { partnerName: string; quantity: number }[] = [];
+  let remaining = neededQuantity;
+  for (const [partnerName, available] of byPartner) {
+    if (remaining <= 0) break;
+    if (available <= 0) continue;
+    const take = Math.min(available, remaining);
+    drawn.push({ partnerName, quantity: take });
+    byPartner.set(partnerName, available - take);
+    remaining -= take;
+  }
+  return drawn;
 }
 
 const STOCK_PURCHASE_LABEL = "재고용 매입";
@@ -289,9 +317,9 @@ function destinationsIncludingStock(
   productName: string,
   spec: string,
   incomingQuantity: number,
-  salesItems: ItemRow[],
+  pool: DestinationPool,
 ): { partnerName: string; quantity: number }[] {
-  const destinations = matchDestinations(productName, spec, salesItems);
+  const destinations = drawFromPool(pool, productName, spec, incomingQuantity);
   const shipped = destinations.reduce((sum, d) => sum + d.quantity, 0);
   const leftover = incomingQuantity - shipped;
   if (leftover <= 0) return destinations;
@@ -305,10 +333,10 @@ function stockGroupLabel(
   productName: string,
   spec: string,
   soldQuantity: number,
-  purchaseItems: ItemRow[],
+  pool: DestinationPool,
   unit: string,
 ): string | null {
-  const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
+  const purchasedQuantity = drawFromPool(pool, productName, spec, soldQuantity).reduce(
     (sum, d) => sum + d.quantity,
     0,
   );
@@ -335,8 +363,8 @@ type LineGroup = {
 // 바로 위 줄과 같은 숫자가 또 나와 불필요하므로 생략한다.
 function buildProductLineGroups(
   product: ProductGroup,
-  matchAgainst: ItemRow[] | undefined,
-  reverseMatchAgainst: ItemRow[] | undefined,
+  matchPool: DestinationPool | undefined,
+  reversePool: DestinationPool | undefined,
 ): LineGroup[] {
   const groups: LineGroup[] = [];
   const indexByLabel = new Map<string | null, number>();
@@ -349,16 +377,16 @@ function buildProductLineGroups(
     const returnSuffix = isReturn ? " (반품)" : "";
 
     let label: string | null = null;
-    if (matchAgainst) {
+    if (matchPool) {
       const destinations = destinationsIncludingStock(
         product.productName,
         group.spec,
         quantity,
-        matchAgainst,
+        matchPool,
       );
       label = destinationGroupLabel(destinations, quantity, unit);
-    } else if (reverseMatchAgainst && !isReturn) {
-      label = stockGroupLabel(product.productName, group.spec, quantity, reverseMatchAgainst, unit);
+    } else if (reversePool && !isReturn) {
+      label = stockGroupLabel(product.productName, group.spec, quantity, reversePool, unit);
     }
 
     let idx = indexByLabel.get(label);
@@ -403,6 +431,12 @@ function appendItemLines(
   reverseMatchAgainst?: ItemRow[],
   otherSidePaperCalcByPartner?: Record<string, PaperCalcPartnerEntry>,
 ) {
+  // 파트너 블록 전체가 하루치 수요 풀 하나를 순서대로 나눠 쓴다 —
+  // 블록마다 새로 만들면 같은 품목+규격 수요가 여러 블록에 중복으로
+  // 잡히는 문제가 생긴다(buildDestinationPool 주석 참고).
+  const matchPool = matchAgainst ? buildDestinationPool(matchAgainst) : undefined;
+  const reversePool = reverseMatchAgainst ? buildDestinationPool(reverseMatchAgainst) : undefined;
+
   const blocks = buildPartnerBlocks(items, paperCalcByPartner, otherSidePaperCalcByPartner);
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
@@ -410,7 +444,7 @@ function appendItemLines(
 
     let isFirstGroup = true;
     partner.products.forEach((product) => {
-      const productGroups = buildProductLineGroups(product, matchAgainst, reverseMatchAgainst);
+      const productGroups = buildProductLineGroups(product, matchPool, reversePool);
       for (const group of productGroups) {
         if (!isFirstGroup) lines.push("");
         isFirstGroup = false;
@@ -526,15 +560,15 @@ function DestinationHint({
   spec,
   unit,
   quantity,
-  salesItems,
+  pool,
 }: {
   productName: string;
   spec: string;
   unit?: string;
   quantity: number;
-  salesItems: ItemRow[];
+  pool: DestinationPool;
 }) {
-  const destinations = destinationsIncludingStock(productName, spec, quantity, salesItems);
+  const destinations = destinationsIncludingStock(productName, spec, quantity, pool);
   if (!destinations.length) return null;
   // 전량이 한 곳으로만 갔으면 숫자는 생략한다 — 카톡복사 텍스트와 동일한
   // 규칙(destinationGroupLabel 참고), 화면과 복사 결과가 서로 다르게
@@ -575,15 +609,15 @@ function StockOriginHint({
   spec,
   unit,
   quantity,
-  purchaseItems,
+  pool,
 }: {
   productName: string;
   spec: string;
   unit?: string;
   quantity: number;
-  purchaseItems: ItemRow[];
+  pool: DestinationPool;
 }) {
-  const purchasedQuantity = matchDestinations(productName, spec, purchaseItems).reduce(
+  const purchasedQuantity = drawFromPool(pool, productName, spec, quantity).reduce(
     (sum, d) => sum + d.quantity,
     0,
   );
@@ -676,6 +710,16 @@ export function DashboardCalendar({
     purchasePaperCalcByPartner: {},
     notes: [],
   };
+  // 렌더링 한 번(=화면을 한 번 훑는 동안)에 매입/매출 각 방향으로 딱
+  // 하나씩만 만들어서, 그 안의 모든 줄이 순서대로 나눠 쓰게 한다 — 같은
+  // 품목+규격을 오늘 여러 거래처에서 나눠 사고판 경우 같은 수요가 여러
+  // 줄에 중복으로 잡히는 문제를 막기 위함(카톡복사 쪽과 같은 이유로
+  // buildDestinationPool/drawFromPool을 쓴다). drawFromPool이 렌더링
+  // 중에 풀 내용을 직접 소진시키므로(줄마다 차감) useMemo로 캐싱하면
+  // 다음 렌더링 때 이미 소진된 풀을 재사용하게 돼 반드시 매 렌더링마다
+  // 새로 만들어야 한다.
+  const purchaseDestPool = buildDestinationPool(selectedData.salesItems);
+  const saleOriginPool = buildDestinationPool(selectedData.purchaseItems);
 
   async function handleCopy(type: "sales" | "purchase" | "memo") {
     if (!selected) return;
@@ -941,7 +985,7 @@ export function DashboardCalendar({
                                               spec={item.spec}
                                               unit={item.unit}
                                               quantity={item.quantity}
-                                              salesItems={selectedData.salesItems}
+                                              pool={purchaseDestPool}
                                             />
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
@@ -973,7 +1017,7 @@ export function DashboardCalendar({
                                               spec={item.spec}
                                               unit={item.unit}
                                               quantity={item.quantity}
-                                              salesItems={selectedData.salesItems}
+                                              pool={purchaseDestPool}
                                             />
                                             {item.remark && (
                                               <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
@@ -1094,7 +1138,7 @@ export function DashboardCalendar({
                                                 spec={item.spec}
                                                 unit={item.unit}
                                                 quantity={item.quantity}
-                                                purchaseItems={selectedData.purchaseItems}
+                                                pool={saleOriginPool}
                                               />
                                             )}
                                             {item.remark && (
@@ -1129,7 +1173,7 @@ export function DashboardCalendar({
                                                 spec={item.spec}
                                                 unit={item.unit}
                                                 quantity={item.quantity}
-                                                purchaseItems={selectedData.purchaseItems}
+                                                pool={saleOriginPool}
                                               />
                                             )}
                                             {item.remark && (
