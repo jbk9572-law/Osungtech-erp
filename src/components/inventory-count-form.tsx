@@ -6,6 +6,7 @@ import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 
 export type CountRow = {
   productId: string;
@@ -14,6 +15,7 @@ export type CountRow = {
   spec: string | null;
   unit: string | null;
   systemQuantity: number;
+  basePackageQty: number | null;
 };
 
 type SavedAdjustment = CountRow & { countedQuantity: number };
@@ -293,7 +295,8 @@ export function InventoryCountForm({
               <th>SKU</th>
               <th>품목명</th>
               <th style={{ width: 140 }}>규격</th>
-              <th className="num" style={{ width: 110 }}>
+              <th style={{ width: 130 }}>포장수량</th>
+              <th className="num" style={{ width: 130 }}>
                 전산 재고
               </th>
               <th className="num" style={{ width: 140 }}>
@@ -316,8 +319,13 @@ export function InventoryCountForm({
                   <td>{row.sku}</td>
                   <td>{row.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.basePackageQty
+                      ? `1박스 = ${Number(row.basePackageQty).toLocaleString()}${row.unit ?? ""}`
+                      : "-"}
+                  </td>
                   <td className="num">
-                    {systemQuantity.toLocaleString()} {row.unit ?? ""}
+                    {formatQuantityWithBoxes(systemQuantity, row.basePackageQty)} {row.unit ?? ""}
                   </td>
                   <td className="num">
                     <NumberInput
@@ -327,6 +335,11 @@ export function InventoryCountForm({
                       }
                       className="erp-input w-full"
                     />
+                    {row.basePackageQty && (
+                      <div className="mt-0.5 text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
+                        {formatQuantityWithBoxes(value, row.basePackageQty)}
+                      </div>
+                    )}
                   </td>
                   <td
                     className="num"
@@ -355,7 +368,7 @@ export function InventoryCountForm({
             })}
             {!visibleRows.length && (
               <tr>
-                <td colSpan={7} className="erp-grid-empty">
+                <td colSpan={8} className="erp-grid-empty">
                   {onlyDiff ? "차이 있는 품목이 없습니다." : "표시할 품목이 없습니다."}
                 </td>
               </tr>

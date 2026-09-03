@@ -48,11 +48,12 @@ export default async function InventoryCountPage({
       spec: string | null;
       unit: string;
       reorder_point: number | null;
+      base_package_qty: number | null;
       inventory: { quantity: number }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, reorder_point, inventory(quantity)")
+        .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity)")
         .order("name")
         .range(from, to),
     ),
@@ -84,6 +85,7 @@ export default async function InventoryCountPage({
     spec: p.spec,
     unit: p.unit,
     systemQuantity: p.inventory?.[0]?.quantity ?? 0,
+    basePackageQty: p.base_package_qty,
   }));
 
   // 안전재고를 실제로 설정해둔(0보다 큰) 품목만 대상으로 한다 — 알림종/대시보드
