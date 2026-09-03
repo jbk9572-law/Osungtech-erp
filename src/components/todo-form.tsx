@@ -13,6 +13,7 @@ import { PENDING_PAPER_CALC_TODO_KEY } from "@/lib/paper-calc-pending-key";
 import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 import { FieldHint } from "@/components/field-hint";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
 
 type Product = {
   id: string;
@@ -328,7 +329,12 @@ export function TodoForm({
                 <th style={{ width: "10%" }} />
               </tr>
             </thead>
-            <tbody>
+            <tbody
+              onKeyDown={(e) => {
+                focusSameColumnNextRow(e);
+                focusGridArrowNav(e);
+              }}
+            >
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 return (

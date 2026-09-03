@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
-import { NumberInput } from "@/components/number-input";
+import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
@@ -354,18 +354,15 @@ export function InventoryCountForm({
                     {formatQuantityWithBoxes(systemQuantity, row.basePackageQty)} {row.unit ?? ""}
                   </td>
                   <td className="num">
-                    <NumberInput
-                      value={value}
-                      onChange={(n) =>
+                    <QuantityWithBoxInput
+                      quantity={value}
+                      onQuantityChange={(n) =>
                         setCounted((prev) => ({ ...prev, [row.productId]: n }))
                       }
+                      basePackageQty={row.basePackageQty}
+                      label="실사 수량"
                       className="erp-input w-full"
                     />
-                    {row.basePackageQty && (
-                      <div className="mt-0.5 text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
-                        {formatQuantityWithBoxes(value, row.basePackageQty)}
-                      </div>
-                    )}
                   </td>
                   <td
                     className="num"
