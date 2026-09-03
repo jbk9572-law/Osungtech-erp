@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 export type CountRow = {
   productId: string;
@@ -59,6 +60,7 @@ export function InventoryCountForm({
   const [started, setStarted] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const confirmSave = useConfirmTwice();
 
   const changedRows = useMemo(
     () =>
@@ -72,6 +74,23 @@ export function InventoryCountForm({
     [rows, counted, baseline]
   );
 
+  // 사유를 안 남긴 채로 유독 큰 차이(⚠ 확인 필요)를 저장하려 하면, 버튼을
+  // 한 번 더 눌러야 실제로 저장되게 한다 — 삭제처럼 되돌릴 수 없는 건
+  // 아니라서 확인코드까지는 과하고, 이 앱의 가벼운 두 번 누르기 확인
+  // 패턴(useConfirmTwice)이 딱 맞는다. 사유를 적었거나 차이가 작으면
+  // 평소처럼 한 번에 저장된다.
+  const hasUnexplainedLargeDiff =
+    !note.trim() &&
+    changedRows.some((r) => isLargeDiscrepancy(r.systemQuantity, r.countedQuantity - r.systemQuantity));
+
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+    if (!hasUnexplainedLargeDiff) return;
+    if (!confirmSave.isArmed("save")) {
+      e.preventDefault();
+    }
+    confirmSave.press("save", () => {});
+  }
+
   // 저장 성공 시: 방금 저장한 조정 내역을 요약 패널에 보여주고, baseline을
   // 갱신해서 같은 화면에서 또 저장 버튼을 눌러도 이미 반영된 품목이
   // 중복으로 다시 저장되지 않게 한다.
@@ -84,6 +103,8 @@ export function InventoryCountForm({
         for (const r of changedRows) next[r.productId] = r.countedQuantity;
         return next;
       });
+      setNote("");
+      confirmSave.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to state changing, changedRows is read at that moment
   }, [state]);
@@ -132,7 +153,7 @@ export function InventoryCountForm({
         </button>
       </div>
       <div className="erp-detail-body">
-      <form action={formAction}>
+      <form action={formAction} onSubmit={handleFormSubmit}>
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="rows" value={payload} />
       <input type="hidden" name="note" value={note} />
@@ -156,18 +177,26 @@ export function InventoryCountForm({
             ref={submitRef}
             type="submit"
             disabled={pending || changedRows.length === 0}
-            className="erp-btn erp-btn-primary"
+            className={hasUnexplainedLargeDiff && confirmSave.isArmed("save") ? "erp-btn erp-btn-danger" : "erp-btn erp-btn-primary"}
           >
             {pending ? (
               <>
                 <span className="erp-spinner" aria-hidden /> 저장 중...
               </>
+            ) : hasUnexplainedLargeDiff && confirmSave.isArmed("save") ? (
+              "⚠ 사유 없이 저장할까요? 다시 눌러 확인"
             ) : (
               `F7 실사 결과 저장 (${changedRows.length}건)`
             )}
           </button>
         </div>
       </div>
+      {hasUnexplainedLargeDiff && (
+        <p className="mt-1 text-[11px]" style={{ color: "var(--erp-warning)" }}>
+          ⚠ 확인 필요로 표시된 품목이 있는데 사유를 안 적었습니다. 저장 버튼을 한 번 더 누르면 그대로
+          저장됩니다.
+        </p>
+      )}
       {/* 실사는 "전산 재고를 실물에 맞춰 덮어쓰는" 동작이라, 왜 차이가
           났는지(파손/샘플/입고 누락 등) 최소한의 흔적을 남겨야 나중에
           이력을 보고 원인을 되짚어볼 수 있다 — 반품 사유를 표준 코드로
@@ -181,7 +210,10 @@ export function InventoryCountForm({
           type="text"
           autoComplete="off"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
+          onChange={(e) => {
+            setNote(e.target.value);
+            confirmSave.reset();
+          }}
           placeholder="예: 파손 3개 폐기, 분기 정기실사 등 — 나중에 이력에서 원인을 되짚어볼 때 도움이 됩니다"
           className="erp-input"
           style={{ width: "100%" }}

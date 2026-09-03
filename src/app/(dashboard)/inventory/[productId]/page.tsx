@@ -50,6 +50,7 @@ export default async function InventoryProductHistoryPage({
       type: string;
       quantity: number;
       note: string | null;
+      reference: string | null;
       created_at: string;
       sales_order_id: string | null;
       purchase_order_id: string | null;
@@ -60,7 +61,7 @@ export default async function InventoryProductHistoryPage({
       supabase
         .from("inventory_transactions")
         .select(
-          "id, type, quantity, note, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
+          "id, type, quantity, note, reference, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
         )
         .eq("product_id", productId)
         .order("created_at", { ascending: true })
@@ -80,6 +81,7 @@ export default async function InventoryProductHistoryPage({
       signedQty: number;
       partnerName: string | null;
       note: string | null;
+      reference: string | null;
       href: string | null;
       balance: number;
       authorName: string | null;
@@ -101,6 +103,7 @@ export default async function InventoryProductHistoryPage({
         t.purchase_orders?.suppliers?.name ??
         null,
       note: t.note,
+      reference: t.reference,
       href: t.sales_order_id
         ? `/sales/${t.sales_order_id}`
         : t.purchase_order_id
@@ -118,6 +121,16 @@ export default async function InventoryProductHistoryPage({
   const presets = getDatePresets();
   const currentQuantity = product.inventory?.[0]?.quantity ?? 0;
 
+  // 재고실사(submitStockCount)가 남긴 조정만 골라서 최근 편차 이력을
+  // 별도로 보여준다 — 아래 전체 입출고내역 표에도 같은 행이 섞여 있지만,
+  // 이 품목이 실사 때마다 반복해서 틀리는지는 전체 표에 파묻혀서는 눈에
+  // 안 띈다. 3회 이상이면 "반복 편차"로 눈에 띄게 표시한다.
+  const countAdjustments = allTx
+    .filter((t) => t.reference?.startsWith("stock_count:"))
+    .slice()
+    .reverse();
+  const isRepeatedMiss = countAdjustments.length >= 3;
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
@@ -130,6 +143,59 @@ export default async function InventoryProductHistoryPage({
         {formatQuantityWithBoxes(currentQuantity, product.base_package_qty)}
         {product.unit ?? ""}
       </p>
+
+      {countAdjustments.length > 0 && (
+        <div
+          className="erp-detail"
+          style={{ marginTop: 0, marginBottom: 14, borderColor: isRepeatedMiss ? "var(--erp-warning)" : undefined }}
+        >
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+              최근 실사 편차 이력
+            </span>
+            {isRepeatedMiss && (
+              <span
+                className="erp-badge erp-badge-warning"
+                style={{ marginLeft: "auto", marginRight: 12, alignSelf: "center" }}
+              >
+                반복 편차 {countAdjustments.length}회
+              </span>
+            )}
+          </div>
+          <div className="erp-detail-body">
+            <div className="erp-grid-wrap">
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th>실사일</th>
+                    <th className="num" style={{ width: 90 }}>
+                      차이
+                    </th>
+                    <th>사유</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {countAdjustments.map((t) => (
+                    <tr key={t.id}>
+                      <td>{new Date(t.date).toLocaleDateString("ko-KR")}</td>
+                      <td
+                        className="num"
+                        style={{ fontWeight: 700, color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
+                      >
+                        {t.signedQty > 0 ? "+" : ""}
+                        {t.signedQty.toLocaleString()}
+                      </td>
+                      <td style={{ color: "var(--erp-text-muted)" }}>
+                        {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="erp-toolbar">
         <Link href="/inventory" className="erp-btn erp-btn-danger">
