@@ -12,6 +12,7 @@ import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-clie
 import { PENDING_PAPER_CALC_TODO_KEY } from "@/lib/paper-calc-pending-key";
 import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 import { FieldHint } from "@/components/field-hint";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 
 type Product = {
   id: string;
@@ -169,7 +170,15 @@ export function TodoForm({
       .filter((row) => row.productId && row.quantity > 0)
       .map((row) => ({
         productId: row.productId,
-        spec: row.manualSpec ? row.spec : null,
+        // manualSpec은 "직접입력" 칸을 편집 가능하게 할지만 정하는 UI
+        // 상태다 — row.spec 자체는 품목을 고르는 순간 그 품목의 기본
+        // 규격으로 항상 채워져 있다(handleProductChange/quickAddProduct
+        // 참고). 그런데 저장할 땐 manualSpec이 false면(대부분의 경우,
+        // 즉 기본 규격을 그대로 쓴 경우) 무조건 null을 보내고 있었다 —
+        // 화면엔 규격이 멀쩡히 보이는데 저장하고 다시 열면 사라지는
+        // 버그였다. 실제로 편집 가능했는지와 무관하게, 화면에 보이는
+        // 값을 그대로 저장한다.
+        spec: row.spec || null,
         quantity: row.quantity,
         lotNumber: row.lotNumber || null,
       }))
@@ -179,6 +188,7 @@ export function TodoForm({
     <form
       action={formAction}
       className="space-y-4"
+      onKeyDown={preventEnterSubmit}
       onSubmit={() => {
         // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다
         // (모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이 없어 지울
