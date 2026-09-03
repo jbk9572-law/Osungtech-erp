@@ -53,6 +53,7 @@ export function InventoryCountForm({
     Object.fromEntries(rows.map((r) => [r.productId, r.systemQuantity]))
   );
   const [onlyDiff, setOnlyDiff] = useState(false);
+  const [onlyNonZero, setOnlyNonZero] = useState(false);
   const [note, setNote] = useState("");
   const [savedSummary, setSavedSummary] = useState<SavedAdjustment[] | null>(null);
   // 실사 이력을 훑어보는 게 기본 화면이고, 새로 실사를 시작할 때만 전체
@@ -111,11 +112,14 @@ export function InventoryCountForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to state changing, changedRows is read at that moment
   }, [state]);
 
-  const visibleRows = onlyDiff
-    ? rows.filter(
-        (r) => (counted[r.productId] ?? r.systemQuantity) !== (baseline[r.productId] ?? r.systemQuantity)
-      )
-    : rows;
+  // 당일 입고돼서 당일 그대로 나가는 품목이 많아, 그런 품목까지 전부
+  // 246개 표에 섞여 있으면 정작 실물이 남아있는 품목을 찾기 번거롭다는
+  // 피드백 — 전산 재고가 0인 품목은 기본적으로 숨길 수 있게 한다.
+  const visibleRows = rows
+    .filter((r) => !onlyNonZero || (baseline[r.productId] ?? r.systemQuantity) !== 0)
+    .filter(
+      (r) => !onlyDiff || (counted[r.productId] ?? r.systemQuantity) !== (baseline[r.productId] ?? r.systemQuantity)
+    );
 
   const payload = JSON.stringify(
     changedRows.map((r) => ({
@@ -160,17 +164,39 @@ export function InventoryCountForm({
       <input type="hidden" name="rows" value={payload} />
       <input type="hidden" name="note" value={note} />
       <div className="erp-search" style={{ alignItems: "center", justifyContent: "space-between" }}>
-        <label
-          className="flex items-center gap-2 text-xs"
-          style={{ color: "var(--erp-text-muted)" }}
-        >
-          <input
-            type="checkbox"
-            checked={onlyDiff}
-            onChange={(e) => setOnlyDiff(e.target.checked)}
-          />
-          차이 있는 품목만 보기
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          <label
+            className="flex items-center gap-2 text-xs"
+            style={{ color: "var(--erp-text-muted)" }}
+          >
+            <input
+              type="checkbox"
+              checked={onlyDiff}
+              onChange={(e) => setOnlyDiff(e.target.checked)}
+            />
+            차이 있는 품목만 보기
+          </label>
+          <label
+            className="flex items-center gap-2 text-xs"
+            style={{ color: "var(--erp-text-muted)" }}
+          >
+            <input
+              type="checkbox"
+              checked={onlyNonZero}
+              onChange={(e) => setOnlyNonZero(e.target.checked)}
+            />
+            0개가 아닌 품목만 보기
+          </label>
+          <a
+            href={`/inventory/count/print${onlyNonZero ? "?onlyNonZero=1" : ""}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="erp-btn"
+            style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+          >
+            🖨 인쇄용 목록
+          </a>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             차이 {changedRows.length}건
