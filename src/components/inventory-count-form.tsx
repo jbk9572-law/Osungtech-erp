@@ -54,6 +54,7 @@ export function InventoryCountForm({
   );
   const [onlyDiff, setOnlyDiff] = useState(false);
   const [onlyNonZero, setOnlyNonZero] = useState(false);
+  const [keyword, setKeyword] = useState("");
   const [note, setNote] = useState("");
   const [savedSummary, setSavedSummary] = useState<SavedAdjustment[] | null>(null);
   // 실사 이력을 훑어보는 게 기본 화면이고, 새로 실사를 시작할 때만 전체
@@ -115,10 +116,18 @@ export function InventoryCountForm({
   // 당일 입고돼서 당일 그대로 나가는 품목이 많아, 그런 품목까지 전부
   // 246개 표에 섞여 있으면 정작 실물이 남아있는 품목을 찾기 번거롭다는
   // 피드백 — 전산 재고가 0인 품목은 기본적으로 숨길 수 있게 한다.
+  const trimmedKeyword = keyword.trim().toLowerCase();
   const visibleRows = rows
     .filter((r) => !onlyNonZero || (baseline[r.productId] ?? r.systemQuantity) !== 0)
     .filter(
       (r) => !onlyDiff || (counted[r.productId] ?? r.systemQuantity) !== (baseline[r.productId] ?? r.systemQuantity)
+    )
+    .filter(
+      (r) =>
+        !trimmedKeyword ||
+        r.sku.toLowerCase().includes(trimmedKeyword) ||
+        r.name.toLowerCase().includes(trimmedKeyword) ||
+        (r.spec ?? "").toLowerCase().includes(trimmedKeyword)
     );
 
   const payload = JSON.stringify(
@@ -165,6 +174,15 @@ export function InventoryCountForm({
       <input type="hidden" name="note" value={note} />
       <div className="erp-search" style={{ alignItems: "center", justifyContent: "space-between" }}>
         <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            autoComplete="off"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="품목명 / 규격 / SKU 검색"
+            className="erp-input"
+            style={{ width: 220 }}
+          />
           <label
             className="flex items-center gap-2 text-xs"
             style={{ color: "var(--erp-text-muted)" }}
@@ -392,7 +410,11 @@ export function InventoryCountForm({
             {!visibleRows.length && (
               <tr>
                 <td colSpan={8} className="erp-grid-empty">
-                  {onlyDiff ? "차이 있는 품목이 없습니다." : "표시할 품목이 없습니다."}
+                  {trimmedKeyword
+                    ? "검색 결과가 없습니다."
+                    : onlyDiff
+                      ? "차이 있는 품목이 없습니다."
+                      : "표시할 품목이 없습니다."}
                 </td>
               </tr>
             )}
