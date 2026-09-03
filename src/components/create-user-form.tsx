@@ -51,6 +51,14 @@ export function CreateUserForm() {
           ))}
         </select>
       </div>
+      <label
+        className="flex items-center gap-2 text-xs"
+        style={{ color: "var(--erp-text-muted)" }}
+        title="이 계정으로 로그인하면 실제 거래처/매출/재고 등은 전혀 안 보이고, 이 계정이 직접 입력한 가짜 데이터만 보고 등록/수정할 수 있습니다."
+      >
+        <input id="cu-is-demo" type="checkbox" name="isDemo" value="true" />
+        테스트(데모) 계정으로 만들기
+      </label>
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
         {pending ? "생성 중..." : "계정 생성"}
       </button>
