@@ -12,6 +12,8 @@ import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-clie
 import { PENDING_PAPER_CALC_TODO_KEY } from "@/lib/paper-calc-pending-key";
 import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 import { FieldHint } from "@/components/field-hint";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
 
 type Product = {
   id: string;
@@ -20,6 +22,8 @@ type Product = {
   spec?: string | null;
   unit?: string | null;
   base_package_qty?: number | null;
+  cost?: number | null;
+  price?: number | null;
 };
 
 type Partner = { id: string; name: string };
@@ -169,7 +173,15 @@ export function TodoForm({
       .filter((row) => row.productId && row.quantity > 0)
       .map((row) => ({
         productId: row.productId,
-        spec: row.manualSpec ? row.spec : null,
+        // manualSpec은 "직접입력" 칸을 편집 가능하게 할지만 정하는 UI
+        // 상태다 — row.spec 자체는 품목을 고르는 순간 그 품목의 기본
+        // 규격으로 항상 채워져 있다(handleProductChange/quickAddProduct
+        // 참고). 그런데 저장할 땐 manualSpec이 false면(대부분의 경우,
+        // 즉 기본 규격을 그대로 쓴 경우) 무조건 null을 보내고 있었다 —
+        // 화면엔 규격이 멀쩡히 보이는데 저장하고 다시 열면 사라지는
+        // 버그였다. 실제로 편집 가능했는지와 무관하게, 화면에 보이는
+        // 값을 그대로 저장한다.
+        spec: row.spec || null,
         quantity: row.quantity,
         lotNumber: row.lotNumber || null,
       }))
@@ -179,6 +191,7 @@ export function TodoForm({
     <form
       action={formAction}
       className="space-y-4"
+      onKeyDown={preventEnterSubmit}
       onSubmit={() => {
         // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다
         // (모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이 없어 지울
@@ -194,6 +207,7 @@ export function TodoForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <input
           name="title"
+          autoComplete="off"
           placeholder="할 일 (비우면 거래처·유형으로 자동 생성)"
           aria-label="할 일"
           defaultValue={initial?.title}
@@ -308,17 +322,25 @@ export function TodoForm({
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
             <thead>
               <tr>
-                <th style={{ width: "28%" }}>품목</th>
-                <th style={{ width: "16%" }}>규격</th>
-                <th style={{ width: "20%" }}>관리번호</th>
-                <th style={{ width: "8%" }}>단위</th>
-                <th className="num" style={{ width: "18%" }}>
+                <th style={{ width: "24%" }}>품목</th>
+                <th style={{ width: "14%" }}>규격</th>
+                <th style={{ width: "16%" }}>관리번호</th>
+                <th style={{ width: "7%" }}>단위</th>
+                <th className="num" style={{ width: "16%" }}>
                   수량
                 </th>
-                <th style={{ width: "10%" }} />
+                <th className="num" style={{ width: "15%" }}>
+                  {todoType === "sale" ? "예상 매출액" : "예상 매입액"}
+                </th>
+                <th style={{ width: "8%" }} />
               </tr>
             </thead>
-            <tbody>
+            <tbody
+              onKeyDown={(e) => {
+                focusSameColumnNextRow(e);
+                focusGridArrowNav(e);
+              }}
+            >
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 return (
@@ -379,6 +401,13 @@ export function TodoForm({
                         className="erp-input w-full"
                       />
                     </td>
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      {(() => {
+                        const unitPrice = todoType === "sale" ? product?.price : product?.cost;
+                        if (!product || !unitPrice || row.quantity <= 0) return "-";
+                        return `${(unitPrice * row.quantity).toLocaleString()}원`;
+                      })()}
+                    </td>
                     <td className="num">
                       <button
                         type="button"
@@ -394,7 +423,7 @@ export function TodoForm({
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="erp-grid-empty">
+                  <td colSpan={7} className="erp-grid-empty">
                     등록된 품목이 없습니다. &quot;+ 품목 추가&quot;로 추가해주세요.
                   </td>
                 </tr>

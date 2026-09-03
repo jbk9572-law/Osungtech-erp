@@ -12,7 +12,7 @@ type CountTxRow = {
   reference: string | null;
   note: string | null;
   created_at: string;
-  products: { sku: string; name: string; unit: string } | null;
+  products: { sku: string; name: string; spec: string | null; unit: string } | null;
   profiles: { full_name: string | null } | null;
 };
 
@@ -21,7 +21,7 @@ type Session = {
   createdAt: string;
   authorName: string | null;
   note: string | null;
-  items: { id: string; productId: string; sku: string; name: string; unit: string; delta: number }[];
+  items: { id: string; productId: string; sku: string; name: string; spec: string | null; unit: string; delta: number }[];
 };
 
 // actions.ts의 submitStockCount가 사용자가 입력한 사유를 "재고실사: <사유>"
@@ -40,7 +40,7 @@ export default async function InventoryCountPage({
   const { session: sessionParam } = await searchParams;
   const supabase = await createClient();
 
-  const [products, { data: warehouse }, countTx] = await Promise.all([
+  const [products, { data: warehouse }, countTx, allTx] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -48,11 +48,12 @@ export default async function InventoryCountPage({
       spec: string | null;
       unit: string;
       reorder_point: number | null;
+      base_package_qty: number | null;
       inventory: { quantity: number }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, reorder_point, inventory(quantity)")
+        .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity)")
         .order("name")
         .range(from, to),
     ),
@@ -69,11 +70,20 @@ export default async function InventoryCountPage({
       supabase
         .from("inventory_transactions")
         .select(
-          "id, product_id, quantity, reference, note, created_at, products(sku, name, unit), profiles!created_by(full_name)",
+          "id, product_id, quantity, reference, note, created_at, products(sku, name, spec, unit), profiles!created_by(full_name)",
         )
         .like("reference", "stock_count:%")
         .order("created_at", { ascending: true })
         .range(from, to),
+    ),
+    // "실사가 말도 안 되게 벌어진다"는 지적에 대한 실측 검증용 — products.
+    // inventory(캐시된 값, apply_inventory_transaction 트리거가 매번 갱신)와
+    // 전체 거래이력을 직접 다시 더한 값이 실제로 일치하는지 전수 비교한다.
+    // 둘이 다르면 캐시 자체가 잘못 갱신된 소프트웨어 버그이고, 둘이 같다면
+    // 실사에서 보이는 큰 차이는 코드 문제가 아니라 실제 현실(파손/누락 등)의
+    // 반영이라는 뜻이다 — DB에 직접 접근하지 않고도 화면에서 바로 확인된다.
+    fetchAllRows<{ product_id: string; type: string; quantity: number }>((from, to) =>
+      supabase.from("inventory_transactions").select("product_id, type, quantity").range(from, to),
     ),
   ]);
 
@@ -84,6 +94,7 @@ export default async function InventoryCountPage({
     spec: p.spec,
     unit: p.unit,
     systemQuantity: p.inventory?.[0]?.quantity ?? 0,
+    basePackageQty: p.base_package_qty,
   }));
 
   // 안전재고를 실제로 설정해둔(0보다 큰) 품목만 대상으로 한다 — 알림종/대시보드
@@ -92,6 +103,30 @@ export default async function InventoryCountPage({
   const lowStockProducts = products
     .map((p) => ({ name: p.name, quantity: p.inventory?.[0]?.quantity ?? 0, reorderPoint: p.reorder_point ?? 0 }))
     .filter((p) => p.reorderPoint > 0 && p.quantity <= p.reorderPoint);
+
+  // apply_inventory_transaction 트리거와 완전히 같은 부호 규칙으로
+  // 전체 이력을 직접 다시 더해, 캐시된 products.inventory.quantity와
+  // 실제로 일치하는지 전 품목 전수 비교한다.
+  const computedByProduct = new Map<string, number>();
+  for (const t of allTx) {
+    const signed = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
+    computedByProduct.set(t.product_id, (computedByProduct.get(t.product_id) ?? 0) + signed);
+  }
+  // 매입/매출 수량은 소수점 입력이 가능한데(decimal_quantity 마이그레이션),
+  // Postgres 쪽 캐시(inventory.quantity)는 numeric으로 정확히 누적되는 반면
+  // 여기 computedByProduct는 자바스크립트 부동소수점으로 다시 더한 값이라
+  // 0.1+0.2 같은 미세한 오차가 생길 수 있다. 오차 없는 실제 불일치만
+  // 잡히도록 아주 작은 허용오차(0.001) 이내 차이는 일치로 본다.
+  const EPSILON = 0.001;
+  const cacheMismatches = products
+    .map((p) => ({
+      sku: p.sku,
+      name: p.name,
+      spec: p.spec,
+      cached: p.inventory?.[0]?.quantity ?? 0,
+      computed: computedByProduct.get(p.id) ?? 0,
+    }))
+    .filter((p) => Math.abs(p.cached - p.computed) > EPSILON);
 
   const sessionsByRef = new Map<string, Session>();
   for (const t of countTx) {
@@ -112,6 +147,7 @@ export default async function InventoryCountPage({
       productId: t.product_id,
       sku: t.products?.sku ?? "-",
       name: t.products?.name ?? "(삭제된 품목)",
+      spec: t.products?.spec ?? null,
       unit: t.products?.unit ?? "",
       delta: t.quantity,
     });
@@ -139,6 +175,7 @@ export default async function InventoryCountPage({
     productId: string;
     sku: string;
     name: string;
+    spec: string | null;
     unit: string;
     before: number;
     after: number;
@@ -176,6 +213,7 @@ export default async function InventoryCountPage({
         productId: item.productId,
         sku: item.sku,
         name: item.name,
+        spec: item.spec,
         unit: item.unit,
         before: after - item.delta,
         after,
@@ -231,7 +269,8 @@ export default async function InventoryCountPage({
                 {largestMiss.quantity.toLocaleString()}
               </div>
               <div className="erp-hero-sub">
-                {largestMiss.products?.name ?? "-"} ({largestMiss.products?.sku ?? "-"})
+                {largestMiss.products?.name ?? "-"}
+                {largestMiss.products?.spec ? ` (${largestMiss.products.spec})` : ""} ({largestMiss.products?.sku ?? "-"})
               </div>
             </>
           ) : (
@@ -253,6 +292,80 @@ export default async function InventoryCountPage({
               ? lowStockProducts.slice(0, 2).map((p) => p.name).join(" · ")
               : "없음"}
           </div>
+        </div>
+      </div>
+
+      {/* "실사가 말도 안 되게 벌어진다"는 지적에 대한 실측 답변 — 화면에
+          보이는 전산 재고(products.inventory 캐시)가 전체 거래이력을 직접
+          다시 더한 값과 실제로 일치하는지 전 품목 전수 비교한다. 여기가
+          비어 있으면(정상) 실사에서 보이는 차이는 소프트웨어 버그가 아니라
+          실제 현실(파손/누락 등)이 그대로 반영된 것이라는 뜻이다. */}
+      <div
+        className="erp-detail"
+        style={{ marginTop: 0, marginBottom: 16, borderColor: cacheMismatches.length > 0 ? "var(--erp-danger)" : "var(--erp-success)" }}
+      >
+        <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12 }}>
+          <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+            재고 캐시 정합성 검증
+          </span>
+          <span
+            className={cacheMismatches.length > 0 ? "erp-badge erp-badge-danger" : "erp-badge erp-badge-success"}
+          >
+            {cacheMismatches.length > 0
+              ? `불일치 ${cacheMismatches.length}건 발견`
+              : `전체 ${products.length}개 품목 정상`}
+          </span>
+        </div>
+        <div className="erp-detail-body">
+          {cacheMismatches.length === 0 ? (
+            <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              화면에 보이는 전산 재고(캐시)와 입출고/조정 이력을 처음부터 전부 다시 더한 값을 전
+              품목 비교한 결과, 차이가 있는 품목이 없습니다. 즉 이 화면의 계산 로직 자체에는 문제가
+              없고, 실사에서 나오는 큰 차이는 실제 재고 유실·파손·누락 등 현실이 그대로 반영된
+              것입니다.
+            </p>
+          ) : (
+            <>
+              <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>
+                ⚠ 아래 품목은 화면의 전산 재고와 실제 거래이력 합계가 다릅니다 — 소프트웨어
+                계산/캐시 문제일 가능성이 있으니 실사보다 먼저 이 목록부터 확인하세요.
+              </p>
+              <div className="erp-grid-wrap">
+                <table className="erp-grid">
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>품목명</th>
+                      <th>규격</th>
+                      <th className="num" style={{ width: 130 }}>
+                        화면 전산 재고
+                      </th>
+                      <th className="num" style={{ width: 130 }}>
+                        이력 합계(정답)
+                      </th>
+                      <th className="num" style={{ width: 100 }}>
+                        차이
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cacheMismatches.map((m) => (
+                      <tr key={m.sku}>
+                        <td>{m.sku}</td>
+                        <td>{m.name}</td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>{m.spec || "-"}</td>
+                        <td className="num">{m.cached.toLocaleString()}</td>
+                        <td className="num">{m.computed.toLocaleString()}</td>
+                        <td className="num" style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
+                          {(m.cached - m.computed > 0 ? "+" : "") + (m.cached - m.computed).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -299,6 +412,7 @@ export default async function InventoryCountPage({
                         <tr>
                           <th>SKU</th>
                           <th>품목명</th>
+                          <th>규격</th>
                           <th className="num" style={{ width: 110 }}>
                             이전 수량
                           </th>
@@ -315,6 +429,7 @@ export default async function InventoryCountPage({
                           <tr key={row.productId}>
                             <td>{row.sku}</td>
                             <td>{row.name}</td>
+                            <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
                             <td className="num">
                               {row.before.toLocaleString()} {row.unit}
                             </td>

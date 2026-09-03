@@ -24,6 +24,7 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
   const fullName = String(formData.get("fullName") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const role = String(formData.get("role") ?? "staff");
+  const isDemo = formData.get("isDemo") === "true";
 
   if (!username || !password || !fullName) {
     return { error: "아이디, 이름, 비밀번호를 모두 입력해주세요." };
@@ -58,7 +59,14 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
     return { error: isDuplicate ? "이미 존재하는 아이디입니다." : (error?.message ?? "계정 생성에 실패했습니다.") };
   }
 
-  const { error: roleError } = await admin.from("profiles").update({ role }).eq("id", created.user.id);
+  // is_demo는 컬럼 기본값(is_demo_actor())에 맡기면, service_role 클라이언트로
+  // 만드는 이 경로에서는 auth.uid()가 없어(서비스 계정이라 세션이 없음) 항상
+  // false로 채워진다 — 그래서 데모 계정을 만들 때는 체크박스 값을 여기서
+  // 명시적으로 같이 저장해야 한다.
+  const { error: roleError } = await admin
+    .from("profiles")
+    .update({ role, is_demo: isDemo })
+    .eq("id", created.user.id);
   if (roleError) {
     // auth 계정은 이미 만들어졌는데 역할 지정이 실패하면, 기본 역할(staff)
     // 그대로 로그인 가능한 반쪽짜리 계정이 조용히 남는다 — 관리자에게는

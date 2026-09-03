@@ -25,11 +25,25 @@ export function EditUserForm({
       <input type="hidden" name="userId" value={userId} />
       <div className="erp-field">
         <label htmlFor="eu-username">아이디</label>
-        <input id="eu-username" name="username" defaultValue={username} required className="erp-input" />
+        <input
+          id="eu-username"
+          name="username"
+          autoComplete="off"
+          defaultValue={username}
+          required
+          className="erp-input"
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="eu-fullname">이름</label>
-        <input id="eu-fullname" name="fullName" defaultValue={fullName} required className="erp-input" />
+        <input
+          id="eu-fullname"
+          name="fullName"
+          autoComplete="off"
+          defaultValue={fullName}
+          required
+          className="erp-input"
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="eu-newpassword">새 비밀번호 (변경할 때만 입력)</label>

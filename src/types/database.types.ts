@@ -16,6 +16,7 @@ export type Database = {
           username: string | null;
           email: string | null;
           role: "admin" | "manager" | "staff";
+          is_demo: boolean;
           created_at: string;
         };
         Insert: {
@@ -24,6 +25,7 @@ export type Database = {
           username?: string | null;
           email?: string | null;
           role?: "admin" | "manager" | "staff";
+          is_demo?: boolean;
           created_at?: string;
         };
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           username?: string | null;
           email?: string | null;
           role?: "admin" | "manager" | "staff";
+          is_demo?: boolean;
           created_at?: string;
         };
         Relationships: [];

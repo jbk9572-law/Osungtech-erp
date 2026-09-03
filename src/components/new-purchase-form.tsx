@@ -950,6 +950,7 @@ export function NewPurchaseForm({
             <input
               id="purchase-memo"
               name="memo"
+              autoComplete="off"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
               className="erp-input"

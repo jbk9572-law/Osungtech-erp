@@ -62,6 +62,7 @@ export default function LoginPage() {
                 id="email"
                 name="email"
                 type="text"
+                autoComplete="username"
                 required
                 defaultValue={savedEmail}
                 className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#4a6fa5] focus:shadow-[0_0_0_3px_rgba(74,111,165,0.16)] focus:outline-none"

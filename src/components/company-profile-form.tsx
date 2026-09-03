@@ -37,6 +37,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-name"
           name="name"
+          autoComplete="off"
           defaultValue={company?.name ?? ""}
           required
           className="erp-input" style={{ width: "100%" }}
@@ -47,6 +48,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-bizno"
           name="business_number"
+          autoComplete="off"
           defaultValue={company?.business_number ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
@@ -56,6 +58,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-rep"
           name="representative_name"
+          autoComplete="off"
           defaultValue={company?.representative_name ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
@@ -73,6 +76,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-manager-name"
           name="manager_name"
+          autoComplete="off"
           defaultValue={company?.manager_name ?? ""}
           placeholder="예: 강신조 차장님"
           className="erp-input" style={{ width: "100%" }}
@@ -87,6 +91,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-biztype"
           name="business_type"
+          autoComplete="off"
           defaultValue={company?.business_type ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
@@ -96,6 +101,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-bizitem"
           name="business_item"
+          autoComplete="off"
           defaultValue={company?.business_item ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
@@ -105,6 +111,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-address"
           name="address"
+          autoComplete="off"
           defaultValue={company?.address ?? ""}
           className="erp-input" style={{ width: "100%" }}
         />
@@ -126,6 +133,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
         <input
           id="cp-greeting"
           name="greeting_message"
+          autoComplete="off"
           defaultValue={company?.greeting_message ?? "오늘 하루도 행복하십시요."}
           className="erp-input" style={{ width: "100%" }}
         />

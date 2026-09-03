@@ -858,6 +858,12 @@
   color: #b9bfc8;
   cursor: not-allowed;
   background: var(--erp-bg-disabled);
+  /* .erp-btn-primary/-danger가 지정한 색깔 있는 border-color를 여기서
+     다시 눌러줘야 한다 — 안 그러면 배경/글자색은 회색으로 꺼지는데
+     테두리만 색깔(빨강 등)이 남아서, 버튼이 반쯤만 비활성화된 것처럼
+     깨져 보인다(실사용 화면에서 발견: 품목이 1개뿐이라 비활성화된
+     "삭제" 버튼이 흰 배경에 빨간 테두리만 남은 상태로 보였다). */
+  border-color: var(--erp-border);
   box-shadow: none;
   transform: none;
 }

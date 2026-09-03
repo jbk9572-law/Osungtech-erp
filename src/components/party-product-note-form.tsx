@@ -32,6 +32,7 @@ export function PartyProductNoteForm({
       <input type="hidden" name={partyIdFieldName} value={partyId} />
       <input
         name="notes"
+        autoComplete="off"
         defaultValue={initialNotes ?? ""}
         placeholder="이 조합 전용 특이사항 (선택)"
         className="erp-input"

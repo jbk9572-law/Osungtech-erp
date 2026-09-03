@@ -43,6 +43,7 @@ export function PartnerForm({
       {idFieldValue && <input type="hidden" name="id" value={idFieldValue} />}
       <input
         name="name"
+        autoComplete="off"
         placeholder="상호명"
         aria-label="상호명"
         required
@@ -51,6 +52,7 @@ export function PartnerForm({
       />
       <input
         name="business_number"
+        autoComplete="off"
         placeholder="사업자등록번호"
         aria-label="사업자등록번호"
         defaultValue={initial?.business_number ?? ""}
@@ -58,6 +60,7 @@ export function PartnerForm({
       />
       <input
         name="representative_name"
+        autoComplete="off"
         placeholder="대표자명"
         aria-label="대표자명"
         defaultValue={initial?.representative_name ?? ""}
@@ -65,6 +68,7 @@ export function PartnerForm({
       />
       <input
         name="contact_name"
+        autoComplete="off"
         placeholder="담당자"
         aria-label="담당자"
         defaultValue={initial?.contact_name ?? ""}
@@ -81,6 +85,7 @@ export function PartnerForm({
       <PhoneInputGroup namePrefix="phone" defaultValue={initial?.phone} />
       <input
         name="address"
+        autoComplete="off"
         placeholder="주소"
         aria-label="주소"
         defaultValue={initial?.address ?? ""}

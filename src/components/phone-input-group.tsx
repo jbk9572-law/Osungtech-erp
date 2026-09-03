@@ -13,6 +13,7 @@ export function PhoneInputGroup({
     <div className="flex items-center gap-1">
       <input
         name={`${namePrefix}1`}
+        autoComplete="off"
         placeholder="010"
         aria-label="전화번호 앞자리"
         defaultValue={part1}
@@ -22,6 +23,7 @@ export function PhoneInputGroup({
       <span style={{ color: "var(--erp-text-muted)" }}>-</span>
       <input
         name={`${namePrefix}2`}
+        autoComplete="off"
         placeholder="1234"
         aria-label="전화번호 가운데자리"
         defaultValue={part2}
@@ -31,6 +33,7 @@ export function PhoneInputGroup({
       <span style={{ color: "var(--erp-text-muted)" }}>-</span>
       <input
         name={`${namePrefix}3`}
+        autoComplete="off"
         placeholder="5678"
         aria-label="전화번호 뒷자리"
         defaultValue={part3}
