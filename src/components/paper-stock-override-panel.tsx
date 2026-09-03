@@ -85,6 +85,7 @@ export function PaperStockOverridePanel({
         />
         <input
           name="note"
+          autoComplete="off"
           type="text"
           placeholder="사유 (예: 거래처 협의로 3연 처리)"
           className="erp-input"

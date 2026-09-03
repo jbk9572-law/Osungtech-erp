@@ -61,6 +61,7 @@ export function ProductForm({
       {idFieldValue && <input type="hidden" name="id" value={idFieldValue} />}
       <input
         name="sku"
+        autoComplete="off"
         placeholder="SKU"
         aria-label="SKU"
         required
@@ -69,6 +70,7 @@ export function ProductForm({
       />
       <input
         name="name"
+        autoComplete="off"
         placeholder="상품명"
         aria-label="상품명"
         required
@@ -87,6 +89,7 @@ export function ProductForm({
         </div>
         <input
           name="new_category"
+          autoComplete="off"
           placeholder="새 카테고리 입력"
           aria-label="새 카테고리 입력"
           className="erp-input"
@@ -103,6 +106,7 @@ export function ProductForm({
       />
       <input
         name="spec"
+        autoComplete="off"
         placeholder="규격 (예: wp(150), 150mm)"
         aria-label="규격"
         defaultValue={initial?.spec ?? ""}
@@ -127,6 +131,7 @@ export function ProductForm({
         ) : (
           <input
             name="unit"
+            autoComplete="off"
             value={unitValue}
             onChange={(e) => setUnitValue(e.target.value)}
             placeholder="단위 직접입력"

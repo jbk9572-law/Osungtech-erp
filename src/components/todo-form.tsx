@@ -207,6 +207,7 @@ export function TodoForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <input
           name="title"
+          autoComplete="off"
           placeholder="할 일 (비우면 거래처·유형으로 자동 생성)"
           aria-label="할 일"
           defaultValue={initial?.title}

@@ -17,11 +17,25 @@ export function CreateUserForm() {
     <form ref={formRef} action={formAction} className="flex flex-wrap items-end gap-3">
       <div className="erp-field">
         <label htmlFor="cu-username">아이디</label>
-        <input id="cu-username" name="username" required className="erp-input" placeholder="예: hong" />
+        <input
+          id="cu-username"
+          name="username"
+          autoComplete="off"
+          required
+          className="erp-input"
+          placeholder="예: hong"
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="cu-fullname">이름</label>
-        <input id="cu-fullname" name="fullName" required className="erp-input" placeholder="예: 홍길동" />
+        <input
+          id="cu-fullname"
+          name="fullName"
+          autoComplete="off"
+          required
+          className="erp-input"
+          placeholder="예: 홍길동"
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="cu-password">비밀번호</label>

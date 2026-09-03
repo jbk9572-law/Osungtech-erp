@@ -41,7 +41,14 @@ export function QuickPaymentRequestForm({
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-department">부서명</label>
-        <input id="qpr-department" name="department" defaultValue={defaultDepartment} className="erp-input w-full" required />
+        <input
+          id="qpr-department"
+          name="department"
+          autoComplete="off"
+          defaultValue={defaultDepartment}
+          className="erp-input w-full"
+          required
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-card-type">
@@ -58,11 +65,17 @@ export function QuickPaymentRequestForm({
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-vendor">사용처</label>
-        <input id="qpr-vendor" name="vendor" className="erp-input w-full" required />
+        <input id="qpr-vendor" name="vendor" autoComplete="off" className="erp-input w-full" required />
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-purpose">용도</label>
-        <input id="qpr-purpose" name="purpose" placeholder="주유, 식대 등" className="erp-input w-full" />
+        <input
+          id="qpr-purpose"
+          name="purpose"
+          autoComplete="off"
+          placeholder="주유, 식대 등"
+          className="erp-input w-full"
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-amount">금액</label>
@@ -70,7 +83,7 @@ export function QuickPaymentRequestForm({
       </div>
       <div className="erp-field md:col-span-4">
         <label htmlFor="qpr-remark">비고 (선택)</label>
-        <input id="qpr-remark" name="remark" className="erp-input w-full" />
+        <input id="qpr-remark" name="remark" autoComplete="off" className="erp-input w-full" />
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-highlighted">강조 표시</label>

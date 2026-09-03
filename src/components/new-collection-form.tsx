@@ -74,7 +74,13 @@ export function NewCollectionForm({
             </div>
             <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
               <label htmlFor="nc-memo">적요 (선택)</label>
-              <input id="nc-memo" name="memo" className="erp-input" style={{ width: "100%" }} />
+              <input
+                id="nc-memo"
+                name="memo"
+                autoComplete="off"
+                className="erp-input"
+                style={{ width: "100%" }}
+              />
             </div>
           </div>
         </div>

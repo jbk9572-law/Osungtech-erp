@@ -920,6 +920,7 @@ export function NewSaleForm({
             <input
               id="sale-memo"
               name="memo"
+              autoComplete="off"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
               className="erp-input"

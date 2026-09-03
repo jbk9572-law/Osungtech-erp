@@ -108,6 +108,7 @@ export function InventoryAdjustForm({
       )}
       <input
         name="note"
+        autoComplete="off"
         placeholder="사유 (예: 기초재고, 실사 조정)"
         aria-label="사유"
         className="erp-input md:col-span-3"

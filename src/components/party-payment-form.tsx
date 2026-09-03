@@ -61,7 +61,7 @@ export function PartyPaymentForm({
       </div>
       <div className="erp-field">
         <label htmlFor="pp-memo">적요 (선택)</label>
-        <input id="pp-memo" type="text" name="memo" className="erp-input w-full" />
+        <input id="pp-memo" type="text" name="memo" autoComplete="off" className="erp-input w-full" />
       </div>
       <div className="md:col-span-4 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">

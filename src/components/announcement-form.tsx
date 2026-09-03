@@ -22,6 +22,7 @@ export function AnnouncementForm({
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input
         name="title"
+        autoComplete="off"
         placeholder="제목"
         required
         defaultValue={initial?.title}

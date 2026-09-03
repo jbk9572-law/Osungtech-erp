@@ -12,7 +12,7 @@ type CountTxRow = {
   reference: string | null;
   note: string | null;
   created_at: string;
-  products: { sku: string; name: string; unit: string } | null;
+  products: { sku: string; name: string; spec: string | null; unit: string } | null;
   profiles: { full_name: string | null } | null;
 };
 
@@ -21,7 +21,7 @@ type Session = {
   createdAt: string;
   authorName: string | null;
   note: string | null;
-  items: { id: string; productId: string; sku: string; name: string; unit: string; delta: number }[];
+  items: { id: string; productId: string; sku: string; name: string; spec: string | null; unit: string; delta: number }[];
 };
 
 // actions.ts의 submitStockCount가 사용자가 입력한 사유를 "재고실사: <사유>"
@@ -70,7 +70,7 @@ export default async function InventoryCountPage({
       supabase
         .from("inventory_transactions")
         .select(
-          "id, product_id, quantity, reference, note, created_at, products(sku, name, unit), profiles!created_by(full_name)",
+          "id, product_id, quantity, reference, note, created_at, products(sku, name, spec, unit), profiles!created_by(full_name)",
         )
         .like("reference", "stock_count:%")
         .order("created_at", { ascending: true })
@@ -122,6 +122,7 @@ export default async function InventoryCountPage({
     .map((p) => ({
       sku: p.sku,
       name: p.name,
+      spec: p.spec,
       cached: p.inventory?.[0]?.quantity ?? 0,
       computed: computedByProduct.get(p.id) ?? 0,
     }))
@@ -146,6 +147,7 @@ export default async function InventoryCountPage({
       productId: t.product_id,
       sku: t.products?.sku ?? "-",
       name: t.products?.name ?? "(삭제된 품목)",
+      spec: t.products?.spec ?? null,
       unit: t.products?.unit ?? "",
       delta: t.quantity,
     });
@@ -173,6 +175,7 @@ export default async function InventoryCountPage({
     productId: string;
     sku: string;
     name: string;
+    spec: string | null;
     unit: string;
     before: number;
     after: number;
@@ -210,6 +213,7 @@ export default async function InventoryCountPage({
         productId: item.productId,
         sku: item.sku,
         name: item.name,
+        spec: item.spec,
         unit: item.unit,
         before: after - item.delta,
         after,
@@ -265,7 +269,8 @@ export default async function InventoryCountPage({
                 {largestMiss.quantity.toLocaleString()}
               </div>
               <div className="erp-hero-sub">
-                {largestMiss.products?.name ?? "-"} ({largestMiss.products?.sku ?? "-"})
+                {largestMiss.products?.name ?? "-"}
+                {largestMiss.products?.spec ? ` (${largestMiss.products.spec})` : ""} ({largestMiss.products?.sku ?? "-"})
               </div>
             </>
           ) : (
@@ -331,6 +336,7 @@ export default async function InventoryCountPage({
                     <tr>
                       <th>SKU</th>
                       <th>품목명</th>
+                      <th>규격</th>
                       <th className="num" style={{ width: 130 }}>
                         화면 전산 재고
                       </th>
@@ -347,6 +353,7 @@ export default async function InventoryCountPage({
                       <tr key={m.sku}>
                         <td>{m.sku}</td>
                         <td>{m.name}</td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>{m.spec || "-"}</td>
                         <td className="num">{m.cached.toLocaleString()}</td>
                         <td className="num">{m.computed.toLocaleString()}</td>
                         <td className="num" style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
@@ -405,6 +412,7 @@ export default async function InventoryCountPage({
                         <tr>
                           <th>SKU</th>
                           <th>품목명</th>
+                          <th>규격</th>
                           <th className="num" style={{ width: 110 }}>
                             이전 수량
                           </th>
@@ -421,6 +429,7 @@ export default async function InventoryCountPage({
                           <tr key={row.productId}>
                             <td>{row.sku}</td>
                             <td>{row.name}</td>
+                            <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
                             <td className="num">
                               {row.before.toLocaleString()} {row.unit}
                             </td>

@@ -6,11 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:search-autocomplete && npm run check:multirow-form-enter",
+    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:search-autocomplete && npm run check:multirow-form-enter && npm run check:named-input-autocomplete",
     "check:pagination": "node scripts/check-pagination.mjs",
     "check:mutation-errors": "node scripts/check-mutation-errors.mjs",
     "check:search-autocomplete": "node scripts/check-search-autocomplete.mjs",
     "check:multirow-form-enter": "node scripts/check-multirow-form-enter.mjs",
+    "check:named-input-autocomplete": "node scripts/check-named-input-autocomplete.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
