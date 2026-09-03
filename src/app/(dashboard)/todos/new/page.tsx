@@ -15,8 +15,14 @@ export default async function NewTodoPage() {
       spec: string | null;
       unit: string;
       base_package_qty: number | null;
+      cost: number;
+      price: number;
     }>((from, to) =>
-      supabase.from("products").select("id, sku, name, spec, unit, base_package_qty").order("name").range(from, to),
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, base_package_qty, cost, price")
+        .order("name")
+        .range(from, to),
     ),
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("suppliers").select("id, name").order("name").range(from, to),

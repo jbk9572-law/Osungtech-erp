@@ -22,6 +22,8 @@ type Product = {
   spec?: string | null;
   unit?: string | null;
   base_package_qty?: number | null;
+  cost?: number | null;
+  price?: number | null;
 };
 
 type Partner = { id: string; name: string };
@@ -319,14 +321,17 @@ export function TodoForm({
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
             <thead>
               <tr>
-                <th style={{ width: "28%" }}>품목</th>
-                <th style={{ width: "16%" }}>규격</th>
-                <th style={{ width: "20%" }}>관리번호</th>
-                <th style={{ width: "8%" }}>단위</th>
-                <th className="num" style={{ width: "18%" }}>
+                <th style={{ width: "24%" }}>품목</th>
+                <th style={{ width: "14%" }}>규격</th>
+                <th style={{ width: "16%" }}>관리번호</th>
+                <th style={{ width: "7%" }}>단위</th>
+                <th className="num" style={{ width: "16%" }}>
                   수량
                 </th>
-                <th style={{ width: "10%" }} />
+                <th className="num" style={{ width: "15%" }}>
+                  {todoType === "sale" ? "예상 매출액" : "예상 매입액"}
+                </th>
+                <th style={{ width: "8%" }} />
               </tr>
             </thead>
             <tbody
@@ -395,6 +400,13 @@ export function TodoForm({
                         className="erp-input w-full"
                       />
                     </td>
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      {(() => {
+                        const unitPrice = todoType === "sale" ? product?.price : product?.cost;
+                        if (!product || !unitPrice || row.quantity <= 0) return "-";
+                        return `${(unitPrice * row.quantity).toLocaleString()}원`;
+                      })()}
+                    </td>
                     <td className="num">
                       <button
                         type="button"
@@ -410,7 +422,7 @@ export function TodoForm({
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="erp-grid-empty">
+                  <td colSpan={7} className="erp-grid-empty">
                     등록된 품목이 없습니다. &quot;+ 품목 추가&quot;로 추가해주세요.
                   </td>
                 </tr>
