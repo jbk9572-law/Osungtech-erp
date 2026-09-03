@@ -1251,6 +1251,20 @@
   border-left: 3px solid var(--erp-primary);
 }
 
+/* 재고 실사: 평소엔 이력만 보이다가, "+ 새 실사 시작"을 누르기 전까지는
+   품목 246개짜리 큰 표 대신 이 안내 박스만 보인다(모조지계산의 "저장된
+   계산 → + 새로 계산하기"와 같은 자리 아끼기). */
+.erp-new-count-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--erp-panel);
+  border: 1px dashed var(--erp-border);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
 /* 작성자 이니셜 원형 아바타 — 공지사항/할일 카드에서 누가 썼는지 한눈에
    구분되게 한다. */
 .erp-avatar {
