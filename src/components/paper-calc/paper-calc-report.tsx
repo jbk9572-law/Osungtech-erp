@@ -12,10 +12,17 @@ export function PaperCalcReport({
   input,
   result,
   closeHref = "/paper-calc",
+  autoPrint = true,
 }: {
   input: { paperW: number; paperH: number; items: Item[] };
   result: NestResult;
   closeHref?: string;
+  // 방금 계산을 마치고 인쇄용 새 탭으로 연 경우(paper-calc-print-view)에는
+  // 곧장 인쇄 대화상자를 띄우는 게 맞지만, 계산이력에서 "도면 보기"로
+  // 지난 계산을 다시 열어볼 때(paper-calc/view/[id])는 그냥 조회하러 온
+  // 것뿐이라 인쇄 대화상자가 멋대로 뜨면 안 된다 — 이 컴포넌트를 두
+  // 화면에서 그대로 공유하는 대신 호출부가 의도를 명시하게 한다.
+  autoPrint?: boolean;
 }) {
   const producedTotals: Record<string, number> = {};
   for (const layout of result.layouts) {
@@ -32,7 +39,7 @@ export function PaperCalcReport({
         <Link href={closeHref} className="erp-btn erp-btn-danger">
           닫기
         </Link>
-        <PrintButton />
+        <PrintButton autoPrint={autoPrint} />
       </div>
 
       <h1 className="mb-4 text-lg font-bold">재단 결과 보고서</h1>

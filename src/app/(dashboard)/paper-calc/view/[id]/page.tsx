@@ -46,5 +46,5 @@ export default async function PaperCalcViewPage({
       ? `/paper-calc?purchaseOrderId=${calc.purchase_order_id}`
       : "/paper-calc";
 
-  return <PaperCalcReport input={input} result={result} closeHref={closeHref} />;
+  return <PaperCalcReport input={input} result={result} closeHref={closeHref} autoPrint={false} />;
 }

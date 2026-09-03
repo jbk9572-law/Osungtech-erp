@@ -501,6 +501,7 @@ export default async function MonthlyReportPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="품목명, SKU, 규격, 거래처명"
             className="erp-input"
@@ -523,14 +524,7 @@ export default async function MonthlyReportPage({
         </Link>
       </form>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
+      <div className="erp-kpi-row">
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div
             style={{

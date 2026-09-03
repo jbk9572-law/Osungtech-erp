@@ -161,6 +161,12 @@
   border-radius: 6px;
   text-decoration: none;
   color: inherit;
+  /* 회사명(회사정보에서 설정하는 값이라 길이가 정해져 있지 않음)이
+     좁은 화면에서 .erp-titlebar-name의 말줄임표까지 닿으려면, 감싸는
+     flex 컨테이너도 min-width: 0이어야 한다 — 안 그러면 flex 아이템의
+     기본 최소너비(내용 전체 너비)가 우선시돼 정작 안쪽 ellipsis가
+     적용될 공간이 안 생긴다. */
+  min-width: 0;
 }
 
 .erp-titlebar-home:hover {
@@ -177,6 +183,14 @@
   font-weight: 600;
   font-size: 13px;
   white-space: nowrap;
+  /* 회사명은 회사정보 설정에서 자유롭게 입력하는 값이라 길이가 정해져
+     있지 않다 — .erp-titlebar-menu(가운데 경로 표시)처럼 좁은 화면에서
+     말줄임표로 줄어들게 한다. overflow/min-width가 없으면 flexbox의
+     기본 최소너비 규칙 때문에 줄어들지 못하고 타이틀바 오른쪽 영역과
+     겹친다. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .erp-titlebar-menu {
@@ -663,6 +677,20 @@
     display: none !important;
   }
 
+  /* .erp-page를 overflow: visible로 풀어도, 그 부모인 .erp가 여전히
+     height: 100vh로 고정돼 있으면 넘친 내용이 .erp의 경계에서 다시
+     잘린다 — .erp는 overflow-x: hidden만 지정했지만, CSS 스펙상 한쪽
+     축만 visible이 아니게 지정하면 지정 안 한 다른 축도 auto로
+     취급돼(오버플로 계산 규칙) .erp가 화면에서는 안 보이던 세로
+     스크롤 컨테이너로 동작한다. 그 상태로 인쇄하면 브라우저가 스크롤
+     로 가려진 부분(현재 화면에 없던 아래쪽 내용)을 인쇄물에서 통째로
+     잘라버린다 — "도면 보기"처럼 셸 안에서 열리는 페이지가 한 화면
+     분량을 넘어가면 인쇄 시 뒷부분이 사라지는 원인이었다. */
+  .erp {
+    height: auto;
+    overflow: visible;
+  }
+
   .erp-page {
     padding: 0;
     overflow: visible;
@@ -1109,6 +1137,27 @@
 @media (max-width: 640px) {
   .erp-hero-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 월별리포트/할일관리/공지사항 상단의 4칸 요약 카드 — 월별리포트/todos
+   페이지, announcement-grid-table.tsx 세 곳이 똑같은 인라인 스타일
+   (display:grid, repeat(4,1fr), gap:10, marginBottom:12)을 각자 들고
+   있었는데 모바일 대응이 하나도 없었다. .erp-home-panel이 overflow:
+   hidden이라 좁은 화면에서 4등분된 칸에 "1,234,567원" 같은 숫자가
+   부러질 자리 없이 통째로 잘려서 안 보이는 문제가 있어(재현: 360px
+   화면에서 카드 폭이 패딩 포함 74px 안팎, 숫자는 90-110px 필요),
+   인라인 스타일 대신 공용 클래스로 묶고 모바일에서 2칸으로 접는다. */
+.erp-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .erp-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

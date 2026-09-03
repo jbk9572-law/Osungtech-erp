@@ -65,14 +65,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
 
   return (
     <>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
+      <div className="erp-kpi-row">
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             전체 공지
@@ -137,6 +130,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
           <input
             id="ann-search-q"
             type="text"
+            autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="제목으로 검색"

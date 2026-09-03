@@ -101,14 +101,7 @@ export default async function TodosPage({
         </Link>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
+      <div className="erp-kpi-row">
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             전체 할일
@@ -148,6 +141,7 @@ export default async function TodosPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="제목, 공급처, 납품처"
             className="erp-input"

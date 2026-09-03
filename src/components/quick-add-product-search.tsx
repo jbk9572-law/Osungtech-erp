@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { clampDropdownLeft } from "@/lib/dropdown-position";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -88,7 +89,8 @@ export function QuickAddProductSearch({
         autoComplete="off"
         onFocus={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
-          setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: Math.max(rect.width, 280) });
+          const width = Math.max(rect.width, 280);
+          setDropdownRect({ top: rect.bottom + 4, left: clampDropdownLeft(rect.left, width), width });
           setOpen(true);
         }}
         onChange={(e) => {

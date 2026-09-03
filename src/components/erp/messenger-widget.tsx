@@ -231,6 +231,7 @@ export function MessengerWidget({
       <div className="erp-messenger-search">
         <input
           type="text"
+          autoComplete="off"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="🔍 메시지 검색"

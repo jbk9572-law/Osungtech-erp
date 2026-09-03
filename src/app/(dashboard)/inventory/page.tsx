@@ -118,6 +118,7 @@ export default async function InventoryPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="상품명, SKU, 규격"
             className="erp-input"

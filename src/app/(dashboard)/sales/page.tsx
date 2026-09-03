@@ -347,6 +347,7 @@ export default async function SalesPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="출고처명, 상품명, SKU, 규격"
             className="erp-input"

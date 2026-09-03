@@ -335,6 +335,7 @@ export default async function PurchasesPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="공급처명, 상품명, SKU, 규격"
             className="erp-input"
