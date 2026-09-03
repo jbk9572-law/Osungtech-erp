@@ -5,23 +5,43 @@ import { QuickPaymentRequestForm } from "@/components/quick-payment-request-form
 import { PaymentRequestGridTable, type PaymentRequestRow } from "@/components/payment-request-grid-table";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+
+type PaymentRequestQueryRow = {
+  id: string;
+  title: string | null;
+  department: string | null;
+  period_from: string | null;
+  period_to: string | null;
+  card_type: string | null;
+  created_at: string;
+  profiles: { full_name: string | null } | null;
+  payment_request_line_items: { amount: number }[] | null;
+};
 
 export default async function PaymentRequestsPage() {
   const supabase = await createClient();
-  const [{ data: rows }, { data: company }] = await Promise.all([
-    supabase
-      .from("payment_requests")
-      .select(
-        "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
-      )
-      .order("created_at", { ascending: false })
-      .limit(200),
+  // .limit(200)으로 고정해두면 지급결의서가 200건을 넘는 순간 그 이전
+  // 문서는 이 목록에서 영구히 안 보이고(검색도 안 됨), "no" 번호도 매번
+  // 가져온 200건 안에서의 위치일 뿐이라 새 문서가 등록될 때마다
+  // 같은 문서의 번호가 계속 바뀐다 — fetchAllRows로 전체를 가져와서
+  // 번호가 실제 등록 순서를 그대로 반영하게 한다.
+  const [rows, { data: company }] = await Promise.all([
+    fetchAllRows<PaymentRequestQueryRow>((from, to) =>
+      supabase
+        .from("payment_requests")
+        .select(
+          "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
+        )
+        .order("created_at", { ascending: false })
+        .range(from, to)
+    ),
     supabase.from("company_profile").select("name").eq("id", 1).maybeSingle(),
   ]);
 
-  const gridRows: PaymentRequestRow[] = (rows ?? []).map((row, i) => ({
+  const gridRows: PaymentRequestRow[] = rows.map((row, i) => ({
     id: row.id,
-    no: (rows?.length ?? 0) - i,
+    no: rows.length - i,
     docTitle: paymentRequestDocTitle(row.card_type),
     department: row.department || row.title || "",
     periodFrom: row.period_from,

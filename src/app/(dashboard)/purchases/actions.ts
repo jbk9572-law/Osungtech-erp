@@ -270,7 +270,7 @@ export async function createPurchase(
 
     // 매출 등록 폼과 동일하게, 이번에 실제로 적용한 단가를 거래처별 단가로
     // 저장해둔다 — 다음 등록부터 이 단가가 기본값으로 뜬다.
-    await Promise.all(
+    const salePriceResults = await Promise.all(
       saleItems.map((item) =>
         supabase.from("customer_product_prices").upsert(
           {
@@ -282,6 +282,9 @@ export async function createPurchase(
         )
       )
     );
+    for (const { error: priceError } of salePriceResults) {
+      if (priceError) console.error("거래처 단가 캐시 갱신 실패:", priceError.message);
+    }
   } else {
     // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
     // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해
@@ -312,15 +315,18 @@ export async function createPurchase(
     purchaseOrderId = newPurchaseId;
   }
 
-  await Promise.all(
+  const costUpdateResults = await Promise.all(
     items.map((item) =>
       supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
     )
   );
+  for (const { error: costError } of costUpdateResults) {
+    if (costError) console.error("품목 매입단가 갱신 실패:", costError.message);
+  }
 
   // 매출 등록과 동일하게, 이번에 실제로 적용한 매입단가를 공급처별 단가로도
   // 저장해둔다 — 다음부터 같은 공급처+상품 조합은 이 단가가 기본값으로 뜬다.
-  await Promise.all(
+  const supplierPriceResults = await Promise.all(
     items.map((item) =>
       supabase.from("supplier_product_prices").upsert(
         {
@@ -332,6 +338,9 @@ export async function createPurchase(
       )
     )
   );
+  for (const { error: priceError } of supplierPriceResults) {
+    if (priceError) console.error("공급처 단가 캐시 갱신 실패:", priceError.message);
+  }
 
   // 이 단계가 실패해도 매입 등록 자체는 이미 성공했으니 등록을 막지 않되,
   // 조용히 묻히지 않도록 상세 화면으로 경고 메시지를 실어 보낸다.
@@ -479,11 +488,14 @@ export async function updatePurchase(
     return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 수정에 실패했습니다: ${error.message}` };
   }
 
-  await Promise.all(
+  const costUpdateResults = await Promise.all(
     items.map((item) =>
       supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
     )
   );
+  for (const { error: costError } of costUpdateResults) {
+    if (costError) console.error("품목 매입단가 갱신 실패:", costError.message);
+  }
 
   revalidatePath("/purchases");
   revalidatePath(`/purchases/${id}`);

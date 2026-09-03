@@ -328,8 +328,13 @@ export default async function MonthlyReportPage({
     .filter((row) => row.sales_orders?.customers)
     .map((row) => {
       // 반품은 이 거래처와의 순거래액에서 차감되도록 음수로 반영한다.
+      // 세액은 양수 공급가액 기준으로 반올림한 뒤 부호를 적용한다 —
+      // Math.round는 음수 .5를 0쪽으로 반올림해서(예: -2.5 → -2),
+      // 서명된 금액에 그대로 반올림을 걸면 목록 화면(sales/page.tsx)의
+      // 세액 합계와 1원 어긋나는 경우가 생긴다.
       const sign = row.sales_orders?.is_return ? -1 : 1;
-      const amount = row.quantity * Number(row.unit_price) * sign;
+      const supplyAmount = row.quantity * Number(row.unit_price);
+      const amount = supplyAmount * sign;
       return {
         companyId: row.sales_orders!.customers!.id,
         companyName: row.sales_orders!.customers!.name,
@@ -340,28 +345,32 @@ export default async function MonthlyReportPage({
         unit: row.products?.unit ?? null,
         quantity: row.quantity * sign,
         amount,
-        taxAmount: calcVat(amount),
+        taxAmount: calcVat(supplyAmount) * sign,
       };
     });
 
+  // 매입처별/매출처별 "비중(%)"의 분모는 반드시 이 목록(전표 단위로 검색어를
+  // 적용한 것)의 합계여야 한다 — 품목별 보기용 itemGroups는 품목 하나에 딸린
+  // 거래처 중 하나라도 검색어에 걸리면 그 품목의 "다른 거래처 몫까지 포함한"
+  // 전체 금액을 그대로 살려두므로(합계 카드용으로는 맞지만), 그걸 분모로
+  // 쓰면 검색어와 무관한 거래처 금액까지 분모에 섞여 비중이 실제보다 작게
+  // 나온다.
+  const purchaseCompanyRowsFiltered = keyword
+    ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    : purchaseCompanyRows;
+  const salesCompanyRowsFiltered = keyword
+    ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    : salesCompanyRows;
   const supplierGroups =
-    view === "supplier"
-      ? buildCompanyGroups(
-          keyword
-            ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
-            : purchaseCompanyRows,
-        )
-      : [];
+    view === "supplier" ? buildCompanyGroups(purchaseCompanyRowsFiltered) : [];
   const customerGroups =
-    view === "customer"
-      ? buildCompanyGroups(
-          keyword
-            ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
-            : salesCompanyRows,
-        )
-      : [];
+    view === "customer" ? buildCompanyGroups(salesCompanyRowsFiltered) : [];
   const companyGroups = view === "supplier" ? supplierGroups : customerGroups;
   const companyKeyPrefix = view === "supplier" ? "s" : "c";
+  const companyViewGrandTotal =
+    view === "supplier"
+      ? purchaseCompanyRowsFiltered.reduce((sum, r) => sum + r.amount, 0)
+      : salesCompanyRowsFiltered.reduce((sum, r) => sum + r.amount, 0);
 
   // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
   // 거래처인지 모호하므로 생략), 요약표를 길게 늘어놓는 대신 그 거래처의
@@ -492,6 +501,7 @@ export default async function MonthlyReportPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="품목명, SKU, 규격, 거래처명"
             className="erp-input"
@@ -514,14 +524,7 @@ export default async function MonthlyReportPage({
         </Link>
       </form>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
+      <div className="erp-kpi-row">
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div
             style={{
@@ -907,9 +910,9 @@ export default async function MonthlyReportPage({
                           background: "#eef0f3",
                           color: "var(--erp-text-muted)",
                         };
-                const grandTotal =
-                  view === "supplier" ? totalPurchaseAmount : totalSalesAmount;
-                const share = grandTotal ? (cg.totalAmount / grandTotal) * 100 : 0;
+                const share = companyViewGrandTotal
+                  ? (cg.totalAmount / companyViewGrandTotal) * 100
+                  : 0;
                 return (
                   <Fragment key={cg.companyId}>
                     <tr style={{ background: groupBg }}>

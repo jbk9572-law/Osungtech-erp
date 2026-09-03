@@ -105,7 +105,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   }
 
   if (items.length > 0) {
-    await Promise.all(
+    const priceResults = await Promise.all(
       items.map((item) =>
         supabase.from("customer_product_prices").upsert(
           {
@@ -117,6 +117,9 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
         )
       )
     );
+    for (const { error: priceError } of priceResults) {
+      if (priceError) console.error("거래처 단가 캐시 갱신 실패:", priceError.message);
+    }
   }
 
   // 모조지 계산 화면에서 주문 생성 전에 미리 계산해둔 결과가 있으면
@@ -235,7 +238,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `매출 거래 수정에 실패했습니다: ${error.message}` };
   }
 
-  await Promise.all(
+  const priceResults = await Promise.all(
     items.map((item) =>
       supabase.from("customer_product_prices").upsert(
         {
@@ -247,6 +250,9 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       )
     )
   );
+  for (const { error: priceError } of priceResults) {
+    if (priceError) console.error("거래처 단가 캐시 갱신 실패:", priceError.message);
+  }
 
   revalidatePath("/sales");
   revalidatePath(`/sales/${id}`);

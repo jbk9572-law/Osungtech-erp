@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors",
+    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:search-autocomplete",
     "check:pagination": "node scripts/check-pagination.mjs",
     "check:mutation-errors": "node scripts/check-mutation-errors.mjs",
+    "check:search-autocomplete": "node scripts/check-search-autocomplete.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"

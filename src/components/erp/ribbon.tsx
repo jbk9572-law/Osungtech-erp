@@ -239,6 +239,7 @@ export function Ribbon() {
               <input
                 autoFocus
                 type="text"
+                autoComplete="off"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="메뉴 이름으로 검색..."

@@ -75,6 +75,7 @@ export function BalanceGridTable({
           <input
             id="balance-search-q"
             type="text"
+            autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`${partyLabel}으로 검색`}

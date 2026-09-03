@@ -367,31 +367,33 @@ export function PaperCalcClient({
                 {salesOrderId ? "출고" : "매입"} 건에 저장&apos;을 눌러주세요.
               </p>
             ) : (
-              <table className="erp-grid w-full">
-                <thead>
-                  <tr>
-                    <th>계산일시</th>
-                    <th className="num">총 원지</th>
-                    <th className="num">총 생산</th>
-                    <th className="num">초과 생산</th>
-                    <th>
-                      충족여부
-                      <FieldHint text="총 생산 수량이 발주 수량 이상이면 충족, 못 미치면 미충족입니다." />
-                    </th>
-                    <th style={{ width: 60 }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {savedCalculations.map((calc) => (
-                    <SavedCalcRow
-                      key={calc.id}
-                      calc={calc}
-                      salesOrderId={salesOrderId}
-                      purchaseOrderId={purchaseOrderId}
-                    />
-                  ))}
-                </tbody>
-              </table>
+              <div className="erp-grid-wrap">
+                <table className="erp-grid w-full">
+                  <thead>
+                    <tr>
+                      <th>계산일시</th>
+                      <th className="num">총 원지</th>
+                      <th className="num">총 생산</th>
+                      <th className="num">초과 생산</th>
+                      <th>
+                        충족여부
+                        <FieldHint text="총 생산 수량이 발주 수량 이상이면 충족, 못 미치면 미충족입니다." />
+                      </th>
+                      <th style={{ width: 60 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {savedCalculations.map((calc) => (
+                      <SavedCalcRow
+                        key={calc.id}
+                        calc={calc}
+                        salesOrderId={salesOrderId}
+                        purchaseOrderId={purchaseOrderId}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

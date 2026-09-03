@@ -67,6 +67,7 @@ export default async function CustomersPage({
             id="search-q"
             type="text"
             name="q"
+            autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="업체명, 사업자번호, 담당자, 연락처, 이메일"
             className="erp-input"

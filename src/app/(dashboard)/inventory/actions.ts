@@ -54,6 +54,7 @@ export async function submitStockCount(
   if (!warehouseId) {
     return { error: "창고 정보를 확인할 수 없습니다." };
   }
+  const userNote = String(formData.get("note") ?? "").trim();
 
   let rows: { productId: string; systemQuantity: number; countedQuantity: number }[];
   try {
@@ -115,7 +116,7 @@ export async function submitStockCount(
       type: "adjustment" as const,
       quantity: r.delta,
       reference: sessionRef,
-      note: "재고실사",
+      note: userNote ? `재고실사: ${userNote}` : "재고실사",
       created_by: user?.id ?? null,
     }))
   );

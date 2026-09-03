@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
 export type CountRow = {
   productId: string;
@@ -16,6 +17,17 @@ export type CountRow = {
 };
 
 type SavedAdjustment = CountRow & { countedQuantity: number };
+
+// 차이가 유독 크면(전산 재고의 절반 이상, 최소 10개 이상) 단순 오차보다
+// 입력 실수나 놓친 사유가 있을 가능성이 커서, 저장을 막지는 않되 저장
+// 전에 한 번 더 눈에 띄게 표시한다 — 이게 없으면 숫자만 슥 바꾸고
+// 아무 확인 없이 저장 버튼을 누르기 쉽다(사용자 피드백: "찾는 과정이
+// 아니라 그냥 눌러서 저장하면 조정해버리는 것 같다").
+function isLargeDiscrepancy(systemQuantity: number, diff: number): boolean {
+  if (diff === 0) return false;
+  const base = Math.max(Math.abs(systemQuantity), 1);
+  return Math.abs(diff) >= 10 && Math.abs(diff) / base >= 0.5;
+}
 
 export function InventoryCountForm({
   rows,
@@ -39,9 +51,16 @@ export function InventoryCountForm({
     Object.fromEntries(rows.map((r) => [r.productId, r.systemQuantity]))
   );
   const [onlyDiff, setOnlyDiff] = useState(false);
+  const [note, setNote] = useState("");
   const [savedSummary, setSavedSummary] = useState<SavedAdjustment[] | null>(null);
+  // 실사 이력을 훑어보는 게 기본 화면이고, 새로 실사를 시작할 때만 전체
+  // 품목 표를 펼친다(모조지 계산 이력 화면의 "+ 새로 계산하기" 토글과 같은
+  // 방식) — 246개 품목 표가 이력 위에 항상 펼쳐져 있으면 이력을 보러 온
+  // 사람도 매번 큰 표부터 지나쳐야 했다.
+  const [started, setStarted] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const confirmSave = useConfirmTwice();
 
   const changedRows = useMemo(
     () =>
@@ -55,6 +74,23 @@ export function InventoryCountForm({
     [rows, counted, baseline]
   );
 
+  // 사유를 안 남긴 채로 유독 큰 차이(⚠ 확인 필요)를 저장하려 하면, 버튼을
+  // 한 번 더 눌러야 실제로 저장되게 한다 — 삭제처럼 되돌릴 수 없는 건
+  // 아니라서 확인코드까지는 과하고, 이 앱의 가벼운 두 번 누르기 확인
+  // 패턴(useConfirmTwice)이 딱 맞는다. 사유를 적었거나 차이가 작으면
+  // 평소처럼 한 번에 저장된다.
+  const hasUnexplainedLargeDiff =
+    !note.trim() &&
+    changedRows.some((r) => isLargeDiscrepancy(r.systemQuantity, r.countedQuantity - r.systemQuantity));
+
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>) {
+    if (!hasUnexplainedLargeDiff) return;
+    if (!confirmSave.isArmed("save")) {
+      e.preventDefault();
+    }
+    confirmSave.press("save", () => {});
+  }
+
   // 저장 성공 시: 방금 저장한 조정 내역을 요약 패널에 보여주고, baseline을
   // 갱신해서 같은 화면에서 또 저장 버튼을 눌러도 이미 반영된 품목이
   // 중복으로 다시 저장되지 않게 한다.
@@ -67,6 +103,8 @@ export function InventoryCountForm({
         for (const r of changedRows) next[r.productId] = r.countedQuantity;
         return next;
       });
+      setNote("");
+      confirmSave.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to state changing, changedRows is read at that moment
   }, [state]);
@@ -85,10 +123,40 @@ export function InventoryCountForm({
     }))
   );
 
+  if (!started) {
+    return (
+      <div className="erp-new-count-cta">
+        <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          전산 재고 {rows.length.toLocaleString()}개 품목 기준으로 새 실사를 시작합니다. 실제로 다른
+          품목만 고쳐서 저장하면 됩니다.
+        </div>
+        <button type="button" onClick={() => setStarted(true)} className="erp-btn erp-btn-primary">
+          + 새 실사 시작
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <form action={formAction}>
+    <div className="erp-detail" style={{ marginTop: 0, borderColor: "var(--erp-primary)" }}>
+      <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 6 }}>
+        <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+          진행 중인 실사
+        </span>
+        <button
+          type="button"
+          onClick={() => setStarted(false)}
+          className="erp-btn"
+          style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+        >
+          접기
+        </button>
+      </div>
+      <div className="erp-detail-body">
+      <form action={formAction} onSubmit={handleFormSubmit}>
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="rows" value={payload} />
+      <input type="hidden" name="note" value={note} />
       <div className="erp-search" style={{ alignItems: "center", justifyContent: "space-between" }}>
         <label
           className="flex items-center gap-2 text-xs"
@@ -109,17 +177,47 @@ export function InventoryCountForm({
             ref={submitRef}
             type="submit"
             disabled={pending || changedRows.length === 0}
-            className="erp-btn erp-btn-primary"
+            className={hasUnexplainedLargeDiff && confirmSave.isArmed("save") ? "erp-btn erp-btn-danger" : "erp-btn erp-btn-primary"}
           >
             {pending ? (
               <>
                 <span className="erp-spinner" aria-hidden /> 저장 중...
               </>
+            ) : hasUnexplainedLargeDiff && confirmSave.isArmed("save") ? (
+              "⚠ 사유 없이 저장할까요? 다시 눌러 확인"
             ) : (
               `F7 실사 결과 저장 (${changedRows.length}건)`
             )}
           </button>
         </div>
+      </div>
+      {hasUnexplainedLargeDiff && (
+        <p className="mt-1 text-[11px]" style={{ color: "var(--erp-warning)" }}>
+          ⚠ 확인 필요로 표시된 품목이 있는데 사유를 안 적었습니다. 저장 버튼을 한 번 더 누르면 그대로
+          저장됩니다.
+        </p>
+      )}
+      {/* 실사는 "전산 재고를 실물에 맞춰 덮어쓰는" 동작이라, 왜 차이가
+          났는지(파손/샘플/입고 누락 등) 최소한의 흔적을 남겨야 나중에
+          이력을 보고 원인을 되짚어볼 수 있다 — 반품 사유를 표준 코드로
+          남기는 것과 같은 이유. 저장을 막지는 않되(작지 않은 원인은
+          현장에서 바로 못 밝혀낼 수도 있다), 비워두면 이력에 "-"로 남아
+          기록을 안 남겼다는 사실 자체가 보이게 한다. */}
+      <div className="erp-field" style={{ marginTop: 8 }}>
+        <label htmlFor="count-note">사유 / 메모 (선택)</label>
+        <input
+          id="count-note"
+          type="text"
+          autoComplete="off"
+          value={note}
+          onChange={(e) => {
+            setNote(e.target.value);
+            confirmSave.reset();
+          }}
+          placeholder="예: 파손 3개 폐기, 분기 정기실사 등 — 나중에 이력에서 원인을 되짚어볼 때 도움이 됩니다"
+          className="erp-input"
+          style={{ width: "100%" }}
+        />
       </div>
       <FormMessage state={state} />
       {savedSummary && savedSummary.length > 0 && (
@@ -204,6 +302,7 @@ export function InventoryCountForm({
               <th className="num" style={{ width: 100 }}>
                 차이
               </th>
+              <th style={{ width: 90 }}></th>
             </tr>
           </thead>
           <tbody>
@@ -211,6 +310,7 @@ export function InventoryCountForm({
               const systemQuantity = baseline[row.productId] ?? row.systemQuantity;
               const value = counted[row.productId] ?? systemQuantity;
               const diff = value - systemQuantity;
+              const flagged = isLargeDiscrepancy(systemQuantity, diff);
               return (
                 <tr key={row.productId}>
                   <td>{row.sku}</td>
@@ -243,12 +343,19 @@ export function InventoryCountForm({
                     {diff > 0 ? "+" : ""}
                     {diff.toLocaleString()}
                   </td>
+                  <td>
+                    {flagged && (
+                      <span className="erp-badge erp-badge-warning" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
+                        ⚠ 확인 필요
+                      </span>
+                    )}
+                  </td>
                 </tr>
               );
             })}
             {!visibleRows.length && (
               <tr>
-                <td colSpan={6} className="erp-grid-empty">
+                <td colSpan={7} className="erp-grid-empty">
                   {onlyDiff ? "차이 있는 품목이 없습니다." : "표시할 품목이 없습니다."}
                 </td>
               </tr>
@@ -256,6 +363,8 @@ export function InventoryCountForm({
           </tbody>
         </table>
       </div>
-    </form>
+      </form>
+      </div>
+    </div>
   );
 }

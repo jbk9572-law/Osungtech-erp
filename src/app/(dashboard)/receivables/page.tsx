@@ -1,13 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { BalanceGridTable } from "@/components/balance-grid-table";
-import { getAllCustomerBalances } from "@/lib/ar-ap";
+import { getAllCustomerBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 
 export default async function ReceivablesPage() {
   const supabase = await createClient();
   const balances = await getAllCustomerBalances(supabase);
 
   const withBalance = balances.filter((b) => b.balance !== 0).sort((a, b) => b.balance - a.balance);
-  const totalBalance = withBalance.reduce((sum, b) => sum + b.balance, 0);
+  const totalBalance = sumOutstandingBalance(withBalance);
 
   return (
     <div>
