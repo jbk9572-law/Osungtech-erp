@@ -112,6 +112,12 @@ export default async function InventoryCountPage({
     const signed = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
     computedByProduct.set(t.product_id, (computedByProduct.get(t.product_id) ?? 0) + signed);
   }
+  // 매입/매출 수량은 소수점 입력이 가능한데(decimal_quantity 마이그레이션),
+  // Postgres 쪽 캐시(inventory.quantity)는 numeric으로 정확히 누적되는 반면
+  // 여기 computedByProduct는 자바스크립트 부동소수점으로 다시 더한 값이라
+  // 0.1+0.2 같은 미세한 오차가 생길 수 있다. 오차 없는 실제 불일치만
+  // 잡히도록 아주 작은 허용오차(0.001) 이내 차이는 일치로 본다.
+  const EPSILON = 0.001;
   const cacheMismatches = products
     .map((p) => ({
       sku: p.sku,
@@ -119,7 +125,7 @@ export default async function InventoryCountPage({
       cached: p.inventory?.[0]?.quantity ?? 0,
       computed: computedByProduct.get(p.id) ?? 0,
     }))
-    .filter((p) => p.cached !== p.computed);
+    .filter((p) => Math.abs(p.cached - p.computed) > EPSILON);
 
   const sessionsByRef = new Map<string, Session>();
   for (const t of countTx) {
