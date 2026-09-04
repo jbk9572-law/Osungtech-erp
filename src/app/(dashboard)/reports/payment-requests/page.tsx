@@ -36,7 +36,7 @@ export default async function PaymentRequestsPage() {
         .order("created_at", { ascending: false })
         .range(from, to)
     ),
-    supabase.from("company_profile").select("name").eq("id", 1).maybeSingle(),
+    supabase.from("company_profile").select("name").maybeSingle(),
   ]);
 
   const gridRows: PaymentRequestRow[] = rows.map((row, i) => ({

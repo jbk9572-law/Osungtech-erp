@@ -6,7 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 
 export default async function NewPaymentRequestPage() {
   const supabase = await createClient();
-  const { data: company } = await supabase.from("company_profile").select("name").eq("id", 1).maybeSingle();
+  const { data: company } = await supabase.from("company_profile").select("name").maybeSingle();
 
   return (
     <div>

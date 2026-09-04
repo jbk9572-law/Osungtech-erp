@@ -126,7 +126,7 @@ export default async function DashboardPage({
       .lte("note_date", monthEnd)
       .order("created_at", { ascending: false })
       .limit(5),
-    supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
+    supabase.from("company_profile").select("name, logo_mark_url").maybeSingle(),
     supabase
       .from("sales_order_items")
       .select("quantity, unit_price, sales_orders!inner(order_date, is_return, is_carryover)")

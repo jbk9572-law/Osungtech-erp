@@ -33,7 +33,6 @@ export default async function DashboardLayout({
     supabase
       .from("company_profile")
       .select("name, logo_mark_url")
-      .eq("id", 1)
       .maybeSingle(),
     getNotificationSummary(supabase, user.id),
     supabase

@@ -70,7 +70,7 @@ export async function GET(request: Request) {
           item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
       }));
 
-    const { data: company } = await supabase.from("company_profile").select("name").eq("id", 1).maybeSingle();
+    const { data: company } = await supabase.from("company_profile").select("name").maybeSingle();
     const companyName = company?.name || "㈜오성테크";
 
     const workbook =

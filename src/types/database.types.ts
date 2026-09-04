@@ -1654,6 +1654,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      is_demo_actor: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
       toggle_todo_done: {
         Args: { p_id: string };
         Returns: undefined;
