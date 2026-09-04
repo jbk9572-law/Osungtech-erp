@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { uploadBrandingImage } from "@/app/(dashboard)/settings/company/actions";
+import { uploadBrandingImage, resetBrandingImage } from "@/app/(dashboard)/settings/company/actions";
 import { FormMessage } from "@/components/form-message";
 import { FilePickerInput } from "@/components/file-picker-input";
 
@@ -21,6 +21,7 @@ function BrandingSlot({
   previewClassName: string;
 }) {
   const [state, formAction, pending] = useActionState(uploadBrandingImage, undefined);
+  const [resetState, resetAction, resetPending] = useActionState(resetBrandingImage, undefined);
   const [hasFile, setHasFile] = useState(false);
 
   return (
@@ -49,8 +50,17 @@ function BrandingSlot({
           )}
         </button>
       </form>
+      {currentUrl && (
+        <form action={resetAction} className="mt-2">
+          <input type="hidden" name="slot" value={slot} />
+          <button type="submit" disabled={resetPending} className="erp-btn erp-btn-danger" style={{ minWidth: 0 }}>
+            {resetPending ? "되돌리는 중..." : "기본값으로 되돌리기"}
+          </button>
+        </form>
+      )}
       <div className="mt-2">
         <FormMessage state={state} />
+        <FormMessage state={resetState} />
       </div>
     </div>
   );

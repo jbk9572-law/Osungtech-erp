@@ -33,7 +33,14 @@ create policy "company_profile_demo_isolation" on public.company_profile
 -- 데모용 회사정보 행을 미리 만들어둔다 — 없으면 데모 계정이 처음
 -- 회사정보를 저장하려 할 때 업데이트 대상 행이 없어 조용히 아무 일도
 -- 안 일어난다(0행 갱신). id=1은 실제 회사 행이 이미 쓰고 있으니 다른
--- 값을 쓴다.
-insert into public.company_profile (id, name, is_demo)
-values (2, '샘플상사(주)', true)
+-- 값을 쓴다. 로고/도장도 null로 두지 않고 처음부터 샘플 이미지를
+-- 넣어둔다 — null로 두면 화면(BrandingSlot)의 defaultUrl이 그대로
+-- 실제 회사 로고 경로라서 데모 화면에 진짜 로고/도장이 노출돼버린다.
+insert into public.company_profile (id, name, is_demo, logo_wordmark_url, logo_mark_url, seal_image_url)
+values (
+  2, '샘플상사(주)', true,
+  '/branding/sample-logo-wordmark.png',
+  '/branding/sample-logo-mark.png',
+  '/branding/sample-company-seal.png'
+)
 on conflict (id) do nothing;

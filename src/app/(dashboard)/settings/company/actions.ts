@@ -126,3 +126,53 @@ export async function uploadBrandingImage(
   revalidatePath("/", "layout");
   return { success: "이미지가 저장되었습니다." };
 }
+
+// 데모 계정용 대체 이미지 — public/branding/logo-*.png(실제 회사 로고·도장)를
+// 그대로 fallback으로 쓰면 데모 계정이 지워도 실제 이미지가 다시 보이게
+// 된다. 데모 계정이 "기본값으로" 버튼을 누르면 null이 아니라 이 샘플
+// 이미지로 되돌린다.
+const DEMO_DEFAULT_URLS: Record<BrandingSlot, string> = {
+  logo_wordmark_url: "/branding/sample-logo-wordmark.png",
+  logo_mark_url: "/branding/sample-logo-mark.png",
+  seal_image_url: "/branding/sample-company-seal.png",
+};
+
+// 업로드한 로고/도장을 기본값으로 되돌린다. 실제 계정은 null로 되돌려
+// 원래 회사 로고(레포에 커밋된 기본 이미지)가 다시 보이게 하고, 데모
+// 계정은 null이 아니라 위 샘플 이미지로 되돌린다 — null로 두면 이
+// 화면(BrandingSlot)의 defaultUrl prop이 그대로 실제 회사 로고 경로라
+// 데모 화면에 실제 로고가 다시 노출돼버린다.
+export async function resetBrandingImage(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 이미지를 변경할 수 있습니다." };
+
+  const slot = String(formData.get("slot") ?? "") as BrandingSlot;
+  if (!(slot in BRANDING_SLOTS)) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const { data: isDemo, error: isDemoError } = await supabase.rpc("is_demo_actor");
+  if (isDemoError) {
+    return { error: `계정 종류를 확인하지 못해 되돌리기를 중단했습니다: ${isDemoError.message}` };
+  }
+
+  const resetValue = isDemo ? DEMO_DEFAULT_URLS[slot] : null;
+  const update =
+    slot === "logo_wordmark_url"
+      ? { logo_wordmark_url: resetValue }
+      : slot === "logo_mark_url"
+        ? { logo_mark_url: resetValue }
+        : { seal_image_url: resetValue };
+
+  const { error } = await supabase.from("company_profile").update(update);
+
+  if (error) {
+    return { error: `되돌리기에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: "기본값으로 되돌렸습니다." };
+}
