@@ -60,12 +60,12 @@ export default async function AnnouncementDetailPage({
       </h1>
 
       <div className="erp-toolbar">
-        <Link href="/announcements" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
         {allowManage && (
           <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
         )}
+        <Link href="/announcements" className="erp-btn erp-btn-danger">
+          ESC 목록으로
+        </Link>
       </div>
 
       <div className="erp-post-header">

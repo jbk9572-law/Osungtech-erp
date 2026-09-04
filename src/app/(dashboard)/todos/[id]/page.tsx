@@ -96,12 +96,12 @@ export default async function TodoDetailPage({
       </h1>
 
       <div className="erp-toolbar">
-        <Link href="/todos" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
         {allowManage && (
           <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
         )}
+        <Link href="/todos" className="erp-btn erp-btn-danger">
+          ESC 목록으로
+        </Link>
       </div>
 
       <div className="erp-post-header">

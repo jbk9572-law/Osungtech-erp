@@ -5,7 +5,10 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
+
+const DEFAULT_LIST_LIMIT = 300;
+const LIST_LIMIT_STEP = 300;
 
 type TodoItemInput = {
   productId: string;
@@ -28,21 +31,49 @@ function summarizeItems(
 export default async function TodosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; warning?: string }>;
+  searchParams: Promise<{ q?: string; warning?: string; limit?: string }>;
 }) {
-  const { q, warning } = await searchParams;
+  const { q, warning, limit: limitParam } = await searchParams;
+  const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
+  const limit =
+    Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const supabase = await createClient();
-  const [{ data: allRows, error }, products] = await Promise.all([
-    supabase
-      .from("todos")
-      .select(
-        "id, title, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
-      )
-      .order("done", { ascending: true })
-      .order("due_date", { ascending: true, nullsFirst: false })
-      .limit(300),
+  const [{ rows: allRows, hasMore }, products, summaryRows] = await Promise.all([
+    fetchLimitedRows<{
+      id: string;
+      title: string;
+      items: unknown;
+      todo_type: string;
+      ship_date: string | null;
+      purchase_done_at: string | null;
+      sale_done_at: string | null;
+      due_date: string | null;
+      done: boolean;
+      profiles: { full_name: string | null } | null;
+      suppliers: { name: string } | null;
+      customers: { name: string } | null;
+    }>(
+      (from, to) =>
+        supabase
+          .from("todos")
+          .select(
+            "id, title, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
+          )
+          .order("done", { ascending: true })
+          .order("due_date", { ascending: true, nullsFirst: false })
+          .range(from, to),
+      limit,
+    ),
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("products").select("id, name").range(from, to),
+    ),
+    // 요약카드(전체/진행중/기한초과/완료)는 화면에 보이는 목록이 limit으로
+    // 잘려도 항상 실제 전체 건수를 반영해야 한다 — 목록이 300건에서 잘린
+    // 상태로 요약카드까지 같이 줄어들면 "완료했는데 왜 전체 건수가 그대로냐"
+    // 같은 혼란이 생긴다(sales/purchases 리스트의 합계를 별도 쿼리로 다시
+    // 구하는 것과 같은 이유).
+    fetchAllRows<{ done: boolean; due_date: string | null }>((from, to) =>
+      supabase.from("todos").select("done, due_date").range(from, to),
     ),
   ]);
 
@@ -51,19 +82,20 @@ export default async function TodosPage({
 
   const keyword = q?.trim().toLowerCase();
   const rows = keyword
-    ? (allRows ?? []).filter(
+    ? allRows.filter(
         (r) =>
           r.title.toLowerCase().includes(keyword) ||
           (r.suppliers?.name ?? "").toLowerCase().includes(keyword) ||
           (r.customers?.name ?? "").toLowerCase().includes(keyword),
       )
-    : (allRows ?? []);
+    : allRows;
 
-  // 요약카드는 검색어와 무관하게 전체 할일 기준으로 보여준다("검색해봤더니
-  // 전체 건수가 줄어보인다" 같은 혼란을 피하기 위함).
-  const totalCount = (allRows ?? []).length;
-  const doneCount = (allRows ?? []).filter((r) => r.done).length;
-  const overdueCount = (allRows ?? []).filter(
+  // 요약카드는 검색어와도, 목록 표시 limit과도 무관하게 전체 할일 기준으로
+  // 보여준다("검색해봤더니/최근 N건만 보이는데 전체 건수가 줄어보인다" 같은
+  // 혼란을 피하기 위함).
+  const totalCount = summaryRows.length;
+  const doneCount = summaryRows.filter((r) => r.done).length;
+  const overdueCount = summaryRows.filter(
     (r) => !r.done && !!r.due_date && r.due_date < todayStr,
   ).length;
   const inProgressCount = totalCount - doneCount;
@@ -151,6 +183,7 @@ export default async function TodosPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           조회
         </button>
+        {limitParam && <input type="hidden" name="limit" value={limitParam} />}
         {q && (
           <Link href="/todos" className="erp-btn">
             초기화
@@ -158,11 +191,17 @@ export default async function TodosPage({
         )}
       </form>
 
-      {error && (
-        <p className="erp-grid-empty" style={{ marginBottom: 12 }}>
-          목록을 불러오지 못했습니다: {error.message}
-        </p>
-      )}
+      <div
+        className="rounded p-2 text-xs"
+        style={{
+          marginBottom: 8,
+          background: "var(--erp-info-bg)",
+          color: "var(--erp-info-text)",
+          border: "1px solid var(--erp-info-border)",
+        }}
+      >
+        최근 {limit.toLocaleString()}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {rows.map((row) => {
@@ -211,6 +250,20 @@ export default async function TodosPage({
           </p>
         )}
       </div>
+
+      {hasMore && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+          <Link
+            href={`/todos?${new URLSearchParams({
+              ...(q ? { q } : {}),
+              limit: String(limit + LIST_LIMIT_STEP),
+            }).toString()}`}
+            className="erp-btn"
+          >
+            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}건)
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

@@ -75,12 +75,6 @@ export default async function PaymentRequestDetailPage({
       </h1>
 
       <div className="erp-toolbar">
-        <Link
-          href="/reports/payment-requests"
-          className="erp-btn erp-btn-danger"
-        >
-          ESC 목록으로
-        </Link>
         {allowManage && (
           <Link
             href={`/reports/payment-requests/${row.id}/edit`}
@@ -102,6 +96,12 @@ export default async function PaymentRequestDetailPage({
             confirmMessage="이 지급결의서를 삭제하시겠습니까?"
           />
         )}
+        <Link
+          href="/reports/payment-requests"
+          className="erp-btn erp-btn-danger"
+        >
+          ESC 목록으로
+        </Link>
       </div>
 
       {warning && (
