@@ -3,8 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-
-const METHODS = ["현금", "계좌이체", "카드", "어음"];
+import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 
 // 거래처(출고처)의 수금, 공급처의 지급 등록 폼 — 필드 구성이 완전히 같아서
 // 하나로 공유한다. 실제로 다른 테이블(customer_payments/supplier_payments)에

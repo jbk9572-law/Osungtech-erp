@@ -18,6 +18,7 @@ import {
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
+import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
@@ -77,8 +78,6 @@ type PriceHistoryEntry = {
   purchaseDate: string;
   lotNumber?: string | null;
 };
-
-const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
 
 export type PurchaseInitial = {
   id: string;

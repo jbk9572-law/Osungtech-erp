@@ -18,6 +18,7 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
@@ -77,8 +78,6 @@ type Row = {
   manualPrice: boolean;
   remark: string;
 };
-
-const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
 
 export type SaleInitial = {
   id: string;

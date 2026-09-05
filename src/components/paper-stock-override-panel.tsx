@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
@@ -30,6 +30,7 @@ export function PaperStockOverridePanel({
   const [state, formAction, pending] = useActionState(overrideAction, undefined);
   const formRef = useRef<HTMLFormElement>(null);
   const [revertPending, startRevertTransition] = useTransition();
+  const [revertError, setRevertError] = useState<string | null>(null);
   const confirmRevert = useConfirmTwice();
 
   useEffect(() => {
@@ -58,10 +59,12 @@ export function PaperStockOverridePanel({
             onBlur={confirmRevert.reset}
             onClick={() => {
               confirmRevert.press("revert", () => {
+                setRevertError(null);
                 const formData = new FormData();
                 formData.set(idFieldName, orderId);
-                startRevertTransition(() => {
-                  revertAction(undefined, formData);
+                startRevertTransition(async () => {
+                  const result = await revertAction(undefined, formData);
+                  if (result?.error) setRevertError(result.error);
                 });
               });
             }}
@@ -69,6 +72,11 @@ export function PaperStockOverridePanel({
             {confirmRevert.isArmed("revert") ? "한 번 더 누르면 되돌림" : "자동값으로 되돌리기"}
           </button>
         </div>
+      )}
+      {revertError && (
+        <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>
+          {revertError}
+        </p>
       )}
 
       <form ref={formRef} action={formAction} className="flex flex-wrap items-center gap-2">

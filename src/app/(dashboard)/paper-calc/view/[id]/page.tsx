@@ -40,11 +40,17 @@ export default async function PaperCalcViewPage({
     effectiveReams: computeEffectiveReams(layouts),
   };
 
+  // 할일(todos)에서 "도면 보기"로 들어온 계산은 매입/매출 전표가 아직
+  // 없으니 sales_order_id/purchase_order_id가 둘 다 비어있다 — 이 경우를
+  // 놓치면 "닫기"가 그 할일이 아니라 아무 맥락 없는 계산기 화면으로
+  // 떨어지는 막다른 길이 됐었다.
   const closeHref = calc.sales_order_id
     ? `/paper-calc?salesOrderId=${calc.sales_order_id}`
     : calc.purchase_order_id
       ? `/paper-calc?purchaseOrderId=${calc.purchase_order_id}`
-      : "/paper-calc";
+      : calc.todo_id
+        ? `/todos/${calc.todo_id}`
+        : "/paper-calc";
 
   return <PaperCalcReport input={input} result={result} closeHref={closeHref} autoPrint={false} />;
 }

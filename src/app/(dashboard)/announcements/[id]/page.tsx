@@ -8,6 +8,7 @@ import { deleteAnnouncement, updateAnnouncement } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
+import { markAnnouncementRead } from "@/lib/announcement-reads";
 
 export default async function AnnouncementDetailPage({
   params,
@@ -44,9 +45,7 @@ export default async function AnnouncementDetailPage({
   // 배지가 이미 읽은 공지도 계속 안읽음으로 보여줬다. 상세 화면을 열람하는
   // 것 자체를 읽음 처리로 본다.
   if (actor.userId) {
-    const { error: markReadError } = await supabase
-      .from("announcement_reads")
-      .upsert({ announcement_id: id, user_id: actor.userId }, { onConflict: "announcement_id,user_id" });
+    const { error: markReadError } = await markAnnouncementRead(supabase, id, actor.userId);
     if (markReadError) {
       console.error("공지 읽음 처리 실패:", markReadError.message);
     }

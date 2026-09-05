@@ -8,6 +8,7 @@ import { FieldHint } from "@/components/field-hint";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
 import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
+import { SHEET_PER_REAM } from "@/lib/paper-nest-engine";
 import {
   computeEffectiveReams,
   PALETTE,
@@ -33,7 +34,7 @@ type DragStart = {
 };
 
 const MAX_ROWS = 10;
-const REAM_SHEETS = 500;
+const REAM_SHEETS = SHEET_PER_REAM;
 
 // 배치 1건 = 1연(500장)이라, 품목 1개를 원지에 한 번 놓을 때마다 그
 // 배치 전체에서 500개씩 나온다. 그래서 발주수량을 다 채우는 데 필요한

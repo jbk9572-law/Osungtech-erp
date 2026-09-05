@@ -235,7 +235,7 @@ export default async function InventoryCountPage({
         전산 재고와 실제 수량을 비교해 맞추고, 지금까지의 실사 이력을 함께 확인합니다.
       </p>
 
-      <div className="erp-hero-row">
+      <div className="erp-kpi-row">
         <div className="erp-hero-card">
           <div className="erp-hero-label">총 실사 횟수</div>
           <div className="erp-hero-value">{sessions.length}회</div>

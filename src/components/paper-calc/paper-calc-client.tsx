@@ -9,6 +9,7 @@ import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import {
   NestEngine,
   computeEffectiveReams,
+  SHEET_PER_REAM,
   type Item,
   type NestLayout,
   type NestResult,
@@ -519,7 +520,7 @@ export function PaperCalcClient({
                   className="text-xs"
                   style={{ color: "var(--erp-text-muted)" }}
                 >
-                  포장단위: 500장 / 연
+                  포장단위: {SHEET_PER_REAM.toLocaleString()}장 / 연
                 </span>
 
                 <div className="ml-auto flex flex-wrap gap-1.5">

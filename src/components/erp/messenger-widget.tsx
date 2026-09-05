@@ -7,6 +7,7 @@ import type { MessengerMessage } from "@/lib/messenger-types";
 import { fileKindIcon, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export type { MessengerMessage };
 
@@ -81,6 +82,12 @@ export function MessengerWidget({
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
+  // 종/리본 드롭다운과 동일하게, 이 패널이 열려있는 동안은 Escape가 페이지
+  // 전역 ESC 단축키(뒤로가기 등)로 새지 않고 패널만 닫는다 — 안 그러면
+  // "/todos/[id]"처럼 자체 Escape 단축키가 있는 화면에서 메신저를 열어둔
+  // 채 Escape를 누르면 패널은 그대로 열려있고 화면만 목록으로 튕겨나간다.
+  useEscapeToClose(open, () => setOpen(false));
 
   useEffect(() => {
     const supabase = createClient();

@@ -13,6 +13,11 @@
 // 원지는 항상 500장(1연) 단위로만 사용한다 — 재단기를 다시 세팅하지 않고
 // 한 번에 쌓아 자르는 실제 인쇄소 작업 방식과 맞춰야 하기 때문.
 
+// "1연 = 500장"이 이 파일과 수동 배치 시뮬레이터(manual-layout-client.tsx),
+// 표시 문구(paper-calc-client.tsx)에 각각 하드코딩돼 있던 걸 하나로 뺐다 —
+// 원지 규격이 바뀌면 여기 한 곳만 고치면 된다.
+export const SHEET_PER_REAM = 500;
+
 export type Item = {
   name: string;
   width: number;
@@ -102,7 +107,7 @@ const MAX_OPTIMIZE_REAMS = 40;
 //   - 그 외에는 10%당 0.1연 단위로 끊어서 인정 (예: 24.71% → 0.2연)
 // 저장된 계산(layouts JSON)에 대해서도 그대로 쓸 수 있도록 클래스 밖에
 // 독립 함수로 둔다.
-export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = 500): number {
+export function computeEffectiveReams(layouts: NestLayout[], sheetPerReam = SHEET_PER_REAM): number {
   if (!sheetPerReam || !layouts.length) return 0;
   const effectiveSheets = layouts.reduce((sum, l) => {
     const coreNames = new Set(
@@ -150,7 +155,7 @@ export class NestEngine {
   sheetWidth = 788;
   sheetHeight = 1091;
   // 원지 1연 = 500장
-  sheetPerReam = 500;
+  sheetPerReam = SHEET_PER_REAM;
   // 원지 안쪽 여백(재단 여유). 기본 0mm.
   marginMm = 0;
 
