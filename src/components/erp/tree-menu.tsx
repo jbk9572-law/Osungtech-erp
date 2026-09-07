@@ -162,7 +162,7 @@ function UsageBar(row: UsageRow) {
     <div className="erp-tree-usage-row erp-tree-usage-row-donut">
       <div
         className="erp-usage-donut"
-        style={{ background: `conic-gradient(${barColor} ${percent}%, #e2e6ec 0)` }}
+        style={{ background: `conic-gradient(${barColor} ${percent}%, var(--erp-border) 0)` }}
       >
         <span className="erp-usage-donut-pct">{percent}%</span>
       </div>

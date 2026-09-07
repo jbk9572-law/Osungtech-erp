@@ -162,9 +162,9 @@ export default async function DashboardPage({
   type ItemRow = {
     partnerName: string;
     productName: string;
-    // 간지/원재료 카테고리 품목만 매입-매출 매칭(입고처/출고처/재고분출고)을
-    // 추적한다 — 일반 품목까지 다 추적하면 정보가 너무 많아서 오히려
-    // "오늘의 업무"를 한눈에 보기 어렵다는 피드백으로 범위를 좁혔다.
+    // Filter 카테고리만 빼고 매입-매출 매칭(입고처/출고처/재고분출고)을
+    // 추적한다(dashboard-calendar.tsx의 isTrackedCategory 참고) — Filter는
+    // 같은 날 사고파는 매칭 정보가 실무에 큰 의미가 없다는 판단.
     categoryName: string | null;
     spec: string;
     unit: string;

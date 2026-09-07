@@ -362,7 +362,7 @@ export default async function SalesPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="출고처명, 상품명, SKU, 규격, 관리번호, 메모, 비고"
+            placeholder="출고처명, 상품명, SKU, 규격, 관리번호, 배송방법, 메모, 비고"
             className="erp-input"
             style={{ width: "100%" }}
           />
