@@ -10,6 +10,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
 import { calcVat } from "@/lib/tax";
+import { matchesSearch } from "@/lib/search-match";
 
 type View = "product" | "supplier" | "customer";
 
@@ -20,20 +21,12 @@ type CompanyProductRow = {
   sku: string;
   productName: string;
   spec: string;
+  categoryName: string | null;
   unit: string | null;
   quantity: number;
   amount: number;
   taxAmount: number;
 };
-
-function matchesKeyword(row: CompanyProductRow, keyword: string): boolean {
-  return (
-    row.sku.toLowerCase().includes(keyword) ||
-    row.productName.toLowerCase().includes(keyword) ||
-    row.spec.toLowerCase().includes(keyword) ||
-    row.companyName.toLowerCase().includes(keyword)
-  );
-}
 
 // 매입처별/매출처별 보기 — 거래처를 먼저 묶고 그 안에서 품목별 소계를
 // 낸다. 품목별 보기(ItemGroup)와 반대 방향으로 같은 데이터를 한 번 더
@@ -91,6 +84,7 @@ type ItemGroup = {
   sku: string;
   name: string;
   spec: string;
+  categoryName: string | null;
   unit: string | null;
   inQty: number;
   inAmount: number;
@@ -130,7 +124,7 @@ export default async function MonthlyReportPage({
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit)",
+          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
@@ -141,7 +135,7 @@ export default async function MonthlyReportPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit)",
+          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("purchase_orders.purchase_date", lookbackFrom)
         .lte("purchase_orders.purchase_date", to)
@@ -183,6 +177,7 @@ export default async function MonthlyReportPage({
     name: string,
     spec: string,
     unit: string | null,
+    categoryName: string | null,
   ) {
     let group = groups.get(productId);
     if (!group) {
@@ -192,6 +187,7 @@ export default async function MonthlyReportPage({
         name,
         spec,
         unit,
+        categoryName,
         inQty: 0,
         inAmount: 0,
         outQty: 0,
@@ -210,7 +206,8 @@ export default async function MonthlyReportPage({
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
-    const group = ensureGroup(row.product_id, sku, productName, spec, unit);
+    const categoryName = row.products?.categories?.name ?? null;
+    const group = ensureGroup(row.product_id, sku, productName, spec, unit, categoryName);
     group.inQty += row.quantity;
     group.inAmount += amount;
     if (supplier) {
@@ -247,7 +244,8 @@ export default async function MonthlyReportPage({
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
-    const group = ensureGroup(row.product_id, sku, productName, spec, unit);
+    const categoryName = row.products?.categories?.name ?? null;
+    const group = ensureGroup(row.product_id, sku, productName, spec, unit, categoryName);
     group.outQty += quantity;
     group.outAmount += amount;
     if (customer) {
@@ -277,10 +275,8 @@ export default async function MonthlyReportPage({
   if (keyword) {
     itemGroups = itemGroups.filter(
       (g) =>
-        g.sku.toLowerCase().includes(keyword) ||
-        g.name.toLowerCase().includes(keyword) ||
-        g.spec.toLowerCase().includes(keyword) ||
-        g.details.some((d) => d.companyName.toLowerCase().includes(keyword)),
+        matchesSearch(keyword, g.sku, g.name, g.spec, g.categoryName) ||
+        g.details.some((d) => matchesSearch(keyword, d.companyName)),
     );
   }
 
@@ -318,6 +314,7 @@ export default async function MonthlyReportPage({
         sku: row.products?.sku ?? "-",
         productName: row.products?.name ?? "-",
         spec: row.products?.spec ?? "-",
+        categoryName: row.products?.categories?.name ?? null,
         unit: row.products?.unit ?? null,
         quantity: row.quantity,
         amount,
@@ -342,6 +339,7 @@ export default async function MonthlyReportPage({
         sku: row.products?.sku ?? "-",
         productName: row.products?.name ?? "-",
         spec: row.products?.spec ?? "-",
+        categoryName: row.products?.categories?.name ?? null,
         unit: row.products?.unit ?? null,
         quantity: row.quantity * sign,
         amount,
@@ -356,10 +354,14 @@ export default async function MonthlyReportPage({
   // 쓰면 검색어와 무관한 거래처 금액까지 분모에 섞여 비중이 실제보다 작게
   // 나온다.
   const purchaseCompanyRowsFiltered = keyword
-    ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    ? purchaseCompanyRows.filter((r) =>
+        matchesSearch(keyword, r.sku, r.productName, r.spec, r.categoryName, r.companyName),
+      )
     : purchaseCompanyRows;
   const salesCompanyRowsFiltered = keyword
-    ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    ? salesCompanyRows.filter((r) =>
+        matchesSearch(keyword, r.sku, r.productName, r.spec, r.categoryName, r.companyName),
+      )
     : salesCompanyRows;
   const supplierGroups =
     view === "supplier" ? buildCompanyGroups(purchaseCompanyRowsFiltered) : [];
@@ -503,7 +505,7 @@ export default async function MonthlyReportPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="품목명, SKU, 규격, 거래처명"
+            placeholder="품목명, SKU, 규격, 카테고리, 거래처명"
             className="erp-input"
             style={{ width: "100%" }}
           />

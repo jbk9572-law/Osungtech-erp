@@ -16,6 +16,7 @@ import {
 } from "@/lib/paper-calc-summary";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
+import { matchesSearch } from "@/lib/search-match";
 
 type DisplayRow = PurchaseRow;
 
@@ -76,14 +77,18 @@ export default async function PurchasesPage({
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
-    ? rawItems?.filter(
-        (item) =>
-          item.purchase_orders?.suppliers?.name
-            ?.toLowerCase()
-            .includes(keyword) ||
-          item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+    ? rawItems?.filter((item) =>
+        matchesSearch(
+          keyword,
+          item.purchase_orders?.suppliers?.name,
+          item.products?.name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.purchase_orders?.memo,
+          item.purchase_orders?.delivery_method,
+        ),
       )
     : rawItems;
 
@@ -198,11 +203,7 @@ export default async function PurchasesPage({
   }));
 
   const payments = keyword
-    ? rawPayments?.filter(
-        (p) =>
-          p.suppliers?.name?.toLowerCase().includes(keyword) ||
-          p.memo?.toLowerCase().includes(keyword),
-      )
+    ? rawPayments?.filter((p) => matchesSearch(keyword, p.suppliers?.name, p.memo))
     : rawPayments;
   const paymentRows: DisplayRow[] = (payments ?? []).map((p) => ({
     key: `payment-${p.id}`,
@@ -235,13 +236,19 @@ export default async function PurchasesPage({
     quantity: number;
     unit_cost: string | number;
     spec: string | null;
-    purchase_orders: { suppliers: { name: string | null } | null } | null;
+    lot_number: string | null;
+    remark: string | null;
+    purchase_orders: {
+      memo: string | null;
+      delivery_method: string | null;
+      suppliers: { name: string | null } | null;
+    } | null;
     products: { name: string | null; sku: string | null; spec: string | null } | null;
   }>((rangeFrom, rangeTo) => {
     let totalsQuery = supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, purchase_orders!inner(suppliers(name)), products(name, sku, spec)",
+        "quantity, unit_cost, spec, lot_number, remark, purchase_orders!inner(memo, delivery_method, suppliers(name)), products(name, sku, spec)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -249,12 +256,18 @@ export default async function PurchasesPage({
     return totalsQuery;
   });
   const filteredTotalsRows = keyword
-    ? totalsRows.filter(
-        (item) =>
-          item.purchase_orders?.suppliers?.name?.toLowerCase().includes(keyword) ||
-          item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+    ? totalsRows.filter((item) =>
+        matchesSearch(
+          keyword,
+          item.purchase_orders?.suppliers?.name,
+          item.products?.name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.purchase_orders?.memo,
+          item.purchase_orders?.delivery_method,
+        ),
       )
     : totalsRows;
 
@@ -337,7 +350,7 @@ export default async function PurchasesPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="공급처명, 상품명, SKU, 규격"
+            placeholder="공급처명, 상품명, SKU, 규격, 관리번호, 메모, 비고"
             className="erp-input"
             style={{ width: "100%" }}
           />

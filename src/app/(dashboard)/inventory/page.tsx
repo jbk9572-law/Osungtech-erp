@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 
 export default async function InventoryPage({
   searchParams,
@@ -56,11 +57,8 @@ export default async function InventoryPage({
 
   const keyword = q?.trim().toLowerCase();
   const stockRows = keyword
-    ? allStockRows.filter(
-        (row) =>
-          row.name.toLowerCase().includes(keyword) ||
-          row.sku.toLowerCase().includes(keyword) ||
-          (row.spec ?? "").toLowerCase().includes(keyword)
+    ? allStockRows.filter((row) =>
+        matchesSearch(keyword, row.name, row.sku, row.spec, row.categoryName, row.supplierName),
       )
     : allStockRows;
 
@@ -120,7 +118,7 @@ export default async function InventoryPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="상품명, SKU, 규격"
+            placeholder="상품명, SKU, 규격, 카테고리, 공급처"
             className="erp-input"
             style={{ width: "100%" }}
           />

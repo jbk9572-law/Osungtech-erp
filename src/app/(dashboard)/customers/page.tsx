@@ -5,6 +5,7 @@ import { CustomerGridTable } from "@/components/customer-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 import type { Database } from "@/types/database.types";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
@@ -22,13 +23,18 @@ export default async function CustomersPage({
 
   const keyword = q?.trim().toLowerCase();
   const customers = keyword
-    ? allCustomers.filter(
-        (c) =>
-          c.name.toLowerCase().includes(keyword) ||
-          (c.business_number ?? "").toLowerCase().includes(keyword) ||
-          (c.contact_name ?? "").toLowerCase().includes(keyword) ||
-          (c.phone ?? "").toLowerCase().includes(keyword) ||
-          (c.email ?? "").toLowerCase().includes(keyword)
+    ? allCustomers.filter((c) =>
+        matchesSearch(
+          keyword,
+          c.name,
+          c.business_number,
+          c.contact_name,
+          c.phone,
+          c.email,
+          c.representative_name,
+          c.address,
+          c.notes,
+        ),
       )
     : allCustomers;
 
@@ -69,7 +75,7 @@ export default async function CustomersPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="업체명, 사업자번호, 담당자, 연락처, 이메일"
+            placeholder="업체명, 사업자번호, 대표자, 담당자, 연락처, 이메일, 주소, 메모"
             className="erp-input"
             style={{ width: "100%" }}
           />

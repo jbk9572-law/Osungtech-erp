@@ -5,6 +5,7 @@ import { SupplierGridTable } from "@/components/supplier-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { importSuppliersExcel } from "@/app/(dashboard)/suppliers/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 import type { Database } from "@/types/database.types";
 
 type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
@@ -22,13 +23,18 @@ export default async function SuppliersPage({
 
   const keyword = q?.trim().toLowerCase();
   const suppliers = keyword
-    ? allSuppliers.filter(
-        (s) =>
-          s.name.toLowerCase().includes(keyword) ||
-          (s.business_number ?? "").toLowerCase().includes(keyword) ||
-          (s.contact_name ?? "").toLowerCase().includes(keyword) ||
-          (s.phone ?? "").toLowerCase().includes(keyword) ||
-          (s.email ?? "").toLowerCase().includes(keyword)
+    ? allSuppliers.filter((s) =>
+        matchesSearch(
+          keyword,
+          s.name,
+          s.business_number,
+          s.contact_name,
+          s.phone,
+          s.email,
+          s.representative_name,
+          s.address,
+          s.notes,
+        ),
       )
     : allSuppliers;
 
@@ -67,7 +73,7 @@ export default async function SuppliersPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="업체명, 사업자번호, 담당자, 연락처, 이메일"
+            placeholder="업체명, 사업자번호, 대표자, 담당자, 연락처, 이메일, 주소, 메모"
             className="erp-input"
             style={{ width: "100%" }}
           />

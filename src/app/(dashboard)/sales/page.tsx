@@ -16,6 +16,7 @@ import {
 } from "@/lib/paper-calc-summary";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
+import { matchesSearch } from "@/lib/search-match";
 
 type DisplayRow = SalesRow;
 
@@ -80,12 +81,18 @@ export default async function SalesPage({
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
-    ? rawItems?.filter(
-        (item) =>
-          item.sales_orders?.customers?.name?.toLowerCase().includes(keyword) ||
-          item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+    ? rawItems?.filter((item) =>
+        matchesSearch(
+          keyword,
+          item.sales_orders?.customers?.name,
+          item.products?.name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.sales_orders?.memo,
+          item.sales_orders?.delivery_method,
+        ),
       )
     : rawItems;
 
@@ -200,11 +207,7 @@ export default async function SalesPage({
   }));
 
   const payments = keyword
-    ? rawPayments?.filter(
-        (p) =>
-          p.customers?.name?.toLowerCase().includes(keyword) ||
-          p.memo?.toLowerCase().includes(keyword),
-      )
+    ? rawPayments?.filter((p) => matchesSearch(keyword, p.customers?.name, p.memo))
     : rawPayments;
   const collectionRows: DisplayRow[] = (payments ?? []).map((p) => ({
     key: `payment-${p.id}`,
@@ -239,8 +242,12 @@ export default async function SalesPage({
     quantity: number;
     unit_price: string | number;
     spec: string | null;
+    lot_number: string | null;
+    remark: string | null;
     sales_orders: {
       is_return: boolean;
+      memo: string | null;
+      delivery_method: string | null;
       customers: { name: string | null } | null;
     } | null;
     products: { name: string | null; sku: string | null; spec: string | null } | null;
@@ -248,7 +255,7 @@ export default async function SalesPage({
     let totalsQuery = supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, sales_orders!inner(is_return, customers(name)), products(name, sku, spec)",
+        "quantity, unit_price, spec, lot_number, remark, sales_orders!inner(is_return, memo, delivery_method, customers(name)), products(name, sku, spec)",
       )
       .gte("sales_orders.order_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -256,12 +263,18 @@ export default async function SalesPage({
     return totalsQuery;
   });
   const filteredTotalsRows = keyword
-    ? totalsRows.filter(
-        (item) =>
-          item.sales_orders?.customers?.name?.toLowerCase().includes(keyword) ||
-          item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+    ? totalsRows.filter((item) =>
+        matchesSearch(
+          keyword,
+          item.sales_orders?.customers?.name,
+          item.products?.name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.sales_orders?.memo,
+          item.sales_orders?.delivery_method,
+        ),
       )
     : totalsRows;
 
@@ -349,7 +362,7 @@ export default async function SalesPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="출고처명, 상품명, SKU, 규격"
+            placeholder="출고처명, 상품명, SKU, 규격, 관리번호, 메모, 비고"
             className="erp-input"
             style={{ width: "100%" }}
           />

@@ -6,6 +6,7 @@ import { importProductsExcel } from "@/app/(dashboard)/products/actions";
 import { buildListReturnParam } from "@/lib/list-return";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 
 export default async function ProductsPage({
   searchParams,
@@ -47,11 +48,8 @@ export default async function ProductsPage({
 
   const keyword = q?.trim().toLowerCase();
   const filteredProducts = keyword
-    ? allProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(keyword) ||
-          p.sku.toLowerCase().includes(keyword) ||
-          (p.spec ?? "").toLowerCase().includes(keyword)
+    ? allProducts.filter((p) =>
+        matchesSearch(keyword, p.name, p.sku, p.spec, p.categories?.name, p.suppliers?.name),
       )
     : allProducts;
 
@@ -107,7 +105,7 @@ export default async function ProductsPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="상품명, SKU, 규격"
+            placeholder="상품명, SKU, 규격, 카테고리, 공급처"
             className="erp-input"
             style={{ width: "100%" }}
           />

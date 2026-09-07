@@ -6,6 +6,7 @@ import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -42,6 +43,7 @@ export default async function TodosPage({
     fetchLimitedRows<{
       id: string;
       title: string;
+      memo: string;
       items: unknown;
       todo_type: string;
       ship_date: string | null;
@@ -57,7 +59,7 @@ export default async function TodosPage({
         supabase
           .from("todos")
           .select(
-            "id, title, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
+            "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
           )
           .order("done", { ascending: true })
           .order("due_date", { ascending: true, nullsFirst: false })
@@ -82,12 +84,11 @@ export default async function TodosPage({
 
   const keyword = q?.trim().toLowerCase();
   const rows = keyword
-    ? allRows.filter(
-        (r) =>
-          r.title.toLowerCase().includes(keyword) ||
-          (r.suppliers?.name ?? "").toLowerCase().includes(keyword) ||
-          (r.customers?.name ?? "").toLowerCase().includes(keyword),
-      )
+    ? allRows.filter((r) => {
+        const items = Array.isArray(r.items) ? (r.items as TodoItemInput[]) : [];
+        const itemNames = items.map((item) => productNameById.get(item.productId));
+        return matchesSearch(keyword, r.title, r.memo, r.suppliers?.name, r.customers?.name, ...itemNames);
+      })
     : allRows;
 
   // 요약카드는 검색어와도, 목록 표시 limit과도 무관하게 전체 할일 기준으로
@@ -175,7 +176,7 @@ export default async function TodosPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="제목, 공급처, 납품처"
+            placeholder="제목, 메모, 품목명, 공급처, 납품처"
             className="erp-input"
             style={{ width: "100%" }}
           />
