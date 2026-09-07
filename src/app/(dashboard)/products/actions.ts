@@ -235,10 +235,16 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   );
   const supplierByName = new Map(existingSuppliers.map((s) => [s.name.trim(), s.id]));
 
+  const existingCategories = await fetchAllRows<{ id: string; name: string }>((from, to) =>
+    supabase.from("categories").select("id, name").range(from, to),
+  );
+  const categoryByName = new Map(existingCategories.map((c) => [c.name.trim(), c.id]));
+
   const errors: ImportRowError[] = [];
   const parsedRows: {
     rowNum: number;
     supplierName: string | null;
+    categoryName: string | null;
     payload: {
       sku: string;
       name: string;
@@ -278,6 +284,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
     parsedRows.push({
       rowNum,
       supplierName: cell(row, "공급처") || null,
+      categoryName: cell(row, "카테고리") || null,
       payload: {
         sku,
         name,
@@ -306,10 +313,11 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         price: number | null;
         base_package_qty: number | null;
         supplier_id: string | null;
+        category_id: string | null;
       }>((from, to) =>
         supabase
           .from("products")
-          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id")
+          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id, category_id")
           .in("sku", skusInFile)
           .range(from, to),
       )
@@ -339,6 +347,26 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
     for (const s of createdSuppliers ?? []) supplierByName.set(s.name.trim(), s.id);
   }
 
+  // 공급처와 같은 방식으로, 파일에 있는데 아직 없는 카테고리 이름은
+  // 한 번에 모아 만든다.
+  const newCategoryNames = [
+    ...new Set(
+      parsedRows
+        .map((r) => r.categoryName)
+        .filter((name): name is string => Boolean(name) && !categoryByName.has(name!))
+    ),
+  ];
+  if (newCategoryNames.length > 0) {
+    const { data: createdCategories, error: categoryError } = await supabase
+      .from("categories")
+      .insert(newCategoryNames.map((name) => ({ name })))
+      .select("id, name");
+    if (categoryError) {
+      return { error: `카테고리 일괄 생성에 실패했습니다: ${categoryError.message}` };
+    }
+    for (const c of createdCategories ?? []) categoryByName.set(c.name.trim(), c.id);
+  }
+
   const productRows = parsedRows.map((r) => {
     const existing = existingBySku.get(r.payload.sku);
     return {
@@ -353,6 +381,9 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         supplier_id: r.supplierName
           ? (supplierByName.get(r.supplierName) ?? null)
           : (existing?.supplier_id ?? null),
+        category_id: r.categoryName
+          ? (categoryByName.get(r.categoryName) ?? null)
+          : (existing?.category_id ?? null),
       },
     };
   });

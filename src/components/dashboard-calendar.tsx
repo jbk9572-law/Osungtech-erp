@@ -27,6 +27,7 @@ import {
 export type ItemRow = {
   partnerName: string;
   productName: string;
+  categoryName: string | null;
   spec: string;
   unit: string;
   quantity: number;
@@ -65,7 +66,7 @@ type DayData = {
 
 type Cell = { dateStr: string; day: number } | null;
 
-type ProductGroup = { productName: string; items: ItemRow[] };
+export type ProductGroup = { productName: string; items: ItemRow[] };
 type PaperCalcBlock = {
   label: string | null;
   sizes: PaperCalcSizeRow[];
@@ -256,9 +257,9 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 // 표시되어 실제로는 50개만 산 B가 80개나 나간 것처럼 보임). 하루치
 // 수요를 풀 하나로 미리 모아두고, drawFromPool로 순서대로 빼 쓰면서
 // 뽑힌 만큼 풀에서 바로 차감해 이 중복을 막는다.
-type DestinationPool = Map<string, Map<string, number>>;
+export type DestinationPool = Map<string, Map<string, number>>;
 
-function buildDestinationPool(items: ItemRow[]): DestinationPool {
+export function buildDestinationPool(items: ItemRow[]): DestinationPool {
   const pool: DestinationPool = new Map();
   for (const item of items) {
     // 반품은 그 거래처로 나간 게 아니라 되돌아온 것이므로 수요 풀에서
@@ -299,6 +300,16 @@ function drawFromPool(
 
 const STOCK_PURCHASE_LABEL = "재고용 매입";
 const STOCK_SALE_LABEL = "재고분 출고";
+
+// 카테고리는 Paper/Material/Tray/Bobbin/Filter/Etc 여섯 가지이고, 이 중
+// Filter만 매입-매출 매칭(입고처/출고처/재고분출고 추적) 대상에서 뺀다 —
+// Filter는 개별 규격/거래처가 다양해서 같은 날 사고파는 매칭 정보가
+// 실무에 큰 의미가 없다는 판단. 나머지 다섯 카테고리는 전부 추적한다.
+// 카테고리가 아예 없는(null) 품목은 안전하게 미추적으로 둔다.
+const UNTRACKED_CATEGORY_NAMES = new Set(["Filter"]);
+function isTrackedCategory(categoryName: string | null): boolean {
+  return categoryName !== null && !UNTRACKED_CATEGORY_NAMES.has(categoryName);
+}
 
 // 예전엔 대괄호로 목적지를 감쌌는데(회사명 자체에 이미 "(주)"처럼 괄호가
 // 들어있는 경우가 많아 구분하려던 것), 콜론이 어떤 회사명과도 안 겹치면서
@@ -361,8 +372,8 @@ type LineGroup = {
   unit: string;
 };
 
-type LabeledItem = { item: ItemRow; note: string | null };
-type ItemLabelGroup = { label: string | null; items: LabeledItem[] };
+export type LabeledItem = { item: ItemRow; note: string | null };
+export type ItemLabelGroup = { label: string | null; items: LabeledItem[] };
 
 // 한 품목 안의 규격들을, 목적지(또는 재고 여부)별로 묶는다. 규격 하나가
 // 통째로 한 거래처(또는 재고)로만 갔으면 그 그룹 하나로, 일부는 거래처로
@@ -373,7 +384,7 @@ type ItemLabelGroup = { label: string | null; items: LabeledItem[] };
 // 오늘의 업무 패널)가 이 그룹핑을 그대로 같이 쓴다 — 문자열이 아니라
 // 원본 ItemRow를 담아서, 화면 쪽은 항목별 링크·금액을 그대로 보여줄 수
 // 있다.
-function groupProductItemsByLabel(
+export function groupProductItemsByLabel(
   product: ProductGroup,
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
@@ -396,10 +407,19 @@ function groupProductItemsByLabel(
     bucket(label, isStock).items.push(...items.map((item) => ({ item, note })));
   }
 
+  // Filter 카테고리(또는 카테고리 미지정)면 매입-매출 매칭 자체를 안 하고
+  // 있는 그대로 한 그룹으로만 보여준다(isTrackedCategory 위 주석 참고).
+  const isTracked = isTrackedCategory(product.items[0]?.categoryName ?? null);
+
   for (const specGroup of groupItemsBySpec(product.items)) {
     const quantity = specGroup.items.reduce((sum, it) => sum + it.quantity, 0);
     const unit = specGroup.items[0]?.unit ?? "";
     const isReturn = specGroup.items.some((it) => it.isReturn);
+
+    if (!isTracked) {
+      push(null, false, specGroup.items);
+      continue;
+    }
 
     if (matchPool) {
       const destinations = destinationsIncludingStock(product.productName, specGroup.spec, quantity, matchPool);
@@ -420,18 +440,28 @@ function groupProductItemsByLabel(
         push(d.partnerName, false, taken, note);
       });
     } else if (reversePool && !isReturn) {
-      const purchasedQuantity = drawFromPool(reversePool, product.productName, specGroup.spec, quantity).reduce(
-        (sum, d) => sum + d.quantity,
-        0,
-      );
-      if (purchasedQuantity >= quantity) {
-        push(null, false, specGroup.items);
-      } else if (purchasedQuantity <= 0) {
+      // 오늘 이 규격을 여러 공급처에서 나눠 샀을 수 있어서(예: A사 80개 +
+      // B사 20개), drawFromPool이 돌려주는 매입처별 내역 그대로 각각
+      // "매입처 -> 출고처" 줄로 쪼갠다 — 매입 쪽의 destinationsIncludingStock과
+      // 대칭되는 처리다. 출고처(고객명)는 이 품목 그룹 전체가 이미 같은
+      // 거래처로 묶여 있으므로 아무 항목에서나 partnerName을 가져오면 된다.
+      const customerName = specGroup.items[0]?.partnerName ?? "";
+      const origins = drawFromPool(reversePool, product.productName, specGroup.spec, quantity);
+      const purchasedQuantity = origins.reduce((sum, d) => sum + d.quantity, 0);
+
+      if (purchasedQuantity <= 0) {
         push(STOCK_SALE_LABEL, true, specGroup.items);
-      } else {
-        const { taken, rest } = takeItems(specGroup.items, purchasedQuantity);
-        push(null, false, taken);
-        push(STOCK_SALE_LABEL, true, rest);
+        continue;
+      }
+
+      let remaining = specGroup.items;
+      origins.forEach((o) => {
+        const { taken, rest } = takeItems(remaining, o.quantity);
+        remaining = rest;
+        push(`${o.partnerName} -> ${customerName}`, false, taken);
+      });
+      if (remaining.length) {
+        push(STOCK_SALE_LABEL, true, remaining);
       }
     } else {
       push(null, false, specGroup.items);

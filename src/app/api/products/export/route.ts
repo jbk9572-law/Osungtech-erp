@@ -1,6 +1,7 @@
 import { buildXlsxResponse } from "@/lib/xlsx-response";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 
 // 품목관리 엑셀 다운로드. 엑셀 일괄등록 템플릿과 같은 컬럼 순서로 내려줘서
 // 받은 파일을 그대로 수정해 다시 업로드할 수 있게 한다.
@@ -20,25 +21,23 @@ export async function GET(request: Request) {
     price: number | string;
     reorder_point: number | null;
     suppliers: { name: string | null } | null;
+    categories: { name: string | null } | null;
   }>((from, to) =>
     supabase
       .from("products")
-      .select("*, suppliers(name)")
+      .select("*, suppliers(name), categories(name)")
       .order("created_at", { ascending: false })
       .range(from, to),
   );
 
   const products = data.filter((p) => {
     if (!q) return true;
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.sku.toLowerCase().includes(q) ||
-      (p.spec ?? "").toLowerCase().includes(q)
-    );
+    return matchesSearch(q, p.name, p.sku, p.spec, p.categories?.name, p.suppliers?.name);
   });
 
   const rows = products.map((p) => ({
     sku: p.sku,
+    카테고리: p.categories?.name ?? "",
     공급처: p.suppliers?.name ?? "",
     품목명: p.name,
     규격: p.spec ?? "",

@@ -91,14 +91,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
+        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
+        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -162,6 +162,10 @@ export default async function DashboardPage({
   type ItemRow = {
     partnerName: string;
     productName: string;
+    // 간지/원재료 카테고리 품목만 매입-매출 매칭(입고처/출고처/재고분출고)을
+    // 추적한다 — 일반 품목까지 다 추적하면 정보가 너무 많아서 오히려
+    // "오늘의 업무"를 한눈에 보기 어렵다는 피드백으로 범위를 좁혔다.
+    categoryName: string | null;
     spec: string;
     unit: string;
     quantity: number;
@@ -268,6 +272,7 @@ export default async function DashboardPage({
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
       productName: item.products?.name ?? "상품 미상",
+      categoryName: item.products?.categories?.name ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
@@ -296,6 +301,7 @@ export default async function DashboardPage({
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? "상품 미상",
+      categoryName: item.products?.categories?.name ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
