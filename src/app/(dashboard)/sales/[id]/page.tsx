@@ -285,7 +285,7 @@ export default async function SaleDetailPage({
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.products?.sku}
                   </td>
-                  <td>{row.products?.name}</td>
+                  <td>{row.products?.name ?? row.custom_name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.spec || row.products?.spec || "-"}
                   </td>

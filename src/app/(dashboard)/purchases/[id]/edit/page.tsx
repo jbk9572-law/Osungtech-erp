@@ -34,7 +34,7 @@ export default async function EditPurchasePage({
     supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("purchase_order_items")
-      .select("product_id, spec, quantity, unit_cost, remark, lot_number")
+      .select("product_id, custom_name, spec, quantity, unit_cost, remark, lot_number")
       .eq("purchase_order_id", id)
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
@@ -91,7 +91,9 @@ export default async function EditPurchasePage({
     );
   }
 
-  const priceHistory = (history ?? []).map((row) => ({
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
     supplierId: row.purchase_orders.supplier_id,
     productId: row.product_id,
     unitCost: Number(row.unit_cost),
@@ -140,6 +142,7 @@ export default async function EditPurchasePage({
           isCarryover: order.is_carryover,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
+            customName: item.custom_name,
             spec: item.spec,
             quantity: item.quantity,
             unitCost: Number(item.unit_cost),

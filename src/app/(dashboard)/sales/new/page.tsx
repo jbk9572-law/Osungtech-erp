@@ -52,13 +52,15 @@ export default async function NewSalePage() {
       .limit(1000),
   ]);
 
-  const priceHistory = (history ?? []).map((row) => ({
-    customerId: row.sales_orders.customer_id,
-    productId: row.product_id,
-    unitPrice: Number(row.unit_price),
-    orderDate: row.sales_orders.order_date,
-    lotNumber: row.lot_number,
-  }));
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
+      customerId: row.sales_orders.customer_id,
+      productId: row.product_id,
+      unitPrice: Number(row.unit_price),
+      orderDate: row.sales_orders.order_date,
+      lotNumber: row.lot_number,
+    }));
 
   return (
     <div>

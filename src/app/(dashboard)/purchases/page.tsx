@@ -82,6 +82,7 @@ export default async function PurchasesPage({
           keyword,
           item.purchase_orders?.suppliers?.name,
           item.products?.name,
+          item.custom_name,
           item.products?.sku,
           item.spec || item.products?.spec,
           item.lot_number,
@@ -142,7 +143,7 @@ export default async function PurchasesPage({
               )
             : [];
         const itemDetail: PurchaseRowItem = {
-          productLabel: item.products?.name ?? "-",
+          productLabel: item.products?.name ?? item.custom_name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           lotNumber: item.lot_number,
           remark: item.remark,
@@ -164,7 +165,7 @@ export default async function PurchasesPage({
             date: item.purchase_orders?.purchase_date,
             supplierName: item.purchase_orders?.suppliers?.name,
             authorName: item.purchase_orders?.profiles?.full_name,
-            productLabel: item.products?.name ?? "-",
+            productLabel: item.products?.name ?? item.custom_name ?? "-",
             spec: item.spec || item.products?.spec || "-",
             lotNumber: item.lot_number,
             remark: item.remark,
@@ -238,6 +239,7 @@ export default async function PurchasesPage({
     spec: string | null;
     lot_number: string | null;
     remark: string | null;
+    custom_name: string | null;
     purchase_orders: {
       memo: string | null;
       delivery_method: string | null;
@@ -248,7 +250,7 @@ export default async function PurchasesPage({
     let totalsQuery = supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, lot_number, remark, purchase_orders!inner(memo, delivery_method, suppliers(name)), products(name, sku, spec)",
+        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, suppliers(name)), products(name, sku, spec)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -261,6 +263,7 @@ export default async function PurchasesPage({
           keyword,
           item.purchase_orders?.suppliers?.name,
           item.products?.name,
+          item.custom_name,
           item.products?.sku,
           item.spec || item.products?.spec,
           item.lot_number,

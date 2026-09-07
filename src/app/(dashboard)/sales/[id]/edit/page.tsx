@@ -35,7 +35,7 @@ export default async function EditSalePage({
     supabase.from("sales_orders").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select("product_id, spec, quantity, unit_price, remark, lot_number")
+      .select("product_id, custom_name, spec, quantity, unit_price, remark, lot_number")
       .eq("sales_order_id", id)
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
@@ -95,13 +95,15 @@ export default async function EditSalePage({
     );
   }
 
-  const priceHistory = (history ?? []).map((row) => ({
-    customerId: row.sales_orders.customer_id,
-    productId: row.product_id,
-    unitPrice: Number(row.unit_price),
-    orderDate: row.sales_orders.order_date,
-    lotNumber: row.lot_number,
-  }));
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
+      customerId: row.sales_orders.customer_id,
+      productId: row.product_id,
+      unitPrice: Number(row.unit_price),
+      orderDate: row.sales_orders.order_date,
+      lotNumber: row.lot_number,
+    }));
 
   return (
     <div>
@@ -150,6 +152,7 @@ export default async function EditSalePage({
           isCarryover: order.is_carryover,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
+            customName: item.custom_name,
             spec: item.spec,
             quantity: item.quantity,
             unitPrice: Number(item.unit_price),

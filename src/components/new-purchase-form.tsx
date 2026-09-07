@@ -52,6 +52,13 @@ type Product = {
 type Row = {
   key: number;
   productId: string;
+  // 품목마스터 없이 1회성으로 입력하는 줄(예: "소프너 교체")일 때만 쓴다 —
+  // productId는 빈 문자열로 두고 이 이름을 그대로 저장한다. 재고 연동 없이
+  // 매입 합계에만 잡힌다(inventory_transactions은 생성되지 않음). "매출도
+  // 같이 등록"(alsoCreateSale) 모드에서는 서버에서 막고 있어 이 폼에서도
+  // 그 모드일 때는 켤 수 없다.
+  customName: string;
+  isCustomEntry: boolean;
   spec: string;
   manualSpec: boolean;
   lotNumber: string;
@@ -91,7 +98,8 @@ export type PurchaseInitial = {
   docNo?: number | null;
   isCarryover?: boolean;
   items: {
-    productId: string;
+    productId: string | null;
+    customName?: string | null;
     spec?: string | null;
     quantity: number;
     unitCost: number;
@@ -264,13 +272,15 @@ export function NewPurchaseForm({
     initial?.items.length
       ? initial.items.map((item, i) => ({
           key: i,
-          productId: item.productId,
+          productId: item.productId ?? "",
+          customName: item.customName ?? "",
+          isCustomEntry: !item.productId && !!item.customName,
           spec: item.spec ?? "",
-          manualSpec: Boolean(item.spec),
+          manualSpec: Boolean(item.spec) || (!item.productId && !!item.customName),
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitCost: item.unitCost,
-          manualPrice: false,
+          manualPrice: !item.productId && !!item.customName,
           remark: item.remark ?? "",
           saleQuantity: item.quantity,
           manualSaleQuantity: false,
@@ -283,6 +293,8 @@ export function NewPurchaseForm({
             return {
               key: i,
               productId: item.productId,
+              customName: "",
+              isCustomEntry: false,
               spec: product?.spec ?? "",
               manualSpec: false,
               lotNumber: "",
@@ -300,6 +312,8 @@ export function NewPurchaseForm({
           {
             key: 0,
             productId: "",
+            customName: "",
+            isCustomEntry: false,
             spec: "",
             manualSpec: false,
             lotNumber: "",
@@ -492,6 +506,8 @@ export function NewPurchaseForm({
       {
         key: nextKey,
         productId: "",
+        customName: "",
+        isCustomEntry: false,
         spec: "",
         manualSpec: false,
         lotNumber: "",
@@ -516,6 +532,8 @@ export function NewPurchaseForm({
     const newRow: Row = {
       key: nextKey,
       productId,
+      customName: "",
+      isCustomEntry: false,
       spec: product?.spec ?? "",
       manualSpec: false,
       lotNumber: getRecentLotNumber(supplierId, productId) ?? "",
@@ -546,6 +564,8 @@ export function NewPurchaseForm({
       const newRow: Row = {
         key: nextKey,
         productId: "",
+        customName: "",
+        isCustomEntry: false,
         spec: "",
         manualSpec: false,
         lotNumber: "",
@@ -649,6 +669,8 @@ export function NewPurchaseForm({
         return {
           key: nextKey + i,
           productId: item.productId,
+          customName: "",
+          isCustomEntry: false,
           spec: item.spec ?? product?.spec ?? "",
           manualSpec: Boolean(item.spec),
           lotNumber: item.lotNumber ?? "",
@@ -689,7 +711,11 @@ export function NewPurchaseForm({
 
   // 화면에 보여주는 합계가 실제 제출되는(itemsJson) 값과 항상 같도록,
   // 제출에서 제외되는 행(품목 미선택, 수량 0 이하)은 합계에서도 뺀다.
-  const submittedRows = rows.filter((row) => row.productId && row.quantity > 0);
+  const submittedRows = rows.filter(
+    (row) =>
+      (row.productId || (row.isCustomEntry && row.customName.trim())) &&
+      row.quantity > 0,
+  );
   const supplyAmount = submittedRows.reduce(
     (sum, row) => sum + row.quantity * row.unitCost,
     0,
@@ -700,7 +726,8 @@ export function NewPurchaseForm({
   const itemsJson = JSON.stringify(
     submittedRows
       .map((row) => ({
-        productId: row.productId,
+        productId: row.productId || null,
+        customName: row.productId ? null : row.customName.trim() || null,
         // 직접입력이 아니면 규격을 스냅샷으로 고정하지 않고 null로 저장해서,
         // 품목관리에서 마스터 규격을 나중에 고쳐도 계속 최신값을 따라가게 한다.
         spec: row.manualSpec ? row.spec : null,
@@ -1015,7 +1042,30 @@ export function NewPurchaseForm({
                   <input
                     type="checkbox"
                     checked={alsoCreateSale}
-                    onChange={(e) => setAlsoCreateSale(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setAlsoCreateSale(checked);
+                      // 매입+출고 동시등록은 직접입력(품목없이) 줄을 서버에서
+                      // 막고 있다 — 이미 직접입력으로 켜둔 줄이 있으면 켜는
+                      // 순간 일반 빈 줄로 되돌린다.
+                      if (checked) {
+                        setRows((prev) =>
+                          prev.map((row) =>
+                            row.isCustomEntry
+                              ? {
+                                  ...row,
+                                  isCustomEntry: false,
+                                  customName: "",
+                                  spec: "",
+                                  manualSpec: false,
+                                  manualPrice: false,
+                                  unitCost: 0,
+                                }
+                              : row,
+                          ),
+                        );
+                      }
+                    }}
                   />
                   매출도 같이 등록 (당일출고)
                 </label>
@@ -1446,31 +1496,76 @@ export function NewPurchaseForm({
                 return (
                   <tr key={row.key}>
                     <td>
-                      <ProductSearchSelect
-                        products={products}
-                        value={row.productId}
-                        onChange={(productId) =>
-                          handleProductChange(row.key, productId)
-                        }
-                      />
-                      {row.productId &&
-                        resolveSupplierNote(supplierId, row.productId) && (
-                          <div
-                            className="mt-1"
-                            style={{
-                              padding: "4px 8px",
-                              fontSize: 11.5,
-                              color: "var(--erp-info-text)",
-                              background: "var(--erp-info-bg)",
-                              border: "1px solid var(--erp-info-border)",
-                              borderRadius: 4,
-                              whiteSpace: "normal",
-                              wordBreak: "break-word",
+                      {row.isCustomEntry ? (
+                        <input
+                          type="text"
+                          placeholder="품목명 직접입력 (예: 소프너 교체)"
+                          aria-label="품목명 직접입력"
+                          value={row.customName}
+                          onChange={(e) =>
+                            updateRow(row.key, { customName: e.target.value })
+                          }
+                          className="erp-input w-full"
+                        />
+                      ) : (
+                        <>
+                          <ProductSearchSelect
+                            products={products}
+                            value={row.productId}
+                            onChange={(productId) =>
+                              handleProductChange(row.key, productId)
+                            }
+                          />
+                          {row.productId &&
+                            resolveSupplierNote(supplierId, row.productId) && (
+                              <div
+                                className="mt-1"
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11.5,
+                                  color: "var(--erp-info-text)",
+                                  background: "var(--erp-info-bg)",
+                                  border: "1px solid var(--erp-info-border)",
+                                  borderRadius: 4,
+                                  whiteSpace: "normal",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                품목 특이사항: {resolveSupplierNote(supplierId, row.productId)}
+                              </div>
+                            )}
+                        </>
+                      )}
+                      {!alsoCreateSale && (
+                        <label
+                          className="mt-1 flex items-center gap-1 text-[10.5px]"
+                          style={{ color: "var(--erp-text-muted)" }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={row.isCustomEntry}
+                            onChange={(e) => {
+                              const isCustomEntry = e.target.checked;
+                              updateRow(row.key, isCustomEntry
+                                ? {
+                                    isCustomEntry,
+                                    productId: "",
+                                    manualSpec: true,
+                                    manualPrice: true,
+                                  }
+                                : {
+                                    isCustomEntry,
+                                    customName: "",
+                                    spec: "",
+                                    manualSpec: false,
+                                    manualPrice: false,
+                                    unitCost: 0,
+                                  });
                             }}
-                          >
-                            품목 특이사항: {resolveSupplierNote(supplierId, row.productId)}
-                          </div>
-                        )}
+                          />
+                          품목없이 직접입력
+                        </label>
+                      )}
                     </td>
                     <td>
                       <input

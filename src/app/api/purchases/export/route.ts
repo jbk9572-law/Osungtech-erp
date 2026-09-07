@@ -74,7 +74,7 @@ export async function GET(request: Request) {
       .filter((item) => item.purchase_orders?.supplier_id === templatedSupplier!.id)
       .map((item) => ({
         date: item.purchase_orders?.purchase_date ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
@@ -109,6 +109,7 @@ export async function GET(request: Request) {
       q,
       item.purchase_orders?.suppliers?.name,
       item.products?.name,
+      item.custom_name,
       item.products?.sku,
       item.spec || item.products?.spec,
       item.lot_number,
@@ -125,7 +126,7 @@ export async function GET(request: Request) {
       매입일자: item.purchase_orders?.purchase_date ?? "",
       공급처명: item.purchase_orders?.suppliers?.name ?? "",
       SKU: item.products?.sku ?? "",
-      품목명: item.products?.name ?? "",
+      품목명: item.products?.name ?? item.custom_name ?? "",
       규격: item.spec || item.products?.spec || "",
       단위: item.products?.unit ?? "",
       수량: item.quantity,

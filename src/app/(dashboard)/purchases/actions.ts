@@ -22,6 +22,12 @@ import { normalizeLotNumber } from "@/lib/lot-number";
 
 type PurchaseItemInput = {
   productId: string;
+  // 품목관리에 등록하지 않고 그 자리에서 이름만 직접 입력하는 1회성 줄
+  // (예: "소프너 교체" 같은 서비스/청구 항목) — productId가 비어있으면
+  // 이 값이 있어야 한다. 재고 반영/품목 연결이 전혀 없다. "매입+출고
+  // 동시등록"(alsoCreateSale)에서는 당일 매칭 대상이 실제 품목이어야
+  // 하므로 이 값이 있는 줄은 허용하지 않는다(아래 검증).
+  customName?: string | null;
   spec?: string | null;
   quantity: number;
   unitCost: number;
@@ -41,7 +47,7 @@ type SaleItemInput = {
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as PurchaseItemInput[];
-    return items.filter((item) => item.productId && item.quantity > 0);
+    return items.filter((item) => (item.productId || item.customName) && item.quantity > 0);
   } catch {
     return null;
   }
@@ -98,7 +104,11 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
 
-  return (data ?? []).map((item) => ({
+  // 직접입력(품목 미연결) 줄은 연결할 품목이 없어 "가져오기" 대상이 될 수
+  // 없으므로 제외한다.
+  return (data ?? [])
+    .filter((item): item is typeof item & { product_id: string } => item.product_id !== null)
+    .map((item) => ({
     id: item.id,
     productId: item.product_id,
     productName: item.products?.name ?? "상품 미상",
@@ -189,6 +199,11 @@ export async function createPurchase(
   }
   if (alsoCreateSale && !saleCustomerId) {
     return { error: "매출도 같이 등록하려면 출고처를 선택해주세요." };
+  }
+  // 직접입력(품목 미연결) 줄은 당일 매입-매출을 같은 품목으로 매칭하는
+  // 개념 자체가 성립하지 않으므로 매입+출고 동시등록에서는 허용하지 않는다.
+  if (alsoCreateSale && items.some((item) => !item.productId)) {
+    return { error: "매입+출고 동시등록에서는 직접입력 품목을 쓸 수 없습니다. 품목을 선택해주세요." };
   }
   if (alsoCreateSale && !saleItems) {
     return { error: "출고 품목 정보를 처리하지 못했습니다." };
@@ -297,7 +312,8 @@ export async function createPurchase(
       p_memo: memo,
       p_created_by: user?.id ?? null,
       p_items: items.map((item) => ({
-        productId: item.productId,
+        productId: item.productId || null,
+        customName: item.productId ? null : item.customName || null,
         spec: item.spec || null,
         quantity: item.quantity,
         unitCost: item.unitCost,
@@ -472,7 +488,8 @@ export async function updatePurchase(
     p_memo: memo,
     p_updated_by: user?.id ?? null,
     p_items: items.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || null,
+      customName: item.productId ? null : item.customName || null,
       spec: item.spec || null,
       quantity: item.quantity,
       unitCost: item.unitCost,
@@ -490,9 +507,11 @@ export async function updatePurchase(
   }
 
   const costUpdateResults = await Promise.all(
-    items.map((item) =>
-      supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
-    )
+    items
+      .filter((item) => item.productId)
+      .map((item) =>
+        supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
+      )
   );
   for (const { error: costError } of costUpdateResults) {
     if (costError) console.error("품목 매입단가 갱신 실패:", costError.message);

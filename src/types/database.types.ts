@@ -802,7 +802,8 @@ export type Database = {
         Row: {
           id: string;
           sales_order_id: string;
-          product_id: string;
+          product_id: string | null;
+          custom_name: string | null;
           spec: string | null;
           quantity: number;
           unit_price: number;
@@ -813,7 +814,8 @@ export type Database = {
         Insert: {
           id?: string;
           sales_order_id: string;
-          product_id: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity: number;
           unit_price?: number;
@@ -824,7 +826,8 @@ export type Database = {
         Update: {
           id?: string;
           sales_order_id?: string;
-          product_id?: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity?: number;
           unit_price?: number;
@@ -917,7 +920,8 @@ export type Database = {
         Row: {
           id: string;
           purchase_order_id: string;
-          product_id: string;
+          product_id: string | null;
+          custom_name: string | null;
           spec: string | null;
           quantity: number;
           unit_cost: number;
@@ -928,7 +932,8 @@ export type Database = {
         Insert: {
           id?: string;
           purchase_order_id: string;
-          product_id: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity: number;
           unit_cost?: number;
@@ -939,7 +944,8 @@ export type Database = {
         Update: {
           id?: string;
           purchase_order_id?: string;
-          product_id?: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity?: number;
           unit_cost?: number;

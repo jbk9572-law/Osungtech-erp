@@ -66,7 +66,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -102,7 +102,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -140,7 +140,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -222,7 +222,7 @@ export default async function SalesPrintPage({
       id: item.id,
       monthDay: `${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`,
       productLabel: (() => {
-        const name = item.products?.name ?? "";
+        const name = item.products?.name ?? item.custom_name ?? "";
         const spec = item.spec || item.products?.spec;
         const base = spec ? `${name} / ${spec}` : name;
         return showLot && item.lot_number ? `${base} / ${item.lot_number}` : base;

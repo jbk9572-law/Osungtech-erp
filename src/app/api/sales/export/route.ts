@@ -62,7 +62,7 @@ export async function GET(request: Request) {
       .filter((item) => item.sales_orders?.customer_id === templatedCustomer!.id)
       .map((item) => ({
         date: item.sales_orders?.order_date ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
@@ -90,6 +90,7 @@ export async function GET(request: Request) {
       q,
       item.sales_orders?.customers?.name,
       item.products?.name,
+      item.custom_name,
       item.products?.sku,
       item.spec || item.products?.spec,
       item.lot_number,
@@ -111,7 +112,7 @@ export async function GET(request: Request) {
       구분: isReturn ? "반품" : "매출",
       출고처명: item.sales_orders?.customers?.name ?? "",
       SKU: item.products?.sku ?? "",
-      품목명: item.products?.name ?? "",
+      품목명: item.products?.name ?? item.custom_name ?? "",
       규격: item.spec || item.products?.spec || "",
       단위: item.products?.unit ?? "",
       수량: item.quantity * sign,

@@ -200,6 +200,9 @@ export default async function MonthlyReportPage({
   }
 
   for (const row of purchaseRows ?? []) {
+    // 직접입력(품목 미연결) 줄은 이 리포트가 다루는 "품목별 실적" 개념에
+    // 안 맞아서 제외한다 — 금액은 매입 목록/오늘의 업무에는 정상 반영된다.
+    if (!row.product_id) continue;
     const supplier = row.purchase_orders?.suppliers;
     const amount = row.quantity * Number(row.unit_cost);
     const sku = row.products?.sku ?? "-";
@@ -233,6 +236,8 @@ export default async function MonthlyReportPage({
   }
 
   for (const row of salesRows ?? []) {
+    // 직접입력(품목 미연결) 줄은 제외한다(위 매입 루프와 같은 이유).
+    if (!row.product_id) continue;
     const customer = row.sales_orders?.customers;
     // 반품 건은 수량/금액을 음수로 뒤집어서 반영한다 — 그래야 "출고수량"이
     // 실제로 순유출된 양을 뜻하고, "재고 순증감"(입고-출고) 계산도 반품으로

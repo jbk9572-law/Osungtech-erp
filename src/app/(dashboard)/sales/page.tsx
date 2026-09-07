@@ -86,6 +86,7 @@ export default async function SalesPage({
           keyword,
           item.sales_orders?.customers?.name,
           item.products?.name,
+          item.custom_name,
           item.products?.sku,
           item.spec || item.products?.spec,
           item.lot_number,
@@ -145,7 +146,7 @@ export default async function SalesPage({
               )
             : [];
         const itemDetail: SalesRowItem = {
-          productLabel: item.products?.name ?? "-",
+          productLabel: item.products?.name ?? item.custom_name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           lotNumber: item.lot_number,
           remark: item.remark,
@@ -167,7 +168,7 @@ export default async function SalesPage({
             date: item.sales_orders?.order_date,
             customerName: item.sales_orders?.customers?.name,
             authorName: item.sales_orders?.profiles?.full_name,
-            productLabel: item.products?.name ?? "-",
+            productLabel: item.products?.name ?? item.custom_name ?? "-",
             spec: item.spec || item.products?.spec || "-",
             lotNumber: item.lot_number,
             remark: item.remark,
@@ -244,6 +245,7 @@ export default async function SalesPage({
     spec: string | null;
     lot_number: string | null;
     remark: string | null;
+    custom_name: string | null;
     sales_orders: {
       is_return: boolean;
       memo: string | null;
@@ -255,7 +257,7 @@ export default async function SalesPage({
     let totalsQuery = supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, lot_number, remark, sales_orders!inner(is_return, memo, delivery_method, customers(name)), products(name, sku, spec)",
+        "quantity, unit_price, spec, lot_number, remark, custom_name, sales_orders!inner(is_return, memo, delivery_method, customers(name)), products(name, sku, spec)",
       )
       .gte("sales_orders.order_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -268,6 +270,7 @@ export default async function SalesPage({
           keyword,
           item.sales_orders?.customers?.name,
           item.products?.name,
+          item.custom_name,
           item.products?.sku,
           item.spec || item.products?.spec,
           item.lot_number,

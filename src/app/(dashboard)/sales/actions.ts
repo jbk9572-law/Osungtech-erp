@@ -18,6 +18,10 @@ import { normalizeLotNumber } from "@/lib/lot-number";
 
 type SaleItemInput = {
   productId: string;
+  // 품목관리에 등록하지 않고 그 자리에서 이름만 직접 입력하는 1회성 줄
+  // (예: "소프너 교체" 같은 서비스/청구 항목) — productId가 비어있으면
+  // 이 값이 있어야 한다. 재고 반영/품목 연결이 전혀 없다.
+  customName?: string | null;
   spec?: string | null;
   quantity: number;
   unitPrice: number;
@@ -28,7 +32,7 @@ type SaleItemInput = {
 function parseItems(itemsRaw: string): SaleItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as SaleItemInput[];
-    return items.filter((item) => item.productId && item.quantity > 0);
+    return items.filter((item) => (item.productId || item.customName) && item.quantity > 0);
   } catch {
     return null;
   }
@@ -86,7 +90,8 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     p_memo: memo,
     p_created_by: user?.id ?? null,
     p_items: items.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || null,
+      customName: item.productId ? null : item.customName || null,
       spec: item.spec || null,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
@@ -105,9 +110,10 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  if (items.length > 0) {
+  const itemsWithProduct = items.filter((item) => item.productId);
+  if (itemsWithProduct.length > 0) {
     const priceResults = await Promise.all(
-      items.map((item) =>
+      itemsWithProduct.map((item) =>
         supabase.from("customer_product_prices").upsert(
           {
             customer_id: customerId,
@@ -220,7 +226,8 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     p_memo: memo,
     p_updated_by: user?.id ?? null,
     p_items: items.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || null,
+      customName: item.productId ? null : item.customName || null,
       spec: item.spec || null,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
@@ -240,7 +247,9 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   }
 
   const priceResults = await Promise.all(
-    items.map((item) =>
+    items
+      .filter((item) => item.productId)
+      .map((item) =>
       supabase.from("customer_product_prices").upsert(
         {
           customer_id: customerId,

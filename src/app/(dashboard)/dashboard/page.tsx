@@ -91,14 +91,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
+        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
+        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -271,7 +271,7 @@ export default async function DashboardPage({
     }
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
-      productName: item.products?.name ?? "상품 미상",
+      productName: item.products?.name ?? item.custom_name ?? "상품 미상",
       categoryName: item.products?.categories?.name ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
@@ -300,7 +300,7 @@ export default async function DashboardPage({
     }
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
-      productName: item.products?.name ?? "상품 미상",
+      productName: item.products?.name ?? item.custom_name ?? "상품 미상",
       categoryName: item.products?.categories?.name ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",

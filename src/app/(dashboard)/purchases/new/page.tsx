@@ -90,13 +90,15 @@ export default async function NewPurchasePage({
         .limit(1000),
     ]);
 
-  const priceHistory = (history ?? []).map((row) => ({
-    supplierId: row.purchase_orders.supplier_id,
-    productId: row.product_id,
-    unitCost: Number(row.unit_cost),
-    purchaseDate: row.purchase_orders.purchase_date,
-    lotNumber: row.lot_number,
-  }));
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
+      supplierId: row.purchase_orders.supplier_id,
+      productId: row.product_id,
+      unitCost: Number(row.unit_cost),
+      purchaseDate: row.purchase_orders.purchase_date,
+      lotNumber: row.lot_number,
+    }));
 
   return (
     <div>
