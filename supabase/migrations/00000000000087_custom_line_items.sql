@@ -5,21 +5,40 @@
 -- custom_name을 추가한다. 최소 하나는 있어야 화면에 이름 없는 줄이
 -- 생기지 않는다.
 
-alter table public.sales_order_items
-  alter column product_id drop not null,
-  add column custom_name text;
+-- 이 아래는 재실행해도 안전하도록(IF NOT EXISTS / 존재 여부 확인 후 추가)
+-- 짰다 — 앞부분만 실행된 채로 중간에 실패해도 처음부터 다시 돌리면 된다.
 
 alter table public.sales_order_items
-  add constraint sales_order_items_product_or_name
-  check (product_id is not null or custom_name is not null);
+  alter column product_id drop not null;
+alter table public.sales_order_items
+  add column if not exists custom_name text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'sales_order_items_product_or_name'
+  ) then
+    alter table public.sales_order_items
+      add constraint sales_order_items_product_or_name
+      check (product_id is not null or custom_name is not null);
+  end if;
+end $$;
 
 alter table public.purchase_order_items
-  alter column product_id drop not null,
-  add column custom_name text;
-
+  alter column product_id drop not null;
 alter table public.purchase_order_items
-  add constraint purchase_order_items_product_or_name
-  check (product_id is not null or custom_name is not null);
+  add column if not exists custom_name text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'purchase_order_items_product_or_name'
+  ) then
+    alter table public.purchase_order_items
+      add constraint purchase_order_items_product_or_name
+      check (product_id is not null or custom_name is not null);
+  end if;
+end $$;
 
 -- inventory_transactions.product_id는 계속 not null이다 — 직접입력 줄은
 -- 애초에 재고 이력 자체를 안 남긴다(아래 RPC들에서 product_id가 있는
