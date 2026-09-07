@@ -26,64 +26,67 @@ const TREE: GroupItem[] = MENU_GROUPS;
 const ICON_STROKE = {
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 1.8,
+  strokeWidth: 1.6,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
   viewBox: "0 0 24 24",
 };
 
+// 재미나이 제안으로 처음 아이콘을 만들었을 때 좌표를 손대충(12.6, 3.2,
+// .5.5 같은 임의의 소수점) 잡아서 "AI가 그린 티가 난다"는 피드백을
+// 받았다 — 정수/반정수 좌표로만 다시 그려서 훨씬 정돈된 느낌으로
+// 바꿨다(페더/루사이드 같은 실제 아이콘셋이 쓰는 격자 방식과 동일).
 const GROUP_ICONS: Record<string, ReactNode> = {
   "메인 대시보드": (
     <svg {...ICON_STROKE}>
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5 10v9h14v-9" />
-      <path d="M9.5 19v-5h5v5" />
+      <path d="M4 11 12 4l8 7" />
+      <path d="M6 10v9h12v-9" />
+      <path d="M10 19v-5h4v5" />
     </svg>
   ),
   매출관리: (
     <svg {...ICON_STROKE}>
-      <path d="M4 17 10 11l4 4 6-7" />
-      <path d="M14.5 8H20v5.5" />
+      <path d="M6 16 16 6" />
+      <path d="M9 6h7v7" />
     </svg>
   ),
   매입관리: (
     <svg {...ICON_STROKE}>
-      <path d="M4 8l6 6 4-4 6 7" />
-      <path d="M14.5 17H20v-5.5" />
+      <path d="M16 6 6 16" />
+      <path d="M6 9v7h7" />
     </svg>
   ),
   재고관리: (
     <svg {...ICON_STROKE}>
-      <path d="M12 3 4 7.5V16.5L12 21l8-4.5V7.5z" />
-      <path d="M4 7.5 12 12l8-4.5" />
-      <path d="M12 12v9" />
+      <path d="M12 3 4 7v10l8 4 8-4V7z" />
+      <path d="M4 7l8 4 8-4" />
+      <path d="M12 11v10" />
     </svg>
   ),
   품목관리: (
     <svg {...ICON_STROKE}>
-      <path d="M12.6 3.2 20 10.6c.5.5.5 1.4 0 2L14 18.6c-.6.6-1.5.6-2 0L4.6 11.2c-.3-.3-.4-.6-.4-1V4.6c0-.6.4-1 1-1H10c.4 0 .8.2 1 .4z" />
-      <circle cx="8.2" cy="8.2" r="1.4" />
+      <path d="M4 5h9l7 7-9 9-7-7z" />
+      <circle cx="8" cy="9" r="1.5" />
     </svg>
   ),
   거래처관리: (
     <svg {...ICON_STROKE}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3.5 19c.6-3 2.7-5 5.5-5s4.9 2 5.5 5" />
-      <circle cx="17.5" cy="9" r="2.4" />
-      <path d="M15.8 13.5c2.2.3 3.8 2 4.3 4.3" />
+      <circle cx="9" cy="9" r="3" />
+      <path d="M4 19c1-3 3-5 5-5s4 2 5 5" />
+      <circle cx="18" cy="10" r="2.3" />
+      <path d="M15 14c2 0 4 2 5 5" />
     </svg>
   ),
   할일관리: (
     <svg {...ICON_STROKE}>
       <rect x="4" y="4" width="16" height="16" rx="3" />
-      <path d="m8.5 12.5 2.3 2.3 4.7-4.8" />
+      <path d="m8 13 3 3 5-6" />
     </svg>
   ),
   공지사항: (
     <svg {...ICON_STROKE}>
-      <path d="M4 10v4h3l5 4V6L7 10H4z" />
-      <path d="M16.5 9a4 4 0 0 1 0 6" />
-      <path d="M19.3 6.5a8 8 0 0 1 0 11" />
+      <path d="M12 3a5 5 0 0 0-5 5v3l-2 5h14l-2-5V8a5 5 0 0 0-5-5z" />
+      <path d="M10 18a2 2 0 0 0 4 0" />
     </svg>
   ),
   "회계·보고서": (
@@ -96,22 +99,26 @@ const GROUP_ICONS: Record<string, ReactNode> = {
   ),
   확장모듈: (
     <svg {...ICON_STROKE}>
-      <rect x="3.5" y="3.5" width="7" height="7" rx="1.4" />
-      <rect x="13.5" y="3.5" width="7" height="7" rx="1.4" />
-      <rect x="3.5" y="13.5" width="7" height="7" rx="1.4" />
-      <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" />
+      <rect x="4" y="4" width="7" height="7" rx="1.5" />
+      <rect x="13" y="4" width="7" height="7" rx="1.5" />
+      <rect x="4" y="13" width="7" height="7" rx="1.5" />
+      <rect x="13" y="13" width="7" height="7" rx="1.5" />
     </svg>
   ),
   환경설정: (
     <svg {...ICON_STROKE}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.5-2-3.4-2.4.7a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.4 2.3a7.6 7.6 0 0 0-2.6 1.5l-2.4-.7-2 3.4 2 1.5a7.6 7.6 0 0 0 0 3l-2 1.5 2 3.4 2.4-.7a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.4-2.3a7.6 7.6 0 0 0 2.6-1.5l2.4.7 2-3.4z" />
+      <path d="M4 7h16" />
+      <circle cx="16" cy="7" r="2" />
+      <path d="M4 12h16" />
+      <circle cx="10" cy="12" r="2" />
+      <path d="M4 17h16" />
+      <circle cx="16" cy="17" r="2" />
     </svg>
   ),
   시스템관리: (
     <svg {...ICON_STROKE}>
-      <path d="M12 3 4.5 6v6c0 4.5 3.2 7.5 7.5 9 4.3-1.5 7.5-4.5 7.5-9V6z" />
-      <path d="m9 12 2 2 4-4.5" />
+      <path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z" />
+      <path d="m9 12 2 2 4-5" />
     </svg>
   ),
 };
