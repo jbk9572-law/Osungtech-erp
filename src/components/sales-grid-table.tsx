@@ -368,12 +368,15 @@ export function SalesGridTable({
                           href={`/sales/${row.orderId}/print`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{
-                            color: "var(--erp-primary)",
-                            fontWeight: 600,
-                          }}
+                          title="명세표 조회 (새 창)"
+                          aria-label="명세표 조회"
+                          className="erp-icon-link"
                         >
-                          명세표 →
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
+                            <path d="M13.5 3.5V8h4" />
+                            <path d="M9 13h6M9 16.5h6" />
+                          </svg>
                         </Link>
                       )}
                     </td>

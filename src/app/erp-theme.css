@@ -473,27 +473,54 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--erp-text-muted);
-  margin-bottom: 5px;
-}
-
-.erp-tree-usage-bar {
-  height: 5px;
-  border-radius: 999px;
-  background: #e9edf2;
-  overflow: hidden;
-}
-
-.erp-tree-usage-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.2s ease;
 }
 
 .erp-tree-usage-sub {
-  margin-top: 5px;
+  margin-top: 2px;
   font-size: 10.5px;
   color: var(--erp-text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* 정률(%) 사용량 한도가 있는 항목(DB/파일저장/서버 디스크/대역폭)만
+   원형 게이지로 보여준다 — 실제 시계열 데이터가 없는 걸 "추세 그래프"
+   처럼 흉내내면 없는 데이터를 있는 것처럼 보여주는 셈이라 넣지 않았다. */
+.erp-tree-usage-row-donut {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.erp-usage-donut {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.erp-usage-donut::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--erp-bg-subtle);
+}
+
+.erp-usage-donut-pct {
+  position: relative;
+  z-index: 1;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--erp-text);
+}
+
+.erp-tree-usage-donut-text {
+  min-width: 0;
+  flex: 1;
 }
 
 .erp-tree-toggle {
@@ -516,7 +543,7 @@
 .erp-tree-group-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   height: 34px;
   padding: 0 12px;
@@ -526,6 +553,26 @@
   font-weight: 700;
   color: var(--erp-primary-dark);
   text-align: left;
+}
+
+/* 접힌 사이드바에서는 라벨 텍스트가 안 보이니, 이 아이콘 하나가 그
+   메뉴를 구분하는 유일한 단서가 된다 — 그래서 접힘/펼침 상관없이 항상
+   보여준다(펼친 상태에서도 텍스트를 안 읽고 아이콘만으로 찾을 수
+   있게). */
+.erp-tree-icon {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--erp-primary);
+  opacity: 0.85;
+}
+
+.erp-tree-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .erp-tree-group-label:hover {
@@ -552,15 +599,16 @@
   display: flex;
   align-items: center;
   height: 30px;
-  padding: 0 12px 0 25px;
+  margin: 1px 8px;
+  padding: 0 10px 0 22px;
+  border-radius: 7px;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--erp-text-muted);
   border: none;
-  border-left: 3px solid transparent;
   background: none;
   text-align: left;
-  width: 100%;
+  width: calc(100% - 16px);
   text-decoration: none;
   transition:
     color 0.12s,
@@ -572,11 +620,13 @@
   color: var(--erp-text);
 }
 
+/* 예전엔 각진 배경 + 왼쪽 3px 굵은 선으로 "선택됨"을 표시했는데, 이걸
+   메뉴 그룹 전체 너비를 채우는 사각형 대신 옆에 여백을 살짝 남긴
+   둥근 알약(pill) 배경으로 바꿔서 더 가벼운 느낌을 준다. */
 .erp-tree-item.active {
   background: var(--erp-selected);
   color: var(--erp-primary);
   font-weight: 700;
-  border-left-color: var(--erp-primary);
 }
 
 .erp-tree-item.disabled {
@@ -965,8 +1015,8 @@
 }
 
 .erp-grid tbody td {
-  height: 30px;
-  padding: 4px 10px;
+  height: 34px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--erp-divider);
   border-right: 1px solid var(--erp-divider);
   white-space: nowrap;
@@ -1073,6 +1123,29 @@
 .erp-badge-info {
   background: var(--erp-info-bg);
   color: var(--erp-info-text);
+}
+
+/* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로
+   바꿀 때 쓴다 — title 속성으로 네이티브 툴팁을 띄워서 텍스트 없이도
+   무슨 기능인지 알 수 있게 한다. */
+.erp-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--erp-primary);
+  transition: background 0.12s ease;
+}
+
+.erp-icon-link:hover {
+  background: var(--erp-selected);
+}
+
+.erp-icon-link svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* ── 7. Detail panel ───────────────────────────────────────── */
