@@ -6,5 +6,15 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  // NEXT_PUBLIC_ 접두사가 붙은 값은 원래 브라우저로 그대로 노출되는
+  // 값이라(빌드 시점에 클라이언트 JS에 박힘) 여기 커밋해도 새로운 노출이
+  // 아니다. 대시보드(Settings > Variables and Secrets)에 넣은 값이
+  // 이 배포 설정 파일이 있는 Worker에는 실제로 안 묶이는 문제가 있어,
+  // 확실하게 묶이도록 여기 직접 선언한다. SUPABASE_SERVICE_ROLE_KEY처럼
+  // 진짜 민감한 값은 여기 넣지 않고 대시보드의 "Secret" 타입으로 넣는다.
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://bqetemkilbtjjbgywmbp.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0"
   }
 }
