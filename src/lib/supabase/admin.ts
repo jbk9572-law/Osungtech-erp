@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
+import { getServerEnv } from "@/lib/server-env";
 
 // 관리자가 새 계정을 만들 때(auth.admin.createUser)만 필요한 서비스 롤 키
 // 클라이언트. RLS를 완전히 우회하므로 브라우저로 절대 노출되면 안 되고,
@@ -7,7 +8,7 @@ import type { Database } from "@/types/database.types";
 // 않았을 수 있어서, 없으면 이 시점에 바로 알 수 있게 명확한 에러를 던진다.
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = getServerEnv("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!url || !serviceRoleKey) {
     throw new Error(

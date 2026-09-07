@@ -4,13 +4,14 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { BackupRestoreForm } from "@/components/backup-restore-form";
 import { ServerRestoreForm } from "@/components/server-restore-form";
 import { listServerBackupSnapshots, RESTORE_WORKFLOW_URL } from "@/lib/github-restore";
+import { getServerEnv } from "@/lib/server-env";
 
 export default async function BackupSettingsPage() {
   const { isAdmin } = await requireAdmin();
   const { snapshots, error: snapshotsError } = isAdmin
     ? await listServerBackupSnapshots()
     : { snapshots: [], error: null };
-  const restoreConfigured = process.env.GITHUB_RESTORE_TOKEN != null;
+  const restoreConfigured = getServerEnv("GITHUB_RESTORE_TOKEN") != null;
 
   return (
     <div>
