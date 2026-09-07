@@ -5,20 +5,8 @@ import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
-import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-
-const TYPE_TONE: Record<string, BadgeTone> = {
-  in: "ok",
-  out: "danger",
-  adjustment: "muted",
-};
-
-const TYPE_LABEL: Record<string, string> = {
-  in: "입고",
-  out: "출고",
-  adjustment: "조정",
-};
+import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
 
 export default async function InventoryProductHistoryPage({
   params,
@@ -31,7 +19,7 @@ export default async function InventoryProductHistoryPage({
   const { from, to } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: product }, txRaw] = await Promise.all([
+  const [{ data: product }, txRaw, saleLotRows, purchaseLotRows] = await Promise.all([
     supabase
       .from("products")
       .select(
@@ -67,26 +55,34 @@ export default async function InventoryProductHistoryPage({
         .order("created_at", { ascending: true })
         .range(from, to),
     ),
+    // 관리번호는 inventory_transactions에 직접 없고 그 전표의 품목 줄
+    // (sales_order_items/purchase_order_items)에 있다 — 이 품목 기준으로
+    // 미리 전표ID→관리번호 맵을 만들어둔다(되돌림 줄은 전표ID 연결이
+    // 없어 관리번호도 없지만, 합쳐지는 앵커/최초 줄 쪽에서 채워진다).
+    fetchAllRows<{ sales_order_id: string; lot_number: string | null }>((from, to) =>
+      supabase
+        .from("sales_order_items")
+        .select("sales_order_id, lot_number")
+        .eq("product_id", productId)
+        .range(from, to),
+    ),
+    fetchAllRows<{ purchase_order_id: string; lot_number: string | null }>((from, to) =>
+      supabase
+        .from("purchase_order_items")
+        .select("purchase_order_id, lot_number")
+        .eq("product_id", productId)
+        .range(from, to),
+    ),
   ]);
 
   if (!product) {
     notFound();
   }
 
-  const allTx = txRaw.reduce<
-    {
-      id: string;
-      date: string;
-      type: string;
-      signedQty: number;
-      partnerName: string | null;
-      note: string | null;
-      reference: string | null;
-      href: string | null;
-      balance: number;
-      authorName: string | null;
-    }[]
-  >((acc, t) => {
+  const lotBySalesOrderId = new Map(saleLotRows.map((r) => [r.sales_order_id, r.lot_number]));
+  const lotByPurchaseOrderId = new Map(purchaseLotRows.map((r) => [r.purchase_order_id, r.lot_number]));
+
+  const allTx = txRaw.reduce<InventoryHistoryRow[]>((acc, t) => {
     const date =
       t.sales_orders?.order_date ??
       t.purchase_orders?.purchase_date ??
@@ -111,11 +107,20 @@ export default async function InventoryProductHistoryPage({
           : null,
       balance,
       authorName: t.profiles?.full_name ?? null,
+      lotNumber: t.sales_order_id
+        ? (lotBySalesOrderId.get(t.sales_order_id) ?? null)
+        : t.purchase_order_id
+          ? (lotByPurchaseOrderId.get(t.purchase_order_id) ?? null)
+          : null,
     });
     return acc;
   }, []);
 
-  const rows = allTx
+  // 전표 수정으로 생긴 되돌림/재반영 여러 줄을, 정확히 같은 전표 ID일
+  // 때만(추측 없이) 최신 줄 하나로 합친다 — inventory-history-grouping.ts 참고.
+  const groupedTx = groupOrderCorrections(allTx);
+
+  const rows = groupedTx
     .filter((t) => (!from || t.date >= from) && (!to || t.date <= to))
     .reverse();
   const presets = getDatePresets();
@@ -249,40 +254,49 @@ export default async function InventoryProductHistoryPage({
           <thead>
             <tr>
               <th>날짜</th>
-              <th>구분</th>
-              <th>거래처</th>
+              <th>입고처</th>
+              <th className="num">입고</th>
+              <th>출고처</th>
+              <th className="num">출고</th>
+              <th>관리번호</th>
               <th>비고</th>
               <th>작성자</th>
-              <th className="num">수량</th>
               <th className="num">재고 잔량</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => {
+              const isIn = row.signedQty > 0;
+              const note = row.correctionNote ?? row.note;
               const cells = (
                 <>
                   <td>{new Date(row.date).toLocaleDateString("ko-KR")}</td>
-                  <td>
-                    <GridBadge tone={TYPE_TONE[row.type] ?? "muted"}>
-                      {TYPE_LABEL[row.type] ?? row.type}
-                    </GridBadge>
+                  <td>{isIn ? (row.partnerName ?? "-") : <span style={{ color: "var(--erp-text-muted)" }}>-</span>}</td>
+                  <td className="num" style={{ color: isIn ? "var(--erp-success)" : "var(--erp-text-muted)", fontWeight: isIn ? 700 : undefined }}>
+                    {isIn ? Math.abs(row.signedQty).toLocaleString() : "-"}
                   </td>
-                  <td>{row.partnerName ?? "-"}</td>
+                  <td>{!isIn ? (row.partnerName ?? "-") : <span style={{ color: "var(--erp-text-muted)" }}>-</span>}</td>
+                  <td className="num" style={{ color: !isIn ? "var(--erp-danger)" : "var(--erp-text-muted)", fontWeight: !isIn ? 700 : undefined }}>
+                    {!isIn ? Math.abs(row.signedQty).toLocaleString() : "-"}
+                  </td>
+                  <td>
+                    {row.lotNumber ? (
+                      <Link
+                        href={`/inventory/lot-lookup?q=${encodeURIComponent(row.lotNumber)}`}
+                        className="erp-badge erp-badge-muted"
+                        style={{ textDecoration: "none" }}
+                      >
+                        {row.lotNumber}
+                      </Link>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+                    )}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.note || "-"}
+                    {note || "-"}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.authorName ?? "-"}
-                  </td>
-                  <td
-                    className="num"
-                    style={{
-                      color:
-                        row.signedQty < 0 ? "var(--erp-danger)" : undefined,
-                    }}
-                  >
-                    {row.signedQty > 0 ? "+" : ""}
-                    {row.signedQty.toLocaleString()}
                   </td>
                   <td className="num">
                     {formatQuantityWithBoxes(
@@ -302,7 +316,7 @@ export default async function InventoryProductHistoryPage({
             })}
             {!rows.length && (
               <tr>
-                <td colSpan={7} className="erp-grid-empty">
+                <td colSpan={9} className="erp-grid-empty">
                   조건에 맞는 입출고 내역이 없습니다.
                 </td>
               </tr>

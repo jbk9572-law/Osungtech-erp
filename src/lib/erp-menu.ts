@@ -23,6 +23,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "재고현황", href: "/inventory" },
       { label: "재고 실사", href: "/inventory/count" },
       { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
+      { label: "관리번호 조회", href: "/inventory/lot-lookup" },
     ],
   },
   { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },

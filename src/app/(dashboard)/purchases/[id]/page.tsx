@@ -278,7 +278,17 @@ export default async function PurchaseDetailPage({
                     {row.spec || row.products?.spec || "-"}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.lot_number || "-"}
+                    {row.lot_number ? (
+                      <Link
+                        href={`/inventory/lot-lookup?q=${encodeURIComponent(row.lot_number)}`}
+                        className="erp-badge erp-badge-muted"
+                        style={{ textDecoration: "none" }}
+                      >
+                        {row.lot_number}
+                      </Link>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.products?.unit}
