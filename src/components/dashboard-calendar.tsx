@@ -300,12 +300,13 @@ function drawFromPool(
 const STOCK_PURCHASE_LABEL = "재고용 매입";
 const STOCK_SALE_LABEL = "재고분 출고";
 
-// 회사명 자체에 이미 "(주)"처럼 괄호가 들어있는 경우가 많아, 목적지
-// 표시는 대괄호로 감싸 구분한다. 실제 거래처로 나간 것이면 화살표를
-// 붙이고, 재고로 남는 것이면(그 어디로도 안 나간 몫) 화살표 없이
-// 라벨만 붙인다.
-function formatDestinationLabel(label: string, isStock: boolean): string {
-  return isStock ? `[${label}]` : `-> [${label}]`;
+// 예전엔 대괄호로 목적지를 감쌌는데(회사명 자체에 이미 "(주)"처럼 괄호가
+// 들어있는 경우가 많아 구분하려던 것), 콜론이 어떤 회사명과도 안 겹치면서
+// 더 읽기 편하다는 피드백으로 "품목명 : 목적지" 형태로 바꿨다. 재고로
+// 남는 몫과 실제 거래처로 나간 몫 모두 같은 형식을 쓴다 — 라벨 글자
+// 자체("재고용 매입"/"재고분 출고" vs 실제 거래처명)로 이미 구분된다.
+function formatDestinationLabel(label: string): string {
+  return `: ${label}`;
 }
 
 // 매입 품목이 당일 매출로 전부/일부 나가고 남는 수량이 있으면, 그 남는
@@ -354,7 +355,6 @@ function takeItems(items: ItemRow[], quantity: number): { taken: ItemRow[]; rest
 
 type LineGroup = {
   label: string | null;
-  isStock: boolean;
   lines: string[];
   specCount: number;
   totalQuantity: number;
@@ -362,7 +362,7 @@ type LineGroup = {
 };
 
 type LabeledItem = { item: ItemRow; note: string | null };
-type ItemLabelGroup = { label: string | null; isStock: boolean; items: LabeledItem[] };
+type ItemLabelGroup = { label: string | null; items: LabeledItem[] };
 
 // 한 품목 안의 규격들을, 목적지(또는 재고 여부)별로 묶는다. 규격 하나가
 // 통째로 한 거래처(또는 재고)로만 갔으면 그 그룹 하나로, 일부는 거래처로
@@ -387,7 +387,7 @@ function groupProductItemsByLabel(
     if (idx === undefined) {
       idx = groups.length;
       indexByKey.set(key, idx);
-      groups.push({ label, isStock, items: [] });
+      groups.push({ label, items: [] });
     }
     return groups[idx];
   }
@@ -450,10 +450,9 @@ function buildProductLineGroups(
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
 ): LineGroup[] {
-  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, isStock, items }) => {
+  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, items }) => {
     const group: LineGroup = {
       label,
-      isStock,
       lines: [],
       specCount: 0,
       totalQuantity: 0,
@@ -539,7 +538,7 @@ function appendItemLines(
         isFirstGroup = false;
         lines.push(
           group.label
-            ? `  · ${product.productName} ${formatDestinationLabel(group.label, group.isStock)}`
+            ? `  · ${product.productName} ${formatDestinationLabel(group.label)}`
             : `  · ${product.productName}`,
         );
         lines.push(...group.lines);
@@ -558,7 +557,7 @@ function appendItemLines(
       isFirstGroup = false;
       lines.push(
         paperCalcBlock.label
-          ? `  · ${paperStockProductName} ${formatDestinationLabel(paperCalcBlock.label, paperCalcBlock.label === STOCK_PURCHASE_LABEL)}`
+          ? `  · ${paperStockProductName} ${formatDestinationLabel(paperCalcBlock.label)}`
           : `  · ${paperStockProductName}`,
       );
       for (const line of formatPaperCalcSizeLines(paperCalcBlock.sizes)) {
@@ -983,7 +982,7 @@ export function DashboardCalendar({
                                 <p className="font-semibold text-[var(--erp-text)]">
                                   - {product.productName}
                                   {group.label &&
-                                    ` ${formatDestinationLabel(group.label, group.isStock)}`}
+                                    ` ${formatDestinationLabel(group.label)}`}
                                 </p>
                                 <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {group.items.length === 1 ? (
@@ -1100,7 +1099,7 @@ export function DashboardCalendar({
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
                               {block.label &&
-                                ` ${formatDestinationLabel(block.label, block.label === STOCK_PURCHASE_LABEL)}`}
+                                ` ${formatDestinationLabel(block.label)}`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                               {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
@@ -1161,7 +1160,7 @@ export function DashboardCalendar({
                                 <p className="font-semibold text-[var(--erp-text)]">
                                   - {product.productName}
                                   {group.label &&
-                                    ` ${formatDestinationLabel(group.label, group.isStock)}`}
+                                    ` ${formatDestinationLabel(group.label)}`}
                                 </p>
                                 <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {group.items.length === 1 ? (
@@ -1280,7 +1279,7 @@ export function DashboardCalendar({
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
                               {block.label &&
-                                ` ${formatDestinationLabel(block.label, block.label === STOCK_SALE_LABEL)}`}
+                                ` ${formatDestinationLabel(block.label)}`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                               {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
