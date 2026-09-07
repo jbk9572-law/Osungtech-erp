@@ -367,7 +367,7 @@ type ItemLabelGroup = { label: string | null; items: LabeledItem[] };
 // 한 품목 안의 규격들을, 목적지(또는 재고 여부)별로 묶는다. 규격 하나가
 // 통째로 한 거래처(또는 재고)로만 갔으면 그 그룹 하나로, 일부는 거래처로
 // 나머지는 재고로 나뉘면 실제로 나간 만큼만 그 거래처 그룹에 넣고(남는
-// 몫은 그 줄에 "(NNN는 재고)" 메모로만 붙인다 — 재고 그룹 자체의 합계에는
+// 몫은 그 줄에 "(NNN는 출고 후 남은재고)" 메모로만 붙인다 — 재고 그룹 자체의 합계에는
 // 안 섞여서, "전량 재고로 남은 규격들끼리의 합"이라는 의미가 흐려지지
 // 않는다). 카톡복사 텍스트(buildProductLineGroups)와 화면 표시(대시보드
 // 오늘의 업무 패널)가 이 그룹핑을 그대로 같이 쓴다 — 문자열이 아니라
@@ -416,7 +416,7 @@ function groupProductItemsByLabel(
         const { taken, rest } = takeItems(remaining, d.quantity);
         remaining = rest;
         const isLast = i === real.length - 1;
-        const note = isLast && stock ? `${stock.quantity.toLocaleString()}${unit}는 재고` : null;
+        const note = isLast && stock ? `${stock.quantity.toLocaleString()}${unit}는 출고 후 남은재고` : null;
         push(d.partnerName, false, taken, note);
       });
     } else if (reversePool && !isReturn) {

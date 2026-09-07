@@ -22,6 +22,8 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "재고현황", href: "/inventory" },
       { label: "재고 실사", href: "/inventory/count" },
+      { label: "QR 자동실사", href: "/inventory/count/scan" },
+      { label: "QR 라벨 인쇄", href: "/inventory/qr-labels" },
       { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
       { label: "관리번호 조회", href: "/inventory/lot-lookup" },
     ],
