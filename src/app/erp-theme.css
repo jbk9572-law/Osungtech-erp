@@ -126,6 +126,18 @@
   outline-offset: -4px;
 }
 
+/* 데모 계정으로 로그인했을 때만 뜨는 얇은 안내 줄 — 실제 화면 레이아웃을
+   그대로 두고 맨 위에 한 줄만 얹는다. */
+.erp-demo-banner {
+  background: var(--erp-warning-bg);
+  color: var(--erp-warning);
+  border-bottom: 1px solid var(--erp-warning-border);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 8px;
+}
+
 /* ── 1. Title Bar (40px) ───────────────────────────────────── */
 .erp-titlebar {
   height: 40px;

@@ -44,7 +44,7 @@ export default async function DashboardLayout({
       // 순서로 보여줘야 하므로 아래에서 다시 뒤집는다.
       .order("created_at", { ascending: false })
       .limit(100),
-    supabase.from("profiles").select("id, full_name"),
+    supabase.from("profiles").select("id, full_name, is_demo"),
     getDatabaseSizeBytes(supabase),
     getStorageSizeBytes(supabase),
     getNetlifyUsage(),
@@ -54,9 +54,11 @@ export default async function DashboardLayout({
   const profileNames = Object.fromEntries(
     (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]),
   );
+  const isDemo = (profiles ?? []).find((p) => p.id === user.id)?.is_demo ?? false;
 
   return (
     <ErpShell
+      isDemo={isDemo}
       companyName={company?.name}
       logoUrl={company?.logo_mark_url}
       email={user.email ?? null}

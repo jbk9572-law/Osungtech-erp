@@ -34,6 +34,7 @@ function RecentMenuTracker() {
 }
 
 export function ErpShell({
+  isDemo,
   companyName,
   logoUrl,
   email,
@@ -49,6 +50,7 @@ export function ErpShell({
   netlifyUsage,
   children,
 }: {
+  isDemo?: boolean;
   companyName?: string | null;
   logoUrl?: string | null;
   email: string | null;
@@ -102,6 +104,11 @@ export function ErpShell({
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>
+      {isDemo && (
+        <div className="erp-demo-banner">
+          데모 모드 — 실제 데이터가 아니며, 여기서 등록/수정/삭제해도 실제 운영 데이터에는 영향을 주지 않습니다.
+        </div>
+      )}
       <NotificationToaster />
       <RecentMenuTracker />
       <MidnightRefresh />
