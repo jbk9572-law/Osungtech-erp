@@ -19,6 +19,7 @@ import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
+import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
@@ -1512,7 +1513,7 @@ export function NewPurchaseForm({
                         aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) =>
-                          updateRow(row.key, { lotNumber: e.target.value })
+                          updateRow(row.key, { lotNumber: normalizeLotNumber(e.target.value) })
                         }
                         className="erp-input w-full"
                       />

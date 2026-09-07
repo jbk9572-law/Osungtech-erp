@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/paper-calc-sync";
 import { parseTodoType } from "@/lib/todo-flow";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { normalizeLotNumber } from "@/lib/lot-number";
 import type { FormState } from "@/components/form-message";
 
 export type TodoItemInput = {
@@ -33,7 +34,14 @@ export type OpenTodoSummary = {
 function parseItems(itemsRaw: string): TodoItemInput[] {
   try {
     const items = JSON.parse(itemsRaw) as TodoItemInput[];
-    return Array.isArray(items) ? items.filter((item) => item.productId && item.quantity > 0) : [];
+    return Array.isArray(items)
+      ? items
+          .filter((item) => item.productId && item.quantity > 0)
+          .map((item) => ({
+            ...item,
+            lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : item.lotNumber,
+          }))
+      : [];
   } catch {
     return [];
   }

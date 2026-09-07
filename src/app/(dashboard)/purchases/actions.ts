@@ -18,6 +18,7 @@ import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
+import { normalizeLotNumber } from "@/lib/lot-number";
 
 type PurchaseItemInput = {
   productId: string;
@@ -238,7 +239,7 @@ export async function createPurchase(
           quantity: item.quantity,
           unitCost: item.unitCost,
           remark: item.remark || null,
-          lotNumber: item.lotNumber || null,
+          lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
         })),
         p_sale_items: saleItems.map((item) => ({
           productId: item.productId,
@@ -246,7 +247,7 @@ export async function createPurchase(
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           remark: item.remark || null,
-          lotNumber: item.lotNumber || null,
+          lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
         })),
         p_payment_method: paymentMethod,
         p_delivery_method: deliveryMethod,
@@ -301,7 +302,7 @@ export async function createPurchase(
         quantity: item.quantity,
         unitCost: item.unitCost,
         remark: item.remark || null,
-        lotNumber: item.lotNumber || null,
+        lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
       })),
       p_payment_method: paymentMethod,
       p_delivery_method: deliveryMethod,
@@ -476,7 +477,7 @@ export async function updatePurchase(
       quantity: item.quantity,
       unitCost: item.unitCost,
       remark: item.remark || null,
-      lotNumber: item.lotNumber || null,
+      lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,

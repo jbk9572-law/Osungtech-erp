@@ -19,6 +19,7 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
+import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
@@ -1480,7 +1481,7 @@ export function NewSaleForm({
                         aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) =>
-                          updateRow(row.key, { lotNumber: e.target.value })
+                          updateRow(row.key, { lotNumber: normalizeLotNumber(e.target.value) })
                         }
                         className="erp-input w-full"
                       />
