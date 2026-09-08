@@ -8,44 +8,13 @@ import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from 
 import { numberOrDefault, numberOrNull } from "@/lib/form-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
-async function resolveCategoryId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  formData: FormData
-): Promise<string | null> {
-  const newCategoryName = String(formData.get("new_category") ?? "").trim();
-  if (newCategoryName) {
-    const { data: existing } = await supabase
-      .from("categories")
-      .select("id")
-      .ilike("name", newCategoryName)
-      .maybeSingle();
-    if (existing) return existing.id;
-
-    const { data: created, error } = await supabase
-      .from("categories")
-      .insert({ name: newCategoryName })
-      .select("id")
-      .single();
-    if (created) return created.id;
-    // 이 조회~삽입 사이에 다른 사람이 같은 이름으로 먼저 만들었으면(동시
-    // 등록) name의 unique 제약에 걸려 삽입이 실패한다 — 실패로 끝내지
-    // 말고 그 사이 생긴 카테고리를 다시 조회해서 그걸 쓴다.
-    if (error) {
-      const { data: retry } = await supabase
-        .from("categories")
-        .select("id")
-        .ilike("name", newCategoryName)
-        .maybeSingle();
-      if (retry) return retry.id;
-    }
-    return null;
-  }
-  return String(formData.get("category_id") ?? "") || null;
-}
-
-async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClient>>, formData: FormData) {
+// 카테고리는 대시보드 매입-매출 매칭 추적 기준(isTrackedCategory)이기도
+// 해서 등록 화면에서 자유롭게 새로 만들 수 없게 고정 6종(PRODUCT_CATEGORIES)
+// 중에서만 고르게 한다 — 그래서 여기선 폼이 넘긴 category_id를 그대로
+// 쓰기만 하면 된다(새 카테고리 생성 로직 없음).
+function productFieldsFrom(formData: FormData) {
   return {
-    category_id: await resolveCategoryId(supabase, formData),
+    category_id: String(formData.get("category_id") ?? "") || null,
     supplier_id: String(formData.get("supplier_id") ?? "") || null,
     spec: String(formData.get("spec") ?? "").trim() || null,
     unit: String(formData.get("unit") ?? "ea") || "ea",
@@ -56,7 +25,10 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
   };
 }
 
-function validateProductFields(fields: Awaited<ReturnType<typeof productFieldsFrom>>): string | null {
+function validateProductFields(fields: ReturnType<typeof productFieldsFrom>): string | null {
+  if (!fields.category_id) {
+    return "카테고리를 선택해주세요.";
+  }
   if (fields.price < 0 || fields.cost < 0 || fields.reorder_point < 0) {
     return "판매가·매입가·재주문점은 0 이상이어야 합니다.";
   }
@@ -93,7 +65,7 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   }
 
   const supabase = await createClient();
-  const fields = await productFieldsFrom(supabase, formData);
+  const fields = productFieldsFrom(formData);
   const fieldError = validateProductFields(fields);
   if (fieldError) return { error: fieldError };
   const { data: created, error } = await supabase
@@ -131,7 +103,7 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
     .select("base_package_qty")
     .eq("id", id)
     .maybeSingle();
-  const fields = await productFieldsFrom(supabase, formData);
+  const fields = productFieldsFrom(formData);
   const fieldError = validateProductFields(fields);
   if (fieldError) return { error: fieldError };
   const { error } = await supabase

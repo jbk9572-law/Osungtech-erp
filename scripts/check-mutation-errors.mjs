@@ -43,7 +43,7 @@ const ALLOWLIST = new Set([
   "src/lib/price-schedule.ts:22",
   // recordPackageQtyChange: 참고용 이력 로그일 뿐이라 실패해도 상품 저장
   // 자체(이미 끝난 뒤)를 막지 않기로 명시적으로 설계됨(주석 참고).
-  "src/app/(dashboard)/products/actions.ts:83",
+  "src/app/(dashboard)/products/actions.ts:55",
 ]);
 
 function walkDir(dir, out = []) {

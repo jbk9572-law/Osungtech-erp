@@ -6,6 +6,7 @@ import { FormMessage } from "@/components/form-message";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { PackageQtyHistoryHint } from "@/components/package-qty-history-hint";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
 
 type Category = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -52,7 +53,6 @@ export function ProductForm({
     UNIT_PRESETS.includes(initialUnit) ? "preset" : "custom"
   );
   const [unitValue, setUnitValue] = useState(initialUnit);
-  const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
   const [supplierId, setSupplierId] = useState(initial?.supplier_id ?? "");
   const [basePackageQty, setBasePackageQty] = useState(initial?.base_package_qty ?? "");
 
@@ -77,26 +77,26 @@ export function ProductForm({
         defaultValue={initial?.name ?? ""}
         className="erp-input"
       />
-      <div style={{ display: "flex", gap: 4 }}>
-        <div style={{ flex: 1 }}>
-          <PartySearchSelect
-            name="category_id"
-            parties={categories}
-            value={categoryId}
-            onChange={setCategoryId}
-            placeholder="카테고리 검색"
-          />
-        </div>
-        <input
-          name="new_category"
-          autoComplete="off"
-          placeholder="새 카테고리 입력"
-          aria-label="새 카테고리 입력"
-          className="erp-input"
-          style={{ flex: 1 }}
-          title="입력하면 위 선택을 무시하고 이 이름으로 카테고리를 새로 만들거나 기존 카테고리를 사용합니다."
-        />
-      </div>
+      <select
+        name="category_id"
+        aria-label="카테고리"
+        required
+        defaultValue={initial?.category_id ?? ""}
+        className="erp-select"
+      >
+        <option value="" disabled>
+          카테고리 선택
+        </option>
+        {PRODUCT_CATEGORIES.map((name) => {
+          const category = categories.find((c) => c.name === name);
+          if (!category) return null;
+          return (
+            <option key={category.id} value={category.id}>
+              {name}
+            </option>
+          );
+        })}
+      </select>
       <PartySearchSelect
         name="supplier_id"
         parties={suppliers}
