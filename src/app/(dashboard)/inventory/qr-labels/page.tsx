@@ -13,10 +13,14 @@ import { PrintButton } from "@/components/print-button";
 export default async function InventoryQrLabelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; hideZero?: string }>;
+  searchParams: Promise<{ q?: string; hideZero?: string; dir?: string }>;
 }) {
-  const { q, hideZero: hideZeroRaw } = await searchParams;
+  const { q, hideZero: hideZeroRaw, dir: dirRaw } = await searchParams;
   const hideZero = hideZeroRaw === "1";
+  // 2단랙이라 라벨을 위쪽 칸용/아래쪽 칸용으로 나눠 인쇄한다 — 라벨마다
+  // 방향 표시를 둘 다 찍어두면 오히려 어느 쪽인지 헷갈린다는 피드백으로,
+  // 인쇄 전에 위/아래 중 하나를 고르면 그 표시만 찍히게 한다.
+  const dir = dirRaw === "down" ? "down" : "up";
   const supabase = await createClient();
 
   const products = await fetchAllRows<{
@@ -78,6 +82,19 @@ export default async function InventoryQrLabelsPage({
             style={{ width: "100%" }}
           />
         </div>
+        <div className="erp-field">
+          <label>라벨 방향 (2단랙 위/아래 칸)</label>
+          <div style={{ display: "flex", gap: 10, height: 34, alignItems: "center" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, cursor: "pointer" }}>
+              <input type="radio" name="dir" value="up" defaultChecked={dir === "up"} />
+              ▲ 위쪽 칸용
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, cursor: "pointer" }}>
+              <input type="radio" name="dir" value="down" defaultChecked={dir === "down"} />
+              ▼ 아래쪽 칸용
+            </label>
+          </div>
+        </div>
         <div className="erp-field" style={{ justifyContent: "flex-end" }}>
           <label aria-hidden="true">&nbsp;</label>
           <label
@@ -97,7 +114,7 @@ export default async function InventoryQrLabelsPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           조회
         </button>
-        {(q || hideZero) && (
+        {(q || hideZero || dir === "down") && (
           <Link href="/inventory/qr-labels" className="erp-btn">
             초기화
           </Link>
@@ -140,12 +157,10 @@ export default async function InventoryQrLabelsPage({
               color: "#000",
             }}
           >
-            {/* 2단랙에 인쇄물을 잘라 붙일 때 라벨이 뒤집혀도(QR 자체는
-                방향을 알기 어려움) 위/아래를 바로 알 수 있게 상단·하단에
-                글자와 함께 방향 표시를 둔다 — 화살표만 있으면 무슨 뜻인지
-                안 와닿는다는 피드백으로 "위"/"아래" 글자를 같이 넣는다. */}
+            {/* 2단랙 위쪽 칸/아래쪽 칸 중 지금 인쇄하는 게 어느 쪽인지
+                위 라벨 방향 선택(dir)에 맞춰 하나만 찍는다. */}
             <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.4, color: "#000" }}>
-              ▲ 위
+              {dir === "up" ? "▲ 위" : "▼ 아래"}
             </div>
             <div
               role="img"
@@ -158,9 +173,6 @@ export default async function InventoryQrLabelsPage({
             {label.spec && (
               <div style={{ fontSize: 10, color: "#444" }}>{label.spec}</div>
             )}
-            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.4, marginTop: 4, color: "#000" }}>
-              ▼ 아래
-            </div>
           </div>
         ))}
       </div>
