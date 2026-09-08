@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { PageGuide } from "@/components/erp/page-guide";
 import { CreateRackForm } from "@/components/create-rack-form";
+import { DeleteRackButton } from "@/components/delete-rack-button";
 
 type LocationRow = { id: string; rack: string; tier: number; position: number; code: string };
 
@@ -68,13 +69,12 @@ export default async function InventoryLocationsPage() {
             >
               <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
                 <span className="erp-detail-tab active">{rack} 랙</span>
-                <Link
-                  href={`/inventory/locations/${rack}/print`}
-                  className="erp-btn"
-                  style={{ marginRight: 8 }}
-                >
-                  QR 현황판 인쇄 (A4)
-                </Link>
+                <div style={{ display: "flex", gap: 8, marginRight: 8 }}>
+                  <Link href={`/inventory/locations/${rack}/print`} className="erp-btn">
+                    QR 현황판 인쇄 (A4)
+                  </Link>
+                  <DeleteRackButton rack={rack} />
+                </div>
               </div>
               <div className="erp-detail-body">
                 {tiers.map((tier) => (
@@ -90,17 +90,22 @@ export default async function InventoryLocationsPage() {
                         <Link
                           key={loc.id}
                           href={`/inventory/locations/${loc.code}`}
-                          className="erp-btn"
                           style={{
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
-                            padding: "14px 8px",
-                            gap: 4,
+                            gap: 6,
+                            padding: "16px 8px",
+                            border: "1px solid var(--erp-border)",
+                            borderRadius: 6,
+                            background: "#fff",
+                            textDecoration: "none",
                           }}
                         >
-                          <span style={{ fontSize: 14, fontWeight: 700 }}>{loc.code}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--erp-text)" }}>
+                            {loc.code}
+                          </span>
                           <span
                             className={count > 0 ? "erp-badge erp-badge-info" : "erp-badge erp-badge-muted"}
                           >

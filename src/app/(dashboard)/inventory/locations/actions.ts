@@ -13,6 +13,12 @@ export async function createRack(_prevState: FormState, formData: FormData): Pro
   if (!rack) {
     return { error: "랙 이름을 입력해주세요. (예: A, B)" };
   }
+  // 코드가 "{랙}-0{단}-0{좌우}" 형태로 만들어지므로, 랙 이름에 하이픈이나
+  // 특수문자가 들어가면 A-01-02-01처럼 알아보기 어려운 코드가 나온다.
+  // 영문/숫자만 허용해 코드가 항상 "A-01-01" 같은 3토막으로 나오게 한다.
+  if (!/^[A-Z0-9]{1,6}$/.test(rack)) {
+    return { error: "랙 이름은 영문/숫자만 6자 이내로 입력해주세요. (예: A, B1)" };
+  }
 
   const supabase = await createClient();
   const { data: warehouse } = await supabase.from("warehouses").select("id").limit(1).maybeSingle();
@@ -41,6 +47,27 @@ export async function createRack(_prevState: FormState, formData: FormData): Pro
 
   revalidatePath("/inventory/locations");
   return { success: `${rack}랙이 추가되었습니다 (파렛트 4자리: ${rack}-01-01, ${rack}-01-02, ${rack}-02-01, ${rack}-02-02).` };
+}
+
+// 랙 이름을 잘못 입력해 만들었거나(예전엔 하이픈도 허용돼 있었다) 더는
+// 안 쓰는 랙을 지운다. 위치 4자리가 다 지워지면 그 안에 보관 등록된
+// 품목(inventory_locations)도 같이 사라져야 앞뒤가 맞으므로, 마이그레이션의
+// on delete cascade에 맡긴다 — 여기서는 locations 행만 지우면 된다.
+export async function deleteRack(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const rack = String(formData.get("rack") ?? "");
+  if (!rack) {
+    return { error: "삭제할 랙을 확인할 수 없습니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("locations").delete().eq("rack", rack);
+
+  if (error) {
+    return { error: `랙 삭제에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/inventory/locations");
+  return { success: `${rack}랙이 삭제되었습니다.` };
 }
 
 // 위치 하나에 보관 중인 품목의 수량을 등록/수정한다. 0개를 입력하면 그

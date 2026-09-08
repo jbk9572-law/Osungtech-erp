@@ -48,10 +48,14 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
 
   const byKey = new Map(locations.map((l) => [`${l.tier}-${l.position}`, l]));
 
+  // A4 한 장(용지 여백 18mm 제외 시 실사용 높이 약 261mm)에 헤더+2단
+  // 슬롯 2줄+안내문까지 전부 들어가야 한다 — QR을 190px로 크게 뽑았을 때
+  // 실제 인쇄에서 2페이지로 넘어가는 문제가 있어(사용자 확인), 한 장에
+  // 여유 있게 들어가도록 QR과 각 블록의 크기/여백을 줄였다.
   const qrByCode: Record<string, string> = {};
   for (const loc of locations) {
     const url = await buildLocationUrl(loc.code);
-    qrByCode[loc.code] = await QRCode.toString(url, { type: "svg", width: 190, margin: 1 });
+    qrByCode[loc.code] = await QRCode.toString(url, { type: "svg", width: 148, margin: 1 });
   }
 
   function renderSlot(tier: number, position: number) {
@@ -63,18 +67,18 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
         style={{
           border: "1px solid var(--erp-border)",
           borderRadius: 6,
-          padding: "14px 10px",
+          padding: "10px 8px",
           textAlign: "center",
           background: "#fff",
         }}
       >
         <div
           style={{
-            fontSize: 26,
+            fontSize: 19,
             fontWeight: 800,
-            letterSpacing: 1,
+            letterSpacing: 0.5,
             color: "var(--erp-primary-dark)",
-            marginBottom: 10,
+            marginBottom: 8,
           }}
         >
           {loc.code}
@@ -83,13 +87,13 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
           style={{ display: "flex", justifyContent: "center" }}
           dangerouslySetInnerHTML={{ __html: qrByCode[loc.code] }}
         />
-        <div style={{ marginTop: 10, fontSize: 12, color: "var(--erp-text-muted)" }}>QR 스캔 → 재고조회</div>
+        <div style={{ marginTop: 8, fontSize: 10.5, color: "var(--erp-text-muted)" }}>QR 스캔 → 재고조회</div>
       </div>
     );
   }
 
   return (
-    <div className="print-page-margin">
+    <div className="mx-auto p-8 print-page-margin" style={{ maxWidth: 560 }}>
       <div className="mb-3 flex items-center justify-between print:hidden">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">{rack}랙 QR 위치 현황판 (A4)</h1>
       </div>
@@ -103,12 +107,13 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
 
       <div
         style={{
-          maxWidth: 560,
+          maxWidth: 480,
           margin: "0 auto",
           background: "#fff",
           border: "1px solid var(--erp-border)",
           borderRadius: 8,
-          padding: 20,
+          padding: 16,
+          boxShadow: "var(--erp-shadow-sm)",
         }}
       >
         {/* 자석/고정장치용 펀칭 구멍 2개 */}
@@ -138,25 +143,18 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
             background: "var(--erp-primary-dark)",
             color: "#fff",
             borderRadius: 6,
-            padding: "16px 18px",
-            marginBottom: 16,
+            padding: "12px 14px",
+            marginBottom: 12,
           }}
         >
-          <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: 1 }}>{rack} RACK</div>
-          <div style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>재고 실사 현황</div>
-          <div style={{ fontSize: 11.5, marginTop: 6, opacity: 0.85 }}>
+          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: 1 }}>{rack} RACK</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2 }}>재고 실사 현황</div>
+          <div style={{ fontSize: 10.5, marginTop: 4, opacity: 0.85 }}>
             QR을 스캔하면 해당 위치의 현재 재고를 확인할 수 있습니다.
           </div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 6,
-          }}
-        >
+        <div style={{ marginBottom: 6 }}>
           <span
             style={{
               fontSize: 11,
@@ -170,19 +168,12 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
             2단 · 상단
           </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
           {renderSlot(2, 1)}
           {renderSlot(2, 2)}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 6,
-          }}
-        >
+        <div style={{ marginBottom: 6 }}>
           <span
             style={{
               fontSize: 11,
@@ -197,7 +188,7 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
             1단 · 하단
           </span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
           {renderSlot(1, 1)}
           {renderSlot(1, 2)}
         </div>
@@ -205,13 +196,13 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
         <div
           style={{
             borderTop: "1px solid var(--erp-border)",
-            paddingTop: 12,
-            fontSize: 11,
+            paddingTop: 10,
+            fontSize: 10.5,
             color: "var(--erp-text-muted)",
           }}
         >
-          <div style={{ fontWeight: 700, color: "var(--erp-text)", marginBottom: 6 }}>QR 실사 방법</div>
-          <ol style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
+          <div style={{ fontWeight: 700, color: "var(--erp-text)", marginBottom: 4 }}>QR 실사 방법</div>
+          <ol style={{ margin: 0, paddingLeft: 18, lineHeight: 1.5 }}>
             <li>QR 스캔</li>
             <li>해당 위치의 현재 재고 확인</li>
             <li>실제 수량 확인 및 수정</li>
