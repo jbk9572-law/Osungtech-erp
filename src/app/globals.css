@@ -49,6 +49,18 @@ body {
   }
 }
 
+/* QR 스캐너 뷰파인더 안에서 위아래로 오가는 스캔 라인 — "지금 스캔
+   중"이라는 느낌을 준다(카메라 앱/페이 앱 QR 스캐너에서 흔한 패턴). */
+@keyframes erp-scan-line {
+  0%,
+  100% {
+    top: 6%;
+  }
+  50% {
+    top: 92%;
+  }
+}
+
 @media print {
   @page {
     size: A4 portrait;

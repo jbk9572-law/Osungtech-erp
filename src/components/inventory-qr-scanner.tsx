@@ -81,7 +81,7 @@ export function InventoryQrScanner({
       const kind = scanState.active ? "ok" : "unknown";
       setFlash((prev) => ({ kind, token: (prev?.token ?? 0) + 1 }));
       if (kind === "ok" && typeof navigator.vibrate === "function") {
-        navigator.vibrate(60);
+        navigator.vibrate(200);
       }
     }
     lastSignatureRef.current = signature;
@@ -231,6 +231,62 @@ export function InventoryQrScanner({
           </div>
         )}
 
+        {/* 스캔 안내 프레임 — 카메라를 켜자마자 뜨는 화면이 밋밋하다는
+            피드백으로, 다른 QR/바코드 스캐너(카메라 앱, 페이 앱 등)에
+            흔한 "모서리 브래킷 + 스캔 라인" 뷰파인더를 넣었다. 네 귀퉁이
+            박스 섀도우 트릭(box-shadow 0 0 0 9999px)으로 사각형 밖을
+            어둡게 눌러 시선을 중앙으로 모으고, 그 안에서 위아래로
+            움직이는 라인이 "지금 스캔 중"이라는 걸 보여준다. */}
+        {!cameraError && (
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "10%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "66%",
+              aspectRatio: "1 / 1",
+              borderRadius: 16,
+              boxShadow: "0 0 0 999px rgba(0, 0, 0, 0.45)",
+              pointerEvents: "none",
+            }}
+          >
+            {[
+              { top: -3, left: -3, borderTopLeftRadius: 10 },
+              { top: -3, right: -3, borderTopRightRadius: 10 },
+              { bottom: -3, left: -3, borderBottomLeftRadius: 10 },
+              { bottom: -3, right: -3, borderBottomRightRadius: 10 },
+            ].map((corner, i) => (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  width: 30,
+                  height: 30,
+                  borderTop: "top" in corner ? "4px solid #4ade80" : undefined,
+                  borderBottom: "bottom" in corner ? "4px solid #4ade80" : undefined,
+                  borderLeft: "left" in corner ? "4px solid #4ade80" : undefined,
+                  borderRight: "right" in corner ? "4px solid #4ade80" : undefined,
+                  ...corner,
+                }}
+              />
+            ))}
+            <div
+              style={{
+                position: "absolute",
+                left: 10,
+                right: 10,
+                height: 2,
+                borderRadius: 2,
+                background: "linear-gradient(90deg, transparent, #4ade80, transparent)",
+                boxShadow: "0 0 10px 2px rgba(74, 222, 128, 0.85)",
+                animation: "erp-scan-line 1.8s ease-in-out infinite",
+              }}
+            />
+          </div>
+        )}
+
         {!cameraError && scanState.active && (
           <div
             style={{
@@ -286,20 +342,24 @@ export function InventoryQrScanner({
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              top: "82%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              maxWidth: "84%",
+              padding: "7px 14px",
+              borderRadius: 999,
+              background: scanState.unknownSku ? "rgba(220, 38, 38, 0.85)" : "rgba(0, 0, 0, 0.55)",
               color: "#fff",
-              fontSize: 13,
-              opacity: 0.8,
-              padding: 16,
+              fontSize: 12.5,
               textAlign: "center",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             {scanState.unknownSku
-              ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다. 다른 QR을 스캔해주세요.`
-              : "품목 QR을 카메라에 비춰주세요."}
+              ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다`
+              : "사각형 안에 QR을 맞춰주세요"}
           </div>
         )}
       </div>
