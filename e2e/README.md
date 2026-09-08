@@ -43,6 +43,13 @@ npx playwright install chromium
   실제 운영 계정이 아니라, 테스트용으로 따로 만든 계정을 쓰길 권한다
   (테스트가 반복 로그인하면서 세션/로그를 계속 남긴다).
 
+  이 앱의 로그인은 이메일이 아니라 **아이디**로 하므로(예: `e2etest`),
+  로그인 서버 액션이 내부적으로 관리자 클라이언트(`SUPABASE_SERVICE_ROLE_KEY`
+  필요)로 아이디→이메일을 조회한다 — 이 키가 없으면 진짜 계정 정보를
+  넣어도 로그인이 "일시적인 오류"로 실패하고 `/login`에 그대로 남는다.
+  그래서 `PLAYWRIGHT_TEST_EMAIL`/`PLAYWRIGHT_TEST_PASSWORD`와 함께
+  `SUPABASE_SERVICE_ROLE_KEY`(`.env.local`의 값과 동일)도 넘겨야 한다.
+
 ## 실행 전에 꼭 필요한 것
 
 이 저장소에는 `.env.local`이 없다(Supabase 접속 정보는 비밀이라 커밋
@@ -62,9 +69,11 @@ npx playwright install chromium
 `main`으로 PR을 올릴 때마다 tsc/lint/유닛테스트/build를 먼저 돌리고
 (quality 잡), 그게 통과하면 이 e2e 테스트도 이어서 돈다(e2e 잡).
 `login.spec.ts`는 계정 없이 그대로 돌고, `authenticated.spec.ts`는
-저장소에 `PLAYWRIGHT_TEST_EMAIL`/`PLAYWRIGHT_TEST_PASSWORD` 시크릿을
-등록해둔 경우에만 돈다(Settings > Secrets and variables > Actions) —
-안 넣어도 CI가 실패하지 않고 그 테스트만 건너뛴다. 실패하면 Actions
+저장소에 `PLAYWRIGHT_TEST_EMAIL`/`PLAYWRIGHT_TEST_PASSWORD` **그리고**
+`SUPABASE_SERVICE_ROLE_KEY` 시크릿을 모두 등록해둔 경우에만 돈다
+(Settings > Secrets and variables > Actions) — 안 넣어도 CI가 실패하지
+않고 그 테스트만 건너뛴다. 다만 앞의 두 개만 넣고 이 키를 빠뜨리면
+"건너뜀"이 아니라 로그인 자체가 계속 실패한다(위 참고). 실패하면 Actions
 탭에서 해당 실행의 Artifacts에 올라간 `playwright-report`를 내려받아
 `npx playwright show-report`로 열어보면 어디서 왜 실패했는지(스크린샷
 포함) 볼 수 있다.

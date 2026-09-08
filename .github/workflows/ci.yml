@@ -82,6 +82,12 @@ jobs:
         env:
           PLAYWRIGHT_TEST_EMAIL: ${{ secrets.PLAYWRIGHT_TEST_EMAIL }}
           PLAYWRIGHT_TEST_PASSWORD: ${{ secrets.PLAYWRIGHT_TEST_PASSWORD }}
+          # 아이디(이메일이 아닌) 로그인은 서버 액션이 관리자 클라이언트로
+          # get_email_for_username을 호출해 이메일을 찾아야 하는데, 그
+          # 클라이언트 생성 자체가 이 키를 요구한다(src/lib/supabase/admin.ts).
+          # 없으면 로그인 자체가 "일시적인 오류"로 실패해 /login에 그대로
+          # 남는다 — 자격증명 문제가 아니라 이 값이 빠진 것 자체가 원인.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run test:e2e
 
       - name: Upload Playwright report (실패 시 확인용)
