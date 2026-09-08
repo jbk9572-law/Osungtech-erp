@@ -34,7 +34,7 @@ export function PaperCalcReport({
   const usageAvg = totalW > 0 ? usageValues.reduce((sum, l) => sum + l.margin.usage * l.sheetCount, 0) / totalW : null;
 
   return (
-    <div className="mx-auto max-w-4xl p-8 print:p-0">
+    <div className="mx-auto max-w-4xl p-8 print-page-margin">
       <div className="mb-4 flex items-center justify-between print:hidden">
         <Link href={closeHref} className="erp-btn erp-btn-danger">
           닫기

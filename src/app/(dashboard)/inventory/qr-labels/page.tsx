@@ -58,7 +58,7 @@ export default async function InventoryQrLabelsPage({
   );
 
   return (
-    <div>
+    <div className="print-page-margin">
       <div className="mb-3 flex items-center justify-between print:hidden">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; QR 라벨 인쇄</h1>
       </div>
@@ -125,8 +125,8 @@ export default async function InventoryQrLabelsPage({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
           marginTop: 12,
         }}
       >
