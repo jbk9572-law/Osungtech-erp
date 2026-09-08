@@ -47,6 +47,17 @@ export function InventoryQrScanner({
 
   const [state, formAction, pending] = useActionState(submitStockCount, undefined);
 
+  // 카메라 디코딩 루프(아래 useEffect)는 마운트 시 한 번만 만들어져서 그
+  // 안의 클로저가 그 시점의 productBySku를 그대로 물고 있다 — products
+  // prop이 세션 중 안 바뀌는 한 문제없지만, 혹시라도 바뀌면(재검증 등)
+  // 그 클로저는 계속 옛 목록을 봐서 "방금 등록/변경된 품목의 QR을
+  // 스캔해도 다음으로 안 넘어가는" 것처럼 보일 수 있다. 항상 최신
+  // 목록을 보게 ref로 우회한다(handleManualLookup과 동일한 방식).
+  const productBySkuRef = useRef(productBySku);
+  useEffect(() => {
+    productBySkuRef.current = productBySku;
+  }, [productBySku]);
+
   useEffect(() => {
     let stream: MediaStream | null = null;
     let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -85,7 +96,7 @@ export function InventoryQrScanner({
           const frame = ctx.getImageData(0, 0, width, height);
           const code = jsQR(frame.data, width, height, { inversionAttempts: "dontInvert" });
           if (code?.data) {
-            setScanState((prev) => onQrDecoded(prev, code.data, productBySku));
+            setScanState((prev) => onQrDecoded(prev, code.data, productBySkuRef.current));
           }
         }, SCAN_INTERVAL_MS);
       } catch (err) {
@@ -103,17 +114,9 @@ export function InventoryQrScanner({
       if (intervalId) clearInterval(intervalId);
       stream?.getTracks().forEach((t) => t.stop());
     };
-    // productBySku는 products prop이 안 바뀌는 한 매 렌더 동일 인스턴스가
-    // 아니라서(useMemo 키가 products), 카메라 스트림을 매번 재시작하지
-    // 않도록 의존성에서 뺀다 — setScanState 콜백 안에서 항상 최신
-    // productBySku를 읽어야 하므로 ref로 우회한다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // 카메라 스트림 자체는 한 번만 열면 되므로(재시작하면 화면이 깜빡이며
+    // 다시 권한을 요청하는 것처럼 보임) 마운트 시 한 번만 실행한다.
   }, []);
-
-  const productBySkuRef = useRef(productBySku);
-  useEffect(() => {
-    productBySkuRef.current = productBySku;
-  }, [productBySku]);
 
   function handleManualLookup() {
     const sku = manualSku.trim().toUpperCase();
