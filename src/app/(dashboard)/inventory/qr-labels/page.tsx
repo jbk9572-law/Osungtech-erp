@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { PrintButton } from "@/components/print-button";
+import { PageGuide } from "@/components/erp/page-guide";
+import { QrLabelCard } from "@/components/qr-label-card";
 
 // 라벨 하나에 넣는 QR은 SKU 문자열 그대로를 인코딩한다 — 관리번호처럼
 // 대문자/무공백 규칙이 있는 값이 아니라 이미 유일성이 보장된 SKU라서
@@ -13,14 +15,10 @@ import { PrintButton } from "@/components/print-button";
 export default async function InventoryQrLabelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; hideZero?: string; dir?: string }>;
+  searchParams: Promise<{ q?: string; hideZero?: string }>;
 }) {
-  const { q, hideZero: hideZeroRaw, dir: dirRaw } = await searchParams;
+  const { q, hideZero: hideZeroRaw } = await searchParams;
   const hideZero = hideZeroRaw === "1";
-  // 2단랙이라 라벨을 위쪽 칸용/아래쪽 칸용으로 나눠 인쇄한다 — 라벨마다
-  // 방향 표시를 둘 다 찍어두면 오히려 어느 쪽인지 헷갈린다는 피드백으로,
-  // 인쇄 전에 위/아래 중 하나를 고르면 그 표시만 찍히게 한다.
-  const dir = dirRaw === "down" ? "down" : "up";
   const supabase = await createClient();
 
   const products = await fetchAllRows<{
@@ -64,9 +62,9 @@ export default async function InventoryQrLabelsPage({
       <div className="mb-3 flex items-center justify-between print:hidden">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; QR 라벨 인쇄</h1>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)] print:hidden">
+      <PageGuide className="print:hidden">
         아래 라벨을 인쇄해서 품목/박스에 붙이면, QR 자동실사 화면에서 스캔으로 바로 인식됩니다.
-      </p>
+      </PageGuide>
 
       <form method="get" className="erp-search print:hidden">
         <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
@@ -81,19 +79,6 @@ export default async function InventoryQrLabelsPage({
             className="erp-input"
             style={{ width: "100%" }}
           />
-        </div>
-        <div className="erp-field">
-          <label>라벨 방향 (2단랙 위/아래 칸)</label>
-          <div style={{ display: "flex", gap: 10, height: 34, alignItems: "center" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, cursor: "pointer" }}>
-              <input type="radio" name="dir" value="up" defaultChecked={dir === "up"} />
-              ▲ 위쪽 칸용
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12.5, cursor: "pointer" }}>
-              <input type="radio" name="dir" value="down" defaultChecked={dir === "down"} />
-              ▼ 아래쪽 칸용
-            </label>
-          </div>
         </div>
         <div className="erp-field" style={{ justifyContent: "flex-end" }}>
           <label aria-hidden="true">&nbsp;</label>
@@ -114,7 +99,7 @@ export default async function InventoryQrLabelsPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           조회
         </button>
-        {(q || hideZero || dir === "down") && (
+        {(q || hideZero) && (
           <Link href="/inventory/qr-labels" className="erp-btn">
             초기화
           </Link>
@@ -146,34 +131,13 @@ export default async function InventoryQrLabelsPage({
         }}
       >
         {labels.map((label) => (
-          <div
+          <QrLabelCard
             key={label.id}
-            style={{
-              border: "1px solid #000",
-              borderRadius: 4,
-              padding: 8,
-              textAlign: "center",
-              breakInside: "avoid",
-              color: "#000",
-            }}
-          >
-            {/* 2단랙 위쪽 칸/아래쪽 칸 중 지금 인쇄하는 게 어느 쪽인지
-                위 라벨 방향 선택(dir)에 맞춰 하나만 찍는다. */}
-            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.4, color: "#000" }}>
-              {dir === "up" ? "▲ 위" : "▼ 아래"}
-            </div>
-            <div
-              role="img"
-              aria-label={label.sku}
-              style={{ width: 110, height: 110, margin: "0 auto" }}
-              dangerouslySetInnerHTML={{ __html: label.qrSvg }}
-            />
-            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>{label.sku}</div>
-            <div style={{ fontSize: 11, lineHeight: 1.3 }}>{label.name}</div>
-            {label.spec && (
-              <div style={{ fontSize: 10, color: "#444" }}>{label.spec}</div>
-            )}
-          </div>
+            sku={label.sku}
+            name={label.name}
+            spec={label.spec}
+            qrSvg={label.qrSvg}
+          />
         ))}
       </div>
     </div>
