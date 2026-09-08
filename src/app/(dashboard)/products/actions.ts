@@ -299,10 +299,11 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         base_package_qty: number | null;
         supplier_id: string | null;
         category_id: string | null;
+        label_direction: string;
       }>((from, to) =>
         supabase
           .from("products")
-          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id, category_id")
+          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id, category_id, label_direction")
           .in("sku", skusInFile)
           .range(from, to),
       )
@@ -369,6 +370,10 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         category_id: r.categoryName
           ? (categoryByName.get(r.categoryName) ?? null)
           : (existing?.category_id ?? null),
+        // 수기 등록(createProduct)과 같은 규칙 — 신규 품목만 카테고리
+        // 기준 기본값(Filter는 아래, 나머지는 위)을 적용하고, 이미 있는
+        // 품목은 QR 라벨 화면에서 직접 바꿔둔 값을 그대로 보존한다.
+        label_direction: existing?.label_direction ?? (r.categoryName === "Filter" ? "down" : "up"),
       },
     };
   });

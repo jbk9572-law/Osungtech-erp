@@ -34,7 +34,7 @@ describe("onQrDecoded", () => {
   it("shows the scanned product as active", () => {
     const state = onQrDecoded(createInitialScanState(), "SKU-A", bySku(productA));
     expect(state.active).toEqual(productA);
-    expect(state.matchedCount).toBe(0);
+    expect(state.confirmedIds.size).toBe(0);
   });
 
   it("re-scanning the same code again does nothing (debounced)", () => {
@@ -47,17 +47,16 @@ describe("onQrDecoded", () => {
     const s1 = onQrDecoded(createInitialScanState(), "SKU-A", bySku(productA, productB));
     const s2 = onQrDecoded(s1, "SKU-B", bySku(productA, productB));
     expect(s2.active).toEqual(productB);
-    expect(s2.matchedCount).toBe(1);
     expect(s2.confirmedIds.has("p1")).toBe(true);
     expect(s2.mismatches).toEqual([]);
   });
 
-  it("an unrecognized code surfaces as unknownSku without advancing matchedCount", () => {
+  it("an unrecognized code surfaces as unknownSku while still confirming the one left behind", () => {
     const s1 = onQrDecoded(createInitialScanState(), "SKU-A", bySku(productA));
     const s2 = onQrDecoded(s1, "GARBAGE", bySku(productA));
     expect(s2.active).toBeNull();
     expect(s2.unknownSku).toBe("GARBAGE");
-    expect(s2.matchedCount).toBe(1); // SKU-A was still auto-confirmed on leaving it
+    expect(s2.confirmedIds.has("p1")).toBe(true); // SKU-A was still auto-confirmed on leaving it
   });
 
   it("does not double-count a product scanned twice non-consecutively", () => {
@@ -66,7 +65,7 @@ describe("onQrDecoded", () => {
     state = onQrDecoded(state, "SKU-B", bySku(productA, productB));
     state = onQrDecoded(state, "SKU-A", bySku(productA, productB)); // re-scan A
     state = finalizeScanSession(state);
-    expect(state.matchedCount).toBe(2); // only A and B, not 3
+    expect(state.confirmedIds.size).toBe(2); // only A and B, not 3
   });
 });
 
@@ -89,7 +88,7 @@ describe("finalizeScanSession", () => {
   it("confirms the still-active product as matched when the session ends", () => {
     const s1 = onQrDecoded(createInitialScanState(), "SKU-A", bySku(productA));
     const s2 = finalizeScanSession(s1);
-    expect(s2.matchedCount).toBe(1);
+    expect(s2.confirmedIds.size).toBe(1);
     expect(s2.confirmedIds.has("p1")).toBe(true);
   });
 });

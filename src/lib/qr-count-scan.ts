@@ -29,12 +29,11 @@ export type ScanState = {
   // 스캔 흐름을 한 번이라도 거친(일치든 불일치든) 품목 id 모음 — 같은
   // 품목을 실수로 두 번 스캔해도 "스캔 건수"가 중복으로 올라가지 않게 한다.
   confirmedIds: Set<string>;
-  matchedCount: number;
   mismatches: ConfirmedMismatch[];
 };
 
 export function createInitialScanState(): ScanState {
-  return { active: null, unknownSku: null, confirmedIds: new Set(), matchedCount: 0, mismatches: [] };
+  return { active: null, unknownSku: null, confirmedIds: new Set(), mismatches: [] };
 }
 
 // 지금 화면에 떠 있는 품목(active)을 "일치"로 확정한다 — 다음 QR을
@@ -43,7 +42,7 @@ function confirmActiveAsMatched(state: ScanState): ScanState {
   if (!state.active || state.confirmedIds.has(state.active.productId)) return state;
   const confirmedIds = new Set(state.confirmedIds);
   confirmedIds.add(state.active.productId);
-  return { ...state, confirmedIds, matchedCount: state.matchedCount + 1 };
+  return { ...state, confirmedIds };
 }
 
 // 새 QR 값을 읽었을 때 호출한다. 지금 떠 있는 품목과 같은 값이면(같은
