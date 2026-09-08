@@ -1280,9 +1280,9 @@ export function NewPurchaseForm({
           >
             <thead>
               <tr>
-                <th style={{ width: alsoCreateSale ? "15%" : "13%" }}>품목</th>
-                <th style={{ width: alsoCreateSale ? "5%" : "6%" }}>규격</th>
-                <th style={{ width: alsoCreateSale ? "9%" : "8%" }}>
+                <th style={{ width: "13%" }}>품목</th>
+                <th style={{ width: alsoCreateSale ? "4%" : "6%" }}>규격</th>
+                <th style={{ width: "8%" }}>
                   관리번호
                 </th>
                 <th style={{ width: alsoCreateSale ? "3%" : "4%" }}>단위</th>
@@ -1326,8 +1326,8 @@ export function NewPurchaseForm({
                 >
                   합계
                 </th>
-                <th style={{ width: alsoCreateSale ? "10%" : "13%" }}>비고</th>
-                <th style={{ width: "5%" }} />
+                <th style={{ width: alsoCreateSale ? "7%" : "6%" }}>비고</th>
+                <th style={{ width: "12%" }} />
               </tr>
             </thead>
             <tbody

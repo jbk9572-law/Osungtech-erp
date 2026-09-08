@@ -1302,8 +1302,8 @@ export function NewSaleForm({
                 <th className="num" style={{ width: "9%" }}>
                   합계
                 </th>
-                <th style={{ width: "13%" }}>비고</th>
-                <th style={{ width: "5%" }} />
+                <th style={{ width: "6%" }}>비고</th>
+                <th style={{ width: "12%" }} />
               </tr>
             </thead>
             <tbody
