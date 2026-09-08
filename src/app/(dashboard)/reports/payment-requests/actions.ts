@@ -399,32 +399,40 @@ export async function bulkDeletePaymentRequests(
 
   const supabase = await createClient();
 
-  const results = await Promise.all(
-    ids.map(async (id) => {
-      // deletePaymentRequest와 같은 이유로, 행이 실제로 지워졌는지 먼저
-      // 확인한 뒤에만(본인 작성 또는 관리자) 영수증 스토리지 파일을 지운다.
-      const { data: receipts } = await supabase
-        .from("payment_request_receipts")
-        .select("file_path")
-        .eq("payment_request_id", id);
+  // 건마다 따로 조회/삭제하면 N건 삭제에 왕복이 2N번(영수증 조회 + 삭제)
+  // 생긴다 — 둘 다 in()으로 한 번씩만 왕복하도록 묶었다. 삭제는 RLS가
+  // 행마다 여전히 개별 판정하므로(본인 작성 또는 관리자만 삭제 가능),
+  // 실제로 지워진 id만 select로 돌려받아 그 목록으로 성공/실패를 가른다
+  // — deletePaymentRequest(단건)의 wasRowMutated 판정과 같은 기준이다.
+  const { data: receipts } = await supabase
+    .from("payment_request_receipts")
+    .select("payment_request_id, file_path")
+    .in("payment_request_id", ids);
 
-      const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
-      if (!wasRowMutated(result)) {
-        return { error: result.error ?? new Error("not deleted") };
-      }
+  const { data: deleted, error: deleteError } = await supabase
+    .from("payment_requests")
+    .delete()
+    .in("id", ids)
+    .select("id");
 
-      if (receipts && receipts.length > 0) {
-        await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
-      }
-      return { error: null };
-    })
-  );
-  const failCount = results.filter((r) => r.error).length;
+  if (deleteError) {
+    return { error: `삭제에 실패했습니다: ${deleteError.message}` };
+  }
+
+  const deletedIds = new Set((deleted ?? []).map((r) => r.id));
+  const filePaths = (receipts ?? [])
+    .filter((r) => deletedIds.has(r.payment_request_id))
+    .map((r) => r.file_path);
+  if (filePaths.length > 0) {
+    await supabase.storage.from("payment-receipts").remove(filePaths);
+  }
+
+  const failCount = ids.length - deletedIds.size;
 
   revalidatePath("/reports/payment-requests");
 
   if (failCount > 0) {
-    return { error: `${ids.length - failCount}건 삭제, ${failCount}건 실패했습니다.` };
+    return { error: `${deletedIds.size}건 삭제, ${failCount}건 실패했습니다.` };
   }
   return { success: `${ids.length}건 삭제했습니다.` };
 }
