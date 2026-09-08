@@ -111,10 +111,7 @@ export default async function InventoryLocationsPage() {
               "미지정"
             )}
           </span>
-          <span
-            style={{ marginLeft: "auto", display: "flex", gap: 8 }}
-            onClick={(e) => e.preventDefault()}
-          >
+          <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
             <Link href={`/inventory/locations/${rack}/print`} className="erp-btn">
               QR 인쇄
             </Link>
