@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+
 export type NetlifyUsage = {
   usedBytes: number;
   // 2025년 9월 이후 넷리파이 무료 플랜은 대역폭 전용 고정 한도가 없고
@@ -30,7 +32,12 @@ export type NetlifyUsageResult = {
 //   Personal access tokens에서 발급
 // - NETLIFY_TEAM_SLUG: (선택) 팀 슬러그. 안 넣으면 토큰으로 접근 가능한
 //   첫 번째 계정을 자동으로 찾는다.
-export async function getNetlifyUsage(): Promise<NetlifyUsageResult> {
+//
+// 대시보드 레이아웃(모든 화면 공통)에서 페이지 이동할 때마다 이 외부 API를
+// 새로 호출하고 있었다 — 대역폭 사용량은 몇 분 단위로 바뀌어도 상관없는
+// 값이라 unstable_cache로 5분간 재사용한다. DB/쿠키에 의존하지 않는
+// 순수 외부 호출이라 unstable_cache와 충돌할 여지가 없다.
+async function fetchNetlifyUsage(): Promise<NetlifyUsageResult> {
   const token = process.env.NETLIFY_API_TOKEN;
   if (!token) return { usage: null, error: null };
 
@@ -100,3 +107,7 @@ export async function getNetlifyUsage(): Promise<NetlifyUsageResult> {
     return { usage: null, error: `조회 중 예외 발생: ${err instanceof Error ? err.message : String(err)}` };
   }
 }
+
+export const getNetlifyUsage = unstable_cache(fetchNetlifyUsage, ["netlify-usage"], {
+  revalidate: 300,
+});
