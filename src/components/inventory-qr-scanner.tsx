@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { FormMessage } from "@/components/form-message";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 import {
   createInitialScanState,
   onQrDecoded,
@@ -205,7 +206,7 @@ export function InventoryQrScanner({
             <div style={{ fontSize: 12.5, opacity: 0.85, marginBottom: 8 }}>
               {scanState.active.spec ?? "-"} · 전산 재고{" "}
               <strong>
-                {scanState.active.systemQuantity.toLocaleString()}
+                {formatQuantityWithBoxes(scanState.active.systemQuantity, scanState.active.basePackageQty)}{" "}
                 {scanState.active.unit ?? ""}
               </strong>
             </div>

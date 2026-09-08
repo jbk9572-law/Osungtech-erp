@@ -14,6 +14,7 @@ const productA: ScanProduct = {
   spec: "788*1090",
   unit: "매",
   systemQuantity: 117,
+  basePackageQty: null,
 };
 const productB: ScanProduct = {
   productId: "p2",
@@ -22,6 +23,7 @@ const productB: ScanProduct = {
   spec: "450*250",
   unit: "EA",
   systemQuantity: 300,
+  basePackageQty: 50,
 };
 
 function bySku(...products: ScanProduct[]) {

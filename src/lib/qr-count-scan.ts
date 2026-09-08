@@ -10,6 +10,7 @@ export type ScanProduct = {
   spec: string | null;
   unit: string | null;
   systemQuantity: number;
+  basePackageQty: number | null;
 };
 
 // 시스템 수량과 다르게(실제로) 센 값으로 확정된 품목 — 실사 저장 대상.

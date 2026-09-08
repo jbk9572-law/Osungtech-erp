@@ -16,11 +16,12 @@ export default async function InventoryQrScanPage() {
       name: string;
       spec: string | null;
       unit: string;
+      base_package_qty: number | null;
       inventory: { quantity: number }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, inventory(quantity)")
+        .select("id, sku, name, spec, unit, base_package_qty, inventory(quantity)")
         .order("name")
         .range(from, to),
     ),
@@ -34,6 +35,7 @@ export default async function InventoryQrScanPage() {
     spec: p.spec,
     unit: p.unit,
     systemQuantity: p.inventory?.[0]?.quantity ?? 0,
+    basePackageQty: p.base_package_qty,
   }));
 
   return (
