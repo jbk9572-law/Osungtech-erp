@@ -13,12 +13,14 @@ import {
   type ScanProduct,
 } from "@/lib/qr-count-scan";
 
-// 프레임마다(60fps) 디코딩을 돌리면 저사양 폰에서 카메라가 버벅이므로,
-// 5회/초 정도로만 잘라서 돈다 — 사람이 QR을 갖다 대고 있는 시간(수백ms)에
-// 비하면 충분히 빠르다.
-const SCAN_INTERVAL_MS = 200;
-// 디코딩 속도를 위해 원본 해상도 대신 축소한 캔버스에서 읽는다.
-const SCAN_CANVAS_WIDTH = 480;
+// 프레임마다(60fps) 디코딩을 돌리면 저사양 폰에서 카메라가 버벅이므로 잘라서
+// 돈다 — 200ms(5회/초)는 안전하지만 "찍었는데 왜 안 넘어가지" 싶을 만큼
+// 굼떠 보인다는 피드백이 있어 8~9회/초로 올렸다.
+const SCAN_INTERVAL_MS = 120;
+// 디코딩 속도를 위해 원본 해상도 대신 축소한 캔버스에서 읽는다 — 너무 작으면
+// (기존 480) 카메라가 QR에서 살짝만 멀어져도 패턴을 못 읽어 재시도가 잦아져
+// 오히려 느리게 느껴진다. 640으로 올려 인식 성공률 자체를 높인다.
+const SCAN_CANVAS_WIDTH = 640;
 
 export function InventoryQrScanner({
   products,
@@ -33,6 +35,13 @@ export function InventoryQrScanner({
   const [manualSku, setManualSku] = useState("");
   const [mismatchInput, setMismatchInput] = useState<string | null>(null);
   const [ended, setEnded] = useState(false);
+  // 인식이 됐는지 안 됐는지 애매하다는 피드백 — 화면을 잠깐 색으로
+  // 깜빡여서(성공은 초록, 모르는 QR은 빨강) 텍스트를 읽기 전에 바로
+  // 눈에 띄게 한다. flashToken을 매번 새 값으로 바꿔 같은 종류가
+  // 연달아 떠도(예: 모르는 QR을 두 번 연속) 애니메이션이 처음부터
+  // 다시 재생되게 한다(React key로 DOM 자체를 새로 만듦).
+  const [flash, setFlash] = useState<{ kind: "ok" | "unknown"; token: number } | null>(null);
+  const lastSignatureRef = useRef<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,6 +67,25 @@ export function InventoryQrScanner({
   useEffect(() => {
     productBySkuRef.current = productBySku;
   }, [productBySku]);
+
+  // scanState.active/unknownSku가 바뀔 때마다(=새로 인식됐을 때만) 플래시를
+  // 띄운다. 시그니처로 한 번 더 걸러서, 같은 품목이 계속 active로 남아있는
+  // 동안 다른 이유로 리렌더가 일어나도 플래시가 중복 재생되지 않게 한다.
+  useEffect(() => {
+    const signature = scanState.active
+      ? `ok:${scanState.active.productId}`
+      : scanState.unknownSku
+        ? `unknown:${scanState.unknownSku}`
+        : null;
+    if (signature && signature !== lastSignatureRef.current) {
+      const kind = scanState.active ? "ok" : "unknown";
+      setFlash((prev) => ({ kind, token: (prev?.token ?? 0) + 1 }));
+      if (kind === "ok" && typeof navigator.vibrate === "function") {
+        navigator.vibrate(60);
+      }
+    }
+    lastSignatureRef.current = signature;
+  }, [scanState.active, scanState.unknownSku]);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -169,6 +197,20 @@ export function InventoryQrScanner({
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
         <canvas ref={canvasRef} style={{ display: "none" }} />
+
+        {flash && (
+          <div
+            key={flash.token}
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background: flash.kind === "ok" ? "rgba(34, 197, 94, 0.45)" : "rgba(220, 38, 38, 0.45)",
+              animation: "erp-scan-flash 380ms ease-out forwards",
+            }}
+          />
+        )}
 
         {cameraError && (
           <div

@@ -38,6 +38,17 @@ body {
   }
 }
 
+/* QR 스캐너 인식 성공/실패 피드백 — 카메라 화면 전체에 짧게 색을
+   깜빡여서, 인식이 됐는지 안 됐는지 텍스트를 읽기 전에 바로 알 수 있게 한다. */
+@keyframes erp-scan-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 @media print {
   @page {
     size: A4 portrait;
