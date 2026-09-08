@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
+import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 
@@ -83,11 +84,11 @@ export default async function InventoryPage({
           </Link>
         </div>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         재고 수량은 매입(입고) · 매출(출고) · 재고 조정 내역의 합으로 자동 계산됩니다. 직접 수량을
         바꿀 수는 없고, 기초재고를 등록할 때는 아래 재고 조정을, 전체 품목을 한 번에 실사해 맞출
         때는 우측 상단 &quot;재고 실사&quot;를 사용하세요.
-      </p>
+      </PageGuide>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">

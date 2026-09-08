@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryCountForm, type CountRow } from "@/components/inventory-count-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 
@@ -231,9 +232,9 @@ export default async function InventoryCountPage({
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         전산 재고와 실제 수량을 비교해 맞추고, 지금까지의 실사 이력을 함께 확인합니다.
-      </p>
+      </PageGuide>
 
       <div className="erp-kpi-row">
         <div className="erp-hero-card">

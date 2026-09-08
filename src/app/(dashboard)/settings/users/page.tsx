@@ -6,6 +6,7 @@ import { UserRoleSelect } from "@/components/user-role-select";
 import { ROLE_LABELS } from "@/lib/user-roles";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 
 export default async function UsersSettingsPage() {
   const supabase = await createClient();
@@ -40,11 +41,11 @@ export default async function UsersSettingsPage() {
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         새 계정을 만들고 역할(권한)을 지정합니다. 아이디로 로그인하며,
         비밀번호는 최초 생성 시 값 그대로 유지되니 본인이 직접 로그인 후
         바꾸도록 안내해주세요.
-      </p>
+      </PageGuide>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { normalizeLotNumber } from "@/lib/lot-number";
 
@@ -77,9 +78,9 @@ export default async function LotLookupPage({
       <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
         재고관리 &gt; 관리번호 조회
       </h1>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         불량/리콜 발생 시 특정 관리번호(로트)가 어디서 들어와서 어디로 나갔는지 품목·거래처 상관없이 전부 추적합니다.
-      </p>
+      </PageGuide>
 
       <div className="erp-toolbar">
         <Link href="/inventory" className="erp-btn erp-btn-danger">
