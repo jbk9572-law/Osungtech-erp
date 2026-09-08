@@ -25,7 +25,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
   if (!location) notFound();
 
-  const [stockRows, products] = await Promise.all([
+  const [stockRows, productRows, inventoryRows] = await Promise.all([
     supabase
       .from("inventory_locations")
       .select("id, product_id, quantity, products(sku, name, spec, unit)")
@@ -35,7 +35,19 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
     fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
       supabase.from("products").select("id, sku, name, spec").order("name").range(from, to),
     ),
+    fetchAllRows<{ product_id: string; quantity: number }>((from, to) =>
+      supabase.from("inventory").select("product_id, quantity").range(from, to),
+    ),
   ]);
+
+  // 위치별 수량을 처음부터 직접 타이핑하게 하면 막막하다는 요청 — 창고
+  // 전체 재고(기존 inventory 합계)를 참고삼아 기본값으로 채워주고, 그
+  // 위치엔 그중 일부만 있으면 숫자만 고치면 되게 한다.
+  const totalByProduct = new Map<string, number>();
+  for (const row of inventoryRows) {
+    totalByProduct.set(row.product_id, (totalByProduct.get(row.product_id) ?? 0) + row.quantity);
+  }
+  const products = productRows.map((p) => ({ ...p, totalQuantity: totalByProduct.get(p.id) ?? 0 }));
 
   return (
     <div>

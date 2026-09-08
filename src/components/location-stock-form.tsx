@@ -4,8 +4,9 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { setLocationStock } from "@/app/(dashboard)/inventory/locations/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
+import { PageGuide } from "@/components/erp/page-guide";
 
-type Product = { id: string; sku: string; name: string; spec?: string | null };
+type Product = { id: string; sku: string; name: string; spec?: string | null; totalQuantity: number };
 
 export function LocationStockForm({
   locationId,
@@ -20,6 +21,7 @@ export function LocationStockForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState<number>(0);
+  const selectedProduct = products.find((p) => p.id === productId);
 
   useEffect(() => {
     if (state?.success) {
@@ -30,13 +32,22 @@ export function LocationStockForm({
     }
   }, [state]);
 
+  // 위치별 수량을 0부터 직접 입력하게 하면 막막하니, 품목을 고르면 창고
+  // 전체 재고를 기본값으로 채워준다 — 이 위치엔 그중 일부만 있으면
+  // 숫자만 고치면 된다.
+  function handleProductChange(id: string) {
+    setProductId(id);
+    const product = products.find((p) => p.id === id);
+    if (product) setQuantity(product.totalQuantity);
+  }
+
   return (
     <form ref={formRef} action={formAction} className="flex flex-wrap items-end gap-3">
       <input type="hidden" name="location_id" value={locationId} />
       <input type="hidden" name="code" value={code} />
       <input type="hidden" name="product_id" value={productId} />
       <div style={{ minWidth: 260, flex: 1 }}>
-        <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
+        <ProductSearchSelect products={products} value={productId} onChange={handleProductChange} />
       </div>
       <div className="erp-field" style={{ minWidth: 100 }}>
         <label htmlFor="loc-qty">수량</label>
@@ -59,6 +70,14 @@ export function LocationStockForm({
           "등록/수정"
         )}
       </button>
+      {selectedProduct && (
+        <div style={{ flexBasis: "100%" }}>
+          <PageGuide className="mb-0">
+            현재 창고 전체 재고: {selectedProduct.totalQuantity.toLocaleString()}개 — 수량 칸에 기본값으로
+            채워뒀습니다. 이 위치엔 일부만 있으면 숫자를 고쳐주세요.
+          </PageGuide>
+        </div>
+      )}
       <div style={{ flexBasis: "100%" }}>
         <FormMessage state={state} />
       </div>
