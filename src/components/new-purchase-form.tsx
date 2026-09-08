@@ -1288,7 +1288,7 @@ export function NewPurchaseForm({
                 <th style={{ width: alsoCreateSale ? "3%" : "4%" }}>단위</th>
                 <th
                   className="num"
-                  style={{ width: alsoCreateSale ? "11%" : "15%" }}
+                  style={{ width: alsoCreateSale ? "7%" : "10%" }}
                 >
                   입고수량
                 </th>
@@ -1326,7 +1326,7 @@ export function NewPurchaseForm({
                 >
                   합계
                 </th>
-                <th style={{ width: alsoCreateSale ? "7%" : "6%" }}>비고</th>
+                <th style={{ width: "11%" }}>비고</th>
                 <th style={{ width: "12%" }} />
               </tr>
             </thead>
