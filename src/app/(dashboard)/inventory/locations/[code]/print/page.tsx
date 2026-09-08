@@ -18,8 +18,15 @@ async function buildLocationUrl(code: string) {
   return `${proto}://${host}/inventory/locations/${code}`;
 }
 
-export default async function RackPrintPage({ params }: { params: Promise<{ rack: string }> }) {
-  const { rack } = await params;
+export default async function RackPrintPage({ params }: { params: Promise<{ code: string }> }) {
+  // 이 라우트는 /inventory/locations/[code](위치 상세)와 URL 한 단계를
+  // 공유해서 다이나믹 세그먼트 이름을 똑같이 "code"로 맞춰야 한다 —
+  // Next.js는 같은 깊이의 경로에 서로 다른 슬러그 이름(rack vs code)을
+  // 허용하지 않고, 이름이 다르면 라우트 테이블 생성 자체가 실패해
+  // 배포된 사이트 전체가 500을 낸다(실제로 이 버그로 한 번 장애가 났다).
+  // 이 화면에서 실제로 받는 값은 위치 코드가 아니라 랙 이름이라
+  // rack으로 바로 재구조분해한다.
+  const { code: rack } = await params;
   const supabase = await createClient();
 
   const { data } = await supabase
