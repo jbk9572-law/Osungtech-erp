@@ -5,6 +5,7 @@ import { BackupRestoreForm } from "@/components/backup-restore-form";
 import { ServerRestoreForm } from "@/components/server-restore-form";
 import { listServerBackupSnapshots, RESTORE_WORKFLOW_URL } from "@/lib/github-restore";
 import { getServerEnv } from "@/lib/server-env";
+import { PageGuide } from "@/components/erp/page-guide";
 
 export default async function BackupSettingsPage() {
   const { isAdmin } = await requireAdmin();
@@ -90,7 +91,7 @@ export default async function BackupSettingsPage() {
                 전체를 지우고 통째로 되돌립니다 — 그 시점 이후 등록/수정한 데이터는
                 전부 사라집니다. 되돌릴 수 없으니 정말 필요할 때만 쓰세요.
               </p>
-              <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <PageGuide>
                 매시간 GitHub Actions가 자동으로 떠두는 백업 시점 중 하나를 골라, 이 화면에서
                 바로 서버(GitHub Actions)에 복원을 요청합니다. 실제 복원 작업은
                 GitHub Actions에서 진행되며, 완료까지 몇 분 걸릴 수 있습니다 — 진행 상황은{" "}
@@ -98,7 +99,7 @@ export default async function BackupSettingsPage() {
                   Actions 실행 목록
                 </a>
                 에서 확인하세요.
-              </p>
+              </PageGuide>
               {!restoreConfigured ? (
                 <p className="erp-grid-empty" style={{ marginTop: 0 }}>
                   이 기능을 쓰려면 배포 환경에 <code style={{ fontSize: 11 }}>GITHUB_RESTORE_TOKEN</code>

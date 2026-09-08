@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { compressImage } from "@/lib/compress-image";
 import type { FormState } from "@/components/form-message";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type StagedReceipt = {
   id: string;
@@ -116,10 +117,10 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
   return (
     <div className="md:col-span-4">
       <input ref={hiddenInputRef} type="file" name="receipts" multiple className="hidden" tabIndex={-1} readOnly />
-      <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <PageGuide>
         여러 장을 한 번에 고르거나, 촬영 화면에서 연속으로 찍어 한 번에 추가할 수 있습니다. 스테이플러로
         묶는 순서대로 화살표로 정렬해주세요.
-      </p>
+      </PageGuide>
 
       <ul className="flex flex-wrap gap-3">
         {items.map((item, index) => (

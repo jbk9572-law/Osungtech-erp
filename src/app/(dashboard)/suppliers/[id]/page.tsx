@@ -19,6 +19,7 @@ import {
 } from "@/app/(dashboard)/suppliers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { todayKstStr } from "@/lib/kst-date";
@@ -207,9 +208,7 @@ export default async function SupplierDetailPage({
           <span className="erp-detail-tab active">매입단가 등록/수정</span>
         </div>
         <div className="erp-detail-body">
-          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-            같은 상품에 새 단가를 등록하면 기존 단가는 최신 단가로 자동 갱신됩니다.
-          </p>
+          <PageGuide>같은 상품에 새 단가를 등록하면 기존 단가는 최신 단가로 자동 갱신됩니다.</PageGuide>
           <SupplierPriceForm supplierId={supplier.id} products={products ?? []} />
         </div>
       </div>

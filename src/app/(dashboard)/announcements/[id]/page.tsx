@@ -9,6 +9,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
 import { markAnnouncementRead } from "@/lib/announcement-reads";
+import { PageGuide } from "@/components/erp/page-guide";
 
 export default async function AnnouncementDetailPage({
   params,
@@ -97,12 +98,7 @@ export default async function AnnouncementDetailPage({
             >
               {row.content || "-"}
             </p>
-            <p
-              className="mt-4 text-xs"
-              style={{ color: "var(--erp-text-muted)" }}
-            >
-              본인이 등록한 공지사항만 수정할 수 있습니다.
-            </p>
+            <PageGuide className="mt-4">본인이 등록한 공지사항만 수정할 수 있습니다.</PageGuide>
           </div>
         )}
       </div>

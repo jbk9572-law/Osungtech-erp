@@ -319,12 +319,12 @@ export default async function InventoryCountPage({
         </div>
         <div className="erp-detail-body">
           {cacheMismatches.length === 0 ? (
-            <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <PageGuide>
               화면에 보이는 전산 재고(캐시)와 입출고/조정 이력을 처음부터 전부 다시 더한 값을 전
               품목 비교한 결과, 차이가 있는 품목이 없습니다. 즉 이 화면의 계산 로직 자체에는 문제가
               없고, 실사에서 나오는 큰 차이는 실제 재고 유실·파손·누락 등 현실이 그대로 반영된
               것입니다.
-            </p>
+            </PageGuide>
           ) : (
             <>
               <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>

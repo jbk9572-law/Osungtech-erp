@@ -5,6 +5,7 @@ import jsQR from "jsqr";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { FormMessage } from "@/components/form-message";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { PageGuide } from "@/components/erp/page-guide";
 import {
   createInitialScanState,
   onQrDecoded,
@@ -364,10 +365,10 @@ export function InventoryQrScanner({
         )}
       </div>
 
-      <p className="mt-2 text-center text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <PageGuide className="mt-2 max-w-[480px] mx-auto text-center">
         QR을 비추면 자동으로 인식됩니다. 다음 품목을 이어서 스캔하면 방금 품목은 &quot;일치&quot;로
         자동 확정됩니다.
-      </p>
+      </PageGuide>
 
       <div className="erp-field" style={{ marginTop: 10, maxWidth: 480, margin: "10px auto 0" }}>
         <label>카메라가 안 될 때 — SKU 직접 입력</label>

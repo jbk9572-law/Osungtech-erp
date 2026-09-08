@@ -130,7 +130,14 @@ export default async function ReorderSuggestionsPage() {
               ) : (
                 <span
                   className="text-xs"
-                  style={{ margin: 4, padding: "0 8px", color: "var(--erp-text-muted)" }}
+                  style={{
+                    margin: 4,
+                    padding: "4px 10px",
+                    borderRadius: 4,
+                    background: "var(--erp-info-bg)",
+                    color: "var(--erp-info-text)",
+                    border: "1px solid var(--erp-info-border)",
+                  }}
                 >
                   품목에 매입처가 지정되어 있지 않아 바로 등록할 수 없습니다.
                 </span>

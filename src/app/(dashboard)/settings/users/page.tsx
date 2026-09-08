@@ -95,13 +95,13 @@ export default async function UsersSettingsPage() {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <PageGuide className="mt-2">
         {Object.entries(ROLE_LABELS)
           .map(([, label]) => label)
           .join(" · ")}{" "}
         중 하나로 지정할 수 있습니다. 본인 계정의 역할은 변경할 수 없습니다.
         행을 클릭하면 아이디/이름/비밀번호 수정 및 계정 삭제가 가능합니다.
-      </p>
+      </PageGuide>
     </div>
   );
 }

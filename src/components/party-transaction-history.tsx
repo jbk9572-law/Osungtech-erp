@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GridBadge } from "@/components/grid/badge";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type Row = {
   id: string;
@@ -164,9 +165,7 @@ export function PartyTransactionHistory({
             </tbody>
           </table>
         </div>
-        <p style={{ marginTop: 8, fontSize: 11, color: "var(--erp-text-muted)" }}>
-          조회용입니다 — 실제 정산은 오래된 미결제 전표부터 자동으로 상계됩니다.
-        </p>
+        <PageGuide className="mt-2">조회용입니다 — 실제 정산은 오래된 미결제 전표부터 자동으로 상계됩니다.</PageGuide>
       </div>
     </div>
   );

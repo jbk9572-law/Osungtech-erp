@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { ReceiptGallery } from "@/components/receipt-gallery";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
 import { deletePaymentRequest } from "../actions";
@@ -214,12 +215,7 @@ export default async function PaymentRequestDetailPage({
         </div>
         <div className="erp-detail-body">
           <ReceiptGallery receipts={receipts ?? []} />
-          <p
-            className="mt-3 text-[11px]"
-            style={{ color: "var(--erp-text-muted)" }}
-          >
-            영수증 추가·삭제는 F4 수정 화면에서 할 수 있습니다.
-          </p>
+          <PageGuide className="mt-3">영수증 추가·삭제는 F4 수정 화면에서 할 수 있습니다.</PageGuide>
         </div>
       </div>
     </div>
