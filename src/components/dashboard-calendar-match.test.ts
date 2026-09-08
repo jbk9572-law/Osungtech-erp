@@ -16,6 +16,7 @@ function row(overrides: Partial<ItemRow> = {}): ItemRow {
     spec: "788*1090",
     unit: "매",
     quantity: 100,
+    basePackageQty: null,
     amount: 100000,
     orderId: `order-${seq}`,
     remark: null,

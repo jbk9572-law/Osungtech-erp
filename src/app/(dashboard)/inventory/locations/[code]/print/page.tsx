@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
@@ -42,6 +43,11 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
     return (
       <div className="print-page-margin">
         <p className="erp-grid-empty">{rack} 랙을 찾을 수 없습니다.</p>
+        <div className="erp-toolbar">
+          <Link href="/inventory/locations" className="erp-btn erp-btn-danger">
+            ESC 목록으로
+          </Link>
+        </div>
       </div>
     );
   }
@@ -103,6 +109,9 @@ export default async function RackPrintPage({ params }: { params: Promise<{ code
       </PageGuide>
       <div className="erp-toolbar print:hidden">
         <PrintButton autoPrint={false} />
+        <Link href="/inventory/locations" className="erp-btn erp-btn-danger">
+          ESC 목록으로
+        </Link>
       </div>
 
       <div

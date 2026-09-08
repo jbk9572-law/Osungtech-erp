@@ -91,14 +91,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
+        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
+        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -169,6 +169,7 @@ export default async function DashboardPage({
     spec: string;
     unit: string;
     quantity: number;
+    basePackageQty: number | null;
     amount: number;
     orderId: string;
     remark: string | null;
@@ -276,6 +277,7 @@ export default async function DashboardPage({
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
+      basePackageQty: item.products?.base_package_qty ?? null,
       amount,
       orderId: item.sales_order_id,
       remark: item.remark,
@@ -305,6 +307,7 @@ export default async function DashboardPage({
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
+      basePackageQty: item.products?.base_package_qty ?? null,
       amount,
       orderId: item.purchase_order_id,
       remark: item.remark,

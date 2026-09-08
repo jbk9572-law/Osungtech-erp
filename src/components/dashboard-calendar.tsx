@@ -23,6 +23,7 @@ import {
   formatPaperCalcSizeLines,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 
 export type ItemRow = {
   partnerName: string;
@@ -31,6 +32,7 @@ export type ItemRow = {
   spec: string;
   unit: string;
   quantity: number;
+  basePackageQty: number | null;
   amount: number;
   orderId: string;
   remark: string | null;
@@ -504,6 +506,7 @@ function buildProductLineGroups(
       const lis = bySpec.get(spec)!;
       const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
       const unit = lis[0]?.item.unit ?? "";
+      const basePackageQty = lis[0]?.item.basePackageQty ?? null;
       const isReturn = lis.some((li) => li.item.isReturn);
       const carryoverSuffix = lis.some((li) => li.item.isCarryover) ? " (이월)" : "";
       const returnSuffix = isReturn ? " (반품)" : "";
@@ -511,7 +514,7 @@ function buildProductLineGroups(
       const noteSuffix = note ? ` (${note})` : "";
 
       group.lines.push(
-        `    ${spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
+        `    ${spec} : ${formatQuantityWithBoxes(quantity, basePackageQty)} ${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
       );
       group.specCount += 1;
       group.totalQuantity += quantity;
