@@ -310,6 +310,83 @@ export type Database = {
           },
         ];
       };
+      locations: {
+        Row: {
+          id: string;
+          warehouse_id: string;
+          rack: string;
+          tier: number;
+          position: number;
+          code: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          warehouse_id: string;
+          rack: string;
+          tier: number;
+          position: number;
+          code: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          warehouse_id?: string;
+          rack?: string;
+          tier?: number;
+          position?: number;
+          code?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "locations_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inventory_locations: {
+        Row: {
+          id: string;
+          product_id: string;
+          location_id: string;
+          quantity: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          location_id: string;
+          quantity?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          location_id?: string;
+          quantity?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_locations_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_locations_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory_transactions: {
         Row: {
           id: string;

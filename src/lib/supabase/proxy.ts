@@ -41,8 +41,15 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
   if (!user && !isPublicPath) {
+    // 위치 QR처럼 로그인 안 된 상태에서 특정 화면 링크로 바로 들어오는
+    // 경우, 로그인 후 무조건 /dashboard로 보내면 원래 보려던 화면을
+    // 다시 찾아가야 한다 — 원래 경로를 next로 넘겨 로그인 액션이 그
+    // 위치로 되돌려보내게 한다.
+    const originalPath = `${pathname}${request.nextUrl.search}`;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", originalPath);
     return NextResponse.redirect(url);
   }
 

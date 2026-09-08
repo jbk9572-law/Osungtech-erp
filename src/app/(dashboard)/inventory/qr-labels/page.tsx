@@ -112,6 +112,9 @@ export default async function InventoryQrLabelsPage({
         <Link href="/inventory/count/scan" className="erp-btn">
           QR 자동실사 화면으로
         </Link>
+        <Link href="/inventory/locations" className="erp-btn">
+          보관 위치 QR 관리
+        </Link>
         <Link href="/inventory" className="erp-btn erp-btn-danger">
           ESC 목록으로
         </Link>

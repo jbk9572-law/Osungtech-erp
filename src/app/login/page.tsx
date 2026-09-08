@@ -1,9 +1,20 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { Suspense, useActionState, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { login } from "./actions";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   const [state, formAction, pending] = useActionState(login, undefined);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
@@ -54,6 +65,7 @@ export default function LoginPage() {
 
         <div className="flex flex-1 flex-col justify-between p-7">
           <form action={handleSubmit} className="flex flex-1 flex-col justify-center gap-3">
+            {next && <input type="hidden" name="next" value={next} />}
             <div>
               <label htmlFor="email" className="mb-1 block text-xs font-medium text-[#6b7280]">
                 아이디
