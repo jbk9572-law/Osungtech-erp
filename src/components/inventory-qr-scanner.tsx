@@ -178,191 +178,203 @@ export function InventoryQrScanner({
 
   return (
     <div>
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: 480,
-          aspectRatio: "3 / 4",
-          background: "#000",
-          borderRadius: 8,
-          overflow: "hidden",
-          margin: "0 auto",
-        }}
-      >
-        <video
-          ref={videoRef}
-          muted
-          playsInline
-          autoPlay
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
-        <canvas ref={canvasRef} style={{ display: "none" }} />
-
-        {flash && (
-          <div
-            key={flash.token}
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              background: flash.kind === "ok" ? "rgba(34, 197, 94, 0.45)" : "rgba(220, 38, 38, 0.45)",
-              animation: "erp-scan-flash 380ms ease-out forwards",
-            }}
-          />
-        )}
-
-        {cameraError && (
+      {/* 앱 전체는 흰색/밝은 톤인데 카메라 화면만 어두운 박스로 뚝 떨어져
+          있어 비대칭이라는 피드백 — 다른 화면 카드(.erp-detail)와 같은
+          흰 패널 + 탭 헤더로 감싸 "액자"처럼 넣는다. 카메라 화면 자체
+          (실시간 영상)는 밝게 바꿀 수 없지만(눈부심, 스캐너 UI 관행),
+          그 주변 톤은 앱과 맞춘다. */}
+      <div className="erp-detail" style={{ marginTop: 0, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+            카메라 스캔
+          </span>
+        </div>
+        <div className="erp-detail-body">
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 16,
-              textAlign: "center",
-              color: "#fff",
-              background: "rgba(0,0,0,0.7)",
-              fontSize: 13,
+              position: "relative",
+              width: "100%",
+              aspectRatio: "3 / 4",
+              // 스트림이 붙기 전 아주 짧게 보이는 로딩 배경 — 검정 대신 앱
+              // 톤에 맞는 밝은 회색으로. 영상이 뜨면 objectFit:cover가 이
+              // 영역을 전부 덮어서 어차피 안 보인다.
+              background: "var(--erp-bg-subtle)",
+              borderRadius: 6,
+              border: "2px solid var(--erp-primary)",
+              overflow: "hidden",
             }}
           >
-            {cameraError}
-          </div>
-        )}
+            <video
+              ref={videoRef}
+              muted
+              playsInline
+              autoPlay
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            <canvas ref={canvasRef} style={{ display: "none" }} />
 
-        {/* 스캔 안내 프레임 — 카메라를 켜자마자 뜨는 화면이 밋밋하다는
-            피드백으로, 다른 QR/바코드 스캐너(카메라 앱, 페이 앱 등)에
-            흔한 "모서리 브래킷 + 스캔 라인" 뷰파인더를 넣었다. 네 귀퉁이
-            박스 섀도우 트릭(box-shadow 0 0 0 9999px)으로 사각형 밖을
-            어둡게 눌러 시선을 중앙으로 모으고, 그 안에서 위아래로
-            움직이는 라인이 "지금 스캔 중"이라는 걸 보여준다. */}
-        {!cameraError && (
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              top: "10%",
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "66%",
-              aspectRatio: "1 / 1",
-              borderRadius: 16,
-              boxShadow: "0 0 0 999px rgba(0, 0, 0, 0.45)",
-              pointerEvents: "none",
-            }}
-          >
-            {[
-              { top: -3, left: -3, borderTopLeftRadius: 10 },
-              { top: -3, right: -3, borderTopRightRadius: 10 },
-              { bottom: -3, left: -3, borderBottomLeftRadius: 10 },
-              { bottom: -3, right: -3, borderBottomRightRadius: 10 },
-            ].map((corner, i) => (
+            {flash && (
               <div
-                key={i}
+                key={flash.token}
+                aria-hidden="true"
                 style={{
                   position: "absolute",
-                  width: 30,
-                  height: 30,
-                  borderTop: "top" in corner ? "4px solid #4ade80" : undefined,
-                  borderBottom: "bottom" in corner ? "4px solid #4ade80" : undefined,
-                  borderLeft: "left" in corner ? "4px solid #4ade80" : undefined,
-                  borderRight: "right" in corner ? "4px solid #4ade80" : undefined,
-                  ...corner,
+                  inset: 0,
+                  pointerEvents: "none",
+                  background: flash.kind === "ok" ? "rgba(34, 197, 94, 0.45)" : "rgba(220, 38, 38, 0.45)",
+                  animation: "erp-scan-flash 380ms ease-out forwards",
                 }}
               />
-            ))}
-            <div
-              style={{
-                position: "absolute",
-                left: 10,
-                right: 10,
-                height: 2,
-                borderRadius: 2,
-                background: "linear-gradient(90deg, transparent, #4ade80, transparent)",
-                boxShadow: "0 0 10px 2px rgba(74, 222, 128, 0.85)",
-                animation: "erp-scan-line 1.8s ease-in-out infinite",
-              }}
-            />
-          </div>
-        )}
+            )}
 
-        {!cameraError && scanState.active && (
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              padding: 12,
-              background: "rgba(15, 20, 30, 0.82)",
-              color: "#fff",
-            }}
-          >
-            <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 2 }}>{scanState.active.sku}</div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>{scanState.active.name}</div>
-            <div style={{ fontSize: 12.5, opacity: 0.85, marginBottom: 8 }}>
-              {scanState.active.spec ?? "-"} · 전산 재고{" "}
-              <strong>
-                {formatQuantityWithBoxes(scanState.active.systemQuantity, scanState.active.basePackageQty)}{" "}
-                {scanState.active.unit ?? ""}
-              </strong>
-            </div>
-            {mismatchInput === null ? (
-              <button
-                type="button"
-                onClick={() => setMismatchInput(String(scanState.active!.systemQuantity))}
-                className="erp-btn erp-btn-danger"
-                style={{ width: "100%" }}
+            {cameraError && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 16,
+                  textAlign: "center",
+                  color: "#fff",
+                  background: "rgba(0,0,0,0.7)",
+                  fontSize: 13,
+                }}
               >
-                수량 다름 — 실제 수량 입력
-              </button>
-            ) : (
-              <div style={{ display: "flex", gap: 6 }}>
-                <input
-                  type="number"
-                  autoFocus
-                  value={mismatchInput}
-                  onChange={(e) => setMismatchInput(e.target.value)}
-                  className="erp-input"
-                  style={{ flex: 1, color: "#111" }}
+                {cameraError}
+              </div>
+            )}
+
+            {/* 스캔 안내 — 처음엔 사각형 하나를 강조하고 밖을 어둡게 눌러
+                시야를 좁혔었는데(다른 스캐너 앱 관행), 카메라가 실제로 보는
+                범위를 그대로 다 보고 싶다는 피드백으로 걷어냈다. 화면 전체를
+                그대로 보여주고, 네 귀퉁이 브래킷 + 오가는 스캔 라인만 앱의
+                메인 컬러로 살짝 얹어 "지금 스캔 중"이라는 걸 표시한다. */}
+            {!cameraError && (
+              <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+                {[
+                  { top: 10, left: 10, borderTopLeftRadius: 10 },
+                  { top: 10, right: 10, borderTopRightRadius: 10 },
+                  { bottom: 10, left: 10, borderBottomLeftRadius: 10 },
+                  { bottom: 10, right: 10, borderBottomRightRadius: 10 },
+                ].map((corner, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      position: "absolute",
+                      width: 34,
+                      height: 34,
+                      opacity: 0.9,
+                      borderTop: "top" in corner ? "4px solid var(--erp-primary)" : undefined,
+                      borderBottom: "bottom" in corner ? "4px solid var(--erp-primary)" : undefined,
+                      borderLeft: "left" in corner ? "4px solid var(--erp-primary)" : undefined,
+                      borderRight: "right" in corner ? "4px solid var(--erp-primary)" : undefined,
+                      ...corner,
+                    }}
+                  />
+                ))}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 16,
+                    right: 16,
+                    top: "45%",
+                    height: 2,
+                    borderRadius: 2,
+                    background: "linear-gradient(90deg, transparent, var(--erp-primary), transparent)",
+                    boxShadow: "0 0 10px 2px rgba(74, 111, 165, 0.85)",
+                    animation: "erp-scan-line 1.8s ease-in-out infinite",
+                  }}
                 />
-                <button type="button" onClick={handleMismatchConfirm} className="erp-btn erp-btn-primary">
-                  확정
-                </button>
-                <button type="button" onClick={() => setMismatchInput(null)} className="erp-btn">
-                  취소
-                </button>
+              </div>
+            )}
+
+            {!cameraError && scanState.active && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  padding: 12,
+                  background: "rgba(15, 20, 30, 0.82)",
+                  color: "#fff",
+                }}
+              >
+                <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 2 }}>{scanState.active.sku}</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{scanState.active.name}</div>
+                <div style={{ fontSize: 12.5, opacity: 0.85, marginBottom: 8 }}>
+                  {scanState.active.spec ?? "-"} · 전산 재고{" "}
+                  <strong>
+                    {formatQuantityWithBoxes(scanState.active.systemQuantity, scanState.active.basePackageQty)}{" "}
+                    {scanState.active.unit ?? ""}
+                  </strong>
+                </div>
+                {mismatchInput === null ? (
+                  <button
+                    type="button"
+                    onClick={() => setMismatchInput(String(scanState.active!.systemQuantity))}
+                    className="erp-btn erp-btn-danger"
+                    style={{ width: "100%" }}
+                  >
+                    수량 다름 — 실제 수량 입력
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <input
+                      type="number"
+                      autoFocus
+                      value={mismatchInput}
+                      onChange={(e) => setMismatchInput(e.target.value)}
+                      className="erp-input"
+                      style={{ flex: 1, color: "#111" }}
+                    />
+                    <button type="button" onClick={handleMismatchConfirm} className="erp-btn erp-btn-primary">
+                      확정
+                    </button>
+                    <button type="button" onClick={() => setMismatchInput(null)} className="erp-btn">
+                      취소
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!cameraError && !scanState.active && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 10,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  maxWidth: "84%",
+                  padding: "7px 14px",
+                  borderRadius: 999,
+                  // 원래는 검정 반투명(rgba(0,0,0,*)) 칩이었는데, 앱 전체가
+                  // 밝은 톤이라 화면 안에 검은 요소가 남는 게 튄다는 피드백 —
+                  // 색을 빼고 반투명 유리 느낌(blur)만 남겼다. 모르는 QR을
+                  // 읽었을 때는 의미 전달을 위해 빨강 톤만 옅게 남긴다.
+                  background: scanState.unknownSku ? "rgba(220, 38, 38, 0.35)" : "rgba(255, 255, 255, 0.16)",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                  border: `1px solid ${scanState.unknownSku ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.35)"}`,
+                  color: "#fff",
+                  textShadow: "0 1px 3px rgba(0, 0, 0, 0.6)",
+                  fontSize: 12.5,
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {scanState.unknownSku
+                  ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다`
+                  : "QR을 화면 안에 비춰주세요"}
               </div>
             )}
           </div>
-        )}
-
-        {!cameraError && !scanState.active && (
-          <div
-            style={{
-              position: "absolute",
-              top: "82%",
-              left: "50%",
-              transform: "translateX(-50%)",
-              maxWidth: "84%",
-              padding: "7px 14px",
-              borderRadius: 999,
-              background: scanState.unknownSku ? "rgba(220, 38, 38, 0.85)" : "rgba(0, 0, 0, 0.55)",
-              color: "#fff",
-              fontSize: 12.5,
-              textAlign: "center",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {scanState.unknownSku
-              ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다`
-              : "사각형 안에 QR을 맞춰주세요"}
-          </div>
-        )}
+        </div>
       </div>
 
       <PageGuide className="mt-2 max-w-[480px] mx-auto text-center">
