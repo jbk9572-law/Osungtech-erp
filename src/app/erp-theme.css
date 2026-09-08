@@ -1015,8 +1015,8 @@
 }
 
 .erp-grid tbody td {
-  height: 34px;
-  padding: 6px 10px;
+  height: 30px;
+  padding: 4px 10px;
   border-bottom: 1px solid var(--erp-divider);
   border-right: 1px solid var(--erp-divider);
   white-space: nowrap;
