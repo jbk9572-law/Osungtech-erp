@@ -15,7 +15,7 @@ test.describe("로그인 후 화면", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
-    await page.getByLabel("아이디").fill(EMAIL!);
+    await page.getByLabel("아이디", { exact: true }).fill(EMAIL!);
     await page.getByLabel("비밀번호").fill(PASSWORD!);
     await page.getByRole("button", { name: "로그인" }).click();
     await expect(page).toHaveURL(/\/dashboard/);

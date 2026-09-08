@@ -12,14 +12,14 @@ test("세션 없이 보호된 화면에 들어가면 로그인 화면으로 리�
 
 test("로그인 화면에 아이디/비밀번호 입력창과 로그인 버튼이 보인다", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByLabel("아이디")).toBeVisible();
+  await expect(page.getByLabel("아이디", { exact: true })).toBeVisible();
   await expect(page.getByLabel("비밀번호")).toBeVisible();
   await expect(page.getByRole("button", { name: "로그인" })).toBeVisible();
 });
 
 test("틀린 계정으로 로그인하면 에러 메시지가 뜨고 /login에 남는다", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("아이디").fill("no-such-account@example.com");
+  await page.getByLabel("아이디", { exact: true }).fill("no-such-account@example.com");
   await page.getByLabel("비밀번호").fill("wrong-password-000");
   await page.getByRole("button", { name: "로그인" }).click();
   await expect(page.getByText("로그인에 실패했습니다")).toBeVisible();
