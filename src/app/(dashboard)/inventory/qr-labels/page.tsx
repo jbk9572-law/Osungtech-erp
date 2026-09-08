@@ -142,9 +142,10 @@ export default async function InventoryQrLabelsPage({
           >
             {/* 2단랙에 인쇄물을 잘라 붙일 때 라벨이 뒤집혀도(QR 자체는
                 방향을 알기 어려움) 위/아래를 바로 알 수 있게 상단·하단에
-                방향 표시를 둔다. */}
-            <div style={{ fontSize: 14, lineHeight: 1, color: "#000" }} aria-hidden="true">
-              ▲
+                글자와 함께 방향 표시를 둔다 — 화살표만 있으면 무슨 뜻인지
+                안 와닿는다는 피드백으로 "위"/"아래" 글자를 같이 넣는다. */}
+            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.4, color: "#000" }}>
+              ▲ 위
             </div>
             <div
               role="img"
@@ -157,8 +158,8 @@ export default async function InventoryQrLabelsPage({
             {label.spec && (
               <div style={{ fontSize: 10, color: "#444" }}>{label.spec}</div>
             )}
-            <div style={{ fontSize: 14, lineHeight: 1, marginTop: 4, color: "#000" }} aria-hidden="true">
-              ▼
+            <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.4, marginTop: 4, color: "#000" }}>
+              ▼ 아래
             </div>
           </div>
         ))}
