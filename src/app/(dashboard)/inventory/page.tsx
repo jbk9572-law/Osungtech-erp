@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
@@ -13,63 +14,30 @@ export default async function InventoryPage({
 }) {
   const { q } = await searchParams;
   const supabase = await createClient();
-  const [products, { data: warehouse }] = await Promise.all([
-    // 매입/매출/조정이 한 번도 없어 inventory 행이 아예 없는 상품도 수량 0으로
-    // 표시하기 위해 products를 기준으로 재고를 왼쪽 조인한다.
+  // 재고 조정 폼(위쪽)에 필요한 건 전체 품목 목록 + 현재 재고 수량뿐이라,
+  // 카테고리/공급처까지 조인하는 아래 그리드용 무거운 쿼리를 기다리지
+  // 않고 먼저 렌더링할 수 있게 따로 가져온다. 그리드 자체는 그 무거운
+  // 쿼리가 끝나는 대로 Suspense로 뒤이어 스트리밍된다.
+  const [pickerProducts, stockLevels, { data: warehouse }] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
       name: string;
       spec: string | null;
       unit: string;
-      reorder_point: number | null;
       base_package_qty: number | null;
-      cost: number;
-      price: number;
-      categories: { name: string } | null;
-      suppliers: { name: string } | null;
-      inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select(
-          "id, sku, name, spec, unit, reorder_point, base_package_qty, cost, price, categories(name), suppliers(name), inventory(quantity, warehouse_id)"
-        )
+        .select("id, sku, name, spec, unit, base_package_qty")
         .order("name")
         .range(from, to),
     ),
+    fetchAllRows<{ product_id: string; warehouse_id: string; quantity: number }>((from, to) =>
+      supabase.from("inventory").select("product_id, warehouse_id, quantity").range(from, to),
+    ),
     supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
-
-  const allStockRows: ProductGridRow[] = products.map((p) => ({
-    id: p.id,
-    sku: p.sku,
-    name: p.name,
-    spec: p.spec,
-    unit: p.unit,
-    basePackageQty: p.base_package_qty,
-    categoryName: p.categories?.name ?? null,
-    supplierName: p.suppliers?.name ?? null,
-    cost: p.cost,
-    price: p.price,
-    reorderPoint: p.reorder_point,
-    quantity: p.inventory?.[0]?.quantity ?? 0,
-  }));
-
-  const keyword = q?.trim().toLowerCase();
-  const stockRows = keyword
-    ? allStockRows.filter((row) =>
-        matchesSearch(keyword, row.name, row.sku, row.spec, row.categoryName, row.supplierName),
-      )
-    : allStockRows;
-
-  const stockLevels = (products ?? []).flatMap((p) =>
-    p.inventory.map((inv) => ({
-      product_id: p.id,
-      warehouse_id: inv.warehouse_id,
-      quantity: inv.quantity,
-    }))
-  );
 
   return (
     <div>
@@ -96,14 +64,7 @@ export default async function InventoryPage({
         </div>
         <div className="erp-detail-body">
           <InventoryAdjustForm
-            products={(products ?? []).map((p) => ({
-              id: p.id,
-              sku: p.sku,
-              name: p.name,
-              spec: p.spec,
-              unit: p.unit,
-              base_package_qty: p.base_package_qty,
-            }))}
+            products={pickerProducts}
             warehouseId={warehouse?.id ?? ""}
             stockLevels={stockLevels}
           />
@@ -134,7 +95,64 @@ export default async function InventoryPage({
         )}
       </form>
 
-      <ProductGridTable rows={stockRows} mode="inventory" keyword={keyword} />
+      <Suspense fallback={<div className="erp-loading-panel"><div className="erp-loading-gauge" aria-hidden />품목 불러오는 중...</div>}>
+        <InventoryGrid q={q} />
+      </Suspense>
     </div>
   );
+}
+
+// 카테고리/공급처 조인 + 재고 배열까지 붙는, 이 화면에서 제일 무거운
+// 쿼리는 이 컴포넌트 안에 가둬서 위쪽(재고 조정 폼)이 이걸 기다리지
+// 않고 먼저 뜨게 한다.
+async function InventoryGrid({ q }: { q?: string }) {
+  const supabase = await createClient();
+  // 매입/매출/조정이 한 번도 없어 inventory 행이 아예 없는 상품도 수량 0으로
+  // 표시하기 위해 products를 기준으로 재고를 왼쪽 조인한다.
+  const products = await fetchAllRows<{
+    id: string;
+    sku: string;
+    name: string;
+    spec: string | null;
+    unit: string;
+    reorder_point: number | null;
+    base_package_qty: number | null;
+    cost: number;
+    price: number;
+    categories: { name: string } | null;
+    suppliers: { name: string } | null;
+    inventory: { quantity: number; warehouse_id: string }[];
+  }>((from, to) =>
+    supabase
+      .from("products")
+      .select(
+        "id, sku, name, spec, unit, reorder_point, base_package_qty, cost, price, categories(name), suppliers(name), inventory(quantity, warehouse_id)"
+      )
+      .order("name")
+      .range(from, to),
+  );
+
+  const allStockRows: ProductGridRow[] = products.map((p) => ({
+    id: p.id,
+    sku: p.sku,
+    name: p.name,
+    spec: p.spec,
+    unit: p.unit,
+    basePackageQty: p.base_package_qty,
+    categoryName: p.categories?.name ?? null,
+    supplierName: p.suppliers?.name ?? null,
+    cost: p.cost,
+    price: p.price,
+    reorderPoint: p.reorder_point,
+    quantity: p.inventory?.[0]?.quantity ?? 0,
+  }));
+
+  const keyword = q?.trim().toLowerCase();
+  const stockRows = keyword
+    ? allStockRows.filter((row) =>
+        matchesSearch(keyword, row.name, row.sku, row.spec, row.categoryName, row.supplierName),
+      )
+    : allStockRows;
+
+  return <ProductGridTable rows={stockRows} mode="inventory" keyword={keyword} />;
 }
