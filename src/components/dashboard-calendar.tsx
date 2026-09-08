@@ -478,26 +478,23 @@ export function groupProductItemsByLabel(
 // 그룹에는 맨 아래에 합계를 붙인다 — 줄이 하나뿐이면 바로 위 줄과 같은
 // 숫자가 또 나와 불필요하므로 생략한다.
 
-// 규격이 "1㎛ * 250mm"처럼 "A * B" 곱셈 형태면, 같은 품목 안에서 A(또는
-// B)쪽 자릿수가 줄마다 다를 때 "*"가 줄마다 다른 위치에 찍혀 지저분해
-// 보인다("1㎛ * 250mm" vs "100㎛ * 500mm"). "*" 앞뒤 토큰을 그 품목의
-// 규격 목록 안에서 가장 긴 길이에 맞춰 오른쪽 정렬로 패딩해서 "*" 기준
-// 세로 정렬되게 만든다. 규격 중 하나라도 "*"가 없으면(곱셈 형태가 아닌
-// 품목) 손대지 않고 그대로 둔다.
-export function alignMultiplySpecs(specs: string[]): Map<string, string> {
+// 규격이 "1㎛ * 250mm"처럼 "A * B" 곱셈 형태면, 등록된 순서 그대로
+// 나열했을 때 뒤쪽 숫자(예: 250/500/750mm)가 뒤섞여 나온다 — "250은
+// 250끼리, 500은 500끼리" 묶어서 보고 싶다는 요청. "*" 뒤쪽 숫자를
+// 기준으로 오름차순 정렬하고, 뒤쪽 숫자가 같으면 앞쪽 숫자로 다시
+// 오름차순 정렬한다. 규격 중 하나라도 "숫자 * 숫자" 형태가 아니면
+// 정렬 기준을 알 수 없으므로 원래 순서 그대로 둔다.
+export function sortSpecsByTrailingNumber(specs: string[]): string[] {
   const parsed = specs.map((spec) => {
-    const i = spec.indexOf("*");
-    if (i === -1) return null;
-    return { spec, left: spec.slice(0, i).trim(), right: spec.slice(i + 1).trim() };
+    const m = spec.match(/^(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    return { spec, left: Number(m[1]), right: Number(m[2]) };
   });
-  if (parsed.some((p) => p === null)) {
-    return new Map(specs.map((spec) => [spec, spec]));
-  }
-  const maxLeft = Math.max(...parsed.map((p) => p!.left.length));
-  const maxRight = Math.max(...parsed.map((p) => p!.right.length));
-  return new Map(
-    parsed.map((p) => [p!.spec, `${p!.left.padStart(maxLeft)} * ${p!.right.padStart(maxRight)}`]),
-  );
+  if (parsed.some((p) => p === null)) return specs;
+  return parsed
+    .map((p) => p!)
+    .sort((a, b) => a.right - b.right || a.left - b.left)
+    .map((p) => p.spec);
 }
 
 function buildProductLineGroups(
@@ -525,9 +522,9 @@ function buildProductLineGroups(
       bySpec.get(key)!.push(li);
     }
 
-    const alignedSpecs = alignMultiplySpecs(order);
+    const sortedOrder = sortSpecsByTrailingNumber(order);
 
-    for (const spec of order) {
+    for (const spec of sortedOrder) {
       const lis = bySpec.get(spec)!;
       const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
       const unit = lis[0]?.item.unit ?? "";
@@ -537,10 +534,9 @@ function buildProductLineGroups(
       const returnSuffix = isReturn ? " (반품)" : "";
       const note = lis.map((li) => li.note).find((n) => n) ?? null;
       const noteSuffix = note ? ` (${note})` : "";
-      const displaySpec = alignedSpecs.get(spec) ?? spec;
 
       group.lines.push(
-        `    ${displaySpec} : ${formatQuantityWithBoxes(quantity, basePackageQty)} ${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
+        `    ${spec} : ${formatQuantityWithBoxes(quantity, basePackageQty)} ${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
       );
       group.specCount += 1;
       group.totalQuantity += quantity;

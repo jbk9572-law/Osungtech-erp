@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  alignMultiplySpecs,
   buildDestinationPool,
   groupProductItemsByLabel,
+  sortSpecsByTrailingNumber,
   type ItemRow,
   type ProductGroup,
 } from "./dashboard-calendar";
@@ -142,23 +142,21 @@ describe("groupProductItemsByLabel — 매출(원재료), 매입처 추적", () 
   });
 });
 
-describe("alignMultiplySpecs", () => {
-  it("* 왼쪽 자릿수가 다르면 오른쪽 정렬로 패딩해 *가 세로로 맞춰진다", () => {
-    const aligned = alignMultiplySpecs(["1㎛ * 250mm", "25㎛ * 750mm", "100㎛ * 500mm"]);
-    expect(aligned.get("1㎛ * 250mm")).toBe("  1㎛ * 250mm");
-    expect(aligned.get("25㎛ * 750mm")).toBe(" 25㎛ * 750mm");
-    expect(aligned.get("100㎛ * 500mm")).toBe("100㎛ * 500mm");
+describe("sortSpecsByTrailingNumber", () => {
+  it("* 뒤쪽 숫자가 같은 규격끼리 묶이고, 뒤쪽 숫자 오름차순으로 정렬된다", () => {
+    const specs = ["1㎛ * 250mm", "1㎛ * 500mm", "1㎛ * 750mm", "5㎛ * 500mm", "25㎛ * 750mm", "100㎛ * 500mm"];
+    expect(sortSpecsByTrailingNumber(specs)).toEqual([
+      "1㎛ * 250mm",
+      "1㎛ * 500mm",
+      "5㎛ * 500mm",
+      "100㎛ * 500mm",
+      "1㎛ * 750mm",
+      "25㎛ * 750mm",
+    ]);
   });
 
-  it("* 오른쪽 자릿수가 다르면 그쪽도 오른쪽 정렬로 패딩한다", () => {
-    const aligned = alignMultiplySpecs(["10 * 5mm", "10 * 250mm"]);
-    expect(aligned.get("10 * 5mm")).toBe("10 *   5mm");
-    expect(aligned.get("10 * 250mm")).toBe("10 * 250mm");
-  });
-
-  it("규격 중 하나라도 *가 없으면 전부 원본 그대로 둔다", () => {
-    const aligned = alignMultiplySpecs(["1㎛ * 250mm", "규격 미지정"]);
-    expect(aligned.get("1㎛ * 250mm")).toBe("1㎛ * 250mm");
-    expect(aligned.get("규격 미지정")).toBe("규격 미지정");
+  it("규격 중 하나라도 '숫자 * 숫자' 형태가 아니면 원래 순서 그대로 둔다", () => {
+    const specs = ["1㎛ * 250mm", "규격 미지정"];
+    expect(sortSpecsByTrailingNumber(specs)).toEqual(specs);
   });
 });
