@@ -37,10 +37,15 @@ export default async function InventoryQrLabelsPage({
     ? products.filter((p) => matchesSearch(keyword, p.sku, p.name, p.spec, p.categories?.name))
     : products;
 
+  // PNG(toDataURL)는 픽셀을 래스터화하고 다시 압축 인코딩하는 과정이 있어
+  // 품목이 많아지면(수백 개) 요청 하나당 CPU 사용량이 급격히 늘어난다 —
+  // 넷리파이에서는 문제없었지만 클라우드플레어 Workers는 요청당 CPU 시간
+  // 상한이 훨씬 빡빡해서 "Worker exceeded resource limits"로 죽었다. SVG는
+  // QR 매트릭스를 그대로 벡터 도형으로만 뽑아내 훨씬 가볍다.
   const labels = await Promise.all(
     filtered.map(async (p) => ({
       ...p,
-      qrDataUrl: await QRCode.toDataURL(p.sku, { width: 160, margin: 1 }),
+      qrSvg: await QRCode.toString(p.sku, { type: "svg", width: 110, margin: 1 }),
     })),
   );
 
@@ -113,13 +118,11 @@ export default async function InventoryQrLabelsPage({
               color: "#000",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- data: URL, next/image 최적화 대상이 아님 */}
-            <img
-              src={label.qrDataUrl}
-              alt={label.sku}
-              width={110}
-              height={110}
-              style={{ margin: "0 auto" }}
+            <div
+              role="img"
+              aria-label={label.sku}
+              style={{ width: 110, height: 110, margin: "0 auto" }}
+              dangerouslySetInnerHTML={{ __html: label.qrSvg }}
             />
             <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>{label.sku}</div>
             <div style={{ fontSize: 11, lineHeight: 1.3 }}>{label.name}</div>
