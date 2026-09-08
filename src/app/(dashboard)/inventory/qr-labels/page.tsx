@@ -13,9 +13,10 @@ import { PrintButton } from "@/components/print-button";
 export default async function InventoryQrLabelsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; hideZero?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, hideZero: hideZeroRaw } = await searchParams;
+  const hideZero = hideZeroRaw === "1";
   const supabase = await createClient();
 
   const products = await fetchAllRows<{
@@ -24,18 +25,23 @@ export default async function InventoryQrLabelsPage({
     name: string;
     spec: string | null;
     categories: { name: string } | null;
+    inventory: { quantity: number }[];
   }>((from, to) =>
     supabase
       .from("products")
-      .select("id, sku, name, spec, categories(name)")
+      .select("id, sku, name, spec, categories(name), inventory(quantity)")
       .order("name")
       .range(from, to),
   );
 
   const keyword = q?.trim().toLowerCase();
-  const filtered = keyword
-    ? products.filter((p) => matchesSearch(keyword, p.sku, p.name, p.spec, p.categories?.name))
-    : products;
+  const filtered = products
+    .filter((p) => !keyword || matchesSearch(keyword, p.sku, p.name, p.spec, p.categories?.name))
+    // 매입 즉시 그 자리에서 매출로 나가고 창고에 안 들어오는 품목이
+    // 절반 이상이라, 그런 품목까지 매번 라벨 인쇄 목록에 다 뜨면 실제로
+    // 붙일 실물이 없는 라벨을 골라내는 게 더 번거롭다 — 현재 재고가
+    // 0인 품목은 체크박스로 숨길 수 있게 한다.
+    .filter((p) => !hideZero || (p.inventory?.[0]?.quantity ?? 0) > 0);
 
   // PNG(toDataURL)는 픽셀을 래스터화하고 다시 압축 인코딩하는 과정이 있어
   // 품목이 많아지면(수백 개) 요청 하나당 CPU 사용량이 급격히 늘어난다 —
@@ -72,10 +78,26 @@ export default async function InventoryQrLabelsPage({
             style={{ width: "100%" }}
           />
         </div>
+        <div className="erp-field" style={{ justifyContent: "flex-end" }}>
+          <label aria-hidden="true">&nbsp;</label>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              height: 34,
+              fontSize: 12.5,
+              cursor: "pointer",
+            }}
+          >
+            <input type="checkbox" name="hideZero" value="1" defaultChecked={hideZero} />
+            0건인 품목은 보지 않기
+          </label>
+        </div>
         <button type="submit" className="erp-btn erp-btn-primary">
           조회
         </button>
-        {q && (
+        {(q || hideZero) && (
           <Link href="/inventory/qr-labels" className="erp-btn">
             초기화
           </Link>
@@ -118,6 +140,12 @@ export default async function InventoryQrLabelsPage({
               color: "#000",
             }}
           >
+            {/* 2단랙에 인쇄물을 잘라 붙일 때 라벨이 뒤집혀도(QR 자체는
+                방향을 알기 어려움) 위/아래를 바로 알 수 있게 상단·하단에
+                방향 표시를 둔다. */}
+            <div style={{ fontSize: 14, lineHeight: 1, color: "#000" }} aria-hidden="true">
+              ▲
+            </div>
             <div
               role="img"
               aria-label={label.sku}
@@ -129,6 +157,9 @@ export default async function InventoryQrLabelsPage({
             {label.spec && (
               <div style={{ fontSize: 10, color: "#444" }}>{label.spec}</div>
             )}
+            <div style={{ fontSize: 14, lineHeight: 1, marginTop: 4, color: "#000" }} aria-hidden="true">
+              ▼
+            </div>
           </div>
         ))}
       </div>
