@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 
 // API 라우트(/api/**)는 proxy.ts(미들웨어)가 비로그인 요청을 /login으로
 // 리다이렉트해주는 것에 의존하고 있었다 — 오늘은 맞지만, PUBLIC_PATHS나
@@ -6,8 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 // 안에서도 명시적으로 한 번 더 확인한다(defense in depth).
 export async function requireAuthedApiUser() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   return { supabase, user };
 }

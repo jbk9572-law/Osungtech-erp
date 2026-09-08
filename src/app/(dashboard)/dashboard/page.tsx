@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { getNotificationSummary } from "@/lib/notifications";
@@ -68,10 +68,10 @@ export default async function DashboardPage({
     new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate()
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { userId: currentUserId, isAdmin } = await getCurrentActor(supabase);
+  const [user, { userId: currentUserId, isAdmin }] = await Promise.all([
+    getUser(),
+    getCurrentActor(supabase),
+  ]);
 
   const [
     { count: productCount },
