@@ -55,3 +55,16 @@ npx playwright install chromium
 `playwright.config.ts`는 기본적으로 `npm run dev`를 직접 띄워서
 테스트한다. 이미 띄워 놓은 서버(다른 주소)를 대상으로 테스트하려면
 `PLAYWRIGHT_BASE_URL` 환경변수로 그 주소를 넘기면 된다.
+
+## CI에서 자동으로 돈다
+
+`.github/workflows/ci.yml`이 `main`/`claude/**` 브랜치에 push하거나
+`main`으로 PR을 올릴 때마다 tsc/lint/유닛테스트/build를 먼저 돌리고
+(quality 잡), 그게 통과하면 이 e2e 테스트도 이어서 돈다(e2e 잡).
+`login.spec.ts`는 계정 없이 그대로 돌고, `authenticated.spec.ts`는
+저장소에 `PLAYWRIGHT_TEST_EMAIL`/`PLAYWRIGHT_TEST_PASSWORD` 시크릿을
+등록해둔 경우에만 돈다(Settings > Secrets and variables > Actions) —
+안 넣어도 CI가 실패하지 않고 그 테스트만 건너뛴다. 실패하면 Actions
+탭에서 해당 실행의 Artifacts에 올라간 `playwright-report`를 내려받아
+`npx playwright show-report`로 열어보면 어디서 왜 실패했는지(스크린샷
+포함) 볼 수 있다.
