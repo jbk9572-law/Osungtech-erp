@@ -26,12 +26,13 @@ export default async function InventoryQrLabelsPage({
     sku: string;
     name: string;
     spec: string | null;
+    label_direction: string;
     categories: { name: string } | null;
     inventory: { quantity: number }[];
   }>((from, to) =>
     supabase
       .from("products")
-      .select("id, sku, name, spec, categories(name), inventory(quantity)")
+      .select("id, sku, name, spec, label_direction, categories(name), inventory(quantity)")
       .order("name")
       .range(from, to),
   );
@@ -133,10 +134,12 @@ export default async function InventoryQrLabelsPage({
         {labels.map((label) => (
           <QrLabelCard
             key={label.id}
+            productId={label.id}
             sku={label.sku}
             name={label.name}
             spec={label.spec}
             qrSvg={label.qrSvg}
+            initialDir={label.label_direction === "down" ? "down" : "up"}
           />
         ))}
       </div>

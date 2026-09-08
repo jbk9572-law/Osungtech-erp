@@ -182,6 +182,7 @@ export type Database = {
           cost: number;
           reorder_point: number;
           is_active: boolean;
+          label_direction: string;
           created_at: string;
           updated_at: string;
         };
@@ -199,6 +200,7 @@ export type Database = {
           cost?: number;
           reorder_point?: number;
           is_active?: boolean;
+          label_direction?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -216,6 +218,7 @@ export type Database = {
           cost?: number;
           reorder_point?: number;
           is_active?: boolean;
+          label_direction?: string;
           created_at?: string;
           updated_at?: string;
         };

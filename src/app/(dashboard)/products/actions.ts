@@ -68,9 +68,22 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   const fields = productFieldsFrom(formData);
   const fieldError = validateProductFields(fields);
   if (fieldError) return { error: fieldError };
+
+  // QR 라벨 방향(위/아래 칸)은 랙 배치 관행상 Filter 품목만 기본이
+  // "아래"고 나머지는 "위" — 등록 시점에 카테고리로 기본값을 정해두면,
+  // 인쇄 화면에서 그때그때 매번 다시 고를 필요가 없다. 이후 인쇄
+  // 화면에서 직접 바꾸면 그 값이 그대로 유지된다(카테고리를 나중에
+  // 바꿔도 이 기본값이 재적용되지 않음).
+  const { data: category } = await supabase
+    .from("categories")
+    .select("name")
+    .eq("id", fields.category_id!)
+    .maybeSingle();
+  const labelDirection = category?.name === "Filter" ? "down" : "up";
+
   const { data: created, error } = await supabase
     .from("products")
-    .insert({ sku, name, ...fields })
+    .insert({ sku, name, ...fields, label_direction: labelDirection })
     .select("id")
     .single();
 
