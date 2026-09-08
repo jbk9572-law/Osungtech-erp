@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { PageGuide } from "@/components/erp/page-guide";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CreateRackForm } from "@/components/create-rack-form";
 import { DeleteRackButton } from "@/components/delete-rack-button";
 
@@ -163,6 +164,7 @@ export default async function InventoryLocationsPage() {
 
   return (
     <div>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
       <div className="mb-3 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 보관 위치(랙) 관리</h1>
         <Link href="/inventory" className="erp-btn erp-btn-danger">

@@ -67,6 +67,12 @@ export function onQrDecoded(
 // "수량 다름" 확정 — 지금 떠 있는 품목을 실제로 센 수량으로 기록하고,
 // 다음 스캔을 받을 준비 상태로 되돌린다(active를 비워서, 같은 품목을
 // 다시 비추기 전까진 정보 패널이 안 남아있게 한다).
+//
+// 같은 품목을 실수로(또는 정정하려고) 두 번 "수량 다름"으로 확정하면,
+// 예전엔 mismatches에 그 품목이 두 번 들어가 저장 시 두 델타가 모두
+// 재고에 반영돼(예: 두 번째로 고쳐 입력한 값이 아니라 두 델타의 합만큼)
+// 최종 재고가 틀어졌다. 같은 productId의 기존 항목을 지우고 이번
+// 값으로만 남겨서, 마지막으로 확정한 수량만 반영되게 한다.
 export function confirmMismatch(state: ScanState, countedQuantity: number): ScanState {
   if (!state.active) return state;
   const confirmedIds = new Set(state.confirmedIds);
@@ -76,7 +82,7 @@ export function confirmMismatch(state: ScanState, countedQuantity: number): Scan
     active: null,
     confirmedIds,
     mismatches: [
-      ...state.mismatches,
+      ...state.mismatches.filter((m) => m.productId !== state.active!.productId),
       { productId: state.active.productId, systemQuantity: state.active.systemQuantity, countedQuantity },
     ],
   };

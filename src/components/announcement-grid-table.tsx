@@ -26,24 +26,32 @@ function initialOf(name: string | null): string {
   return name?.trim()?.[0] ?? "?";
 }
 
-function isThisWeek(dateStr: string): boolean {
+export function isThisWeek(dateStr: string): boolean {
   const d = new Date(dateStr);
   const now = new Date();
   const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
   return diffDays >= 0 && diffDays < 7;
 }
 
-export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
+// 요약카드(전체/안읽음/고정/이번주)는 목록 표시 limit(기본 300건)과 무관하게
+// 전체 공지 기준으로 보여준다 — todos 목록의 summaryRows와 같은 이유다.
+// 이 값들은 서버에서 전체 행을 따로 조회해 계산한 뒤 프롭으로 받는다.
+export function AnnouncementGridTable({
+  rows,
+  totalCount,
+  unreadCount,
+  pinnedCount,
+  thisWeekCount,
+}: {
+  rows: AnnouncementRow[];
+  totalCount: number;
+  unreadCount: number;
+  pinnedCount: number;
+  thisWeekCount: number;
+}) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortKey>("createdAt");
-
-  const unreadCount = useMemo(() => rows.filter((r) => !r.read).length, [rows]);
-  const pinnedCount = useMemo(() => rows.filter((r) => r.pinned).length, [rows]);
-  const thisWeekCount = useMemo(
-    () => rows.filter((r) => isThisWeek(r.createdAt)).length,
-    [rows],
-  );
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -70,7 +78,7 @@ export function AnnouncementGridTable({ rows }: { rows: AnnouncementRow[] }) {
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             전체 공지
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{rows.length.toLocaleString()}건</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{totalCount.toLocaleString()}건</div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>

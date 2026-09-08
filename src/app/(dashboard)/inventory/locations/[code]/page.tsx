@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { PageGuide } from "@/components/erp/page-guide";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { LocationStockForm } from "@/components/location-stock-form";
 import { LocationStockRow } from "@/components/location-stock-row";
 
@@ -25,7 +26,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
   if (!location) notFound();
 
-  const [stockRows, productRows, inventoryRows] = await Promise.all([
+  const [stockRows, productRows, inventoryRows, assignedElsewhereRows] = await Promise.all([
     supabase
       .from("inventory_locations")
       .select("id, product_id, quantity, products(sku, name, spec, unit)")
@@ -38,19 +39,41 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
     fetchAllRows<{ product_id: string; quantity: number }>((from, to) =>
       supabase.from("inventory").select("product_id, quantity").range(from, to),
     ),
+    fetchAllRows<{ product_id: string; quantity: number }>((from, to) =>
+      supabase
+        .from("inventory_locations")
+        .select("product_id, quantity")
+        .neq("location_id", location.id)
+        .range(from, to),
+    ),
   ]);
 
   // 위치별 수량을 처음부터 직접 타이핑하게 하면 막막하다는 요청 — 창고
-  // 전체 재고(기존 inventory 합계)를 참고삼아 기본값으로 채워주고, 그
-  // 위치엔 그중 일부만 있으면 숫자만 고치면 되게 한다.
+  // 전체 재고(기존 inventory 합계)를 참고삼아 기본값으로 채워준다. 다만
+  // 그대로 채우면 한 품목을 여러 위치에 나눠 보관할 때 두 번째 위치에도
+  // 창고 전체 수량이 그대로 떠서 이중 입력을 유도하기 쉽다 — 다른
+  // 위치에 이미 배정해 둔 만큼은 빼고, "아직 어디에도 안 배정한 나머지"
+  // 만 기본값으로 보여준다.
   const totalByProduct = new Map<string, number>();
   for (const row of inventoryRows) {
     totalByProduct.set(row.product_id, (totalByProduct.get(row.product_id) ?? 0) + row.quantity);
   }
-  const products = productRows.map((p) => ({ ...p, totalQuantity: totalByProduct.get(p.id) ?? 0 }));
+  const assignedElsewhereByProduct = new Map<string, number>();
+  for (const row of assignedElsewhereRows) {
+    assignedElsewhereByProduct.set(
+      row.product_id,
+      (assignedElsewhereByProduct.get(row.product_id) ?? 0) + row.quantity,
+    );
+  }
+  const products = productRows.map((p) => {
+    const total = totalByProduct.get(p.id) ?? 0;
+    const assignedElsewhere = assignedElsewhereByProduct.get(p.id) ?? 0;
+    return { ...p, totalQuantity: Math.max(0, total - assignedElsewhere) };
+  });
 
   return (
     <div>
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/locations" } }} />
       <div className="mb-3 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
           보관 위치 {location.code} ({location.tier === 2 ? "2단·상단" : "1단·하단"}{" "}

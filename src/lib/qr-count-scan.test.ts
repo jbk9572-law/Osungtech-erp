@@ -82,6 +82,14 @@ describe("confirmMismatch", () => {
     const state = createInitialScanState();
     expect(confirmMismatch(state, 5)).toBe(state);
   });
+
+  it("re-confirming the same product replaces the earlier mismatch instead of adding a second one", () => {
+    let state = onQrDecoded(createInitialScanState(), "SKU-A", bySku(productA));
+    state = confirmMismatch(state, 90); // 잘못 입력
+    state = onQrDecoded(state, "SKU-A", bySku(productA)); // 다시 스캔해서 정정
+    state = confirmMismatch(state, 80); // 실제 정정값
+    expect(state.mismatches).toEqual([{ productId: "p1", systemQuantity: 117, countedQuantity: 80 }]);
+  });
 });
 
 describe("finalizeScanSession", () => {

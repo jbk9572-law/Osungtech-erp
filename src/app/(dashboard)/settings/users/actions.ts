@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 const ROLES = ["admin", "manager", "staff"] as const;
@@ -92,10 +93,12 @@ export async function updateUserRole(formData: FormData): Promise<{ error: strin
     return { error: "잘못된 요청입니다." };
   }
 
-  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
-  if (error) {
-    return { error: `역할 변경에 실패했습니다: ${error.message}` };
-  }
+  const result = await supabase.from("profiles").update({ role }).eq("id", userId).select("id");
+  const mutationError = requireMutatedRow(result, {
+    onError: "역할 변경에 실패했습니다",
+    onForbidden: "해당 계정을 찾을 수 없거나 변경 권한이 없습니다.",
+  });
+  if (mutationError) return mutationError;
   revalidatePath("/settings/users");
 }
 

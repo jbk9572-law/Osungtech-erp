@@ -5,6 +5,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { PrintButton } from "@/components/print-button";
 import { PageGuide } from "@/components/erp/page-guide";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { QrLabelCard } from "@/components/qr-label-card";
 
 // 라벨 하나에 넣는 QR은 SKU 문자열 그대로를 인코딩한다 — 관리번호처럼
@@ -60,6 +61,7 @@ export default async function InventoryQrLabelsPage({
 
   return (
     <div className="print-page-margin">
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
       <div className="mb-3 flex items-center justify-between print:hidden">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; QR 라벨 인쇄</h1>
       </div>

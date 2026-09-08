@@ -22,7 +22,7 @@ export function CreateRackForm() {
           type="text"
           autoComplete="off"
           placeholder="예: B"
-          maxLength={10}
+          maxLength={6}
           required
           className="erp-input"
         />

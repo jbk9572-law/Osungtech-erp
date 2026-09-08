@@ -73,8 +73,8 @@ export function LocationStockForm({
       {selectedProduct && (
         <div style={{ flexBasis: "100%" }}>
           <PageGuide className="mb-0">
-            현재 창고 전체 재고: {selectedProduct.totalQuantity.toLocaleString()}개 — 수량 칸에 기본값으로
-            채워뒀습니다. 이 위치엔 일부만 있으면 숫자를 고쳐주세요.
+            아직 다른 위치에 배정하지 않은 재고: {selectedProduct.totalQuantity.toLocaleString()}개 — 수량
+            칸에 기본값으로 채워뒀습니다. 이 위치엔 일부만 있으면 숫자를 고쳐주세요.
           </PageGuide>
         </div>
       )}

@@ -716,10 +716,9 @@ export function NewPurchaseForm({
       (row.productId || (row.isCustomEntry && row.customName.trim())) &&
       row.quantity > 0,
   );
-  const supplyAmount = submittedRows.reduce(
-    (sum, row) => sum + row.quantity * row.unitCost,
-    0,
-  );
+  const supplyAmount =
+    submittedRows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0) +
+    pendingCalcAmount;
   const taxAmount = calcVat(supplyAmount);
   const total = supplyAmount + taxAmount;
 

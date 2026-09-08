@@ -484,17 +484,30 @@ export function groupProductItemsByLabel(
 // 기준으로 오름차순 정렬하고, 뒤쪽 숫자가 같으면 앞쪽 숫자로 다시
 // 오름차순 정렬한다. 규격 중 하나라도 "숫자 * 숫자" 형태가 아니면
 // 정렬 기준을 알 수 없으므로 원래 순서 그대로 둔다.
-export function sortSpecsByTrailingNumber(specs: string[]): string[] {
-  const parsed = specs.map((spec) => {
-    const m = spec.match(/^(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
-    if (!m) return null;
-    return { spec, left: Number(m[1]), right: Number(m[2]) };
+function parseSpecTrailingNumber(spec: string): { left: number; right: number } | null {
+  const m = spec.match(/^(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
+  return m ? { left: Number(m[1]), right: Number(m[2]) } : null;
+}
+
+// 카톡 복사 텍스트뿐 아니라 화면(오늘의 업무 패널)에도 똑같이 써야 한다 —
+// 예전에 "화면에 보이는 순서와 복사한 텍스트 순서가 다르다"는 문제를
+// 한 번 고쳤는데(이 함수를 카톡 복사 쪽에만 적용하면서) 화면 렌더링
+// 쪽은 못 맞춰서 다시 어긋났었다. items 자체를 정렬하려면 getSpec으로
+// 규격 문자열을 꺼내는 함수를 넘긴다.
+export function sortBySpecTrailingNumber<T>(items: T[], getSpec: (item: T) => string): T[] {
+  const parsed = items.map((item) => {
+    const n = parseSpecTrailingNumber(getSpec(item));
+    return n ? { item, ...n } : null;
   });
-  if (parsed.some((p) => p === null)) return specs;
+  if (parsed.some((p) => p === null)) return items;
   return parsed
     .map((p) => p!)
     .sort((a, b) => a.right - b.right || a.left - b.left)
-    .map((p) => p.spec);
+    .map((p) => p.item);
+}
+
+export function sortSpecsByTrailingNumber(specs: string[]): string[] {
+  return sortBySpecTrailingNumber(specs, (spec) => spec);
 }
 
 function buildProductLineGroups(
@@ -1032,6 +1045,14 @@ export function DashboardCalendar({
                             const anyCarryover = group.items.some(
                               ({ item }) => item.isCarryover,
                             );
+                            // 카톡 복사 텍스트(buildProductLineGroups)와 순서가 어긋나지
+                            // 않도록, 화면에 보여줄 항목도 같은 기준(* 뒤쪽 숫자)으로
+                            // 정렬한다 — 예전에 "화면과 복사 텍스트 순서가 다르다"는
+                            // 문제를 고쳤는데 복사 쪽에만 정렬이 적용되며 다시 어긋났다.
+                            const sortedItems = sortBySpecTrailingNumber(
+                              group.items,
+                              ({ item }) => item.spec || "",
+                            );
                             return (
                               <div key={`${di}-${gi}`}>
                                 <p className="font-semibold text-[var(--erp-text)]">
@@ -1077,7 +1098,7 @@ export function DashboardCalendar({
                                     })()
                                   ) : (
                                     <>
-                                      {group.items.map(({ item, note }, i) => (
+                                      {sortedItems.map(({ item, note }, i) => (
                                         <li key={i}>
                                           <Link
                                             href={`/purchases/${item.orderId}`}
@@ -1107,7 +1128,7 @@ export function DashboardCalendar({
                                       ))}
                                       {(() => {
                                         const totals = productTotals(
-                                          group.items.map(({ item }) => item),
+                                          sortedItems.map(({ item }) => item),
                                         );
                                         return (
                                           <li className="flex items-start justify-between gap-2">
@@ -1210,6 +1231,14 @@ export function DashboardCalendar({
                             const anyCarryover = group.items.some(
                               ({ item }) => item.isCarryover,
                             );
+                            // 카톡 복사 텍스트(buildProductLineGroups)와 순서가 어긋나지
+                            // 않도록, 화면에 보여줄 항목도 같은 기준(* 뒤쪽 숫자)으로
+                            // 정렬한다 — 예전에 "화면과 복사 텍스트 순서가 다르다"는
+                            // 문제를 고쳤는데 복사 쪽에만 정렬이 적용되며 다시 어긋났다.
+                            const sortedItems = sortBySpecTrailingNumber(
+                              group.items,
+                              ({ item }) => item.spec || "",
+                            );
                             return (
                               <div key={`${di}-${gi}`}>
                                 <p className="font-semibold text-[var(--erp-text)]">
@@ -1256,7 +1285,7 @@ export function DashboardCalendar({
                                     })()
                                   ) : (
                                     <>
-                                      {group.items.map(({ item, note }, i) => (
+                                      {sortedItems.map(({ item, note }, i) => (
                                         <li key={i}>
                                           <Link
                                             href={`/sales/${item.orderId}`}
@@ -1287,7 +1316,7 @@ export function DashboardCalendar({
                                       ))}
                                       {(() => {
                                         const totals = productTotals(
-                                          group.items.map(({ item }) => item),
+                                          sortedItems.map(({ item }) => item),
                                         );
                                         return (
                                           <li className="flex items-start justify-between gap-2">
