@@ -1659,6 +1659,14 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      get_customer_balances: {
+        Args: Record<string, never>;
+        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
+      };
+      get_supplier_balances: {
+        Args: Record<string, never>;
+        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
+      };
       is_admin: {
         Args: Record<string, never>;
         Returns: boolean;
