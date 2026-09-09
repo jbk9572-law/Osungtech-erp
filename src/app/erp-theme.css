@@ -1151,6 +1151,15 @@
 /* ── 7. Detail panel ───────────────────────────────────────── */
 .erp-detail {
   margin-top: 14px;
+  /* 배경색을 명시적으로 안 주고 페이지의 흰 배경이 뒤에서 비쳐 보이는
+     것에만 기대고 있었다 — 페이지 안에 순서대로 놓일 때는 우연히
+     하얗게 보이지만, 이 클래스를 fixed 오버레이(모달 등, 예:
+     location-allocation-modal.tsx / empty-location-alert.tsx)의 카드로
+     쓰면 뒤에 깔린 반투명 백드롭(그리고 그 뒤의 "이동 중..." 로딩
+     오버레이 등)이 그대로 비쳐 보여 카드 전체가 뿌옇게 보이는 버그가
+     났다. 배경을 명시적으로 불투명하게 고정해서 어디서 쓰이든 항상
+     또렷한 흰 카드로 보이게 한다. */
+  background: var(--erp-panel);
   border: 1px solid var(--erp-border);
   border-radius: 6px;
   box-shadow: var(--erp-shadow-sm);

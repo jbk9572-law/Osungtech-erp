@@ -5,6 +5,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CreateRackForm } from "@/components/create-rack-form";
 import { DeleteRackButton } from "@/components/delete-rack-button";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 
 type LocationRow = { id: string; rack: string; tier: number; position: number; code: string };
 
@@ -20,17 +21,23 @@ export default async function InventoryLocationsPage() {
     fetchAllRows<LocationRow>((from, to) =>
       supabase.from("locations").select("id, rack, tier, position, code").order("rack").range(from, to),
     ),
-    fetchAllRows<{ location_id: string; quantity: number; products: { name: string; spec: string | null; unit: string } | null }>(
-      (from, to) =>
-        supabase
-          .from("inventory_locations")
-          .select("location_id, quantity, products(name, spec, unit)")
-          .range(from, to),
+    fetchAllRows<{
+      location_id: string;
+      quantity: number;
+      products: { name: string; spec: string | null; unit: string; base_package_qty: number | null } | null;
+    }>((from, to) =>
+      supabase
+        .from("inventory_locations")
+        .select("location_id, quantity, products(name, spec, unit, base_package_qty)")
+        .range(from, to),
     ),
   ]);
 
   const countByLocation = new Map<string, number>();
-  const itemsByLocation = new Map<string, { name: string; spec: string | null; unit: string; quantity: number }[]>();
+  const itemsByLocation = new Map<
+    string,
+    { name: string; spec: string | null; unit: string; quantity: number; basePackageQty: number | null }[]
+  >();
   for (const row of stockRows) {
     countByLocation.set(row.location_id, (countByLocation.get(row.location_id) ?? 0) + 1);
     const list = itemsByLocation.get(row.location_id) ?? [];
@@ -39,6 +46,7 @@ export default async function InventoryLocationsPage() {
       spec: row.products?.spec ?? null,
       unit: row.products?.unit ?? "EA",
       quantity: row.quantity,
+      basePackageQty: row.products?.base_package_qty ?? null,
     });
     itemsByLocation.set(row.location_id, list);
   }
@@ -178,10 +186,7 @@ export default async function InventoryLocationsPage() {
                             <li key={i} style={{ fontSize: 11.5, color: "var(--erp-text)" }}>
                               {it.name}
                               {it.spec ? ` (${it.spec})` : ""} —{" "}
-                              <b>
-                                {it.quantity.toLocaleString()}
-                                {it.unit}
-                              </b>
+                              <b>{formatQuantityWithBoxes(it.quantity, it.basePackageQty, it.unit)}</b>
                             </li>
                           ))}
                         </ul>
