@@ -11,7 +11,7 @@ type StockRow = {
   id: string;
   product_id: string;
   quantity: number;
-  products: { sku: string; name: string; spec: string | null; unit: string } | null;
+  products: { sku: string; name: string; spec: string | null; unit: string; base_package_qty: number | null } | null;
 };
 
 export default async function LocationDetailPage({ params }: { params: Promise<{ code: string }> }) {
@@ -29,12 +29,13 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
   const [stockRows, productRows, inventoryRows, assignedElsewhereRows] = await Promise.all([
     supabase
       .from("inventory_locations")
-      .select("id, product_id, quantity, products(sku, name, spec, unit)")
+      .select("id, product_id, quantity, products(sku, name, spec, unit, base_package_qty)")
       .eq("location_id", location.id)
       .order("updated_at", { ascending: false })
       .then((res) => (res.data ?? []) as StockRow[]),
-    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
-      supabase.from("products").select("id, sku, name, spec").order("name").range(from, to),
+    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; base_package_qty: number | null }>(
+      (from, to) =>
+        supabase.from("products").select("id, sku, name, spec, base_package_qty").order("name").range(from, to),
     ),
     fetchAllRows<{ product_id: string; quantity: number }>((from, to) =>
       supabase.from("inventory").select("product_id, quantity").range(from, to),
@@ -68,7 +69,11 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
   const products = productRows.map((p) => {
     const total = totalByProduct.get(p.id) ?? 0;
     const assignedElsewhere = assignedElsewhereByProduct.get(p.id) ?? 0;
-    return { ...p, totalQuantity: Math.max(0, total - assignedElsewhere) };
+    return {
+      ...p,
+      totalQuantity: Math.max(0, total - assignedElsewhere),
+      basePackageQty: p.base_package_qty,
+    };
   });
 
   return (
@@ -121,6 +126,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
                   spec={row.products?.spec ?? null}
                   unit={row.products?.unit ?? "EA"}
                   quantity={row.quantity}
+                  basePackageQty={row.products?.base_package_qty ?? null}
                 />
               ))}
             </tbody>
