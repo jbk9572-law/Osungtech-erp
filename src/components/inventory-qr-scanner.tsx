@@ -480,7 +480,7 @@ export function InventoryQrScanner({
               </div>
             )}
 
-            {!cameraError && !scanState.active && (
+            {!cameraError && !locationLookup && !scanState.active && (
               <div
                 style={{
                   position: "absolute",
