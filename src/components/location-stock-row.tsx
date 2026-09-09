@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { setLocationStock } from "@/app/(dashboard)/inventory/locations/actions";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { formatBoxCount } from "@/lib/package-qty";
 
 export function LocationStockRow({
   locationId,
@@ -47,6 +47,11 @@ export function LocationStockRow({
           <input type="hidden" name="code" value={code} />
           <input type="hidden" name="product_id" value={productId} />
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {basePackageQty != null && (
+              <span style={{ fontSize: 10.5, color: "var(--erp-text-muted)", whiteSpace: "nowrap" }}>
+                {formatBoxCount(value, basePackageQty)}
+              </span>
+            )}
             <input
               name="quantity"
               type="number"
@@ -58,11 +63,6 @@ export function LocationStockRow({
             />
             <span style={{ fontSize: 11, color: "var(--erp-text-muted)" }}>{unit}</span>
           </div>
-          {basePackageQty != null && (
-            <span style={{ fontSize: 10.5, color: "var(--erp-text-muted)" }}>
-              {formatQuantityWithBoxes(value, basePackageQty)}
-            </span>
-          )}
           {state?.error && <span style={{ color: "var(--erp-danger)", fontSize: 11 }}>{state.error}</span>}
         </form>
       </td>

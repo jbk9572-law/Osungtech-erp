@@ -142,7 +142,10 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
       {stockRows.length === 0 ? (
         <p className="erp-grid-empty">아직 이 위치에 등록된 품목이 없습니다.</p>
       ) : (
-        <div className="erp-grid-wrap">
+        // .erp-grid-wrap도 기본이 컨테이너 폭을 꽉 채우는 블록이라, 표를
+        // 좁혀도 이 감싸는 박스(테두리)는 그대로 넓게 남아 "빈 공간"처럼
+        // 보인다. width: fit-content로 표 실제 폭만큼만 감싸게 한다.
+        <div className="erp-grid-wrap" style={{ width: "fit-content" }}>
           {/* .erp-grid 클래스 자체가 width:100%라서, 인라인으로 auto를
               줘서 덮어써야 한다 — 안 그러면 fixed 레이아웃이라도 지정한
               칸 폭들이 표 폭(=컨테이너 100%)에 맞춰 비례해서 다시
@@ -154,7 +157,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
                 <th style={{ width: 100 }}>SKU</th>
                 <th style={{ width: 220 }}>품목명</th>
                 <th style={{ width: 110 }}>규격</th>
-                <th className="num" style={{ width: 140 }}>
+                <th className="num" style={{ width: 165 }}>
                   수량
                 </th>
                 <th style={{ width: 130 }} />
