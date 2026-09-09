@@ -15,7 +15,15 @@ import {
   type ScanProduct,
 } from "@/lib/qr-count-scan";
 
-type LocationStockRow = { id: string; sku: string; name: string; spec: string | null; unit: string; quantity: number };
+type LocationStockRow = {
+  id: string;
+  sku: string;
+  name: string;
+  spec: string | null;
+  unit: string;
+  quantity: number;
+  basePackageQty: number | null;
+};
 type LocationLookup =
   | { code: string; status: "loading" }
   | { code: string; status: "done"; tier: number; position: number; rows: LocationStockRow[] }
@@ -353,7 +361,72 @@ export function InventoryQrScanner({
               </div>
             )}
 
-            {!cameraError && scanState.active && (
+            {/* 위치 카드가 화면 대부분을 덮게 되더라도 카메라가 멈춘 게
+                아니라는 걸 항상 눈에 보이게 — 좌상단에 계속 맥박치는
+                점 + "스캔 중" 표시를 둔다. */}
+            {!cameraError && (
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 11px",
+                  borderRadius: 999,
+                  background: "rgba(15, 20, 30, 0.65)",
+                  backdropFilter: "blur(6px)",
+                  WebkitBackdropFilter: "blur(6px)",
+                  color: "#fff",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  pointerEvents: "none",
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "#4ade80",
+                    animation: "erp-live-pulse 1.6s infinite",
+                  }}
+                />
+                스캔 중
+              </div>
+            )}
+
+            {/* 위치 카드가 하단 시트로 뜨는 동안, 그 안쪽에서 다른 위치로
+                넘어갔을 때만 "위치가 변경되었습니다" 안내를 잠깐 띄운다
+                — 처음 뜰 때(token 1)는 카드 자체가 슬라이드업되므로
+                중복 안내하지 않는다. */}
+            {locationLookup && locationFlashToken > 1 && (
+              <div
+                key={locationFlashToken}
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 46,
+                  left: "50%",
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  background: "var(--erp-primary)",
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  boxShadow: "var(--erp-shadow-md)",
+                  pointerEvents: "none",
+                  animation: "erp-toast-fade 1.3s ease-out forwards",
+                }}
+              >
+                위치가 변경되었습니다
+              </div>
+            )}
+
+            {!cameraError && !locationLookup && scanState.active && (
               <div
                 style={{
                   position: "absolute",
@@ -443,105 +516,117 @@ export function InventoryQrScanner({
             {/* 보관위치(랙) QR을 찍으면 위치 화면으로 이동하지 않고 이
                 자리에서 재고만 보여준다 — 진행 중인 품목 실사(스캔한
                 불일치 목록 등)를 그대로 유지한 채, 닫으면 다시 이어서
-                스캔할 수 있게 하기 위해서다. */}
+                스캔할 수 있게 하기 위해서다. 화면 전체를 덮는 검은
+                패널 대신 하단 카드로만 띄워서 카메라가 계속 보이게
+                하고(라이브 스캔 느낌 유지), 위쪽 "스캔 중" 표시 +
+                위치가 바뀔 때의 토스트로 계속 살아있음을 알린다. */}
             {locationLookup && (
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  background: "rgba(15, 20, 30, 0.92)",
-                  color: "#fff",
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                  maxHeight: "58%",
                   display: "flex",
                   flexDirection: "column",
-                  padding: 14,
+                  background: "rgba(255, 255, 255, 0.97)",
+                  color: "var(--erp-text)",
+                  borderRadius: 16,
+                  borderTop: "4px solid var(--erp-primary)",
+                  boxShadow: "var(--erp-shadow-lg)",
+                  overflow: "hidden",
+                  animation: "erp-sheet-in 220ms ease-out",
                 }}
               >
-                {locationFlashToken > 0 && (
-                  <div
-                    key={locationFlashToken}
-                    aria-hidden="true"
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      pointerEvents: "none",
-                      background: "rgba(74, 111, 165, 0.55)",
-                      animation: "erp-scan-flash 380ms ease-out forwards",
-                    }}
-                  />
-                )}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 8,
-                    marginBottom: 4,
-                  }}
-                >
-                  <div style={{ fontSize: 15, fontWeight: 700, minWidth: 0, overflowWrap: "anywhere" }}>
-                    보관 위치 {locationLookup.code}
-                    {locationLookup.status === "done" && (
-                      <span style={{ fontSize: 11.5, fontWeight: 400, opacity: 0.75, marginLeft: 6 }}>
-                        ({locationLookup.tier === 2 ? "2단" : "1단"}·
-                        {locationLookup.position === 1 ? "좌측" : "우측"})
-                      </span>
-                    )}
+                <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--erp-border)", margin: "8px auto 2px" }} />
+                <div style={{ padding: "6px 14px 10px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginBottom: 1 }}>보관 위치</div>
+                      <div style={{ fontSize: 17, fontWeight: 800, overflowWrap: "anywhere" }}>
+                        {locationLookup.code}
+                        {locationLookup.status === "done" && (
+                          <span style={{ fontSize: 12, fontWeight: 400, color: "var(--erp-text-muted)", marginLeft: 6 }}>
+                            ({locationLookup.tier === 2 ? "2단" : "1단"}·
+                            {locationLookup.position === 1 ? "좌측" : "우측"})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={closeLocationLookup}
+                      aria-label="닫기"
+                      style={{
+                        flexShrink: 0,
+                        width: 26,
+                        height: 26,
+                        borderRadius: "50%",
+                        border: "none",
+                        background: "var(--erp-bg-subtle)",
+                        color: "var(--erp-text-muted)",
+                        fontSize: 14,
+                        lineHeight: 1,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={closeLocationLookup}
-                    className="erp-btn erp-btn-danger"
-                    style={{ flexShrink: 0 }}
-                  >
-                    닫기
-                  </button>
                 </div>
 
-                {/* 위치 카드가 화면을 거의 다 가려서, 카메라가 계속 QR을
-                    읽고 있는지 멈춰있는지 헷갈린다는 피드백 — 계속 스캔
-                    중이라는 걸 말로 명확히 알려준다. */}
-                <div
-                  className="animate-pulse"
-                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, opacity: 0.75, marginBottom: 10 }}
-                >
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", flexShrink: 0 }} />
-                  <span style={{ fontWeight: 400 }}>
-                    카메라가 계속 스캔 중 — 다른 위치나 품목 QR을 비추면 자동으로 넘어갑니다
-                  </span>
-                </div>
-
-                <div style={{ flex: 1, overflow: "auto" }}>
+                <div style={{ flex: 1, overflow: "auto", padding: "0 14px" }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", marginBottom: 4 }}>
+                    보관 중인 품목
+                  </div>
                   {locationLookup.status === "loading" && (
-                    <p style={{ fontSize: 12.5, opacity: 0.85 }}>조회 중...</p>
+                    <p style={{ fontSize: 12.5, color: "var(--erp-text-muted)" }}>조회 중...</p>
                   )}
                   {locationLookup.status === "error" && (
-                    <p style={{ fontSize: 12.5, color: "#ffb4b4" }}>{locationLookup.error}</p>
+                    <p style={{ fontSize: 12.5, color: "var(--erp-danger)" }}>{locationLookup.error}</p>
                   )}
                   {locationLookup.status === "done" && locationLookup.rows.length === 0 && (
-                    <p style={{ fontSize: 12.5, opacity: 0.85 }}>이 위치에 등록된 품목이 없습니다.</p>
+                    <p style={{ fontSize: 12.5, color: "var(--erp-text-muted)" }}>이 위치에 등록된 품목이 없습니다.</p>
                   )}
                   {locationLookup.status === "done" && locationLookup.rows.length > 0 && (
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                       <thead>
-                        <tr style={{ opacity: 0.75 }}>
-                          <th style={{ textAlign: "left", padding: "4px 6px" }}>품목</th>
+                        <tr style={{ color: "var(--erp-text-muted)" }}>
+                          <th style={{ textAlign: "left", padding: "4px 6px" }}>품목명</th>
                           <th style={{ textAlign: "left", padding: "4px 6px" }}>규격</th>
                           <th style={{ textAlign: "right", padding: "4px 6px" }}>수량</th>
                         </tr>
                       </thead>
                       <tbody>
                         {locationLookup.rows.map((row) => (
-                          <tr key={row.id} style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
-                            <td style={{ padding: "6px" }}>{row.name}</td>
-                            <td style={{ padding: "6px", opacity: 0.85 }}>{row.spec ?? "-"}</td>
-                            <td style={{ padding: "6px", textAlign: "right" }}>
-                              {formatQuantityWithBoxes(row.quantity, null, row.unit)}
+                          <tr key={row.id} style={{ borderTop: "1px solid var(--erp-divider)" }}>
+                            <td style={{ padding: "6px", fontWeight: 600 }}>{row.name}</td>
+                            <td style={{ padding: "6px", color: "var(--erp-text-muted)" }}>{row.spec ?? "-"}</td>
+                            <td style={{ padding: "6px", textAlign: "right", fontWeight: 700 }}>
+                              {formatQuantityWithBoxes(row.quantity, row.basePackageQty, row.unit)}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   )}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 14px",
+                    fontSize: 11,
+                    color: "var(--erp-info-text)",
+                    background: "var(--erp-info-bg)",
+                    borderTop: "1px solid var(--erp-info-border)",
+                  }}
+                >
+                  <span aria-hidden="true">ⓘ</span>
+                  다른 위치나 품목 QR을 비추면 자동으로 전환됩니다.
                 </div>
               </div>
             )}

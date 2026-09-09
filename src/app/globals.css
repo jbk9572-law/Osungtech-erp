@@ -61,6 +61,49 @@ body {
   }
 }
 
+/* QR 스캐너 — 좌상단 "스캔 중" 점이 계속 맥박치듯 깜빡여서 카메라가
+   멈추지 않고 계속 인식 중임을 알려준다. */
+@keyframes erp-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(74, 222, 128, 0);
+  }
+}
+
+/* QR 스캐너 — 보관위치 카드가 카메라 화면을 가리지 않고 하단에서
+   슬라이드업으로 나타난다. */
+@keyframes erp-sheet-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* QR 스캐너 — 카드가 떠 있는 상태에서 다른 위치 QR로 넘어가면, "위치가
+   바뀌었다"는 걸 말로도 잠깐 띄워서 명확히 알려준다. */
+@keyframes erp-toast-fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  15%,
+  70% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+}
+
 @media print {
   @page {
     size: A4 portrait;

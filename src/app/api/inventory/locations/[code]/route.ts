@@ -24,7 +24,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
   // 받는다(재고 없으면 빈 배열).
   const { data: location } = await supabase
     .from("locations")
-    .select("code, tier, position, inventory_locations(id, quantity, products(sku, name, spec, unit))")
+    .select(
+      "code, tier, position, inventory_locations(id, quantity, products(sku, name, spec, unit, base_package_qty))",
+    )
     .eq("code", code)
     .order("updated_at", { foreignTable: "inventory_locations", ascending: false })
     .maybeSingle();
@@ -40,6 +42,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
     name: row.products?.name ?? "(삭제된 품목)",
     spec: row.products?.spec ?? null,
     unit: row.products?.unit ?? "EA",
+    basePackageQty: row.products?.base_package_qty ?? null,
   }));
 
   return NextResponse.json({
