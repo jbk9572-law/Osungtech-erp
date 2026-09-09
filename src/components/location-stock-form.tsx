@@ -75,6 +75,10 @@ export function LocationStockForm({
           <thead>
             <tr>
               <th>품목</th>
+              <th style={{ width: 130 }}>규격</th>
+              <th className="num" style={{ width: 110 }}>
+                미배정
+              </th>
               <th className="num" style={{ width: 170 }}>
                 이 위치 보관수량
               </th>
@@ -97,12 +101,10 @@ export function LocationStockForm({
                       value={row.productId}
                       onChange={(productId) => updateRow(row.key, { productId, quantity: 0 })}
                     />
-                    {product && (
-                      <div style={{ fontSize: 11, color: "var(--erp-primary-dark)", marginTop: 2 }}>
-                        미배정 {product.totalQuantity.toLocaleString()}개 (다른 위치에 이미 등록해 둔 만큼
-                        뺀 참고값, 자동으로 채워지진 않습니다)
-                      </div>
-                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{product?.spec ?? "-"}</td>
+                  <td className="num" style={{ color: "var(--erp-primary-dark)" }}>
+                    {product ? `${product.totalQuantity.toLocaleString()}개` : "-"}
                   </td>
                   <td className="num">
                     <QuantityWithBoxInput
@@ -149,10 +151,10 @@ export function LocationStockForm({
       </div>
 
       <PageGuide className="mt-2 mb-0">
-        품목을 고르면 아래에 참고용 미배정 재고가 뜹니다(자동으로 채워지진 않습니다) — 이 위치에 실제로
-        있는 수량을 세어서 입력하세요. 포장수량이 있는 품목은 몇 박스인지 바로 보여주고, 수량 칸에
-        &quot;=10+5&quot;처럼 계산식을 입력해도 됩니다. &quot;+ 품목 추가&quot;로 여러 품목을 한 번에
-        등록한 뒤 한 번만 저장하면 됩니다.
+        &quot;미배정&quot;은 창고 전체 재고에서 다른 위치에 이미 등록해 둔 만큼 뺀 참고값입니다(자동으로
+        채워지진 않습니다) — 이 위치에 실제로 있는 수량을 세어서 &quot;이 위치 보관수량&quot;에 입력하세요.
+        포장수량이 있는 품목은 몇 박스인지 바로 보여주고, 수량 칸에 &quot;=10+5&quot;처럼 계산식을
+        입력해도 됩니다. &quot;+ 품목 추가&quot;로 여러 품목을 한 번에 등록한 뒤 한 번만 저장하면 됩니다.
       </PageGuide>
     </form>
   );
