@@ -55,6 +55,12 @@ export function InventoryQrScanner({
   // 위치 상세 페이지 URL이다. 페이지 이동 없이 이 화면 안에서 그 위치의
   // 재고만 조회해 보여주고, 닫으면 하던 품목 실사를 그대로 이어간다.
   const [locationLookup, setLocationLookup] = useState<LocationLookup | null>(null);
+  // 위치 카드가 화면을 거의 다 덮어서, 다른 위치로 넘어갔을 때 정말
+  // 바뀐 건지 멈춘 건지 헷갈린다는 피드백 — 새 위치를 인식할 때마다
+  // 짧게 화면을 깜빡여서(품목 인식 성공 플래시와 같은 방식) 눈에 보이는
+  // 변화를 준다. 0이면 아직 한 번도 안 떴다는 뜻이라 마운트 시 헛플래시가
+  // 안 뜨게 한다.
+  const [locationFlashToken, setLocationFlashToken] = useState(0);
   // setInterval 콜백에서 fetch를 매번 새로 트리거하지 않도록(같은 QR을
   // 카메라에 계속 대고 있는 동안 120ms마다 반복 조회하는 걸 막기 위해)
   // 동기적으로 즉시 확인 가능한 ref로 마지막 조회 코드를 기억한다 —
@@ -171,6 +177,7 @@ export function InventoryQrScanner({
               if (lastLocationCodeRef.current !== locationCode) {
                 lastLocationCodeRef.current = locationCode;
                 setLocationLookup({ code: locationCode, status: "loading" });
+                setLocationFlashToken((t) => t + 1);
                 lookupLocation(locationCode);
               }
               return;
@@ -449,13 +456,26 @@ export function InventoryQrScanner({
                   padding: 14,
                 }}
               >
+                {locationFlashToken > 0 && (
+                  <div
+                    key={locationFlashToken}
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      pointerEvents: "none",
+                      background: "rgba(74, 111, 165, 0.55)",
+                      animation: "erp-scan-flash 380ms ease-out forwards",
+                    }}
+                  />
+                )}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 8,
-                    marginBottom: 10,
+                    marginBottom: 4,
                   }}
                 >
                   <div style={{ fontSize: 15, fontWeight: 700, minWidth: 0, overflowWrap: "anywhere" }}>
@@ -475,6 +495,19 @@ export function InventoryQrScanner({
                   >
                     닫기
                   </button>
+                </div>
+
+                {/* 위치 카드가 화면을 거의 다 가려서, 카메라가 계속 QR을
+                    읽고 있는지 멈춰있는지 헷갈린다는 피드백 — 계속 스캔
+                    중이라는 걸 말로 명확히 알려준다. */}
+                <div
+                  className="animate-pulse"
+                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, opacity: 0.75, marginBottom: 10 }}
+                >
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4ade80", flexShrink: 0 }} />
+                  <span style={{ fontWeight: 400 }}>
+                    카메라가 계속 스캔 중 — 다른 위치나 품목 QR을 비추면 자동으로 넘어갑니다
+                  </span>
                 </div>
 
                 <div style={{ flex: 1, overflow: "auto" }}>

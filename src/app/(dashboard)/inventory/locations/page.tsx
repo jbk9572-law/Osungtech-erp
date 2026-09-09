@@ -20,14 +20,27 @@ export default async function InventoryLocationsPage() {
     fetchAllRows<LocationRow>((from, to) =>
       supabase.from("locations").select("id, rack, tier, position, code").order("rack").range(from, to),
     ),
-    fetchAllRows<{ location_id: string }>((from, to) =>
-      supabase.from("inventory_locations").select("location_id").range(from, to),
+    fetchAllRows<{ location_id: string; quantity: number; products: { name: string; spec: string | null; unit: string } | null }>(
+      (from, to) =>
+        supabase
+          .from("inventory_locations")
+          .select("location_id, quantity, products(name, spec, unit)")
+          .range(from, to),
     ),
   ]);
 
   const countByLocation = new Map<string, number>();
+  const itemsByLocation = new Map<string, { name: string; spec: string | null; unit: string; quantity: number }[]>();
   for (const row of stockRows) {
     countByLocation.set(row.location_id, (countByLocation.get(row.location_id) ?? 0) + 1);
+    const list = itemsByLocation.get(row.location_id) ?? [];
+    list.push({
+      name: row.products?.name ?? "(삭제된 품목)",
+      spec: row.products?.spec ?? null,
+      unit: row.products?.unit ?? "EA",
+      quantity: row.quantity,
+    });
+    itemsByLocation.set(row.location_id, list);
   }
 
   const racks = new Map<string, LocationRow[]>();
@@ -129,30 +142,63 @@ export default async function InventoryLocationsPage() {
                 const loc = byKey.get(`${tier}-${position}`);
                 if (!loc) return <div key={position} />;
                 const count = countByLocation.get(loc.id) ?? 0;
+                const items = itemsByLocation.get(loc.id) ?? [];
                 return (
-                  <Link
+                  <details
                     key={loc.id}
-                    href={`/inventory/locations/${loc.code}`}
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      padding: "16px 8px",
                       border: "1px solid var(--erp-border)",
                       borderRadius: 6,
                       background: "#fff",
-                      textDecoration: "none",
                     }}
                   >
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "var(--erp-text)" }}>
-                      {loc.code}
-                    </span>
-                    <span className={count > 0 ? "erp-badge erp-badge-info" : "erp-badge erp-badge-muted"}>
-                      {count > 0 ? `${count}품목 보관 중` : "미지정"}
-                    </span>
-                  </Link>
+                    <summary
+                      style={{
+                        listStyle: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        padding: "16px 8px",
+                      }}
+                    >
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "var(--erp-text)" }}>
+                        {loc.code}
+                      </span>
+                      <span className={count > 0 ? "erp-badge erp-badge-info" : "erp-badge erp-badge-muted"}>
+                        {count > 0 ? `${count}품목 보관 중` : "미지정"}
+                      </span>
+                    </summary>
+                    <div style={{ borderTop: "1px solid var(--erp-border)", padding: "8px 10px 10px" }}>
+                      {items.length > 0 ? (
+                        <ul style={{ margin: "0 0 8px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+                          {items.map((it, i) => (
+                            <li key={i} style={{ fontSize: 11.5, color: "var(--erp-text)" }}>
+                              {it.name}
+                              {it.spec ? ` (${it.spec})` : ""} —{" "}
+                              <b>
+                                {it.quantity.toLocaleString()}
+                                {it.unit}
+                              </b>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p style={{ fontSize: 11.5, color: "var(--erp-text-muted)", margin: "0 0 8px" }}>
+                          보관 중인 품목이 없습니다.
+                        </p>
+                      )}
+                      <Link
+                        href={`/inventory/locations/${loc.code}`}
+                        className="erp-btn"
+                        style={{ width: "100%" }}
+                      >
+                        상세보기/수정
+                      </Link>
+                    </div>
+                  </details>
                 );
               })}
             </div>
