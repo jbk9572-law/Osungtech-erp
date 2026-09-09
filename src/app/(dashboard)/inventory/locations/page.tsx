@@ -5,7 +5,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CreateRackForm } from "@/components/create-rack-form";
 import { DeleteRackButton } from "@/components/delete-rack-button";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
 
 type LocationRow = { id: string; rack: string; tier: number; position: number; code: string };
 
@@ -186,7 +186,9 @@ export default async function InventoryLocationsPage() {
                             <li key={i} style={{ fontSize: 11.5, color: "var(--erp-text)" }}>
                               {it.name}
                               {it.spec ? ` (${it.spec})` : ""} —{" "}
-                              <b>{formatQuantityWithBoxes(it.quantity, it.basePackageQty, it.unit)}</b>
+                              <b>
+                                <QtyWithBoxes quantity={it.quantity} basePackageQty={it.basePackageQty} unit={it.unit} />
+                              </b>
                             </li>
                           ))}
                         </ul>

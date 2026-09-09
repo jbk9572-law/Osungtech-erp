@@ -48,7 +48,7 @@ export function LocationStockRow({
           <input type="hidden" name="product_id" value={productId} />
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {basePackageQty != null && (
-              <span style={{ fontSize: 10.5, color: "var(--erp-text-muted)", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: 10.5, color: "var(--erp-danger)", whiteSpace: "nowrap" }}>
                 {formatBoxCount(value, basePackageQty)}
               </span>
             )}

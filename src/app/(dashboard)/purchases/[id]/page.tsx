@@ -295,7 +295,7 @@ export default async function PurchaseDetailPage({
                   </td>
                   <td
                     className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    style={{ color: row.products?.base_package_qty ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                   >
                     {formatPackageQty(
                       row.products?.base_package_qty,

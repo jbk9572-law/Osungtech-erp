@@ -6,7 +6,7 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
 
 export type CountRow = {
   productId: string;
@@ -368,7 +368,9 @@ export function InventoryCountForm({
                       ? `1박스 = ${Number(row.basePackageQty).toLocaleString()}${row.unit ?? ""}`
                       : "-"}
                   </td>
-                  <td className="num">{formatQuantityWithBoxes(systemQuantity, row.basePackageQty, row.unit ?? "")}</td>
+                  <td className="num">
+                    <QtyWithBoxes quantity={systemQuantity} basePackageQty={row.basePackageQty} unit={row.unit ?? ""} />
+                  </td>
                   <td className="num">
                     <QuantityWithBoxInput
                       quantity={value}

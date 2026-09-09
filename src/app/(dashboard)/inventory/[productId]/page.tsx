@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ClickableRow } from "@/components/clickable-row";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
 
@@ -145,7 +145,7 @@ export default async function InventoryProductHistoryPage({
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {product.sku} · {product.name}
         {product.spec && ` (${product.spec})`} · 현재 재고{" "}
-        {formatQuantityWithBoxes(currentQuantity, product.base_package_qty)}
+        <QtyWithBoxes quantity={currentQuantity} basePackageQty={product.base_package_qty} />
         {product.unit ?? ""}
       </p>
 
@@ -299,10 +299,7 @@ export default async function InventoryProductHistoryPage({
                     {row.authorName ?? "-"}
                   </td>
                   <td className="num">
-                    {formatQuantityWithBoxes(
-                      row.balance,
-                      product.base_package_qty,
-                    )}
+                    <QtyWithBoxes quantity={row.balance} basePackageQty={product.base_package_qty} />
                   </td>
                 </>
               );

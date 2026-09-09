@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { FormMessage } from "@/components/form-message";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { PageGuide } from "@/components/erp/page-guide";
 import {
   createInitialScanState,
@@ -501,11 +501,11 @@ export function InventoryQrScanner({
                   <div style={{ fontSize: 12.5, color: "var(--erp-text-muted)", marginBottom: 10 }}>
                     {scanState.active.spec ?? "-"} · 전산 재고{" "}
                     <strong style={{ color: "var(--erp-text)" }}>
-                      {formatQuantityWithBoxes(
-                        scanState.active.systemQuantity,
-                        scanState.active.basePackageQty,
-                        scanState.active.unit ?? "",
-                      )}
+                      <QtyWithBoxes
+                        quantity={scanState.active.systemQuantity}
+                        basePackageQty={scanState.active.basePackageQty}
+                        unit={scanState.active.unit ?? ""}
+                      />
                     </strong>
                   </div>
                   {mismatchInput === null ? (
@@ -663,7 +663,7 @@ export function InventoryQrScanner({
                             <td style={{ padding: "6px", fontWeight: 600 }}>{row.name}</td>
                             <td style={{ padding: "6px", color: "var(--erp-text-muted)" }}>{row.spec ?? "-"}</td>
                             <td style={{ padding: "6px", textAlign: "right", fontWeight: 700 }}>
-                              {formatQuantityWithBoxes(row.quantity, row.basePackageQty, row.unit)}
+                              <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} unit={row.unit} />
                             </td>
                           </tr>
                         ))}
