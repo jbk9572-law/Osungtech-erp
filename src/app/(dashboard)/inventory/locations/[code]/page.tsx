@@ -148,8 +148,11 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
               fit-content로 줄이면 이번엔 표 자체가 컨테이너보다 작아져
               잘린 것처럼 보인다. 모든 칸에 %로 폭을 주고 합이 100%가
               되게 해서 표는 항상 컨테이너 전체 폭을 채우면서 칸 비율도
-              고정되게 한다(등록 폼 표와 같은 방식). */}
-          <table className="erp-grid" style={{ tableLayout: "fixed" }}>
+              고정되게 한다(등록 폼 표와 같은 방식). 다만 %만 있으면
+              좁은(모바일) 화면에서 입력칸/버튼이 다 찌그러지므로,
+              minWidth로 바닥을 깔고 그 아래로는 erp-grid-wrap의
+              overflow:auto로 가로 스크롤되게 한다. */}
+          <table className="erp-grid" style={{ tableLayout: "fixed", minWidth: 680 }}>
             <thead>
               <tr>
                 <th style={{ width: "12%" }}>SKU</th>

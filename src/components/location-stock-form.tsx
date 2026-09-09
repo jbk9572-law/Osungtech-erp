@@ -71,13 +71,16 @@ export function LocationStockForm({
       <input type="hidden" name="items" value={itemsJson} />
 
       <div className="erp-grid-wrap" style={{ marginBottom: 8 }}>
-        <table className="erp-grid" style={{ width: "100%", tableLayout: "fixed" }}>
+        <table className="erp-grid" style={{ width: "100%", tableLayout: "fixed", minWidth: 620 }}>
           {/* table-layout:fixed에서 칸 하나라도 폭을 안 주면 그 칸이 표
               폭(100%)의 남는 부분을 전부 떠안고, 반대로 표를 auto/
               fit-content로 줄이면 이번엔 표 자체가 컨테이너보다 작아져
               잘린 것처럼 보인다. 모든 칸에 %로 폭을 주고 합이 100%가
               되게 해서 표는 항상 컨테이너 전체 폭을 채우면서 칸 비율도
-              고정되게 한다. */}
+              고정되게 한다. 다만 %만 있으면 좁은(모바일) 화면에서
+              입력칸/버튼이 다 찌그러지므로, minWidth로 바닥을 깔고 그
+              아래로는 erp-grid-wrap의 overflow:auto로 가로 스크롤되게
+              한다(todo-form.tsx 등 다른 여러 줄 표와 동일한 방식). */}
           <thead>
             <tr>
               <th style={{ width: "34%" }}>품목</th>

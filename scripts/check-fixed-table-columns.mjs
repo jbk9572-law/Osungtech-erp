@@ -16,10 +16,16 @@
 //      없으면 위반 — 폭 없는 칸이 남는 폭을 전부 떠안는다. (전부 폭이
 //      있거나 전부 없으면 위반 아님 — 전부 없으면 브라우저 기본 자동
 //      배분이라 이 버그가 안 생긴다.)
+//   C) 칸 폭에 %가 하나라도 있는데 표 자체에 minWidth가 없으면 위반 —
+//      %만 있으면 좁은(모바일) 화면에서 입력칸/버튼이 다 찌그러진다
+//      (실제로 이 버그로 모바일 화면이 깨졌었다). minWidth로 바닥을
+//      깔아서 그 밑으로는 erp-grid-wrap의 overflow:auto가 가로
+//      스크롤을 대신하게 해야 한다.
 //
-// 권장 해결책: 모든 칸에 %로 폭을 주고 합이 100%가 되게 하면(표는
-// width:100%인 기본값 그대로) 두 문제가 동시에 해결된다 —
-// location-stock-form.tsx / locations/[code]/page.tsx 참고.
+// 권장 해결책: 모든 칸에 %로 폭을 주고 합이 100%가 되게 하면서(표는
+// width:100%인 기본값 그대로) 표에 minWidth도 같이 주면 세 문제가
+// 동시에 해결된다 — location-stock-form.tsx / locations/[code]/page.tsx
+// 참고.
 //
 // 오탐이 있으면 ALLOWLIST에 "파일:줄번호"와 이유를 추가한다.
 
@@ -53,8 +59,28 @@ function isThElement(tagName) {
   return ts.isIdentifier(tagName) && tagName.text === "th";
 }
 
+function stringLiteralText(node) {
+  return node && ts.isStringLiteralLike(node) ? node.text : null;
+}
+
+// 값이 (직접 또는 삼항식의 양쪽 분기 모두) "%"로 끝나는 문자열 리터럴인지
+// 본다 — width: cond ? "4%" : "6%" 처럼 조건부로 %를 주는 경우도 있어서다.
+function looksLikePercent(initExpr) {
+  const direct = stringLiteralText(initExpr);
+  if (direct !== null) return direct.endsWith("%");
+  if (ts.isConditionalExpression(initExpr)) {
+    const a = stringLiteralText(initExpr.whenTrue);
+    const b = stringLiteralText(initExpr.whenFalse);
+    if (a !== null && b !== null) return a.endsWith("%") && b.endsWith("%");
+  }
+  return false;
+}
+
 // style={{ a: "b", c: 1 }} 형태의 JSX style 속성에서 프로퍼티 이름 ->
-// 값(문자열 리터럴이면 그 텍스트, 아니면 null) 맵을 만든다.
+// { literal: 문자열 리터럴이면 그 텍스트(아니면 null), percent: %로 끝나는
+// 값인지(삼항식의 양쪽 분기 포함) } 맵을 만든다. 프로퍼티 자체가 있는지는
+// map.has(key)로 확인한다 — 값이 삼항식이라 literal이 null이어도
+// "폭을 준 칸"으로는 쳐야 오탐이 안 난다.
 function readStyleObject(attributes) {
   const styleAttr = attributes.properties.find(
     (p) => ts.isJsxAttribute(p) && p.name && p.name.text === "style",
@@ -67,16 +93,14 @@ function readStyleObject(attributes) {
   for (const prop of expr.properties) {
     if (!ts.isPropertyAssignment(prop)) continue;
     const key = prop.name.getText().replace(/["']/g, "");
-    const value = ts.isStringLiteralLike(prop.initializer) ? prop.initializer.text : undefined;
-    map.set(key, value);
+    map.set(key, { literal: stringLiteralText(prop.initializer), percent: looksLikePercent(prop.initializer) });
   }
   return map;
 }
 
 function hasFixedTableLayout(style) {
   if (!style) return false;
-  const v = style.get("tableLayout");
-  return v === "fixed";
+  return style.get("tableLayout")?.literal === "fixed";
 }
 
 function findFirstHeaderRowThs(tableNode) {
@@ -119,7 +143,7 @@ function checkFile(filePath) {
         const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
         const key = `${relPath}:${line + 1}`;
         if (!ALLOWLIST.has(key)) {
-          const width = style.get("width");
+          const width = style.get("width")?.literal;
           if (width === "auto" || width === "fit-content") {
             violations.push({
               key,
@@ -129,12 +153,20 @@ function checkFile(filePath) {
           if (isTableJsxElement) {
             const ths = findFirstHeaderRowThs(node);
             if (ths.length > 1) {
-              const widths = ths.map((th) => readStyleObject(th.attributes)?.has("width") ?? false);
-              const withCount = widths.filter(Boolean).length;
-              if (withCount > 0 && withCount < widths.length) {
+              const thWidths = ths.map((th) => readStyleObject(th.attributes)?.get("width"));
+              const withCount = thWidths.filter((w) => w !== undefined).length;
+              if (withCount > 0 && withCount < thWidths.length) {
                 violations.push({
                   key,
                   reason: "칸 일부에만 폭이 있어 폭 없는 칸이 남는 폭을 전부 떠안을 수 있음",
+                });
+              }
+              const hasPercentWidth = thWidths.some((w) => w?.percent);
+              if (hasPercentWidth && !style.has("minWidth")) {
+                violations.push({
+                  key,
+                  reason:
+                    "칸 폭이 %인데 표에 minWidth가 없어 좁은(모바일) 화면에서 입력칸/버튼이 찌그러질 수 있음",
                 });
               }
             }
