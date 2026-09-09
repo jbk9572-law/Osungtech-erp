@@ -23,6 +23,7 @@ type HistoryRow = {
   new_quantity: number | null;
   created_at: string;
   profiles: { full_name: string | null } | null;
+  reason: "manual" | "in" | "out";
 };
 
 export default async function LocationDetailPage({ params }: { params: Promise<{ code: string }> }) {
@@ -67,7 +68,9 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
       .limit(4), // 랙 1개 = 2단 × 좌우 2칸 = 항상 4자리 (createRack 참고)
     supabase
       .from("location_stock_history")
-      .select("id, product_name, product_spec, previous_quantity, new_quantity, created_at, profiles!actor(full_name)")
+      .select(
+        "id, product_name, product_spec, previous_quantity, new_quantity, created_at, reason, profiles!actor(full_name)",
+      )
       .eq("location_id", location.id)
       .order("created_at", { ascending: false })
       .limit(20),
@@ -213,12 +216,19 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
               {history.map((row) => {
                 const label = row.product_name ?? "(삭제된 품목)";
                 const spec = row.product_spec ? ` (${row.product_spec})` : "";
+                // 매출/매입 연동으로 자동 반영된 변경은 "입고"/"출고"로,
+                // 위치등록 화면에서 사람이 직접 고친 변경은 기존처럼
+                // 등록/수정/제거로 구분해서 보여준다.
                 const changeText =
-                  row.previous_quantity == null
-                    ? `등록 — ${row.new_quantity?.toLocaleString() ?? 0}개`
-                    : row.new_quantity == null
-                      ? `제거 — ${row.previous_quantity.toLocaleString()}개 → 0`
-                      : `수정 — ${row.previous_quantity.toLocaleString()} → ${row.new_quantity.toLocaleString()}`;
+                  row.reason === "in" || row.reason === "out"
+                    ? `${row.reason === "in" ? "입고" : "출고"} — ${
+                        row.previous_quantity == null ? "신규" : row.previous_quantity.toLocaleString()
+                      } → ${row.new_quantity?.toLocaleString() ?? 0}`
+                    : row.previous_quantity == null
+                      ? `등록 — ${row.new_quantity?.toLocaleString() ?? 0}개`
+                      : row.new_quantity == null
+                        ? `제거 — ${row.previous_quantity.toLocaleString()}개 → 0`
+                        : `수정 — ${row.previous_quantity.toLocaleString()} → ${row.new_quantity.toLocaleString()}`;
                 return (
                   <li key={row.id} style={{ fontSize: 12, color: "var(--erp-text)" }}>
                     <span style={{ color: "var(--erp-text-muted)" }}>

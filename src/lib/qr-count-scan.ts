@@ -14,10 +14,15 @@ export type ScanProduct = {
 };
 
 // 시스템 수량과 다르게(실제로) 센 값으로 확정된 품목 — 실사 저장 대상.
+// locationCode가 있으면 "이 랙을 실사하는 도중" 확정된 값이라는 뜻이고,
+// 저장 시 창고 전체 재고뿐 아니라 그 위치의 재고(inventory_locations)도
+// 같이 맞춘다(location-stock-sync.ts와 별개로, submitStockCount 안에서
+// 직접 처리).
 export type ConfirmedMismatch = {
   productId: string;
   systemQuantity: number;
   countedQuantity: number;
+  locationCode: string | null;
 };
 
 export type ScanState = {
@@ -30,10 +35,15 @@ export type ScanState = {
   // 품목을 실수로 두 번 스캔해도 "스캔 건수"가 중복으로 올라가지 않게 한다.
   confirmedIds: Set<string>;
   mismatches: ConfirmedMismatch[];
+  // 랙별로 돌면서 실사하는 흐름 지원 — 보관위치 QR을 한 번 찍으면, 다음
+  // 위치 QR을 찍기 전까지는 그 자리에 계속 있다고 보고 품목 QR을 아무리
+  // 여러 개 찍어도 이 값이 유지된다(품목 QR을 찍는다고 지워지지 않음 —
+  // 화면에 뜨는 "위치 조회 카드"만 그 자리에서 잠깐 접힐 뿐).
+  activeLocation: { code: string } | null;
 };
 
 export function createInitialScanState(): ScanState {
-  return { active: null, unknownSku: null, confirmedIds: new Set(), mismatches: [] };
+  return { active: null, unknownSku: null, confirmedIds: new Set(), mismatches: [], activeLocation: null };
 }
 
 // 보관위치(랙) QR은 품목 QR과 달리 SKU가 아니라 그 위치 상세 페이지의
@@ -76,26 +86,44 @@ export function onQrDecoded(
   return { ...next, active: product, unknownSku: null };
 }
 
+// 보관위치(랙) QR을 읽었을 때 호출한다 — 이후 품목 QR을 몇 개를 찍든 다른
+// 위치 QR을 찍기 전까지는 이 위치가 "지금 실사 중인 위치"로 유지된다.
+// location이 null이면(사용자가 직접 해제) 창고 전체 기준 실사로 돌아간다.
+export function setActiveLocation(state: ScanState, location: { code: string } | null): ScanState {
+  return { ...state, activeLocation: location };
+}
+
 // "수량 다름" 확정 — 지금 떠 있는 품목을 실제로 센 수량으로 기록하고,
 // 다음 스캔을 받을 준비 상태로 되돌린다(active를 비워서, 같은 품목을
-// 다시 비추기 전까진 정보 패널이 안 남아있게 한다).
+// 다시 비추기 전까진 정보 패널이 안 남아있게 한다). 지금 activeLocation이
+// 있으면 그 위치 코드를 같이 찍어둔다.
 //
 // 같은 품목을 실수로(또는 정정하려고) 두 번 "수량 다름"으로 확정하면,
 // 예전엔 mismatches에 그 품목이 두 번 들어가 저장 시 두 델타가 모두
 // 재고에 반영돼(예: 두 번째로 고쳐 입력한 값이 아니라 두 델타의 합만큼)
-// 최종 재고가 틀어졌다. 같은 productId의 기존 항목을 지우고 이번
-// 값으로만 남겨서, 마지막으로 확정한 수량만 반영되게 한다.
+// 최종 재고가 틀어졌다. 같은 productId+위치의 기존 항목을 지우고 이번
+// 값으로만 남겨서, 마지막으로 확정한 수량만 반영되게 한다 — 위치까지
+// 같이 키로 묶는 이유는, 같은 품목이 랙 A와 랙 B에 둘 다 있어서 두 위치를
+// 돌며 각각 다르게 정정하는 경우 서로 지우면 안 되기 때문이다.
 export function confirmMismatch(state: ScanState, countedQuantity: number): ScanState {
   if (!state.active) return state;
   const confirmedIds = new Set(state.confirmedIds);
   confirmedIds.add(state.active.productId);
+  const locationCode = state.activeLocation?.code ?? null;
   return {
     ...state,
     active: null,
     confirmedIds,
     mismatches: [
-      ...state.mismatches.filter((m) => m.productId !== state.active!.productId),
-      { productId: state.active.productId, systemQuantity: state.active.systemQuantity, countedQuantity },
+      ...state.mismatches.filter(
+        (m) => !(m.productId === state.active!.productId && m.locationCode === locationCode),
+      ),
+      {
+        productId: state.active.productId,
+        systemQuantity: state.active.systemQuantity,
+        countedQuantity,
+        locationCode,
+      },
     ],
   };
 }

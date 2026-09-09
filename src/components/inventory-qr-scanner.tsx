@@ -12,6 +12,7 @@ import {
   confirmMismatch,
   finalizeScanSession,
   extractLocationCodeFromQr,
+  setActiveLocation,
   type ScanProduct,
 } from "@/lib/qr-count-scan";
 
@@ -187,12 +188,20 @@ export function InventoryQrScanner({
                 setLocationLookup({ code: locationCode, status: "loading" });
                 setLocationFlashToken((t) => t + 1);
                 lookupLocation(locationCode);
+                // 랙별로 돌면서 실사하는 흐름 — 이 위치를 "지금 실사 중인
+                // 위치"로 기억해둔다. 다음 위치 QR을 찍기 전까지는 품목을
+                // 몇 개를 스캔하든 이 값이 유지되고, "수량 다름"으로 확정한
+                // 값은 이 위치 기준으로 저장된다(아래 onQrDecoded 분기는
+                // 이 값을 건드리지 않는다).
+                setScanState((prev) => setActiveLocation(prev, { code: locationCode }));
               }
               return;
             }
             // 위치 카드가 떠 있는 상태에서 품목 QR로 넘어가면(계속
-            // 실사하려는 것), 닫기 버튼 없이도 카드를 자동으로 치우고
-            // 품목 스캔을 이어간다.
+            // 실사하려는 것), 닫기 버튼 없이도 카드를 자동으로 치운다 —
+            // 다만 "지금 실사 중인 위치"(activeLocation) 자체는 유지한다.
+            // 카드가 다시 필요하면(위치를 재확인하고 싶으면) 같은 위치 QR을
+            // 한 번 더 찍으면 된다.
             if (lastLocationCodeRef.current !== null) {
               lastLocationCodeRef.current = null;
               setLocationLookup(null);
@@ -243,6 +252,7 @@ export function InventoryQrScanner({
       productId: m.productId,
       systemQuantity: m.systemQuantity,
       countedQuantity: m.countedQuantity,
+      locationCode: m.locationCode,
     })),
   );
   const totalScanned = scanState.confirmedIds.size;
@@ -399,6 +409,38 @@ export function InventoryQrScanner({
               </div>
             )}
 
+            {/* 랙별로 돌면서 실사하는 중이라는 걸 계속 보여준다 — 위치
+                카드는 품목을 스캔하면 접히지만, "지금 이 위치 기준으로
+                수량을 맞추고 있다"는 사실 자체는 다음 위치 QR을 찍기
+                전까지 안 없어져야 하기 때문. 눌러서 직접 해제하면
+                (예: 랙 실사를 끝내고 창고 전체 실사로 돌아갈 때) 이후
+                "수량 다름"은 다시 위치 구분 없이(창고 전체 기준) 저장된다. */}
+            {!cameraError && !locationLookup && scanState.activeLocation && (
+              <button
+                type="button"
+                onClick={() => setScanState((prev) => setActiveLocation(prev, null))}
+                style={{
+                  position: "absolute",
+                  top: 38,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  background: "rgba(74, 111, 165, 0.85)",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                📍 {scanState.activeLocation.code} 실사 중 <span style={{ opacity: 0.8 }}>· 해제</span>
+              </button>
+            )}
+
             {/* 위치 카드가 하단 시트로 뜨는 동안, 그 안쪽에서 다른 위치로
                 넘어갔을 때만 "위치가 변경되었습니다" 안내를 잠깐 띄운다
                 — 처음 뜰 때(token 1)는 카드 자체가 슬라이드업되므로
@@ -426,57 +468,74 @@ export function InventoryQrScanner({
               </div>
             )}
 
+            {/* 위치 카드(랙실사 화면)와 같은 하단 카드 스타일로 통일했다 —
+                예전엔 이 패널만 어두운 반투명 바였는데, 같은 화면 안에서
+                두 패널의 톤이 다른 게 일관성이 없다는 지적이 있었다. */}
             {!cameraError && !locationLookup && scanState.active && (
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  padding: 12,
-                  background: "rgba(15, 20, 30, 0.82)",
-                  color: "#fff",
+                  left: 10,
+                  right: 10,
+                  bottom: 10,
+                  display: "flex",
+                  flexDirection: "column",
+                  background: "rgba(255, 255, 255, 0.97)",
+                  color: "var(--erp-text)",
+                  borderRadius: 16,
+                  borderTop: "4px solid var(--erp-primary)",
+                  boxShadow: "var(--erp-shadow-lg)",
+                  overflow: "hidden",
+                  animation: "erp-sheet-in 220ms ease-out",
                 }}
               >
-                <div style={{ fontSize: 11, opacity: 0.75, marginBottom: 2 }}>{scanState.active.sku}</div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>{scanState.active.name}</div>
-                <div style={{ fontSize: 12.5, opacity: 0.85, marginBottom: 8 }}>
-                  {scanState.active.spec ?? "-"} · 전산 재고{" "}
-                  <strong>
-                    {formatQuantityWithBoxes(
-                      scanState.active.systemQuantity,
-                      scanState.active.basePackageQty,
-                      scanState.active.unit ?? "",
-                    )}
-                  </strong>
-                </div>
-                {mismatchInput === null ? (
-                  <button
-                    type="button"
-                    onClick={() => setMismatchInput(String(scanState.active!.systemQuantity))}
-                    className="erp-btn erp-btn-danger"
-                    style={{ width: "100%" }}
-                  >
-                    수량 다름 — 실제 수량 입력
-                  </button>
-                ) : (
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <input
-                      type="number"
-                      autoFocus
-                      value={mismatchInput}
-                      onChange={(e) => setMismatchInput(e.target.value)}
-                      className="erp-input"
-                      style={{ flex: 1, color: "#111" }}
-                    />
-                    <button type="button" onClick={handleMismatchConfirm} className="erp-btn erp-btn-primary">
-                      확정
-                    </button>
-                    <button type="button" onClick={() => setMismatchInput(null)} className="erp-btn">
-                      취소
-                    </button>
+                <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--erp-border)", margin: "8px auto 2px" }} />
+                <div style={{ padding: "6px 14px 12px" }}>
+                  {scanState.activeLocation && (
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--erp-primary)", marginBottom: 4 }}>
+                      📍 {scanState.activeLocation.code} 실사 중
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginBottom: 1 }}>{scanState.active.sku}</div>
+                  <div style={{ fontSize: 16, fontWeight: 800 }}>{scanState.active.name}</div>
+                  <div style={{ fontSize: 12.5, color: "var(--erp-text-muted)", marginBottom: 10 }}>
+                    {scanState.active.spec ?? "-"} · 전산 재고{" "}
+                    <strong style={{ color: "var(--erp-text)" }}>
+                      {formatQuantityWithBoxes(
+                        scanState.active.systemQuantity,
+                        scanState.active.basePackageQty,
+                        scanState.active.unit ?? "",
+                      )}
+                    </strong>
                   </div>
-                )}
+                  {mismatchInput === null ? (
+                    <button
+                      type="button"
+                      onClick={() => setMismatchInput(String(scanState.active!.systemQuantity))}
+                      className="erp-btn erp-btn-danger"
+                      style={{ width: "100%" }}
+                    >
+                      수량 다름 — 실제 수량 입력
+                    </button>
+                  ) : (
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <input
+                        type="number"
+                        autoFocus
+                        value={mismatchInput}
+                        onChange={(e) => setMismatchInput(e.target.value)}
+                        className="erp-input"
+                        style={{ flex: 1 }}
+                      />
+                      <button type="button" onClick={handleMismatchConfirm} className="erp-btn erp-btn-primary">
+                        확정
+                      </button>
+                      <button type="button" onClick={() => setMismatchInput(null)} className="erp-btn">
+                        취소
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -676,6 +735,7 @@ export function InventoryQrScanner({
                 <thead>
                   <tr>
                     <th>품목</th>
+                    <th>위치</th>
                     <th className="num">전산</th>
                     <th className="num">실사</th>
                     <th className="num">차이</th>
@@ -686,8 +746,9 @@ export function InventoryQrScanner({
                     const product = products.find((p) => p.productId === m.productId);
                     const diff = m.countedQuantity - m.systemQuantity;
                     return (
-                      <tr key={m.productId}>
+                      <tr key={`${m.productId}-${m.locationCode ?? ""}`}>
                         <td>{product?.name ?? m.productId}</td>
+                        <td>{m.locationCode ?? "창고 전체"}</td>
                         <td className="num">{m.systemQuantity.toLocaleString()}</td>
                         <td className="num">{m.countedQuantity.toLocaleString()}</td>
                         <td

@@ -400,6 +400,7 @@ export type Database = {
           new_quantity: number | null;
           actor: string | null;
           created_at: string;
+          reason: "manual" | "in" | "out";
         };
         Insert: {
           id?: string;
@@ -413,6 +414,7 @@ export type Database = {
           new_quantity?: number | null;
           actor?: string | null;
           created_at?: string;
+          reason?: "manual" | "in" | "out";
         };
         Update: {
           id?: string;
@@ -426,6 +428,7 @@ export type Database = {
           new_quantity?: number | null;
           actor?: string | null;
           created_at?: string;
+          reason?: "manual" | "in" | "out";
         };
         Relationships: [
           {
@@ -1712,6 +1715,10 @@ export type Database = {
       get_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;
+      };
+      apply_location_stock_delta: {
+        Args: { p_product_id: string; p_location_id: string; p_delta: number };
+        Returns: void;
       };
       create_sale_with_items: {
         Args: {

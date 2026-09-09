@@ -106,10 +106,17 @@ export async function applyOrderLocationStock(
       const row = rows.find((r) => r.location_id === p.locationId);
       if (!row) continue;
       const delta = sign * p.amount;
-      const { error } = await supabase
-        .from("inventory_locations")
-        .update({ quantity: row.quantity + delta, updated_at: new Date().toISOString() })
-        .eq("id", row.id);
+      // 절대값(quantity: row.quantity + delta)으로 직접 update하는 대신
+      // 상대값(delta)만 함수에 넘긴다 — apply_location_stock_delta가 그
+      // 자리에서 "quantity = quantity + delta"로 더하므로, 이 요청과 저
+      // 요청 사이에 다른 변경이 끼어들어도(같은 위치에 다른 매출이 먼저
+      // 반영되는 등) 값을 덮어쓰지 않는다. 이 함수가 트랜잭션 범위에
+      // "입고/출고"를 남겨서 location_stock_history에도 그대로 찍힌다.
+      const { error } = await supabase.rpc("apply_location_stock_delta", {
+        p_product_id: productId,
+        p_location_id: p.locationId,
+        p_delta: delta,
+      });
       if (error) {
         console.error("위치별 재고 반영 실패:", error.message);
         continue;
@@ -141,27 +148,15 @@ export async function reverseOrderLocationStock(
   if (!rows || rows.length === 0) return;
 
   for (const row of rows) {
-    const { data: existing } = await supabase
-      .from("inventory_locations")
-      .select("id, quantity")
-      .eq("product_id", row.product_id)
-      .eq("location_id", row.location_id)
-      .maybeSingle();
-    const reversedDelta = -row.quantity_delta;
-    if (existing) {
-      const { error } = await supabase
-        .from("inventory_locations")
-        .update({ quantity: existing.quantity + reversedDelta, updated_at: new Date().toISOString() })
-        .eq("id", existing.id);
-      if (error) console.error("위치별 재고 되돌리기 실패:", error.message);
-    } else {
-      // 되돌리려는 사이에 위치 등록 자체가 지워진 경우(수동 관리 화면에서
-      // 삭제 등) — 되돌린 값 그대로 새 행을 만든다.
-      const { error } = await supabase
-        .from("inventory_locations")
-        .insert({ product_id: row.product_id, location_id: row.location_id, quantity: reversedDelta, updated_at: new Date().toISOString() });
-      if (error) console.error("위치별 재고 되돌리기(재생성) 실패:", error.message);
-    }
+    // apply_location_stock_delta가 상대값으로 더하고(없으면 새로 만들고)
+    // 부호에 따라 입고/출고를 이력에 남긴다 — applyOrderLocationStock과
+    // 동일한 함수를 그대로 재사용한다.
+    const { error } = await supabase.rpc("apply_location_stock_delta", {
+      p_product_id: row.product_id,
+      p_location_id: row.location_id,
+      p_delta: -row.quantity_delta,
+    });
+    if (error) console.error("위치별 재고 되돌리기 실패:", error.message);
   }
 
   const { error: cleanupError } = await supabase
