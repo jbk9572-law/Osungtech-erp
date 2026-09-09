@@ -4,6 +4,7 @@ import {
   onQrDecoded,
   confirmMismatch,
   finalizeScanSession,
+  extractLocationCodeFromQr,
   type ScanProduct,
 } from "./qr-count-scan";
 
@@ -98,5 +99,30 @@ describe("finalizeScanSession", () => {
     const s2 = finalizeScanSession(s1);
     expect(s2.confirmedIds.size).toBe(1);
     expect(s2.confirmedIds.has("p1")).toBe(true);
+  });
+});
+
+describe("extractLocationCodeFromQr", () => {
+  it("extracts the location code from a full location URL", () => {
+    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations/A1-02-01")).toBe(
+      "A1-02-01",
+    );
+  });
+
+  it("extracts the code even with a trailing slash or query string", () => {
+    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations/A1-02-01/")).toBe(
+      "A1-02-01",
+    );
+    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations/A1-02-01?x=1")).toBe(
+      "A1-02-01",
+    );
+  });
+
+  it("returns null for a plain product SKU (not a URL)", () => {
+    expect(extractLocationCodeFromQr("SKU-A")).toBeNull();
+  });
+
+  it("returns null for the locations list URL (no code segment)", () => {
+    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations")).toBeNull();
   });
 });

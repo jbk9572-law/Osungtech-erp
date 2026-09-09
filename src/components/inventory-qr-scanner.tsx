@@ -11,8 +11,15 @@ import {
   onQrDecoded,
   confirmMismatch,
   finalizeScanSession,
+  extractLocationCodeFromQr,
   type ScanProduct,
 } from "@/lib/qr-count-scan";
+
+type LocationStockRow = { id: string; sku: string; name: string; spec: string | null; unit: string; quantity: number };
+type LocationLookup =
+  | { code: string; status: "loading" }
+  | { code: string; status: "done"; tier: number; position: number; rows: LocationStockRow[] }
+  | { code: string; status: "error"; error: string };
 
 // 프레임마다(60fps) 디코딩을 돌리면 저사양 폰에서 카메라가 버벅이므로 잘라서
 // 돈다 — 200ms(5회/초)는 안전하지만 "찍었는데 왜 안 넘어가지" 싶을 만큼
@@ -44,17 +51,46 @@ export function InventoryQrScanner({
   const [flash, setFlash] = useState<{ kind: "ok" | "unknown"; token: number } | null>(null);
   const lastSignatureRef = useRef<string | null>(null);
 
+  // 보관위치(랙) QR — 품목 QR과 같은 카메라로 찍히지만 값이 SKU가 아니라
+  // 위치 상세 페이지 URL이다. 페이지 이동 없이 이 화면 안에서 그 위치의
+  // 재고만 조회해 보여주고, 닫으면 하던 품목 실사를 그대로 이어간다.
+  const [locationLookup, setLocationLookup] = useState<LocationLookup | null>(null);
+  // setInterval 콜백에서 fetch를 매번 새로 트리거하지 않도록(같은 QR을
+  // 카메라에 계속 대고 있는 동안 120ms마다 반복 조회하는 걸 막기 위해)
+  // 동기적으로 즉시 확인 가능한 ref로 마지막 조회 코드를 기억한다 —
+  // locationLookup state는 리렌더 이후에나 반영되어 한 박자 늦는다.
+  const lastLocationCodeRef = useRef<string | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // 수량 정정 입력창이 열려 있는 동안은 디코딩을 멈춘다 — 안 그러면
-  // 입력하는 사이에 카메라가 같은 QR을 다시 읽어 다음 품목으로 새는 걸
-  // 막을 방법이 없다. 이 값을 매 렌더 중에 바로 ref에 써넣지 않고
+  // 수량 정정 입력창/위치 조회 카드가 열려 있는 동안은 디코딩을 멈춘다 —
+  // 안 그러면 입력하는 사이에 카메라가 같은 QR을 다시 읽어 다음 품목으로
+  // 새는 걸 막을 방법이 없다. 이 값을 매 렌더 중에 바로 ref에 써넣지 않고
   // useEffect로 동기화하는 이유는, 렌더 중 ref 쓰기는 리액트 규칙 위반이라서다
   // (setInterval 콜백은 렌더와 무관하게 실행되므로 effect 타이밍으로도 충분하다).
   const pausedRef = useRef(false);
   useEffect(() => {
-    pausedRef.current = mismatchInput !== null || ended;
-  }, [mismatchInput, ended]);
+    pausedRef.current = mismatchInput !== null || ended || locationLookup !== null;
+  }, [mismatchInput, ended, locationLookup]);
+
+  function closeLocationLookup() {
+    lastLocationCodeRef.current = null;
+    setLocationLookup(null);
+  }
+
+  async function lookupLocation(code: string) {
+    try {
+      const res = await fetch(`/api/inventory/locations/${encodeURIComponent(code)}`, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) {
+        setLocationLookup({ code, status: "error", error: data.error ?? "조회에 실패했습니다." });
+        return;
+      }
+      setLocationLookup({ code, status: "done", tier: data.tier, position: data.position, rows: data.rows });
+    } catch {
+      setLocationLookup({ code, status: "error", error: "조회에 실패했습니다. 네트워크 상태를 확인해주세요." });
+    }
+  }
 
   const [state, formAction, pending] = useActionState(submitStockCount, undefined);
 
@@ -126,6 +162,15 @@ export function InventoryQrScanner({
           const frame = ctx.getImageData(0, 0, width, height);
           const code = jsQR(frame.data, width, height, { inversionAttempts: "dontInvert" });
           if (code?.data) {
+            const locationCode = extractLocationCodeFromQr(code.data);
+            if (locationCode) {
+              if (lastLocationCodeRef.current !== locationCode) {
+                lastLocationCodeRef.current = locationCode;
+                setLocationLookup({ code: locationCode, status: "loading" });
+                lookupLocation(locationCode);
+              }
+              return;
+            }
             setScanState((prev) => onQrDecoded(prev, code.data, productBySkuRef.current));
           }
         }, SCAN_INTERVAL_MS);
@@ -374,6 +419,86 @@ export function InventoryQrScanner({
                 {scanState.unknownSku
                   ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다`
                   : "QR을 화면 안에 비춰주세요"}
+              </div>
+            )}
+
+            {/* 보관위치(랙) QR을 찍으면 위치 화면으로 이동하지 않고 이
+                자리에서 재고만 보여준다 — 진행 중인 품목 실사(스캔한
+                불일치 목록 등)를 그대로 유지한 채, 닫으면 다시 이어서
+                스캔할 수 있게 하기 위해서다. */}
+            {locationLookup && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(15, 20, 30, 0.92)",
+                  color: "#fff",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: 14,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    marginBottom: 10,
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 700, minWidth: 0, overflowWrap: "anywhere" }}>
+                    보관 위치 {locationLookup.code}
+                    {locationLookup.status === "done" && (
+                      <span style={{ fontSize: 11.5, fontWeight: 400, opacity: 0.75, marginLeft: 6 }}>
+                        ({locationLookup.tier === 2 ? "2단" : "1단"}·
+                        {locationLookup.position === 1 ? "좌측" : "우측"})
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeLocationLookup}
+                    className="erp-btn erp-btn-danger"
+                    style={{ flexShrink: 0 }}
+                  >
+                    닫기
+                  </button>
+                </div>
+
+                <div style={{ flex: 1, overflow: "auto" }}>
+                  {locationLookup.status === "loading" && (
+                    <p style={{ fontSize: 12.5, opacity: 0.85 }}>조회 중...</p>
+                  )}
+                  {locationLookup.status === "error" && (
+                    <p style={{ fontSize: 12.5, color: "#ffb4b4" }}>{locationLookup.error}</p>
+                  )}
+                  {locationLookup.status === "done" && locationLookup.rows.length === 0 && (
+                    <p style={{ fontSize: 12.5, opacity: 0.85 }}>이 위치에 등록된 품목이 없습니다.</p>
+                  )}
+                  {locationLookup.status === "done" && locationLookup.rows.length > 0 && (
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ opacity: 0.75 }}>
+                          <th style={{ textAlign: "left", padding: "4px 6px" }}>품목</th>
+                          <th style={{ textAlign: "left", padding: "4px 6px" }}>규격</th>
+                          <th style={{ textAlign: "right", padding: "4px 6px" }}>수량</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {locationLookup.rows.map((row) => (
+                          <tr key={row.id} style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+                            <td style={{ padding: "6px" }}>{row.name}</td>
+                            <td style={{ padding: "6px", opacity: 0.85 }}>{row.spec ?? "-"}</td>
+                            <td style={{ padding: "6px", textAlign: "right" }}>
+                              {formatQuantityWithBoxes(row.quantity, null, row.unit)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               </div>
             )}
           </div>

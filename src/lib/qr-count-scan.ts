@@ -36,6 +36,18 @@ export function createInitialScanState(): ScanState {
   return { active: null, unknownSku: null, confirmedIds: new Set(), mismatches: [] };
 }
 
+// 보관위치(랙) QR은 품목 QR과 달리 SKU가 아니라 그 위치 상세 페이지의
+// URL을 통째로 인코딩해서 만든다(print/page.tsx의 buildLocationUrl 참고).
+// 이 화면(QR 자동실사)에서 같은 카메라로 위치 QR을 찍었을 때 "등록 안 된
+// SKU"로 오인하지 않고 위치 조회로 분기할 수 있게, 디코딩된 값이 위치
+// URL이면 코드만 뽑아낸다 — 아니면 null(품목 SKU로 계속 처리).
+const LOCATION_QR_PATTERN = /\/inventory\/locations\/([A-Za-z0-9-]+)(?:[/?#]|$)/;
+
+export function extractLocationCodeFromQr(decodedValue: string): string | null {
+  const m = decodedValue.match(LOCATION_QR_PATTERN);
+  return m ? m[1] : null;
+}
+
 // 지금 화면에 떠 있는 품목(active)을 "일치"로 확정한다 — 다음 QR을
 // 스캔했을 때, 그리고 "실사 종료" 시 마지막 품목에 대해 호출된다.
 function confirmActiveAsMatched(state: ScanState): ScanState {
