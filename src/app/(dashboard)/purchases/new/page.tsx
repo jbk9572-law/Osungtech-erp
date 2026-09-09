@@ -8,6 +8,7 @@ import {
 } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function NewPurchasePage({
   searchParams,
@@ -43,7 +44,7 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }] =
+  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows] =
     await Promise.all([
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
@@ -88,7 +89,29 @@ export default async function NewPurchasePage({
         )
         .order("created_at", { ascending: false })
         .limit(1000),
+      fetchAllRows<{
+        product_id: string;
+        location_id: string;
+        quantity: number;
+        locations: { code: string; tier: number; position: number } | null;
+      }>((from, to) =>
+        supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+      ),
     ]);
+
+  const productLocations: Record<string, LocationOption[]> = {};
+  for (const row of locationStockRows) {
+    if (!row.locations) continue;
+    const list = productLocations[row.product_id] ?? [];
+    list.push({
+      locationId: row.location_id,
+      code: row.locations.code,
+      tier: row.locations.tier,
+      position: row.locations.position,
+      quantity: row.quantity,
+    });
+    productLocations[row.product_id] = list;
+  }
 
   const priceHistory = (history ?? [])
     .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
@@ -125,6 +148,7 @@ export default async function NewPurchasePage({
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? ""}
+        productLocations={productLocations}
         customers={customers ?? []}
         prices={prices ?? []}
         supplierPrices={supplierPrices ?? []}

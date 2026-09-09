@@ -15,6 +15,7 @@ import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
 import { normalizeLotNumber } from "@/lib/lot-number";
+import { applyOrderLocationStock, reverseOrderLocationStock, parseAllocationChoices } from "@/lib/location-stock-sync";
 
 type SaleItemInput = {
   productId: string;
@@ -64,6 +65,10 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
   // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
   const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
+  // 품목이 보관 위치 2곳 이상에 나뉘어 있어서 등록 화면의 확인 모달을
+  // 거친 경우에만 값이 들어온다 — 어느 위치에서 얼마나 뺄지 사용자가 고른
+  // 배분값.
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
 
   if (!customerId || !warehouseId || !orderDate) {
     return { error: "출고처, 창고, 거래일자를 모두 입력해주세요." };
@@ -128,6 +133,19 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       if (priceError) console.error("거래처 단가 캐시 갱신 실패:", priceError.message);
     }
   }
+
+  // 보관 위치별 재고(inventory_locations)에도 이 판매만큼 반영한다. 주문
+  // 등록 자체는 이미 끝난 뒤라 여기서 실패해도 등록을 막지는 않는다 — 위치
+  // 재고는 부가적인 창고관리 보조 데이터라, 반영에 실패했다고 매출 등록
+  // 자체를 되돌릴 필요는 없다고 판단했다.
+  await applyOrderLocationStock(supabase, {
+    orderType: "sale",
+    orderId: salesOrderId,
+    warehouseId,
+    items: itemsWithProduct.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+    direction: isReturn ? "in" : "out",
+    allocationChoices: locationAllocations,
+  });
 
   // 모조지 계산 화면에서 주문 생성 전에 미리 계산해둔 결과가 있으면
   // (localStorage에 임시 저장 → new-sale-form이 hidden input으로 넘김)
@@ -195,6 +213,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const returnReason = isReturn ? String(formData.get("return_reason") ?? "") || null : null;
   const isCarryover = formData.get("is_carryover") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
   // 상세가 아니라 그 목록으로 돌아간다.
   const back = String(formData.get("back") ?? "") || undefined;
@@ -245,6 +264,19 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   if (error) {
     return { error: docNoErrorMessage(error, docNo) ?? `매출 거래 수정에 실패했습니다: ${error.message}` };
   }
+
+  // 이 건 때문에 위치별 재고에 반영했던 이전 내용을 정확히 되돌린 뒤,
+  // 방금 수정한 새 품목/수량 기준으로 다시 반영한다.
+  await reverseOrderLocationStock(supabase, "sale", id);
+  const itemsWithProduct = items.filter((item) => item.productId);
+  await applyOrderLocationStock(supabase, {
+    orderType: "sale",
+    orderId: id,
+    warehouseId,
+    items: itemsWithProduct.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+    direction: isReturn ? "in" : "out",
+    allocationChoices: locationAllocations,
+  });
 
   const priceResults = await Promise.all(
     items
@@ -299,6 +331,8 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
     return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
+  await reverseOrderLocationStock(supabase, "sale", id);
+
   revalidatePath("/sales");
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
@@ -333,6 +367,12 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
     ids.map((id) => supabase.rpc("delete_sale_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
   );
   const failCount = results.filter((r) => r.error).length;
+
+  await Promise.all(
+    ids
+      .filter((_, i) => !results[i].error)
+      .map((id) => reverseOrderLocationStock(supabase, "sale", id)),
+  );
 
   revalidatePath("/sales");
   revalidatePath("/inventory");

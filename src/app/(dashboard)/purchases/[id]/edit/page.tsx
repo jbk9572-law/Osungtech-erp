@@ -7,6 +7,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function EditPurchasePage({
   params,
@@ -30,6 +31,7 @@ export default async function EditPurchasePage({
     { data: warehouse },
     { data: history },
     actor,
+    locationStockRows,
   ] = await Promise.all([
     supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
     supabase
@@ -69,10 +71,32 @@ export default async function EditPurchasePage({
       .order("created_at", { ascending: false })
       .limit(1000),
     getCurrentActor(supabase),
+    fetchAllRows<{
+      product_id: string;
+      location_id: string;
+      quantity: number;
+      locations: { code: string; tier: number; position: number } | null;
+    }>((from, to) =>
+      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+    ),
   ]);
 
   if (!order) {
     notFound();
+  }
+
+  const productLocations: Record<string, LocationOption[]> = {};
+  for (const row of locationStockRows) {
+    if (!row.locations) continue;
+    const list = productLocations[row.product_id] ?? [];
+    list.push({
+      locationId: row.location_id,
+      code: row.locations.code,
+      tier: row.locations.tier,
+      position: row.locations.position,
+      quantity: row.quantity,
+    });
+    productLocations[row.product_id] = list;
   }
 
   if (!canManage(order.created_by, actor.userId, actor.isAdmin)) {
@@ -126,6 +150,7 @@ export default async function EditPurchasePage({
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? order.warehouse_id}
+        productLocations={productLocations}
         action={updatePurchase}
         submitLabel="매입 수정"
         backParam={back}

@@ -36,6 +36,8 @@ import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
+import { findMultiLocationItems, type LocationOption } from "@/lib/location-stock-sync";
+import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -112,6 +114,7 @@ export function NewPurchaseForm({
   suppliers,
   products,
   warehouseId,
+  productLocations = {},
   action = createPurchase,
   initial,
   submitLabel = "매입 등록",
@@ -126,6 +129,9 @@ export function NewPurchaseForm({
   suppliers: Supplier[];
   products: Product[];
   warehouseId: string;
+  // 품목별 보관 위치 목록(2곳 이상인 품목만 저장 시 확인 모달을 띄우는 데
+  // 쓰인다) — 페이지에서 미리 한 번에 내려받는다.
+  productLocations?: Record<string, LocationOption[]>;
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: PurchaseInitial;
   submitLabel?: string;
@@ -337,6 +343,17 @@ export function NewPurchaseForm({
   const [messageDismissed, setMessageDismissed] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+
+  // 매입(입고) 품목, 그리고 "매출도 같이 등록"이 켜져 있으면 출고 품목까지
+  // 합쳐서 위치가 2곳 이상인 것만 있으면 저장 직전에 한 번에 확인받는다
+  // (new-sale-form.tsx와 동일한 방식). groupKey에 방향 접두사를 붙여
+  // 매입/매출에 같은 품목이 동시에 있어도 입력값이 섞이지 않게 한다.
+  const [allocationModalOpen, setAllocationModalOpen] = useState(false);
+  const [confirmedAllocation, setConfirmedAllocation] = useState<{
+    signature: string;
+    purchaseChoices: { productId: string; allocations: { locationId: string; quantity: number }[] }[];
+    saleChoices: { productId: string; allocations: { locationId: string; quantity: number }[] }[];
+  } | null>(null);
 
   // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 purchase_order_id가 있어서
   // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
@@ -755,6 +772,60 @@ export function NewPurchaseForm({
       })),
   );
 
+  // 매입(입고) 품목 중 위치가 2곳 이상인 것 + (매출도 같이 등록이 켜져
+  // 있으면) 출고 품목 중 위치가 2곳 이상인 것을 한 모달에 같이 보여준다.
+  // groupKey에 방향 접두사를 붙여서, 같은 품목이 매입/매출 양쪽에 있어도
+  // 입력값이 서로 덮어쓰지 않게 한다.
+  const multiPurchaseRaw = findMultiLocationItems(
+    submittedRows.filter((r) => r.productId).map((r) => ({ productId: r.productId, quantity: r.quantity })),
+    productLocations,
+  );
+  const multiSaleRaw = alsoCreateSale
+    ? findMultiLocationItems(
+        rows.filter((r) => r.productId && r.saleQuantity > 0).map((r) => ({ productId: r.productId, quantity: r.saleQuantity })),
+        productLocations,
+      )
+    : [];
+  const multiLocationItems: MultiLocationItem[] = [
+    ...multiPurchaseRaw.map((m) => {
+      const product = products.find((p) => p.id === m.productId);
+      return {
+        groupKey: `p:${m.productId}`,
+        productId: m.productId,
+        productName: product?.name ?? m.productId,
+        spec: product?.spec ?? null,
+        unit: product?.unit ?? "EA",
+        quantity: m.quantity,
+        locations: m.locations,
+        direction: "입고",
+      };
+    }),
+    ...multiSaleRaw.map((m) => {
+      const product = products.find((p) => p.id === m.productId);
+      return {
+        groupKey: `s:${m.productId}`,
+        productId: m.productId,
+        productName: product?.name ?? m.productId,
+        spec: product?.spec ?? null,
+        unit: product?.unit ?? "EA",
+        quantity: m.quantity,
+        locations: m.locations,
+        direction: "출고",
+      };
+    }),
+  ];
+  const locationSignature = JSON.stringify(
+    multiLocationItems.map((m) => [m.groupKey, m.quantity]).sort((a, b) => (a[0] as string).localeCompare(b[0] as string)),
+  );
+  const locationAllocationsJson =
+    confirmedAllocation && confirmedAllocation.signature === locationSignature
+      ? JSON.stringify(confirmedAllocation.purchaseChoices)
+      : "[]";
+  const saleLocationAllocationsJson =
+    confirmedAllocation && confirmedAllocation.signature === locationSignature
+      ? JSON.stringify(confirmedAllocation.saleChoices)
+      : "[]";
+
   return (
     <form
       action={formAction}
@@ -762,7 +833,12 @@ export function NewPurchaseForm({
       onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
-      onSubmit={() => {
+      onSubmit={(e) => {
+        if (multiLocationItems.length > 0 && locationSignature !== confirmedAllocation?.signature) {
+          e.preventDefault();
+          setAllocationModalOpen(true);
+          return;
+        }
         setMessageDismissed(false);
         // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니
         // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
@@ -772,10 +848,31 @@ export function NewPurchaseForm({
           localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
       }}
     >
+      <LocationAllocationModal
+        open={allocationModalOpen}
+        items={multiLocationItems}
+        actionLabel="입출고"
+        onCancel={() => setAllocationModalOpen(false)}
+        onConfirm={(result) => {
+          const purchaseChoices = result
+            .filter((r) => r.groupKey.startsWith("p:"))
+            .map((r) => ({ productId: r.productId, allocations: r.allocations }));
+          const saleChoices = result
+            .filter((r) => r.groupKey.startsWith("s:"))
+            .map((r) => ({ productId: r.productId, allocations: r.allocations }));
+          setConfirmedAllocation({ signature: locationSignature, purchaseChoices, saleChoices });
+          setAllocationModalOpen(false);
+          // 다음 렌더에서 hidden input이 최신 배분값으로 채워진 뒤 다시
+          // 제출한다 — 이 클릭 핸들러 안에서 곧장 폼을 submit()하면 아직
+          // state가 반영되기 전이라 방금 만든 배분값 없이 나갈 수 있다.
+          requestAnimationFrame(() => submitRef.current?.click());
+        }}
+      />
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
       <input type="hidden" name="warehouse_id" value={warehouseId} />
+      <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
       <input
         type="hidden"
         name="payment_method"
@@ -814,6 +911,7 @@ export function NewPurchaseForm({
           />
           <input type="hidden" name="sale_delivery_method" value={saleDeliveryMethod} />
           <input type="hidden" name="sale_items" value={saleItemsJson} />
+          <input type="hidden" name="sale_location_allocations" value={saleLocationAllocationsJson} />
         </>
       )}
       {tg0IsOverridden && (

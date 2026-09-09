@@ -42,6 +42,8 @@ import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { RETURN_REASONS } from "@/lib/return-reason";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
+import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
+import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -114,6 +116,7 @@ export function NewSaleForm({
   warehouseId,
   prices,
   history,
+  productLocations = {},
   action = createSale,
   initial,
   submitLabel = "매출 등록",
@@ -125,6 +128,9 @@ export function NewSaleForm({
   warehouseId: string;
   prices: CustomerPrice[];
   history: PriceHistoryEntry[];
+  // 품목별 보관 위치 목록(2곳 이상인 품목만 저장 시 확인 모달을 띄우는 데
+  // 쓰인다) — 페이지에서 미리 한 번에 내려받는다.
+  productLocations?: Record<string, LocationOption[]>;
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: SaleInitial;
   submitLabel?: string;
@@ -214,6 +220,16 @@ export function NewSaleForm({
   const [messageDismissed, setMessageDismissed] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+
+  // 품목이 보관 위치 2곳 이상에 나뉘어 있으면, 저장 직전에 어디서 얼마나
+  // 뺄지/넣을지 한 번 확인받는다(1곳뿐이면 자동 반영, 0곳이면 건너뜀 — 이
+  // 갈림은 서버 액션에서 처리). confirmedAllocation.signature가 지금 저장
+  // 대상과 다르면(품목/수량이 바뀌었으면) 다시 확인받는다.
+  const [allocationModalOpen, setAllocationModalOpen] = useState(false);
+  const [confirmedAllocation, setConfirmedAllocation] = useState<{
+    signature: string;
+    choices: LocationAllocationChoice[];
+  } | null>(null);
 
   // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 sales_order_id가 있어서
   // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
@@ -703,6 +719,34 @@ export function NewSaleForm({
       })),
   );
 
+  // 위치가 2곳 이상인 품목만 뽑아서(0곳/1곳은 서버에서 자동 처리) 확인
+  // 모달에 보여줄 형태로 정리한다. signature가 바뀌면(품목/수량이
+  // 달라지면) 이전에 확인받았던 배분값은 더 이상 유효하지 않다고 보고
+  // 다시 확인받는다.
+  const multiLocationRaw = findMultiLocationItems(
+    submittedRows.filter((r) => r.productId).map((r) => ({ productId: r.productId, quantity: r.quantity })),
+    productLocations,
+  );
+  const multiLocationItems: MultiLocationItem[] = multiLocationRaw.map((m) => {
+    const product = products.find((p) => p.id === m.productId);
+    return {
+      groupKey: m.productId,
+      productId: m.productId,
+      productName: product?.name ?? m.productId,
+      spec: product?.spec ?? null,
+      unit: product?.unit ?? "EA",
+      quantity: m.quantity,
+      locations: m.locations,
+    };
+  });
+  const locationSignature = JSON.stringify(
+    multiLocationRaw.map((m) => [m.productId, m.quantity]).sort((a, b) => (a[0] as string).localeCompare(b[0] as string)),
+  );
+  const locationAllocationsJson =
+    confirmedAllocation && confirmedAllocation.signature === locationSignature
+      ? JSON.stringify(confirmedAllocation.choices)
+      : "[]";
+
   return (
     <form
       action={formAction}
@@ -710,7 +754,12 @@ export function NewSaleForm({
       onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
-      onSubmit={() => {
+      onSubmit={(e) => {
+        if (multiLocationItems.length > 0 && locationSignature !== confirmedAllocation?.signature) {
+          e.preventDefault();
+          setAllocationModalOpen(true);
+          return;
+        }
         setMessageDismissed(false);
         // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니
         // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
@@ -719,6 +768,24 @@ export function NewSaleForm({
         if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
       }}
     >
+      <LocationAllocationModal
+        open={allocationModalOpen}
+        items={multiLocationItems}
+        actionLabel={isReturn ? "반품 입고" : "출고"}
+        onCancel={() => setAllocationModalOpen(false)}
+        onConfirm={(result) => {
+          const choices: LocationAllocationChoice[] = result.map((r) => ({
+            productId: r.productId,
+            allocations: r.allocations,
+          }));
+          setConfirmedAllocation({ signature: locationSignature, choices });
+          setAllocationModalOpen(false);
+          // 다음 렌더에서 hidden input이 최신 배분값으로 채워진 뒤 다시
+          // 제출한다 — 이 클릭 핸들러 안에서 곧장 폼을 submit()하면 아직
+          // state가 반영되기 전이라 방금 만든 배분값 없이 나갈 수 있다.
+          requestAnimationFrame(() => submitRef.current?.click());
+        }}
+      />
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
@@ -733,6 +800,7 @@ export function NewSaleForm({
       {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
       <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
+      <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
       )}

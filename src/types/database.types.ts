@@ -451,6 +451,51 @@ export type Database = {
           },
         ];
       };
+      order_item_location_stock: {
+        Row: {
+          id: string;
+          order_type: "sale" | "purchase";
+          order_id: string;
+          product_id: string;
+          location_id: string;
+          quantity_delta: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_type: "sale" | "purchase";
+          order_id: string;
+          product_id: string;
+          location_id: string;
+          quantity_delta: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_type?: "sale" | "purchase";
+          order_id?: string;
+          product_id?: string;
+          location_id?: string;
+          quantity_delta?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_item_location_stock_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_item_location_stock_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory_transactions: {
         Row: {
           id: string;
