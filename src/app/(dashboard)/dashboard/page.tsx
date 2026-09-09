@@ -166,6 +166,7 @@ export default async function DashboardPage({
     // 추적한다(dashboard-calendar.tsx의 isTrackedCategory 참고) — Filter는
     // 같은 날 사고파는 매칭 정보가 실무에 큰 의미가 없다는 판단.
     categoryName: string | null;
+    sku: string | null;
     spec: string;
     unit: string;
     quantity: number;
@@ -274,6 +275,7 @@ export default async function DashboardPage({
       partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
       productName: item.products?.name ?? item.custom_name ?? "상품 미상",
       categoryName: item.products?.categories?.name ?? null,
+      sku: item.products?.sku ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
@@ -304,6 +306,7 @@ export default async function DashboardPage({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
       productName: item.products?.name ?? item.custom_name ?? "상품 미상",
       categoryName: item.products?.categories?.name ?? null,
+      sku: item.products?.sku ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,

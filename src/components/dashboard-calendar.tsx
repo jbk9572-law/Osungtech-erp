@@ -29,6 +29,7 @@ export type ItemRow = {
   partnerName: string;
   productName: string;
   categoryName: string | null;
+  sku: string | null;
   spec: string;
   unit: string;
   quantity: number;
@@ -523,6 +524,24 @@ export function stripFilterUnitsForCopy(spec: string, categoryName: string | nul
   return spec.replace(/㎛/g, "").replace(/mm/g, "").replace(/\s+/g, " ").trim();
 }
 
+// 거래처별로 카톡복사 텍스트에서 박스 수 표기("(N박스)")를 빼달라는 요청 —
+// 화면 표시는 그대로 두고 복사 텍스트에서만 적용한다(stripFilterUnitsForCopy와
+// 동일한 방식). 거래처 이름은 오타 없이 정확히 일치해야 하고, SKU/카테고리
+// 비교는 표기 차이(대소문자 등)에 안 걸리게 대소문자 구분 없이 비교한다.
+export function shouldStripBoxCountForCopy(
+  customerName: string,
+  sku: string | null,
+  categoryName: string | null,
+): boolean {
+  if (customerName === "신일베스텍") return true;
+  if (customerName === "나영식테크") {
+    const upperSku = sku?.toUpperCase() ?? "";
+    if (upperSku === "ST1" || upperSku === "FM") return true;
+    if (categoryName?.toLowerCase() === "bobbin") return true;
+  }
+  return false;
+}
+
 function buildProductLineGroups(
   product: ProductGroup,
   matchPool: DestinationPool | undefined,
@@ -554,8 +573,12 @@ function buildProductLineGroups(
       const lis = bySpec.get(spec)!;
       const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
       const unit = lis[0]?.item.unit ?? "";
-      const basePackageQty = lis[0]?.item.basePackageQty ?? null;
       const categoryName = lis[0]?.item.categoryName ?? null;
+      const sku = lis[0]?.item.sku ?? null;
+      const customerName = lis[0]?.item.partnerName ?? "";
+      const basePackageQty = shouldStripBoxCountForCopy(customerName, sku, categoryName)
+        ? null
+        : (lis[0]?.item.basePackageQty ?? null);
       const isReturn = lis.some((li) => li.item.isReturn);
       const carryoverSuffix = lis.some((li) => li.item.isCarryover) ? " (이월)" : "";
       const returnSuffix = isReturn ? " (반품)" : "";

@@ -2,20 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 import type { FormState } from "@/components/form-message";
 
+// 코드에서 전역 순번만 뽑아내는 정규식 — "A" + 숫자 형태(예: A1, A23).
+const LOCATION_CODE_SEQ_PATTERN = /^[A-Z]+(\d+)$/;
+
 // 랙 1개 = 2단 × 좌우 2칸 = 파렛트 4자리라는 고정 구조를 그대로 코드로
-// 옮긴다. 랙 이름만 받으면 그 4칸(코드: A-01-01/A-01-02/A-02-01/A-02-02)을
-// 한 번에 만든다 — 하나씩 따로 등록하게 하면 사람이 매번 tier/position을
-// 손으로 맞춰야 해서 실수하기 쉽다.
+// 옮긴다. 예전에는 코드가 "{랙 이름}-0{단}-0{좌우}"(예: A1-02-01)라 알아보기
+// 어렵다는 지적으로, 전체 랙에 걸쳐 이어지는 순번(A1, A2, A3, A4, 다음
+// 랙은 A5, A6, A7, A8 ...)으로 바꿨다 — 한 랙 안에서는 2단 좌 → 2단 우 →
+// 1단 좌 → 1단 우 순서로 번호가 붙는다(창고 실사 동선과 맞춤).
+// 랙 이름만 받으면 그 4칸을 한 번에 만든다 — 하나씩 따로 등록하게 하면
+// 사람이 매번 tier/position을 손으로 맞춰야 해서 실수하기 쉽다.
 export async function createRack(_prevState: FormState, formData: FormData): Promise<FormState> {
   const rack = String(formData.get("rack") ?? "").trim().toUpperCase();
   if (!rack) {
     return { error: "랙 이름을 입력해주세요. (예: A, B)" };
   }
-  // 코드가 "{랙}-0{단}-0{좌우}" 형태로 만들어지므로, 랙 이름에 하이픈이나
-  // 특수문자가 들어가면 A-01-02-01처럼 알아보기 어려운 코드가 나온다.
-  // 영문/숫자만 허용해 코드가 항상 "A-01-01" 같은 3토막으로 나오게 한다.
   if (!/^[A-Z0-9]{1,6}$/.test(rack)) {
     return { error: "랙 이름은 영문/숫자만 6자 이내로 입력해주세요. (예: A, B1)" };
   }
@@ -26,27 +30,37 @@ export async function createRack(_prevState: FormState, formData: FormData): Pro
     return { error: "창고 정보를 찾을 수 없습니다. 설정에서 창고를 먼저 등록해주세요." };
   }
 
-  const rows = [1, 2].flatMap((tier) =>
-    [1, 2].map((position) => ({
+  const existingCodes = await fetchAllRows<{ code: string }>((from, to) =>
+    supabase.from("locations").select("code").range(from, to),
+  );
+  let maxSeq = 0;
+  for (const row of existingCodes) {
+    const m = row.code.match(LOCATION_CODE_SEQ_PATTERN);
+    if (m) maxSeq = Math.max(maxSeq, Number(m[1]));
+  }
+
+  const rows = [2, 1].flatMap((tier) =>
+    [1, 2].map((position, i) => ({
       warehouse_id: warehouse.id,
       rack,
       tier,
       position,
-      code: `${rack}-0${tier}-0${position}`,
+      code: `A${maxSeq + (tier === 2 ? 0 : 2) + i + 1}`,
     })),
   );
+  const codes = rows.map((r) => r.code);
 
   const { error } = await supabase.from("locations").insert(rows);
 
   if (error) {
     if (error.code === "23505") {
-      return { error: `이미 있는 랙 이름입니다: ${rack}` };
+      return { error: `이미 있는 랙 이름이거나 위치 코드가 겹칩니다: ${rack}` };
     }
     return { error: `랙 추가에 실패했습니다: ${error.message}` };
   }
 
   revalidatePath("/inventory/locations");
-  return { success: `${rack}랙이 추가되었습니다 (파렛트 4자리: ${rack}-01-01, ${rack}-01-02, ${rack}-02-01, ${rack}-02-02).` };
+  return { success: `${rack}랙이 추가되었습니다 (파렛트 4자리: ${codes.join(", ")}).` };
 }
 
 // 랙 이름을 잘못 입력해 만들었거나(예전엔 하이픈도 허용돼 있었다) 더는

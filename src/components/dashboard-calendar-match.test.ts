@@ -4,6 +4,7 @@ import {
   groupProductItemsByLabel,
   sortSpecsByTrailingNumber,
   stripFilterUnitsForCopy,
+  shouldStripBoxCountForCopy,
   type ItemRow,
   type ProductGroup,
 } from "./dashboard-calendar";
@@ -15,6 +16,7 @@ function row(overrides: Partial<ItemRow> = {}): ItemRow {
     partnerName: "명진화학",
     productName: "크라프트지 98",
     categoryName: "Material",
+    sku: null,
     spec: "788*1090",
     unit: "매",
     quantity: 100,
@@ -196,5 +198,24 @@ describe("stripFilterUnitsForCopy", () => {
   it("Filter가 아닌 카테고리는 그대로 둔다", () => {
     expect(stripFilterUnitsForCopy("1㎛ * 250mm", "Material")).toBe("1㎛ * 250mm");
     expect(stripFilterUnitsForCopy("1㎛ * 250mm", null)).toBe("1㎛ * 250mm");
+  });
+});
+
+describe("shouldStripBoxCountForCopy", () => {
+  it("신일베스텍은 품목/카테고리 상관없이 항상 뺀다", () => {
+    expect(shouldStripBoxCountForCopy("신일베스텍", "ANYTHING", "Paper")).toBe(true);
+    expect(shouldStripBoxCountForCopy("신일베스텍", null, null)).toBe(true);
+  });
+
+  it("나영식테크는 SKU가 ST1/FM이거나 카테고리가 Bobbin일 때만 뺀다", () => {
+    expect(shouldStripBoxCountForCopy("나영식테크", "ST1", "Paper")).toBe(true);
+    expect(shouldStripBoxCountForCopy("나영식테크", "fm", "Paper")).toBe(true); // 대소문자 무관
+    expect(shouldStripBoxCountForCopy("나영식테크", "OTHER", "Bobbin")).toBe(true);
+    expect(shouldStripBoxCountForCopy("나영식테크", "OTHER", "bobbin")).toBe(true); // 카테고리 대소문자 무관
+    expect(shouldStripBoxCountForCopy("나영식테크", "OTHER", "Paper")).toBe(false);
+  });
+
+  it("다른 거래처는 항상 그대로 둔다", () => {
+    expect(shouldStripBoxCountForCopy("명진화학", "ST1", "Bobbin")).toBe(false);
   });
 });
