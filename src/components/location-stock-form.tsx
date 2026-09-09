@@ -59,7 +59,15 @@ export function LocationStockForm({
         <ProductSearchSelect products={products} value={productId} onChange={handleProductChange} />
       </div>
       <div className="erp-field" style={{ minWidth: 130 }}>
-        <label htmlFor="loc-qty">이 위치 보관수량</label>
+        <label htmlFor="loc-qty">
+          이 위치 보관수량
+          {selectedProduct && (
+            <span style={{ fontWeight: 400, color: "var(--erp-primary-dark)" }}>
+              {" "}
+              (미배정 {selectedProduct.totalQuantity.toLocaleString()}개)
+            </span>
+          )}
+        </label>
         <input
           id="loc-qty"
           name="quantity"
@@ -87,8 +95,8 @@ export function LocationStockForm({
       <div style={{ flexBasis: "100%" }}>
         <PageGuide className="mb-0">
           {selectedProduct
-            ? `창고 전체 재고 중 아직 다른 위치에 배정하지 않은 재고: ${selectedProduct.totalQuantity.toLocaleString()}개 (참고용, 자동으로 채워지지 않습니다) — 이 위치에 실제로 보관 중인 수량을 직접 세어서 입력하세요. 포장수량이 있는 품목은 입력한 수량이 몇 박스인지 아래에 바로 표시됩니다.`
-            : "품목을 고르면 참고용으로 창고 전체 재고 중 아직 다른 위치에 배정하지 않은 수량을 보여줍니다. 이 위치 보관수량은 자동으로 채워지지 않으니 실제로 있는 수량을 직접 입력하세요."}
+            ? `미배정 ${selectedProduct.totalQuantity.toLocaleString()}개는 창고 전체 재고에서 다른 위치(예: B-1)에 이미 등록해 둔 수량을 뺀 값입니다 — 자동으로 채워지진 않으니 이 위치에 실제로 있는 수량을 세어서 입력하세요.`
+            : "품목을 고르면 라벨 옆에 \"미배정\" 재고(다른 위치에 이미 등록해 둔 만큼 뺀 값)를 참고로 보여줍니다. 수량 칸은 자동으로 채워지지 않으니 이 위치에 실제로 있는 수량을 직접 입력하세요."}
         </PageGuide>
       </div>
       <div style={{ flexBasis: "100%" }}>
