@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:search-autocomplete && npm run check:multirow-form-enter && npm run check:named-input-autocomplete && npm run check:toolbar-esc-order && npm run check:page-guide && npm run check:server-component-handlers",
+    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:search-autocomplete && npm run check:multirow-form-enter && npm run check:named-input-autocomplete && npm run check:toolbar-esc-order && npm run check:page-guide && npm run check:server-component-handlers && npm run check:fixed-table-columns",
     "check:pagination": "node scripts/check-pagination.mjs",
     "check:mutation-errors": "node scripts/check-mutation-errors.mjs",
     "check:search-autocomplete": "node scripts/check-search-autocomplete.mjs",
@@ -15,6 +15,7 @@
     "check:toolbar-esc-order": "node scripts/check-toolbar-esc-order.mjs",
     "check:page-guide": "node scripts/check-page-guide.mjs",
     "check:server-component-handlers": "node scripts/check-server-component-handlers.mjs",
+    "check:fixed-table-columns": "node scripts/check-fixed-table-columns.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"

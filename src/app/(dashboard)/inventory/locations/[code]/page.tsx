@@ -142,25 +142,23 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
       {stockRows.length === 0 ? (
         <p className="erp-grid-empty">아직 이 위치에 등록된 품목이 없습니다.</p>
       ) : (
-        // .erp-grid-wrap도 기본이 컨테이너 폭을 꽉 채우는 블록이라, 표를
-        // 좁혀도 이 감싸는 박스(테두리)는 그대로 넓게 남아 "빈 공간"처럼
-        // 보인다. width: fit-content로 표 실제 폭만큼만 감싸게 한다.
-        <div className="erp-grid-wrap" style={{ width: "fit-content" }}>
-          {/* .erp-grid 클래스 자체가 width:100%라서, 인라인으로 auto를
-              줘서 덮어써야 한다 — 안 그러면 fixed 레이아웃이라도 지정한
-              칸 폭들이 표 폭(=컨테이너 100%)에 맞춰 비례해서 다시
-              늘어나 버려서(특히 폭을 안 준 품목명 칸이 다 떠안음) 결국
-              처음 문제로 되돌아간다. 칸 폭 합계만큼만 표가 차지하게 한다. */}
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "auto" }}>
+        <div className="erp-grid-wrap">
+          {/* table-layout:fixed에서 칸 하나라도 폭을 안 주면 그 칸이 표
+              폭(100%)의 남는 부분을 전부 떠안고, 반대로 표를 auto/
+              fit-content로 줄이면 이번엔 표 자체가 컨테이너보다 작아져
+              잘린 것처럼 보인다. 모든 칸에 %로 폭을 주고 합이 100%가
+              되게 해서 표는 항상 컨테이너 전체 폭을 채우면서 칸 비율도
+              고정되게 한다(등록 폼 표와 같은 방식). */}
+          <table className="erp-grid" style={{ tableLayout: "fixed" }}>
             <thead>
               <tr>
-                <th style={{ width: 100 }}>SKU</th>
-                <th style={{ width: 220 }}>품목명</th>
-                <th style={{ width: 110 }}>규격</th>
-                <th className="num" style={{ width: 165 }}>
+                <th style={{ width: "12%" }}>SKU</th>
+                <th style={{ width: "34%" }}>품목명</th>
+                <th style={{ width: "14%" }}>규격</th>
+                <th className="num" style={{ width: "26%" }}>
                   수량
                 </th>
-                <th style={{ width: 130 }} />
+                <th style={{ width: "14%" }} />
               </tr>
             </thead>
             <tbody>

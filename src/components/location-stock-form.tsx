@@ -72,17 +72,23 @@ export function LocationStockForm({
 
       <div className="erp-grid-wrap" style={{ marginBottom: 8 }}>
         <table className="erp-grid" style={{ width: "100%", tableLayout: "fixed" }}>
+          {/* table-layout:fixed에서 칸 하나라도 폭을 안 주면 그 칸이 표
+              폭(100%)의 남는 부분을 전부 떠안고, 반대로 표를 auto/
+              fit-content로 줄이면 이번엔 표 자체가 컨테이너보다 작아져
+              잘린 것처럼 보인다. 모든 칸에 %로 폭을 주고 합이 100%가
+              되게 해서 표는 항상 컨테이너 전체 폭을 채우면서 칸 비율도
+              고정되게 한다. */}
           <thead>
             <tr>
-              <th>품목</th>
-              <th style={{ width: 130 }}>규격</th>
-              <th className="num" style={{ width: 110 }}>
+              <th style={{ width: "34%" }}>품목</th>
+              <th style={{ width: "16%" }}>규격</th>
+              <th className="num" style={{ width: "12%" }}>
                 미배정
               </th>
-              <th className="num" style={{ width: 170 }}>
+              <th className="num" style={{ width: "28%" }}>
                 이 위치 보관수량
               </th>
-              <th style={{ width: 64 }} />
+              <th style={{ width: "10%" }} />
             </tr>
           </thead>
           <tbody
