@@ -55,8 +55,14 @@ export function LocationStockForm({
       <input type="hidden" name="location_id" value={locationId} />
       <input type="hidden" name="code" value={code} />
       <input type="hidden" name="product_id" value={productId} />
-      <div style={{ minWidth: 260, flex: 1 }}>
-        <ProductSearchSelect products={products} value={productId} onChange={handleProductChange} />
+      <div className="erp-field" style={{ minWidth: 260, flex: 1 }}>
+        <label htmlFor="loc-product-search">품목 선택</label>
+        <ProductSearchSelect
+          id="loc-product-search"
+          products={products}
+          value={productId}
+          onChange={handleProductChange}
+        />
       </div>
       <div className="erp-field" style={{ minWidth: 130 }}>
         <label htmlFor="loc-qty">

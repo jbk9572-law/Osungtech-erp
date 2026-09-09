@@ -13,11 +13,13 @@ export function ProductSearchSelect({
   value,
   onChange,
   placeholder = "코드, 상품명 또는 규격 검색",
+  id,
 }: {
   products: Product[];
   value: string;
   onChange: (productId: string) => void;
   placeholder?: string;
+  id?: string;
 }) {
   const selected = products.find((p) => p.id === value) ?? null;
   const [query, setQuery] = useState("");
@@ -59,6 +61,7 @@ export function ProductSearchSelect({
     <div className="relative">
       <input
         ref={inputRef}
+        id={id}
         type="text"
         value={open ? query : (selected?.name ?? "")}
         placeholder={placeholder}
