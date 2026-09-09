@@ -484,8 +484,13 @@ export function groupProductItemsByLabel(
 // 기준으로 오름차순 정렬하고, 뒤쪽 숫자가 같으면 앞쪽 숫자로 다시
 // 오름차순 정렬한다. 규격 중 하나라도 "숫자 * 숫자" 형태가 아니면
 // 정렬 기준을 알 수 없으므로 원래 순서 그대로 둔다.
+//
+// "G1㎛ * 250mm"처럼 등급 표기(G)가 숫자 앞에 붙는 규격도 있어서, 맨 앞
+// 비숫자 글자는 건너뛰고 첫 숫자부터 찾는다 — 안 그러면 이 규격 하나
+// 때문에 매칭 자체가 실패해서 전체 그룹이 정렬 없이 원래 순서로
+// 되돌아간다(실제로 100㎛이 1㎛보다 먼저 나오는 문제로 나타났다).
 function parseSpecTrailingNumber(spec: string): { left: number; right: number } | null {
-  const m = spec.match(/^(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
+  const m = spec.match(/^[^\d]*?(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
   return m ? { left: Number(m[1]), right: Number(m[2]) } : null;
 }
 
@@ -508,6 +513,14 @@ export function sortBySpecTrailingNumber<T>(items: T[], getSpec: (item: T) => st
 
 export function sortSpecsByTrailingNumber(specs: string[]): string[] {
   return sortBySpecTrailingNumber(specs, (spec) => spec);
+}
+
+// Filter 카테고리 품목은 카톡 복사 텍스트에서 단위 기호("㎛"/"mm")를 빼고
+// 숫자만 남긴다("1㎛ * 250mm" -> "1 * 250") — 화면 표시는 그대로 두고
+// 복사 텍스트에서만 적용한다.
+export function stripFilterUnitsForCopy(spec: string, categoryName: string | null): string {
+  if (categoryName !== "Filter") return spec;
+  return spec.replace(/㎛/g, "").replace(/mm/g, "").replace(/\s+/g, " ").trim();
 }
 
 function buildProductLineGroups(
@@ -542,14 +555,16 @@ function buildProductLineGroups(
       const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
       const unit = lis[0]?.item.unit ?? "";
       const basePackageQty = lis[0]?.item.basePackageQty ?? null;
+      const categoryName = lis[0]?.item.categoryName ?? null;
       const isReturn = lis.some((li) => li.item.isReturn);
       const carryoverSuffix = lis.some((li) => li.item.isCarryover) ? " (이월)" : "";
       const returnSuffix = isReturn ? " (반품)" : "";
       const note = lis.map((li) => li.note).find((n) => n) ?? null;
       const noteSuffix = note ? ` (${note})` : "";
+      const displaySpec = stripFilterUnitsForCopy(spec, categoryName);
 
       group.lines.push(
-        `    ${spec} : ${formatQuantityWithBoxes(quantity, basePackageQty)} ${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
+        `    ${displaySpec} : ${formatQuantityWithBoxes(quantity, basePackageQty, unit)}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
       );
       group.specCount += 1;
       group.totalQuantity += quantity;

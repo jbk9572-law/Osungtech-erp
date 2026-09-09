@@ -3,6 +3,7 @@ import {
   buildDestinationPool,
   groupProductItemsByLabel,
   sortSpecsByTrailingNumber,
+  stripFilterUnitsForCopy,
   type ItemRow,
   type ProductGroup,
 } from "./dashboard-calendar";
@@ -158,5 +159,42 @@ describe("sortSpecsByTrailingNumber", () => {
   it("규격 중 하나라도 '숫자 * 숫자' 형태가 아니면 원래 순서 그대로 둔다", () => {
     const specs = ["1㎛ * 250mm", "규격 미지정"];
     expect(sortSpecsByTrailingNumber(specs)).toEqual(specs);
+  });
+
+  it("'G1㎛'처럼 숫자 앞에 등급 표기가 붙어도 정렬이 깨지지 않는다", () => {
+    // 실제로 "G1㎛ * 250mm" 하나 때문에 매칭 전체가 실패해 원래 순서로
+    // 되돌아가면서 500mm 그룹이 100,1,5 순서로(뒤죽박죽) 나오던 버그.
+    const specs = [
+      "1㎛ * 250mm",
+      "G1㎛ * 250mm",
+      "100㎛ * 250mm",
+      "100㎛ * 500mm",
+      "1㎛ * 500mm",
+      "5㎛ * 500mm",
+      "25㎛ * 750mm",
+      "1㎛ * 750mm",
+    ];
+    expect(sortSpecsByTrailingNumber(specs)).toEqual([
+      "1㎛ * 250mm",
+      "G1㎛ * 250mm",
+      "100㎛ * 250mm",
+      "1㎛ * 500mm",
+      "5㎛ * 500mm",
+      "100㎛ * 500mm",
+      "1㎛ * 750mm",
+      "25㎛ * 750mm",
+    ]);
+  });
+});
+
+describe("stripFilterUnitsForCopy", () => {
+  it("Filter 카테고리 규격에서 단위 기호(㎛/mm)를 뺀다", () => {
+    expect(stripFilterUnitsForCopy("1㎛ * 250mm", "Filter")).toBe("1 * 250");
+    expect(stripFilterUnitsForCopy("G1㎛ * 250mm", "Filter")).toBe("G1 * 250");
+  });
+
+  it("Filter가 아닌 카테고리는 그대로 둔다", () => {
+    expect(stripFilterUnitsForCopy("1㎛ * 250mm", "Material")).toBe("1㎛ * 250mm");
+    expect(stripFilterUnitsForCopy("1㎛ * 250mm", null)).toBe("1㎛ * 250mm");
   });
 });

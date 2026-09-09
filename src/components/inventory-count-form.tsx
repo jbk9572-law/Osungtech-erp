@@ -368,9 +368,7 @@ export function InventoryCountForm({
                       ? `1박스 = ${Number(row.basePackageQty).toLocaleString()}${row.unit ?? ""}`
                       : "-"}
                   </td>
-                  <td className="num">
-                    {formatQuantityWithBoxes(systemQuantity, row.basePackageQty)} {row.unit ?? ""}
-                  </td>
+                  <td className="num">{formatQuantityWithBoxes(systemQuantity, row.basePackageQty, row.unit ?? "")}</td>
                   <td className="num">
                     <QuantityWithBoxInput
                       quantity={value}

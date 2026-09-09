@@ -307,8 +307,11 @@ export function InventoryQrScanner({
                 <div style={{ fontSize: 12.5, opacity: 0.85, marginBottom: 8 }}>
                   {scanState.active.spec ?? "-"} · 전산 재고{" "}
                   <strong>
-                    {formatQuantityWithBoxes(scanState.active.systemQuantity, scanState.active.basePackageQty)}{" "}
-                    {scanState.active.unit ?? ""}
+                    {formatQuantityWithBoxes(
+                      scanState.active.systemQuantity,
+                      scanState.active.basePackageQty,
+                      scanState.active.unit ?? "",
+                    )}
                   </strong>
                 </div>
                 {mismatchInput === null ? (

@@ -29,12 +29,16 @@ export function formatBoxCount(
 }
 
 // 재고수량 옆에 몇 박스 분량인지 괄호로 같이 보여준다(예: "500 (10박스)").
-// 포장수량이 없는 품목은 그냥 수량만 보여준다.
+// 포장수량이 없는 품목은 그냥 수량만 보여준다. unit을 넘기면 "수량 단위
+// (N박스)" 순서로 붙여준다("500 (10박스) EA"처럼 단위가 박스 표시 뒤로
+// 밀려나면 어색하다는 지적이 있었다) — 호출부가 단위를 따로 이어붙이는
+// 자리마다 이 함수 하나로 통일한다.
 export function formatQuantityWithBoxes(
   quantity: number,
-  basePackageQty: number | string | null | undefined
+  basePackageQty: number | string | null | undefined,
+  unit?: string
 ): string {
-  const qtyLabel = quantity.toLocaleString();
+  const qtyLabel = unit ? `${quantity.toLocaleString()} ${unit}` : quantity.toLocaleString();
   const boxLabel = formatBoxCount(quantity, basePackageQty);
   return boxLabel ? `${qtyLabel} (${boxLabel})` : qtyLabel;
 }
