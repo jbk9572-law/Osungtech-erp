@@ -143,16 +143,21 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
         <p className="erp-grid-empty">아직 이 위치에 등록된 품목이 없습니다.</p>
       ) : (
         <div className="erp-grid-wrap">
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
+          {/* .erp-grid 클래스 자체가 width:100%라서, 인라인으로 auto를
+              줘서 덮어써야 한다 — 안 그러면 fixed 레이아웃이라도 지정한
+              칸 폭들이 표 폭(=컨테이너 100%)에 맞춰 비례해서 다시
+              늘어나 버려서(특히 폭을 안 준 품목명 칸이 다 떠안음) 결국
+              처음 문제로 되돌아간다. 칸 폭 합계만큼만 표가 차지하게 한다. */}
+          <table className="erp-grid" style={{ tableLayout: "fixed", width: "auto" }}>
             <thead>
               <tr>
-                <th style={{ width: 110 }}>SKU</th>
-                <th>품목명</th>
-                <th style={{ width: 130 }}>규격</th>
-                <th className="num" style={{ width: 150 }}>
+                <th style={{ width: 100 }}>SKU</th>
+                <th style={{ width: 220 }}>품목명</th>
+                <th style={{ width: 110 }}>규격</th>
+                <th className="num" style={{ width: 140 }}>
                   수량
                 </th>
-                <th style={{ width: 140 }} />
+                <th style={{ width: 130 }} />
               </tr>
             </thead>
             <tbody>
