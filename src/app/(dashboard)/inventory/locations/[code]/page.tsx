@@ -6,12 +6,23 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { LocationStockForm } from "@/components/location-stock-form";
 import { LocationStockRow } from "@/components/location-stock-row";
+import { EmptyLocationAlert } from "@/components/empty-location-alert";
 
 type StockRow = {
   id: string;
   product_id: string;
   quantity: number;
   products: { sku: string; name: string; spec: string | null; unit: string; base_package_qty: number | null } | null;
+};
+
+type HistoryRow = {
+  id: string;
+  product_name: string | null;
+  product_spec: string | null;
+  previous_quantity: number | null;
+  new_quantity: number | null;
+  created_at: string;
+  profiles: { full_name: string | null } | null;
 };
 
 export default async function LocationDetailPage({ params }: { params: Promise<{ code: string }> }) {
@@ -26,7 +37,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
   if (!location) notFound();
 
-  const [stockRows, productRows, inventoryRows, assignedElsewhereRows, siblingLocationsRes] = await Promise.all([
+  const [stockRows, productRows, inventoryRows, assignedElsewhereRows, siblingLocationsRes, historyRes] = await Promise.all([
     supabase
       .from("inventory_locations")
       .select("id, product_id, quantity, products(sku, name, spec, unit, base_package_qty)")
@@ -54,7 +65,14 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
       .order("tier", { ascending: false })
       .order("position", { ascending: true })
       .limit(4), // 랙 1개 = 2단 × 좌우 2칸 = 항상 4자리 (createRack 참고)
+    supabase
+      .from("location_stock_history")
+      .select("id, product_name, product_spec, previous_quantity, new_quantity, created_at, profiles!actor(full_name)")
+      .eq("location_id", location.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
+  const history = (historyRes.data ?? []) as unknown as HistoryRow[];
 
   // 같은 랙의 4칸(2단×좌우)을 위치 목록으로 나가지 않고 그 자리에서
   // 바로 옮겨다니며 입력할 수 있게, 상세 화면 위쪽에 형제 위치 탭을
@@ -100,6 +118,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/locations" } }} />
+      <EmptyLocationAlert code={location.code} stockCount={stockRows.length} />
       <div className="mb-3 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
           보관 위치 {location.code} ({location.tier === 2 ? "2단·상단" : "1단·하단"}{" "}
@@ -182,6 +201,38 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
             </tbody>
           </table>
         </div>
+      )}
+
+      {history.length > 0 && (
+        <details className="erp-detail" style={{ marginTop: 16, marginBottom: 0 }}>
+          <summary className="erp-detail-tabs" style={{ listStyle: "none", cursor: "pointer" }}>
+            <span className="erp-detail-tab active">최근 변경 이력 ({history.length}건)</span>
+          </summary>
+          <div className="erp-detail-body">
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+              {history.map((row) => {
+                const label = row.product_name ?? "(삭제된 품목)";
+                const spec = row.product_spec ? ` (${row.product_spec})` : "";
+                const changeText =
+                  row.previous_quantity == null
+                    ? `등록 — ${row.new_quantity?.toLocaleString() ?? 0}개`
+                    : row.new_quantity == null
+                      ? `제거 — ${row.previous_quantity.toLocaleString()}개 → 0`
+                      : `수정 — ${row.previous_quantity.toLocaleString()} → ${row.new_quantity.toLocaleString()}`;
+                return (
+                  <li key={row.id} style={{ fontSize: 12, color: "var(--erp-text)" }}>
+                    <span style={{ color: "var(--erp-text-muted)" }}>
+                      {new Date(row.created_at).toLocaleString("ko-KR")} ·{" "}
+                    </span>
+                    {label}
+                    {spec} {changeText}
+                    <span style={{ color: "var(--erp-text-muted)" }}> · {row.profiles?.full_name ?? "-"}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </details>
       )}
     </div>
   );

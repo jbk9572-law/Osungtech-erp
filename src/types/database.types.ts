@@ -387,6 +387,70 @@ export type Database = {
           },
         ];
       };
+      location_stock_history: {
+        Row: {
+          id: string;
+          location_id: string | null;
+          location_code: string;
+          product_id: string | null;
+          product_sku: string | null;
+          product_name: string | null;
+          product_spec: string | null;
+          previous_quantity: number | null;
+          new_quantity: number | null;
+          actor: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          location_id?: string | null;
+          location_code: string;
+          product_id?: string | null;
+          product_sku?: string | null;
+          product_name?: string | null;
+          product_spec?: string | null;
+          previous_quantity?: number | null;
+          new_quantity?: number | null;
+          actor?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          location_id?: string | null;
+          location_code?: string;
+          product_id?: string | null;
+          product_sku?: string | null;
+          product_name?: string | null;
+          product_spec?: string | null;
+          previous_quantity?: number | null;
+          new_quantity?: number | null;
+          actor?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "location_stock_history_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "location_stock_history_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "location_stock_history_actor_fkey";
+            columns: ["actor"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory_transactions: {
         Row: {
           id: string;
