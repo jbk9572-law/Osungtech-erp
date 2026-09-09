@@ -26,7 +26,7 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
 
   if (!location) notFound();
 
-  const [stockRows, productRows, inventoryRows, assignedElsewhereRows] = await Promise.all([
+  const [stockRows, productRows, inventoryRows, assignedElsewhereRows, siblingLocationsRes] = await Promise.all([
     supabase
       .from("inventory_locations")
       .select("id, product_id, quantity, products(sku, name, spec, unit, base_package_qty)")
@@ -47,7 +47,28 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
         .neq("location_id", location.id)
         .range(from, to),
     ),
+    supabase
+      .from("locations")
+      .select("id, code, tier, position")
+      .eq("rack", location.rack)
+      .order("tier", { ascending: false })
+      .order("position", { ascending: true })
+      .limit(4), // 랙 1개 = 2단 × 좌우 2칸 = 항상 4자리 (createRack 참고)
   ]);
+
+  // 같은 랙의 4칸(2단×좌우)을 위치 목록으로 나가지 않고 그 자리에서
+  // 바로 옮겨다니며 입력할 수 있게, 상세 화면 위쪽에 형제 위치 탭을
+  // 보여준다. A1-02-01을 입력한 뒤 A1-02-02로 넘어갈 때 목록 화면까지
+  // 되돌아갈 필요가 없다.
+  const siblingLocations = siblingLocationsRes.data ?? [];
+  const { data: siblingStockRows } = await supabase
+    .from("inventory_locations")
+    .select("location_id")
+    .in("location_id", siblingLocations.map((l) => l.id));
+  const itemCountByLocation = new Map<string, number>();
+  for (const row of siblingStockRows ?? []) {
+    itemCountByLocation.set(row.location_id, (itemCountByLocation.get(row.location_id) ?? 0) + 1);
+  }
 
   // 위치별 수량을 처음부터 직접 타이핑하게 하면 막막하다는 요청 — 창고
   // 전체 재고(기존 inventory 합계)를 참고삼아 기본값으로 채워준다. 다만
@@ -88,6 +109,24 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
           ESC 위치 목록으로
         </Link>
       </div>
+
+      {siblingLocations.length > 1 && (
+        <div className="erp-detail-tabs" style={{ marginBottom: 12, borderRadius: 6 }}>
+          {siblingLocations.map((sibling) => {
+            const count = itemCountByLocation.get(sibling.id) ?? 0;
+            const label = `${sibling.tier === 2 ? "2단" : "1단"}·${sibling.position === 1 ? "좌" : "우"}`;
+            return sibling.code === location.code ? (
+              <span key={sibling.id} className="erp-detail-tab active">
+                {sibling.code} ({label})
+              </span>
+            ) : (
+              <Link key={sibling.id} href={`/inventory/locations/${sibling.code}`} className="erp-detail-tab">
+                {sibling.code} ({label}){count > 0 ? ` · ${count}품목` : ""}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       <PageGuide>이 위치에 현재 보관 중인 품목입니다. 실제로 확인한 수량과 다르면 아래에서 바로 수정하세요.</PageGuide>
 
