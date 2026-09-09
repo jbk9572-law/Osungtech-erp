@@ -234,7 +234,7 @@ export default async function AuditLogPage({
     return (
       <div>
         <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-          환경설정 &gt; 변경 이력
+          시스템관리 &gt; 변경 이력
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
@@ -413,7 +413,7 @@ export default async function AuditLogPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/company" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          환경설정 &gt; 변경 이력
+          시스템관리 &gt; 변경 이력
         </h1>
         <Link href="/settings/company" className="erp-btn erp-btn-danger">
           ESC 닫기

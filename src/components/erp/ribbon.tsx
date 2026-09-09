@@ -335,16 +335,18 @@ export function Ribbon() {
               >
                 단축키
               </p>
-              <table className="erp-grid" style={{ width: "100%" }}>
-                <tbody>
-                  {SHORTCUTS.map((s) => (
-                    <tr key={s.key}>
-                      <td style={{ fontWeight: 700, width: 90 }}>{s.key}</td>
-                      <td>{s.label}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="erp-grid-wrap">
+                <table className="erp-grid" style={{ width: "100%" }}>
+                  <tbody>
+                    {SHORTCUTS.map((s) => (
+                      <tr key={s.key}>
+                        <td style={{ fontWeight: 700, width: 90 }}>{s.key}</td>
+                        <td>{s.label}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

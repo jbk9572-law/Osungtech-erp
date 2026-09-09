@@ -82,7 +82,7 @@ export async function deleteSupplier(_prevState: FormState, formData: FormData):
   if (error) {
     return {
       error: error.message.includes("foreign key")
-        ? "이 공급처와 연결된 매입/상품 내역이 있어 삭제할 수 없습니다."
+        ? "이 공급처로 등록된 매입 전표(거래명세)가 있어 삭제할 수 없습니다. 해당 매입 내역을 먼저 삭제하거나 다른 거래처로 옮긴 뒤 다시 시도해주세요."
         : `삭제에 실패했습니다: ${error.message}`,
     };
   }
@@ -110,7 +110,7 @@ export async function bulkDeleteSuppliers(_prevState: FormState, formData: FormD
 
   if (failCount > 0) {
     return {
-      error: `${ids.length - failCount}건 삭제, ${failCount}건은 연결된 매입/상품 내역이 있어 삭제하지 못했습니다.`,
+      error: `${ids.length - failCount}건 삭제, ${failCount}건은 등록된 매입 전표가 있어 삭제하지 못했습니다.`,
     };
   }
   return { success: `${ids.length}건 삭제했습니다.` };

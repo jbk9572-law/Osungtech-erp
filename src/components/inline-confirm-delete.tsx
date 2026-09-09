@@ -76,7 +76,7 @@ export function InlineConfirmDelete({
               borderRadius: 4,
               padding: 8,
               width: PANEL_WIDTH,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              boxShadow: "var(--erp-shadow-md)",
             }}
           >
             <form action={formAction}>

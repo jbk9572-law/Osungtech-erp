@@ -192,12 +192,8 @@ export default async function InventoryLocationsPage() {
 
       {(rightRacks.length > 0 || leftRacks.length > 0) && (
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 60px 1fr",
-            gap: 14,
-            marginBottom: otherRacks.length ? 20 : 0,
-          }}
+          className="erp-locations-floor-grid"
+          style={{ marginBottom: otherRacks.length ? 20 : 0 }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div
@@ -207,24 +203,7 @@ export default async function InventoryLocationsPage() {
             </div>
             {leftRacks.map(([rack, locs]) => renderRackCard(rack, locs))}
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              writingMode: "vertical-rl",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: 4,
-              color: "var(--erp-text-muted)",
-              border: "1px dashed var(--erp-border)",
-              borderRadius: 4,
-              background: "var(--erp-bg-subtle)",
-              padding: "8px 0",
-            }}
-          >
-            통로
-          </div>
+          <div className="erp-locations-aisle">통로</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div
               style={{ textAlign: "center", fontSize: 11, fontWeight: 700, color: "var(--erp-text-muted)" }}

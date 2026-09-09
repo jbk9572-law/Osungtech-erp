@@ -1077,7 +1077,7 @@ export function NewSaleForm({
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
                 borderRadius: 2,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                boxShadow: "var(--erp-shadow-md)",
               }}
             >
               <div
@@ -1172,7 +1172,7 @@ export function NewSaleForm({
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
                 borderRadius: 2,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                boxShadow: "var(--erp-shadow-md)",
               }}
             >
               <div
