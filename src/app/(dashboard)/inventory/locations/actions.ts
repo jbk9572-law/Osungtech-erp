@@ -74,14 +74,46 @@ export async function deleteRack(_prevState: FormState, formData: FormData): Pro
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("locations").delete().eq("rack", rack);
+  // .select()로 실제로 지워진 행을 돌려받는다 — 이게 없으면 RLS가 조용히
+  // 0건을 지우고 끝나도(권한 문제 등) 에러 없이 "성공"으로 보여서, 버튼을
+  // 눌러도 화면상 아무 반응이 없는 것처럼 보이는 문제가 있었다.
+  // 랙 1개 = 파렛트 4자리 고정이라 최대 4행까지만 지워진다(위 createRack
+  // 주석 참고) — limit(4)는 그 불변조건을 그대로 코드에 반영한 것.
+  const { data, error } = await supabase.from("locations").delete().eq("rack", rack).select("id").limit(4);
 
   if (error) {
     return { error: `랙 삭제에 실패했습니다: ${error.message}` };
   }
+  if (!data || data.length === 0) {
+    return { error: `${rack}랙을 찾을 수 없거나 삭제 권한이 없습니다.` };
+  }
 
   revalidatePath("/inventory/locations");
   return { success: `${rack}랙이 삭제되었습니다.` };
+}
+
+// 랙을 하나씩 지우기 번거롭거나(코드 체계가 바뀌어서 처음부터 다시 만들고
+// 싶은 경우 등) 전체를 한 번에 지운다. inventory_locations/
+// order_item_location_stock은 on delete cascade로 같이 지워지고,
+// location_stock_history는 on delete set null이라 이력 텍스트 자체는
+// (위치 참조만 끊긴 채) 남는다.
+export async function deleteAllRacks(): Promise<FormState> {
+  const supabase = await createClient();
+  let totalDeleted = 0;
+  // PostgREST가 한 번 요청에 최대 1000행까지만 지우므로(max_rows), 위치가
+  // 그보다 많으면 한 번에 다 안 지워진다 — 남는 게 없어질 때까지 반복한다.
+  for (;;) {
+    const { data, error } = await supabase.from("locations").delete().not("id", "is", null).select("id").limit(1000);
+    if (error) {
+      return { error: `전체 삭제에 실패했습니다: ${error.message}` };
+    }
+    if (!data || data.length === 0) break;
+    totalDeleted += data.length;
+    if (data.length < 1000) break;
+  }
+
+  revalidatePath("/inventory/locations");
+  return { success: `보관 위치 ${totalDeleted}곳을 전부 삭제했습니다.` };
 }
 
 // 위치 하나에 보관 중인 품목의 수량을 등록/수정한다. 0개를 입력하면 그

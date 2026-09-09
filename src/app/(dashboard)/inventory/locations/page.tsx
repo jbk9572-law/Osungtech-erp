@@ -5,6 +5,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CreateRackForm } from "@/components/create-rack-form";
 import { DeleteRackButton } from "@/components/delete-rack-button";
+import { DeleteAllRacksButton } from "@/components/delete-all-racks-button";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 
 type LocationRow = { id: string; rack: string; tier: number; position: number; code: string };
@@ -240,6 +241,21 @@ export default async function InventoryLocationsPage() {
           <CreateRackForm />
         </div>
       </div>
+
+      {racks.size > 0 && (
+        <details className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+          <summary className="erp-detail-tabs" style={{ listStyle: "none", cursor: "pointer" }}>
+            <span className="erp-detail-tab active">위험 구역 — 전체 삭제</span>
+          </summary>
+          <div className="erp-detail-body">
+            <PageGuide className="mb-3">
+              랙을 하나씩 지우기보다 코드 체계를 바꾸는 등 처음부터 다시 만들고 싶을 때 씁니다. 되돌릴 수
+              없으니 신중하게 눌러주세요.
+            </PageGuide>
+            <DeleteAllRacksButton />
+          </div>
+        </details>
+      )}
 
       {racks.size === 0 && <p className="erp-grid-empty">아직 등록된 랙이 없습니다. 위에서 추가해주세요.</p>}
 
