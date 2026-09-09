@@ -143,14 +143,16 @@ export default async function LocationDetailPage({ params }: { params: Promise<{
         <p className="erp-grid-empty">아직 이 위치에 등록된 품목이 없습니다.</p>
       ) : (
         <div className="erp-grid-wrap">
-          <table className="erp-grid">
+          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%" }}>
             <thead>
               <tr>
-                <th>SKU</th>
+                <th style={{ width: 110 }}>SKU</th>
                 <th>품목명</th>
-                <th>규격</th>
-                <th className="num">수량</th>
-                <th />
+                <th style={{ width: 130 }}>규격</th>
+                <th className="num" style={{ width: 150 }}>
+                  수량
+                </th>
+                <th style={{ width: 140 }} />
               </tr>
             </thead>
             <tbody>

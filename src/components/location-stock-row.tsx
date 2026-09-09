@@ -27,6 +27,7 @@ export function LocationStockRow({
 }) {
   const [state, formAction, pending] = useActionState(setLocationStock, undefined);
   const [value, setValue] = useState(quantity);
+  const saveFormId = `loc-stock-save-${productId}`;
 
   return (
     <tr>
@@ -34,11 +35,18 @@ export function LocationStockRow({
       <td>{name}</td>
       <td>{spec ?? "-"}</td>
       <td className="num">
-        <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
-            <input type="hidden" name="location_id" value={locationId} />
-            <input type="hidden" name="code" value={code} />
-            <input type="hidden" name="product_id" value={productId} />
+        {/* 저장 버튼은 옆 칸(액션 칸)에 두되 form 속성으로 이 폼과 연결한다 —
+            이 칸(수량) 너비를 입력칸+단위만큼으로 좁게 유지해 표 전체 폭을
+            차지하지 않게 하기 위해서다. */}
+        <form
+          id={saveFormId}
+          action={formAction}
+          style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}
+        >
+          <input type="hidden" name="location_id" value={locationId} />
+          <input type="hidden" name="code" value={code} />
+          <input type="hidden" name="product_id" value={productId} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
               name="quantity"
               type="number"
@@ -46,33 +54,44 @@ export function LocationStockRow({
               value={value}
               onChange={(e) => setValue(Number(e.target.value))}
               className="erp-input"
-              style={{ width: 80, textAlign: "right" }}
+              style={{ width: 72, textAlign: "right" }}
             />
-            <span style={{ alignSelf: "center", fontSize: 11, color: "var(--erp-text-muted)" }}>{unit}</span>
-            <button type="submit" disabled={pending} className="erp-btn" style={{ padding: "0 10px" }}>
-              저장
-            </button>
+            <span style={{ fontSize: 11, color: "var(--erp-text-muted)" }}>{unit}</span>
           </div>
           {basePackageQty != null && (
-            <span style={{ fontSize: 11, color: "var(--erp-text-muted)", textAlign: "right" }}>
+            <span style={{ fontSize: 10.5, color: "var(--erp-text-muted)" }}>
               {formatQuantityWithBoxes(value, basePackageQty)}
             </span>
           )}
-          {state?.error && (
-            <span style={{ color: "var(--erp-danger)", fontSize: 11, textAlign: "right" }}>{state.error}</span>
-          )}
+          {state?.error && <span style={{ color: "var(--erp-danger)", fontSize: 11 }}>{state.error}</span>}
         </form>
       </td>
-      <td>
-        <form action={formAction}>
-          <input type="hidden" name="location_id" value={locationId} />
-          <input type="hidden" name="code" value={code} />
-          <input type="hidden" name="product_id" value={productId} />
-          <input type="hidden" name="quantity" value={0} />
-          <button type="submit" disabled={pending} className="erp-btn erp-btn-danger" style={{ padding: "0 10px" }}>
-            제거
+      <td className="num">
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
+          <button
+            type="submit"
+            form={saveFormId}
+            disabled={pending}
+            className="erp-btn"
+            style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+          >
+            저장
           </button>
-        </form>
+          <form action={formAction}>
+            <input type="hidden" name="location_id" value={locationId} />
+            <input type="hidden" name="code" value={code} />
+            <input type="hidden" name="product_id" value={productId} />
+            <input type="hidden" name="quantity" value={0} />
+            <button
+              type="submit"
+              disabled={pending}
+              className="erp-btn erp-btn-danger"
+              style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+            >
+              제거
+            </button>
+          </form>
+        </div>
       </td>
     </tr>
   );
