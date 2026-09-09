@@ -70,8 +70,8 @@ export function InventoryQrScanner({
   // (setInterval 콜백은 렌더와 무관하게 실행되므로 effect 타이밍으로도 충분하다).
   const pausedRef = useRef(false);
   useEffect(() => {
-    pausedRef.current = mismatchInput !== null || ended || locationLookup !== null;
-  }, [mismatchInput, ended, locationLookup]);
+    pausedRef.current = mismatchInput !== null || ended;
+  }, [mismatchInput, ended]);
 
   function closeLocationLookup() {
     lastLocationCodeRef.current = null;
@@ -164,12 +164,23 @@ export function InventoryQrScanner({
           if (code?.data) {
             const locationCode = extractLocationCodeFromQr(code.data);
             if (locationCode) {
+              // 같은 위치 QR을 카메라에 계속 대고 있는 동안은 다시 조회하지
+              // 않는다 — 품목 QR의 "같은 값이면 아무 것도 안 바뀐다"는
+              // 규칙과 동일. 다른 위치 QR로 넘어가면(랙을 옮겨 찍으면)
+              // 닫기를 누를 필요 없이 바로 그 위치로 갱신된다.
               if (lastLocationCodeRef.current !== locationCode) {
                 lastLocationCodeRef.current = locationCode;
                 setLocationLookup({ code: locationCode, status: "loading" });
                 lookupLocation(locationCode);
               }
               return;
+            }
+            // 위치 카드가 떠 있는 상태에서 품목 QR로 넘어가면(계속
+            // 실사하려는 것), 닫기 버튼 없이도 카드를 자동으로 치우고
+            // 품목 스캔을 이어간다.
+            if (lastLocationCodeRef.current !== null) {
+              lastLocationCodeRef.current = null;
+              setLocationLookup(null);
             }
             setScanState((prev) => onQrDecoded(prev, code.data, productBySkuRef.current));
           }

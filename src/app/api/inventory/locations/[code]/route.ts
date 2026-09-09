@@ -16,23 +16,24 @@ export async function GET(_request: Request, { params }: { params: Promise<{ cod
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
 
+  // 위치 존재 확인 + 재고 목록을 따로 두 번 요청하면(위치 조회 → 그
+  // id로 재고 조회) 왕복이 두 번 생겨 QR 스캔 화면에서 반응이 느리게
+  // 느껴진다는 지적이 있었다. locations를 기준으로 inventory_locations를
+  // 함께 embed해서 한 번에 가져온다 — 재고가 0개인(아직 비어있는) 위치도
+  // 정상 응답이어야 하므로 inner join(필터링)이 아니라 그냥 embed로
+  // 받는다(재고 없으면 빈 배열).
   const { data: location } = await supabase
     .from("locations")
-    .select("id, code, tier, position")
+    .select("code, tier, position, inventory_locations(id, quantity, products(sku, name, spec, unit))")
     .eq("code", code)
+    .order("updated_at", { foreignTable: "inventory_locations", ascending: false })
     .maybeSingle();
 
   if (!location) {
     return NextResponse.json({ error: `위치를 찾을 수 없습니다: ${code}` }, { status: 404 });
   }
 
-  const { data: stockRows } = await supabase
-    .from("inventory_locations")
-    .select("id, quantity, products(sku, name, spec, unit)")
-    .eq("location_id", location.id)
-    .order("updated_at", { ascending: false });
-
-  const rows = (stockRows ?? []).map((row) => ({
+  const rows = (location.inventory_locations ?? []).map((row) => ({
     id: row.id,
     quantity: row.quantity,
     sku: row.products?.sku ?? "-",
