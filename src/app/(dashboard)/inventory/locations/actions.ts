@@ -114,3 +114,59 @@ export async function setLocationStock(_prevState: FormState, formData: FormData
   revalidatePath("/inventory/locations");
   return { success: "저장되었습니다." };
 }
+
+// 위치 하나에 품목을 한 줄씩 저장할 때마다 페이지가 매번 새로고침돼
+// 여러 품목을 등록할 때 너무 오래 걸린다는 지적 — 매입/매출/할일
+// 등록 폼과 같은 방식으로 여러 줄을 한 번에 입력받아 한 번의 요청으로
+// 저장한다.
+export async function setLocationStockBatch(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const locationId = String(formData.get("location_id") ?? "");
+  const code = String(formData.get("code") ?? "");
+
+  let items: { productId: string; quantity: number }[];
+  try {
+    items = JSON.parse(String(formData.get("items") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  if (!locationId) {
+    return { error: "위치 정보를 확인할 수 없습니다." };
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    return { error: "등록할 품목을 추가해주세요." };
+  }
+  if (items.some((item) => !item.productId || !Number.isFinite(item.quantity) || item.quantity < 0)) {
+    return { error: "품목과 0 이상의 수량을 모두 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const updatedAt = new Date().toISOString();
+  const toUpsert = items
+    .filter((item) => item.quantity > 0)
+    .map((item) => ({ location_id: locationId, product_id: item.productId, quantity: item.quantity, updated_at: updatedAt }));
+  const toDeleteIds = items.filter((item) => item.quantity === 0).map((item) => item.productId);
+
+  if (toUpsert.length > 0) {
+    const { error } = await supabase
+      .from("inventory_locations")
+      .upsert(toUpsert, { onConflict: "product_id,location_id" });
+    if (error) {
+      return { error: `저장에 실패했습니다: ${error.message}` };
+    }
+  }
+  if (toDeleteIds.length > 0) {
+    const { error } = await supabase
+      .from("inventory_locations")
+      .delete()
+      .eq("location_id", locationId)
+      .in("product_id", toDeleteIds);
+    if (error) {
+      return { error: `삭제에 실패했습니다: ${error.message}` };
+    }
+  }
+
+  if (code) revalidatePath(`/inventory/locations/${code}`);
+  revalidatePath("/inventory/locations");
+  return { success: `${items.length}건 저장되었습니다.` };
+}
