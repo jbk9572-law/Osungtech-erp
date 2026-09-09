@@ -49,8 +49,8 @@ export function LocationStockForm({
       <div style={{ minWidth: 260, flex: 1 }}>
         <ProductSearchSelect products={products} value={productId} onChange={handleProductChange} />
       </div>
-      <div className="erp-field" style={{ minWidth: 100 }}>
-        <label htmlFor="loc-qty">수량</label>
+      <div className="erp-field" style={{ minWidth: 130 }}>
+        <label htmlFor="loc-qty">이 위치 보관수량</label>
         <input
           id="loc-qty"
           name="quantity"
@@ -70,14 +70,13 @@ export function LocationStockForm({
           "등록/수정"
         )}
       </button>
-      {selectedProduct && (
-        <div style={{ flexBasis: "100%" }}>
-          <PageGuide className="mb-0">
-            아직 다른 위치에 배정하지 않은 재고: {selectedProduct.totalQuantity.toLocaleString()}개 — 수량
-            칸에 기본값으로 채워뒀습니다. 이 위치엔 일부만 있으면 숫자를 고쳐주세요.
-          </PageGuide>
-        </div>
-      )}
+      <div style={{ flexBasis: "100%" }}>
+        <PageGuide className="mb-0">
+          {selectedProduct
+            ? `아직 다른 위치에 배정하지 않은 재고: ${selectedProduct.totalQuantity.toLocaleString()}개 — 이 위치 보관수량 칸에 기본값으로 채워뒀습니다. 이 위치엔 일부만 있으면 숫자를 고쳐주세요.`
+            : "품목을 고르면 창고 전체 재고 중 아직 다른 위치에 배정하지 않은 수량이 이 위치 보관수량 칸에 자동으로 채워집니다. 이 위치에 실제로 있는 수량과 다르면 숫자를 고쳐서 등록하세요."}
+        </PageGuide>
+      </div>
       <div style={{ flexBasis: "100%" }}>
         <FormMessage state={state} />
       </div>
