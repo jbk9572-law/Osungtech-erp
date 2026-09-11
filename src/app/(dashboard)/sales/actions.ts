@@ -69,6 +69,11 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 거친 경우에만 값이 들어온다 — 어느 위치에서 얼마나 뺄지 사용자가 고른
   // 배분값.
   const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
+  // "저장 후 계속 등록" 버튼을 눌렀을 때만 값이 온다(같은 <button name>을
+  // 쓰는 일반 "저장" 버튼은 이 필드를 아예 안 보낸다) — 저장 후 방금 만든
+  // 거래 상세로 가는 대신 새 등록 화면으로 바로 돌아가서, 여러 건을
+  // 연달아 입력할 때 매번 메뉴를 다시 타지 않아도 되게 한다.
+  const continueNew = formData.get("continue_new") === "1";
 
   if (!customerId || !warehouseId || !orderDate) {
     return { error: "출고처, 창고, 거래일자를 모두 입력해주세요." };
@@ -193,6 +198,9 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/paper-calc");
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
+  if (continueNew) {
+    redirect(`/sales/new?saved=${salesOrderId}`);
+  }
   redirect(
     paperCalcWarning
       ? `/sales/${salesOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`

@@ -7,7 +7,12 @@ import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import type { LocationOption } from "@/lib/location-stock-sync";
 
-export default async function NewSalePage() {
+export default async function NewSalePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
+  const { saved } = await searchParams;
   const supabase = await createClient();
 
   // 오늘 이미 도래한 단가 예약(거래처별)을 먼저 반영해서, 이 화면의 단가
@@ -109,6 +114,22 @@ export default async function NewSalePage() {
           </Link>
         </div>
       </div>
+      {saved && (
+        <p
+          className="mb-3 rounded p-2 text-xs"
+          style={{
+            background: "var(--erp-success-bg)",
+            color: "var(--erp-success)",
+            border: "1px solid var(--erp-success-border)",
+          }}
+        >
+          방금 등록한 거래가 저장되었습니다.{" "}
+          <Link href={`/sales/${saved}`} className="underline">
+            방금 건 보기
+          </Link>{" "}
+          — 이어서 다음 건을 등록하세요.
+        </p>
+      )}
       <NewSaleTypeSwitcher
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({

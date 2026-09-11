@@ -13,9 +13,9 @@ import type { LocationOption } from "@/lib/location-stock-sync";
 export default async function NewPurchasePage({
   searchParams,
 }: {
-  searchParams: Promise<{ supplier_id?: string; reorder_items?: string }>;
+  searchParams: Promise<{ supplier_id?: string; reorder_items?: string; saved?: string }>;
 }) {
-  const { supplier_id: prefillSupplierId, reorder_items: reorderItemsRaw } = await searchParams;
+  const { supplier_id: prefillSupplierId, reorder_items: reorderItemsRaw, saved } = await searchParams;
   // 재고 부족 자동 발주 제안(/inventory/reorder-suggestions)의 "매입
   // 등록으로 보내기"에서만 넘어온다 — 잘못된 값이 와도 등록 자체는 막지
   // 않고 그냥 빈 폼으로 시작한다.
@@ -144,6 +144,22 @@ export default async function NewPurchasePage({
           </Link>
         </div>
       </div>
+      {saved && (
+        <p
+          className="mb-3 rounded p-2 text-xs"
+          style={{
+            background: "var(--erp-success-bg)",
+            color: "var(--erp-success)",
+            border: "1px solid var(--erp-success-border)",
+          }}
+        >
+          방금 등록한 거래가 저장되었습니다.{" "}
+          <Link href={`/purchases/${saved}`} className="underline">
+            방금 건 보기
+          </Link>{" "}
+          — 이어서 다음 건을 등록하세요.
+        </p>
+      )}
       <NewPurchaseTypeSwitcher
         suppliers={suppliers ?? []}
         products={products ?? []}

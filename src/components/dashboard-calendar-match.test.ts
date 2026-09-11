@@ -202,9 +202,11 @@ describe("stripFilterUnitsForCopy", () => {
 });
 
 describe("shouldStripBoxCountForCopy", () => {
-  it("신일베스텍은 품목/카테고리 상관없이 항상 뺀다", () => {
+  it("신일베스텍/(주)에이티씨/(주)타이거일렉은 품목/카테고리 상관없이 항상 뺀다", () => {
     expect(shouldStripBoxCountForCopy("신일베스텍", "ANYTHING", "Paper")).toBe(true);
     expect(shouldStripBoxCountForCopy("신일베스텍", null, null)).toBe(true);
+    expect(shouldStripBoxCountForCopy("(주)에이티씨", "ANYTHING", "Paper")).toBe(true);
+    expect(shouldStripBoxCountForCopy("(주)타이거일렉", null, null)).toBe(true);
   });
 
   it("나영식테크는 SKU가 ST1/FM이거나 카테고리가 Bobbin일 때만 뺀다", () => {

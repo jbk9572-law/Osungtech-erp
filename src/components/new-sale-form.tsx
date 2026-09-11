@@ -219,6 +219,12 @@ export function NewSaleForm({
   // 화면에서만 숨긴다 (다시 제출하면 onSubmit에서 원복해 새 결과를 보여줌).
   const [messageDismissed, setMessageDismissed] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  // "저장" 버튼과 "저장 후 계속 등록" 버튼 중 실제로 어느 쪽을 눌러
+  // 제출했는지 기억해둔다 — 위치 배분 확인 모달 때문에 제출이 한 번
+  // 가로채져도(아래 onSubmit), 모달 확인 후 다시 제출할 때 같은 버튼으로
+  // 제출해야 "계속 등록" 의도가 안 사라진다.
+  const lastSubmitterRef = useRef<HTMLButtonElement | null>(null);
   useKeyShortcut("F7", submitRef);
 
   // 품목이 보관 위치 2곳 이상에 나뉘어 있으면, 저장 직전에 어디서 얼마나
@@ -749,12 +755,14 @@ export function NewSaleForm({
 
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="space-y-6"
       onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={(e) => {
+        lastSubmitterRef.current = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
         if (multiLocationItems.length > 0 && locationSignature !== confirmedAllocation?.signature) {
           e.preventDefault();
           setAllocationModalOpen(true);
@@ -783,7 +791,9 @@ export function NewSaleForm({
           // 다음 렌더에서 hidden input이 최신 배분값으로 채워진 뒤 다시
           // 제출한다 — 이 클릭 핸들러 안에서 곧장 폼을 submit()하면 아직
           // state가 반영되기 전이라 방금 만든 배분값 없이 나갈 수 있다.
-          requestAnimationFrame(() => submitRef.current?.click());
+          // 원래 눌렀던 버튼("저장" vs "저장 후 계속 등록")으로 다시
+          // 제출해야 그 의도가 유지된다.
+          requestAnimationFrame(() => formRef.current?.requestSubmit(lastSubmitterRef.current ?? undefined));
         }}
       />
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
@@ -900,21 +910,38 @@ export function NewSaleForm({
           style={{ justifyContent: "space-between" }}
         >
           <span className="erp-detail-tab active">기본정보</span>
-          <button
-            ref={submitRef}
-            type="submit"
-            disabled={pending}
-            className="erp-btn erp-btn-primary"
-            style={{ minWidth: 0, margin: 4 }}
-          >
-            {pending ? (
-              <>
-                <span className="erp-spinner" aria-hidden /> 저장 중...
-              </>
-            ) : (
-              `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
+          <div style={{ display: "flex", gap: 6 }}>
+            {/* 수정 화면(initial.id 있음)에는 "다음 건"이라는 개념이 없어서
+                신규 등록일 때만 보여준다 — 하루에 여러 건을 연달아 입력할
+                때마다 매번 목록/메뉴를 다시 타지 않아도 되게 한다. */}
+            {!initial?.id && (
+              <button
+                type="submit"
+                name="continue_new"
+                value="1"
+                disabled={pending}
+                className="erp-btn"
+                style={{ minWidth: 0, margin: 4 }}
+              >
+                저장 후 계속 등록
+              </button>
             )}
-          </button>
+            <button
+              ref={submitRef}
+              type="submit"
+              disabled={pending}
+              className="erp-btn erp-btn-primary"
+              style={{ minWidth: 0, margin: 4 }}
+            >
+              {pending ? (
+                <>
+                  <span className="erp-spinner" aria-hidden /> 저장 중...
+                </>
+              ) : (
+                `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
+              )}
+            </button>
+          </div>
         </div>
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>

@@ -191,6 +191,9 @@ export async function createPurchase(
   // 매출(출고)용이 서로 다른 hidden input으로 넘어온다.
   const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   const saleLocationAllocations = parseAllocationChoices(String(formData.get("sale_location_allocations") ?? ""));
+  // "저장 후 계속 등록" 버튼을 눌렀을 때만 값이 온다 — 저장 후 방금 만든
+  // 거래 상세로 가는 대신 새 등록 화면으로 바로 돌아간다.
+  const continueNew = formData.get("continue_new") === "1";
 
   if (!supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급처, 창고, 매입일자를 모두 입력해주세요." };
@@ -465,6 +468,9 @@ export async function createPurchase(
   // 않아서 방금 저장한 계산이 캐시된 화면에 안 보일 수 있었다.
   revalidatePath("/paper-calc");
 
+  if (continueNew) {
+    redirect(`/purchases/new?saved=${purchaseOrderId}`);
+  }
   redirect(
     paperCalcWarning
       ? `/purchases/${purchaseOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`

@@ -524,6 +524,10 @@ export function stripFilterUnitsForCopy(spec: string, categoryName: string | nul
   return spec.replace(/㎛/g, "").replace(/mm/g, "").replace(/\s+/g, " ").trim();
 }
 
+// 전체 품목에서 박스 수 표기를 빼는 거래처 — 품목/카테고리 조건 없이
+// 무조건 뺀다.
+const STRIP_BOX_COUNT_ALWAYS = new Set(["신일베스텍", "(주)에이티씨", "(주)타이거일렉"]);
+
 // 거래처별로 카톡복사 텍스트에서 박스 수 표기("(N박스)")를 빼달라는 요청 —
 // 화면 표시는 그대로 두고 복사 텍스트에서만 적용한다(stripFilterUnitsForCopy와
 // 동일한 방식). 거래처 이름은 오타 없이 정확히 일치해야 하고, SKU/카테고리
@@ -533,7 +537,7 @@ export function shouldStripBoxCountForCopy(
   sku: string | null,
   categoryName: string | null,
 ): boolean {
-  if (customerName === "신일베스텍") return true;
+  if (STRIP_BOX_COUNT_ALWAYS.has(customerName)) return true;
   if (customerName === "나영식테크") {
     const upperSku = sku?.toUpperCase() ?? "";
     if (upperSku === "ST1" || upperSku === "FM") return true;
