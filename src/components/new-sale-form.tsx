@@ -440,7 +440,7 @@ export function NewSaleForm({
   );
 
   function resolveNote(forCustomerId: string, productId: string): string | null {
-    return noteMap.get(`${forCustomerId}:${productId}`) ?? null;
+    return lookupPartyProductValue(noteMap, forCustomerId, productId) ?? null;
   }
 
   // 수정 화면에서는 product.stock이 "이 거래로 이미 출고 처리된 뒤"의 현재
