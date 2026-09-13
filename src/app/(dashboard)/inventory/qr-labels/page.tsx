@@ -128,14 +128,7 @@ export default async function InventoryQrLabelsPage({
         </p>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-          marginTop: 12,
-        }}
-      >
+      <div className="erp-qr-label-grid">
         {labels.map((label) => (
           <QrLabelCard
             key={label.id}

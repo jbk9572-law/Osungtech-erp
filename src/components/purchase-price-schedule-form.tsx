@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { schedulePurchasePriceChange } from "@/app/(dashboard)/suppliers/actions";
 import { FormMessage } from "@/components/form-message";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -16,6 +17,8 @@ export function PurchasePriceScheduleForm({
 }) {
   const [state, formAction, pending] = useActionState(schedulePurchasePriceChange, undefined);
   const formRef = useRef<HTMLFormElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
   const [productId, setProductId] = useState("");
 
   useEffect(() => {
@@ -42,8 +45,8 @@ export function PurchasePriceScheduleForm({
         className="erp-input"
       />
       <input name="effective_date" type="date" aria-label="적용일자" required className="erp-input" />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-        {pending ? "예약 중..." : "예약"}
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        {pending ? "예약 중..." : "F7 예약"}
       </button>
       <div className="md:col-span-4">
         <FormMessage state={state} />

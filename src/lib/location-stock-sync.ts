@@ -103,8 +103,12 @@ export async function applyOrderLocationStock(
     }
 
     for (const p of plan) {
-      const row = rows.find((r) => r.location_id === p.locationId);
-      if (!row) continue;
+      // rows.find(...)로 존재 여부를 먼저 확인하던 예전 코드는, 페이지를
+      // 열어둔 사이 다른 사람이 그 위치 재고를 0으로 만들어(위치 상세
+      // 화면에서 삭제) rows에서 빠지면 이 배분 몫을 통째로 건너뛰어 재고가
+      // 조용히 유실됐다. apply_location_stock_delta는 해당 위치 행이 없으면
+      // 알아서 새로 만들어주므로(RPC 정의 참고) 존재 여부 확인 없이 항상
+      // 반영한다.
       const delta = sign * p.amount;
       // 절대값(quantity: row.quantity + delta)으로 직접 update하는 대신
       // 상대값(delta)만 함수에 넘긴다 — apply_location_stock_delta가 그

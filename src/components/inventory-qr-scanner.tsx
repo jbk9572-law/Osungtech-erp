@@ -619,13 +619,16 @@ export function InventoryQrScanner({
                       aria-label="닫기"
                       style={{
                         flexShrink: 0,
-                        width: 26,
-                        height: 26,
+                        // 창고에서 스마트폰으로 실사하며 흔들리는 손으로 누르는
+                        // 버튼이라 44px 이상(권장 터치 타겟)으로 키운다 —
+                        // 원래 26px은 데스크톱 마우스 기준 크기였다.
+                        width: 44,
+                        height: 44,
                         borderRadius: "50%",
                         border: "none",
                         background: "var(--erp-bg-subtle)",
                         color: "var(--erp-text-muted)",
-                        fontSize: 14,
+                        fontSize: 18,
                         lineHeight: 1,
                         cursor: "pointer",
                       }}

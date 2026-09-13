@@ -6,6 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
+import { ROLE_LABELS } from "@/lib/user-roles";
 
 // audit_logs 트리거는 매출/매입/품목 같은 마스터·전표 테이블에만 붙어있고
 // inventory_transactions에는 없다(재고 조정은 그 테이블 자체가 이미
@@ -130,12 +131,6 @@ const FIELD_LABELS: Record<string, Record<string, string>> = {
     memo: "메모",
     created_by: "작성자",
   },
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: "관리자",
-  manager: "매니저",
-  staff: "직원",
 };
 
 const PRICE_BASIS_LABELS: Record<string, string> = {

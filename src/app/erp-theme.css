@@ -1297,6 +1297,29 @@
   }
 }
 
+/* QR 라벨 인쇄 화면의 카드 그리드 — repeat(3,1fr)만 있고 모바일 대응이
+   없어서, 카드 안 QR SVG가 고정폭(110px)이라 grid item이 그 아래로 못
+   줄어들어 390px 화면에서 3번째 칸이 넘쳐 잘려 보이던 문제. 다른
+   요약카드 그리드(erp-hero-row 등)와 같은 방식으로 좁은 화면에서 접는다. */
+.erp-qr-label-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .erp-qr-label-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .erp-qr-label-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .erp-hero-card {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);

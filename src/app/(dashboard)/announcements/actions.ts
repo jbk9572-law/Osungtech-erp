@@ -35,6 +35,12 @@ export async function createAnnouncement(
 
   revalidatePath("/announcements");
   revalidatePath("/dashboard");
+  // 타이틀바 알림 종 배지는 layout.tsx가 렌더링 시점에 계산해 내려주는
+  // 값이라, 페이지 단위 revalidatePath만으로는 갱신되지 않는다(Next.js
+  // 문서: 레이아웃 지정 없는 revalidatePath는 그 페이지만 무효화한다) —
+  // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
+  // 무효화한다.
+  revalidatePath("/", "layout");
   redirect(`/announcements/${data.id}`);
 }
 
@@ -66,6 +72,12 @@ export async function updateAnnouncement(
 
   revalidatePath("/announcements");
   revalidatePath("/dashboard");
+  // 타이틀바 알림 종 배지는 layout.tsx가 렌더링 시점에 계산해 내려주는
+  // 값이라, 페이지 단위 revalidatePath만으로는 갱신되지 않는다(Next.js
+  // 문서: 레이아웃 지정 없는 revalidatePath는 그 페이지만 무효화한다) —
+  // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
+  // 무효화한다.
+  revalidatePath("/", "layout");
   redirect(`/announcements/${id}`);
 }
 
@@ -89,6 +101,12 @@ export async function deleteAnnouncement(
 
   revalidatePath("/announcements");
   revalidatePath("/dashboard");
+  // 타이틀바 알림 종 배지는 layout.tsx가 렌더링 시점에 계산해 내려주는
+  // 값이라, 페이지 단위 revalidatePath만으로는 갱신되지 않는다(Next.js
+  // 문서: 레이아웃 지정 없는 revalidatePath는 그 페이지만 무효화한다) —
+  // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
+  // 무효화한다.
+  revalidatePath("/", "layout");
   redirect("/announcements");
 }
 
@@ -115,4 +133,10 @@ export async function toggleAnnouncementRead(formData: FormData): Promise<{ erro
 
   revalidatePath("/announcements");
   revalidatePath("/dashboard");
+  // 타이틀바 알림 종 배지는 layout.tsx가 렌더링 시점에 계산해 내려주는
+  // 값이라, 페이지 단위 revalidatePath만으로는 갱신되지 않는다(Next.js
+  // 문서: 레이아웃 지정 없는 revalidatePath는 그 페이지만 무효화한다) —
+  // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
+  // 무효화한다.
+  revalidatePath("/", "layout");
 }

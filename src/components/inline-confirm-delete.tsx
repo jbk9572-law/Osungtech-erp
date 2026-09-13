@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useConfirmCode } from "@/lib/use-confirm-code";
 import { clampDropdownLeft } from "@/lib/dropdown-position";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 const PANEL_WIDTH = 220;
 
@@ -33,6 +34,10 @@ export function InlineConfirmDelete({
   const { code, confirmText, setConfirmText, confirmMatches, regenerate } = useConfirmCode();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<{ top: number; left: number } | null>(null);
+  useEscapeToClose(open, () => {
+    setOpen(false);
+    setConfirmText("");
+  });
 
   // 삭제 성공 시 패널을 닫는다 — 다른 폼들과 동일한 state identity 비교 패턴.
   const [lastState, setLastState] = useState(state);

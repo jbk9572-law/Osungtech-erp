@@ -6,6 +6,7 @@ import { quickAddPaymentRequestItem } from "@/app/(dashboard)/reports/payment-re
 import { PAYMENT_REQUEST_CARD_TYPES, type PaymentRequestCardType } from "@/lib/payment-request-title";
 import { ReceiptPicker } from "@/components/receipt-picker";
 import { FieldHint } from "@/components/field-hint";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 
 // 월말에 몰아 쓰지 않고 그날그날 한 줄씩 빠르게 기록하는 입력창. 문서를
 // 고르지 않아도 서버 액션이 "부서+카드종류+이번 달" 문서를 찾거나 새로
@@ -34,7 +35,12 @@ export function QuickPaymentRequestForm({
   }
 
   return (
-    <form action={formAction} key={formKey} className="grid grid-cols-1 gap-3 md:grid-cols-6">
+    <form
+      action={formAction}
+      key={formKey}
+      onKeyDown={preventEnterSubmit}
+      className="grid grid-cols-1 gap-3 md:grid-cols-6"
+    >
       <div className="erp-field">
         <label htmlFor="qpr-used-at">일자</label>
         <input id="qpr-used-at" type="date" name="used_at" defaultValue={today} className="erp-input w-full" required />

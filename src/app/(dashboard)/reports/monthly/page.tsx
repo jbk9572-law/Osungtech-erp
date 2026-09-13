@@ -732,7 +732,7 @@ export default async function MonthlyReportPage({
                 // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
                 // 헷갈렸다.
                 const groupBg =
-                  groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                  groupIndex % 2 === 0 ? "var(--erp-panel)" : "var(--erp-bg)";
                 return (
                   <Fragment key={g.productId}>
                     <tr style={{ background: groupBg }}>
@@ -903,7 +903,7 @@ export default async function MonthlyReportPage({
             <tbody>
               {companyGroups.map((cg, groupIndex) => {
                 const groupBg =
-                  groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                  groupIndex % 2 === 0 ? "var(--erp-panel)" : "var(--erp-bg)";
                 const rank = groupIndex + 1;
                 const rankStyle =
                   rank === 1
@@ -914,7 +914,7 @@ export default async function MonthlyReportPage({
                           color: "var(--erp-primary)",
                         }
                       : {
-                          background: "#eef0f3",
+                          background: "var(--erp-divider)",
                           color: "var(--erp-text-muted)",
                         };
                 const share = companyViewGrandTotal
