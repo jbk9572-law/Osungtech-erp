@@ -24,12 +24,13 @@ export default async function InventoryLocationsPage() {
     ),
     fetchAllRows<{
       location_id: string;
+      product_id: string;
       quantity: number;
       products: { name: string; spec: string | null; unit: string; base_package_qty: number | null } | null;
     }>((from, to) =>
       supabase
         .from("inventory_locations")
-        .select("location_id, quantity, products(name, spec, unit, base_package_qty)")
+        .select("location_id, product_id, quantity, products(name, spec, unit, base_package_qty)")
         .range(from, to),
     ),
   ]);
@@ -37,12 +38,13 @@ export default async function InventoryLocationsPage() {
   const countByLocation = new Map<string, number>();
   const itemsByLocation = new Map<
     string,
-    { name: string; spec: string | null; unit: string; quantity: number; basePackageQty: number | null }[]
+    { productId: string; name: string; spec: string | null; unit: string; quantity: number; basePackageQty: number | null }[]
   >();
   for (const row of stockRows) {
     countByLocation.set(row.location_id, (countByLocation.get(row.location_id) ?? 0) + 1);
     const list = itemsByLocation.get(row.location_id) ?? [];
     list.push({
+      productId: row.product_id,
       name: row.products?.name ?? "(삭제된 품목)",
       spec: row.products?.spec ?? null,
       unit: row.products?.unit ?? "EA",
@@ -185,7 +187,9 @@ export default async function InventoryLocationsPage() {
                         <ul style={{ margin: "0 0 8px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
                           {items.map((it, i) => (
                             <li key={i} style={{ fontSize: 11.5, color: "var(--erp-text)" }}>
-                              {it.name}
+                              <Link href={`/inventory/${it.productId}`} className="underline">
+                                {it.name}
+                              </Link>
                               {it.spec ? ` (${it.spec})` : ""} —{" "}
                               <b>
                                 <QtyWithBoxes quantity={it.quantity} basePackageQty={it.basePackageQty} unit={it.unit} />

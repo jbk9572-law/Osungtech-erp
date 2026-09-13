@@ -19,7 +19,7 @@ export default async function InventoryProductHistoryPage({
   const { from, to } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: product }, txRaw, saleLotRows, purchaseLotRows] = await Promise.all([
+  const [{ data: product }, txRaw, saleLotRows, purchaseLotRows, { data: locationRows }] = await Promise.all([
     supabase
       .from("products")
       .select(
@@ -73,6 +73,14 @@ export default async function InventoryProductHistoryPage({
         .eq("product_id", productId)
         .range(from, to),
     ),
+    // 이 품목이 지금 실제로 어느 랙에 보관 중인지 — 재고현황/입출고내역과
+    // 보관위치 화면이 서로 링크 없이 사이드바로만 오가야 했던 문제를
+    // 해소하기 위해 여기서 바로 보여주고 각 위치로 링크한다.
+    supabase
+      .from("inventory_locations")
+      .select("quantity, locations(code)")
+      .eq("product_id", productId)
+      .gt("quantity", 0),
   ]);
 
   if (!product) {
@@ -148,6 +156,25 @@ export default async function InventoryProductHistoryPage({
         <QtyWithBoxes quantity={currentQuantity} basePackageQty={product.base_package_qty} />
         {product.unit ?? ""}
       </p>
+
+      {locationRows && locationRows.length > 0 && (
+        <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+          현재 보관 위치:{" "}
+          {locationRows.map((row, i) => (
+            <span key={row.locations?.code ?? i}>
+              {i > 0 && ", "}
+              {row.locations?.code ? (
+                <Link href={`/inventory/locations/${row.locations.code}`} className="underline">
+                  {row.locations.code}
+                </Link>
+              ) : (
+                "-"
+              )}{" "}
+              <QtyWithBoxes quantity={row.quantity} basePackageQty={product.base_package_qty} />
+            </span>
+          ))}
+        </p>
+      )}
 
       {countAdjustments.length > 0 && (
         <div

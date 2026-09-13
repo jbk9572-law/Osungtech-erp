@@ -42,6 +42,12 @@ import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { RETURN_REASONS } from "@/lib/return-reason";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
+import {
+  buildPartyProductMap,
+  buildPartyProductNoteMap,
+  lookupPartyProductValue,
+  getMostRecentLotNumber,
+} from "@/lib/party-price-lookup";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
@@ -420,27 +426,18 @@ export function NewSaleForm({
     setOpenTodos(null);
   }
 
-  const priceMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const price of prices) {
-      map.set(
-        `${price.customer_id}:${price.product_id}`,
-        Number(price.unit_price),
-      );
-    }
-    return map;
-  }, [prices]);
+  const priceMap = useMemo(
+    () => buildPartyProductMap(prices, (p) => p.customer_id, (p) => p.product_id, (p) => Number(p.unit_price)),
+    [prices],
+  );
 
   // 이 거래처+이 품목 조합에만 해당하는 특이사항(customer_product_prices.notes)
   // — 거래처 하나만 골랐을 때 뜨는 거래처 전체 특이사항과는 별개로, 품목까지
   // 같이 골랐을 때만 추가로 보여준다.
-  const noteMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const price of prices) {
-      if (price.notes) map.set(`${price.customer_id}:${price.product_id}`, price.notes);
-    }
-    return map;
-  }, [prices]);
+  const noteMap = useMemo(
+    () => buildPartyProductNoteMap(prices, (p) => p.customer_id, (p) => p.product_id, (p) => p.notes),
+    [prices],
+  );
 
   function resolveNote(forCustomerId: string, productId: string): string | null {
     return noteMap.get(`${forCustomerId}:${productId}`) ?? null;
@@ -473,7 +470,7 @@ export function NewSaleForm({
   }, [rows]);
 
   function resolvePrice(forCustomerId: string, productId: string) {
-    const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
+    const fromCustomer = lookupPartyProductValue(priceMap, forCustomerId, productId);
     if (fromCustomer !== undefined) return fromCustomer;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.price) : 0;
@@ -487,15 +484,12 @@ export function NewSaleForm({
     productId: string,
   ): string | null {
     if (!forCustomerId) return null;
-    const entries = history
-      .filter(
-        (h) =>
-          h.customerId === forCustomerId &&
-          h.productId === productId &&
-          h.lotNumber,
-      )
-      .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
-    return entries[0]?.lotNumber ?? null;
+    return getMostRecentLotNumber(
+      history,
+      (h) => h.customerId === forCustomerId && h.productId === productId,
+      (h) => h.orderDate,
+      (h) => h.lotNumber,
+    );
   }
 
   // 임시 저장된 모조지 계산 + 입고 불러오기로 복사해온 계산들을 합쳐서,

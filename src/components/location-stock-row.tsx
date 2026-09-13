@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { setLocationStock } from "@/app/(dashboard)/inventory/locations/actions";
 import { formatBoxCount } from "@/lib/package-qty";
@@ -32,7 +33,14 @@ export function LocationStockRow({
   return (
     <tr>
       <td>{sku}</td>
-      <td>{name}</td>
+      <td>
+        {/* 이 위치 상세 ↔ 품목의 입출고내역을 서로 링크 없이 사이드바로만
+            오가야 했던 문제 — 반대쪽(입출고내역 화면)에는 이미 보관 위치로
+            가는 링크를 추가해뒀다. */}
+        <Link href={`/inventory/${productId}`} className="underline">
+          {name}
+        </Link>
+      </td>
       <td>{spec ?? "-"}</td>
       <td className="num">
         {/* 저장 버튼은 옆 칸(액션 칸)에 두되 form 속성으로 이 폼과 연결한다 —

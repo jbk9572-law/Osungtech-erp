@@ -11,7 +11,14 @@ export default async function PayablesPage() {
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 미지급금현황</h1>
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 미지급금현황</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <a href="/api/payables/export" className="erp-btn" title="현재 화면 그대로 엑셀로 다운로드">
+            📥 엑셀 다운로드
+          </a>
+        </div>
+      </div>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">

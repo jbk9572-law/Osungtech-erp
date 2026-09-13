@@ -16,6 +16,9 @@ import {
   addCustomerPayment,
   deleteCustomerPayment,
   updateCustomerProductPriceNotes,
+  schedulePriceChange,
+  updatePriceSchedule,
+  cancelPriceSchedule,
 } from "@/app/(dashboard)/customers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -222,7 +225,13 @@ export default async function CustomerDetailPage({
           <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
             지정한 날짜가 되면 자동으로 위 판매단가에 반영됩니다(그 전까지는 기존 단가 그대로 적용).
           </p>
-          <PriceScheduleForm customerId={customer.id} products={products ?? []} />
+          <PriceScheduleForm
+            action={schedulePriceChange}
+            partyIdField="customer_id"
+            partyId={customer.id}
+            unitFieldName="new_unit_price"
+            products={products ?? []}
+          />
 
           {schedules && schedules.length > 0 && (
             <div className="mt-3 flex flex-col gap-1.5">
@@ -230,12 +239,16 @@ export default async function CustomerDetailPage({
                 <PriceScheduleRow
                   key={s.id}
                   id={s.id}
-                  customerId={customer.id}
+                  partyIdField="customer_id"
+                  partyId={customer.id}
+                  unitFieldName="new_unit_price"
                   productId={s.product_id}
                   productLabel={`${s.products?.sku} · ${s.products?.name}${s.products?.spec ? ` (${s.products.spec})` : ""}`}
                   currentUnitPrice={currentPriceByProduct[s.product_id] ?? null}
                   newUnitPrice={Number(s.new_unit_price)}
                   effectiveDate={s.effective_date}
+                  updateAction={updatePriceSchedule}
+                  cancelAction={cancelPriceSchedule}
                 />
               ))}
             </div>

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerForm } from "@/components/partner-form";
 import { SupplierPriceForm } from "@/components/supplier-price-form";
-import { PurchasePriceScheduleForm } from "@/components/purchase-price-schedule-form";
-import { PurchasePriceScheduleRow } from "@/components/purchase-price-schedule-row";
+import { PriceScheduleForm } from "@/components/price-schedule-form";
+import { PriceScheduleRow } from "@/components/price-schedule-row";
 import { PartyPaymentForm } from "@/components/party-payment-form";
 import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { DeleteButton } from "@/components/delete-button";
@@ -16,6 +16,9 @@ import {
   addSupplierPayment,
   deleteSupplierPayment,
   updateSupplierProductPriceNotes,
+  schedulePurchasePriceChange,
+  updatePurchasePriceSchedule,
+  cancelPurchasePriceSchedule,
 } from "@/app/(dashboard)/suppliers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -221,20 +224,30 @@ export default async function SupplierDetailPage({
           <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
             지정한 날짜가 되면 자동으로 위 매입단가에 반영됩니다(그 전까지는 기존 단가 그대로 적용).
           </p>
-          <PurchasePriceScheduleForm supplierId={supplier.id} products={products ?? []} />
+          <PriceScheduleForm
+            action={schedulePurchasePriceChange}
+            partyIdField="supplier_id"
+            partyId={supplier.id}
+            unitFieldName="new_unit_cost"
+            products={products ?? []}
+          />
 
           {schedules && schedules.length > 0 && (
             <div className="mt-3 flex flex-col gap-1.5">
               {schedules.map((s) => (
-                <PurchasePriceScheduleRow
+                <PriceScheduleRow
                   key={s.id}
                   id={s.id}
-                  supplierId={supplier.id}
+                  partyIdField="supplier_id"
+                  partyId={supplier.id}
+                  unitFieldName="new_unit_cost"
                   productId={s.product_id}
                   productLabel={`${s.products?.sku} · ${s.products?.name}${s.products?.spec ? ` (${s.products.spec})` : ""}`}
-                  currentUnitCost={currentPriceByProduct[s.product_id] ?? null}
-                  newUnitCost={Number(s.new_unit_cost)}
+                  currentUnitPrice={currentPriceByProduct[s.product_id] ?? null}
+                  newUnitPrice={Number(s.new_unit_cost)}
                   effectiveDate={s.effective_date}
+                  updateAction={updatePurchasePriceSchedule}
+                  cancelAction={cancelPurchasePriceSchedule}
                 />
               ))}
             </div>

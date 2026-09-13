@@ -38,6 +38,12 @@ import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
 import { findMultiLocationItems, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
+import {
+  buildPartyProductMap,
+  buildPartyProductNoteMap,
+  lookupPartyProductValue,
+  getMostRecentLotNumber,
+} from "@/lib/party-price-lookup";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -211,49 +217,34 @@ export function NewPurchaseForm({
   // 그대로 들어가 매번 방문수령으로 잘못 저장됐었다.
   const [saleDeliveryMethod, setSaleDeliveryMethod] = useState("직납");
   const priceMap = useMemo(
-    () =>
-      new Map(
-        prices.map((p) => [
-          `${p.customer_id}:${p.product_id}`,
-          Number(p.unit_price),
-        ]),
-      ),
+    () => buildPartyProductMap(prices, (p) => p.customer_id, (p) => p.product_id, (p) => Number(p.unit_price)),
     [prices],
   );
   function resolveSalePrice(forCustomerId: string, productId: string) {
-    const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
+    const fromCustomer = lookupPartyProductValue(priceMap, forCustomerId, productId);
     if (fromCustomer !== undefined) return fromCustomer;
     const product = products.find((p) => p.id === productId);
     return product?.price ? Number(product.price) : 0;
   }
   const supplierPriceMap = useMemo(
-    () =>
-      new Map(
-        supplierPrices.map((p) => [
-          `${p.supplier_id}:${p.product_id}`,
-          Number(p.unit_cost),
-        ]),
-      ),
+    () => buildPartyProductMap(supplierPrices, (p) => p.supplier_id, (p) => p.product_id, (p) => Number(p.unit_cost)),
     [supplierPrices],
   );
   function resolveCost(forSupplierId: string, productId: string) {
-    const fromSupplier = supplierPriceMap.get(`${forSupplierId}:${productId}`);
+    const fromSupplier = lookupPartyProductValue(supplierPriceMap, forSupplierId, productId);
     if (fromSupplier !== undefined) return fromSupplier;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.cost) : 0;
   }
-  const supplierNoteMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const p of supplierPrices) {
-      if (p.notes) map.set(`${p.supplier_id}:${p.product_id}`, p.notes);
-    }
-    return map;
-  }, [supplierPrices]);
+  const supplierNoteMap = useMemo(
+    () => buildPartyProductNoteMap(supplierPrices, (p) => p.supplier_id, (p) => p.product_id, (p) => p.notes),
+    [supplierPrices],
+  );
   function resolveSupplierNote(
     forSupplierId: string,
     productId: string,
   ): string | null {
-    return supplierNoteMap.get(`${forSupplierId}:${productId}`) ?? null;
+    return lookupPartyProductValue(supplierNoteMap, forSupplierId, productId) ?? null;
   }
 
   // 케이아이티솔루션·제니스테크·타이거일렉처럼 같은 공급처+품목 조합에
@@ -264,15 +255,12 @@ export function NewPurchaseForm({
     productId: string,
   ): string | null {
     if (!forSupplierId) return null;
-    const entries = history
-      .filter(
-        (h) =>
-          h.supplierId === forSupplierId &&
-          h.productId === productId &&
-          h.lotNumber,
-      )
-      .sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
-    return entries[0]?.lotNumber ?? null;
+    return getMostRecentLotNumber(
+      history,
+      (h) => h.supplierId === forSupplierId && h.productId === productId,
+      (h) => h.purchaseDate,
+      (h) => h.lotNumber,
+    );
   }
   const [rows, setRows] = useState<Row[]>(
     initial?.items.length

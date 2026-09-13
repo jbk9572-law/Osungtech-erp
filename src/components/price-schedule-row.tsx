@@ -1,32 +1,40 @@
 "use client";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { cancelPriceSchedule, updatePriceSchedule } from "@/app/(dashboard)/customers/actions";
+import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 
-// 단가 예약 한 줄 — 평소엔 "기존가 → 변경가 (차액)"만 보여주다가, 수정
-// 버튼을 누르면 그 자리에서 바로 변경 단가/적용일을 고칠 수 있는 폼으로
-// 바뀐다(취소 후 재등록할 필요 없이).
+// 단가 예약 한 줄 — 판매단가(거래처)/매입단가(공급처) 공용. 평소엔 "기존가
+// → 변경가 (차액)"만 보여주다가, 수정 버튼을 누르면 그 자리에서 바로
+// 변경 단가/적용일을 고칠 수 있는 폼으로 바뀐다(취소 후 재등록할 필요 없이).
 export function PriceScheduleRow({
   id,
-  customerId,
+  partyIdField,
+  partyId,
+  unitFieldName,
   productId,
   productLabel,
   currentUnitPrice,
   newUnitPrice,
   effectiveDate,
+  updateAction: update,
+  cancelAction: cancel,
 }: {
   id: string;
-  customerId: string;
+  partyIdField: "customer_id" | "supplier_id";
+  partyId: string;
+  unitFieldName: "new_unit_price" | "new_unit_cost";
   productId: string;
   productLabel: string;
   currentUnitPrice: number | null;
   newUnitPrice: number;
   effectiveDate: string;
+  updateAction: (prevState: FormState, formData: FormData) => Promise<FormState>;
+  cancelAction: (prevState: FormState, formData: FormData) => Promise<FormState>;
 }) {
   const [editing, setEditing] = useState(false);
-  const [updateState, updateAction, updatePending] = useActionState(updatePriceSchedule, undefined);
+  const [updateState, updateAction, updatePending] = useActionState(update, undefined);
   const [cancelPending, startCancelTransition] = useTransition();
   const confirmCancel = useConfirmTwice();
 
@@ -41,9 +49,9 @@ export function PriceScheduleRow({
     confirmCancel.press("cancel", () => {
       const formData = new FormData();
       formData.set("id", id);
-      formData.set("customer_id", customerId);
+      formData.set(partyIdField, partyId);
       startCancelTransition(() => {
-        cancelPriceSchedule(undefined, formData);
+        cancel(undefined, formData);
       });
     });
   }
@@ -54,9 +62,9 @@ export function PriceScheduleRow({
         <p className="mb-1.5 font-medium">{productLabel}</p>
         <form action={updateAction} className="flex flex-wrap items-center gap-1.5">
           <input type="hidden" name="id" value={id} />
-          <input type="hidden" name="customer_id" value={customerId} />
+          <input type="hidden" name={partyIdField} value={partyId} />
           <input
-            name="new_unit_price"
+            name={unitFieldName}
             type="number"
             step="0.01"
             min="0"
