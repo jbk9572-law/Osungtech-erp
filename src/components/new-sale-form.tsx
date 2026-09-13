@@ -48,6 +48,7 @@ import {
   lookupPartyProductValue,
   getMostRecentLotNumber,
 } from "@/lib/party-price-lookup";
+import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
@@ -186,7 +187,22 @@ export function NewSaleForm({
   const [isCarryover, setIsCarryover] = useState(
     initial?.isCarryover ?? false,
   );
-  const [rows, setRows] = useState<Row[]>(
+  function makeBlankRow(key: number): Row {
+    return {
+      key,
+      productId: "",
+      customName: "",
+      isCustomEntry: false,
+      spec: "",
+      manualSpec: false,
+      lotNumber: "",
+      quantity: 0,
+      unitPrice: 0,
+      manualPrice: false,
+      remark: "",
+    };
+  }
+  const { rows, setRows, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows } = useKeyedRows<Row>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
           key: i,
@@ -201,23 +217,13 @@ export function NewSaleForm({
           manualPrice: !item.productId && !!item.customName,
           remark: item.remark ?? "",
         }))
-      : [
-          {
-            key: 0,
-            productId: "",
-            customName: "",
-            isCustomEntry: false,
-            spec: "",
-            manualSpec: false,
-            lotNumber: "",
-            quantity: 0,
-            unitPrice: 0,
-            manualPrice: false,
-            remark: "",
-          },
-        ],
+      : [makeBlankRow(0)],
+    makeBlankRow,
   );
-  const [nextKey, setNextKey] = useState(rows.length);
+  // 이 폼에서 "빈 줄"의 기준 — 검색/가져오기로 채워진 줄(들)을 넣을 때
+  // 아직 아무것도 안 고른 첫 줄이면 그 줄을 교체한다(quickAddProduct/
+  // addPurchaseItem/importTodoItems 공용).
+  const isBlankRow = (row: Row) => !row.productId && row.quantity === 0;
   const [state, formAction, pending] = useActionState(action, undefined);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
@@ -316,25 +322,22 @@ export function NewSaleForm({
       }
     }
 
-    const newRow: Row = {
-      key: nextKey,
-      productId: item.productId,
-      customName: "",
-      isCustomEntry: false,
-      spec: item.spec,
-      manualSpec: Boolean(item.spec),
-      lotNumber: item.lotNumber,
-      quantity: item.quantity,
-      unitPrice: resolvePrice(customerId, item.productId),
-      manualPrice: false,
-      remark: "",
-    };
-    setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
-        ? [newRow]
-        : [...prev, newRow],
+    addFilledRow(
+      (key) => ({
+        key,
+        productId: item.productId,
+        customName: "",
+        isCustomEntry: false,
+        spec: item.spec,
+        manualSpec: Boolean(item.spec),
+        lotNumber: item.lotNumber,
+        quantity: item.quantity,
+        unitPrice: resolvePrice(customerId, item.productId),
+        manualPrice: false,
+        remark: "",
+      }),
+      isBlankRow,
     );
-    setNextKey((k) => k + 1);
     setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
   }
 
@@ -383,31 +386,28 @@ export function NewSaleForm({
     }
 
     if (todo.items.length > 0) {
-      const newRows: Row[] = todo.items.map((item, i) => {
-        const product = products.find((p) => p.id === item.productId);
-        return {
-          key: nextKey + i,
-          productId: item.productId,
-          customName: "",
-          isCustomEntry: false,
-          spec: item.spec ?? product?.spec ?? "",
-          manualSpec: Boolean(item.spec),
-          lotNumber: item.lotNumber ?? "",
-          quantity: item.quantity,
-          unitPrice: product
-            ? resolvePrice(effectiveCustomerId, product.id)
-            : 0,
-          manualPrice: false,
-          remark: "",
-        };
-      });
-
-      setRows((prev) =>
-        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
-          ? newRows
-          : [...prev, ...newRows],
+      addFilledRows(
+        (startKey) =>
+          todo.items.map((item, i) => {
+            const product = products.find((p) => p.id === item.productId);
+            return {
+              key: startKey + i,
+              productId: item.productId,
+              customName: "",
+              isCustomEntry: false,
+              spec: item.spec ?? product?.spec ?? "",
+              manualSpec: Boolean(item.spec),
+              lotNumber: item.lotNumber ?? "",
+              quantity: item.quantity,
+              unitPrice: product
+                ? resolvePrice(effectiveCustomerId, product.id)
+                : 0,
+              manualPrice: false,
+              remark: "",
+            };
+          }),
+        isBlankRow,
       );
-      setNextKey((k) => k + newRows.length);
     }
 
     setImportingTodoId(todo.id);
@@ -611,77 +611,21 @@ export function NewSaleForm({
   // 방식으로, 아직 아무것도 안 고른 첫 빈 줄이면 그 줄을 그대로 채운다).
   function quickAddProduct(productId: string) {
     const product = products.find((p) => p.id === productId);
-    const newRow: Row = {
-      key: nextKey,
-      productId,
-      customName: "",
-      isCustomEntry: false,
-      spec: product?.spec ?? "",
-      manualSpec: false,
-      lotNumber: getRecentLotNumber(customerId, productId) ?? "",
-      quantity: 0,
-      unitPrice: resolvePrice(customerId, productId),
-      manualPrice: false,
-      remark: "",
-    };
-    setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
-        ? [newRow]
-        : [...prev, newRow],
-    );
-    setNextKey((k) => k + 1);
-  }
-
-  function addRow() {
-    setRows((prev) => [
-      ...prev,
-      {
-        key: nextKey,
-        productId: "",
+    addFilledRow(
+      (key) => ({
+        key,
+        productId,
         customName: "",
         isCustomEntry: false,
-        spec: "",
+        spec: product?.spec ?? "",
         manualSpec: false,
-        lotNumber: "",
+        lotNumber: getRecentLotNumber(customerId, productId) ?? "",
         quantity: 0,
-        unitPrice: 0,
+        unitPrice: resolvePrice(customerId, productId),
         manualPrice: false,
         remark: "",
-      },
-    ]);
-    setNextKey((k) => k + 1);
-  }
-
-  // 맨 아래에만 추가되던 "+ 품목 추가"와 달리, 이미 입력해둔 줄들 사이에
-  // 빠뜨린 품목을 끼워 넣고 싶을 때를 위한 것 — 그 줄 바로 아래에 빈 줄을
-  // 삽입한다.
-  function insertRowAfter(key: number) {
-    setRows((prev) => {
-      const idx = prev.findIndex((row) => row.key === key);
-      if (idx === -1) return prev;
-      const newRow: Row = {
-        key: nextKey,
-        productId: "",
-        customName: "",
-        isCustomEntry: false,
-        spec: "",
-        manualSpec: false,
-        lotNumber: "",
-        quantity: 0,
-        unitPrice: 0,
-        manualPrice: false,
-        remark: "",
-      };
-      const next = [...prev];
-      next.splice(idx + 1, 0, newRow);
-      return next;
-    });
-    setNextKey((k) => k + 1);
-  }
-
-  function removeRow(key: number) {
-    setRows((prev) =>
-      prev.length > 1 ? prev.filter((row) => row.key !== key) : prev,
+      }),
+      isBlankRow,
     );
   }
 

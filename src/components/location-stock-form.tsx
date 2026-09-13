@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { setLocationStockBatch } from "@/app/(dashboard)/inventory/locations/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
@@ -8,6 +8,7 @@ import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
+import { useKeyedRows } from "@/lib/use-keyed-rows";
 
 type Product = {
   id: string;
@@ -34,30 +35,19 @@ export function LocationStockForm({
 }) {
   const [state, formAction, pending] = useActionState(setLocationStockBatch, undefined);
   const formRef = useRef<HTMLFormElement>(null);
-  const [rows, setRows] = useState<Row[]>([{ key: 0, productId: "", quantity: 0 }]);
-  const [nextKey, setNextKey] = useState(1);
+  const makeBlankRow = (key: number): Row => ({ key, productId: "", quantity: 0 });
+  const { rows, setRows, addRow, removeRow, resetToBlank } = useKeyedRows<Row>([makeBlankRow(0)], makeBlankRow);
 
   useEffect(() => {
     if (state?.success) {
       formRef.current?.reset();
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting local UI state in reaction to a server action result, not derived state
-      setRows([{ key: nextKey, productId: "", quantity: 0 }]);
-      setNextKey((k) => k + 1);
+      resetToBlank();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run on state changes, nextKey is read not depended on
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run on state changes
   }, [state]);
-
-  function addRow() {
-    setRows((prev) => [...prev, { key: nextKey, productId: "", quantity: 0 }]);
-    setNextKey((k) => k + 1);
-  }
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, ...patch } : row)));
-  }
-
-  function removeRow(key: number) {
-    setRows((prev) => (prev.length > 1 ? prev.filter((row) => row.key !== key) : prev));
   }
 
   const itemsJson = JSON.stringify(
