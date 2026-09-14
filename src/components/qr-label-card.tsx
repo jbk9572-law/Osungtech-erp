@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import QRCode from "qrcode";
 import { setProductLabelDirection } from "@/app/(dashboard)/inventory/qr-labels/actions";
 
 // 2단랙에서 품목마다 원래 두는 칸(위/아래)이 다르고 인쇄할 때마다 섞여서
@@ -15,18 +16,34 @@ export function QrLabelCard({
   sku,
   name,
   spec,
-  qrSvg,
   initialDir,
 }: {
   productId: string;
   sku: string;
   name: string;
   spec: string | null;
-  qrSvg: string;
   initialDir: "up" | "down";
 }) {
   const [dir, setDir] = useState<"up" | "down">(initialDir);
   const [, startTransition] = useTransition();
+  // QR SVG는 각자 브라우저에서 만든다 — 예전엔 서버에서 품목 전체(수백 개)
+  // 분량을 한 요청 안에서 전부 만들어 보냈는데(toDataURL PNG 시절), SVG로
+  // 바꾼 뒤로도 여전히 "요청 하나가 라벨 수백 장을 다 만든다"는 구조
+  // 자체는 그대로라 품목이 많아지면 Cloudflare Workers 요청당 CPU 한도를
+  // 넘길 수 있었다 — 각 카드가 자기 SKU 하나만 클라이언트에서 만들면
+  // 서버 요청은 순수 데이터만 내려주면 되고, 카드 수백 장의 QR 생성
+  // 비용은 서버가 아니라 보고 있는 사람 브라우저에 나눠진다.
+  const [qrSvg, setQrSvg] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    QRCode.toString(sku, { type: "svg", width: 110, margin: 1 }).then((svg) => {
+      if (!cancelled) setQrSvg(svg);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [sku]);
 
   function choose(next: "up" | "down") {
     setDir(next);
@@ -63,7 +80,7 @@ export function QrLabelCard({
           role="img"
           aria-label={sku}
           style={{ width: 110, height: 110, margin: "0 auto" }}
-          dangerouslySetInnerHTML={{ __html: qrSvg }}
+          dangerouslySetInnerHTML={qrSvg ? { __html: qrSvg } : undefined}
         />
         <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>{sku}</div>
         <div style={{ fontSize: 11, lineHeight: 1.3 }}>{name}</div>

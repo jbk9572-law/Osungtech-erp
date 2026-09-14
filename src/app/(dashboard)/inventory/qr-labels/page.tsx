@@ -1,5 +1,4 @@
 import Link from "next/link";
-import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
@@ -47,17 +46,14 @@ export default async function InventoryQrLabelsPage({
     // 0인 품목은 체크박스로 숨길 수 있게 한다.
     .filter((p) => !hideZero || (p.inventory?.[0]?.quantity ?? 0) > 0);
 
-  // PNG(toDataURL)는 픽셀을 래스터화하고 다시 압축 인코딩하는 과정이 있어
-  // 품목이 많아지면(수백 개) 요청 하나당 CPU 사용량이 급격히 늘어난다 —
-  // 넷리파이에서는 문제없었지만 클라우드플레어 Workers는 요청당 CPU 시간
-  // 상한이 훨씬 빡빡해서 "Worker exceeded resource limits"로 죽었다. SVG는
-  // QR 매트릭스를 그대로 벡터 도형으로만 뽑아내 훨씬 가볍다.
-  const labels = await Promise.all(
-    filtered.map(async (p) => ({
-      ...p,
-      qrSvg: await QRCode.toString(p.sku, { type: "svg", width: 110, margin: 1 }),
-    })),
-  );
+  // 예전엔 여기서 서버가 필터링된 품목 전부(수백 개)의 QR SVG를 한 요청
+  // 안에서 만들어 내려보냈다 — PNG(toDataURL)에서 SVG로 바꿔서 한 번
+  // 가벼워졌지만, "요청 하나가 라벨 수백 장을 만든다"는 구조 자체는
+  // 그대로라 품목이 더 늘면 다시 Cloudflare Workers 요청당 CPU 한도
+  // ("Worker exceeded resource limits")에 걸릴 수 있었다. 이제 QR 생성은
+  // QrLabelCard가 각자 클라이언트에서 하므로, 여기서는 SKU만 그대로
+  // 내려주면 된다.
+  const labels = filtered;
 
   return (
     <div className="print-page-margin">
@@ -133,7 +129,6 @@ export default async function InventoryQrLabelsPage({
             sku={label.sku}
             name={label.name}
             spec={label.spec}
-            qrSvg={label.qrSvg}
             initialDir={label.label_direction === "down" ? "down" : "up"}
           />
         ))}
