@@ -665,7 +665,7 @@ export function ManualLayoutClient({
                       style={{
                         width: 12,
                         height: 12,
-                        borderRadius: 2,
+                        borderRadius: 0,
                         background: colorMap[item.name],
                         display: "inline-block",
                       }}

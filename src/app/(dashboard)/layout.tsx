@@ -9,8 +9,10 @@ import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const supabase = await createClient();
   const user = await getUser();
@@ -70,6 +72,7 @@ export default async function DashboardLayout({
       storageSizeBytes={storageSizeBytes}
       vpsDisk={vpsDisk}
       netlifyUsage={netlifyUsage}
+      modal={modal}
     >
       {children}
     </ErpShell>

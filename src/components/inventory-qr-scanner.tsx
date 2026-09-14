@@ -199,7 +199,7 @@ export function InventoryQrScanner({
               // 톤에 맞는 밝은 회색으로. 영상이 뜨면 objectFit:cover가 이
               // 영역을 전부 덮어서 어차피 안 보인다.
               background: "var(--erp-bg-subtle)",
-              borderRadius: 6,
+              borderRadius: 0,
               border: "2px solid var(--erp-primary)",
               overflow: "hidden",
             }}
@@ -281,7 +281,7 @@ export function InventoryQrScanner({
                     right: 16,
                     top: "45%",
                     height: 2,
-                    borderRadius: 2,
+                    borderRadius: 0,
                     background: "linear-gradient(90deg, transparent, var(--erp-primary), transparent)",
                     boxShadow: "0 0 10px 2px rgba(74, 111, 165, 0.85)",
                     animation: "erp-scan-line 1.8s ease-in-out infinite",
@@ -304,7 +304,7 @@ export function InventoryQrScanner({
                   alignItems: "center",
                   gap: 6,
                   padding: "5px 11px",
-                  borderRadius: 999,
+                  borderRadius: 0,
                   background: "rgba(15, 20, 30, 0.65)",
                   backdropFilter: "blur(6px)",
                   WebkitBackdropFilter: "blur(6px)",
@@ -338,14 +338,14 @@ export function InventoryQrScanner({
                   flexDirection: "column",
                   background: "rgba(255, 255, 255, 0.97)",
                   color: "var(--erp-text)",
-                  borderRadius: 16,
+                  borderRadius: 0,
                   borderTop: "4px solid var(--erp-primary)",
                   boxShadow: "var(--erp-shadow-lg)",
                   overflow: "hidden",
                   animation: "erp-sheet-in 220ms ease-out",
                 }}
               >
-                <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--erp-border)", margin: "8px auto 2px" }} />
+                <div style={{ width: 36, height: 4, borderRadius: 0, background: "var(--erp-border)", margin: "8px auto 2px" }} />
                 <div style={{ padding: "6px 14px 12px" }}>
                   <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginBottom: 1 }}>{scanState.active.sku}</div>
                   <div style={{ fontSize: 16, fontWeight: 800 }}>{scanState.active.name}</div>
@@ -399,7 +399,7 @@ export function InventoryQrScanner({
                   transform: "translateX(-50%)",
                   maxWidth: "84%",
                   padding: "7px 14px",
-                  borderRadius: 999,
+                  borderRadius: 0,
                   // 원래는 검정 반투명(rgba(0,0,0,*)) 칩이었는데, 앱 전체가
                   // 밝은 톤이라 화면 안에 검은 요소가 남는 게 튄다는 피드백 —
                   // 색을 빼고 반투명 유리 느낌(blur)만 남겼다. 모르는 QR을

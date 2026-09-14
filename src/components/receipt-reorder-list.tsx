@@ -71,7 +71,7 @@ export function ReceiptReorderList({
             <img
               src={receipt.file_url}
               alt={`영수증 ${index + 1}`}
-              style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 4 }}
+              style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 0 }}
             />
           </a>
           <span className="text-[11px]" style={{ color: "var(--erp-text-muted)" }}>

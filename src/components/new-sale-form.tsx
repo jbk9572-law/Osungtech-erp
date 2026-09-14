@@ -936,7 +936,7 @@ export function NewSaleForm({
                 gap: 8,
                 height: 34,
                 padding: "0 14px",
-                borderRadius: 6,
+                borderRadius: 0,
                 background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
                 border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
                 cursor: "pointer",
@@ -1109,7 +1109,7 @@ export function NewSaleForm({
                 overflowY: "auto",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
-                borderRadius: 2,
+                borderRadius: 0,
                 boxShadow: "var(--erp-shadow-md)",
               }}
             >
@@ -1204,7 +1204,7 @@ export function NewSaleForm({
                 overflowY: "auto",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
-                borderRadius: 2,
+                borderRadius: 0,
                 boxShadow: "var(--erp-shadow-md)",
               }}
             >
@@ -1503,7 +1503,7 @@ export function NewSaleForm({
                                   color: "var(--erp-info-text)",
                                   background: "var(--erp-info-bg)",
                                   border: "1px solid var(--erp-info-border)",
-                                  borderRadius: 4,
+                                  borderRadius: 0,
                                   whiteSpace: "normal",
                                   wordBreak: "break-word",
                                 }}

@@ -294,7 +294,7 @@ export function MessengerWidget({
                       background: mine ? "var(--erp-primary)" : "var(--erp-hover)",
                       color: mine ? "#fff" : "var(--erp-text)",
                       padding: "6px 10px",
-                      borderRadius: 8,
+                      borderRadius: 0,
                       fontSize: 12.5,
                       whiteSpace: "pre-wrap",
                       wordBreak: "break-word",

@@ -49,6 +49,7 @@ export function ErpShell({
   vpsDisk,
   netlifyUsage,
   children,
+  modal,
 }: {
   isDemo?: boolean;
   companyName?: string | null;
@@ -65,6 +66,7 @@ export function ErpShell({
   vpsDisk: VpsDiskUsage | null;
   netlifyUsage: NetlifyUsageResult;
   children: React.ReactNode;
+  modal?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -147,6 +149,7 @@ export function ErpShell({
         profileNames={profileNames}
         currentUserId={currentUserId}
       />
+      {modal}
     </div>
   );
 }

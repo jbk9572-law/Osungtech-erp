@@ -148,7 +148,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
             <img
               src={item.previewUrl}
               alt={`영수증 ${index + 1}`}
-              style={{ width: THUMB_SIZE, height: THUMB_SIZE, objectFit: "cover", borderRadius: 4 }}
+              style={{ width: THUMB_SIZE, height: THUMB_SIZE, objectFit: "cover", borderRadius: 0 }}
             />
             <span className="text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
               {formatKb(item.originalSize)} → {formatKb(item.file.size)}

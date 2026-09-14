@@ -133,7 +133,7 @@ export default async function ReorderSuggestionsPage() {
                   style={{
                     margin: 4,
                     padding: "4px 10px",
-                    borderRadius: 4,
+                    borderRadius: 0,
                     background: "var(--erp-info-bg)",
                     color: "var(--erp-info-text)",
                     border: "1px solid var(--erp-info-border)",

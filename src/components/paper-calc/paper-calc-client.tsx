@@ -1212,7 +1212,7 @@ export function BatchCard({
               style={{
                 width: 10,
                 height: 10,
-                borderRadius: 2,
+                borderRadius: 0,
                 background: color,
                 display: "inline-block",
               }}

@@ -135,7 +135,7 @@ export function LocationAllocationModal({
             return (
               <div
                 key={item.groupKey}
-                style={{ marginBottom: 14, padding: 10, borderRadius: 6, border: "1px solid var(--erp-border)" }}
+                style={{ marginBottom: 14, padding: 10, borderRadius: 0, border: "1px solid var(--erp-border)" }}
               >
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
                   <div style={{ fontWeight: 700, fontSize: 13.5, display: "flex", alignItems: "center", gap: 6 }}>
@@ -145,7 +145,7 @@ export function LocationAllocationModal({
                           fontSize: 10.5,
                           fontWeight: 700,
                           padding: "1px 6px",
-                          borderRadius: 999,
+                          borderRadius: 0,
                           background: item.direction === "출고" ? "var(--erp-danger-bg)" : "var(--erp-success-bg)",
                           color: item.direction === "출고" ? "var(--erp-danger)" : "var(--erp-success)",
                         }}

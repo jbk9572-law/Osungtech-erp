@@ -40,7 +40,7 @@ export function OnboardingBanner() {
             fontFamily: "inherit",
             background: "var(--erp-panel)",
             border: "1px solid var(--erp-info-border)",
-            borderRadius: 4,
+            borderRadius: 0,
             padding: "1px 5px",
           }}
         >

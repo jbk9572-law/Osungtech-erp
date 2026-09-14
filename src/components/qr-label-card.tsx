@@ -39,7 +39,7 @@ export function QrLabelCard({
     <div
       style={{
         border: "1px solid #000",
-        borderRadius: 4,
+        borderRadius: 0,
         overflow: "hidden",
         textAlign: "center",
         breakInside: "avoid",

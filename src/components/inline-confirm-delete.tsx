@@ -78,7 +78,7 @@ export function InlineConfirmDelete({
               zIndex: 1000,
               background: "var(--erp-panel)",
               border: "1px solid var(--erp-border)",
-              borderRadius: 4,
+              borderRadius: 0,
               padding: 8,
               width: PANEL_WIDTH,
               boxShadow: "var(--erp-shadow-md)",

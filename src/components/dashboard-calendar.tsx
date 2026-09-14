@@ -745,7 +745,7 @@ async function copyText(text: string) {
 function CarryoverBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
       style={{
         background: "var(--erp-warning-bg)",
         color: "var(--erp-warning)",
@@ -759,7 +759,7 @@ function CarryoverBadge() {
 function ReturnBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
       style={{
         background: "var(--erp-danger-bg)",
         color: "var(--erp-danger)",
