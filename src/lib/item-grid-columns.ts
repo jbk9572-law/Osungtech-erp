@@ -5,7 +5,13 @@
 // 이다. 기본형(수량/단가 한 쌍만 있는 매출 폼, "매출도 같이 등록" 아닌
 // 매입 폼)은 이 값을 그대로 쓰고, "매출도 같이 등록"으로 열이 2개 더
 // 늘어나는 매입 폼만 별도 값을 쓴다(같은 방향으로 재배분: 품목/단위
-// 축소, 규격 확대, 액션 칸 여백 축소).
+// 축소, 규격 확대).
+//
+// actions: "+ 삽입"/"삭제" 버튼 두 개 + 칸 좌우 여백(.erp-grid td
+// padding 10px×2)을 Playwright로 실측하면 필요한 최소 너비가 약
+// 121px(버튼 두 개 100.8px + 여백 20px)이다. 예전에 여백이 남는다는
+// 지적으로 90px까지 줄였다가 버튼 자체가 칸보다 넓어져서 겹쳐 보이는
+// 회귀가 생겼다 — 다시 여유 있게 124px로 되돌린다.
 export const ITEM_GRID_COLUMN_PX_WIDTHS = {
   product: 110,
   spec: 110,
@@ -17,7 +23,7 @@ export const ITEM_GRID_COLUMN_PX_WIDTHS = {
   tax: 88,
   total: 99,
   remark: 165,
-  actions: 90,
+  actions: 124,
 } as const;
 
 export const ITEM_GRID_COLUMN_PX_WIDTHS_DUAL = {
@@ -33,5 +39,5 @@ export const ITEM_GRID_COLUMN_PX_WIDTHS_DUAL = {
   tax: 72,
   total: 84,
   remark: 165,
-  actions: 100,
+  actions: 124,
 } as const;

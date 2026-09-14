@@ -52,14 +52,13 @@ export function getDatePresets(now: Date = new Date()): DatePreset[] {
   ];
 }
 
-// 매출/매입 목록의 기본 조회기간 하한 — 날짜를 직접 안 걸었으면 지난달
-// 1일부터(=최근 2개월 가량)만 보여준다. 그보다 오래된 내역은 날짜 필터로
-// 직접 조회한다.
-export function previousMonthStart(now: Date = new Date()): string {
+// 매출/매입 목록의 기본 조회기간(오늘 하루) — 날짜를 직접 안 걸었으면
+// "오늘" 프리셋을 누른 것과 똑같이 오늘 하루만 보여준다. 그보다 이전
+// 내역은 프리셋/날짜 필터로 직접 조회한다.
+export function todayStr(now: Date = new Date()): string {
   const kstNow = nowInKst(now);
   const today = new Date(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
-  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  return toDateStr(lastMonthStart);
+  return toDateStr(today);
 }
 
 // "YYYY-MM" 월 문자열 <-> 조회기간(from/to) 변환 헬퍼. 월별 리포트에서 사용.

@@ -233,9 +233,12 @@ export function NewSaleForm({
   // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
   useFormRedirect(state);
   // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
-  // 값은 브라우저에 저장되어 다음에 열어도 유지된다.
+  // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
+  // 매출 등록 폼과 매입 등록 폼(기본형, "매출도 같이 등록" 아닌 상태)이
+  // 칸 구성이 완전히 같아서(ITEM_GRID_COLUMN_PX_WIDTHS 공유) 저장 키도
+  // 같이 쓴다 — 한쪽에서 조절하면 다른 쪽에도 그대로 반영된다.
   const { widths: colWidths, startResize, resizingCol } = useResizableColumns(
-    "erp-sale-item-grid-columns",
+    "erp-item-grid-columns",
     ITEM_GRID_COLUMN_PX_WIDTHS,
   );
   const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);

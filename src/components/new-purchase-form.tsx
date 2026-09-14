@@ -338,11 +338,14 @@ export function NewPurchaseForm({
   // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
   useFormRedirect(state);
   // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
-  // 값은 브라우저에 저장되어 다음에 열어도 유지된다. "매출도 같이 등록"
+  // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
+  // 기본형(수량/단가 한 쌍)은 매출 등록 폼과 칸 구성이 완전히 같아서
+  // "erp-item-grid-columns" 키를 그대로 공유한다(new-sale-form.tsx 참고) —
+  // 한쪽에서 조절하면 다른 쪽에도 그대로 반영된다. "매출도 같이 등록"
   // 모드는 열 구성 자체가 달라(입고/출고 수량·단가가 따로 있음) 별도
   // 값으로 저장한다 — 두 훅 다 항상 호출하고(리액트 훅 규칙) 어느 쪽을
   // 쓸지만 alsoCreateSale로 고른다.
-  const baseCols = useResizableColumns("erp-purchase-item-grid-columns", ITEM_GRID_COLUMN_PX_WIDTHS);
+  const baseCols = useResizableColumns("erp-item-grid-columns", ITEM_GRID_COLUMN_PX_WIDTHS);
   const dualCols = useResizableColumns("erp-purchase-item-grid-columns-dual", ITEM_GRID_COLUMN_PX_WIDTHS_DUAL);
   // 두 모드가 서로 다른 칸 키 집합을 쓰다 보니(수량/단가 한 쌍 vs
   // 입고·출고 두 쌍) 유니언 타입 그대로 두면 공용 키만 남아 각 모드의

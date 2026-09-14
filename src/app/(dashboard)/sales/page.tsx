@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getQuickDatePresets, getYearMonthButtons, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, todayStr, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -33,9 +33,10 @@ export default async function SalesPage({
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
-  // 날짜를 직접 안 걸었으면 지난달 1일부터만 보여준다 — 그 이전 내역은
-  // 날짜 필터로 직접 조회한다.
-  const effectiveFrom = from || previousMonthStart();
+  // 날짜를 직접 안 걸었으면 "오늘" 프리셋과 똑같이 오늘 하루만 보여준다
+  // — 그 이전 내역은 프리셋/날짜 필터로 직접 조회한다.
+  const effectiveFrom = from || todayStr();
+  const effectiveTo = to || todayStr();
   // 상세 화면에서 ESC/닫기를 누르면 지금 걸어둔 검색/필터로 되돌아오게,
   // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
@@ -58,7 +59,7 @@ export default async function SalesPage({
     .order("created_at", { ascending: false })
     .gte("sales_orders.order_date", effectiveFrom)
     .limit(limit);
-  if (to) query = query.lte("sales_orders.order_date", to);
+  query = query.lte("sales_orders.order_date", effectiveTo);
 
   // 매출 옆에 수금 내역도 같은 목록에 섞어서 보여준다(구 ERP의 "매출"
   // 메뉴 안에 매출/수금 전표가 같이 쌓이던 방식과 동일). 실제 정산 로직은
@@ -69,7 +70,7 @@ export default async function SalesPage({
     .order("paid_at", { ascending: false })
     .gte("paid_at", effectiveFrom)
     .limit(limit);
-  if (to) paymentQuery = paymentQuery.lte("paid_at", to);
+  paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
 
   const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
     query,
@@ -262,7 +263,7 @@ export default async function SalesPage({
       )
       .gte("sales_orders.order_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
-    if (to) totalsQuery = totalsQuery.lte("sales_orders.order_date", to);
+    totalsQuery = totalsQuery.lte("sales_orders.order_date", effectiveTo);
     return totalsQuery;
   });
   const filteredTotalsRows = keyword
@@ -307,7 +308,7 @@ export default async function SalesPage({
   const moreFrom = getMonthRange(shiftMonth(effectiveFromMonth, -1)).from;
   const moreParams = new URLSearchParams();
   moreParams.set("from", moreFrom);
-  if (to) moreParams.set("to", to);
+  moreParams.set("to", to || effectiveTo);
   if (q) moreParams.set("q", q);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/sales?${moreParams.toString()}`;
@@ -330,8 +331,8 @@ export default async function SalesPage({
         basePath="/sales"
         presets={presets}
         monthButtons={monthButtons}
-        from={from}
-        to={to}
+        from={effectiveFrom}
+        to={effectiveTo}
       />
 
       <form method="get" id="sales-search-form" className="erp-search">
@@ -351,7 +352,7 @@ export default async function SalesPage({
             id="search-to"
             type="date"
             name="to"
-            defaultValue={to ?? ""}
+            defaultValue={to ?? effectiveTo}
             className="erp-input"
           />
         </div>
@@ -386,7 +387,7 @@ export default async function SalesPage({
           border: "1px solid var(--erp-info-border)",
         }}
       >
-        {from ? "" : `날짜를 지정하지 않으면 지난달 1일(${effectiveFrom})부터 표시됩니다. `}
+        {from ? "" : `날짜를 지정하지 않으면 오늘(${effectiveFrom})만 표시됩니다. `}
         최근 {limit.toLocaleString()}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
