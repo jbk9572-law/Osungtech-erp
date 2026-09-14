@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { ClickableRow } from "@/components/clickable-row";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -124,7 +125,8 @@ export default async function InventoryProductHistoryPage({
   const rows = groupedTx
     .filter((t) => (!from || t.date >= from) && (!to || t.date <= to))
     .reverse();
-  const presets = getDatePresets();
+  const presets = getQuickDatePresets();
+  const monthButtons = getYearMonthButtons();
   const currentQuantity = product.inventory?.[0]?.quantity ?? 0;
 
   // 재고실사(submitStockCount)가 남긴 조정만 골라서 최근 편차 이력을
@@ -207,17 +209,13 @@ export default async function InventoryProductHistoryPage({
         <CloseButton href="/inventory">ESC 목록으로</CloseButton>
       </div>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
-        {presets.map((preset) => (
-          <Link
-            key={preset.label}
-            href={`/inventory/${productId}?from=${preset.from}&to=${preset.to}`}
-            className={`erp-date-preset-btn${from === preset.from && to === preset.to ? " active" : ""}`}
-          >
-            {preset.label}
-          </Link>
-        ))}
-      </div>
+      <DateRangeQuickFilters
+        basePath={`/inventory/${productId}`}
+        presets={presets}
+        monthButtons={monthButtons}
+        from={from}
+        to={to}
+      />
 
       <form method="get" className="erp-search">
         <div className="erp-field">
