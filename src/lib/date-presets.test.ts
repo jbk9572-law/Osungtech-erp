@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { currentMonth, getDatePresets, getMonthRange, shiftMonth } from "./date-presets";
+import { currentMonth, getDatePresets, getQuickDatePresets, getMonthRange, shiftMonth } from "./date-presets";
 
 // getDatePresets/currentMonth는 KST 변환을 거치므로, 한국 기준으로
 // 날짜가 확실히 정오 근처인 UTC 시각을 기준시로 넣어 테스트 흔들림을 막는다.
@@ -50,6 +50,13 @@ describe("getDatePresets", () => {
     const lastYear = presets.find((p) => p.label === "작년")!;
     expect(lastYear.from).toBe("2025-01-01");
     expect(lastYear.to).toBe("2025-12-31");
+  });
+});
+
+describe("getQuickDatePresets", () => {
+  it("이번달/지난달/올해/작년 없이 오늘/어제/이번주/지난주 4개만 반환한다", () => {
+    const quick = getQuickDatePresets(kstNoon("2026-08-19"));
+    expect(quick.map((p) => p.label)).toEqual(["오늘", "어제", "이번주", "지난주"]);
   });
 });
 

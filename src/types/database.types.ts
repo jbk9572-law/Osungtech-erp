@@ -1709,6 +1709,30 @@ export type Database = {
           },
         ];
       };
+      ui_grid_column_widths: {
+        Row: {
+          id: string;
+          grid_key: string;
+          widths: Json;
+          is_demo: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          grid_key: string;
+          widths: Json;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          grid_key?: string;
+          widths?: Json;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

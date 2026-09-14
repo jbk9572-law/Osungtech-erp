@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets, getYearMonthButtons, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -284,7 +284,7 @@ export default async function PurchasesPage({
     (sum, row) => sum + calcVat(row.quantity * Number(row.unit_cost)),
     0,
   );
-  const presets = getDatePresets();
+  const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
   const exportHref = q
     ? `/api/purchases/export?q=${encodeURIComponent(q)}`

@@ -81,6 +81,15 @@ export function shiftMonth(month: string, delta: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
 
+// 매출/매입 목록 상단처럼 1월~12월 월별 버튼과 한 줄에 같이 놓는
+// 화면에서는, getDatePresets()의 이번달/지난달/올해/작년까지 다 넣으면
+// 월별 버튼과 기능이 겹치면서 두 줄로 나뉘어 화면이 늘어진다 — 겹치지
+// 않는 4개(오늘/어제/이번주/지난주)만 추린다. getDatePresets()가 항상
+// 이 4개를 앞에 두고 반환하므로 로직을 새로 만들지 않고 그대로 잘라 쓴다.
+export function getQuickDatePresets(now: Date = new Date()): DatePreset[] {
+  return getDatePresets(now).slice(0, 4);
+}
+
 // 매출/매입 목록 상단의 "1월~12월" 월별 바로가기 버튼 — 올해 각 달의
 // 조회기간(from/to)을 미리 계산해둔다.
 export function getYearMonthButtons(now: Date = new Date()): DatePreset[] {

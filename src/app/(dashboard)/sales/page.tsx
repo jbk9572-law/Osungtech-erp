@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets, getYearMonthButtons, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -293,7 +293,7 @@ export default async function SalesPage({
     return sum + (row.sales_orders?.is_return ? -taxAmount : taxAmount);
   }, 0);
   const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);
-  const presets = getDatePresets();
+  const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
   const exportHref = q
     ? `/api/sales/export?q=${encodeURIComponent(q)}`
