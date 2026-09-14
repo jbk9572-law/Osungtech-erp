@@ -80,3 +80,14 @@ export function shiftMonth(month: string, delta: number): string {
   const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 }
+
+// 매출/매입 목록 상단의 "1월~12월" 월별 바로가기 버튼 — 올해 각 달의
+// 조회기간(from/to)을 미리 계산해둔다.
+export function getYearMonthButtons(now: Date = new Date()): DatePreset[] {
+  const kstNow = nowInKst(now);
+  const year = kstNow.getUTCFullYear();
+  return Array.from({ length: 12 }, (_, i) => {
+    const { from, to } = getMonthRange(`${year}-${pad(i + 1)}`);
+    return { label: `${i + 1}월`, from, to };
+  });
+}

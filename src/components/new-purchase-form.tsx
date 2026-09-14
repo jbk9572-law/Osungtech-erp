@@ -46,6 +46,7 @@ import {
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useFormRedirect } from "@/lib/use-form-redirect";
+import { ITEM_GRID_COLUMN_WIDTHS, ITEM_GRID_COLUMN_WIDTHS_DUAL } from "@/lib/item-grid-columns";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -1336,54 +1337,54 @@ export function NewPurchaseForm({
           >
             <thead>
               <tr>
-                <th style={{ width: "13%" }}>품목</th>
-                <th style={{ width: alsoCreateSale ? "4%" : "6%" }}>규격</th>
-                <th style={{ width: "8%" }}>
+                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.product : ITEM_GRID_COLUMN_WIDTHS.product }}>품목</th>
+                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.spec : ITEM_GRID_COLUMN_WIDTHS.spec }}>규격</th>
+                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.lotNumber : ITEM_GRID_COLUMN_WIDTHS.lotNumber }}>
                   관리번호
                 </th>
-                <th style={{ width: alsoCreateSale ? "3%" : "4%" }}>단위</th>
+                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.unit : ITEM_GRID_COLUMN_WIDTHS.unit }}>단위</th>
                 <th
                   className="num"
-                  style={{ width: alsoCreateSale ? "7%" : "10%" }}
+                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.quantityIn : ITEM_GRID_COLUMN_WIDTHS.quantity }}
                 >
                   입고수량
                 </th>
                 {alsoCreateSale && (
-                  <th className="num" style={{ width: "7%" }}>
+                  <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS_DUAL.quantityOut }}>
                     출고수량
                   </th>
                 )}
                 <th
                   className="num"
-                  style={{ width: alsoCreateSale ? "7%" : "9%" }}
+                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.priceIn : ITEM_GRID_COLUMN_WIDTHS.price }}
                 >
                   매입단가
                 </th>
                 {alsoCreateSale && (
-                  <th className="num" style={{ width: "7%" }}>
+                  <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS_DUAL.priceOut }}>
                     매출단가
                   </th>
                 )}
                 <th
                   className="num"
-                  style={{ width: alsoCreateSale ? "8%" : "10%" }}
+                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.supplyAmount : ITEM_GRID_COLUMN_WIDTHS.supplyAmount }}
                 >
                   공급가액
                 </th>
                 <th
                   className="num"
-                  style={{ width: alsoCreateSale ? "6%" : "8%" }}
+                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.tax : ITEM_GRID_COLUMN_WIDTHS.tax }}
                 >
                   세액
                 </th>
                 <th
                   className="num"
-                  style={{ width: alsoCreateSale ? "7%" : "9%" }}
+                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.total : ITEM_GRID_COLUMN_WIDTHS.total }}
                 >
                   합계
                 </th>
-                <th style={{ width: "11%" }}>비고</th>
-                <th style={{ width: "12%" }} />
+                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.remark : ITEM_GRID_COLUMN_WIDTHS.remark }}>비고</th>
+                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.actions : ITEM_GRID_COLUMN_WIDTHS.actions }} />
               </tr>
             </thead>
             <tbody

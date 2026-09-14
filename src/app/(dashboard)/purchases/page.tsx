@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { getDatePresets, getYearMonthButtons, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
@@ -284,6 +285,7 @@ export default async function PurchasesPage({
     0,
   );
   const presets = getDatePresets();
+  const monthButtons = getYearMonthButtons();
   const exportHref = q
     ? `/api/purchases/export?q=${encodeURIComponent(q)}`
     : "/api/purchases/export";
@@ -312,17 +314,13 @@ export default async function PurchasesPage({
         매입관리
       </h1>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
-        {presets.map((preset) => (
-          <Link
-            key={preset.label}
-            href={`/purchases?from=${preset.from}&to=${preset.to}`}
-            className={`erp-date-preset-btn${from === preset.from && to === preset.to ? " active" : ""}`}
-          >
-            {preset.label}
-          </Link>
-        ))}
-      </div>
+      <DateRangeQuickFilters
+        basePath="/purchases"
+        presets={presets}
+        monthButtons={monthButtons}
+        from={from}
+        to={to}
+      />
 
       <form method="get" id="purchases-search-form" className="erp-search">
         <div className="erp-field">

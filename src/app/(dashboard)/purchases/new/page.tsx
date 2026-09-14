@@ -161,6 +161,11 @@ export default async function NewPurchasePage({
         </p>
       )}
       <NewPurchaseTypeSwitcher
+        // "저장 후 계속 등록"은 모달 안에서 같은 경로로(쿼리만 바뀌어)
+        // 소프트 이동하므로, key를 saved 값에 묶어 저장할 때마다 폼을
+        // 강제로 새로 마운트한다 — 안 그러면 방금 입력했던 품목 줄이
+        // 그대로 남아있는다.
+        key={saved ?? "new"}
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? ""}

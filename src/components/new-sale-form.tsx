@@ -50,6 +50,7 @@ import {
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useFormRedirect } from "@/lib/use-form-redirect";
+import { ITEM_GRID_COLUMN_WIDTHS } from "@/lib/item-grid-columns";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
@@ -1321,27 +1322,27 @@ export function NewSaleForm({
           >
             <thead>
               <tr>
-                <th style={{ width: "13%" }}>품목</th>
-                <th style={{ width: "6%" }}>규격</th>
-                <th style={{ width: "8%" }}>관리번호</th>
-                <th style={{ width: "4%" }}>단위</th>
-                <th className="num" style={{ width: "10%" }}>
+                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.product }}>품목</th>
+                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.spec }}>규격</th>
+                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.lotNumber }}>관리번호</th>
+                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.unit }}>단위</th>
+                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.quantity }}>
                   수량
                 </th>
-                <th className="num" style={{ width: "9%" }}>
+                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.price }}>
                   단가
                 </th>
-                <th className="num" style={{ width: "10%" }}>
+                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.supplyAmount }}>
                   공급가액
                 </th>
-                <th className="num" style={{ width: "8%" }}>
+                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.tax }}>
                   세액
                 </th>
-                <th className="num" style={{ width: "9%" }}>
+                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.total }}>
                   합계
                 </th>
-                <th style={{ width: "11%" }}>비고</th>
-                <th style={{ width: "12%" }} />
+                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.remark }}>비고</th>
+                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.actions }} />
               </tr>
             </thead>
             <tbody

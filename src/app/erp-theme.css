@@ -360,6 +360,19 @@
   background: var(--erp-panel);
   border-radius: 0;
   box-shadow: var(--erp-shadow-lg);
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+/* 닫기 클릭/ESC 즉시 — 실제 이동이 끝나길 기다리지 않고 눌리자마자
+   반응이 보이게 한다(등록 모달 셸의 closing 상태). */
+.erp-modal.closing {
+  opacity: 0;
+  transform: scale(0.98);
+  pointer-events: none;
 }
 
 /* 공지사항/할일/사용자 정보처럼 필드 몇 개짜리 단순한 폼을 담는 모달 —

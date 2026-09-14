@@ -131,6 +131,12 @@ export default async function NewSalePage({
         </p>
       )}
       <NewSaleTypeSwitcher
+        // "저장 후 계속 등록"은 모달 안에서 같은 경로로(쿼리만 바뀌어)
+        // 소프트 이동하므로, key를 saved 값에 묶어 저장할 때마다 폼을
+        // 강제로 새로 마운트한다 — 안 그러면 방금 입력했던 품목 줄이
+        // 그대로 남아있는다(예전 전체 페이지 이동 방식은 항상 새
+        // 컴포넌트였어서 자동으로 비워졌다).
+        key={saved ?? "new"}
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({
           ...p,
