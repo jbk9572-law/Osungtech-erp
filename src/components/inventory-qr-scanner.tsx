@@ -11,24 +11,8 @@ import {
   onQrDecoded,
   confirmMismatch,
   finalizeScanSession,
-  extractLocationCodeFromQr,
-  setActiveLocation,
   type ScanProduct,
 } from "@/lib/qr-count-scan";
-
-type LocationStockRow = {
-  id: string;
-  sku: string;
-  name: string;
-  spec: string | null;
-  unit: string;
-  quantity: number;
-  basePackageQty: number | null;
-};
-type LocationLookup =
-  | { code: string; status: "loading" }
-  | { code: string; status: "done"; tier: number; position: number; rows: LocationStockRow[] }
-  | { code: string; status: "error"; error: string };
 
 // 프레임마다(60fps) 디코딩을 돌리면 저사양 폰에서 카메라가 버벅이므로 잘라서
 // 돈다 — 200ms(5회/초)는 안전하지만 "찍었는데 왜 안 넘어가지" 싶을 만큼
@@ -60,52 +44,17 @@ export function InventoryQrScanner({
   const [flash, setFlash] = useState<{ kind: "ok" | "unknown"; token: number } | null>(null);
   const lastSignatureRef = useRef<string | null>(null);
 
-  // 보관위치(랙) QR — 품목 QR과 같은 카메라로 찍히지만 값이 SKU가 아니라
-  // 위치 상세 페이지 URL이다. 페이지 이동 없이 이 화면 안에서 그 위치의
-  // 재고만 조회해 보여주고, 닫으면 하던 품목 실사를 그대로 이어간다.
-  const [locationLookup, setLocationLookup] = useState<LocationLookup | null>(null);
-  // 위치 카드가 화면을 거의 다 덮어서, 다른 위치로 넘어갔을 때 정말
-  // 바뀐 건지 멈춘 건지 헷갈린다는 피드백 — 새 위치를 인식할 때마다
-  // 짧게 화면을 깜빡여서(품목 인식 성공 플래시와 같은 방식) 눈에 보이는
-  // 변화를 준다. 0이면 아직 한 번도 안 떴다는 뜻이라 마운트 시 헛플래시가
-  // 안 뜨게 한다.
-  const [locationFlashToken, setLocationFlashToken] = useState(0);
-  // setInterval 콜백에서 fetch를 매번 새로 트리거하지 않도록(같은 QR을
-  // 카메라에 계속 대고 있는 동안 120ms마다 반복 조회하는 걸 막기 위해)
-  // 동기적으로 즉시 확인 가능한 ref로 마지막 조회 코드를 기억한다 —
-  // locationLookup state는 리렌더 이후에나 반영되어 한 박자 늦는다.
-  const lastLocationCodeRef = useRef<string | null>(null);
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // 수량 정정 입력창/위치 조회 카드가 열려 있는 동안은 디코딩을 멈춘다 —
-  // 안 그러면 입력하는 사이에 카메라가 같은 QR을 다시 읽어 다음 품목으로
-  // 새는 걸 막을 방법이 없다. 이 값을 매 렌더 중에 바로 ref에 써넣지 않고
+  // 수량 정정 입력창이 열려 있는 동안은 디코딩을 멈춘다 — 안 그러면
+  // 입력하는 사이에 카메라가 같은 QR을 다시 읽어 다음 품목으로 새는 걸
+  // 막을 방법이 없다. 이 값을 매 렌더 중에 바로 ref에 써넣지 않고
   // useEffect로 동기화하는 이유는, 렌더 중 ref 쓰기는 리액트 규칙 위반이라서다
   // (setInterval 콜백은 렌더와 무관하게 실행되므로 effect 타이밍으로도 충분하다).
   const pausedRef = useRef(false);
   useEffect(() => {
     pausedRef.current = mismatchInput !== null || ended;
   }, [mismatchInput, ended]);
-
-  function closeLocationLookup() {
-    lastLocationCodeRef.current = null;
-    setLocationLookup(null);
-  }
-
-  async function lookupLocation(code: string) {
-    try {
-      const res = await fetch(`/api/inventory/locations/${encodeURIComponent(code)}`, { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) {
-        setLocationLookup({ code, status: "error", error: data.error ?? "조회에 실패했습니다." });
-        return;
-      }
-      setLocationLookup({ code, status: "done", tier: data.tier, position: data.position, rows: data.rows });
-    } catch {
-      setLocationLookup({ code, status: "error", error: "조회에 실패했습니다. 네트워크 상태를 확인해주세요." });
-    }
-  }
 
   const [state, formAction, pending] = useActionState(submitStockCount, undefined);
 
@@ -177,35 +126,6 @@ export function InventoryQrScanner({
           const frame = ctx.getImageData(0, 0, width, height);
           const code = jsQR(frame.data, width, height, { inversionAttempts: "dontInvert" });
           if (code?.data) {
-            const locationCode = extractLocationCodeFromQr(code.data);
-            if (locationCode) {
-              // 같은 위치 QR을 카메라에 계속 대고 있는 동안은 다시 조회하지
-              // 않는다 — 품목 QR의 "같은 값이면 아무 것도 안 바뀐다"는
-              // 규칙과 동일. 다른 위치 QR로 넘어가면(랙을 옮겨 찍으면)
-              // 닫기를 누를 필요 없이 바로 그 위치로 갱신된다.
-              if (lastLocationCodeRef.current !== locationCode) {
-                lastLocationCodeRef.current = locationCode;
-                setLocationLookup({ code: locationCode, status: "loading" });
-                setLocationFlashToken((t) => t + 1);
-                lookupLocation(locationCode);
-                // 랙별로 돌면서 실사하는 흐름 — 이 위치를 "지금 실사 중인
-                // 위치"로 기억해둔다. 다음 위치 QR을 찍기 전까지는 품목을
-                // 몇 개를 스캔하든 이 값이 유지되고, "수량 다름"으로 확정한
-                // 값은 이 위치 기준으로 저장된다(아래 onQrDecoded 분기는
-                // 이 값을 건드리지 않는다).
-                setScanState((prev) => setActiveLocation(prev, { code: locationCode }));
-              }
-              return;
-            }
-            // 위치 카드가 떠 있는 상태에서 품목 QR로 넘어가면(계속
-            // 실사하려는 것), 닫기 버튼 없이도 카드를 자동으로 치운다 —
-            // 다만 "지금 실사 중인 위치"(activeLocation) 자체는 유지한다.
-            // 카드가 다시 필요하면(위치를 재확인하고 싶으면) 같은 위치 QR을
-            // 한 번 더 찍으면 된다.
-            if (lastLocationCodeRef.current !== null) {
-              lastLocationCodeRef.current = null;
-              setLocationLookup(null);
-            }
             setScanState((prev) => onQrDecoded(prev, code.data, productBySkuRef.current));
           }
         }, SCAN_INTERVAL_MS);
@@ -252,7 +172,6 @@ export function InventoryQrScanner({
       productId: m.productId,
       systemQuantity: m.systemQuantity,
       countedQuantity: m.countedQuantity,
-      locationCode: m.locationCode,
     })),
   );
   const totalScanned = scanState.confirmedIds.size;
@@ -371,9 +290,8 @@ export function InventoryQrScanner({
               </div>
             )}
 
-            {/* 위치 카드가 화면 대부분을 덮게 되더라도 카메라가 멈춘 게
-                아니라는 걸 항상 눈에 보이게 — 좌상단에 계속 맥박치는
-                점 + "스캔 중" 표시를 둔다. */}
+            {/* 좌상단에 계속 맥박치는 점 + "스캔 중" 표시로 카메라가
+                멈춘 게 아니라는 걸 항상 눈에 보이게 한다. */}
             {!cameraError && (
               <div
                 aria-hidden="true"
@@ -409,69 +327,7 @@ export function InventoryQrScanner({
               </div>
             )}
 
-            {/* 랙별로 돌면서 실사하는 중이라는 걸 계속 보여준다 — 위치
-                카드는 품목을 스캔하면 접히지만, "지금 이 위치 기준으로
-                수량을 맞추고 있다"는 사실 자체는 다음 위치 QR을 찍기
-                전까지 안 없어져야 하기 때문. 눌러서 직접 해제하면
-                (예: 랙 실사를 끝내고 창고 전체 실사로 돌아갈 때) 이후
-                "수량 다름"은 다시 위치 구분 없이(창고 전체 기준) 저장된다. */}
-            {!cameraError && !locationLookup && scanState.activeLocation && (
-              <button
-                type="button"
-                onClick={() => setScanState((prev) => setActiveLocation(prev, null))}
-                style={{
-                  position: "absolute",
-                  top: 38,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  background: "rgba(74, 111, 165, 0.85)",
-                  border: "none",
-                  color: "#fff",
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                📍 {scanState.activeLocation.code} 실사 중 <span style={{ opacity: 0.8 }}>· 해제</span>
-              </button>
-            )}
-
-            {/* 위치 카드가 하단 시트로 뜨는 동안, 그 안쪽에서 다른 위치로
-                넘어갔을 때만 "위치가 변경되었습니다" 안내를 잠깐 띄운다
-                — 처음 뜰 때(token 1)는 카드 자체가 슬라이드업되므로
-                중복 안내하지 않는다. */}
-            {locationLookup && locationFlashToken > 1 && (
-              <div
-                key={locationFlashToken}
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  top: 46,
-                  left: "50%",
-                  padding: "6px 14px",
-                  borderRadius: 999,
-                  background: "var(--erp-primary)",
-                  color: "#fff",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  boxShadow: "var(--erp-shadow-md)",
-                  pointerEvents: "none",
-                  animation: "erp-toast-fade 1.3s ease-out forwards",
-                }}
-              >
-                위치가 변경되었습니다
-              </div>
-            )}
-
-            {/* 위치 카드(랙실사 화면)와 같은 하단 카드 스타일로 통일했다 —
-                예전엔 이 패널만 어두운 반투명 바였는데, 같은 화면 안에서
-                두 패널의 톤이 다른 게 일관성이 없다는 지적이 있었다. */}
-            {!cameraError && !locationLookup && scanState.active && (
+            {!cameraError && scanState.active && (
               <div
                 style={{
                   position: "absolute",
@@ -491,11 +347,6 @@ export function InventoryQrScanner({
               >
                 <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--erp-border)", margin: "8px auto 2px" }} />
                 <div style={{ padding: "6px 14px 12px" }}>
-                  {scanState.activeLocation && (
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--erp-primary)", marginBottom: 4 }}>
-                      📍 {scanState.activeLocation.code} 실사 중
-                    </div>
-                  )}
                   <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginBottom: 1 }}>{scanState.active.sku}</div>
                   <div style={{ fontSize: 16, fontWeight: 800 }}>{scanState.active.name}</div>
                   <div style={{ fontSize: 12.5, color: "var(--erp-text-muted)", marginBottom: 10 }}>
@@ -539,7 +390,7 @@ export function InventoryQrScanner({
               </div>
             )}
 
-            {!cameraError && !locationLookup && !scanState.active && (
+            {!cameraError && !scanState.active && (
               <div
                 style={{
                   position: "absolute",
@@ -569,127 +420,6 @@ export function InventoryQrScanner({
                 {scanState.unknownSku
                   ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다`
                   : "QR을 화면 안에 비춰주세요"}
-              </div>
-            )}
-
-            {/* 보관위치(랙) QR을 찍으면 위치 화면으로 이동하지 않고 이
-                자리에서 재고만 보여준다 — 진행 중인 품목 실사(스캔한
-                불일치 목록 등)를 그대로 유지한 채, 닫으면 다시 이어서
-                스캔할 수 있게 하기 위해서다. 화면 전체를 덮는 검은
-                패널 대신 하단 카드로만 띄워서 카메라가 계속 보이게
-                하고(라이브 스캔 느낌 유지), 위쪽 "스캔 중" 표시 +
-                위치가 바뀔 때의 토스트로 계속 살아있음을 알린다. */}
-            {locationLookup && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: 10,
-                  right: 10,
-                  bottom: 10,
-                  maxHeight: "58%",
-                  display: "flex",
-                  flexDirection: "column",
-                  background: "rgba(255, 255, 255, 0.97)",
-                  color: "var(--erp-text)",
-                  borderRadius: 16,
-                  borderTop: "4px solid var(--erp-primary)",
-                  boxShadow: "var(--erp-shadow-lg)",
-                  overflow: "hidden",
-                  animation: "erp-sheet-in 220ms ease-out",
-                }}
-              >
-                <div style={{ width: 36, height: 4, borderRadius: 999, background: "var(--erp-border)", margin: "8px auto 2px" }} />
-                <div style={{ padding: "6px 14px 10px" }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginBottom: 1 }}>보관 위치</div>
-                      <div style={{ fontSize: 17, fontWeight: 800, overflowWrap: "anywhere" }}>
-                        {locationLookup.code}
-                        {locationLookup.status === "done" && (
-                          <span style={{ fontSize: 12, fontWeight: 400, color: "var(--erp-text-muted)", marginLeft: 6 }}>
-                            ({locationLookup.tier === 2 ? "2단" : "1단"}·
-                            {locationLookup.position === 1 ? "좌측" : "우측"})
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={closeLocationLookup}
-                      aria-label="닫기"
-                      style={{
-                        flexShrink: 0,
-                        // 창고에서 스마트폰으로 실사하며 흔들리는 손으로 누르는
-                        // 버튼이라 44px 이상(권장 터치 타겟)으로 키운다 —
-                        // 원래 26px은 데스크톱 마우스 기준 크기였다.
-                        width: 44,
-                        height: 44,
-                        borderRadius: "50%",
-                        border: "none",
-                        background: "var(--erp-bg-subtle)",
-                        color: "var(--erp-text-muted)",
-                        fontSize: 18,
-                        lineHeight: 1,
-                        cursor: "pointer",
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ flex: 1, overflow: "auto", padding: "0 14px" }}>
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", marginBottom: 4 }}>
-                    보관 중인 품목
-                  </div>
-                  {locationLookup.status === "loading" && (
-                    <p style={{ fontSize: 12.5, color: "var(--erp-text-muted)" }}>조회 중...</p>
-                  )}
-                  {locationLookup.status === "error" && (
-                    <p style={{ fontSize: 12.5, color: "var(--erp-danger)" }}>{locationLookup.error}</p>
-                  )}
-                  {locationLookup.status === "done" && locationLookup.rows.length === 0 && (
-                    <p style={{ fontSize: 12.5, color: "var(--erp-text-muted)" }}>이 위치에 등록된 품목이 없습니다.</p>
-                  )}
-                  {locationLookup.status === "done" && locationLookup.rows.length > 0 && (
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ color: "var(--erp-text-muted)" }}>
-                          <th style={{ textAlign: "left", padding: "4px 6px" }}>품목명</th>
-                          <th style={{ textAlign: "left", padding: "4px 6px" }}>규격</th>
-                          <th style={{ textAlign: "right", padding: "4px 6px" }}>수량</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {locationLookup.rows.map((row) => (
-                          <tr key={row.id} style={{ borderTop: "1px solid var(--erp-divider)" }}>
-                            <td style={{ padding: "6px", fontWeight: 600 }}>{row.name}</td>
-                            <td style={{ padding: "6px", color: "var(--erp-text-muted)" }}>{row.spec ?? "-"}</td>
-                            <td style={{ padding: "6px", textAlign: "right", fontWeight: 700 }}>
-                              <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} unit={row.unit} />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "8px 14px",
-                    fontSize: 11,
-                    color: "var(--erp-info-text)",
-                    background: "var(--erp-info-bg)",
-                    borderTop: "1px solid var(--erp-info-border)",
-                  }}
-                >
-                  <span aria-hidden="true">ⓘ</span>
-                  다른 위치나 품목 QR을 비추면 자동으로 전환됩니다.
-                </div>
               </div>
             )}
           </div>
@@ -738,7 +468,6 @@ export function InventoryQrScanner({
                 <thead>
                   <tr>
                     <th>품목</th>
-                    <th>위치</th>
                     <th className="num">전산</th>
                     <th className="num">실사</th>
                     <th className="num">차이</th>
@@ -749,9 +478,8 @@ export function InventoryQrScanner({
                     const product = products.find((p) => p.productId === m.productId);
                     const diff = m.countedQuantity - m.systemQuantity;
                     return (
-                      <tr key={`${m.productId}-${m.locationCode ?? ""}`}>
+                      <tr key={m.productId}>
                         <td>{product?.name ?? m.productId}</td>
-                        <td>{m.locationCode ?? "창고 전체"}</td>
                         <td className="num">{m.systemQuantity.toLocaleString()}</td>
                         <td className="num">{m.countedQuantity.toLocaleString()}</td>
                         <td

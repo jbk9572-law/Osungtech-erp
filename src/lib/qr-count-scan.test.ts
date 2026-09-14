@@ -4,8 +4,6 @@ import {
   onQrDecoded,
   confirmMismatch,
   finalizeScanSession,
-  extractLocationCodeFromQr,
-  setActiveLocation,
   type ScanProduct,
 } from "./qr-count-scan";
 
@@ -76,9 +74,7 @@ describe("confirmMismatch", () => {
     const s1 = onQrDecoded(createInitialScanState(), "SKU-A", bySku(productA));
     const s2 = confirmMismatch(s1, 90);
     expect(s2.active).toBeNull();
-    expect(s2.mismatches).toEqual([
-      { productId: "p1", systemQuantity: 117, countedQuantity: 90, locationCode: null },
-    ]);
+    expect(s2.mismatches).toEqual([{ productId: "p1", systemQuantity: 117, countedQuantity: 90 }]);
     expect(s2.confirmedIds.has("p1")).toBe(true);
   });
 
@@ -92,38 +88,7 @@ describe("confirmMismatch", () => {
     state = confirmMismatch(state, 90); // 잘못 입력
     state = onQrDecoded(state, "SKU-A", bySku(productA)); // 다시 스캔해서 정정
     state = confirmMismatch(state, 80); // 실제 정정값
-    expect(state.mismatches).toEqual([
-      { productId: "p1", systemQuantity: 117, countedQuantity: 80, locationCode: null },
-    ]);
-  });
-
-  it("stamps the currently active location onto the mismatch", () => {
-    let state = setActiveLocation(createInitialScanState(), { code: "A1-02-01" });
-    state = onQrDecoded(state, "SKU-A", bySku(productA));
-    state = confirmMismatch(state, 90);
-    expect(state.mismatches).toEqual([
-      { productId: "p1", systemQuantity: 117, countedQuantity: 90, locationCode: "A1-02-01" },
-    ]);
-  });
-
-  it("scanning a product QR does not clear the active location", () => {
-    let state = setActiveLocation(createInitialScanState(), { code: "A1-02-01" });
-    state = onQrDecoded(state, "SKU-A", bySku(productA, productB));
-    state = onQrDecoded(state, "SKU-B", bySku(productA, productB));
-    expect(state.activeLocation).toEqual({ code: "A1-02-01" });
-  });
-
-  it("keeps corrections for the same product at two different locations separate", () => {
-    let state = setActiveLocation(createInitialScanState(), { code: "RACK-1" });
-    state = onQrDecoded(state, "SKU-A", bySku(productA));
-    state = confirmMismatch(state, 50);
-    state = setActiveLocation(state, { code: "RACK-2" });
-    state = onQrDecoded(state, "SKU-A", bySku(productA));
-    state = confirmMismatch(state, 20);
-    expect(state.mismatches).toEqual([
-      { productId: "p1", systemQuantity: 117, countedQuantity: 50, locationCode: "RACK-1" },
-      { productId: "p1", systemQuantity: 117, countedQuantity: 20, locationCode: "RACK-2" },
-    ]);
+    expect(state.mismatches).toEqual([{ productId: "p1", systemQuantity: 117, countedQuantity: 80 }]);
   });
 });
 
@@ -133,30 +98,5 @@ describe("finalizeScanSession", () => {
     const s2 = finalizeScanSession(s1);
     expect(s2.confirmedIds.size).toBe(1);
     expect(s2.confirmedIds.has("p1")).toBe(true);
-  });
-});
-
-describe("extractLocationCodeFromQr", () => {
-  it("extracts the location code from a full location URL", () => {
-    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations/A1-02-01")).toBe(
-      "A1-02-01",
-    );
-  });
-
-  it("extracts the code even with a trailing slash or query string", () => {
-    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations/A1-02-01/")).toBe(
-      "A1-02-01",
-    );
-    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations/A1-02-01?x=1")).toBe(
-      "A1-02-01",
-    );
-  });
-
-  it("returns null for a plain product SKU (not a URL)", () => {
-    expect(extractLocationCodeFromQr("SKU-A")).toBeNull();
-  });
-
-  it("returns null for the locations list URL (no code segment)", () => {
-    expect(extractLocationCodeFromQr("https://erp.example.com/inventory/locations")).toBeNull();
   });
 });
