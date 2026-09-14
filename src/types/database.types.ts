@@ -271,6 +271,103 @@ export type Database = {
           },
         ];
       };
+      bom_items: {
+        Row: {
+          id: string;
+          parent_product_id: string;
+          component_product_id: string;
+          quantity_per_unit: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          parent_product_id: string;
+          component_product_id: string;
+          quantity_per_unit: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          parent_product_id?: string;
+          component_product_id?: string;
+          quantity_per_unit?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bom_items_parent_product_id_fkey";
+            columns: ["parent_product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bom_items_component_product_id_fkey";
+            columns: ["component_product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      work_orders: {
+        Row: {
+          id: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          order_date: string;
+          memo: string | null;
+          doc_no: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          order_date: string;
+          memo?: string | null;
+          doc_no?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          warehouse_id?: string;
+          quantity?: number;
+          order_date?: string;
+          memo?: string | null;
+          doc_no?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_orders_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_orders_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory: {
         Row: {
           id: string;
@@ -1739,6 +1836,21 @@ export type Database = {
       get_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;
+      };
+      create_work_order: {
+        Args: {
+          p_product_id: string;
+          p_warehouse_id: string;
+          p_quantity: number;
+          p_order_date: string;
+          p_memo?: string | null;
+          p_doc_no?: number | null;
+        };
+        Returns: string;
+      };
+      delete_work_order: {
+        Args: { p_id: string };
+        Returns: void;
       };
       apply_location_stock_delta: {
         Args: { p_product_id: string; p_location_id: string; p_delta: number };

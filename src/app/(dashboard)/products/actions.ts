@@ -7,6 +7,7 @@ import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 import { numberOrDefault, numberOrNull } from "@/lib/form-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 
 // 카테고리는 대시보드 매입-매출 매칭 추적 기준(isTrackedCategory)이기도
 // 해서 등록 화면에서 자유롭게 새로 만들 수 없게 고정 6종(PRODUCT_CATEGORIES)
@@ -428,4 +429,57 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   revalidatePath("/products");
   revalidatePath("/inventory");
   return summarize(rows.length, okCount, errors);
+}
+
+// BOM(구성품) 등록 — 생산관리(1차 범위: MRP-lite)에서 이 완제품을 만들 때
+// 필요한 구성품과 단위당 소요량을 정의한다. 실제 생산지시 등록 시 이
+// 목록을 기준으로 구성품 출고/완제품 입고 재고 이력을 자동으로 남긴다
+// (create_work_order RPC, migration 100).
+export async function addBomItem(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const parentProductId = String(formData.get("parent_product_id") ?? "");
+  const componentProductId = String(formData.get("component_product_id") ?? "");
+  const quantityPerUnit = numberOrDefault(formData.get("quantity_per_unit"), 0);
+
+  if (!parentProductId || !componentProductId) {
+    return { error: "구성품을 선택해주세요." };
+  }
+  if (parentProductId === componentProductId) {
+    return { error: "완제품과 같은 품목은 구성품으로 등록할 수 없습니다." };
+  }
+  if (!(quantityPerUnit > 0)) {
+    return { error: "단위당 소요량은 0보다 커야 합니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("bom_items").insert({
+    parent_product_id: parentProductId,
+    component_product_id: componentProductId,
+    quantity_per_unit: quantityPerUnit,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "이미 등록된 구성품입니다." };
+    }
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath(`/products/${parentProductId}`);
+  revalidatePath("/production/new");
+  return { success: "구성품을 등록했습니다." };
+}
+
+export async function deleteBomItem(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const parentProductId = String(formData.get("parent_product_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const result = await supabase.from("bom_items").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, "삭제에 실패했습니다");
+  if (mutationError) return mutationError;
+
+  if (parentProductId) revalidatePath(`/products/${parentProductId}`);
+  revalidatePath("/production/new");
+  return { success: "삭제했습니다." };
 }

@@ -63,6 +63,12 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <circle cx="8" cy="9" r="1.5" />
     </svg>
   ),
+  생산관리: (
+    <svg {...ICON_STROKE}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2" />
+    </svg>
+  ),
   거래처관리: (
     <svg {...ICON_STROKE}>
       <circle cx="9" cy="9" r="3" />

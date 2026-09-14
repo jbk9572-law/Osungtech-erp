@@ -30,6 +30,10 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
   { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
   {
+    label: "생산관리",
+    items: [{ label: "생산지시 내역", href: "/production" }],
+  },
+  {
     label: "거래처관리",
     items: [
       { label: "출고처관리", href: "/customers" },
