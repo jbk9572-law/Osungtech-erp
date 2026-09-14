@@ -410,7 +410,7 @@ export default async function AuditLogPage({
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
           시스템관리 &gt; 변경 이력
         </h1>
-        <Link href="/settings/company" className="erp-btn erp-btn-danger">
+        <Link href="/settings/company" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>

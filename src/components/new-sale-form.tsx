@@ -1163,7 +1163,7 @@ export function NewSaleForm({
                 <button
                   type="button"
                   onClick={() => setPurchaseCandidates(null)}
-                  className="erp-btn erp-btn-danger"
+                  className="erp-btn erp-btn-dark"
                   style={{ minWidth: 0, height: 22, padding: "0 8px" }}
                 >
                   닫기
@@ -1258,7 +1258,7 @@ export function NewSaleForm({
                 <button
                   type="button"
                   onClick={() => setOpenTodos(null)}
-                  className="erp-btn erp-btn-danger"
+                  className="erp-btn erp-btn-dark"
                   style={{ minWidth: 0, height: 22, padding: "0 8px" }}
                 >
                   닫기

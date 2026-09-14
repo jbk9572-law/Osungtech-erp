@@ -48,7 +48,7 @@ export default async function InventoryQrScanPage() {
       </PageGuide>
 
       <div className="erp-toolbar">
-        <Link href="/inventory/count" className="erp-btn erp-btn-danger">
+        <Link href="/inventory/count" className="erp-btn erp-btn-dark">
           ESC 목록 실사로
         </Link>
       </div>

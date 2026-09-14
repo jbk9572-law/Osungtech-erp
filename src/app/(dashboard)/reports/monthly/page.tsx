@@ -526,7 +526,7 @@ export default async function MonthlyReportPage({
             초기화
           </Link>
         )}
-        <Link href="/dashboard" className="erp-btn erp-btn-danger">
+        <Link href="/dashboard" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </form>

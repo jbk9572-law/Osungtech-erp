@@ -19,7 +19,7 @@ export default async function BackupSettingsPage() {
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">시스템관리 &gt; 백업/복원</h1>
-        <Link href="/dashboard" className="erp-btn erp-btn-danger">
+        <Link href="/dashboard" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>

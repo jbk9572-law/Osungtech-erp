@@ -359,6 +359,11 @@
   flex-direction: column;
   background: var(--erp-panel);
   border-radius: 0;
+  /* 등록모달(md/lg/xl)은 그동안 헤더바 없이 그냥 흰 박스라, 위쪽에
+     제목바(.erp-modal-title)가 붙는 단순 모달과 같은 화면에서 "같은
+     모달"처럼 안 보인다는 지적 — 위쪽에 브랜드 색 테두리를 둘러 모든
+     모달이 하나의 통일된 틀을 쓰는 것처럼 보이게 한다. */
+  border-top: 3px solid var(--erp-primary);
   box-shadow: var(--erp-shadow-lg);
   opacity: 1;
   transform: scale(1);
@@ -986,6 +991,19 @@
 
 .erp-btn-danger:hover {
   background: #c22636;
+}
+
+/* ESC 닫기/취소처럼 "저장 없이 이 화면을 벗어난다"는 비파괴적 동작 —
+   같은 줄의 "삭제" 버튼과 색(빨강)이 겹쳐서 파괴적 동작인지 아닌지
+   구분이 안 된다는 지적으로, 검정 버튼으로 따로 뺐다. */
+.erp-btn-dark {
+  background: var(--erp-text);
+  border-color: var(--erp-text);
+  color: #fff;
+}
+
+.erp-btn-dark:hover {
+  background: #0c1420;
 }
 
 /* ── 유형 토글(매출/수금, 매입/지급 등) ───────────────────── */

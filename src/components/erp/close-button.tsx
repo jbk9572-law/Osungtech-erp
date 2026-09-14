@@ -12,7 +12,7 @@ import { useModalClose } from "@/lib/modal-context";
 export function CloseButton({
   href,
   children = "ESC 닫기",
-  className = "erp-btn erp-btn-danger",
+  className = "erp-btn erp-btn-dark",
 }: {
   href: string;
   children?: ReactNode;

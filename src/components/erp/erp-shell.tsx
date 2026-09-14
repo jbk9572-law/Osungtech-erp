@@ -21,8 +21,6 @@ import {
 } from "@/components/erp/messenger-widget";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
-import type { VpsDiskUsage } from "@/lib/vps-usage";
-import type { NetlifyUsageResult } from "@/lib/netlify-usage";
 
 function RecentMenuTracker() {
   const pathname = usePathname();
@@ -44,10 +42,7 @@ export function ErpShell({
   initialMessages,
   profileNames,
   currentUserId,
-  dbSizeBytes,
-  storageSizeBytes,
-  vpsDisk,
-  netlifyUsage,
+  usageWidget,
   children,
   modal,
 }: {
@@ -61,10 +56,7 @@ export function ErpShell({
   initialMessages: MessengerMessage[];
   profileNames: Record<string, string>;
   currentUserId: string;
-  dbSizeBytes: number | null;
-  storageSizeBytes: number | null;
-  vpsDisk: VpsDiskUsage | null;
-  netlifyUsage: NetlifyUsageResult;
+  usageWidget: React.ReactNode;
   children: React.ReactNode;
   modal?: React.ReactNode;
 }) {
@@ -127,10 +119,7 @@ export function ErpShell({
       <Ribbon />
       <div className="erp-body">
         <TreeMenu
-          dbSizeBytes={dbSizeBytes}
-          storageSizeBytes={storageSizeBytes}
-          vpsDisk={vpsDisk}
-          netlifyUsage={netlifyUsage}
+          usageWidget={usageWidget}
           collapsed={collapsed}
           isMobile={isMobile}
           onToggleCollapsed={() => setCollapsed((c) => !c)}

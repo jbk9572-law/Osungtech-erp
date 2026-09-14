@@ -83,7 +83,7 @@ export default async function LotLookupPage({
       </PageGuide>
 
       <div className="erp-toolbar">
-        <Link href="/inventory" className="erp-btn erp-btn-danger">
+        <Link href="/inventory" className="erp-btn erp-btn-dark">
           ESC 목록으로
         </Link>
       </div>
