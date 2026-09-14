@@ -41,7 +41,7 @@ export async function createAnnouncement(
   // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
   // 무효화한다.
   revalidatePath("/", "layout");
-  redirect(`/announcements/${data.id}`);
+  return { redirectTo: `/announcements/${data.id}` };
 }
 
 export async function updateAnnouncement(
@@ -78,7 +78,7 @@ export async function updateAnnouncement(
   // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
   // 무효화한다.
   revalidatePath("/", "layout");
-  redirect(`/announcements/${id}`);
+  return { redirectTo: `/announcements/${id}` };
 }
 
 export async function deleteAnnouncement(

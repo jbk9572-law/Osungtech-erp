@@ -362,7 +362,16 @@
   box-shadow: var(--erp-shadow-lg);
 }
 
-/* 모조지 계산처럼 내용이 넓고 긴 모달용 확장 크기 */
+/* 공지사항/할일/사용자 정보처럼 필드 몇 개짜리 단순한 폼을 담는 모달 —
+   등록 모달(registration-modal-shell.tsx)의 md 크기. */
+.erp-modal-md {
+  width: 640px;
+  max-width: calc(100vw - 32px);
+  max-height: 85vh;
+}
+
+/* 모조지 계산처럼 내용이 넓고 긴 모달용 확장 크기 — 거래처/품목/재고
+   상세처럼 표가 섞인 중간 크기 폼에도 쓴다(등록 모달 셸의 lg 크기). */
 .erp-modal-lg {
   width: 1120px;
   max-width: calc(100vw - 32px);

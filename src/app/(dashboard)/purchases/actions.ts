@@ -469,13 +469,13 @@ export async function createPurchase(
   revalidatePath("/paper-calc");
 
   if (continueNew) {
-    redirect(`/purchases/new?saved=${purchaseOrderId}`);
+    return { redirectTo: `/purchases/new?saved=${purchaseOrderId}` };
   }
-  redirect(
-    paperCalcWarning
+  return {
+    redirectTo: paperCalcWarning
       ? `/purchases/${purchaseOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
-      : `/purchases/${purchaseOrderId}`
-  );
+      : `/purchases/${purchaseOrderId}`,
+  };
 }
 
 export async function updatePurchase(
@@ -570,7 +570,7 @@ export async function updatePurchase(
   revalidatePath("/dashboard");
   revalidatePath("/payables");
   revalidatePath(`/suppliers/${supplierId}`);
-  redirect(back ? resolveListHref("/purchases", back) : `/purchases/${id}`);
+  return { redirectTo: back ? resolveListHref("/purchases", back) : `/purchases/${id}` };
 }
 
 export async function bulkDeletePurchases(_prevState: FormState, formData: FormData): Promise<FormState> {

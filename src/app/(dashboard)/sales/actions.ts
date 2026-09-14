@@ -199,13 +199,13 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
   if (continueNew) {
-    redirect(`/sales/new?saved=${salesOrderId}`);
+    return { redirectTo: `/sales/new?saved=${salesOrderId}` };
   }
-  redirect(
-    paperCalcWarning
+  return {
+    redirectTo: paperCalcWarning
       ? `/sales/${salesOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
-      : `/sales/${salesOrderId}`
-  );
+      : `/sales/${salesOrderId}`,
+  };
 }
 
 export async function updateSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -310,7 +310,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/dashboard");
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
-  redirect(back ? resolveListHref("/sales", back) : `/sales/${id}`);
+  return { redirectTo: back ? resolveListHref("/sales", back) : `/sales/${id}` };
 }
 
 export async function deleteSale(_prevState: FormState, formData: FormData): Promise<FormState> {

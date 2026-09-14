@@ -120,11 +120,11 @@ export async function createPaymentRequest(
   }
 
   revalidatePath("/reports/payment-requests");
-  redirect(
-    receiptWarning
+  return {
+    redirectTo: receiptWarning
       ? `/reports/payment-requests/${id}?warning=${encodeURIComponent(receiptWarning)}`
-      : `/reports/payment-requests/${id}`
-  );
+      : `/reports/payment-requests/${id}`,
+  };
 }
 
 // 매일 한 줄씩 빠르게 기록하는 입력창용 액션. 부서+카드종류+월(month_key)
@@ -236,7 +236,7 @@ export async function updatePaymentRequest(
 
   revalidatePath("/reports/payment-requests");
   revalidatePath(`/reports/payment-requests/${id}`);
-  redirect(`/reports/payment-requests/${id}`);
+  return { redirectTo: `/reports/payment-requests/${id}` };
 }
 
 export async function addPaymentRequestReceipts(

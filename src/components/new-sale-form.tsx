@@ -49,6 +49,7 @@ import {
   getMostRecentLotNumber,
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
+import { useFormRedirect } from "@/lib/use-form-redirect";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
@@ -225,6 +226,10 @@ export function NewSaleForm({
   // addPurchaseItem/importTodoItems 공용).
   const isBlankRow = (row: Row) => !row.productId && row.quantity === 0;
   const [state, formAction, pending] = useActionState(action, undefined);
+  // 서버 액션에서 직접 redirect()를 부르면 모달(인터셉트 라우트)로 열려
+  // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
+  // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
+  useFormRedirect(state);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간

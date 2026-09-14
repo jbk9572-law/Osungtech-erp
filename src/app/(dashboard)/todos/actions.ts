@@ -264,7 +264,7 @@ export async function updateTodo(_prevState: FormState, formData: FormData): Pro
   // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
   // 무효화한다.
   revalidatePath("/", "layout");
-  redirect(`/todos/${id}`);
+  return { redirectTo: `/todos/${id}` };
 }
 
 export async function toggleTodo(formData: FormData): Promise<{ error: string } | undefined> {
