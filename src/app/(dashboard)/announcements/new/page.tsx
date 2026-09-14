@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 
 export default function NewAnnouncementPage() {
   return (
@@ -10,9 +10,7 @@ export default function NewAnnouncementPage() {
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">공지사항 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
-        <Link href="/announcements" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
+        <CloseButton href="/announcements">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

@@ -46,7 +46,8 @@ import {
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useFormRedirect } from "@/lib/use-form-redirect";
-import { ITEM_GRID_COLUMN_WIDTHS, ITEM_GRID_COLUMN_WIDTHS_DUAL } from "@/lib/item-grid-columns";
+import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL } from "@/lib/item-grid-columns";
+import { useResizableColumns } from "@/lib/use-resizable-columns";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -336,6 +337,25 @@ export function NewPurchaseForm({
   // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
   // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
   useFormRedirect(state);
+  // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
+  // 값은 브라우저에 저장되어 다음에 열어도 유지된다. "매출도 같이 등록"
+  // 모드는 열 구성 자체가 달라(입고/출고 수량·단가가 따로 있음) 별도
+  // 값으로 저장한다 — 두 훅 다 항상 호출하고(리액트 훅 규칙) 어느 쪽을
+  // 쓸지만 alsoCreateSale로 고른다.
+  const baseCols = useResizableColumns("erp-purchase-item-grid-columns", ITEM_GRID_COLUMN_PX_WIDTHS);
+  const dualCols = useResizableColumns("erp-purchase-item-grid-columns-dual", ITEM_GRID_COLUMN_PX_WIDTHS_DUAL);
+  // 두 모드가 서로 다른 칸 키 집합을 쓰다 보니(수량/단가 한 쌍 vs
+  // 입고·출고 두 쌍) 유니언 타입 그대로 두면 공용 키만 남아 각 모드의
+  // 고유 칸을 못 쓴다 — 실제로는 alsoCreateSale에 따라 항상 한쪽만 쓰므로
+  // 문자열 키 기준으로 다룬다.
+  const { widths: colWidths, startResize, resizingCol } = (
+    alsoCreateSale ? dualCols : baseCols
+  ) as unknown as {
+    widths: Record<string, number>;
+    startResize: (col: string) => (e: React.MouseEvent) => void;
+    resizingCol: string | null;
+  };
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -764,6 +784,24 @@ export function NewPurchaseForm({
     confirmedAllocation && confirmedAllocation.signature === locationSignature
       ? JSON.stringify(confirmedAllocation.saleChoices)
       : "[]";
+
+  // 품목 그리드 칸 헤더 — 칸 오른쪽 경계에 드래그 손잡이를 같이 넣어서
+  // 마우스로 끌어 너비를 직접 조절할 수 있게 한다.
+  function resizableTh(
+    col: string,
+    label: React.ReactNode,
+    className?: string,
+  ) {
+    return (
+      <th className={className} style={{ width: colWidths[col] }}>
+        {label}
+        <span
+          className={`erp-col-resize-handle${resizingCol === col ? " resizing" : ""}`}
+          onMouseDown={startResize(col)}
+        />
+      </th>
+    );
+  }
 
   return (
     <form
@@ -1331,60 +1369,25 @@ export function NewPurchaseForm({
             className="erp-grid"
             style={{
               tableLayout: "fixed",
-              width: "100%",
-              minWidth: alsoCreateSale ? 1180 : 960,
+              width: itemGridTotalWidth,
+              minWidth: itemGridTotalWidth,
             }}
           >
             <thead>
               <tr>
-                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.product : ITEM_GRID_COLUMN_WIDTHS.product }}>품목</th>
-                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.spec : ITEM_GRID_COLUMN_WIDTHS.spec }}>규격</th>
-                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.lotNumber : ITEM_GRID_COLUMN_WIDTHS.lotNumber }}>
-                  관리번호
-                </th>
-                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.unit : ITEM_GRID_COLUMN_WIDTHS.unit }}>단위</th>
-                <th
-                  className="num"
-                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.quantityIn : ITEM_GRID_COLUMN_WIDTHS.quantity }}
-                >
-                  입고수량
-                </th>
-                {alsoCreateSale && (
-                  <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS_DUAL.quantityOut }}>
-                    출고수량
-                  </th>
-                )}
-                <th
-                  className="num"
-                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.priceIn : ITEM_GRID_COLUMN_WIDTHS.price }}
-                >
-                  매입단가
-                </th>
-                {alsoCreateSale && (
-                  <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS_DUAL.priceOut }}>
-                    매출단가
-                  </th>
-                )}
-                <th
-                  className="num"
-                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.supplyAmount : ITEM_GRID_COLUMN_WIDTHS.supplyAmount }}
-                >
-                  공급가액
-                </th>
-                <th
-                  className="num"
-                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.tax : ITEM_GRID_COLUMN_WIDTHS.tax }}
-                >
-                  세액
-                </th>
-                <th
-                  className="num"
-                  style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.total : ITEM_GRID_COLUMN_WIDTHS.total }}
-                >
-                  합계
-                </th>
-                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.remark : ITEM_GRID_COLUMN_WIDTHS.remark }}>비고</th>
-                <th style={{ width: alsoCreateSale ? ITEM_GRID_COLUMN_WIDTHS_DUAL.actions : ITEM_GRID_COLUMN_WIDTHS.actions }} />
+                {resizableTh("product", "품목")}
+                {resizableTh("spec", "규격")}
+                {resizableTh("lotNumber", "관리번호")}
+                {resizableTh("unit", "단위")}
+                {resizableTh(alsoCreateSale ? "quantityIn" : "quantity", "입고수량", "num")}
+                {alsoCreateSale && resizableTh("quantityOut", "출고수량", "num")}
+                {resizableTh(alsoCreateSale ? "priceIn" : "price", "매입단가", "num")}
+                {alsoCreateSale && resizableTh("priceOut", "매출단가", "num")}
+                {resizableTh("supplyAmount", "공급가액", "num")}
+                {resizableTh("tax", "세액", "num")}
+                {resizableTh("total", "합계", "num")}
+                {resizableTh("remark", "비고")}
+                <th style={{ width: colWidths.actions }} />
               </tr>
             </thead>
             <tbody

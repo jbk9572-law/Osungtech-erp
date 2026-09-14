@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
 import { PriceScheduleForm } from "@/components/price-schedule-form";
@@ -22,6 +21,7 @@ import {
 } from "@/app/(dashboard)/customers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
@@ -84,9 +84,7 @@ export default async function CustomerDetailPage({
             id={customer.id}
             confirmMessage="이 출고처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
           />
-          <Link href="/customers" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/customers" />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">

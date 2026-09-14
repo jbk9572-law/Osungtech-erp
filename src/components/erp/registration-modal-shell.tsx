@@ -1,15 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { startRouteProgress } from "@/lib/route-progress";
+import { ModalCloseProvider } from "@/lib/modal-context";
 
 const SIZE_CLASS = {
   md: "erp-modal-md",
   lg: "erp-modal-lg",
   xl: "erp-modal-xl",
 } as const;
+
+// 닫히는 모습(투명 처리)을 보여준 뒤, 이 시간 안에 실제 이동이 끝나
+// 이 컴포넌트가 언마운트되지 않으면(=이동이 걸리거나 실패한 것) 원래
+// 모습으로 되돌린다 — 안 그러면 배경 화면으로 못 돌아간 채 투명해진
+// 모달만 남아 화면이 멈춘 것처럼 보인다.
+const CLOSING_TIMEOUT_MS = 2000;
 
 function isInternalNavAnchor(target: EventTarget | null): boolean {
   const anchor = (target as HTMLElement | null)?.closest?.(
@@ -41,16 +48,35 @@ export function RegistrationModalShell({
   // 않고, 닫는 클릭 즉시 모달을 시각적으로 먼저 닫아 보여준다 — 안 그러면
   // 이동이 조금만 느려도 "눌린 건지 렉인지" 구분이 안 된다는 지적이 있었다.
   const [closing, setClosing] = useState(false);
+  const closingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closingTimeoutRef.current) clearTimeout(closingTimeoutRef.current);
+    };
+  }, []);
+
+  const beginClosing = useCallback(() => {
+    setClosing(true);
+    if (closingTimeoutRef.current) clearTimeout(closingTimeoutRef.current);
+    // 실제 이동이 이 시간 안에 안 끝나면(=이 컴포넌트가 그대로 남아있으면)
+    // 멈춘 것처럼 안 보이게 원래 모습으로 되돌린다.
+    closingTimeoutRef.current = setTimeout(() => {
+      setClosing(false);
+    }, CLOSING_TIMEOUT_MS);
+  }, []);
 
   const close = useCallback(() => {
-    setClosing(true);
+    beginClosing();
     // 배경 목록으로 돌아가는 것도 실제 라우트 이동이라, 시간이 걸리면
     // "이동 중..." 표시가 뜨게 한다(Link로 닫는 버튼들은 클릭 자체가
     // 감지되어 자동으로 뜨지만, 배경 클릭/ESC 키로 닫을 때는
     // router.back()을 직접 호출하는 거라 그 클릭 감지에 걸리지 않는다).
+    // 뒤로가기는 이미 열려 있던 배경 화면을 그대로 복원하는 것이라, 새로
+    // 서버에 요청하는 방식보다 훨씬 안정적으로 끝난다.
     startRouteProgress();
     router.back();
-  }, [router]);
+  }, [router, beginClosing]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -74,7 +100,7 @@ export function RegistrationModalShell({
   function handleClickCapture(e: MouseEvent<HTMLDivElement>) {
     // "ESC 닫기" 링크처럼 이 모달을 벗어나는 실제 이동이 시작되는 순간,
     // 그 이동이 끝나길 기다리지 않고 즉시 닫히는 모습을 보여준다.
-    if (isInternalNavAnchor(e.target)) setClosing(true);
+    if (isInternalNavAnchor(e.target)) beginClosing();
   }
 
   return (
@@ -90,7 +116,7 @@ export function RegistrationModalShell({
         onClickCapture={handleClickCapture}
       >
         <div className="erp-modal-body" style={{ flex: 1, minHeight: 0 }}>
-          {children}
+          <ModalCloseProvider value={close}>{children}</ModalCloseProvider>
         </div>
       </div>
     </div>

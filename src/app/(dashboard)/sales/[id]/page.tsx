@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { formatPackageQty } from "@/lib/package-qty";
 import {
   formatPaperCalcSizeLines,
@@ -138,9 +139,7 @@ export default async function SaleDetailPage({
               confirmMessage="이 매출 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
             />
           )}
-          <Link href={closeHref} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href={closeHref} />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">

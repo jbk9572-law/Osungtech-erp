@@ -810,6 +810,10 @@
 
 .erp-date-preset-btn {
   height: 24px;
+  /* 프리셋 줄(오늘/이번주/이번달...)과 월별 줄(1월~12월)의 버튼 길이가
+     글자 수에 따라 제각각이라 두 줄이 나란히 있을 때 들쭉날쭉해 보였다
+     — 최소 너비를 통일해서 두 줄이 같은 리듬으로 정렬되게 한다. */
+  min-width: 52px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1042,6 +1046,30 @@
 
 .erp-grid thead th:last-child {
   border-right: none;
+}
+
+/* 표 칸 너비를 마우스로 드래그해서 직접 조절하는 손잡이
+   (use-resizable-columns.ts) — 칸 오른쪽 경계에 얇게 겹쳐두고, 위에
+   올리거나 드래그 중일 때만 파란 선으로 보이게 한다. */
+.erp-col-resize-handle {
+  position: absolute;
+  top: 0;
+  /* 오른쪽 옆 칸(다음 th)이 sticky로 인해 자체 쌓임 맥락을 만들어서, 이
+     손잡이가 옆 칸 쪽으로 조금이라도 넘어가면 z-index를 줘도 옆 칸에
+     가려 클릭이 안 먹는 문제가 있었다 — 지금 칸 안쪽에서만 자리하게
+     둔다(0으로 겹침 없앰). */
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+  touch-action: none;
+}
+
+.erp-col-resize-handle:hover,
+.erp-col-resize-handle.resizing {
+  background: var(--erp-primary);
+  opacity: 0.5;
 }
 
 .erp-grid tbody td {

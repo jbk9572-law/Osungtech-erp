@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getDatePresets } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { ClickableRow } from "@/components/clickable-row";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -203,9 +204,7 @@ export default async function InventoryProductHistoryPage({
       )}
 
       <div className="erp-toolbar">
-        <Link href="/inventory" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
+        <CloseButton href="/inventory">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>

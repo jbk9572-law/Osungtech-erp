@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleTypeSwitcher } from "@/components/new-sale-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -109,9 +110,7 @@ export default async function NewSalePage({
           >
             재단 배치 시뮬레이터
           </Link>
-          <Link href="/sales" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/sales" />
         </div>
       </div>
       {saved && (

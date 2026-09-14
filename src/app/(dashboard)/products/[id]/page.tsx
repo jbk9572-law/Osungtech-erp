@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "@/components/product-form";
 import { DeleteButton } from "@/components/delete-button";
 import { updateProduct, deleteProduct } from "@/app/(dashboard)/products/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { resolveListHref } from "@/lib/list-return";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
@@ -52,9 +52,7 @@ export default async function ProductDetailPage({
             id={product.id}
             confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
           />
-          <Link href={closeHref} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href={closeHref} />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{product.sku}</p>

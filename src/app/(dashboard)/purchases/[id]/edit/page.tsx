@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
 import { updatePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -141,9 +142,7 @@ export default async function EditPurchasePage({
           >
             모조지 계산
           </Link>
-          <Link href={`/purchases/${id}`} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href={`/purchases/${id}`} />
         </div>
       </div>
       <NewPurchaseForm

@@ -50,7 +50,8 @@ import {
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useFormRedirect } from "@/lib/use-form-redirect";
-import { ITEM_GRID_COLUMN_WIDTHS } from "@/lib/item-grid-columns";
+import { ITEM_GRID_COLUMN_PX_WIDTHS } from "@/lib/item-grid-columns";
+import { useResizableColumns } from "@/lib/use-resizable-columns";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
@@ -231,6 +232,13 @@ export function NewSaleForm({
   // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
   // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
   useFormRedirect(state);
+  // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
+  // 값은 브라우저에 저장되어 다음에 열어도 유지된다.
+  const { widths: colWidths, startResize, resizingCol } = useResizableColumns(
+    "erp-sale-item-grid-columns",
+    ITEM_GRID_COLUMN_PX_WIDTHS,
+  );
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
@@ -696,6 +704,24 @@ export function NewSaleForm({
     confirmedAllocation && confirmedAllocation.signature === locationSignature
       ? JSON.stringify(confirmedAllocation.choices)
       : "[]";
+
+  // 품목 그리드 칸 헤더 — 칸 오른쪽 경계에 드래그 손잡이를 같이 넣어서
+  // 마우스로 끌어 너비를 직접 조절할 수 있게 한다.
+  function resizableTh(
+    col: keyof typeof colWidths,
+    label: React.ReactNode,
+    className?: string,
+  ) {
+    return (
+      <th className={className} style={{ width: colWidths[col] }}>
+        {label}
+        <span
+          className={`erp-col-resize-handle${resizingCol === col ? " resizing" : ""}`}
+          onMouseDown={startResize(col)}
+        />
+      </th>
+    );
+  }
 
   return (
     <form
@@ -1318,31 +1344,21 @@ export function NewSaleForm({
         >
           <table
             className="erp-grid"
-            style={{ tableLayout: "fixed", width: "100%", minWidth: 960 }}
+            style={{ tableLayout: "fixed", width: itemGridTotalWidth, minWidth: itemGridTotalWidth }}
           >
             <thead>
               <tr>
-                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.product }}>품목</th>
-                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.spec }}>규격</th>
-                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.lotNumber }}>관리번호</th>
-                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.unit }}>단위</th>
-                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.quantity }}>
-                  수량
-                </th>
-                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.price }}>
-                  단가
-                </th>
-                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.supplyAmount }}>
-                  공급가액
-                </th>
-                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.tax }}>
-                  세액
-                </th>
-                <th className="num" style={{ width: ITEM_GRID_COLUMN_WIDTHS.total }}>
-                  합계
-                </th>
-                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.remark }}>비고</th>
-                <th style={{ width: ITEM_GRID_COLUMN_WIDTHS.actions }} />
+                {resizableTh("product", "품목")}
+                {resizableTh("spec", "규격")}
+                {resizableTh("lotNumber", "관리번호")}
+                {resizableTh("unit", "단위")}
+                {resizableTh("quantity", "수량", "num")}
+                {resizableTh("price", "단가", "num")}
+                {resizableTh("supplyAmount", "공급가액", "num")}
+                {resizableTh("tax", "세액", "num")}
+                {resizableTh("total", "합계", "num")}
+                {resizableTh("remark", "비고")}
+                <th style={{ width: colWidths.actions }} />
               </tr>
             </thead>
             <tbody

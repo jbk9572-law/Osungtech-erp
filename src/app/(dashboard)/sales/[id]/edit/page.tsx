@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
 import { updateSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -145,9 +146,7 @@ export default async function EditSalePage({
           >
             모조지 계산
           </Link>
-          <Link href={`/sales/${id}`} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href={`/sales/${id}`} />
         </div>
       </div>
       <NewSaleForm

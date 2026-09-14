@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PaymentRequestForm } from "@/components/payment-request-form";
 import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 
 export default async function NewPaymentRequestPage() {
   const supabase = await createClient();
@@ -14,9 +14,7 @@ export default async function NewPaymentRequestPage() {
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
-        <Link href="/reports/payment-requests" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
+        <CloseButton href="/reports/payment-requests">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

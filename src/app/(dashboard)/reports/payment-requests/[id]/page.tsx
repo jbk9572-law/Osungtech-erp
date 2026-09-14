@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { ReceiptGallery } from "@/components/receipt-gallery";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
@@ -97,12 +98,7 @@ export default async function PaymentRequestDetailPage({
             confirmMessage="이 지급결의서를 삭제하시겠습니까?"
           />
         )}
-        <Link
-          href="/reports/payment-requests"
-          className="erp-btn erp-btn-danger"
-        >
-          ESC 목록으로
-        </Link>
+        <CloseButton href="/reports/payment-requests">ESC 목록으로</CloseButton>
       </div>
 
       {warning && (

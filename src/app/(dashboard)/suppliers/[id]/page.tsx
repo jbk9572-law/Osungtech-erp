@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerForm } from "@/components/partner-form";
 import { SupplierPriceForm } from "@/components/supplier-price-form";
@@ -22,6 +21,7 @@ import {
 } from "@/app/(dashboard)/suppliers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
 import { getSupplierBalance } from "@/lib/ar-ap";
@@ -84,9 +84,7 @@ export default async function SupplierDetailPage({
             id={supplier.id}
             confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
           />
-          <Link href="/suppliers" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/suppliers" />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import {
   applyDuePriceSchedules,
   applyDuePurchasePriceSchedules,
@@ -139,9 +140,7 @@ export default async function NewPurchasePage({
           >
             재단 배치 시뮬레이터
           </Link>
-          <Link href="/purchases" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/purchases" />
         </div>
       </div>
       {saved && (

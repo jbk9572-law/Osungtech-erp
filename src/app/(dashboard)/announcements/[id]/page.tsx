@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { deleteAnnouncement, updateAnnouncement } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
@@ -63,9 +63,7 @@ export default async function AnnouncementDetailPage({
         {allowManage && (
           <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
         )}
-        <Link href="/announcements" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
+        <CloseButton href="/announcements">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-post-header">
