@@ -3,11 +3,6 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { TitleBar } from "@/components/erp/title-bar";
-import type {
-  AnnouncementItem,
-  DueTodoItem,
-  LowStockItem,
-} from "@/components/erp/notification-bell";
 import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
@@ -15,10 +10,6 @@ import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
-import {
-  MessengerWidget,
-  type MessengerMessage,
-} from "@/components/erp/messenger-widget";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
 
@@ -36,12 +27,8 @@ export function ErpShell({
   companyName,
   logoUrl,
   email,
-  unreadAnnouncements,
-  dueTodos,
-  lowStock,
-  initialMessages,
-  profileNames,
-  currentUserId,
+  notificationBell,
+  messengerWidget,
   usageWidget,
   children,
   modal,
@@ -50,12 +37,8 @@ export function ErpShell({
   companyName?: string | null;
   logoUrl?: string | null;
   email: string | null;
-  unreadAnnouncements: AnnouncementItem[];
-  dueTodos: DueTodoItem[];
-  lowStock: LowStockItem[];
-  initialMessages: MessengerMessage[];
-  profileNames: Record<string, string>;
-  currentUserId: string;
+  notificationBell: React.ReactNode;
+  messengerWidget: React.ReactNode;
   usageWidget: React.ReactNode;
   children: React.ReactNode;
   modal?: React.ReactNode;
@@ -110,9 +93,7 @@ export function ErpShell({
         logoUrl={logoUrl}
         companyName={companyName}
         email={email}
-        unreadAnnouncements={unreadAnnouncements}
-        dueTodos={dueTodos}
-        lowStock={lowStock}
+        notificationBell={notificationBell}
         isMobile={isMobile}
         onToggleMenu={() => setCollapsed((c) => !c)}
       />
@@ -133,11 +114,7 @@ export function ErpShell({
         </div>
       </div>
       <StatusBar email={email} companyName={companyName} />
-      <MessengerWidget
-        initialMessages={initialMessages}
-        profileNames={profileNames}
-        currentUserId={currentUserId}
-      />
+      {messengerWidget}
       {modal}
     </div>
   );
