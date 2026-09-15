@@ -11,7 +11,13 @@ export type MenuLeaf = {
   // 지정한다(예: "메인 대시보드 > 홈"이 아니라 그냥 "메인 대시보드").
   flatLabel?: string;
 };
-export type MenuGroup = { label: string; items: MenuLeaf[] };
+// featureKey가 있는 그룹만 테넌트별로 껐다 켰다 할 수 있다(SaaS 판매용
+// 전환 — 회사마다 쓰는 기능이 다 다르니, 예를 들어 생산 안 하는 유통사는
+// 생산관리를, 오성테크가 아닌 회사는 모조지 계산을 끌 수 있어야 한다).
+// 없으면 모든 테넌트에서 항상 켜져 있는 핵심 기능으로 취급한다. 실제
+// on/off 값은 DB(tenants.disabled_features, migration 104)에 저장되고,
+// 이 배열은 "무엇을 토글할 수 있는가"라는 카탈로그 역할만 한다.
+export type MenuGroup = { label: string; items: MenuLeaf[]; featureKey?: string };
 
 export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
@@ -32,6 +38,7 @@ export const MENU_GROUPS: MenuGroup[] = [
   {
     label: "생산관리",
     items: [{ label: "생산지시 내역", href: "/production" }],
+    featureKey: "production",
   },
   {
     label: "거래처관리",
@@ -43,7 +50,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
-  { label: "전자결재", items: [{ label: "기안함", href: "/approvals" }] },
+  { label: "전자결재", items: [{ label: "기안함", href: "/approvals" }], featureKey: "approvals" },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
   {
     // 성격이 같은 회계/집계 화면 2개(지급결의양식·월별 리포트)를 한
@@ -69,11 +76,13 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "모조지 계산", href: "/paper-calc" },
       { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
     ],
+    featureKey: "paper_calc",
   },
   {
     label: "환경설정",
     items: [
       { label: "회사정보", href: "/settings/company" },
+      { label: "기능 관리", href: "/settings/features" },
       { label: "비밀번호 변경", href: "/settings/password" },
     ],
   },
@@ -86,6 +95,24 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
   },
 ];
+
+// 설정 화면(기능 관리)에 보여줄 카탈로그 — featureKey가 있는 그룹에서
+// 그대로 뽑아낸다. 새 토글 가능 모듈을 추가할 땐 위 MENU_GROUPS에
+// featureKey만 붙이면 여기 자동으로 나타난다(따로 목록을 관리할 필요
+// 없음).
+export type ToggleableFeature = { key: string; label: string };
+
+export const TOGGLEABLE_FEATURES: ToggleableFeature[] = MENU_GROUPS.filter(
+  (g): g is MenuGroup & { featureKey: string } => !!g.featureKey,
+).map((g) => ({ key: g.featureKey, label: g.label }));
+
+// 테넌트가 끈 기능(featureKey) 그룹을 제외한 메뉴 목록. 트리메뉴/빠른검색/
+// 최근메뉴 전부 이 함수를 거친 결과만 써야, 꺼진 메뉴가 어디서는 보이고
+// 어디서는 안 보이는 불일치가 안 생긴다.
+export function getVisibleMenuGroups(disabledFeatures: string[]): MenuGroup[] {
+  if (disabledFeatures.length === 0) return MENU_GROUPS;
+  return MENU_GROUPS.filter((g) => !g.featureKey || !disabledFeatures.includes(g.featureKey));
+}
 
 export type MenuItem = { label: string; href: string };
 
@@ -101,6 +128,15 @@ function flatten(groups: MenuGroup[]): MenuItem[] {
 }
 
 export const MENU_ITEMS: MenuItem[] = flatten(MENU_GROUPS);
+
+// 빠른검색처럼 "지금 이 회사에서 실제로 쓸 수 있는 메뉴"만 보여줘야 하는
+// 곳에서 쓴다. 타이틀바 현재 위치 라벨(labelFor류)은 일부러 이 함수를
+// 안 쓰고 전체 MENU_ITEMS를 그대로 쓴다 — 꺼진 기능 페이지에 어쩌다
+// 남아있는 링크로 들어가도 타이틀바 라벨 자체는 정상 표시돼야 한다.
+export function getVisibleMenuItems(disabledFeatures: string[]): MenuItem[] {
+  if (disabledFeatures.length === 0) return MENU_ITEMS;
+  return flatten(getVisibleMenuGroups(disabledFeatures));
+}
 
 export function findMenuItem(pathname: string): MenuItem | undefined {
   return findByLongestPrefix(MENU_ITEMS, pathname, (m) => m.href);

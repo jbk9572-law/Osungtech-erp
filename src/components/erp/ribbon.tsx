@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { MENU_ITEMS } from "@/lib/erp-menu";
+import { MENU_ITEMS, getVisibleMenuItems } from "@/lib/erp-menu";
 import {
   getFavorites,
   getRecentMenus,
@@ -33,7 +33,7 @@ function labelFor(href: string) {
   return MENU_ITEMS.find((m) => m.href === href)?.label ?? href;
 }
 
-export function Ribbon() {
+export function Ribbon({ disabledFeatures }: { disabledFeatures: string[] }) {
   const router = useRouter();
   const [openPanel, setOpenPanel] = useState<"favorites" | "recent" | null>(
     null,
@@ -114,7 +114,8 @@ export function Ribbon() {
     setFavorites(toggleFavorite(href));
   }
 
-  const filteredMenus = MENU_ITEMS.filter((m) =>
+  const visibleMenuItems = getVisibleMenuItems(disabledFeatures);
+  const filteredMenus = visibleMenuItems.filter((m) =>
     m.label.toLowerCase().includes(query.trim().toLowerCase()),
   );
 

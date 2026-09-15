@@ -271,6 +271,56 @@ export type Database = {
           },
         ];
       };
+      tenants: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+          disabled_features: string[];
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+          disabled_features?: string[];
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+          disabled_features?: string[];
+        };
+        Relationships: [];
+      };
+      tenant_members: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_members_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       approval_documents: {
         Row: {
           id: string;
@@ -1931,6 +1981,10 @@ export type Database = {
       get_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;
+      };
+      set_tenant_feature_enabled: {
+        Args: { p_feature_key: string; p_enabled: boolean };
+        Returns: void;
       };
       submit_approval_document: {
         Args: { p_title: string; p_content: string; p_approver_ids: string[] };

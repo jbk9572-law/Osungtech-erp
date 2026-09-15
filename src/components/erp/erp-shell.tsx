@@ -30,6 +30,7 @@ export function ErpShell({
   notificationBell,
   messengerWidget,
   usageWidget,
+  disabledFeatures,
   children,
   modal,
 }: {
@@ -40,6 +41,7 @@ export function ErpShell({
   notificationBell: React.ReactNode;
   messengerWidget: React.ReactNode;
   usageWidget: React.ReactNode;
+  disabledFeatures: string[];
   children: React.ReactNode;
   modal?: React.ReactNode;
 }) {
@@ -97,13 +99,14 @@ export function ErpShell({
         isMobile={isMobile}
         onToggleMenu={() => setCollapsed((c) => !c)}
       />
-      <Ribbon />
+      <Ribbon disabledFeatures={disabledFeatures} />
       <div className="erp-body">
         <TreeMenu
           usageWidget={usageWidget}
           collapsed={collapsed}
           isMobile={isMobile}
           onToggleCollapsed={() => setCollapsed((c) => !c)}
+          disabledFeatures={disabledFeatures}
         />
         <div className="erp-workspace">
           <RouteProgressBar />

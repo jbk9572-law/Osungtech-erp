@@ -3,15 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { MENU_GROUPS } from "@/lib/erp-menu";
+import { getVisibleMenuGroups } from "@/lib/erp-menu";
 
 type LeafItem = { label: string; href?: string };
 type GroupItem = { label: string; items: LeafItem[] };
-
-// 트리에 보이는 메뉴 구조는 erp-menu.ts의 MENU_GROUPS를 그대로 쓴다 —
-// 예전엔 여기 따로 목록이 있어서(할일관리가 여기서만 대시보드 바로
-// 다음 순서였다) 빠른검색/최근메뉴의 순서와 어긋나 있었다.
-const TREE: GroupItem[] = MENU_GROUPS;
 
 // 그룹당 아이콘 하나 — 사이드바를 접었을 때는 이 아이콘이 그 메뉴를
 // 구분하는 유일한 단서라서(라벨 텍스트가 안 보임), 목록에 없는
@@ -135,6 +130,7 @@ export function TreeMenu({
   collapsed,
   isMobile,
   onToggleCollapsed,
+  disabledFeatures,
 }: {
   // DB/스토리지/서버 사용량 위젯은 서버 컴포넌트(usage-widget-panel.tsx)가
   // 별도로 조회해서 미리 렌더링해 넘겨준다 — 레이아웃의 다른 데이터와
@@ -146,8 +142,14 @@ export function TreeMenu({
   collapsed: boolean;
   isMobile: boolean;
   onToggleCollapsed: () => void;
+  // 이 테넌트(회사)가 꺼둔 기능 그룹(설정 > 기능 관리, migration 104).
+  // 예전엔 여기서 erp-menu.ts의 MENU_GROUPS를 통째로 그대로 썼는데,
+  // SaaS 판매용 전환으로 회사마다 켜는 메뉴가 달라져야 해서 서버가
+  // 내려준 이 값으로 걸러낸 목록만 쓴다.
+  disabledFeatures: string[];
 }) {
   const pathname = usePathname();
+  const TREE: GroupItem[] = getVisibleMenuGroups(disabledFeatures);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of TREE) {
