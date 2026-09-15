@@ -113,6 +113,7 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          supplier_code: string;
           business_number: string | null;
           representative_name: string | null;
           contact_name: string | null;
@@ -127,6 +128,7 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
+          supplier_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -141,6 +143,7 @@ export type Database = {
         Update: {
           id?: string;
           name?: string;
+          supplier_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -1491,6 +1494,7 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          customer_code: string;
           business_number: string | null;
           representative_name: string | null;
           contact_name: string | null;
@@ -1506,6 +1510,7 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
+          customer_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -1521,6 +1526,7 @@ export type Database = {
         Update: {
           id?: string;
           name?: string;
+          customer_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -1789,6 +1795,9 @@ export type Database = {
           invoice_number: string | null;
           invoice_issued_at: string | null;
           invoice_provider: string;
+          tax_type: "과세" | "면세" | "영세";
+          evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at: string | null;
         };
         Insert: {
           id?: string;
@@ -1808,6 +1817,9 @@ export type Database = {
           invoice_number?: string | null;
           invoice_issued_at?: string | null;
           invoice_provider?: string;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Update: {
           id?: string;
@@ -1827,6 +1839,9 @@ export type Database = {
           invoice_number?: string | null;
           invoice_issued_at?: string | null;
           invoice_provider?: string;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Relationships: [
           {
@@ -1919,6 +1934,9 @@ export type Database = {
           created_at: string;
           doc_no: number;
           is_carryover: boolean;
+          tax_type: "과세" | "면세" | "영세";
+          evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at: string | null;
         };
         Insert: {
           id?: string;
@@ -1932,6 +1950,9 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_carryover?: boolean;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Update: {
           id?: string;
@@ -1945,6 +1966,9 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_carryover?: boolean;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Relationships: [
           {

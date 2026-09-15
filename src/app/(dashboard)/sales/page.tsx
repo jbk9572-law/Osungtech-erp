@@ -45,7 +45,7 @@ export default async function SalesPage({
   let query = supabase
     .from("sales_order_items")
     .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, is_carryover, customers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, is_carryover, doc_no, tax_type, evidence_type, statement_issued_at, invoice_status, customers(id, name, customer_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
@@ -101,7 +101,9 @@ export default async function SalesPage({
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = calcVat(supplyAmount);
+    // 과세구분이 면세/영세면 세액 0 — 지금까지는 전부 과세로 취급했다.
+    const taxAmount =
+      item.sales_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -167,6 +169,12 @@ export default async function SalesPage({
             kind: "sale",
             orderId,
             customerId: item.sales_orders?.customers?.id,
+            docNo: item.sales_orders?.doc_no,
+            customerCode: item.sales_orders?.customers?.customer_code,
+            taxType: item.sales_orders?.tax_type,
+            evidenceType: item.sales_orders?.evidence_type,
+            statementIssued: !!item.sales_orders?.statement_issued_at,
+            invoiceStatus: item.sales_orders?.invoice_status,
             date: item.sales_orders?.order_date,
             customerName: item.sales_orders?.customers?.name,
             authorName: item.sales_orders?.profiles?.full_name,
@@ -252,6 +260,7 @@ export default async function SalesPage({
       is_return: boolean;
       memo: string | null;
       delivery_method: string | null;
+      tax_type: "과세" | "면세" | "영세";
       customers: { name: string | null } | null;
     } | null;
     products: { name: string | null; sku: string | null; spec: string | null } | null;
@@ -259,7 +268,7 @@ export default async function SalesPage({
     let totalsQuery = supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, lot_number, remark, custom_name, sales_orders!inner(is_return, memo, delivery_method, customers(name)), products(name, sku, spec)",
+        "quantity, unit_price, spec, lot_number, remark, custom_name, sales_orders!inner(is_return, memo, delivery_method, tax_type, customers(name)), products(name, sku, spec)",
       )
       .gte("sales_orders.order_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -290,6 +299,7 @@ export default async function SalesPage({
     return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
   }, 0);
   const totalTax = filteredTotalsRows.reduce((sum, row) => {
+    if (row.sales_orders?.tax_type !== "과세") return sum;
     const taxAmount = calcVat(row.quantity * Number(row.unit_price));
     return sum + (row.sales_orders?.is_return ? -taxAmount : taxAmount);
   }, 0);

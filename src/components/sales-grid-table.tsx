@@ -45,6 +45,12 @@ export type SalesRow = {
   kind: "sale" | "collection";
   orderId: string | undefined;
   customerId?: string;
+  docNo?: number | null;
+  customerCode?: string | null;
+  taxType?: "과세" | "면세" | "영세" | null;
+  evidenceType?: string | null;
+  statementIssued?: boolean;
+  invoiceStatus?: string;
   date: string | undefined;
   customerName: string | undefined;
   authorName: string | null | undefined;
@@ -254,10 +260,16 @@ export function SalesGridTable({
               <th>품목명 / 적요</th>
               <th>규격</th>
               <th>관리번호</th>
+              <th style={{ width: 90 }}>전표번호</th>
+              <th style={{ width: 76 }}>거래처코드</th>
+              <th style={{ width: 60 }}>과세구분</th>
+              <th style={{ width: 90 }}>증빙유형</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
+              <th style={{ width: 76 }}>명세서발행</th>
+              <th style={{ width: 76 }}>계산서발행</th>
               <th>비고</th>
               <th />
             </tr>
@@ -332,6 +344,32 @@ export function SalesGridTable({
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.lotNumber || "-"}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.docNo ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.customerCode ?? "-"}
+                  </td>
+                  <td>
+                    {row.taxType ? (
+                      <GridBadge
+                        tone={
+                          row.taxType === "과세"
+                            ? "info"
+                            : row.taxType === "영세"
+                              ? "warn"
+                              : "muted"
+                        }
+                      >
+                        {row.taxType}
+                      </GridBadge>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.evidenceType ?? "-"}
+                  </td>
                   <td
                     className="num"
                     style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
@@ -358,6 +396,24 @@ export function SalesGridTable({
                     style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                   >
                     {isCollection ? "-" : `${row.isReturn ? "-" : ""}${row.taxAmount.toLocaleString()}`}
+                  </td>
+                  <td>
+                    {isCollection ? (
+                      "-"
+                    ) : row.statementIssued ? (
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>발행</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+                    )}
+                  </td>
+                  <td>
+                    {isCollection ? (
+                      "-"
+                    ) : row.invoiceStatus === "issued" ? (
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>발행</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+                    )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}
@@ -399,7 +455,7 @@ export function SalesGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={15} className="erp-grid-empty">
+                <td colSpan={21} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -410,7 +466,7 @@ export function SalesGridTable({
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
-                  colSpan={7}
+                  colSpan={11}
                   style={stickyFooterStyle(
                     GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH,
                   )}
@@ -422,6 +478,8 @@ export function SalesGridTable({
                 <td />
                 <td className="num">{totalSupply.toLocaleString()}</td>
                 <td className="num">{totalTax.toLocaleString()}</td>
+                <td />
+                <td />
                 <td />
                 <td />
               </tr>
