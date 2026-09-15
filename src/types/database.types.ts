@@ -385,6 +385,150 @@ export type Database = {
           },
         ];
       };
+      payroll_rate_settings: {
+        Row: {
+          id: string;
+          year: number;
+          min_wage_hourly: number;
+          national_pension_rate: number;
+          health_insurance_rate: number;
+          long_term_care_rate: number;
+          employment_insurance_rate: number;
+          source_note: string | null;
+          last_confirmed_at: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          year: number;
+          min_wage_hourly?: number;
+          national_pension_rate?: number;
+          health_insurance_rate?: number;
+          long_term_care_rate?: number;
+          employment_insurance_rate?: number;
+          source_note?: string | null;
+          last_confirmed_at?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          year?: number;
+          min_wage_hourly?: number;
+          national_pension_rate?: number;
+          health_insurance_rate?: number;
+          long_term_care_rate?: number;
+          employment_insurance_rate?: number;
+          source_note?: string | null;
+          last_confirmed_at?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payroll_rate_settings_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      employee_pay_settings: {
+        Row: {
+          id: string;
+          user_id: string;
+          monthly_base_pay: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          monthly_base_pay?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          monthly_base_pay?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "employee_pay_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payslips: {
+        Row: {
+          id: string;
+          user_id: string;
+          pay_month: string;
+          base_pay: number;
+          gross_pay: number;
+          pension_deduction: number;
+          health_deduction: number;
+          long_term_care_deduction: number;
+          employment_deduction: number;
+          total_deduction: number;
+          net_pay: number;
+          rate_year: number;
+          status: string;
+          created_at: string;
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          pay_month: string;
+          base_pay?: number;
+          gross_pay?: number;
+          pension_deduction?: number;
+          health_deduction?: number;
+          long_term_care_deduction?: number;
+          employment_deduction?: number;
+          total_deduction?: number;
+          net_pay?: number;
+          rate_year: number;
+          status?: string;
+          created_at?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          pay_month?: string;
+          base_pay?: number;
+          gross_pay?: number;
+          pension_deduction?: number;
+          health_deduction?: number;
+          long_term_care_deduction?: number;
+          employment_deduction?: number;
+          total_deduction?: number;
+          net_pay?: number;
+          rate_year?: number;
+          status?: string;
+          created_at?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payslips_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           id: string;

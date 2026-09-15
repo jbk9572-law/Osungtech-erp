@@ -56,6 +56,9 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "근태", href: "/hr/attendance" },
       { label: "연차관리", href: "/hr/leave-balances" },
+      { label: "급여 기준 설정", href: "/hr/payroll-settings" },
+      { label: "직원 급여정보", href: "/hr/employee-pay-settings" },
+      { label: "급여명세", href: "/hr/payroll" },
     ],
     featureKey: "hr",
   },
