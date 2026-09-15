@@ -1837,6 +1837,14 @@ export type Database = {
         Args: { p_username: string };
         Returns: string | null;
       };
+      get_ledger_opening_balance: {
+        Args: {
+          p_product_id: string;
+          p_warehouse_id?: string | null;
+          p_before?: string;
+        };
+        Returns: number;
+      };
       create_work_order: {
         Args: {
           p_product_id: string;

@@ -55,6 +55,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "지급결의양식", href: "/reports/payment-requests" },
       { label: "월별 리포트", href: "/reports/monthly" },
+      { label: "수불부", href: "/reports/ledger" },
     ],
   },
   {
