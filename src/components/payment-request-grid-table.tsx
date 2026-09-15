@@ -6,6 +6,7 @@ import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePaymentRequests } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { GridBadge } from "@/components/grid/badge";
 
 export type PaymentRequestRow = {
   id: string;
@@ -17,6 +18,14 @@ export type PaymentRequestRow = {
   authorName: string | null;
   total: number;
   createdAt: string;
+  status: string;
+};
+
+const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
+  draft: { label: "작성중", tone: "muted" },
+  pending: { label: "결재중", tone: "warn" },
+  approved: { label: "승인완료", tone: "ok" },
+  rejected: { label: "반려", tone: "danger" },
 };
 
 type SortKey = "department" | "authorName" | "total" | "createdAt";
@@ -202,6 +211,7 @@ export function PaymentRequestGridTable({
               {sortableHeader("작성자", "authorName", { width: 110 })}
               {sortableHeader("합계", "total", { width: 130 }, "num")}
               {sortableHeader("작성일", "createdAt", { width: 100 })}
+              <th style={{ width: 90 }}>상태</th>
             </tr>
           </thead>
           <tbody>
@@ -229,12 +239,17 @@ export function PaymentRequestGridTable({
                   <td>{row.authorName ?? "-"}</td>
                   <td className="num">{row.total.toLocaleString()}원</td>
                   <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
+                  <td>
+                    <GridBadge tone={(STATUS_LABEL[row.status] ?? { tone: "muted" as const }).tone}>
+                      {STATUS_LABEL[row.status]?.label ?? row.status}
+                    </GridBadge>
+                  </td>
                 </ClickableRow>
               );
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={8} className="erp-grid-empty">
+                <td colSpan={9} className="erp-grid-empty">
                   등록된 지급결의서가 없습니다.
                 </td>
               </tr>

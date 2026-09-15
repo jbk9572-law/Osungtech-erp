@@ -2234,6 +2234,10 @@ export type Database = {
           requested_by: string | null;
           created_at: string;
           month_key: string | null;
+          status: string;
+          approval_document_id: string | null;
+          decided_at: string | null;
+          decided_by: string | null;
         };
         Insert: {
           id?: string;
@@ -2247,6 +2251,10 @@ export type Database = {
           requested_by?: string | null;
           created_at?: string;
           month_key?: string | null;
+          status?: string;
+          approval_document_id?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
         };
         Update: {
           id?: string;
@@ -2260,6 +2268,10 @@ export type Database = {
           requested_by?: string | null;
           created_at?: string;
           month_key?: string | null;
+          status?: string;
+          approval_document_id?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
         };
         Relationships: [
           {
@@ -2267,6 +2279,13 @@ export type Database = {
             columns: ["requested_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_requests_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
             referencedColumns: ["id"];
           },
         ];
@@ -2678,6 +2697,14 @@ export type Database = {
           p_reference_ids?: string[];
         };
         Returns: string;
+      };
+      submit_payment_request: {
+        Args: { p_id: string; p_approver_ids: string[]; p_reference_ids?: string[] };
+        Returns: string;
+      };
+      recall_payment_request: {
+        Args: { p_id: string };
+        Returns: void;
       };
       submit_attendance_correction: {
         Args: {

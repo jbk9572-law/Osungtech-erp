@@ -2,15 +2,27 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
+import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ReceiptGallery } from "@/components/receipt-gallery";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
+import { GridBadge } from "@/components/grid/badge";
+import { PaymentRequestSubmitForm } from "@/components/payment-request-submit-form";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
-import { deletePaymentRequest } from "../actions";
+import { deletePaymentRequest, submitPaymentRequest, recallPaymentRequestSubmission } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { buildOrgTree } from "@/lib/org-chart";
+
+const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
+  draft: { label: "작성중", tone: "muted" },
+  pending: { label: "결재중", tone: "warn" },
+  approved: { label: "승인완료", tone: "ok" },
+  rejected: { label: "반려", tone: "danger" },
+};
 
 function formatPeriod(from: string | null, to: string | null) {
   if (!from && !to) return "-";
@@ -29,12 +41,12 @@ export default async function PaymentRequestDetailPage({
   const { id } = await params;
   const { warning } = await searchParams;
   const supabase = await createClient();
-  const [{ data: row }, { data: items }, { data: receipts }, actor] =
+  const [{ data: row }, { data: items }, { data: receipts }, actor, departments, profiles, presetsRaw] =
     await Promise.all([
       supabase
         .from("payment_requests")
         .select(
-          "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, profiles(full_name)",
+          "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, status, approval_document_id, decided_at, profiles(full_name)",
         )
         .eq("id", id)
         .maybeSingle(),
@@ -49,6 +61,15 @@ export default async function PaymentRequestDetailPage({
         .eq("payment_request_id", id)
         .order("sort_order", { ascending: true }),
       getCurrentActor(supabase),
+      fetchAllRows<{ id: string; name: string; parent_department_id: string | null; sort_order: number }>((from, to) =>
+        supabase.from("departments").select("id, name, parent_department_id, sort_order").order("sort_order").range(from, to),
+      ),
+      fetchAllRows<{ id: string; full_name: string | null; position_title: string | null; department_id: string | null }>(
+        (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").order("full_name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string; approver_ids: string[]; reference_ids: string[] }>((from, to) =>
+        supabase.from("approval_line_presets").select("id, name, approver_ids, reference_ids").order("name").range(from, to),
+      ),
     ]);
 
   if (!row) {
@@ -56,6 +77,13 @@ export default async function PaymentRequestDetailPage({
   }
 
   const allowManage = canManage(row.requested_by, actor.userId, actor.isAdmin);
+  const orgTree = buildOrgTree(
+    departments.map((d) => ({ id: d.id, name: d.name, parentDepartmentId: d.parent_department_id, sortOrder: d.sort_order })),
+    profiles.map((p) => ({ id: p.id, fullName: p.full_name, positionTitle: p.position_title, departmentId: p.department_id })),
+  );
+  const profileNameById: Record<string, string> = {};
+  for (const p of profiles) profileNameById[p.id] = p.full_name || "구성원";
+  const presets = presetsRaw.map((p) => ({ id: p.id, name: p.name, approverIds: p.approver_ids, referenceIds: p.reference_ids }));
   const total = (items ?? []).reduce(
     (sum, item) => sum + Number(item.amount),
     0,
@@ -65,19 +93,23 @@ export default async function PaymentRequestDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          ...(allowManage && {
-            F4: { href: `/reports/payment-requests/${row.id}/edit` },
-          }),
+          ...(allowManage &&
+            row.status === "draft" && {
+              F4: { href: `/reports/payment-requests/${row.id}/edit` },
+            }),
           F9: { printHref: `/reports/payment-requests/${row.id}/print` },
           Escape: { href: "/reports/payment-requests" },
         }}
       />
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
-        보고서 &gt; 지급결의양식 &gt; 본문
+        보고서 &gt; 지급결의양식 &gt; 본문{" "}
+        <GridBadge tone={(STATUS_LABEL[row.status] ?? { tone: "muted" as const }).tone}>
+          {STATUS_LABEL[row.status]?.label ?? row.status}
+        </GridBadge>
       </h1>
 
       <div className="erp-toolbar">
-        {allowManage && (
+        {allowManage && row.status === "draft" && (
           <Link
             href={`/reports/payment-requests/${row.id}/edit`}
             className="erp-btn"
@@ -91,6 +123,18 @@ export default async function PaymentRequestDetailPage({
         >
           F9 인쇄
         </PrintInPlaceButton>
+        {allowManage && row.status === "pending" && (
+          // F6(삭제) 단축키는 아래 삭제 버튼 하나로만 써야 하므로(두 개를
+          // DeleteButton으로 같이 쓰면 F6에 둘 다 반응하는 문제가 생김)
+          // 회수는 InlineConfirmDelete로 별도 확인만 받는다.
+          <InlineConfirmDelete
+            action={recallPaymentRequestSubmission}
+            hiddenFields={{ id: row.id }}
+            warningText="제출을 회수하시겠습니까? 다시 작성 상태로 돌아갑니다."
+            triggerLabel="회수"
+            triggerClassName="erp-btn erp-btn-danger"
+          />
+        )}
         {allowManage && (
           <DeleteButton
             action={deletePaymentRequest}
@@ -214,6 +258,41 @@ export default async function PaymentRequestDetailPage({
           <PageGuide className="mt-3">영수증 추가·삭제는 F4 수정 화면에서 할 수 있습니다.</PageGuide>
         </div>
       </div>
+
+      {allowManage && row.status === "draft" && (
+        <div className="erp-detail" style={{ marginBottom: 12 }}>
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">제출(마감)</span>
+          </div>
+          <div className="erp-detail-body">
+            <PageGuide>
+              제출하면 사용 내역을 더 이상 추가·수정할 수 없고, 지정한
+              결재선을 거쳐 승인/반려됩니다. 아직 아무도 결재하지 않았다면
+              위 &quot;회수&quot; 버튼으로 다시 작성 상태로 되돌릴 수 있습니다.
+            </PageGuide>
+            <PaymentRequestSubmitForm
+              action={submitPaymentRequest}
+              paymentRequestId={row.id}
+              orgTree={orgTree}
+              presets={presets}
+              profileNameById={profileNameById}
+            />
+          </div>
+        </div>
+      )}
+
+      {row.approval_document_id && (
+        <div className="erp-detail" style={{ marginBottom: 12 }}>
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">결재</span>
+          </div>
+          <div className="erp-detail-body">
+            <Link href={`/approvals/${row.approval_document_id}`} className="erp-btn erp-btn-primary">
+              결재 문서 보기
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

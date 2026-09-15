@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
 import { DetailPageHeader } from "@/components/erp/page-header";
 import { DeleteButton } from "@/components/delete-button";
+import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { GridBadge } from "@/components/grid/badge";
 import { decideApprovalStep, deleteApprovalDocument, recallApprovalDocument } from "@/app/(dashboard)/approvals/actions";
 import { ApprovalDecisionForm } from "@/components/approval-decision-form";
@@ -73,11 +74,15 @@ export default async function ApprovalDocumentDetailPage({
         actions={
           <>
             {canRecall && (
-              <DeleteButton
+              // F6(삭제)은 아래 삭제 버튼 하나로만 써야 한다 — DeleteButton을
+              // 여기서도 쓰면 두 F6 단축키 핸들러가 동시에 등록돼 F6 한 번에
+              // 회수/삭제 확인창이 둘 다 뜨는 문제가 생긴다.
+              <InlineConfirmDelete
                 action={recallApprovalDocument}
-                id={doc.id}
-                label="회수"
-                confirmMessage="이 기안을 회수하시겠습니까? 결재가 진행 중이었다면 처음부터 다시 상신해야 합니다."
+                hiddenFields={{ id: doc.id }}
+                warningText="이 기안을 회수하시겠습니까? 결재가 진행 중이었다면 처음부터 다시 상신해야 합니다."
+                triggerLabel="회수"
+                triggerClassName="erp-btn erp-btn-danger"
               />
             )}
             {canDelete && (

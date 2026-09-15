@@ -16,6 +16,7 @@ type PaymentRequestQueryRow = {
   period_to: string | null;
   card_type: string | null;
   created_at: string;
+  status: string;
   profiles: { full_name: string | null } | null;
   payment_request_line_items: { amount: number }[] | null;
 };
@@ -32,7 +33,7 @@ export default async function PaymentRequestsPage() {
       supabase
         .from("payment_requests")
         .select(
-          "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
+          "id, title, department, period_from, period_to, card_type, created_at, status, profiles(full_name), payment_request_line_items(amount)"
         )
         .order("created_at", { ascending: false })
         .range(from, to)
@@ -50,6 +51,7 @@ export default async function PaymentRequestsPage() {
     authorName: row.profiles?.full_name ?? null,
     total: (row.payment_request_line_items ?? []).reduce((sum, item) => sum + Number(item.amount), 0),
     createdAt: row.created_at,
+    status: row.status,
   }));
 
   return (

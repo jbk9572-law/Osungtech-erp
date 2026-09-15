@@ -15,7 +15,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
   const [{ data: row }, { data: items }, { data: receipts }, actor] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, department, period_from, period_to, card_type, requested_by")
+      .select("id, department, period_from, period_to, card_type, requested_by, status")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -44,6 +44,18 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
         <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           본인이 작성한 지급결의서만 수정할 수 있습니다.
+        </p>
+      </div>
+    );
+  }
+
+  if (row.status !== "draft") {
+    return (
+      <div>
+        <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
+        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+          이미 제출(마감)된 지급결의서는 수정할 수 없습니다. 회수 후 다시 시도해주세요.
         </p>
       </div>
     );
