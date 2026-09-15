@@ -20,6 +20,7 @@ export type Database = {
           created_at: string;
           department_id: string | null;
           position_title: string | null;
+          signature_image_url: string | null;
         };
         Insert: {
           id: string;
@@ -31,6 +32,7 @@ export type Database = {
           created_at?: string;
           department_id?: string | null;
           position_title?: string | null;
+          signature_image_url?: string | null;
         };
         Update: {
           id?: string;
@@ -42,6 +44,7 @@ export type Database = {
           created_at?: string;
           department_id?: string | null;
           position_title?: string | null;
+          signature_image_url?: string | null;
         };
         Relationships: [
           {
@@ -739,6 +742,9 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           decided_at: string | null;
+          recalled_at: string | null;
+          draft_approver_ids: string[];
+          draft_reference_ids: string[];
         };
         Insert: {
           id?: string;
@@ -748,6 +754,9 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           decided_at?: string | null;
+          recalled_at?: string | null;
+          draft_approver_ids?: string[];
+          draft_reference_ids?: string[];
         };
         Update: {
           id?: string;
@@ -757,6 +766,9 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           decided_at?: string | null;
+          recalled_at?: string | null;
+          draft_approver_ids?: string[];
+          draft_reference_ids?: string[];
         };
         Relationships: [
           {
@@ -778,6 +790,7 @@ export type Database = {
           role: string;
           comment: string | null;
           decided_at: string | null;
+          decided_by: string | null;
         };
         Insert: {
           id?: string;
@@ -788,6 +801,7 @@ export type Database = {
           role?: string;
           comment?: string | null;
           decided_at?: string | null;
+          decided_by?: string | null;
         };
         Update: {
           id?: string;
@@ -798,6 +812,7 @@ export type Database = {
           role?: string;
           comment?: string | null;
           decided_at?: string | null;
+          decided_by?: string | null;
         };
         Relationships: [
           {
@@ -812,6 +827,132 @@ export type Database = {
             columns: ["approver_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_delegations: {
+        Row: {
+          id: string;
+          delegator_id: string;
+          delegate_id: string;
+          start_date: string;
+          end_date: string;
+          reason: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          delegator_id: string;
+          delegate_id: string;
+          start_date: string;
+          end_date: string;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          delegator_id?: string;
+          delegate_id?: string;
+          start_date?: string;
+          end_date?: string;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_delegations_delegator_id_fkey";
+            columns: ["delegator_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_delegations_delegate_id_fkey";
+            columns: ["delegate_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_line_presets: {
+        Row: {
+          id: string;
+          name: string;
+          approver_ids: string[];
+          reference_ids: string[];
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          approver_ids?: string[];
+          reference_ids?: string[];
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          approver_ids?: string[];
+          reference_ids?: string[];
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_line_presets_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_matrix_rules: {
+        Row: {
+          id: string;
+          template_id: string;
+          preset_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          preset_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          preset_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_matrix_rules_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: true;
+            referencedRelation: "document_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_matrix_rules_preset_id_fkey";
+            columns: ["preset_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_line_presets";
             referencedColumns: ["id"];
           },
         ];
@@ -2406,12 +2547,38 @@ export type Database = {
         Args: { p_document_id: string };
         Returns: boolean;
       };
+      is_active_delegate_for: {
+        Args: { p_delegator_id: string };
+        Returns: boolean;
+      };
       submit_approval_document: {
         Args: { p_title: string; p_content: string; p_approver_ids: string[]; p_reference_ids?: string[] };
         Returns: string;
       };
       decide_approval_step: {
         Args: { p_step_id: string; p_decision: string; p_comment?: string | null };
+        Returns: void;
+      };
+      save_approval_draft: {
+        Args: {
+          p_id: string | null;
+          p_title: string;
+          p_content: string;
+          p_approver_ids?: string[];
+          p_reference_ids?: string[];
+        };
+        Returns: string;
+      };
+      submit_approval_draft: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      recall_approval_document: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      update_own_signature: {
+        Args: { p_url: string | null };
         Returns: void;
       };
       get_ledger_opening_balance: {

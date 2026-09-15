@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { EmployeeDepartmentForm } from "@/components/employee-department-form";
@@ -79,43 +80,37 @@ export default async function DepartmentsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/settings/departments/new" }, Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 조직도 관리</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href="/settings/departments/new" className="erp-btn erp-btn-primary">
-            F2 새 부서
-          </Link>
-          <Link href="/dashboard" className="erp-btn erp-btn-dark">
-            ESC 닫기
-          </Link>
-        </div>
-      </div>
+      <ListPageHeader
+        title="환경설정 > 조직도 관리"
+        actions={
+          <>
+            <Link href="/settings/departments/new" className="erp-btn erp-btn-primary">
+              F2 새 부서
+            </Link>
+            <Link href="/dashboard" className="erp-btn erp-btn-dark">
+              ESC 닫기
+            </Link>
+          </>
+        }
+      />
 
       <PageGuide>
         부서 트리를 만들고 구성원을 배치합니다. 전자결재 결재선을 조직도
         기준으로 고를 때 이 구조가 그대로 쓰입니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">조직도</span>
-        </div>
-        <div className="erp-detail-body">
-          {tree.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-              등록된 부서가 없습니다.
-            </p>
-          ) : (
-            tree.map((node) => <DepartmentNode key={node.id} node={node} depth={0} />)
-          )}
-        </div>
-      </div>
+      <FormSection tabLabel="조직도">
+        {tree.length === 0 ? (
+          <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            등록된 부서가 없습니다.
+          </p>
+        ) : (
+          tree.map((node) => <DepartmentNode key={node.id} node={node} depth={0} />)
+        )}
+      </FormSection>
 
-      <div className="erp-detail">
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">구성원 배치</span>
-        </div>
-        <div className="erp-detail-body">
+      <div style={{ marginTop: 14 }}>
+        <FormSection tabLabel="구성원 배치">
           <div className="erp-grid-wrap">
             <table className="erp-grid">
               <thead>
@@ -142,7 +137,7 @@ export default async function DepartmentsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </FormSection>
       </div>
     </div>
   );

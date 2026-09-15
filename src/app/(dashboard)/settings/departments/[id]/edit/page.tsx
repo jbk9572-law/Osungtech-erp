@@ -4,6 +4,7 @@ import { DepartmentForm } from "@/components/department-form";
 import { updateDepartment } from "@/app/(dashboard)/settings/departments/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function EditDepartmentPage({
@@ -27,23 +28,18 @@ export default async function EditDepartmentPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/departments" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 조직도 관리 &gt; 부서 수정</h1>
-      <div className="erp-toolbar">
-        <CloseButton href="/settings/departments">ESC 목록으로</CloseButton>
-      </div>
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">부서 수정</span>
-        </div>
-        <div className="erp-detail-body">
-          <DepartmentForm
-            action={updateDepartment}
-            submitLabel="저장"
-            candidates={departments}
-            initial={{ id: department.id, name: department.name, parentDepartmentId: department.parent_department_id }}
-          />
-        </div>
-      </div>
+      <ListPageHeader
+        title="환경설정 > 조직도 관리 > 부서 수정"
+        actions={<CloseButton href="/settings/departments">ESC 목록으로</CloseButton>}
+      />
+      <FormSection tabLabel="부서 수정">
+        <DepartmentForm
+          action={updateDepartment}
+          submitLabel="저장"
+          candidates={departments}
+          initial={{ id: department.id, name: department.name, parentDepartmentId: department.parent_department_id }}
+        />
+      </FormSection>
     </div>
   );
 }

@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClickableRow } from "@/components/clickable-row";
 
-const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
+const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   pending: { label: "결재중", tone: "warn" },
   approved: { label: "승인완료", tone: "ok" },
   rejected: { label: "반려", tone: "danger" },
+  recalled: { label: "회수됨", tone: "muted" },
 };
 
 const TABS: { key: string; label: string }[] = [
@@ -16,6 +18,7 @@ const TABS: { key: string; label: string }[] = [
   { key: "pending", label: "진행중" },
   { key: "approved", label: "완료" },
   { key: "rejected", label: "반려" },
+  { key: "recalled", label: "회수" },
 ];
 
 export default async function ApprovalsPage({
@@ -37,8 +40,23 @@ export default async function ApprovalsPage({
     .select("id, title, status, created_at, profiles!created_by(full_name)")
     .order("created_at", { ascending: false })
     .limit(200);
-  if (activeTab !== "all") query = query.eq("status", activeTab);
+  // 임시저장(draft)은 이 기안함이 아니라 /approvals/drafts에서만 보여준다
+  // — 여기 섞이면 "결재선도 없는 문서"가 목록에 나타나 혼란스럽다.
+  query = activeTab === "all" ? query.neq("status", "draft") : query.eq("status", activeTab);
   const { data: docs } = await query;
+
+  // 지금 로그인한 사람이 대리 결재 중인 원 결재자 목록 — "내 차례" 판정에
+  // 본인 몫뿐 아니라 위임받은 몫도 포함시킨다.
+  const { data: delegations } = user
+    ? await supabase
+        .from("approval_delegations")
+        .select("delegator_id, start_date, end_date")
+        .eq("delegate_id", user.id)
+    : { data: [] as { delegator_id: string; start_date: string; end_date: string }[] };
+  const today = new Date().toISOString().slice(0, 10);
+  const delegatedForIds = new Set(
+    (delegations ?? []).filter((d) => d.start_date <= today && today <= d.end_date).map((d) => d.delegator_id),
+  );
 
   const docIds = (docs ?? []).map((d) => d.id);
   const { data: steps } = docIds.length
@@ -66,27 +84,46 @@ export default async function ApprovalsPage({
 
   const rows = (docs ?? []).map((d) => {
     const current = currentStepByDoc.get(d.id);
-    const myTurn = d.status === "pending" && current?.approverId === user?.id;
+    const myTurn =
+      d.status === "pending" &&
+      !!current &&
+      (current.approverId === user?.id || delegatedForIds.has(current.approverId));
     return { ...d, myTurn };
   });
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/approvals/new" }, Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">전자결재 &gt; 기안함</h1>
-
-      <div className="erp-toolbar">
-        <Link href="/approvals/new" className="erp-btn erp-btn-primary">
-          F2 기안
-        </Link>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
-        </Link>
-      </div>
+      <ListPageHeader
+        title="전자결재 > 기안함"
+        actions={
+          <>
+            <Link href="/approvals/new" className="erp-btn erp-btn-primary">
+              F2 기안
+            </Link>
+            <Link href="/approvals/drafts" className="erp-btn">
+              임시저장함
+            </Link>
+            <Link href="/approvals/lines" className="erp-btn">
+              공유 결재선
+            </Link>
+            <Link href="/approvals/matrix" className="erp-btn">
+              결재매트릭스
+            </Link>
+            <Link href="/settings/delegations" className="erp-btn">
+              전결권 관리
+            </Link>
+            <Link href="/dashboard" className="erp-btn erp-btn-dark">
+              ESC 닫기
+            </Link>
+          </>
+        }
+      />
 
       <PageGuide>
         본인이 기안했거나 결재선/참조에 포함된 문서만 보입니다. &quot;내 차례&quot;
-        배지가 붙은 문서는 지금 승인/반려를 기다리고 있습니다.
+        배지가 붙은 문서는 지금 승인/반려를 기다리고 있고(대리 결재 중인
+        문서도 포함), 아직 상신 전인 문서는 임시저장함에서 이어 씁니다.
       </PageGuide>
 
       <div className="erp-date-presets" style={{ marginBottom: 12 }}>

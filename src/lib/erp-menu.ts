@@ -50,7 +50,16 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
-  { label: "전자결재", items: [{ label: "기안함", href: "/approvals" }], featureKey: "approvals" },
+  {
+    label: "전자결재",
+    items: [
+      { label: "기안함", href: "/approvals" },
+      { label: "임시저장함", href: "/approvals/drafts" },
+      { label: "공유 결재선", href: "/approvals/lines" },
+      { label: "결재매트릭스", href: "/approvals/matrix" },
+    ],
+    featureKey: "approvals",
+  },
   {
     label: "인사관리",
     items: [
@@ -96,6 +105,8 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "회사정보", href: "/settings/company" },
       { label: "조직도 관리", href: "/settings/departments" },
+      { label: "전결권 관리", href: "/settings/delegations" },
+      { label: "전자서명 등록", href: "/settings/signature" },
       { label: "기능 관리", href: "/settings/features" },
       { label: "비밀번호 변경", href: "/settings/password" },
     ],
