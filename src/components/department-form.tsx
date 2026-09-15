@@ -39,7 +39,8 @@ export function DepartmentForm({
             ))}
         </select>
       </div>
-      <div className="erp-field flex items-end">
+      <div className="erp-field">
+        <label aria-hidden="true">&nbsp;</label>
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
           {pending ? "저장 중..." : `F7 ${submitLabel}`}
         </button>

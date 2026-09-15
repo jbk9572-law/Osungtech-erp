@@ -113,7 +113,8 @@ export function QuickPaymentRequestForm({
         </label>
         <ReceiptPicker clearOn={state} />
       </div>
-      <div className="erp-field flex items-end">
+      <div className="erp-field">
+        <label aria-hidden="true">&nbsp;</label>
         <button type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
           {pending ? (
             <>
