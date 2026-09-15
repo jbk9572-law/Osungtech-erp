@@ -529,6 +529,111 @@ export type Database = {
           },
         ];
       };
+      document_templates: {
+        Row: {
+          id: string;
+          category: string;
+          name: string;
+          body: string;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category?: string;
+          name: string;
+          body?: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          category?: string;
+          name?: string;
+          body?: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "document_templates_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      document_instances: {
+        Row: {
+          id: string;
+          template_id: string | null;
+          category: string;
+          title: string;
+          subject_user_id: string | null;
+          field_values: Json;
+          rendered_body: string;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+          issued_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          template_id?: string | null;
+          category?: string;
+          title: string;
+          subject_user_id?: string | null;
+          field_values?: Json;
+          rendered_body?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          issued_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          template_id?: string | null;
+          category?: string;
+          title?: string;
+          subject_user_id?: string | null;
+          field_values?: Json;
+          rendered_body?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          issued_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "document_instances_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "document_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "document_instances_subject_user_id_fkey";
+            columns: ["subject_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "document_instances_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           id: string;

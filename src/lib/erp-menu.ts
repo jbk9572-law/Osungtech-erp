@@ -59,6 +59,8 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "급여 기준 설정", href: "/hr/payroll-settings" },
       { label: "직원 급여정보", href: "/hr/employee-pay-settings" },
       { label: "급여명세", href: "/hr/payroll" },
+      { label: "문서함", href: "/hr/documents" },
+      { label: "문서 양식 관리", href: "/hr/documents/templates" },
     ],
     featureKey: "hr",
   },
