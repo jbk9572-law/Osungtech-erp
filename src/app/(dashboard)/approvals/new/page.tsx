@@ -1,19 +1,36 @@
-import { createClient, getUser } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { ApprovalDocumentForm } from "@/components/approval-document-form";
 import { submitApprovalDocument } from "@/app/(dashboard)/approvals/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { buildOrgTree } from "@/lib/org-chart";
 
 export default async function NewApprovalDocumentPage() {
   const supabase = await createClient();
-  const user = await getUser();
 
-  const allProfiles = await fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
-    supabase.from("profiles").select("id, full_name").order("full_name").range(from, to),
+  const [departments, profiles, templates] = await Promise.all([
+    fetchAllRows<{ id: string; name: string; parent_department_id: string | null; sort_order: number }>((from, to) =>
+      supabase.from("departments").select("id, name, parent_department_id, sort_order").order("sort_order").range(from, to),
+    ),
+    fetchAllRows<{ id: string; full_name: string | null; position_title: string | null; department_id: string | null }>(
+      (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").order("full_name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string; body: string }>((from, to) =>
+      supabase
+        .from("document_templates")
+        .select("id, name, body")
+        .eq("category", "approval")
+        .eq("is_active", true)
+        .order("name")
+        .range(from, to),
+    ),
+  ]);
+
+  const orgTree = buildOrgTree(
+    departments.map((d) => ({ id: d.id, name: d.name, parentDepartmentId: d.parent_department_id, sortOrder: d.sort_order })),
+    profiles.map((p) => ({ id: p.id, fullName: p.full_name, positionTitle: p.position_title, departmentId: p.department_id })),
   );
-  // 본인을 본인 결재선에 넣는 건 의미가 없으므로 후보에서 제외한다.
-  const approvers = allProfiles.filter((p) => p.id !== user?.id);
 
   return (
     <div>
@@ -29,7 +46,7 @@ export default async function NewApprovalDocumentPage() {
           <span className="erp-detail-tab active">기안서 작성</span>
         </div>
         <div className="erp-detail-body">
-          <ApprovalDocumentForm action={submitApprovalDocument} approvers={approvers} />
+          <ApprovalDocumentForm action={submitApprovalDocument} orgTree={orgTree} templates={templates} />
         </div>
       </div>
     </div>

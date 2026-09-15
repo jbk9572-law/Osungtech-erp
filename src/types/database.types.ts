@@ -18,6 +18,8 @@ export type Database = {
           role: "admin" | "manager" | "staff";
           is_demo: boolean;
           created_at: string;
+          department_id: string | null;
+          position_title: string | null;
         };
         Insert: {
           id: string;
@@ -27,6 +29,8 @@ export type Database = {
           role?: "admin" | "manager" | "staff";
           is_demo?: boolean;
           created_at?: string;
+          department_id?: string | null;
+          position_title?: string | null;
         };
         Update: {
           id?: string;
@@ -36,8 +40,50 @@ export type Database = {
           role?: "admin" | "manager" | "staff";
           is_demo?: boolean;
           created_at?: string;
+          department_id?: string | null;
+          position_title?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      departments: {
+        Row: {
+          id: string;
+          name: string;
+          parent_department_id: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          parent_department_id?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          parent_department_id?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "departments_parent_department_id_fkey";
+            columns: ["parent_department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       categories: {
         Row: {
@@ -726,27 +772,30 @@ export type Database = {
         Row: {
           id: string;
           document_id: string;
-          step_order: number;
+          step_order: number | null;
           approver_id: string;
           status: string;
+          role: string;
           comment: string | null;
           decided_at: string | null;
         };
         Insert: {
           id?: string;
           document_id: string;
-          step_order: number;
+          step_order?: number | null;
           approver_id: string;
           status?: string;
+          role?: string;
           comment?: string | null;
           decided_at?: string | null;
         };
         Update: {
           id?: string;
           document_id?: string;
-          step_order?: number;
+          step_order?: number | null;
           approver_id?: string;
           status?: string;
+          role?: string;
           comment?: string | null;
           decided_at?: string | null;
         };
@@ -2358,7 +2407,7 @@ export type Database = {
         Returns: boolean;
       };
       submit_approval_document: {
-        Args: { p_title: string; p_content: string; p_approver_ids: string[] };
+        Args: { p_title: string; p_content: string; p_approver_ids: string[]; p_reference_ids?: string[] };
         Returns: string;
       };
       decide_approval_step: {

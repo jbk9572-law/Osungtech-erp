@@ -95,6 +95,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     label: "환경설정",
     items: [
       { label: "회사정보", href: "/settings/company" },
+      { label: "조직도 관리", href: "/settings/departments" },
       { label: "기능 관리", href: "/settings/features" },
       { label: "비밀번호 변경", href: "/settings/password" },
     ],

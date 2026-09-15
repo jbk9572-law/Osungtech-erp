@@ -30,17 +30,19 @@ export default async function ApprovalDocumentDetailPage({
       .maybeSingle(),
     supabase
       .from("approval_steps")
-      .select("id, step_order, approver_id, status, comment, decided_at, profiles!approver_id(full_name)")
+      .select("id, step_order, approver_id, status, role, comment, decided_at, profiles!approver_id(full_name)")
       .eq("document_id", id)
-      .order("step_order", { ascending: true }),
+      .order("step_order", { ascending: true, nullsFirst: false }),
   ]);
 
   if (!doc) {
     notFound();
   }
 
-  const stepRows = steps ?? [];
-  const currentStep = stepRows.find((s) => s.status === "pending");
+  const allSteps = steps ?? [];
+  const approverSteps = allSteps.filter((s) => s.role === "approver");
+  const referenceSteps = allSteps.filter((s) => s.role === "reference");
+  const currentStep = approverSteps.find((s) => s.status === "pending");
   const myTurn = doc.status === "pending" && currentStep?.approver_id === user?.id;
   const canDelete = doc.created_by === user?.id;
 
@@ -81,8 +83,8 @@ export default async function ApprovalDocumentDetailPage({
           <span className="erp-detail-tab active">결재선</span>
         </div>
         <div className="erp-detail-body">
-          <div className="m-steps flex flex-wrap gap-2" style={{ marginBottom: myTurn ? 16 : 0 }}>
-            {stepRows.map((s) => {
+          <div className="m-steps flex flex-wrap gap-2" style={{ marginBottom: 12 }}>
+            {approverSteps.map((s) => {
               const tone = s.status === "approved" ? "ok" : s.status === "rejected" ? "danger" : "muted";
               return (
                 <div
@@ -102,6 +104,19 @@ export default async function ApprovalDocumentDetailPage({
               );
             })}
           </div>
+
+          {referenceSteps.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: myTurn ? 16 : 0 }}>
+              <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                참조:
+              </span>
+              {referenceSteps.map((s) => (
+                <GridBadge key={s.id} tone="info">
+                  {s.profiles?.full_name ?? "구성원"}
+                </GridBadge>
+              ))}
+            </div>
+          )}
 
           {myTurn && currentStep && (
             <ApprovalDecisionForm action={decideApprovalStep} stepId={currentStep.id} documentId={doc.id} />

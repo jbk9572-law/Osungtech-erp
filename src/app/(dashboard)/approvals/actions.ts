@@ -13,6 +13,7 @@ export async function submitApprovalDocument(_prevState: FormState, formData: Fo
   const title = String(formData.get("title") ?? "").trim();
   const content = String(formData.get("content") ?? "").trim();
   const approverIds = formData.getAll("approver_id").map(String).filter(Boolean);
+  const referenceIds = formData.getAll("reference_id").map(String).filter(Boolean);
 
   if (!title) {
     return { error: "제목을 입력해주세요." };
@@ -26,6 +27,7 @@ export async function submitApprovalDocument(_prevState: FormState, formData: Fo
     p_title: title,
     p_content: content,
     p_approver_ids: approverIds,
+    p_reference_ids: referenceIds,
   });
 
   if (error || !docId) {
