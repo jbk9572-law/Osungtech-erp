@@ -10,11 +10,19 @@ export async function getGridColumnWidths(
   gridKey: string,
 ): Promise<Record<string, number> | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("ui_grid_column_widths")
     .select("widths")
     .eq("grid_key", gridKey)
     .maybeSingle();
+
+  // 저장된 값이 아직 없는 것(정상)과 조회 자체가 실패한 것(테이블 없음/
+  // 권한 문제 등)을 구분해 로그로 남긴다 — 둘 다 조용히 null을 반환해
+  // 화면은 기본값으로 그대로 동작하지만, 후자를 아무 흔적 없이 삼키면
+  // "왜 저장이 안 되냐"는 문의가 와도 원인을 못 찾는다(실제로 있었던 일).
+  if (error) {
+    console.error(`표 칸 너비 조회 실패(${gridKey}):`, error);
+  }
 
   return (data?.widths as Record<string, number> | null) ?? null;
 }

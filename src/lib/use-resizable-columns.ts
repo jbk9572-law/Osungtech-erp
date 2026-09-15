@@ -34,8 +34,12 @@ export function useResizableColumns<Col extends string>(
 
   const persist = useCallback(
     (next: Record<Col, number>) => {
-      saveGridColumnWidths(storageKey, next).catch(() => {
-        // 무시: 저장 실패해도 화면 조절 자체는 그대로 동작한다.
+      // 저장 실패해도 화면 조절 자체는 그대로 동작하게 에러를 화면에는
+      // 띄우지 않는다 — 다만 완전히 조용히 삼키면 "DB 테이블이 아직
+      // 없다" 같은 원인을 아무도 못 알아채고 조절값이 계속 안 남는
+      // 채로 방치될 수 있어(실제로 이런 사고가 있었다), 콘솔에는 남긴다.
+      saveGridColumnWidths(storageKey, next).catch((err) => {
+        console.error(`표 칸 너비 저장 실패(${storageKey}):`, err);
       });
     },
     [storageKey],
