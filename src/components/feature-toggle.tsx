@@ -27,33 +27,37 @@ export function FeatureToggle({
   }
 
   return (
-    <label className="flex items-center gap-2" style={{ cursor: pending ? "wait" : "pointer" }}>
-      <input
-        type="checkbox"
-        checked={enabled}
-        disabled={pending}
-        aria-label={`${featureKey} 기능 사용`}
-        onChange={() => {
-          const next = !enabled;
-          const previous = enabled;
-          setEnabled(next);
-          setError(null);
-          const formData = new FormData();
-          formData.set("feature_key", featureKey);
-          formData.set("enabled", next ? "1" : "0");
-          startTransition(async () => {
-            const result = await action(undefined, formData);
-            if (result?.error) {
-              setEnabled(previous);
-              setError(result.error);
-            }
-          });
-        }}
-      />
+    <div className="flex items-center gap-2">
+      <label className="erp-switch">
+        <input
+          type="checkbox"
+          checked={enabled}
+          disabled={pending}
+          aria-label={`${featureKey} 기능 사용`}
+          onChange={() => {
+            const next = !enabled;
+            const previous = enabled;
+            setEnabled(next);
+            setError(null);
+            const formData = new FormData();
+            formData.set("feature_key", featureKey);
+            formData.set("enabled", next ? "1" : "0");
+            startTransition(async () => {
+              const result = await action(undefined, formData);
+              if (result?.error) {
+                setEnabled(previous);
+                setError(result.error);
+              }
+            });
+          }}
+        />
+        <span className="erp-switch-track" />
+        <span className="erp-switch-knob" />
+      </label>
       <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
         {enabled ? "사용" : "미사용"}
       </span>
       {error && <span className="text-xs" style={{ color: "var(--erp-danger)" }}>{error}</span>}
-    </label>
+    </div>
   );
 }

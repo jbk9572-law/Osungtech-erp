@@ -2474,3 +2474,57 @@
   background: #b7bec9;
   background-clip: padding-box;
 }
+
+/* ── 토글 스위치(기능 관리 등 켜기/끄기) ──────────────────────────
+   나머지 컴포넌트와 같은 각진 디자인 언어를 그대로 따른다 — 흔한
+   알약(pill) 모양 스위치 대신 사각 트랙 + 사각 손잡이로 통일한다. */
+.erp-switch {
+  position: relative;
+  display: inline-flex;
+  width: 38px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.erp-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.erp-switch-track {
+  position: absolute;
+  inset: 0;
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border);
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.erp-switch input:checked + .erp-switch-track {
+  background: var(--erp-primary);
+  border-color: var(--erp-primary-dark);
+}
+.erp-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: var(--erp-text-muted);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.erp-switch input:checked ~ .erp-switch-knob {
+  transform: translateX(18px);
+  background: #fff;
+}
+.erp-switch input:disabled ~ .erp-switch-track {
+  opacity: 0.5;
+}
+.erp-switch input:disabled {
+  cursor: wait;
+}
+.erp-switch input:focus-visible + .erp-switch-track {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 2px;
+}
