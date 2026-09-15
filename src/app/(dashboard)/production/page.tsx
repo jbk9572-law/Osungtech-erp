@@ -6,20 +6,21 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { deleteWorkOrder } from "@/app/(dashboard)/production/actions";
+import { matchesSearch } from "@/lib/search-match";
 
 export default async function ProductionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string }>;
 }) {
-  const { from, to } = await searchParams;
+  const { from, to, q } = await searchParams;
   // 매출/매입 목록과 같은 기본값(오늘) — 그 이전 내역은 프리셋/날짜
   // 필터로 직접 조회한다.
   const effectiveFrom = from || todayStr();
   const effectiveTo = to || todayStr();
   const supabase = await createClient();
 
-  const { data: rows } = await supabase
+  const { data: rawRows } = await supabase
     .from("work_orders")
     .select(
       "id, doc_no, order_date, quantity, memo, products(sku, name, unit), warehouses(name), profiles!created_by(full_name)",
@@ -28,6 +29,13 @@ export default async function ProductionPage({
     .lte("order_date", effectiveTo)
     .order("order_date", { ascending: false })
     .order("doc_no", { ascending: false });
+
+  const keyword = q?.trim().toLowerCase();
+  const rows = keyword
+    ? rawRows?.filter((row) =>
+        matchesSearch(keyword, row.products?.sku, row.products?.name, row.memo, row.warehouses?.name),
+      )
+    : rawRows;
 
   return (
     <div>
@@ -56,14 +64,35 @@ export default async function ProductionPage({
         to={effectiveTo}
       />
 
-      {(rows ?? []).length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-          조회 기간에 등록된 생산지시가 없습니다.
-        </p>
-      ) : (
-        <div className="erp-grid-wrap">
-          <table className="erp-grid">
-            <thead>
+      <form method="get" className="erp-search" style={{ marginBottom: 12 }}>
+        {from && <input type="hidden" name="from" value={from} />}
+        {to && <input type="hidden" name="to" value={to} />}
+        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+          <label htmlFor="production-search-q">완제품 / 창고 / 메모 검색</label>
+          <input
+            id="production-search-q"
+            type="text"
+            name="q"
+            autoComplete="off"
+            defaultValue={q ?? ""}
+            placeholder="상품명, SKU, 창고, 메모"
+            className="erp-input"
+            style={{ width: "100%" }}
+          />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          조회
+        </button>
+        {q && (
+          <Link href="/production" className="erp-btn">
+            초기화
+          </Link>
+        )}
+      </form>
+
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
               <tr>
                 <th style={{ width: 90 }}>일자</th>
                 <th style={{ width: 90 }}>지시번호</th>
@@ -101,10 +130,16 @@ export default async function ProductionPage({
                   </td>
                 </tr>
               ))}
+              {!rows?.length && (
+                <tr>
+                  <td colSpan={8} className="erp-grid-empty">
+                    조건에 맞는 생산지시가 없습니다.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-      )}
     </div>
   );
 }
