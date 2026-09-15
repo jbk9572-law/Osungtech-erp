@@ -51,6 +51,14 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
   { label: "전자결재", items: [{ label: "기안함", href: "/approvals" }], featureKey: "approvals" },
+  {
+    label: "인사관리",
+    items: [
+      { label: "근태", href: "/hr/attendance" },
+      { label: "연차관리", href: "/hr/leave-balances" },
+    ],
+    featureKey: "hr",
+  },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
   {
     // 성격이 같은 회계/집계 화면 2개(지급결의양식·월별 리포트)를 한

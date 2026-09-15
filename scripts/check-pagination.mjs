@@ -42,6 +42,7 @@ const SAFE_UNBOUNDED_TABLES = new Set([
   "warehouses", // 창고 1곳 기준 운영이라 사실상 1~2행
   "company_profile", // 싱글턴 설정 테이블 (id=1 고정)
   "profiles", // 이 회사 구성원 계정 수 — 거래량과 무관, 수십 명 규모
+  "leave_balances", // 구성원 수 × 연도 수 — profiles와 같은 이유로 거래량과 무관
 ]);
 
 const ALLOWLIST = new Set([

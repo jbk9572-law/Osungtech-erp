@@ -271,6 +271,120 @@ export type Database = {
           },
         ];
       };
+      attendance_records: {
+        Row: {
+          id: string;
+          user_id: string;
+          work_date: string;
+          clock_in_at: string | null;
+          clock_out_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          work_date?: string;
+          clock_in_at?: string | null;
+          clock_out_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          work_date?: string;
+          clock_in_at?: string | null;
+          clock_out_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leave_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          start_date: string;
+          end_date: string;
+          days: number;
+          reason: string | null;
+          status: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          start_date: string;
+          end_date: string;
+          days: number;
+          reason?: string | null;
+          status?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          start_date?: string;
+          end_date?: string;
+          days?: number;
+          reason?: string | null;
+          status?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leave_balances: {
+        Row: {
+          id: string;
+          user_id: string;
+          year: number;
+          total_days: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          year: number;
+          total_days?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          year?: number;
+          total_days?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           id: string;
