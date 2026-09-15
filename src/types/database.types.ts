@@ -2349,6 +2349,14 @@ export type Database = {
         Args: { p_feature_key: string; p_enabled: boolean };
         Returns: void;
       };
+      is_approval_step_approver: {
+        Args: { p_document_id: string };
+        Returns: boolean;
+      };
+      is_approval_document_owner: {
+        Args: { p_document_id: string };
+        Returns: boolean;
+      };
       submit_approval_document: {
         Args: { p_title: string; p_content: string; p_approver_ids: string[] };
         Returns: string;
