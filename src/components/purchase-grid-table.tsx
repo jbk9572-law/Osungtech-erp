@@ -382,7 +382,7 @@ export function PurchaseGridTable({
                     {isPayment ? (
                       "-"
                     ) : row.statementIssued ? (
-                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>수령</span>
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 수령</span>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>미수령</span>
                     )}

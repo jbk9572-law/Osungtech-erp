@@ -316,9 +316,7 @@ export function SalesGridTable({
                     {row.customerCode ?? "-"}
                   </td>
                   <td>
-                    <GridBadge
-                      tone={isCollection ? "muted" : row.isReturn ? "danger" : "info"}
-                    >
+                    <GridBadge tone={isCollection ? "muted" : "danger"}>
                       {isCollection ? "수금" : row.isReturn ? "반품" : "매출"}
                     </GridBadge>
                   </td>
@@ -401,7 +399,7 @@ export function SalesGridTable({
                     {isCollection ? (
                       "-"
                     ) : row.statementIssued ? (
-                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>발행</span>
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
                     )}
@@ -410,7 +408,7 @@ export function SalesGridTable({
                     {isCollection ? (
                       "-"
                     ) : row.invoiceStatus === "issued" ? (
-                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>발행</span>
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
                     )}
