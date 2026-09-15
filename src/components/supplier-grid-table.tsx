@@ -17,6 +17,7 @@ import { RowCheckbox } from "@/components/grid/row-checkbox";
 export type SupplierRow = {
   id: string;
   name: string;
+  supplier_code: string;
   business_number: string | null;
   contact_name: string | null;
   email: string | null;
@@ -124,6 +125,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                 />
               </th>
               {sortableHeader("업체명", "name", thName)}
+              <th style={{ width: 76 }}>코드</th>
               {sortableHeader("사업자번호", "business_number")}
               {sortableHeader("담당자", "contact_name")}
               {sortableHeader("이메일", "email")}
@@ -150,6 +152,9 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
                   </td>
                   <td style={tdName}>{supplier.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
+                    {supplier.supplier_code}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
                     {supplier.business_number ?? "-"}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
@@ -175,7 +180,7 @@ export function SupplierGridTable({ rows }: { rows: SupplierRow[] }) {
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={7} className="erp-grid-empty">
+                <td colSpan={8} className="erp-grid-empty">
                   등록된 공급처가 없습니다.
                 </td>
               </tr>
