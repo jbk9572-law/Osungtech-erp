@@ -33,7 +33,7 @@ function labelFor(href: string) {
   return MENU_ITEMS.find((m) => m.href === href)?.label ?? href;
 }
 
-export function Ribbon({ disabledFeatures }: { disabledFeatures: string[] }) {
+export function Ribbon({ disabledFeatures, isAdmin }: { disabledFeatures: string[]; isAdmin: boolean }) {
   const router = useRouter();
   const [openPanel, setOpenPanel] = useState<"favorites" | "recent" | null>(
     null,
@@ -114,7 +114,7 @@ export function Ribbon({ disabledFeatures }: { disabledFeatures: string[] }) {
     setFavorites(toggleFavorite(href));
   }
 
-  const visibleMenuItems = getVisibleMenuItems(disabledFeatures);
+  const visibleMenuItems = getVisibleMenuItems(disabledFeatures, isAdmin);
   const filteredMenus = visibleMenuItems.filter((m) =>
     m.label.toLowerCase().includes(query.trim().toLowerCase()),
   );

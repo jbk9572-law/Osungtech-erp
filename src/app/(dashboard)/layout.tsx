@@ -32,7 +32,7 @@ export default async function DashboardLayout({
       .from("company_profile")
       .select("name, logo_mark_url")
       .maybeSingle(),
-    supabase.from("profiles").select("id, full_name, is_demo"),
+    supabase.from("profiles").select("id, full_name, is_demo, role"),
     // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
     // 별도 id 조건이 필요 없다. 멀티테넌트 전환(migration 098~) 적용
     // 전이거나 실패해도 화면 전체가 죽으면 안 되므로 그냥 빈 배열로
@@ -43,7 +43,9 @@ export default async function DashboardLayout({
   const profileNames = Object.fromEntries(
     (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]),
   );
-  const isDemo = (profiles ?? []).find((p) => p.id === user.id)?.is_demo ?? false;
+  const myProfile = (profiles ?? []).find((p) => p.id === user.id);
+  const isDemo = myProfile?.is_demo ?? false;
+  const isAdmin = myProfile?.role === "admin";
   const disabledFeatures = tenant?.disabled_features ?? [];
 
   return (
@@ -68,6 +70,7 @@ export default async function DashboardLayout({
         </Suspense>
       }
       disabledFeatures={disabledFeatures}
+      isAdmin={isAdmin}
       modal={modal}
     >
       {children}
