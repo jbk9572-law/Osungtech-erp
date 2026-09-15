@@ -66,11 +66,16 @@ export async function clockOut(): Promise<FormState> {
   return { success: "퇴근 처리했습니다." };
 }
 
+// 휴가 신청 + 결재선을 submit_leave_request() RPC(마이그레이션 115)
+// 하나로 원자적으로 만든다 — 결재선 없이 신청만 되는 반쪽 상태를
+// 막는다. 기안서와 똑같이 조직도에서 고른 결재자를 그대로 결재선으로 쓴다.
 export async function requestLeave(_prevState: FormState, formData: FormData): Promise<FormState> {
   const startDate = String(formData.get("start_date") ?? "");
   const endDate = String(formData.get("end_date") ?? "");
   const days = Number(formData.get("days") ?? 0);
   const reason = String(formData.get("reason") ?? "").trim() || null;
+  const approverIds = formData.getAll("approver_id").map(String).filter(Boolean);
+  const referenceIds = formData.getAll("reference_id").map(String).filter(Boolean);
 
   if (!startDate || !endDate || !(days > 0)) {
     return { error: "기간과 일수를 올바르게 입력해주세요." };
@@ -78,25 +83,33 @@ export async function requestLeave(_prevState: FormState, formData: FormData): P
   if (endDate < startDate) {
     return { error: "종료일이 시작일보다 빠를 수 없습니다." };
   }
+  if (approverIds.length === 0) {
+    return { error: "결재선(승인자)을 1명 이상 지정해주세요." };
+  }
 
   const supabase = await createClient();
-  const user = await getUser();
-  if (!user) return { error: "로그인이 필요합니다." };
-
-  const { error } = await supabase.from("leave_requests").insert({
-    user_id: user.id,
-    start_date: startDate,
-    end_date: endDate,
-    days,
-    reason,
+  const { data: leaveId, error } = await supabase.rpc("submit_leave_request", {
+    p_start_date: startDate,
+    p_end_date: endDate,
+    p_days: days,
+    p_reason: reason,
+    p_approver_ids: approverIds,
+    p_reference_ids: referenceIds,
   });
 
-  if (error) return { error: `신청에 실패했습니다: ${error.message}` };
+  if (error || !leaveId) {
+    return { error: `신청에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+  }
 
   revalidatePath("/hr/attendance");
-  return { success: "휴가를 신청했습니다." };
+  revalidatePath("/approvals");
+  return { success: "휴가를 신청했습니다. 결재 진행 상황은 전자결재 기안함에서도 확인할 수 있습니다." };
 }
 
+// 결재선이 연결된(approval_document_id가 있는) 휴가 신청은 전자결재
+// 화면(/approvals/[id])에서 decide_approval_step()으로만 처리한다 — 이
+// 함수는 그 인프라가 생기기 전(마이그레이션 115 이전)에 등록된 레거시
+// 신청만 관리자가 직접 처리하는 경로로 남겨둔다.
 export async function decideLeaveRequest(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   const decision = String(formData.get("decision") ?? "");
@@ -111,6 +124,7 @@ export async function decideLeaveRequest(_prevState: FormState, formData: FormDa
     .update({ status: decision, decided_at: new Date().toISOString(), decided_by: user?.id ?? null })
     .eq("id", id)
     .eq("status", "pending")
+    .is("approval_document_id", null)
     .select("id");
   const mutationError = requireMutatedRow(result, {
     onError: "처리에 실패했습니다",
@@ -122,11 +136,29 @@ export async function decideLeaveRequest(_prevState: FormState, formData: FormDa
   return { success: decision === "approved" ? "승인했습니다." : "반려했습니다." };
 }
 
+// 결재선이 연결된 신청을 취소할 땐, 연결된 기안 문서도 함께 회수한다 —
+// 안 그러면 휴가 신청은 지워졌는데 결재자 기안함에는 "내 차례"로 계속
+// 남아있는 유령 문서가 생긴다.
 export async function cancelLeaveRequest(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+  const { data: leave } = await supabase
+    .from("leave_requests")
+    .select("approval_document_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (leave?.approval_document_id) {
+    const { error: recallError } = await supabase.rpc("recall_approval_document", {
+      p_id: leave.approval_document_id,
+    });
+    if (recallError) {
+      return { error: `취소에 실패했습니다: ${recallError.message}` };
+    }
+  }
+
   const result = await supabase.from("leave_requests").delete().eq("id", id).select("id");
   const mutationError = requireMutatedRow(result, {
     onError: "취소에 실패했습니다",
@@ -134,6 +166,7 @@ export async function cancelLeaveRequest(_prevState: FormState, formData: FormDa
   });
   if (mutationError) return mutationError;
 
+  revalidatePath("/approvals");
   revalidatePath("/hr/attendance");
   return { success: "취소했습니다." };
 }

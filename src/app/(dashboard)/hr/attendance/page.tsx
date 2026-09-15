@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClockInOutPanel } from "@/components/clock-in-out-panel";
@@ -15,6 +18,8 @@ import {
   cancelLeaveRequest,
 } from "@/app/(dashboard)/hr/actions";
 import { todayKstStr } from "@/lib/kst-date";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { buildOrgTree } from "@/lib/org-chart";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -29,30 +34,52 @@ export default async function AttendancePage() {
   const today = todayKstStr();
   const year = Number(today.slice(0, 4));
 
-  const [{ data: todayRecord }, { data: myLeaves }, { data: balance }] = await Promise.all([
-    supabase
-      .from("attendance_records")
-      .select("clock_in_at, clock_out_at")
-      .eq("user_id", user!.id)
-      .eq("work_date", today)
-      .maybeSingle(),
-    supabase
-      .from("leave_requests")
-      .select("id, start_date, end_date, days, reason, status, created_at")
-      .eq("user_id", user!.id)
-      .order("created_at", { ascending: false })
-      .limit(50),
-    supabase.from("leave_balances").select("total_days").eq("user_id", user!.id).eq("year", year).maybeSingle(),
-  ]);
+  const [{ data: todayRecord }, { data: myLeaves }, { data: balance }, departments, profiles, presetsRaw] =
+    await Promise.all([
+      supabase
+        .from("attendance_records")
+        .select("clock_in_at, clock_out_at")
+        .eq("user_id", user!.id)
+        .eq("work_date", today)
+        .maybeSingle(),
+      supabase
+        .from("leave_requests")
+        .select("id, start_date, end_date, days, reason, status, created_at, approval_document_id")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase.from("leave_balances").select("total_days").eq("user_id", user!.id).eq("year", year).maybeSingle(),
+      fetchAllRows<{ id: string; name: string; parent_department_id: string | null; sort_order: number }>((from, to) =>
+        supabase.from("departments").select("id, name, parent_department_id, sort_order").order("sort_order").range(from, to),
+      ),
+      fetchAllRows<{ id: string; full_name: string | null; position_title: string | null; department_id: string | null }>(
+        (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").order("full_name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string; approver_ids: string[]; reference_ids: string[] }>((from, to) =>
+        supabase.from("approval_line_presets").select("id, name, approver_ids, reference_ids").order("name").range(from, to),
+      ),
+    ]);
 
+  // 결재선 인프라가 생기기 전(마이그레이션 115 이전)에 등록된 레거시
+  // 신청만 이 화면에서 관리자가 직접 처리한다 — 결재선이 연결된 신청은
+  // 전자결재 기안함에서 처리하고 여기서는 상태만 보여준다.
   const { data: pendingLeaves } = isAdmin
     ? await supabase
         .from("leave_requests")
         .select("id, start_date, end_date, days, reason, created_at, profiles!user_id(full_name)")
         .eq("status", "pending")
+        .is("approval_document_id", null)
         .order("created_at", { ascending: true })
         .limit(100)
     : { data: [] as never[] };
+
+  const orgTree = buildOrgTree(
+    departments.map((d) => ({ id: d.id, name: d.name, parentDepartmentId: d.parent_department_id, sortOrder: d.sort_order })),
+    profiles.map((p) => ({ id: p.id, fullName: p.full_name, positionTitle: p.position_title, departmentId: p.department_id })),
+  );
+  const profileNameById: Record<string, string> = {};
+  for (const p of profiles) profileNameById[p.id] = p.full_name || "구성원";
+  const presets = presetsRaw.map((p) => ({ id: p.id, name: p.name, approverIds: p.approver_ids, referenceIds: p.reference_ids }));
 
   const usedThisYear = (myLeaves ?? [])
     .filter((l) => l.status === "approved" && l.start_date.startsWith(String(year)))
@@ -66,12 +93,13 @@ export default async function AttendancePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 근태</h1>
+      <ListPageHeader title="인사관리 > 근태" actions={<CloseButton href="/dashboard">ESC 닫기</CloseButton>} />
 
       <PageGuide>
         연차 총일수는 관리자가 &quot;연차관리&quot; 화면에서 직접 설정합니다(노동법
         발생 규칙 자동계산 아님) — 잔여 연차는 그 값에서 승인된 휴가일수를
-        뺀 단순 계산입니다.
+        뺀 단순 계산입니다. 휴가 신청은 전자결재와 같은 결재선을 타므로,
+        진행 상황은 기안함에서도 확인할 수 있습니다.
       </PageGuide>
 
       <ClockInOutPanel
@@ -108,19 +136,14 @@ export default async function AttendancePage() {
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">휴가 신청</span>
-        </div>
-        <div className="erp-detail-body">
-          <LeaveRequestForm action={requestLeave} today={today} />
-        </div>
-      </div>
+      <FormSection tabLabel="휴가 신청">
+        <LeaveRequestForm action={requestLeave} today={today} orgTree={orgTree} presets={presets} profileNameById={profileNameById} />
+      </FormSection>
 
       {isAdmin && (pendingLeaves ?? []).length > 0 && (
         <div className="erp-detail">
           <div className="erp-detail-tabs">
-            <span className="erp-detail-tab active">결재 대기 휴가 신청 (관리자)</span>
+            <span className="erp-detail-tab active">결재 대기 휴가 신청 (레거시 · 결재선 없음)</span>
           </div>
           <div className="erp-detail-body">
             <div className="erp-grid-wrap">
@@ -180,7 +203,7 @@ export default async function AttendancePage() {
                     </th>
                     <th>사유</th>
                     <th style={{ width: 90 }}>상태</th>
-                    <th style={{ width: 70 }} />
+                    <th style={{ width: 140 }} />
                   </tr>
                 </thead>
                 <tbody>
@@ -197,16 +220,27 @@ export default async function AttendancePage() {
                           <GridBadge tone={status.tone}>{status.label}</GridBadge>
                         </td>
                         <td>
-                          {l.status === "pending" && (
-                            <InlineConfirmDelete
-                              action={cancelLeaveRequest}
-                              hiddenFields={{ id: l.id }}
-                              warningText="이 휴가 신청을 취소하시겠습니까?"
-                              triggerLabel="취소"
-                              triggerClassName="erp-btn"
-                              triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
-                            />
-                          )}
+                          <div className="flex items-center gap-1">
+                            {l.approval_document_id && (
+                              <Link
+                                href={`/approvals/${l.approval_document_id}`}
+                                className="erp-btn"
+                                style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                              >
+                                결재 문서
+                              </Link>
+                            )}
+                            {l.status === "pending" && (
+                              <InlineConfirmDelete
+                                action={cancelLeaveRequest}
+                                hiddenFields={{ id: l.id }}
+                                warningText="이 휴가 신청을 취소하시겠습니까? 결재선이 연결된 신청이면 기안 문서도 함께 회수됩니다."
+                                triggerLabel="취소"
+                                triggerClassName="erp-btn"
+                                triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                              />
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

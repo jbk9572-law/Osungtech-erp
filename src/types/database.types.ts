@@ -367,6 +367,7 @@ export type Database = {
           created_at: string;
           decided_at: string | null;
           decided_by: string | null;
+          approval_document_id: string | null;
         };
         Insert: {
           id?: string;
@@ -379,6 +380,7 @@ export type Database = {
           created_at?: string;
           decided_at?: string | null;
           decided_by?: string | null;
+          approval_document_id?: string | null;
         };
         Update: {
           id?: string;
@@ -391,6 +393,7 @@ export type Database = {
           created_at?: string;
           decided_at?: string | null;
           decided_by?: string | null;
+          approval_document_id?: string | null;
         };
         Relationships: [
           {
@@ -398,6 +401,13 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leave_requests_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
             referencedColumns: ["id"];
           },
         ];
@@ -2576,6 +2586,17 @@ export type Database = {
       recall_approval_document: {
         Args: { p_id: string };
         Returns: void;
+      };
+      submit_leave_request: {
+        Args: {
+          p_start_date: string;
+          p_end_date: string;
+          p_days: number;
+          p_reason: string | null;
+          p_approver_ids: string[];
+          p_reference_ids?: string[];
+        };
+        Returns: string;
       };
       update_own_signature: {
         Args: { p_url: string | null };
