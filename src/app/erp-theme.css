@@ -77,6 +77,7 @@
   background: var(--erp-bg);
   color: var(--erp-text);
   font-family:
+    var(--font-pretendard),
     "Malgun Gothic",
     "Segoe UI",
     -apple-system,
@@ -969,18 +970,19 @@
   transform: none;
 }
 
+/* 이전엔 진한 파란 그라디언트로 꽉 채운 버튼이었다. 색을 상태 표시(선택된
+   날짜 프리셋, 활성 탭)에만 쓰고 동작 버튼은 아웃라인으로 두는 쪽이 더
+   차분해 보인다는 참고 사례(타 ERP 제품 화면 다수)를 확인해 맞춰
+   바꿨다 — 화면마다 파란 덩어리가 여러 개 떠서 정작 중요한 강조가 묻히는
+   문제도 줄어든다. */
 .erp-btn-primary {
-  background: linear-gradient(
-    180deg,
-    var(--erp-primary),
-    var(--erp-primary-dark)
-  );
-  border-color: var(--erp-primary-dark);
-  color: #fff;
+  background: var(--erp-panel);
+  border-color: var(--erp-primary);
+  color: var(--erp-primary);
 }
 
 .erp-btn-primary:hover {
-  background: var(--erp-primary-dark);
+  background: var(--erp-info-bg);
 }
 
 .erp-btn-danger {

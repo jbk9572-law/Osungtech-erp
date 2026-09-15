@@ -9,7 +9,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-pretendard);
   --font-mono: var(--font-geist-mono);
   /* 전문 프로그램처럼 각진 사각형 형태를 쓰기 위해, 순수 원형(rounded-full)을
      제외한 모든 Tailwind 라운딩 스케일을 0으로 낮춘다 — 화면마다 따로 고칠
