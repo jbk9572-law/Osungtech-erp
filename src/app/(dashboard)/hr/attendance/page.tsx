@@ -8,6 +8,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClockInOutPanel } from "@/components/clock-in-out-panel";
 import { LeaveRequestForm } from "@/components/leave-request-form";
+import { AttendanceCorrectionForm } from "@/components/attendance-correction-form";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { LeaveDecisionButton } from "@/components/leave-decision-button";
 import {
@@ -16,6 +17,8 @@ import {
   requestLeave,
   decideLeaveRequest,
   cancelLeaveRequest,
+  requestAttendanceCorrection,
+  cancelAttendanceCorrection,
 } from "@/app/(dashboard)/hr/actions";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -34,7 +37,7 @@ export default async function AttendancePage() {
   const today = todayKstStr();
   const year = Number(today.slice(0, 4));
 
-  const [{ data: todayRecord }, { data: myLeaves }, { data: balance }, departments, profiles, presetsRaw] =
+  const [{ data: todayRecord }, { data: myLeaves }, { data: myCorrections }, { data: balance }, departments, profiles, presetsRaw] =
     await Promise.all([
       supabase
         .from("attendance_records")
@@ -45,6 +48,12 @@ export default async function AttendancePage() {
       supabase
         .from("leave_requests")
         .select("id, start_date, end_date, days, reason, status, created_at, approval_document_id")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("attendance_correction_requests")
+        .select("id, work_date, requested_clock_in_at, requested_clock_out_at, reason, status, created_at, approval_document_id")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -98,8 +107,8 @@ export default async function AttendancePage() {
       <PageGuide>
         연차 총일수는 관리자가 &quot;연차관리&quot; 화면에서 직접 설정합니다(노동법
         발생 규칙 자동계산 아님) — 잔여 연차는 그 값에서 승인된 휴가일수를
-        뺀 단순 계산입니다. 휴가 신청은 전자결재와 같은 결재선을 타므로,
-        진행 상황은 기안함에서도 확인할 수 있습니다.
+        뺀 단순 계산입니다. 휴가 신청·근태 정정 신청 모두 전자결재와 같은
+        결재선을 타므로, 진행 상황은 기안함에서도 확인할 수 있습니다.
       </PageGuide>
 
       <ClockInOutPanel
@@ -139,6 +148,18 @@ export default async function AttendancePage() {
       <FormSection tabLabel="휴가 신청">
         <LeaveRequestForm action={requestLeave} today={today} orgTree={orgTree} presets={presets} profileNameById={profileNameById} />
       </FormSection>
+
+      <div style={{ marginTop: 14 }}>
+        <FormSection tabLabel="근태 정정 신청">
+          <AttendanceCorrectionForm
+            action={requestAttendanceCorrection}
+            today={today}
+            orgTree={orgTree}
+            presets={presets}
+            profileNameById={profileNameById}
+          />
+        </FormSection>
+      </div>
 
       {isAdmin && (pendingLeaves ?? []).length > 0 && (
         <div className="erp-detail">
@@ -235,6 +256,73 @@ export default async function AttendancePage() {
                                 action={cancelLeaveRequest}
                                 hiddenFields={{ id: l.id }}
                                 warningText="이 휴가 신청을 취소하시겠습니까? 결재선이 연결된 신청이면 기안 문서도 함께 회수됩니다."
+                                triggerLabel="취소"
+                                triggerClassName="erp-btn"
+                                triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                              />
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">내 근태 정정 신청 이력</span>
+        </div>
+        <div className="erp-detail-body">
+          {(myCorrections ?? []).length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              신청 내역이 없습니다.
+            </p>
+          ) : (
+            <div className="erp-grid-wrap">
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th style={{ width: 100 }}>날짜</th>
+                    <th style={{ width: 110 }}>정정 출근</th>
+                    <th style={{ width: 110 }}>정정 퇴근</th>
+                    <th>사유</th>
+                    <th style={{ width: 90 }}>상태</th>
+                    <th style={{ width: 140 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {(myCorrections ?? []).map((c) => {
+                    const status = STATUS_LABEL[c.status] ?? { label: c.status, tone: "muted" as const };
+                    return (
+                      <tr key={c.id}>
+                        <td>{c.work_date.replaceAll("-", ".")}</td>
+                        <td>{fmtTime(c.requested_clock_in_at) ?? "-"}</td>
+                        <td>{fmtTime(c.requested_clock_out_at) ?? "-"}</td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>{c.reason}</td>
+                        <td>
+                          <GridBadge tone={status.tone}>{status.label}</GridBadge>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-1">
+                            {c.approval_document_id && (
+                              <Link
+                                href={`/approvals/${c.approval_document_id}`}
+                                className="erp-btn"
+                                style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                              >
+                                결재 문서
+                              </Link>
+                            )}
+                            {c.status === "pending" && (
+                              <InlineConfirmDelete
+                                action={cancelAttendanceCorrection}
+                                hiddenFields={{ id: c.id }}
+                                warningText="이 근태 정정 신청을 취소하시겠습니까? 연결된 기안 문서도 함께 회수됩니다."
                                 triggerLabel="취소"
                                 triggerClassName="erp-btn"
                                 triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}

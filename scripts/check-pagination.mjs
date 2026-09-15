@@ -53,7 +53,7 @@ const ALLOWLIST = new Set([
   // 구성원 수만큼이라 사실상 1000행을 넘을 수 없다("pay_month" 컬럼명이
   // DATE_LIKE_COLUMN 정규식(/date/i)에 안 걸려서 자동으로는 안전하다고
   // 인식되지 않을 뿐, 실제로는 order_date 구간 필터와 같은 이유로 안전).
-  "src/app/(dashboard)/hr/actions.ts:279",
+  "src/app/(dashboard)/hr/actions.ts:361",
   "src/app/(dashboard)/hr/payroll/page.tsx:34",
 ]);
 

@@ -355,6 +355,63 @@ export type Database = {
           },
         ];
       };
+      attendance_correction_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          work_date: string;
+          requested_clock_in_at: string | null;
+          requested_clock_out_at: string | null;
+          reason: string;
+          status: string;
+          approval_document_id: string | null;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          work_date: string;
+          requested_clock_in_at?: string | null;
+          requested_clock_out_at?: string | null;
+          reason: string;
+          status?: string;
+          approval_document_id?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          work_date?: string;
+          requested_clock_in_at?: string | null;
+          requested_clock_out_at?: string | null;
+          reason?: string;
+          status?: string;
+          approval_document_id?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_correction_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendance_correction_requests_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       leave_requests: {
         Row: {
           id: string;
@@ -2593,6 +2650,17 @@ export type Database = {
           p_end_date: string;
           p_days: number;
           p_reason: string | null;
+          p_approver_ids: string[];
+          p_reference_ids?: string[];
+        };
+        Returns: string;
+      };
+      submit_attendance_correction: {
+        Args: {
+          p_work_date: string;
+          p_requested_clock_in_at: string | null;
+          p_requested_clock_out_at: string | null;
+          p_reason: string;
           p_approver_ids: string[];
           p_reference_ids?: string[];
         };

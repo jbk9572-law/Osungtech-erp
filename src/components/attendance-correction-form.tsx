@@ -1,0 +1,107 @@
+"use client";
+
+import { useActionState, useRef, useState } from "react";
+import { FormMessage, type FormState } from "@/components/form-message";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
+import type { OrgDepartmentNode } from "@/lib/org-chart";
+import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
+
+export function AttendanceCorrectionForm({
+  action,
+  today,
+  orgTree,
+  presets,
+  profileNameById,
+}: {
+  action: (prevState: FormState, formData: FormData) => Promise<FormState>;
+  today: string;
+  orgTree: OrgDepartmentNode[];
+  presets: ApprovalLinePresetOption[];
+  profileNameById: Record<string, string>;
+}) {
+  const [state, formAction, pending] = useActionState(action, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
+
+  const [approvers, setApprovers] = useState<PickedPerson[]>([]);
+  const [references, setReferences] = useState<PickedPerson[]>([]);
+  const [presetId, setPresetId] = useState("");
+
+  function toPicked(ids: string[]): PickedPerson[] {
+    return ids.map((id) => ({ id, name: profileNameById[id] ?? "구성원" }));
+  }
+
+  function applyPreset(id: string) {
+    setPresetId(id);
+    const preset = presets.find((p) => p.id === id);
+    if (!preset) return;
+    setApprovers(toPicked(preset.approverIds));
+    setReferences(toPicked(preset.referenceIds));
+  }
+
+  return (
+    <form action={formAction} onKeyDown={preventEnterSubmit} className="grid grid-cols-1 gap-3">
+      {approvers.map((a) => (
+        <input key={a.id} type="hidden" name="approver_id" value={a.id} />
+      ))}
+      {references.map((r) => (
+        <input key={r.id} type="hidden" name="reference_id" value={r.id} />
+      ))}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="erp-field">
+          <label htmlFor="ac-date">정정할 날짜</label>
+          <input id="ac-date" type="date" name="work_date" defaultValue={today} className="erp-input w-full" required />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="ac-in">출근 시간 정정 (선택)</label>
+          <input id="ac-in" type="time" name="clock_in_time" className="erp-input w-full" />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="ac-out">퇴근 시간 정정 (선택)</label>
+          <input id="ac-out" type="time" name="clock_out_time" className="erp-input w-full" />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="ac-reason">정정 사유</label>
+          <input id="ac-reason" type="text" name="reason" autoComplete="off" className="erp-input w-full" required />
+        </div>
+      </div>
+
+      {presets.length > 0 && (
+        <div className="erp-field" style={{ maxWidth: 320 }}>
+          <label htmlFor="ac-preset">저장된 결재선 불러오기</label>
+          <select id="ac-preset" className="erp-input w-full" value={presetId} onChange={(e) => applyPreset(e.target.value)}>
+            <option value="">선택 안 함</option>
+            {presets.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div>
+        <p className="mb-1.5 text-xs font-semibold" style={{ color: "var(--erp-text)" }}>
+          결재선 · 참조자 선택
+        </p>
+        <OrgChartApproverPicker
+          tree={orgTree}
+          approvers={approvers}
+          references={references}
+          onChangeApprovers={setApprovers}
+          onChangeReferences={setReferences}
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button ref={submitRef} type="submit" disabled={pending || approvers.length === 0} className="erp-btn erp-btn-primary">
+          {pending ? "신청 중..." : "F7 정정 신청"}
+        </button>
+        <FormMessage state={state} />
+      </div>
+    </form>
+  );
+}

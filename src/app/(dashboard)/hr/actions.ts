@@ -171,6 +171,88 @@ export async function cancelLeaveRequest(_prevState: FormState, formData: FormDa
   return { success: "취소했습니다." };
 }
 
+// 근태 정정 신청 — 본인이 attendance_records를 직접 고치지 못하게 하고
+// (부정 출퇴근 조작 방지) 휴가 신청과 같은 방식으로 결재선을 거치게
+// 한다. 시:분 입력값은 work_date와 합쳐 한국 시간(KST, UTC+9 고정)
+// 기준 시각으로 만든다 — 이 시스템은 한국에서만 쓰이므로 오프셋을
+// +09:00으로 고정해도 안전하다(kst-date.ts의 다른 헬퍼들과 같은 전제).
+export async function requestAttendanceCorrection(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const workDate = String(formData.get("work_date") ?? "");
+  const clockInTime = String(formData.get("clock_in_time") ?? "").trim();
+  const clockOutTime = String(formData.get("clock_out_time") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+  const approverIds = formData.getAll("approver_id").map(String).filter(Boolean);
+  const referenceIds = formData.getAll("reference_id").map(String).filter(Boolean);
+
+  if (!workDate) {
+    return { error: "정정할 날짜를 입력해주세요." };
+  }
+  if (!clockInTime && !clockOutTime) {
+    return { error: "정정할 출근 또는 퇴근 시간을 하나 이상 입력해주세요." };
+  }
+  if (!reason) {
+    return { error: "정정 사유를 입력해주세요." };
+  }
+  if (approverIds.length === 0) {
+    return { error: "결재선(승인자)을 1명 이상 지정해주세요." };
+  }
+
+  const requestedClockInAt = clockInTime ? new Date(`${workDate}T${clockInTime}:00+09:00`).toISOString() : null;
+  const requestedClockOutAt = clockOutTime ? new Date(`${workDate}T${clockOutTime}:00+09:00`).toISOString() : null;
+
+  const supabase = await createClient();
+  const { data: requestId, error } = await supabase.rpc("submit_attendance_correction", {
+    p_work_date: workDate,
+    p_requested_clock_in_at: requestedClockInAt,
+    p_requested_clock_out_at: requestedClockOutAt,
+    p_reason: reason,
+    p_approver_ids: approverIds,
+    p_reference_ids: referenceIds,
+  });
+
+  if (error || !requestId) {
+    return { error: `신청에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+  }
+
+  revalidatePath("/hr/attendance");
+  revalidatePath("/approvals");
+  return { success: "근태 정정을 신청했습니다. 결재 진행 상황은 전자결재 기안함에서도 확인할 수 있습니다." };
+}
+
+// 정정 신청 취소 — 연결된 기안 문서도 함께 회수한다(cancelLeaveRequest와
+// 같은 이유).
+export async function cancelAttendanceCorrection(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { data: request } = await supabase
+    .from("attendance_correction_requests")
+    .select("approval_document_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (request?.approval_document_id) {
+    const { error: recallError } = await supabase.rpc("recall_approval_document", {
+      p_id: request.approval_document_id,
+    });
+    if (recallError) {
+      return { error: `취소에 실패했습니다: ${recallError.message}` };
+    }
+  }
+
+  const result = await supabase.from("attendance_correction_requests").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, {
+    onError: "취소에 실패했습니다",
+    onForbidden: "결재 대기 중인 본인 신청만 취소할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
+
+  revalidatePath("/approvals");
+  revalidatePath("/hr/attendance");
+  return { success: "취소했습니다." };
+}
+
 export async function setLeaveBalance(_prevState: FormState, formData: FormData): Promise<FormState> {
   const userId = String(formData.get("user_id") ?? "");
   const year = Number(formData.get("year") ?? 0);
