@@ -455,3 +455,61 @@ export async function revertSalesPaperStock(
   revalidatePath("/dashboard");
   return { success: "자동 계산값으로 되돌렸습니다." };
 }
+
+// 계산서(세금계산서) 발행 "상태관리"만 — 실제 국세청 전송(팝빌 등 API
+// 연동)은 아직 없다. invoice_provider가 항상 'manual'인 것이 그 표시다.
+// 나중에 실제 연동을 붙일 때는 이 액션 안에 API 호출을 끼워 넣고
+// invoice_provider 값만 바꾸면 되고, 화면/스키마는 그대로 재사용된다.
+export async function markInvoiceIssued(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  const invoiceNumber = String(formData.get("invoice_number") ?? "").trim() || null;
+  const invoiceIssuedAt = String(formData.get("invoice_issued_at") ?? "").trim() || null;
+
+  if (!salesOrderId || !invoiceIssuedAt) {
+    return { error: "발행일자를 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 계산서 상태를 기록할 수 있습니다." };
+  }
+
+  const { error } = await supabase
+    .from("sales_orders")
+    .update({
+      invoice_status: "issued",
+      invoice_number: invoiceNumber,
+      invoice_issued_at: invoiceIssuedAt,
+      invoice_provider: "manual",
+    })
+    .eq("id", salesOrderId);
+
+  if (error) {
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  return { success: "계산서 발행완료로 기록했습니다." };
+}
+
+export async function cancelInvoiceIssued(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  if (!salesOrderId) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 계산서 상태를 기록할 수 있습니다." };
+  }
+
+  const { error } = await supabase
+    .from("sales_orders")
+    .update({ invoice_status: "not_issued", invoice_number: null, invoice_issued_at: null })
+    .eq("id", salesOrderId);
+
+  if (error) {
+    return { error: `처리에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  return { success: "미발행 상태로 되돌렸습니다." };
+}

@@ -15,6 +15,8 @@ import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel
 import {
   overrideSalesPaperStock,
   revertSalesPaperStock,
+  markInvoiceIssued,
+  cancelInvoiceIssued,
 } from "@/app/(dashboard)/sales/actions";
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -22,6 +24,8 @@ import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
+import { InvoiceStatusPanel } from "@/components/invoice-status-panel";
+import { todayKstStr } from "@/lib/kst-date";
 
 export default async function SaleDetailPage({
   params,
@@ -256,6 +260,17 @@ export default async function SaleDetailPage({
             <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>
               메모: {order.memo}
             </p>
+          )}
+          {allowManage && (
+            <InvoiceStatusPanel
+              orderId={id}
+              status={order.invoice_status}
+              invoiceNumber={order.invoice_number}
+              invoiceIssuedAt={order.invoice_issued_at}
+              today={todayKstStr()}
+              markIssuedAction={markInvoiceIssued}
+              cancelAction={cancelInvoiceIssued}
+            />
           )}
         </div>
       </div>

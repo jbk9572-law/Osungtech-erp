@@ -1115,6 +1115,10 @@ export type Database = {
           is_return: boolean;
           return_reason: string | null;
           is_carryover: boolean;
+          invoice_status: string;
+          invoice_number: string | null;
+          invoice_issued_at: string | null;
+          invoice_provider: string;
         };
         Insert: {
           id?: string;
@@ -1130,6 +1134,10 @@ export type Database = {
           is_return?: boolean;
           return_reason?: string | null;
           is_carryover?: boolean;
+          invoice_status?: string;
+          invoice_number?: string | null;
+          invoice_issued_at?: string | null;
+          invoice_provider?: string;
         };
         Update: {
           id?: string;
@@ -1145,6 +1153,10 @@ export type Database = {
           is_return?: boolean;
           return_reason?: string | null;
           is_carryover?: boolean;
+          invoice_status?: string;
+          invoice_number?: string | null;
+          invoice_issued_at?: string | null;
+          invoice_provider?: string;
         };
         Relationships: [
           {
