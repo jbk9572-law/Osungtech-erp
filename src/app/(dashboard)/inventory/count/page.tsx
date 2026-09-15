@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { InventoryCountForm, type CountRow } from "@/components/inventory-count-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
+import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 
@@ -334,13 +335,11 @@ export default async function InventoryCountPage({
             재고 캐시 정합성 검증
           </span>
           {verifyRequested ? (
-            <span
-              className={cacheMismatches.length > 0 ? "erp-badge erp-badge-danger" : "erp-badge erp-badge-success"}
-            >
+            <GridBadge tone={cacheMismatches.length > 0 ? "danger" : "ok"}>
               {cacheMismatches.length > 0
                 ? `불일치 ${cacheMismatches.length}건 발견`
                 : `전체 ${products.length}개 품목 정상`}
-            </span>
+            </GridBadge>
           ) : (
             <Link
               href={`/inventory/count?verify=1${sessionParam ? `&session=${encodeURIComponent(sessionParam)}` : ""}`}
@@ -439,7 +438,7 @@ export default async function InventoryCountPage({
                   <span className="font-bold" style={{ fontSize: 13 }}>
                     {new Date(session.createdAt).toLocaleString("ko-KR")}
                   </span>
-                  <span className="erp-badge erp-badge-info">{session.items.length}건 조정</span>
+                  <GridBadge tone="info">{session.items.length}건 조정</GridBadge>
                 </div>
                 <div className="mt-0.5 text-[11.5px]" style={{ color: "var(--erp-text-muted)" }}>
                   작성자 {session.authorName ?? "-"}

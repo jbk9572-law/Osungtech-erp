@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
+import { GridBadge } from "@/components/grid/badge";
 
 export type CountRow = {
   productId: string;
@@ -399,9 +400,9 @@ export function InventoryCountForm({
                   </td>
                   <td>
                     {flagged && (
-                      <span className="erp-badge erp-badge-warning" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
+                      <GridBadge tone="warn" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
                         ⚠ 확인 필요
-                      </span>
+                      </GridBadge>
                     )}
                   </td>
                 </tr>

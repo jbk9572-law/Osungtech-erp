@@ -8,6 +8,7 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { ClickableRow } from "@/components/clickable-row";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { GridBadge } from "@/components/grid/badge";
 import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
 
 export default async function InventoryProductHistoryPage({
@@ -162,12 +163,12 @@ export default async function InventoryProductHistoryPage({
               최근 실사 편차 이력
             </span>
             {isRepeatedMiss && (
-              <span
-                className="erp-badge erp-badge-warning"
+              <GridBadge
+                tone="warn"
                 style={{ marginLeft: "auto", marginRight: 12, alignSelf: "center" }}
               >
                 반복 편차 {countAdjustments.length}회
-              </span>
+              </GridBadge>
             )}
           </div>
           <div className="erp-detail-body">

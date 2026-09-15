@@ -6,6 +6,7 @@ import { useCallback, useRef, useState } from "react";
 import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { GridBadge } from "@/components/grid/badge";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 export type DueTodoItem = {
@@ -98,12 +99,9 @@ export function NotificationBell({
                   <button type="button" onClick={() => go(`/todos/${t.id}`)}>
                     <span>{t.title}</span>
                     {itemCount > 0 && (
-                      <span
-                        className="erp-badge erp-badge-muted"
-                        style={{ marginLeft: 6 }}
-                      >
+                      <GridBadge tone="muted" style={{ marginLeft: 6 }}>
                         품목 {itemCount}건
-                      </span>
+                      </GridBadge>
                     )}
                     {t.due_date && (
                       <span

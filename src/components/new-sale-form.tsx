@@ -18,6 +18,7 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { GridBadge } from "@/components/grid/badge";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
@@ -1288,23 +1289,20 @@ export function NewSaleForm({
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600 }}>
                           {todo.title}
-                          <span
-                            className="erp-badge erp-badge-muted"
-                            style={{ marginLeft: 6 }}
-                          >
+                          <GridBadge tone="muted" style={{ marginLeft: 6 }}>
                             {todoTypeLabel(
                               todo.todo_type,
                               todo.ship_date,
                               todo.due_date,
                             )}
-                          </span>
+                          </GridBadge>
                           {todo.todo_type === "both" && (
-                            <span
-                              className={`erp-badge ${todo.purchase_done_at ? "erp-badge-success" : "erp-badge-warning"}`}
+                            <GridBadge
+                              tone={todo.purchase_done_at ? "ok" : "warn"}
                               style={{ marginLeft: 4 }}
                             >
                               {todo.purchase_done_at ? "매입완료" : "매입 전"}
-                            </span>
+                            </GridBadge>
                           )}
                         </div>
                         <div

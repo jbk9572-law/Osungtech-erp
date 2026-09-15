@@ -8,6 +8,7 @@ import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 import { nowInKst } from "@/lib/kst-date";
+import { GridBadge } from "@/components/grid/badge";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -383,13 +384,13 @@ export default async function DashboardPage({
                 <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>
                 {t.title}
                 {t.due_date ? ` (${t.due_date})` : ""}
-                <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                <GridBadge tone="muted" style={{ marginLeft: 6 }}>
                   {todoTypeLabel(t.todoType, t.shipDate, t.due_date)}
-                </span>
+                </GridBadge>
                 {itemCount > 0 && (
-                  <span className="erp-badge erp-badge-muted" style={{ marginLeft: 4 }}>
+                  <GridBadge tone="muted" style={{ marginLeft: 4 }}>
                     품목 {itemCount}건
-                  </span>
+                  </GridBadge>
                 )}
               </Link>
             );

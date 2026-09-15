@@ -18,6 +18,7 @@ import {
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
+import { GridBadge } from "@/components/grid/badge";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
@@ -1319,16 +1320,13 @@ export function NewPurchaseForm({
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600 }}>
                           {todo.title}
-                          <span
-                            className="erp-badge erp-badge-muted"
-                            style={{ marginLeft: 6 }}
-                          >
+                          <GridBadge tone="muted" style={{ marginLeft: 6 }}>
                             {todoTypeLabel(
                               todo.todo_type,
                               todo.ship_date,
                               todo.due_date,
                             )}
-                          </span>
+                          </GridBadge>
                         </div>
                         <div
                           style={{
