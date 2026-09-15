@@ -36,21 +36,19 @@ create index if not exists tenant_members_tenant_id_idx on public.tenant_members
 alter table public.tenants enable row level security;
 alter table public.tenant_members enable row level security;
 
--- 자기 테넌트 행 / 자기 테넌트 소속 목록만 조회 가능. 생성/수정/삭제는
--- 지금 단계에서 API로 열어줄 필요가 없다(가입 트리거와 관리자 도구만
--- 다룬다) — 필요해지면 owner 역할 기준으로 정책을 추가하면 된다.
-create policy "tenants_select_own" on public.tenants
-  for select using (id = public.current_tenant_id());
-
-create policy "tenant_members_select_own_tenant" on public.tenant_members
-  for select using (tenant_id = public.current_tenant_id());
-
 -- 지금 로그인한 사용자가 속한 테넌트 id. is_admin()/is_demo_actor()와
 -- 완전히 같은 패턴(security definer + stable)이라 RLS 정책 안에서
 -- 순환 참조 없이 안전하게 쓸 수 있다. 아직 어느 테넌트에도 속하지 않은
 -- 계정(가입 직후 등)이면 null을 반환하고, 그러면 등호 비교(tenant_id =
 -- current_tenant_id())가 항상 false가 되어 자동으로 접근이 막힌다
 -- (fail-closed).
+--
+-- 아래 두 CREATE POLICY보다 반드시 먼저 와야 한다 — POLICY의 USING
+-- 절은 plpgsql 함수 본문과 달리 생성 시점에 바로 표현식을 분석해서,
+-- 참조하는 함수가 그 시점에 이미 존재하지 않으면 "함수가 없다"는
+-- 에러로 정책 생성 자체가 실패한다(실제로 이 순서 실수로 한 번 걸림 —
+-- migration 85의 is_demo_actor()가 먼저 만들어지고 그걸 쓰는 정책이
+-- 뒤에 오는 순서를 그대로 따라야 했는데 여기선 거꾸로 했었다).
 create or replace function public.current_tenant_id()
 returns uuid
 language sql
@@ -63,6 +61,15 @@ $$;
 
 revoke all on function public.current_tenant_id() from public;
 grant execute on function public.current_tenant_id() to authenticated;
+
+-- 자기 테넌트 행 / 자기 테넌트 소속 목록만 조회 가능. 생성/수정/삭제는
+-- 지금 단계에서 API로 열어줄 필요가 없다(가입 트리거와 관리자 도구만
+-- 다룬다) — 필요해지면 owner 역할 기준으로 정책을 추가하면 된다.
+create policy "tenants_select_own" on public.tenants
+  for select using (id = public.current_tenant_id());
+
+create policy "tenant_members_select_own_tenant" on public.tenant_members
+  for select using (tenant_id = public.current_tenant_id());
 
 -- 오성테크를 테넌트 #1로 만든다. 재실행해도 안전하도록 이미 있으면
 -- 새로 만들지 않는다.
