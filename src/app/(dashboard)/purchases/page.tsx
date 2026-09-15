@@ -45,7 +45,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, doc_no, tax_type, evidence_type, statement_issued_at, suppliers(id, name, supplier_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -97,7 +97,8 @@ export default async function PurchasesPage({
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount =
+      item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -164,6 +165,11 @@ export default async function PurchasesPage({
             kind: "purchase",
             orderId,
             supplierId: item.purchase_orders?.suppliers?.id,
+            docNo: item.purchase_orders?.doc_no,
+            supplierCode: item.purchase_orders?.suppliers?.supplier_code,
+            taxType: item.purchase_orders?.tax_type,
+            evidenceType: item.purchase_orders?.evidence_type,
+            statementIssued: !!item.purchase_orders?.statement_issued_at,
             date: item.purchase_orders?.purchase_date,
             supplierName: item.purchase_orders?.suppliers?.name,
             authorName: item.purchase_orders?.profiles?.full_name,
@@ -245,6 +251,7 @@ export default async function PurchasesPage({
     purchase_orders: {
       memo: string | null;
       delivery_method: string | null;
+      tax_type: "과세" | "면세" | "영세";
       suppliers: { name: string | null } | null;
     } | null;
     products: { name: string | null; sku: string | null; spec: string | null } | null;
@@ -252,7 +259,7 @@ export default async function PurchasesPage({
     let totalsQuery = supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, suppliers(name)), products(name, sku, spec)",
+        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
@@ -282,7 +289,10 @@ export default async function PurchasesPage({
     0,
   );
   const totalTax = filteredTotalsRows.reduce(
-    (sum, row) => sum + calcVat(row.quantity * Number(row.unit_cost)),
+    (sum, row) =>
+      row.purchase_orders?.tax_type === "과세"
+        ? sum + calcVat(row.quantity * Number(row.unit_cost))
+        : sum,
     0,
   );
   const presets = getQuickDatePresets();

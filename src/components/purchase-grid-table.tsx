@@ -45,6 +45,11 @@ export type PurchaseRow = {
   kind: "purchase" | "payment";
   orderId: string | undefined;
   supplierId?: string;
+  docNo?: number | null;
+  supplierCode?: string | null;
+  taxType?: "과세" | "면세" | "영세" | null;
+  evidenceType?: string | null;
+  statementIssued?: boolean;
   date: string | undefined;
   supplierName: string | undefined;
   authorName: string | null | undefined;
@@ -241,7 +246,11 @@ export function PurchaseGridTable({
                 />
               </th>
               {sortableHeader("매입일자", "date", thSticky2)}
+              <th style={{ width: 90 }}>전표번호</th>
+              <th style={{ width: 76 }}>공급처코드</th>
               <th style={{ width: 64 }}>유형</th>
+              <th style={{ width: 60 }}>과세구분</th>
+              <th style={{ width: 90 }}>증빙유형</th>
               {sortableHeader("공급처", "supplierName")}
               <th style={{ width: 76 }}>입고방법</th>
               {sortableHeader("작성자", "authorName")}
@@ -252,6 +261,7 @@ export function PurchaseGridTable({
               <th className="num">매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
+              <th style={{ width: 76 }}>명세서</th>
               <th>비고</th>
               <th />
             </tr>
@@ -291,10 +301,36 @@ export function PurchaseGridTable({
                       </GridBadge>
                     )}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.docNo ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.supplierCode ?? "-"}
+                  </td>
                   <td>
                     <GridBadge tone={isPayment ? "muted" : "info"}>
                       {isPayment ? "지급" : "매입"}
                     </GridBadge>
+                  </td>
+                  <td>
+                    {row.taxType ? (
+                      <GridBadge
+                        tone={
+                          row.taxType === "과세"
+                            ? "info"
+                            : row.taxType === "영세"
+                              ? "warn"
+                              : "muted"
+                        }
+                      >
+                        {row.taxType}
+                      </GridBadge>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.evidenceType ?? "-"}
                   </td>
                   <td>{row.supplierName}</td>
                   <td>
@@ -342,6 +378,15 @@ export function PurchaseGridTable({
                   >
                     {isPayment ? "-" : row.taxAmount.toLocaleString()}
                   </td>
+                  <td>
+                    {isPayment ? (
+                      "-"
+                    ) : row.statementIssued ? (
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>수령</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>미수령</span>
+                    )}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}
                   </td>
@@ -364,7 +409,7 @@ export function PurchaseGridTable({
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={15} className="erp-grid-empty">
+                <td colSpan={20} className="erp-grid-empty">
                   조건에 맞는 매입 거래가 없습니다.
                 </td>
               </tr>
@@ -375,7 +420,7 @@ export function PurchaseGridTable({
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
-                  colSpan={7}
+                  colSpan={11}
                   style={stickyFooterStyle(
                     GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH,
                   )}
@@ -387,6 +432,7 @@ export function PurchaseGridTable({
                 <td />
                 <td className="num">{totalSupply.toLocaleString()}</td>
                 <td className="num">{totalTax.toLocaleString()}</td>
+                <td />
                 <td />
                 <td />
               </tr>

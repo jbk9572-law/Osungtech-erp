@@ -253,17 +253,17 @@ export function SalesGridTable({
                 />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
+              <th style={{ width: 90 }}>전표번호</th>
+              <th style={{ width: 76 }}>거래처코드</th>
               <th style={{ width: 64 }}>유형</th>
+              <th style={{ width: 60 }}>과세구분</th>
+              <th style={{ width: 90 }}>증빙유형</th>
               {sortableHeader("출고처", "customerName")}
               <th style={{ width: 76 }}>배송방법</th>
               {sortableHeader("작성자", "authorName")}
               <th>품목명 / 적요</th>
               <th>규격</th>
               <th>관리번호</th>
-              <th style={{ width: 90 }}>전표번호</th>
-              <th style={{ width: 76 }}>거래처코드</th>
-              <th style={{ width: 60 }}>과세구분</th>
-              <th style={{ width: 90 }}>증빙유형</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
               <th className="num">공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
@@ -309,12 +309,38 @@ export function SalesGridTable({
                       </GridBadge>
                     )}
                   </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.docNo ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.customerCode ?? "-"}
+                  </td>
                   <td>
                     <GridBadge
                       tone={isCollection ? "muted" : row.isReturn ? "danger" : "info"}
                     >
                       {isCollection ? "수금" : row.isReturn ? "반품" : "매출"}
                     </GridBadge>
+                  </td>
+                  <td>
+                    {row.taxType ? (
+                      <GridBadge
+                        tone={
+                          row.taxType === "과세"
+                            ? "info"
+                            : row.taxType === "영세"
+                              ? "warn"
+                              : "muted"
+                        }
+                      >
+                        {row.taxType}
+                      </GridBadge>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.evidenceType ?? "-"}
                   </td>
                   <td>{row.customerName}</td>
                   <td>
@@ -343,32 +369,6 @@ export function SalesGridTable({
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.lotNumber || "-"}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.docNo ?? "-"}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.customerCode ?? "-"}
-                  </td>
-                  <td>
-                    {row.taxType ? (
-                      <GridBadge
-                        tone={
-                          row.taxType === "과세"
-                            ? "info"
-                            : row.taxType === "영세"
-                              ? "warn"
-                              : "muted"
-                        }
-                      >
-                        {row.taxType}
-                      </GridBadge>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.evidenceType ?? "-"}
                   </td>
                   <td
                     className="num"
