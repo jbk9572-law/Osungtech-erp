@@ -83,6 +83,13 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="m8 13 3 3 5-6" />
     </svg>
   ),
+  전자결재: (
+    <svg {...ICON_STROKE}>
+      <path d="M6 3h9l3 3v15H6z" />
+      <path d="M15 3v3h3" />
+      <path d="m9 13 2 2 4-5" />
+    </svg>
+  ),
   공지사항: (
     <svg {...ICON_STROKE}>
       <path d="M12 3a5 5 0 0 0-5 5v3l-2 5h14l-2-5V8a5 5 0 0 0-5-5z" />

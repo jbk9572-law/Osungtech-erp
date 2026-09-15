@@ -271,6 +271,89 @@ export type Database = {
           },
         ];
       };
+      approval_documents: {
+        Row: {
+          id: string;
+          title: string;
+          content: string;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+          decided_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          content?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          content?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_documents_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_steps: {
+        Row: {
+          id: string;
+          document_id: string;
+          step_order: number;
+          approver_id: string;
+          status: string;
+          comment: string | null;
+          decided_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          step_order: number;
+          approver_id: string;
+          status?: string;
+          comment?: string | null;
+          decided_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          step_order?: number;
+          approver_id?: string;
+          status?: string;
+          comment?: string | null;
+          decided_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_steps_document_id_fkey";
+            columns: ["document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_approver_id_fkey";
+            columns: ["approver_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       bom_items: {
         Row: {
           id: string;
@@ -1836,6 +1919,14 @@ export type Database = {
       get_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;
+      };
+      submit_approval_document: {
+        Args: { p_title: string; p_content: string; p_approver_ids: string[] };
+        Returns: string;
+      };
+      decide_approval_step: {
+        Args: { p_step_id: string; p_decision: string; p_comment?: string | null };
+        Returns: void;
       };
       get_ledger_opening_balance: {
         Args: {
