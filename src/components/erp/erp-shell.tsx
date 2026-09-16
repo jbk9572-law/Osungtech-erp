@@ -76,7 +76,16 @@ export function ErpShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pathname 변경에만 반응한다
   }, [pathname]);
 
-  if (pathname.endsWith("/print")) {
+  // "/print"로 끝나는 라우트는 원래 전체 화면 이동(새 탭)이라 셸 자체를
+  // 렌더링하지 않고 인쇄용 내용만 그렸다. 이제 명세표 인쇄처럼 옵션이
+  // 있는 인쇄 화면은 모달(@modal 인터셉트 라우트)로도 뜨는데, 그때는
+  // usePathname()이 똑같이 "/print"로 끝나는 값을 돌려주면서도 이
+  // 컴포넌트가 그리는 건 배경 화면(children)과 모달(modal) 둘 다다 —
+  // 여기서 그대로 조기 반환하면 modal 자체가 통째로 안 그려진다. 모달이
+  // 있을 때는 평소처럼 전체 셸을 그리고, 인쇄 시 크롬/배경을 감추는 건
+  // erp-theme.css의 @media print 규칙(.erp-modal-overlay 존재 시
+  // .erp-body 숨김)에 맡긴다.
+  if (pathname.endsWith("/print") && !modal) {
     return <>{children}</>;
   }
 

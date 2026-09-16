@@ -793,6 +793,38 @@
     padding: 0;
     overflow: visible;
   }
+
+  /* 명세표 인쇄(옵션 있는 미리보기)는 이제 새 탭 대신 모달로 뜬다 —
+     모달 자체의 화면 전용 장식(반투명 배경, 흰 박스 테두리/그림자,
+     스크롤 제한)까지 그대로 인쇄되면 안 되므로 위 셸 크롬과 같은
+     방식으로 인쇄 시에는 지운다. */
+  .erp-modal-overlay {
+    position: static;
+    background: none;
+    display: block;
+  }
+
+  .erp-modal {
+    width: auto;
+    max-width: none;
+    max-height: none;
+    box-shadow: none;
+    border-top: none;
+  }
+
+  .erp-modal-body {
+    padding: 0;
+    overflow: visible;
+  }
+
+  /* 모달 뒤에 깔린 배경 화면(트리메뉴/탭바/.erp-page 전부 포함하는
+     .erp-body)은 모달이 떠 있을 때만 감춘다 — 모달 없이 "/print"가 아닌
+     화면(예: 도면 보기)을 셸 안에서 그대로 인쇄할 때는 .erp-page 자체가
+     인쇄 대상이라 이 규칙이 걸리면 안 된다. :has()로 .erp-modal-overlay가
+     실제로 존재할 때만 배경을 지운다. */
+  .erp:has(.erp-modal-overlay) .erp-body {
+    display: none !important;
+  }
 }
 
 /* ── 4. Search / filter panel ──────────────────────────────── */

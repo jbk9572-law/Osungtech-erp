@@ -36,7 +36,7 @@ const ALLOWLIST = new Set([
   "src/app/(dashboard)/settings/password/page.tsx:15",
   // .erp-new-count-cta 자체가 이미 점선 테두리 있는 카드형 콜아웃이라,
   // 안에서 또 PageGuide로 박스 안의 박스를 만들면 오히려 더 지저분해짐.
-  "src/components/inventory-count-form.tsx:145",
+  "src/components/inventory-count-form.tsx:146",
 ]);
 
 const MUTED_COLOR = /erp-text-muted/;

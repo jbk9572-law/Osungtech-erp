@@ -433,9 +433,7 @@ export function SalesGridTable({
                       {row.orderId && (
                         <Link
                           href={`/sales/${row.orderId}/print`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="명세표 조회 (새 창)"
+                          title="명세표 조회"
                           aria-label="명세표 조회"
                           className="erp-icon-link"
                         >

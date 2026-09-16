@@ -8,6 +8,7 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { GridBadge } from "@/components/grid/badge";
+import { PrintInPlaceButton } from "@/components/print-in-place-button";
 
 export type CountRow = {
   productId: string;
@@ -206,15 +207,13 @@ export function InventoryCountForm({
             />
             0개가 아닌 품목만 보기
           </label>
-          <a
+          <PrintInPlaceButton
             href={`/inventory/count/print${onlyNonZero ? "?onlyNonZero=1" : ""}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="erp-btn"
             style={{ minWidth: 0, height: 26, padding: "0 10px" }}
           >
             🖨 인쇄용 목록
-          </a>
+          </PrintInPlaceButton>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>

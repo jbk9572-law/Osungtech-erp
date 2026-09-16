@@ -104,7 +104,7 @@ export default async function SaleDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F9: { href: `/sales/${id}/print`, newTab: true },
+          F9: { href: `/sales/${id}/print` },
           ...(allowManage && { F4: { href: editHref } }),
           Escape: { href: closeHref },
         }}
@@ -116,12 +116,7 @@ export default async function SaleDetailPage({
           {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href={`/sales/${id}/print`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
+          <Link href={`/sales/${id}/print`} className="erp-btn">
             F9 명세표
           </Link>
           {allowManage && (
