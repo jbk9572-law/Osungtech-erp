@@ -9,6 +9,7 @@ import {
 } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function NewPurchasePage({
@@ -45,7 +46,7 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows] =
+  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualColWidths] =
     await Promise.all([
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
@@ -98,6 +99,8 @@ export default async function NewPurchasePage({
       }>((from, to) =>
         supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
       ),
+      getGridColumnWidths("erp-item-grid-columns"),
+      getGridColumnWidths("erp-purchase-item-grid-columns-dual"),
     ]);
 
   const productLocations: Record<string, LocationOption[]> = {};
@@ -176,6 +179,8 @@ export default async function NewPurchasePage({
         today={todayKstStr()}
         prefillSupplierId={prefillSupplierId}
         prefillItems={prefillItems}
+        initialBaseColWidths={baseColWidths}
+        initialDualColWidths={dualColWidths}
       />
     </div>
   );

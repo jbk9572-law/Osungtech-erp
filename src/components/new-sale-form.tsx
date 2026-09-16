@@ -133,6 +133,7 @@ export function NewSaleForm({
   submitLabel = "매출 등록",
   backParam,
   initialIsReturn = false,
+  initialColWidths,
 }: {
   customers: Customer[];
   products: Product[];
@@ -151,6 +152,10 @@ export function NewSaleForm({
   // 신규 등록 화면에서 매출/수금/반품 3버튼 중 "반품"으로 들어온 경우에만
   // 쓴다(NewSaleTypeSwitcher 참고) — 수정 화면은 initial.isReturn을 그대로 쓴다.
   initialIsReturn?: boolean;
+  // 페이지(서버 컴포넌트)가 미리 조회해 내려준 품목 그리드 칸 너비 —
+  // useResizableColumns 참고, 마운트 후 재조회로 인한 폭 "확 늘어남"
+  // 깜빡임을 없애기 위한 값이다.
+  initialColWidths?: Record<string, number> | null;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
@@ -241,6 +246,7 @@ export function NewSaleForm({
   const { widths: colWidths, startResize, resizingCol } = useResizableColumns(
     "erp-item-grid-columns",
     ITEM_GRID_COLUMN_PX_WIDTHS,
+    initialColWidths,
   );
   const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을

@@ -8,6 +8,7 @@ import { CloseButton } from "@/components/erp/close-button";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function EditPurchasePage({
@@ -33,6 +34,7 @@ export default async function EditPurchasePage({
     { data: history },
     actor,
     locationStockRows,
+    baseColWidths,
   ] = await Promise.all([
     supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
     supabase
@@ -80,6 +82,7 @@ export default async function EditPurchasePage({
     }>((from, to) =>
       supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
     ),
+    getGridColumnWidths("erp-item-grid-columns"),
   ]);
 
   if (!order) {
@@ -174,6 +177,7 @@ export default async function EditPurchasePage({
             lotNumber: item.lot_number,
           })),
         }}
+        initialBaseColWidths={baseColWidths}
       />
     </div>
   );

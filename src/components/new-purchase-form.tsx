@@ -136,6 +136,8 @@ export function NewPurchaseForm({
   history = [],
   prefillSupplierId,
   prefillItems,
+  initialBaseColWidths,
+  initialDualColWidths,
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -175,6 +177,11 @@ export function NewPurchaseForm({
   // 최근 매입단가 이력 — 매출 등록 화면의 PriceHistoryHint와 동일하게,
   // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
   history?: PriceHistoryEntry[];
+  // 페이지(서버 컴포넌트)가 미리 조회해 내려준 품목 그리드 칸 너비 —
+  // useResizableColumns 참고. 기본형/듀얼("매출도 같이 등록") 두 모드가
+  // 서로 다른 DB 키를 쓰므로 각각 따로 받는다.
+  initialBaseColWidths?: Record<string, number> | null;
+  initialDualColWidths?: Record<string, number> | null;
 }) {
   const [supplierId, setSupplierId] = useState(
     initial?.supplierId ?? prefillSupplierId ?? "",
@@ -346,8 +353,12 @@ export function NewPurchaseForm({
   // 모드는 열 구성 자체가 달라(입고/출고 수량·단가가 따로 있음) 별도
   // 값으로 저장한다 — 두 훅 다 항상 호출하고(리액트 훅 규칙) 어느 쪽을
   // 쓸지만 alsoCreateSale로 고른다.
-  const baseCols = useResizableColumns("erp-item-grid-columns", ITEM_GRID_COLUMN_PX_WIDTHS);
-  const dualCols = useResizableColumns("erp-purchase-item-grid-columns-dual", ITEM_GRID_COLUMN_PX_WIDTHS_DUAL);
+  const baseCols = useResizableColumns("erp-item-grid-columns", ITEM_GRID_COLUMN_PX_WIDTHS, initialBaseColWidths);
+  const dualCols = useResizableColumns(
+    "erp-purchase-item-grid-columns-dual",
+    ITEM_GRID_COLUMN_PX_WIDTHS_DUAL,
+    initialDualColWidths,
+  );
   // 두 모드가 서로 다른 칸 키 집합을 쓰다 보니(수량/단가 한 쌍 vs
   // 입고·출고 두 쌍) 유니언 타입 그대로 두면 공용 키만 남아 각 모드의
   // 고유 칸을 못 쓴다 — 실제로는 alsoCreateSale에 따라 항상 한쪽만 쓰므로
