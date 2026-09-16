@@ -61,7 +61,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
   const [{ data: row }, { data: items }] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, department, period_from, period_to, card_type, profiles(full_name)")
+      .select("id, department, period_from, period_to, card_type, profiles!requested_by(full_name)")
       .eq("id", id)
       .maybeSingle(),
     supabase

@@ -46,7 +46,7 @@ export default async function PaymentRequestDetailPage({
       supabase
         .from("payment_requests")
         .select(
-          "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, status, approval_document_id, decided_at, profiles(full_name)",
+          "id, title, content, department, period_from, period_to, card_type, created_at, requested_by, status, approval_document_id, decided_at, profiles!requested_by(full_name)",
         )
         .eq("id", id)
         .maybeSingle(),

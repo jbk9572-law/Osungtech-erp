@@ -33,7 +33,7 @@ export default async function PaymentRequestsPage() {
       supabase
         .from("payment_requests")
         .select(
-          "id, title, department, period_from, period_to, card_type, created_at, status, profiles(full_name), payment_request_line_items(amount)"
+          "id, title, department, period_from, period_to, card_type, created_at, status, profiles!requested_by(full_name), payment_request_line_items(amount)"
         )
         .order("created_at", { ascending: false })
         .range(from, to)
