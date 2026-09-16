@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
+import { CloseButton } from "@/components/erp/close-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import {
   SnsFiltechCanvas,
@@ -78,9 +79,9 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn erp-btn-dark print:hidden">
+            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
-            </Link>
+            </CloseButton>
             <PrintButton />
           </div>
           <SnsFiltechCanvas
@@ -114,9 +115,9 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn erp-btn-dark print:hidden">
+            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
-            </Link>
+            </CloseButton>
             <PrintButton />
           </div>
           <ZenithTechCanvas
@@ -153,9 +154,9 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="erp-btn erp-btn-dark print:hidden">
+            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
-            </Link>
+            </CloseButton>
             <PrintButton />
           </div>
           <KtSolutionCanvas
@@ -185,9 +186,9 @@ export default async function SalesPrintPage({
     return (
       <div className="mx-auto max-w-3xl print-page-wrapper">
         <div className="mb-4 flex items-center justify-between print:hidden">
-          <Link href="/sales" className="erp-btn erp-btn-dark print:hidden">
+          <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
             목록으로
-          </Link>
+          </CloseButton>
           <PrintButton />
         </div>
         <DeliveryNoteDoc
@@ -259,9 +260,9 @@ export default async function SalesPrintPage({
       className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <Link href="/sales" className="erp-btn erp-btn-dark print:hidden">
+        <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
           목록으로
-        </Link>
+        </CloseButton>
         <div className="flex flex-wrap items-center gap-2">
           <div className="erp-seg">
             {(
