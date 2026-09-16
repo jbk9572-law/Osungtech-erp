@@ -10,6 +10,7 @@ import {
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
+import { deriveDualSplitWidths } from "@/lib/item-grid-columns";
 import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function NewPurchasePage({
@@ -46,7 +47,7 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualColWidths] =
+  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualSplitColWidths] =
     await Promise.all([
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
@@ -100,7 +101,7 @@ export default async function NewPurchasePage({
         supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
       ),
       getGridColumnWidths("erp-item-grid-columns"),
-      getGridColumnWidths("erp-purchase-item-grid-columns-dual"),
+      getGridColumnWidths("erp-purchase-item-grid-columns-dual-split"),
     ]);
 
   const productLocations: Record<string, LocationOption[]> = {};
@@ -135,14 +136,6 @@ export default async function NewPurchasePage({
           새 매입(입고) 등록
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href="/paper-calc/manual?for=purchase"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
-            재단 배치 시뮬레이터
-          </Link>
           <CloseButton href="/purchases" />
         </div>
       </div>
@@ -180,7 +173,7 @@ export default async function NewPurchasePage({
         prefillSupplierId={prefillSupplierId}
         prefillItems={prefillItems}
         initialBaseColWidths={baseColWidths}
-        initialDualColWidths={dualColWidths}
+        initialDualSplitColWidths={dualSplitColWidths ?? deriveDualSplitWidths(baseColWidths)}
       />
     </div>
   );

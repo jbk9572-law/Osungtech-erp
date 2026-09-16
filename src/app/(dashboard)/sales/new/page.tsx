@@ -104,14 +104,6 @@ export default async function NewSalePage({
           새 판매 거래 등록
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href="/paper-calc/manual"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
-            재단 배치 시뮬레이터
-          </Link>
           <CloseButton href="/sales" />
         </div>
       </div>

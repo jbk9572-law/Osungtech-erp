@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import {
@@ -1131,10 +1132,24 @@ export function NewSaleForm({
               + 품목 추가
             </button>
             {!initial?.id && (
-              <PaperCalcModalTrigger
-                pendingFor="sales"
-                onApply={handlePaperCalcApply}
-              />
+              <>
+                <PaperCalcModalTrigger
+                  pendingFor="sales"
+                  onApply={handlePaperCalcApply}
+                />
+                {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
+                    한 세트라 나란히 붙여둔다 — 예전엔 재단 배치 시뮬레이터가
+                    페이지 맨 위 툴바에 따로 있어서 둘이 멀리 떨어져 보였다. */}
+                <Link
+                  href="/paper-calc/manual"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="erp-btn"
+                  style={{ minWidth: 0 }}
+                >
+                  재단 배치 시뮬레이터
+                </Link>
+              </>
             )}
           </div>
 

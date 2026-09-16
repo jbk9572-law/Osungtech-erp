@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
@@ -47,7 +48,7 @@ import {
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useFormRedirect } from "@/lib/use-form-redirect";
-import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL } from "@/lib/item-grid-columns";
+import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
 
 type Supplier = { id: string; name: string; notes?: string | null };
@@ -137,7 +138,7 @@ export function NewPurchaseForm({
   prefillSupplierId,
   prefillItems,
   initialBaseColWidths,
-  initialDualColWidths,
+  initialDualSplitColWidths,
 }: {
   suppliers: Supplier[];
   products: Product[];
@@ -178,10 +179,11 @@ export function NewPurchaseForm({
   // 이번에 입력한 단가가 지난번과 다르면 바로 눈에 띄게 보여준다.
   history?: PriceHistoryEntry[];
   // 페이지(서버 컴포넌트)가 미리 조회해 내려준 품목 그리드 칸 너비 —
-  // useResizableColumns 참고. 기본형/듀얼("매출도 같이 등록") 두 모드가
-  // 서로 다른 DB 키를 쓰므로 각각 따로 받는다.
+  // useResizableColumns 참고. baseColWidths는 매출/매입 공통 칸(동시등록
+  // 모드에서도 그대로 재사용), dualSplitColWidths는 동시등록에서만 갈라지는
+  // 4칸(입고/출고수량, 매입/매출단가) 전용이다.
   initialBaseColWidths?: Record<string, number> | null;
-  initialDualColWidths?: Record<string, number> | null;
+  initialDualSplitColWidths?: Record<string, number> | null;
 }) {
   const [supplierId, setSupplierId] = useState(
     initial?.supplierId ?? prefillSupplierId ?? "",
@@ -347,29 +349,30 @@ export function NewPurchaseForm({
   useFormRedirect(state);
   // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
   // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
-  // 기본형(수량/단가 한 쌍)은 매출 등록 폼과 칸 구성이 완전히 같아서
-  // "erp-item-grid-columns" 키를 그대로 공유한다(new-sale-form.tsx 참고) —
-  // 한쪽에서 조절하면 다른 쪽에도 그대로 반영된다. "매출도 같이 등록"
-  // 모드는 열 구성 자체가 달라(입고/출고 수량·단가가 따로 있음) 별도
-  // 값으로 저장한다 — 두 훅 다 항상 호출하고(리액트 훅 규칙) 어느 쪽을
-  // 쓸지만 alsoCreateSale로 고른다.
+  // "매출도 같이 등록"(동시등록) 모드도 품목/규격/관리번호/단위/공급가액/
+  // 세액/합계/비고/버튼 칸은 매출·매입 기본 그리드와 완전히 같은 칸이라
+  // "erp-item-grid-columns" 키를 그대로 같이 쓴다(new-sale-form.tsx 참고)
+  // — 매출/매입 어느 쪽에서 조절하든, 동시등록 화면에서 조절하든 서로
+  // 그대로 반영된다. 진짜로 갈라지는 4칸(입고/출고수량, 매입/매출단가)만
+  // 별도 키로 저장한다. 두 훅 다 항상 호출하고(리액트 훅 규칙) 렌더링할
+  // 때 필요한 쪽만 합쳐 쓴다.
   const baseCols = useResizableColumns("erp-item-grid-columns", ITEM_GRID_COLUMN_PX_WIDTHS, initialBaseColWidths);
-  const dualCols = useResizableColumns(
-    "erp-purchase-item-grid-columns-dual",
-    ITEM_GRID_COLUMN_PX_WIDTHS_DUAL,
-    initialDualColWidths,
+  const splitCols = useResizableColumns(
+    "erp-purchase-item-grid-columns-dual-split",
+    ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT,
+    initialDualSplitColWidths,
   );
-  // 두 모드가 서로 다른 칸 키 집합을 쓰다 보니(수량/단가 한 쌍 vs
-  // 입고·출고 두 쌍) 유니언 타입 그대로 두면 공용 키만 남아 각 모드의
-  // 고유 칸을 못 쓴다 — 실제로는 alsoCreateSale에 따라 항상 한쪽만 쓰므로
-  // 문자열 키 기준으로 다룬다.
-  const { widths: colWidths, startResize, resizingCol } = (
-    alsoCreateSale ? dualCols : baseCols
-  ) as unknown as {
-    widths: Record<string, number>;
-    startResize: (col: string) => (e: React.MouseEvent) => void;
-    resizingCol: string | null;
-  };
+  const SHARED_COLS = ["product", "spec", "lotNumber", "unit", "supplyAmount", "tax", "total", "remark", "actions"] as const;
+  const SPLIT_COL_SET = new Set(["quantityIn", "quantityOut", "priceIn", "priceOut"]);
+  const dualWidths: Record<string, number> = { ...splitCols.widths };
+  for (const key of SHARED_COLS) dualWidths[key] = baseCols.widths[key];
+  const { widths: colWidths, startResize, resizingCol } = alsoCreateSale
+    ? {
+        widths: dualWidths,
+        startResize: (col: string) => (SPLIT_COL_SET.has(col) ? splitCols.startResize(col) : baseCols.startResize(col)),
+        resizingCol: baseCols.resizingCol ?? splitCols.resizingCol,
+      }
+    : baseCols;
   const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
@@ -1262,10 +1265,24 @@ export function NewPurchaseForm({
               + 품목 추가
             </button>
             {!initial?.id && (
-              <PaperCalcModalTrigger
-                pendingFor="purchase"
-                onApply={handlePaperCalcApply}
-              />
+              <>
+                <PaperCalcModalTrigger
+                  pendingFor="purchase"
+                  onApply={handlePaperCalcApply}
+                />
+                {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
+                    한 세트라 나란히 붙여둔다 — 예전엔 재단 배치 시뮬레이터가
+                    페이지 맨 위 툴바에 따로 있어서 둘이 멀리 떨어져 보였다. */}
+                <Link
+                  href="/paper-calc/manual?for=purchase"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="erp-btn"
+                  style={{ minWidth: 0 }}
+                >
+                  재단 배치 시뮬레이터
+                </Link>
+              </>
             )}
           </div>
 
