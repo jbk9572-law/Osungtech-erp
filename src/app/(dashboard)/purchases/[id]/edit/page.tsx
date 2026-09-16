@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { updatePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
@@ -137,14 +137,9 @@ export default async function EditPurchasePage({
           매입 거래 수정
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href={`/paper-calc?purchaseOrderId=${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
+          <PaperCalcNavLink href={`/paper-calc?purchaseOrderId=${id}`} className="erp-btn">
             모조지 계산
-          </Link>
+          </PaperCalcNavLink>
           <CloseButton href={`/purchases/${id}`} />
         </div>
       </div>

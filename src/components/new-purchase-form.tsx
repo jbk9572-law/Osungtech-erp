@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
@@ -17,6 +16,7 @@ import {
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 import { GridBadge } from "@/components/grid/badge";
@@ -1272,16 +1272,15 @@ export function NewPurchaseForm({
                 />
                 {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
                     한 세트라 나란히 붙여둔다 — 예전엔 재단 배치 시뮬레이터가
-                    페이지 맨 위 툴바에 따로 있어서 둘이 멀리 떨어져 보였다. */}
-                <Link
-                  href="/paper-calc/manual?for=purchase"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="erp-btn"
-                  style={{ minWidth: 0 }}
-                >
+                    페이지 맨 위 툴바에 따로 있어서 둘이 멀리 떨어져 보였다.
+                    PaperCalcNavLink: 이 폼이 모달 밖(전체 화면)에서 열렸을
+                    때만 재단 배치 시뮬레이터도 모달로 뜬다 — 이미 이 폼
+                    자체가 모달인 채로 열려 있으면 모달 슬롯을 새로 갈아
+                    끼우는 순간 지금까지 입력한 품목 줄이 통째로 사라지므로
+                    그때는 예전처럼 새 탭으로 연다. */}
+                <PaperCalcNavLink href="/paper-calc/manual?for=purchase" className="erp-btn">
                   재단 배치 시뮬레이터
-                </Link>
+                </PaperCalcNavLink>
               </>
             )}
           </div>
