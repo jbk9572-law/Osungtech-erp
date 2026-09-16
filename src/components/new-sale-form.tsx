@@ -26,7 +26,7 @@ import {
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
-import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
+import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
 import {
@@ -1138,16 +1138,16 @@ export function NewSaleForm({
                   onApply={handlePaperCalcApply}
                 />
                 {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
-                    한 세트라 나란히 붙여둔다 — 예전엔 재단 배치 시뮬레이터가
-                    페이지 맨 위 툴바에 따로 있어서 둘이 멀리 떨어져 보였다.
-                    PaperCalcNavLink: 이 폼이 모달 밖(전체 화면)에서 열렸을
-                    때만 재단 배치 시뮬레이터도 모달로 뜬다 — 이미 이 폼
-                    자체가 모달인 채로 열려 있으면 모달 슬롯을 새로 갈아
-                    끼우는 순간 지금까지 입력한 품목 줄이 통째로 사라지므로
-                    그때는 예전처럼 새 탭으로 연다. */}
-                <PaperCalcNavLink href="/paper-calc/manual" className="erp-btn">
-                  재단 배치 시뮬레이터
-                </PaperCalcNavLink>
+                    한 세트라 나란히 붙여둔다. PaperCalcModalTrigger와
+                    똑같이 라우트 이동 없는 중첩 팝업이라 이 폼이 이미
+                    모달로 열려 있어도 품목 줄이 사라지지 않는다 — 안에서
+                    "새 판매 등록에 연결"을 누르면 storage 이벤트 대신
+                    팝업이 닫히는 시점에 localStorage를 직접 다시 읽어
+                    반영한다. */}
+                <ManualLayoutModalTrigger
+                  pendingFor="sales"
+                  onClose={() => setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY))}
+                />
               </>
             )}
           </div>
