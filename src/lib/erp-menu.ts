@@ -10,8 +10,20 @@ export type MenuLeaf = {
   // 빠른검색/즐겨찾기용 평평한 라벨이 "그룹 > 항목" 기계적 규칙과 다를 때만
   // 지정한다(예: "메인 대시보드 > 홈"이 아니라 그냥 "메인 대시보드").
   flatLabel?: string;
+  // 화면 자체가 "이 화면은 관리자만 볼 수 있습니다"로 통째로 막혀있는
+  // 항목만 true로 표시한다 — 관리자가 아니면 클릭해도 벽만 보게 되므로
+  // 메뉴/빠른검색/즐겨찾기에서 애초에 노출하지 않는다. 관리자 여부와
+  // 무관하게 "보는 건 누구나, 바꾸는 건 관리자만"인 화면(예:
+  // 결재매트릭스)은 실제로 볼 게 있으니 여기 표시하지 않는다.
+  adminOnly?: boolean;
 };
-export type MenuGroup = { label: string; items: MenuLeaf[] };
+// featureKey가 있는 그룹만 테넌트별로 껐다 켰다 할 수 있다(SaaS 판매용
+// 전환 — 회사마다 쓰는 기능이 다 다르니, 예를 들어 생산 안 하는 유통사는
+// 생산관리를, 오성테크가 아닌 회사는 모조지 계산을 끌 수 있어야 한다).
+// 없으면 모든 테넌트에서 항상 켜져 있는 핵심 기능으로 취급한다. 실제
+// on/off 값은 DB(tenants.disabled_features, migration 104)에 저장되고,
+// 이 배열은 "무엇을 토글할 수 있는가"라는 카탈로그 역할만 한다.
+export type MenuGroup = { label: string; items: MenuLeaf[]; featureKey?: string };
 
 export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
@@ -22,10 +34,18 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "재고현황", href: "/inventory" },
       { label: "재고 실사", href: "/inventory/count" },
+      { label: "QR 자동실사", href: "/inventory/count/scan" },
+      { label: "QR 라벨 인쇄", href: "/inventory/qr-labels" },
       { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
+      { label: "관리번호 조회", href: "/inventory/lot-lookup" },
     ],
   },
   { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
+  {
+    label: "생산관리",
+    items: [{ label: "생산지시 내역", href: "/production" }],
+    featureKey: "production",
+  },
   {
     label: "거래처관리",
     items: [
@@ -36,6 +56,29 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
+  {
+    label: "전자결재",
+    items: [
+      { label: "기안함", href: "/approvals" },
+      { label: "임시저장함", href: "/approvals/drafts" },
+      { label: "공유 결재선", href: "/approvals/lines" },
+      { label: "결재매트릭스", href: "/approvals/matrix" },
+    ],
+    featureKey: "approvals",
+  },
+  {
+    label: "인사관리",
+    items: [
+      { label: "근태", href: "/hr/attendance" },
+      { label: "연차관리", href: "/hr/leave-balances", adminOnly: true },
+      { label: "급여 기준 설정", href: "/hr/payroll-settings", adminOnly: true },
+      { label: "직원 급여정보", href: "/hr/employee-pay-settings", adminOnly: true },
+      { label: "급여명세", href: "/hr/payroll", adminOnly: true },
+      { label: "문서함", href: "/hr/documents" },
+      { label: "문서 양식 관리", href: "/hr/documents/templates", adminOnly: true },
+    ],
+    featureKey: "hr",
+  },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
   {
     // 성격이 같은 회계/집계 화면 2개(지급결의양식·월별 리포트)를 한
@@ -48,6 +91,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "지급결의양식", href: "/reports/payment-requests" },
       { label: "월별 리포트", href: "/reports/monthly" },
+      { label: "수불부", href: "/reports/ledger" },
     ],
   },
   {
@@ -60,23 +104,51 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "모조지 계산", href: "/paper-calc" },
       { label: "재단 배치 시뮬레이터", href: "/paper-calc/manual" },
     ],
+    featureKey: "paper_calc",
   },
   {
     label: "환경설정",
     items: [
-      { label: "회사정보", href: "/settings/company" },
+      { label: "회사정보", href: "/settings/company", adminOnly: true },
+      { label: "조직도 관리", href: "/settings/departments", adminOnly: true },
+      { label: "전결권 관리", href: "/settings/delegations" },
+      { label: "전자서명 등록", href: "/settings/signature" },
+      { label: "기능 관리", href: "/settings/features", adminOnly: true },
       { label: "비밀번호 변경", href: "/settings/password" },
     ],
   },
   {
     label: "시스템관리",
     items: [
-      { label: "권한관리", href: "/settings/users" },
-      { label: "백업/복원", href: "/settings/backup" },
-      { label: "변경 이력", href: "/settings/audit-log" },
+      { label: "권한관리", href: "/settings/users", adminOnly: true },
+      { label: "백업/복원", href: "/settings/backup", adminOnly: true },
+      { label: "변경 이력", href: "/settings/audit-log", adminOnly: true },
     ],
   },
 ];
+
+// 설정 화면(기능 관리)에 보여줄 카탈로그 — featureKey가 있는 그룹에서
+// 그대로 뽑아낸다. 새 토글 가능 모듈을 추가할 땐 위 MENU_GROUPS에
+// featureKey만 붙이면 여기 자동으로 나타난다(따로 목록을 관리할 필요
+// 없음).
+export type ToggleableFeature = { key: string; label: string };
+
+export const TOGGLEABLE_FEATURES: ToggleableFeature[] = MENU_GROUPS.filter(
+  (g): g is MenuGroup & { featureKey: string } => !!g.featureKey,
+).map((g) => ({ key: g.featureKey, label: g.label }));
+
+// 테넌트가 끈 기능(featureKey) 그룹 및 관리자 전용 항목(adminOnly, 일반
+// 사용자에게는 안 보임)을 제외한 메뉴 목록. 트리메뉴/빠른검색/최근메뉴
+// 전부 이 함수를 거친 결과만 써야, 꺼진 메뉴나 관리자 전용 화면이
+// 어디서는 보이고 어디서는 안 보이는 불일치가 안 생긴다. 항목을
+// 걸러내고 남은 게 없는 그룹(예: 전부 관리자 전용인 시스템관리)은
+// 그룹째로 사라진다 — 눌러도 아무것도 없는 빈 그룹 헤더만 남는 걸
+// 막는다.
+export function getVisibleMenuGroups(disabledFeatures: string[], isAdmin: boolean): MenuGroup[] {
+  return MENU_GROUPS.filter((g) => !g.featureKey || !disabledFeatures.includes(g.featureKey))
+    .map((g) => (isAdmin ? g : { ...g, items: g.items.filter((i) => !i.adminOnly) }))
+    .filter((g) => g.items.length > 0);
+}
 
 export type MenuItem = { label: string; href: string };
 
@@ -92,6 +164,15 @@ function flatten(groups: MenuGroup[]): MenuItem[] {
 }
 
 export const MENU_ITEMS: MenuItem[] = flatten(MENU_GROUPS);
+
+// 빠른검색처럼 "지금 이 사람이 실제로 들어갈 수 있는 메뉴"만 보여줘야
+// 하는 곳에서 쓴다. 타이틀바 현재 위치 라벨(labelFor류)은 일부러 이
+// 함수를 안 쓰고 전체 MENU_ITEMS를 그대로 쓴다 — 꺼진 기능/관리자 전용
+// 페이지에 어쩌다 남아있는 링크로 들어가도 타이틀바 라벨 자체는 정상
+// 표시돼야 한다.
+export function getVisibleMenuItems(disabledFeatures: string[], isAdmin: boolean): MenuItem[] {
+  return flatten(getVisibleMenuGroups(disabledFeatures, isAdmin));
+}
 
 export function findMenuItem(pathname: string): MenuItem | undefined {
   return findByLongestPrefix(MENU_ITEMS, pathname, (m) => m.href);

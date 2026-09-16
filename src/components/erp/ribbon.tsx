@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { MENU_ITEMS } from "@/lib/erp-menu";
+import { MENU_ITEMS, getVisibleMenuItems } from "@/lib/erp-menu";
 import {
   getFavorites,
   getRecentMenus,
@@ -33,7 +33,7 @@ function labelFor(href: string) {
   return MENU_ITEMS.find((m) => m.href === href)?.label ?? href;
 }
 
-export function Ribbon() {
+export function Ribbon({ disabledFeatures, isAdmin }: { disabledFeatures: string[]; isAdmin: boolean }) {
   const router = useRouter();
   const [openPanel, setOpenPanel] = useState<"favorites" | "recent" | null>(
     null,
@@ -114,7 +114,8 @@ export function Ribbon() {
     setFavorites(toggleFavorite(href));
   }
 
-  const filteredMenus = MENU_ITEMS.filter((m) =>
+  const visibleMenuItems = getVisibleMenuItems(disabledFeatures, isAdmin);
+  const filteredMenus = visibleMenuItems.filter((m) =>
     m.label.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
@@ -335,16 +336,18 @@ export function Ribbon() {
               >
                 단축키
               </p>
-              <table className="erp-grid" style={{ width: "100%" }}>
-                <tbody>
-                  {SHORTCUTS.map((s) => (
-                    <tr key={s.key}>
-                      <td style={{ fontWeight: 700, width: 90 }}>{s.key}</td>
-                      <td>{s.label}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="erp-grid-wrap">
+                <table className="erp-grid" style={{ width: "100%" }}>
+                  <tbody>
+                    {SHORTCUTS.map((s) => (
+                      <tr key={s.key}>
+                        <td style={{ fontWeight: 700, width: 90 }}>{s.key}</td>
+                        <td>{s.label}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

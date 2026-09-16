@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryCountForm, type CountRow } from "@/components/inventory-count-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
+import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 
@@ -35,12 +37,13 @@ function extractCountNote(note: string | null): string | null {
 export default async function InventoryCountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session?: string }>;
+  searchParams: Promise<{ session?: string; verify?: string }>;
 }) {
-  const { session: sessionParam } = await searchParams;
+  const { session: sessionParam, verify: verifyParam } = await searchParams;
+  const verifyRequested = verifyParam === "1";
   const supabase = await createClient();
 
-  const [products, { data: warehouse }, countTx, allTx] = await Promise.all([
+  const [products, { data: warehouse }, countTx] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -76,16 +79,27 @@ export default async function InventoryCountPage({
         .order("created_at", { ascending: true })
         .range(from, to),
     ),
-    // "실사가 말도 안 되게 벌어진다"는 지적에 대한 실측 검증용 — products.
-    // inventory(캐시된 값, apply_inventory_transaction 트리거가 매번 갱신)와
-    // 전체 거래이력을 직접 다시 더한 값이 실제로 일치하는지 전수 비교한다.
-    // 둘이 다르면 캐시 자체가 잘못 갱신된 소프트웨어 버그이고, 둘이 같다면
-    // 실사에서 보이는 큰 차이는 코드 문제가 아니라 실제 현실(파손/누락 등)의
-    // 반영이라는 뜻이다 — DB에 직접 접근하지 않고도 화면에서 바로 확인된다.
-    fetchAllRows<{ product_id: string; type: string; quantity: number }>((from, to) =>
-      supabase.from("inventory_transactions").select("product_id, type, quantity").range(from, to),
-    ),
   ]);
+
+  // "실사가 말도 안 되게 벌어진다"는 지적에 대한 실측 검증용 — products.
+  // inventory(캐시된 값, apply_inventory_transaction 트리거가 매번 갱신)와
+  // 전체 거래이력을 직접 다시 더한 값이 실제로 일치하는지 전수 비교한다.
+  // 둘이 다르면 캐시 자체가 잘못 갱신된 소프트웨어 버그이고, 둘이 같다면
+  // 실사에서 보이는 큰 차이는 코드 문제가 아니라 실제 현실(파손/누락 등)의
+  // 반영이라는 뜻이다 — DB에 직접 접근하지 않고도 화면에서 바로 확인된다.
+  //
+  // inventory_transactions 테이블 전체를 필터 없이 훑는 쿼리라, 거래
+  // 이력이 쌓여 1000행을 넘으면 fetchAllRows가 여러 페이지를 순차로
+  // 받아온다 — 이게 페이지를 열 때마다 자동으로 돌면서 Cloudflare
+  // Workers의 요청당 리소스 한도를 넘겨 "Worker exceeded resource
+  // limits"로 사이트 전체가 죽는 사고로 이어졌다(qr-labels의 PNG->SVG
+  // 전환과 같은 종류의 문제). 그래서 기본으로는 실행하지 않고, "무결성
+  // 검사 실행" 버튼을 눌렀을 때(?verify=1)만 계산한다.
+  const allTx = verifyRequested
+    ? await fetchAllRows<{ product_id: string; type: string; quantity: number }>((from, to) =>
+        supabase.from("inventory_transactions").select("product_id, type, quantity").range(from, to),
+      )
+    : [];
 
   const rows: CountRow[] = products.map((p) => ({
     productId: p.id,
@@ -227,15 +241,15 @@ export default async function InventoryCountPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고 실사</h1>
-        <Link href="/inventory" className="erp-btn erp-btn-danger">
+        <Link href="/inventory" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         전산 재고와 실제 수량을 비교해 맞추고, 지금까지의 실사 이력을 함께 확인합니다.
-      </p>
+      </PageGuide>
 
-      <div className="erp-hero-row">
+      <div className="erp-kpi-row">
         <div className="erp-hero-card">
           <div className="erp-hero-label">총 실사 횟수</div>
           <div className="erp-hero-value">{sessions.length}회</div>
@@ -299,31 +313,57 @@ export default async function InventoryCountPage({
           보이는 전산 재고(products.inventory 캐시)가 전체 거래이력을 직접
           다시 더한 값과 실제로 일치하는지 전 품목 전수 비교한다. 여기가
           비어 있으면(정상) 실사에서 보이는 차이는 소프트웨어 버그가 아니라
-          실제 현실(파손/누락 등)이 그대로 반영된 것이라는 뜻이다. */}
+          실제 현실(파손/누락 등)이 그대로 반영된 것이라는 뜻이다.
+          inventory_transactions 전체를 훑는 무거운 검사라 페이지를 열
+          때마다 자동으로 돌리지 않고 버튼으로 직접 실행할 때만 계산한다
+          (allTx 선언부 주석 참고 — 자동 실행이 Cloudflare Workers 리소스
+          한도 초과 사고의 원인이었다). */}
       <div
         className="erp-detail"
-        style={{ marginTop: 0, marginBottom: 16, borderColor: cacheMismatches.length > 0 ? "var(--erp-danger)" : "var(--erp-success)" }}
+        style={{
+          marginTop: 0,
+          marginBottom: 16,
+          borderColor: verifyRequested
+            ? cacheMismatches.length > 0
+              ? "var(--erp-danger)"
+              : "var(--erp-success)"
+            : undefined,
+        }}
       >
         <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12 }}>
           <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
             재고 캐시 정합성 검증
           </span>
-          <span
-            className={cacheMismatches.length > 0 ? "erp-badge erp-badge-danger" : "erp-badge erp-badge-success"}
-          >
-            {cacheMismatches.length > 0
-              ? `불일치 ${cacheMismatches.length}건 발견`
-              : `전체 ${products.length}개 품목 정상`}
-          </span>
+          {verifyRequested ? (
+            <GridBadge tone={cacheMismatches.length > 0 ? "danger" : "ok"}>
+              {cacheMismatches.length > 0
+                ? `불일치 ${cacheMismatches.length}건 발견`
+                : `전체 ${products.length}개 품목 정상`}
+            </GridBadge>
+          ) : (
+            <Link
+              href={`/inventory/count?verify=1${sessionParam ? `&session=${encodeURIComponent(sessionParam)}` : ""}`}
+              className="erp-btn"
+              style={{ margin: 4 }}
+            >
+              무결성 검사 실행
+            </Link>
+          )}
         </div>
         <div className="erp-detail-body">
-          {cacheMismatches.length === 0 ? (
-            <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          {!verifyRequested ? (
+            <PageGuide>
+              전체 입출고/조정 이력을 처음부터 다시 더해 화면에 보이는 전산 재고(캐시)와 맞는지
+              전 품목 비교합니다 — 거래 이력이 많을수록 시간이 걸릴 수 있어 버튼을 눌렀을 때만
+              실행됩니다.
+            </PageGuide>
+          ) : cacheMismatches.length === 0 ? (
+            <PageGuide>
               화면에 보이는 전산 재고(캐시)와 입출고/조정 이력을 처음부터 전부 다시 더한 값을 전
               품목 비교한 결과, 차이가 있는 품목이 없습니다. 즉 이 화면의 계산 로직 자체에는 문제가
               없고, 실사에서 나오는 큰 차이는 실제 재고 유실·파손·누락 등 현실이 그대로 반영된
               것입니다.
-            </p>
+            </PageGuide>
           ) : (
             <>
               <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>
@@ -398,7 +438,7 @@ export default async function InventoryCountPage({
                   <span className="font-bold" style={{ fontSize: 13 }}>
                     {new Date(session.createdAt).toLocaleString("ko-KR")}
                   </span>
-                  <span className="erp-badge erp-badge-info">{session.items.length}건 조정</span>
+                  <GridBadge tone="info">{session.items.length}건 조정</GridBadge>
                 </div>
                 <div className="mt-0.5 text-[11.5px]" style={{ color: "var(--erp-text-muted)" }}>
                   작성자 {session.authorName ?? "-"}

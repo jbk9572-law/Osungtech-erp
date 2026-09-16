@@ -160,82 +160,32 @@ export function sumOutstandingBalance(balances: { balance: number }[]): number {
   return balances.filter((b) => b.balance > 0).reduce((sum, b) => sum + b.balance, 0);
 }
 
-// 미수금현황 목록용 — 거래처마다 따로 조회하면 거래처 수만큼 왕복이
-// 생기므로, 전체 매출/전체 수금을 한 번씩만 불러와 메모리에서 거래처별로
-// 합산한다.
+// 미수금현황 목록용 — 예전엔 거래처마다 따로 조회하는 대신 전체
+// 매출/전체 수금을 통째로 앱 서버로 내려받아 메모리에서 합산했는데,
+// 거래가 쌓일수록 그대로 느려지는 이 코드베이스의 유일한 "진짜 무제한"
+// 쿼리였다. 같은 계산(외상 주문만, 반품은 마이너스로, 거래처별 합계)을
+// SQL 집계로 DB 안에서 끝내는 RPC로 옮겼다 — 이제 거래처당 합계 행만
+// 받아온다(supabase/migrations/00000000000090_party_balance_rpc.sql).
 export async function getAllCustomerBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [customers, items, payments] = await Promise.all([
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("customers").select("id, name").order("name").range(from, to),
-    ),
-    fetchAllRows<{
-      quantity: number;
-      unit_price: string | number;
-      sales_orders: { customer_id: string; payment_method: string | null; is_return: boolean } | null;
-    }>((from, to) =>
-      supabase
-        .from("sales_order_items")
-        .select("quantity, unit_price, sales_orders!inner(customer_id, payment_method, is_return)")
-        .range(from, to),
-    ),
-    fetchAllRows<{ customer_id: string; amount: string | number }>((from, to) =>
-      supabase.from("customer_payments").select("customer_id, amount").range(from, to),
-    ),
-  ]);
-
-  const salesByCustomer: Record<string, number> = {};
-  for (const item of items) {
-    if (!item.sales_orders || item.sales_orders.payment_method) continue;
-    const cid = item.sales_orders.customer_id;
-    const amount = item.quantity * Number(item.unit_price) * (item.sales_orders.is_return ? -1 : 1);
-    salesByCustomer[cid] = (salesByCustomer[cid] ?? 0) + amount;
-  }
-  const paidByCustomer: Record<string, number> = {};
-  for (const p of payments) {
-    paidByCustomer[p.customer_id] = (paidByCustomer[p.customer_id] ?? 0) + Number(p.amount);
-  }
-
-  return customers.map((c) => {
-    const total = salesByCustomer[c.id] ?? 0;
-    const paid = paidByCustomer[c.id] ?? 0;
-    return { id: c.id, name: c.name, total, paid, balance: total - paid };
-  });
+  const { data, error } = await supabase.rpc("get_customer_balances");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    total: Number(r.total),
+    paid: Number(r.paid),
+    balance: Number(r.balance),
+  }));
 }
 
 export async function getAllSupplierBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
-  const [suppliers, items, payments] = await Promise.all([
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("suppliers").select("id, name").order("name").range(from, to),
-    ),
-    fetchAllRows<{
-      quantity: number;
-      unit_cost: string | number;
-      purchase_orders: { supplier_id: string; payment_method: string | null } | null;
-    }>((from, to) =>
-      supabase
-        .from("purchase_order_items")
-        .select("quantity, unit_cost, purchase_orders!inner(supplier_id, payment_method)")
-        .range(from, to),
-    ),
-    fetchAllRows<{ supplier_id: string; amount: string | number }>((from, to) =>
-      supabase.from("supplier_payments").select("supplier_id, amount").range(from, to),
-    ),
-  ]);
-
-  const purchasesBySupplier: Record<string, number> = {};
-  for (const item of items) {
-    if (!item.purchase_orders || item.purchase_orders.payment_method) continue;
-    const sid = item.purchase_orders.supplier_id;
-    purchasesBySupplier[sid] = (purchasesBySupplier[sid] ?? 0) + item.quantity * Number(item.unit_cost);
-  }
-  const paidBySupplier: Record<string, number> = {};
-  for (const p of payments) {
-    paidBySupplier[p.supplier_id] = (paidBySupplier[p.supplier_id] ?? 0) + Number(p.amount);
-  }
-
-  return suppliers.map((s) => {
-    const total = purchasesBySupplier[s.id] ?? 0;
-    const paid = paidBySupplier[s.id] ?? 0;
-    return { id: s.id, name: s.name, total, paid, balance: total - paid };
-  });
+  const { data, error } = await supabase.rpc("get_supplier_balances");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    total: Number(r.total),
+    paid: Number(r.paid),
+    balance: Number(r.balance),
+  }));
 }

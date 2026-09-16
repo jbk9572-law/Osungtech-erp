@@ -42,10 +42,19 @@ const SAFE_UNBOUNDED_TABLES = new Set([
   "warehouses", // 창고 1곳 기준 운영이라 사실상 1~2행
   "company_profile", // 싱글턴 설정 테이블 (id=1 고정)
   "profiles", // 이 회사 구성원 계정 수 — 거래량과 무관, 수십 명 규모
+  "leave_balances", // 구성원 수 × 연도 수 — profiles와 같은 이유로 거래량과 무관
+  "employee_pay_settings", // 구성원 1인당 1행 — profiles와 같은 이유로 거래량과 무관
 ]);
 
 const ALLOWLIST = new Set([
   // "src/app/(dashboard)/foo/page.tsx:12" 형태로 추가하고 이유를 여기 적을 것
+  // payslips는 시간이 지나며 계속 느는 테이블이 맞지만, 아래 두 곳은 항상
+  // .eq("pay_month", ...)로 "그 달"만 좁혀서 조회한다 — 한 달치 행 수는
+  // 구성원 수만큼이라 사실상 1000행을 넘을 수 없다("pay_month" 컬럼명이
+  // DATE_LIKE_COLUMN 정규식(/date/i)에 안 걸려서 자동으로는 안전하다고
+  // 인식되지 않을 뿐, 실제로는 order_date 구간 필터와 같은 이유로 안전).
+  "src/app/(dashboard)/hr/actions.ts:361",
+  "src/app/(dashboard)/hr/payroll/page.tsx:34",
 ]);
 
 const ID_LIKE_COLUMN = /(^id$|_id$)/;

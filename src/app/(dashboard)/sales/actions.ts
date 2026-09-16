@@ -14,9 +14,15 @@ import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
+import { normalizeLotNumber } from "@/lib/lot-number";
+import { applyOrderLocationStock, reverseOrderLocationStock, parseAllocationChoices } from "@/lib/location-stock-sync";
 
 type SaleItemInput = {
   productId: string;
+  // 품목관리에 등록하지 않고 그 자리에서 이름만 직접 입력하는 1회성 줄
+  // (예: "소프너 교체" 같은 서비스/청구 항목) — productId가 비어있으면
+  // 이 값이 있어야 한다. 재고 반영/품목 연결이 전혀 없다.
+  customName?: string | null;
   spec?: string | null;
   quantity: number;
   unitPrice: number;
@@ -27,7 +33,7 @@ type SaleItemInput = {
 function parseItems(itemsRaw: string): SaleItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as SaleItemInput[];
-    return items.filter((item) => item.productId && item.quantity > 0);
+    return items.filter((item) => (item.productId || item.customName) && item.quantity > 0);
   } catch {
     return null;
   }
@@ -59,6 +65,15 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
   // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
   const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
+  // 품목이 보관 위치 2곳 이상에 나뉘어 있어서 등록 화면의 확인 모달을
+  // 거친 경우에만 값이 들어온다 — 어느 위치에서 얼마나 뺄지 사용자가 고른
+  // 배분값.
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
+  // "저장 후 계속 등록" 버튼을 눌렀을 때만 값이 온다(같은 <button name>을
+  // 쓰는 일반 "저장" 버튼은 이 필드를 아예 안 보낸다) — 저장 후 방금 만든
+  // 거래 상세로 가는 대신 새 등록 화면으로 바로 돌아가서, 여러 건을
+  // 연달아 입력할 때 매번 메뉴를 다시 타지 않아도 되게 한다.
+  const continueNew = formData.get("continue_new") === "1";
 
   if (!customerId || !warehouseId || !orderDate) {
     return { error: "출고처, 창고, 거래일자를 모두 입력해주세요." };
@@ -85,12 +100,13 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     p_memo: memo,
     p_created_by: user?.id ?? null,
     p_items: items.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || null,
+      customName: item.productId ? null : item.customName || null,
       spec: item.spec || null,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       remark: item.remark || null,
-      lotNumber: item.lotNumber || null,
+      lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
@@ -104,9 +120,10 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  if (items.length > 0) {
+  const itemsWithProduct = items.filter((item) => item.productId);
+  if (itemsWithProduct.length > 0) {
     const priceResults = await Promise.all(
-      items.map((item) =>
+      itemsWithProduct.map((item) =>
         supabase.from("customer_product_prices").upsert(
           {
             customer_id: customerId,
@@ -121,6 +138,19 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       if (priceError) console.error("거래처 단가 캐시 갱신 실패:", priceError.message);
     }
   }
+
+  // 보관 위치별 재고(inventory_locations)에도 이 판매만큼 반영한다. 주문
+  // 등록 자체는 이미 끝난 뒤라 여기서 실패해도 등록을 막지는 않는다 — 위치
+  // 재고는 부가적인 창고관리 보조 데이터라, 반영에 실패했다고 매출 등록
+  // 자체를 되돌릴 필요는 없다고 판단했다.
+  await applyOrderLocationStock(supabase, {
+    orderType: "sale",
+    orderId: salesOrderId,
+    warehouseId,
+    items: itemsWithProduct.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+    direction: isReturn ? "in" : "out",
+    allocationChoices: locationAllocations,
+  });
 
   // 모조지 계산 화면에서 주문 생성 전에 미리 계산해둔 결과가 있으면
   // (localStorage에 임시 저장 → new-sale-form이 hidden input으로 넘김)
@@ -168,11 +198,14 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/paper-calc");
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
-  redirect(
-    paperCalcWarning
+  if (continueNew) {
+    return { redirectTo: `/sales/new?saved=${salesOrderId}` };
+  }
+  return {
+    redirectTo: paperCalcWarning
       ? `/sales/${salesOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
-      : `/sales/${salesOrderId}`
-  );
+      : `/sales/${salesOrderId}`,
+  };
 }
 
 export async function updateSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -188,6 +221,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const returnReason = isReturn ? String(formData.get("return_reason") ?? "") || null : null;
   const isCarryover = formData.get("is_carryover") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
   // 상세가 아니라 그 목록으로 돌아간다.
   const back = String(formData.get("back") ?? "") || undefined;
@@ -219,12 +253,13 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     p_memo: memo,
     p_updated_by: user?.id ?? null,
     p_items: items.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || null,
+      customName: item.productId ? null : item.customName || null,
       spec: item.spec || null,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       remark: item.remark || null,
-      lotNumber: item.lotNumber || null,
+      lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
@@ -238,8 +273,23 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `매출 거래 수정에 실패했습니다: ${error.message}` };
   }
 
+  // 이 건 때문에 위치별 재고에 반영했던 이전 내용을 정확히 되돌린 뒤,
+  // 방금 수정한 새 품목/수량 기준으로 다시 반영한다.
+  await reverseOrderLocationStock(supabase, "sale", id);
+  const itemsWithProduct = items.filter((item) => item.productId);
+  await applyOrderLocationStock(supabase, {
+    orderType: "sale",
+    orderId: id,
+    warehouseId,
+    items: itemsWithProduct.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+    direction: isReturn ? "in" : "out",
+    allocationChoices: locationAllocations,
+  });
+
   const priceResults = await Promise.all(
-    items.map((item) =>
+    items
+      .filter((item) => item.productId)
+      .map((item) =>
       supabase.from("customer_product_prices").upsert(
         {
           customer_id: customerId,
@@ -260,7 +310,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/dashboard");
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
-  redirect(back ? resolveListHref("/sales", back) : `/sales/${id}`);
+  return { redirectTo: back ? resolveListHref("/sales", back) : `/sales/${id}` };
 }
 
 export async function deleteSale(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -288,6 +338,8 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
   if (error) {
     return { error: `삭제에 실패했습니다: ${error.message}` };
   }
+
+  await reverseOrderLocationStock(supabase, "sale", id);
 
   revalidatePath("/sales");
   revalidatePath("/inventory");
@@ -323,6 +375,12 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
     ids.map((id) => supabase.rpc("delete_sale_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
   );
   const failCount = results.filter((r) => r.error).length;
+
+  await Promise.all(
+    ids
+      .filter((_, i) => !results[i].error)
+      .map((id) => reverseOrderLocationStock(supabase, "sale", id)),
+  );
 
   revalidatePath("/sales");
   revalidatePath("/inventory");
@@ -396,4 +454,62 @@ export async function revertSalesPaperStock(
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
   return { success: "자동 계산값으로 되돌렸습니다." };
+}
+
+// 계산서(세금계산서) 발행 "상태관리"만 — 실제 국세청 전송(팝빌 등 API
+// 연동)은 아직 없다. invoice_provider가 항상 'manual'인 것이 그 표시다.
+// 나중에 실제 연동을 붙일 때는 이 액션 안에 API 호출을 끼워 넣고
+// invoice_provider 값만 바꾸면 되고, 화면/스키마는 그대로 재사용된다.
+export async function markInvoiceIssued(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  const invoiceNumber = String(formData.get("invoice_number") ?? "").trim() || null;
+  const invoiceIssuedAt = String(formData.get("invoice_issued_at") ?? "").trim() || null;
+
+  if (!salesOrderId || !invoiceIssuedAt) {
+    return { error: "발행일자를 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 계산서 상태를 기록할 수 있습니다." };
+  }
+
+  const { error } = await supabase
+    .from("sales_orders")
+    .update({
+      invoice_status: "issued",
+      invoice_number: invoiceNumber,
+      invoice_issued_at: invoiceIssuedAt,
+      invoice_provider: "manual",
+    })
+    .eq("id", salesOrderId);
+
+  if (error) {
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  return { success: "계산서 발행완료로 기록했습니다." };
+}
+
+export async function cancelInvoiceIssued(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  if (!salesOrderId) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 계산서 상태를 기록할 수 있습니다." };
+  }
+
+  const { error } = await supabase
+    .from("sales_orders")
+    .update({ invoice_status: "not_issued", invoice_number: null, invoice_issued_at: null })
+    .eq("id", salesOrderId);
+
+  if (error) {
+    return { error: `처리에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  return { success: "미발행 상태로 되돌렸습니다." };
 }

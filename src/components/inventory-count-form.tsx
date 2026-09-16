@@ -6,7 +6,9 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
+import { GridBadge } from "@/components/grid/badge";
+import { PrintInPlaceButton } from "@/components/print-in-place-button";
 
 export type CountRow = {
   productId: string;
@@ -205,15 +207,13 @@ export function InventoryCountForm({
             />
             0개가 아닌 품목만 보기
           </label>
-          <a
+          <PrintInPlaceButton
             href={`/inventory/count/print${onlyNonZero ? "?onlyNonZero=1" : ""}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="erp-btn"
             style={{ minWidth: 0, height: 26, padding: "0 10px" }}
           >
             🖨 인쇄용 목록
-          </a>
+          </PrintInPlaceButton>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
@@ -369,7 +369,7 @@ export function InventoryCountForm({
                       : "-"}
                   </td>
                   <td className="num">
-                    {formatQuantityWithBoxes(systemQuantity, row.basePackageQty)} {row.unit ?? ""}
+                    <QtyWithBoxes quantity={systemQuantity} basePackageQty={row.basePackageQty} unit={row.unit ?? ""} />
                   </td>
                   <td className="num">
                     <QuantityWithBoxInput
@@ -399,9 +399,9 @@ export function InventoryCountForm({
                   </td>
                   <td>
                     {flagged && (
-                      <span className="erp-badge erp-badge-warning" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
+                      <GridBadge tone="warn" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
                         ⚠ 확인 필요
-                      </span>
+                      </GridBadge>
                     )}
                   </td>
                 </tr>

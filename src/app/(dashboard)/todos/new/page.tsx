@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TodoForm } from "@/components/todo-form";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 
 export default async function NewTodoPage() {
   const supabase = await createClient();
@@ -38,9 +38,7 @@ export default async function NewTodoPage() {
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
-        <Link href="/todos" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
+        <CloseButton href="/todos">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

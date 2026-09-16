@@ -1,15 +1,12 @@
 "use client";
 
 import {
-  Fragment,
   useActionState,
   useMemo,
   useState,
   type CSSProperties,
-  type MouseEvent,
 } from "react";
 import Link from "next/link";
-import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteSales } from "@/app/(dashboard)/sales/actions";
@@ -23,6 +20,7 @@ import {
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { nextMonthLabel } from "@/lib/carryover";
 
@@ -37,8 +35,8 @@ export type SalesRowItem = {
   supplyAmount: number;
   taxAmount: number;
   // 모조지(TG0) 품목 줄에만 채워진다 — 이 수량이 어떤 규격들로 재단됐는지
-  // "가로×세로 : 수량" 형태로. 값이 있으면 드롭다운에서 이 줄 아래 한 단계
-  // 더 들여써서 보여준다.
+  // "가로×세로 : 수량" 형태로. 값이 있으면 아래 품목내역 패널에서 이 줄
+  // 아래 한 단계 더 들여써서 보여준다.
   paperCalcSizeLines?: string[];
 };
 
@@ -47,6 +45,12 @@ export type SalesRow = {
   kind: "sale" | "collection";
   orderId: string | undefined;
   customerId?: string;
+  docNo?: number | null;
+  customerCode?: string | null;
+  taxType?: "과세" | "면세" | "영세" | null;
+  evidenceType?: string | null;
+  statementIssued?: boolean;
+  invoiceStatus?: string;
   date: string | undefined;
   customerName: string | undefined;
   authorName: string | null | undefined;
@@ -66,9 +70,8 @@ export type SalesRow = {
   supplyAmount: number;
   taxAmount: number;
   deliveryMethod?: string | null;
-  // 품목이 2건 이상인 명세표만 채워진다 — 목록에서 "품목A 외 N건"으로
-  // 뭉뚱그려진 걸 상세 페이지로 넘어가지 않고 행 아래에 펼쳐서 볼 수
-  // 있게 하기 위함.
+  // 품목이 2건 이상인 명세표만 채워진다 — 아래 품목내역 패널에서 이 건을
+  // 선택했을 때 보여줄 품목 목록.
   items?: SalesRowItem[];
 };
 
@@ -100,18 +103,17 @@ export function SalesGridTable({
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
     useSortableRows<SalesRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
+  // 마스터-디테일 레이아웃: 지금 아래 품목내역 패널에 표시 중인 명세표.
+  // 일괄삭제 체크박스(selected)와는 별개의 상태다. 사용자가 직접 고른 적이
+  // 없거나 그 행이 더 이상 목록에 없으면(필터 변경 등) 첫 매출 건으로
+  // 자동 대체한다 — effect 없이 렌더 중 계산해서 캐스케이드 렌더를 피한다.
+  const [manualActiveKey, setManualActiveKey] = useState<string | null>(null);
+  const activeKey =
+    manualActiveKey && sortedRows.some((row) => row.key === manualActiveKey)
+      ? manualActiveKey
+      : (sortedRows.find((row) => row.orderId)?.key ?? null);
 
-  function toggleExpand(key: string, e: MouseEvent) {
-    e.stopPropagation();
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     bulkDeleteSales,
     undefined,
@@ -195,6 +197,34 @@ export function SalesGridTable({
     borderRight: "1px solid var(--erp-border)",
   });
 
+  const activeRow = sortedRows.find((row) => row.key === activeKey) ?? null;
+  const activeSelection: OrderDetailSelection | null = activeRow
+    ? {
+        label: activeRow.customerName ?? "-",
+        dateLabel: activeRow.date
+          ? new Date(activeRow.date).toLocaleDateString("ko-KR")
+          : "-",
+        isReturn: activeRow.isReturn,
+        items:
+          activeRow.items ??
+          (activeRow.kind === "sale"
+            ? [
+                {
+                  productLabel: activeRow.productLabel,
+                  spec: activeRow.spec,
+                  lotNumber: activeRow.lotNumber ?? null,
+                  remark: activeRow.remark ?? null,
+                  quantity: activeRow.quantity,
+                  unit: activeRow.unit,
+                  unitPrice: activeRow.unitPrice,
+                  supplyAmount: activeRow.supplyAmount,
+                  taxAmount: activeRow.taxAmount,
+                },
+              ]
+            : []),
+      }
+    : null;
+
   return (
     <>
       {selected.size > 0 && (
@@ -223,7 +253,11 @@ export function SalesGridTable({
                 />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
+              <th style={{ width: 90 }}>전표번호</th>
+              <th style={{ width: 76 }}>거래처코드</th>
               <th style={{ width: 64 }}>유형</th>
+              <th style={{ width: 60 }}>과세구분</th>
+              <th style={{ width: 90 }}>증빙유형</th>
               {sortableHeader("출고처", "customerName")}
               <th style={{ width: 76 }}>배송방법</th>
               {sortableHeader("작성자", "authorName")}
@@ -234,6 +268,8 @@ export function SalesGridTable({
               <th className="num">공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
+              <th style={{ width: 76 }}>명세서발행</th>
+              <th style={{ width: 76 }}>계산서발행</th>
               <th>비고</th>
               <th />
             </tr>
@@ -242,241 +278,180 @@ export function SalesGridTable({
             {sortedRows.map((row) => {
               const isRowSelected = !!row.orderId && selected.has(row.orderId);
               const isCollection = row.kind === "collection";
-              const href = row.orderId
+              const detailHref = row.orderId
                 ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
                 : row.customerId
                   ? `/customers/${row.customerId}`
-                  : "#";
-              const hasMultipleItems = !!row.items && row.items.length > 1;
-              const isExpanded = expanded.has(row.key);
-              const isSummaryEmphasized = isExpanded && hasMultipleItems;
+                  : null;
+              const isActive = row.key === activeKey;
               return (
-                <Fragment key={row.key}>
-                  <ClickableRow
-                    href={href}
-                    className={
-                      isRowSelected
-                        ? "selected"
-                        : isSummaryEmphasized
-                          ? "summary-emphasis"
-                          : undefined
+                <tr
+                  key={row.key}
+                  className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}`}
+                  onClick={() => setManualActiveKey(row.key)}
+                >
+                  <td style={tdSticky1}>
+                    {row.orderId && (
+                      <RowCheckbox
+                        checked={isRowSelected}
+                        onChange={() => toggleRow(row.orderId!)}
+                        label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.customerName ?? ""} 선택`}
+                      />
+                    )}
+                  </td>
+                  <td style={tdSticky2}>
+                    {row.date
+                      ? new Date(row.date).toLocaleDateString("ko-KR")
+                      : "-"}
+                    {row.isCarryover && row.date && (
+                      <GridBadge tone="warn" style={{ marginLeft: 4 }}>
+                        이월({nextMonthLabel(row.date)})
+                      </GridBadge>
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.docNo ?? "-"}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.customerCode ?? "-"}
+                  </td>
+                  <td>
+                    <GridBadge tone={isCollection ? "muted" : "danger"}>
+                      {isCollection ? "수금" : row.isReturn ? "반품" : "매출"}
+                    </GridBadge>
+                  </td>
+                  <td>
+                    {row.taxType ? (
+                      <GridBadge
+                        tone={
+                          row.taxType === "과세"
+                            ? "info"
+                            : row.taxType === "영세"
+                              ? "warn"
+                              : "muted"
+                        }
+                      >
+                        {row.taxType}
+                      </GridBadge>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.evidenceType ?? "-"}
+                  </td>
+                  <td>{row.customerName}</td>
+                  <td>
+                    {row.deliveryMethod ? (
+                      <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>
+                        -
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.authorName ?? "-"}
+                  </td>
+                  <td
+                    style={
+                      isCollection
+                        ? { color: "var(--erp-text-muted)" }
+                        : undefined
                     }
                   >
-                    <td style={tdSticky1}>
-                      {row.orderId && (
-                        <RowCheckbox
-                          checked={isRowSelected}
-                          onChange={() => toggleRow(row.orderId!)}
-                          label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.customerName ?? ""} 선택`}
-                        />
-                      )}
-                    </td>
-                    <td style={tdSticky2}>
-                      {row.date
-                        ? new Date(row.date).toLocaleDateString("ko-KR")
-                        : "-"}
-                      {row.isCarryover && row.date && (
-                        <GridBadge tone="warn" style={{ marginLeft: 4 }}>
-                          이월({nextMonthLabel(row.date)})
-                        </GridBadge>
-                      )}
-                    </td>
-                    <td>
-                      <GridBadge
-                        tone={isCollection ? "muted" : row.isReturn ? "danger" : "info"}
-                      >
-                        {isCollection ? "수금" : row.isReturn ? "반품" : "매출"}
-                      </GridBadge>
-                    </td>
-                    <td>{row.customerName}</td>
-                    <td>
-                      {row.deliveryMethod ? (
-                        <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
-                      ) : (
-                        <span style={{ color: "var(--erp-text-muted)" }}>
-                          -
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
-                      {row.authorName ?? "-"}
-                    </td>
-                    <td
-                      style={
-                        isCollection
-                          ? { color: "var(--erp-text-muted)" }
-                          : undefined
-                      }
-                    >
-                      {hasMultipleItems && (
-                        <button
-                          type="button"
-                          onClick={(e) => toggleExpand(row.key, e)}
-                          aria-label={isExpanded ? "품목 접기" : "품목 펼치기"}
-                          aria-expanded={isExpanded}
-                          className="erp-expand-toggle"
+                    {row.productLabel}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.spec}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.lotNumber || "-"}
+                  </td>
+                  <td
+                    className="num"
+                    style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+                  >
+                    {isCollection
+                      ? "-"
+                      : `${row.isReturn ? "+" : ""}${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                  </td>
+                  <td
+                    className="num"
+                    style={{ color: "var(--erp-text-muted)" }}
+                  >
+                    {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
+                  </td>
+                  <td
+                    className="num"
+                    style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+                  >
+                    {row.isReturn ? "-" : ""}
+                    {row.supplyAmount.toLocaleString()}
+                  </td>
+                  <td
+                    className="num"
+                    style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
+                  >
+                    {isCollection ? "-" : `${row.isReturn ? "-" : ""}${row.taxAmount.toLocaleString()}`}
+                  </td>
+                  <td>
+                    {isCollection ? (
+                      "-"
+                    ) : row.statementIssued ? (
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+                    )}
+                  </td>
+                  <td>
+                    {isCollection ? (
+                      "-"
+                    ) : row.invoiceStatus === "issued" ? (
+                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
+                    ) : (
+                      <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+                    )}
+                  </td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {row.remark || "-"}
+                  </td>
+                  <td className="num" onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                      {detailHref && (
+                        <Link
+                          href={detailHref}
+                          title="상세 보기"
+                          aria-label="상세 보기"
+                          className="erp-icon-link"
                         >
-                          {isExpanded ? "▾" : "▸"}
-                        </button>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
                       )}
-                      {row.productLabel}
-                      {isSummaryEmphasized && (
-                        <GridBadge tone="warn" style={{ marginLeft: 6 }}>
-                          합계
-                        </GridBadge>
-                      )}
-                    </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
-                      {row.spec}
-                    </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
-                      {row.lotNumber || "-"}
-                    </td>
-                    <td
-                      className="num"
-                      style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
-                    >
-                      {isCollection
-                        ? "-"
-                        : `${row.isReturn ? "+" : ""}${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
-                    </td>
-                    <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
-                    >
-                      {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
-                    </td>
-                    <td
-                      className="num"
-                      style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
-                    >
-                      {row.isReturn ? "-" : ""}
-                      {row.supplyAmount.toLocaleString()}
-                    </td>
-                    <td
-                      className="num"
-                      style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
-                    >
-                      {isCollection ? "-" : `${row.isReturn ? "-" : ""}${row.taxAmount.toLocaleString()}`}
-                    </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
-                      {row.remark || "-"}
-                    </td>
-                    <td className="num">
                       {row.orderId && (
                         <Link
                           href={`/sales/${row.orderId}/print`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "var(--erp-primary)",
-                            fontWeight: 600,
-                          }}
+                          title="명세표 조회"
+                          aria-label="명세표 조회"
+                          className="erp-icon-link"
                         >
-                          명세표 →
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
+                            <path d="M13.5 3.5V8h4" />
+                            <path d="M9 13h6M9 16.5h6" />
+                          </svg>
                         </Link>
                       )}
-                    </td>
-                  </ClickableRow>
-                  {isExpanded &&
-                    row.items?.map((item, i) => (
-                      <Fragment key={`${row.key}-item-${i}`}>
-                        <tr style={{ background: "var(--erp-bg-subtle)" }}>
-                          <td style={tdSticky1} />
-                          <td style={tdSticky2} />
-                          <td />
-                          <td />
-                          <td />
-                          <td />
-                          <td
-                            style={{
-                              paddingLeft: 26,
-                              color: "var(--erp-text-muted)",
-                            }}
-                          >
-                            {item.productLabel}
-                            {!!item.paperCalcSizeLines?.length && (
-                              <GridBadge tone="info" style={{ marginLeft: 6 }}>
-                                계산 연결됨
-                              </GridBadge>
-                            )}
-                          </td>
-                          <td style={{ color: "var(--erp-text-muted)" }}>
-                            {item.spec}
-                          </td>
-                          <td style={{ color: "var(--erp-text-muted)" }}>
-                            {item.lotNumber || "-"}
-                          </td>
-                          <td
-                            className="num"
-                            style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
-                          >
-                            {row.isReturn ? "+" : ""}
-                            {item.quantity.toLocaleString()} {item.unit ?? ""}
-                          </td>
-                          <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
-                          >
-                            {formatNumOrDash(item.unitPrice)}
-                          </td>
-                          <td
-                            className="num"
-                            style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
-                          >
-                            {row.isReturn ? "-" : ""}
-                            {item.supplyAmount.toLocaleString()}
-                          </td>
-                          <td
-                            className="num"
-                            style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
-                          >
-                            {row.isReturn ? "-" : ""}
-                            {item.taxAmount.toLocaleString()}
-                          </td>
-                          <td style={{ color: "var(--erp-text-muted)" }}>
-                            {item.remark || "-"}
-                          </td>
-                          <td />
-                        </tr>
-                        {item.paperCalcSizeLines?.map((line, lineIndex) => (
-                          <tr
-                            key={`${row.key}-item-${i}-size-${lineIndex}`}
-                            style={{ background: "var(--erp-bg-subtle)" }}
-                          >
-                            <td style={tdSticky1} />
-                            <td style={tdSticky2} />
-                            <td />
-                            <td />
-                            <td />
-                            <td />
-                            <td
-                              style={{
-                                paddingLeft: 44,
-                                color: "var(--erp-text-muted)",
-                                fontSize: 11.5,
-                              }}
-                            >
-                              ㄴ {line}
-                            </td>
-                            <td />
-                            <td />
-                            <td />
-                            <td />
-                            <td />
-                            <td />
-                            <td />
-                            <td />
-                          </tr>
-                        ))}
-                      </Fragment>
-                    ))}
-                </Fragment>
+                    </div>
+                  </td>
+                </tr>
               );
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={15} className="erp-grid-empty">
+                <td colSpan={21} className="erp-grid-empty">
                   조건에 맞는 판매 거래가 없습니다.
                 </td>
               </tr>
@@ -487,7 +462,7 @@ export function SalesGridTable({
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
-                  colSpan={7}
+                  colSpan={11}
                   style={stickyFooterStyle(
                     GRID_CHECKBOX_WIDTH + STICKY_2_WIDTH,
                   )}
@@ -501,11 +476,19 @@ export function SalesGridTable({
                 <td className="num">{totalTax.toLocaleString()}</td>
                 <td />
                 <td />
+                <td />
+                <td />
               </tr>
             </tfoot>
           )}
         </table>
       </div>
+
+      <OrderDetailPanel
+        selection={activeSelection}
+        priceLabel="공급가"
+        emptyMessage="위 목록에서 명세표를 선택하면 품목내역이 여기에 표시됩니다."
+      />
     </>
   );
 }

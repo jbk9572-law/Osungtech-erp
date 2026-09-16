@@ -34,4 +34,12 @@ describe("formatQuantityWithBoxes", () => {
     expect(formatQuantityWithBoxes(500, null)).toBe("500");
     expect(formatQuantityWithBoxes(500, 0)).toBe("500");
   });
+
+  it("unit을 넘기면 '수량 단위 (N박스)' 순서로 붙인다", () => {
+    expect(formatQuantityWithBoxes(500, 50, "EA")).toBe("500 EA (10박스)");
+  });
+
+  it("unit을 넘겨도 포장수량이 없으면 '수량 단위'만 보여준다", () => {
+    expect(formatQuantityWithBoxes(500, null, "EA")).toBe("500 EA");
+  });
 });

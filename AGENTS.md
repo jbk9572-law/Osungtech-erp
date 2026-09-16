@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # 버그 수정 시 반드시 지킬 규칙 (모든 세션에 적용, 정기 감사 세션 포함)
@@ -31,7 +35,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # 절대 규칙(헌법) — 모든 세션에 예외 없이 적용
 
-이 두 가지는 사용자가 "헌법"이라고 명시적으로 지정한 규칙이다. 정기 감사
+이 네 가지는 사용자가 "헌법"이라고 명시적으로 지정한 규칙이다. 정기 감사
 세션을 포함해 이 저장소에서 작업하는 모든 세션이 예외 없이 지킨다.
 
 1. **병합(main)·배포는 사용자가 그 대화에서 "배포해"라고 명시적으로
@@ -46,6 +50,43 @@ This version has breaking changes — APIs, conventions, and file structure may 
    "고쳤습니다"라고 말로 끝내지 않는다. 실제 CSS/컴포넌트로 렌더링해
    Before/After를 나란히 보여주는 방식(이 세션에서 계속 써온 Playwright
    스크린샷 검증 방식)을 계속 쓴다.
+3. **같은 종류의 화면/UI 패턴을 한 곳에서 고치거나 새로 도입하면, 그
+   요청에서 이름이 언급되지 않은 다른 화면이라도 같은 패턴을 쓰는
+   곳인지 반드시 먼저 확인하고 전부 같이 통일한다.** (예: 매출/매입
+   목록의 조회기간 필터 UI를 바꾸면서 재고관리 > 입출고내역처럼 같은
+   `getDatePresets`/프리셋 줄 패턴을 쓰는 화면을 빼놓고 넘어갔다가
+   "이런걸 공용화해서 같이 고쳤어야지, 이러니 시스템이 꼬이잖아"라는
+   지적을 받은 전례가 있다.) 구체적으로:
+   - 수정 전에 같은 컴포넌트/훅/헬퍼 함수를 쓰는 다른 호출부가 있는지
+     Grep으로 검색한다(버그 수정 규칙 1번과 동일한 검색 습관을, 버그가
+     아니라 기능 변경/리팩터에도 그대로 적용).
+   - 사용자가 특정 화면(예: 매출/매입)만 콕 집어 요청했더라도, 같은
+     종류의 UI/로직이 다른 화면에도 있으면 "요청받은 화면만" 고치고
+     끝내지 말고 같이 통일할지 먼저 판단한다 — 애매하면 나중에 되묻지
+     말고 통일하는 쪽으로 진행하고 결과 보고에 "이 화면도 같이
+     통일했습니다"라고 명시한다.
+   - 이미 공용 컴포넌트/훅이 있는데 특정 화면만 그걸 안 쓰고 자기
+     스타일로 따로 마크업을 들고 있다면(예: 목록 페이지는 공용
+     `DateRangeQuickFilters`를 쓰는데 상세 페이지는 똑같은 프리셋 줄을
+     직접 인라인으로 그리고 있는 경우), 그 화면도 공용 컴포넌트를 쓰게
+     바꾼다 — "일단 이 화면은 그대로 둬도 되겠지"라고 판단해서 넘어가지
+     않는다.
+4. **UI/레이아웃을 만들거나 고칠 때는 정기 감사 때만이 아니라 매번
+   모바일 환경을 확인한다.** 데스크톱 화면에서만 확인하고 "화면
+   깨짐 없음"이라고 보고한 뒤 나중에 좁은 화면에서 깨져 보이는 걸
+   따로 또 지적받는 식으로 반복되지 않게 한다. 구체적으로:
+   - 새 화면/컴포넌트를 추가하거나 기존 레이아웃(그리드, 표, 버튼
+     줄, 모달, 카드 등)을 수정했으면, Before/After 스크린샷(헌법
+     2번)을 데스크톱 뷰포트 하나로만 찍고 끝내지 않는다 — 좁은 화면
+     (모바일 폭, 대략 375~430px)에서도 최소 한 장을 같이 찍어서
+     overflow/clipping, 터치 타겟 크기, 줄바꿈이 깨지지 않는지 직접
+     확인한다.
+   - 표/그리드처럼 원래 가로로 넓은 요소는 좁은 화면에서 전체
+     레이아웃이 깨지는 대신 그 요소만 가로 스크롤되는지, 또는 의도한
+     방식으로 반응형 처리가 되는지 확인한다.
+   - 이 확인은 정기 "헌법검사"의 2번 항목(모바일 환경성 검사)과 같은
+     기준이지만, 거기서 그치지 않고 그 자리에서 하는 모든 UI 작업에
+     바로 적용한다 — 정기 감사가 나중에 잡아줄 거라고 미루지 않는다.
 
 # 정기 "헌법검사" — 매일 오후 18:30 자동 실행 + "헌법검사 진행해" 즉시 실행
 

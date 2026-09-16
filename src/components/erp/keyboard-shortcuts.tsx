@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printInPlace } from "@/lib/print-in-place";
 import { startRouteProgress } from "@/lib/route-progress";
+import { useModalClose } from "@/lib/modal-context";
 
 type ShortcutAction =
   | { href: string; newTab?: boolean }
@@ -25,6 +26,14 @@ export function KeyboardShortcuts({
   shortcuts: Partial<Record<string, ShortcutAction>>;
 }) {
   const router = useRouter();
+  // 모달 안에서는 ESC 닫기 버튼(CloseButton)이 이미 forward Link 대신
+  // router.back() 기반 close()를 쓴다 — 새 라우트로 forward 이동은 RSC를
+  // 새로 받아와야 해서 간간이 멈춰 보이는 반면, back()은 이미 캐시된
+  // 이전 화면으로 돌아가서 훨씬 안정적이다(이 세션에서 실제로 겪은
+  // "닫기 눌렀는데 화면이 멈춘다" 버그의 원인). 물리 Escape 키도 버튼과
+  // 똑같이 동작해야 하므로 여기서도 모달 컨텍스트가 있으면 그 close()를
+  // 쓴다.
+  const closeModal = useModalClose();
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -39,6 +48,8 @@ export function KeyboardShortcuts({
       if ("href" in action) {
         if (action.newTab) {
           window.open(action.href, "_blank", "noopener,noreferrer");
+        } else if (e.key === "Escape" && closeModal) {
+          closeModal();
         } else {
           startRouteProgress();
           router.push(action.href);
@@ -53,7 +64,7 @@ export function KeyboardShortcuts({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [shortcuts, router]);
+  }, [shortcuts, router, closeModal]);
 
   return null;
 }

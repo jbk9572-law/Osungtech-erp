@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { FormMessage } from "@/components/form-message";
+import { PageGuide } from "@/components/erp/page-guide";
 import { ROLE_LABELS, ROLE_OPTIONS } from "@/lib/user-roles";
 
 export function EditUserForm({
@@ -55,9 +56,7 @@ export function EditUserForm({
           <>
             <input type="hidden" name="role" value={role} />
             <span id="eu-role" className="text-sm">{ROLE_LABELS[role] ?? role}</span>
-            <p className="mt-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              본인 계정의 역할은 변경할 수 없습니다.
-            </p>
+            <PageGuide className="mt-1">본인 계정의 역할은 변경할 수 없습니다.</PageGuide>
           </>
         ) : (
           <select id="eu-role" name="role" defaultValue={role} className="erp-select">

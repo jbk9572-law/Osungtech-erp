@@ -9,6 +9,7 @@ import { effectiveMonth } from "@/lib/carryover";
 import { GridBadge } from "@/components/grid/badge";
 import { groupByProductKey } from "@/lib/group-by-product";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { CloseButton } from "@/components/erp/close-button";
 
 type Transaction = {
   date: string;
@@ -183,12 +184,7 @@ export default async function MonthlyReportCompanyPage({
       </div>
 
       <div className="erp-toolbar" style={{ marginBottom: 12 }}>
-        <Link
-          href={`/reports/monthly?month=${month}`}
-          className="erp-btn erp-btn-danger"
-        >
-          ESC 목록으로
-        </Link>
+        <CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-grid-wrap">

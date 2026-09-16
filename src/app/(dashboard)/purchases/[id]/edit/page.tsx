@@ -1,12 +1,15 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseForm } from "@/components/new-purchase-form";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { updatePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
+import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function EditPurchasePage({
   params,
@@ -30,11 +33,13 @@ export default async function EditPurchasePage({
     { data: warehouse },
     { data: history },
     actor,
+    locationStockRows,
+    baseColWidths,
   ] = await Promise.all([
     supabase.from("purchase_orders").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("purchase_order_items")
-      .select("product_id, spec, quantity, unit_cost, remark, lot_number")
+      .select("product_id, custom_name, spec, quantity, unit_cost, remark, lot_number")
       .eq("purchase_order_id", id)
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
@@ -69,10 +74,33 @@ export default async function EditPurchasePage({
       .order("created_at", { ascending: false })
       .limit(1000),
     getCurrentActor(supabase),
+    fetchAllRows<{
+      product_id: string;
+      location_id: string;
+      quantity: number;
+      locations: { code: string; tier: number; position: number } | null;
+    }>((from, to) =>
+      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+    ),
+    getGridColumnWidths("erp-item-grid-columns"),
   ]);
 
   if (!order) {
     notFound();
+  }
+
+  const productLocations: Record<string, LocationOption[]> = {};
+  for (const row of locationStockRows) {
+    if (!row.locations) continue;
+    const list = productLocations[row.product_id] ?? [];
+    list.push({
+      locationId: row.location_id,
+      code: row.locations.code,
+      tier: row.locations.tier,
+      position: row.locations.position,
+      quantity: row.quantity,
+    });
+    productLocations[row.product_id] = list;
   }
 
   if (!canManage(order.created_by, actor.userId, actor.isAdmin)) {
@@ -91,7 +119,9 @@ export default async function EditPurchasePage({
     );
   }
 
-  const priceHistory = (history ?? []).map((row) => ({
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
     supplierId: row.purchase_orders.supplier_id,
     productId: row.product_id,
     unitCost: Number(row.unit_cost),
@@ -107,23 +137,17 @@ export default async function EditPurchasePage({
           매입 거래 수정
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href={`/paper-calc?purchaseOrderId=${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
+          <PaperCalcNavLink href={`/paper-calc?purchaseOrderId=${id}`} className="erp-btn">
             모조지 계산
-          </Link>
-          <Link href={`/purchases/${id}`} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          </PaperCalcNavLink>
+          <CloseButton href={`/purchases/${id}`} />
         </div>
       </div>
       <NewPurchaseForm
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? order.warehouse_id}
+        productLocations={productLocations}
         action={updatePurchase}
         submitLabel="매입 수정"
         backParam={back}
@@ -140,6 +164,7 @@ export default async function EditPurchasePage({
           isCarryover: order.is_carryover,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
+            customName: item.custom_name,
             spec: item.spec,
             quantity: item.quantity,
             unitCost: Number(item.unit_cost),
@@ -147,6 +172,7 @@ export default async function EditPurchasePage({
             lotNumber: item.lot_number,
           })),
         }}
+        initialBaseColWidths={baseColWidths}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import { PAYMENT_REQUEST_CARD_TYPES, type PaymentRequestCardType } from "@/lib/p
 import { createPaymentRequest, updatePaymentRequest } from "@/app/(dashboard)/reports/payment-requests/actions";
 import type { FormState } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { useFormRedirect } from "@/lib/use-form-redirect";
 
 type Initial = {
   id: string;
@@ -30,6 +31,7 @@ export function PaymentRequestForm({
 }) {
   const action = initial ? updatePaymentRequest : createPaymentRequest;
   const [state, formAction, pending] = useActionState<FormState, FormData>(action, undefined);
+  useFormRedirect(state);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 

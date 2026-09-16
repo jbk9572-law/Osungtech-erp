@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { QuickPaymentRequestForm } from "@/components/quick-payment-request-form";
 import { PaymentRequestGridTable, type PaymentRequestRow } from "@/components/payment-request-grid-table";
 import { paymentRequestDocTitle } from "@/lib/payment-request-title";
@@ -15,6 +16,7 @@ type PaymentRequestQueryRow = {
   period_to: string | null;
   card_type: string | null;
   created_at: string;
+  status: string;
   profiles: { full_name: string | null } | null;
   payment_request_line_items: { amount: number }[] | null;
 };
@@ -31,12 +33,12 @@ export default async function PaymentRequestsPage() {
       supabase
         .from("payment_requests")
         .select(
-          "id, title, department, period_from, period_to, card_type, created_at, profiles(full_name), payment_request_line_items(amount)"
+          "id, title, department, period_from, period_to, card_type, created_at, status, profiles!requested_by(full_name), payment_request_line_items(amount)"
         )
         .order("created_at", { ascending: false })
         .range(from, to)
     ),
-    supabase.from("company_profile").select("name").eq("id", 1).maybeSingle(),
+    supabase.from("company_profile").select("name").maybeSingle(),
   ]);
 
   const gridRows: PaymentRequestRow[] = rows.map((row, i) => ({
@@ -49,6 +51,7 @@ export default async function PaymentRequestsPage() {
     authorName: row.profiles?.full_name ?? null,
     total: (row.payment_request_line_items ?? []).reduce((sum, item) => sum + Number(item.amount), 0),
     createdAt: row.created_at,
+    status: row.status,
   }));
 
   return (
@@ -66,10 +69,10 @@ export default async function PaymentRequestsPage() {
           <span className="erp-detail-tab active">오늘 지출 빠르게 기록</span>
         </div>
         <div className="erp-detail-body">
-          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <PageGuide>
             문서를 따로 만들지 않아도 됩니다 — 같은 부서·카드로 이번 달에 이미 쓴 문서가 있으면 거기에 이어서
             추가되고, 없으면 자동으로 새로 만들어집니다.
-          </p>
+          </PageGuide>
           <QuickPaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
         </div>
       </div>
@@ -81,7 +84,7 @@ export default async function PaymentRequestsPage() {
         <button type="button" className="erp-btn" disabled title="추후 예정">
           엑셀 다운로드
         </button>
-        <Link href="/dashboard" className="erp-btn erp-btn-danger">
+        <Link href="/dashboard" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>

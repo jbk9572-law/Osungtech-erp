@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 type SuggestionRow = {
@@ -91,15 +92,15 @@ export default async function ReorderSuggestionsPage() {
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
           재고관리 &gt; 재고 부족 자동 발주 제안
         </h1>
-        <Link href="/inventory" className="erp-btn erp-btn-danger">
+        <Link href="/inventory" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         안전재고 이하로 떨어진 품목을 매입처별로 묶어 보여줍니다. 제안수량은 안전재고의 2배를
         목표로 부족분을 채우는 값이며, 실제 발주 수량은 매입 등록 화면에서 얼마든지 고칠 수
         있습니다.
-      </p>
+      </PageGuide>
 
       {groups.length === 0 && (
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
@@ -129,7 +130,14 @@ export default async function ReorderSuggestionsPage() {
               ) : (
                 <span
                   className="text-xs"
-                  style={{ margin: 4, padding: "0 8px", color: "var(--erp-text-muted)" }}
+                  style={{
+                    margin: 4,
+                    padding: "4px 10px",
+                    borderRadius: 0,
+                    background: "var(--erp-info-bg)",
+                    color: "var(--erp-info-text)",
+                    border: "1px solid var(--erp-info-border)",
+                  }}
                 >
                   품목에 매입처가 지정되어 있지 않아 바로 등록할 수 없습니다.
                 </span>

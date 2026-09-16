@@ -120,11 +120,11 @@ export async function createPaymentRequest(
   }
 
   revalidatePath("/reports/payment-requests");
-  redirect(
-    receiptWarning
+  return {
+    redirectTo: receiptWarning
       ? `/reports/payment-requests/${id}?warning=${encodeURIComponent(receiptWarning)}`
-      : `/reports/payment-requests/${id}`
-  );
+      : `/reports/payment-requests/${id}`,
+  };
 }
 
 // 매일 한 줄씩 빠르게 기록하는 입력창용 액션. 부서+카드종류+월(month_key)
@@ -236,7 +236,52 @@ export async function updatePaymentRequest(
 
   revalidatePath("/reports/payment-requests");
   revalidatePath(`/reports/payment-requests/${id}`);
-  redirect(`/reports/payment-requests/${id}`);
+  return { redirectTo: `/reports/payment-requests/${id}` };
+}
+
+// 제출(마감) — 다 쓴 지급결의서에 결재선을 붙여 잠그고 결재를 시작한다.
+export async function submitPaymentRequest(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const approverIds = formData.getAll("approver_id").map(String).filter(Boolean);
+  const referenceIds = formData.getAll("reference_id").map(String).filter(Boolean);
+
+  if (!id) return { error: "잘못된 요청입니다." };
+  if (approverIds.length === 0) {
+    return { error: "결재선(승인자)을 1명 이상 지정해주세요." };
+  }
+
+  const supabase = await createClient();
+  const { data: docId, error } = await supabase.rpc("submit_payment_request", {
+    p_id: id,
+    p_approver_ids: approverIds,
+    p_reference_ids: referenceIds,
+  });
+
+  if (error || !docId) {
+    return { error: `제출에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+  }
+
+  revalidatePath("/reports/payment-requests");
+  revalidatePath(`/reports/payment-requests/${id}`);
+  revalidatePath("/approvals");
+  return { success: "제출했습니다. 결재 진행 상황은 전자결재 기안함에서도 확인할 수 있습니다." };
+}
+
+// 제출 회수 — 아직 아무도 결재하지 않은 경우에만 허용된다(RPC 내부 검증).
+export async function recallPaymentRequestSubmission(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("recall_payment_request", { p_id: id });
+  if (error) {
+    return { error: `회수에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/reports/payment-requests");
+  revalidatePath(`/reports/payment-requests/${id}`);
+  revalidatePath("/approvals");
+  return { success: "회수했습니다. 다시 작성할 수 있습니다." };
 }
 
 export async function addPaymentRequestReceipts(
@@ -358,6 +403,23 @@ export async function deletePaymentRequest(
 
   const supabase = await createClient();
 
+  // 제출된(pending) 상태로 남은 문서를 그냥 지우면, 결재선에 있는
+  // 사람의 기안함에 유령 문서가 남는다 — leave_requests/attendance_
+  // correction_requests의 취소와 같은 이유로 삭제 전에 먼저 회수한다.
+  const { data: existing } = await supabase
+    .from("payment_requests")
+    .select("status, approval_document_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (existing?.status === "pending" && existing.approval_document_id) {
+    const { error: recallError } = await supabase.rpc("recall_approval_document", {
+      p_id: existing.approval_document_id,
+    });
+    if (recallError) {
+      return { error: `삭제에 실패했습니다: ${recallError.message}` };
+    }
+  }
+
   // 스토리지 파일을 먼저 지우고 나중에 행을 지우면, RLS가 행 삭제를
   // 막는 경우(본인 작성이 아님) 파일만 사라지고 행은 그대로 남는 불일치가
   // 생긴다. 그래서 행 삭제를 먼저 시도해 실제로 지워졌는지 확인한 뒤에만
@@ -399,32 +461,61 @@ export async function bulkDeletePaymentRequests(
 
   const supabase = await createClient();
 
-  const results = await Promise.all(
-    ids.map(async (id) => {
-      // deletePaymentRequest와 같은 이유로, 행이 실제로 지워졌는지 먼저
-      // 확인한 뒤에만(본인 작성 또는 관리자) 영수증 스토리지 파일을 지운다.
-      const { data: receipts } = await supabase
-        .from("payment_request_receipts")
-        .select("file_path")
-        .eq("payment_request_id", id);
+  // 제출된(pending) 문서가 섞여 있으면 지우기 전에 먼저 회수한다 —
+  // deletePaymentRequest(단건)와 같은 이유(유령 기안 방지). 회수가 실패한
+  // 건(예: 이미 결재가 진행된 경우)은 삭제 대상에서 빼서, 결재가 진행
+  // 중인 문서가 조용히 지워지는 일이 없게 한다.
+  const { data: pendingRows } = await supabase
+    .from("payment_requests")
+    .select("id, approval_document_id")
+    .in("id", ids)
+    .eq("status", "pending");
+  const recallFailedIds = new Set<string>();
+  for (const row of pendingRows ?? []) {
+    if (row.approval_document_id) {
+      const { error: recallError } = await supabase.rpc("recall_approval_document", { p_id: row.approval_document_id });
+      if (recallError) recallFailedIds.add(row.id);
+    }
+  }
+  const idsToDelete = ids.filter((id) => !recallFailedIds.has(id));
+  if (idsToDelete.length === 0) {
+    return { error: "선택한 문서를 모두 회수하지 못해 삭제할 수 없습니다." };
+  }
 
-      const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
-      if (!wasRowMutated(result)) {
-        return { error: result.error ?? new Error("not deleted") };
-      }
+  // 건마다 따로 조회/삭제하면 N건 삭제에 왕복이 2N번(영수증 조회 + 삭제)
+  // 생긴다 — 둘 다 in()으로 한 번씩만 왕복하도록 묶었다. 삭제는 RLS가
+  // 행마다 여전히 개별 판정하므로(본인 작성 또는 관리자만 삭제 가능),
+  // 실제로 지워진 id만 select로 돌려받아 그 목록으로 성공/실패를 가른다
+  // — deletePaymentRequest(단건)의 wasRowMutated 판정과 같은 기준이다.
+  const { data: receipts } = await supabase
+    .from("payment_request_receipts")
+    .select("payment_request_id, file_path")
+    .in("payment_request_id", idsToDelete);
 
-      if (receipts && receipts.length > 0) {
-        await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
-      }
-      return { error: null };
-    })
-  );
-  const failCount = results.filter((r) => r.error).length;
+  const { data: deleted, error: deleteError } = await supabase
+    .from("payment_requests")
+    .delete()
+    .in("id", idsToDelete)
+    .select("id");
+
+  if (deleteError) {
+    return { error: `삭제에 실패했습니다: ${deleteError.message}` };
+  }
+
+  const deletedIds = new Set((deleted ?? []).map((r) => r.id));
+  const filePaths = (receipts ?? [])
+    .filter((r) => deletedIds.has(r.payment_request_id))
+    .map((r) => r.file_path);
+  if (filePaths.length > 0) {
+    await supabase.storage.from("payment-receipts").remove(filePaths);
+  }
+
+  const failCount = ids.length - deletedIds.size;
 
   revalidatePath("/reports/payment-requests");
 
   if (failCount > 0) {
-    return { error: `${ids.length - failCount}건 삭제, ${failCount}건 실패했습니다.` };
+    return { error: `${deletedIds.size}건 삭제, ${failCount}건 실패했습니다.` };
   }
   return { success: `${ids.length}건 삭제했습니다.` };
 }

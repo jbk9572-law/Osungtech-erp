@@ -52,14 +52,13 @@ export function getDatePresets(now: Date = new Date()): DatePreset[] {
   ];
 }
 
-// 매출/매입 목록의 기본 조회기간 하한 — 날짜를 직접 안 걸었으면 지난달
-// 1일부터(=최근 2개월 가량)만 보여준다. 그보다 오래된 내역은 날짜 필터로
-// 직접 조회한다.
-export function previousMonthStart(now: Date = new Date()): string {
+// 매출/매입 목록의 기본 조회기간(오늘 하루) — 날짜를 직접 안 걸었으면
+// "오늘" 프리셋을 누른 것과 똑같이 오늘 하루만 보여준다. 그보다 이전
+// 내역은 프리셋/날짜 필터로 직접 조회한다.
+export function todayStr(now: Date = new Date()): string {
   const kstNow = nowInKst(now);
   const today = new Date(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
-  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-  return toDateStr(lastMonthStart);
+  return toDateStr(today);
 }
 
 // "YYYY-MM" 월 문자열 <-> 조회기간(from/to) 변환 헬퍼. 월별 리포트에서 사용.
@@ -79,4 +78,24 @@ export function shiftMonth(month: string, delta: number): string {
   const [y, m] = month.split("-").map(Number);
   const d = new Date(y, m - 1 + delta, 1);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+// 매출/매입 목록 상단처럼 1월~12월 월별 버튼과 한 줄에 같이 놓는
+// 화면에서는, getDatePresets()의 이번달/지난달/올해/작년까지 다 넣으면
+// 월별 버튼과 기능이 겹치면서 두 줄로 나뉘어 화면이 늘어진다 — 겹치지
+// 않는 4개(오늘/어제/이번주/지난주)만 추린다. getDatePresets()가 항상
+// 이 4개를 앞에 두고 반환하므로 로직을 새로 만들지 않고 그대로 잘라 쓴다.
+export function getQuickDatePresets(now: Date = new Date()): DatePreset[] {
+  return getDatePresets(now).slice(0, 4);
+}
+
+// 매출/매입 목록 상단의 "1월~12월" 월별 바로가기 버튼 — 올해 각 달의
+// 조회기간(from/to)을 미리 계산해둔다.
+export function getYearMonthButtons(now: Date = new Date()): DatePreset[] {
+  const kstNow = nowInKst(now);
+  const year = kstNow.getUTCFullYear();
+  return Array.from({ length: 12 }, (_, i) => {
+    const { from, to } = getMonthRange(`${year}-${pad(i + 1)}`);
+    return { label: `${i + 1}월`, from, to };
+  });
 }

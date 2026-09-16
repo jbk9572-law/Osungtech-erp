@@ -10,6 +10,7 @@ import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
+import { matchesSearch } from "@/lib/search-match";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
 // 검색어(q)가 등록된 공급처 이름과 매칭되고 그 업체가 전용 양식을 쓰는
@@ -60,7 +61,7 @@ export async function GET(request: Request) {
     supabase
       .from("purchase_order_items")
       .select(
-        "*, purchase_orders!inner(purchase_date, supplier_id, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
+        "*, purchase_orders!inner(purchase_date, supplier_id, memo, delivery_method, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
       .filter((item) => item.purchase_orders?.supplier_id === templatedSupplier!.id)
       .map((item) => ({
         date: item.purchase_orders?.purchase_date ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
@@ -104,11 +105,17 @@ export async function GET(request: Request) {
 
   const items = data.filter((item) => {
     if (!q) return true;
-    return (
-      item.purchase_orders?.suppliers?.name?.toLowerCase().includes(q) ||
-      item.products?.name?.toLowerCase().includes(q) ||
-      item.products?.sku?.toLowerCase().includes(q) ||
-      (item.spec || item.products?.spec)?.toLowerCase().includes(q)
+    return matchesSearch(
+      q,
+      item.purchase_orders?.suppliers?.name,
+      item.products?.name,
+      item.custom_name,
+      item.products?.sku,
+      item.spec || item.products?.spec,
+      item.lot_number,
+      item.remark,
+      item.purchase_orders?.memo,
+      item.purchase_orders?.delivery_method,
     );
   });
 
@@ -119,7 +126,7 @@ export async function GET(request: Request) {
       매입일자: item.purchase_orders?.purchase_date ?? "",
       공급처명: item.purchase_orders?.suppliers?.name ?? "",
       SKU: item.products?.sku ?? "",
-      품목명: item.products?.name ?? "",
+      품목명: item.products?.name ?? item.custom_name ?? "",
       규격: item.spec || item.products?.spec || "",
       단위: item.products?.unit ?? "",
       수량: item.quantity,

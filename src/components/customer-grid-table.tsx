@@ -18,6 +18,7 @@ import { RowCheckbox } from "@/components/grid/row-checkbox";
 export type CustomerRow = {
   id: string;
   name: string;
+  customer_code: string;
   business_number: string | null;
   contact_name: string | null;
   phone: string | null;
@@ -126,6 +127,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                 />
               </th>
               {sortableHeader("출고처명", "name", thName)}
+              <th style={{ width: 76 }}>코드</th>
               {sortableHeader("사업자번호", "business_number")}
               {sortableHeader("담당자", "contact_name")}
               {sortableHeader("연락처", "phone")}
@@ -152,6 +154,9 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
                     />
                   </td>
                   <td style={tdName}>{customer.name}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>
+                    {customer.customer_code}
+                  </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {customer.business_number ?? "-"}
                   </td>
@@ -187,7 +192,7 @@ export function CustomerGridTable({ rows }: { rows: CustomerRow[] }) {
             })}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={8} className="erp-grid-empty">
+                <td colSpan={9} className="erp-grid-empty">
                   등록된 출고처가 없습니다.
                 </td>
               </tr>

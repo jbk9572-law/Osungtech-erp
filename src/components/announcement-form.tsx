@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { useFormRedirect } from "@/lib/use-form-redirect";
 
 export function AnnouncementForm({
   action,
@@ -14,6 +15,7 @@ export function AnnouncementForm({
   initial?: { id: string; title: string; content: string; pinned: boolean };
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  useFormRedirect(state);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 

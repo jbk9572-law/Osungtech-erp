@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
+import { ROLE_LABELS } from "@/lib/user-roles";
 
 // audit_logs 트리거는 매출/매입/품목 같은 마스터·전표 테이블에만 붙어있고
 // inventory_transactions에는 없다(재고 조정은 그 테이블 자체가 이미
@@ -131,12 +133,6 @@ const FIELD_LABELS: Record<string, Record<string, string>> = {
   },
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "관리자",
-  manager: "매니저",
-  staff: "직원",
-};
-
 const PRICE_BASIS_LABELS: Record<string, string> = {
   box: "박스 단위",
   quantity: "낱개 단위",
@@ -233,7 +229,7 @@ export default async function AuditLogPage({
     return (
       <div>
         <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-          환경설정 &gt; 변경 이력
+          시스템관리 &gt; 변경 이력
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
@@ -412,16 +408,16 @@ export default async function AuditLogPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/company" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          환경설정 &gt; 변경 이력
+          시스템관리 &gt; 변경 이력
         </h1>
-        <Link href="/settings/company" className="erp-btn erp-btn-danger">
+        <Link href="/settings/company" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+      <PageGuide>
         매출·매입·품목·거래처·계정 권한의 등록/수정/삭제 이력과 재고 조정 이력입니다. 관리자만 볼 수
         있습니다.
-      </p>
+      </PageGuide>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>
         <Link

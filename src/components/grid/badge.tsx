@@ -17,13 +17,15 @@ export function GridBadge({
   tone,
   children,
   style,
+  title,
 }: {
   tone: BadgeTone;
   children: ReactNode;
   style?: CSSProperties;
+  title?: string;
 }) {
   return (
-    <span className={`erp-badge ${TONE_CLASS[tone]}`} style={style}>
+    <span className={`erp-badge ${TONE_CLASS[tone]}`} style={style} title={title}>
       {children}
     </span>
   );

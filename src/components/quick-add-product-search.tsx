@@ -133,7 +133,7 @@ export function QuickAddProductSearch({
             alignItems: "center",
             gap: 2,
             padding: "2px 6px",
-            borderRadius: 4,
+            borderRadius: 0,
             fontSize: 10.5,
             fontWeight: 700,
             background: "var(--erp-info-bg)",

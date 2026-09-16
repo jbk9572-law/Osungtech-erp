@@ -1,12 +1,15 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { updateSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
+import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function EditSalePage({
   params,
@@ -31,11 +34,13 @@ export default async function EditSalePage({
     prices,
     { data: history },
     actor,
+    locationStockRows,
+    gridColWidths,
   ] = await Promise.all([
     supabase.from("sales_orders").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select("product_id, spec, quantity, unit_price, remark, lot_number")
+      .select("product_id, custom_name, spec, quantity, unit_price, remark, lot_number")
       .eq("sales_order_id", id)
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
@@ -75,10 +80,33 @@ export default async function EditSalePage({
       .order("created_at", { ascending: false })
       .limit(1000),
     getCurrentActor(supabase),
+    fetchAllRows<{
+      product_id: string;
+      location_id: string;
+      quantity: number;
+      locations: { code: string; tier: number; position: number } | null;
+    }>((from, to) =>
+      supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+    ),
+    getGridColumnWidths("erp-item-grid-columns"),
   ]);
 
   if (!order) {
     notFound();
+  }
+
+  const productLocations: Record<string, LocationOption[]> = {};
+  for (const row of locationStockRows) {
+    if (!row.locations) continue;
+    const list = productLocations[row.product_id] ?? [];
+    list.push({
+      locationId: row.location_id,
+      code: row.locations.code,
+      tier: row.locations.tier,
+      position: row.locations.position,
+      quantity: row.quantity,
+    });
+    productLocations[row.product_id] = list;
   }
 
   if (!canManage(order.created_by, actor.userId, actor.isAdmin)) {
@@ -95,13 +123,15 @@ export default async function EditSalePage({
     );
   }
 
-  const priceHistory = (history ?? []).map((row) => ({
-    customerId: row.sales_orders.customer_id,
-    productId: row.product_id,
-    unitPrice: Number(row.unit_price),
-    orderDate: row.sales_orders.order_date,
-    lotNumber: row.lot_number,
-  }));
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
+      customerId: row.sales_orders.customer_id,
+      productId: row.product_id,
+      unitPrice: Number(row.unit_price),
+      orderDate: row.sales_orders.order_date,
+      lotNumber: row.lot_number,
+    }));
 
   return (
     <div>
@@ -111,17 +141,10 @@ export default async function EditSalePage({
           매출 거래 수정
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href={`/paper-calc?salesOrderId=${id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
+          <PaperCalcNavLink href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
             모조지 계산
-          </Link>
-          <Link href={`/sales/${id}`} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          </PaperCalcNavLink>
+          <CloseButton href={`/sales/${id}`} />
         </div>
       </div>
       <NewSaleForm
@@ -133,6 +156,7 @@ export default async function EditSalePage({
         warehouseId={warehouse?.id ?? order.warehouse_id}
         prices={prices ?? []}
         history={priceHistory}
+        productLocations={productLocations}
         action={updateSale}
         submitLabel="매출 수정"
         backParam={back}
@@ -150,6 +174,7 @@ export default async function EditSalePage({
           isCarryover: order.is_carryover,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
+            customName: item.custom_name,
             spec: item.spec,
             quantity: item.quantity,
             unitPrice: Number(item.unit_price),
@@ -157,6 +182,7 @@ export default async function EditSalePage({
             lotNumber: item.lot_number,
           })),
         }}
+        initialColWidths={gridColWidths}
       />
     </div>
   );

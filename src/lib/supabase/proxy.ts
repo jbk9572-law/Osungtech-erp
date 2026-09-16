@@ -1,7 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// "/demo"는 아이디/비밀번호 입력 없이 데모 계정으로 자동 로그인시켜주는
+// 진입점(src/app/demo/route.ts)이라, 로그인 전 상태에서도 이 경로 자체는
+// 통과시켜야 한다 — 그러지 않으면 로그인 안 된 방문자가 /demo에 도달하기도
+// 전에 /login으로 튕겨나간다. 로그인 처리 자체는 그 라우트 핸들러 안에서
+// 이뤄지고, 성공하면 /dashboard로 리다이렉트되어 그 다음부터는 이미 로그인된
+// 상태로 나머지 화면을 통과한다.
+const PUBLIC_PATHS = ["/login", "/auth", "/demo"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -35,8 +41,15 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
   if (!user && !isPublicPath) {
+    // 위치 QR처럼 로그인 안 된 상태에서 특정 화면 링크로 바로 들어오는
+    // 경우, 로그인 후 무조건 /dashboard로 보내면 원래 보려던 화면을
+    // 다시 찾아가야 한다 — 원래 경로를 next로 넘겨 로그인 액션이 그
+    // 위치로 되돌려보내게 한다.
+    const originalPath = `${pathname}${request.nextUrl.search}`;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("next", originalPath);
     return NextResponse.redirect(url);
   }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { getNotificationSummary } from "@/lib/notifications";
@@ -8,6 +8,7 @@ import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
 import { nowInKst } from "@/lib/kst-date";
+import { GridBadge } from "@/components/grid/badge";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -68,10 +69,10 @@ export default async function DashboardPage({
     new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate()
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { userId: currentUserId, isAdmin } = await getCurrentActor(supabase);
+  const [user, { userId: currentUserId, isAdmin }] = await Promise.all([
+    getUser(),
+    getCurrentActor(supabase),
+  ]);
 
   const [
     { count: productCount },
@@ -91,14 +92,14 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, sales_order_id, products(sku, name, unit, spec), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
+        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, purchase_order_id, products(sku, name, unit, spec), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
+        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
@@ -126,7 +127,7 @@ export default async function DashboardPage({
       .lte("note_date", monthEnd)
       .order("created_at", { ascending: false })
       .limit(5),
-    supabase.from("company_profile").select("name, logo_mark_url").eq("id", 1).maybeSingle(),
+    supabase.from("company_profile").select("name, logo_mark_url").maybeSingle(),
     supabase
       .from("sales_order_items")
       .select("quantity, unit_price, sales_orders!inner(order_date, is_return, is_carryover)")
@@ -162,9 +163,15 @@ export default async function DashboardPage({
   type ItemRow = {
     partnerName: string;
     productName: string;
+    // Filter 카테고리만 빼고 매입-매출 매칭(입고처/출고처/재고분출고)을
+    // 추적한다(dashboard-calendar.tsx의 isTrackedCategory 참고) — Filter는
+    // 같은 날 사고파는 매칭 정보가 실무에 큰 의미가 없다는 판단.
+    categoryName: string | null;
+    sku: string | null;
     spec: string;
     unit: string;
     quantity: number;
+    basePackageQty: number | null;
     amount: number;
     orderId: string;
     remark: string | null;
@@ -267,10 +274,13 @@ export default async function DashboardPage({
     }
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
-      productName: item.products?.name ?? "상품 미상",
+      productName: item.products?.name ?? item.custom_name ?? "상품 미상",
+      categoryName: item.products?.categories?.name ?? null,
+      sku: item.products?.sku ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
+      basePackageQty: item.products?.base_package_qty ?? null,
       amount,
       orderId: item.sales_order_id,
       remark: item.remark,
@@ -295,10 +305,13 @@ export default async function DashboardPage({
     }
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
-      productName: item.products?.name ?? "상품 미상",
+      productName: item.products?.name ?? item.custom_name ?? "상품 미상",
+      categoryName: item.products?.categories?.name ?? null,
+      sku: item.products?.sku ?? null,
       spec: item.spec || item.products?.spec || "",
       unit: item.products?.unit ?? "",
       quantity: item.quantity,
+      basePackageQty: item.products?.base_package_qty ?? null,
       amount,
       orderId: item.purchase_order_id,
       remark: item.remark,
@@ -371,13 +384,13 @@ export default async function DashboardPage({
                 <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>
                 {t.title}
                 {t.due_date ? ` (${t.due_date})` : ""}
-                <span className="erp-badge erp-badge-muted" style={{ marginLeft: 6 }}>
+                <GridBadge tone="muted" style={{ marginLeft: 6 }}>
                   {todoTypeLabel(t.todoType, t.shipDate, t.due_date)}
-                </span>
+                </GridBadge>
                 {itemCount > 0 && (
-                  <span className="erp-badge erp-badge-muted" style={{ marginLeft: 4 }}>
+                  <GridBadge tone="muted" style={{ marginLeft: 4 }}>
                     품목 {itemCount}건
-                  </span>
+                  </GridBadge>
                 )}
               </Link>
             );
@@ -479,10 +492,10 @@ export default async function DashboardPage({
           빠른 실행
         </div>
         <div className="erp-home-list">
-          <Link className="erp-home-list-item" href="/sales">
+          <Link className="erp-home-list-item" href="/sales/new">
             새 판매 등록
           </Link>
-          <Link className="erp-home-list-item" href="/purchases">
+          <Link className="erp-home-list-item" href="/purchases/new">
             새 입고 등록
           </Link>
           <Link className="erp-home-list-item" href="/products">

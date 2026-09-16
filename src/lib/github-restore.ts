@@ -1,3 +1,5 @@
+import { getServerEnv } from "@/lib/server-env";
+
 const OWNER = "jbk9572-law";
 const REPO = "Osungtech-erp";
 const WORKFLOW_FILE = "db-restore.yml";
@@ -22,7 +24,7 @@ export type SnapshotListResult = { snapshots: string[]; error: string | null };
 // 없으면(이 기능을 안 쓰기로 한 배포본) error도 null로 둬서 화면에
 // 조용히 안내만 뜨게 한다.
 export async function listServerBackupSnapshots(): Promise<SnapshotListResult> {
-  const token = process.env.GITHUB_RESTORE_TOKEN;
+  const token = getServerEnv("GITHUB_RESTORE_TOKEN");
   if (!token) return { snapshots: [], error: null };
 
   try {
@@ -58,7 +60,7 @@ export async function dispatchServerRestore(
   snapshot: string,
   requestedBy: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const token = process.env.GITHUB_RESTORE_TOKEN;
+  const token = getServerEnv("GITHUB_RESTORE_TOKEN");
   if (!token) {
     return { ok: false, error: "GITHUB_RESTORE_TOKEN 환경변수가 설정되어 있지 않습니다." };
   }

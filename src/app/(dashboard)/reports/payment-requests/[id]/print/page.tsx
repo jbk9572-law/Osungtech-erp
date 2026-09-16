@@ -61,7 +61,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
   const [{ data: row }, { data: items }] = await Promise.all([
     supabase
       .from("payment_requests")
-      .select("id, department, period_from, period_to, card_type, profiles(full_name)")
+      .select("id, department, period_from, period_to, card_type, profiles!requested_by(full_name)")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -82,10 +82,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
   return (
     <div className="mx-auto print-page-margin" style={{ width: 620, maxWidth: "100%" }}>
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link
-          href={`/reports/payment-requests/${id}`}
-          className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-        >
+        <Link href={`/reports/payment-requests/${id}`} className="erp-btn erp-btn-dark print:hidden">
           목록으로
         </Link>
         <PrintButton />

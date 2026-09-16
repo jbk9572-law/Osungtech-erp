@@ -14,6 +14,8 @@ import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 import { FieldHint } from "@/components/field-hint";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
+import { normalizeLotNumber } from "@/lib/lot-number";
+import { useFormRedirect } from "@/lib/use-form-redirect";
 
 type Product = {
   id: string;
@@ -70,6 +72,7 @@ export function TodoForm({
   customers?: Partner[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  useFormRedirect(state);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
@@ -388,7 +391,7 @@ export function TodoForm({
                         placeholder="관리번호"
                         aria-label="관리번호"
                         value={row.lotNumber}
-                        onChange={(e) => updateRow(row.key, { lotNumber: e.target.value })}
+                        onChange={(e) => updateRow(row.key, { lotNumber: normalizeLotNumber(e.target.value) })}
                         className="erp-input w-full"
                       />
                     </td>

@@ -33,8 +33,11 @@ export async function updateCompanyProfile(
       manager_phone: combinePhone(formData, "mgrphone"),
       email: String(formData.get("email") ?? "") || null,
       greeting_message: String(formData.get("greeting_message") ?? "") || null,
-    })
-    .eq("id", 1);
+    });
+  // id로 안 고른다 — RLS가 실제 계정은 진짜 회사정보 행만, 데모 계정은
+  // 데모용 행만 갱신되게 걸러준다(company_profile_demo_isolation
+  // 마이그레이션 참고). id=1로 고정했다가 데모 계정이 실제 회사정보를
+  // 그대로 덮어쓰던 버그가 있었다.
 
   if (error) {
     return {
@@ -81,7 +84,16 @@ export async function uploadBrandingImage(
     return { error: "PNG, JPG, GIF, WEBP 형식의 이미지 파일만 업로드할 수 있습니다." };
   }
 
-  const path = `${BRANDING_SLOTS[slot]}.png`;
+  // 스토리지 버킷 경로는 DB 행과 달리 RLS로 자동 분리되지 않는다 —
+  // 데모 계정과 실제 계정이 같은 파일 경로("logo-wordmark.png")에 그대로
+  // 업로드하면 서로의 로고를 덮어써버린다. 데모 계정이면 "demo/" 폴더
+  // 아래에 따로 저장한다. 이 판정이 실패하면 데모 계정이 실제 경로로
+  // 잘못 새는 걸 막기 위해, 조용히 넘어가지 않고 업로드 자체를 막는다.
+  const { data: isDemo, error: isDemoError } = await supabase.rpc("is_demo_actor");
+  if (isDemoError) {
+    return { error: `계정 종류를 확인하지 못해 업로드를 중단했습니다: ${isDemoError.message}` };
+  }
+  const path = isDemo ? `demo/${BRANDING_SLOTS[slot]}.png` : `${BRANDING_SLOTS[slot]}.png`;
 
   const { error: uploadError } = await supabase.storage
     .from("branding")
@@ -103,7 +115,9 @@ export async function uploadBrandingImage(
         ? { logo_mark_url: url }
         : { seal_image_url: url };
 
-  const { error } = await supabase.from("company_profile").update(update).eq("id", 1);
+  // id로 안 고른다 — RLS가 실제/데모 계정에 맞는 행만 갱신되게 걸러준다
+  // (company_profile_demo_isolation 마이그레이션 참고).
+  const { error } = await supabase.from("company_profile").update(update);
 
   if (error) {
     return { error: `저장에 실패했습니다: ${error.message}` };
@@ -111,4 +125,54 @@ export async function uploadBrandingImage(
 
   revalidatePath("/", "layout");
   return { success: "이미지가 저장되었습니다." };
+}
+
+// 데모 계정용 대체 이미지 — public/branding/logo-*.png(실제 회사 로고·도장)를
+// 그대로 fallback으로 쓰면 데모 계정이 지워도 실제 이미지가 다시 보이게
+// 된다. 데모 계정이 "기본값으로" 버튼을 누르면 null이 아니라 이 샘플
+// 이미지로 되돌린다.
+const DEMO_DEFAULT_URLS: Record<BrandingSlot, string> = {
+  logo_wordmark_url: "/branding/sample-logo-wordmark.png",
+  logo_mark_url: "/branding/sample-logo-mark.png",
+  seal_image_url: "/branding/sample-company-seal.png",
+};
+
+// 업로드한 로고/도장을 기본값으로 되돌린다. 실제 계정은 null로 되돌려
+// 원래 회사 로고(레포에 커밋된 기본 이미지)가 다시 보이게 하고, 데모
+// 계정은 null이 아니라 위 샘플 이미지로 되돌린다 — null로 두면 이
+// 화면(BrandingSlot)의 defaultUrl prop이 그대로 실제 회사 로고 경로라
+// 데모 화면에 실제 로고가 다시 노출돼버린다.
+export async function resetBrandingImage(
+  _prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 이미지를 변경할 수 있습니다." };
+
+  const slot = String(formData.get("slot") ?? "") as BrandingSlot;
+  if (!(slot in BRANDING_SLOTS)) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const { data: isDemo, error: isDemoError } = await supabase.rpc("is_demo_actor");
+  if (isDemoError) {
+    return { error: `계정 종류를 확인하지 못해 되돌리기를 중단했습니다: ${isDemoError.message}` };
+  }
+
+  const resetValue = isDemo ? DEMO_DEFAULT_URLS[slot] : null;
+  const update =
+    slot === "logo_wordmark_url"
+      ? { logo_wordmark_url: resetValue }
+      : slot === "logo_mark_url"
+        ? { logo_mark_url: resetValue }
+        : { seal_image_url: resetValue };
+
+  const { error } = await supabase.from("company_profile").update(update);
+
+  if (error) {
+    return { error: `되돌리기에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/", "layout");
+  return { success: "기본값으로 되돌렸습니다." };
 }

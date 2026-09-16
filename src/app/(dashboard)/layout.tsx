@@ -1,76 +1,77 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { ErpShell } from "@/components/erp/erp-shell";
-import { getNotificationSummary } from "@/lib/notifications";
-import { getDatabaseSizeBytes, getStorageSizeBytes } from "@/lib/db-usage";
-import { getVpsDiskUsage } from "@/lib/vps-usage";
-import { getNetlifyUsage } from "@/lib/netlify-usage";
+import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
+import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
+import { MessengerWidgetPanel } from "@/components/erp/messenger-widget-panel";
 import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  const [
-    { data: company },
-    notifications,
-    { data: messages },
-    { data: profiles },
-    dbSizeBytes,
-    storageSizeBytes,
-    netlifyUsage,
-  ] = await Promise.all([
+  // company_profile/profiles/tenants(기능 on-off)는 첫 페인트에 바로
+  // 필요하다(제목표시줄 회사명, 데모 배너 여부, 트리메뉴에 뭘 보여줄지) —
+  // 나머지 두 개(알림 종, 메신저)는 각자 서버 컴포넌트로 빼서
+  // <Suspense>로 따로 스트리밍한다(아래 usageWidget과 같은 이유) —
+  // 페이지 이동마다(모달 열기 포함) 항상 같이 돌던 조회를 줄여 요청당
+  // CPU 부담을 낮춘다.
+  const [{ data: company }, { data: profiles }, { data: tenant }] = await Promise.all([
     supabase
       .from("company_profile")
       .select("name, logo_mark_url")
-      .eq("id", 1)
       .maybeSingle(),
-    getNotificationSummary(supabase, user.id),
-    supabase
-      .from("messenger_messages")
-      .select(
-        "id, sender_id, content, file_url, file_path, file_name, file_size, created_at",
-      )
-      // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로 오는
-      // 순서로 보여줘야 하므로 아래에서 다시 뒤집는다.
-      .order("created_at", { ascending: false })
-      .limit(100),
-    supabase.from("profiles").select("id, full_name"),
-    getDatabaseSizeBytes(supabase),
-    getStorageSizeBytes(supabase),
-    getNetlifyUsage(),
+    supabase.from("profiles").select("id, full_name, is_demo, role"),
+    // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
+    // 별도 id 조건이 필요 없다. 멀티테넌트 전환(migration 098~) 적용
+    // 전이거나 실패해도 화면 전체가 죽으면 안 되므로 그냥 빈 배열로
+    // 넘어간다 — "아무 기능도 안 꺼짐"이 안전한 기본값이다.
+    supabase.from("tenants").select("disabled_features").maybeSingle(),
   ]);
-  const vpsDisk = getVpsDiskUsage();
 
   const profileNames = Object.fromEntries(
     (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]),
   );
+  const myProfile = (profiles ?? []).find((p) => p.id === user.id);
+  const isDemo = myProfile?.is_demo ?? false;
+  const isAdmin = myProfile?.role === "admin";
+  const disabledFeatures = tenant?.disabled_features ?? [];
 
   return (
     <ErpShell
+      isDemo={isDemo}
       companyName={company?.name}
       logoUrl={company?.logo_mark_url}
       email={user.email ?? null}
-      unreadAnnouncements={notifications.announcements}
-      dueTodos={notifications.todos}
-      lowStock={notifications.lowStock}
-      initialMessages={(messages ?? []).slice().reverse()}
-      profileNames={profileNames}
-      currentUserId={user.id}
-      dbSizeBytes={dbSizeBytes}
-      storageSizeBytes={storageSizeBytes}
-      vpsDisk={vpsDisk}
-      netlifyUsage={netlifyUsage}
+      notificationBell={
+        <Suspense fallback={<button type="button" className="erp-bell-btn" aria-label="알림">🔔</button>}>
+          <NotificationBellPanel userId={user.id} />
+        </Suspense>
+      }
+      messengerWidget={
+        <Suspense fallback={null}>
+          <MessengerWidgetPanel profileNames={profileNames} currentUserId={user.id} />
+        </Suspense>
+      }
+      usageWidget={
+        <Suspense fallback={null}>
+          <UsageWidgetPanel />
+        </Suspense>
+      }
+      disabledFeatures={disabledFeatures}
+      isAdmin={isAdmin}
+      modal={modal}
     >
       {children}
     </ErpShell>

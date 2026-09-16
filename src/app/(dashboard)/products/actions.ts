@@ -7,45 +7,15 @@ import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 import { numberOrDefault, numberOrNull } from "@/lib/form-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 
-async function resolveCategoryId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  formData: FormData
-): Promise<string | null> {
-  const newCategoryName = String(formData.get("new_category") ?? "").trim();
-  if (newCategoryName) {
-    const { data: existing } = await supabase
-      .from("categories")
-      .select("id")
-      .ilike("name", newCategoryName)
-      .maybeSingle();
-    if (existing) return existing.id;
-
-    const { data: created, error } = await supabase
-      .from("categories")
-      .insert({ name: newCategoryName })
-      .select("id")
-      .single();
-    if (created) return created.id;
-    // 이 조회~삽입 사이에 다른 사람이 같은 이름으로 먼저 만들었으면(동시
-    // 등록) name의 unique 제약에 걸려 삽입이 실패한다 — 실패로 끝내지
-    // 말고 그 사이 생긴 카테고리를 다시 조회해서 그걸 쓴다.
-    if (error) {
-      const { data: retry } = await supabase
-        .from("categories")
-        .select("id")
-        .ilike("name", newCategoryName)
-        .maybeSingle();
-      if (retry) return retry.id;
-    }
-    return null;
-  }
-  return String(formData.get("category_id") ?? "") || null;
-}
-
-async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClient>>, formData: FormData) {
+// 카테고리는 대시보드 매입-매출 매칭 추적 기준(isTrackedCategory)이기도
+// 해서 등록 화면에서 자유롭게 새로 만들 수 없게 고정 6종(PRODUCT_CATEGORIES)
+// 중에서만 고르게 한다 — 그래서 여기선 폼이 넘긴 category_id를 그대로
+// 쓰기만 하면 된다(새 카테고리 생성 로직 없음).
+function productFieldsFrom(formData: FormData) {
   return {
-    category_id: await resolveCategoryId(supabase, formData),
+    category_id: String(formData.get("category_id") ?? "") || null,
     supplier_id: String(formData.get("supplier_id") ?? "") || null,
     spec: String(formData.get("spec") ?? "").trim() || null,
     unit: String(formData.get("unit") ?? "ea") || "ea",
@@ -56,7 +26,10 @@ async function productFieldsFrom(supabase: Awaited<ReturnType<typeof createClien
   };
 }
 
-function validateProductFields(fields: Awaited<ReturnType<typeof productFieldsFrom>>): string | null {
+function validateProductFields(fields: ReturnType<typeof productFieldsFrom>): string | null {
+  if (!fields.category_id) {
+    return "카테고리를 선택해주세요.";
+  }
   if (fields.price < 0 || fields.cost < 0 || fields.reorder_point < 0) {
     return "판매가·매입가·재주문점은 0 이상이어야 합니다.";
   }
@@ -93,12 +66,25 @@ export async function createProduct(_prevState: FormState, formData: FormData): 
   }
 
   const supabase = await createClient();
-  const fields = await productFieldsFrom(supabase, formData);
+  const fields = productFieldsFrom(formData);
   const fieldError = validateProductFields(fields);
   if (fieldError) return { error: fieldError };
+
+  // QR 라벨 방향(위/아래 칸)은 랙 배치 관행상 Filter 품목만 기본이
+  // "아래"고 나머지는 "위" — 등록 시점에 카테고리로 기본값을 정해두면,
+  // 인쇄 화면에서 그때그때 매번 다시 고를 필요가 없다. 이후 인쇄
+  // 화면에서 직접 바꾸면 그 값이 그대로 유지된다(카테고리를 나중에
+  // 바꿔도 이 기본값이 재적용되지 않음).
+  const { data: category } = await supabase
+    .from("categories")
+    .select("name")
+    .eq("id", fields.category_id!)
+    .maybeSingle();
+  const labelDirection = category?.name === "Filter" ? "down" : "up";
+
   const { data: created, error } = await supabase
     .from("products")
-    .insert({ sku, name, ...fields })
+    .insert({ sku, name, ...fields, label_direction: labelDirection })
     .select("id")
     .single();
 
@@ -131,7 +117,7 @@ export async function updateProduct(_prevState: FormState, formData: FormData): 
     .select("base_package_qty")
     .eq("id", id)
     .maybeSingle();
-  const fields = await productFieldsFrom(supabase, formData);
+  const fields = productFieldsFrom(formData);
   const fieldError = validateProductFields(fields);
   if (fieldError) return { error: fieldError };
   const { error } = await supabase
@@ -235,10 +221,16 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   );
   const supplierByName = new Map(existingSuppliers.map((s) => [s.name.trim(), s.id]));
 
+  const existingCategories = await fetchAllRows<{ id: string; name: string }>((from, to) =>
+    supabase.from("categories").select("id, name").range(from, to),
+  );
+  const categoryByName = new Map(existingCategories.map((c) => [c.name.trim(), c.id]));
+
   const errors: ImportRowError[] = [];
   const parsedRows: {
     rowNum: number;
     supplierName: string | null;
+    categoryName: string | null;
     payload: {
       sku: string;
       name: string;
@@ -278,6 +270,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
     parsedRows.push({
       rowNum,
       supplierName: cell(row, "공급처") || null,
+      categoryName: cell(row, "카테고리") || null,
       payload: {
         sku,
         name,
@@ -306,10 +299,12 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         price: number | null;
         base_package_qty: number | null;
         supplier_id: string | null;
+        category_id: string | null;
+        label_direction: string;
       }>((from, to) =>
         supabase
           .from("products")
-          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id")
+          .select("sku, spec, unit, cost, price, base_package_qty, supplier_id, category_id, label_direction")
           .in("sku", skusInFile)
           .range(from, to),
       )
@@ -339,6 +334,26 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
     for (const s of createdSuppliers ?? []) supplierByName.set(s.name.trim(), s.id);
   }
 
+  // 공급처와 같은 방식으로, 파일에 있는데 아직 없는 카테고리 이름은
+  // 한 번에 모아 만든다.
+  const newCategoryNames = [
+    ...new Set(
+      parsedRows
+        .map((r) => r.categoryName)
+        .filter((name): name is string => Boolean(name) && !categoryByName.has(name!))
+    ),
+  ];
+  if (newCategoryNames.length > 0) {
+    const { data: createdCategories, error: categoryError } = await supabase
+      .from("categories")
+      .insert(newCategoryNames.map((name) => ({ name })))
+      .select("id, name");
+    if (categoryError) {
+      return { error: `카테고리 일괄 생성에 실패했습니다: ${categoryError.message}` };
+    }
+    for (const c of createdCategories ?? []) categoryByName.set(c.name.trim(), c.id);
+  }
+
   const productRows = parsedRows.map((r) => {
     const existing = existingBySku.get(r.payload.sku);
     return {
@@ -353,6 +368,13 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
         supplier_id: r.supplierName
           ? (supplierByName.get(r.supplierName) ?? null)
           : (existing?.supplier_id ?? null),
+        category_id: r.categoryName
+          ? (categoryByName.get(r.categoryName) ?? null)
+          : (existing?.category_id ?? null),
+        // 수기 등록(createProduct)과 같은 규칙 — 신규 품목만 카테고리
+        // 기준 기본값(Filter는 아래, 나머지는 위)을 적용하고, 이미 있는
+        // 품목은 QR 라벨 화면에서 직접 바꿔둔 값을 그대로 보존한다.
+        label_direction: existing?.label_direction ?? (r.categoryName === "Filter" ? "down" : "up"),
       },
     };
   });
@@ -407,4 +429,57 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
   revalidatePath("/products");
   revalidatePath("/inventory");
   return summarize(rows.length, okCount, errors);
+}
+
+// BOM(구성품) 등록 — 생산관리(1차 범위: MRP-lite)에서 이 완제품을 만들 때
+// 필요한 구성품과 단위당 소요량을 정의한다. 실제 생산지시 등록 시 이
+// 목록을 기준으로 구성품 출고/완제품 입고 재고 이력을 자동으로 남긴다
+// (create_work_order RPC, migration 100).
+export async function addBomItem(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const parentProductId = String(formData.get("parent_product_id") ?? "");
+  const componentProductId = String(formData.get("component_product_id") ?? "");
+  const quantityPerUnit = numberOrDefault(formData.get("quantity_per_unit"), 0);
+
+  if (!parentProductId || !componentProductId) {
+    return { error: "구성품을 선택해주세요." };
+  }
+  if (parentProductId === componentProductId) {
+    return { error: "완제품과 같은 품목은 구성품으로 등록할 수 없습니다." };
+  }
+  if (!(quantityPerUnit > 0)) {
+    return { error: "단위당 소요량은 0보다 커야 합니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("bom_items").insert({
+    parent_product_id: parentProductId,
+    component_product_id: componentProductId,
+    quantity_per_unit: quantityPerUnit,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "이미 등록된 구성품입니다." };
+    }
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath(`/products/${parentProductId}`);
+  revalidatePath("/production/new");
+  return { success: "구성품을 등록했습니다." };
+}
+
+export async function deleteBomItem(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const parentProductId = String(formData.get("parent_product_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const result = await supabase.from("bom_items").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, "삭제에 실패했습니다");
+  if (mutationError) return mutationError;
+
+  if (parentProductId) revalidatePath(`/products/${parentProductId}`);
+  revalidatePath("/production/new");
+  return { success: "삭제했습니다." };
 }

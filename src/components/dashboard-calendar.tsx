@@ -23,13 +23,17 @@ import {
   formatPaperCalcSizeLines,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
+import { formatQuantityWithBoxes } from "@/lib/package-qty";
 
 export type ItemRow = {
   partnerName: string;
   productName: string;
+  categoryName: string | null;
+  sku: string | null;
   spec: string;
   unit: string;
   quantity: number;
+  basePackageQty: number | null;
   amount: number;
   orderId: string;
   remark: string | null;
@@ -65,7 +69,7 @@ type DayData = {
 
 type Cell = { dateStr: string; day: number } | null;
 
-type ProductGroup = { productName: string; items: ItemRow[] };
+export type ProductGroup = { productName: string; items: ItemRow[] };
 type PaperCalcBlock = {
   label: string | null;
   sizes: PaperCalcSizeRow[];
@@ -256,9 +260,9 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 // 표시되어 실제로는 50개만 산 B가 80개나 나간 것처럼 보임). 하루치
 // 수요를 풀 하나로 미리 모아두고, drawFromPool로 순서대로 빼 쓰면서
 // 뽑힌 만큼 풀에서 바로 차감해 이 중복을 막는다.
-type DestinationPool = Map<string, Map<string, number>>;
+export type DestinationPool = Map<string, Map<string, number>>;
 
-function buildDestinationPool(items: ItemRow[]): DestinationPool {
+export function buildDestinationPool(items: ItemRow[]): DestinationPool {
   const pool: DestinationPool = new Map();
   for (const item of items) {
     // 반품은 그 거래처로 나간 게 아니라 되돌아온 것이므로 수요 풀에서
@@ -300,12 +304,23 @@ function drawFromPool(
 const STOCK_PURCHASE_LABEL = "재고용 매입";
 const STOCK_SALE_LABEL = "재고분 출고";
 
-// 회사명 자체에 이미 "(주)"처럼 괄호가 들어있는 경우가 많아, 목적지
-// 표시는 대괄호로 감싸 구분한다. 실제 거래처로 나간 것이면 화살표를
-// 붙이고, 재고로 남는 것이면(그 어디로도 안 나간 몫) 화살표 없이
-// 라벨만 붙인다.
-function formatDestinationLabel(label: string, isStock: boolean): string {
-  return isStock ? `[${label}]` : `-> [${label}]`;
+// 카테고리는 Paper/Material/Tray/Bobbin/Filter/Etc 여섯 가지이고, 이 중
+// Filter만 매입-매출 매칭(입고처/출고처/재고분출고 추적) 대상에서 뺀다 —
+// Filter는 개별 규격/거래처가 다양해서 같은 날 사고파는 매칭 정보가
+// 실무에 큰 의미가 없다는 판단. 나머지 다섯 카테고리는 전부 추적한다.
+// 카테고리가 아예 없는(null) 품목은 안전하게 미추적으로 둔다.
+const UNTRACKED_CATEGORY_NAMES = new Set(["Filter"]);
+function isTrackedCategory(categoryName: string | null): boolean {
+  return categoryName !== null && !UNTRACKED_CATEGORY_NAMES.has(categoryName);
+}
+
+// 예전엔 대괄호로 목적지를 감쌌는데(회사명 자체에 이미 "(주)"처럼 괄호가
+// 들어있는 경우가 많아 구분하려던 것), 콜론이 어떤 회사명과도 안 겹치면서
+// 더 읽기 편하다는 피드백으로 "품목명 : 목적지" 형태로 바꿨다. 재고로
+// 남는 몫과 실제 거래처로 나간 몫 모두 같은 형식을 쓴다 — 라벨 글자
+// 자체("재고용 매입"/"재고분 출고" vs 실제 거래처명)로 이미 구분된다.
+function formatDestinationLabel(label: string): string {
+  return `: ${label}`;
 }
 
 // 매입 품목이 당일 매출로 전부/일부 나가고 남는 수량이 있으면, 그 남는
@@ -354,26 +369,25 @@ function takeItems(items: ItemRow[], quantity: number): { taken: ItemRow[]; rest
 
 type LineGroup = {
   label: string | null;
-  isStock: boolean;
   lines: string[];
   specCount: number;
   totalQuantity: number;
   unit: string;
 };
 
-type LabeledItem = { item: ItemRow; note: string | null };
-type ItemLabelGroup = { label: string | null; isStock: boolean; items: LabeledItem[] };
+export type LabeledItem = { item: ItemRow; note: string | null };
+export type ItemLabelGroup = { label: string | null; items: LabeledItem[] };
 
 // 한 품목 안의 규격들을, 목적지(또는 재고 여부)별로 묶는다. 규격 하나가
 // 통째로 한 거래처(또는 재고)로만 갔으면 그 그룹 하나로, 일부는 거래처로
 // 나머지는 재고로 나뉘면 실제로 나간 만큼만 그 거래처 그룹에 넣고(남는
-// 몫은 그 줄에 "(NNN는 재고)" 메모로만 붙인다 — 재고 그룹 자체의 합계에는
+// 몫은 그 줄에 "(NNN는 출고 후 남은재고)" 메모로만 붙인다 — 재고 그룹 자체의 합계에는
 // 안 섞여서, "전량 재고로 남은 규격들끼리의 합"이라는 의미가 흐려지지
 // 않는다). 카톡복사 텍스트(buildProductLineGroups)와 화면 표시(대시보드
 // 오늘의 업무 패널)가 이 그룹핑을 그대로 같이 쓴다 — 문자열이 아니라
 // 원본 ItemRow를 담아서, 화면 쪽은 항목별 링크·금액을 그대로 보여줄 수
 // 있다.
-function groupProductItemsByLabel(
+export function groupProductItemsByLabel(
   product: ProductGroup,
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
@@ -387,7 +401,7 @@ function groupProductItemsByLabel(
     if (idx === undefined) {
       idx = groups.length;
       indexByKey.set(key, idx);
-      groups.push({ label, isStock, items: [] });
+      groups.push({ label, items: [] });
     }
     return groups[idx];
   }
@@ -396,10 +410,19 @@ function groupProductItemsByLabel(
     bucket(label, isStock).items.push(...items.map((item) => ({ item, note })));
   }
 
+  // Filter 카테고리(또는 카테고리 미지정)면 매입-매출 매칭 자체를 안 하고
+  // 있는 그대로 한 그룹으로만 보여준다(isTrackedCategory 위 주석 참고).
+  const isTracked = isTrackedCategory(product.items[0]?.categoryName ?? null);
+
   for (const specGroup of groupItemsBySpec(product.items)) {
     const quantity = specGroup.items.reduce((sum, it) => sum + it.quantity, 0);
     const unit = specGroup.items[0]?.unit ?? "";
     const isReturn = specGroup.items.some((it) => it.isReturn);
+
+    if (!isTracked) {
+      push(null, false, specGroup.items);
+      continue;
+    }
 
     if (matchPool) {
       const destinations = destinationsIncludingStock(product.productName, specGroup.spec, quantity, matchPool);
@@ -416,22 +439,32 @@ function groupProductItemsByLabel(
         const { taken, rest } = takeItems(remaining, d.quantity);
         remaining = rest;
         const isLast = i === real.length - 1;
-        const note = isLast && stock ? `${stock.quantity.toLocaleString()}${unit}는 재고` : null;
+        const note = isLast && stock ? `${stock.quantity.toLocaleString()}${unit}는 출고 후 남은재고` : null;
         push(d.partnerName, false, taken, note);
       });
     } else if (reversePool && !isReturn) {
-      const purchasedQuantity = drawFromPool(reversePool, product.productName, specGroup.spec, quantity).reduce(
-        (sum, d) => sum + d.quantity,
-        0,
-      );
-      if (purchasedQuantity >= quantity) {
-        push(null, false, specGroup.items);
-      } else if (purchasedQuantity <= 0) {
+      // 오늘 이 규격을 여러 공급처에서 나눠 샀을 수 있어서(예: A사 80개 +
+      // B사 20개), drawFromPool이 돌려주는 매입처별 내역 그대로 각각
+      // "매입처 -> 출고처" 줄로 쪼갠다 — 매입 쪽의 destinationsIncludingStock과
+      // 대칭되는 처리다. 출고처(고객명)는 이 품목 그룹 전체가 이미 같은
+      // 거래처로 묶여 있으므로 아무 항목에서나 partnerName을 가져오면 된다.
+      const customerName = specGroup.items[0]?.partnerName ?? "";
+      const origins = drawFromPool(reversePool, product.productName, specGroup.spec, quantity);
+      const purchasedQuantity = origins.reduce((sum, d) => sum + d.quantity, 0);
+
+      if (purchasedQuantity <= 0) {
         push(STOCK_SALE_LABEL, true, specGroup.items);
-      } else {
-        const { taken, rest } = takeItems(specGroup.items, purchasedQuantity);
-        push(null, false, taken);
-        push(STOCK_SALE_LABEL, true, rest);
+        continue;
+      }
+
+      let remaining = specGroup.items;
+      origins.forEach((o) => {
+        const { taken, rest } = takeItems(remaining, o.quantity);
+        remaining = rest;
+        push(`${o.partnerName} -> ${customerName}`, false, taken);
+      });
+      if (remaining.length) {
+        push(STOCK_SALE_LABEL, true, remaining);
       }
     } else {
       push(null, false, specGroup.items);
@@ -445,15 +478,82 @@ function groupProductItemsByLabel(
 // 다시 펼친다. 화면(productTotals)과 동일하게, 규격 줄이 2개 이상인
 // 그룹에는 맨 아래에 합계를 붙인다 — 줄이 하나뿐이면 바로 위 줄과 같은
 // 숫자가 또 나와 불필요하므로 생략한다.
+
+// 규격이 "1㎛ * 250mm"처럼 "A * B" 곱셈 형태면, 등록된 순서 그대로
+// 나열했을 때 뒤쪽 숫자(예: 250/500/750mm)가 뒤섞여 나온다 — "250은
+// 250끼리, 500은 500끼리" 묶어서 보고 싶다는 요청. "*" 뒤쪽 숫자를
+// 기준으로 오름차순 정렬하고, 뒤쪽 숫자가 같으면 앞쪽 숫자로 다시
+// 오름차순 정렬한다. 규격 중 하나라도 "숫자 * 숫자" 형태가 아니면
+// 정렬 기준을 알 수 없으므로 원래 순서 그대로 둔다.
+//
+// "G1㎛ * 250mm"처럼 등급 표기(G)가 숫자 앞에 붙는 규격도 있어서, 맨 앞
+// 비숫자 글자는 건너뛰고 첫 숫자부터 찾는다 — 안 그러면 이 규격 하나
+// 때문에 매칭 자체가 실패해서 전체 그룹이 정렬 없이 원래 순서로
+// 되돌아간다(실제로 100㎛이 1㎛보다 먼저 나오는 문제로 나타났다).
+function parseSpecTrailingNumber(spec: string): { left: number; right: number } | null {
+  const m = spec.match(/^[^\d]*?(\d+(?:\.\d+)?)[^\d*]*\*\s*(\d+(?:\.\d+)?)/);
+  return m ? { left: Number(m[1]), right: Number(m[2]) } : null;
+}
+
+// 카톡 복사 텍스트뿐 아니라 화면(오늘의 업무 패널)에도 똑같이 써야 한다 —
+// 예전에 "화면에 보이는 순서와 복사한 텍스트 순서가 다르다"는 문제를
+// 한 번 고쳤는데(이 함수를 카톡 복사 쪽에만 적용하면서) 화면 렌더링
+// 쪽은 못 맞춰서 다시 어긋났었다. items 자체를 정렬하려면 getSpec으로
+// 규격 문자열을 꺼내는 함수를 넘긴다.
+export function sortBySpecTrailingNumber<T>(items: T[], getSpec: (item: T) => string): T[] {
+  const parsed = items.map((item) => {
+    const n = parseSpecTrailingNumber(getSpec(item));
+    return n ? { item, ...n } : null;
+  });
+  if (parsed.some((p) => p === null)) return items;
+  return parsed
+    .map((p) => p!)
+    .sort((a, b) => a.right - b.right || a.left - b.left)
+    .map((p) => p.item);
+}
+
+export function sortSpecsByTrailingNumber(specs: string[]): string[] {
+  return sortBySpecTrailingNumber(specs, (spec) => spec);
+}
+
+// Filter 카테고리 품목은 카톡 복사 텍스트에서 단위 기호("㎛"/"mm")를 빼고
+// 숫자만 남긴다("1㎛ * 250mm" -> "1 * 250") — 화면 표시는 그대로 두고
+// 복사 텍스트에서만 적용한다.
+export function stripFilterUnitsForCopy(spec: string, categoryName: string | null): string {
+  if (categoryName !== "Filter") return spec;
+  return spec.replace(/㎛/g, "").replace(/mm/g, "").replace(/\s+/g, " ").trim();
+}
+
+// 전체 품목에서 박스 수 표기를 빼는 거래처 — 품목/카테고리 조건 없이
+// 무조건 뺀다.
+const STRIP_BOX_COUNT_ALWAYS = new Set(["신일베스텍", "(주)에이티씨", "(주)타이거일렉"]);
+
+// 거래처별로 카톡복사 텍스트에서 박스 수 표기("(N박스)")를 빼달라는 요청 —
+// 화면 표시는 그대로 두고 복사 텍스트에서만 적용한다(stripFilterUnitsForCopy와
+// 동일한 방식). 거래처 이름은 오타 없이 정확히 일치해야 하고, SKU/카테고리
+// 비교는 표기 차이(대소문자 등)에 안 걸리게 대소문자 구분 없이 비교한다.
+export function shouldStripBoxCountForCopy(
+  customerName: string,
+  sku: string | null,
+  categoryName: string | null,
+): boolean {
+  if (STRIP_BOX_COUNT_ALWAYS.has(customerName)) return true;
+  if (customerName === "나영식테크") {
+    const upperSku = sku?.toUpperCase() ?? "";
+    if (upperSku === "ST1" || upperSku === "FM") return true;
+    if (categoryName?.toLowerCase() === "bobbin") return true;
+  }
+  return false;
+}
+
 function buildProductLineGroups(
   product: ProductGroup,
   matchPool: DestinationPool | undefined,
   reversePool: DestinationPool | undefined,
 ): LineGroup[] {
-  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, isStock, items }) => {
+  return groupProductItemsByLabel(product, matchPool, reversePool).map(({ label, items }) => {
     const group: LineGroup = {
       label,
-      isStock,
       lines: [],
       specCount: 0,
       totalQuantity: 0,
@@ -471,18 +571,27 @@ function buildProductLineGroups(
       bySpec.get(key)!.push(li);
     }
 
-    for (const spec of order) {
+    const sortedOrder = sortSpecsByTrailingNumber(order);
+
+    for (const spec of sortedOrder) {
       const lis = bySpec.get(spec)!;
       const quantity = lis.reduce((sum, li) => sum + li.item.quantity, 0);
       const unit = lis[0]?.item.unit ?? "";
+      const categoryName = lis[0]?.item.categoryName ?? null;
+      const sku = lis[0]?.item.sku ?? null;
+      const customerName = lis[0]?.item.partnerName ?? "";
+      const basePackageQty = shouldStripBoxCountForCopy(customerName, sku, categoryName)
+        ? null
+        : (lis[0]?.item.basePackageQty ?? null);
       const isReturn = lis.some((li) => li.item.isReturn);
       const carryoverSuffix = lis.some((li) => li.item.isCarryover) ? " (이월)" : "";
       const returnSuffix = isReturn ? " (반품)" : "";
       const note = lis.map((li) => li.note).find((n) => n) ?? null;
       const noteSuffix = note ? ` (${note})` : "";
+      const displaySpec = stripFilterUnitsForCopy(spec, categoryName);
 
       group.lines.push(
-        `    ${spec} : ${quantity.toLocaleString()}${unit}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
+        `    ${displaySpec} : ${formatQuantityWithBoxes(quantity, basePackageQty, unit)}${carryoverSuffix}${returnSuffix}${noteSuffix}`,
       );
       group.specCount += 1;
       group.totalQuantity += quantity;
@@ -539,7 +648,7 @@ function appendItemLines(
         isFirstGroup = false;
         lines.push(
           group.label
-            ? `  · ${product.productName} ${formatDestinationLabel(group.label, group.isStock)}`
+            ? `  · ${product.productName} ${formatDestinationLabel(group.label)}`
             : `  · ${product.productName}`,
         );
         lines.push(...group.lines);
@@ -558,7 +667,7 @@ function appendItemLines(
       isFirstGroup = false;
       lines.push(
         paperCalcBlock.label
-          ? `  · ${paperStockProductName} ${formatDestinationLabel(paperCalcBlock.label, paperCalcBlock.label === STOCK_PURCHASE_LABEL)}`
+          ? `  · ${paperStockProductName} ${formatDestinationLabel(paperCalcBlock.label)}`
           : `  · ${paperStockProductName}`,
       );
       for (const line of formatPaperCalcSizeLines(paperCalcBlock.sizes)) {
@@ -636,7 +745,7 @@ async function copyText(text: string) {
 function CarryoverBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
       style={{
         background: "var(--erp-warning-bg)",
         color: "var(--erp-warning)",
@@ -650,7 +759,7 @@ function CarryoverBadge() {
 function ReturnBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold"
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
       style={{
         background: "var(--erp-danger-bg)",
         color: "var(--erp-danger)",
@@ -978,12 +1087,20 @@ export function DashboardCalendar({
                             const anyCarryover = group.items.some(
                               ({ item }) => item.isCarryover,
                             );
+                            // 카톡 복사 텍스트(buildProductLineGroups)와 순서가 어긋나지
+                            // 않도록, 화면에 보여줄 항목도 같은 기준(* 뒤쪽 숫자)으로
+                            // 정렬한다 — 예전에 "화면과 복사 텍스트 순서가 다르다"는
+                            // 문제를 고쳤는데 복사 쪽에만 정렬이 적용되며 다시 어긋났다.
+                            const sortedItems = sortBySpecTrailingNumber(
+                              group.items,
+                              ({ item }) => item.spec || "",
+                            );
                             return (
                               <div key={`${di}-${gi}`}>
                                 <p className="font-semibold text-[var(--erp-text)]">
                                   - {product.productName}
                                   {group.label &&
-                                    ` ${formatDestinationLabel(group.label, group.isStock)}`}
+                                    ` ${formatDestinationLabel(group.label)}`}
                                 </p>
                                 <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {group.items.length === 1 ? (
@@ -1023,7 +1140,7 @@ export function DashboardCalendar({
                                     })()
                                   ) : (
                                     <>
-                                      {group.items.map(({ item, note }, i) => (
+                                      {sortedItems.map(({ item, note }, i) => (
                                         <li key={i}>
                                           <Link
                                             href={`/purchases/${item.orderId}`}
@@ -1053,7 +1170,7 @@ export function DashboardCalendar({
                                       ))}
                                       {(() => {
                                         const totals = productTotals(
-                                          group.items.map(({ item }) => item),
+                                          sortedItems.map(({ item }) => item),
                                         );
                                         return (
                                           <li className="flex items-start justify-between gap-2">
@@ -1100,7 +1217,7 @@ export function DashboardCalendar({
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
                               {block.label &&
-                                ` ${formatDestinationLabel(block.label, block.label === STOCK_PURCHASE_LABEL)}`}
+                                ` ${formatDestinationLabel(block.label)}`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                               {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
@@ -1156,12 +1273,20 @@ export function DashboardCalendar({
                             const anyCarryover = group.items.some(
                               ({ item }) => item.isCarryover,
                             );
+                            // 카톡 복사 텍스트(buildProductLineGroups)와 순서가 어긋나지
+                            // 않도록, 화면에 보여줄 항목도 같은 기준(* 뒤쪽 숫자)으로
+                            // 정렬한다 — 예전에 "화면과 복사 텍스트 순서가 다르다"는
+                            // 문제를 고쳤는데 복사 쪽에만 정렬이 적용되며 다시 어긋났다.
+                            const sortedItems = sortBySpecTrailingNumber(
+                              group.items,
+                              ({ item }) => item.spec || "",
+                            );
                             return (
                               <div key={`${di}-${gi}`}>
                                 <p className="font-semibold text-[var(--erp-text)]">
                                   - {product.productName}
                                   {group.label &&
-                                    ` ${formatDestinationLabel(group.label, group.isStock)}`}
+                                    ` ${formatDestinationLabel(group.label)}`}
                                 </p>
                                 <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                                   {group.items.length === 1 ? (
@@ -1202,7 +1327,7 @@ export function DashboardCalendar({
                                     })()
                                   ) : (
                                     <>
-                                      {group.items.map(({ item, note }, i) => (
+                                      {sortedItems.map(({ item, note }, i) => (
                                         <li key={i}>
                                           <Link
                                             href={`/sales/${item.orderId}`}
@@ -1233,7 +1358,7 @@ export function DashboardCalendar({
                                       ))}
                                       {(() => {
                                         const totals = productTotals(
-                                          group.items.map(({ item }) => item),
+                                          sortedItems.map(({ item }) => item),
                                         );
                                         return (
                                           <li className="flex items-start justify-between gap-2">
@@ -1280,7 +1405,7 @@ export function DashboardCalendar({
                             <p className="font-semibold text-[var(--erp-text)]">
                               - {paperStockProductName}
                               {block.label &&
-                                ` ${formatDestinationLabel(block.label, block.label === STOCK_SALE_LABEL)}`}
+                                ` ${formatDestinationLabel(block.label)}`}
                             </p>
                             <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
                               {formatPaperCalcSizeLines(block.sizes).map((line, i) => (

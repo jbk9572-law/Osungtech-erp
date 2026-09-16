@@ -53,7 +53,14 @@ export async function login(_prevState: { error: string } | undefined, formData:
     return { error: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요." };
   }
 
-  redirect("/dashboard");
+  // 위치 QR처럼 로그인 안 된 상태에서 특정 화면으로 바로 들어왔을 때
+  // 되돌아갈 경로. 다른 사이트로 튕기는 오픈 리다이렉트를 막기 위해
+  // "/"로 시작하고 "//"(스킴 없는 절대 URL)로는 시작하지 않는 내부
+  // 경로만 허용한다.
+  const nextRaw = String(formData.get("next") ?? "");
+  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/dashboard";
+
+  redirect(next);
 }
 
 export async function signOut() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { NumberInput } from "@/components/number-input";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
 
 // 박스×포장수량 환산(예: 50*20)은 저장된 뒤 매출/매입 상세 페이지 목록에서만
 // 보여준다(formatPackageQty 참고). 등록 화면 입력칸은 수량 하나만 받고,
@@ -52,7 +52,7 @@ export function QuantityWithBoxInput({
       />
       {base !== null && base > 0 && quantity !== 0 && (
         <div className="mt-0.5 text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
-          {formatQuantityWithBoxes(quantity, base)}
+          <QtyWithBoxes quantity={quantity} basePackageQty={base} />
         </div>
       )}
     </div>

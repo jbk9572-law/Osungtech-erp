@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
@@ -96,12 +97,10 @@ export default async function TodoDetailPage({
       </h1>
 
       <div className="erp-toolbar">
-        <Link href="/todos" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
         {allowManage && (
           <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
         )}
+        <CloseButton href="/todos">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-post-header">

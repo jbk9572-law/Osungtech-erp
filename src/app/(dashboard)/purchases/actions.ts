@@ -18,9 +18,17 @@ import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
+import { normalizeLotNumber } from "@/lib/lot-number";
+import { applyOrderLocationStock, reverseOrderLocationStock, parseAllocationChoices } from "@/lib/location-stock-sync";
 
 type PurchaseItemInput = {
   productId: string;
+  // 품목관리에 등록하지 않고 그 자리에서 이름만 직접 입력하는 1회성 줄
+  // (예: "소프너 교체" 같은 서비스/청구 항목) — productId가 비어있으면
+  // 이 값이 있어야 한다. 재고 반영/품목 연결이 전혀 없다. "매입+출고
+  // 동시등록"(alsoCreateSale)에서는 당일 매칭 대상이 실제 품목이어야
+  // 하므로 이 값이 있는 줄은 허용하지 않는다(아래 검증).
+  customName?: string | null;
   spec?: string | null;
   quantity: number;
   unitCost: number;
@@ -40,7 +48,7 @@ type SaleItemInput = {
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
   try {
     const items = JSON.parse(itemsRaw) as PurchaseItemInput[];
-    return items.filter((item) => item.productId && item.quantity > 0);
+    return items.filter((item) => (item.productId || item.customName) && item.quantity > 0);
   } catch {
     return null;
   }
@@ -97,7 +105,11 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
 
-  return (data ?? []).map((item) => ({
+  // 직접입력(품목 미연결) 줄은 연결할 품목이 없어 "가져오기" 대상이 될 수
+  // 없으므로 제외한다.
+  return (data ?? [])
+    .filter((item): item is typeof item & { product_id: string } => item.product_id !== null)
+    .map((item) => ({
     id: item.id,
     productId: item.product_id,
     productName: item.products?.name ?? "상품 미상",
@@ -174,6 +186,14 @@ export async function createPurchase(
   const saleCustomerId = String(formData.get("sale_customer_id") ?? "").trim();
   const saleDate = String(formData.get("sale_date") ?? "").trim() || purchaseDate;
   const saleItems = alsoCreateSale ? parseSaleItems(String(formData.get("sale_items") ?? "[]")) : [];
+  // 품목이 보관 위치 2곳 이상에 나뉘어 있어서 등록 화면의 확인 모달을
+  // 거친 경우에만 값이 들어온다. 매입(입고)용과, 매입+출고 동시등록일 때
+  // 매출(출고)용이 서로 다른 hidden input으로 넘어온다.
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
+  const saleLocationAllocations = parseAllocationChoices(String(formData.get("sale_location_allocations") ?? ""));
+  // "저장 후 계속 등록" 버튼을 눌렀을 때만 값이 온다 — 저장 후 방금 만든
+  // 거래 상세로 가는 대신 새 등록 화면으로 바로 돌아간다.
+  const continueNew = formData.get("continue_new") === "1";
 
   if (!supplierId || !warehouseId || !purchaseDate) {
     return { error: "공급처, 창고, 매입일자를 모두 입력해주세요." };
@@ -188,6 +208,11 @@ export async function createPurchase(
   }
   if (alsoCreateSale && !saleCustomerId) {
     return { error: "매출도 같이 등록하려면 출고처를 선택해주세요." };
+  }
+  // 직접입력(품목 미연결) 줄은 당일 매입-매출을 같은 품목으로 매칭하는
+  // 개념 자체가 성립하지 않으므로 매입+출고 동시등록에서는 허용하지 않는다.
+  if (alsoCreateSale && items.some((item) => !item.productId)) {
+    return { error: "매입+출고 동시등록에서는 직접입력 품목을 쓸 수 없습니다. 품목을 선택해주세요." };
   }
   if (alsoCreateSale && !saleItems) {
     return { error: "출고 품목 정보를 처리하지 못했습니다." };
@@ -238,7 +263,7 @@ export async function createPurchase(
           quantity: item.quantity,
           unitCost: item.unitCost,
           remark: item.remark || null,
-          lotNumber: item.lotNumber || null,
+          lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
         })),
         p_sale_items: saleItems.map((item) => ({
           productId: item.productId,
@@ -246,7 +271,7 @@ export async function createPurchase(
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           remark: item.remark || null,
-          lotNumber: item.lotNumber || null,
+          lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
         })),
         p_payment_method: paymentMethod,
         p_delivery_method: deliveryMethod,
@@ -296,12 +321,13 @@ export async function createPurchase(
       p_memo: memo,
       p_created_by: user?.id ?? null,
       p_items: items.map((item) => ({
-        productId: item.productId,
+        productId: item.productId || null,
+        customName: item.productId ? null : item.customName || null,
         spec: item.spec || null,
         quantity: item.quantity,
         unitCost: item.unitCost,
         remark: item.remark || null,
-        lotNumber: item.lotNumber || null,
+        lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
       })),
       p_payment_method: paymentMethod,
       p_delivery_method: deliveryMethod,
@@ -313,6 +339,29 @@ export async function createPurchase(
       return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
     }
     purchaseOrderId = newPurchaseId;
+  }
+
+  // 보관 위치별 재고에도 이 매입만큼 반영한다(0곳이면 건너뜀, 1곳이면
+  // 자동, 2곳 이상이면 등록 화면 확인 모달에서 고른 배분대로). 매입+출고
+  // 동시등록이면 출고 쪽도 매출과 동일한 방식(direction "out")으로 같이
+  // 반영한다.
+  await applyOrderLocationStock(supabase, {
+    orderType: "purchase",
+    orderId: purchaseOrderId,
+    warehouseId,
+    items: items.map((item) => ({ productId: item.productId || null, quantity: item.quantity })),
+    direction: "in",
+    allocationChoices: locationAllocations,
+  });
+  if (salesOrderId && saleItems) {
+    await applyOrderLocationStock(supabase, {
+      orderType: "sale",
+      orderId: salesOrderId,
+      warehouseId,
+      items: saleItems.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+      direction: "out",
+      allocationChoices: saleLocationAllocations,
+    });
   }
 
   const costUpdateResults = await Promise.all(
@@ -419,11 +468,14 @@ export async function createPurchase(
   // 않아서 방금 저장한 계산이 캐시된 화면에 안 보일 수 있었다.
   revalidatePath("/paper-calc");
 
-  redirect(
-    paperCalcWarning
+  if (continueNew) {
+    return { redirectTo: `/purchases/new?saved=${purchaseOrderId}` };
+  }
+  return {
+    redirectTo: paperCalcWarning
       ? `/purchases/${purchaseOrderId}?warning=${encodeURIComponent(paperCalcWarning)}`
-      : `/purchases/${purchaseOrderId}`
-  );
+      : `/purchases/${purchaseOrderId}`,
+  };
 }
 
 export async function updatePurchase(
@@ -440,6 +492,7 @@ export async function updatePurchase(
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const isCarryover = formData.get("is_carryover") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
   // 상세가 아니라 그 목록으로 돌아간다.
   const back = String(formData.get("back") ?? "") || undefined;
@@ -471,12 +524,13 @@ export async function updatePurchase(
     p_memo: memo,
     p_updated_by: user?.id ?? null,
     p_items: items.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || null,
+      customName: item.productId ? null : item.customName || null,
       spec: item.spec || null,
       quantity: item.quantity,
       unitCost: item.unitCost,
       remark: item.remark || null,
-      lotNumber: item.lotNumber || null,
+      lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
@@ -488,10 +542,22 @@ export async function updatePurchase(
     return { error: docNoErrorMessage(error, docNo) ?? `매입 거래 수정에 실패했습니다: ${error.message}` };
   }
 
+  await reverseOrderLocationStock(supabase, "purchase", id);
+  await applyOrderLocationStock(supabase, {
+    orderType: "purchase",
+    orderId: id,
+    warehouseId,
+    items: items.map((item) => ({ productId: item.productId || null, quantity: item.quantity })),
+    direction: "in",
+    allocationChoices: locationAllocations,
+  });
+
   const costUpdateResults = await Promise.all(
-    items.map((item) =>
-      supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
-    )
+    items
+      .filter((item) => item.productId)
+      .map((item) =>
+        supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
+      )
   );
   for (const { error: costError } of costUpdateResults) {
     if (costError) console.error("품목 매입단가 갱신 실패:", costError.message);
@@ -504,7 +570,7 @@ export async function updatePurchase(
   revalidatePath("/dashboard");
   revalidatePath("/payables");
   revalidatePath(`/suppliers/${supplierId}`);
-  redirect(back ? resolveListHref("/purchases", back) : `/purchases/${id}`);
+  return { redirectTo: back ? resolveListHref("/purchases", back) : `/purchases/${id}` };
 }
 
 export async function bulkDeletePurchases(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -529,6 +595,12 @@ export async function bulkDeletePurchases(_prevState: FormState, formData: FormD
     ids.map((id) => supabase.rpc("delete_purchase_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
   );
   const failCount = results.filter((r) => r.error).length;
+
+  await Promise.all(
+    ids
+      .filter((_, i) => !results[i].error)
+      .map((id) => reverseOrderLocationStock(supabase, "purchase", id)),
+  );
 
   revalidatePath("/purchases");
   revalidatePath("/inventory");
@@ -572,6 +644,8 @@ export async function deletePurchase(
   if (error) {
     return { error: `삭제에 실패했습니다: ${error.message}` };
   }
+
+  await reverseOrderLocationStock(supabase, "purchase", id);
 
   revalidatePath("/purchases");
   revalidatePath("/inventory");

@@ -24,6 +24,15 @@ const SECTIONS: { prefix: string; label: string }[] = [
   { prefix: "/reports/monthly", label: "월별 리포트" },
   { prefix: "/paper-calc", label: "모조지 계산" },
   { prefix: "/paper-calc/manual", label: "재단 배치 시뮬레이터" },
+  // erp-menu.ts에서 /settings 하위가 "환경설정"(회사정보/비밀번호 변경)과
+  // "시스템관리"(권한관리/백업복원/변경이력) 두 그룹으로 나뉘어 있는데,
+  // 여기 있던 "/settings" 캐치올 하나가 전부 "환경설정"으로 뭉뚱그려서
+  // 타이틀바(erp-menu 기반이라 "시스템관리 > 권한관리"로 나옴)와 탭
+  // 라벨이 같은 화면에서 서로 다르게 보였다. 시스템관리 쪽 세 경로를
+  // 먼저 구체적으로 지정해 그 불일치를 없앤다.
+  { prefix: "/settings/users", label: "시스템관리" },
+  { prefix: "/settings/backup", label: "시스템관리" },
+  { prefix: "/settings/audit-log", label: "시스템관리" },
   { prefix: "/settings", label: "환경설정" },
 ];
 

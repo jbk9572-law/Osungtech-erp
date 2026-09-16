@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getDatePresets, previousMonthStart, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, todayStr, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
@@ -16,6 +17,7 @@ import {
 } from "@/lib/paper-calc-summary";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
+import { matchesSearch } from "@/lib/search-match";
 
 type DisplayRow = PurchaseRow;
 
@@ -31,9 +33,10 @@ export default async function PurchasesPage({
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
-  // 날짜를 직접 안 걸었으면 지난달 1일부터만 보여준다 — 그 이전 내역은
-  // 날짜 필터로 직접 조회한다.
-  const effectiveFrom = from || previousMonthStart();
+  // 날짜를 직접 안 걸었으면 "오늘" 프리셋과 똑같이 오늘 하루만 보여준다
+  // — 그 이전 내역은 프리셋/날짜 필터로 직접 조회한다.
+  const effectiveFrom = from || todayStr();
+  const effectiveTo = to || todayStr();
   // 상세 화면에서 ESC/닫기를 누르면 지금 걸어둔 검색/필터로 되돌아오게,
   // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
@@ -42,7 +45,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, suppliers(id, name), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, doc_no, tax_type, evidence_type, statement_issued_at, suppliers(id, name, supplier_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -53,7 +56,7 @@ export default async function PurchasesPage({
     .gte("purchase_orders.purchase_date", effectiveFrom)
     .limit(limit);
 
-  if (to) query = query.lte("purchase_orders.purchase_date", to);
+  query = query.lte("purchase_orders.purchase_date", effectiveTo);
 
   // 매입 옆에 지급 내역도 같은 목록에 섞어서 보여준다 — sales/page.tsx와
   // 동일한 방식(표시용으로만 합침, 실제 정산은 lib/ar-ap.ts 그대로).
@@ -63,7 +66,7 @@ export default async function PurchasesPage({
     .order("paid_at", { ascending: false })
     .gte("paid_at", effectiveFrom)
     .limit(limit);
-  if (to) paymentQuery = paymentQuery.lte("paid_at", to);
+  paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
 
   const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
     query,
@@ -76,20 +79,26 @@ export default async function PurchasesPage({
 
   const keyword = q?.trim().toLowerCase();
   const items = keyword
-    ? rawItems?.filter(
-        (item) =>
-          item.purchase_orders?.suppliers?.name
-            ?.toLowerCase()
-            .includes(keyword) ||
-          item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+    ? rawItems?.filter((item) =>
+        matchesSearch(
+          keyword,
+          item.purchase_orders?.suppliers?.name,
+          item.products?.name,
+          item.custom_name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.purchase_orders?.memo,
+          item.purchase_orders?.delivery_method,
+        ),
       )
     : rawItems;
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount =
+      item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -137,7 +146,7 @@ export default async function PurchasesPage({
               )
             : [];
         const itemDetail: PurchaseRowItem = {
-          productLabel: item.products?.name ?? "-",
+          productLabel: item.products?.name ?? item.custom_name ?? "-",
           spec: item.spec || item.products?.spec || "-",
           lotNumber: item.lot_number,
           remark: item.remark,
@@ -156,10 +165,15 @@ export default async function PurchasesPage({
             kind: "purchase",
             orderId,
             supplierId: item.purchase_orders?.suppliers?.id,
+            docNo: item.purchase_orders?.doc_no,
+            supplierCode: item.purchase_orders?.suppliers?.supplier_code,
+            taxType: item.purchase_orders?.tax_type,
+            evidenceType: item.purchase_orders?.evidence_type,
+            statementIssued: !!item.purchase_orders?.statement_issued_at,
             date: item.purchase_orders?.purchase_date,
             supplierName: item.purchase_orders?.suppliers?.name,
             authorName: item.purchase_orders?.profiles?.full_name,
-            productLabel: item.products?.name ?? "-",
+            productLabel: item.products?.name ?? item.custom_name ?? "-",
             spec: item.spec || item.products?.spec || "-",
             lotNumber: item.lot_number,
             remark: item.remark,
@@ -198,11 +212,7 @@ export default async function PurchasesPage({
   }));
 
   const payments = keyword
-    ? rawPayments?.filter(
-        (p) =>
-          p.suppliers?.name?.toLowerCase().includes(keyword) ||
-          p.memo?.toLowerCase().includes(keyword),
-      )
+    ? rawPayments?.filter((p) => matchesSearch(keyword, p.suppliers?.name, p.memo))
     : rawPayments;
   const paymentRows: DisplayRow[] = (payments ?? []).map((p) => ({
     key: `payment-${p.id}`,
@@ -235,26 +245,41 @@ export default async function PurchasesPage({
     quantity: number;
     unit_cost: string | number;
     spec: string | null;
-    purchase_orders: { suppliers: { name: string | null } | null } | null;
+    lot_number: string | null;
+    remark: string | null;
+    custom_name: string | null;
+    purchase_orders: {
+      memo: string | null;
+      delivery_method: string | null;
+      tax_type: "과세" | "면세" | "영세";
+      suppliers: { name: string | null } | null;
+    } | null;
     products: { name: string | null; sku: string | null; spec: string | null } | null;
   }>((rangeFrom, rangeTo) => {
     let totalsQuery = supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, purchase_orders!inner(suppliers(name)), products(name, sku, spec)",
+        "quantity, unit_cost, spec, lot_number, remark, custom_name, purchase_orders!inner(memo, delivery_method, tax_type, suppliers(name)), products(name, sku, spec)",
       )
       .gte("purchase_orders.purchase_date", effectiveFrom)
       .range(rangeFrom, rangeTo);
-    if (to) totalsQuery = totalsQuery.lte("purchase_orders.purchase_date", to);
+    totalsQuery = totalsQuery.lte("purchase_orders.purchase_date", effectiveTo);
     return totalsQuery;
   });
   const filteredTotalsRows = keyword
-    ? totalsRows.filter(
-        (item) =>
-          item.purchase_orders?.suppliers?.name?.toLowerCase().includes(keyword) ||
-          item.products?.name?.toLowerCase().includes(keyword) ||
-          item.products?.sku?.toLowerCase().includes(keyword) ||
-          (item.spec || item.products?.spec)?.toLowerCase().includes(keyword),
+    ? totalsRows.filter((item) =>
+        matchesSearch(
+          keyword,
+          item.purchase_orders?.suppliers?.name,
+          item.products?.name,
+          item.custom_name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.purchase_orders?.memo,
+          item.purchase_orders?.delivery_method,
+        ),
       )
     : totalsRows;
 
@@ -264,10 +289,14 @@ export default async function PurchasesPage({
     0,
   );
   const totalTax = filteredTotalsRows.reduce(
-    (sum, row) => sum + calcVat(row.quantity * Number(row.unit_cost)),
+    (sum, row) =>
+      row.purchase_orders?.tax_type === "과세"
+        ? sum + calcVat(row.quantity * Number(row.unit_cost))
+        : sum,
     0,
   );
-  const presets = getDatePresets();
+  const presets = getQuickDatePresets();
+  const monthButtons = getYearMonthButtons();
   const exportHref = q
     ? `/api/purchases/export?q=${encodeURIComponent(q)}`
     : "/api/purchases/export";
@@ -277,7 +306,7 @@ export default async function PurchasesPage({
   const moreFrom = getMonthRange(shiftMonth(effectiveFromMonth, -1)).from;
   const moreParams = new URLSearchParams();
   moreParams.set("from", moreFrom);
-  if (to) moreParams.set("to", to);
+  moreParams.set("to", to || effectiveTo);
   if (q) moreParams.set("q", q);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/purchases?${moreParams.toString()}`;
@@ -296,17 +325,13 @@ export default async function PurchasesPage({
         매입관리
       </h1>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
-        {presets.map((preset) => (
-          <Link
-            key={preset.label}
-            href={`/purchases?from=${preset.from}&to=${preset.to}`}
-            className={`erp-date-preset-btn${from === preset.from && to === preset.to ? " active" : ""}`}
-          >
-            {preset.label}
-          </Link>
-        ))}
-      </div>
+      <DateRangeQuickFilters
+        basePath="/purchases"
+        presets={presets}
+        monthButtons={monthButtons}
+        from={effectiveFrom}
+        to={effectiveTo}
+      />
 
       <form method="get" id="purchases-search-form" className="erp-search">
         <div className="erp-field">
@@ -325,7 +350,7 @@ export default async function PurchasesPage({
             id="search-to"
             type="date"
             name="to"
-            defaultValue={to ?? ""}
+            defaultValue={to ?? effectiveTo}
             className="erp-input"
           />
         </div>
@@ -337,7 +362,7 @@ export default async function PurchasesPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="공급처명, 상품명, SKU, 규격"
+            placeholder="공급처명, 상품명, SKU, 규격, 관리번호, 배송방법, 메모, 비고"
             className="erp-input"
             style={{ width: "100%" }}
           />
@@ -360,7 +385,7 @@ export default async function PurchasesPage({
           border: "1px solid var(--erp-info-border)",
         }}
       >
-        {from ? "" : `날짜를 지정하지 않으면 지난달 1일(${effectiveFrom})부터 표시됩니다. `}
+        {from ? "" : `날짜를 지정하지 않으면 오늘(${effectiveFrom})만 표시됩니다. `}
         최근 {limit.toLocaleString()}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
@@ -379,7 +404,7 @@ export default async function PurchasesPage({
         >
           📥 엑셀 다운로드
         </a>
-        <Link href="/dashboard" className="erp-btn erp-btn-danger">
+        <Link href="/dashboard" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </div>

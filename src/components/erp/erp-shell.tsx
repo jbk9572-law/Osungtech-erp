@@ -3,11 +3,6 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { TitleBar } from "@/components/erp/title-bar";
-import type {
-  AnnouncementItem,
-  DueTodoItem,
-  LowStockItem,
-} from "@/components/erp/notification-bell";
 import { Ribbon } from "@/components/erp/ribbon";
 import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
@@ -15,14 +10,8 @@ import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
-import {
-  MessengerWidget,
-  type MessengerMessage,
-} from "@/components/erp/messenger-widget";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
-import type { VpsDiskUsage } from "@/lib/vps-usage";
-import type { NetlifyUsageResult } from "@/lib/netlify-usage";
 
 function RecentMenuTracker() {
   const pathname = usePathname();
@@ -34,35 +23,29 @@ function RecentMenuTracker() {
 }
 
 export function ErpShell({
+  isDemo,
   companyName,
   logoUrl,
   email,
-  unreadAnnouncements,
-  dueTodos,
-  lowStock,
-  initialMessages,
-  profileNames,
-  currentUserId,
-  dbSizeBytes,
-  storageSizeBytes,
-  vpsDisk,
-  netlifyUsage,
+  notificationBell,
+  messengerWidget,
+  usageWidget,
+  disabledFeatures,
+  isAdmin,
   children,
+  modal,
 }: {
+  isDemo?: boolean;
   companyName?: string | null;
   logoUrl?: string | null;
   email: string | null;
-  unreadAnnouncements: AnnouncementItem[];
-  dueTodos: DueTodoItem[];
-  lowStock: LowStockItem[];
-  initialMessages: MessengerMessage[];
-  profileNames: Record<string, string>;
-  currentUserId: string;
-  dbSizeBytes: number | null;
-  storageSizeBytes: number | null;
-  vpsDisk: VpsDiskUsage | null;
-  netlifyUsage: NetlifyUsageResult;
+  notificationBell: React.ReactNode;
+  messengerWidget: React.ReactNode;
+  usageWidget: React.ReactNode;
+  disabledFeatures: string[];
+  isAdmin: boolean;
   children: React.ReactNode;
+  modal?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -93,7 +76,16 @@ export function ErpShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pathname 변경에만 반응한다
   }, [pathname]);
 
-  if (pathname.endsWith("/print")) {
+  // "/print"로 끝나는 라우트는 원래 전체 화면 이동(새 탭)이라 셸 자체를
+  // 렌더링하지 않고 인쇄용 내용만 그렸다. 이제 명세표 인쇄처럼 옵션이
+  // 있는 인쇄 화면은 모달(@modal 인터셉트 라우트)로도 뜨는데, 그때는
+  // usePathname()이 똑같이 "/print"로 끝나는 값을 돌려주면서도 이
+  // 컴포넌트가 그리는 건 배경 화면(children)과 모달(modal) 둘 다다 —
+  // 여기서 그대로 조기 반환하면 modal 자체가 통째로 안 그려진다. 모달이
+  // 있을 때는 평소처럼 전체 셸을 그리고, 인쇄 시 크롬/배경을 감추는 건
+  // erp-theme.css의 @media print 규칙(.erp-modal-overlay 존재 시
+  // .erp-body 숨김)에 맡긴다.
+  if (pathname.endsWith("/print") && !modal) {
     return <>{children}</>;
   }
 
@@ -102,6 +94,11 @@ export function ErpShell({
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>
+      {isDemo && (
+        <div className="erp-demo-banner">
+          데모 모드 — 실제 데이터가 아니며, 여기서 등록/수정/삭제해도 실제 운영 데이터에는 영향을 주지 않습니다.
+        </div>
+      )}
       <NotificationToaster />
       <RecentMenuTracker />
       <MidnightRefresh />
@@ -109,22 +106,19 @@ export function ErpShell({
         logoUrl={logoUrl}
         companyName={companyName}
         email={email}
-        unreadAnnouncements={unreadAnnouncements}
-        dueTodos={dueTodos}
-        lowStock={lowStock}
+        notificationBell={notificationBell}
         isMobile={isMobile}
         onToggleMenu={() => setCollapsed((c) => !c)}
       />
-      <Ribbon />
+      <Ribbon disabledFeatures={disabledFeatures} isAdmin={isAdmin} />
       <div className="erp-body">
         <TreeMenu
-          dbSizeBytes={dbSizeBytes}
-          storageSizeBytes={storageSizeBytes}
-          vpsDisk={vpsDisk}
-          netlifyUsage={netlifyUsage}
+          usageWidget={usageWidget}
           collapsed={collapsed}
           isMobile={isMobile}
           onToggleCollapsed={() => setCollapsed((c) => !c)}
+          disabledFeatures={disabledFeatures}
+          isAdmin={isAdmin}
         />
         <div className="erp-workspace">
           <RouteProgressBar />
@@ -135,11 +129,8 @@ export function ErpShell({
         </div>
       </div>
       <StatusBar email={email} companyName={companyName} />
-      <MessengerWidget
-        initialMessages={initialMessages}
-        profileNames={profileNames}
-        currentUserId={currentUserId}
-      />
+      {messengerWidget}
+      {modal}
     </div>
   );
 }

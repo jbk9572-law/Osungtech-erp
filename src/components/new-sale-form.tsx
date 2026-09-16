@@ -18,11 +18,15 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { GridBadge } from "@/components/grid/badge";
+import { PAYMENT_METHODS } from "@/lib/payment-methods";
+import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   focusSameColumnNextRow,
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
 import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
+import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
 import {
@@ -40,6 +44,18 @@ import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { RETURN_REASONS } from "@/lib/return-reason";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
+import {
+  buildPartyProductMap,
+  buildPartyProductNoteMap,
+  lookupPartyProductValue,
+  getMostRecentLotNumber,
+} from "@/lib/party-price-lookup";
+import { useKeyedRows } from "@/lib/use-keyed-rows";
+import { useFormRedirect } from "@/lib/use-form-redirect";
+import { ITEM_GRID_COLUMN_PX_WIDTHS } from "@/lib/item-grid-columns";
+import { useResizableColumns } from "@/lib/use-resizable-columns";
+import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
+import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -69,6 +85,11 @@ type PriceHistoryEntry = {
 type Row = {
   key: number;
   productId: string;
+  // 품목마스터 없이 1회성으로 입력하는 줄(예: "소프너 교체")일 때만 쓴다 —
+  // productId는 빈 문자열로 두고 이 이름을 그대로 저장한다. 재고 연동 없이
+  // 매출 합계에만 잡힌다(inventory_transactions은 생성되지 않음).
+  customName: string;
+  isCustomEntry: boolean;
   spec: string;
   manualSpec: boolean;
   lotNumber: string;
@@ -77,8 +98,6 @@ type Row = {
   manualPrice: boolean;
   remark: string;
 };
-
-const PAYMENT_METHODS = ["현금", "계좌이체", "카드", "어음"];
 
 export type SaleInitial = {
   id: string;
@@ -93,7 +112,8 @@ export type SaleInitial = {
   returnReason?: string | null;
   isCarryover?: boolean;
   items: {
-    productId: string;
+    productId: string | null;
+    customName?: string | null;
     spec?: string | null;
     quantity: number;
     unitPrice: number;
@@ -108,17 +128,22 @@ export function NewSaleForm({
   warehouseId,
   prices,
   history,
+  productLocations = {},
   action = createSale,
   initial,
   submitLabel = "매출 등록",
   backParam,
   initialIsReturn = false,
+  initialColWidths,
 }: {
   customers: Customer[];
   products: Product[];
   warehouseId: string;
   prices: CustomerPrice[];
   history: PriceHistoryEntry[];
+  // 품목별 보관 위치 목록(2곳 이상인 품목만 저장 시 확인 모달을 띄우는 데
+  // 쓰인다) — 페이지에서 미리 한 번에 내려받는다.
+  productLocations?: Record<string, LocationOption[]>;
   action?: (state: FormState, formData: FormData) => Promise<FormState>;
   initial?: SaleInitial;
   submitLabel?: string;
@@ -128,6 +153,10 @@ export function NewSaleForm({
   // 신규 등록 화면에서 매출/수금/반품 3버튼 중 "반품"으로 들어온 경우에만
   // 쓴다(NewSaleTypeSwitcher 참고) — 수정 화면은 initial.isReturn을 그대로 쓴다.
   initialIsReturn?: boolean;
+  // 페이지(서버 컴포넌트)가 미리 조회해 내려준 품목 그리드 칸 너비 —
+  // useResizableColumns 참고, 마운트 후 재조회로 인한 폭 "확 늘어남"
+  // 깜빡임을 없애기 위한 값이다.
+  initialColWidths?: Record<string, number> | null;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
@@ -168,42 +197,82 @@ export function NewSaleForm({
   const [isCarryover, setIsCarryover] = useState(
     initial?.isCarryover ?? false,
   );
-  const [rows, setRows] = useState<Row[]>(
+  function makeBlankRow(key: number): Row {
+    return {
+      key,
+      productId: "",
+      customName: "",
+      isCustomEntry: false,
+      spec: "",
+      manualSpec: false,
+      lotNumber: "",
+      quantity: 0,
+      unitPrice: 0,
+      manualPrice: false,
+      remark: "",
+    };
+  }
+  const { rows, setRows, addRow, insertRowAfter, removeRow, addFilledRow, addFilledRows } = useKeyedRows<Row>(
     initial?.items.length
       ? initial.items.map((item, i) => ({
           key: i,
-          productId: item.productId,
+          productId: item.productId ?? "",
+          customName: item.customName ?? "",
+          isCustomEntry: !item.productId && !!item.customName,
           spec: item.spec ?? "",
-          manualSpec: Boolean(item.spec),
+          manualSpec: Boolean(item.spec) || (!item.productId && !!item.customName),
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          manualPrice: false,
+          manualPrice: !item.productId && !!item.customName,
           remark: item.remark ?? "",
         }))
-      : [
-          {
-            key: 0,
-            productId: "",
-            spec: "",
-            manualSpec: false,
-            lotNumber: "",
-            quantity: 0,
-            unitPrice: 0,
-            manualPrice: false,
-            remark: "",
-          },
-        ],
+      : [makeBlankRow(0)],
+    makeBlankRow,
   );
-  const [nextKey, setNextKey] = useState(rows.length);
+  // 이 폼에서 "빈 줄"의 기준 — 검색/가져오기로 채워진 줄(들)을 넣을 때
+  // 아직 아무것도 안 고른 첫 줄이면 그 줄을 교체한다(quickAddProduct/
+  // addPurchaseItem/importTodoItems 공용).
+  const isBlankRow = (row: Row) => !row.productId && row.quantity === 0;
   const [state, formAction, pending] = useActionState(action, undefined);
+  // 서버 액션에서 직접 redirect()를 부르면 모달(인터셉트 라우트)로 열려
+  // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
+  // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
+  useFormRedirect(state);
+  // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
+  // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
+  // 매출 등록 폼과 매입 등록 폼(기본형, "매출도 같이 등록" 아닌 상태)이
+  // 칸 구성이 완전히 같아서(ITEM_GRID_COLUMN_PX_WIDTHS 공유) 저장 키도
+  // 같이 쓴다 — 한쪽에서 조절하면 다른 쪽에도 그대로 반영된다.
+  const { widths: colWidths, startResize, resizingCol } = useResizableColumns(
+    "erp-item-grid-columns",
+    ITEM_GRID_COLUMN_PX_WIDTHS,
+    initialColWidths,
+  );
+  const itemGridTotalWidth = Object.values<number>(colWidths).reduce((a, b) => a + b, 0);
   // 등록 실패 메시지는 실제로 다시 제출하기 전까지는 useActionState가 값을
   // 갱신하지 않는다. 값을 수정한 뒤에도 이전 실패 메시지가 그대로 남아있으면
   // "고쳤는데도 계속 실패한다"고 오해하게 되므로, 입력을 건드리는 순간
   // 화면에서만 숨긴다 (다시 제출하면 onSubmit에서 원복해 새 결과를 보여줌).
   const [messageDismissed, setMessageDismissed] = useState(false);
   const submitRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  // "저장" 버튼과 "저장 후 계속 등록" 버튼 중 실제로 어느 쪽을 눌러
+  // 제출했는지 기억해둔다 — 위치 배분 확인 모달 때문에 제출이 한 번
+  // 가로채져도(아래 onSubmit), 모달 확인 후 다시 제출할 때 같은 버튼으로
+  // 제출해야 "계속 등록" 의도가 안 사라진다.
+  const lastSubmitterRef = useRef<HTMLButtonElement | null>(null);
   useKeyShortcut("F7", submitRef);
+
+  // 품목이 보관 위치 2곳 이상에 나뉘어 있으면, 저장 직전에 어디서 얼마나
+  // 뺄지/넣을지 한 번 확인받는다(1곳뿐이면 자동 반영, 0곳이면 건너뜀 — 이
+  // 갈림은 서버 액션에서 처리). confirmedAllocation.signature가 지금 저장
+  // 대상과 다르면(품목/수량이 바뀌었으면) 다시 확인받는다.
+  const [allocationModalOpen, setAllocationModalOpen] = useState(false);
+  const [confirmedAllocation, setConfirmedAllocation] = useState<{
+    signature: string;
+    choices: LocationAllocationChoice[];
+  } | null>(null);
 
   // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 sales_order_id가 있어서
   // 모조지 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다.
@@ -278,23 +347,22 @@ export function NewSaleForm({
       }
     }
 
-    const newRow: Row = {
-      key: nextKey,
-      productId: item.productId,
-      spec: item.spec,
-      manualSpec: Boolean(item.spec),
-      lotNumber: item.lotNumber,
-      quantity: item.quantity,
-      unitPrice: resolvePrice(customerId, item.productId),
-      manualPrice: false,
-      remark: "",
-    };
-    setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
-        ? [newRow]
-        : [...prev, newRow],
+    addFilledRow(
+      (key) => ({
+        key,
+        productId: item.productId,
+        customName: "",
+        isCustomEntry: false,
+        spec: item.spec,
+        manualSpec: Boolean(item.spec),
+        lotNumber: item.lotNumber,
+        quantity: item.quantity,
+        unitPrice: resolvePrice(customerId, item.productId),
+        manualPrice: false,
+        remark: "",
+      }),
+      isBlankRow,
     );
-    setNextKey((k) => k + 1);
     setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
   }
 
@@ -343,29 +411,28 @@ export function NewSaleForm({
     }
 
     if (todo.items.length > 0) {
-      const newRows: Row[] = todo.items.map((item, i) => {
-        const product = products.find((p) => p.id === item.productId);
-        return {
-          key: nextKey + i,
-          productId: item.productId,
-          spec: item.spec ?? product?.spec ?? "",
-          manualSpec: Boolean(item.spec),
-          lotNumber: item.lotNumber ?? "",
-          quantity: item.quantity,
-          unitPrice: product
-            ? resolvePrice(effectiveCustomerId, product.id)
-            : 0,
-          manualPrice: false,
-          remark: "",
-        };
-      });
-
-      setRows((prev) =>
-        prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
-          ? newRows
-          : [...prev, ...newRows],
+      addFilledRows(
+        (startKey) =>
+          todo.items.map((item, i) => {
+            const product = products.find((p) => p.id === item.productId);
+            return {
+              key: startKey + i,
+              productId: item.productId,
+              customName: "",
+              isCustomEntry: false,
+              spec: item.spec ?? product?.spec ?? "",
+              manualSpec: Boolean(item.spec),
+              lotNumber: item.lotNumber ?? "",
+              quantity: item.quantity,
+              unitPrice: product
+                ? resolvePrice(effectiveCustomerId, product.id)
+                : 0,
+              manualPrice: false,
+              remark: "",
+            };
+          }),
+        isBlankRow,
       );
-      setNextKey((k) => k + newRows.length);
     }
 
     setImportingTodoId(todo.id);
@@ -384,30 +451,21 @@ export function NewSaleForm({
     setOpenTodos(null);
   }
 
-  const priceMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const price of prices) {
-      map.set(
-        `${price.customer_id}:${price.product_id}`,
-        Number(price.unit_price),
-      );
-    }
-    return map;
-  }, [prices]);
+  const priceMap = useMemo(
+    () => buildPartyProductMap(prices, (p) => p.customer_id, (p) => p.product_id, (p) => Number(p.unit_price)),
+    [prices],
+  );
 
   // 이 거래처+이 품목 조합에만 해당하는 특이사항(customer_product_prices.notes)
   // — 거래처 하나만 골랐을 때 뜨는 거래처 전체 특이사항과는 별개로, 품목까지
   // 같이 골랐을 때만 추가로 보여준다.
-  const noteMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const price of prices) {
-      if (price.notes) map.set(`${price.customer_id}:${price.product_id}`, price.notes);
-    }
-    return map;
-  }, [prices]);
+  const noteMap = useMemo(
+    () => buildPartyProductNoteMap(prices, (p) => p.customer_id, (p) => p.product_id, (p) => p.notes),
+    [prices],
+  );
 
   function resolveNote(forCustomerId: string, productId: string): string | null {
-    return noteMap.get(`${forCustomerId}:${productId}`) ?? null;
+    return lookupPartyProductValue(noteMap, forCustomerId, productId) ?? null;
   }
 
   // 수정 화면에서는 product.stock이 "이 거래로 이미 출고 처리된 뒤"의 현재
@@ -416,6 +474,7 @@ export function NewSaleForm({
   const originalQtyByProduct = useMemo(() => {
     const map = new Map<string, number>();
     for (const item of initial?.items ?? []) {
+      if (!item.productId) continue;
       map.set(item.productId, (map.get(item.productId) ?? 0) + item.quantity);
     }
     return map;
@@ -436,7 +495,7 @@ export function NewSaleForm({
   }, [rows]);
 
   function resolvePrice(forCustomerId: string, productId: string) {
-    const fromCustomer = priceMap.get(`${forCustomerId}:${productId}`);
+    const fromCustomer = lookupPartyProductValue(priceMap, forCustomerId, productId);
     if (fromCustomer !== undefined) return fromCustomer;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.price) : 0;
@@ -450,15 +509,12 @@ export function NewSaleForm({
     productId: string,
   ): string | null {
     if (!forCustomerId) return null;
-    const entries = history
-      .filter(
-        (h) =>
-          h.customerId === forCustomerId &&
-          h.productId === productId &&
-          h.lotNumber,
-      )
-      .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
-    return entries[0]?.lotNumber ?? null;
+    return getMostRecentLotNumber(
+      history,
+      (h) => h.customerId === forCustomerId && h.productId === productId,
+      (h) => h.orderDate,
+      (h) => h.lotNumber,
+    );
   }
 
   // 임시 저장된 모조지 계산 + 입고 불러오기로 복사해온 계산들을 합쳐서,
@@ -580,71 +636,21 @@ export function NewSaleForm({
   // 방식으로, 아직 아무것도 안 고른 첫 빈 줄이면 그 줄을 그대로 채운다).
   function quickAddProduct(productId: string) {
     const product = products.find((p) => p.id === productId);
-    const newRow: Row = {
-      key: nextKey,
-      productId,
-      spec: product?.spec ?? "",
-      manualSpec: false,
-      lotNumber: getRecentLotNumber(customerId, productId) ?? "",
-      quantity: 0,
-      unitPrice: resolvePrice(customerId, productId),
-      manualPrice: false,
-      remark: "",
-    };
-    setRows((prev) =>
-      prev.length === 1 && !prev[0].productId && prev[0].quantity === 0
-        ? [newRow]
-        : [...prev, newRow],
-    );
-    setNextKey((k) => k + 1);
-  }
-
-  function addRow() {
-    setRows((prev) => [
-      ...prev,
-      {
-        key: nextKey,
-        productId: "",
-        spec: "",
+    addFilledRow(
+      (key) => ({
+        key,
+        productId,
+        customName: "",
+        isCustomEntry: false,
+        spec: product?.spec ?? "",
         manualSpec: false,
-        lotNumber: "",
+        lotNumber: getRecentLotNumber(customerId, productId) ?? "",
         quantity: 0,
-        unitPrice: 0,
+        unitPrice: resolvePrice(customerId, productId),
         manualPrice: false,
         remark: "",
-      },
-    ]);
-    setNextKey((k) => k + 1);
-  }
-
-  // 맨 아래에만 추가되던 "+ 품목 추가"와 달리, 이미 입력해둔 줄들 사이에
-  // 빠뜨린 품목을 끼워 넣고 싶을 때를 위한 것 — 그 줄 바로 아래에 빈 줄을
-  // 삽입한다.
-  function insertRowAfter(key: number) {
-    setRows((prev) => {
-      const idx = prev.findIndex((row) => row.key === key);
-      if (idx === -1) return prev;
-      const newRow: Row = {
-        key: nextKey,
-        productId: "",
-        spec: "",
-        manualSpec: false,
-        lotNumber: "",
-        quantity: 0,
-        unitPrice: 0,
-        manualPrice: false,
-        remark: "",
-      };
-      const next = [...prev];
-      next.splice(idx + 1, 0, newRow);
-      return next;
-    });
-    setNextKey((k) => k + 1);
-  }
-
-  function removeRow(key: number) {
-    setRows((prev) =>
-      prev.length > 1 ? prev.filter((row) => row.key !== key) : prev,
+      }),
+      isBlankRow,
     );
   }
 
@@ -656,7 +662,11 @@ export function NewSaleForm({
 
   // 화면에 보여주는 합계가 실제 제출되는(itemsJson) 값과 항상 같도록,
   // 제출에서 제외되는 행(품목 미선택, 수량 0 이하)은 합계에서도 뺀다.
-  const submittedRows = rows.filter((row) => row.productId && row.quantity > 0);
+  const submittedRows = rows.filter(
+    (row) =>
+      (row.productId || (row.isCustomEntry && row.customName.trim())) &&
+      row.quantity > 0,
+  );
   const supplyAmount =
     submittedRows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) +
     pendingCalcAmount;
@@ -666,7 +676,8 @@ export function NewSaleForm({
   const itemsJson = JSON.stringify(
     submittedRows
       .map((row) => ({
-        productId: row.productId,
+        productId: row.productId || null,
+        customName: row.productId ? null : row.customName.trim() || null,
         // 직접입력이 아니면 규격을 스냅샷으로 고정하지 않고 null로 저장해서,
         // 품목관리에서 마스터 규격을 나중에 고쳐도 계속 최신값을 따라가게 한다.
         spec: row.manualSpec ? row.spec : null,
@@ -677,14 +688,67 @@ export function NewSaleForm({
       })),
   );
 
+  // 위치가 2곳 이상인 품목만 뽑아서(0곳/1곳은 서버에서 자동 처리) 확인
+  // 모달에 보여줄 형태로 정리한다. signature가 바뀌면(품목/수량이
+  // 달라지면) 이전에 확인받았던 배분값은 더 이상 유효하지 않다고 보고
+  // 다시 확인받는다.
+  const multiLocationRaw = findMultiLocationItems(
+    submittedRows.filter((r) => r.productId).map((r) => ({ productId: r.productId, quantity: r.quantity })),
+    productLocations,
+  );
+  const multiLocationItems: MultiLocationItem[] = multiLocationRaw.map((m) => {
+    const product = products.find((p) => p.id === m.productId);
+    return {
+      groupKey: m.productId,
+      productId: m.productId,
+      productName: product?.name ?? m.productId,
+      spec: product?.spec ?? null,
+      unit: product?.unit ?? "EA",
+      quantity: m.quantity,
+      locations: m.locations,
+    };
+  });
+  const locationSignature = JSON.stringify(
+    multiLocationRaw.map((m) => [m.productId, m.quantity]).sort((a, b) => (a[0] as string).localeCompare(b[0] as string)),
+  );
+  const locationAllocationsJson =
+    confirmedAllocation && confirmedAllocation.signature === locationSignature
+      ? JSON.stringify(confirmedAllocation.choices)
+      : "[]";
+
+  // 품목 그리드 칸 헤더 — 칸 오른쪽 경계에 드래그 손잡이를 같이 넣어서
+  // 마우스로 끌어 너비를 직접 조절할 수 있게 한다.
+  function resizableTh(
+    col: keyof typeof colWidths,
+    label: React.ReactNode,
+    className?: string,
+  ) {
+    return (
+      <th className={className} style={{ width: colWidths[col] }}>
+        {label}
+        <span
+          className={`erp-col-resize-handle${resizingCol === col ? " resizing" : ""}`}
+          onMouseDown={startResize(col)}
+        />
+      </th>
+    );
+  }
+
   return (
     <form
+      ref={formRef}
       action={formAction}
       className="space-y-6"
       onKeyDown={preventEnterSubmit}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
-      onSubmit={() => {
+      onSubmit={(e) => {
+        lastSubmitterRef.current = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+        if (multiLocationItems.length > 0 && locationSignature !== confirmedAllocation?.signature) {
+          e.preventDefault();
+          setAllocationModalOpen(true);
+          return;
+        }
         setMessageDismissed(false);
         // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니
         // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
@@ -693,6 +757,26 @@ export function NewSaleForm({
         if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
       }}
     >
+      <LocationAllocationModal
+        open={allocationModalOpen}
+        items={multiLocationItems}
+        actionLabel={isReturn ? "반품 입고" : "출고"}
+        onCancel={() => setAllocationModalOpen(false)}
+        onConfirm={(result) => {
+          const choices: LocationAllocationChoice[] = result.map((r) => ({
+            productId: r.productId,
+            allocations: r.allocations,
+          }));
+          setConfirmedAllocation({ signature: locationSignature, choices });
+          setAllocationModalOpen(false);
+          // 다음 렌더에서 hidden input이 최신 배분값으로 채워진 뒤 다시
+          // 제출한다 — 이 클릭 핸들러 안에서 곧장 폼을 submit()하면 아직
+          // state가 반영되기 전이라 방금 만든 배분값 없이 나갈 수 있다.
+          // 원래 눌렀던 버튼("저장" vs "저장 후 계속 등록")으로 다시
+          // 제출해야 그 의도가 유지된다.
+          requestAnimationFrame(() => formRef.current?.requestSubmit(lastSubmitterRef.current ?? undefined));
+        }}
+      />
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
@@ -707,6 +791,7 @@ export function NewSaleForm({
       {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
       <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
+      <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
       {pendingPaperCalc && (
         <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
       )}
@@ -806,21 +891,38 @@ export function NewSaleForm({
           style={{ justifyContent: "space-between" }}
         >
           <span className="erp-detail-tab active">기본정보</span>
-          <button
-            ref={submitRef}
-            type="submit"
-            disabled={pending}
-            className="erp-btn erp-btn-primary"
-            style={{ minWidth: 0, margin: 4 }}
-          >
-            {pending ? (
-              <>
-                <span className="erp-spinner" aria-hidden /> 저장 중...
-              </>
-            ) : (
-              `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
+          <div style={{ display: "flex", gap: 6 }}>
+            {/* 수정 화면(initial.id 있음)에는 "다음 건"이라는 개념이 없어서
+                신규 등록일 때만 보여준다 — 하루에 여러 건을 연달아 입력할
+                때마다 매번 목록/메뉴를 다시 타지 않아도 되게 한다. */}
+            {!initial?.id && (
+              <button
+                type="submit"
+                name="continue_new"
+                value="1"
+                disabled={pending}
+                className="erp-btn"
+                style={{ minWidth: 0, margin: 4 }}
+              >
+                저장 후 계속 등록
+              </button>
             )}
-          </button>
+            <button
+              ref={submitRef}
+              type="submit"
+              disabled={pending}
+              className="erp-btn erp-btn-primary"
+              style={{ minWidth: 0, margin: 4 }}
+            >
+              {pending ? (
+                <>
+                  <span className="erp-spinner" aria-hidden /> 저장 중...
+                </>
+              ) : (
+                `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
+              )}
+            </button>
+          </div>
         </div>
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
@@ -877,7 +979,7 @@ export function NewSaleForm({
                 gap: 8,
                 height: 34,
                 padding: "0 14px",
-                borderRadius: 6,
+                borderRadius: 0,
                 background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
                 border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
                 cursor: "pointer",
@@ -1030,10 +1132,23 @@ export function NewSaleForm({
               + 품목 추가
             </button>
             {!initial?.id && (
-              <PaperCalcModalTrigger
-                pendingFor="sales"
-                onApply={handlePaperCalcApply}
-              />
+              <>
+                <PaperCalcModalTrigger
+                  pendingFor="sales"
+                  onApply={handlePaperCalcApply}
+                />
+                {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
+                    한 세트라 나란히 붙여둔다. PaperCalcModalTrigger와
+                    똑같이 라우트 이동 없는 중첩 팝업이라 이 폼이 이미
+                    모달로 열려 있어도 품목 줄이 사라지지 않는다 — 안에서
+                    "새 판매 등록에 연결"을 누르면 storage 이벤트 대신
+                    팝업이 닫히는 시점에 localStorage를 직접 다시 읽어
+                    반영한다. */}
+                <ManualLayoutModalTrigger
+                  pendingFor="sales"
+                  onClose={() => setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY))}
+                />
+              </>
             )}
           </div>
 
@@ -1050,8 +1165,8 @@ export function NewSaleForm({
                 overflowY: "auto",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
-                borderRadius: 2,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                borderRadius: 0,
+                boxShadow: "var(--erp-shadow-md)",
               }}
             >
               <div
@@ -1069,7 +1184,7 @@ export function NewSaleForm({
                 <button
                   type="button"
                   onClick={() => setPurchaseCandidates(null)}
-                  className="erp-btn erp-btn-danger"
+                  className="erp-btn erp-btn-dark"
                   style={{ minWidth: 0, height: 22, padding: "0 8px" }}
                 >
                   닫기
@@ -1145,8 +1260,8 @@ export function NewSaleForm({
                 overflowY: "auto",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
-                borderRadius: 2,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                borderRadius: 0,
+                boxShadow: "var(--erp-shadow-md)",
               }}
             >
               <div
@@ -1164,7 +1279,7 @@ export function NewSaleForm({
                 <button
                   type="button"
                   onClick={() => setOpenTodos(null)}
-                  className="erp-btn erp-btn-danger"
+                  className="erp-btn erp-btn-dark"
                   style={{ minWidth: 0, height: 22, padding: "0 8px" }}
                 >
                   닫기
@@ -1194,23 +1309,20 @@ export function NewSaleForm({
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600 }}>
                           {todo.title}
-                          <span
-                            className="erp-badge erp-badge-muted"
-                            style={{ marginLeft: 6 }}
-                          >
+                          <GridBadge tone="muted" style={{ marginLeft: 6 }}>
                             {todoTypeLabel(
                               todo.todo_type,
                               todo.ship_date,
                               todo.due_date,
                             )}
-                          </span>
+                          </GridBadge>
                           {todo.todo_type === "both" && (
-                            <span
-                              className={`erp-badge ${todo.purchase_done_at ? "erp-badge-success" : "erp-badge-warning"}`}
+                            <GridBadge
+                              tone={todo.purchase_done_at ? "ok" : "warn"}
                               style={{ marginLeft: 4 }}
                             >
                               {todo.purchase_done_at ? "매입완료" : "매입 전"}
-                            </span>
+                            </GridBadge>
                           )}
                         </div>
                         <div
@@ -1253,31 +1365,21 @@ export function NewSaleForm({
         >
           <table
             className="erp-grid"
-            style={{ tableLayout: "fixed", width: "100%", minWidth: 960 }}
+            style={{ tableLayout: "fixed", width: itemGridTotalWidth, minWidth: itemGridTotalWidth }}
           >
             <thead>
               <tr>
-                <th style={{ width: "13%" }}>품목</th>
-                <th style={{ width: "6%" }}>규격</th>
-                <th style={{ width: "8%" }}>관리번호</th>
-                <th style={{ width: "4%" }}>단위</th>
-                <th className="num" style={{ width: "15%" }}>
-                  수량
-                </th>
-                <th className="num" style={{ width: "9%" }}>
-                  단가
-                </th>
-                <th className="num" style={{ width: "10%" }}>
-                  공급가액
-                </th>
-                <th className="num" style={{ width: "8%" }}>
-                  세액
-                </th>
-                <th className="num" style={{ width: "9%" }}>
-                  합계
-                </th>
-                <th style={{ width: "13%" }}>비고</th>
-                <th style={{ width: "5%" }} />
+                {resizableTh("product", "품목")}
+                {resizableTh("spec", "규격")}
+                {resizableTh("lotNumber", "관리번호")}
+                {resizableTh("unit", "단위")}
+                {resizableTh("quantity", "수량", "num")}
+                {resizableTh("price", "단가", "num")}
+                {resizableTh("supplyAmount", "공급가액", "num")}
+                {resizableTh("tax", "세액", "num")}
+                {resizableTh("total", "합계", "num")}
+                {resizableTh("remark", "비고")}
+                <th style={{ width: colWidths.actions }} />
               </tr>
             </thead>
             <tbody
@@ -1414,31 +1516,74 @@ export function NewSaleForm({
                 return (
                   <tr key={row.key}>
                     <td>
-                      <ProductSearchSelect
-                        products={products}
-                        value={row.productId}
-                        onChange={(productId) =>
-                          handleProductChange(row.key, productId)
-                        }
-                      />
-                      {row.productId &&
-                        resolveNote(customerId, row.productId) && (
-                          <div
-                            className="mt-1"
-                            style={{
-                              padding: "4px 8px",
-                              fontSize: 11.5,
-                              color: "var(--erp-info-text)",
-                              background: "var(--erp-info-bg)",
-                              border: "1px solid var(--erp-info-border)",
-                              borderRadius: 4,
-                              whiteSpace: "normal",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            품목 특이사항: {resolveNote(customerId, row.productId)}
-                          </div>
-                        )}
+                      {row.isCustomEntry ? (
+                        <input
+                          type="text"
+                          placeholder="품목명 직접입력 (예: 소프너 교체)"
+                          aria-label="품목명 직접입력"
+                          value={row.customName}
+                          onChange={(e) =>
+                            updateRow(row.key, { customName: e.target.value })
+                          }
+                          className="erp-input w-full"
+                        />
+                      ) : (
+                        <>
+                          <ProductSearchSelect
+                            products={products}
+                            value={row.productId}
+                            onChange={(productId) =>
+                              handleProductChange(row.key, productId)
+                            }
+                          />
+                          {row.productId &&
+                            resolveNote(customerId, row.productId) && (
+                              <div
+                                className="mt-1"
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11.5,
+                                  color: "var(--erp-info-text)",
+                                  background: "var(--erp-info-bg)",
+                                  border: "1px solid var(--erp-info-border)",
+                                  borderRadius: 0,
+                                  whiteSpace: "normal",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                품목 특이사항: {resolveNote(customerId, row.productId)}
+                              </div>
+                            )}
+                        </>
+                      )}
+                      <label
+                        className="mt-1 flex items-center gap-1 text-[10.5px]"
+                        style={{ color: "var(--erp-text-muted)" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={row.isCustomEntry}
+                          onChange={(e) => {
+                            const isCustomEntry = e.target.checked;
+                            updateRow(row.key, isCustomEntry
+                              ? {
+                                  isCustomEntry,
+                                  productId: "",
+                                  manualSpec: true,
+                                  manualPrice: true,
+                                }
+                              : {
+                                  isCustomEntry,
+                                  customName: "",
+                                  spec: "",
+                                  manualSpec: false,
+                                  manualPrice: false,
+                                  unitPrice: 0,
+                                });
+                          }}
+                        />
+                        품목없이 직접입력
+                      </label>
                     </td>
                     <td>
                       <input
@@ -1481,7 +1626,7 @@ export function NewSaleForm({
                         aria-label="관리번호"
                         value={row.lotNumber}
                         onChange={(e) =>
-                          updateRow(row.key, { lotNumber: e.target.value })
+                          updateRow(row.key, { lotNumber: normalizeLotNumber(e.target.value) })
                         }
                         className="erp-input w-full"
                       />

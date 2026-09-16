@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { formatPackageQty } from "@/lib/package-qty";
 import {
   formatPaperCalcSizeLines,
@@ -14,6 +15,8 @@ import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel
 import {
   overrideSalesPaperStock,
   revertSalesPaperStock,
+  markInvoiceIssued,
+  cancelInvoiceIssued,
 } from "@/app/(dashboard)/sales/actions";
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -21,6 +24,8 @@ import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
+import { InvoiceStatusPanel } from "@/components/invoice-status-panel";
+import { todayKstStr } from "@/lib/kst-date";
 
 export default async function SaleDetailPage({
   params,
@@ -99,7 +104,7 @@ export default async function SaleDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F9: { href: `/sales/${id}/print`, newTab: true },
+          F9: { href: `/sales/${id}/print` },
           ...(allowManage && { F4: { href: editHref } }),
           Escape: { href: closeHref },
         }}
@@ -111,12 +116,7 @@ export default async function SaleDetailPage({
           {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href={`/sales/${id}/print`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
+          <Link href={`/sales/${id}/print`} className="erp-btn">
             F9 명세표
           </Link>
           {allowManage && (
@@ -138,9 +138,7 @@ export default async function SaleDetailPage({
               confirmMessage="이 매출 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
             />
           )}
-          <Link href={closeHref} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href={closeHref} />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
@@ -258,6 +256,17 @@ export default async function SaleDetailPage({
               메모: {order.memo}
             </p>
           )}
+          {allowManage && (
+            <InvoiceStatusPanel
+              orderId={id}
+              status={order.invoice_status}
+              invoiceNumber={order.invoice_number}
+              invoiceIssuedAt={order.invoice_issued_at}
+              today={todayKstStr()}
+              markIssuedAction={markInvoiceIssued}
+              cancelAction={cancelInvoiceIssued}
+            />
+          )}
         </div>
       </div>
 
@@ -285,19 +294,29 @@ export default async function SaleDetailPage({
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.products?.sku}
                   </td>
-                  <td>{row.products?.name}</td>
+                  <td>{row.products?.name ?? row.custom_name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.spec || row.products?.spec || "-"}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.lot_number || "-"}
+                    {row.lot_number ? (
+                      <Link
+                        href={`/inventory/lot-lookup?q=${encodeURIComponent(row.lot_number)}`}
+                        className="erp-badge erp-badge-muted"
+                        style={{ textDecoration: "none" }}
+                      >
+                        {row.lot_number}
+                      </Link>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.products?.unit}
                   </td>
                   <td
                     className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    style={{ color: row.products?.base_package_qty ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                   >
                     {formatPackageQty(
                       row.products?.base_package_qty,

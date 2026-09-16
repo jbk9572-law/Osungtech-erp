@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { EditUserForm } from "@/components/edit-user-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { deleteUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { getCurrentActor } from "@/lib/current-actor";
 
@@ -52,9 +52,7 @@ export default async function UserDetailPage({
               confirmMessage={`${target.full_name ?? target.username} 계정을 삭제하시겠습니까? 되돌릴 수 없습니다.`}
             />
           )}
-          <Link href="/settings/users" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/settings/users" />
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
+import { CloseButton } from "@/components/erp/close-button";
 import { DeliveryNoteDoc } from "@/components/delivery-note-doc";
 import {
   SnsFiltechCanvas,
@@ -42,7 +43,7 @@ export default async function SalesPrintPage({
       .select("*, products(sku, name, spec, unit, base_package_qty, categories(name))")
       .eq("sales_order_id", id)
       .order("created_at"),
-    supabase.from("company_profile").select("*").eq("id", 1).maybeSingle(),
+    supabase.from("company_profile").select("*").maybeSingle(),
     supabase.from("paper_calculations").select("input_items").eq("sales_order_id", id),
   ]);
 
@@ -66,7 +67,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -78,9 +79,9 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
-            </Link>
+            </CloseButton>
             <PrintButton />
           </div>
           <SnsFiltechCanvas
@@ -102,7 +103,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -114,9 +115,9 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
-            </Link>
+            </CloseButton>
             <PrintButton />
           </div>
           <ZenithTechCanvas
@@ -140,7 +141,7 @@ export default async function SalesPrintPage({
       const canvasItems = (items ?? []).map((item) => ({
         id: item.id,
         category: item.products?.categories?.name ?? "",
-        productName: item.products?.name ?? "",
+        productName: item.products?.name ?? item.custom_name ?? "",
         spec: item.spec || item.products?.spec || "",
         sku: item.products?.sku ?? "",
         unit: item.products?.unit ?? "",
@@ -153,9 +154,9 @@ export default async function SalesPrintPage({
       return (
         <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
           <div className="mb-4 flex items-center justify-between print:hidden">
-            <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+            <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
-            </Link>
+            </CloseButton>
             <PrintButton />
           </div>
           <KtSolutionCanvas
@@ -185,9 +186,9 @@ export default async function SalesPrintPage({
     return (
       <div className="mx-auto max-w-3xl print-page-wrapper">
         <div className="mb-4 flex items-center justify-between print:hidden">
-          <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+          <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
             목록으로
-          </Link>
+          </CloseButton>
           <PrintButton />
         </div>
         <DeliveryNoteDoc
@@ -222,7 +223,7 @@ export default async function SalesPrintPage({
       id: item.id,
       monthDay: `${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`,
       productLabel: (() => {
-        const name = item.products?.name ?? "";
+        const name = item.products?.name ?? item.custom_name ?? "";
         const spec = item.spec || item.products?.spec;
         const base = spec ? `${name} / ${spec}` : name;
         return showLot && item.lot_number ? `${base} / ${item.lot_number}` : base;
@@ -259,11 +260,11 @@ export default async function SalesPrintPage({
       className={`mx-auto max-w-5xl print:mx-0 print:max-w-none ${layout === "half" ? "print-page-wrapper" : ""}`}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <Link href="/sales" className="print:hidden rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+        <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
           목록으로
-        </Link>
+        </CloseButton>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+          <div className="erp-seg">
             {(
               [
                 ["both", "양쪽 다"],
@@ -274,15 +275,13 @@ export default async function SalesPrintPage({
               <Link
                 key={value}
                 href={`/sales/${id}/print?copies=${value}&layout=${layout}&balance=${showBalance ? "show" : "hide"}`}
-                className={`rounded px-3 py-1.5 ${
-                  copies === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`erp-seg-btn${copies === value ? " active" : ""}`}
               >
                 {label}
               </Link>
             ))}
           </div>
-          <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+          <div className="erp-seg">
             {(
               [
                 ["half", "2연식"],
@@ -292,15 +291,13 @@ export default async function SalesPrintPage({
               <Link
                 key={value}
                 href={`/sales/${id}/print?copies=${copies}&layout=${value}&balance=${showBalance ? "show" : "hide"}`}
-                className={`rounded px-3 py-1.5 ${
-                  layout === value ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`erp-seg-btn${layout === value ? " active" : ""}`}
               >
                 {label}
               </Link>
             ))}
           </div>
-          <div className="flex gap-1 rounded-md border border-gray-200 p-1 text-sm">
+          <div className="erp-seg">
             {(
               [
                 ["hide", "미수금 표기 안함"],
@@ -310,11 +307,7 @@ export default async function SalesPrintPage({
               <Link
                 key={value}
                 href={`/sales/${id}/print?copies=${copies}&layout=${layout}&balance=${value}`}
-                className={`rounded px-3 py-1.5 ${
-                  (showBalance ? "show" : "hide") === value
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`erp-seg-btn${(showBalance ? "show" : "hide") === value ? " active" : ""}`}
               >
                 {label}
               </Link>

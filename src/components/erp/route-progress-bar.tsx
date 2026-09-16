@@ -82,12 +82,19 @@ function ProgressWatcher() {
     function onClick(e: MouseEvent) {
       if (isInternalNavClick(e)) start();
     }
-    function onSubmit() {
+    // 캡처 단계에서 잡으면, 폼의 onSubmit이 아직 실행되기도 전이라 그
+    // 안에서 e.preventDefault()로 제출을 막는 경우(위치 배분 확인 모달을
+    // 띄우려고 첫 제출을 가로채는 등)까지 실제 이동으로 오인해서 "이동
+    // 중..." 오버레이가 그 모달 위에 겹쳐 뜬다. 버블 단계로 늦춰서 리액트의
+    // onSubmit이 먼저 실행된 뒤(그래서 e.defaultPrevented가 반영된 뒤)
+    // 판단하면, 실제로 막히지 않고 진짜 이동이 시작되는 제출에만 반응한다.
+    function onSubmit(e: SubmitEvent) {
+      if (e.defaultPrevented) return;
       start();
     }
 
     document.addEventListener("click", onClick, true);
-    document.addEventListener("submit", onSubmit, true);
+    document.addEventListener("submit", onSubmit, false);
     // ClickableRow(행 클릭)/탭바/리본/알림종처럼 <a> 없이 router.push()로
     // 바로 이동하는 곳은 위 클릭 감지에 안 걸리므로, 그런 곳은 이 이벤트로
     // 직접 알려준다 (src/lib/route-progress.ts).

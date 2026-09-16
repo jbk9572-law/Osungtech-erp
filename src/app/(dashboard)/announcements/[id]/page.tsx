@@ -1,13 +1,16 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { deleteAnnouncement, updateAnnouncement } from "../actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
+import { markAnnouncementRead } from "@/lib/announcement-reads";
+import { PageGuide } from "@/components/erp/page-guide";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function AnnouncementDetailPage({
   params,
@@ -44,13 +47,28 @@ export default async function AnnouncementDetailPage({
   // 배지가 이미 읽은 공지도 계속 안읽음으로 보여줬다. 상세 화면을 열람하는
   // 것 자체를 읽음 처리로 본다.
   if (actor.userId) {
-    const { error: markReadError } = await supabase
-      .from("announcement_reads")
-      .upsert({ announcement_id: id, user_id: actor.userId }, { onConflict: "announcement_id,user_id" });
+    const { error: markReadError } = await markAnnouncementRead(supabase, id, actor.userId);
     if (markReadError) {
       console.error("공지 읽음 처리 실패:", markReadError.message);
     }
   }
+
+  // 이 공지를 누가 아직 안 읽었는지 — 관리자에게만 보여준다(마이그레이션
+  // 117로 열어준 announcement_reads_select_admin 정책 필요). 고정(필독)
+  // 공지에서 특히 쓸모 있다. 위 markAnnouncementRead 호출 다음에 조회해야
+  // 지금 보고 있는 관리자 본인의 읽음도 바로 반영된다.
+  const [readRows, allProfiles] = actor.isAdmin
+    ? await Promise.all([
+        fetchAllRows<{ user_id: string; read_at: string }>((from, to) =>
+          supabase.from("announcement_reads").select("user_id, read_at").eq("announcement_id", id).range(from, to),
+        ),
+        fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+          supabase.from("profiles").select("id, full_name").order("full_name").range(from, to),
+        ),
+      ])
+    : [[], []];
+  const readAtByUser = new Map(readRows.map((r) => [r.user_id, r.read_at]));
+  const unreadMembers = allProfiles.filter((p) => !readAtByUser.has(p.id));
 
   return (
     <div>
@@ -60,12 +78,10 @@ export default async function AnnouncementDetailPage({
       </h1>
 
       <div className="erp-toolbar">
-        <Link href="/announcements" className="erp-btn erp-btn-danger">
-          ESC 목록으로
-        </Link>
         {allowManage && (
           <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
         )}
+        <CloseButton href="/announcements">ESC 목록으로</CloseButton>
       </div>
 
       <div className="erp-post-header">
@@ -98,15 +114,40 @@ export default async function AnnouncementDetailPage({
             >
               {row.content || "-"}
             </p>
-            <p
-              className="mt-4 text-xs"
-              style={{ color: "var(--erp-text-muted)" }}
-            >
-              본인이 등록한 공지사항만 수정할 수 있습니다.
-            </p>
+            <PageGuide className="mt-4">본인이 등록한 공지사항만 수정할 수 있습니다.</PageGuide>
           </div>
         )}
       </div>
+
+      {actor.isAdmin && (
+        <div className="erp-detail">
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">
+              읽음 현황 (관리자) · {allProfiles.length - unreadMembers.length}/{allProfiles.length}명
+            </span>
+          </div>
+          <div className="erp-detail-body">
+            {unreadMembers.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+                전 구성원이 읽었습니다.
+              </p>
+            ) : (
+              <>
+                <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  아직 읽지 않음:
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {unreadMembers.map((p) => (
+                    <GridBadge key={p.id} tone="muted">
+                      {p.full_name || "구성원"}
+                    </GridBadge>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

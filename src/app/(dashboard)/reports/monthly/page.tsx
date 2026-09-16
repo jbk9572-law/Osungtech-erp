@@ -10,6 +10,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
 import { calcVat } from "@/lib/tax";
+import { matchesSearch } from "@/lib/search-match";
 
 type View = "product" | "supplier" | "customer";
 
@@ -20,20 +21,12 @@ type CompanyProductRow = {
   sku: string;
   productName: string;
   spec: string;
+  categoryName: string | null;
   unit: string | null;
   quantity: number;
   amount: number;
   taxAmount: number;
 };
-
-function matchesKeyword(row: CompanyProductRow, keyword: string): boolean {
-  return (
-    row.sku.toLowerCase().includes(keyword) ||
-    row.productName.toLowerCase().includes(keyword) ||
-    row.spec.toLowerCase().includes(keyword) ||
-    row.companyName.toLowerCase().includes(keyword)
-  );
-}
 
 // 매입처별/매출처별 보기 — 거래처를 먼저 묶고 그 안에서 품목별 소계를
 // 낸다. 품목별 보기(ItemGroup)와 반대 방향으로 같은 데이터를 한 번 더
@@ -91,6 +84,7 @@ type ItemGroup = {
   sku: string;
   name: string;
   spec: string;
+  categoryName: string | null;
   unit: string | null;
   inQty: number;
   inAmount: number;
@@ -130,7 +124,7 @@ export default async function MonthlyReportPage({
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit)",
+          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
@@ -141,7 +135,7 @@ export default async function MonthlyReportPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit)",
+          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("purchase_orders.purchase_date", lookbackFrom)
         .lte("purchase_orders.purchase_date", to)
@@ -183,6 +177,7 @@ export default async function MonthlyReportPage({
     name: string,
     spec: string,
     unit: string | null,
+    categoryName: string | null,
   ) {
     let group = groups.get(productId);
     if (!group) {
@@ -192,6 +187,7 @@ export default async function MonthlyReportPage({
         name,
         spec,
         unit,
+        categoryName,
         inQty: 0,
         inAmount: 0,
         outQty: 0,
@@ -204,13 +200,17 @@ export default async function MonthlyReportPage({
   }
 
   for (const row of purchaseRows ?? []) {
+    // 직접입력(품목 미연결) 줄은 이 리포트가 다루는 "품목별 실적" 개념에
+    // 안 맞아서 제외한다 — 금액은 매입 목록/오늘의 업무에는 정상 반영된다.
+    if (!row.product_id) continue;
     const supplier = row.purchase_orders?.suppliers;
     const amount = row.quantity * Number(row.unit_cost);
     const sku = row.products?.sku ?? "-";
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
-    const group = ensureGroup(row.product_id, sku, productName, spec, unit);
+    const categoryName = row.products?.categories?.name ?? null;
+    const group = ensureGroup(row.product_id, sku, productName, spec, unit, categoryName);
     group.inQty += row.quantity;
     group.inAmount += amount;
     if (supplier) {
@@ -236,6 +236,8 @@ export default async function MonthlyReportPage({
   }
 
   for (const row of salesRows ?? []) {
+    // 직접입력(품목 미연결) 줄은 제외한다(위 매입 루프와 같은 이유).
+    if (!row.product_id) continue;
     const customer = row.sales_orders?.customers;
     // 반품 건은 수량/금액을 음수로 뒤집어서 반영한다 — 그래야 "출고수량"이
     // 실제로 순유출된 양을 뜻하고, "재고 순증감"(입고-출고) 계산도 반품으로
@@ -247,7 +249,8 @@ export default async function MonthlyReportPage({
     const productName = row.products?.name ?? "-";
     const spec = row.products?.spec ?? "-";
     const unit = row.products?.unit ?? null;
-    const group = ensureGroup(row.product_id, sku, productName, spec, unit);
+    const categoryName = row.products?.categories?.name ?? null;
+    const group = ensureGroup(row.product_id, sku, productName, spec, unit, categoryName);
     group.outQty += quantity;
     group.outAmount += amount;
     if (customer) {
@@ -277,10 +280,8 @@ export default async function MonthlyReportPage({
   if (keyword) {
     itemGroups = itemGroups.filter(
       (g) =>
-        g.sku.toLowerCase().includes(keyword) ||
-        g.name.toLowerCase().includes(keyword) ||
-        g.spec.toLowerCase().includes(keyword) ||
-        g.details.some((d) => d.companyName.toLowerCase().includes(keyword)),
+        matchesSearch(keyword, g.sku, g.name, g.spec, g.categoryName) ||
+        g.details.some((d) => matchesSearch(keyword, d.companyName)),
     );
   }
 
@@ -318,6 +319,7 @@ export default async function MonthlyReportPage({
         sku: row.products?.sku ?? "-",
         productName: row.products?.name ?? "-",
         spec: row.products?.spec ?? "-",
+        categoryName: row.products?.categories?.name ?? null,
         unit: row.products?.unit ?? null,
         quantity: row.quantity,
         amount,
@@ -342,6 +344,7 @@ export default async function MonthlyReportPage({
         sku: row.products?.sku ?? "-",
         productName: row.products?.name ?? "-",
         spec: row.products?.spec ?? "-",
+        categoryName: row.products?.categories?.name ?? null,
         unit: row.products?.unit ?? null,
         quantity: row.quantity * sign,
         amount,
@@ -356,10 +359,14 @@ export default async function MonthlyReportPage({
   // 쓰면 검색어와 무관한 거래처 금액까지 분모에 섞여 비중이 실제보다 작게
   // 나온다.
   const purchaseCompanyRowsFiltered = keyword
-    ? purchaseCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    ? purchaseCompanyRows.filter((r) =>
+        matchesSearch(keyword, r.sku, r.productName, r.spec, r.categoryName, r.companyName),
+      )
     : purchaseCompanyRows;
   const salesCompanyRowsFiltered = keyword
-    ? salesCompanyRows.filter((r) => matchesKeyword(r, keyword))
+    ? salesCompanyRows.filter((r) =>
+        matchesSearch(keyword, r.sku, r.productName, r.spec, r.categoryName, r.companyName),
+      )
     : salesCompanyRows;
   const supplierGroups =
     view === "supplier" ? buildCompanyGroups(purchaseCompanyRowsFiltered) : [];
@@ -503,7 +510,7 @@ export default async function MonthlyReportPage({
             name="q"
             autoComplete="off"
             defaultValue={q ?? ""}
-            placeholder="품목명, SKU, 규격, 거래처명"
+            placeholder="품목명, SKU, 규격, 카테고리, 거래처명"
             className="erp-input"
             style={{ width: "100%" }}
           />
@@ -519,7 +526,7 @@ export default async function MonthlyReportPage({
             초기화
           </Link>
         )}
-        <Link href="/dashboard" className="erp-btn erp-btn-danger">
+        <Link href="/dashboard" className="erp-btn erp-btn-dark">
           ESC 닫기
         </Link>
       </form>
@@ -725,7 +732,7 @@ export default async function MonthlyReportPage({
                 // 음영)는 품목마다 상세행 수가 달라서 경계가 안 맞고 오히려
                 // 헷갈렸다.
                 const groupBg =
-                  groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                  groupIndex % 2 === 0 ? "var(--erp-panel)" : "var(--erp-bg)";
                 return (
                   <Fragment key={g.productId}>
                     <tr style={{ background: groupBg }}>
@@ -896,7 +903,7 @@ export default async function MonthlyReportPage({
             <tbody>
               {companyGroups.map((cg, groupIndex) => {
                 const groupBg =
-                  groupIndex % 2 === 0 ? "#ffffff" : "var(--erp-bg)";
+                  groupIndex % 2 === 0 ? "var(--erp-panel)" : "var(--erp-bg)";
                 const rank = groupIndex + 1;
                 const rankStyle =
                   rank === 1
@@ -907,7 +914,7 @@ export default async function MonthlyReportPage({
                           color: "var(--erp-primary)",
                         }
                       : {
-                          background: "#eef0f3",
+                          background: "var(--erp-divider)",
                           color: "var(--erp-text-muted)",
                         };
                 const share = companyViewGrandTotal
@@ -963,7 +970,7 @@ export default async function MonthlyReportPage({
                             style={{
                               flex: 1,
                               height: 5,
-                              borderRadius: 999,
+                              borderRadius: 0,
                               background: "var(--erp-divider)",
                               overflow: "hidden",
                             }}
@@ -971,7 +978,7 @@ export default async function MonthlyReportPage({
                             <div
                               style={{
                                 height: "100%",
-                                borderRadius: 999,
+                                borderRadius: 0,
                                 background: "var(--erp-primary)",
                                 width: `${Math.min(share, 100)}%`,
                               }}

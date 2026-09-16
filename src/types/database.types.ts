@@ -18,6 +18,9 @@ export type Database = {
           role: "admin" | "manager" | "staff";
           is_demo: boolean;
           created_at: string;
+          department_id: string | null;
+          position_title: string | null;
+          signature_image_url: string | null;
         };
         Insert: {
           id: string;
@@ -27,6 +30,9 @@ export type Database = {
           role?: "admin" | "manager" | "staff";
           is_demo?: boolean;
           created_at?: string;
+          department_id?: string | null;
+          position_title?: string | null;
+          signature_image_url?: string | null;
         };
         Update: {
           id?: string;
@@ -36,8 +42,51 @@ export type Database = {
           role?: "admin" | "manager" | "staff";
           is_demo?: boolean;
           created_at?: string;
+          department_id?: string | null;
+          position_title?: string | null;
+          signature_image_url?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      departments: {
+        Row: {
+          id: string;
+          name: string;
+          parent_department_id: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          parent_department_id?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          parent_department_id?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "departments_parent_department_id_fkey";
+            columns: ["parent_department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       categories: {
         Row: {
@@ -64,6 +113,7 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          supplier_code: string;
           business_number: string | null;
           representative_name: string | null;
           contact_name: string | null;
@@ -78,6 +128,7 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
+          supplier_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -92,6 +143,7 @@ export type Database = {
         Update: {
           id?: string;
           name?: string;
+          supplier_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -182,6 +234,7 @@ export type Database = {
           cost: number;
           reorder_point: number;
           is_active: boolean;
+          label_direction: string;
           created_at: string;
           updated_at: string;
         };
@@ -199,6 +252,7 @@ export type Database = {
           cost?: number;
           reorder_point?: number;
           is_active?: boolean;
+          label_direction?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -216,6 +270,7 @@ export type Database = {
           cost?: number;
           reorder_point?: number;
           is_active?: boolean;
+          label_direction?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -268,6 +323,807 @@ export type Database = {
           },
         ];
       };
+      attendance_records: {
+        Row: {
+          id: string;
+          user_id: string;
+          work_date: string;
+          clock_in_at: string | null;
+          clock_out_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          work_date?: string;
+          clock_in_at?: string | null;
+          clock_out_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          work_date?: string;
+          clock_in_at?: string | null;
+          clock_out_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      attendance_correction_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          work_date: string;
+          requested_clock_in_at: string | null;
+          requested_clock_out_at: string | null;
+          reason: string;
+          status: string;
+          approval_document_id: string | null;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          work_date: string;
+          requested_clock_in_at?: string | null;
+          requested_clock_out_at?: string | null;
+          reason: string;
+          status?: string;
+          approval_document_id?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          work_date?: string;
+          requested_clock_in_at?: string | null;
+          requested_clock_out_at?: string | null;
+          reason?: string;
+          status?: string;
+          approval_document_id?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_correction_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attendance_correction_requests_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leave_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          start_date: string;
+          end_date: string;
+          days: number;
+          reason: string | null;
+          status: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          approval_document_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          start_date: string;
+          end_date: string;
+          days: number;
+          reason?: string | null;
+          status?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          approval_document_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          start_date?: string;
+          end_date?: string;
+          days?: number;
+          reason?: string | null;
+          status?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          approval_document_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leave_requests_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leave_balances: {
+        Row: {
+          id: string;
+          user_id: string;
+          year: number;
+          total_days: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          year: number;
+          total_days?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          year?: number;
+          total_days?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payroll_rate_settings: {
+        Row: {
+          id: string;
+          year: number;
+          min_wage_hourly: number;
+          national_pension_rate: number;
+          health_insurance_rate: number;
+          long_term_care_rate: number;
+          employment_insurance_rate: number;
+          source_note: string | null;
+          last_confirmed_at: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          year: number;
+          min_wage_hourly?: number;
+          national_pension_rate?: number;
+          health_insurance_rate?: number;
+          long_term_care_rate?: number;
+          employment_insurance_rate?: number;
+          source_note?: string | null;
+          last_confirmed_at?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          year?: number;
+          min_wage_hourly?: number;
+          national_pension_rate?: number;
+          health_insurance_rate?: number;
+          long_term_care_rate?: number;
+          employment_insurance_rate?: number;
+          source_note?: string | null;
+          last_confirmed_at?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payroll_rate_settings_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      employee_pay_settings: {
+        Row: {
+          id: string;
+          user_id: string;
+          monthly_base_pay: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          monthly_base_pay?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          monthly_base_pay?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "employee_pay_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      payslips: {
+        Row: {
+          id: string;
+          user_id: string;
+          pay_month: string;
+          base_pay: number;
+          gross_pay: number;
+          pension_deduction: number;
+          health_deduction: number;
+          long_term_care_deduction: number;
+          employment_deduction: number;
+          total_deduction: number;
+          net_pay: number;
+          rate_year: number;
+          status: string;
+          created_at: string;
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          pay_month: string;
+          base_pay?: number;
+          gross_pay?: number;
+          pension_deduction?: number;
+          health_deduction?: number;
+          long_term_care_deduction?: number;
+          employment_deduction?: number;
+          total_deduction?: number;
+          net_pay?: number;
+          rate_year: number;
+          status?: string;
+          created_at?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          pay_month?: string;
+          base_pay?: number;
+          gross_pay?: number;
+          pension_deduction?: number;
+          health_deduction?: number;
+          long_term_care_deduction?: number;
+          employment_deduction?: number;
+          total_deduction?: number;
+          net_pay?: number;
+          rate_year?: number;
+          status?: string;
+          created_at?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payslips_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      document_templates: {
+        Row: {
+          id: string;
+          category: string;
+          name: string;
+          body: string;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category?: string;
+          name: string;
+          body?: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          category?: string;
+          name?: string;
+          body?: string;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "document_templates_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      document_instances: {
+        Row: {
+          id: string;
+          template_id: string | null;
+          category: string;
+          title: string;
+          subject_user_id: string | null;
+          field_values: Json;
+          rendered_body: string;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+          issued_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          template_id?: string | null;
+          category?: string;
+          title: string;
+          subject_user_id?: string | null;
+          field_values?: Json;
+          rendered_body?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          issued_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          template_id?: string | null;
+          category?: string;
+          title?: string;
+          subject_user_id?: string | null;
+          field_values?: Json;
+          rendered_body?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          issued_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "document_instances_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "document_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "document_instances_subject_user_id_fkey";
+            columns: ["subject_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "document_instances_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tenants: {
+        Row: {
+          id: string;
+          name: string;
+          created_at: string;
+          disabled_features: string[];
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          created_at?: string;
+          disabled_features?: string[];
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          created_at?: string;
+          disabled_features?: string[];
+        };
+        Relationships: [];
+      };
+      tenant_members: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_members_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_documents: {
+        Row: {
+          id: string;
+          title: string;
+          content: string;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+          decided_at: string | null;
+          recalled_at: string | null;
+          draft_approver_ids: string[];
+          draft_reference_ids: string[];
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          content?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          recalled_at?: string | null;
+          draft_approver_ids?: string[];
+          draft_reference_ids?: string[];
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          content?: string;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          recalled_at?: string | null;
+          draft_approver_ids?: string[];
+          draft_reference_ids?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_documents_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_steps: {
+        Row: {
+          id: string;
+          document_id: string;
+          step_order: number | null;
+          approver_id: string;
+          status: string;
+          role: string;
+          comment: string | null;
+          decided_at: string | null;
+          decided_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          step_order?: number | null;
+          approver_id: string;
+          status?: string;
+          role?: string;
+          comment?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          document_id?: string;
+          step_order?: number | null;
+          approver_id?: string;
+          status?: string;
+          role?: string;
+          comment?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_steps_document_id_fkey";
+            columns: ["document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_approver_id_fkey";
+            columns: ["approver_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_delegations: {
+        Row: {
+          id: string;
+          delegator_id: string;
+          delegate_id: string;
+          start_date: string;
+          end_date: string;
+          reason: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          delegator_id: string;
+          delegate_id: string;
+          start_date: string;
+          end_date: string;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          delegator_id?: string;
+          delegate_id?: string;
+          start_date?: string;
+          end_date?: string;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_delegations_delegator_id_fkey";
+            columns: ["delegator_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_delegations_delegate_id_fkey";
+            columns: ["delegate_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_line_presets: {
+        Row: {
+          id: string;
+          name: string;
+          approver_ids: string[];
+          reference_ids: string[];
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          approver_ids?: string[];
+          reference_ids?: string[];
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          approver_ids?: string[];
+          reference_ids?: string[];
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_line_presets_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_matrix_rules: {
+        Row: {
+          id: string;
+          template_id: string;
+          preset_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          preset_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          preset_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_matrix_rules_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: true;
+            referencedRelation: "document_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_matrix_rules_preset_id_fkey";
+            columns: ["preset_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_line_presets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      bom_items: {
+        Row: {
+          id: string;
+          parent_product_id: string;
+          component_product_id: string;
+          quantity_per_unit: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          parent_product_id: string;
+          component_product_id: string;
+          quantity_per_unit: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          parent_product_id?: string;
+          component_product_id?: string;
+          quantity_per_unit?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bom_items_parent_product_id_fkey";
+            columns: ["parent_product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "bom_items_component_product_id_fkey";
+            columns: ["component_product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      work_orders: {
+        Row: {
+          id: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          order_date: string;
+          memo: string | null;
+          doc_no: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          warehouse_id: string;
+          quantity: number;
+          order_date: string;
+          memo?: string | null;
+          doc_no?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          warehouse_id?: string;
+          quantity?: number;
+          order_date?: string;
+          memo?: string | null;
+          doc_no?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_orders_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_orders_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       inventory: {
         Row: {
           id: string;
@@ -303,6 +1159,195 @@ export type Database = {
             columns: ["warehouse_id"];
             isOneToOne: false;
             referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      locations: {
+        Row: {
+          id: string;
+          warehouse_id: string;
+          rack: string;
+          tier: number;
+          position: number;
+          code: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          warehouse_id: string;
+          rack: string;
+          tier: number;
+          position: number;
+          code: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          warehouse_id?: string;
+          rack?: string;
+          tier?: number;
+          position?: number;
+          code?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "locations_warehouse_id_fkey";
+            columns: ["warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      inventory_locations: {
+        Row: {
+          id: string;
+          product_id: string;
+          location_id: string;
+          quantity: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          location_id: string;
+          quantity?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          location_id?: string;
+          quantity?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "inventory_locations_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "inventory_locations_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      location_stock_history: {
+        Row: {
+          id: string;
+          location_id: string | null;
+          location_code: string;
+          product_id: string | null;
+          product_sku: string | null;
+          product_name: string | null;
+          product_spec: string | null;
+          previous_quantity: number | null;
+          new_quantity: number | null;
+          actor: string | null;
+          created_at: string;
+          reason: "manual" | "in" | "out";
+        };
+        Insert: {
+          id?: string;
+          location_id?: string | null;
+          location_code: string;
+          product_id?: string | null;
+          product_sku?: string | null;
+          product_name?: string | null;
+          product_spec?: string | null;
+          previous_quantity?: number | null;
+          new_quantity?: number | null;
+          actor?: string | null;
+          created_at?: string;
+          reason?: "manual" | "in" | "out";
+        };
+        Update: {
+          id?: string;
+          location_id?: string | null;
+          location_code?: string;
+          product_id?: string | null;
+          product_sku?: string | null;
+          product_name?: string | null;
+          product_spec?: string | null;
+          previous_quantity?: number | null;
+          new_quantity?: number | null;
+          actor?: string | null;
+          created_at?: string;
+          reason?: "manual" | "in" | "out";
+        };
+        Relationships: [
+          {
+            foreignKeyName: "location_stock_history_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "location_stock_history_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "location_stock_history_actor_fkey";
+            columns: ["actor"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      order_item_location_stock: {
+        Row: {
+          id: string;
+          order_type: "sale" | "purchase";
+          order_id: string;
+          product_id: string;
+          location_id: string;
+          quantity_delta: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_type: "sale" | "purchase";
+          order_id: string;
+          product_id: string;
+          location_id: string;
+          quantity_delta: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_type?: "sale" | "purchase";
+          order_id?: string;
+          product_id?: string;
+          location_id?: string;
+          quantity_delta?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "order_item_location_stock_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "order_item_location_stock_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
             referencedColumns: ["id"];
           },
         ];
@@ -449,6 +1494,7 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          customer_code: string;
           business_number: string | null;
           representative_name: string | null;
           contact_name: string | null;
@@ -464,6 +1510,7 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
+          customer_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -479,6 +1526,7 @@ export type Database = {
         Update: {
           id?: string;
           name?: string;
+          customer_code?: string;
           business_number?: string | null;
           representative_name?: string | null;
           contact_name?: string | null;
@@ -743,6 +1791,13 @@ export type Database = {
           is_return: boolean;
           return_reason: string | null;
           is_carryover: boolean;
+          invoice_status: string;
+          invoice_number: string | null;
+          invoice_issued_at: string | null;
+          invoice_provider: string;
+          tax_type: "과세" | "면세" | "영세";
+          evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at: string | null;
         };
         Insert: {
           id?: string;
@@ -758,6 +1813,13 @@ export type Database = {
           is_return?: boolean;
           return_reason?: string | null;
           is_carryover?: boolean;
+          invoice_status?: string;
+          invoice_number?: string | null;
+          invoice_issued_at?: string | null;
+          invoice_provider?: string;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Update: {
           id?: string;
@@ -773,6 +1835,13 @@ export type Database = {
           is_return?: boolean;
           return_reason?: string | null;
           is_carryover?: boolean;
+          invoice_status?: string;
+          invoice_number?: string | null;
+          invoice_issued_at?: string | null;
+          invoice_provider?: string;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Relationships: [
           {
@@ -802,7 +1871,8 @@ export type Database = {
         Row: {
           id: string;
           sales_order_id: string;
-          product_id: string;
+          product_id: string | null;
+          custom_name: string | null;
           spec: string | null;
           quantity: number;
           unit_price: number;
@@ -813,7 +1883,8 @@ export type Database = {
         Insert: {
           id?: string;
           sales_order_id: string;
-          product_id: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity: number;
           unit_price?: number;
@@ -824,7 +1895,8 @@ export type Database = {
         Update: {
           id?: string;
           sales_order_id?: string;
-          product_id?: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity?: number;
           unit_price?: number;
@@ -862,6 +1934,9 @@ export type Database = {
           created_at: string;
           doc_no: number;
           is_carryover: boolean;
+          tax_type: "과세" | "면세" | "영세";
+          evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at: string | null;
         };
         Insert: {
           id?: string;
@@ -875,6 +1950,9 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_carryover?: boolean;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Update: {
           id?: string;
@@ -888,6 +1966,9 @@ export type Database = {
           created_at?: string;
           doc_no?: number;
           is_carryover?: boolean;
+          tax_type?: "과세" | "면세" | "영세";
+          evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
         };
         Relationships: [
           {
@@ -917,7 +1998,8 @@ export type Database = {
         Row: {
           id: string;
           purchase_order_id: string;
-          product_id: string;
+          product_id: string | null;
+          custom_name: string | null;
           spec: string | null;
           quantity: number;
           unit_cost: number;
@@ -928,7 +2010,8 @@ export type Database = {
         Insert: {
           id?: string;
           purchase_order_id: string;
-          product_id: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity: number;
           unit_cost?: number;
@@ -939,7 +2022,8 @@ export type Database = {
         Update: {
           id?: string;
           purchase_order_id?: string;
-          product_id?: string;
+          product_id?: string | null;
+          custom_name?: string | null;
           spec?: string | null;
           quantity?: number;
           unit_cost?: number;
@@ -1150,6 +2234,10 @@ export type Database = {
           requested_by: string | null;
           created_at: string;
           month_key: string | null;
+          status: string;
+          approval_document_id: string | null;
+          decided_at: string | null;
+          decided_by: string | null;
         };
         Insert: {
           id?: string;
@@ -1163,6 +2251,10 @@ export type Database = {
           requested_by?: string | null;
           created_at?: string;
           month_key?: string | null;
+          status?: string;
+          approval_document_id?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
         };
         Update: {
           id?: string;
@@ -1176,6 +2268,10 @@ export type Database = {
           requested_by?: string | null;
           created_at?: string;
           month_key?: string | null;
+          status?: string;
+          approval_document_id?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
         };
         Relationships: [
           {
@@ -1183,6 +2279,13 @@ export type Database = {
             columns: ["requested_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "payment_requests_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
             referencedColumns: ["id"];
           },
         ];
@@ -1511,12 +2614,139 @@ export type Database = {
           },
         ];
       };
+      ui_grid_column_widths: {
+        Row: {
+          id: string;
+          grid_key: string;
+          widths: Json;
+          is_demo: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          grid_key: string;
+          widths: Json;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          grid_key?: string;
+          widths?: Json;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       get_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;
+      };
+      set_tenant_feature_enabled: {
+        Args: { p_feature_key: string; p_enabled: boolean };
+        Returns: void;
+      };
+      is_approval_step_approver: {
+        Args: { p_document_id: string };
+        Returns: boolean;
+      };
+      is_approval_document_owner: {
+        Args: { p_document_id: string };
+        Returns: boolean;
+      };
+      is_active_delegate_for: {
+        Args: { p_delegator_id: string };
+        Returns: boolean;
+      };
+      submit_approval_document: {
+        Args: { p_title: string; p_content: string; p_approver_ids: string[]; p_reference_ids?: string[] };
+        Returns: string;
+      };
+      decide_approval_step: {
+        Args: { p_step_id: string; p_decision: string; p_comment?: string | null };
+        Returns: void;
+      };
+      save_approval_draft: {
+        Args: {
+          p_id: string | null;
+          p_title: string;
+          p_content: string;
+          p_approver_ids?: string[];
+          p_reference_ids?: string[];
+        };
+        Returns: string;
+      };
+      submit_approval_draft: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      recall_approval_document: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      submit_leave_request: {
+        Args: {
+          p_start_date: string;
+          p_end_date: string;
+          p_days: number;
+          p_reason: string | null;
+          p_approver_ids: string[];
+          p_reference_ids?: string[];
+        };
+        Returns: string;
+      };
+      submit_payment_request: {
+        Args: { p_id: string; p_approver_ids: string[]; p_reference_ids?: string[] };
+        Returns: string;
+      };
+      recall_payment_request: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      submit_attendance_correction: {
+        Args: {
+          p_work_date: string;
+          p_requested_clock_in_at: string | null;
+          p_requested_clock_out_at: string | null;
+          p_reason: string;
+          p_approver_ids: string[];
+          p_reference_ids?: string[];
+        };
+        Returns: string;
+      };
+      update_own_signature: {
+        Args: { p_url: string | null };
+        Returns: void;
+      };
+      get_ledger_opening_balance: {
+        Args: {
+          p_product_id: string;
+          p_warehouse_id?: string | null;
+          p_before?: string;
+        };
+        Returns: number;
+      };
+      create_work_order: {
+        Args: {
+          p_product_id: string;
+          p_warehouse_id: string;
+          p_quantity: number;
+          p_order_date: string;
+          p_memo?: string | null;
+          p_doc_no?: number | null;
+        };
+        Returns: string;
+      };
+      delete_work_order: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      apply_location_stock_delta: {
+        Args: { p_product_id: string; p_location_id: string; p_delta: number };
+        Returns: void;
       };
       create_sale_with_items: {
         Args: {
@@ -1650,7 +2880,19 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      get_customer_balances: {
+        Args: Record<string, never>;
+        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
+      };
+      get_supplier_balances: {
+        Args: Record<string, never>;
+        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
+      };
       is_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      is_demo_actor: {
         Args: Record<string, never>;
         Returns: boolean;
       };

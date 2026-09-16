@@ -30,7 +30,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
     <form
       action={formAction}
       className="erp-detail-body grid grid-cols-1 gap-4 md:grid-cols-2"
-      style={{ border: "1px solid var(--erp-border)", borderRadius: 2 }}
+      style={{ border: "1px solid var(--erp-border)", borderRadius: 0 }}
     >
       <div>
         <label htmlFor="cp-name" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">상호명</label>

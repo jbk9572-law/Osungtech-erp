@@ -2,19 +2,23 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import {
   applyDuePriceSchedules,
   applyDuePurchasePriceSchedules,
 } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
+import { deriveDualSplitWidths } from "@/lib/item-grid-columns";
+import type { LocationOption } from "@/lib/location-stock-sync";
 
 export default async function NewPurchasePage({
   searchParams,
 }: {
-  searchParams: Promise<{ supplier_id?: string; reorder_items?: string }>;
+  searchParams: Promise<{ supplier_id?: string; reorder_items?: string; saved?: string }>;
 }) {
-  const { supplier_id: prefillSupplierId, reorder_items: reorderItemsRaw } = await searchParams;
+  const { supplier_id: prefillSupplierId, reorder_items: reorderItemsRaw, saved } = await searchParams;
   // 재고 부족 자동 발주 제안(/inventory/reorder-suggestions)의 "매입
   // 등록으로 보내기"에서만 넘어온다 — 잘못된 값이 와도 등록 자체는 막지
   // 않고 그냥 빈 폼으로 시작한다.
@@ -43,7 +47,7 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }] =
+  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualSplitColWidths] =
     await Promise.all([
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
@@ -88,15 +92,41 @@ export default async function NewPurchasePage({
         )
         .order("created_at", { ascending: false })
         .limit(1000),
+      fetchAllRows<{
+        product_id: string;
+        location_id: string;
+        quantity: number;
+        locations: { code: string; tier: number; position: number } | null;
+      }>((from, to) =>
+        supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
+      ),
+      getGridColumnWidths("erp-item-grid-columns"),
+      getGridColumnWidths("erp-purchase-item-grid-columns-dual-split"),
     ]);
 
-  const priceHistory = (history ?? []).map((row) => ({
-    supplierId: row.purchase_orders.supplier_id,
-    productId: row.product_id,
-    unitCost: Number(row.unit_cost),
-    purchaseDate: row.purchase_orders.purchase_date,
-    lotNumber: row.lot_number,
-  }));
+  const productLocations: Record<string, LocationOption[]> = {};
+  for (const row of locationStockRows) {
+    if (!row.locations) continue;
+    const list = productLocations[row.product_id] ?? [];
+    list.push({
+      locationId: row.location_id,
+      code: row.locations.code,
+      tier: row.locations.tier,
+      position: row.locations.position,
+      quantity: row.quantity,
+    });
+    productLocations[row.product_id] = list;
+  }
+
+  const priceHistory = (history ?? [])
+    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
+    .map((row) => ({
+      supplierId: row.purchase_orders.supplier_id,
+      productId: row.product_id,
+      unitCost: Number(row.unit_cost),
+      purchaseDate: row.purchase_orders.purchase_date,
+      lotNumber: row.lot_number,
+    }));
 
   return (
     <div>
@@ -106,23 +136,35 @@ export default async function NewPurchasePage({
           새 매입(입고) 등록
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link
-            href="/paper-calc/manual?for=purchase"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="erp-btn"
-          >
-            재단 배치 시뮬레이터
-          </Link>
-          <Link href="/purchases" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/purchases" />
         </div>
       </div>
+      {saved && (
+        <p
+          className="mb-3 rounded p-2 text-xs"
+          style={{
+            background: "var(--erp-success-bg)",
+            color: "var(--erp-success)",
+            border: "1px solid var(--erp-success-border)",
+          }}
+        >
+          방금 등록한 거래가 저장되었습니다.{" "}
+          <Link href={`/purchases/${saved}`} className="underline">
+            방금 건 보기
+          </Link>{" "}
+          — 이어서 다음 건을 등록하세요.
+        </p>
+      )}
       <NewPurchaseTypeSwitcher
+        // "저장 후 계속 등록"은 모달 안에서 같은 경로로(쿼리만 바뀌어)
+        // 소프트 이동하므로, key를 saved 값에 묶어 저장할 때마다 폼을
+        // 강제로 새로 마운트한다 — 안 그러면 방금 입력했던 품목 줄이
+        // 그대로 남아있는다.
+        key={saved ?? "new"}
         suppliers={suppliers ?? []}
         products={products ?? []}
         warehouseId={warehouse?.id ?? ""}
+        productLocations={productLocations}
         customers={customers ?? []}
         prices={prices ?? []}
         supplierPrices={supplierPrices ?? []}
@@ -130,6 +172,8 @@ export default async function NewPurchasePage({
         today={todayKstStr()}
         prefillSupplierId={prefillSupplierId}
         prefillItems={prefillItems}
+        initialBaseColWidths={baseColWidths}
+        initialDualSplitColWidths={dualSplitColWidths ?? deriveDualSplitWidths(baseColWidths)}
       />
     </div>
   );

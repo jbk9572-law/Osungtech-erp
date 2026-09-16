@@ -1,14 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
-import {
-  NotificationBell,
-  type AnnouncementItem,
-  type DueTodoItem,
-  type LowStockItem,
-} from "@/components/erp/notification-bell";
 import { MENU_ITEMS } from "@/lib/erp-menu";
 import { findByLongestPrefix } from "@/lib/route-match";
 
@@ -24,18 +19,17 @@ export function TitleBar({
   logoUrl,
   companyName,
   email,
-  unreadAnnouncements,
-  dueTodos,
-  lowStock,
+  notificationBell,
   isMobile,
   onToggleMenu,
 }: {
   logoUrl?: string | null;
   companyName?: string | null;
   email: string | null;
-  unreadAnnouncements: AnnouncementItem[];
-  dueTodos: DueTodoItem[];
-  lowStock: LowStockItem[];
+  // 알림 종은 서버 컴포넌트(notification-bell-panel.tsx)가 조회해서
+  // 미리 렌더링해 넘겨준다 — usage-widget과 같은 이유로, 이 조회가
+  // 느려지거나 실패해도 타이틀바 나머지는 영향받지 않게 분리했다.
+  notificationBell: ReactNode;
   isMobile: boolean;
   onToggleMenu: () => void;
 }) {
@@ -70,7 +64,7 @@ export function TitleBar({
       </div>
       <div className="erp-titlebar-right">
         <span>{today}</span>
-        <NotificationBell announcements={unreadAnnouncements} todos={dueTodos} lowStock={lowStock} />
+        {notificationBell}
         <span>{email}</span>
         <Link href="/settings/backup" className="erp-titlebar-link">
           백업/복원

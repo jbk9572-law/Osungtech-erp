@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
 import { PriceScheduleForm } from "@/components/price-schedule-form";
@@ -16,9 +15,14 @@ import {
   addCustomerPayment,
   deleteCustomerPayment,
   updateCustomerProductPriceNotes,
+  schedulePriceChange,
+  updatePriceSchedule,
+  cancelPriceSchedule,
 } from "@/app/(dashboard)/customers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
+import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { todayKstStr } from "@/lib/kst-date";
@@ -80,9 +84,7 @@ export default async function CustomerDetailPage({
             id={customer.id}
             confirmMessage="이 출고처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
           />
-          <Link href="/customers" className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href="/customers" />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
@@ -208,9 +210,7 @@ export default async function CustomerDetailPage({
           <span className="erp-detail-tab active">판매단가 등록/수정</span>
         </div>
         <div className="erp-detail-body">
-          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-            같은 상품에 새 단가를 등록하면 기존 단가는 최신 단가로 자동 갱신됩니다.
-          </p>
+          <PageGuide>같은 상품에 새 단가를 등록하면 기존 단가는 최신 단가로 자동 갱신됩니다.</PageGuide>
           <CustomerPriceForm customerId={customer.id} products={products ?? []} />
         </div>
       </div>
@@ -223,7 +223,13 @@ export default async function CustomerDetailPage({
           <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
             지정한 날짜가 되면 자동으로 위 판매단가에 반영됩니다(그 전까지는 기존 단가 그대로 적용).
           </p>
-          <PriceScheduleForm customerId={customer.id} products={products ?? []} />
+          <PriceScheduleForm
+            action={schedulePriceChange}
+            partyIdField="customer_id"
+            partyId={customer.id}
+            unitFieldName="new_unit_price"
+            products={products ?? []}
+          />
 
           {schedules && schedules.length > 0 && (
             <div className="mt-3 flex flex-col gap-1.5">
@@ -231,12 +237,16 @@ export default async function CustomerDetailPage({
                 <PriceScheduleRow
                   key={s.id}
                   id={s.id}
-                  customerId={customer.id}
+                  partyIdField="customer_id"
+                  partyId={customer.id}
+                  unitFieldName="new_unit_price"
                   productId={s.product_id}
                   productLabel={`${s.products?.sku} · ${s.products?.name}${s.products?.spec ? ` (${s.products.spec})` : ""}`}
                   currentUnitPrice={currentPriceByProduct[s.product_id] ?? null}
                   newUnitPrice={Number(s.new_unit_price)}
                   effectiveDate={s.effective_date}
+                  updateAction={updatePriceSchedule}
+                  cancelAction={cancelPriceSchedule}
                 />
               ))}
             </div>

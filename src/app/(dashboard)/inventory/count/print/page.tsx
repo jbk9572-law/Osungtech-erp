@@ -55,7 +55,7 @@ export default async function InventoryCountPrintPage({
   return (
     <div className="mx-auto print-page-margin" style={{ width: 780, maxWidth: "100%" }}>
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <Link href="/inventory/count" className="erp-btn erp-btn-danger">
+        <Link href="/inventory/count" className="erp-btn erp-btn-dark">
           닫기
         </Link>
         <PrintButton />

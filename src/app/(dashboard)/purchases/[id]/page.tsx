@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deletePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { CloseButton } from "@/components/erp/close-button";
 import { formatPackageQty } from "@/lib/package-qty";
 import {
   formatPaperCalcSizeLines,
@@ -131,9 +132,7 @@ export default async function PurchaseDetailPage({
               confirmMessage="이 매입 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
             />
           )}
-          <Link href={closeHref} className="erp-btn erp-btn-danger">
-            ESC 닫기
-          </Link>
+          <CloseButton href={closeHref} />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
@@ -273,19 +272,29 @@ export default async function PurchaseDetailPage({
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.products?.sku}
                   </td>
-                  <td>{row.products?.name}</td>
+                  <td>{row.products?.name ?? row.custom_name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.spec || row.products?.spec || "-"}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.lot_number || "-"}
+                    {row.lot_number ? (
+                      <Link
+                        href={`/inventory/lot-lookup?q=${encodeURIComponent(row.lot_number)}`}
+                        className="erp-badge erp-badge-muted"
+                        style={{ textDecoration: "none" }}
+                      >
+                        {row.lot_number}
+                      </Link>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.products?.unit}
                   </td>
                   <td
                     className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    style={{ color: row.products?.base_package_qty ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                   >
                     {formatPackageQty(
                       row.products?.base_package_qty,

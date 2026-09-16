@@ -5,7 +5,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
@@ -195,7 +195,9 @@ export function ProductGridTable({
                   </td>
                 ) : (
                   <>
-                    <td className="num">{formatQuantityWithBoxes(row.quantity, row.basePackageQty)}</td>
+                    <td className="num">
+                      <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} />
+                    </td>
                     <td>
                       <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
                     </td>
