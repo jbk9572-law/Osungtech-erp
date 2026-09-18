@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import type { Workbook } from "exceljs";
+import type { CellValue, Workbook } from "exceljs";
 import { nowInKst } from "@/lib/kst-date";
 
 export function buildXlsxResponse(rows: Record<string, unknown>[], filename: string): Response {
@@ -24,6 +24,17 @@ function respondWithBuffer(buffer: Buffer, filename: string): Response {
       "Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`,
     },
   });
+}
+
+// 명세표/장부 템플릿(sales-export-templates.ts, purchase-export-templates.ts)의
+// 합계 행 SUM 수식. 그 달 품목이 0건이면 데이터 행 자체가 없어서
+// firstRow > lastRow가 되는데, 그 상태로 `SUM(H12:H11)`처럼 뒤집힌 범위를
+// 그대로 써넣으면(엑셀 자체는 이런 역방향 범위도 정상 범위로 취급해서
+// 열리긴 하지만) 의도한 "품목 0건짜리 합계는 0"이라는 의미가 수식에
+// 드러나지 않는다 — 데이터가 없을 땐 그냥 값 0을 채운다.
+export function sumFormulaOrZero(col: string, firstRow: number, lastRow: number): CellValue {
+  if (lastRow < firstRow) return 0;
+  return { formula: `SUM(${col}${firstRow}:${col}${lastRow})` };
 }
 
 export function pad(n: number): string {

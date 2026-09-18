@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { sumFormulaOrZero } from "@/lib/xlsx-response";
 
 // 매입처마다 실제로 쓰는 엑셀 장부 양식이 있어서, 그 업체로 다운로드할 때는
 // 우리 시스템의 일반 컬럼 나열 대신 이 양식대로(글꼴 굵기·테두리·채우기색·
@@ -84,7 +85,7 @@ export async function buildStandardLedgerWorkbook(
   });
 
   const totalCell = sheet.getCell("B5");
-  totalCell.value = { formula: `SUM(H10:H${lastDataRow})` };
+  totalCell.value = sumFormulaOrZero("H", 10, lastDataRow);
   totalCell.numFmt = WON_FORMAT;
   totalCell.font = { bold: true };
   totalCell.alignment = { horizontal: "center" };
@@ -106,12 +107,12 @@ export async function buildStandardLedgerWorkbook(
   summaryLabelCell.border = boxBorder("medium");
 
   const boxTotalCell = sheet.getCell("E8");
-  boxTotalCell.value = { formula: `SUM(E10:E${lastDataRow})` };
+  boxTotalCell.value = sumFormulaOrZero("E", 10, lastDataRow);
   boxTotalCell.numFmt = NUM_FORMAT;
   boxTotalCell.alignment = { horizontal: "center" };
 
   const qtyTotalCell = sheet.getCell("F8");
-  qtyTotalCell.value = { formula: `SUM(F10:F${lastDataRow})` };
+  qtyTotalCell.value = sumFormulaOrZero("F", 10, lastDataRow);
   qtyTotalCell.numFmt = NUM_FORMAT;
   qtyTotalCell.alignment = { horizontal: "center" };
 
@@ -229,7 +230,7 @@ export async function buildLeadersSpecialWorkbook(
   });
 
   const totalCell = sheet.getCell("B3");
-  totalCell.value = { formula: `SUM(F8:F${lastDataRow})` };
+  totalCell.value = sumFormulaOrZero("F", 8, lastDataRow);
   totalCell.numFmt = WON_FORMAT;
   totalCell.font = { bold: true };
   totalCell.alignment = { horizontal: "center" };
