@@ -1050,14 +1050,18 @@
   background: var(--erp-info-bg);
 }
 
+/* "F5 조회"(erp-btn-primary) 같은 아웃라인 스타일로 통일 — 꽉 채운
+   빨간 버튼이 화면마다 하나씩 떠서 너무 튄다는 지적으로, 배경은 비우고
+   글자/테두리만 빨간색으로, 호버 시엔 다른 아웃라인 버튼들과 같은
+   방식(연한 톤 배경)으로 바꿨다. */
 .erp-btn-danger {
-  background: var(--erp-danger);
+  background: var(--erp-panel);
   border-color: var(--erp-danger);
-  color: #fff;
+  color: var(--erp-danger);
 }
 
 .erp-btn-danger:hover {
-  background: #c22636;
+  background: var(--erp-danger-bg);
 }
 
 /* ESC 닫기/취소처럼 "저장 없이 이 화면을 벗어난다"는 비파괴적 동작 —
