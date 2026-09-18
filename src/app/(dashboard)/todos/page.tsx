@@ -129,9 +129,6 @@ export default async function TodosPage({
         <Link href="/todos/new" className="erp-btn erp-btn-primary">
           F2 글쓰기
         </Link>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
       </div>
 
       <div className="erp-kpi-row">

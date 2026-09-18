@@ -46,9 +46,6 @@ export default async function ProductionPage({
         <Link href="/production/new" className="erp-btn erp-btn-primary">
           F2 생산지시 등록
         </Link>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
       </div>
 
       <PageGuide>

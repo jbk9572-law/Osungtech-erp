@@ -28,9 +28,6 @@ export default async function DocumentsPage() {
           <Link href="/hr/documents/templates" className="erp-btn">
             양식 관리
           </Link>
-          <Link href="/dashboard" className="erp-btn erp-btn-dark">
-            ✕
-          </Link>
         </div>
       </div>
 

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PaperCalcClient } from "@/components/paper-calc/paper-calc-client";
 import { createClient } from "@/lib/supabase/server";
@@ -70,12 +69,7 @@ export default async function PaperCalcPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 모조지 계산</h1>
-        <Link href={closeHref} className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 모조지 계산</h1>
       <div style={{ marginTop: 12 }}>
         <PaperCalcClient
           salesOrderId={salesOrderId ?? null}

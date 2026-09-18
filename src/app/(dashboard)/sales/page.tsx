@@ -416,9 +416,6 @@ export default async function SalesPage({
         >
           📥 엑셀 다운로드
         </a>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
       </div>
 
       <SalesGridTable

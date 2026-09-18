@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { CreateUserForm } from "@/components/create-user-form";
@@ -33,14 +32,9 @@ export default async function UsersSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          시스템관리 &gt; 권한관리
-        </h1>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        시스템관리 &gt; 권한관리
+      </h1>
       <PageGuide>
         새 계정을 만들고 역할(권한)을 지정합니다. 아이디로 로그인하며,
         비밀번호는 최초 생성 시 값 그대로 유지되니 본인이 직접 로그인 후

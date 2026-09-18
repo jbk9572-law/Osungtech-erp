@@ -32,7 +32,7 @@ const ALLOWLIST = new Set([
   "src/app/(dashboard)/suppliers/[id]/page.tsx:88",
   "src/app/(dashboard)/products/[id]/page.tsx:60",
   "src/app/(dashboard)/inventory/[productId]/page.tsx:145",
-  "src/app/(dashboard)/settings/company/page.tsx:38",
+  "src/app/(dashboard)/settings/company/page.tsx:32",
   "src/app/(dashboard)/settings/password/page.tsx:15",
   // .erp-new-count-cta 자체가 이미 점선 테두리 있는 카드형 콜아웃이라,
   // 안에서 또 PageGuide로 박스 안의 박스를 만들면 오히려 더 지저분해짐.

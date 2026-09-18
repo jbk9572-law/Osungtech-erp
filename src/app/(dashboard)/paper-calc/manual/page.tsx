@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ManualLayoutClient } from "@/components/paper-calc/manual-layout-client";
 
@@ -12,12 +11,7 @@ export default async function PaperCalcManualPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/paper-calc" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 재단 배치 시뮬레이터</h1>
-        <Link href="/paper-calc" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 재단 배치 시뮬레이터</h1>
       <div style={{ marginTop: 12 }}>
         <ManualLayoutClient pendingFor={pendingFor === "purchase" ? "purchase" : "sales"} />
       </div>

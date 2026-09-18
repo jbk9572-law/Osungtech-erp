@@ -92,9 +92,6 @@ export default async function AnnouncementsPage({
         <Link href="/announcements/new" className="erp-btn erp-btn-primary">
           F2 글쓰기
         </Link>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
       </div>
 
       <div

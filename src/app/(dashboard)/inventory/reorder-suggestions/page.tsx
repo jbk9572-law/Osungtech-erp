@@ -88,14 +88,9 @@ export default async function ReorderSuggestionsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          재고관리 &gt; 재고 부족 자동 발주 제안
-        </h1>
-        <Link href="/inventory" className="erp-btn erp-btn-dark">
-          ✕
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        재고관리 &gt; 재고 부족 자동 발주 제안
+      </h1>
       <PageGuide>
         안전재고 이하로 떨어진 품목을 매입처별로 묶어 보여줍니다. 제안수량은 안전재고의 2배를
         목표로 부족분을 채우는 값이며, 실제 발주 수량은 매입 등록 화면에서 얼마든지 고칠 수
