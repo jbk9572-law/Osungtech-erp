@@ -38,7 +38,7 @@ export default async function UsersSettingsPage() {
           시스템관리 &gt; 권한관리
         </h1>
         <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
       <PageGuide>

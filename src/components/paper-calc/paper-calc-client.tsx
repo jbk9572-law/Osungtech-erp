@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
@@ -18,6 +17,8 @@ import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 import { GridBadge } from "@/components/grid/badge";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { startRouteProgress } from "@/lib/route-progress";
+import { printInPlace } from "@/lib/print-in-place";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import {
   savePaperCalculation,
   deletePaperCalculation,
@@ -221,15 +222,18 @@ export function PaperCalcClient({
 
   function openPrintView() {
     if (!result) return;
-    // localStorage를 쓴다: sessionStorage는 noopener로 연 새 창에는 복제되지
-    // 않아서(오프너와의 연결이 끊기면 새 세션으로 취급됨) 인쇄 페이지가 빈
-    // 화면으로 뜨는 문제가 있었다. localStorage는 오프너 관계와 무관하게
-    // 같은 출처(origin)에서 항상 공유된다.
+    // 예전엔 새 창(window.open)으로 열었는데, 이 화면 자체가 이제 모달
+    // 안에 중첩 팝업으로도 뜨는 경우가 있어(모조지 계산 팝업, 재단 배치
+    // 시뮬레이터 안 등) 인쇄할 때마다 눈에 보이는 새 창이 하나 더 뜨는
+    // 게 다른 인쇄 화면들(printInPlace로 통일된 명세표/인사문서/재고실사)과
+    // 안 맞았다. localStorage에 담아두는 방식은 그대로 두고(같은 출처면
+    // iframe 안에서도 그대로 읽힌다), 숨겨진 iframe에 로드해 인쇄
+    // 대화상자만 뜨게 한다.
     localStorage.setItem(
       "paper-calc-print-input",
       JSON.stringify({ paperW, paperH, items: orderItems }),
     );
-    window.open("/paper-calc/print", "_blank", "noopener,noreferrer");
+    printInPlace("/paper-calc/print");
   }
 
   // 아직 주문이 없는 상태(신규 판매/매입 등록 전)에서는 order id가 없어서
@@ -882,13 +886,13 @@ function SavedCalcRow({
       </td>
       <td>
         <div className="flex items-center gap-1">
-          <Link
+          <PaperCalcNavLink
             href={`/paper-calc/view/${calc.id}`}
             className="erp-btn"
             style={{ minWidth: 0, height: 26, padding: "0 8px" }}
           >
             도면 보기
-          </Link>
+          </PaperCalcNavLink>
           <form
             action={action}
             onSubmit={(e) => {

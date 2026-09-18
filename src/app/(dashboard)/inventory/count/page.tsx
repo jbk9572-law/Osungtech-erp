@@ -242,7 +242,7 @@ export default async function InventoryCountPage({
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고 실사</h1>
         <Link href="/inventory" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
       <PageGuide>

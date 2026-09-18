@@ -85,7 +85,7 @@ export default async function PaymentRequestsPage() {
           엑셀 다운로드
         </button>
         <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
 

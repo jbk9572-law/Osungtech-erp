@@ -93,7 +93,7 @@ export default async function ReorderSuggestionsPage() {
           재고관리 &gt; 재고 부족 자동 발주 제안
         </h1>
         <Link href="/inventory" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
       <PageGuide>

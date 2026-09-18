@@ -15,7 +15,7 @@ export default async function PaperCalcManualPage({
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 재단 배치 시뮬레이터</h1>
         <Link href="/paper-calc" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
       <div style={{ marginTop: 12 }}>

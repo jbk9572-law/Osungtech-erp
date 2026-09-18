@@ -15,24 +15,26 @@ import { useModalClose } from "@/lib/modal-context";
 export function PaperCalcNavLink({
   href,
   className,
+  style,
   children,
 }: {
   href: string;
   className?: string;
+  style?: React.CSSProperties;
   children: React.ReactNode;
 }) {
   const insideModal = useModalClose() !== null;
 
   if (insideModal) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
         {children}
       </a>
     );
   }
 
   return (
-    <Link href={href} className={className}>
+    <Link href={href} className={className} style={style}>
       {children}
     </Link>
   );

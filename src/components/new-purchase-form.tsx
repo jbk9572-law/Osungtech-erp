@@ -826,7 +826,16 @@ export function NewPurchaseForm({
       ref={formRef}
       action={formAction}
       className="space-y-6"
-      onKeyDown={preventEnterSubmit}
+      onKeyDown={(e) => {
+        preventEnterSubmit(e);
+        // new-sale-form.tsx와 동일 — ESC를 F7과 같은 "저장 후 닫기"로
+        // 쓴다. stopPropagation으로 모달 셸/페이지의 "그냥 닫기" ESC
+        // 핸들러와 경합하지 않게 한다(자세한 설명은 new-sale-form.tsx 참고).
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          submitRef.current?.click();
+        }
+      }}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={(e) => {

@@ -5,6 +5,7 @@ import { DeleteButton } from "@/components/delete-button";
 import { deletePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { formatPackageQty } from "@/lib/package-qty";
 import {
   formatPaperCalcSizeLines,
@@ -116,14 +117,14 @@ export default async function PurchaseDetailPage({
             </Link>
           )}
           {allowManage && (
-            <Link
+            <PaperCalcNavLink
               href={`/paper-calc?purchaseOrderId=${id}`}
               className="erp-btn"
             >
               {paperCalcs && paperCalcs.length > 0
                 ? "모조지 계산 이력"
                 : "모조지 계산"}
-            </Link>
+            </PaperCalcNavLink>
           )}
           {allowManage && (
             <DeleteButton

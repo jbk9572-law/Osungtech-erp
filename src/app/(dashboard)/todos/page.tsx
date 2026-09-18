@@ -130,7 +130,7 @@ export default async function TodosPage({
           F2 글쓰기
         </Link>
         <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
 

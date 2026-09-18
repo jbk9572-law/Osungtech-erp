@@ -47,7 +47,7 @@ export default async function ProductionPage({
           F2 생산지시 등록
         </Link>
         <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
 

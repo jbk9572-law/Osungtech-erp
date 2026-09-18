@@ -88,7 +88,7 @@ export default async function DepartmentsPage() {
               F2 새 부서
             </Link>
             <Link href="/dashboard" className="erp-btn erp-btn-dark">
-              ESC 닫기
+              ✕
             </Link>
           </>
         }

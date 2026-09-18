@@ -32,7 +32,7 @@ export default async function CompanySettingsPage() {
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 회사정보</h1>
         <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">거래명세표의 공급자 정보로 사용됩니다.</p>

@@ -102,7 +102,7 @@ export default async function AttendancePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="인사관리 > 근태" actions={<CloseButton href="/dashboard">ESC 닫기</CloseButton>} />
+      <ListPageHeader title="인사관리 > 근태" actions={<CloseButton href="/dashboard">✕</CloseButton>} />
 
       <PageGuide>
         연차 총일수는 관리자가 &quot;연차관리&quot; 화면에서 직접 설정합니다(노동법

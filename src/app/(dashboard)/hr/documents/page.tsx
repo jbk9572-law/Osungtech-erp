@@ -29,7 +29,7 @@ export default async function DocumentsPage() {
             양식 관리
           </Link>
           <Link href="/dashboard" className="erp-btn erp-btn-dark">
-            ESC 닫기
+            ✕
           </Link>
         </div>
       </div>

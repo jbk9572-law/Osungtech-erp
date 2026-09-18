@@ -16,7 +16,7 @@ export default async function SignaturePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="환경설정 > 전자서명 등록" actions={<CloseButton href="/dashboard">ESC 닫기</CloseButton>} />
+      <ListPageHeader title="환경설정 > 전자서명 등록" actions={<CloseButton href="/dashboard">✕</CloseButton>} />
 
       <PageGuide>
         본인 서명 이미지를 등록합니다. 배경이 투명한 PNG 이미지를 권장합니다.

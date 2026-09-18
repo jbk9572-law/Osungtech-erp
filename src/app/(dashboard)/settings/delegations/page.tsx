@@ -38,7 +38,7 @@ export default async function ApprovalDelegationsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="환경설정 > 전결권 관리" actions={<CloseButton href="/dashboard">ESC 닫기</CloseButton>} />
+      <ListPageHeader title="환경설정 > 전결권 관리" actions={<CloseButton href="/dashboard">✕</CloseButton>} />
 
       <PageGuide>
         휴가·출장 등으로 자리를 비우는 기간 동안, 지정한 대리 결재자가 그

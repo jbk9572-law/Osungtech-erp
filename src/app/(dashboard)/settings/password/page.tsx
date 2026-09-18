@@ -9,7 +9,7 @@ export default function ChangePasswordPage() {
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 비밀번호 변경</h1>
         <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
+          ✕
         </Link>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">본인 계정의 비밀번호를 변경합니다.</p>
