@@ -34,7 +34,7 @@ export default async function DocumentDetailPage({
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">{doc.title}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <PrintInPlaceButton href={`/hr/documents/${id}/print`} className="erp-btn">
+          <PrintInPlaceButton href={`/hr/documents/${id}/print`}>
             F9 인쇄
           </PrintInPlaceButton>
           {canManage && (

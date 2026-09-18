@@ -209,7 +209,7 @@ export function InventoryCountForm({
           </label>
           <PrintInPlaceButton
             href={`/inventory/count/print${onlyNonZero ? "?onlyNonZero=1" : ""}`}
-            className="erp-btn"
+            className="erp-btn erp-btn-primary"
             style={{ minWidth: 0, height: 26, padding: "0 10px" }}
           >
             🖨 인쇄용 목록

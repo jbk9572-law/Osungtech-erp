@@ -117,10 +117,7 @@ export default async function PaymentRequestDetailPage({
             F4 수정
           </Link>
         )}
-        <PrintInPlaceButton
-          href={`/reports/payment-requests/${row.id}/print`}
-          className="erp-btn"
-        >
+        <PrintInPlaceButton href={`/reports/payment-requests/${row.id}/print`}>
           F9 인쇄
         </PrintInPlaceButton>
         {allowManage && row.status === "pending" && (
