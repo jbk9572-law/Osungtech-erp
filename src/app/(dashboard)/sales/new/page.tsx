@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleTypeSwitcher } from "@/components/new-sale-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -99,14 +98,9 @@ export default async function NewSalePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/sales" } }} />
-      <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          새 판매 거래 등록
-        </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <CloseButton href="/sales" />
-        </div>
-      </div>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        새 판매 거래 등록
+      </h1>
       {saved && (
         <p
           className="mb-3 rounded p-2 text-xs"

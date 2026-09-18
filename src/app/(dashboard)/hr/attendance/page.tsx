@@ -3,7 +3,6 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
-import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClockInOutPanel } from "@/components/clock-in-out-panel";
@@ -102,7 +101,7 @@ export default async function AttendancePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="인사관리 > 근태" actions={<CloseButton href="/dashboard">✕</CloseButton>} />
+      <ListPageHeader title="인사관리 > 근태" />
 
       <PageGuide>
         연차 총일수는 관리자가 &quot;연차관리&quot; 화면에서 직접 설정합니다(노동법

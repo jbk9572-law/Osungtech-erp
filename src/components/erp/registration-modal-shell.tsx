@@ -115,6 +115,14 @@ export function RegistrationModalShell({
         style={{ minHeight: 0 }}
         onClickCapture={handleClickCapture}
       >
+        <button
+          type="button"
+          className="erp-modal-window-close print:hidden"
+          onClick={close}
+          aria-label="닫기"
+        >
+          ✕
+        </button>
         <div className="erp-modal-body" style={{ flex: 1, minHeight: 0 }}>
           <ModalCloseProvider value={close}>{children}</ModalCloseProvider>
         </div>

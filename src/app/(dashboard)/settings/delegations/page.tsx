@@ -3,7 +3,6 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
-import { CloseButton } from "@/components/erp/close-button";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ApprovalDelegationForm } from "@/components/approval-delegation-form";
 import { createApprovalDelegation, deleteApprovalDelegation } from "@/app/(dashboard)/settings/delegations/actions";
@@ -38,7 +37,7 @@ export default async function ApprovalDelegationsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="환경설정 > 전결권 관리" actions={<CloseButton href="/dashboard">✕</CloseButton>} />
+      <ListPageHeader title="환경설정 > 전결권 관리" />
 
       <PageGuide>
         휴가·출장 등으로 자리를 비우는 기간 동안, 지정한 대리 결재자가 그

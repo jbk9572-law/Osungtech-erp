@@ -6,7 +6,6 @@ import { BomItemForm } from "@/components/bom-item-form";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { updateProduct, deleteProduct, addBomItem, deleteBomItem } from "@/app/(dashboard)/products/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { resolveListHref } from "@/lib/list-return";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -81,7 +80,6 @@ export default async function ProductDetailPage({
             id={product.id}
             confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
           />
-          <CloseButton href={closeHref} />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{product.sku}</p>

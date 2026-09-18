@@ -5,11 +5,11 @@ import type { ReactNode } from "react";
 // 손으로 반복해서 짰는데, 여백 값이나 클래스가 한 곳만 바뀌고 다른 곳은
 // 그대로 남는 식으로 "같은 화면 종류인데 미묘하게 다른" 상태가 되기
 // 쉬웠다. 이 레이아웃을 쓰는 화면은 전부 이 컴포넌트만 쓴다.
-export function ListPageHeader({ title, actions }: { title: string; actions: ReactNode }) {
+export function ListPageHeader({ title, actions }: { title: string; actions?: ReactNode }) {
   return (
     <>
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">{title}</h1>
-      <div className="erp-toolbar">{actions}</div>
+      {actions && <div className="erp-toolbar">{actions}</div>}
     </>
   );
 }
