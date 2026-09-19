@@ -275,6 +275,7 @@ export default async function SalesPrintPage({
               <Link
                 key={value}
                 href={`/sales/${id}/print?copies=${value}&layout=${layout}&balance=${showBalance ? "show" : "hide"}`}
+                replace
                 className={`erp-seg-btn${copies === value ? " active" : ""}`}
               >
                 {label}
@@ -291,6 +292,7 @@ export default async function SalesPrintPage({
               <Link
                 key={value}
                 href={`/sales/${id}/print?copies=${copies}&layout=${value}&balance=${showBalance ? "show" : "hide"}`}
+                replace
                 className={`erp-seg-btn${layout === value ? " active" : ""}`}
               >
                 {label}
@@ -307,6 +309,7 @@ export default async function SalesPrintPage({
               <Link
                 key={value}
                 href={`/sales/${id}/print?copies=${copies}&layout=${layout}&balance=${value}`}
+                replace
                 className={`erp-seg-btn${(showBalance ? "show" : "hide") === value ? " active" : ""}`}
               >
                 {label}
