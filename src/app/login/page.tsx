@@ -59,7 +59,7 @@ function LoginForm() {
           </div>
           <div className="text-[10px] text-white/60">
             <p>Version 1.0</p>
-            <p className="mt-1">&copy; {new Date().getFullYear()} 오성테크</p>
+            <p className="mt-1">&copy; {new Date().getFullYear()} ELVONIX</p>
           </div>
         </div>
 
@@ -130,7 +130,7 @@ function LoginForm() {
 
           <div className="flex justify-between border-t border-[#eef0f3] pt-2 text-[10px] text-[#6b7280]">
             <span>ELVONIX v1.0</span>
-            <span>&copy; {new Date().getFullYear()} 오성테크</span>
+            <span>&copy; {new Date().getFullYear()} ELVONIX</span>
           </div>
         </div>
       </div>
