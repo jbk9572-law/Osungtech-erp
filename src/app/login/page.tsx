@@ -48,7 +48,7 @@ function LoginForm() {
             <img
               src="/branding/logo-mark.png"
               alt=""
-              className="h-12 w-12 rounded bg-white/10 object-contain p-1"
+              className="h-12 w-12 rounded bg-white object-contain p-1"
             />
             <h1 className="mt-4 text-lg font-bold tracking-tight">ELVONIX</h1>
             <p className="mt-2 text-xs leading-relaxed text-white/80">
