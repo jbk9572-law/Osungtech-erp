@@ -50,7 +50,7 @@ function LoginForm() {
               alt=""
               className="h-12 w-12 rounded bg-white/10 object-contain p-1"
             />
-            <h1 className="mt-4 text-lg font-bold tracking-tight">NEST ERP</h1>
+            <h1 className="mt-4 text-lg font-bold tracking-tight">ELVONIX</h1>
             <p className="mt-2 text-xs leading-relaxed text-white/80">
               Integrated Business
               <br />
@@ -129,7 +129,7 @@ function LoginForm() {
           </form>
 
           <div className="flex justify-between border-t border-[#eef0f3] pt-2 text-[10px] text-[#6b7280]">
-            <span>NEST ERP v1.0</span>
+            <span>ELVONIX v1.0</span>
             <span>&copy; {new Date().getFullYear()} 오성테크</span>
           </div>
         </div>

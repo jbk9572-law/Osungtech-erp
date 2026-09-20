@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Osungtech ERP",
+  title: "ELVONIX",
   description: "Next.js + Supabase 기반 재고관리 ERP",
 };
 
