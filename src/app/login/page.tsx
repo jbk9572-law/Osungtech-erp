@@ -42,7 +42,7 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#eef1f5] px-4 py-6">
       <div className="flex w-full max-w-[640px] flex-col overflow-hidden rounded-sm border border-[#e2e5eb] bg-white shadow-sm md:h-[420px] md:w-[640px] md:flex-row">
-        <div className="flex flex-col justify-between bg-[#4a6fa5] p-7 text-white md:w-[260px]">
+        <div className="flex flex-col justify-between bg-[#2170e0] p-7 text-white md:w-[260px]">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -77,7 +77,7 @@ function LoginForm() {
                 autoComplete="username"
                 required
                 defaultValue={savedEmail}
-                className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#4a6fa5] focus:shadow-[0_0_0_3px_rgba(74,111,165,0.16)] focus:outline-none"
+                className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#2170e0] focus:shadow-[0_0_0_3px_rgba(33,112,224,0.16)] focus:outline-none"
               />
             </div>
             <div>
@@ -90,7 +90,7 @@ function LoginForm() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#4a6fa5] focus:shadow-[0_0_0_3px_rgba(74,111,165,0.16)] focus:outline-none"
+                  className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#2170e0] focus:shadow-[0_0_0_3px_rgba(33,112,224,0.16)] focus:outline-none"
                 />
                 <button
                   type="button"
@@ -116,7 +116,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={pending}
-              className="h-10 w-full rounded-sm bg-[#4a6fa5] text-sm font-semibold text-white hover:bg-[#35507d] disabled:opacity-50"
+              className="h-10 w-full rounded-sm bg-[#2170e0] text-sm font-semibold text-white hover:bg-[#12294a] disabled:opacity-50"
             >
               {pending ? (
                 <>

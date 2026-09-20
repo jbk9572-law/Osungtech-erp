@@ -283,7 +283,7 @@ export function InventoryQrScanner({
                     height: 2,
                     borderRadius: 0,
                     background: "linear-gradient(90deg, transparent, var(--erp-primary), transparent)",
-                    boxShadow: "0 0 10px 2px rgba(74, 111, 165, 0.85)",
+                    boxShadow: "0 0 10px 2px rgba(33, 112, 224, 0.85)",
                     animation: "erp-scan-line 1.8s ease-in-out infinite",
                   }}
                 />
