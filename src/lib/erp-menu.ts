@@ -105,6 +105,8 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "지급결의양식", href: "/reports/payment-requests" },
       { label: "월별 리포트", href: "/reports/monthly" },
       { label: "수불부", href: "/reports/ledger" },
+      { label: "부가세 신고 자료", href: "/reports/vat" },
+      { label: "간이 손익계산서", href: "/reports/income-statement" },
     ],
   },
   {
