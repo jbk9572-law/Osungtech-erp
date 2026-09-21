@@ -236,3 +236,79 @@ export async function resetTenantUserPassword(_prevState: FormState, formData: F
   revalidatePath(`/platform-admin/${tenantId}`);
   return { success: "비밀번호를 재설정했습니다." };
 }
+
+// 이용기간(시작일/만료일) 설정. plan_expires_at이 지나면 로그인 자체가
+// 막힌다(get_login_block_reason, login/actions.ts 참고) — "장식용
+// 날짜"가 아니라 실제 이용 가능 여부를 가른다.
+export async function updateTenantPlanPeriod(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const startedAt = String(formData.get("planStartedAt") ?? "").trim();
+  const expiresAt = String(formData.get("planExpiresAt") ?? "").trim();
+  if (!tenantId) return { error: "잘못된 요청입니다." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin
+    .from("tenants")
+    .update({
+      plan_started_at: startedAt || null,
+      // 날짜 입력(date)만 받으므로 그날 자정이 아니라 하루의 끝(23:59:59)을
+      // 만료 시점으로 잡는다 — "만료일 당일"에는 정상적으로 쓸 수 있어야
+      // 하는데, 자정 기준으로 하면 만료일 당일 새벽부터 막혀버린다.
+      plan_expires_at: expiresAt ? `${expiresAt}T23:59:59+09:00` : null,
+    })
+    .eq("id", tenantId);
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "이용기간을 저장했습니다." };
+}
+
+// 포인트 지급/차감. 지금은 실제로 포인트를 소모하는 곳이 없다(세금계산서/
+// 계산서 발행이 전부 수기 표시라 — invoice-status-panel.tsx 참고) —
+// 나중에 팝빌/바로빌 같은 실제 발행 API나 알림톡/팩스 기능을 붙일 때
+// 그 호출 지점에서 이 잔액을 깎게 될 것을 미리 준비해두는 것이라, 지금은
+// 플랫폼 운영자가 수동으로 지급/차감하는 이 경로만 있다.
+export async function adjustTenantPoints(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const deltaRaw = String(formData.get("delta") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+  const delta = Number(deltaRaw);
+
+  if (!tenantId || !Number.isInteger(delta) || delta === 0) {
+    return { error: "포인트는 0이 아닌 정수로 입력해주세요(차감은 음수)." };
+  }
+  if (!reason) {
+    return { error: "지급/차감 사유를 입력해주세요." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin.rpc("adjust_tenant_points", {
+    p_tenant_id: tenantId,
+    p_delta: delta,
+    p_action_type: "manual_admin_adjustment",
+    p_reason: reason,
+  });
+  if (error) return { error: `처리에 실패했습니다: ${error.message}` };
+
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: `포인트를 ${delta > 0 ? `${delta}점 지급` : `${Math.abs(delta)}점 차감`}했습니다.` };
+}

@@ -4,6 +4,7 @@ import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EditCompanyForm } from "@/components/edit-company-form";
 import { TenantStatusControls } from "@/components/tenant-status-controls";
+import { TenantPointsPanel } from "@/components/tenant-points-panel";
 import { ResetTenantUserPasswordForm } from "@/components/reset-tenant-user-password-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import "@/app/erp-theme.css";
@@ -28,13 +29,20 @@ export default async function PlatformAdminTenantDetailPage({
 
   const { data: tenant } = await admin
     .from("tenants")
-    .select("id, name, slug, created_at, disabled_at, plan")
+    .select("id, name, slug, created_at, disabled_at, plan, plan_started_at, plan_expires_at, points_balance")
     .eq("id", tenantId)
     .maybeSingle();
 
   if (!tenant) {
     notFound();
   }
+
+  const { data: pointTransactions } = await admin
+    .from("point_transactions")
+    .select("id, delta, action_type, reason, created_at")
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   const { data: members } = await admin
     .from("tenant_members")
@@ -105,7 +113,26 @@ export default async function PlatformAdminTenantDetailPage({
             <span className="erp-detail-tab active">이용 상태</span>
           </div>
           <div className="erp-detail-body">
-            <TenantStatusControls tenantId={tenant.id} disabled={tenant.disabled_at !== null} plan={tenant.plan} />
+            <TenantStatusControls
+              tenantId={tenant.id}
+              disabled={tenant.disabled_at !== null}
+              plan={tenant.plan}
+              planStartedAt={tenant.plan_started_at}
+              planExpiresAt={tenant.plan_expires_at}
+            />
+          </div>
+        </div>
+
+        <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">포인트</span>
+          </div>
+          <div className="erp-detail-body">
+            <TenantPointsPanel
+              tenantId={tenant.id}
+              balance={tenant.points_balance}
+              transactions={pointTransactions ?? []}
+            />
           </div>
         </div>
 

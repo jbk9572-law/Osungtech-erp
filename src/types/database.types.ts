@@ -762,6 +762,9 @@ export type Database = {
           disabled_features: string[];
           disabled_at: string | null;
           plan: string;
+          plan_started_at: string | null;
+          plan_expires_at: string | null;
+          points_balance: number;
         };
         Insert: {
           id?: string;
@@ -771,6 +774,9 @@ export type Database = {
           disabled_features?: string[];
           disabled_at?: string | null;
           plan?: string;
+          plan_started_at?: string | null;
+          plan_expires_at?: string | null;
+          points_balance?: number;
         };
         Update: {
           id?: string;
@@ -780,8 +786,49 @@ export type Database = {
           disabled_features?: string[];
           disabled_at?: string | null;
           plan?: string;
+          plan_started_at?: string | null;
+          plan_expires_at?: string | null;
+          points_balance?: number;
         };
         Relationships: [];
+      };
+      point_transactions: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          delta: number;
+          action_type: string | null;
+          reason: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          delta: number;
+          action_type?: string | null;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          delta?: number;
+          action_type?: string | null;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "point_transactions_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       tenant_members: {
         Row: {
@@ -2918,9 +2965,13 @@ export type Database = {
         Args: Record<string, never>;
         Returns: boolean;
       };
-      is_login_tenant_disabled: {
+      get_login_block_reason: {
         Args: { p_username: string };
-        Returns: boolean;
+        Returns: string | null;
+      };
+      adjust_tenant_points: {
+        Args: { p_tenant_id: string; p_delta: number; p_action_type: string | null; p_reason: string | null };
+        Returns: number;
       };
       toggle_todo_done: {
         Args: { p_id: string };

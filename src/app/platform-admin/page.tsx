@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { CreateCompanyForm } from "@/components/create-company-form";
 import { PageGuide } from "@/components/erp/page-guide";
+import { isPlanExpired } from "@/lib/tenant-plan";
 import "@/app/erp-theme.css";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -26,7 +27,7 @@ export default async function PlatformAdminPage() {
   // 기반 B2B ERP) — 넘어설 정도로 커지면 그때 fetchAllRows()로 바꾼다.
   const { data: tenants } = await supabase
     .from("tenants")
-    .select("id, name, slug, created_at, disabled_at, plan")
+    .select("id, name, slug, created_at, disabled_at, plan, plan_expires_at")
     .order("created_at", { ascending: true })
     .limit(1000);
 
@@ -58,13 +59,16 @@ export default async function PlatformAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {(tenants ?? []).map((t) => (
+              {(tenants ?? []).map((t) => {
+                const isExpired = isPlanExpired(t.plan_expires_at);
+                const isBlocked = t.disabled_at !== null || isExpired;
+                return (
                 <tr key={t.id}>
                   <td>{t.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{t.slug}</td>
                   <td>
-                    <span className={`erp-badge ${t.disabled_at ? "erp-badge-danger" : "erp-badge-success"}`}>
-                      {t.disabled_at ? "비활성" : "활성"}
+                    <span className={`erp-badge ${isBlocked ? "erp-badge-danger" : "erp-badge-success"}`}>
+                      {t.disabled_at ? "비활성" : isExpired ? "만료됨" : "활성"}
                     </span>
                   </td>
                   <td>{PLAN_LABELS[t.plan] ?? t.plan}</td>
@@ -75,7 +79,8 @@ export default async function PlatformAdminPage() {
                     </Link>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {!tenants?.length && (
                 <tr>
                   <td colSpan={6} className="erp-grid-empty">
