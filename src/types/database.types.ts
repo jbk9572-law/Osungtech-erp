@@ -757,18 +757,21 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          slug: string;
           created_at: string;
           disabled_features: string[];
         };
         Insert: {
           id?: string;
           name: string;
+          slug: string;
           created_at?: string;
           disabled_features?: string[];
         };
         Update: {
           id?: string;
           name?: string;
+          slug?: string;
           created_at?: string;
           disabled_features?: string[];
         };
@@ -2893,6 +2896,10 @@ export type Database = {
         Returns: boolean;
       };
       is_demo_actor: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      is_platform_admin: {
         Args: Record<string, never>;
         Returns: boolean;
       };
