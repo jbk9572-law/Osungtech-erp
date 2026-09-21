@@ -1567,6 +1567,112 @@ export type Database = {
           },
         ];
       };
+      stock_transfers: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          from_warehouse_id: string;
+          to_warehouse_id: string;
+          transfer_date: string;
+          memo: string | null;
+          is_demo: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          from_warehouse_id: string;
+          to_warehouse_id: string;
+          transfer_date?: string;
+          memo?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          from_warehouse_id?: string;
+          to_warehouse_id?: string;
+          transfer_date?: string;
+          memo?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_from_warehouse_id_fkey";
+            columns: ["from_warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_transfers_to_warehouse_id_fkey";
+            columns: ["to_warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_transfers_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stock_transfer_items: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          stock_transfer_id: string;
+          product_id: string;
+          quantity: number;
+          remark: string | null;
+          is_demo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          stock_transfer_id: string;
+          product_id: string;
+          quantity: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          stock_transfer_id?: string;
+          product_id?: string;
+          quantity?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_items_stock_transfer_id_fkey";
+            columns: ["stock_transfer_id"];
+            isOneToOne: false;
+            referencedRelation: "stock_transfers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_transfer_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       company_profile: {
         Row: {
           id: number;
@@ -3406,6 +3512,20 @@ export type Database = {
         Returns: string;
       };
       recall_purchase_request: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      create_stock_transfer_with_items: {
+        Args: {
+          p_from_warehouse_id: string;
+          p_to_warehouse_id: string;
+          p_transfer_date: string;
+          p_memo: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      delete_stock_transfer: {
         Args: { p_id: string };
         Returns: void;
       };
