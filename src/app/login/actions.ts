@@ -45,6 +45,22 @@ export async function login(_prevState: { error: string } | undefined, formData:
       return { error: "존재하지 않는 아이디입니다." };
     }
     email = resolvedEmail;
+
+    // 플랫폼 관리자가 회사(테넌트)를 비활성화했거나 이용기간이 지났으면,
+    // 비밀번호가 맞아도 로그인 자체를 막아야 한다 — 아래
+    // signInWithPassword는 그 상태를 모르므로 여기서 먼저 확인한다.
+    const { data: blockReason, error: blockCheckError } = await admin.rpc("get_login_block_reason", {
+      p_username: loginId,
+    });
+    if (blockCheckError) {
+      return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
+    }
+    if (blockReason === "disabled") {
+      return { error: "이 회사 계정은 비활성화되었습니다. 관리자에게 문의해주세요." };
+    }
+    if (blockReason === "expired") {
+      return { error: "이용기간이 만료되었습니다. 관리자에게 문의해주세요." };
+    }
   }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });

@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       }));
 
     const { data: company } = await supabase.from("company_profile").select("name").maybeSingle();
-    const companyName = company?.name || "㈜오성테크";
+    const companyName = company?.name || "";
 
     const workbook =
       templatedCustomer.sales_export_template === "filter_no_box"

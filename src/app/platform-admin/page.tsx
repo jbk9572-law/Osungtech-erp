@@ -1,8 +1,16 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { CreateCompanyForm } from "@/components/create-company-form";
 import { PageGuide } from "@/components/erp/page-guide";
+import { isPlanExpired } from "@/lib/tenant-plan";
 import "@/app/erp-theme.css";
+
+const PLAN_LABELS: Record<string, string> = {
+  trial: "체험",
+  active: "정상 이용",
+  suspended: "이용 중지",
+};
 
 // 타 업체(테넌트) 온보딩의 유일한 입구. 공개 회원가입 페이지가 없는
 // 지금 구조상, 새 고객사는 이 화면에서 플랫폼 운영자가 직접 만들어준다
@@ -19,7 +27,7 @@ export default async function PlatformAdminPage() {
   // 기반 B2B ERP) — 넘어설 정도로 커지면 그때 fetchAllRows()로 바꾼다.
   const { data: tenants } = await supabase
     .from("tenants")
-    .select("id, name, slug, created_at")
+    .select("id, name, slug, created_at, disabled_at, plan, plan_expires_at")
     .order("created_at", { ascending: true })
     .limit(1000);
 
@@ -44,20 +52,38 @@ export default async function PlatformAdminPage() {
               <tr>
                 <th>회사명</th>
                 <th>슬러그</th>
+                <th style={{ width: 90 }}>상태</th>
+                <th style={{ width: 100 }}>요금제</th>
                 <th style={{ width: 140 }}>가입일</th>
+                <th style={{ width: 80 }}></th>
               </tr>
             </thead>
             <tbody>
-              {(tenants ?? []).map((t) => (
+              {(tenants ?? []).map((t) => {
+                const isExpired = isPlanExpired(t.plan_expires_at);
+                const isBlocked = t.disabled_at !== null || isExpired;
+                return (
                 <tr key={t.id}>
                   <td>{t.name}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{t.slug}</td>
+                  <td>
+                    <span className={`erp-badge ${isBlocked ? "erp-badge-danger" : "erp-badge-success"}`}>
+                      {t.disabled_at ? "비활성" : isExpired ? "만료됨" : "활성"}
+                    </span>
+                  </td>
+                  <td>{PLAN_LABELS[t.plan] ?? t.plan}</td>
                   <td>{new Date(t.created_at).toLocaleDateString("ko-KR")}</td>
+                  <td>
+                    <Link href={`/platform-admin/${t.id}`} className="erp-btn" style={{ minWidth: 0 }}>
+                      상세
+                    </Link>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
               {!tenants?.length && (
                 <tr>
-                  <td colSpan={3} className="erp-grid-empty">
+                  <td colSpan={6} className="erp-grid-empty">
                     등록된 회사가 없습니다.
                   </td>
                 </tr>

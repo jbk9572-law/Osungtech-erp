@@ -58,7 +58,7 @@ export function TitleBar({
         <Link href="/dashboard" className="erp-titlebar-home">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl || "/branding/logo-mark.png"} alt="" className="erp-titlebar-logo" />
-          <span className="erp-titlebar-name">{companyName || "오성테크"} ERP</span>
+          <span className="erp-titlebar-name">{companyName || "회사명 미설정"} ERP</span>
         </Link>
         <span className="erp-titlebar-menu">{menuLabel}</span>
       </div>
