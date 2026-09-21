@@ -81,6 +81,11 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
   {
+    label: "메일함",
+    items: [{ label: "메일함", href: "/mail", flatLabel: "메일함" }],
+    featureKey: "mail",
+  },
+  {
     // 성격이 같은 회계/집계 화면 2개(지급결의양식·월별 리포트)를 한
     // 그룹으로 모았다 — 예전엔 이 둘이 "보고서"/"확장모듈"에 각각 하나씩
     // 흩어져 있어서, 정작 확장모듈엔 계산 도구가 아닌 월별 리포트가
@@ -113,6 +118,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "조직도 관리", href: "/settings/departments", adminOnly: true },
       { label: "전결권 관리", href: "/settings/delegations" },
       { label: "전자서명 등록", href: "/settings/signature" },
+      { label: "메일 계정 연동", href: "/settings/mail" },
       { label: "기능 관리", href: "/settings/features", adminOnly: true },
       { label: "비밀번호 변경", href: "/settings/password" },
     ],

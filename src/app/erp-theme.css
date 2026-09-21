@@ -2605,3 +2605,91 @@
   outline: 2px solid var(--erp-primary);
   outline-offset: 2px;
 }
+
+/* 메일함: 목록/본문 2열 레이아웃. 좁은 화면에서는 JS 없이 CSS만으로
+   "메일을 선택하면 목록은 숨기고 본문만 전체폭으로" 전환한다 — 선택
+   여부(has-selection)는 서버 컴포넌트가 searchParams만 보고 클래스로
+   내려주므로 클라이언트 상태가 따로 필요 없다. */
+.erp-mail-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.erp-mail-list {
+  border: 1px solid var(--erp-divider);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.erp-mail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--erp-divider);
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+.erp-mail-row:hover {
+  background: var(--erp-hover);
+}
+.erp-mail-row.active {
+  background: var(--erp-info-bg);
+}
+.erp-mail-row.unread .erp-mail-row-subject {
+  font-weight: 700;
+}
+.erp-mail-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--erp-text-muted);
+}
+.erp-mail-row-subject {
+  font-size: 13px;
+  color: var(--erp-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-mail-row-snippet {
+  font-size: 12px;
+  color: var(--erp-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-mail-detail {
+  border: 1px solid var(--erp-divider);
+  border-radius: 4px;
+  padding: 16px;
+  min-height: 240px;
+}
+.erp-mail-detail-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  color: var(--erp-text-muted);
+  font-size: 13px;
+}
+.erp-mail-back-link {
+  display: none;
+  margin-bottom: 10px;
+}
+@media (max-width: 768px) {
+  .erp-mail-layout {
+    grid-template-columns: 1fr;
+  }
+  .erp-mail-layout.has-selection .erp-mail-list {
+    display: none;
+  }
+  .erp-mail-layout:not(.has-selection) .erp-mail-detail {
+    display: none;
+  }
+  .erp-mail-back-link {
+    display: inline-block;
+  }
+}

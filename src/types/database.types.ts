@@ -2638,6 +2638,190 @@ export type Database = {
           },
         ];
       };
+      mail_accounts: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          user_id: string;
+          email_address: string;
+          display_name: string | null;
+          imap_host: string;
+          imap_port: number;
+          smtp_host: string;
+          smtp_port: number;
+          username: string;
+          encrypted_app_password: string;
+          is_active: boolean;
+          last_synced_at: string | null;
+          last_sync_error: string | null;
+          last_synced_uid: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          user_id: string;
+          email_address: string;
+          display_name?: string | null;
+          imap_host?: string;
+          imap_port?: number;
+          smtp_host?: string;
+          smtp_port?: number;
+          username: string;
+          encrypted_app_password: string;
+          is_active?: boolean;
+          last_synced_at?: string | null;
+          last_sync_error?: string | null;
+          last_synced_uid?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          user_id?: string;
+          email_address?: string;
+          display_name?: string | null;
+          imap_host?: string;
+          imap_port?: number;
+          smtp_host?: string;
+          smtp_port?: number;
+          username?: string;
+          encrypted_app_password?: string;
+          is_active?: boolean;
+          last_synced_at?: string | null;
+          last_sync_error?: string | null;
+          last_synced_uid?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      mail_messages: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          mail_account_id: string;
+          user_id: string;
+          folder: string;
+          uid: number;
+          message_id: string | null;
+          subject: string | null;
+          from_address: string | null;
+          from_name: string | null;
+          to_addresses: Json;
+          cc_addresses: Json;
+          sent_at: string | null;
+          body_text: string | null;
+          body_html: string | null;
+          snippet: string | null;
+          has_attachments: boolean;
+          is_read: boolean;
+          is_starred: boolean;
+          size_bytes: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          mail_account_id: string;
+          user_id: string;
+          folder: string;
+          uid: number;
+          message_id?: string | null;
+          subject?: string | null;
+          from_address?: string | null;
+          from_name?: string | null;
+          to_addresses?: Json;
+          cc_addresses?: Json;
+          sent_at?: string | null;
+          body_text?: string | null;
+          body_html?: string | null;
+          snippet?: string | null;
+          has_attachments?: boolean;
+          is_read?: boolean;
+          is_starred?: boolean;
+          size_bytes?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          mail_account_id?: string;
+          user_id?: string;
+          folder?: string;
+          uid?: number;
+          message_id?: string | null;
+          subject?: string | null;
+          from_address?: string | null;
+          from_name?: string | null;
+          to_addresses?: Json;
+          cc_addresses?: Json;
+          sent_at?: string | null;
+          body_text?: string | null;
+          body_html?: string | null;
+          snippet?: string | null;
+          has_attachments?: boolean;
+          is_read?: boolean;
+          is_starred?: boolean;
+          size_bytes?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mail_messages_mail_account_id_fkey";
+            columns: ["mail_account_id"];
+            isOneToOne: false;
+            referencedRelation: "mail_accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      mail_attachments: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          mail_message_id: string;
+          user_id: string;
+          filename: string;
+          content_type: string | null;
+          size_bytes: number | null;
+          storage_path: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          mail_message_id: string;
+          user_id: string;
+          filename: string;
+          content_type?: string | null;
+          size_bytes?: number | null;
+          storage_path: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          mail_message_id?: string;
+          user_id?: string;
+          filename?: string;
+          content_type?: string | null;
+          size_bytes?: number | null;
+          storage_path?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "mail_attachments_mail_message_id_fkey";
+            columns: ["mail_message_id"];
+            isOneToOne: false;
+            referencedRelation: "mail_messages";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           id: string;

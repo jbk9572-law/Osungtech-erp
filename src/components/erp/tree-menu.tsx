@@ -98,6 +98,12 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M10 18a2 2 0 0 0 4 0" />
     </svg>
   ),
+  메일함: (
+    <svg {...ICON_STROKE}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m4 7 8 6 8-6" />
+    </svg>
+  ),
   "회계·보고서": (
     <svg {...ICON_STROKE}>
       <path d="M5 20V10" />
