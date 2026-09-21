@@ -143,16 +143,6 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
 ];
 
-// 설정 화면(기능 관리)에 보여줄 카탈로그 — featureKey가 있는 그룹에서
-// 그대로 뽑아낸다. 새 토글 가능 모듈을 추가할 땐 위 MENU_GROUPS에
-// featureKey만 붙이면 여기 자동으로 나타난다(따로 목록을 관리할 필요
-// 없음).
-export type ToggleableFeature = { key: string; label: string };
-
-export const TOGGLEABLE_FEATURES: ToggleableFeature[] = MENU_GROUPS.filter(
-  (g): g is MenuGroup & { featureKey: string } => !!g.featureKey,
-).map((g) => ({ key: g.featureKey, label: g.label }));
-
 // 테넌트가 끈 기능(featureKey) 그룹 및 관리자 전용 항목(adminOnly, 일반
 // 사용자에게는 안 보임)을 제외한 메뉴 목록. 트리메뉴/빠른검색/최근메뉴
 // 전부 이 함수를 거친 결과만 써야, 꺼진 메뉴나 관리자 전용 화면이
@@ -160,11 +150,28 @@ export const TOGGLEABLE_FEATURES: ToggleableFeature[] = MENU_GROUPS.filter(
 // 걸러내고 남은 게 없는 그룹(예: 전부 관리자 전용인 시스템관리)은
 // 그룹째로 사라진다 — 눌러도 아무것도 없는 빈 그룹 헤더만 남는 걸
 // 막는다.
+// 그룹 전체(featureKey)뿐 아니라 세부 메뉴 항목 하나하나도 각자의 href를
+// 키로 켜고 끌 수 있다(환경설정 > 기능 관리 화면에서 그누보드 관리자
+// 페이지 수준으로 세분화한 요청 — 그룹 단위로만 끄던 걸 항목 단위까지
+// 넓혔다). disabled_features 배열에는 그룹 featureKey와 leaf href가
+// 같은 배열에 섞여 들어간다 — 서로 형태가 겹치지 않아(featureKey는
+// "production" 같은 짧은 단어, href는 "/production"처럼 슬래시로
+// 시작) 충돌하지 않는다.
 export function getVisibleMenuGroups(disabledFeatures: string[], isAdmin: boolean): MenuGroup[] {
   return MENU_GROUPS.filter((g) => !g.featureKey || !disabledFeatures.includes(g.featureKey))
-    .map((g) => (isAdmin ? g : { ...g, items: g.items.filter((i) => !i.adminOnly) }))
+    .map((g) => ({
+      ...g,
+      items: g.items.filter(
+        (i) => !disabledFeatures.includes(i.href) && (isAdmin || !i.adminOnly)
+      ),
+    }))
     .filter((g) => g.items.length > 0);
 }
+
+// 환경설정 > 기능 관리 화면 자기 자신은 꺼버리면 다시 켤 방법이
+// 없어지므로(자물쇠 잠그고 열쇠도 같이 잠근 상태) 항목 단위 토글
+// 목록에서 아예 빼서 항상 켜져 있게 한다.
+export const MENU_TOGGLE_LOCKED_HREFS = new Set(["/settings/features", "/dashboard"]);
 
 export type MenuItem = { label: string; href: string };
 

@@ -9,10 +9,15 @@ import type { FormState } from "@/components/form-message";
 // 안 맞아 따로 만들었다.
 export function FeatureToggle({
   featureKey,
+  label,
   enabled: serverEnabled,
   action,
 }: {
   featureKey: string;
+  // 세부 메뉴 항목 토글처럼 featureKey 자체가 href라 화면 낭독기용
+  // 문구로는 부적절할 때, 사람이 읽을 라벨을 따로 넘긴다(없으면 기존처럼
+  // featureKey를 그대로 쓴다).
+  label?: string;
   enabled: boolean;
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
 }) {
@@ -33,7 +38,7 @@ export function FeatureToggle({
           type="checkbox"
           checked={enabled}
           disabled={pending}
-          aria-label={`${featureKey} 기능 사용`}
+          aria-label={`${label ?? featureKey} 기능 사용`}
           onChange={() => {
             const next = !enabled;
             const previous = enabled;
