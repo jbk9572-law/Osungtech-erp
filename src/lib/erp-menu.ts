@@ -33,6 +33,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "입고관리", href: "/purchases", flatLabel: "매입관리" },
       { label: "구매요청", href: "/purchase-requests" },
+      { label: "구매 견적요청", href: "/purchase-quote-requests" },
     ],
   },
   {
