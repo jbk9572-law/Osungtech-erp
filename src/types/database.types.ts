@@ -1854,6 +1854,133 @@ export type Database = {
           },
         ];
       };
+      purchase_requests: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          supplier_id: string;
+          request_date: string;
+          memo: string | null;
+          status: "draft" | "pending" | "approved" | "rejected";
+          approval_document_id: string | null;
+          decided_at: string | null;
+          decided_by: string | null;
+          converted_purchase_order_id: string | null;
+          is_demo: boolean;
+          requested_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          supplier_id: string;
+          request_date?: string;
+          memo?: string | null;
+          status?: "draft" | "pending" | "approved" | "rejected";
+          approval_document_id?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          converted_purchase_order_id?: string | null;
+          is_demo?: boolean;
+          requested_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          supplier_id?: string;
+          request_date?: string;
+          memo?: string | null;
+          status?: "draft" | "pending" | "approved" | "rejected";
+          approval_document_id?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          converted_purchase_order_id?: string | null;
+          is_demo?: boolean;
+          requested_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_requests_converted_purchase_order_id_fkey";
+            columns: ["converted_purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_requests_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      purchase_request_items: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          purchase_request_id: string;
+          product_id: string | null;
+          custom_name: string | null;
+          spec: string | null;
+          quantity: number;
+          estimated_unit_price: number;
+          remark: string | null;
+          is_demo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          purchase_request_id: string;
+          product_id?: string | null;
+          custom_name?: string | null;
+          spec?: string | null;
+          quantity: number;
+          estimated_unit_price?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          purchase_request_id?: string;
+          product_id?: string | null;
+          custom_name?: string | null;
+          spec?: string | null;
+          quantity?: number;
+          estimated_unit_price?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchase_request_items_purchase_request_id_fkey";
+            columns: ["purchase_request_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purchase_request_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       customer_payments: {
         Row: {
           id: string;
@@ -3264,6 +3391,23 @@ export type Database = {
           p_items: Json;
         };
         Returns: string;
+      };
+      create_purchase_request_with_items: {
+        Args: {
+          p_supplier_id: string;
+          p_request_date: string;
+          p_memo: string | null;
+          p_items: Json;
+        };
+        Returns: string;
+      };
+      submit_purchase_request: {
+        Args: { p_id: string; p_approver_ids: string[]; p_reference_ids?: string[] };
+        Returns: string;
+      };
+      recall_purchase_request: {
+        Args: { p_id: string };
+        Returns: void;
       };
       create_sale_with_items: {
         Args: {

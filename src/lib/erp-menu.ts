@@ -28,7 +28,13 @@ export type MenuGroup = { label: string; items: MenuLeaf[]; featureKey?: string 
 export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
   { label: "매출관리", items: [{ label: "출고관리", href: "/sales", flatLabel: "매출관리" }] },
-  { label: "매입관리", items: [{ label: "입고관리", href: "/purchases", flatLabel: "매입관리" }] },
+  {
+    label: "매입관리",
+    items: [
+      { label: "입고관리", href: "/purchases", flatLabel: "매입관리" },
+      { label: "구매요청", href: "/purchase-requests" },
+    ],
+  },
   {
     label: "재고관리",
     items: [

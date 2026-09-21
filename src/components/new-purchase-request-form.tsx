@@ -1,0 +1,172 @@
+"use client";
+
+import { useActionState, useMemo, useState } from "react";
+import { createPurchaseRequest } from "@/app/(dashboard)/purchase-requests/actions";
+import { PartySearchSelect } from "@/components/party-search-select";
+import { ProductSearchSelect } from "@/components/product-search-select";
+import { NumberInput } from "@/components/number-input";
+import { FormMessage } from "@/components/form-message";
+import { useKeyedRows } from "@/lib/use-keyed-rows";
+import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+
+type Row = {
+  key: number;
+  productId: string;
+  spec: string;
+  quantity: number;
+  estimatedUnitPrice: number;
+  remark: string;
+};
+
+function blankRow(key: number): Row {
+  return { key, productId: "", spec: "", quantity: 0, estimatedUnitPrice: 0, remark: "" };
+}
+
+export function NewPurchaseRequestForm({
+  today,
+  suppliers,
+  products,
+}: {
+  today: string;
+  suppliers: { id: string; name: string }[];
+  products: { id: string; sku: string; name: string; spec: string | null; price: number }[];
+}) {
+  const [state, formAction, pending] = useActionState(createPurchaseRequest, undefined);
+  const [supplierId, setSupplierId] = useState("");
+  const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>([blankRow(0)], blankRow);
+
+  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+
+  function updateRow(key: number, patch: Partial<Row>) {
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+
+  const validRows = rows.filter((r) => r.productId && r.quantity > 0);
+  const total = validRows.reduce((sum, r) => sum + r.quantity * r.estimatedUnitPrice, 0);
+  const itemsJson = JSON.stringify(
+    validRows.map((r) => ({
+      productId: r.productId,
+      spec: r.spec || null,
+      quantity: r.quantity,
+      estimatedUnitPrice: r.estimatedUnitPrice,
+      remark: r.remark || null,
+    }))
+  );
+
+  return (
+    <form action={formAction} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
+      <input type="hidden" name="supplier_id" value={supplierId} />
+      <input type="hidden" name="items" value={itemsJson} />
+
+      <div className="grid grid-cols-2 gap-3" style={{ maxWidth: 500 }}>
+        <div className="erp-field">
+          <label htmlFor="pr-supplier">공급처</label>
+          <PartySearchSelect parties={suppliers} value={supplierId} onChange={setSupplierId} id="pr-supplier" />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="pr-date">요청일</label>
+          <input id="pr-date" name="request_date" type="date" defaultValue={today} className="erp-input" />
+        </div>
+      </div>
+
+      <div className="erp-field" style={{ maxWidth: 720 }}>
+        <label htmlFor="pr-memo">메모(선택)</label>
+        <textarea id="pr-memo" name="memo" rows={2} className="erp-input" style={{ resize: "vertical" }} />
+      </div>
+
+      <div className="erp-grid-wrap">
+        <table className="erp-grid">
+          <thead>
+            <tr>
+              <th style={{ width: 260 }}>품목</th>
+              <th style={{ width: 140 }}>규격</th>
+              <th className="num" style={{ width: 90 }}>수량</th>
+              <th className="num" style={{ width: 110 }}>예상단가</th>
+              <th className="num" style={{ width: 110 }}>예상금액</th>
+              <th>비고</th>
+              <th style={{ width: 50 }} />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key}>
+                <td>
+                  <ProductSearchSelect
+                    products={products}
+                    value={row.productId}
+                    onChange={(productId) => {
+                      const product = productById.get(productId);
+                      updateRow(row.key, {
+                        productId,
+                        spec: product?.spec ?? row.spec,
+                        estimatedUnitPrice: row.estimatedUnitPrice || product?.price || 0,
+                      });
+                    }}
+                  />
+                </td>
+                <td>
+                  <input
+                    value={row.spec}
+                    onChange={(e) => updateRow(row.key, { spec: e.target.value })}
+                    className="erp-input"
+                    autoComplete="off"
+                  />
+                </td>
+                <td>
+                  <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} className="erp-input" />
+                </td>
+                <td>
+                  <NumberInput
+                    value={row.estimatedUnitPrice}
+                    onChange={(n) => updateRow(row.key, { estimatedUnitPrice: n })}
+                    className="erp-input"
+                  />
+                </td>
+                <td className="num">{(row.quantity * row.estimatedUnitPrice).toLocaleString()}</td>
+                <td>
+                  <input
+                    value={row.remark}
+                    onChange={(e) => updateRow(row.key, { remark: e.target.value })}
+                    className="erp-input"
+                    autoComplete="off"
+                  />
+                </td>
+                <td>
+                  <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
+                    삭제
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
+                합계
+              </td>
+              <td className="num" style={{ fontWeight: 700 }}>
+                {total.toLocaleString()}
+              </td>
+              <td colSpan={3} />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <button type="button" className="erp-btn" onClick={addRow} style={{ alignSelf: "flex-start" }}>
+        + 품목 추가
+      </button>
+
+      <FormMessage state={state} />
+
+      <button
+        type="submit"
+        className="erp-btn erp-btn-primary"
+        disabled={pending || !supplierId || validRows.length === 0}
+        style={{ alignSelf: "flex-start" }}
+      >
+        {pending ? "등록 중..." : "구매요청 등록"}
+      </button>
+    </form>
+  );
+}
