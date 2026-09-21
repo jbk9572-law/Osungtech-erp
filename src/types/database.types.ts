@@ -1600,6 +1600,179 @@ export type Database = {
         };
         Relationships: [];
       };
+      sales_activities: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          customer_id: string;
+          activity_type: "전화" | "방문" | "이메일" | "기타";
+          subject: string;
+          content: string | null;
+          activity_date: string;
+          next_action_date: string | null;
+          next_action_memo: string | null;
+          next_action_done: boolean;
+          is_demo: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          customer_id: string;
+          activity_type?: "전화" | "방문" | "이메일" | "기타";
+          subject: string;
+          content?: string | null;
+          activity_date?: string;
+          next_action_date?: string | null;
+          next_action_memo?: string | null;
+          next_action_done?: boolean;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          customer_id?: string;
+          activity_type?: "전화" | "방문" | "이메일" | "기타";
+          subject?: string;
+          content?: string | null;
+          activity_date?: string;
+          next_action_date?: string | null;
+          next_action_memo?: string | null;
+          next_action_done?: boolean;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "sales_activities_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      quotes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          customer_id: string;
+          doc_no: number;
+          quote_date: string;
+          valid_until: string | null;
+          status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+          memo: string | null;
+          converted_sales_order_id: string | null;
+          is_demo: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          customer_id: string;
+          doc_no?: number;
+          quote_date?: string;
+          valid_until?: string | null;
+          status?: "draft" | "sent" | "accepted" | "rejected" | "expired";
+          memo?: string | null;
+          converted_sales_order_id?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          customer_id?: string;
+          doc_no?: number;
+          quote_date?: string;
+          valid_until?: string | null;
+          status?: "draft" | "sent" | "accepted" | "rejected" | "expired";
+          memo?: string | null;
+          converted_sales_order_id?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quotes_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quotes_converted_sales_order_id_fkey";
+            columns: ["converted_sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      quote_items: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          quote_id: string;
+          product_id: string | null;
+          custom_name: string | null;
+          spec: string | null;
+          quantity: number;
+          unit_price: number;
+          remark: string | null;
+          is_demo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          quote_id: string;
+          product_id?: string | null;
+          custom_name?: string | null;
+          spec?: string | null;
+          quantity: number;
+          unit_price?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          quote_id?: string;
+          product_id?: string | null;
+          custom_name?: string | null;
+          spec?: string | null;
+          quantity?: number;
+          unit_price?: number;
+          remark?: string | null;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey";
+            columns: ["quote_id"];
+            isOneToOne: false;
+            referencedRelation: "quotes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "quote_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       customer_payments: {
         Row: {
           id: string;
@@ -2996,6 +3169,16 @@ export type Database = {
       apply_location_stock_delta: {
         Args: { p_product_id: string; p_location_id: string; p_delta: number };
         Returns: void;
+      };
+      create_quote_with_items: {
+        Args: {
+          p_customer_id: string;
+          p_quote_date: string;
+          p_valid_until: string | null;
+          p_memo: string | null;
+          p_items: Json;
+        };
+        Returns: string;
       };
       create_sale_with_items: {
         Args: {

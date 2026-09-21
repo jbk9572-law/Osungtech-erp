@@ -72,6 +72,12 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M15 14c2 0 4 2 5 5" />
     </svg>
   ),
+  영업관리: (
+    <svg {...ICON_STROKE}>
+      <path d="M4 19 10 13 14 17 20 8" />
+      <path d="M14 8h6v6" />
+    </svg>
+  ),
   할일관리: (
     <svg {...ICON_STROKE}>
       <rect x="4" y="4" width="16" height="16" rx="3" />

@@ -27,6 +27,8 @@ import { getCustomerBalance } from "@/lib/ar-ap";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { SalesActivityForm } from "@/components/sales-activity-form";
+import { deleteActivity } from "@/app/(dashboard)/sales-activities/actions";
 
 export default async function CustomerDetailPage({
   params,
@@ -40,7 +42,7 @@ export default async function CustomerDetailPage({
   // (별도 크론 없이 "그 날짜가 된 뒤 누군가 화면을 열면 그때 적용"되는 방식).
   await applyDuePriceSchedules(supabase, id);
 
-  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance] =
+  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance, { data: activities }] =
     await Promise.all([
       supabase.from("customers").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -58,6 +60,11 @@ export default async function CustomerDetailPage({
         .is("applied_at", null)
         .order("effective_date", { ascending: true }),
       getCustomerBalance(supabase, id),
+      supabase
+        .from("sales_activities")
+        .select("id, activity_type, subject, content, activity_date, next_action_date, next_action_memo")
+        .eq("customer_id", id)
+        .order("activity_date", { ascending: false }),
     ]);
 
   if (!customer) {
@@ -101,6 +108,51 @@ export default async function CustomerDetailPage({
             showDocumentType
             submitLabel="저장"
           />
+        </div>
+      </div>
+
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">영업활동</span>
+        </div>
+        <div className="erp-detail-body">
+          <SalesActivityForm today={todayKstStr()} fixedCustomerId={customer.id} />
+
+          {activities && activities.length > 0 && (
+            <div className="erp-grid-wrap" style={{ marginTop: 16 }}>
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th style={{ width: 90 }}>일자</th>
+                    <th style={{ width: 60 }}>유형</th>
+                    <th>제목</th>
+                    <th style={{ width: 130 }}>다음 팔로우업</th>
+                    <th style={{ width: 60 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {activities.map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.activity_date.replaceAll("-", ".")}</td>
+                      <td>{a.activity_type}</td>
+                      <td>
+                        {a.subject}
+                        {a.content && (
+                          <span className="block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                            {a.content}
+                          </span>
+                        )}
+                      </td>
+                      <td>{a.next_action_date ? a.next_action_date.replaceAll("-", ".") : "-"}</td>
+                      <td>
+                        <DeleteButton action={deleteActivity} id={a.id} confirmMessage="이 활동 기록을 삭제하시겠습니까?" label="삭제" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 

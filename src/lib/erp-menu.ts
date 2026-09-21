@@ -57,6 +57,14 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
   { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
   {
+    label: "영업관리",
+    items: [
+      { label: "영업활동관리", href: "/sales-activities" },
+      { label: "견적서관리", href: "/quotes" },
+    ],
+    featureKey: "crm",
+  },
+  {
     label: "전자결재",
     items: [
       { label: "기안함", href: "/approvals" },
