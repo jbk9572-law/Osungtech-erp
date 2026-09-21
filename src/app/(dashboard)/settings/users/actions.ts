@@ -155,6 +155,15 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
     }
   }
 
+  // createUserAccount와 동일하게 내 테넌트 슬러그로 이메일 도메인을
+  // 만들어야 한다 — 예전엔 "@osungtech.local"로 고정돼 있어서, 타 업체
+  // 계정의 아이디를 수정하면 엉뚱한(오성테크) 도메인으로 이메일이
+  // 바뀌던 버그가 있었다.
+  const { data: myTenant, error: tenantError } = await supabase.from("tenants").select("slug").maybeSingle();
+  if (tenantError || !myTenant) {
+    return { error: "소속 테넌트를 확인하지 못해 계정을 수정할 수 없습니다." };
+  }
+
   let admin;
   try {
     admin = createAdminClient();
@@ -162,7 +171,7 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
     return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
   }
 
-  const email = `${username}@osungtech.local`;
+  const email = `${username}@${myTenant.slug}.elvonix.local`;
   const { error: authError } = await admin.auth.admin.updateUserById(userId, {
     email,
     ...(newPassword ? { password: newPassword } : {}),

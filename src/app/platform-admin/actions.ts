@@ -92,3 +92,147 @@ export async function createCompanyTenant(_prevState: FormState, formData: FormD
   revalidatePath("/platform-admin");
   return { success: `"${companyName}" 테넌트와 관리자 계정을 만들었습니다.` };
 }
+
+// 회사명/슬러그 수정. 슬러그는 로그인 이메일 도메인(아이디@슬러그.elvonix.local)에
+// 그대로 쓰이므로, 바꾸면 그 회사의 모든 계정이 기존 아이디로 로그인이 안 되게
+// 된다 — 화면에도 이 경고를 같이 보여준다.
+export async function updateCompanyTenant(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 회사 정보를 수정할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const slug = String(formData.get("slug") ?? "").trim().toLowerCase();
+
+  if (!tenantId || !name || !slug) {
+    return { error: "회사명과 슬러그를 모두 입력해주세요." };
+  }
+  if (!/^[a-z0-9-]{2,32}$/.test(slug)) {
+    return { error: "슬러그는 영문 소문자/숫자/하이픈(2~32자)만 사용할 수 있습니다." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { data: existingTenant } = await admin
+    .from("tenants")
+    .select("id")
+    .eq("slug", slug)
+    .neq("id", tenantId)
+    .maybeSingle();
+  if (existingTenant) {
+    return { error: "이미 다른 회사가 사용 중인 슬러그입니다." };
+  }
+
+  const { error } = await admin.from("tenants").update({ name, slug }).eq("id", tenantId);
+  if (error) {
+    return { error: `저장에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "회사 정보를 저장했습니다." };
+}
+
+// 비활성화/재활성화 토글. 삭제와 달리 되돌릴 수 있어서 DeleteButton의
+// 확인코드 절차 없이 바로 처리한다 — 화면에서 누른 즉시 반영된다.
+export async function toggleTenantActive(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const nextDisabled = formData.get("disable") === "true";
+  if (!tenantId) return { error: "잘못된 요청입니다." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin
+    .from("tenants")
+    .update({ disabled_at: nextDisabled ? new Date().toISOString() : null })
+    .eq("id", tenantId);
+  if (error) return { error: `변경에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: nextDisabled ? "비활성화했습니다." : "다시 활성화했습니다." };
+}
+
+const PLANS = ["trial", "active", "suspended"] as const;
+
+// 요금제 상태 변경. 실제 결제 연동은 없고, 지금은 운영자가 수동으로
+// 붙이는 상태 표시일 뿐이다(백로그: 실제 결제 연동 전까지 임시).
+export async function updateTenantPlan(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const plan = String(formData.get("plan") ?? "");
+  if (!tenantId || !(PLANS as readonly string[]).includes(plan)) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin.from("tenants").update({ plan }).eq("id", tenantId);
+  if (error) return { error: `변경에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "요금제 상태를 저장했습니다." };
+}
+
+// 특정 회사 소속 사용자의 비밀번호를 강제로 재설정한다. 그 회사 관리자가
+// 비밀번호를 잊어버려 본인 계정으로도, 같은 회사 다른 관리자 계정으로도
+// 로그인할 수 없을 때 쓰는 최후 수단이라 플랫폼 운영자 권한으로만 연다.
+export async function resetTenantUserPassword(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 비밀번호를 재설정할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const userId = String(formData.get("userId") ?? "");
+  const newPassword = String(formData.get("newPassword") ?? "");
+
+  if (!tenantId || !userId || newPassword.length < 6) {
+    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  // userId가 정말 이 tenantId 소속인지 확인한다 — 화면에서 넘어온 값을
+  // 그대로 믿고 비밀번호를 바꾸면, 폼 값 조작만으로 아무 회사 계정의
+  // 비밀번호나 재설정할 수 있게 된다.
+  const { data: membership } = await admin
+    .from("tenant_members")
+    .select("user_id")
+    .eq("tenant_id", tenantId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!membership) {
+    return { error: "해당 회사 소속 계정을 찾을 수 없습니다." };
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(userId, { password: newPassword });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "비밀번호를 재설정했습니다." };
+}

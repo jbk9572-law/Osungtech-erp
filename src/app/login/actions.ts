@@ -45,6 +45,20 @@ export async function login(_prevState: { error: string } | undefined, formData:
       return { error: "존재하지 않는 아이디입니다." };
     }
     email = resolvedEmail;
+
+    // 플랫폼 관리자가 회사(테넌트)를 비활성화하면, 비밀번호가 맞아도
+    // 로그인 자체를 막아야 한다 — 아래 signInWithPassword는 그 회사
+    // 계정 여부를 모르므로 여기서 먼저 확인한다.
+    const { data: tenantDisabled, error: disabledCheckError } = await admin.rpc(
+      "is_login_tenant_disabled",
+      { p_username: loginId }
+    );
+    if (disabledCheckError) {
+      return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
+    }
+    if (tenantDisabled) {
+      return { error: "이 회사 계정은 비활성화되었습니다. 관리자에게 문의해주세요." };
+    }
   }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });

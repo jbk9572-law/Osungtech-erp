@@ -760,6 +760,8 @@ export type Database = {
           slug: string;
           created_at: string;
           disabled_features: string[];
+          disabled_at: string | null;
+          plan: string;
         };
         Insert: {
           id?: string;
@@ -767,6 +769,8 @@ export type Database = {
           slug: string;
           created_at?: string;
           disabled_features?: string[];
+          disabled_at?: string | null;
+          plan?: string;
         };
         Update: {
           id?: string;
@@ -774,6 +778,8 @@ export type Database = {
           slug?: string;
           created_at?: string;
           disabled_features?: string[];
+          disabled_at?: string | null;
+          plan?: string;
         };
         Relationships: [];
       };
@@ -1509,6 +1515,7 @@ export type Database = {
           delivery_note_variant: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
           created_at: string;
+          tenant_id: string;
         };
         Insert: {
           id?: string;
@@ -1525,6 +1532,7 @@ export type Database = {
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template?: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
           created_at?: string;
+          tenant_id?: string;
         };
         Update: {
           id?: string;
@@ -1541,6 +1549,7 @@ export type Database = {
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template?: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
           created_at?: string;
+          tenant_id?: string;
         };
         Relationships: [];
       };
@@ -1801,6 +1810,7 @@ export type Database = {
           tax_type: "과세" | "면세" | "영세";
           evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
           statement_issued_at: string | null;
+          tenant_id: string;
         };
         Insert: {
           id?: string;
@@ -1823,6 +1833,7 @@ export type Database = {
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
           statement_issued_at?: string | null;
+          tenant_id?: string;
         };
         Update: {
           id?: string;
@@ -1845,6 +1856,7 @@ export type Database = {
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
           statement_issued_at?: string | null;
+          tenant_id?: string;
         };
         Relationships: [
           {
@@ -1940,6 +1952,7 @@ export type Database = {
           tax_type: "과세" | "면세" | "영세";
           evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
           statement_issued_at: string | null;
+          tenant_id: string;
         };
         Insert: {
           id?: string;
@@ -1956,6 +1969,7 @@ export type Database = {
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
           statement_issued_at?: string | null;
+          tenant_id?: string;
         };
         Update: {
           id?: string;
@@ -1972,6 +1986,7 @@ export type Database = {
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
           statement_issued_at?: string | null;
+          tenant_id?: string;
         };
         Relationships: [
           {
@@ -2901,6 +2916,10 @@ export type Database = {
       };
       is_platform_admin: {
         Args: Record<string, never>;
+        Returns: boolean;
+      };
+      is_login_tenant_disabled: {
+        Args: { p_username: string };
         Returns: boolean;
       };
       toggle_todo_done: {
