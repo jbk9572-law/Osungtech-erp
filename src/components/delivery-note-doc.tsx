@@ -257,10 +257,10 @@ export function DeliveryNoteDoc({
       <div className="flex items-stretch justify-around border-t border-black text-sm">
         <div className="relative flex flex-1 items-center gap-2 px-3 py-4">
           <span>공급자</span>
-          <span className="text-xs text-gray-700">㈜오성테크</span>
+          <span className="text-xs text-gray-700">{company?.name ?? "-"}</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={company?.seal_image_url || "/branding/company-seal.png"}
+            src={company?.seal_image_url || "/branding/sample-company-seal.png"}
             alt=""
             aria-hidden
             className="pointer-events-none absolute top-1/2 right-10 h-10 w-10 -translate-y-1/2 opacity-90 mix-blend-multiply"

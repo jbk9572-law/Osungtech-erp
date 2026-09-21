@@ -139,11 +139,17 @@ const DEMO_DEFAULT_URLS: Record<BrandingSlot, string> = {
   seal_image_url: "/branding/sample-company-seal.png",
 };
 
-// 업로드한 로고/도장을 기본값으로 되돌린다. 실제 계정은 null로 되돌려
-// 원래 회사 로고(레포에 커밋된 기본 이미지)가 다시 보이게 하고, 데모
-// 계정은 null이 아니라 위 샘플 이미지로 되돌린다 — null로 두면 이
-// 화면(BrandingSlot)의 defaultUrl prop이 그대로 실제 회사 로고 경로라
-// 데모 화면에 실제 로고가 다시 노출돼버린다.
+// 업로드한 로고/도장을 기본값으로 되돌린다. 실제 계정은 null로 되돌리는데,
+// 로고는 null이면 ELVONIX 기본 로고(레포에 커밋된 이미지, 브랜드 공용
+// 자산이라 아무 회사가 봐도 무방함)가 보이지만, 도장은 다르다 — null이면
+// 반드시 "샘플" 플레이스홀더(sample-company-seal.png)가 보여야 한다.
+// 예전엔 도장 기본값이 오성테크의 실제 법인 인감 이미지였는데, 도장을
+// 안 올린 다른 회사 화면(실제 거래명세표/세금계산서 포함)에 오성테크의
+// 진짜 인감이 그대로 노출되는 심각한 문제가 있었다. 데모 계정은 null이
+// 아니라 위 샘플 이미지로 명시적으로 되돌린다 — null로 두면 이
+// 화면(BrandingSlot)의 defaultUrl prop을 그대로 쓰게 되는데, 로고는
+// 그래도 되지만 도장은 항상 샘플이어야 하므로 이제 로고/도장 모두
+// 결과적으로 안전한 기본값을 보게 된다.
 export async function resetBrandingImage(
   _prevState: FormState,
   formData: FormData
