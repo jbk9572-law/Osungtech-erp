@@ -239,12 +239,7 @@ export default async function InventoryCountPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고 실사</h1>
-        <Link href="/inventory" className="erp-btn erp-btn-dark">
-          ESC 닫기
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고 실사</h1>
       <PageGuide>
         전산 재고와 실제 수량을 비교해 맞추고, 지금까지의 실사 이력을 함께 확인합니다.
       </PageGuide>

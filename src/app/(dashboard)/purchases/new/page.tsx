@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
 import {
   applyDuePriceSchedules,
   applyDuePurchasePriceSchedules,
@@ -131,14 +130,9 @@ export default async function NewPurchasePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
-      <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          새 매입(입고) 등록
-        </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <CloseButton href="/purchases" />
-        </div>
-      </div>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+        새 매입(입고) 등록
+      </h1>
       {saved && (
         <p
           className="mb-3 rounded p-2 text-xs"

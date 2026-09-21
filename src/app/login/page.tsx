@@ -42,15 +42,15 @@ function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#eef1f5] px-4 py-6">
       <div className="flex w-full max-w-[640px] flex-col overflow-hidden rounded-sm border border-[#e2e5eb] bg-white shadow-sm md:h-[420px] md:w-[640px] md:flex-row">
-        <div className="flex flex-col justify-between bg-[#4a6fa5] p-7 text-white md:w-[260px]">
+        <div className="flex flex-col justify-between bg-[#132944] p-7 text-white md:w-[260px]">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/branding/logo-mark.png"
               alt=""
-              className="h-12 w-12 rounded bg-white/10 object-contain p-1"
+              className="h-12 w-12 rounded bg-white object-contain p-1"
             />
-            <h1 className="mt-4 text-lg font-bold tracking-tight">NEST ERP</h1>
+            <h1 className="mt-4 text-lg font-bold tracking-tight">ELVONIX</h1>
             <p className="mt-2 text-xs leading-relaxed text-white/80">
               Integrated Business
               <br />
@@ -59,7 +59,7 @@ function LoginForm() {
           </div>
           <div className="text-[10px] text-white/60">
             <p>Version 1.0</p>
-            <p className="mt-1">&copy; {new Date().getFullYear()} 오성테크</p>
+            <p className="mt-1">&copy; {new Date().getFullYear()} ELVONIX</p>
           </div>
         </div>
 
@@ -77,7 +77,7 @@ function LoginForm() {
                 autoComplete="username"
                 required
                 defaultValue={savedEmail}
-                className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#4a6fa5] focus:shadow-[0_0_0_3px_rgba(74,111,165,0.16)] focus:outline-none"
+                className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#132944] focus:shadow-[0_0_0_3px_rgba(19,41,68,0.16)] focus:outline-none"
               />
             </div>
             <div>
@@ -90,7 +90,7 @@ function LoginForm() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#4a6fa5] focus:shadow-[0_0_0_3px_rgba(74,111,165,0.16)] focus:outline-none"
+                  className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#132944] focus:shadow-[0_0_0_3px_rgba(19,41,68,0.16)] focus:outline-none"
                 />
                 <button
                   type="button"
@@ -116,7 +116,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={pending}
-              className="h-10 w-full rounded-sm bg-[#4a6fa5] text-sm font-semibold text-white hover:bg-[#35507d] disabled:opacity-50"
+              className="h-10 w-full rounded-sm bg-[#132944] text-sm font-semibold text-white hover:bg-[#0d1d30] disabled:opacity-50"
             >
               {pending ? (
                 <>
@@ -129,8 +129,8 @@ function LoginForm() {
           </form>
 
           <div className="flex justify-between border-t border-[#eef0f3] pt-2 text-[10px] text-[#6b7280]">
-            <span>NEST ERP v1.0</span>
-            <span>&copy; {new Date().getFullYear()} 오성테크</span>
+            <span>ELVONIX v1.0</span>
+            <span>&copy; {new Date().getFullYear()} ELVONIX</span>
           </div>
         </div>
       </div>

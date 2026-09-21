@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { FeatureToggle } from "@/components/feature-toggle";
 import { setTenantFeatureEnabled } from "@/app/(dashboard)/settings/features/actions";
@@ -29,10 +28,7 @@ export default async function FeatureSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 기능 관리</h1>
-        <CloseButton href="/dashboard" />
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 기능 관리</h1>
 
       <PageGuide>
         모든 회사가 모든 기능을 쓰지는 않으므로, 안 쓰는 기능은 꺼서

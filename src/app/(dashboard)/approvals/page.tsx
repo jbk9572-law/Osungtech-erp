@@ -113,9 +113,6 @@ export default async function ApprovalsPage({
             <Link href="/settings/delegations" className="erp-btn">
               전결권 관리
             </Link>
-            <Link href="/dashboard" className="erp-btn erp-btn-dark">
-              ESC 닫기
-            </Link>
           </>
         }
       />

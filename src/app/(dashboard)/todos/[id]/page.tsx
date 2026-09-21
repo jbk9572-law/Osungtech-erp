@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
@@ -174,9 +174,9 @@ export default async function TodoDetailPage({
                     </td>
                     <td className="num">
                       {latestCalcId && (
-                        <Link href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)", fontWeight: 700 }}>
+                        <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)", fontWeight: 700 }}>
                           도면 보기 →
-                        </Link>
+                        </PaperCalcNavLink>
                       )}
                     </td>
                   </tr>

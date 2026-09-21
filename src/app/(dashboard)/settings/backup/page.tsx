@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/require-admin";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { BackupRestoreForm } from "@/components/backup-restore-form";
@@ -17,12 +16,7 @@ export default async function BackupSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">시스템관리 &gt; 백업/복원</h1>
-        <Link href="/dashboard" className="erp-btn erp-btn-dark">
-          ESC 닫기
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">시스템관리 &gt; 백업/복원</h1>
 
       {!isAdmin ? (
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>

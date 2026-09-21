@@ -83,14 +83,9 @@ export default async function DepartmentsPage() {
       <ListPageHeader
         title="환경설정 > 조직도 관리"
         actions={
-          <>
-            <Link href="/settings/departments/new" className="erp-btn erp-btn-primary">
-              F2 새 부서
-            </Link>
-            <Link href="/dashboard" className="erp-btn erp-btn-dark">
-              ESC 닫기
-            </Link>
-          </>
+          <Link href="/settings/departments/new" className="erp-btn erp-btn-primary">
+            F2 새 부서
+          </Link>
         }
       />
 

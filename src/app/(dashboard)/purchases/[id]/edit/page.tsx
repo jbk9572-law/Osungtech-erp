@@ -4,7 +4,6 @@ import { NewPurchaseForm } from "@/components/new-purchase-form";
 import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { updatePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -140,7 +139,6 @@ export default async function EditPurchasePage({
           <PaperCalcNavLink href={`/paper-calc?purchaseOrderId=${id}`} className="erp-btn">
             모조지 계산
           </PaperCalcNavLink>
-          <CloseButton href={`/purchases/${id}`} />
         </div>
       </div>
       <NewPurchaseForm

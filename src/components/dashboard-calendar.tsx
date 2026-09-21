@@ -443,12 +443,12 @@ export function groupProductItemsByLabel(
         push(d.partnerName, false, taken, note);
       });
     } else if (reversePool && !isReturn) {
-      // 오늘 이 규격을 여러 공급처에서 나눠 샀을 수 있어서(예: A사 80개 +
-      // B사 20개), drawFromPool이 돌려주는 매입처별 내역 그대로 각각
-      // "매입처 -> 출고처" 줄로 쪼갠다 — 매입 쪽의 destinationsIncludingStock과
-      // 대칭되는 처리다. 출고처(고객명)는 이 품목 그룹 전체가 이미 같은
-      // 거래처로 묶여 있으므로 아무 항목에서나 partnerName을 가져오면 된다.
-      const customerName = specGroup.items[0]?.partnerName ?? "";
+      // 예전엔 당일 매입 origin까지 밝혀 "매입처 -> 출고처"로 표시했는데,
+      // 출고처(고객명)는 이 파트너 블록 맨 위(- {거래처명})에 이미 나와
+      // 있고, 그 매입 내역 자체도 매입 복사/화면 쪽에 이미 나오므로
+      // 매출 쪽에서 또 밝히는 게 중복이라는 지적으로 없앴다. 당일 매입과
+      // 매칭되는 만큼은 라벨 없이, 매칭 안 되고 재고에서 나간 만큼만
+      // "재고분 출고"로 구분해서 보여준다(이 구분 자체는 그대로 유지).
       const origins = drawFromPool(reversePool, product.productName, specGroup.spec, quantity);
       const purchasedQuantity = origins.reduce((sum, d) => sum + d.quantity, 0);
 
@@ -457,14 +457,10 @@ export function groupProductItemsByLabel(
         continue;
       }
 
-      let remaining = specGroup.items;
-      origins.forEach((o) => {
-        const { taken, rest } = takeItems(remaining, o.quantity);
-        remaining = rest;
-        push(`${o.partnerName} -> ${customerName}`, false, taken);
-      });
-      if (remaining.length) {
-        push(STOCK_SALE_LABEL, true, remaining);
+      const { taken, rest } = takeItems(specGroup.items, purchasedQuantity);
+      push(null, false, taken);
+      if (rest.length) {
+        push(STOCK_SALE_LABEL, true, rest);
       }
     } else {
       push(null, false, specGroup.items);
@@ -526,7 +522,18 @@ export function stripFilterUnitsForCopy(spec: string, categoryName: string | nul
 
 // 전체 품목에서 박스 수 표기를 빼는 거래처 — 품목/카테고리 조건 없이
 // 무조건 뺀다.
-const STRIP_BOX_COUNT_ALWAYS = new Set(["신일베스텍", "(주)에이티씨", "(주)타이거일렉"]);
+const STRIP_BOX_COUNT_ALWAYS = new Set([
+  "신일베스텍",
+  "(주)에이티씨",
+  "(주)타이거일렉",
+  "WOTE",
+  "이온하이텍",
+  "태창",
+]);
+
+// 원지류(낱장/연 단위로 세는 종이)는 거래처와 무관하게 박스 수 표기 자체가
+// 의미가 없어서 품목명 기준으로 뺀다.
+const STRIP_BOX_COUNT_PRODUCT_KEYWORDS = ["크라프트지", "모조지", "아트지", "무진지"];
 
 // 거래처별로 카톡복사 텍스트에서 박스 수 표기("(N박스)")를 빼달라는 요청 —
 // 화면 표시는 그대로 두고 복사 텍스트에서만 적용한다(stripFilterUnitsForCopy와
@@ -536,8 +543,10 @@ export function shouldStripBoxCountForCopy(
   customerName: string,
   sku: string | null,
   categoryName: string | null,
+  productName: string | null = null,
 ): boolean {
   if (STRIP_BOX_COUNT_ALWAYS.has(customerName)) return true;
+  if (productName && STRIP_BOX_COUNT_PRODUCT_KEYWORDS.some((kw) => productName.includes(kw))) return true;
   if (customerName === "나영식테크") {
     const upperSku = sku?.toUpperCase() ?? "";
     if (upperSku === "ST1" || upperSku === "FM") return true;
@@ -580,7 +589,7 @@ function buildProductLineGroups(
       const categoryName = lis[0]?.item.categoryName ?? null;
       const sku = lis[0]?.item.sku ?? null;
       const customerName = lis[0]?.item.partnerName ?? "";
-      const basePackageQty = shouldStripBoxCountForCopy(customerName, sku, categoryName)
+      const basePackageQty = shouldStripBoxCountForCopy(customerName, sku, categoryName, product.productName)
         ? null
         : (lis[0]?.item.basePackageQty ?? null);
       const isReturn = lis.some((li) => li.item.isReturn);

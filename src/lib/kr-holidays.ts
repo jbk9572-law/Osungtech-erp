@@ -112,9 +112,17 @@ function buildHolidayMap(): Map<string, string> {
 
   for (const g of groups) {
     if (!g.substitutable) continue;
+    // 설날/추석 연휴는 "일요일"과 겹칠 때만 대체공휴일이 생긴다 — 토요일과만
+    // 겹치는 건 해당 안 된다(관공서의 공휴일에 관한 규정 제3조). 반면
+    // 어린이날/3·1절/광복절/개천절/한글날/성탄절/부처님오신날처럼 하루짜리
+    // 공휴일은 토요일·일요일 겹침 둘 다 대체공휴일 대상이다 — 이 둘을
+    // 같은 기준(토/일 다 인정)으로 계산하면 추석/설날 연휴 마지막 날이
+    // 토요일인 해(예: 2026년 추석)에 실제로는 없는 대체공휴일을 잘못
+    // 만들어낸다.
+    const isLunarHolidayRecess = g.name === "설날" || g.name === "추석";
     const overlapsWeekend = g.dates.some((d) => {
       const dow = dayOfWeek(d);
-      return dow === 0 || dow === 6;
+      return isLunarHolidayRecess ? dow === 0 : dow === 0 || dow === 6;
     });
     const overlapsOtherHoliday =
       g.name.includes(" · ") || g.dates.some((d) => (claims.get(d)?.size ?? 0) > 1);

@@ -103,34 +103,35 @@ describe("groupProductItemsByLabel — 매출(원재료), 매입처 추적", () 
     expect(groups[0].label).toBe("재고분 출고");
   });
 
-  it("당일 매입 한 곳에서 전량 커버되면 '매입처 -> 출고처' 라벨이 붙는다", () => {
+  it("당일 매입 한 곳에서 전량 커버되면 라벨 없이(출고처는 상단에 이미 있음) 한 그룹이 된다", () => {
     const sold = [row({ partnerName: "명진화학", quantity: 50 })];
     const purchasedToday = buildDestinationPool([row({ partnerName: "분필타셈유한산업", quantity: 100 })]);
     const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
     expect(groups).toHaveLength(1);
-    expect(groups[0].label).toBe("분필타셈유한산업 -> 명진화학");
+    expect(groups[0].label).toBeNull();
   });
 
-  it("당일 매입 여러 공급처에서 나눠 커버되면 공급처별로 줄이 나뉜다", () => {
+  it("당일 매입 여러 공급처에서 나눠 커버돼도 매입처별로 안 쪼개고 한 그룹으로 합친다", () => {
+    // 예전엔 어느 공급처에서 얼마씩 샀는지 라벨로 쪼개 보여줬는데, 매입
+    // 쪽 화면/복사에 이미 나오는 정보라 매출 쪽에서 또 밝히는 게
+    // 중복이라는 지적으로 없앴다 — 매칭된 몫은 공급처 구분 없이 합친다.
     const sold = [row({ partnerName: "명진화학", quantity: 100 })];
     const purchasedToday = buildDestinationPool([
       row({ partnerName: "A공급처", quantity: 80 }),
       row({ partnerName: "B공급처", quantity: 30 }),
     ]);
     const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
-    expect(groups).toHaveLength(2);
-    expect(groups[0].label).toBe("A공급처 -> 명진화학");
-    expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(80);
-    expect(groups[1].label).toBe("B공급처 -> 명진화학");
-    expect(groups[1].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(20);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].label).toBeNull();
+    expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(100);
   });
 
-  it("일부는 당일 매입, 나머지는 재고면 매입처 라벨 + 재고분출고가 같이 나온다", () => {
+  it("일부는 당일 매입, 나머지는 재고면 라벨 없는 매입분 + 재고분출고가 같이 나온다", () => {
     const sold = [row({ partnerName: "명진화학", quantity: 100 })];
     const purchasedToday = buildDestinationPool([row({ partnerName: "분필타셈유한산업", quantity: 40 })]);
     const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
     expect(groups).toHaveLength(2);
-    expect(groups[0].label).toBe("분필타셈유한산업 -> 명진화학");
+    expect(groups[0].label).toBeNull();
     expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(40);
     expect(groups[1].label).toBe("재고분 출고");
     expect(groups[1].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(60);
@@ -202,11 +203,23 @@ describe("stripFilterUnitsForCopy", () => {
 });
 
 describe("shouldStripBoxCountForCopy", () => {
-  it("신일베스텍/(주)에이티씨/(주)타이거일렉은 품목/카테고리 상관없이 항상 뺀다", () => {
+  it("신일베스텍/(주)에이티씨/(주)타이거일렉/WOTE/이온하이텍/태창은 품목/카테고리 상관없이 항상 뺀다", () => {
     expect(shouldStripBoxCountForCopy("신일베스텍", "ANYTHING", "Paper")).toBe(true);
     expect(shouldStripBoxCountForCopy("신일베스텍", null, null)).toBe(true);
     expect(shouldStripBoxCountForCopy("(주)에이티씨", "ANYTHING", "Paper")).toBe(true);
     expect(shouldStripBoxCountForCopy("(주)타이거일렉", null, null)).toBe(true);
+    expect(shouldStripBoxCountForCopy("WOTE", null, null)).toBe(true);
+    expect(shouldStripBoxCountForCopy("이온하이텍", null, null)).toBe(true);
+    expect(shouldStripBoxCountForCopy("태창", null, null)).toBe(true);
+  });
+
+  it("품목명에 크라프트지/모조지/아트지/무진지가 들어가면 거래처 상관없이 항상 뺀다", () => {
+    expect(shouldStripBoxCountForCopy("명진화학", null, null, "크라프트지 120g")).toBe(true);
+    expect(shouldStripBoxCountForCopy("명진화학", null, null, "모조지 100")).toBe(true);
+    expect(shouldStripBoxCountForCopy("명진화학", null, null, "아트지")).toBe(true);
+    expect(shouldStripBoxCountForCopy("명진화학", null, null, "무진지")).toBe(true);
+    expect(shouldStripBoxCountForCopy("명진화학", null, null, "필터원단")).toBe(false);
+    expect(shouldStripBoxCountForCopy("명진화학", null, null, null)).toBe(false);
   });
 
   it("나영식테크는 SKU가 ST1/FM이거나 카테고리가 Bobbin일 때만 뺀다", () => {

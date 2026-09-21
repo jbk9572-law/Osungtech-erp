@@ -739,7 +739,22 @@ export function NewSaleForm({
       ref={formRef}
       action={formAction}
       className="space-y-6"
-      onKeyDown={preventEnterSubmit}
+      onKeyDown={(e) => {
+        preventEnterSubmit(e);
+        // ESC는 이 화면에서 "그냥 닫기"가 아니라 F7과 같은 "저장 후
+        // 닫기"로 동작한다(실패하면 에러만 뜨고 안 닫힘 — 기존 저장
+        // 버튼 로직을 그대로 탄다). 상단 툴바의 "✕" 버튼은 그대로 저장
+        // 없이 즉시 닫힌다 — 사용자가 그 둘을 구분해 쓸 수 있게 한다.
+        // stopPropagation으로 이 keydown이 window까지 올라가는 걸 막아,
+        // 모달 셸/페이지의 "그냥 닫기" ESC 핸들러가 같은 키 입력에
+        // 동시에 반응해 저장이 끝나기 전에 먼저 닫혀버리는 걸 막는다.
+        // (자동완성 드롭다운의 ESC는 캡처 단계에서 먼저 소비되므로 여기
+        // 도달 전에 이미 처리되어 있다 — 드롭다운만 닫히고 저장은 안 됨.)
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          submitRef.current?.click();
+        }
+      }}
       onChangeCapture={() => setMessageDismissed(true)}
       onClickCapture={() => setMessageDismissed(true)}
       onSubmit={(e) => {

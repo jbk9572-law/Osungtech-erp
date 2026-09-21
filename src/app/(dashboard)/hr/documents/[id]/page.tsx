@@ -3,7 +3,6 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
 import { IssueDocumentButton } from "@/components/issue-document-button";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
 import { deleteDocument, issueDocument } from "@/app/(dashboard)/hr/documents/actions";
@@ -35,13 +34,12 @@ export default async function DocumentDetailPage({
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">{doc.title}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <PrintInPlaceButton href={`/hr/documents/${id}/print`} className="erp-btn">
+          <PrintInPlaceButton href={`/hr/documents/${id}/print`}>
             F9 인쇄
           </PrintInPlaceButton>
           {canManage && (
             <DeleteButton action={deleteDocument} id={id} confirmMessage="이 문서를 삭제하시겠습니까?" />
           )}
-          <CloseButton href="/hr/documents" />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">

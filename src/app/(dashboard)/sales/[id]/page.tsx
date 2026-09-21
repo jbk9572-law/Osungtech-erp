@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { CloseButton } from "@/components/erp/close-button";
+import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
 import { formatPackageQty } from "@/lib/package-qty";
 import {
   formatPaperCalcSizeLines,
@@ -125,11 +125,11 @@ export default async function SaleDetailPage({
             </Link>
           )}
           {allowManage && (
-            <Link href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
+            <PaperCalcNavLink href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
               {paperCalcs && paperCalcs.length > 0
                 ? "모조지 계산 이력"
                 : "모조지 계산"}
-            </Link>
+            </PaperCalcNavLink>
           )}
           {allowManage && (
             <DeleteButton
@@ -138,7 +138,6 @@ export default async function SaleDetailPage({
               confirmMessage="이 매출 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
             />
           )}
-          <CloseButton href={closeHref} />
         </div>
       </div>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">

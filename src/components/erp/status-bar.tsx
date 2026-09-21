@@ -14,7 +14,7 @@ export function StatusBar({
       <span>회사: {companyName || "오성테크"}</span>
       <span className="sep">|</span>
       <span>{now}</span>
-      <span style={{ marginLeft: "auto" }}>NEST ERP v1.0</span>
+      <span style={{ marginLeft: "auto" }}>ELVONIX v1.0</span>
     </div>
   );
 }

@@ -406,14 +406,9 @@ export default async function AuditLogPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/company" } }} />
-      <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
-          시스템관리 &gt; 변경 이력
-        </h1>
-        <Link href="/settings/company" className="erp-btn erp-btn-dark">
-          ESC 닫기
-        </Link>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        시스템관리 &gt; 변경 이력
+      </h1>
       <PageGuide>
         매출·매입·품목·거래처·계정 권한의 등록/수정/삭제 이력과 재고 조정 이력입니다. 관리자만 볼 수
         있습니다.

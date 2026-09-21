@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { sumFormulaOrZero } from "@/lib/xlsx-response";
 
 // 매출처마다 실제로 쓰는 엑셀 명세표 양식이 있어서, 그 거래처로 다운로드할 때는
 // 우리 시스템의 일반 컬럼 나열 대신 이 양식대로(수신/발신·합계금액 한글표기
@@ -285,10 +286,10 @@ export async function buildFilterBoxStatementWorkbook(
   sheet.getCell(totalRow, 1).value = "합계";
   sheet.getCell(totalRow, 1).font = { bold: true };
   const supplyTotal = sheet.getCell(totalRow, 8);
-  supplyTotal.value = { formula: `SUM(H12:H${totalRow - 1})` };
+  supplyTotal.value = sumFormulaOrZero("H", 12, totalRow - 1);
   supplyTotal.numFmt = NUM_FORMAT;
   const taxTotal = sheet.getCell(totalRow, 9);
-  taxTotal.value = { formula: `SUM(I12:I${totalRow - 1})` };
+  taxTotal.value = sumFormulaOrZero("I", 12, totalRow - 1);
   taxTotal.numFmt = NUM_FORMAT;
   const grandTotal = sheet.getCell(totalRow, 2);
   grandTotal.value = { formula: `SUM(H${totalRow}:I${totalRow})` };
@@ -356,10 +357,10 @@ export async function buildFilterNoBoxStatementWorkbook(
   sheet.getCell(totalRow, 1).value = "합계";
   sheet.getCell(totalRow, 1).font = { bold: true };
   const supplyTotal = sheet.getCell(totalRow, 7);
-  supplyTotal.value = { formula: `SUM(G12:G${totalRow - 1})` };
+  supplyTotal.value = sumFormulaOrZero("G", 12, totalRow - 1);
   supplyTotal.numFmt = NUM_FORMAT;
   const taxTotal = sheet.getCell(totalRow, 8);
-  taxTotal.value = { formula: `SUM(H12:H${totalRow - 1})` };
+  taxTotal.value = sumFormulaOrZero("H", 12, totalRow - 1);
   taxTotal.numFmt = NUM_FORMAT;
   const grandTotal = sheet.getCell(totalRow, 2);
   grandTotal.value = { formula: `G${totalRow}+H${totalRow}` };
@@ -437,10 +438,10 @@ export async function buildPaperRollStatementWorkbook(
   sheet.getCell(totalRow, 1).value = "합계";
   sheet.getCell(totalRow, 1).font = { bold: true };
   const amountTotal = sheet.getCell(totalRow, 9);
-  amountTotal.value = { formula: `SUM(I12:I${totalRow - 1})` };
+  amountTotal.value = sumFormulaOrZero("I", 12, totalRow - 1);
   amountTotal.numFmt = NUM_FORMAT;
   const taxTotal = sheet.getCell(totalRow, 10);
-  taxTotal.value = { formula: `SUM(J12:J${totalRow - 1})` };
+  taxTotal.value = sumFormulaOrZero("J", 12, totalRow - 1);
   taxTotal.numFmt = NUM_FORMAT;
   const grandTotal = sheet.getCell(totalRow, 2);
   grandTotal.value = { formula: `SUM(I${totalRow}+J${totalRow})` };

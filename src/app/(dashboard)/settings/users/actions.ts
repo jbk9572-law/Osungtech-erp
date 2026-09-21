@@ -14,12 +14,22 @@ function isRole(value: string): value is Role {
 }
 
 // 관리자 전용 계정 생성. 이메일 대신 아이디만 입력받고, 실제 Supabase Auth용
-// 이메일은 "아이디@osungtech.local"로 자동 생성한다(로그인 화면에서 아이디를
-// 입력하면 이 이메일로 변환되어 로그인된다). service_role 키가 필요해서
-// 서버 환경변수(SUPABASE_SERVICE_ROLE_KEY)가 없으면 실패한다.
+// 이메일은 "아이디@<내 테넌트 슬러그>.elvonix.local"로 자동 생성한다(로그인
+// 화면에서 아이디를 입력하면 이 이메일로 변환되어 로그인된다) — 예전엔
+// "@osungtech.local"로 고정돼 있었는데, 타 업체(테넌트 #2)가 생기면서
+// 회사마다 다른 슬러그를 써야 다른 회사의 같은 아이디와 이메일이
+// 충돌하지 않는다. service_role 키가 필요해서 서버 환경변수
+// (SUPABASE_SERVICE_ROLE_KEY)가 없으면 실패한다.
 export async function createUserAccount(_prevState: FormState, formData: FormData): Promise<FormState> {
-  const { isAdmin } = await requireAdmin();
+  const { supabase, isAdmin } = await requireAdmin();
   if (!isAdmin) return { error: "관리자만 계정을 생성할 수 있습니다." };
+
+  // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
+  // 별도 id 조건이 필요 없다.
+  const { data: myTenant, error: tenantError } = await supabase.from("tenants").select("id, slug").maybeSingle();
+  if (tenantError || !myTenant) {
+    return { error: "소속 테넌트를 확인하지 못해 계정을 만들 수 없습니다." };
+  }
 
   const username = String(formData.get("username") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim();
@@ -47,12 +57,12 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
     return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
   }
 
-  const email = `${username}@osungtech.local`;
+  const email = `${username}@${myTenant.slug}.elvonix.local`;
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, username },
+    user_metadata: { full_name: fullName, username, tenant_id: myTenant.id },
   });
 
   if (error || !created.user) {

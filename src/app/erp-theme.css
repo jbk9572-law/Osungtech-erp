@@ -1,4 +1,4 @@
-/* NEST ERP 데스크톱 디자인 시스템 — .erp 스코프 안에서만 적용된다.
+/* ELVONIX 데스크톱 디자인 시스템 — .erp 스코프 안에서만 적용된다.
    로그인/인쇄(print) 라우트는 이 파일 자체를 불러오지 않아서 이 테마의
    영향을 받지 않는다(대시보드 레이아웃에서만 import한다).
    색상 변수(--erp-*)는 :root에 둔다 — 검색창 드롭다운 등 일부 팝업이
@@ -7,12 +7,14 @@
    (예: 방향키/마우스로 항목을 짚어도 배경색이 하나도 안 바뀌는 문제)
    조용히 깨진다. */
 :root {
-  /* 파란 포인트가 그래도 너무 쨍하다는 피드백으로 채도를 낮춘 파스텔
-     톤으로 다시 조정한다 — 모서리/그림자/여백 등 형태 언어는 그대로
-     둔다. 시맨틱 색(success/warning/danger)은 브랜드 포인트색과
-     별개로 그대로 둔다. */
-  --erp-primary: #4a6fa5;
-  --erp-primary-dark: #35507d;
+  /* 브랜드 로고(엘보닉스) "E" 마크 본체의 짙은 남색에 맞춰 조정 —
+     로고 안쪽의 밝은 포인트 블루가 아니라 마크 몸통 색이 기준이다.
+     예전엔 반대로 "포인트가 너무 쨍하다"는 피드백으로 채도를 낮춘
+     이력이 있다(그 낮춘 값과는 또 다른, 로고 기준의 짙은 톤). 모서리/
+     그림자/여백 등 형태 언어는 그대로 둔다. 시맨틱 색(success/
+     warning/danger)은 브랜드 포인트색과 별개로 그대로 둔다. */
+  --erp-primary: #132944;
+  --erp-primary-dark: #0d1d30;
   --erp-border: #e2e5eb;
   --erp-hover: #eef2f7;
   --erp-selected: #e3eaf4;
@@ -353,6 +355,7 @@
 }
 
 .erp-modal {
+  position: relative;
   width: 460px;
   max-width: calc(100vw - 32px);
   max-height: 70vh;
@@ -379,6 +382,38 @@
   opacity: 0;
   transform: scale(0.98);
   pointer-events: none;
+}
+
+/* 등록 모달 셸(registration-modal-shell.tsx) 전용 — 화면마다 제각각
+   "ESC 닫기"/"ESC 목록으로" 텍스트 버튼을 넣는 대신, 창(윈도우)이나
+   브라우저 창 닫을 때처럼 모달 모서리에 X 하나만 고정으로 둔다(탭바에
+   이미 탭별 닫기(×)가 있어 화면 안 텍스트 버튼은 중복이라는 지적).
+   모달 박스 테두리에 살짝 걸치게(음수 offset) 띄워서, 페이지 자체의
+   툴바 버튼과 절대 겹치지 않는다 — 페이지마다 툴바 폭이 달라도 안전.
+   erp-modal-body가 내부 스크롤(overflow-y: auto)이라, 본문을 아무리
+   내려도 이 X는 모달 바깥 기준으로 고정된 채 그대로 보인다. */
+.erp-modal-window-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--erp-border);
+  border-radius: 0;
+  background: var(--erp-text);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: var(--erp-shadow-md);
+}
+
+.erp-modal-window-close:hover {
+  background: var(--erp-danger);
+  border-color: var(--erp-danger);
 }
 
 /* 공지사항/할일/사용자 정보처럼 필드 몇 개짜리 단순한 폼을 담는 모달 —
@@ -938,7 +973,7 @@
 .erp-select:focus {
   outline: none;
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.16);
+  box-shadow: 0 0 0 3px rgba(19, 41, 68, 0.16);
 }
 
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
@@ -1017,27 +1052,35 @@
   background: var(--erp-info-bg);
 }
 
+/* "F5 조회"(erp-btn-primary) 같은 아웃라인 스타일로 통일 — 꽉 채운
+   빨간 버튼이 화면마다 하나씩 떠서 너무 튄다는 지적으로, 배경은 비우고
+   글자/테두리만 빨간색으로, 호버 시엔 다른 아웃라인 버튼들과 같은
+   방식(연한 톤 배경)으로 바꿨다. */
 .erp-btn-danger {
-  background: var(--erp-danger);
+  background: var(--erp-panel);
   border-color: var(--erp-danger);
-  color: #fff;
+  color: var(--erp-danger);
 }
 
 .erp-btn-danger:hover {
-  background: #c22636;
+  background: var(--erp-danger-bg);
 }
 
-/* ESC 닫기/취소처럼 "저장 없이 이 화면을 벗어난다"는 비파괴적 동작 —
-   같은 줄의 "삭제" 버튼과 색(빨강)이 겹쳐서 파괴적 동작인지 아닌지
-   구분이 안 된다는 지적으로, 검정 버튼으로 따로 뺐다. */
+/* 닫기(✕)/목록으로처럼 "저장 없이 이 화면을 벗어난다"는 비파괴적
+   동작 — 같은 줄의 "삭제" 버튼과 색(빨강)이 겹쳐서 파괴적 동작인지
+   아닌지 구분이 안 된다는 지적으로, 검정 계열로 따로 뺐다. 예전엔
+   꽉 채운 검정 배경이었는데, erp-btn-danger를 조회 버튼과 같은
+   아웃라인 톤으로 바꾸면서 이 버튼만 화면에서 혼자 꽉 찬 채로 남아
+   또 튀어 보였다 — 같은 아웃라인 규칙(배경 비우고 테두리/글자만
+   색, 호버는 연한 톤)으로 통일한다. */
 .erp-btn-dark {
-  background: var(--erp-text);
+  background: var(--erp-panel);
   border-color: var(--erp-text);
-  color: #fff;
+  color: var(--erp-text);
 }
 
 .erp-btn-dark:hover {
-  background: #0c1420;
+  background: var(--erp-hover);
 }
 
 /* ── 유형 토글(매출/수금, 매입/지급 등) ───────────────────── */

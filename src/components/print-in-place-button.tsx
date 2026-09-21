@@ -8,7 +8,7 @@ import { printInPlace } from "@/lib/print-in-place";
 // 똑같이 쓸 수 있도록 className을 그대로 받는다.
 export function PrintInPlaceButton({
   href,
-  className,
+  className = "erp-btn erp-btn-primary",
   style,
   children,
 }: {
