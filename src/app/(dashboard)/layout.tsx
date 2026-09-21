@@ -27,7 +27,7 @@ export default async function DashboardLayout({
   // <Suspense>로 따로 스트리밍한다(아래 usageWidget과 같은 이유) —
   // 페이지 이동마다(모달 열기 포함) 항상 같이 돌던 조회를 줄여 요청당
   // CPU 부담을 낮춘다.
-  const [{ data: company }, { data: profiles }, { data: tenant }] = await Promise.all([
+  const [{ data: company }, { data: profiles }, { data: tenant }, { data: isPlatformAdmin }] = await Promise.all([
     supabase
       .from("company_profile")
       .select("name, logo_mark_url")
@@ -38,6 +38,10 @@ export default async function DashboardLayout({
     // 전이거나 실패해도 화면 전체가 죽으면 안 되므로 그냥 빈 배열로
     // 넘어간다 — "아무 기능도 안 꺼짐"이 안전한 기본값이다.
     supabase.from("tenants").select("disabled_features").maybeSingle(),
+    // DB/스토리지/넷리파이/VPS 사용량 위젯은 플랫폼(엘보닉스) 전체 인프라
+    // 현황이라 특정 회사 직원이 볼 정보가 아니다 — 플랫폼 운영자에게만
+    // 보여준다. 조회 실패해도 false로 처리해 안전하게 숨긴다.
+    supabase.rpc("is_platform_admin"),
   ]);
 
   const profileNames = Object.fromEntries(
@@ -65,9 +69,11 @@ export default async function DashboardLayout({
         </Suspense>
       }
       usageWidget={
-        <Suspense fallback={null}>
-          <UsageWidgetPanel />
-        </Suspense>
+        isPlatformAdmin === true ? (
+          <Suspense fallback={null}>
+            <UsageWidgetPanel />
+          </Suspense>
+        ) : null
       }
       disabledFeatures={disabledFeatures}
       isAdmin={isAdmin}
