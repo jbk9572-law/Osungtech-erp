@@ -33,11 +33,12 @@ export async function updateCompanyProfile(
       manager_phone: combinePhone(formData, "mgrphone"),
       email: String(formData.get("email") ?? "") || null,
       greeting_message: String(formData.get("greeting_message") ?? "") || null,
-    });
-  // id로 안 고른다 — RLS가 실제 계정은 진짜 회사정보 행만, 데모 계정은
-  // 데모용 행만 갱신되게 걸러준다(company_profile_demo_isolation
-  // 마이그레이션 참고). id=1로 고정했다가 데모 계정이 실제 회사정보를
-  // 그대로 덮어쓰던 버그가 있었다.
+    })
+    // id 값으로 특정 행을 고르는 게 아니라(RLS가 실제/데모 계정에 맞는
+    // 행만 갱신되게 걸러준다 — company_profile_demo_isolation 마이그레이션
+    // 참고), DB가 WHERE절 없는 UPDATE 자체를 막고 있어서 형식상 항상
+    // 참인 조건을 하나 붙여준다.
+    .not("id", "is", null);
 
   if (error) {
     return {
@@ -116,8 +117,9 @@ export async function uploadBrandingImage(
         : { seal_image_url: url };
 
   // id로 안 고른다 — RLS가 실제/데모 계정에 맞는 행만 갱신되게 걸러준다
-  // (company_profile_demo_isolation 마이그레이션 참고).
-  const { error } = await supabase.from("company_profile").update(update);
+  // (company_profile_demo_isolation 마이그레이션 참고). DB가 WHERE절
+  // 없는 UPDATE를 막고 있어서 형식상 항상 참인 조건을 붙여준다.
+  const { error } = await supabase.from("company_profile").update(update).not("id", "is", null);
 
   if (error) {
     return { error: `저장에 실패했습니다: ${error.message}` };
@@ -167,7 +169,9 @@ export async function resetBrandingImage(
         ? { logo_mark_url: resetValue }
         : { seal_image_url: resetValue };
 
-  const { error } = await supabase.from("company_profile").update(update);
+  // DB가 WHERE절 없는 UPDATE를 막고 있어서 형식상 항상 참인 조건을
+  // 붙여준다 — 실제 행 선택은 위 uploadBrandingImage와 동일하게 RLS가 한다.
+  const { error } = await supabase.from("company_profile").update(update).not("id", "is", null);
 
   if (error) {
     return { error: `되돌리기에 실패했습니다: ${error.message}` };
