@@ -4,6 +4,21 @@
 -- "오성테크"로 폴백하도록 짜여있어서(1테넌트 시절 흔적), 새 회사 화면에
 -- 엉뚱하게 "오성테크"가 찍혀 마치 데이터가 안 나뉜 것처럼 보였다 —
 -- 실제 매출/매입 등 업무 데이터는 tenant_id로 정상 격리되고 있었다.
+
+-- 0) 선행 버그: company_profile.id가 원래 "싱글턴 행 1개"로 설계돼
+--    (migration 3) 기본값이 항상 고정된 1이다. 여러 회사가 각자 행을
+--    가지게 된 뒤(migration 86)에도 이 기본값을 안 고쳐서, id를 안 정해주고
+--    두 번째 이상 행을 넣으면 전부 "id=1 중복"으로 실패한다 — 지금
+--    고치지 않으면 아래 handle_new_user()가 새 회사를 만들 때마다 매번
+--    이 에러로 실패한다. 제대로 된 시퀀스를 만들어 연결한다.
+create sequence if not exists public.company_profile_id_seq owned by public.company_profile.id;
+select setval(
+  'public.company_profile_id_seq',
+  greatest((select coalesce(max(id), 0) from public.company_profile), 1),
+  true
+);
+alter table public.company_profile alter column id set default nextval('public.company_profile_id_seq');
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
