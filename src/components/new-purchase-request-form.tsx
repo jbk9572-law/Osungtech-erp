@@ -26,14 +26,36 @@ export function NewPurchaseRequestForm({
   today,
   suppliers,
   products,
+  prefillSupplierId,
+  prefillItems,
 }: {
   today: string;
   suppliers: { id: string; name: string }[];
-  products: { id: string; sku: string; name: string; spec: string | null; price: number }[];
+  products: { id: string; sku: string; name: string; spec: string | null; cost: number }[];
+  // 재고 부족 자동 발주 제안(/inventory/reorder-suggestions)에서 "구매요청
+  // 작성으로 보내기"를 눌렀을 때만 채워진다(new-purchase-form.tsx의
+  // prefillSupplierId/prefillItems와 동일한 패턴).
+  prefillSupplierId?: string;
+  prefillItems?: { productId: string; quantity: number }[];
 }) {
   const [state, formAction, pending] = useActionState(createPurchaseRequest, undefined);
-  const [supplierId, setSupplierId] = useState("");
-  const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>([blankRow(0)], blankRow);
+  const [supplierId, setSupplierId] = useState(prefillSupplierId ?? "");
+  const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>(
+    prefillItems?.length
+      ? prefillItems.map((item, i) => {
+          const product = products.find((p) => p.id === item.productId);
+          return {
+            key: i,
+            productId: item.productId,
+            spec: product?.spec ?? "",
+            quantity: item.quantity,
+            estimatedUnitPrice: product?.cost ?? 0,
+            remark: "재고 부족 자동 발주 제안",
+          };
+        })
+      : [blankRow(0)],
+    blankRow,
+  );
 
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
 
@@ -99,7 +121,7 @@ export function NewPurchaseRequestForm({
                       updateRow(row.key, {
                         productId,
                         spec: product?.spec ?? row.spec,
-                        estimatedUnitPrice: row.estimatedUnitPrice || product?.price || 0,
+                        estimatedUnitPrice: row.estimatedUnitPrice || product?.cost || 0,
                       });
                     }}
                   />

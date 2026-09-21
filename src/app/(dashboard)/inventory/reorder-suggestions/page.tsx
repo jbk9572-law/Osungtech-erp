@@ -93,8 +93,9 @@ export default async function ReorderSuggestionsPage() {
       </h1>
       <PageGuide>
         안전재고 이하로 떨어진 품목을 매입처별로 묶어 보여줍니다. 제안수량은 안전재고의 2배를
-        목표로 부족분을 채우는 값이며, 실제 발주 수량은 매입 등록 화면에서 얼마든지 고칠 수
-        있습니다.
+        목표로 부족분을 채우는 값이며, 실제 수량은 다음 화면에서 얼마든지 고칠 수 있습니다.
+        결재가 필요 없으면 &quot;매입 등록&quot;으로 바로, 결재를 거쳐야 하면 &quot;구매요청
+        작성&quot;으로 보내세요.
       </PageGuide>
 
       {groups.length === 0 && (
@@ -106,10 +107,16 @@ export default async function ReorderSuggestionsPage() {
       {groups.map((group) => {
         const totalEstimate = group.rows.reduce((sum, r) => sum + r.suggestedQty * r.cost, 0);
         const reorderItems = group.rows.map((r) => ({ productId: r.productId, quantity: r.suggestedQty }));
+        const reorderItemsQuery = encodeURIComponent(JSON.stringify(reorderItems));
         const purchaseHref = group.supplierId
-          ? `/purchases/new?supplier_id=${group.supplierId}&reorder_items=${encodeURIComponent(
-              JSON.stringify(reorderItems),
-            )}`
+          ? `/purchases/new?supplier_id=${group.supplierId}&reorder_items=${reorderItemsQuery}`
+          : null;
+        // 승인 없이 바로 매입 등록하는 위 링크와 별개로, 결재를 거쳐야
+        // 하는 회사를 위해 구매요청(purchase-requests) 작성으로도 보낼 수
+        // 있게 한다 — new-purchase-form.tsx와 동일한 reorder_items 프리필
+        // 쿼리를 그대로 재사용(new-purchase-request-form.tsx도 같은 형식을 읽음).
+        const purchaseRequestHref = group.supplierId
+          ? `/purchase-requests/new?supplier_id=${group.supplierId}&reorder_items=${reorderItemsQuery}`
           : null;
 
         return (
@@ -118,10 +125,15 @@ export default async function ReorderSuggestionsPage() {
               <span className="erp-detail-tab active">
                 {group.supplierName} · {group.rows.length}개 품목
               </span>
-              {purchaseHref ? (
-                <Link href={purchaseHref} className="erp-btn erp-btn-primary" style={{ margin: 4 }}>
-                  이 매입처로 매입 등록
-                </Link>
+              {purchaseHref && purchaseRequestHref ? (
+                <div className="flex flex-wrap items-center gap-2" style={{ margin: 4 }}>
+                  <Link href={purchaseRequestHref} className="erp-btn">
+                    이 매입처로 구매요청 작성
+                  </Link>
+                  <Link href={purchaseHref} className="erp-btn erp-btn-primary">
+                    이 매입처로 매입 등록
+                  </Link>
+                </div>
               ) : (
                 <span
                   className="text-xs"
