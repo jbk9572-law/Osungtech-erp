@@ -79,7 +79,7 @@ export function InvoiceCopy({
           상단에서 58px 지점, 좌측에서 43.5% 지점을 중심으로 겹침). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={company?.seal_image_url || "/branding/company-seal.png"}
+        src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
         className="pointer-events-none absolute -translate-x-1/2 opacity-90 mix-blend-multiply"

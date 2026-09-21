@@ -188,10 +188,10 @@ export function SnsFiltechCanvas({
       {/* 하단 도장란 */}
       <T x={102.48} y={730.4} size={9.96} bold>공급자</T>
       <TRight right={278.64 - 8} y={730.4} size={9.96}>(인)</TRight>
-      <TCenter centerX={201.84} y={732.72} size={9}>㈜오성테크</TCenter>
+      <TCenter centerX={201.84} y={732.72} size={9}>{dash(company?.name)}</TCenter>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={company?.seal_image_url || "/branding/company-seal.png"}
+        src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
         className="pointer-events-none opacity-90 mix-blend-multiply"
@@ -363,10 +363,10 @@ export function ZenithTechCanvas({
       {/* 하단 도장란 */}
       <T x={102.48} y={732.08} size={9.96} bold>공급자</T>
       <TRight right={278.64 - 8} y={732.08} size={9.96}>(인)</TRight>
-      <TCenter centerX={201.84} y={734.4} size={9}>㈜오성테크</TCenter>
+      <TCenter centerX={201.84} y={734.4} size={9}>{dash(company?.name)}</TCenter>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={company?.seal_image_url || "/branding/company-seal.png"}
+        src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
         className="pointer-events-none opacity-90 mix-blend-multiply"
@@ -533,10 +533,10 @@ export function KtSolutionCanvas({
       {/* 하단 도장란 */}
       <T x={102.48} y={729.92} size={9.96} bold>공급자</T>
       <TRight right={278.64 - 8} y={729.92} size={9.96}>(인)</TRight>
-      <TCenter centerX={201.84} y={732.24} size={9}>㈜오성테크</TCenter>
+      <TCenter centerX={201.84} y={732.24} size={9}>{dash(company?.name)}</TCenter>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={company?.seal_image_url || "/branding/company-seal.png"}
+        src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
         className="pointer-events-none opacity-90 mix-blend-multiply"

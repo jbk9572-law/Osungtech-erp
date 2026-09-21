@@ -59,10 +59,12 @@ export function MessengerWidget({
   initialMessages,
   profileNames,
   currentUserId,
+  isAdmin,
 }: {
   initialMessages: MessengerMessage[];
   profileNames: Record<string, string>;
   currentUserId: string;
+  isAdmin: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [hasUnseen, setHasUnseen] = useState(false);
@@ -340,8 +342,8 @@ export function MessengerWidget({
                   </div>
                 )}
 
-                {mine && (
-                  <div style={{ alignSelf: "flex-end", display: "flex", gap: 6 }}>
+                {(mine || isAdmin) && (
+                  <div style={{ alignSelf: mine ? "flex-end" : "flex-start", display: "flex", gap: 6 }}>
                     <button
                       type="button"
                       onClick={() => handleDelete(m.id, m.file_path)}

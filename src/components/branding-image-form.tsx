@@ -98,7 +98,7 @@ export function BrandingImageForm({
         label="회사 도장"
         description="거래명세표 (인) 칸에 찍히는 도장 이미지"
         currentUrl={sealImageUrl}
-        defaultUrl="/branding/company-seal.png"
+        defaultUrl="/branding/sample-company-seal.png"
         previewClassName="h-14 w-14"
       />
     </div>

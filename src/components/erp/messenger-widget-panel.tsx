@@ -10,9 +10,11 @@ import { MessengerWidget } from "@/components/erp/messenger-widget";
 export async function MessengerWidgetPanel({
   profileNames,
   currentUserId,
+  isAdmin,
 }: {
   profileNames: Record<string, string>;
   currentUserId: string;
+  isAdmin: boolean;
 }) {
   const supabase = await createClient();
   const { data: messages } = await supabase
@@ -30,6 +32,7 @@ export async function MessengerWidgetPanel({
       initialMessages={(messages ?? []).slice().reverse()}
       profileNames={profileNames}
       currentUserId={currentUserId}
+      isAdmin={isAdmin}
     />
   );
 }
