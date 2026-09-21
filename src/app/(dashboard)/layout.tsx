@@ -65,7 +65,7 @@ export default async function DashboardLayout({
       }
       messengerWidget={
         <Suspense fallback={null}>
-          <MessengerWidgetPanel profileNames={profileNames} currentUserId={user.id} />
+          <MessengerWidgetPanel profileNames={profileNames} currentUserId={user.id} isAdmin={isAdmin} />
         </Suspense>
       }
       usageWidget={
