@@ -22,6 +22,7 @@ export function TitleBar({
   notificationBell,
   isMobile,
   onToggleMenu,
+  isPlatformAdmin,
 }: {
   logoUrl?: string | null;
   companyName?: string | null;
@@ -32,6 +33,11 @@ export function TitleBar({
   notificationBell: ReactNode;
   isMobile: boolean;
   onToggleMenu: () => void;
+  // 엘보닉스 플랫폼 운영자에게만 보이는 링크 — 지금까지 /platform-admin은
+  // 메뉴 어디에도 없이 주소를 직접 입력해야만 들어갈 수 있었다. 일반
+  // 테넌트 관리자에게는 여전히 안 보여야 하므로 isPlatformAdmin일 때만
+  // 렌더링한다(layout.tsx가 is_platform_admin RPC로 이미 판별해서 내려줌).
+  isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const menuLabel = findByLongestPrefix(SECTION_LABEL, pathname, (s) => s.prefix)?.label ?? "";
@@ -66,6 +72,11 @@ export function TitleBar({
         <span>{today}</span>
         {notificationBell}
         <span>{email}</span>
+        {isPlatformAdmin && (
+          <Link href="/platform-admin" className="erp-titlebar-link erp-titlebar-link-persistent">
+            플랫폼 관리자
+          </Link>
+        )}
         <Link href="/settings/backup" className="erp-titlebar-link">
           백업/복원
         </Link>

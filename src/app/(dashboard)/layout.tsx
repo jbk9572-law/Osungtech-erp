@@ -77,6 +77,7 @@ export default async function DashboardLayout({
       }
       disabledFeatures={disabledFeatures}
       isAdmin={isAdmin}
+      isPlatformAdmin={isPlatformAdmin === true}
       modal={modal}
     >
       {children}

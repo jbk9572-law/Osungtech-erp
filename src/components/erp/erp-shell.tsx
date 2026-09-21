@@ -32,6 +32,7 @@ export function ErpShell({
   usageWidget,
   disabledFeatures,
   isAdmin,
+  isPlatformAdmin,
   children,
   modal,
 }: {
@@ -44,6 +45,7 @@ export function ErpShell({
   usageWidget: React.ReactNode;
   disabledFeatures: string[];
   isAdmin: boolean;
+  isPlatformAdmin?: boolean;
   children: React.ReactNode;
   modal?: React.ReactNode;
 }) {
@@ -109,6 +111,7 @@ export function ErpShell({
         notificationBell={notificationBell}
         isMobile={isMobile}
         onToggleMenu={() => setCollapsed((c) => !c)}
+        isPlatformAdmin={isPlatformAdmin}
       />
       <Ribbon disabledFeatures={disabledFeatures} isAdmin={isAdmin} />
       <div className="erp-body">
