@@ -1,13 +1,11 @@
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EditCompanyForm } from "@/components/edit-company-form";
 import { TenantStatusControls } from "@/components/tenant-status-controls";
 import { TenantPointsPanel } from "@/components/tenant-points-panel";
 import { ResetTenantUserPasswordForm } from "@/components/reset-tenant-user-password-form";
 import { PageGuide } from "@/components/erp/page-guide";
-import "@/app/erp-theme.css";
 
 const ROLE_LABELS: Record<string, string> = { admin: "관리자", manager: "매니저", staff: "직원" };
 
@@ -17,10 +15,7 @@ export default async function PlatformAdminTenantDetailPage({
   params: Promise<{ tenantId: string }>;
 }) {
   const { tenantId } = await params;
-  const { isPlatformAdmin } = await requirePlatformAdmin();
-  if (!isPlatformAdmin) {
-    redirect("/login");
-  }
+  // 권한 체크는 상위 platform-admin/layout.tsx에서 이미 끝났다.
 
   // 이 화면 전체가 회사(테넌트)를 넘나드는 조회/수정이라 RLS로는 표현할
   // 수 없다 — 대신 위에서 이미 플랫폼 운영자 권한을 확인했으므로, 여기서는
@@ -64,17 +59,16 @@ export default async function PlatformAdminTenantDetailPage({
   ]);
 
   return (
-    <div className="erp" style={{ minHeight: "100vh", background: "var(--erp-bg)" }}>
-      <div style={{ maxWidth: 880, margin: "0 auto", padding: "40px 20px" }}>
-        <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-[var(--erp-text)]">
-            플랫폼 관리 &gt; 고객사 &gt; {tenant.name}
-          </h1>
-          <Link href="/platform-admin" className="erp-btn">
-            목록으로
-          </Link>
-        </div>
-        <PageGuide>이 회사의 정보 수정, 로그인 허용 여부, 요금제 상태, 소속 계정을 관리합니다.</PageGuide>
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+          플랫폼 관리 &gt; 고객사 &gt; {tenant.name}
+        </h1>
+        <Link href="/platform-admin" className="erp-btn">
+          목록으로
+        </Link>
+      </div>
+      <PageGuide>이 회사의 정보 수정, 로그인 허용 여부, 요금제 상태, 소속 계정을 관리합니다.</PageGuide>
 
         <div className="erp-grid-wrap" style={{ marginBottom: 16 }}>
           <table className="erp-grid">
@@ -174,7 +168,6 @@ export default async function PlatformAdminTenantDetailPage({
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

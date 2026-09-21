@@ -33,6 +33,7 @@ export function ErpShell({
   disabledFeatures,
   isAdmin,
   isPlatformAdmin,
+  platformAnnouncements,
   children,
   modal,
 }: {
@@ -46,6 +47,9 @@ export function ErpShell({
   disabledFeatures: string[];
   isAdmin: boolean;
   isPlatformAdmin?: boolean;
+  // 플랫폼 운영자가 platform-admin > 공지사항에서 등록해 켜둔 전체
+  // 테넌트 공지 — 회사 구분 없이 로그인한 모든 사용자에게 보인다.
+  platformAnnouncements?: { id: string; title: string }[];
   children: React.ReactNode;
   modal?: React.ReactNode;
 }) {
@@ -101,6 +105,12 @@ export function ErpShell({
           데모 모드 — 실제 데이터가 아니며, 여기서 등록/수정/삭제해도 실제 운영 데이터에는 영향을 주지 않습니다.
         </div>
       )}
+      {(platformAnnouncements ?? []).map((a) => (
+        <div className="erp-platform-announcement-banner" key={a.id}>
+          <strong>공지</strong>
+          <span>{a.title}</span>
+        </div>
+      ))}
       <NotificationToaster />
       <RecentMenuTracker />
       <MidnightRefresh />

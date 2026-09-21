@@ -27,22 +27,33 @@ export default async function DashboardLayout({
   // <Suspense>로 따로 스트리밍한다(아래 usageWidget과 같은 이유) —
   // 페이지 이동마다(모달 열기 포함) 항상 같이 돌던 조회를 줄여 요청당
   // CPU 부담을 낮춘다.
-  const [{ data: company }, { data: profiles }, { data: tenant }, { data: isPlatformAdmin }] = await Promise.all([
-    supabase
-      .from("company_profile")
-      .select("name, logo_mark_url")
-      .maybeSingle(),
-    supabase.from("profiles").select("id, full_name, is_demo, role"),
-    // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
-    // 별도 id 조건이 필요 없다. 멀티테넌트 전환(migration 098~) 적용
-    // 전이거나 실패해도 화면 전체가 죽으면 안 되므로 그냥 빈 배열로
-    // 넘어간다 — "아무 기능도 안 꺼짐"이 안전한 기본값이다.
-    supabase.from("tenants").select("disabled_features").maybeSingle(),
-    // DB/스토리지/넷리파이/VPS 사용량 위젯은 플랫폼(엘보닉스) 전체 인프라
-    // 현황이라 특정 회사 직원이 볼 정보가 아니다 — 플랫폼 운영자에게만
-    // 보여준다. 조회 실패해도 false로 처리해 안전하게 숨긴다.
-    supabase.rpc("is_platform_admin"),
-  ]);
+  const [{ data: company }, { data: profiles }, { data: tenant }, { data: isPlatformAdmin }, { data: announcements }] =
+    await Promise.all([
+      supabase
+        .from("company_profile")
+        .select("name, logo_mark_url")
+        .maybeSingle(),
+      supabase.from("profiles").select("id, full_name, is_demo, role"),
+      // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
+      // 별도 id 조건이 필요 없다. 멀티테넌트 전환(migration 098~) 적용
+      // 전이거나 실패해도 화면 전체가 죽으면 안 되므로 그냥 빈 배열로
+      // 넘어간다 — "아무 기능도 안 꺼짐"이 안전한 기본값이다.
+      supabase.from("tenants").select("disabled_features").maybeSingle(),
+      // DB/스토리지/넷리파이/VPS 사용량 위젯은 플랫폼(엘보닉스) 전체 인프라
+      // 현황이라 특정 회사 직원이 볼 정보가 아니다 — 플랫폼 운영자에게만
+      // 보여준다. 조회 실패해도 false로 처리해 안전하게 숨긴다.
+      supabase.rpc("is_platform_admin"),
+      // 플랫폼 운영자가 켜둔 전체 테넌트 공지(platform-admin > 공지사항,
+      // migration 129) — 노출 중(is_active)인 것만, 회사 구분 없이 전부.
+      // 배너 줄로 그대로 보여줄 목적이라 실제로는 몇 개 안 되지만,
+      // check-pagination.mjs 안전장치 기준을 맞추기 위해 상한을 둔다.
+      supabase
+        .from("platform_announcements")
+        .select("id, title")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
 
   const profileNames = Object.fromEntries(
     (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]),
@@ -78,6 +89,7 @@ export default async function DashboardLayout({
       disabledFeatures={disabledFeatures}
       isAdmin={isAdmin}
       isPlatformAdmin={isPlatformAdmin === true}
+      platformAnnouncements={announcements ?? []}
       modal={modal}
     >
       {children}

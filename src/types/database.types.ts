@@ -792,6 +792,87 @@ export type Database = {
         };
         Relationships: [];
       };
+      platform_settings: {
+        Row: {
+          id: boolean;
+          default_plan: string;
+          default_disabled_features: string[];
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          default_plan?: string;
+          default_disabled_features?: string[];
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          default_plan?: string;
+          default_disabled_features?: string[];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_announcements: {
+        Row: {
+          id: string;
+          title: string;
+          content: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          content?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          content?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      platform_plans: {
+        Row: {
+          id: string;
+          plan_key: string;
+          name: string;
+          monthly_price: number;
+          description: string | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          plan_key: string;
+          name: string;
+          monthly_price?: number;
+          description?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          plan_key?: string;
+          name?: string;
+          monthly_price?: number;
+          description?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       point_transactions: {
         Row: {
           id: string;
@@ -3071,6 +3152,10 @@ export type Database = {
         Args: { p_feature_key: string; p_enabled: boolean };
         Returns: void;
       };
+      set_platform_default_feature_enabled: {
+        Args: { p_feature_key: string; p_enabled: boolean };
+        Returns: void;
+      };
       is_approval_step_approver: {
         Args: { p_document_id: string };
         Returns: boolean;
@@ -3331,6 +3416,21 @@ export type Database = {
       is_platform_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      get_cross_tenant_activity_log: {
+        Args: { p_limit?: number };
+        Returns: {
+          id: string;
+          tenant_name: string | null;
+          table_name: string;
+          action: string;
+          actor_name: string | null;
+          created_at: string;
+        }[];
+      };
+      get_platform_stats: {
+        Args: Record<string, never>;
+        Returns: Json;
       };
       get_login_block_reason: {
         Args: { p_username: string };
