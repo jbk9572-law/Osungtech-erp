@@ -96,6 +96,7 @@ export const MENU_GROUPS: MenuGroup[] = [
     featureKey: "hr",
   },
   { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
+  { label: "캘린더", items: [{ label: "캘린더", href: "/calendar", flatLabel: "캘린더" }] },
   {
     label: "메일함",
     items: [{ label: "메일함", href: "/mail", flatLabel: "메일함" }],

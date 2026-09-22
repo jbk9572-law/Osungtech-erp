@@ -19,6 +19,7 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { canManage } from "@/lib/can-manage";
 import { startRouteProgress } from "@/lib/route-progress";
+import { copyText } from "@/lib/clipboard";
 import {
   formatPaperCalcSizeLines,
   type PaperCalcSizeRow,
@@ -734,21 +735,6 @@ function buildMemoCopyText(
     lines.push(`${note.authorName}: ${note.content}`);
   }
   return lines.join("\n");
-}
-
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-  }
 }
 
 function CarryoverBadge() {

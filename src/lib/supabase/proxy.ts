@@ -7,7 +7,11 @@ import { NextResponse, type NextRequest } from "next/server";
 // 전에 /login으로 튕겨나간다. 로그인 처리 자체는 그 라우트 핸들러 안에서
 // 이뤄지고, 성공하면 /dashboard로 리다이렉트되어 그 다음부터는 이미 로그인된
 // 상태로 나머지 화면을 통과한다.
-const PUBLIC_PATHS = ["/login", "/auth", "/demo"];
+// "/api/calendar/feed"는 외부 캘린더 앱(구글/아웃룩 등)이 로그인 세션 없이
+// URL에 담긴 개인별 비밀 토큰만으로 주기적으로 요청하는 ICS 구독 피드라,
+// 이 경로 자체는 통과시켜야 한다 — 인증은 그 라우트 핸들러 안에서 토큰으로
+// 직접 확인한다(src/app/api/calendar/feed/route.ts).
+const PUBLIC_PATHS = ["/login", "/auth", "/demo", "/api/calendar/feed"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

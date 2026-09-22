@@ -17,6 +17,7 @@ export type Database = {
           email: string | null;
           role: "admin" | "manager" | "staff";
           is_demo: boolean;
+          tenant_id: string;
           created_at: string;
           department_id: string | null;
           position_title: string | null;
@@ -29,6 +30,7 @@ export type Database = {
           email?: string | null;
           role?: "admin" | "manager" | "staff";
           is_demo?: boolean;
+          tenant_id?: string;
           created_at?: string;
           department_id?: string | null;
           position_title?: string | null;
@@ -40,6 +42,7 @@ export type Database = {
           username?: string | null;
           email?: string | null;
           role?: "admin" | "manager" | "staff";
+          tenant_id?: string;
           is_demo?: boolean;
           created_at?: string;
           department_id?: string | null;
@@ -447,6 +450,8 @@ export type Database = {
           decided_at: string | null;
           decided_by: string | null;
           approval_document_id: string | null;
+          tenant_id: string;
+          is_demo: boolean;
         };
         Insert: {
           id?: string;
@@ -461,6 +466,8 @@ export type Database = {
           decided_at?: string | null;
           decided_by?: string | null;
           approval_document_id?: string | null;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Update: {
           id?: string;
@@ -474,6 +481,8 @@ export type Database = {
           created_at?: string;
           decided_at?: string | null;
           decided_by?: string | null;
+          tenant_id?: string;
+          is_demo?: boolean;
           approval_document_id?: string | null;
         };
         Relationships: [
@@ -2985,6 +2994,91 @@ export type Database = {
           },
         ];
       };
+      calendar_events: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          title: string;
+          description: string;
+          location: string;
+          start_at: string;
+          end_at: string;
+          all_day: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          title: string;
+          description?: string;
+          location?: string;
+          start_at: string;
+          end_at: string;
+          all_day?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          title?: string;
+          description?: string;
+          location?: string;
+          start_at?: string;
+          end_at?: string;
+          all_day?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      calendar_feed_tokens: {
+        Row: {
+          user_id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          token: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          token?: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          token?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_feed_tokens_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       push_subscriptions: {
         Row: {
           id: string;
@@ -3754,6 +3848,14 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_or_create_calendar_feed_token: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
+      regenerate_calendar_feed_token: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
       get_or_create_all_channel: {
         Args: Record<PropertyKey, never>;
         Returns: string;
