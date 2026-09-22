@@ -32,6 +32,11 @@
   --erp-success-border: #b7e4c7;
   --erp-warning-bg: #fff3e0;
   --erp-warning-border: #ffd9a8;
+  /* 플랫폼 전체공지 배너 전용 — LED 전광판처럼 눈에 확 띄어야 해서
+     나머지 배지/배너와 달리 시맨틱 톤(success/warning/danger/info)을
+     쓰지 않고 실제 전광판 배색(빨간 바탕 + 노란 글씨)을 그대로 쓴다. */
+  --erp-led-bg: #b30000;
+  --erp-led-text: #ffe000;
   --erp-danger-bg: #fdeaec;
   --erp-danger-border: #f3c6cb;
   /* 단가예약/할일-품목 이월/용지계산 안내 배지에서 공통으로 쓰는
@@ -143,27 +148,67 @@
 
 /* 플랫폼 운영자가 platform-admin > 공지사항에서 등록한, 전체 테넌트
    방송 공지 — erp-demo-banner와 같은 자리(맨 위 한 줄)에, 여러 개면
-   그대로 쌓인다. 데모 배너와 색을 겹치지 않게 info 톤을 쓴다. */
+   그대로 쌓인다. "LED 전광판처럼 눈에 띄게" 요청으로 빨간 바탕 +
+   노란 글씨 + 좌우로 흐르는 스크롤 문구로 만든다. */
 .erp-platform-announcement-banner {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  background: var(--erp-info-bg);
-  color: var(--erp-info-text);
-  border-bottom: 1px solid var(--erp-info-border);
-  font-size: 11.5px;
+  background: var(--erp-led-bg);
+  color: var(--erp-led-text);
+  border-bottom: 1px solid var(--erp-primary-dark);
+  font-size: 12px;
+  font-weight: 700;
   padding: 4px 12px;
 }
 
 .erp-platform-announcement-banner strong {
   flex: 0 0 auto;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.05em;
 }
 
-.erp-platform-announcement-banner span {
+.erp-platform-announcement-banner-track {
+  flex: 1 1 auto;
   overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
+  height: 1.4em;
+}
+
+.erp-platform-announcement-banner-text {
+  position: absolute;
+  top: 0;
   white-space: nowrap;
+  /* left(%)는 transform(%)과 달리 자기 자신이 아니라 부모(트랙)의
+     너비를 기준으로 계산된다 — 그래서 문구 길이와 무관하게 항상
+     "트랙 오른쪽 밖 -> 왼쪽 밖"까지 같은 궤적으로 흐른다(실제 LED
+     전광판과 같은 방식). transform(translateX)을 썼다면 문구가 짧을 때
+     제 너비만큼만 움직여 트랙 밖으로 나가지 못하는 문제가 있었다. */
+  animation: erp-led-scroll 14s linear infinite;
+}
+
+@keyframes erp-led-scroll {
+  from {
+    left: 100%;
+  }
+  to {
+    left: -100%;
+  }
+}
+
+/* 움직임에 민감한 사용자를 위한 배려 — 계속 흐르는 대신 한 번만 잘려
+   보이더라도(ellipsis) 고정된 화면을 우선한다. */
+@media (prefers-reduced-motion: reduce) {
+  .erp-platform-announcement-banner-track {
+    overflow: hidden;
+  }
+  .erp-platform-announcement-banner-text {
+    position: static;
+    animation: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
 }
 
 /* ── 1. Title Bar (40px) ───────────────────────────────────── */
@@ -1390,6 +1435,25 @@ a.erp-detail-tab {
 a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-hover);
   color: var(--erp-text);
+}
+
+/* 플랫폼 관리자 상단 페이지 이동 탭 전용 변형 — 기본 .erp-detail-tabs는
+   화면이 좁아지면 탭이 다음 줄로 줄바꿈되는데(위 flex-wrap 참고), 이
+   탭들은 "화면 이동 메뉴"라서 줄바꿈되면 창 크기에 따라 메뉴 자체의
+   높이가 늘었다 줄었다 하며 화면이 덜컹거리는 문제가 있었다("관리자
+   페이지 반응형으로 하더라도 기본 메뉴가 있어야지, 커졌다 줄어들었다
+   보기가 너무 안좋아" 지적). 줄바꿈 대신 한 줄을 유지하고 좁은 화면에서는
+   가로 스크롤로 나머지 탭을 보게 한다 — 메뉴 구성 자체는 항상 그대로
+   유지되고 화면 높이도 변하지 않는다. 다른 화면의 .erp-detail-tabs(품목
+   탭 등)는 그대로 두기 위해 별도 클래스로 얹는다. */
+.erp-detail-tabs-scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.erp-detail-tabs-scroll .erp-detail-tab {
+  flex: 0 0 auto;
 }
 
 .erp-detail-body {

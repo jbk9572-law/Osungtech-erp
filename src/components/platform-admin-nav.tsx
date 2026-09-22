@@ -26,7 +26,7 @@ export function PlatformAdminNav() {
   const pathname = usePathname();
 
   return (
-    <div className="erp-detail-tabs" style={{ marginBottom: 16 }}>
+    <div className="erp-detail-tabs erp-detail-tabs-scroll" style={{ marginBottom: 16 }}>
       {NAV_ITEMS.map((item) => (
         <Link
           key={item.href}

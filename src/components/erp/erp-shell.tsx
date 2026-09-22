@@ -108,7 +108,9 @@ export function ErpShell({
       {(platformAnnouncements ?? []).map((a) => (
         <div className="erp-platform-announcement-banner" key={a.id}>
           <strong>공지</strong>
-          <span>{a.title}</span>
+          <div className="erp-platform-announcement-banner-track">
+            <span className="erp-platform-announcement-banner-text">{a.title}</span>
+          </div>
         </div>
       ))}
       <NotificationToaster />
