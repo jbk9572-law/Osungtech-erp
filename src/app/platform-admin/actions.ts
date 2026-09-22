@@ -52,15 +52,10 @@ export async function createCompanyTenant(_prevState: FormState, formData: FormD
     return { error: "이미 사용 중인 슬러그입니다. 다른 값을 입력해주세요." };
   }
 
-  // profiles.username은 테넌트 구분 없이 전역으로 유니크하다(회사마다
-  // "admin"을 그대로 쓰고 싶어하는 경우가 흔해서 충돌 확률이 높다) —
-  // 이것도 계정 생성 트랜잭션 안에서 뒤늦게 막히면 에러 메시지가
-  // 알아보기 어려운 DB 원문 그대로 나가므로 미리 확인한다.
-  const { data: existingUsername } = await admin.from("profiles").select("id").eq("username", username).maybeSingle();
-  if (existingUsername) {
-    return { error: "이미 다른 회사에서 사용 중인 아이디입니다. 회사명을 붙이는 등 다른 아이디를 입력해주세요." };
-  }
-
+  // profiles.username은 이제 전역이 아니라 (테넌트, 아이디) 조합으로만
+  // 유니크하다(migration 134) — 로그인도 회사코드(슬러그)를 같이 받으므로,
+  // 새로 만드는 테넌트라면 다른 회사가 이미 "admin"을 쓰고 있어도 전혀
+  // 문제되지 않는다. 방금 위에서 확인한 슬러그 중복만 막으면 충분하다.
   const email = `${username}@${slug}.elvonix.local`;
   const { data: created, error } = await admin.auth.admin.createUser({
     email,

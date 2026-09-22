@@ -3581,7 +3581,7 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       get_email_for_username: {
-        Args: { p_username: string };
+        Args: { p_slug: string; p_username: string };
         Returns: string | null;
       };
       set_tenant_feature_enabled: {
@@ -3921,7 +3921,7 @@ export type Database = {
         Returns: Json;
       };
       get_login_block_reason: {
-        Args: { p_username: string };
+        Args: { p_slug: string; p_username: string };
         Returns: string | null;
       };
       adjust_tenant_points: {

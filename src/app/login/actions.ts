@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function login(_prevState: { error: string } | undefined, formData: FormData) {
-  const loginId = String(formData.get("email") ?? "").trim();
+  const companyCode = String(formData.get("companyCode") ?? "").trim().toLowerCase();
+  const loginId = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
   if (!loginId || !password) {
@@ -14,11 +15,16 @@ export async function login(_prevState: { error: string } | undefined, formData:
 
   const supabase = await createClient();
 
-  // "admin"처럼 이메일 형식이 아니면 아이디로 보고, DB에 등록된 이메일을
-  // 찾아서 그 이메일로 로그인한다(Supabase Auth 자체는 이메일 기반이라
-  // 아이디 로그인을 직접 지원하지 않는다).
+  // "admin"처럼 이메일 형식이 아니면 아이디로 보고, 회사코드와 함께 DB에
+  // 등록된 이메일을 찾아서 그 이메일로 로그인한다(Supabase Auth 자체는
+  // 이메일 기반이라 아이디 로그인을 직접 지원하지 않는다). 아이디는 이제
+  // 전역이 아니라 회사(테넌트)별로만 유니크하므로(migration 134), 회사코드
+  // 없이는 어느 회사의 계정인지 알 수 없다.
   let email = loginId;
   if (!loginId.includes("@")) {
+    if (!companyCode) {
+      return { error: "회사코드를 입력해주세요." };
+    }
     // get_email_for_username은 로그인 전(비로그인/anon) 상태에서 호출돼야
     // 하는데, anon에게 직접 실행 권한을 주면 앱을 거치지 않고 공개된 anon
     // key만으로 REST API를 직접 두드려 아이디 존재 여부/이메일을 무제한
@@ -32,6 +38,7 @@ export async function login(_prevState: { error: string } | undefined, formData:
       return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
     }
     const { data: resolvedEmail, error: lookupError } = await admin.rpc("get_email_for_username", {
+      p_slug: companyCode,
       p_username: loginId,
     });
     // 조회 자체가 실패한 경우(네트워크 오류 등)와 "그런 아이디가 없음"을
@@ -42,7 +49,7 @@ export async function login(_prevState: { error: string } | undefined, formData:
       return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
     }
     if (!resolvedEmail) {
-      return { error: "존재하지 않는 아이디입니다." };
+      return { error: "회사코드 또는 아이디가 올바르지 않습니다." };
     }
     email = resolvedEmail;
 
@@ -50,6 +57,7 @@ export async function login(_prevState: { error: string } | undefined, formData:
     // 비밀번호가 맞아도 로그인 자체를 막아야 한다 — 아래
     // signInWithPassword는 그 상태를 모르므로 여기서 먼저 확인한다.
     const { data: blockReason, error: blockCheckError } = await admin.rpc("get_login_block_reason", {
+      p_slug: companyCode,
       p_username: loginId,
     });
     if (blockCheckError) {
