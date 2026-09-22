@@ -18,6 +18,19 @@ export async function updateCompanyProfile(
     return { error: "상호명을 입력해주세요." };
   }
 
+  const officeLatRaw = String(formData.get("office_lat") ?? "").trim();
+  const officeLngRaw = String(formData.get("office_lng") ?? "").trim();
+  const officeRadiusRaw = String(formData.get("office_radius_m") ?? "").trim();
+  const officeLat = officeLatRaw ? Number(officeLatRaw) : null;
+  const officeLng = officeLngRaw ? Number(officeLngRaw) : null;
+  const officeRadiusM = officeRadiusRaw ? Number(officeRadiusRaw) : 300;
+  if ((officeLat != null && !Number.isFinite(officeLat)) || (officeLng != null && !Number.isFinite(officeLng))) {
+    return { error: "사무실 위치 좌표를 올바르게 입력해주세요." };
+  }
+  if (!Number.isFinite(officeRadiusM) || officeRadiusM <= 0) {
+    return { error: "사무실 인정 반경을 올바르게 입력해주세요." };
+  }
+
   const { error } = await supabase
     .from("company_profile")
     .update({
@@ -33,6 +46,9 @@ export async function updateCompanyProfile(
       manager_phone: combinePhone(formData, "mgrphone"),
       email: String(formData.get("email") ?? "") || null,
       greeting_message: String(formData.get("greeting_message") ?? "") || null,
+      office_lat: officeLat,
+      office_lng: officeLng,
+      office_radius_m: officeRadiusM,
     })
     // id 값으로 특정 행을 고르는 게 아니라(RLS가 실제/데모 계정에 맞는
     // 행만 갱신되게 걸러준다 — company_profile_demo_isolation 마이그레이션

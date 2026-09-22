@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { updateCompanyProfile } from "@/app/(dashboard)/settings/company/actions";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
+import { PageGuide } from "@/components/erp/page-guide";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Company = {
@@ -19,12 +20,20 @@ type Company = {
   address: string | null;
   email: string | null;
   greeting_message: string | null;
+  office_lat?: number | null;
+  office_lng?: number | null;
+  office_radius_m?: number;
 } | null;
 
 export function CompanyProfileForm({ company }: { company: Company }) {
   const [state, formAction, pending] = useActionState(updateCompanyProfile, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+
+  const officeLatRef = useRef<HTMLInputElement>(null);
+  const officeLngRef = useRef<HTMLInputElement>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
 
   return (
     <form
@@ -138,6 +147,97 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           className="erp-input" style={{ width: "100%" }}
         />
       </div>
+      <div className="md:col-span-2" style={{ borderTop: "1px solid var(--erp-border)", paddingTop: 12, marginTop: 4 }}>
+        <span className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">
+          사무실 위치 (근태 GPS 확인 기준)
+        </span>
+        <PageGuide className="text-[11px]">
+          근태 &gt; 출퇴근 체크에서 GPS로 기록한 위치가 이 좌표에서 얼마나 떨어져 있는지 함께
+          보여줍니다. 비워두면 위치는 기록만 되고 거리 비교는 하지 않습니다.
+        </PageGuide>
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <label htmlFor="cp-office-lat" className="mb-1 block text-[11px] text-[var(--erp-text-muted)]">
+              위도
+            </label>
+            <input
+              ref={officeLatRef}
+              id="cp-office-lat"
+              name="office_lat"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              defaultValue={company?.office_lat ?? ""}
+              className="erp-input"
+              style={{ width: 140 }}
+            />
+          </div>
+          <div>
+            <label htmlFor="cp-office-lng" className="mb-1 block text-[11px] text-[var(--erp-text-muted)]">
+              경도
+            </label>
+            <input
+              ref={officeLngRef}
+              id="cp-office-lng"
+              name="office_lng"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              defaultValue={company?.office_lng ?? ""}
+              className="erp-input"
+              style={{ width: 140 }}
+            />
+          </div>
+          <div>
+            <label htmlFor="cp-office-radius" className="mb-1 block text-[11px] text-[var(--erp-text-muted)]">
+              인정 반경(m)
+            </label>
+            <input
+              id="cp-office-radius"
+              name="office_radius_m"
+              type="number"
+              min={1}
+              autoComplete="off"
+              defaultValue={company?.office_radius_m ?? 300}
+              className="erp-input"
+              style={{ width: 100 }}
+            />
+          </div>
+          <button
+            type="button"
+            className="erp-btn"
+            disabled={locating}
+            onClick={() => {
+              if (!("geolocation" in navigator)) {
+                setLocateError("이 브라우저에서는 위치 확인을 지원하지 않습니다.");
+                return;
+              }
+              setLocating(true);
+              setLocateError(null);
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  if (officeLatRef.current) officeLatRef.current.value = String(pos.coords.latitude);
+                  if (officeLngRef.current) officeLngRef.current.value = String(pos.coords.longitude);
+                  setLocating(false);
+                },
+                () => {
+                  setLocateError("위치 확인에 실패했습니다. 브라우저 위치 권한을 확인해주세요.");
+                  setLocating(false);
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+              );
+            }}
+          >
+            {locating ? "위치 확인 중..." : "📍 지금 위치를 사무실로 지정"}
+          </button>
+        </div>
+        {locateError && (
+          <p className="mt-1 text-[11px]" style={{ color: "var(--erp-danger)" }}>
+            {locateError}
+          </p>
+        )}
+      </div>
+
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-2">
         {pending ? (
           <>

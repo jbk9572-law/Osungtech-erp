@@ -22,6 +22,7 @@ import {
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
+import { haversineDistanceMeters } from "@/lib/geo";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -36,11 +37,21 @@ export default async function AttendancePage() {
   const today = todayKstStr();
   const year = Number(today.slice(0, 4));
 
-  const [{ data: todayRecord }, { data: myLeaves }, { data: myCorrections }, { data: balance }, departments, profiles, presetsRaw] =
-    await Promise.all([
+  const [
+    { data: todayRecord },
+    { data: myLeaves },
+    { data: myCorrections },
+    { data: balance },
+    departments,
+    profiles,
+    presetsRaw,
+    { data: company },
+  ] = await Promise.all([
       supabase
         .from("attendance_records")
-        .select("clock_in_at, clock_out_at")
+        .select(
+          "clock_in_at, clock_out_at, clock_in_lat, clock_in_lng, clock_in_accuracy_m, clock_out_lat, clock_out_lng, clock_out_accuracy_m"
+        )
         .eq("user_id", user!.id)
         .eq("work_date", today)
         .maybeSingle(),
@@ -66,6 +77,7 @@ export default async function AttendancePage() {
       fetchAllRows<{ id: string; name: string; approver_ids: string[]; reference_ids: string[] }>((from, to) =>
         supabase.from("approval_line_presets").select("id, name, approver_ids, reference_ids").order("name").range(from, to),
       ),
+      supabase.from("company_profile").select("office_lat, office_lng, office_radius_m").maybeSingle(),
     ]);
 
   // 결재선 인프라가 생기기 전(마이그레이션 115 이전)에 등록된 레거시
@@ -98,6 +110,20 @@ export default async function AttendancePage() {
   const fmtTime = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) : null;
 
+  // 사무실 좌표가 설정돼 있으면(환경설정 > 회사정보) 거리를, 없거나 GPS
+  // 확인에 실패했으면 그 사실을 그대로 보여준다 — "확인했더니 멀다"와
+  // "애초에 확인이 안 됐다"를 구분해야 의미가 있다(위 hr/actions.ts 주석
+  // 참고).
+  const describeLocation = (lat: number | null, lng: number | null): string => {
+    if (lat == null || lng == null) return "위치 확인 안 됨";
+    if (company?.office_lat == null || company?.office_lng == null) return "위치 기록됨 (사무실 위치 미설정)";
+    const distance = haversineDistanceMeters(lat, lng, company.office_lat, company.office_lng);
+    const radius = company.office_radius_m ?? 300;
+    return distance <= radius
+      ? `사무실에서 ${Math.round(distance).toLocaleString()}m (반경 이내)`
+      : `사무실에서 ${Math.round(distance).toLocaleString()}m (반경 밖)`;
+  };
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
@@ -115,6 +141,8 @@ export default async function AttendancePage() {
         clockedOut={!!todayRecord?.clock_out_at}
         clockInTime={fmtTime(todayRecord?.clock_in_at ?? null)}
         clockOutTime={fmtTime(todayRecord?.clock_out_at ?? null)}
+        clockInLocation={todayRecord?.clock_in_at ? describeLocation(todayRecord.clock_in_lat, todayRecord.clock_in_lng) : null}
+        clockOutLocation={todayRecord?.clock_out_at ? describeLocation(todayRecord.clock_out_lat, todayRecord.clock_out_lng) : null}
         clockInAction={clockIn}
         clockOutAction={clockOut}
       />

@@ -6,10 +6,27 @@ import type { FormState } from "@/components/form-message";
 import { todayKstStr } from "@/lib/kst-date";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 
-export async function clockIn(): Promise<FormState> {
+// 위치 값은 브라우저 navigator.geolocation이 넘겨준 값을 그대로 믿고
+// 숫자로만 파싱한다 — 권한을 거부했거나 위치 확인에 실패한 경우 빈
+// 문자열/누락으로 넘어오는데, 그때는 null로 저장해 "위치 확인 안 됨"과
+// "위치를 확인했더니 회사와 멀다"를 구분할 수 있게 한다(둘 다 출퇴근
+// 처리 자체는 막지 않는다 — 실내 GPS 오차나 권한 거부로 정상 근무자가
+// 체크를 못 하게 되는 걸 막기 위함).
+function parseCoord(formData: FormData, key: string): number | null {
+  const raw = formData.get(key);
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+export async function clockIn(_prevState: FormState, formData: FormData): Promise<FormState> {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) return { error: "로그인이 필요합니다." };
+
+  const lat = parseCoord(formData, "lat");
+  const lng = parseCoord(formData, "lng");
+  const accuracyM = parseCoord(formData, "accuracy_m");
 
   const today = todayKstStr();
   const { data: existing } = await supabase
@@ -23,11 +40,15 @@ export async function clockIn(): Promise<FormState> {
     return { error: "이미 출근 처리되었습니다." };
   }
 
+  const clockInFields = {
+    clock_in_at: new Date().toISOString(),
+    clock_in_lat: lat,
+    clock_in_lng: lng,
+    clock_in_accuracy_m: accuracyM,
+  };
   const { error } = existing
-    ? await supabase.from("attendance_records").update({ clock_in_at: new Date().toISOString() }).eq("id", existing.id)
-    : await supabase
-        .from("attendance_records")
-        .insert({ user_id: user.id, work_date: today, clock_in_at: new Date().toISOString() });
+    ? await supabase.from("attendance_records").update(clockInFields).eq("id", existing.id)
+    : await supabase.from("attendance_records").insert({ user_id: user.id, work_date: today, ...clockInFields });
 
   if (error) return { error: `출근 처리에 실패했습니다: ${error.message}` };
 
@@ -35,10 +56,14 @@ export async function clockIn(): Promise<FormState> {
   return { success: "출근 처리했습니다." };
 }
 
-export async function clockOut(): Promise<FormState> {
+export async function clockOut(_prevState: FormState, formData: FormData): Promise<FormState> {
   const supabase = await createClient();
   const user = await getUser();
   if (!user) return { error: "로그인이 필요합니다." };
+
+  const lat = parseCoord(formData, "lat");
+  const lng = parseCoord(formData, "lng");
+  const accuracyM = parseCoord(formData, "accuracy_m");
 
   const today = todayKstStr();
   const { data: existing } = await supabase
@@ -57,7 +82,12 @@ export async function clockOut(): Promise<FormState> {
 
   const { error } = await supabase
     .from("attendance_records")
-    .update({ clock_out_at: new Date().toISOString() })
+    .update({
+      clock_out_at: new Date().toISOString(),
+      clock_out_lat: lat,
+      clock_out_lng: lng,
+      clock_out_accuracy_m: accuracyM,
+    })
     .eq("id", existing.id);
 
   if (error) return { error: `퇴근 처리에 실패했습니다: ${error.message}` };

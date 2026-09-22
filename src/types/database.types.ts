@@ -330,6 +330,12 @@ export type Database = {
           work_date: string;
           clock_in_at: string | null;
           clock_out_at: string | null;
+          clock_in_lat: number | null;
+          clock_in_lng: number | null;
+          clock_in_accuracy_m: number | null;
+          clock_out_lat: number | null;
+          clock_out_lng: number | null;
+          clock_out_accuracy_m: number | null;
           created_at: string;
         };
         Insert: {
@@ -338,6 +344,12 @@ export type Database = {
           work_date?: string;
           clock_in_at?: string | null;
           clock_out_at?: string | null;
+          clock_in_lat?: number | null;
+          clock_in_lng?: number | null;
+          clock_in_accuracy_m?: number | null;
+          clock_out_lat?: number | null;
+          clock_out_lng?: number | null;
+          clock_out_accuracy_m?: number | null;
           created_at?: string;
         };
         Update: {
@@ -346,6 +358,12 @@ export type Database = {
           work_date?: string;
           clock_in_at?: string | null;
           clock_out_at?: string | null;
+          clock_in_lat?: number | null;
+          clock_in_lng?: number | null;
+          clock_in_accuracy_m?: number | null;
+          clock_out_lat?: number | null;
+          clock_out_lng?: number | null;
+          clock_out_accuracy_m?: number | null;
           created_at?: string;
         };
         Relationships: [
@@ -1691,6 +1709,9 @@ export type Database = {
           logo_wordmark_url: string | null;
           logo_mark_url: string | null;
           seal_image_url: string | null;
+          office_lat: number | null;
+          office_lng: number | null;
+          office_radius_m: number;
           updated_at: string;
         };
         Insert: {
@@ -1710,6 +1731,9 @@ export type Database = {
           logo_wordmark_url?: string | null;
           logo_mark_url?: string | null;
           seal_image_url?: string | null;
+          office_lat?: number | null;
+          office_lng?: number | null;
+          office_radius_m?: number;
           updated_at?: string;
         };
         Update: {
@@ -1729,6 +1753,9 @@ export type Database = {
           logo_wordmark_url?: string | null;
           logo_mark_url?: string | null;
           seal_image_url?: string | null;
+          office_lat?: number | null;
+          office_lng?: number | null;
+          office_radius_m?: number;
           updated_at?: string;
         };
         Relationships: [];
