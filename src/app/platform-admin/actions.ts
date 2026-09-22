@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
+import { ROLE_LABELS } from "@/lib/user-roles";
 import type { FormState } from "@/components/form-message";
+
+type Role = "admin" | "manager" | "staff";
+function isRole(value: string): value is Role {
+  return value in ROLE_LABELS;
+}
 
 // 새 고객사(테넌트)를 만들고 그 회사의 첫 관리자 계정까지 한 번에
 // 발급한다. 지금은 공개 회원가입 페이지가 없어서(모든 계정은 관리자가
@@ -86,6 +92,74 @@ export async function createCompanyTenant(_prevState: FormState, formData: FormD
 
   revalidatePath("/platform-admin");
   return { success: `"${companyName}" 테넌트와 관리자 계정을 만들었습니다.` };
+}
+
+// 고객사 소속 데모(테스트) 계정 생성. 테넌트 관리자 화면(settings/users)에는
+// 이 기능이 없다 — 어떤 계정이 실제 거래 데이터 대신 가짜 데이터만 보이는
+// 계정인지는 그 회사 스스로가 아니라 플랫폼(엘보닉스) 운영자가 판단/발급할
+// 일이라는 지적으로, 여기 플랫폼 관리 전용 경로로만 만들 수 있게 옮겼다.
+export async function createTenantDemoAccount(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 데모 계정을 만들 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const username = String(formData.get("username") ?? "").trim();
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const role = String(formData.get("role") ?? "staff");
+
+  if (!tenantId || !username || !password || !fullName) {
+    return { error: "아이디, 이름, 비밀번호를 모두 입력해주세요." };
+  }
+  if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
+    return { error: "아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
+  }
+  if (password.length < 6) {
+    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  }
+  if (!isRole(role)) {
+    return { error: "역할 값이 올바르지 않습니다." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { data: tenant, error: tenantError } = await admin.from("tenants").select("slug").eq("id", tenantId).maybeSingle();
+  if (tenantError || !tenant) {
+    return { error: "고객사를 확인하지 못해 계정을 만들 수 없습니다." };
+  }
+
+  const email = `${username}@${tenant.slug}.elvonix.local`;
+  const { data: created, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName, username, tenant_id: tenantId },
+  });
+
+  if (error || !created.user) {
+    const isDuplicate = error?.message?.toLowerCase().includes("already");
+    return { error: isDuplicate ? "이미 존재하는 아이디입니다." : (error?.message ?? "계정 생성에 실패했습니다.") };
+  }
+
+  // createUserAccount와 달리 여기서는 is_demo를 명시적으로 true로 저장한다 —
+  // 이 계정으로 로그인하면 실제 거래처/매출/재고 등은 전혀 안 보이고, 이
+  // 계정이 직접 입력한 가짜 데이터만 보고 등록/수정할 수 있다.
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({ role, is_demo: true })
+    .eq("id", created.user.id);
+  if (profileError) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    return { error: `데모 계정 설정에 실패해 계정 생성을 취소했습니다: ${profileError.message}` };
+  }
+
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "데모 계정을 만들었습니다." };
 }
 
 // 회사명/슬러그 수정. 슬러그는 로그인 이메일 도메인(아이디@슬러그.elvonix.local)에

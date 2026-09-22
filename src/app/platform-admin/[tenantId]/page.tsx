@@ -5,6 +5,7 @@ import { EditCompanyForm } from "@/components/edit-company-form";
 import { TenantStatusControls } from "@/components/tenant-status-controls";
 import { TenantPointsPanel } from "@/components/tenant-points-panel";
 import { ResetTenantUserPasswordForm } from "@/components/reset-tenant-user-password-form";
+import { CreateTenantDemoAccountForm } from "@/components/create-tenant-demo-account-form";
 import { PageGuide } from "@/components/erp/page-guide";
 
 const ROLE_LABELS: Record<string, string> = { admin: "관리자", manager: "매니저", staff: "직원" };
@@ -47,7 +48,7 @@ export default async function PlatformAdminTenantDetailPage({
   const userIds = (members ?? []).map((m) => m.user_id);
 
   const { data: users } = userIds.length
-    ? await admin.from("profiles").select("id, username, full_name, role").in("id", userIds).limit(1000)
+    ? await admin.from("profiles").select("id, username, full_name, role, is_demo").in("id", userIds).limit(1000)
     : { data: [] };
 
   // 회사별 사용 현황 — 실제 업무 데이터 내용은 안 보여주고(플랫폼 운영자가
@@ -135,6 +136,9 @@ export default async function PlatformAdminTenantDetailPage({
             <span className="erp-detail-tab active">소속 계정 ({(users ?? []).length})</span>
           </div>
           <div className="erp-detail-body">
+            <div style={{ marginBottom: 12 }}>
+              <CreateTenantDemoAccountForm tenantId={tenant.id} />
+            </div>
             <div className="erp-grid-wrap">
               <table className="erp-grid">
                 <thead>
@@ -148,7 +152,23 @@ export default async function PlatformAdminTenantDetailPage({
                 <tbody>
                   {(users ?? []).map((u) => (
                     <tr key={u.id}>
-                      <td>{u.full_name}</td>
+                      <td>
+                        {u.full_name}
+                        {u.is_demo && (
+                          <span
+                            style={{
+                              marginLeft: 6,
+                              padding: "1px 6px",
+                              fontSize: 10,
+                              fontWeight: 700,
+                              color: "var(--erp-warning)",
+                              background: "var(--erp-warning-bg)",
+                            }}
+                          >
+                            데모
+                          </span>
+                        )}
+                      </td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{u.username}</td>
                       <td>{ROLE_LABELS[u.role] ?? u.role}</td>
                       <td>
