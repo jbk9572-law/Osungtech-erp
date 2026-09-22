@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/platform-admin/settings", label: "환경설정" },
   { href: "/platform-admin/announcements", label: "공지사항" },
   { href: "/platform-admin/activity-log", label: "활동 로그" },
+  { href: "/platform-admin/support", label: "고객지원" },
   { href: "/platform-admin/plans", label: "요금제" },
   { href: "/platform-admin/stats", label: "통계" },
 ] as const;

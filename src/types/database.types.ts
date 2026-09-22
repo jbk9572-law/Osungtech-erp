@@ -2982,6 +2982,66 @@ export type Database = {
           },
         ];
       };
+      support_tickets: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          doc_no: number;
+          subject: string;
+          message: string;
+          status: string;
+          reply: string | null;
+          replied_at: string | null;
+          replied_by: string | null;
+          is_demo: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          doc_no?: number;
+          subject: string;
+          message: string;
+          status?: string;
+          reply?: string | null;
+          replied_at?: string | null;
+          replied_by?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          doc_no?: number;
+          subject?: string;
+          message?: string;
+          status?: string;
+          reply?: string | null;
+          replied_at?: string | null;
+          replied_by?: string | null;
+          is_demo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_tickets_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payment_requests: {
         Row: {
           id: string;
@@ -3910,6 +3970,10 @@ export type Database = {
       is_platform_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      reply_support_ticket: {
+        Args: { p_id: string; p_reply: string; p_status?: string };
+        Returns: undefined;
       };
       get_cross_tenant_activity_log: {
         Args: { p_limit?: number };

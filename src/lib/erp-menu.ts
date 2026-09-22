@@ -139,6 +139,8 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "메일 계정 연동", href: "/settings/mail" },
       { label: "기능 관리", href: "/settings/features", adminOnly: true },
       { label: "비밀번호 변경", href: "/settings/password" },
+      { label: "고객지원", href: "/settings/support" },
+      { label: "구독/결제", href: "/settings/billing", adminOnly: true },
     ],
   },
   {
