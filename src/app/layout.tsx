@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 // Geist는 라틴 전용이라 한글은 시스템 기본폰트(맑은 고딕 등)로 대체돼
@@ -27,6 +28,10 @@ export const metadata: Metadata = {
   description: "Next.js + Supabase 기반 재고관리 ERP",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#132944",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,7 +42,10 @@ export default function RootLayout({
       lang="ko"
       className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }
