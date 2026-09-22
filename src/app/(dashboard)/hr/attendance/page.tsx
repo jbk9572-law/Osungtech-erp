@@ -23,6 +23,7 @@ import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { haversineDistanceMeters } from "@/lib/geo";
+import { LEAVE_UNIT_LABEL, type LeaveUnit } from "@/lib/leave-unit";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -57,7 +58,7 @@ export default async function AttendancePage() {
         .maybeSingle(),
       supabase
         .from("leave_requests")
-        .select("id, start_date, end_date, days, reason, status, created_at, approval_document_id")
+        .select("id, start_date, end_date, days, leave_unit, reason, status, created_at, approval_document_id")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -86,7 +87,7 @@ export default async function AttendancePage() {
   const { data: pendingLeaves } = isAdmin
     ? await supabase
         .from("leave_requests")
-        .select("id, start_date, end_date, days, reason, created_at, profiles!user_id(full_name)")
+        .select("id, start_date, end_date, days, leave_unit, reason, created_at, profiles!user_id(full_name)")
         .eq("status", "pending")
         .is("approval_document_id", null)
         .order("created_at", { ascending: true })
@@ -200,6 +201,7 @@ export default async function AttendancePage() {
                   <tr>
                     <th style={{ width: 100 }}>신청자</th>
                     <th style={{ width: 200 }}>기간</th>
+                    <th style={{ width: 90 }}>구분</th>
                     <th className="num" style={{ width: 80 }}>
                       일수
                     </th>
@@ -214,6 +216,7 @@ export default async function AttendancePage() {
                       <td>
                         {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
                       </td>
+                      <td>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</td>
                       <td className="num">{Number(l.days).toLocaleString()}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{l.reason ?? "-"}</td>
                       <td>
@@ -246,6 +249,7 @@ export default async function AttendancePage() {
                 <thead>
                   <tr>
                     <th style={{ width: 200 }}>기간</th>
+                    <th style={{ width: 90 }}>구분</th>
                     <th className="num" style={{ width: 80 }}>
                       일수
                     </th>
@@ -262,6 +266,7 @@ export default async function AttendancePage() {
                         <td>
                           {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
                         </td>
+                        <td>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</td>
                         <td className="num">{Number(l.days).toLocaleString()}</td>
                         <td style={{ color: "var(--erp-text-muted)" }}>{l.reason ?? "-"}</td>
                         <td>

@@ -440,6 +440,7 @@ export type Database = {
           start_date: string;
           end_date: string;
           days: number;
+          leave_unit: string;
           reason: string | null;
           status: string;
           created_at: string;
@@ -453,6 +454,7 @@ export type Database = {
           start_date: string;
           end_date: string;
           days: number;
+          leave_unit?: string;
           reason?: string | null;
           status?: string;
           created_at?: string;
@@ -466,6 +468,7 @@ export type Database = {
           start_date?: string;
           end_date?: string;
           days?: number;
+          leave_unit?: string;
           reason?: string | null;
           status?: string;
           created_at?: string;
@@ -3796,6 +3799,7 @@ export type Database = {
           p_reason: string | null;
           p_approver_ids: string[];
           p_reference_ids?: string[];
+          p_leave_unit?: string;
         };
         Returns: string;
       };

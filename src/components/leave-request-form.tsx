@@ -7,6 +7,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
+import { LEAVE_UNIT_DAYS, LEAVE_UNIT_LABEL, LEAVE_UNIT_OPTIONS, type LeaveUnit } from "@/lib/leave-unit";
 
 export function LeaveRequestForm({
   action,
@@ -28,6 +29,25 @@ export function LeaveRequestForm({
   const [approvers, setApprovers] = useState<PickedPerson[]>([]);
   const [references, setReferences] = useState<PickedPerson[]>([]);
   const [presetId, setPresetId] = useState("");
+  const [leaveUnit, setLeaveUnit] = useState<LeaveUnit>("full");
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [days, setDays] = useState("1");
+
+  // 반차/반반차는 하루만 신청할 수 있어서, 고르는 순간 종료일을 시작일에
+  // 맞춰 잠그고 일수도 자동으로 채운다(0.5/0.25) — 종일만 여러 날짜에
+  // 걸칠 수 있어 일수를 직접 입력받는다.
+  function applyLeaveUnit(unit: LeaveUnit) {
+    setLeaveUnit(unit);
+    if (unit === "full") return;
+    setEndDate(startDate);
+    setDays(String(LEAVE_UNIT_DAYS[unit]));
+  }
+
+  function handleStartDateChange(value: string) {
+    setStartDate(value);
+    if (leaveUnit !== "full") setEndDate(value);
+  }
 
   function toPicked(ids: string[]): PickedPerson[] {
     return ids.map((id) => ({ id, name: profileNameById[id] ?? "구성원" }));
@@ -50,18 +70,64 @@ export function LeaveRequestForm({
         <input key={r.id} type="hidden" name="reference_id" value={r.id} />
       ))}
 
+      <input type="hidden" name="leave_unit" value={leaveUnit} />
+
+      <div className="erp-field" style={{ maxWidth: 480 }}>
+        <label htmlFor="lv-unit">휴가 단위</label>
+        <select
+          id="lv-unit"
+          className="erp-input w-full"
+          value={leaveUnit}
+          onChange={(e) => applyLeaveUnit(e.target.value as LeaveUnit)}
+        >
+          {LEAVE_UNIT_OPTIONS.map((unit) => (
+            <option key={unit} value={unit}>
+              {LEAVE_UNIT_LABEL[unit]}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         <div className="erp-field">
           <label htmlFor="lv-start">시작일</label>
-          <input id="lv-start" type="date" name="start_date" defaultValue={today} className="erp-input w-full" required />
+          <input
+            id="lv-start"
+            type="date"
+            name="start_date"
+            value={startDate}
+            onChange={(e) => handleStartDateChange(e.target.value)}
+            className="erp-input w-full"
+            required
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="lv-end">종료일</label>
-          <input id="lv-end" type="date" name="end_date" defaultValue={today} className="erp-input w-full" required />
+          <input
+            id="lv-end"
+            type="date"
+            name="end_date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            disabled={leaveUnit !== "full"}
+            className="erp-input w-full"
+            required
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="lv-days">사용 일수</label>
-          <input id="lv-days" type="number" name="days" step="0.5" min="0.5" defaultValue="1" className="erp-input w-full" required />
+          <input
+            id="lv-days"
+            type="number"
+            name="days"
+            step="0.25"
+            min="0.25"
+            value={days}
+            onChange={(e) => setDays(e.target.value)}
+            disabled={leaveUnit !== "full"}
+            className="erp-input w-full"
+            required
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="lv-reason">사유 (선택)</label>

@@ -103,6 +103,7 @@ export async function requestLeave(_prevState: FormState, formData: FormData): P
   const startDate = String(formData.get("start_date") ?? "");
   const endDate = String(formData.get("end_date") ?? "");
   const days = Number(formData.get("days") ?? 0);
+  const leaveUnit = String(formData.get("leave_unit") ?? "full");
   const reason = String(formData.get("reason") ?? "").trim() || null;
   const approverIds = formData.getAll("approver_id").map(String).filter(Boolean);
   const referenceIds = formData.getAll("reference_id").map(String).filter(Boolean);
@@ -112,6 +113,9 @@ export async function requestLeave(_prevState: FormState, formData: FormData): P
   }
   if (endDate < startDate) {
     return { error: "종료일이 시작일보다 빠를 수 없습니다." };
+  }
+  if (leaveUnit !== "full" && startDate !== endDate) {
+    return { error: "반차/반반차는 하루만 신청할 수 있습니다." };
   }
   if (approverIds.length === 0) {
     return { error: "결재선(승인자)을 1명 이상 지정해주세요." };
@@ -125,6 +129,7 @@ export async function requestLeave(_prevState: FormState, formData: FormData): P
     p_reason: reason,
     p_approver_ids: approverIds,
     p_reference_ids: referenceIds,
+    p_leave_unit: leaveUnit,
   });
 
   if (error || !leaveId) {
