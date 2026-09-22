@@ -10,6 +10,7 @@ import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
+import { AnnouncementMarquee } from "@/components/announcement-marquee";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
 
@@ -108,9 +109,7 @@ export function ErpShell({
       {(platformAnnouncements ?? []).map((a) => (
         <div className="erp-platform-announcement-banner" key={a.id}>
           <strong>공지</strong>
-          <div className="erp-platform-announcement-banner-track">
-            <span className="erp-platform-announcement-banner-text">{a.title}</span>
-          </div>
+          <AnnouncementMarquee text={a.title} />
         </div>
       ))}
       <NotificationToaster />
