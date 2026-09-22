@@ -2,6 +2,7 @@ import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
 import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
+import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
 import { setPlatformDefaultFeatureEnabled } from "@/app/platform-admin/settings/actions";
 import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS } from "@/lib/erp-menu";
 
@@ -10,7 +11,7 @@ export default async function PlatformSettingsPage() {
 
   const { data: settings } = await supabase
     .from("platform_settings")
-    .select("default_plan, default_disabled_features")
+    .select("default_plan, default_disabled_features, maintenance_mode, maintenance_message")
     .eq("id", true)
     .maybeSingle();
   const defaultDisabledFeatures = settings?.default_disabled_features ?? [];
@@ -24,6 +25,18 @@ export default async function PlatformSettingsPage() {
       </PageGuide>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">점검 모드</span>
+        </div>
+        <div className="erp-detail-body">
+          <MaintenanceModeForm
+            enabled={settings?.maintenance_mode ?? false}
+            message={settings?.maintenance_message ?? null}
+          />
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginBottom: 16 }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본 요금제</span>
         </div>

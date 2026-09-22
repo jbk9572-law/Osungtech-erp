@@ -815,18 +815,24 @@ export type Database = {
           id: boolean;
           default_plan: string;
           default_disabled_features: string[];
+          maintenance_mode: boolean;
+          maintenance_message: string | null;
           updated_at: string;
         };
         Insert: {
           id?: boolean;
           default_plan?: string;
           default_disabled_features?: string[];
+          maintenance_mode?: boolean;
+          maintenance_message?: string | null;
           updated_at?: string;
         };
         Update: {
           id?: boolean;
           default_plan?: string;
           default_disabled_features?: string[];
+          maintenance_mode?: boolean;
+          maintenance_message?: string | null;
           updated_at?: string;
         };
         Relationships: [];

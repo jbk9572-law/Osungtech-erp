@@ -2,6 +2,7 @@
 
 import { Suspense, useActionState, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { login } from "./actions";
 
 export default function LoginPage() {
@@ -156,7 +157,14 @@ function LoginForm() {
 
           <div className="flex justify-between border-t border-[#eef0f3] pt-2 text-[10px] text-[#6b7280]">
             <span>ELVONIX v1.0</span>
-            <span>&copy; {new Date().getFullYear()} ELVONIX</span>
+            <span className="flex gap-2">
+              <Link href="/terms" className="underline">
+                이용약관
+              </Link>
+              <Link href="/privacy" className="underline">
+                개인정보처리방침
+              </Link>
+            </span>
           </div>
         </div>
       </div>

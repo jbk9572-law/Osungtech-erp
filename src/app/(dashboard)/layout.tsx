@@ -5,6 +5,7 @@ import { ErpShell } from "@/components/erp/erp-shell";
 import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
 import { MessengerWidgetPanel } from "@/components/erp/messenger-widget-panel";
+import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
 import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
@@ -27,8 +28,14 @@ export default async function DashboardLayout({
   // <Suspense>로 따로 스트리밍한다(아래 usageWidget과 같은 이유) —
   // 페이지 이동마다(모달 열기 포함) 항상 같이 돌던 조회를 줄여 요청당
   // CPU 부담을 낮춘다.
-  const [{ data: company }, { data: profiles }, { data: tenant }, { data: isPlatformAdmin }, { data: announcements }] =
-    await Promise.all([
+  const [
+    { data: company },
+    { data: profiles },
+    { data: tenant },
+    { data: isPlatformAdmin },
+    { data: announcements },
+    { data: platformSettings },
+  ] = await Promise.all([
       supabase
         .from("company_profile")
         .select("name, logo_mark_url")
@@ -53,6 +60,9 @@ export default async function DashboardLayout({
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(20),
+      // 점검 모드(migration 135) — 켜져 있으면 플랫폼 운영자를 제외한
+      // 모든 사용자에게 실제 화면 대신 안내만 보여준다.
+      supabase.from("platform_settings").select("maintenance_mode, maintenance_message").eq("id", true).maybeSingle(),
     ]);
 
   const profileNames = Object.fromEntries(
@@ -62,6 +72,10 @@ export default async function DashboardLayout({
   const isDemo = myProfile?.is_demo ?? false;
   const isAdmin = myProfile?.role === "admin";
   const disabledFeatures = tenant?.disabled_features ?? [];
+
+  if (platformSettings?.maintenance_mode && isPlatformAdmin !== true) {
+    return <MaintenanceScreen message={platformSettings.maintenance_message} />;
+  }
 
   return (
     <ErpShell

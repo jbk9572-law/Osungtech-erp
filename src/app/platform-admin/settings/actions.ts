@@ -47,3 +47,25 @@ export async function updatePlatformDefaultPlan(_prevState: FormState, formData:
   revalidatePath("/platform-admin/settings");
   return { success: "기본 요금제를 저장했습니다." };
 }
+
+// 점검 모드 — 켜두면 (dashboard)/layout.tsx가 플랫폼 운영자를 제외한
+// 모든 사용자에게 안내 화면만 보여주고 실제 업무 화면은 막는다(대규모
+// 마이그레이션/배포 작업 중 사용). 플랫폼 운영자 본인은 이 값과 무관하게
+// 항상 접근할 수 있어야 꺼야 하는 사람이 자기가 걸어놓은 점검 모드에
+// 자기도 막히는 일이 없다.
+export async function setMaintenanceMode(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { supabase, isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const enabled = formData.get("enabled") === "1";
+  const message = String(formData.get("message") ?? "").trim() || null;
+
+  const { error } = await supabase
+    .from("platform_settings")
+    .update({ maintenance_mode: enabled, maintenance_message: message, updated_at: new Date().toISOString() })
+    .eq("id", true);
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin/settings");
+  return { success: enabled ? "점검 모드를 켰습니다." : "점검 모드를 껐습니다." };
+}
