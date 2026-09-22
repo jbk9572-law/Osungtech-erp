@@ -3356,6 +3356,7 @@ export type Database = {
       messenger_messages: {
         Row: {
           id: string;
+          channel_id: string;
           sender_id: string | null;
           content: string;
           file_url: string | null;
@@ -3366,6 +3367,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          channel_id: string;
           sender_id?: string | null;
           content?: string;
           file_url?: string | null;
@@ -3376,6 +3378,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          channel_id?: string;
           sender_id?: string | null;
           content?: string;
           file_url?: string | null;
@@ -3390,6 +3393,75 @@ export type Database = {
             columns: ["sender_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messenger_messages_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "messenger_channels";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      messenger_channels: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          type: string;
+          name: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          type: string;
+          name?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          type?: string;
+          name?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      messenger_channel_members: {
+        Row: {
+          channel_id: string;
+          user_id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          joined_at: string;
+        };
+        Insert: {
+          channel_id: string;
+          user_id: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          joined_at?: string;
+        };
+        Update: {
+          channel_id?: string;
+          user_id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          joined_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messenger_channel_members_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "messenger_channels";
             referencedColumns: ["id"];
           },
         ];
@@ -3646,6 +3718,26 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_or_create_all_channel: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
+      create_dm_channel: {
+        Args: { p_other_user_id: string };
+        Returns: string;
+      };
+      create_group_channel: {
+        Args: { p_name: string; p_member_ids: string[] };
+        Returns: string;
+      };
+      leave_messenger_channel: {
+        Args: { p_channel_id: string };
+        Returns: void;
+      };
+      is_messenger_channel_member: {
+        Args: { p_channel_id: string };
+        Returns: boolean;
+      };
       get_email_for_username: {
         Args: { p_slug: string; p_username: string };
         Returns: string | null;

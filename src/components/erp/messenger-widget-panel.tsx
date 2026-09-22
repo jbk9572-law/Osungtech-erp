@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { MessengerWidget } from "@/components/erp/messenger-widget";
+import type { MessengerChannel } from "@/lib/messenger-types";
 
 // 최근 메신저 메시지 100건 조회를 (dashboard)/layout.tsx의 메인
 // Promise.all에서 분리했다 — usage-widget/notification-bell과 같은
@@ -17,18 +18,46 @@ export async function MessengerWidgetPanel({
   isAdmin: boolean;
 }) {
   const supabase = await createClient();
-  const { data: messages } = await supabase
-    .from("messenger_messages")
-    .select(
-      "id, sender_id, content, file_url, file_path, file_name, file_size, created_at",
-    )
-    // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로 오는
-    // 순서로 보여줘야 하므로 다시 뒤집는다.
-    .order("created_at", { ascending: false })
-    .limit(100);
+
+  const { data: allChannelId } = await supabase.rpc("get_or_create_all_channel");
+
+  const [{ data: channelRows }, { data: memberRows }, { data: messages }] = await Promise.all([
+    supabase
+      .from("messenger_channels")
+      .select("id, type, name")
+      .order("created_at", { ascending: true })
+      .limit(500),
+    supabase.from("messenger_channel_members").select("channel_id, user_id").limit(2000),
+    allChannelId
+      ? supabase
+          .from("messenger_messages")
+          .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
+          .eq("channel_id", allChannelId)
+          // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로
+          // 오는 순서로 보여줘야 하므로 다시 뒤집는다.
+          .order("created_at", { ascending: false })
+          .limit(100)
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const membersByChannel = new Map<string, string[]>();
+  for (const m of memberRows ?? []) {
+    const list = membersByChannel.get(m.channel_id) ?? [];
+    list.push(m.user_id);
+    membersByChannel.set(m.channel_id, list);
+  }
+
+  const channels: MessengerChannel[] = (channelRows ?? []).map((c) => ({
+    id: c.id,
+    type: c.type as MessengerChannel["type"],
+    name: c.name,
+    memberIds: membersByChannel.get(c.id) ?? [],
+  }));
 
   return (
     <MessengerWidget
+      channels={channels}
+      activeChannelId={allChannelId ?? channels[0]?.id ?? null}
       initialMessages={(messages ?? []).slice().reverse()}
       profileNames={profileNames}
       currentUserId={currentUserId}

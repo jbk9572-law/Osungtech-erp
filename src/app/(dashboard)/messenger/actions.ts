@@ -14,10 +14,14 @@ export async function sendMessage(
   _prevState: SendMessageState,
   formData: FormData
 ): Promise<SendMessageState> {
+  const channelId = String(formData.get("channel_id") ?? "");
   const content = String(formData.get("content") ?? "").trim();
   const file = formData.get("file");
   const hasFile = file instanceof File && file.size > 0;
 
+  if (!channelId) {
+    return { error: "채널을 선택해주세요." };
+  }
   if (!content && !hasFile) {
     return { error: "메시지나 파일을 입력해주세요." };
   }
@@ -70,6 +74,7 @@ export async function sendMessage(
   const { data: inserted, error } = await supabase
     .from("messenger_messages")
     .insert({
+      channel_id: channelId,
       sender_id: user.id,
       content,
       file_url: fileUrl,
@@ -77,7 +82,7 @@ export async function sendMessage(
       file_name: fileName,
       file_size: fileSize,
     })
-    .select("id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
+    .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
     .single();
 
   if (error || !inserted) {
@@ -123,5 +128,44 @@ export async function deleteMessage(formData: FormData): Promise<{ error?: strin
   }
   const { error } = await supabase.from("messenger_messages").delete().eq("id", id);
   if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
+  return {};
+}
+
+export type ChannelActionState = { error?: string; channelId?: string } | undefined;
+
+// DM은 상대방 한 명을 고르면 되고, 이미 만든 적 있으면 그 채널을 그대로
+// 재사용한다(create_dm_channel RPC가 처리).
+export async function startDirectMessage(otherUserId: string): Promise<ChannelActionState> {
+  if (!otherUserId) return { error: "대화 상대를 선택해주세요." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_dm_channel", { p_other_user_id: otherUserId });
+  if (error || !data) return { error: `대화를 시작하지 못했습니다.${error ? ` (${error.message})` : ""}` };
+  return { channelId: data };
+}
+
+export async function createGroup(
+  _prevState: ChannelActionState,
+  formData: FormData
+): Promise<ChannelActionState> {
+  const name = String(formData.get("name") ?? "").trim();
+  const memberIds = formData.getAll("member_id").map(String).filter(Boolean);
+
+  if (!name) return { error: "그룹 이름을 입력해주세요." };
+  if (memberIds.length === 0) return { error: "그룹원을 한 명 이상 선택해주세요." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_group_channel", {
+    p_name: name,
+    p_member_ids: memberIds,
+  });
+  if (error || !data) return { error: `그룹을 만들지 못했습니다.${error ? ` (${error.message})` : ""}` };
+  return { channelId: data };
+}
+
+export async function leaveGroup(channelId: string): Promise<{ error?: string }> {
+  if (!channelId) return { error: "잘못된 요청입니다." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("leave_messenger_channel", { p_channel_id: channelId });
+  if (error) return { error: `나가기에 실패했습니다: ${error.message}` };
   return {};
 }

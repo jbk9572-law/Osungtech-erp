@@ -2312,6 +2312,31 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 8px;
 }
 
+/* 채널 목록/새 DM·그룹 만들기 화면의 항목 한 줄 — 버튼이지만 목록
+   행처럼 보이게 전체 폭+가로 정렬로 통일한다(erp-btn류와는 다른 결). */
+.erp-messenger-channel-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--erp-divider);
+  background: none;
+  color: var(--erp-text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.erp-messenger-channel-row:hover {
+  background: var(--erp-hover);
+}
+
+.erp-messenger-channel-row:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .erp-messenger-composer {
   flex: 0 0 auto;
   border-top: 1px solid var(--erp-border);
