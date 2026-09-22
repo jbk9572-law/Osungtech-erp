@@ -47,6 +47,8 @@ import {
   getMostRecentLotNumber,
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
+import { useDraftAutosave } from "@/lib/use-draft-autosave";
+import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
@@ -92,6 +94,27 @@ type Row = {
   salePrice: number;
   manualSalePrice: boolean;
 };
+
+// 임시저장(useDraftAutosave)에 담아두는 값 — 서버로 실제 제출되는 값과
+// 거의 같지만, 신규 등록 화면에서만 의미가 있는 폼 상태 그대로다.
+type PurchaseDraft = {
+  supplierId: string;
+  purchaseDate: string;
+  memo: string;
+  alwaysCredit: boolean;
+  paymentMethod: string;
+  deliveryMethod: string;
+  isCarryover: boolean;
+  alsoCreateSale: boolean;
+  saleCustomerId: string;
+  saleDate: string;
+  saleDeliveryMethod: string;
+  rows: Row[];
+};
+
+function draftHasContent(d: PurchaseDraft): boolean {
+  return !!d.supplierId || !!d.memo.trim() || d.rows.some((r) => r.productId || r.customName.trim() || r.quantity > 0);
+}
 
 type PriceHistoryEntry = {
   supplierId: string;
@@ -347,6 +370,88 @@ export function NewPurchaseForm({
   // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
   // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
   useFormRedirect(state);
+
+  // 전표 입력 중 이탈(뒤로가기/새로고침/다른 메뉴 클릭) 시 입력 내용이
+  // 날아가지 않게, 신규 등록이면서(수정 화면 제외) 재고 부족 자동 발주
+  // 제안처럼 이미 채워진 채로 시작하는 경우도 아닐 때만(그런 경우는
+  // "이어서 작성" 대상이 될 임시저장이 애초에 없다) 이 브라우저에
+  // 임시저장한다.
+  const draftKey = initial?.id || prefillItems?.length ? null : "erp-draft:purchase:new";
+  const { draft, draftLoaded, save: saveDraft, clear: clearDraft } = useDraftAutosave<PurchaseDraft>(draftKey);
+  const [draftChoiceMade, setDraftChoiceMade] = useState(false);
+  const showDraftBanner = !!draftKey && draftLoaded && !!draft && draftHasContent(draft) && !draftChoiceMade;
+
+  function resumeDraft() {
+    if (!draft) return;
+    setSupplierId(draft.supplierId);
+    setPurchaseDate(draft.purchaseDate);
+    setMemo(draft.memo);
+    setAlwaysCredit(draft.alwaysCredit);
+    setPaymentMethod(draft.paymentMethod);
+    setDeliveryMethod(draft.deliveryMethod);
+    setIsCarryover(draft.isCarryover);
+    setAlsoCreateSale(draft.alsoCreateSale);
+    setSaleCustomerId(draft.saleCustomerId);
+    setSaleDate(draft.saleDate);
+    setSaleDeliveryMethod(draft.saleDeliveryMethod);
+    addFilledRows((startKey) => draft.rows.map((r, i) => ({ ...r, key: startKey + i })), () => true);
+    setDraftChoiceMade(true);
+  }
+
+  function discardDraft() {
+    clearDraft();
+    setDraftChoiceMade(true);
+  }
+
+  // 임시저장된 값이 있는데 아직 "이어서 작성"/"새로 시작"을 고르지
+  // 않았으면, 지금 화면의 빈 초기값으로 덮어써버리지 않게 자동저장을
+  // 잠깐 멈춘다.
+  const draftAutosaveReady = !!draftKey && draftLoaded && (!draft || draftChoiceMade);
+  useEffect(() => {
+    if (!draftAutosaveReady) return;
+    const data: PurchaseDraft = {
+      supplierId,
+      purchaseDate,
+      memo,
+      alwaysCredit,
+      paymentMethod,
+      deliveryMethod,
+      isCarryover,
+      alsoCreateSale,
+      saleCustomerId,
+      saleDate,
+      saleDeliveryMethod,
+      rows,
+    };
+    if (!draftHasContent(data)) {
+      clearDraft();
+      return;
+    }
+    saveDraft(data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    draftAutosaveReady,
+    supplierId,
+    purchaseDate,
+    memo,
+    alwaysCredit,
+    paymentMethod,
+    deliveryMethod,
+    isCarryover,
+    alsoCreateSale,
+    saleCustomerId,
+    saleDate,
+    saleDeliveryMethod,
+    rows,
+  ]);
+
+  // 저장(F7)이든 "저장 후 계속 등록"이든 성공하면 항상 state.redirectTo가
+  // 채워진다(useFormRedirect가 그걸로 이동시킨다) — 그 순간 임시저장은
+  // 더 이상 필요 없으니 지운다.
+  useEffect(() => {
+    if (state?.redirectTo) clearDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
   // 품목 그리드 칸 너비 — 마우스로 드래그해서 직접 조절할 수 있고, 조절한
   // 값은 DB에 저장되어 다음에 열어도, 다른 직원 화면에서도 유지된다.
   // "매출도 같이 등록"(동시등록) 모드도 품목/규격/관리번호/단위/공급가액/
@@ -929,6 +1034,8 @@ export function NewPurchaseForm({
           value={tg0OverrideQuantity ?? ""}
         />
       )}
+
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       {isCarryover && !alsoCreateSale && (
         <div

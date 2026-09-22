@@ -51,6 +51,8 @@ import {
   getMostRecentLotNumber,
 } from "@/lib/party-price-lookup";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
+import { useDraftAutosave } from "@/lib/use-draft-autosave";
+import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
@@ -98,6 +100,24 @@ type Row = {
   manualPrice: boolean;
   remark: string;
 };
+
+// 임시저장(useDraftAutosave)에 담아두는 값 — 서버로 실제 제출되는 값과
+// 거의 같지만, 신규 등록 화면에서만 의미가 있는 폼 상태 그대로다.
+type SaleDraft = {
+  customerId: string;
+  orderDate: string;
+  memo: string;
+  alwaysCredit: boolean;
+  paymentMethod: string;
+  deliveryMethod: string;
+  isCarryover: boolean;
+  returnReason: string;
+  rows: Row[];
+};
+
+function draftHasContent(d: SaleDraft): boolean {
+  return !!d.customerId || !!d.memo.trim() || d.rows.some((r) => r.productId || r.customName.trim() || r.quantity > 0);
+}
 
 export type SaleInitial = {
   id: string;
@@ -235,6 +255,77 @@ export function NewSaleForm({
   // addPurchaseItem/importTodoItems 공용).
   const isBlankRow = (row: Row) => !row.productId && row.quantity === 0;
   const [state, formAction, pending] = useActionState(action, undefined);
+
+  // 전표 입력 중 이탈(뒤로가기/새로고침/다른 메뉴 클릭) 시 입력 내용이
+  // 날아가지 않게, 신규 등록일 때만(수정 화면은 "임시저장 값 vs 실제
+  // 저장된 값"이 헷갈릴 수 있어 제외) 이 브라우저에 임시저장한다.
+  const draftKey = initial?.id ? null : "erp-draft:sale:new";
+  const { draft, draftLoaded, save: saveDraft, clear: clearDraft } = useDraftAutosave<SaleDraft>(draftKey);
+  const [draftChoiceMade, setDraftChoiceMade] = useState(false);
+  const showDraftBanner = !initial?.id && draftLoaded && !!draft && draftHasContent(draft) && !draftChoiceMade;
+
+  function resumeDraft() {
+    if (!draft) return;
+    setCustomerId(draft.customerId);
+    setOrderDate(draft.orderDate);
+    setMemo(draft.memo);
+    setAlwaysCredit(draft.alwaysCredit);
+    setPaymentMethod(draft.paymentMethod);
+    setDeliveryMethod(draft.deliveryMethod);
+    setIsCarryover(draft.isCarryover);
+    setReturnReason(draft.returnReason);
+    addFilledRows((startKey) => draft.rows.map((r, i) => ({ ...r, key: startKey + i })), () => true);
+    setDraftChoiceMade(true);
+  }
+
+  function discardDraft() {
+    clearDraft();
+    setDraftChoiceMade(true);
+  }
+
+  // 임시저장된 값이 있는데 아직 "이어서 작성"/"새로 시작"을 고르지
+  // 않았으면, 지금 화면의 빈 초기값으로 덮어써버리지 않게 자동저장을
+  // 잠깐 멈춘다.
+  const draftAutosaveReady = !initial?.id && draftLoaded && (!draft || draftChoiceMade);
+  useEffect(() => {
+    if (!draftAutosaveReady) return;
+    const data: SaleDraft = {
+      customerId,
+      orderDate,
+      memo,
+      alwaysCredit,
+      paymentMethod,
+      deliveryMethod,
+      isCarryover,
+      returnReason,
+      rows,
+    };
+    if (!draftHasContent(data)) {
+      clearDraft();
+      return;
+    }
+    saveDraft(data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    draftAutosaveReady,
+    customerId,
+    orderDate,
+    memo,
+    alwaysCredit,
+    paymentMethod,
+    deliveryMethod,
+    isCarryover,
+    returnReason,
+    rows,
+  ]);
+
+  // 저장(F7)이든 "저장 후 계속 등록"이든 성공하면 항상 state.redirectTo가
+  // 채워진다(useFormRedirect가 그걸로 이동시킨다) — 그 순간 임시저장은
+  // 더 이상 필요 없으니 지운다.
+  useEffect(() => {
+    if (state?.redirectTo) clearDraft();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
   // 서버 액션에서 직접 redirect()를 부르면 모달(인터셉트 라우트)로 열려
   // 있던 이 폼이 항상 전체 페이지로 튕겨나가버린다 — 액션은 이동할 경로만
   // 반환하고, 실제 이동은 여기서 클라이언트 라우터로 한다.
@@ -831,6 +922,8 @@ export function NewSaleForm({
           value={tg0OverrideQuantity ?? ""}
         />
       )}
+
+      {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       {(pendingPaperCalc || copiedPaperCalcs.length > 0) && (
         <div
