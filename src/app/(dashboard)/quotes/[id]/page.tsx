@@ -44,6 +44,9 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         }
         actions={
           <>
+            <Link href={`/quotes/${quote.id}/print`} className="erp-btn">
+              인쇄 / PDF
+            </Link>
             <QuoteStatusForm id={quote.id} currentStatus={quote.status} />
             <DeleteButton action={deleteQuote} id={quote.id} confirmMessage="이 견적서를 삭제하시겠습니까?" />
           </>
