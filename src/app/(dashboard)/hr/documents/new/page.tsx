@@ -3,6 +3,7 @@ import { GenerateDocumentForm } from "@/components/generate-document-form";
 import { createDocument } from "@/app/(dashboard)/hr/documents/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
@@ -27,11 +28,10 @@ export default async function NewDocumentPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/hr/documents" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 문서함 &gt; 새 문서</h1>
-
-      <div className="erp-toolbar">
-        <CloseButton href="/hr/documents">ESC 목록으로</CloseButton>
-      </div>
+      <ListPageHeader
+        title="인사관리 > 문서함 > 새 문서"
+        actions={<CloseButton href="/hr/documents">ESC 목록으로</CloseButton>}
+      />
 
       <PageGuide>
         양식을 고르면 그 안에 있는 병합필드 입력칸이 나타납니다. 대상
@@ -44,19 +44,14 @@ export default async function NewDocumentPage() {
           사용 가능한 양식이 없습니다. 문서 양식 관리에서 먼저 등록해주세요.
         </p>
       ) : (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
-          <div className="erp-detail-tabs">
-            <span className="erp-detail-tab active">문서 생성</span>
-          </div>
-          <div className="erp-detail-body">
-            <GenerateDocumentForm
-              action={createDocument}
-              templates={templates}
-              employees={employees}
-              companyName={company?.name ?? null}
-            />
-          </div>
-        </div>
+        <FormSection tabLabel="문서 생성">
+          <GenerateDocumentForm
+            action={createDocument}
+            templates={templates}
+            employees={employees}
+            companyName={company?.name ?? null}
+          />
+        </FormSection>
       )}
     </div>
   );

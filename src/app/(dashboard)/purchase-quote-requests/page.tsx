@@ -12,7 +12,7 @@ export default async function PurchaseQuoteRequestsPage() {
     supabase
       .from("purchase_quote_requests")
       .select(
-        "id, request_date, status, target_supplier_ids, selected_supplier:suppliers!selected_supplier_id(name), purchase_quote_request_items(id)",
+        "id, request_date, status, memo, target_supplier_ids, converted_purchase_request_id, selected_supplier:suppliers!selected_supplier_id(name), purchase_quote_request_items(id)",
       )
       .order("request_date", { ascending: false })
       .limit(300),
@@ -42,6 +42,8 @@ export default async function PurchaseQuoteRequestsPage() {
               <th className="num" style={{ width: 90 }}>품목 수</th>
               <th style={{ width: 90 }}>상태</th>
               <th style={{ width: 140 }}>확정 공급처</th>
+              <th style={{ width: 90 }}>구매요청 전환</th>
+              <th>메모</th>
             </tr>
           </thead>
           <tbody>
@@ -56,11 +58,13 @@ export default async function PurchaseQuoteRequestsPage() {
                   </GridBadge>
                 </td>
                 <td>{r.selected_supplier?.name ?? "-"}</td>
+                <td>{r.converted_purchase_request_id ? "전환됨" : "-"}</td>
+                <td style={{ color: "var(--erp-text-muted)" }}>{r.memo ?? "-"}</td>
               </ClickableRow>
             ))}
             {(!requests || requests.length === 0) && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={7} className="erp-grid-empty">
                   등록된 견적요청이 없습니다.
                 </td>
               </tr>

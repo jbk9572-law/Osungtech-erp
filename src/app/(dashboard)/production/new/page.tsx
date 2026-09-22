@@ -3,6 +3,7 @@ import { WorkOrderForm } from "@/components/work-order-form";
 import { createWorkOrder } from "@/app/(dashboard)/production/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
@@ -84,11 +85,10 @@ export default async function NewWorkOrderPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/production" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">생산관리 &gt; 생산지시 등록</h1>
-
-      <div className="erp-toolbar">
-        <CloseButton href="/production">ESC 목록으로</CloseButton>
-      </div>
+      <ListPageHeader
+        title="생산관리 > 생산지시 등록"
+        actions={<CloseButton href="/production">ESC 목록으로</CloseButton>}
+      />
 
       <PageGuide>
         완제품을 고르면 BOM에 등록된 구성품별 소요량과 현재 재고를 보여줍니다.
@@ -96,19 +96,14 @@ export default async function NewWorkOrderPage() {
         범위: 대기/진행 상태 없이 즉시 처리).
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">생산지시 등록</span>
-        </div>
-        <div className="erp-detail-body">
-          <WorkOrderForm
-            action={createWorkOrder}
-            producibleProducts={producibleProducts}
-            warehouses={warehouses.data ?? []}
-            today={todayKstStr()}
-          />
-        </div>
-      </div>
+      <FormSection tabLabel="생산지시 등록">
+        <WorkOrderForm
+          action={createWorkOrder}
+          producibleProducts={producibleProducts}
+          warehouses={warehouses.data ?? []}
+          today={todayKstStr()}
+        />
+      </FormSection>
     </div>
   );
 }

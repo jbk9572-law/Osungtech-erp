@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { createStockTransfer } from "@/app/(dashboard)/inventory/transfers/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Row = { key: number; productId: string; quantity: number; remark: string };
 
@@ -24,6 +25,8 @@ export function NewStockTransferForm({
   products: { id: string; sku: string; name: string; spec: string | null }[];
 }) {
   const [state, formAction, pending] = useActionState(createStockTransfer, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
   const [fromWarehouseId, setFromWarehouseId] = useState(warehouses[0]?.id ?? "");
   const [toWarehouseId, setToWarehouseId] = useState(warehouses[1]?.id ?? warehouses[0]?.id ?? "");
   const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>([blankRow(0)], blankRow);
@@ -128,16 +131,17 @@ export function NewStockTransferForm({
         + 품목 추가
       </button>
 
-      <FormMessage state={state} />
-
-      <button
-        type="submit"
-        className="erp-btn erp-btn-primary"
-        disabled={pending || sameWarehouse || !fromWarehouseId || !toWarehouseId || validRows.length === 0}
-        style={{ alignSelf: "flex-start" }}
-      >
-        {pending ? "등록 중..." : "창고 이동 등록"}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          ref={submitRef}
+          type="submit"
+          className="erp-btn erp-btn-primary"
+          disabled={pending || sameWarehouse || !fromWarehouseId || !toWarehouseId || validRows.length === 0}
+        >
+          {pending ? "등록 중..." : "F7 창고 이동 등록"}
+        </button>
+        <FormMessage state={state} />
+      </div>
     </form>
   );
 }

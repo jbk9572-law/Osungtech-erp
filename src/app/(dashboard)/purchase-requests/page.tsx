@@ -18,7 +18,7 @@ export default async function PurchaseRequestsPage() {
   const { data: requests } = await supabase
     .from("purchase_requests")
     .select(
-      "id, request_date, status, converted_purchase_order_id, suppliers(name), purchase_request_items(quantity, estimated_unit_price)",
+      "id, request_date, status, converted_purchase_order_id, memo, suppliers(name), profiles!requested_by(full_name), purchase_request_items(quantity, estimated_unit_price)",
     )
     .order("request_date", { ascending: false })
     .limit(300);
@@ -41,9 +41,12 @@ export default async function PurchaseRequestsPage() {
             <tr>
               <th style={{ width: 90 }}>요청일</th>
               <th style={{ width: 160 }}>공급처</th>
+              <th className="num" style={{ width: 70 }}>품목 수</th>
               <th className="num" style={{ width: 120 }}>예상합계</th>
+              <th style={{ width: 90 }}>작성자</th>
               <th style={{ width: 90 }}>상태</th>
               <th style={{ width: 90 }}>발주전환</th>
+              <th>메모</th>
             </tr>
           </thead>
           <tbody>
@@ -57,17 +60,20 @@ export default async function PurchaseRequestsPage() {
                 <ClickableRow key={r.id} href={`/purchase-requests/${r.id}`}>
                   <td>{r.request_date.replaceAll("-", ".")}</td>
                   <td>{r.suppliers?.name ?? "-"}</td>
+                  <td className="num">{(r.purchase_request_items ?? []).length}</td>
                   <td className="num">{total.toLocaleString()}</td>
+                  <td>{r.profiles?.full_name ?? "-"}</td>
                   <td>
                     <GridBadge tone={status.tone}>{status.label}</GridBadge>
                   </td>
                   <td>{r.converted_purchase_order_id ? "전환됨" : "-"}</td>
+                  <td style={{ color: "var(--erp-text-muted)" }}>{r.memo ?? "-"}</td>
                 </ClickableRow>
               );
             })}
             {(!requests || requests.length === 0) && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={8} className="erp-grid-empty">
                   등록된 구매요청이 없습니다.
                 </td>
               </tr>

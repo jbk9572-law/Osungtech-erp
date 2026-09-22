@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 export function ApprovalDelegationForm({
   action,
@@ -13,6 +14,8 @@ export function ApprovalDelegationForm({
   profiles: { id: string; full_name: string | null }[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-2" style={{ maxWidth: 640 }}>
@@ -62,8 +65,8 @@ export function ApprovalDelegationForm({
         <input id="dg-reason" type="text" name="reason" autoComplete="off" className="erp-input w-full" placeholder="예: 출장, 휴가" />
       </div>
       <div className="flex items-center gap-2 md:col-span-2">
-        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
-          {pending ? "저장 중..." : "위임 등록"}
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+          {pending ? "저장 중..." : "F7 위임 등록"}
         </button>
         <FormMessage state={state} />
       </div>

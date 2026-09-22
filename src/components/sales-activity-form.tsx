@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { createActivity } from "@/app/(dashboard)/sales-activities/actions";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { FormMessage } from "@/components/form-message";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 const ACTIVITY_TYPES = ["전화", "방문", "이메일", "기타"] as const;
 
@@ -19,6 +20,8 @@ export function SalesActivityForm({
   fixedCustomerId?: string;
 }) {
   const [state, formAction, pending] = useActionState(createActivity, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
   const [customerId, setCustomerId] = useState("");
 
   // 저장 성공 시 폼을 비운다 — party-payment-form.tsx와 동일한 패턴으로,
@@ -89,11 +92,12 @@ export function SalesActivityForm({
         </div>
       </div>
 
-      <FormMessage state={state} />
-
-      <button type="submit" className="erp-btn erp-btn-primary" disabled={pending} style={{ alignSelf: "flex-start" }}>
-        {pending ? "등록 중..." : "활동 기록"}
-      </button>
+      <div className="flex items-center gap-2">
+        <button ref={submitRef} type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
+          {pending ? "등록 중..." : "F7 활동 기록"}
+        </button>
+        <FormMessage state={state} />
+      </div>
     </form>
   );
 }

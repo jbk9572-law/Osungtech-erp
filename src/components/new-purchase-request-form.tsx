@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { createPurchaseRequest } from "@/app/(dashboard)/purchase-requests/actions";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { ProductSearchSelect } from "@/components/product-search-select";
@@ -8,6 +8,7 @@ import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type Row = {
   key: number;
@@ -39,6 +40,8 @@ export function NewPurchaseRequestForm({
   prefillItems?: { productId: string; quantity: number }[];
 }) {
   const [state, formAction, pending] = useActionState(createPurchaseRequest, undefined);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", submitRef);
   const [supplierId, setSupplierId] = useState(prefillSupplierId ?? "");
   const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>(
     prefillItems?.length
@@ -179,16 +182,17 @@ export function NewPurchaseRequestForm({
         + 품목 추가
       </button>
 
-      <FormMessage state={state} />
-
-      <button
-        type="submit"
-        className="erp-btn erp-btn-primary"
-        disabled={pending || !supplierId || validRows.length === 0}
-        style={{ alignSelf: "flex-start" }}
-      >
-        {pending ? "등록 중..." : "구매요청 등록"}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          ref={submitRef}
+          type="submit"
+          className="erp-btn erp-btn-primary"
+          disabled={pending || !supplierId || validRows.length === 0}
+        >
+          {pending ? "등록 중..." : "F7 구매요청 등록"}
+        </button>
+        <FormMessage state={state} />
+      </div>
     </form>
   );
 }

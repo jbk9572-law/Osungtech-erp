@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { saveMailAccount, deleteMailAccount, testMailConnection } from "@/app/(dashboard)/settings/mail/actions";
 import { FormMessage } from "@/components/form-message";
+import { useKeyShortcut } from "@/lib/use-key-shortcut";
 
 type MailAccount = {
   email_address: string;
@@ -21,6 +22,8 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
   const [testState, testAction, testPending] = useActionState(testMailConnection, undefined);
   const [deleteState, deleteAction, deletePending] = useActionState(deleteMailAccount, undefined);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const saveRef = useRef<HTMLButtonElement>(null);
+  useKeyShortcut("F7", saveRef);
 
   return (
     <div className="flex flex-col gap-4" style={{ maxWidth: 480 }}>
@@ -132,8 +135,8 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
         <FormMessage state={testState} />
 
         <div className="flex gap-2">
-          <button type="submit" className="erp-btn erp-btn-primary" disabled={savePending}>
-            {savePending ? "저장 중..." : "저장"}
+          <button ref={saveRef} type="submit" className="erp-btn erp-btn-primary" disabled={savePending}>
+            {savePending ? "저장 중..." : "F7 저장"}
           </button>
           <button
             type="submit"
