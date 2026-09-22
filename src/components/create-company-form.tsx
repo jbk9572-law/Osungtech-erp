@@ -22,7 +22,7 @@ export function CreateCompanyForm() {
           autoComplete="off"
           required
           className="erp-input"
-          placeholder="예: 오성테크"
+          placeholder="예: 엘보닉스"
         />
       </div>
       <div className="erp-field">
@@ -33,7 +33,7 @@ export function CreateCompanyForm() {
           autoComplete="off"
           required
           className="erp-input"
-          placeholder="예: osungtech"
+          placeholder="예: elvonix"
           title="로그인 이메일과 나중에 서브도메인/경로에 쓰이는 영문 값입니다"
         />
       </div>

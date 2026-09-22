@@ -88,7 +88,7 @@ function LoginForm() {
                 autoComplete="organization"
                 required
                 defaultValue={savedCompanyCode}
-                placeholder="예: osungtech"
+                placeholder="예: elvonix"
                 className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#132944] focus:shadow-[0_0_0_3px_rgba(19,41,68,0.16)] focus:outline-none"
               />
             </div>

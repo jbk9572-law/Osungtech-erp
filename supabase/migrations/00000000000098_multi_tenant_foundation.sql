@@ -71,20 +71,28 @@ create policy "tenants_select_own" on public.tenants
 create policy "tenant_members_select_own_tenant" on public.tenant_members
   for select using (tenant_id = public.current_tenant_id());
 
--- 오성테크를 테넌트 #1로 만든다. 재실행해도 안전하도록 이미 있으면
--- 새로 만들지 않는다.
+-- 테넌트 #1을 만든다(맨 처음 배포하는 회사 — 이 저장소를 가져다 쓰는
+-- 모든 배포마다 값이 다르므로 실제 회사명으로 반드시 바꿔서 실행해야
+-- 한다). 재실행해도 안전하도록 이미 있으면 새로 만들지 않는다.
+--
+-- (예전엔 이 자리가 '오성테크'로 고정돼 있었다 — 이 저장소를 그대로
+-- 가져다 다른 회사가 처음부터 새로 배포해도 항상 "오성테크"라는
+-- 남의 회사 이름으로 테넌트 #1이 생기는 문제가 있었다. 이미 이
+-- 마이그레이션을 실행한 기존 배포에는 영향이 없다 — do 블록은 DB당
+-- 한 번만 실행되고, 이미 만들어진 테넌트 이름을 다시 바꾸지 않는다.)
 do $$
 declare
   v_tenant_id uuid;
+  v_first_tenant_name text := '[여기에_첫_회사명]';
 begin
-  select id into v_tenant_id from public.tenants where name = '오성테크' limit 1;
+  select id into v_tenant_id from public.tenants where name = v_first_tenant_name limit 1;
 
   if v_tenant_id is null then
-    insert into public.tenants (name) values ('오성테크') returning id into v_tenant_id;
+    insert into public.tenants (name) values (v_first_tenant_name) returning id into v_tenant_id;
   end if;
 
-  -- 기존에 가입돼 있는 모든 계정(실제 + 데모 계정 전부)을 오성테크
-  -- 소속으로 편입한다. 데모 계정도 "오성테크를 시연하는 계정"이라는
+  -- 기존에 가입돼 있는 모든 계정(실제 + 데모 계정 전부)을 이 테넌트
+  -- 소속으로 편입한다. 데모 계정도 "이 회사를 시연하는 계정"이라는
   -- 점은 그대로이므로 같은 테넌트 소속이 맞다 — 실제/데모 데이터 분리는
   -- 이미 있는 is_demo RESTRICTIVE 정책이 별도로 계속 담당한다(테넌트
   -- 정책과 AND로 합쳐진다).
