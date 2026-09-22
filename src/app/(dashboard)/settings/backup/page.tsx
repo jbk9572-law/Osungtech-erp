@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/require-admin";
+import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { BackupRestoreForm } from "@/components/backup-restore-form";
 import { ServerRestoreForm } from "@/components/server-restore-form";
@@ -8,7 +9,12 @@ import { PageGuide } from "@/components/erp/page-guide";
 
 export default async function BackupSettingsPage() {
   const { isAdmin } = await requireAdmin();
-  const { snapshots, error: snapshotsError } = isAdmin
+  // "재해복구(서버에서 시점 복원)"는 DB 전체(모든 테넌트)를 되돌리는
+  // 파괴적 작업이라, 테넌트 관리자(isAdmin)가 아니라 플랫폼 운영자만 볼 수
+  // 있어야 한다 — 실제 실행 권한 체크는 actions.ts의 restoreFromServerSnapshot이
+  // 한 번 더 한다(이 화면 숨김은 UX일 뿐, 진짜 방어선은 서버 액션 쪽).
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  const { snapshots, error: snapshotsError } = isPlatformAdmin
     ? await listServerBackupSnapshots()
     : { snapshots: [], error: null };
   const restoreConfigured = getServerEnv("GITHUB_RESTORE_TOKEN") != null;
@@ -67,53 +73,56 @@ export default async function BackupSettingsPage() {
             </div>
           </div>
 
-          <div className="erp-detail">
-            <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active">재해복구 (서버에서 시점 복원)</span>
+          {isPlatformAdmin && (
+            <div className="erp-detail">
+              <div className="erp-detail-tabs">
+                <span className="erp-detail-tab active">재해복구 (서버에서 시점 복원)</span>
+              </div>
+              <div className="erp-detail-body">
+                <p
+                  className="mb-3 rounded-sm p-2 text-xs"
+                  style={{
+                    background: "var(--erp-danger-bg)",
+                    color: "var(--erp-danger)",
+                    border: "1px solid var(--erp-danger-border)",
+                    fontWeight: 600,
+                  }}
+                >
+                  ⚠ 위험한 복원입니다. 이 회사만이 아니라 이 서버에 있는 모든 회사의 DB
+                  전체를 선택한 시점 기준으로 지우고 통째로 되돌립니다 — 그 시점 이후
+                  등록/수정한 데이터는 전부 사라집니다. 되돌릴 수 없으니 정말 필요할 때만
+                  쓰세요. (그래서 일반 회사 관리자가 아니라 플랫폼 운영자에게만 보입니다.)
+                </p>
+                <PageGuide>
+                  매시간 GitHub Actions가 자동으로 떠두는 백업 시점 중 하나를 골라, 이 화면에서
+                  바로 서버(GitHub Actions)에 복원을 요청합니다. 실제 복원 작업은
+                  GitHub Actions에서 진행되며, 완료까지 몇 분 걸릴 수 있습니다 — 진행 상황은{" "}
+                  <a href={RESTORE_WORKFLOW_URL} target="_blank" rel="noopener noreferrer" className="underline">
+                    Actions 실행 목록
+                  </a>
+                  에서 확인하세요.
+                </PageGuide>
+                {!restoreConfigured ? (
+                  <p className="erp-grid-empty" style={{ marginTop: 0 }}>
+                    이 기능을 쓰려면 배포 환경에 <code style={{ fontSize: 11 }}>GITHUB_RESTORE_TOKEN</code>
+                    환경변수(이 저장소 전용, Actions 쓰기 + Contents 읽기 권한의 GitHub
+                    fine-grained PAT)를 등록해야 합니다. 자세한 절차는{" "}
+                    <code style={{ fontSize: 11 }}>docs/db-backup-restore.md</code> 참고.
+                  </p>
+                ) : snapshotsError ? (
+                  <p className="erp-grid-empty" style={{ marginTop: 0 }}>
+                    백업 시점 목록을 불러오지 못했습니다: {snapshotsError}
+                  </p>
+                ) : snapshots.length === 0 ? (
+                  <p className="erp-grid-empty" style={{ marginTop: 0 }}>
+                    아직 서버에 저장된 백업 시점이 없습니다.
+                  </p>
+                ) : (
+                  <ServerRestoreForm snapshots={snapshots} />
+                )}
+              </div>
             </div>
-            <div className="erp-detail-body">
-              <p
-                className="mb-3 rounded-sm p-2 text-xs"
-                style={{
-                  background: "var(--erp-danger-bg)",
-                  color: "var(--erp-danger)",
-                  border: "1px solid var(--erp-danger-border)",
-                  fontWeight: 600,
-                }}
-              >
-                ⚠ 위험한 복원입니다. 위 &ldquo;복원하기&rdquo;와 달리 선택한 시점 기준으로 DB
-                전체를 지우고 통째로 되돌립니다 — 그 시점 이후 등록/수정한 데이터는
-                전부 사라집니다. 되돌릴 수 없으니 정말 필요할 때만 쓰세요.
-              </p>
-              <PageGuide>
-                매시간 GitHub Actions가 자동으로 떠두는 백업 시점 중 하나를 골라, 이 화면에서
-                바로 서버(GitHub Actions)에 복원을 요청합니다. 실제 복원 작업은
-                GitHub Actions에서 진행되며, 완료까지 몇 분 걸릴 수 있습니다 — 진행 상황은{" "}
-                <a href={RESTORE_WORKFLOW_URL} target="_blank" rel="noopener noreferrer" className="underline">
-                  Actions 실행 목록
-                </a>
-                에서 확인하세요.
-              </PageGuide>
-              {!restoreConfigured ? (
-                <p className="erp-grid-empty" style={{ marginTop: 0 }}>
-                  이 기능을 쓰려면 배포 환경에 <code style={{ fontSize: 11 }}>GITHUB_RESTORE_TOKEN</code>
-                  환경변수(이 저장소 전용, Actions 쓰기 + Contents 읽기 권한의 GitHub
-                  fine-grained PAT)를 등록해야 합니다. 자세한 절차는{" "}
-                  <code style={{ fontSize: 11 }}>docs/db-backup-restore.md</code> 참고.
-                </p>
-              ) : snapshotsError ? (
-                <p className="erp-grid-empty" style={{ marginTop: 0 }}>
-                  백업 시점 목록을 불러오지 못했습니다: {snapshotsError}
-                </p>
-              ) : snapshots.length === 0 ? (
-                <p className="erp-grid-empty" style={{ marginTop: 0 }}>
-                  아직 서버에 저장된 백업 시점이 없습니다.
-                </p>
-              ) : (
-                <ServerRestoreForm snapshots={snapshots} />
-              )}
-            </div>
-          </div>
+          )}
         </>
       )}
     </div>

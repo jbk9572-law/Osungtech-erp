@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/require-admin";
+import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BACKUP_TABLES, BACKUP_FORMAT_VERSION, RESTORE_SKIP_TABLES, type BackupFile } from "@/lib/backup-tables";
 import { dispatchServerRestore } from "@/lib/github-restore";
@@ -23,8 +24,24 @@ function chunk<T>(items: T[], size: number): T[][] {
 // 그대로 되돌려야 하는 경우는 이 기능이 아니라 docs/db-backup-restore.md의
 // pg_dump 기반 절차를 쓴다.
 export async function restoreBackup(_prevState: FormState, formData: FormData): Promise<FormState> {
-  const { isAdmin } = await requireAdmin();
+  const { supabase, isAdmin } = await requireAdmin();
   if (!isAdmin) return { error: "관리자만 복원할 수 있습니다." };
+
+  // 백업 파일 안의 tenant_id/is_demo 값은 절대 그대로 믿지 않는다 — 다른
+  // 회사(테넌트)에서 받은 백업 파일이거나, 파일을 직접 조작해서 올렸다면
+  // 그 값이 지금 로그인한 관리자의 소속과 다를 수 있다. service_role은
+  // RLS를 우회하므로 여기서 강제로 지금 계정의 tenant_id/is_demo로
+  // 덮어써야, 업로드한 백업이 엉뚱한 테넌트로 섞여 들어가는 걸 막는다.
+  const [{ data: tenantId, error: tenantIdError }, { data: isDemo, error: isDemoError }] = await Promise.all([
+    supabase.rpc("current_tenant_id"),
+    supabase.rpc("is_demo_actor"),
+  ]);
+  if (tenantIdError || !tenantId) {
+    return { error: `소속 회사를 확인하지 못해 복원을 중단했습니다: ${tenantIdError?.message ?? "알 수 없는 오류"}` };
+  }
+  if (isDemoError) {
+    return { error: `계정 종류를 확인하지 못해 복원을 중단했습니다: ${isDemoError.message}` };
+  }
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
@@ -71,9 +88,13 @@ export async function restoreBackup(_prevState: FormState, formData: FormData): 
     const rows = parsed.tables[table];
     if (!rows || rows.length === 0) continue;
 
+    // 업로드된 행의 tenant_id/is_demo를 무시하고 지금 로그인한 관리자의
+    // 소속으로 강제 고정한다(위 주석 참고).
+    const scopedRows = rows.map((row) => ({ ...row, tenant_id: tenantId, is_demo: isDemo === true }));
+
     let restored = 0;
     let failMessage: string | undefined;
-    for (const batch of chunk(rows, 500)) {
+    for (const batch of chunk(scopedRows, 500)) {
       const { data, error } = await db
         .from(table)
         .upsert(batch, { onConflict: "id", ignoreDuplicates: true })
@@ -106,12 +127,18 @@ export async function restoreBackup(_prevState: FormState, formData: FormData): 
 // 파괴적 작업(pg_restore --clean)이라, 이 앱에서 직접 실행하지 않고
 // GitHub Actions 워크플로우(db-restore.yml)를 호출만 한다. 실제 복원은
 // 거기서 일어난다 — 자세한 배경은 docs/db-backup-restore.md 참고.
+//
+// 이 복원은 "지금 로그인한 테넌트"만 되돌리는 게 아니라 DB 전체(모든
+// 테넌트)를 그 시점으로 되돌린다 — 그래서 테넌트 단위 관리자(requireAdmin)가
+// 아니라 플랫폼(엘보닉스) 운영자만 실행할 수 있어야 한다. 예전에는
+// requireAdmin()만 확인해서, 아무 회사의 관리자든 다른 모든 회사의 데이터를
+// 옛 시점으로 되돌려버릴 수 있는 결함이 있었다.
 export async function restoreFromServerSnapshot(
   _prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const { supabase, isAdmin } = await requireAdmin();
-  if (!isAdmin) return { error: "관리자만 복원할 수 있습니다." };
+  const { supabase, isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 복원할 수 있습니다." };
 
   const snapshot = formData.get("snapshot");
   if (typeof snapshot !== "string" || !SNAPSHOT_FILENAME_RE.test(snapshot)) {

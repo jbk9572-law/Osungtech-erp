@@ -3870,6 +3870,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      current_tenant_id: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
       is_platform_admin: {
         Args: Record<string, never>;
         Returns: boolean;
