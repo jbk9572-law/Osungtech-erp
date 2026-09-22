@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { todayKstStr } from "@/lib/kst-date";
 import type { FormState } from "@/components/form-message";
+import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
 
 type PurchaseRequestItemInput = {
   productId: string;
@@ -85,6 +86,8 @@ export async function submitPurchaseRequest(_prevState: FormState, formData: For
   if (error || !docId) {
     return { error: `제출에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
+
+  await notifyApprovalDocumentEvent(supabase, docId);
 
   revalidatePath("/purchase-requests");
   revalidatePath(`/purchase-requests/${id}`);

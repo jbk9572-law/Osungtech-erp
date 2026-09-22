@@ -15,6 +15,11 @@
   // 진짜 민감한 값은 여기 넣지 않고 대시보드의 "Secret" 타입으로 넣는다.
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://bqetemkilbtjjbgywmbp.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0"
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0",
+    // 브라우저 푸시 알림용 VAPID 공개키 — 이 값 자체는 브라우저로 노출돼도
+    // 안전하다(공개키). 짝을 이루는 VAPID_PRIVATE_KEY는 여기 넣지 않고
+    // Cloudflare 대시보드에서 "Secret"으로 등록한다(SUPABASE_SERVICE_ROLE_KEY와
+    // 같은 방식).
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY": "BOc7G27LJBnLwHIDb7h7KdFk7Epk9PQHf7jt00pSqNj-wi996hCXy0ShrfIKuMbkN_8zSxGdrT6zUzeoUL8VX_k"
   }
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
 
 // 기안서 등록 — submit_approval_document() RPC(migration 102) 하나로
 // 문서+결재선을 원자적으로 만든다. 매출/매입 등록 RPC와 같은 이유(중간에
@@ -34,6 +35,8 @@ export async function submitApprovalDocument(_prevState: FormState, formData: Fo
     return { error: `기안 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
+  await notifyApprovalDocumentEvent(supabase, docId);
+
   revalidatePath("/approvals");
   redirect(`/approvals/${docId}`);
 }
@@ -58,6 +61,8 @@ export async function decideApprovalStep(_prevState: FormState, formData: FormDa
   if (error) {
     return { error: `처리에 실패했습니다: ${error.message}` };
   }
+
+  if (documentId) await notifyApprovalDocumentEvent(supabase, documentId);
 
   if (documentId) revalidatePath(`/approvals/${documentId}`);
   revalidatePath("/approvals");

@@ -48,19 +48,15 @@ const SAFE_UNBOUNDED_TABLES = new Set([
 
 const ALLOWLIST = new Set([
   // "src/app/(dashboard)/foo/page.tsx:12" 형태로 추가하고 이유를 여기 적을 것
-  // payslips는 시간이 지나며 계속 느는 테이블이 맞지만, 아래 두 곳은 항상
-  // .eq("pay_month", ...)로 "그 달"만 좁혀서 조회한다 — 한 달치 행 수는
-  // 구성원 수만큼이라 사실상 1000행을 넘을 수 없다("pay_month" 컬럼명이
-  // DATE_LIKE_COLUMN 정규식(/date/i)에 안 걸려서 자동으로는 안전하다고
-  // 인식되지 않을 뿐, 실제로는 order_date 구간 필터와 같은 이유로 안전).
-  "src/app/(dashboard)/hr/actions.ts:396",
-  "src/app/(dashboard)/hr/payroll/page.tsx:34",
 ]);
 
 const ID_LIKE_COLUMN = /(^id$|_id$)/;
 // 특정 날짜 하나로 정확히 좁히는 필터(예: .eq("purchase_orders.purchase_date",
 // "2026-09-01"))도 하루치 거래로 좁히는 것이라 id 필터와 같은 이유로 안전하다.
-const DATE_LIKE_COLUMN = /date/i;
+// "month"도 같이 인식한다 — .eq("pay_month", "2026-09")처럼 급여 등 "그 달"
+// 단위로 좁히는 필터가 실제로 여러 곳에 있고, 한 달치 행 수는 구성원 수
+// 규모라 사실상 1000행을 넘을 수 없다(날짜 구간 필터와 같은 근거).
+const DATE_LIKE_COLUMN = /date|month/i;
 const BOUNDING_FILTER_NAMES = new Set(["eq", "is", "match", "in"]);
 const UPPER_BOUND_NAMES = new Set(["lte", "lt"]);
 const LOWER_BOUND_NAMES = new Set(["gte", "gt"]);

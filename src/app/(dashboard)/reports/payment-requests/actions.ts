@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import { requireMutatedRow, wasRowMutated } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
+import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -260,6 +261,8 @@ export async function submitPaymentRequest(_prevState: FormState, formData: Form
   if (error || !docId) {
     return { error: `제출에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
+
+  await notifyApprovalDocumentEvent(supabase, docId);
 
   revalidatePath("/reports/payment-requests");
   revalidatePath(`/reports/payment-requests/${id}`);

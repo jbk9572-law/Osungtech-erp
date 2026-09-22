@@ -5,6 +5,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { todayKstStr } from "@/lib/kst-date";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
 
 // 위치 값은 브라우저 navigator.geolocation이 넘겨준 값을 그대로 믿고
 // 숫자로만 파싱한다 — 권한을 거부했거나 위치 확인에 실패한 경우 빈
@@ -136,6 +137,13 @@ export async function requestLeave(_prevState: FormState, formData: FormData): P
     return { error: `신청에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
+  const { data: leaveRow } = await supabase
+    .from("leave_requests")
+    .select("approval_document_id")
+    .eq("id", leaveId)
+    .maybeSingle();
+  if (leaveRow?.approval_document_id) await notifyApprovalDocumentEvent(supabase, leaveRow.approval_document_id);
+
   revalidatePath("/hr/attendance");
   revalidatePath("/approvals");
   return { success: "휴가를 신청했습니다. 결재 진행 상황은 전자결재 기안함에서도 확인할 수 있습니다." };
@@ -247,6 +255,15 @@ export async function requestAttendanceCorrection(_prevState: FormState, formDat
 
   if (error || !requestId) {
     return { error: `신청에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+  }
+
+  const { data: correctionRow } = await supabase
+    .from("attendance_correction_requests")
+    .select("approval_document_id")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (correctionRow?.approval_document_id) {
+    await notifyApprovalDocumentEvent(supabase, correctionRow.approval_document_id);
   }
 
   revalidatePath("/hr/attendance");

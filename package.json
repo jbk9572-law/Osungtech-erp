@@ -35,6 +35,7 @@
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "web-push": "^3.6.7",
     "worker-mailer": "^1.1.0",
     "xlsx": "^0.18.5"
   },
@@ -45,6 +46,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",

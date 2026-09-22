@@ -7,6 +7,7 @@ import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { GridBadge } from "@/components/grid/badge";
+import { PushSubscribeToggle } from "@/components/erp/push-subscribe-toggle";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 export type DueTodoItem = {
@@ -167,6 +168,7 @@ export function NotificationBell({
               재고현황 보기
             </Link>
           </div>
+          <PushSubscribeToggle />
         </div>
       )}
     </div>
