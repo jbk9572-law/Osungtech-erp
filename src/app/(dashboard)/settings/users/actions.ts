@@ -299,6 +299,17 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
   if (!isRole(submittedRole)) {
     return { error: "역할 값이 올바르지 않습니다." };
   }
+
+  // userId가 정말 내 테넌트 소속인지 확인한다 — 아래에서 service_role
+  // 클라이언트(RLS 우회)로 auth.users를 직접 수정하므로, 이 확인이 없으면
+  // 폼 값 조작만으로 다른 회사 계정의 로그인 정보를 바꿀 수 있게 된다
+  // (platform-admin/actions.ts의 resetTenantUserPassword와 동일한 확인).
+  // profiles_tenant_isolation RLS 덕분에, 일반(RLS 적용) 클라이언트로
+  // 조회해서 안 보이면 타 테넌트 소속(또는 존재하지 않음)이다.
+  const { data: targetProfile } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
+  if (!targetProfile) {
+    return { error: "해당 계정을 찾을 수 없습니다." };
+  }
   let role: Role = submittedRole;
   // updateUserRole과 동일한 규칙: 본인 계정의 역할은 바꿀 수 없다. 화면은
   // 숨김 input으로 현재 역할을 그대로 되돌려 보내지만, 그건 클라이언트
@@ -365,12 +376,20 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
 // 계정 삭제. auth.users에서 지우면 profiles 행도 on delete cascade로 같이
 // 지워진다. 본인 계정은 실수로 스스로를 잠그는 걸 막기 위해 삭제할 수 없다.
 export async function deleteUserAccount(_prevState: FormState, formData: FormData): Promise<FormState> {
-  const { isAdmin, selfId } = await requireAdmin();
+  const { supabase, isAdmin, selfId } = await requireAdmin();
   if (!isAdmin) return { error: "관리자만 계정을 삭제할 수 있습니다." };
 
   const userId = String(formData.get("id") ?? "");
   if (!userId) return { error: "잘못된 요청입니다." };
   if (userId === selfId) return { error: "본인 계정은 삭제할 수 없습니다." };
+
+  // updateUserAccount와 동일한 이유로 확인한다 — 아래 service_role
+  // 클라이언트는 RLS를 우회하므로, 폼 값 조작만으로 다른 회사 계정을
+  // 지울 수 있게 되는 걸 막는다.
+  const { data: targetProfile } = await supabase.from("profiles").select("id").eq("id", userId).maybeSingle();
+  if (!targetProfile) {
+    return { error: "해당 계정을 찾을 수 없습니다." };
+  }
 
   let admin;
   try {
