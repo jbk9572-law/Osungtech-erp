@@ -22,6 +22,7 @@ export type Database = {
           department_id: string | null;
           position_title: string | null;
           signature_image_url: string | null;
+          hire_date: string | null;
         };
         Insert: {
           id: string;
@@ -35,6 +36,7 @@ export type Database = {
           department_id?: string | null;
           position_title?: string | null;
           signature_image_url?: string | null;
+          hire_date?: string | null;
         };
         Update: {
           id?: string;
@@ -48,6 +50,7 @@ export type Database = {
           department_id?: string | null;
           position_title?: string | null;
           signature_image_url?: string | null;
+          hire_date?: string | null;
         };
         Relationships: [
           {
@@ -528,6 +531,57 @@ export type Database = {
           {
             foreignKeyName: "leave_balances_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      leave_promotion_notices: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          user_id: string;
+          year: number;
+          stage: number;
+          remaining_days: number;
+          sent_by: string | null;
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          user_id: string;
+          year: number;
+          stage: number;
+          remaining_days: number;
+          sent_by?: string | null;
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          user_id?: string;
+          year?: number;
+          stage?: number;
+          remaining_days?: number;
+          sent_by?: string | null;
+          sent_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_promotion_notices_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leave_promotion_notices_sent_by_fkey";
+            columns: ["sent_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

@@ -329,6 +329,65 @@ export async function setLeaveBalance(_prevState: FormState, formData: FormData)
   return { success: "저장했습니다." };
 }
 
+// 연차 자동 계산(leave-accrual.ts)의 유일한 입력값. profiles.hire_date를
+// 저장만 하면 연차관리 화면이 그 값으로 법정 연차/사용촉진 시점을 다시
+// 계산해 보여준다 — 여기서는 날짜 형식 검증만 하고 계산은 하지 않는다.
+export async function setHireDate(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const userId = String(formData.get("user_id") ?? "");
+  const hireDate = String(formData.get("hire_date") ?? "");
+
+  if (!userId) return { error: "잘못된 요청입니다." };
+  if (hireDate && !/^\d{4}-\d{2}-\d{2}$/.test(hireDate)) {
+    return { error: "입사일 형식이 올바르지 않습니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ hire_date: hireDate || null })
+    .eq("id", userId);
+
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/hr/leave-balances");
+  return { success: "저장했습니다." };
+}
+
+// 연차 사용촉진(근로기준법 61조) 1차/2차 통지를 보냈다는 기록을 남긴다.
+// 실제 통지 문구·발송 채널은 이 기능의 책임이 아니고(직접 서면·메신저 등
+// 회사가 이미 쓰는 방법으로 통지), "언제 누구에게 잔여 며칠을 통지했다"는
+// 증빙만 저장한다 — 미사용 연차수당 지급 의무를 면하려면 이 통지 자체가
+// 요건이라 이력이 남아야 한다.
+export async function sendLeavePromotionNotice(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const userId = String(formData.get("user_id") ?? "");
+  const year = Number(formData.get("year") ?? 0);
+  const stage = Number(formData.get("stage") ?? 0);
+  const remainingDays = Number(formData.get("remaining_days") ?? NaN);
+
+  if (!userId || !year || (stage !== 1 && stage !== 2) || !Number.isFinite(remainingDays)) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const supabase = await createClient();
+  const user = await getUser();
+  const { error } = await supabase.from("leave_promotion_notices").upsert(
+    {
+      user_id: userId,
+      year,
+      stage,
+      remaining_days: remainingDays,
+      sent_by: user?.id ?? null,
+      sent_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,year,stage" },
+  );
+
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/hr/leave-balances");
+  return { success: `${stage}차 촉진 통지를 발송 처리했습니다.` };
+}
+
 // 급여계산 1차 범위 — 4대보험 공제까지만 계산한다. 소득세/지방소득세
 // 원천징수(국세청 간이세액표)는 부양가족 수 등 별도 정보가 필요한
 // 영역이라 이번 범위에서 뺐다(화면에 "소득세 별도" 명시).
