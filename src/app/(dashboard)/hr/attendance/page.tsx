@@ -24,6 +24,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { haversineDistanceMeters } from "@/lib/geo";
 import { LEAVE_UNIT_LABEL, type LeaveUnit } from "@/lib/leave-unit";
+import { getWeekRange, sumWorkedHours, weeklyHoursTone, WEEKLY_HOURS_WARNING } from "@/lib/weekly-hours";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -37,6 +38,7 @@ export default async function AttendancePage() {
   const { isAdmin } = await getCurrentActor(supabase);
   const today = todayKstStr();
   const year = Number(today.slice(0, 4));
+  const week = getWeekRange(today);
 
   const [
     { data: todayRecord },
@@ -47,6 +49,7 @@ export default async function AttendancePage() {
     profiles,
     presetsRaw,
     { data: company },
+    myWeekRecords,
   ] = await Promise.all([
       supabase
         .from("attendance_records")
@@ -79,7 +82,31 @@ export default async function AttendancePage() {
         supabase.from("approval_line_presets").select("id, name, approver_ids, reference_ids").order("name").range(from, to),
       ),
       supabase.from("company_profile").select("office_lat, office_lng, office_radius_m").maybeSingle(),
+      fetchAllRows<{ clock_in_at: string | null; clock_out_at: string | null }>((from, to) =>
+        supabase
+          .from("attendance_records")
+          .select("clock_in_at, clock_out_at")
+          .eq("user_id", user!.id)
+          .gte("work_date", week.start)
+          .lte("work_date", week.end)
+          .range(from, to),
+      ),
     ]);
+
+  // 관리자는 본인 주간 근무시간뿐 아니라, 지금 경고 임계값(48시간) 이상
+  // 일한 구성원이 있는지도 한눈에 봐야 즉시 조치할 수 있다(근로기준법 주
+  // 52시간 상한 — 초과하면 이미 늦다). 전 직원 기록을 한 번에 불러와
+  // user_id별로 묶어서 계산한다.
+  const teamWeekRecords = isAdmin
+    ? await fetchAllRows<{ user_id: string; clock_in_at: string | null; clock_out_at: string | null }>((from, to) =>
+        supabase
+          .from("attendance_records")
+          .select("user_id, clock_in_at, clock_out_at")
+          .gte("work_date", week.start)
+          .lte("work_date", week.end)
+          .range(from, to),
+      )
+    : [];
 
   // 결재선 인프라가 생기기 전(마이그레이션 115 이전)에 등록된 레거시
   // 신청만 이 화면에서 관리자가 직접 처리한다 — 결재선이 연결된 신청은
@@ -107,6 +134,20 @@ export default async function AttendancePage() {
     .reduce((sum, l) => sum + Number(l.days), 0);
   const totalDays = Number(balance?.total_days ?? 0);
   const remaining = totalDays - usedThisYear;
+
+  const myWeekHours = sumWorkedHours(myWeekRecords);
+  const myWeekTone = weeklyHoursTone(myWeekHours);
+
+  const teamHoursByUser = new Map<string, { clock_in_at: string | null; clock_out_at: string | null }[]>();
+  for (const r of teamWeekRecords) {
+    const list = teamHoursByUser.get(r.user_id) ?? [];
+    list.push({ clock_in_at: r.clock_in_at, clock_out_at: r.clock_out_at });
+    teamHoursByUser.set(r.user_id, list);
+  }
+  const teamWarnings = Array.from(teamHoursByUser.entries())
+    .map(([userId, records]) => ({ userId, hours: sumWorkedHours(records) }))
+    .filter((row) => row.hours >= WEEKLY_HOURS_WARNING)
+    .sort((a, b) => b.hours - a.hours);
 
   const fmtTime = (iso: string | null) =>
     iso ? new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) : null;
@@ -171,6 +212,30 @@ export default async function AttendancePage() {
             {remaining.toLocaleString()}일
           </div>
         </div>
+        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
+          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+            이번주 근무시간 ({week.start.slice(5)}~{week.end.slice(5)})
+          </div>
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              color:
+                myWeekTone === "danger"
+                  ? "var(--erp-danger)"
+                  : myWeekTone === "warn"
+                    ? "var(--erp-warning)"
+                    : undefined,
+            }}
+          >
+            {myWeekHours.toLocaleString()}시간
+            {myWeekTone !== "ok" && (
+              <GridBadge tone={myWeekTone === "danger" ? "danger" : "warn"} style={{ marginLeft: 6 }}>
+                {myWeekTone === "danger" ? "52시간 초과" : "초과 주의"}
+              </GridBadge>
+            )}
+          </div>
+        </div>
       </div>
 
       <FormSection tabLabel="휴가 신청">
@@ -188,6 +253,52 @@ export default async function AttendancePage() {
           />
         </FormSection>
       </div>
+
+      {isAdmin && teamWarnings.length > 0 && (
+        <div className="erp-detail" style={{ marginBottom: 14 }}>
+          <div className="erp-detail-tabs">
+            <span className="erp-detail-tab active">
+              이번주 근무시간 {WEEKLY_HOURS_WARNING}시간 이상 ({teamWarnings.length}명)
+            </span>
+          </div>
+          <div className="erp-detail-body">
+            <PageGuide className="mb-2">
+              근로기준법상 주 52시간을 넘기면 이미 위반입니다 — 52시간을
+              넘긴 사람은 즉시, 48시간 이상인 사람은 이번 주가 끝나기 전에
+              확인해주세요.
+            </PageGuide>
+            <div className="erp-grid-wrap">
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th>구성원</th>
+                    <th className="num" style={{ width: 120 }}>
+                      이번주 근무시간
+                    </th>
+                    <th style={{ width: 100 }}>상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamWarnings.map(({ userId, hours }) => {
+                    const tone = weeklyHoursTone(hours);
+                    return (
+                      <tr key={userId}>
+                        <td>{profileNameById[userId] ?? "구성원"}</td>
+                        <td className="num">{hours.toLocaleString()}시간</td>
+                        <td>
+                          <GridBadge tone={tone === "danger" ? "danger" : "warn"}>
+                            {tone === "danger" ? "52시간 초과" : "초과 주의"}
+                          </GridBadge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isAdmin && (pendingLeaves ?? []).length > 0 && (
         <div className="erp-detail">
