@@ -58,6 +58,11 @@
      안 되는 색이었어서 통일해도 화면상 차이는 없다. */
   --erp-bg-subtle: #fafbfc;
   --erp-divider: #eef0f3;
+  /* 데이터 그리드 전용 셀 경계선 — 더존/이카운트류 데스크톱 ERP처럼
+     "촘촘하게 칸이 다 보이는" 느낌을 주려고 위 --erp-divider보다 한 톤
+     짙게 뺐다. 패널·카드 등 다른 곳의 옅은 구분선(--erp-divider)까지
+     같이 짙어지면 화면 전체가 답답해 보여서, 표 칸에만 좁혀 쓴다. */
+  --erp-grid-line: #cdd3dc;
   /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
      disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
   --erp-bg-disabled: #f5f6f8;
@@ -823,6 +828,7 @@
   color: var(--erp-text-muted);
   font-size: 12.5px;
   border-radius: 0;
+  border-top: 2px solid transparent;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -830,10 +836,15 @@
     color 0.12s ease;
 }
 
+/* 지금 보고 있는 탭임을 배경색 대비만이 아니라 실제 종이 탭처럼 위쪽
+   테두리로도 표시한다(더존/이카운트류 ERP의 탭 UI 관례) — 모든 탭에
+   투명 테두리를 미리 깔아둬서(위) 활성 탭만 색이 생겨도 높이가 안
+   흔들리게 한다. */
 .erp-tab.active {
   background: var(--erp-panel);
   color: var(--erp-primary);
   font-weight: 600;
+  border-top-color: var(--erp-primary);
 }
 
 .erp-tab-close {
@@ -1206,7 +1217,7 @@
   text-align: left;
   padding: 0 10px;
   border-bottom: 1px solid #c9ced8;
-  border-right: 1px solid var(--erp-border);
+  border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -1244,8 +1255,8 @@
 .erp-grid tbody td {
   height: 30px;
   padding: 4px 10px;
-  border-bottom: 1px solid var(--erp-divider);
-  border-right: 1px solid var(--erp-divider);
+  border-bottom: 1px solid var(--erp-grid-line);
+  border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: top;
@@ -1259,7 +1270,7 @@
   height: 30px;
   padding: 4px 10px;
   border-top: 2px solid var(--erp-border);
-  border-right: 1px solid var(--erp-divider);
+  border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: middle;
