@@ -837,6 +837,151 @@ export type Database = {
           },
         ];
       };
+      official_documents: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          template_id: string | null;
+          title: string;
+          body: string;
+          status: string;
+          doc_no: number | null;
+          disclosure: string;
+          disclosure_reason: string | null;
+          visibility_scope: string;
+          retention: string;
+          effective_date: string | null;
+          internal_only: boolean;
+          approval_document_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          sent_at: string | null;
+          closed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          template_id?: string | null;
+          title: string;
+          body?: string;
+          status?: string;
+          doc_no?: number | null;
+          disclosure?: string;
+          disclosure_reason?: string | null;
+          visibility_scope?: string;
+          retention?: string;
+          effective_date?: string | null;
+          internal_only?: boolean;
+          approval_document_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+          closed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          template_id?: string | null;
+          title?: string;
+          body?: string;
+          status?: string;
+          doc_no?: number | null;
+          disclosure?: string;
+          disclosure_reason?: string | null;
+          visibility_scope?: string;
+          retention?: string;
+          effective_date?: string | null;
+          internal_only?: boolean;
+          approval_document_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          sent_at?: string | null;
+          closed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "official_documents_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "document_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "official_documents_approval_document_id_fkey";
+            columns: ["approval_document_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "official_documents_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      official_document_recipients: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          official_document_id: string;
+          kind: string;
+          name: string;
+          email: string | null;
+          user_id: string | null;
+          status: string;
+          bounce_reason: string | null;
+          sent_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          official_document_id: string;
+          kind: string;
+          name: string;
+          email?: string | null;
+          user_id?: string | null;
+          status?: string;
+          bounce_reason?: string | null;
+          sent_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          official_document_id?: string;
+          kind?: string;
+          name?: string;
+          email?: string | null;
+          user_id?: string | null;
+          status?: string;
+          bounce_reason?: string | null;
+          sent_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "official_document_recipients_official_document_id_fkey";
+            columns: ["official_document_id"];
+            isOneToOne: false;
+            referencedRelation: "official_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "official_document_recipients_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tenants: {
         Row: {
           id: string;
@@ -3994,6 +4139,10 @@ export type Database = {
       };
       submit_payment_request: {
         Args: { p_id: string; p_approver_ids: string[]; p_reference_ids?: string[] };
+        Returns: string;
+      };
+      submit_official_document: {
+        Args: { p_official_document_id: string; p_approver_ids: string[]; p_reference_ids?: string[] };
         Returns: string;
       };
       recall_payment_request: {

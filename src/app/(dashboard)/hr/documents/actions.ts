@@ -8,7 +8,7 @@ import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { extractTemplateFields, isServerAutoField, renderTemplate } from "@/lib/document-template";
 import { todayKstStr } from "@/lib/kst-date";
 
-const CATEGORIES = ["hr_contract", "hr_certificate", "approval", "general"] as const;
+const CATEGORIES = ["hr_contract", "hr_certificate", "approval", "official", "general"] as const;
 type Category = (typeof CATEGORIES)[number];
 
 function parseCategory(value: FormDataEntryValue | null): Category {

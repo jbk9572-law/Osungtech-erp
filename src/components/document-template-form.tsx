@@ -9,6 +9,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   hr_contract: "인사 · 계약서",
   hr_certificate: "인사 · 증명서",
   approval: "전자결재 서식",
+  official: "공문 서식",
   general: "기타",
 };
 

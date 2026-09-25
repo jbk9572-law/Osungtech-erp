@@ -83,6 +83,17 @@ export const MENU_GROUPS: MenuGroup[] = [
     featureKey: "approvals",
   },
   {
+    // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로 재사용하되,
+    // 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈 — 전자결재 바로
+    // 옆에 둔다.
+    label: "공문관리",
+    items: [
+      { label: "내 공문함", href: "/official-documents" },
+      { label: "받은 공문함", href: "/official-documents/received" },
+    ],
+    featureKey: "official_documents",
+  },
+  {
     label: "인사관리",
     items: [
       { label: "근태", href: "/hr/attendance" },
