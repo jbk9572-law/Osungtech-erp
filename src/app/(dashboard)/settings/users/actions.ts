@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { cell, readExcelRows, summarize, type ImportRowError } from "@/lib/excel-import";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { ROLE_LABELS } from "@/lib/user-roles";
 import type { FormState } from "@/components/form-message";
 
 const ROLES = ["admin", "manager", "staff"] as const;
@@ -91,6 +94,161 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
 
   revalidatePath("/settings/users");
   return { success: "계정을 생성했습니다." };
+}
+
+// 초대링크 없이 엑셀 한 장으로 여러 직원을 한 번에 등록한다(초대링크
+// 자가가입 방식은 이번 범위에서 제외 — 사용자 요청). Supabase Auth는
+// 사용자 생성을 한 번에 여러 명 만드는 API가 없어서 행마다 순차로
+// admin.auth.admin.createUser()를 호출한다 — 직원 수 규모(수십~수백
+// 명)에서는 병렬화보다 실패한 행만 정확히 골라내는 게 더 중요하다.
+// 아이디가 이미 있으면 새 계정을 또 만들지 않고 부서/직급/입사일/역할만
+// 갱신한다 — "이미 등록된 직원까지 섞인 전체 인사대장"을 그대로
+// 다시 올려도 안전하게 하기 위함(customers/products 엑셀 가져오기와
+// 같은 원칙).
+function generateTempPassword(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+}
+
+export async function importEmployeesExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 일괄 등록할 수 있습니다." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "엑셀 파일을 선택해주세요." };
+  }
+
+  let rows: Awaited<ReturnType<typeof readExcelRows>>;
+  try {
+    rows = await readExcelRows(file);
+  } catch {
+    return { error: "엑셀 파일을 읽을 수 없습니다. .xlsx 파일인지 확인해주세요." };
+  }
+  if (rows.length === 0) {
+    return { error: "엑셀에 데이터 행이 없습니다." };
+  }
+
+  const { data: myTenant, error: tenantError } = await supabase.from("tenants").select("id, slug").maybeSingle();
+  if (tenantError || !myTenant) {
+    return { error: "소속 테넌트를 확인하지 못해 일괄 등록할 수 없습니다." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const [departments, existingProfiles] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("departments").select("id, name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; username: string | null }>((from, to) =>
+      supabase.from("profiles").select("id, username").range(from, to),
+    ),
+  ]);
+  const departmentIdByName = new Map(departments.map((d) => [d.name.trim(), d.id]));
+  const profileIdByUsername = new Map(
+    existingProfiles.filter((p) => p.username).map((p) => [p.username as string, p.id]),
+  );
+  const roleKeyByLabel = new Map(Object.entries(ROLE_LABELS).map(([key, label]) => [label, key]));
+
+  const errors: ImportRowError[] = [];
+  const createdCredentials: { username: string; password: string }[] = [];
+  let updatedCount = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowNum = i + 2;
+    const row = rows[i];
+    const username = cell(row, "아이디");
+    const fullName = cell(row, "이름");
+    if (!username || !fullName) {
+      errors.push({ row: rowNum, reason: "아이디와 이름은 필수입니다." });
+      continue;
+    }
+    if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
+      errors.push({ row: rowNum, reason: "아이디는 영문/숫자/일부 기호(2~32자)만 가능합니다." });
+      continue;
+    }
+
+    const departmentName = cell(row, "부서");
+    const departmentId = departmentName ? (departmentIdByName.get(departmentName) ?? null) : null;
+    if (departmentName && !departmentId) {
+      errors.push({ row: rowNum, reason: `"${departmentName}" 부서를 찾을 수 없습니다(조직도에 먼저 등록해주세요).` });
+      continue;
+    }
+
+    const positionTitle = cell(row, "직급") || null;
+    const hireDateRaw = cell(row, "입사일");
+    if (hireDateRaw && !/^\d{4}-\d{2}-\d{2}$/.test(hireDateRaw)) {
+      errors.push({ row: rowNum, reason: "입사일 형식이 올바르지 않습니다(YYYY-MM-DD)." });
+      continue;
+    }
+    const roleLabel = cell(row, "역할");
+    const roleFromLabel = roleLabel ? roleKeyByLabel.get(roleLabel) : undefined;
+    const role: Role = roleFromLabel && isRole(roleFromLabel) ? roleFromLabel : "staff";
+
+    const profileUpdate = {
+      full_name: fullName,
+      department_id: departmentId,
+      position_title: positionTitle,
+      hire_date: hireDateRaw || null,
+      role,
+    };
+
+    const existingId = profileIdByUsername.get(username);
+    if (existingId) {
+      const { error } = await admin.from("profiles").update(profileUpdate).eq("id", existingId);
+      if (error) {
+        errors.push({ row: rowNum, reason: `갱신 실패: ${error.message}` });
+        continue;
+      }
+      updatedCount++;
+      continue;
+    }
+
+    const password = generateTempPassword();
+    const email = `${username}@${myTenant.slug}.elvonix.local`;
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName, username, tenant_id: myTenant.id },
+    });
+    if (createError || !created.user) {
+      const isDuplicate = createError?.message?.toLowerCase().includes("already");
+      errors.push({ row: rowNum, reason: isDuplicate ? "이미 존재하는 아이디입니다." : (createError?.message ?? "계정 생성 실패") });
+      continue;
+    }
+
+    const { error: profileError } = await admin.from("profiles").update(profileUpdate).eq("id", created.user.id);
+    if (profileError) {
+      await admin.auth.admin.deleteUser(created.user.id);
+      errors.push({ row: rowNum, reason: `정보 저장 실패로 계정 생성을 취소했습니다: ${profileError.message}` });
+      continue;
+    }
+
+    createdCredentials.push({ username, password });
+  }
+
+  revalidatePath("/settings/users");
+
+  const okCount = createdCredentials.length + updatedCount;
+  const base = summarize(rows.length, okCount, errors);
+  if ("error" in base) return base;
+
+  if (createdCredentials.length === 0) {
+    return { success: `${base.success} (신규 생성 없음, 기존 ${updatedCount}건 정보만 갱신)` };
+  }
+  const shown = createdCredentials
+    .slice(0, 20)
+    .map((c) => `${c.username}:${c.password}`)
+    .join(", ");
+  const more = createdCredentials.length > 20 ? ` 외 ${createdCredentials.length - 20}건` : "";
+  return {
+    success: `${base.success} 새로 만든 계정(아이디:임시비밀번호) — 지금 복사해 전달하세요(다시 볼 수 없습니다): ${shown}${more}`,
+  };
 }
 
 // 이미 만들어진 계정의 역할(권한)을 변경한다. service_role 없이도 RLS 정책

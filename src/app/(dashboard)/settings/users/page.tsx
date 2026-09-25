@@ -2,10 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { CreateUserForm } from "@/components/create-user-form";
 import { UserRoleSelect } from "@/components/user-role-select";
+import { ExcelImportForm } from "@/components/excel-import-form";
 import { ROLE_LABELS } from "@/lib/user-roles";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
+import { importEmployeesExcel } from "@/app/(dashboard)/settings/users/actions";
 
 export default async function UsersSettingsPage() {
   const supabase = await createClient();
@@ -47,6 +49,22 @@ export default async function UsersSettingsPage() {
         </div>
         <div className="erp-detail-body">
           <CreateUserForm />
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">엑셀 일괄등록</span>
+        </div>
+        <div className="erp-detail-body">
+          <PageGuide className="mb-2">
+            아이디/이름은 필수, 부서(조직도에 미리 등록돼 있어야 함)·직급·
+            입사일(YYYY-MM-DD)·역할은 선택입니다. 비밀번호는 자동
+            생성되며 결과 메시지에 한 번만 표시되니 그 자리에서 복사해
+            전달해주세요. 이미 있는 아이디는 새로 만들지 않고 부서/직급/
+            입사일/역할만 갱신합니다.
+          </PageGuide>
+          <ExcelImportForm action={importEmployeesExcel} templateHref="/templates/employees-template.xlsx" />
         </div>
       </div>
 
