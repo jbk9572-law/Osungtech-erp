@@ -20,6 +20,24 @@ function parseCoord(formData: FormData, key: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+// 출근은 찍었는데 퇴근을 아직 안 찍은 근무 기록을 날짜 상관없이 찾는다.
+// 자정을 넘겨 근무하는 경우(예: 23:30 출근 → 다음날 00:30 퇴근) "오늘"
+// 날짜로만 찾으면 전날 생성된 레코드를 못 찾아 퇴근 처리가 막히므로,
+// clock_in_at은 있고 clock_out_at은 없는 가장 최근 레코드를 그대로
+// 찾아서 쓴다(사용자당 이런 열린 레코드는 최대 1개만 있어야 정상).
+async function findOpenAttendanceRecord(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
+  const { data } = await supabase
+    .from("attendance_records")
+    .select("id, work_date, clock_in_at, clock_out_at")
+    .eq("user_id", userId)
+    .not("clock_in_at", "is", null)
+    .is("clock_out_at", null)
+    .order("work_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}
+
 export async function clockIn(_prevState: FormState, formData: FormData): Promise<FormState> {
   const supabase = await createClient();
   const user = await getUser();
@@ -30,6 +48,15 @@ export async function clockIn(_prevState: FormState, formData: FormData): Promis
   const accuracyM = parseCoord(formData, "accuracy_m");
 
   const today = todayKstStr();
+
+  // 전날 퇴근 처리를 안 한 채 새로 출근을 찍으면 전날 기록이 영원히
+  // clock_out_at이 비어있는 상태로 남아 근무시간 집계에서 조용히
+  // 빠지게 된다 — 오늘 날짜 기록이 아니라면 먼저 그 기록부터 닫게 한다.
+  const openRecord = await findOpenAttendanceRecord(supabase, user.id);
+  if (openRecord && openRecord.work_date !== today) {
+    return { error: "전날 퇴근 처리가 안 된 근무 기록이 있습니다. 먼저 퇴근 처리해주세요." };
+  }
+
   const { data: existing } = await supabase
     .from("attendance_records")
     .select("id, clock_in_at")
@@ -66,19 +93,10 @@ export async function clockOut(_prevState: FormState, formData: FormData): Promi
   const lng = parseCoord(formData, "lng");
   const accuracyM = parseCoord(formData, "accuracy_m");
 
-  const today = todayKstStr();
-  const { data: existing } = await supabase
-    .from("attendance_records")
-    .select("id, clock_in_at, clock_out_at")
-    .eq("user_id", user.id)
-    .eq("work_date", today)
-    .maybeSingle();
+  const existing = await findOpenAttendanceRecord(supabase, user.id);
 
-  if (!existing?.clock_in_at) {
+  if (!existing) {
     return { error: "출근 기록이 없습니다. 먼저 출근 처리해주세요." };
-  }
-  if (existing.clock_out_at) {
-    return { error: "이미 퇴근 처리되었습니다." };
   }
 
   const { error } = await supabase

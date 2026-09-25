@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
@@ -23,9 +24,13 @@ export default async function NewStockTransferPage() {
       <ListPageHeader title="재고관리 > 창고 이동 > 등록" />
 
       {warehouses.length < 2 ? (
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
-          창고가 2개 이상 있어야 이동을 등록할 수 있습니다.
-        </p>
+        <div className="erp-grid-empty" style={{ marginTop: 24 }}>
+          창고가 2개 이상 있어야 이동을 등록할 수 있습니다.{" "}
+          <Link href="/inventory/warehouses" style={{ color: "var(--erp-primary)", textDecoration: "underline" }}>
+            창고 관리에서 창고를 추가하세요
+          </Link>
+          .
+        </div>
       ) : (
         <FormSection tabLabel="창고 이동 등록">
           <NewStockTransferForm today={todayKstStr()} warehouses={warehouses} products={products} />

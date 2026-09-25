@@ -44,6 +44,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "QR 자동실사", href: "/inventory/count/scan" },
       { label: "QR 라벨 인쇄", href: "/inventory/qr-labels" },
       { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
+      { label: "창고 관리", href: "/inventory/warehouses" },
       { label: "창고 이동", href: "/inventory/transfers" },
       { label: "관리번호 조회", href: "/inventory/lot-lookup" },
     ],

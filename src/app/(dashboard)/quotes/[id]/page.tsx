@@ -6,6 +6,7 @@ import { DetailPageHeader } from "@/components/erp/page-header";
 import { DeleteButton } from "@/components/delete-button";
 import { QuoteStatusBadge } from "@/components/quote-status-badge";
 import { QuoteStatusForm } from "@/components/quote-status-form";
+import { SendQuoteButton } from "@/components/send-quote-button";
 import { ConvertQuoteForm } from "@/components/convert-quote-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { deleteQuote } from "@/app/(dashboard)/quotes/actions";
@@ -47,6 +48,9 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
             <Link href={`/quotes/${quote.id}/print`} className="erp-btn">
               인쇄 / PDF
             </Link>
+            {!quote.converted_sales_order_id && (
+              <SendQuoteButton id={quote.id} sent={quote.status === "sent"} />
+            )}
             <QuoteStatusForm id={quote.id} currentStatus={quote.status} />
             <DeleteButton action={deleteQuote} id={quote.id} confirmMessage="이 견적서를 삭제하시겠습니까?" />
           </>

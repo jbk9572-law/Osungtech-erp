@@ -2098,6 +2098,7 @@ export type Database = {
           status: "draft" | "sent" | "accepted" | "rejected" | "expired";
           memo: string | null;
           converted_sales_order_id: string | null;
+          sent_at: string | null;
           is_demo: boolean;
           created_by: string | null;
           created_at: string;
@@ -2112,6 +2113,7 @@ export type Database = {
           status?: "draft" | "sent" | "accepted" | "rejected" | "expired";
           memo?: string | null;
           converted_sales_order_id?: string | null;
+          sent_at?: string | null;
           is_demo?: boolean;
           created_by?: string | null;
           created_at?: string;
@@ -2126,6 +2128,7 @@ export type Database = {
           status?: "draft" | "sent" | "accepted" | "rejected" | "expired";
           memo?: string | null;
           converted_sales_order_id?: string | null;
+          sent_at?: string | null;
           is_demo?: boolean;
           created_by?: string | null;
           created_at?: string;
