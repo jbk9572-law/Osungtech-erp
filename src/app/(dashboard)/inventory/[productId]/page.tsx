@@ -128,7 +128,9 @@ export default async function InventoryProductHistoryPage({
     .reverse();
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
-  const currentQuantity = product.inventory?.[0]?.quantity ?? 0;
+  // 창고가 여러 개면 [0]은 임의의 창고 하나만 가리켜, 아래 표에 보이는
+  // (모든 창고 입출고를 합산한) 재고 잔량과 값이 어긋날 수 있었다.
+  const currentQuantity = (product.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0);
 
   // 재고실사(submitStockCount)가 남긴 조정만 골라서 최근 편차 이력을
   // 별도로 보여준다 — 아래 전체 입출고내역 표에도 같은 행이 섞여 있지만,

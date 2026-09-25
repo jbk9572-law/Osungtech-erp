@@ -44,7 +44,9 @@ export default async function InventoryQrLabelsPage({
     // 절반 이상이라, 그런 품목까지 매번 라벨 인쇄 목록에 다 뜨면 실제로
     // 붙일 실물이 없는 라벨을 골라내는 게 더 번거롭다 — 현재 재고가
     // 0인 품목은 체크박스로 숨길 수 있게 한다.
-    .filter((p) => !hideZero || (p.inventory?.[0]?.quantity ?? 0) > 0);
+    // 창고가 여러 개면 [0]은 임의의 창고 하나만 가리킨다 — 전체(모든
+    // 창고 합계) 재고가 0인지로 판단해야 한다.
+    .filter((p) => !hideZero || (p.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0) > 0);
 
   // 예전엔 여기서 서버가 필터링된 품목 전부(수백 개)의 QR SVG를 한 요청
   // 안에서 만들어 내려보냈다 — PNG(toDataURL)에서 SVG로 바꿔서 한 번

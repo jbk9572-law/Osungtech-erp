@@ -51,7 +51,9 @@ export default async function ReorderSuggestionsPage() {
 
   const lowStock: SuggestionRow[] = products
     .map((p) => {
-      const quantity = p.inventory?.[0]?.quantity ?? 0;
+      // 창고가 여러 개면 [0]은 임의의 창고 하나만 가리켜, 실제로는
+      // 재고가 충분한데도 부족으로 오판(또는 그 반대)할 수 있었다.
+      const quantity = (p.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0);
       const reorderPoint = p.reorder_point;
       return {
         productId: p.id,

@@ -130,13 +130,29 @@ export async function convertPurchaseRequestToPurchaseOrder(
 
   const { data: request, error: requestError } = await supabase
     .from("purchase_requests")
-    .select("id, supplier_id, memo, status, converted_purchase_order_id")
+    .select("id, supplier_id, memo, status, converted_purchase_order_id, requested_by")
     .eq("id", requestId)
     .maybeSingle();
 
   if (requestError || !request) return { error: "구매요청을 찾을 수 없습니다." };
   if (request.converted_purchase_order_id) return { error: "이미 구매발주로 전환된 요청입니다." };
   if (request.status !== "approved") return { error: "승인된 구매요청만 발주로 전환할 수 있습니다." };
+
+  // create_purchase_with_items RPC로 매입 전표를 먼저 만든 뒤 이 구매요청에
+  // 링크를 남기는 순서라, 작성자 확인 없이 진행하면 본인 것이 아닌
+  // 구매요청으로도 매입 전표는 만들어지는데 정작 링크 갱신만 RLS(purchase_
+  // requests_update_owner_or_admin)에 막혀 조용히 실패하는 반쪽짜리
+  // 상태가 될 수 있다 — 맨 앞에서 명시적으로 막는다.
+  const {
+    data: { user: actor },
+  } = await supabase.auth.getUser();
+  const { data: actorProfile } = actor
+    ? await supabase.from("profiles").select("role").eq("id", actor.id).maybeSingle()
+    : { data: null };
+  const isActorAdmin = actorProfile?.role === "admin";
+  if (request.requested_by !== actor?.id && !isActorAdmin) {
+    return { error: "본인이 작성한 구매요청만 발주로 전환할 수 있습니다." };
+  }
 
   const { data: items, error: itemsError } = await supabase
     .from("purchase_request_items")
@@ -146,16 +162,12 @@ export async function convertPurchaseRequestToPurchaseOrder(
   if (itemsError) return { error: `품목 조회에 실패했습니다: ${itemsError.message}` };
   if (!items || items.length === 0) return { error: "전환할 품목이 없습니다." };
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { data: purchaseOrderId, error: createError } = await supabase.rpc("create_purchase_with_items", {
     p_supplier_id: request.supplier_id,
     p_warehouse_id: warehouseId,
     p_purchase_date: new Date().toISOString().slice(0, 10),
     p_memo: request.memo ? `[구매요청전환] ${request.memo}` : "[구매요청전환]",
-    p_created_by: user?.id ?? null,
+    p_created_by: actor?.id ?? null,
     p_items: items.map((item) => ({
       productId: item.product_id,
       customName: item.custom_name,

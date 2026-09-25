@@ -97,12 +97,28 @@ export async function convertQuoteToSale(_prevState: FormState, formData: FormDa
 
   const { data: quote, error: quoteError } = await supabase
     .from("quotes")
-    .select("id, customer_id, memo, converted_sales_order_id")
+    .select("id, customer_id, memo, converted_sales_order_id, created_by")
     .eq("id", quoteId)
     .maybeSingle();
 
   if (quoteError || !quote) return { error: "견적서를 찾을 수 없습니다." };
   if (quote.converted_sales_order_id) return { error: "이미 매출로 전환된 견적서입니다." };
+
+  // 아래에서 create_sale_with_items RPC로 매출 전표를 먼저 만든 뒤 이
+  // 견적서에 링크를 남기는 순서라, 작성자 확인 없이 진행하면 본인 것이
+  // 아닌 견적서로도 매출 전표는 만들어지는데 정작 견적서 쪽 링크 갱신만
+  // RLS(quotes_update_owner_or_admin)에 막혀 조용히 실패하는 반쪽짜리
+  // 상태가 될 수 있다 — 맨 앞에서 명시적으로 막는다.
+  const {
+    data: { user: actor },
+  } = await supabase.auth.getUser();
+  const { data: actorProfile } = actor
+    ? await supabase.from("profiles").select("role").eq("id", actor.id).maybeSingle()
+    : { data: null };
+  const isActorAdmin = actorProfile?.role === "admin";
+  if (quote.created_by !== actor?.id && !isActorAdmin) {
+    return { error: "본인이 작성한 견적서만 매출로 전환할 수 있습니다." };
+  }
 
   const { data: items, error: itemsError } = await supabase
     .from("quote_items")
@@ -112,16 +128,12 @@ export async function convertQuoteToSale(_prevState: FormState, formData: FormDa
   if (itemsError) return { error: `품목 조회에 실패했습니다: ${itemsError.message}` };
   if (!items || items.length === 0) return { error: "전환할 품목이 없습니다." };
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const { data: salesOrderId, error: createError } = await supabase.rpc("create_sale_with_items", {
     p_customer_id: quote.customer_id,
     p_warehouse_id: warehouseId,
     p_order_date: new Date().toISOString().slice(0, 10),
     p_memo: quote.memo ? `[견적전환] ${quote.memo}` : "[견적전환]",
-    p_created_by: user?.id ?? null,
+    p_created_by: actor?.id ?? null,
     p_items: items.map((item) => ({
       productId: item.product_id,
       customName: item.custom_name,

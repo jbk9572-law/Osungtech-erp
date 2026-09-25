@@ -77,7 +77,9 @@ export async function getNotificationSummary(
     .map((p) => ({
       id: p.id,
       name: p.name,
-      quantity: p.inventory?.[0]?.quantity ?? 0,
+      // 창고가 여러 개면 [0]은 임의의 창고 하나만 가리킨다 — 전체(모든
+      // 창고 합계) 재고 기준으로 안전재고 이하인지 판단해야 한다.
+      quantity: (p.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0),
       reorderPoint: p.reorder_point,
     }))
     .filter((p) => p.quantity <= p.reorderPoint)
