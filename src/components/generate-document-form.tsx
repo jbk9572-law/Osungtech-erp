@@ -3,8 +3,9 @@
 import { useActionState, useMemo, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { extractTemplateFields } from "@/lib/document-template";
+import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type TemplateOption = { id: string; name: string; body: string };
 type EmployeeOption = { id: string; full_name: string | null };
@@ -35,7 +36,13 @@ export function GenerateDocumentForm({
   const [values, setValues] = useState<Record<string, string>>({});
 
   const selectedTemplate = useMemo(() => templates.find((t) => t.id === templateId), [templates, templateId]);
-  const fields = useMemo(() => (selectedTemplate ? extractTemplateFields(selectedTemplate.body) : []), [selectedTemplate]);
+  // {{today}}, {{author_name}} 같은 서버 자동 필드는 사람이 채울 값이
+  // 아니라 문서 생성 시점에 서버가 직접 넣는다(createDocument 참고) —
+  // 입력칸 목록에서 아예 빼서 "이건 안 채워도 되는 필드"임을 굳이
+  // 안내하지 않아도 자연스럽게 드러나게 한다.
+  const allFields = useMemo(() => (selectedTemplate ? extractTemplateFields(selectedTemplate.body) : []), [selectedTemplate]);
+  const fields = useMemo(() => allFields.filter((f) => !isServerAutoField(f)), [allFields]);
+  const autoFields = useMemo(() => allFields.filter(isServerAutoField), [allFields]);
 
   function applyAutoFill(subjectId: string, fieldList: string[]) {
     const employeeName = employees.find((e) => e.id === subjectId)?.full_name ?? "";
@@ -62,7 +69,7 @@ export function GenerateDocumentForm({
             onChange={(e) => {
               setTemplateId(e.target.value);
               const t = templates.find((x) => x.id === e.target.value);
-              applyAutoFill(subjectUserId, t ? extractTemplateFields(t.body) : []);
+              applyAutoFill(subjectUserId, t ? extractTemplateFields(t.body).filter((f) => !isServerAutoField(f)) : []);
             }}
             required
           >
@@ -110,8 +117,15 @@ export function GenerateDocumentForm({
         </div>
       </div>
 
+      {autoFields.length > 0 && (
+        <PageGuide className="mb-0">
+          {autoFields.map((f) => SERVER_AUTO_FIELD_LABELS[f]).join(", ")}은(는) 문서를 생성하는 지금
+          시점 기준으로 자동으로 채워집니다.
+        </PageGuide>
+      )}
       {fields.length === 0 ? (
-        selectedTemplate && (
+        selectedTemplate &&
+        autoFields.length === 0 && (
           <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             이 양식에는 채울 필드가 없습니다.
           </p>

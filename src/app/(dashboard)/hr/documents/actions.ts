@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
-import { renderTemplate } from "@/lib/document-template";
+import { extractTemplateFields, isServerAutoField, renderTemplate } from "@/lib/document-template";
+import { todayKstStr } from "@/lib/kst-date";
 
 const CATEGORIES = ["hr_contract", "hr_certificate", "approval", "general"] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -13,6 +14,29 @@ type Category = (typeof CATEGORIES)[number];
 function parseCategory(value: FormDataEntryValue | null): Category {
   const v = String(value ?? "");
   return (CATEGORIES as readonly string[]).includes(v) ? (v as Category) : "general";
+}
+
+function formatKoreanDate(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-");
+  return `${y}년 ${Number(m)}월 ${Number(d)}일`;
+}
+
+// {{today}}/{{author_name}} 같은 서버 자동 필드는 문서 생성 화면에
+// 입력칸이 없어서(generate-document-form.tsx) 클라이언트가 보낸 값이
+// 원래 비어있지만, 폼 조작 등으로 값이 실려와도 여기서 항상 덮어써서
+// "그 순간의 진짜 값"만 남긴다.
+async function resolveServerAutoFieldValue(
+  name: string,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string | null
+): Promise<string> {
+  if (name === "today") return formatKoreanDate(todayKstStr());
+  if (name === "author_name") {
+    if (!userId) return "";
+    const { data } = await supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle();
+    return data?.full_name ?? "";
+  }
+  return "";
 }
 
 export async function createTemplate(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -97,9 +121,16 @@ export async function createDocument(_prevState: FormState, formData: FormData):
   fieldNames.forEach((name, i) => {
     values[name] = fieldValuesRaw[i] ?? "";
   });
-  const renderedBody = renderTemplate(template.body, values);
 
   const user = await getUser();
+  // 서버 자동 필드는 사람이 채운 값(애초에 폼에 입력칸이 없어 보통
+  // 비어있음)을 무시하고, 지금 이 문서를 생성하는 시점 기준으로 항상
+  // 새로 계산한다.
+  for (const name of extractTemplateFields(template.body)) {
+    if (!isServerAutoField(name)) continue;
+    values[name] = await resolveServerAutoFieldValue(name, supabase, user?.id ?? null);
+  }
+  const renderedBody = renderTemplate(template.body, values);
   const { data: doc, error } = await supabase
     .from("document_instances")
     .insert({
