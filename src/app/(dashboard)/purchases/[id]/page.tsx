@@ -10,7 +10,7 @@ import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
 } from "@/lib/paper-calc-summary";
-import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
 import {
   overridePurchasePaperStock,
@@ -44,6 +44,7 @@ export default async function PurchaseDetailPage({
     { data: paperCalcs },
     { data: overrideHistory },
     actor,
+    paperCalcEnabled,
   ] = await Promise.all([
     supabase
       .from("purchase_orders")
@@ -68,6 +69,7 @@ export default async function PurchaseDetailPage({
       .eq("purchase_order_id", id)
       .order("created_at", { ascending: false }),
     getCurrentActor(supabase),
+    isPaperCalcEnabled(supabase),
   ]);
 
   if (!order) {
@@ -115,7 +117,7 @@ export default async function PurchaseDetailPage({
               F4 수정
             </Link>
           )}
-          {allowManage && (
+          {allowManage && paperCalcEnabled && (
             <PaperCalcNavLink
               href={`/paper-calc?purchaseOrderId=${id}`}
               className="erp-btn"
@@ -228,7 +230,7 @@ export default async function PurchaseDetailPage({
             </span>
             <span>{order.profiles?.full_name ?? "-"}</span>
           </div>
-          {allowManage && paperCalcs && paperCalcs.length > 0 && (
+          {allowManage && paperCalcEnabled && paperCalcs && paperCalcs.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <PaperStockOverridePanel
                 orderId={id}

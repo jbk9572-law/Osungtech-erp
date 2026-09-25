@@ -53,6 +53,7 @@ export function TodoForm({
   products = [],
   suppliers = [],
   customers = [],
+  paperCalcEnabled = true,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   submitLabel?: string;
@@ -70,6 +71,9 @@ export function TodoForm({
   products?: Product[];
   suppliers?: Partner[];
   customers?: Partner[];
+  // 테넌트가 환경설정 > 기능 관리에서 "모조지 계산"을 꺼두면 false — new-sale-form.tsx와
+  // 동일하게 계산 진입 버튼을 숨긴다(paper-calc-sync.ts의 isPaperCalcEnabled 참고).
+  paperCalcEnabled?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   useFormRedirect(state);
@@ -297,7 +301,9 @@ export function TodoForm({
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
             </button>
-            {!initial?.id && <PaperCalcModalTrigger pendingFor="todo" onApply={handlePaperCalcApply} />}
+            {!initial?.id && paperCalcEnabled && (
+              <PaperCalcModalTrigger pendingFor="todo" onApply={handlePaperCalcApply} />
+            )}
           </div>
         </div>
 

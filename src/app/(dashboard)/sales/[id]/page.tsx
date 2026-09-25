@@ -10,7 +10,7 @@ import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
 } from "@/lib/paper-calc-summary";
-import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
 import {
   overrideSalesPaperStock,
@@ -48,6 +48,7 @@ export default async function SaleDetailPage({
     { data: paperCalcs },
     { data: overrideHistory },
     actor,
+    paperCalcEnabled,
   ] = await Promise.all([
     supabase
       .from("sales_orders")
@@ -72,6 +73,7 @@ export default async function SaleDetailPage({
       .eq("sales_order_id", id)
       .order("created_at", { ascending: false }),
     getCurrentActor(supabase),
+    isPaperCalcEnabled(supabase),
   ]);
 
   if (!order) {
@@ -124,7 +126,7 @@ export default async function SaleDetailPage({
               F4 수정
             </Link>
           )}
-          {allowManage && (
+          {allowManage && paperCalcEnabled && (
             <PaperCalcNavLink href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
               {paperCalcs && paperCalcs.length > 0
                 ? "모조지 계산 이력"
@@ -234,7 +236,7 @@ export default async function SaleDetailPage({
             </span>
             <span>{order.profiles?.full_name ?? "-"}</span>
           </div>
-          {allowManage && paperCalcs && paperCalcs.length > 0 && (
+          {allowManage && paperCalcEnabled && paperCalcs && paperCalcs.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <PaperStockOverridePanel
                 orderId={id}

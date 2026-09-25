@@ -6,8 +6,9 @@ import { getNotificationSummary } from "@/lib/notifications";
 import { getCurrentActor } from "@/lib/current-actor";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
-import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { nowInKst } from "@/lib/kst-date";
+import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 
 function pad(n: number) {
@@ -69,9 +70,10 @@ export default async function DashboardPage({
     new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate()
   );
 
-  const [user, { userId: currentUserId, isAdmin }] = await Promise.all([
+  const [user, { userId: currentUserId, isAdmin }, paperCalcEnabled] = await Promise.all([
     getUser(),
     getCurrentActor(supabase),
+    isPaperCalcEnabled(supabase),
   ]);
 
   const [
@@ -86,6 +88,7 @@ export default async function DashboardPage({
     { data: company },
     { data: carryoverInSales },
     { data: carryoverInPurchases },
+    { data: myProfile },
     notifications,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
@@ -103,17 +106,23 @@ export default async function DashboardPage({
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
-    supabase
-      .from("paper_calculations")
-      .select("input_items, sales_orders!inner(order_date, customers(name))")
-      .gte("sales_orders.order_date", monthStart)
-      .lte("sales_orders.order_date", monthEnd),
-    supabase
-      .from("paper_calculations")
-      .select("input_items, purchase_orders!inner(purchase_date, suppliers(name))")
-      .gte("purchase_orders.purchase_date", monthStart)
-      .lte("purchase_orders.purchase_date", monthEnd),
-    supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle(),
+    paperCalcEnabled
+      ? supabase
+          .from("paper_calculations")
+          .select("input_items, sales_orders!inner(order_date, customers(name))")
+          .gte("sales_orders.order_date", monthStart)
+          .lte("sales_orders.order_date", monthEnd)
+      : Promise.resolve({ data: [] as { input_items: unknown; sales_orders: { order_date: string; customers: { name: string } | null } }[] }),
+    paperCalcEnabled
+      ? supabase
+          .from("paper_calculations")
+          .select("input_items, purchase_orders!inner(purchase_date, suppliers(name))")
+          .gte("purchase_orders.purchase_date", monthStart)
+          .lte("purchase_orders.purchase_date", monthEnd)
+      : Promise.resolve({ data: [] as { input_items: unknown; purchase_orders: { purchase_date: string; suppliers: { name: string } | null } }[] }),
+    paperCalcEnabled
+      ? supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle()
+      : Promise.resolve({ data: null as { name: string } | null }),
     supabase
       .from("calendar_notes")
       .select("id, note_date, content, created_at, created_by, profiles!created_by(full_name)")
@@ -140,6 +149,9 @@ export default async function DashboardPage({
       .eq("purchase_orders.is_carryover", true)
       .gte("purchase_orders.purchase_date", prevMonthStart)
       .lte("purchase_orders.purchase_date", prevMonthEnd),
+    user
+      ? supabase.from("profiles").select("tenant_id, is_demo").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
     user
       ? getNotificationSummary(supabase, user.id)
       : Promise.resolve({ announcements: [], todos: [], lowStock: [] }),
@@ -197,6 +209,7 @@ export default async function DashboardPage({
       createdAt: string;
       createdBy: string | null;
     }[];
+    calendarItems: CalendarItem[];
   };
 
   const dataByDate: Record<string, DayData> = {};
@@ -213,6 +226,7 @@ export default async function DashboardPage({
         salesPaperCalcByPartner: {},
         purchasePaperCalcByPartner: {},
         notes: [],
+        calendarItems: [],
       };
     }
     return dataByDate[date];
@@ -340,6 +354,32 @@ export default async function DashboardPage({
       createdAt: note.created_at,
       createdBy: note.created_by,
     });
+  }
+
+  // 회사 캘린더(/calendar)의 회의·기타 일정 + 승인된 연차를 대시보드 달력에도
+  // 그대로 얹는다 — /calendar 화면과 같은 조회 함수를 써서 두 화면이
+  // 어긋나지 않게 한다.
+  if (myProfile) {
+    const calendarItems = await getCalendarItems(supabase, {
+      from: `${monthStart}T00:00:00`,
+      to: `${monthEnd}T23:59:59`,
+      tenantId: myProfile.tenant_id,
+      isDemo: myProfile.is_demo,
+    });
+    for (const item of calendarItems) {
+      let cur = item.startAt.slice(0, 10);
+      const end = item.endAt.slice(0, 10);
+      let guard = 0;
+      while (cur <= end && guard < 366) {
+        if (cur >= monthStart && cur <= monthEnd) {
+          ensure(cur).calendarItems.push(item);
+        }
+        const d = new Date(`${cur}T00:00:00`);
+        d.setDate(d.getDate() + 1);
+        cur = d.toLocaleDateString("sv-SE");
+        guard += 1;
+      }
+    }
   }
 
   const weeks = buildWeeks(year, month);

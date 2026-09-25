@@ -4,10 +4,11 @@ import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 
 export default async function NewTodoPage() {
   const supabase = await createClient();
-  const [products, suppliers, customers] = await Promise.all([
+  const [products, suppliers, customers, paperCalcEnabled] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -30,6 +31,7 @@ export default async function NewTodoPage() {
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("customers").select("id, name").order("name").range(from, to),
     ),
+    isPaperCalcEnabled(supabase),
   ]);
 
   return (
@@ -52,6 +54,7 @@ export default async function NewTodoPage() {
             products={products}
             suppliers={suppliers}
             customers={customers}
+            paperCalcEnabled={paperCalcEnabled}
           />
         </div>
       </div>

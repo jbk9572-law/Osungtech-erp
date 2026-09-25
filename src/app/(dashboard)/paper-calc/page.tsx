@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PaperCalcClient } from "@/components/paper-calc/paper-calc-client";
 import { createClient } from "@/lib/supabase/server";
+import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import type { NestLayout } from "@/lib/paper-nest-engine";
 
 export default async function PaperCalcPage({
@@ -9,6 +11,12 @@ export default async function PaperCalcPage({
   searchParams: Promise<{ salesOrderId?: string; purchaseOrderId?: string; for?: string }>;
 }) {
   const { salesOrderId, purchaseOrderId, for: pendingFor } = await searchParams;
+  // 메뉴에서는 featureKey: "paper_calc"로 이미 가려지지만, URL을 직접 쳐서
+  // 들어오는 경우까지 막으려면 화면 진입 자체를 여기서 한 번 더 확인해야
+  // 한다(다른 테넌트에게는 아예 존재하지 않는 화면이어야 한다).
+  if (!(await isPaperCalcEnabled(await createClient()))) {
+    redirect("/dashboard");
+  }
   let salesOrderLabel: string | null = null;
   let purchaseOrderLabel: string | null = null;
   let savedCalculations: {

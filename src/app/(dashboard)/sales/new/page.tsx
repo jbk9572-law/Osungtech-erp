@@ -7,6 +7,7 @@ import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
+import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 
 export default async function NewSalePage({
   searchParams,
@@ -20,7 +21,7 @@ export default async function NewSalePage({
   // 자동입력이 예약된 인상/인하가 있으면 그걸 바로 반영하게 한다.
   await applyDuePriceSchedules(supabase);
 
-  const [customers, products, { data: warehouse }, prices, { data: history }, locationStockRows, gridColWidths] = await Promise.all([
+  const [customers, products, { data: warehouse }, prices, { data: history }, locationStockRows, gridColWidths, paperCalcEnabled] = await Promise.all([
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
       supabase.from("customers").select("id, name, notes").order("name").range(from, to),
     ),
@@ -69,6 +70,7 @@ export default async function NewSalePage({
       supabase.from("inventory_locations").select("product_id, location_id, quantity, locations(code, tier, position)").range(from, to),
     ),
     getGridColumnWidths("erp-item-grid-columns"),
+    isPaperCalcEnabled(supabase),
   ]);
 
   const productLocations: Record<string, LocationOption[]> = {};
@@ -135,6 +137,7 @@ export default async function NewSalePage({
         productLocations={productLocations}
         today={todayKstStr()}
         initialColWidths={gridColWidths}
+        paperCalcEnabled={paperCalcEnabled}
       />
     </div>
   );

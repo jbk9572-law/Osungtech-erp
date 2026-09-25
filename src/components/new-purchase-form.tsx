@@ -146,6 +146,7 @@ export type PurchaseInitial = {
 };
 
 export function NewPurchaseForm({
+  paperCalcEnabled = true,
   suppliers,
   products,
   warehouseId,
@@ -207,6 +208,9 @@ export function NewPurchaseForm({
   // 4칸(입고/출고수량, 매입/매출단가) 전용이다.
   initialBaseColWidths?: Record<string, number> | null;
   initialDualSplitColWidths?: Record<string, number> | null;
+  // 테넌트가 환경설정 > 기능 관리에서 "모조지 계산"을 꺼두면 false — new-sale-form.tsx와
+  // 동일하게 계산 진입 버튼을 숨긴다(paper-calc-sync.ts의 isPaperCalcEnabled 참고).
+  paperCalcEnabled?: boolean;
 }) {
   const [supplierId, setSupplierId] = useState(
     initial?.supplierId ?? prefillSupplierId ?? "",
@@ -1380,7 +1384,7 @@ export function NewPurchaseForm({
             >
               + 품목 추가
             </button>
-            {!initial?.id && (
+            {!initial?.id && paperCalcEnabled && (
               <>
                 <PaperCalcModalTrigger
                   pendingFor="purchase"

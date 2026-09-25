@@ -155,6 +155,7 @@ export function NewSaleForm({
   backParam,
   initialIsReturn = false,
   initialColWidths,
+  paperCalcEnabled = true,
 }: {
   customers: Customer[];
   products: Product[];
@@ -177,6 +178,11 @@ export function NewSaleForm({
   // useResizableColumns 참고, 마운트 후 재조회로 인한 폭 "확 늘어남"
   // 깜빡임을 없애기 위한 값이다.
   initialColWidths?: Record<string, number> | null;
+  // 테넌트가 환경설정 > 기능 관리에서 "모조지 계산"을 꺼두면 false — 이
+  // 등록 폼 안의 계산 진입 버튼 자체를 안 보이게 한다(paper-calc-sync.ts의
+  // isPaperCalcEnabled 참고). 페이지에서 안 내려주는 옛 호출부가 있어도
+  // 기본값 true로 기존 동작(SI 테넌트)을 그대로 유지한다.
+  paperCalcEnabled?: boolean;
 }) {
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
@@ -1239,7 +1245,7 @@ export function NewSaleForm({
             >
               + 품목 추가
             </button>
-            {!initial?.id && (
+            {!initial?.id && paperCalcEnabled && (
               <>
                 <PaperCalcModalTrigger
                   pendingFor="sales"

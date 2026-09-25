@@ -25,6 +25,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import type { CalendarItem } from "@/lib/calendar-data";
 
 export type ItemRow = {
   partnerName: string;
@@ -66,6 +67,10 @@ type DayData = {
     createdAt: string;
     createdBy: string | null;
   }[];
+  // 회사 캘린더(/calendar)의 회의·기타 일정 + 승인된 연차를 그대로
+  // 재사용한다 — 대시보드 전용 데이터를 따로 만들면 캘린더 화면과
+  // 어긋날 수 있어, src/lib/calendar-data.ts의 같은 타입/조회 함수를 쓴다.
+  calendarItems: CalendarItem[];
 };
 
 type Cell = { dateStr: string; day: number } | null;
@@ -827,6 +832,7 @@ export function DashboardCalendar({
     salesPaperCalcByPartner: {},
     purchasePaperCalcByPartner: {},
     notes: [],
+    calendarItems: [],
   };
   // 렌더링 한 번(=화면을 한 번 훑는 동안)에 매입/매출 각 방향으로 딱
   // 하나씩만 만들어서, 그 안의 모든 줄이 순서대로 나눠 쓰게 한다 — 같은
@@ -927,6 +933,7 @@ export function DashboardCalendar({
               const hasSalesDot = !!data?.salesCount || carryoverSalesCount > 0;
               const hasPurchaseDot =
                 !!data?.purchaseCount || carryoverPurchaseCount > 0;
+              const hasScheduleDot = !!data?.calendarItems.length;
               const tooltipParts = [
                 data?.salesCount ? `매출 ${data.salesCount}건` : null,
                 data?.purchaseCount ? `매입 ${data.purchaseCount}건` : null,
@@ -937,6 +944,7 @@ export function DashboardCalendar({
                   ? `이월 매입 ${carryoverPurchaseCount}건`
                   : null,
                 data?.notes.length ? "메모 있음" : null,
+                hasScheduleDot ? `일정 ${data!.calendarItems.length}건` : null,
                 showLowStockDot ? "안전재고 부족" : null,
               ].filter(Boolean);
               return (
@@ -985,6 +993,11 @@ export function DashboardCalendar({
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-warning)]"}`}
                       />
                     ) : null}
+                    {hasScheduleDot ? (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-info-text)]"}`}
+                      />
+                    ) : null}
                     {showLowStockDot ? (
                       <span
                         className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-danger)]"}`}
@@ -1009,6 +1022,10 @@ export function DashboardCalendar({
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-warning)]" />{" "}
             메모
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-info-text)]" />{" "}
+            일정
           </span>
           <span className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-danger)]" />{" "}
@@ -1423,6 +1440,46 @@ export function DashboardCalendar({
                 </div>
               )}
             </div>
+
+            {selectedData.calendarItems.length > 0 && (
+              <div className="mb-4">
+                <div className="mb-1 flex items-center justify-between">
+                  <p className="text-xs font-bold text-[var(--erp-info-text)]">
+                    오늘 일정 {selectedData.calendarItems.length}건
+                  </p>
+                  <Link
+                    href="/calendar"
+                    className="text-[10.5px] text-[var(--erp-text-muted)] hover:underline"
+                  >
+                    캘린더에서 보기
+                  </Link>
+                </div>
+                <ul className="space-y-1">
+                  {selectedData.calendarItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className="border-l-[3px] p-1.5 text-xs"
+                      style={{
+                        borderLeftColor:
+                          item.source === "meeting"
+                            ? "var(--erp-info-text)"
+                            : "var(--erp-warning)",
+                        background: "var(--erp-bg-subtle)",
+                      }}
+                    >
+                      <span className="font-semibold text-[var(--erp-text)]">
+                        {item.title}
+                      </span>
+                      {!item.allDay && (
+                        <span className="ml-1.5 text-[var(--erp-text-muted)]">
+                          {item.startAt.slice(11, 16)}~{item.endAt.slice(11, 16)}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <NoteForm
               dateStr={selected}

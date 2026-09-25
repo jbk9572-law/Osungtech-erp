@@ -11,6 +11,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import { deriveDualSplitWidths } from "@/lib/item-grid-columns";
 import type { LocationOption } from "@/lib/location-stock-sync";
+import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 
 export default async function NewPurchasePage({
   searchParams,
@@ -46,7 +47,7 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualSplitColWidths] =
+  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualSplitColWidths, paperCalcEnabled] =
     await Promise.all([
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
@@ -101,6 +102,7 @@ export default async function NewPurchasePage({
       ),
       getGridColumnWidths("erp-item-grid-columns"),
       getGridColumnWidths("erp-purchase-item-grid-columns-dual-split"),
+      isPaperCalcEnabled(supabase),
     ]);
 
   const productLocations: Record<string, LocationOption[]> = {};
@@ -168,6 +170,7 @@ export default async function NewPurchasePage({
         prefillItems={prefillItems}
         initialBaseColWidths={baseColWidths}
         initialDualSplitColWidths={dualSplitColWidths ?? deriveDualSplitWidths(baseColWidths)}
+        paperCalcEnabled={paperCalcEnabled}
       />
     </div>
   );

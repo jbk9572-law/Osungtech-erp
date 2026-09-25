@@ -5,6 +5,19 @@ export const PAPER_STOCK_SKU = "TG0";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+// 모조지 계산은 원래 특정 거래처(SI) 업무 방식에 맞춰 만든 기능이라, 이
+// SaaS의 다른 테넌트는 대부분 안 쓴다 — 환경설정 > 기능 관리에서
+// featureKey "paper_calc"로 끈 테넌트는 매출/매입 등록 폼에 계산 진입
+// 버튼 자체가 안 보이고(new-sale-form.tsx 등), 상세 화면의 계산 이력/
+// 오버라이드 패널도, 대시보드의 모조지 집계도 전부 숨긴다 — 메뉴만 가려져
+// 있고 안쪽 화면·로직은 여전히 노출되던 예전 상태를 이 함수 하나로 통일해
+// 막는다. disabled_features 조회 자체가 실패하면(멀티테넌트 전환 이전
+// 데이터 등) "안 꺼짐"을 기본값으로 삼아 기존 사용자(SI) 흐름을 깨지 않는다.
+export async function isPaperCalcEnabled(supabase: SupabaseServerClient): Promise<boolean> {
+  const { data: tenant } = await supabase.from("tenants").select("disabled_features").maybeSingle();
+  return !(tenant?.disabled_features ?? []).includes("paper_calc");
+}
+
 // 모조지 자동반영은 매출(출고)/매입(입고) 양쪽에 똑같은 흐름(계산 합계로
 // 품목 수량 재계산 → 오버라이드 확인 → 재고 반영)이 있는데, 예전엔 이
 // 흐름 전체가 함수마다 복붙돼 있었다(sync/override/revert 각각 매출용,
