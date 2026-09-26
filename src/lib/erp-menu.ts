@@ -27,6 +27,10 @@ export type MenuGroup = { label: string; items: MenuLeaf[]; featureKey?: string 
 
 export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
+  // 공지사항/인사문서함/공문함/기안함의 최근 항목을 한 화면에 모아
+  // 보여주는 훑어보기 전용 진입점 — 각 원본 화면(과 그 메뉴)은 그대로
+  // 둔 채 새로 추가한다(전체 감사 후 사용자 요청으로 도입).
+  { label: "게시판", items: [{ label: "게시판", href: "/board", flatLabel: "게시판" }] },
   { label: "매출관리", items: [{ label: "출고관리", href: "/sales", flatLabel: "매출관리" }] },
   {
     label: "매입관리",
