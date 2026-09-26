@@ -17,6 +17,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/lib/mail/crypto";
 import { sendMail } from "@/lib/mail/smtp-send";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 // 승인된 공문을 발송 처리한다. 이메일이 있는 외부 수신처는 기안자 본인의
@@ -45,7 +46,7 @@ export async function sendOfficialDocument(_prevState: FormState, formData: Form
 
   const { data: recipients } = await supabase
     .from("official_document_recipients")
-    .select("id, kind, name, email, user_id")
+    .select("id, kind, name, email, user_id, status")
     .eq("official_document_id", id);
 
   const { data: account } = await supabase
@@ -65,6 +66,10 @@ export async function sendOfficialDocument(_prevState: FormState, formData: Form
   let manualCount = 0;
 
   for (const r of recipients ?? []) {
+    // 문서 상태 갱신 실패로 재시도할 때, 이미 처리된 수신처까지 다시
+    // 메일을 보내지 않게 한다(아래 requireMutatedRow 실패 시 재시도가
+    // 안전하려면 이 건너뛰기가 필요하다).
+    if (r.status === "sent" || r.status === "delivered_manual") continue;
     if (r.kind === "internal") {
       const { error: markSentError } = await admin
         .from("official_document_recipients")
@@ -109,11 +114,16 @@ export async function sendOfficialDocument(_prevState: FormState, formData: Form
     }
   }
 
-  const { error: markDocSentError } = await admin
+  const markDocSentResult = await admin
     .from("official_documents")
     .update({ status: "sent", sent_at: new Date().toISOString() })
-    .eq("id", id);
-  if (markDocSentError) console.error("공문 발송완료 상태 갱신 실패:", markDocSentError.message);
+    .eq("id", id)
+    .select("id");
+  const markDocSentMutationError = requireMutatedRow(
+    markDocSentResult,
+    "각 수신처 발송 처리는 끝났지만 문서 상태 갱신에 실패했습니다. 다시 발송 처리를 눌러주세요(이미 발송된 수신처는 다시 보내지 않습니다)",
+  );
+  if (markDocSentMutationError) return markDocSentMutationError;
 
   revalidatePath(`/official-documents/${id}`);
   revalidatePath("/official-documents");

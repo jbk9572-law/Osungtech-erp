@@ -143,7 +143,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 등록 자체는 이미 끝난 뒤라 여기서 실패해도 등록을 막지는 않는다 — 위치
   // 재고는 부가적인 창고관리 보조 데이터라, 반영에 실패했다고 매출 등록
   // 자체를 되돌릴 필요는 없다고 판단했다.
-  await applyOrderLocationStock(supabase, {
+  const locationStockWarning = await applyOrderLocationStock(supabase, {
     orderType: "sale",
     orderId: salesOrderId,
     warehouseId,
@@ -157,9 +157,9 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   // 방금 만든 주문에 붙여서 저장하고 TG0 판매 품목에도 반영한다. 이 단계가
   // 실패해도 주문 자체는 이미 생성됐으니 등록을 막지 않되, 조용히 묻히지
   // 않도록 상세 화면으로 경고 메시지를 실어 보낸다.
-  let paperCalcWarning: string | null = null;
+  let paperCalcWarning: string | null = locationStockWarning;
   if (pendingPaperCalc) {
-    paperCalcWarning = await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
+    paperCalcWarning ??= await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
   }
 
   // 입고 불러오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
@@ -277,7 +277,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   // 방금 수정한 새 품목/수량 기준으로 다시 반영한다.
   await reverseOrderLocationStock(supabase, "sale", id);
   const itemsWithProduct = items.filter((item) => item.productId);
-  await applyOrderLocationStock(supabase, {
+  const locationStockWarning = await applyOrderLocationStock(supabase, {
     orderType: "sale",
     orderId: id,
     warehouseId,
@@ -310,7 +310,12 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   revalidatePath("/dashboard");
   revalidatePath("/receivables");
   revalidatePath(`/customers/${customerId}`);
-  return { redirectTo: back ? resolveListHref("/sales", back) : `/sales/${id}` };
+  if (back) {
+    return { redirectTo: resolveListHref("/sales", back) };
+  }
+  return {
+    redirectTo: locationStockWarning ? `/sales/${id}?warning=${encodeURIComponent(locationStockWarning)}` : `/sales/${id}`,
+  };
 }
 
 export async function deleteSale(_prevState: FormState, formData: FormData): Promise<FormState> {

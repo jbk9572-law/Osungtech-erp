@@ -345,7 +345,7 @@ export async function createPurchase(
   // 자동, 2곳 이상이면 등록 화면 확인 모달에서 고른 배분대로). 매입+출고
   // 동시등록이면 출고 쪽도 매출과 동일한 방식(direction "out")으로 같이
   // 반영한다.
-  await applyOrderLocationStock(supabase, {
+  const purchaseLocationWarning = await applyOrderLocationStock(supabase, {
     orderType: "purchase",
     orderId: purchaseOrderId,
     warehouseId,
@@ -353,8 +353,9 @@ export async function createPurchase(
     direction: "in",
     allocationChoices: locationAllocations,
   });
+  let saleLocationWarning: string | null = null;
   if (salesOrderId && saleItems) {
-    await applyOrderLocationStock(supabase, {
+    saleLocationWarning = await applyOrderLocationStock(supabase, {
       orderType: "sale",
       orderId: salesOrderId,
       warehouseId,
@@ -364,8 +365,12 @@ export async function createPurchase(
     });
   }
 
+  // 직접입력 품목(productId 없이 이름만 입력)은 상품 마스터가 없어 원가/
+  // 단가 캐시를 갱신할 대상 자체가 없다 — updatePurchase는 이미 이렇게
+  // 필터링하고 있어 그것과 맞춘다.
+  const itemsWithProduct = items.filter((item) => item.productId);
   const costUpdateResults = await Promise.all(
-    items.map((item) =>
+    itemsWithProduct.map((item) =>
       supabase.from("products").update({ cost: item.unitCost }).eq("id", item.productId)
     )
   );
@@ -376,7 +381,7 @@ export async function createPurchase(
   // 매출 등록과 동일하게, 이번에 실제로 적용한 매입단가를 공급처별 단가로도
   // 저장해둔다 — 다음부터 같은 공급처+상품 조합은 이 단가가 기본값으로 뜬다.
   const supplierPriceResults = await Promise.all(
-    items.map((item) =>
+    itemsWithProduct.map((item) =>
       supabase.from("supplier_product_prices").upsert(
         {
           supplier_id: supplierId,
@@ -393,7 +398,7 @@ export async function createPurchase(
 
   // 이 단계가 실패해도 매입 등록 자체는 이미 성공했으니 등록을 막지 않되,
   // 조용히 묻히지 않도록 상세 화면으로 경고 메시지를 실어 보낸다.
-  let paperCalcWarning: string | null = null;
+  let paperCalcWarning: string | null = purchaseLocationWarning ?? saleLocationWarning;
   if (pendingPaperCalc) {
     paperCalcWarning = await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
   }
@@ -543,7 +548,7 @@ export async function updatePurchase(
   }
 
   await reverseOrderLocationStock(supabase, "purchase", id);
-  await applyOrderLocationStock(supabase, {
+  const locationStockWarning = await applyOrderLocationStock(supabase, {
     orderType: "purchase",
     orderId: id,
     warehouseId,
@@ -570,7 +575,12 @@ export async function updatePurchase(
   revalidatePath("/dashboard");
   revalidatePath("/payables");
   revalidatePath(`/suppliers/${supplierId}`);
-  return { redirectTo: back ? resolveListHref("/purchases", back) : `/purchases/${id}` };
+  if (back) {
+    return { redirectTo: resolveListHref("/purchases", back) };
+  }
+  return {
+    redirectTo: locationStockWarning ? `/purchases/${id}?warning=${encodeURIComponent(locationStockWarning)}` : `/purchases/${id}`,
+  };
 }
 
 export async function bulkDeletePurchases(_prevState: FormState, formData: FormData): Promise<FormState> {

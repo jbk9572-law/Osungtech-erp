@@ -34,6 +34,11 @@ function fallbackAllocation(rows: LocationOption[], totalQty: number) {
 // 사용자가 고른 배분을 따른다. 실제로 반영한 만큼을
 // order_item_location_stock에 남겨서, 이 건을 나중에 수정/삭제할 때
 // reverseOrderLocationStock로 정확히 되돌릴 수 있게 한다.
+// 반환값: 위치별 반영에 실패한 품목이 있으면 그 개수를 알려주는 경고
+// 문구, 전부 성공하면 null. 예전엔 실패를 console.error로만 남기고
+// 호출자에게 알리지 않아서, 매출/매입 등록 자체는 성공했다고 뜨는데
+// 정작 위치별 재고만 조용히 어긋나는 경우가 있었다 — attachPendingPaperCalculation과
+// 동일하게 "등록은 막지 않되 경고는 화면에 보여준다" 방식으로 맞춘다.
 export async function applyOrderLocationStock(
   supabase: SupabaseServerClient,
   params: {
@@ -45,7 +50,7 @@ export async function applyOrderLocationStock(
     direction: "in" | "out";
     allocationChoices?: LocationAllocationChoice[];
   },
-): Promise<void> {
+): Promise<string | null> {
   const { orderType, orderId, warehouseId, items, direction, allocationChoices } = params;
   const sign = direction === "in" ? 1 : -1;
 
@@ -54,7 +59,7 @@ export async function applyOrderLocationStock(
     if (!item.productId || item.quantity <= 0) continue;
     qtyByProduct.set(item.productId, (qtyByProduct.get(item.productId) ?? 0) + item.quantity);
   }
-  if (qtyByProduct.size === 0) return;
+  if (qtyByProduct.size === 0) return null;
 
   const productIds = [...qtyByProduct.keys()];
   const { data: existingRows } = await supabase
@@ -78,6 +83,7 @@ export async function applyOrderLocationStock(
     location_id: string;
     quantity_delta: number;
   }[] = [];
+  let failedCount = 0;
 
   for (const [productId, totalQty] of qtyByProduct) {
     const rows = rowsByProduct.get(productId) ?? [];
@@ -123,6 +129,7 @@ export async function applyOrderLocationStock(
       });
       if (error) {
         console.error("위치별 재고 반영 실패:", error.message);
+        failedCount++;
         continue;
       }
       historyRows.push({ order_type: orderType, order_id: orderId, product_id: productId, location_id: p.locationId, quantity_delta: delta });
@@ -131,8 +138,15 @@ export async function applyOrderLocationStock(
 
   if (historyRows.length > 0) {
     const { error } = await supabase.from("order_item_location_stock").insert(historyRows);
-    if (error) console.error("위치별 재고 배정 이력 저장 실패:", error.message);
+    if (error) {
+      console.error("위치별 재고 배정 이력 저장 실패:", error.message);
+      failedCount += historyRows.length;
+    }
   }
+
+  return failedCount > 0
+    ? `위치별 재고 반영에 실패한 품목이 ${failedCount}건 있습니다 — 재고관리 > 관리번호 조회에서 이 거래의 위치별 재고를 직접 확인해주세요.`
+    : null;
 }
 
 // 매출/매입 건을 수정하거나 삭제하기 전에 호출한다. applyOrderLocationStock이
