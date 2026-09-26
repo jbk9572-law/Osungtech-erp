@@ -151,6 +151,16 @@ export default async function InventoryLedgerPage({
         >
           다음달 ▶
         </Link>
+        {selectedProduct && (
+          <a
+            href={`/api/reports/ledger/export?product_id=${selectedProduct.id}&month=${month}${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`}
+            className="erp-btn"
+            title="현재 화면 그대로 엑셀로 다운로드"
+            style={{ marginLeft: "auto" }}
+          >
+            📥 엑셀 다운로드
+          </a>
+        )}
       </div>
 
       {!selectedProduct ? (

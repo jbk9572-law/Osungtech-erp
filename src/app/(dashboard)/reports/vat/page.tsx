@@ -5,6 +5,24 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
+import { nowInKst } from "@/lib/kst-date";
+import { shiftMonth } from "@/lib/date-presets";
+import { effectiveMonth } from "@/lib/carryover";
+
+// [from, to] 구간에 걸쳐 있는 "YYYY-MM" 월 목록 — 이월(carryover) 건을
+// effectiveMonth 기준으로 걸러낼 때 쓴다. 분기 버튼은 항상 월 경계에
+// 딱 맞지만, 사용자가 날짜를 직접 입력하면 월 중간일 수도 있어 그 달
+// 전체를 포함시킨다(reports/monthly와 같은 월 단위 판정 방식).
+function monthsInRange(from: string, to: string): string[] {
+  const months: string[] = [];
+  let cursor = from.slice(0, 7);
+  const last = to.slice(0, 7);
+  for (let i = 0; i < 24 && cursor <= last; i++) {
+    months.push(cursor);
+    cursor = shiftMonth(cursor, 1);
+  }
+  return months;
+}
 
 type TaxType = "과세" | "면세" | "영세";
 
@@ -25,34 +43,60 @@ export default async function VatReportPage({
 }: {
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
-  const now = new Date();
-  const defaultQuarter = (Math.floor(now.getMonth() / 3) + 1) as 1 | 2 | 3 | 4;
-  const defaultRange = quarterRange(now.getFullYear(), defaultQuarter);
+  // 서버는 보통 UTC로 돈다 — 분기 경계일(1/1, 4/1, 7/1, 10/1) 자정~오전
+  // 9시(KST) 사이에는 new Date()의 getMonth()가 아직 이전 분기를 가리켜
+  // 기본 선택 분기가 하루 늦게 바뀌는 문제가 있었다. 다른 리포트들처럼
+  // KST 기준으로 "오늘"을 구한다(kst-date.ts).
+  const now = nowInKst();
+  const currentYear = now.getUTCFullYear();
+  const defaultQuarter = (Math.floor(now.getUTCMonth() / 3) + 1) as 1 | 2 | 3 | 4;
+  const defaultRange = quarterRange(currentYear, defaultQuarter);
   const { from: fromParam, to: toParam } = await searchParams;
   const from = fromParam || defaultRange.from;
   const to = toParam || defaultRange.to;
 
   const supabase = await createClient();
 
-  const [salesRows, purchaseRows] = await Promise.all([
-    fetchAllRows<{ id: string; is_return: boolean; tax_type: TaxType; sales_order_items: { quantity: number; unit_price: number }[] }>(
-      (f, t) =>
-        supabase
-          .from("sales_orders")
-          .select("id, is_return, tax_type, sales_order_items(quantity, unit_price)")
-          .gte("order_date", from)
-          .lte("order_date", to)
-          .range(f, t)
+  // 이월(is_carryover) 건은 거래일자가 실제로는 전월인데 이번 신고기간
+  // 실적으로 잡혀야 하므로, 조회 범위를 전월 1일까지 넓혀서 가져온 뒤
+  // effectiveMonth 기준으로 다시 걸러야 한다 — reports/monthly와 같은 패턴.
+  const lookbackFrom = shiftMonth(from.slice(0, 7), -1) + "-01";
+  const months = monthsInRange(from, to);
+
+  const [salesRowsRaw, purchaseRowsRaw] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      is_return: boolean;
+      tax_type: TaxType;
+      order_date: string;
+      is_carryover: boolean;
+      sales_order_items: { quantity: number; unit_price: number }[];
+    }>((f, t) =>
+      supabase
+        .from("sales_orders")
+        .select("id, is_return, tax_type, order_date, is_carryover, sales_order_items(quantity, unit_price)")
+        .gte("order_date", lookbackFrom)
+        .lte("order_date", to)
+        .range(f, t)
     ),
-    fetchAllRows<{ id: string; tax_type: TaxType; purchase_order_items: { quantity: number; unit_cost: number }[] }>((f, t) =>
+    fetchAllRows<{
+      id: string;
+      tax_type: TaxType;
+      purchase_date: string;
+      is_carryover: boolean;
+      purchase_order_items: { quantity: number; unit_cost: number }[];
+    }>((f, t) =>
       supabase
         .from("purchase_orders")
-        .select("id, tax_type, purchase_order_items(quantity, unit_cost)")
-        .gte("purchase_date", from)
+        .select("id, tax_type, purchase_date, is_carryover, purchase_order_items(quantity, unit_cost)")
+        .gte("purchase_date", lookbackFrom)
         .lte("purchase_date", to)
         .range(f, t)
     ),
   ]);
+
+  const salesRows = salesRowsRaw.filter((r) => months.includes(effectiveMonth(r.order_date, r.is_carryover)));
+  const purchaseRows = purchaseRowsRaw.filter((r) => months.includes(effectiveMonth(r.purchase_date, r.is_carryover)));
 
   const salesSupply = emptyTotals();
   for (const order of salesRows) {
@@ -72,8 +116,8 @@ export default async function VatReportPage({
   const payable = salesTax - purchaseTax;
 
   const quarterLinks = ([1, 2, 3, 4] as const).map((q) => ({
-    label: `${now.getFullYear()}년 ${q}분기`,
-    ...quarterRange(now.getFullYear(), q),
+    label: `${currentYear}년 ${q}분기`,
+    ...quarterRange(currentYear, q),
   }));
 
   return (
@@ -100,6 +144,14 @@ export default async function VatReportPage({
         <button type="submit" className="erp-btn">
           조회
         </button>
+        <a
+          href={`/api/reports/vat/export?from=${from}&to=${to}`}
+          className="erp-btn"
+          title="현재 화면 그대로 엑셀로 다운로드"
+          style={{ marginLeft: "auto" }}
+        >
+          📥 엑셀 다운로드
+        </a>
       </form>
 
       <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>

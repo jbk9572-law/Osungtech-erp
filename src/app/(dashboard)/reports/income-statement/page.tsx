@@ -5,6 +5,7 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { effectiveMonth } from "@/lib/carryover";
 
 export default async function IncomeStatementPage({
   searchParams,
@@ -19,17 +20,23 @@ export default async function IncomeStatementPage({
 
   const supabase = await createClient();
 
-  const [salesRows, approvedExpenseRows] = await Promise.all([
+  // 이월(is_carryover) 건은 거래일자가 실제로는 전월인데 이번 달 실적으로
+  // 잡혀야 하므로(월별 리포트와 동일한 effectiveMonth 규칙), 조회 범위를
+  // 전월 1일까지 넓혀서 가져온 뒤 실적월 기준으로 다시 걸러야 한다 —
+  // reports/monthly와 같은 패턴.
+  const { from: lookbackFrom } = getMonthRange(shiftMonth(month, -1));
+
+  const [salesRowsRaw, approvedExpenseRows] = await Promise.all([
     fetchAllRows<{
       quantity: number;
       unit_price: number;
-      sales_orders: { is_return: boolean } | null;
-      products: { cost: number } | null;
+      unit_cost: number;
+      sales_orders: { is_return: boolean; order_date: string; is_carryover: boolean } | null;
     }>((f, t) =>
       supabase
         .from("sales_order_items")
-        .select("quantity, unit_price, sales_orders!inner(is_return, order_date), products(cost)")
-        .gte("sales_orders.order_date", from)
+        .select("quantity, unit_price, unit_cost, sales_orders!inner(is_return, order_date, is_carryover)")
+        .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
         .range(f, t)
     ),
@@ -44,12 +51,16 @@ export default async function IncomeStatementPage({
     ),
   ]);
 
+  const salesRows = salesRowsRaw.filter(
+    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === month,
+  );
+
   let revenue = 0;
   let cogs = 0;
   for (const row of salesRows) {
     const sign = row.sales_orders?.is_return ? -1 : 1;
     revenue += row.quantity * Number(row.unit_price) * sign;
-    cogs += row.quantity * Number(row.products?.cost ?? 0) * sign;
+    cogs += row.quantity * Number(row.unit_cost) * sign;
   }
 
   const grossProfit = revenue - cogs;
@@ -81,6 +92,14 @@ export default async function IncomeStatementPage({
         <Link href={`/reports/income-statement?month=${nextMonth}`} className="erp-btn">
           {nextMonth} →
         </Link>
+        <a
+          href={`/api/reports/income-statement/export?month=${month}`}
+          className="erp-btn"
+          title="현재 화면 그대로 엑셀로 다운로드"
+          style={{ marginLeft: "auto" }}
+        >
+          📥 엑셀 다운로드
+        </a>
       </div>
 
       <div className="erp-grid-wrap">

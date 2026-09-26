@@ -242,7 +242,8 @@ async function insertPaperItem(
   orderId: string,
   productId: string,
   quantity: number,
-  unitPrice: number
+  unitPrice: number,
+  unitCost: number
 ): Promise<string | null> {
   const { error } =
     orderIdColumn === "sales_order_id"
@@ -251,6 +252,7 @@ async function insertPaperItem(
           product_id: productId,
           quantity,
           unit_price: unitPrice,
+          unit_cost: unitCost,
         })
       : await supabase.from("purchase_order_items").insert({
           purchase_order_id: orderId,
@@ -305,7 +307,7 @@ async function syncPaperStockItem(
   }
 
   const unitPrice = await resolveNewPaperItemUnitPrice(supabase, orderIdColumn, product, context);
-  const insertError = await insertPaperItem(supabase, orderIdColumn, orderId, product.id, totalReams, unitPrice);
+  const insertError = await insertPaperItem(supabase, orderIdColumn, orderId, product.id, totalReams, unitPrice, product.cost);
   if (insertError) return insertError;
   return applyPaperStockDelta(supabase, orderIdColumn, product.id, context.warehouseId, orderId, 0, totalReams);
 }

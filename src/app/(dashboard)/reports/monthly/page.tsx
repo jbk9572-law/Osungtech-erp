@@ -3,95 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
-import { effectiveMonth } from "@/lib/carryover";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { currentMonth, shiftMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
-import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
-import { groupByProductKey } from "@/lib/group-by-product";
-import { calcVat } from "@/lib/tax";
-import { matchesSearch } from "@/lib/search-match";
-
-type View = "product" | "supplier" | "customer";
-
-type CompanyProductRow = {
-  companyId: string;
-  companyName: string;
-  orderId: string;
-  sku: string;
-  productName: string;
-  spec: string;
-  categoryName: string | null;
-  unit: string | null;
-  quantity: number;
-  amount: number;
-  taxAmount: number;
-};
-
-// 매입처별/매출처별 보기 — 거래처를 먼저 묶고 그 안에서 품목별 소계를
-// 낸다. 품목별 보기(ItemGroup)와 반대 방향으로 같은 데이터를 한 번 더
-// 묶는 것이라, 이미 있는 groupByProductKey를 두 단계(거래처 → 품목)로
-// 재사용한다.
-function buildCompanyGroups(rows: CompanyProductRow[]) {
-  return groupByProductKey(
-    rows,
-    (r) => r.companyId,
-    (r) => r.quantity,
-    (r) => r.amount,
-  )
-    .map((g) => ({
-      companyId: g.key,
-      companyName: g.items[0].companyName,
-      totalQuantity: g.totalQuantity,
-      totalAmount: g.totalAmount,
-      totalTax: g.items.reduce((sum, r) => sum + r.taxAmount, 0),
-      transactionCount: new Set(g.items.map((r) => r.orderId)).size,
-      products: groupByProductKey(
-        g.items,
-        (r) => `${r.productName}|${r.spec}`,
-        (r) => r.quantity,
-        (r) => r.amount,
-      ).map((pg) => ({
-        ...pg,
-        totalTax: pg.items.reduce((sum, r) => sum + r.taxAmount, 0),
-        avgUnitPrice: pg.totalQuantity ? pg.totalAmount / pg.totalQuantity : 0,
-      })),
-    }))
-    .sort((a, b) => b.totalAmount - a.totalAmount);
-}
-
-// 전월 대비 증감률 — 전월 실적이 0이면(신규 시작 등) 비율 계산이 무의미해
-// 배지를 아예 표시하지 않는다.
-function monthOverMonthDelta(
-  current: number,
-  prev: number,
-): { pct: number; isUp: boolean } | null {
-  if (!prev) return null;
-  const pct = ((current - prev) / prev) * 100;
-  return { pct: Math.abs(pct), isUp: pct >= 0 };
-}
-
-type Detail = {
-  type: "in" | "out";
-  companyId: string;
-  companyName: string;
-  quantity: number;
-  amount: number;
-};
-
-type ItemGroup = {
-  productId: string;
-  sku: string;
-  name: string;
-  spec: string;
-  categoryName: string | null;
-  unit: string | null;
-  inQty: number;
-  inAmount: number;
-  outQty: number;
-  outAmount: number;
-  details: Detail[];
-};
+import { fetchMonthlyReportData, type View } from "@/lib/monthly-report-data";
 
 export default async function MonthlyReportPage({
   searchParams,
@@ -104,332 +18,39 @@ export default async function MonthlyReportPage({
       ? viewParam
       : "product";
   const month = monthParam || currentMonth();
-  const { to } = getMonthRange(month);
-  const prevMonth = shiftMonth(month, -1);
-  // 이월(is_carryover) 건은 거래일자가 실제로는 전월인데 이번 달 실적으로
-  // 잡히므로, 조회 범위를 전월 1일까지 넓혀서 가져온 뒤 실적월(effectiveMonth)
-  // 기준으로 이번 달/전월 몫을 각각 걸러낸다 — 전월 대비 비교(prevMonth)도
-  // 같은 방식으로 걸러야 해서 한 달 더(lookbackMonth) 여유를 둔다.
-  const lookbackMonth = shiftMonth(month, -2);
-  const { from: lookbackFrom } = getMonthRange(lookbackMonth);
   const supabase = await createClient();
 
-  // limit 없이 order()만 걸면 postgrest가 기본 상한(1000행, config.toml의
-  // max_rows)에서 조용히 자른다 — 예전엔 .limit(5000)이면 넉넉하다고
-  // 봤지만 실제 서버 상한은 1000이라 애초에 무의미했고, 이월 조회를 위해
-  // 조회 범위를 3개월치로 넓히면서 그 상한에 걸릴 가능성이 더 커졌다.
-  // .range()로 직접 페이지를 넘기며 끝까지 받아온다.
-  const [allSalesRows, allPurchaseRows] = await Promise.all([
-    fetchAllRows((from, to2) =>
-      supabase
-        .from("sales_order_items")
-        .select(
-          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit, categories(name))",
-        )
-        .gte("sales_orders.order_date", lookbackFrom)
-        .lte("sales_orders.order_date", to)
-        .order("sales_orders(order_date)", { ascending: true })
-        .range(from, to2),
-    ),
-    fetchAllRows((from, to2) =>
-      supabase
-        .from("purchase_order_items")
-        .select(
-          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
-        )
-        .gte("purchase_orders.purchase_date", lookbackFrom)
-        .lte("purchase_orders.purchase_date", to)
-        .order("purchase_orders(purchase_date)", { ascending: true })
-        .range(from, to2),
-    ),
-  ]);
+  const {
+    itemGroups,
+    supplierGroups,
+    customerGroups,
+    companyIds,
+    totalSalesAmount,
+    totalPurchaseAmount,
+    totalInQty,
+    totalInAmount,
+    totalOutQty,
+    totalOutAmount,
+    salesDelta,
+    purchaseDelta,
+    returnReasonStats,
+    totalReturnAmount,
+    matchedCompanyKeys,
+  } = await fetchMonthlyReportData(supabase, month, q, view);
 
-  const salesRows = allSalesRows.filter(
-    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === month,
-  );
-  const prevSalesRows = (allSalesRows ?? []).filter(
-    (r) => effectiveMonth(r.sales_orders?.order_date ?? "", r.sales_orders?.is_carryover ?? false) === prevMonth,
-  );
-  const purchaseRows = (allPurchaseRows ?? []).filter(
-    (r) => effectiveMonth(r.purchase_orders?.purchase_date ?? "", r.purchase_orders?.is_carryover ?? false) === month,
-  );
-  const prevPurchaseRows = (allPurchaseRows ?? []).filter(
-    (r) => effectiveMonth(r.purchase_orders?.purchase_date ?? "", r.purchase_orders?.is_carryover ?? false) === prevMonth,
-  );
-
-  const prevSalesTotal = (prevSalesRows ?? []).reduce(
-    (sum, r) =>
-      sum + r.quantity * Number(r.unit_price) * (r.sales_orders?.is_return ? -1 : 1),
-    0,
-  );
-  const prevPurchaseTotal = (prevPurchaseRows ?? []).reduce(
-    (sum, r) => sum + r.quantity * Number(r.unit_cost),
-    0,
-  );
-
-  const groups = new Map<string, ItemGroup>();
-  const companyIds = new Set<string>();
-  const companyNameByKey = new Map<string, string>();
-
-  function ensureGroup(
-    productId: string,
-    sku: string,
-    name: string,
-    spec: string,
-    unit: string | null,
-    categoryName: string | null,
-  ) {
-    let group = groups.get(productId);
-    if (!group) {
-      group = {
-        productId,
-        sku,
-        name,
-        spec,
-        unit,
-        categoryName,
-        inQty: 0,
-        inAmount: 0,
-        outQty: 0,
-        outAmount: 0,
-        details: [],
-      };
-      groups.set(productId, group);
-    }
-    return group;
-  }
-
-  for (const row of purchaseRows ?? []) {
-    // 직접입력(품목 미연결) 줄은 이 리포트가 다루는 "품목별 실적" 개념에
-    // 안 맞아서 제외한다 — 금액은 매입 목록/오늘의 업무에는 정상 반영된다.
-    if (!row.product_id) continue;
-    const supplier = row.purchase_orders?.suppliers;
-    const amount = row.quantity * Number(row.unit_cost);
-    const sku = row.products?.sku ?? "-";
-    const productName = row.products?.name ?? "-";
-    const spec = row.products?.spec ?? "-";
-    const unit = row.products?.unit ?? null;
-    const categoryName = row.products?.categories?.name ?? null;
-    const group = ensureGroup(row.product_id, sku, productName, spec, unit, categoryName);
-    group.inQty += row.quantity;
-    group.inAmount += amount;
-    if (supplier) {
-      const companyKey = `s:${supplier.id}`;
-      companyIds.add(companyKey);
-      companyNameByKey.set(companyKey, supplier.name);
-      const existing = group.details.find(
-        (d) => d.type === "in" && d.companyId === supplier.id,
-      );
-      if (existing) {
-        existing.quantity += row.quantity;
-        existing.amount += amount;
-      } else {
-        group.details.push({
-          type: "in",
-          companyId: supplier.id,
-          companyName: supplier.name,
-          quantity: row.quantity,
-          amount,
-        });
-      }
-    }
-  }
-
-  for (const row of salesRows ?? []) {
-    // 직접입력(품목 미연결) 줄은 제외한다(위 매입 루프와 같은 이유).
-    if (!row.product_id) continue;
-    const customer = row.sales_orders?.customers;
-    // 반품 건은 수량/금액을 음수로 뒤집어서 반영한다 — 그래야 "출고수량"이
-    // 실제로 순유출된 양을 뜻하고, "재고 순증감"(입고-출고) 계산도 반품으로
-    // 늘어난 재고를 정확히 반영한다.
-    const sign = row.sales_orders?.is_return ? -1 : 1;
-    const quantity = row.quantity * sign;
-    const amount = row.quantity * Number(row.unit_price) * sign;
-    const sku = row.products?.sku ?? "-";
-    const productName = row.products?.name ?? "-";
-    const spec = row.products?.spec ?? "-";
-    const unit = row.products?.unit ?? null;
-    const categoryName = row.products?.categories?.name ?? null;
-    const group = ensureGroup(row.product_id, sku, productName, spec, unit, categoryName);
-    group.outQty += quantity;
-    group.outAmount += amount;
-    if (customer) {
-      const companyKey = `c:${customer.id}`;
-      companyIds.add(companyKey);
-      companyNameByKey.set(companyKey, customer.name);
-      const existing = group.details.find(
-        (d) => d.type === "out" && d.companyId === customer.id,
-      );
-      if (existing) {
-        existing.quantity += quantity;
-        existing.amount += amount;
-      } else {
-        group.details.push({
-          type: "out",
-          companyId: customer.id,
-          companyName: customer.name,
-          quantity,
-          amount,
-        });
-      }
-    }
-  }
-
-  const keyword = q?.trim().toLowerCase();
-  let itemGroups = Array.from(groups.values());
-  if (keyword) {
-    itemGroups = itemGroups.filter(
-      (g) =>
-        matchesSearch(keyword, g.sku, g.name, g.spec, g.categoryName) ||
-        g.details.some((d) => matchesSearch(keyword, d.companyName)),
-    );
-  }
-
-  for (const g of itemGroups) {
-    g.details.sort((a, b) => {
-      if (a.type !== b.type) return a.type === "in" ? -1 : 1;
-      return b.amount - a.amount;
-    });
-  }
-  // 품목 하나의 거래금액 순으로만 정렬하면, 같은 출고처로 나가는 품목끼리도
-  // 다른 품목을 사이에 두고 떨어져 보인다("KD238VA-R3"와 "KD240BI"가 둘 다
-  // 신일베스텍으로 나가는데 목록에서 멀리 떨어지는 식). 품목마다 제일 비중
-  // 큰 출고처를 기준으로 묶어서, 같은 출고처가 주력인 품목들이 붙어
-  // 나오게 한다.
-  itemGroups = clusterByDominantPartner(
-    itemGroups.map((g) => ({
-      ...g,
-      totalAmount: g.inAmount + g.outAmount,
-      outPartners: g.details
-        .filter((d) => d.type === "out")
-        .map((d) => ({ id: d.companyId, amount: d.amount })),
-    })),
-  );
-
-  // 매입처별/매출처별 보기용 — 위에서 이미 받아온 원본 행을 거래처 기준으로
-  // 다시 정리한다. 새로 쿼리하지 않고 같은 데이터를 재사용한다.
-  const purchaseCompanyRows: CompanyProductRow[] = (purchaseRows ?? [])
-    .filter((row) => row.purchase_orders?.suppliers)
-    .map((row) => {
-      const amount = row.quantity * Number(row.unit_cost);
-      return {
-        companyId: row.purchase_orders!.suppliers!.id,
-        companyName: row.purchase_orders!.suppliers!.name,
-        orderId: row.purchase_orders!.id,
-        sku: row.products?.sku ?? "-",
-        productName: row.products?.name ?? "-",
-        spec: row.products?.spec ?? "-",
-        categoryName: row.products?.categories?.name ?? null,
-        unit: row.products?.unit ?? null,
-        quantity: row.quantity,
-        amount,
-        taxAmount: calcVat(amount),
-      };
-    });
-  const salesCompanyRows: CompanyProductRow[] = (salesRows ?? [])
-    .filter((row) => row.sales_orders?.customers)
-    .map((row) => {
-      // 반품은 이 거래처와의 순거래액에서 차감되도록 음수로 반영한다.
-      // 세액은 양수 공급가액 기준으로 반올림한 뒤 부호를 적용한다 —
-      // Math.round는 음수 .5를 0쪽으로 반올림해서(예: -2.5 → -2),
-      // 서명된 금액에 그대로 반올림을 걸면 목록 화면(sales/page.tsx)의
-      // 세액 합계와 1원 어긋나는 경우가 생긴다.
-      const sign = row.sales_orders?.is_return ? -1 : 1;
-      const supplyAmount = row.quantity * Number(row.unit_price);
-      const amount = supplyAmount * sign;
-      return {
-        companyId: row.sales_orders!.customers!.id,
-        companyName: row.sales_orders!.customers!.name,
-        orderId: row.sales_orders!.id,
-        sku: row.products?.sku ?? "-",
-        productName: row.products?.name ?? "-",
-        spec: row.products?.spec ?? "-",
-        categoryName: row.products?.categories?.name ?? null,
-        unit: row.products?.unit ?? null,
-        quantity: row.quantity * sign,
-        amount,
-        taxAmount: calcVat(supplyAmount) * sign,
-      };
-    });
-
-  // 매입처별/매출처별 "비중(%)"의 분모는 반드시 이 목록(전표 단위로 검색어를
-  // 적용한 것)의 합계여야 한다 — 품목별 보기용 itemGroups는 품목 하나에 딸린
-  // 거래처 중 하나라도 검색어에 걸리면 그 품목의 "다른 거래처 몫까지 포함한"
-  // 전체 금액을 그대로 살려두므로(합계 카드용으로는 맞지만), 그걸 분모로
-  // 쓰면 검색어와 무관한 거래처 금액까지 분모에 섞여 비중이 실제보다 작게
-  // 나온다.
-  const purchaseCompanyRowsFiltered = keyword
-    ? purchaseCompanyRows.filter((r) =>
-        matchesSearch(keyword, r.sku, r.productName, r.spec, r.categoryName, r.companyName),
-      )
-    : purchaseCompanyRows;
-  const salesCompanyRowsFiltered = keyword
-    ? salesCompanyRows.filter((r) =>
-        matchesSearch(keyword, r.sku, r.productName, r.spec, r.categoryName, r.companyName),
-      )
-    : salesCompanyRows;
-  const supplierGroups =
-    view === "supplier" ? buildCompanyGroups(purchaseCompanyRowsFiltered) : [];
-  const customerGroups =
-    view === "customer" ? buildCompanyGroups(salesCompanyRowsFiltered) : [];
   const companyGroups = view === "supplier" ? supplierGroups : customerGroups;
   const companyKeyPrefix = view === "supplier" ? "s" : "c";
-  const companyViewGrandTotal =
-    view === "supplier"
-      ? purchaseCompanyRowsFiltered.reduce((sum, r) => sum + r.amount, 0)
-      : salesCompanyRowsFiltered.reduce((sum, r) => sum + r.amount, 0);
+  const companyViewGrandTotal = companyGroups.reduce((sum, g) => sum + g.totalAmount, 0);
 
   // 검색어가 거래처 하나로 정확히 특정될 때(여러 거래처가 매칭되면 어느
   // 거래처인지 모호하므로 생략), 요약표를 길게 늘어놓는 대신 그 거래처의
   // 일자별 상세내역만 보여주는 별도 페이지로 바로 이동시킨다.
-  if (keyword) {
-    const matchedKeys = Array.from(companyNameByKey.keys()).filter((key) =>
-      (companyNameByKey.get(key) ?? "").toLowerCase().includes(keyword),
-    );
-    if (matchedKeys.length === 1) {
-      redirect(
-        `/reports/monthly/company?month=${month}&company=${encodeURIComponent(matchedKeys[0])}`,
-      );
-    }
+  if (matchedCompanyKeys.length === 1) {
+    redirect(`/reports/monthly/company?month=${month}&company=${encodeURIComponent(matchedCompanyKeys[0])}`);
   }
 
-  const totalSalesAmount = itemGroups.reduce((sum, g) => sum + g.outAmount, 0);
-  const totalPurchaseAmount = itemGroups.reduce(
-    (sum, g) => sum + g.inAmount,
-    0,
-  );
-  const totalInQty = itemGroups.reduce((sum, g) => sum + g.inQty, 0);
-  const totalInAmount = itemGroups.reduce((sum, g) => sum + g.inAmount, 0);
-  const totalOutQty = itemGroups.reduce((sum, g) => sum + g.outQty, 0);
-  const totalOutAmount = itemGroups.reduce((sum, g) => sum + g.outAmount, 0);
-
-  const salesDelta = monthOverMonthDelta(totalSalesAmount, prevSalesTotal);
-  const purchaseDelta = monthOverMonthDelta(
-    totalPurchaseAmount,
-    prevPurchaseTotal,
-  );
-
-  // 반품 사유별 통계 — 어떤 사유가 반복되는지 파악용. 품목 단위(salesRows)를
-  // 사유별로 묶되, 전표(주문) 수는 같은 주문의 여러 품목이 중복 집계되지
-  // 않게 Set으로 센다.
-  const returnReasonStats = (() => {
-    const map = new Map<string, { orderIds: Set<string>; quantity: number; amount: number }>();
-    for (const row of salesRows ?? []) {
-      if (!row.sales_orders?.is_return) continue;
-      const reason = row.sales_orders.return_reason || "미지정";
-      const entry = map.get(reason) ?? { orderIds: new Set<string>(), quantity: 0, amount: 0 };
-      entry.orderIds.add(row.sales_orders.id);
-      entry.quantity += row.quantity;
-      entry.amount += row.quantity * Number(row.unit_price);
-      map.set(reason, entry);
-    }
-    return Array.from(map.entries())
-      .map(([reason, e]) => ({ reason, count: e.orderIds.size, quantity: e.quantity, amount: e.amount }))
-      .sort((a, b) => b.amount - a.amount);
-  })();
-  const totalReturnAmount = returnReasonStats.reduce((sum, r) => sum + r.amount, 0);
-
   const [year, monthNum] = month.split("-");
+  const prevMonth = shiftMonth(month, -1);
   const nextMonth = shiftMonth(month, 1);
   const thisMonth = currentMonth();
   const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
@@ -467,6 +88,14 @@ export default async function MonthlyReportPage({
         >
           다음달 ▶
         </Link>
+        <a
+          href={`/api/reports/monthly/export?month=${month}${suffix}`}
+          className="erp-btn"
+          title="현재 화면 그대로 엑셀로 다운로드"
+          style={{ marginLeft: "auto" }}
+        >
+          📥 엑셀 다운로드
+        </a>
       </div>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>

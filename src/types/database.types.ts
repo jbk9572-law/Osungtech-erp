@@ -2848,6 +2848,7 @@ export type Database = {
           spec: string | null;
           quantity: number;
           unit_price: number;
+          unit_cost: number;
           remark: string | null;
           lot_number: string | null;
           created_at: string;
@@ -2860,6 +2861,7 @@ export type Database = {
           spec?: string | null;
           quantity: number;
           unit_price?: number;
+          unit_cost?: number;
           remark?: string | null;
           lot_number?: string | null;
           created_at?: string;
@@ -2872,6 +2874,7 @@ export type Database = {
           spec?: string | null;
           quantity?: number;
           unit_price?: number;
+          unit_cost?: number;
           remark?: string | null;
           lot_number?: string | null;
           created_at?: string;
