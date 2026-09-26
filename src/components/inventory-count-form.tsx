@@ -208,7 +208,7 @@ export function InventoryCountForm({
             0개가 아닌 품목만 보기
           </label>
           <PrintInPlaceButton
-            href={`/inventory/count/print${onlyNonZero ? "?onlyNonZero=1" : ""}`}
+            href={`/inventory/count/print?warehouseId=${encodeURIComponent(warehouseId)}${onlyNonZero ? "&onlyNonZero=1" : ""}`}
             className="erp-btn erp-btn-primary"
             style={{ minWidth: 0, height: 26, padding: "0 10px" }}
           >

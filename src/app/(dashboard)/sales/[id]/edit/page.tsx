@@ -29,7 +29,7 @@ export default async function EditSalePage({
     { data: items },
     customers,
     products,
-    { data: warehouse },
+    warehouses,
     prices,
     { data: history },
     actor,
@@ -53,20 +53,17 @@ export default async function EditSalePage({
       unit: string;
       price: number;
       base_package_qty: number | null;
-      inventory: { quantity: number }[];
+      inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)")
+        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
-    supabase
-      .from("warehouses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
     fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
       (from, to) =>
         supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
@@ -149,9 +146,19 @@ export default async function EditSalePage({
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({
           ...p,
-          stock: p.inventory?.[0]?.quantity ?? 0,
+          // 창고가 1개뿐인 화면(대부분)은 기존처럼 전체 합계를 쓰고,
+          // 2개 이상이면 아래 stockByWarehouse가 선택된 창고 기준으로
+          // 다시 계산해준다.
+          stock: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
         }))}
-        warehouseId={warehouse?.id ?? order.warehouse_id}
+        stockByWarehouse={Object.fromEntries(
+          (products ?? []).map((p) => [
+            p.id,
+            Object.fromEntries(p.inventory.map((inv) => [inv.warehouse_id, Number(inv.quantity)])),
+          ]),
+        )}
+        warehouseId={warehouses[0]?.id ?? order.warehouse_id}
+        warehouses={warehouses}
         prices={prices ?? []}
         history={priceHistory}
         productLocations={productLocations}

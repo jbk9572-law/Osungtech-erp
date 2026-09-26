@@ -29,7 +29,7 @@ export default async function EditPurchasePage({
     { data: items },
     suppliers,
     products,
-    { data: warehouse },
+    warehouses,
     { data: history },
     actor,
     locationStockRows,
@@ -59,12 +59,9 @@ export default async function EditPurchasePage({
         .order("name")
         .range(from, to),
     ),
-    supabase
-      .from("warehouses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
     supabase
       .from("purchase_order_items")
       .select(
@@ -144,7 +141,8 @@ export default async function EditPurchasePage({
       <NewPurchaseForm
         suppliers={suppliers ?? []}
         products={products ?? []}
-        warehouseId={warehouse?.id ?? order.warehouse_id}
+        warehouseId={warehouses[0]?.id ?? order.warehouse_id}
+        warehouses={warehouses}
         productLocations={productLocations}
         action={updatePurchase}
         submitLabel="매입 수정"

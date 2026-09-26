@@ -19,17 +19,22 @@ type StockLevel = { product_id: string; warehouse_id: string; quantity: number }
 
 export function InventoryAdjustForm({
   products,
-  warehouseId,
+  warehouseId: defaultWarehouseId,
+  warehouses = [],
   stockLevels,
 }: {
   products: Product[];
   warehouseId: string;
+  // 창고가 2개 이상이면 아래에 창고 선택 드롭다운이 뜨고, 1개면(대부분의
+  // 기존 테넌트) 예전처럼 이 기본값 그대로 조용히 쓰인다.
+  warehouses?: { id: string; name: string }[];
   stockLevels: StockLevel[];
 }) {
   const [state, formAction, pending] = useActionState(adjustInventory, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   useKeyShortcut("F7", submitRef);
+  const [warehouseId, setWarehouseId] = useState(defaultWarehouseId);
   const [productId, setProductId] = useState("");
   const [direction, setDirection] = useState<"increase" | "decrease">("increase");
   const [amount, setAmount] = useState(0);
@@ -61,8 +66,25 @@ export function InventoryAdjustForm({
   return (
     <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
       <input type="hidden" name="product_id" value={productId} />
-      <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="quantity" value={signedQuantity} />
+      {warehouses.length <= 1 ? (
+        <input type="hidden" name="warehouse_id" value={warehouseId} />
+      ) : (
+        <select
+          aria-label="창고"
+          name="warehouse_id"
+          value={warehouseId}
+          onChange={(e) => setWarehouseId(e.target.value)}
+          className="erp-input"
+          required
+        >
+          {warehouses.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </select>
+      )}
       <div className="md:col-span-2">
         <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
       </div>

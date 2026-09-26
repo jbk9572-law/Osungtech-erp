@@ -3,13 +3,19 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InventoryQrScanner } from "@/components/inventory-qr-scanner";
+import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import type { ScanProduct } from "@/lib/qr-count-scan";
 
-export default async function InventoryQrScanPage() {
+export default async function InventoryQrScanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ warehouseId?: string }>;
+}) {
+  const { warehouseId: warehouseIdParam } = await searchParams;
   const supabase = await createClient();
 
-  const [products, { data: warehouse }] = await Promise.all([
+  const [products, warehouses] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -17,16 +23,20 @@ export default async function InventoryQrScanPage() {
       spec: string | null;
       unit: string;
       base_package_qty: number | null;
-      inventory: { quantity: number }[];
+      inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, base_package_qty, inventory(quantity)")
+        .select("id, sku, name, spec, unit, base_package_qty, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
-    supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
   ]);
+
+  const selectedWarehouseId = warehouseIdParam || warehouses[0]?.id || "";
 
   const scanProducts: ScanProduct[] = products.map((p) => ({
     productId: p.id,
@@ -34,7 +44,7 @@ export default async function InventoryQrScanPage() {
     name: p.name,
     spec: p.spec,
     unit: p.unit,
-    systemQuantity: p.inventory?.[0]?.quantity ?? 0,
+    systemQuantity: p.inventory.find((inv) => inv.warehouse_id === selectedWarehouseId)?.quantity ?? 0,
     basePackageQty: p.base_package_qty,
   }));
 
@@ -51,9 +61,10 @@ export default async function InventoryQrScanPage() {
         <Link href="/inventory/count" className="erp-btn erp-btn-dark">
           ESC 목록 실사로
         </Link>
+        {warehouses.length > 1 && <WarehouseQuerySelect warehouses={warehouses} value={selectedWarehouseId} />}
       </div>
 
-      <InventoryQrScanner products={scanProducts} warehouseId={warehouse?.id ?? ""} />
+      <InventoryQrScanner products={scanProducts} warehouseId={selectedWarehouseId} />
     </div>
   );
 }

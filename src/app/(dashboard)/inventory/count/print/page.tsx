@@ -19,26 +19,34 @@ const cellStyle: React.CSSProperties = {
 export default async function InventoryCountPrintPage({
   searchParams,
 }: {
-  searchParams: Promise<{ onlyNonZero?: string }>;
+  searchParams: Promise<{ onlyNonZero?: string; warehouseId?: string }>;
 }) {
-  const { onlyNonZero } = await searchParams;
+  const { onlyNonZero, warehouseId } = await searchParams;
   const supabase = await createClient();
 
-  const products = await fetchAllRows<{
-    id: string;
-    sku: string;
-    name: string;
-    spec: string | null;
-    unit: string;
-    base_package_qty: number | null;
-    inventory: { quantity: number }[];
-  }>((from, to) =>
-    supabase
-      .from("products")
-      .select("id, sku, name, spec, unit, base_package_qty, inventory(quantity)")
-      .order("name")
-      .range(from, to),
-  );
+  const [products, warehouses] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      base_package_qty: number | null;
+      inventory: { quantity: number; warehouse_id: string }[];
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, base_package_qty, inventory(quantity, warehouse_id)")
+        .order("name")
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
+  ]);
+
+  const selectedWarehouseId = warehouseId || warehouses[0]?.id || "";
+  const selectedWarehouseName = warehouses.find((w) => w.id === selectedWarehouseId)?.name ?? "";
 
   const rows = products
     .map((p) => ({
@@ -48,7 +56,7 @@ export default async function InventoryCountPrintPage({
       spec: p.spec,
       unit: p.unit,
       basePackageQty: p.base_package_qty,
-      systemQuantity: p.inventory?.[0]?.quantity ?? 0,
+      systemQuantity: p.inventory.find((inv) => inv.warehouse_id === selectedWarehouseId)?.quantity ?? 0,
     }))
     .filter((r) => onlyNonZero !== "1" || r.systemQuantity !== 0);
 
@@ -62,7 +70,7 @@ export default async function InventoryCountPrintPage({
       </div>
 
       <div className="mb-3 flex items-end justify-between" style={{ color: "#000" }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700 }}>재고 실사 목록</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 700 }}>재고 실사 목록{selectedWarehouseName ? ` — ${selectedWarehouseName}` : ""}</h1>
         <div style={{ fontSize: 12 }}>
           기준일 {todayKstStr()} · {rows.length.toLocaleString()}개 품목
           {onlyNonZero === "1" && " (전산 재고 0 제외)"}

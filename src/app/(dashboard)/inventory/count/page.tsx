@@ -4,6 +4,7 @@ import { InventoryCountForm, type CountRow } from "@/components/inventory-count-
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
+import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 
@@ -37,13 +38,13 @@ function extractCountNote(note: string | null): string | null {
 export default async function InventoryCountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session?: string; verify?: string }>;
+  searchParams: Promise<{ session?: string; verify?: string; warehouseId?: string }>;
 }) {
-  const { session: sessionParam, verify: verifyParam } = await searchParams;
+  const { session: sessionParam, verify: verifyParam, warehouseId: warehouseIdParam } = await searchParams;
   const verifyRequested = verifyParam === "1";
   const supabase = await createClient();
 
-  const [products, { data: warehouse }, countTx] = await Promise.all([
+  const [products, warehouses, countTx] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -52,20 +53,17 @@ export default async function InventoryCountPage({
       unit: string;
       reorder_point: number | null;
       base_package_qty: number | null;
-      inventory: { quantity: number }[];
+      inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity)")
+        .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
-    supabase
-      .from("warehouses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
     // 재고실사(submitStockCount)가 남긴 조정만 대상으로 한다 — reference에
     // "stock_count:" 접두어를 붙여두는 게 이 화면을 위한 표식이다(actions.ts
     // 참고). 단발성 수기 조정(재고조정 화면)은 reference가 없어 여기 안 잡힌다.
@@ -101,21 +99,32 @@ export default async function InventoryCountPage({
       )
     : [];
 
+  // 실사는 실제로 물건을 세는 그 창고 하나를 대상으로 한다 — 창고가
+  // 1개면 그 창고, 2개 이상이면 쿼리 파라미터(?warehouseId=)로 고른
+  // 창고 기준으로 "전산 재고"를 계산한다(실사 진행 폼 제출도 이 창고로
+  // 간다).
+  const selectedWarehouseId = warehouseIdParam || warehouses[0]?.id || "";
+
   const rows: CountRow[] = products.map((p) => ({
     productId: p.id,
     sku: p.sku,
     name: p.name,
     spec: p.spec,
     unit: p.unit,
-    systemQuantity: p.inventory?.[0]?.quantity ?? 0,
+    systemQuantity: p.inventory.find((inv) => inv.warehouse_id === selectedWarehouseId)?.quantity ?? 0,
     basePackageQty: p.base_package_qty,
   }));
 
-  // 안전재고를 실제로 설정해둔(0보다 큰) 품목만 대상으로 한다 — 알림종/대시보드
-  // 배너(src/lib/notifications.ts)와 같은 기준이다. 이 화면은 어차피 전체
-  // 품목을 이미 불러와 놓은 상태라 별도 조회 없이 그대로 필터링한다.
+  // 안전재고 이하 경고는 실사 대상 창고와 무관하게 회사 전체(모든 창고
+  // 합계) 기준이다 — 알림종/대시보드 배너(src/lib/notifications.ts)와
+  // 같은 기준. 이 화면은 어차피 전체 품목을 이미 불러와 놓은 상태라
+  // 별도 조회 없이 그대로 필터링한다.
   const lowStockProducts = products
-    .map((p) => ({ name: p.name, quantity: p.inventory?.[0]?.quantity ?? 0, reorderPoint: p.reorder_point ?? 0 }))
+    .map((p) => ({
+      name: p.name,
+      quantity: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
+      reorderPoint: p.reorder_point ?? 0,
+    }))
     .filter((p) => p.reorderPoint > 0 && p.quantity <= p.reorderPoint);
 
   // apply_inventory_transaction 트리거와 완전히 같은 부호 규칙으로
@@ -137,7 +146,9 @@ export default async function InventoryCountPage({
       sku: p.sku,
       name: p.name,
       spec: p.spec,
-      cached: p.inventory?.[0]?.quantity ?? 0,
+      // allTx(계산 기준)가 창고 구분 없이 전체 거래를 다 더한 값이라,
+      // 비교 대상인 캐시 쪽도 창고 구분 없는 전체 합계여야 한다.
+      cached: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
       computed: computedByProduct.get(p.id) ?? 0,
     }))
     .filter((p) => Math.abs(p.cached - p.computed) > EPSILON);
@@ -501,8 +512,11 @@ export default async function InventoryCountPage({
         )}
       </div>
 
-      <h2 className="mb-2 mt-6 text-sm font-bold text-[var(--erp-text)]">새 실사 진행</h2>
-      <InventoryCountForm rows={rows} warehouseId={warehouse?.id ?? ""} />
+      <div className="mb-2 mt-6 flex items-center justify-between">
+        <h2 className="text-sm font-bold text-[var(--erp-text)]">새 실사 진행</h2>
+        {warehouses.length > 1 && <WarehouseQuerySelect warehouses={warehouses} value={selectedWarehouseId} />}
+      </div>
+      <InventoryCountForm rows={rows} warehouseId={selectedWarehouseId} />
     </div>
   );
 }

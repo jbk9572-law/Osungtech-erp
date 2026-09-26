@@ -18,7 +18,7 @@ export default async function InventoryPage({
   // 카테고리/공급처까지 조인하는 아래 그리드용 무거운 쿼리를 기다리지
   // 않고 먼저 렌더링할 수 있게 따로 가져온다. 그리드 자체는 그 무거운
   // 쿼리가 끝나는 대로 Suspense로 뒤이어 스트리밍된다.
-  const [pickerProducts, stockLevels, { data: warehouse }] = await Promise.all([
+  const [pickerProducts, stockLevels, warehouses] = await Promise.all([
     fetchAllRows<{
       id: string;
       sku: string;
@@ -36,7 +36,9 @@ export default async function InventoryPage({
     fetchAllRows<{ product_id: string; warehouse_id: string; quantity: number }>((from, to) =>
       supabase.from("inventory").select("product_id, warehouse_id, quantity").range(from, to),
     ),
-    supabase.from("warehouses").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle(),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
   ]);
 
   return (
@@ -65,7 +67,8 @@ export default async function InventoryPage({
         <div className="erp-detail-body">
           <InventoryAdjustForm
             products={pickerProducts}
-            warehouseId={warehouse?.id ?? ""}
+            warehouseId={warehouses[0]?.id ?? ""}
+            warehouses={warehouses}
             stockLevels={stockLevels}
           />
         </div>

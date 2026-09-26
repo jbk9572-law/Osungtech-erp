@@ -47,7 +47,7 @@ export default async function NewPurchasePage({
     applyDuePurchasePriceSchedules(supabase),
   ]);
 
-  const [suppliers, products, { data: warehouse }, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualSplitColWidths, paperCalcEnabled] =
+  const [suppliers, products, warehouses, customers, prices, supplierPrices, { data: history }, locationStockRows, baseColWidths, dualSplitColWidths, paperCalcEnabled] =
     await Promise.all([
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
@@ -68,12 +68,9 @@ export default async function NewPurchasePage({
           .order("name")
           .range(from, to),
       ),
-      supabase
-        .from("warehouses")
-        .select("id")
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle(),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+      ),
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("customers").select("id, name, notes").order("name").range(from, to),
       ),
@@ -159,7 +156,8 @@ export default async function NewPurchasePage({
         key={saved ?? "new"}
         suppliers={suppliers ?? []}
         products={products ?? []}
-        warehouseId={warehouse?.id ?? ""}
+        warehouseId={warehouses[0]?.id ?? ""}
+        warehouses={warehouses}
         productLocations={productLocations}
         customers={customers ?? []}
         prices={prices ?? []}

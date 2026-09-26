@@ -11,7 +11,7 @@ type ComponentInfo = {
   name: string;
   unit: string;
   qtyPerUnit: number;
-  currentStock: number;
+  stockByWarehouse: Record<string, number>;
 };
 type ProducibleProduct = {
   id: string;
@@ -23,12 +23,12 @@ type ProducibleProduct = {
 type WarehouseOption = { id: string; name: string };
 
 // 생산지시 등록 폼 — 완제품을 고르면 BOM에 등록된 구성품별 단위당
-// 소요량과 현재 재고(창고 구분 없이 전체 합계 — 지정 창고 하나만의
-// 재고가 아니라는 점을 캡션으로 명시한다)를 보여주고, 수량을 입력하면
-// 그 자리에서 필요수량을 다시 계산해 부족한 구성품에 배지를 띄운다.
-// 매출/매입 등록 화면의 "재고 부족" 표시와 같은 소프트 경고 방식 —
-// 등록 자체를 막지는 않는다(재고가 0 밑으로 내려가도 DB에서 막지 않는
-// 기존 정책과 동일).
+// 소요량과 현재 재고를 보여주고, 수량을 입력하면 그 자리에서 필요수량을
+// 다시 계산해 부족한 구성품에 배지를 띄운다. 실제로 재고가 빠지는 곳은
+// 아래에서 고른 그 창고 하나뿐이라, 현재재고도 창고를 바꿀 때마다 그
+// 창고 기준으로 다시 계산한다. 매출/매입 등록 화면의 "재고 부족" 표시와
+// 같은 소프트 경고 방식 — 등록 자체를 막지는 않는다(재고가 0 밑으로
+// 내려가도 DB에서 막지 않는 기존 정책과 동일).
 export function WorkOrderForm({
   action,
   producibleProducts,
@@ -45,6 +45,7 @@ export function WorkOrderForm({
   useKeyShortcut("F7", submitRef);
 
   const [productId, setProductId] = useState(producibleProducts[0]?.id ?? "");
+  const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id ?? "");
   const [quantity, setQuantity] = useState("1");
 
   const selected = useMemo(
@@ -54,12 +55,16 @@ export function WorkOrderForm({
   const qtyNum = Number(quantity) || 0;
   const requirements = useMemo(
     () =>
-      (selected?.components ?? []).map((c) => ({
-        ...c,
-        needed: c.qtyPerUnit * qtyNum,
-        short: c.qtyPerUnit * qtyNum > c.currentStock,
-      })),
-    [selected, qtyNum]
+      (selected?.components ?? []).map((c) => {
+        const currentStock = warehouseId ? (c.stockByWarehouse[warehouseId] ?? 0) : 0;
+        return {
+          ...c,
+          currentStock,
+          needed: c.qtyPerUnit * qtyNum,
+          short: c.qtyPerUnit * qtyNum > currentStock,
+        };
+      }),
+    [selected, qtyNum, warehouseId]
   );
   const hasShortage = requirements.some((r) => r.short);
 
@@ -93,7 +98,14 @@ export function WorkOrderForm({
       </div>
       <div className="erp-field">
         <label htmlFor="wo-warehouse">창고</label>
-        <select id="wo-warehouse" name="warehouse_id" className="erp-input w-full" required defaultValue="">
+        <select
+          id="wo-warehouse"
+          name="warehouse_id"
+          className="erp-input w-full"
+          required
+          value={warehouseId}
+          onChange={(e) => setWarehouseId(e.target.value)}
+        >
           <option value="" disabled>
             선택
           </option>
@@ -132,7 +144,7 @@ export function WorkOrderForm({
       {requirements.length > 0 && (
         <div className="md:col-span-4">
           <PageGuide className="mb-1.5">
-            구성품 소요량입니다. 현재재고는 창고 구분 없는 전체 합계 기준입니다.
+            구성품 소요량입니다. 현재재고는 위에서 고른 창고 기준입니다.
           </PageGuide>
           <div className="erp-grid-wrap">
             <table className="erp-grid">

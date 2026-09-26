@@ -38,13 +38,18 @@ export default async function NewWorkOrderPage() {
   const { data: inventoryRows } = componentProductIds.length
     ? await supabase
         .from("inventory")
-        .select("product_id, quantity")
+        .select("product_id, warehouse_id, quantity")
         .in("product_id", componentProductIds)
-    : { data: [] as { product_id: string; quantity: number }[] };
+    : { data: [] as { product_id: string; warehouse_id: string; quantity: number }[] };
 
-  const stockByProduct = new Map<string, number>();
+  // 창고별 재고를 그대로 들고 있는다 — 실제 소요량 체크는 사용자가 고른
+  // 특정 창고 하나만 대상이라(생산지시가 그 창고에서만 재고를 빼므로),
+  // 화면에 보여줄 "현재재고"도 선택한 창고 기준이어야 정확하다.
+  const stockByProduct = new Map<string, Record<string, number>>();
   for (const row of inventoryRows ?? []) {
-    stockByProduct.set(row.product_id, (stockByProduct.get(row.product_id) ?? 0) + Number(row.quantity));
+    const byWarehouse = stockByProduct.get(row.product_id) ?? {};
+    byWarehouse[row.warehouse_id] = (byWarehouse[row.warehouse_id] ?? 0) + Number(row.quantity);
+    stockByProduct.set(row.product_id, byWarehouse);
   }
 
   const bomByParent = new Map<string, typeof bomRows>();
@@ -73,7 +78,7 @@ export default async function NewWorkOrderPage() {
               name: component.name,
               unit: component.unit,
               qtyPerUnit: Number(c.quantity_per_unit),
-              currentStock: stockByProduct.get(component.id) ?? 0,
+              stockByWarehouse: stockByProduct.get(component.id) ?? {},
             };
           })
           .filter((c): c is NonNullable<typeof c> => c !== null),

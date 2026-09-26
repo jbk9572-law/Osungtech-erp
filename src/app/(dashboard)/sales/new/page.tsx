@@ -21,7 +21,7 @@ export default async function NewSalePage({
   // 자동입력이 예약된 인상/인하가 있으면 그걸 바로 반영하게 한다.
   await applyDuePriceSchedules(supabase);
 
-  const [customers, products, { data: warehouse }, prices, { data: history }, locationStockRows, gridColWidths, paperCalcEnabled] = await Promise.all([
+  const [customers, products, warehouses, prices, { data: history }, locationStockRows, gridColWidths, paperCalcEnabled] = await Promise.all([
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
       supabase.from("customers").select("id, name, notes").order("name").range(from, to),
     ),
@@ -33,20 +33,17 @@ export default async function NewSalePage({
       unit: string;
       price: number;
       base_package_qty: number | null;
-      inventory: { quantity: number }[];
+      inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity)")
+        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
-    supabase
-      .from("warehouses")
-      .select("id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
     fetchAllRows<{ customer_id: string; product_id: string; unit_price: number; notes: string | null }>(
       (from, to) =>
         supabase.from("customer_product_prices").select("customer_id, product_id, unit_price, notes").range(from, to),
@@ -129,9 +126,16 @@ export default async function NewSalePage({
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({
           ...p,
-          stock: p.inventory?.[0]?.quantity ?? 0,
+          stock: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
         }))}
-        warehouseId={warehouse?.id ?? ""}
+        stockByWarehouse={Object.fromEntries(
+          (products ?? []).map((p) => [
+            p.id,
+            Object.fromEntries(p.inventory.map((inv) => [inv.warehouse_id, Number(inv.quantity)])),
+          ]),
+        )}
+        warehouseId={warehouses[0]?.id ?? ""}
+        warehouses={warehouses}
         prices={prices ?? []}
         history={priceHistory}
         productLocations={productLocations}

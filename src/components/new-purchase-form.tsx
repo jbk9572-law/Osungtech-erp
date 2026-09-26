@@ -149,7 +149,8 @@ export function NewPurchaseForm({
   paperCalcEnabled = true,
   suppliers,
   products,
-  warehouseId,
+  warehouseId: defaultWarehouseId,
+  warehouses = [],
   productLocations = {},
   action = createPurchase,
   initial,
@@ -167,6 +168,10 @@ export function NewPurchaseForm({
   suppliers: Supplier[];
   products: Product[];
   warehouseId: string;
+  // 창고가 2개 이상이면 위 warehouseId는 "기본값"일 뿐이고 실제로는 이
+  // 목록에서 입고받을 창고를 직접 고른다 — 창고가 1개면 목록이 비어있어
+  // 선택 UI 없이 예전처럼 warehouseId 그대로 쓰인다.
+  warehouses?: { id: string; name: string }[];
   // 품목별 보관 위치 목록(2곳 이상인 품목만 저장 시 확인 모달을 띄우는 데
   // 쓰인다) — 페이지에서 미리 한 번에 내려받는다.
   productLocations?: Record<string, LocationOption[]>;
@@ -212,6 +217,7 @@ export function NewPurchaseForm({
   // 동일하게 계산 진입 버튼을 숨긴다(paper-calc-sync.ts의 isPaperCalcEnabled 참고).
   paperCalcEnabled?: boolean;
 }) {
+  const [warehouseId, setWarehouseId] = useState(initial?.warehouseId ?? defaultWarehouseId);
   const [supplierId, setSupplierId] = useState(
     initial?.supplierId ?? prefillSupplierId ?? "",
   );
@@ -988,7 +994,7 @@ export function NewPurchaseForm({
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
-      <input type="hidden" name="warehouse_id" value={warehouseId} />
+      {warehouses.length <= 1 && <input type="hidden" name="warehouse_id" value={warehouseId} />}
       <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
       <input
         type="hidden"
@@ -1156,6 +1162,25 @@ export function NewPurchaseForm({
               className="erp-input"
             />
           </div>
+          {warehouses.length > 1 && (
+            <div className="erp-field">
+              <label htmlFor="purchase-warehouse">입고창고</label>
+              <select
+                id="purchase-warehouse"
+                name="warehouse_id"
+                value={warehouseId}
+                onChange={(e) => setWarehouseId(e.target.value)}
+                className="erp-select"
+                required
+              >
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {!alsoCreateSale && (
             <div className="erp-field">
               <label aria-hidden="true">&nbsp;</label>

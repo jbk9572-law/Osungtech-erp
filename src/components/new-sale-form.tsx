@@ -144,8 +144,10 @@ export type SaleInitial = {
 
 export function NewSaleForm({
   customers,
-  products,
-  warehouseId,
+  products: rawProducts,
+  warehouseId: defaultWarehouseId,
+  warehouses = [],
+  stockByWarehouse = {},
   prices,
   history,
   productLocations = {},
@@ -160,6 +162,16 @@ export function NewSaleForm({
   customers: Customer[];
   products: Product[];
   warehouseId: string;
+  // 창고가 2개 이상이면 위 warehouseId는 "기본값"일 뿐이고, 실제로는
+  // 이 목록에서 사용자가 직접 고른다 — 창고가 1개(기존 테넌트 대부분)면
+  // 목록이 비어있거나 1개뿐이라 선택 UI 자체가 안 뜨고 예전과 동일하게
+  // warehouseId 그대로 쓰인다.
+  warehouses?: { id: string; name: string }[];
+  // 품목별로 창고마다 다른 현재 재고 — 선택한 창고가 바뀌면 아래 products
+  // 배열의 stock 필드도 그 창고 기준으로 다시 계산된다(오버셀 경고 등에
+  // 쓰는 그 stock 그대로다). 창고 선택 UI가 없는 화면(1창고)에서는 빈
+  // 객체로 넘어와 기존처럼 product.stock 값을 그대로 쓴다.
+  stockByWarehouse?: Record<string, Record<string, number>>;
   prices: CustomerPrice[];
   history: PriceHistoryEntry[];
   // 품목별 보관 위치 목록(2곳 이상인 품목만 저장 시 확인 모달을 띄우는 데
@@ -184,6 +196,14 @@ export function NewSaleForm({
   // 기본값 true로 기존 동작(SI 테넌트)을 그대로 유지한다.
   paperCalcEnabled?: boolean;
 }) {
+  const [warehouseId, setWarehouseId] = useState(initial?.warehouseId ?? defaultWarehouseId);
+  // 선택한 창고 기준으로 재고를 다시 계산한다 — products.find(...)를 쓰는
+  // 아래 모든 곳(오버셀 경고 등)이 이 값을 그대로 쓰므로, 창고를 바꾸면
+  // 화면 전체가 자동으로 그 창고 기준 재고로 갱신된다.
+  const products = useMemo(
+    () => rawProducts.map((p) => ({ ...p, stock: stockByWarehouse[p.id]?.[warehouseId] ?? p.stock ?? 0 })),
+    [rawProducts, stockByWarehouse, warehouseId],
+  );
   const [customerId, setCustomerId] = useState(initial?.customerId ?? "");
   const [orderDate, setOrderDate] = useState(
     // toISOString()은 UTC 기준이라, 자정~오전 9시(KST) 사이에는 오늘이 아니라
@@ -892,7 +912,7 @@ export function NewSaleForm({
       {initial?.id && <input type="hidden" name="id" value={initial.id} />}
       {backParam && <input type="hidden" name="back" value={backParam} />}
       <input type="hidden" name="doc_no" value={docNo} />
-      <input type="hidden" name="warehouse_id" value={warehouseId} />
+      {warehouses.length <= 1 && <input type="hidden" name="warehouse_id" value={warehouseId} />}
       <input
         type="hidden"
         name="payment_method"
@@ -1084,6 +1104,25 @@ export function NewSaleForm({
               className="erp-input"
             />
           </div>
+          {warehouses.length > 1 && (
+            <div className="erp-field">
+              <label htmlFor="sale-warehouse">출고창고</label>
+              <select
+                id="sale-warehouse"
+                name="warehouse_id"
+                value={warehouseId}
+                onChange={(e) => setWarehouseId(e.target.value)}
+                className="erp-select"
+                required
+              >
+                {warehouses.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="erp-field">
             <label aria-hidden="true">&nbsp;</label>
             <label
