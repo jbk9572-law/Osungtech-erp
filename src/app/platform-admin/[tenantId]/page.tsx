@@ -25,13 +25,20 @@ export default async function PlatformAdminTenantDetailPage({
 
   const { data: tenant } = await admin
     .from("tenants")
-    .select("id, name, slug, created_at, disabled_at, plan, plan_started_at, plan_expires_at, points_balance")
+    .select("id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance")
     .eq("id", tenantId)
     .maybeSingle();
 
   if (!tenant) {
     notFound();
   }
+
+  const { data: plans } = await admin
+    .from("platform_plans")
+    .select("plan_key, name")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .limit(200);
 
   const { data: pointTransactions } = await admin
     .from("point_transactions")
@@ -112,6 +119,8 @@ export default async function PlatformAdminTenantDetailPage({
               tenantId={tenant.id}
               disabled={tenant.disabled_at !== null}
               plan={tenant.plan}
+              planKey={tenant.plan_key}
+              plans={plans ?? []}
               planStartedAt={tenant.plan_started_at}
               planExpiresAt={tenant.plan_expires_at}
             />

@@ -33,6 +33,7 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
     title: string;
     status: string;
     doc_no: number | null;
+    doc_no_year: number | null;
     disclosure: string;
     created_at: string;
   }[] = [];
@@ -41,7 +42,7 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
     rows = await fetchAllRows((from, to) =>
       supabase
         .from("official_documents")
-        .select("id, title, status, doc_no, disclosure, created_at")
+        .select("id, title, status, doc_no, doc_no_year, disclosure, created_at")
         .eq("created_by", user!.id)
         .order("created_at", { ascending: false })
         .range(from, to),
@@ -59,7 +60,7 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
       ? await fetchAllRows((from, to) =>
           supabase
             .from("official_documents")
-            .select("id, title, status, doc_no, disclosure, created_at")
+            .select("id, title, status, doc_no, doc_no_year, disclosure, created_at")
             .in("id", ids)
             .order("created_at", { ascending: false })
             .range(from, to),
@@ -107,7 +108,7 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
               const status = STATUS_LABEL[row.status] ?? { label: row.status, tone: "muted" as const };
               return (
                 <ClickableRow key={row.id} href={`/official-documents/${row.id}`}>
-                  <td>{row.doc_no ?? "-"}</td>
+                  <td>{row.doc_no ? `${row.doc_no_year}-${row.doc_no}` : "-"}</td>
                   <td>{row.title}</td>
                   <td>{row.disclosure === "public" ? "공개" : row.disclosure === "partial" ? "부분공개" : "비공개"}</td>
                   <td>

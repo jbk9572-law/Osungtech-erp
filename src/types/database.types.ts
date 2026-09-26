@@ -847,6 +847,7 @@ export type Database = {
           body: string;
           status: string;
           doc_no: number | null;
+          doc_no_year: number | null;
           disclosure: string;
           disclosure_reason: string | null;
           visibility_scope: string;
@@ -868,6 +869,7 @@ export type Database = {
           body?: string;
           status?: string;
           doc_no?: number | null;
+          doc_no_year?: number | null;
           disclosure?: string;
           disclosure_reason?: string | null;
           visibility_scope?: string;
@@ -889,6 +891,7 @@ export type Database = {
           body?: string;
           status?: string;
           doc_no?: number | null;
+          doc_no_year?: number | null;
           disclosure?: string;
           disclosure_reason?: string | null;
           visibility_scope?: string;
@@ -991,6 +994,7 @@ export type Database = {
           disabled_features: string[];
           disabled_at: string | null;
           plan: string;
+          plan_key: string | null;
           plan_started_at: string | null;
           plan_expires_at: string | null;
           points_balance: number;
@@ -1003,6 +1007,7 @@ export type Database = {
           disabled_features?: string[];
           disabled_at?: string | null;
           plan?: string;
+          plan_key?: string | null;
           plan_started_at?: string | null;
           plan_expires_at?: string | null;
           points_balance?: number;
@@ -1015,6 +1020,7 @@ export type Database = {
           disabled_features?: string[];
           disabled_at?: string | null;
           plan?: string;
+          plan_key?: string | null;
           plan_started_at?: string | null;
           plan_expires_at?: string | null;
           points_balance?: number;

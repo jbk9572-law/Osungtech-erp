@@ -264,6 +264,39 @@ export async function updateTenantPlan(_prevState: FormState, formData: FormData
   return { success: "요금제 상태를 저장했습니다." };
 }
 
+// 이 회사가 실제로 구독 중인 요금제 상품(platform_plans.plan_key) 연결 —
+// 위 updateTenantPlan(trial/active/suspended)은 "지금 서비스를 정상
+// 이용 중인지" 상태값일 뿐, "어떤 요금제 상품을 쓰는지"와는 별개
+// 축이었다(migration 129 설계 그대로). 그래서 tenants ↔ platform_plans가
+// 전혀 연결돼 있지 않아, 테넌트 자신의 구독/결제 화면(settings/billing)이
+// 요금제 카탈로그를 보여줄 순 있어도 "이 중에 지금 뭘 쓰고 있는지"는
+// 표시할 방법이 없었다 — 전체 감사에서 발견. plan_key 컬럼(migration 153)을
+// 여기서 설정한다.
+export async function updateTenantPlanKey(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const planKey = String(formData.get("planKey") ?? "") || null;
+  if (!tenantId) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin.from("tenants").update({ plan_key: planKey }).eq("id", tenantId);
+  if (error) return { error: `변경에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "요금제 상품을 저장했습니다." };
+}
+
 // 특정 회사 소속 사용자의 비밀번호를 강제로 재설정한다. 그 회사 관리자가
 // 비밀번호를 잊어버려 본인 계정으로도, 같은 회사 다른 관리자 계정으로도
 // 로그인할 수 없을 때 쓰는 최후 수단이라 플랫폼 운영자 권한으로만 연다.

@@ -52,7 +52,7 @@ export default async function OfficialDocumentDetailPage({ params }: { params: P
 
   const { data: doc } = await supabase
     .from("official_documents")
-    .select("id, title, body, status, doc_no, disclosure, disclosure_reason, visibility_scope, retention, effective_date, internal_only, approval_document_id, created_by, created_at, sent_at, closed_at, profiles!created_by(full_name)")
+    .select("id, title, body, status, doc_no, doc_no_year, disclosure, disclosure_reason, visibility_scope, retention, effective_date, internal_only, approval_document_id, created_by, created_at, sent_at, closed_at, profiles!created_by(full_name)")
     .eq("id", id)
     .maybeSingle();
 
@@ -98,7 +98,7 @@ export default async function OfficialDocumentDetailPage({ params }: { params: P
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/official-documents" } }} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="flex items-center gap-2 text-lg font-bold text-[var(--erp-text)]">
-          공문관리 &gt; {doc.doc_no ? `#${doc.doc_no}` : "상세"}
+          공문관리 &gt; {doc.doc_no ? `#${doc.doc_no_year}-${doc.doc_no}` : "상세"}
           <GridBadge tone={status.tone}>{status.label}</GridBadge>
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { toggleTenantActive, updateTenantPlan, updateTenantPlanPeriod } from "@/app/platform-admin/actions";
+import { toggleTenantActive, updateTenantPlan, updateTenantPlanKey, updateTenantPlanPeriod } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { isPlanExpired } from "@/lib/tenant-plan";
 
@@ -21,17 +21,22 @@ export function TenantStatusControls({
   tenantId,
   disabled,
   plan,
+  planKey,
+  plans,
   planStartedAt,
   planExpiresAt,
 }: {
   tenantId: string;
   disabled: boolean;
   plan: string;
+  planKey: string | null;
+  plans: { plan_key: string; name: string }[];
   planStartedAt: string | null;
   planExpiresAt: string | null;
 }) {
   const [toggleState, toggleAction, togglePending] = useActionState(toggleTenantActive, undefined);
   const [planState, planAction, planPending] = useActionState(updateTenantPlan, undefined);
+  const [planKeyState, planKeyAction, planKeyPending] = useActionState(updateTenantPlanKey, undefined);
   const [periodState, periodAction, periodPending] = useActionState(updateTenantPlanPeriod, undefined);
 
   const isExpired = isPlanExpired(planExpiresAt);
@@ -58,6 +63,29 @@ export function TenantStatusControls({
           {planPending && <span className="erp-spinner" aria-hidden />}
         </form>
         <FormMessage state={planState} />
+      </div>
+
+      <div className="erp-field">
+        <label htmlFor="ts-plan-key">요금제 상품(구독)</label>
+        <form action={planKeyAction} className="flex items-center gap-2">
+          <input type="hidden" name="tenantId" value={tenantId} />
+          <select
+            id="ts-plan-key"
+            name="planKey"
+            defaultValue={planKey ?? ""}
+            className="erp-select"
+            onChange={(e) => e.currentTarget.form?.requestSubmit()}
+          >
+            <option value="">미지정</option>
+            {plans.map((p) => (
+              <option key={p.plan_key} value={p.plan_key}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          {planKeyPending && <span className="erp-spinner" aria-hidden />}
+        </form>
+        <FormMessage state={planKeyState} />
       </div>
 
       <div className="erp-field">

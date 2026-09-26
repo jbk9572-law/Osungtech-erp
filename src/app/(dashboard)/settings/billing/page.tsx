@@ -15,7 +15,7 @@ export default async function BillingPage() {
   const supabase = await createClient();
 
   const [{ data: tenant }, { data: plans }] = await Promise.all([
-    supabase.from("tenants").select("name, plan, plan_expires_at").maybeSingle(),
+    supabase.from("tenants").select("name, plan, plan_key, plan_expires_at").maybeSingle(),
     supabase
       .from("platform_plans")
       .select("plan_key, name, monthly_price, description")
@@ -71,21 +71,31 @@ export default async function BillingPage() {
             </p>
           ) : (
             <div className="flex flex-col gap-3">
-              {plans.map((p) => (
-                <div key={p.plan_key} className="rounded border p-3" style={{ borderColor: "var(--erp-border)" }}>
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold">{p.name}</span>
-                    <span className="text-sm font-bold" style={{ color: "var(--erp-primary)" }}>
-                      {p.monthly_price > 0 ? `월 ${p.monthly_price.toLocaleString()}원` : "무료"}
-                    </span>
+              {plans.map((p) => {
+                const isCurrent = tenant?.plan_key === p.plan_key;
+                return (
+                  <div
+                    key={p.plan_key}
+                    className="rounded border p-3"
+                    style={{ borderColor: isCurrent ? "var(--erp-primary)" : "var(--erp-border)", borderWidth: isCurrent ? 2 : 1 }}
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2 text-sm font-bold">
+                        {p.name}
+                        {isCurrent && <GridBadge tone="ok">현재 이용중</GridBadge>}
+                      </span>
+                      <span className="text-sm font-bold" style={{ color: "var(--erp-primary)" }}>
+                        {p.monthly_price > 0 ? `월 ${p.monthly_price.toLocaleString()}원` : "무료"}
+                      </span>
+                    </div>
+                    {p.description && (
+                      <p className="whitespace-pre-line text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                        {p.description}
+                      </p>
+                    )}
                   </div>
-                  {p.description && (
-                    <p className="whitespace-pre-line text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                      {p.description}
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <PageGuide className="mt-3 mb-0">
