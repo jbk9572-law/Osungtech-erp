@@ -5,9 +5,11 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { EmployeePayForm } from "@/components/employee-pay-form";
 import { setEmployeePaySetting } from "@/app/(dashboard)/hr/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function EmployeePaySettingsPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "hr");
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {

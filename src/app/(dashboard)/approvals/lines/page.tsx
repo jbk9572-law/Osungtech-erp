@@ -7,9 +7,11 @@ import { CloseButton } from "@/components/erp/close-button";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { deleteApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function ApprovalLinePresetsPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "approvals");
   const presets = await fetchAllRows<{
     id: string;
     name: string;

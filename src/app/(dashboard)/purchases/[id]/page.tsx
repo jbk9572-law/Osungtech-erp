@@ -102,6 +102,7 @@ export default async function PurchaseDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
+          F9: { href: `/purchases/${id}/print` },
           ...(allowManage && { F4: { href: editHref } }),
           Escape: { href: closeHref },
         }}
@@ -112,6 +113,9 @@ export default async function PurchaseDetailPage({
           {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={`/purchases/${id}/print`} className="erp-btn">
+            F9 명세표
+          </Link>
           {allowManage && (
             <Link href={editHref} className="erp-btn">
               F4 수정

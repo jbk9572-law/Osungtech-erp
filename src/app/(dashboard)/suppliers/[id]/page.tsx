@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerForm } from "@/components/partner-form";
 import { SupplierPriceForm } from "@/components/supplier-price-form";
@@ -108,12 +109,21 @@ export default async function SupplierDetailPage({
           <span className="erp-detail-tab active">미지급금 현황</span>
         </div>
         <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
-            <span>매입 누계: {balance.totalPurchases.toLocaleString()}원</span>
-            <span>지급 누계: {balance.totalPaid.toLocaleString()}원</span>
-            <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
-              잔액: {balance.balance.toLocaleString()}원
-            </span>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <div className="flex flex-wrap gap-x-6 gap-y-1">
+              <span>매입 누계: {balance.totalPurchases.toLocaleString()}원</span>
+              <span>지급 누계: {balance.totalPaid.toLocaleString()}원</span>
+              <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
+                잔액: {balance.balance.toLocaleString()}원
+              </span>
+            </div>
+            <Link
+              href={`/reports/monthly/company?company=${encodeURIComponent(`s:${supplier.id}`)}`}
+              className="text-xs underline"
+              style={{ color: "var(--erp-primary)" }}
+            >
+              전체거래내역 보기 →
+            </Link>
           </div>
 
           {balance.unpaidOrders.length > 0 && (

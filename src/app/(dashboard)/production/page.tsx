@@ -7,6 +7,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { deleteWorkOrder } from "@/app/(dashboard)/production/actions";
 import { matchesSearch } from "@/lib/search-match";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function ProductionPage({
   searchParams,
@@ -19,6 +20,10 @@ export default async function ProductionPage({
   const effectiveFrom = from || todayStr();
   const effectiveTo = to || todayStr();
   const supabase = await createClient();
+  // 메뉴에서는 이미 가려지지만, URL을 직접 쳐서 들어오는 경우까지 막으려면
+  // 화면 진입 자체를 여기서 한 번 더 확인해야 한다(paper-calc/page.tsx와
+  // 동일한 방식 — 전체 감사에서 이 화면엔 이 검사가 빠져 있던 걸 발견).
+  await requireFeatureEnabled(supabase, "production");
 
   const { data: rawRows } = await supabase
     .from("work_orders")

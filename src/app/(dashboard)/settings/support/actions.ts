@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 
-// 고객지원 문의 등록 — 답변은 플랫폼 운영자만 reply_support_ticket()
+// 운영자 문의 등록 — 답변은 플랫폼 운영자만 reply_support_ticket()
 // RPC로 남길 수 있다(migration 136). 일반 사용자는 등록/조회만 한다.
 export async function createSupportTicket(_prevState: FormState, formData: FormData): Promise<FormState> {
   const subject = String(formData.get("subject") ?? "").trim();

@@ -25,7 +25,7 @@ export default async function SupportPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <ListPageHeader title="환경설정 > 고객지원" />
+      <ListPageHeader title="환경설정 > 운영자 문의" />
       <PageGuide>
         서비스 이용 중 궁금한 점이나 문제가 있으면 아래에 남겨주세요. 플랫폼 운영자가 확인 후 답변을
         등록하면 이 화면에 그대로 표시됩니다.

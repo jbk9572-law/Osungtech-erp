@@ -8,9 +8,11 @@ import { DeleteButton } from "@/components/delete-button";
 import { deleteActivity } from "@/app/(dashboard)/sales-activities/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function SalesActivitiesPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "crm");
   const today = todayKstStr();
 
   const [customers, { data: activities }] = await Promise.all([

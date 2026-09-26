@@ -32,7 +32,7 @@ export default async function BillingPage() {
       <ListPageHeader title="환경설정 > 구독/결제" />
       <PageGuide>
         현재 이용 중인 요금제 정보입니다. 아직 온라인 결제 연동 전이라 요금제 변경이나 결제 관련
-        문의는 고객지원 채널로 남겨주시면 운영자가 직접 처리해드립니다.
+        문의는 운영자 문의 채널로 남겨주시면 운영자가 직접 처리해드립니다.
       </PageGuide>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
@@ -91,7 +91,7 @@ export default async function BillingPage() {
           <PageGuide className="mt-3 mb-0">
             요금제 변경, 결제 수단 등록은{" "}
             <Link href="/settings/support" className="underline" style={{ color: "var(--erp-primary)" }}>
-              고객지원 문의
+              운영자 문의
             </Link>
             로 남겨주세요.
           </PageGuide>

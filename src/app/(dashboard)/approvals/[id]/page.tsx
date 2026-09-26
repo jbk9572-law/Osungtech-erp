@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
@@ -16,6 +17,19 @@ const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "dange
   recalled: { label: "회수됨", tone: "muted" },
 };
 
+// 결재 상세 화면에서 이 기안이 실제로 어느 화면(원본 레코드)에서 나온
+// 건지 바로 갈 수 있게 한다 — 예전엔 제출 당시 텍스트(title/content)만
+// 보여줄 뿐, 그 뒤의 연차 신청/구매요청/지급결의서/공문 화면으로 갈
+// 방법이 없었다. 연차/근태 정정은 개별 상세 페이지가 없어 목록 화면인
+// hr/attendance로 보낸다.
+const SOURCE_LINK: Record<string, { label: string; href: (id: string) => string }> = {
+  leave_request: { label: "연차 신청 화면 열기", href: () => "/hr/attendance" },
+  attendance_correction: { label: "근태 정정 화면 열기", href: () => "/hr/attendance" },
+  purchase_request: { label: "구매요청 원본 열기", href: (id) => `/purchase-requests/${id}` },
+  payment_request: { label: "지급결의서 원본 열기", href: (id) => `/reports/payment-requests/${id}` },
+  official_document: { label: "공문 원본 열기", href: (id) => `/official-documents/${id}` },
+};
+
 export default async function ApprovalDocumentDetailPage({
   params,
 }: {
@@ -28,7 +42,9 @@ export default async function ApprovalDocumentDetailPage({
   const [{ data: doc }, { data: steps }, { data: delegations }] = await Promise.all([
     supabase
       .from("approval_documents")
-      .select("id, title, content, status, created_at, decided_at, recalled_at, created_by, profiles!created_by(full_name)")
+      .select(
+        "id, title, content, status, created_at, decided_at, recalled_at, created_by, source_type, source_id, profiles!created_by(full_name)",
+      )
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -102,6 +118,15 @@ export default async function ApprovalDocumentDetailPage({
           <span className="erp-detail-tab active">기안 내용</span>
         </div>
         <div className="erp-detail-body">
+          {doc.source_type && doc.source_id && SOURCE_LINK[doc.source_type] && (
+            <Link
+              href={SOURCE_LINK[doc.source_type].href(doc.source_id)}
+              className="erp-btn"
+              style={{ display: "inline-flex", marginBottom: 12 }}
+            >
+              {SOURCE_LINK[doc.source_type].label} →
+            </Link>
+          )}
           <p style={{ whiteSpace: "pre-wrap" }}>{doc.content || "(내용 없음)"}</p>
         </div>
       </div>

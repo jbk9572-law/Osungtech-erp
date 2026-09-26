@@ -7,9 +7,11 @@ import { CloseButton } from "@/components/erp/close-button";
 import { ApprovalMatrixRuleSelect } from "@/components/approval-matrix-rule-select";
 import { setApprovalMatrixRule } from "@/app/(dashboard)/approvals/matrix/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function ApprovalMatrixPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "approvals");
   const { isAdmin } = await getCurrentActor(supabase);
 
   const [templates, presets, rules] = await Promise.all([

@@ -5,11 +5,13 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { PayrollRateSettingsForm } from "@/components/payroll-rate-settings-form";
 import { setPayrollRateSettings } from "@/app/(dashboard)/hr/actions";
 import { todayKstStr } from "@/lib/kst-date";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 const CONFIRM_STALE_DAYS = 180;
 
 export default async function PayrollSettingsPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "hr");
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {

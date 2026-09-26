@@ -5,6 +5,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClickableRow } from "@/components/clickable-row";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" | "info" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -24,6 +25,7 @@ const TABS = [
 // 똑같아서 공용 서버 컴포넌트로 뺐다 — 각 page.tsx는 box만 다르게 넘긴다.
 export async function OfficialDocumentsList({ box }: { box: "mine" | "received" }) {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "official_documents");
   const user = await getUser();
 
   let rows: {

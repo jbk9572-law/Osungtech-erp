@@ -9,9 +9,11 @@ import { setLeaveBalance, setHireDate, sendLeavePromotionNotice } from "@/app/(d
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
 import { calcStatutoryAnnualLeaveDays, leavePromotionWindow } from "@/lib/leave-accrual";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function LeaveBalancesPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "hr");
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {

@@ -1511,42 +1511,6 @@ a.erp-detail-tab:hover:not(.active) {
   }
 }
 
-/* 보관위치(랙) 배치도 — 가운데 통로를 기준으로 좌/우 랙 목록을 나란히
-   보여주는 3단 그리드. 좁은 화면에서는 통로를 가로 구분선으로 바꾸고
-   좌/우 목록을 위아래로 쌓는다. */
-.erp-locations-floor-grid {
-  display: grid;
-  grid-template-columns: 1fr 60px 1fr;
-  gap: 14px;
-}
-
-.erp-locations-aisle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  writing-mode: vertical-rl;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 4px;
-  color: var(--erp-text-muted);
-  border: 1px dashed var(--erp-border);
-  border-radius: 0;
-  background: var(--erp-bg-subtle);
-  padding: 8px 0;
-}
-
-@media (max-width: 640px) {
-  .erp-locations-floor-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .erp-locations-aisle {
-    writing-mode: horizontal-tb;
-    letter-spacing: 2px;
-    padding: 4px 0;
-  }
-}
-
 /* 월별리포트/할일관리/공지사항 상단의 4칸 요약 카드 — 월별리포트/todos
    페이지, announcement-grid-table.tsx 세 곳이 똑같은 인라인 스타일
    (display:grid, repeat(4,1fr), gap:10, marginBottom:12)을 각자 들고
@@ -1917,30 +1881,6 @@ a.erp-detail-tab:hover:not(.active) {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--erp-text-muted);
-}
-
-.erp-expand-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  margin: -3px 2px -3px -6px;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: none;
-  color: var(--erp-text-muted);
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-  vertical-align: middle;
-}
-
-.erp-expand-toggle:hover {
-  background: var(--erp-hover);
-  color: var(--erp-text);
 }
 
 @keyframes erp-nav-overlay-in {

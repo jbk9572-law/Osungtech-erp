@@ -4,9 +4,11 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClickableRow } from "@/components/clickable-row";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function DocumentsPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "hr");
 
   // document_instances_select RLS가 이미 "내가 만들었거나 나에 대한
   // 문서 또는 관리자"로 걸러준다. 화면 자체에도 상한을 둔다.

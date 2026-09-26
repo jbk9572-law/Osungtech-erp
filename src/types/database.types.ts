@@ -1187,6 +1187,8 @@ export type Database = {
           recalled_at: string | null;
           draft_approver_ids: string[];
           draft_reference_ids: string[];
+          source_type: string | null;
+          source_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1199,6 +1201,8 @@ export type Database = {
           recalled_at?: string | null;
           draft_approver_ids?: string[];
           draft_reference_ids?: string[];
+          source_type?: string | null;
+          source_id?: string | null;
         };
         Update: {
           id?: string;
@@ -1211,6 +1215,8 @@ export type Database = {
           recalled_at?: string | null;
           draft_approver_ids?: string[];
           draft_reference_ids?: string[];
+          source_type?: string | null;
+          source_id?: string | null;
         };
         Relationships: [
           {

@@ -7,6 +7,7 @@ import { GeneratePayrollForm } from "@/components/generate-payroll-form";
 import { ConfirmPayslipButton } from "@/components/confirm-payslip-button";
 import { generatePayroll, confirmPayslip } from "@/app/(dashboard)/hr/actions";
 import { todayKstStr } from "@/lib/kst-date";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function PayrollPage({
   searchParams,
@@ -14,6 +15,7 @@ export default async function PayrollPage({
   searchParams: Promise<{ pay_month?: string }>;
 }) {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "hr");
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {

@@ -5,6 +5,7 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { ClickableRow } from "@/components/clickable-row";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   pending: { label: "결재중", tone: "warn" },
@@ -30,6 +31,7 @@ export default async function ApprovalsPage({
   const activeTab = TABS.some((t) => t.key === statusParam) ? statusParam! : "all";
 
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "approvals");
   const user = await getUser();
 
   // RLS(approval_documents_select)가 이미 "본인 기안 또는 본인이 결재선에

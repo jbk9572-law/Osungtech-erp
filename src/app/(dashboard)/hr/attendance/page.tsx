@@ -25,6 +25,7 @@ import { buildOrgTree } from "@/lib/org-chart";
 import { haversineDistanceMeters } from "@/lib/geo";
 import { LEAVE_UNIT_LABEL, type LeaveUnit } from "@/lib/leave-unit";
 import { getWeekRange, sumWorkedHours, weeklyHoursTone, WEEKLY_HOURS_WARNING } from "@/lib/weekly-hours";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -34,6 +35,7 @@ const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "dange
 
 export default async function AttendancePage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "hr");
   const user = await getUser();
   const { isAdmin } = await getCurrentActor(supabase);
   const today = todayKstStr();

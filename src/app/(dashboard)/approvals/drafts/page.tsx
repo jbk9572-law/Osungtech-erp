@@ -6,9 +6,11 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { CloseButton } from "@/components/erp/close-button";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { deleteApprovalDraft } from "@/app/(dashboard)/approvals/actions";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 export default async function ApprovalDraftsPage() {
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "approvals");
   const user = await getUser();
 
   // RLS(approval_documents_select)가 created_by=본인 조건을 이미 걸어주지만,

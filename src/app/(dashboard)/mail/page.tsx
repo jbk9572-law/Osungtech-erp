@@ -6,6 +6,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { SyncMailButton } from "@/components/mail/sync-mail-button";
 import { ComposeMailButton } from "@/components/mail/compose-mail";
 import { MarkAsRead } from "@/components/mail/mark-as-read";
+import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 
 type Folder = "INBOX" | "SENT";
 
@@ -29,6 +30,7 @@ export default async function MailPage({
 
   const user = await getUser();
   const supabase = await createClient();
+  await requireFeatureEnabled(supabase, "mail");
 
   const { data: account } = user
     ? await supabase.from("mail_accounts").select("id, email_address").eq("user_id", user.id).maybeSingle()
