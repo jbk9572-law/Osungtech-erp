@@ -21,7 +21,7 @@ export default async function DocumentsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/hr/documents/new" }, Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 문서함</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href="/hr/documents/new" className="erp-btn erp-btn-primary">

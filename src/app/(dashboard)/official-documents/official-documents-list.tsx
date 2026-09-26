@@ -71,7 +71,7 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</h1>
         <Link href="/official-documents/new" className="erp-btn erp-btn-primary">
           + 새 공문

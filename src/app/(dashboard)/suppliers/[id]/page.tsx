@@ -76,7 +76,7 @@ export default async function SupplierDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/suppliers" } }} />
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">{supplier.name}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <DeleteButton

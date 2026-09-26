@@ -96,7 +96,7 @@ export default async function OfficialDocumentDetailPage({ params }: { params: P
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/official-documents" } }} />
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 erp-detail-header-row">
         <h1 className="flex items-center gap-2 text-lg font-bold text-[var(--erp-text)]">
           공문관리 &gt; {doc.doc_no ? `#${doc.doc_no_year}-${doc.doc_no}` : "상세"}
           <GridBadge tone={status.tone}>{status.label}</GridBadge>
