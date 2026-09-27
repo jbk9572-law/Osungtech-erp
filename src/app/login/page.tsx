@@ -18,13 +18,18 @@ const REMEMBER_KEY = "nest-erp-remember-login";
 function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
+  const signupCompanyCode = searchParams.get("signupCompanyCode");
+  const signupUsername = searchParams.get("signupUsername");
   const [state, formAction, pending] = useActionState(login, undefined);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberLogin, setRememberLogin] = useState(false);
-  const [savedCompanyCode, setSavedCompanyCode] = useState("");
-  const [savedUsername, setSavedUsername] = useState("");
+  const [savedCompanyCode, setSavedCompanyCode] = useState(signupCompanyCode ?? "");
+  const [savedUsername, setSavedUsername] = useState(signupUsername ?? "");
 
   useEffect(() => {
+    // 방금 회원가입을 마치고 넘어온 경우엔 그 값이 우선이다 — 저장된 값을
+    // 덮어쓰지 않는다.
+    if (signupCompanyCode || signupUsername) return;
     try {
       const stored = window.localStorage.getItem(REMEMBER_KEY);
       if (stored) {
@@ -37,7 +42,7 @@ function LoginForm() {
     } catch {
       // 손상된 값은 무시 — 그냥 빈 폼으로 시작한다.
     }
-  }, []);
+  }, [signupCompanyCode, signupUsername]);
 
   function handleSubmit(formData: FormData) {
     const companyCode = String(formData.get("companyCode") ?? "");
@@ -77,6 +82,11 @@ function LoginForm() {
         <div className="flex flex-1 flex-col justify-between p-7">
           <form action={handleSubmit} className="flex flex-1 flex-col justify-center gap-3">
             {next && <input type="hidden" name="next" value={next} />}
+            {(signupCompanyCode || signupUsername) && (
+              <p className="rounded-sm bg-[var(--erp-success-bg)] px-3 py-2 text-xs font-medium text-[var(--erp-success)]">
+                가입이 완료되었습니다. 아래 정보로 로그인해주세요.
+              </p>
+            )}
             <div>
               <label htmlFor="companyCode" className="mb-1 block text-xs font-medium text-[#6b7280]">
                 회사코드
@@ -155,7 +165,14 @@ function LoginForm() {
             </button>
           </form>
 
-          <div className="flex justify-between border-t border-[#eef0f3] pt-2 text-[10px] text-[#6b7280]">
+          <p className="text-center text-xs text-[#6b7280]">
+            아직 계정이 없으신가요?{" "}
+            <Link href="/signup" className="font-medium text-[#132944] underline">
+              회원가입
+            </Link>
+          </p>
+
+          <div className="mt-2 flex justify-between border-t border-[#eef0f3] pt-2 text-[10px] text-[#6b7280]">
             <span>ELVONIX v1.0</span>
             <span className="flex gap-2">
               <Link href="/terms" className="underline">

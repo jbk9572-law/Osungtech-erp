@@ -11,7 +11,12 @@ import { NextResponse, type NextRequest } from "next/server";
 // URL에 담긴 개인별 비밀 토큰만으로 주기적으로 요청하는 ICS 구독 피드라,
 // 이 경로 자체는 통과시켜야 한다 — 인증은 그 라우트 핸들러 안에서 토큰으로
 // 직접 확인한다(src/app/api/calendar/feed/route.ts).
-const PUBLIC_PATHS = ["/login", "/auth", "/demo", "/api/calendar/feed"];
+// "/signup"은 공개 회원가입 화면이라 로그인 전 상태에서 접근 가능해야 한다.
+// "/terms"/"/privacy"는 로그인 화면 자체(비로그인 상태)에서 링크로 노출되는
+// 약관/개인정보처리방침 화면인데 여기 빠져 있어서 클릭하면 /login으로
+// 되튕겨나가는 버그가 있었다 — 같은 "로그인 화면에서 링크로 노출되는데
+// PUBLIC_PATHS엔 없는" 패턴이라 같이 고친다.
+const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/terms", "/privacy"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

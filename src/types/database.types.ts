@@ -998,6 +998,7 @@ export type Database = {
           plan_started_at: string | null;
           plan_expires_at: string | null;
           points_balance: number;
+          contact_email: string | null;
         };
         Insert: {
           id?: string;
@@ -1011,6 +1012,7 @@ export type Database = {
           plan_started_at?: string | null;
           plan_expires_at?: string | null;
           points_balance?: number;
+          contact_email?: string | null;
         };
         Update: {
           id?: string;
@@ -1024,6 +1026,25 @@ export type Database = {
           plan_started_at?: string | null;
           plan_expires_at?: string | null;
           points_balance?: number;
+          contact_email?: string | null;
+        };
+        Relationships: [];
+      };
+      signup_attempts: {
+        Row: {
+          id: number;
+          ip: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          ip: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          ip?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
