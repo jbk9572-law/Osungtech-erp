@@ -18,6 +18,7 @@ import {
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
+import { formatNumber } from "@/lib/format-number";
 
 type DisplayRow = PurchaseRow;
 
@@ -386,7 +387,7 @@ export default async function PurchasesPage({
         }}
       >
         {from ? "" : `날짜를 지정하지 않으면 오늘(${effectiveFrom})만 표시됩니다. `}
-        최근 {limit.toLocaleString()}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+        최근 {formatNumber(limit)}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
       <div className="erp-toolbar">
@@ -417,7 +418,7 @@ export default async function PurchasesPage({
       {hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}줄)
+            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>
         </div>
       )}

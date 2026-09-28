@@ -8,6 +8,7 @@ import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { GridBadge } from "@/components/grid/badge";
 import { PushSubscribeToggle } from "@/components/erp/push-subscribe-toggle";
+import { formatNumber } from "@/lib/format-number";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 export type DueTodoItem = {
@@ -145,8 +146,8 @@ export function NotificationBell({
                       color: "var(--erp-text-muted)",
                     }}
                   >
-                    현재 {p.quantity.toLocaleString()} / 기준{" "}
-                    {p.reorderPoint.toLocaleString()}
+                    현재 {formatNumber(p.quantity)} / 기준{" "}
+                    {formatNumber(p.reorderPoint)}
                   </span>
                 </button>
               </div>

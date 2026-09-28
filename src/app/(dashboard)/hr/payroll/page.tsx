@@ -16,6 +16,7 @@ import {
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { formatNumber } from "@/lib/format-number";
 
 const CONFIRM_STALE_DAYS = 180;
 
@@ -189,12 +190,12 @@ export default async function PayrollPage({
                     {(payslips ?? []).map((p) => (
                       <tr key={p.id}>
                         <td>{p.profiles?.full_name ?? "-"}</td>
-                        <td className="num">{Number(p.base_pay).toLocaleString()}</td>
+                        <td className="num">{formatNumber(Number(p.base_pay))}</td>
                         <td className="num" style={{ color: "var(--erp-danger)" }}>
-                          -{Number(p.total_deduction).toLocaleString()}
+                          -{formatNumber(Number(p.total_deduction))}
                         </td>
                         <td className="num" style={{ fontWeight: 700 }}>
-                          {Number(p.net_pay).toLocaleString()}
+                          {formatNumber(Number(p.net_pay))}
                         </td>
                         <td>
                           <GridBadge tone={p.status === "confirmed" ? "ok" : "warn"}>

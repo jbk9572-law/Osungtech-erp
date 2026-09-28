@@ -5,6 +5,7 @@ import { DetailPageHeader } from "@/components/erp/page-header";
 import { DeleteButton } from "@/components/delete-button";
 import { CloseButton } from "@/components/erp/close-button";
 import { deleteStockTransfer } from "@/app/(dashboard)/inventory/transfers/actions";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function StockTransferDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -71,7 +72,7 @@ export default async function StockTransferDetailPage({ params }: { params: Prom
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.products?.spec ?? "-"}</td>
                 <td className="num">
-                  {Number(item.quantity).toLocaleString()} {item.products?.unit ?? ""}
+                  {formatNumber(Number(item.quantity))} {item.products?.unit ?? ""}
                 </td>
                 <td>{item.remark ?? "-"}</td>
               </tr>

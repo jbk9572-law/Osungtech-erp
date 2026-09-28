@@ -10,6 +10,7 @@ import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { nowInKst } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
+import { formatNumber } from "@/lib/format-number";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -447,18 +448,18 @@ export default async function DashboardPage({
         <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-success)" }}>
           <div className="erp-hero-label">이번달 매출</div>
           <div className="erp-hero-value">
-            {monthSalesCount}건 · {monthSalesTotal.toLocaleString()}원
+            {monthSalesCount}건 · {formatNumber(monthSalesTotal)}원
           </div>
         </div>
         <div className="erp-hero-card">
           <div className="erp-hero-label">이번달 매입</div>
           <div className="erp-hero-value">
-            {monthPurchaseCount}건 · {monthPurchaseTotal.toLocaleString()}원
+            {monthPurchaseCount}건 · {formatNumber(monthPurchaseTotal)}원
           </div>
         </div>
         <div className="erp-hero-card">
           <div className="erp-hero-label">전체 품목 수</div>
-          <div className="erp-hero-value">{(productCount ?? 0).toLocaleString()}개</div>
+          <div className="erp-hero-value">{formatNumber((productCount ?? 0))}개</div>
         </div>
       </div>
       <div className="erp-home">
@@ -479,7 +480,7 @@ export default async function DashboardPage({
                   <Link key={p.id} href={`/inventory/${p.id}`} className="erp-home-stock-row">
                     <span className="name">{p.name}</span>
                     <span className="ratio">
-                      현재 {p.quantity.toLocaleString()} / 기준 {p.reorderPoint.toLocaleString()}
+                      현재 {formatNumber(p.quantity)} / 기준 {formatNumber(p.reorderPoint)}
                     </span>
                   </Link>
                 ))}

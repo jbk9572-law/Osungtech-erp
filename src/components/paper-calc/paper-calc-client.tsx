@@ -25,6 +25,7 @@ import {
 } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
+import { formatNumber } from "@/lib/format-number";
 import {
   PENDING_PAPER_CALC_KEY,
   PENDING_PAPER_CALC_PURCHASE_KEY,
@@ -79,7 +80,7 @@ function computeTotalMarginArea(layouts: NestLayout[]): number | null {
 
 function formatArea(areaMm2: number): string {
   if (areaMm2 >= 1_000_000) return `${(areaMm2 / 1_000_000).toFixed(2)} ㎡`;
-  return `${Math.round(areaMm2).toLocaleString()} mm²`;
+  return `${formatNumber(Math.round(areaMm2))} mm²`;
 }
 
 function buildMergedItems(rows: OrderRow[]): Item[] {
@@ -210,7 +211,7 @@ export function PaperCalcClient({
         );
         if (shortfall.length) {
           const lines = shortfall
-            .map(([name, qty]) => `- ${name}: ${qty.toLocaleString()}장 부족`)
+            .map(([name, qty]) => `- ${name}: ${formatNumber(qty)}장 부족`)
             .join("\n");
           setWarning(
             `다음 품목이 원지 크기 안에서 다 배치되지 못했습니다.\n${lines}\n치수가 원지보다 크지 않은지 확인해주세요.`,
@@ -524,7 +525,7 @@ export function PaperCalcClient({
                   className="text-xs"
                   style={{ color: "var(--erp-text-muted)" }}
                 >
-                  포장단위: {SHEET_PER_REAM.toLocaleString()}장 / 연
+                  포장단위: {formatNumber(SHEET_PER_REAM)}장 / 연
                 </span>
 
                 <div className="ml-auto flex flex-wrap gap-1.5">
@@ -824,7 +825,7 @@ export function PaperCalcClient({
                             <li>우측 여백: {layout.margin.right} mm</li>
                             <li>하단 여백: {layout.margin.bottom} mm</li>
                             <li>
-                              남은 면적: {layout.margin.area.toLocaleString()}{" "}
+                              남은 면적: {formatNumber(layout.margin.area)}{" "}
                               mm²
                             </li>
                           </ul>
@@ -874,11 +875,11 @@ function SavedCalcRow({
     <tr>
       <td>{new Date(calc.created_at).toLocaleString("ko-KR")}</td>
       <td className="num">
-        {calc.total_paper.toLocaleString()}장 ({calc.total_sheet}연 구매 ·
+        {formatNumber(calc.total_paper)}장 ({calc.total_sheet}연 구매 ·
         실사용 {effectiveReams.toFixed(2)}연)
       </td>
-      <td className="num">{calc.total_prod.toLocaleString()}매</td>
-      <td className="num">{calc.over_prod.toLocaleString()}매</td>
+      <td className="num">{formatNumber(calc.total_prod)}매</td>
+      <td className="num">{formatNumber(calc.over_prod)}매</td>
       <td>
         <GridBadge tone={calc.fulfilled ? "ok" : "warn"}>
           {calc.fulfilled ? "충족" : "미충족"}
@@ -942,13 +943,13 @@ export function DashboardCards({
   const cards = [
     {
       label: "총 원지",
-      value: result.totalPaper.toLocaleString(),
+      value: formatNumber(result.totalPaper),
       sub: `${result.totalSheet}연 구매 · 실사용 ${result.effectiveReams.toFixed(2)}연`,
     },
-    { label: "총 생산", value: result.totalProd.toLocaleString(), sub: "" },
+    { label: "총 생산", value: formatNumber(result.totalProd), sub: "" },
     {
       label: "초과 생산",
-      value: result.overProd.toLocaleString(),
+      value: formatNumber(result.overProd),
       sub: "",
       bg: "var(--erp-warning-bg)",
       fg: "var(--erp-warning)",
@@ -1206,7 +1207,7 @@ export function BatchCard({
         className="mt-1.5 text-center text-xs"
         style={{ color: "var(--erp-text-muted)" }}
       >
-        {layout.sheetCount.toLocaleString()}장 (약 {layout.batchReams}연) ·
+        {formatNumber(layout.sheetCount)}장 (약 {layout.batchReams}연) ·
         사용률 {layout.margin.usage}%
       </div>
       <div className="mt-1.5 flex flex-col gap-0.5 text-xs">
@@ -1221,7 +1222,7 @@ export function BatchCard({
                 display: "inline-block",
               }}
             />
-            {name} · {count.toLocaleString()}매
+            {name} · {formatNumber(count)}매
           </div>
         ))}
       </div>
@@ -1267,7 +1268,7 @@ export function ProductionSummaryTable({
             <tr key={name}>
               <td>{name}</td>
               <td className="num">
-                {produced.toLocaleString()} / {target.toLocaleString()}
+                {formatNumber(produced)} / {formatNumber(target)}
               </td>
               <td className="num">{pct.toFixed(0)}%</td>
             </tr>
@@ -1276,7 +1277,7 @@ export function ProductionSummaryTable({
         <tr>
           <td className="font-bold">총 합계</td>
           <td className="num font-bold">
-            {totalProduced.toLocaleString()} / {totalTarget.toLocaleString()}
+            {formatNumber(totalProduced)} / {formatNumber(totalTarget)}
           </td>
           <td className="num font-bold">
             {totalTarget ? ((totalProduced / totalTarget) * 100).toFixed(0) : 0}

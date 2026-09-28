@@ -26,6 +26,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
 import { InvoiceStatusPanel } from "@/components/invoice-status-panel";
 import { todayKstStr } from "@/lib/kst-date";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function SaleDetailPage({
   params,
@@ -324,19 +325,19 @@ export default async function SaleDetailPage({
                       row.quantity,
                     )}
                   </td>
-                  <td className="num">{row.quantity.toLocaleString()}</td>
+                  <td className="num">{formatNumber(row.quantity)}</td>
                   <td
                     className="num"
                     style={{ color: "var(--erp-text-muted)" }}
                   >
                     {formatNumOrDash(row.unit_price)}
                   </td>
-                  <td className="num">{row.supplyAmount.toLocaleString()}</td>
+                  <td className="num">{formatNumber(row.supplyAmount)}</td>
                   <td
                     className="num"
                     style={{ color: "var(--erp-text-muted)" }}
                   >
-                    {row.taxAmount.toLocaleString()}
+                    {formatNumber(row.taxAmount)}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}
@@ -405,8 +406,8 @@ export default async function SaleDetailPage({
               <td colSpan={8} className="num">
                 합계
               </td>
-              <td className="num">{totalSupply.toLocaleString()}</td>
-              <td className="num">{totalTax.toLocaleString()}</td>
+              <td className="num">{formatNumber(totalSupply)}</td>
+              <td className="num">{formatNumber(totalTax)}</td>
               <td />
             </tr>
           </tfoot>

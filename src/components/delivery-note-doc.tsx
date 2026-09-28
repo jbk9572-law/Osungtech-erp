@@ -1,3 +1,5 @@
+import { formatNumber } from "@/lib/format-number";
+
 type Company = {
   name: string;
   business_number: string | null;
@@ -60,7 +62,7 @@ const VARIANT_CONFIG: Record<Exclude<DeliveryNoteVariant, null>, ZoneConfig> = {
   sns_filtech: {
     bLabel: "수량 (box)",
     cLabel: "",
-    cellB: (row) => (row.quantity != null ? `${row.quantity.toLocaleString()}${row.unit ? ` ${row.unit}` : ""}` : ""),
+    cellB: (row) => (row.quantity != null ? `${formatNumber(row.quantity)}${row.unit ? ` ${row.unit}` : ""}` : ""),
     cellC: () => "",
     totalZone: "b",
   },
@@ -68,14 +70,14 @@ const VARIANT_CONFIG: Record<Exclude<DeliveryNoteVariant, null>, ZoneConfig> = {
     bLabel: "단위",
     cLabel: "합계 (Ea)",
     cellB: (row) => row.unit,
-    cellC: (row) => (row.quantity != null ? row.quantity.toLocaleString() : ""),
+    cellC: (row) => (row.quantity != null ? formatNumber(row.quantity) : ""),
     totalZone: "c",
   },
   ket_solution: {
     bLabel: "관리번호",
     cLabel: "수량",
     cellB: (row) => row.sku,
-    cellC: (row) => (row.quantity != null ? `${row.quantity.toLocaleString()}${row.unit ? ` ${row.unit}` : ""}` : ""),
+    cellC: (row) => (row.quantity != null ? `${formatNumber(row.quantity)}${row.unit ? ` ${row.unit}` : ""}` : ""),
     totalZone: "c",
   },
 };
@@ -231,7 +233,7 @@ export function DeliveryNoteDoc({
                   {zone ? zone.cellB(row) : row.unit}
                 </td>
                 <td className="border border-black px-2 py-1 text-right">
-                  {zone ? zone.cellC(row) : row.quantity != null ? row.quantity.toLocaleString() : ""}
+                  {zone ? zone.cellC(row) : row.quantity != null ? formatNumber(row.quantity) : ""}
                 </td>
                 <td className="border border-black px-2 py-1 whitespace-pre-line">{remarkText}</td>
               </tr>
@@ -244,10 +246,10 @@ export function DeliveryNoteDoc({
               합계
             </td>
             <td className="border border-black px-2 py-1.5 text-right">
-              {(!zone || zone.totalZone === "b") ? totalQuantity.toLocaleString() : ""}
+              {(!zone || zone.totalZone === "b") ? formatNumber(totalQuantity) : ""}
             </td>
             <td className="border border-black px-2 py-1.5 text-right">
-              {zone?.totalZone === "c" ? totalQuantity.toLocaleString() : ""}
+              {zone?.totalZone === "c" ? formatNumber(totalQuantity) : ""}
             </td>
             <td className="border border-black px-2 py-1.5" />
           </tr>

@@ -1,6 +1,7 @@
 import { Cell } from "./Cell";
 import { TABLE } from "./InvoiceMetrics";
 import { ITEM_COLS, type InvoiceItem, type InvoiceColor } from "./types";
+import { formatNumber } from "@/lib/format-number";
 
 // 0707 원본 품목 헤더: 월일 / 품 명 / 규 격 / 단위 / 수량 / 단 가 / 공급가액 / 세 액 / 비고/합계
 export function ItemsTable({
@@ -68,20 +69,20 @@ export function ItemsTable({
           </Cell>
           <Cell colSpan={ITEM_COLS[3]} align="right" hideBorder={["t", "b"]}>
             <span style={{ position: "relative", left: TABLE.qtyDataOffsetX }}>
-              {item.isReference ? "-" : item.quantity.toLocaleString()}
+              {item.isReference ? "-" : formatNumber(item.quantity)}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[4]} align="right" hideBorder={["t", "b"]}>
             <span style={{ position: "relative", left: TABLE.priceDataOffsetX }}>
-              {item.isReference ? "-" : item.unitPrice.toLocaleString()}
+              {item.isReference ? "-" : formatNumber(item.unitPrice)}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[5]} align="right" hideBorder={["t", "b"]}>
-            {item.isReference ? "-" : item.supplyAmount.toLocaleString()}
+            {item.isReference ? "-" : formatNumber(item.supplyAmount)}
           </Cell>
           <Cell colSpan={ITEM_COLS[6]} align="right" hideBorder={["t", "b"]}>
             <span style={{ position: "relative", left: TABLE.taxDataOffsetX }}>
-              {item.isReference ? "-" : item.taxAmount.toLocaleString()}
+              {item.isReference ? "-" : formatNumber(item.taxAmount)}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[7]} hideBorder={["t", "b"]}>

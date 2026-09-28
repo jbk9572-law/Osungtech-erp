@@ -5,6 +5,7 @@ import { savePurchaseQuotePrices } from "@/app/(dashboard)/purchase-quote-reques
 import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { formatNumber } from "@/lib/format-number";
 
 type Item = { id: string; label: string; spec: string | null; quantity: number };
 
@@ -49,7 +50,7 @@ export function PurchaseQuotePriceForm({
                     <input type="hidden" name="item_id" value={item.id} />
                   </td>
                   <td>{item.spec ?? "-"}</td>
-                  <td className="num">{item.quantity.toLocaleString()}</td>
+                  <td className="num">{formatNumber(item.quantity)}</td>
                   <td>
                     <NumberInput
                       value={price}
@@ -58,7 +59,7 @@ export function PurchaseQuotePriceForm({
                     />
                     <input type="hidden" name="unit_price" value={price} />
                   </td>
-                  <td className="num">{(price * item.quantity).toLocaleString()}</td>
+                  <td className="num">{formatNumber((price * item.quantity))}</td>
                 </tr>
               );
             })}

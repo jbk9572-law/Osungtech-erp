@@ -7,6 +7,7 @@ import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
+import { formatNumber } from "@/lib/format-number";
 
 const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -134,7 +135,7 @@ export default async function PurchaseRequestsPage({
                   <td>{r.request_date.replaceAll("-", ".")}</td>
                   <td>{r.suppliers?.name ?? "-"}</td>
                   <td className="num">{(r.purchase_request_items ?? []).length}</td>
-                  <td className="num">{total.toLocaleString()}</td>
+                  <td className="num">{formatNumber(total)}</td>
                   <td>{r.profiles?.full_name ?? "-"}</td>
                   <td>
                     <GridBadge tone={status.tone}>{status.label}</GridBadge>
@@ -158,7 +159,7 @@ export default async function PurchaseRequestsPage({
       {hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}줄)
+            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>
         </div>
       )}

@@ -16,6 +16,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
+import { formatNumber } from "@/lib/format-number";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -204,7 +205,7 @@ export default async function PaymentRequestDetailPage({
                     <td>{item.vendor}</td>
                     <td>{item.purpose || "-"}</td>
                     <td className="num">
-                      {Number(item.amount).toLocaleString()}
+                      {formatNumber(Number(item.amount))}
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>
                       {item.remark || "-"}
@@ -225,7 +226,7 @@ export default async function PaymentRequestDetailPage({
                     합계
                   </td>
                   <td className="num" style={{ fontWeight: 700 }}>
-                    {total.toLocaleString()}원
+                    {formatNumber(total)}원
                   </td>
                   <td />
                 </tr>

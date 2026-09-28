@@ -7,6 +7,7 @@ import { buildListReturnParam } from "@/lib/list-return";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { formatNumber } from "@/lib/format-number";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -159,7 +160,7 @@ export default async function ProductsPage({
 
       {!keyword && (
         <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-          최근 등록순 {limit.toLocaleString()}개까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+          최근 등록순 {formatNumber(limit)}개까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
         </p>
       )}
 
@@ -168,7 +169,7 @@ export default async function ProductsPage({
       {hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}개)
+            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}개)
           </Link>
         </div>
       )}

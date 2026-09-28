@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
+import { formatNumber } from "@/lib/format-number";
 
 const PLAN_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   trial: { label: "체험 이용 중", tone: "warn" },
@@ -85,7 +86,7 @@ export default async function BillingPage() {
                         {isCurrent && <GridBadge tone="ok">현재 이용중</GridBadge>}
                       </span>
                       <span className="text-sm font-bold" style={{ color: "var(--erp-primary)" }}>
-                        {p.monthly_price > 0 ? `월 ${p.monthly_price.toLocaleString()}원` : "무료"}
+                        {p.monthly_price > 0 ? `월 ${formatNumber(p.monthly_price)}원` : "무료"}
                       </span>
                     </div>
                     {p.description && (

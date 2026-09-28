@@ -1,4 +1,5 @@
 import { formatBoxCount } from "@/lib/package-qty";
+import { formatNumber } from "@/lib/format-number";
 
 // formatQuantityWithBoxes와 같은 계산이지만, "(N박스)" 부분만 빨간 글씨로
 // 따로 강조해서 보여줘야 하는 자리(사이트 전체의 박스수량 표기)에 쓴다 —
@@ -15,7 +16,7 @@ export function QtyWithBoxes({
   basePackageQty: number | string | null | undefined;
   unit?: string;
 }) {
-  const qtyLabel = unit ? `${quantity.toLocaleString()} ${unit}` : quantity.toLocaleString();
+  const qtyLabel = unit ? `${formatNumber(quantity)} ${unit}` : formatNumber(quantity);
   const boxLabel = formatBoxCount(quantity, basePackageQty);
   return (
     <>

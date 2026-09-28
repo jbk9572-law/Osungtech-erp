@@ -10,6 +10,7 @@ import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
 import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function InventoryProductHistoryPage({
   params,
@@ -194,7 +195,7 @@ export default async function InventoryProductHistoryPage({
                         style={{ fontWeight: 700, color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
                       >
                         {t.signedQty > 0 ? "+" : ""}
-                        {t.signedQty.toLocaleString()}
+                        {formatNumber(t.signedQty)}
                       </td>
                       <td style={{ color: "var(--erp-text-muted)" }}>
                         {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
@@ -273,11 +274,11 @@ export default async function InventoryProductHistoryPage({
                   <td>{new Date(row.date).toLocaleDateString("ko-KR")}</td>
                   <td>{isIn ? (row.partnerName ?? "-") : <span style={{ color: "var(--erp-text-muted)" }}>-</span>}</td>
                   <td className="num" style={{ color: isIn ? "var(--erp-success)" : "var(--erp-text-muted)", fontWeight: isIn ? 700 : undefined }}>
-                    {isIn ? Math.abs(row.signedQty).toLocaleString() : "-"}
+                    {isIn ? formatNumber(Math.abs(row.signedQty)) : "-"}
                   </td>
                   <td>{!isIn ? (row.partnerName ?? "-") : <span style={{ color: "var(--erp-text-muted)" }}>-</span>}</td>
                   <td className="num" style={{ color: !isIn ? "var(--erp-danger)" : "var(--erp-text-muted)", fontWeight: !isIn ? 700 : undefined }}>
-                    {!isIn ? Math.abs(row.signedQty).toLocaleString() : "-"}
+                    {!isIn ? formatNumber(Math.abs(row.signedQty)) : "-"}
                   </td>
                   <td>
                     {row.lotNumber ? (

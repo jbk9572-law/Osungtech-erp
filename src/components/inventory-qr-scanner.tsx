@@ -6,6 +6,7 @@ import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { FormMessage } from "@/components/form-message";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { PageGuide } from "@/components/erp/page-guide";
+import { formatNumber } from "@/lib/format-number";
 import {
   createInitialScanState,
   onQrDecoded,
@@ -480,8 +481,8 @@ export function InventoryQrScanner({
                     return (
                       <tr key={m.productId}>
                         <td>{product?.name ?? m.productId}</td>
-                        <td className="num">{m.systemQuantity.toLocaleString()}</td>
-                        <td className="num">{m.countedQuantity.toLocaleString()}</td>
+                        <td className="num">{formatNumber(m.systemQuantity)}</td>
+                        <td className="num">{formatNumber(m.countedQuantity)}</td>
                         <td
                           className="num"
                           style={{
@@ -490,7 +491,7 @@ export function InventoryQrScanner({
                           }}
                         >
                           {diff > 0 ? "+" : ""}
-                          {diff.toLocaleString()}
+                          {formatNumber(diff)}
                         </td>
                       </tr>
                     );

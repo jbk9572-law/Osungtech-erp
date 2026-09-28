@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { GridBadge } from "@/components/grid/badge";
 import { PageGuide } from "@/components/erp/page-guide";
+import { formatNumber } from "@/lib/format-number";
 
 type Row = {
   id: string;
@@ -149,9 +150,9 @@ export function PartyTransactionHistory({
                   </td>
                   <td>{r.date.replaceAll("-", ".")}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{r.label}</td>
-                  <td className="num">{r.total.toLocaleString()}</td>
+                  <td className="num">{formatNumber(r.total)}</td>
                   <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                    {r.balance.toLocaleString()}
+                    {formatNumber(r.balance)}
                   </td>
                 </tr>
               ))}

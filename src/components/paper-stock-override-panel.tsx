@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
+import { formatNumber } from "@/lib/format-number";
 
 export type PaperStockOverrideEntry = {
   id: string;
@@ -47,8 +48,8 @@ export function PaperStockOverridePanel({
           style={{ background: "var(--erp-warning-bg)", border: "1px solid var(--erp-warning-border)" }}
         >
           <span>
-            수동값 적용 중: <strong>{Number(activeOverride.override_quantity).toLocaleString()}연</strong>{" "}
-            (자동값 {Number(activeOverride.auto_quantity).toLocaleString()}연)
+            수동값 적용 중: <strong>{formatNumber(Number(activeOverride.override_quantity))}연</strong>{" "}
+            (자동값 {formatNumber(Number(activeOverride.auto_quantity))}연)
             {activeOverride.note ? ` · ${activeOverride.note}` : ""}
           </span>
           <button
@@ -117,7 +118,7 @@ export function PaperStockOverridePanel({
           {history.map((h) => (
             <div key={h.id}>
               {new Date(h.created_at).toLocaleString("ko-KR")} · {h.profiles?.full_name ?? "-"} ·{" "}
-              {Number(h.auto_quantity).toLocaleString()}연 → {Number(h.override_quantity).toLocaleString()}연
+              {formatNumber(Number(h.auto_quantity))}연 → {formatNumber(Number(h.override_quantity))}연
               {h.note ? ` (${h.note})` : ""}
               {h.reverted_at ? " · 되돌림" : " · 적용 중"}
             </div>

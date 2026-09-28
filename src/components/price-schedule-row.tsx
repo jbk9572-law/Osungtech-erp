@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
+import { formatNumber } from "@/lib/format-number";
 
 // 단가 예약 한 줄 — 판매단가(거래처)/매입단가(공급처) 공용. 평소엔 "기존가
 // → 변경가 (차액)"만 보여주다가, 수정 버튼을 누르면 그 자리에서 바로
@@ -109,7 +110,7 @@ export function PriceScheduleRow({
       ? "신규 등록"
       : diff === 0
         ? "변동 없음"
-        : `${Math.abs(diff).toLocaleString()}원 ${diff > 0 ? "인상" : "인하"}`;
+        : `${formatNumber(Math.abs(diff))}원 ${diff > 0 ? "인상" : "인하"}`;
 
   return (
     <div
@@ -119,8 +120,8 @@ export function PriceScheduleRow({
     >
       <span>
         {effectiveDate}부터 {productLabel}:{" "}
-        {currentUnitPrice != null && <>{currentUnitPrice.toLocaleString()}원 → </>}
-        <strong>{newUnitPrice.toLocaleString()}원</strong>{" "}
+        {currentUnitPrice != null && <>{formatNumber(currentUnitPrice)}원 → </>}
+        <strong>{formatNumber(newUnitPrice)}원</strong>{" "}
         <span style={{ color: "var(--erp-text-muted)" }}>({diffLabel})</span>
       </span>
       <div className="flex shrink-0 gap-1">

@@ -16,6 +16,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { useFormRedirect } from "@/lib/use-form-redirect";
+import { formatNumber } from "@/lib/format-number";
 
 type Product = {
   id: string;
@@ -312,7 +313,7 @@ export function TodoForm({
             className="mb-2 flex items-center justify-between gap-2 rounded p-2 text-xs"
             style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
           >
-            <span>모조지 계산 연결됨 — {pendingCalcSummary.toLocaleString()}연</span>
+            <span>모조지 계산 연결됨 — {formatNumber(pendingCalcSummary)}연</span>
             <button
               type="button"
               className="erp-btn erp-btn-danger"
@@ -414,7 +415,7 @@ export function TodoForm({
                       {(() => {
                         const unitPrice = todoType === "sale" ? product?.price : product?.cost;
                         if (!product || !unitPrice || row.quantity <= 0) return "-";
-                        return `${(unitPrice * row.quantity).toLocaleString()}원`;
+                        return `${formatNumber((unitPrice * row.quantity))}원`;
                       })()}
                     </td>
                     <td className="num">

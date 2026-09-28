@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatNumber } from "@/lib/format-number";
 
 type HistoryEntry = { basePackageQty: number; changedAt: string };
 
@@ -31,7 +32,7 @@ export function PackageQtyHistoryHint({
         className="font-medium hover:underline"
         style={{ color: "var(--erp-success)" }}
       >
-        ✓ 최근 포장수량 {latest.basePackageQty.toLocaleString()} ({latest.changedAt}) · 히스토리{" "}
+        ✓ 최근 포장수량 {formatNumber(latest.basePackageQty)} ({latest.changedAt}) · 히스토리{" "}
         {expanded ? "숨기기" : `${history.length}건 보기`}
       </button>
       {expanded && (
@@ -51,7 +52,7 @@ export function PackageQtyHistoryHint({
                 className="hover:underline"
                 style={{ color: "var(--erp-primary)", fontWeight: 600 }}
               >
-                {entry.basePackageQty.toLocaleString()}로 덮어쓰기
+                {formatNumber(entry.basePackageQty)}로 덮어쓰기
               </button>
             </li>
           ))}

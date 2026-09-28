@@ -23,6 +23,7 @@ import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { nextMonthLabel } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { formatNumber } from "@/lib/format-number";
 
 export type PurchaseRowItem = {
   productLabel: string;
@@ -363,7 +364,7 @@ export function PurchaseGridTable({
                   <td className="num">
                     {isPayment
                       ? "-"
-                      : `${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                      : `${formatNumber(row.quantity)} ${row.unit ?? ""}`}
                   </td>
                   <td
                     className="num"
@@ -371,12 +372,12 @@ export function PurchaseGridTable({
                   >
                     {isPayment ? "-" : formatNumOrDash(row.unitCost)}
                   </td>
-                  <td className="num">{row.supplyAmount.toLocaleString()}</td>
+                  <td className="num">{formatNumber(row.supplyAmount)}</td>
                   <td
                     className="num"
                     style={{ color: "var(--erp-text-muted)" }}
                   >
-                    {isPayment ? "-" : row.taxAmount.toLocaleString()}
+                    {isPayment ? "-" : formatNumber(row.taxAmount)}
                   </td>
                   <td>
                     {isPayment ? (
@@ -428,10 +429,10 @@ export function PurchaseGridTable({
                   매입 합계 (
                   {sortedRows.filter((r) => r.kind === "purchase").length}건)
                 </td>
-                <td className="num">{totalQuantity.toLocaleString()}</td>
+                <td className="num">{formatNumber(totalQuantity)}</td>
                 <td />
-                <td className="num">{totalSupply.toLocaleString()}</td>
-                <td className="num">{totalTax.toLocaleString()}</td>
+                <td className="num">{formatNumber(totalSupply)}</td>
+                <td className="num">{formatNumber(totalTax)}</td>
                 <td />
                 <td />
                 <td />

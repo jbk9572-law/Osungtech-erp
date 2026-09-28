@@ -13,6 +13,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function TodoDetailPage({
   params,
@@ -170,7 +171,7 @@ export default async function TodoDetailPage({
                 <tfoot>
                   <tr>
                     <td colSpan={2} style={{ fontWeight: 700 }}>
-                      합계 {paperCalcTotalSheet.toLocaleString()}연
+                      합계 {formatNumber(paperCalcTotalSheet)}연
                     </td>
                     <td className="num">
                       {latestCalcId && (
@@ -259,7 +260,7 @@ export default async function TodoDetailPage({
                               {item.lotNumber || "-"}
                             </td>
                             <td className="num">
-                              {item.quantity.toLocaleString()}{" "}
+                              {formatNumber(item.quantity)}{" "}
                               {product?.unit ?? ""}
                             </td>
                           </tr>

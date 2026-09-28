@@ -7,6 +7,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
+import { formatNumber } from "@/lib/format-number";
 
 type CountTxRow = {
   id: string;
@@ -286,7 +287,7 @@ export default async function InventoryCountPage({
             <>
               <div className="erp-hero-value">
                 {largestMiss.quantity > 0 ? "+" : ""}
-                {largestMiss.quantity.toLocaleString()}
+                {formatNumber(largestMiss.quantity)}
               </div>
               <div className="erp-hero-sub">
                 {largestMiss.products?.name ?? "-"}
@@ -400,10 +401,10 @@ export default async function InventoryCountPage({
                         <td>{m.sku}</td>
                         <td>{m.name}</td>
                         <td style={{ color: "var(--erp-text-muted)" }}>{m.spec || "-"}</td>
-                        <td className="num">{m.cached.toLocaleString()}</td>
-                        <td className="num">{m.computed.toLocaleString()}</td>
+                        <td className="num">{formatNumber(m.cached)}</td>
+                        <td className="num">{formatNumber(m.computed)}</td>
                         <td className="num" style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
-                          {(m.cached - m.computed > 0 ? "+" : "") + (m.cached - m.computed).toLocaleString()}
+                          {(m.cached - m.computed > 0 ? "+" : "") + formatNumber((m.cached - m.computed))}
                         </td>
                       </tr>
                     ))}
@@ -477,10 +478,10 @@ export default async function InventoryCountPage({
                             <td>{row.name}</td>
                             <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
                             <td className="num">
-                              {row.before.toLocaleString()} {row.unit}
+                              {formatNumber(row.before)} {row.unit}
                             </td>
                             <td className="num">
-                              {row.after.toLocaleString()} {row.unit}
+                              {formatNumber(row.after)} {row.unit}
                             </td>
                             <td
                               className="num"
@@ -490,7 +491,7 @@ export default async function InventoryCountPage({
                               }}
                             >
                               {row.delta > 0 ? "+" : ""}
-                              {row.delta.toLocaleString()}
+                              {formatNumber(row.delta)}
                             </td>
                           </tr>
                         ))}

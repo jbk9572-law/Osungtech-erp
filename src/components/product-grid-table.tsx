@@ -12,6 +12,7 @@ import { SortableTh } from "@/components/grid/sortable-th";
 import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
+import { formatNumber } from "@/lib/format-number";
 
 export type ProductGridRow = {
   id: string;
@@ -179,7 +180,7 @@ export function ProductGridTable({
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.spec ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.unit ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>
-                  {row.basePackageQty ? `1박스 = ${Number(row.basePackageQty).toLocaleString()}${row.unit ?? ""}` : "-"}
+                  {row.basePackageQty ? `1박스 = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}` : "-"}
                 </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.categoryName ?? "-"}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.supplierName ?? "-"}</td>

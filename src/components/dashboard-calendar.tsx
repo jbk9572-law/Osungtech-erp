@@ -26,6 +26,7 @@ import {
 } from "@/lib/paper-calc-summary";
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
+import { formatNumber } from "@/lib/format-number";
 
 export type ItemRow = {
   partnerName: string;
@@ -445,7 +446,7 @@ export function groupProductItemsByLabel(
         const { taken, rest } = takeItems(remaining, d.quantity);
         remaining = rest;
         const isLast = i === real.length - 1;
-        const note = isLast && stock ? `${stock.quantity.toLocaleString()}${unit}는 출고 후 남은재고` : null;
+        const note = isLast && stock ? `${formatNumber(stock.quantity)}${unit}는 출고 후 남은재고` : null;
         push(d.partnerName, false, taken, note);
       });
     } else if (reversePool && !isReturn) {
@@ -617,7 +618,7 @@ function buildProductLineGroups(
     }
 
     if (group.specCount > 1) {
-      group.lines.push(`    합계 - ${group.totalQuantity.toLocaleString()}${group.unit}`);
+      group.lines.push(`    합계 - ${formatNumber(group.totalQuantity)}${group.unit}`);
     }
 
     return group;
@@ -673,7 +674,7 @@ function appendItemLines(
       if (productGroups.length > 1) {
         const grandTotal = productTotals(product.items);
         lines.push("");
-        lines.push(`  ${grandTotalLabel} - ${grandTotal.quantity.toLocaleString()}${grandTotal.unit}`);
+        lines.push(`  ${grandTotalLabel} - ${formatNumber(grandTotal.quantity)}${grandTotal.unit}`);
       }
     });
 
@@ -688,7 +689,7 @@ function appendItemLines(
       for (const line of formatPaperCalcSizeLines(paperCalcBlock.sizes)) {
         lines.push(`    ${line}`);
       }
-      lines.push(`    합계 - ${paperCalcBlock.totalSheet.toLocaleString()}연`);
+      lines.push(`    합계 - ${formatNumber(paperCalcBlock.totalSheet)}연`);
     }
   });
 }
@@ -1075,7 +1076,7 @@ export function DashboardCalendar({
             >
               <p className="mb-1 text-xs font-bold text-[var(--erp-primary)]">
                 매입 {selectedData.purchaseCount}건 ·{" "}
-                {selectedData.purchaseTotal.toLocaleString()}원
+                {formatNumber(selectedData.purchaseTotal)}원
               </p>
               {(selectedData.purchaseItems.length > 0 ||
                 Object.keys(selectedData.purchasePaperCalcByPartner).length >
@@ -1126,7 +1127,7 @@ export function DashboardCalendar({
                                           >
                                             <span className="min-w-0">
                                               {item.spec || "규격 미지정"} :{" "}
-                                              {item.quantity.toLocaleString()}
+                                              {formatNumber(item.quantity)}
                                               {item.unit}
                                               {note && (
                                                 <span className="text-[10px]">
@@ -1144,7 +1145,7 @@ export function DashboardCalendar({
                                               )}
                                             </span>
                                             <span className="shrink-0">
-                                              {item.amount.toLocaleString()}원
+                                              {formatNumber(item.amount)}원
                                             </span>
                                           </Link>
                                         </li>
@@ -1160,7 +1161,7 @@ export function DashboardCalendar({
                                           >
                                             <span className="min-w-0">
                                               {item.spec || "규격 미지정"} :{" "}
-                                              {item.quantity.toLocaleString()}
+                                              {formatNumber(item.quantity)}
                                               {item.unit}
                                               {note && (
                                                 <span className="text-[10px]">
@@ -1175,7 +1176,7 @@ export function DashboardCalendar({
                                               )}
                                             </span>
                                             <span className="shrink-0">
-                                              {item.amount.toLocaleString()}원
+                                              {formatNumber(item.amount)}원
                                             </span>
                                           </Link>
                                         </li>
@@ -1188,12 +1189,12 @@ export function DashboardCalendar({
                                           <li className="flex items-start justify-between gap-2">
                                             <span className="min-w-0">
                                               합계 -{" "}
-                                              {totals.quantity.toLocaleString()}
+                                              {formatNumber(totals.quantity)}
                                               {totals.unit}
                                               {anyCarryover && <CarryoverBadge />}
                                             </span>
                                             <span className="shrink-0">
-                                              {totals.amount.toLocaleString()}원
+                                              {formatNumber(totals.amount)}원
                                             </span>
                                           </li>
                                         );
@@ -1213,11 +1214,11 @@ export function DashboardCalendar({
                                 style={{ borderColor: "var(--erp-border)" }}
                               >
                                 <span className="min-w-0">
-                                  입고합계 - {grand.quantity.toLocaleString()}
+                                  입고합계 - {formatNumber(grand.quantity)}
                                   {grand.unit}
                                 </span>
                                 <span className="shrink-0">
-                                  {grand.amount.toLocaleString()}원
+                                  {formatNumber(grand.amount)}원
                                 </span>
                               </div>,
                             );
@@ -1237,10 +1238,10 @@ export function DashboardCalendar({
                               ))}
                               <li className="flex items-start justify-between gap-2 text-[var(--erp-primary)]">
                                 <span className="min-w-0">
-                                  합계 - {block.totalSheet.toLocaleString()}연
+                                  합계 - {formatNumber(block.totalSheet)}연
                                 </span>
                                 <span className="shrink-0">
-                                  {block.amount.toLocaleString()}원
+                                  {formatNumber(block.amount)}원
                                 </span>
                               </li>
                             </ul>
@@ -1262,7 +1263,7 @@ export function DashboardCalendar({
             >
               <p className="mb-1 text-xs font-bold text-[var(--erp-success)]">
                 매출 {selectedData.salesCount}건 ·{" "}
-                {selectedData.salesTotal.toLocaleString()}원
+                {formatNumber(selectedData.salesTotal)}원
               </p>
               {(selectedData.salesItems.length > 0 ||
                 Object.keys(selectedData.salesPaperCalcByPartner).length >
@@ -1312,7 +1313,7 @@ export function DashboardCalendar({
                                           >
                                             <span className="min-w-0">
                                               {item.spec || "규격 미지정"} :{" "}
-                                              {item.quantity.toLocaleString()}
+                                              {formatNumber(item.quantity)}
                                               {item.unit}
                                               {note && (
                                                 <span className="text-[10px]">
@@ -1331,7 +1332,7 @@ export function DashboardCalendar({
                                               )}
                                             </span>
                                             <span className="shrink-0">
-                                              {item.amount.toLocaleString()}원
+                                              {formatNumber(item.amount)}원
                                             </span>
                                           </Link>
                                         </li>
@@ -1347,7 +1348,7 @@ export function DashboardCalendar({
                                           >
                                             <span className="min-w-0">
                                               {item.spec || "규격 미지정"} :{" "}
-                                              {item.quantity.toLocaleString()}
+                                              {formatNumber(item.quantity)}
                                               {item.unit}
                                               {note && (
                                                 <span className="text-[10px]">
@@ -1363,7 +1364,7 @@ export function DashboardCalendar({
                                               )}
                                             </span>
                                             <span className="shrink-0">
-                                              {item.amount.toLocaleString()}원
+                                              {formatNumber(item.amount)}원
                                             </span>
                                           </Link>
                                         </li>
@@ -1376,12 +1377,12 @@ export function DashboardCalendar({
                                           <li className="flex items-start justify-between gap-2">
                                             <span className="min-w-0">
                                               합계 -{" "}
-                                              {totals.quantity.toLocaleString()}
+                                              {formatNumber(totals.quantity)}
                                               {totals.unit}
                                               {anyCarryover && <CarryoverBadge />}
                                             </span>
                                             <span className="shrink-0">
-                                              {totals.amount.toLocaleString()}원
+                                              {formatNumber(totals.amount)}원
                                             </span>
                                           </li>
                                         );
@@ -1401,11 +1402,11 @@ export function DashboardCalendar({
                                 style={{ borderColor: "var(--erp-border)" }}
                               >
                                 <span className="min-w-0">
-                                  출고합계 - {grand.quantity.toLocaleString()}
+                                  출고합계 - {formatNumber(grand.quantity)}
                                   {grand.unit}
                                 </span>
                                 <span className="shrink-0">
-                                  {grand.amount.toLocaleString()}원
+                                  {formatNumber(grand.amount)}원
                                 </span>
                               </div>,
                             );
@@ -1425,10 +1426,10 @@ export function DashboardCalendar({
                               ))}
                               <li className="flex items-start justify-between gap-2 text-[var(--erp-success)]">
                                 <span className="min-w-0">
-                                  합계 - {block.totalSheet.toLocaleString()}연
+                                  합계 - {formatNumber(block.totalSheet)}연
                                 </span>
                                 <span className="shrink-0">
-                                  {block.amount.toLocaleString()}원
+                                  {formatNumber(block.amount)}원
                                 </span>
                               </li>
                             </ul>

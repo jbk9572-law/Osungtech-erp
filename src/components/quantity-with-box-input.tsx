@@ -2,6 +2,7 @@
 
 import { NumberInput } from "@/components/number-input";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
+import { formatNumber } from "@/lib/format-number";
 
 // 박스×포장수량 환산(예: 50*20)은 저장된 뒤 매출/매입 상세 페이지 목록에서만
 // 보여준다(formatPackageQty 참고). 등록 화면 입력칸은 수량 하나만 받고,
@@ -36,7 +37,7 @@ export function QuantityWithBoxInput({
   const base = basePackageQty != null ? Number(basePackageQty) : null;
   const placeholder =
     base && base > 0
-      ? `${label} (예: ${base.toLocaleString()}×1=${base.toLocaleString()})`
+      ? `${label} (예: ${formatNumber(base)}×1=${formatNumber(base)})`
       : allowFormula
         ? `${label} (엑셀식 계산 가능)`
         : label;

@@ -14,6 +14,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/mail/crypto";
 import { sendMail } from "@/lib/mail/smtp-send";
 import type { FormState } from "@/components/form-message";
+import { formatNumber } from "@/lib/format-number";
 
 // 견적서를 실제로 이메일 발송한다. 지금까지 "발송" 버튼은 quotes.status만
 // 'sent'로 바꿨을 뿐 아무 이메일도 나가지 않았다(사용자 지적) — 공문관리
@@ -58,7 +59,7 @@ export async function sendQuote(_prevState: FormState, formData: FormData): Prom
     .map((i) => {
       const name = i.products?.name ?? "-";
       const amount = Number(i.quantity) * Number(i.unit_price);
-      return `- ${name}${i.spec ? ` (${i.spec})` : ""} : ${Number(i.quantity).toLocaleString()} x ${Number(i.unit_price).toLocaleString()} = ${amount.toLocaleString()}원`;
+      return `- ${name}${i.spec ? ` (${i.spec})` : ""} : ${formatNumber(Number(i.quantity))} x ${formatNumber(Number(i.unit_price))} = ${formatNumber(amount)}원`;
     })
     .join("\n");
 
@@ -71,7 +72,7 @@ export async function sendQuote(_prevState: FormState, formData: FormData): Prom
     "",
     itemLines,
     "",
-    `합계: ${total.toLocaleString()}원`,
+    `합계: ${formatNumber(total)}원`,
     quote.memo ? `\n메모: ${quote.memo}` : "",
   ]
     .filter(Boolean)

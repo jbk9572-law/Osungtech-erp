@@ -10,6 +10,7 @@ import { SendQuoteButton } from "@/components/send-quote-button";
 import { ConvertQuoteForm } from "@/components/convert-quote-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { deleteQuote } from "@/app/(dashboard)/quotes/actions";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -105,9 +106,9 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
               <tr key={item.id}>
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.spec ?? "-"}</td>
-                <td className="num">{Number(item.quantity).toLocaleString()}</td>
-                <td className="num">{Number(item.unit_price).toLocaleString()}</td>
-                <td className="num">{(Number(item.quantity) * Number(item.unit_price)).toLocaleString()}</td>
+                <td className="num">{formatNumber(Number(item.quantity))}</td>
+                <td className="num">{formatNumber(Number(item.unit_price))}</td>
+                <td className="num">{formatNumber((Number(item.quantity) * Number(item.unit_price)))}</td>
                 <td>{item.remark ?? "-"}</td>
               </tr>
             ))}
@@ -118,7 +119,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                 합계
               </td>
               <td className="num" style={{ fontWeight: 700 }}>
-                {total.toLocaleString()}
+                {formatNumber(total)}
               </td>
               <td />
             </tr>

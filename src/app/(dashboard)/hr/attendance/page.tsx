@@ -26,6 +26,7 @@ import { haversineDistanceMeters } from "@/lib/geo";
 import { LEAVE_UNIT_LABEL, type LeaveUnit } from "@/lib/leave-unit";
 import { getWeekRange, sumWorkedHours, weeklyHoursTone, WEEKLY_HOURS_WARNING } from "@/lib/weekly-hours";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { formatNumber } from "@/lib/format-number";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -164,8 +165,8 @@ export default async function AttendancePage() {
     const distance = haversineDistanceMeters(lat, lng, company.office_lat, company.office_lng);
     const radius = company.office_radius_m ?? 300;
     return distance <= radius
-      ? `사무실에서 ${Math.round(distance).toLocaleString()}m (반경 이내)`
-      : `사무실에서 ${Math.round(distance).toLocaleString()}m (반경 밖)`;
+      ? `사무실에서 ${formatNumber(Math.round(distance))}m (반경 이내)`
+      : `사무실에서 ${formatNumber(Math.round(distance))}m (반경 밖)`;
   };
 
   return (
@@ -196,14 +197,14 @@ export default async function AttendancePage() {
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             {year}년 연차 총일수
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{totalDays.toLocaleString()}일</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalDays)}일</div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             사용(승인 기준)
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
-            {usedThisYear.toLocaleString()}일
+            {formatNumber(usedThisYear)}일
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -211,7 +212,7 @@ export default async function AttendancePage() {
             잔여
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: remaining < 0 ? "var(--erp-danger)" : undefined }}>
-            {remaining.toLocaleString()}일
+            {formatNumber(remaining)}일
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -230,7 +231,7 @@ export default async function AttendancePage() {
                     : undefined,
             }}
           >
-            {myWeekHours.toLocaleString()}시간
+            {formatNumber(myWeekHours)}시간
             {myWeekTone !== "ok" && (
               <GridBadge tone={myWeekTone === "danger" ? "danger" : "warn"} style={{ marginLeft: 6 }}>
                 {myWeekTone === "danger" ? "52시간 초과" : "초과 주의"}
@@ -286,7 +287,7 @@ export default async function AttendancePage() {
                     return (
                       <tr key={userId}>
                         <td>{profileNameById[userId] ?? "구성원"}</td>
-                        <td className="num">{hours.toLocaleString()}시간</td>
+                        <td className="num">{formatNumber(hours)}시간</td>
                         <td>
                           <GridBadge tone={tone === "danger" ? "danger" : "warn"}>
                             {tone === "danger" ? "52시간 초과" : "초과 주의"}
@@ -330,7 +331,7 @@ export default async function AttendancePage() {
                         {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
                       </td>
                       <td>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</td>
-                      <td className="num">{Number(l.days).toLocaleString()}</td>
+                      <td className="num">{formatNumber(Number(l.days))}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{l.reason ?? "-"}</td>
                       <td>
                         <div className="flex gap-1">
@@ -380,7 +381,7 @@ export default async function AttendancePage() {
                           {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
                         </td>
                         <td>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</td>
-                        <td className="num">{Number(l.days).toLocaleString()}</td>
+                        <td className="num">{formatNumber(Number(l.days))}</td>
                         <td style={{ color: "var(--erp-text-muted)" }}>{l.reason ?? "-"}</td>
                         <td>
                           <GridBadge tone={status.tone}>{status.label}</GridBadge>

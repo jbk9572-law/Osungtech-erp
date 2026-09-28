@@ -8,6 +8,7 @@ import { WarehouseForm } from "@/components/warehouse-form";
 import { ClickableRow } from "@/components/clickable-row";
 import { createWarehouse, deleteWarehouse } from "@/app/(dashboard)/inventory/warehouses/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
 
 // 창고 관리(마스터: 창고 목록)와 창고 이동(거래 이력)을 탭으로 나눠뒀었는데,
 // "탭으로 나누지 말고 하나로 합쳐달라"는 요청으로 한 페이지에 세로로
@@ -112,7 +113,7 @@ export default async function WarehousesPage() {
                       <td>{t.from_warehouse?.name ?? "-"}</td>
                       <td>{t.to_warehouse?.name ?? "-"}</td>
                       <td className="num">{items.length}</td>
-                      <td className="num">{totalQty.toLocaleString()}</td>
+                      <td className="num">{formatNumber(totalQty)}</td>
                       <td>{t.profiles?.full_name ?? "-"}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{t.memo ?? "-"}</td>
                     </ClickableRow>

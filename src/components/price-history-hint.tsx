@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatNumber } from "@/lib/format-number";
 
 type HistoryEntry = { unitPrice: number; orderDate: string };
 
@@ -37,8 +38,8 @@ export function PriceHistoryHint({
         style={{ color: "var(--erp-success)" }}
       >
         ✓ 최근단가{" "}
-        {previousDifferent && `${previousDifferent.unitPrice.toLocaleString()}원 → `}
-        {latest.unitPrice.toLocaleString()}원 ({latest.orderDate}) · 히스토리{" "}
+        {previousDifferent && `${formatNumber(previousDifferent.unitPrice)}원 → `}
+        {formatNumber(latest.unitPrice)}원 ({latest.orderDate}) · 히스토리{" "}
         {expanded ? "숨기기" : `${history.length}건 보기`}
       </button>
       {expanded && (
@@ -56,8 +57,8 @@ export function PriceHistoryHint({
                 <span>{entry.orderDate}</span>
                 <span>
                   {changed
-                    ? `${older.unitPrice.toLocaleString()}원 → ${entry.unitPrice.toLocaleString()}원`
-                    : `${entry.unitPrice.toLocaleString()}원`}
+                    ? `${formatNumber(older.unitPrice)}원 → ${formatNumber(entry.unitPrice)}원`
+                    : `${formatNumber(entry.unitPrice)}원`}
                 </span>
               </li>
             );

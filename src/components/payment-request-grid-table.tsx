@@ -7,6 +7,7 @@ import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePaymentRequests } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { GridBadge } from "@/components/grid/badge";
+import { formatNumber } from "@/lib/format-number";
 
 export type PaymentRequestRow = {
   id: string;
@@ -237,7 +238,7 @@ export function PaymentRequestGridTable({
                     <PeriodCell from={row.periodFrom} to={row.periodTo} />
                   </td>
                   <td>{row.authorName ?? "-"}</td>
-                  <td className="num">{row.total.toLocaleString()}원</td>
+                  <td className="num">{formatNumber(row.total)}원</td>
                   <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
                   <td>
                     <GridBadge tone={(STATUS_LABEL[row.status] ?? { tone: "muted" as const }).tone}>

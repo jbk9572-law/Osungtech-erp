@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { adjustTenantPoints } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
+import { formatNumber } from "@/lib/format-number";
 
 export type PointTransactionRow = {
   id: string;
@@ -43,7 +44,7 @@ export function TenantPointsPanel({
       </PageGuide>
 
       <div className="mb-3 flex items-center gap-2">
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--erp-text)" }}>{balance.toLocaleString()}</span>
+        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--erp-text)" }}>{formatNumber(balance)}</span>
         <span style={{ color: "var(--erp-text-muted)" }}>포인트 보유</span>
       </div>
 

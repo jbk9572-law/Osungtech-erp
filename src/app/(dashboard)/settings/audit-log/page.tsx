@@ -7,6 +7,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 import { ROLE_LABELS } from "@/lib/user-roles";
+import { formatNumber } from "@/lib/format-number";
 
 // audit_logs 트리거는 매출/매입/품목 같은 마스터·전표 테이블에만 붙어있고
 // inventory_transactions에는 없다(재고 조정은 그 테이블 자체가 이미
@@ -173,7 +174,7 @@ function formatValue(tableName: string, key: string, v: unknown, lookups: Lookup
     (tableName === "products" && (key === "price" || key === "cost")) ||
     ((tableName === "customer_payments" || tableName === "supplier_payments") && key === "amount")
   ) {
-    return `₩${Number(v).toLocaleString()}`;
+    return `₩${formatNumber(Number(v))}`;
   }
   if (key === "order_date" || key === "purchase_date" || key === "paid_at") {
     return new Date(String(v)).toLocaleDateString("ko-KR");
@@ -212,7 +213,7 @@ function identitySummary(tableName: string, data: Record<string, unknown> | null
   const field = IDENTITY_FIELD[tableName];
   const value = field ? data[field] : undefined;
   if (value == null || value === "") return "-";
-  if (field === "amount") return `₩${Number(value).toLocaleString()}`;
+  if (field === "amount") return `₩${formatNumber(Number(value))}`;
   return String(value);
 }
 
@@ -325,9 +326,9 @@ export default async function AuditLogPage({
         actionTone: "info",
         target: row.products?.name ?? "(삭제된 품목)",
         author: row.profiles?.full_name ?? "-",
-        summary: `전산 재고: ${before.toLocaleString()} → ${after.toLocaleString()} (${
+        summary: `전산 재고: ${formatNumber(before)} → ${formatNumber(after)} (${
           row.quantity > 0 ? "+" : ""
-        }${row.quantity.toLocaleString()}) · 사유: ${row.note || "-"}`,
+        }${formatNumber(row.quantity)}) · 사유: ${row.note || "-"}`,
       };
     });
   } else {
@@ -447,7 +448,7 @@ export default async function AuditLogPage({
           border: "1px solid var(--erp-info-border)",
         }}
       >
-        최근 {limit.toLocaleString()}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+        최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
       <div className="erp-grid-wrap">
@@ -499,7 +500,7 @@ export default async function AuditLogPage({
       {hasMore && (
         <div className="mt-2 text-center">
           <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {LIMIT_STEP.toLocaleString()}건)
+            더보기 (다음 {formatNumber(LIMIT_STEP)}건)
           </Link>
         </div>
       )}

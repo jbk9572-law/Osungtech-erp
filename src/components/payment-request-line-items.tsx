@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
+import { formatNumber } from "@/lib/format-number";
 
 export type LineItemRow = {
   key: string;
@@ -162,7 +163,7 @@ export function PaymentRequestLineItems({
         <button type="button" onClick={addRow} className="erp-btn">
           + 줄 추가
         </button>
-        <span className="text-sm font-semibold">합계: {total.toLocaleString()}원</span>
+        <span className="text-sm font-semibold">합계: {formatNumber(total)}원</span>
       </div>
     </div>
   );

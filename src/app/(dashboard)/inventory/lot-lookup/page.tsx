@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { normalizeLotNumber } from "@/lib/lot-number";
+import { formatNumber } from "@/lib/format-number";
 
 type PurchaseHit = {
   id: string;
@@ -133,8 +134,8 @@ export default async function LotLookupPage({
           >
             &quot;{lotNumber}&quot;로 등록된 거래 {purchaseHits.length + saleHits.length}건 · 관련 품목{" "}
             {productNames.size}개 · 관련 거래처 {partnerNames.size}곳 · 입고 합계{" "}
-            {totalIn.toLocaleString()} · 출고 합계 {totalOut.toLocaleString()} · 추정 잔량{" "}
-            {(totalIn - totalOut).toLocaleString()}
+            {formatNumber(totalIn)} · 출고 합계 {formatNumber(totalOut)} · 추정 잔량{" "}
+            {formatNumber((totalIn - totalOut))}
           </div>
 
           <div className="erp-detail" style={{ marginTop: 0 }}>
@@ -169,7 +170,7 @@ export default async function LotLookupPage({
                         <td>{h.purchase_orders?.suppliers?.name ?? "-"}</td>
                         <td>{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</td>
                         <td className="num" style={{ color: "var(--erp-success)", fontWeight: 700 }}>
-                          {Number(h.quantity).toLocaleString()}
+                          {formatNumber(Number(h.quantity))}
                         </td>
                       </tr>
                     ))}
@@ -188,7 +189,7 @@ export default async function LotLookupPage({
                           합계 입고
                         </td>
                         <td className="num" style={{ fontWeight: 700 }}>
-                          {totalIn.toLocaleString()}
+                          {formatNumber(totalIn)}
                         </td>
                       </tr>
                     </tfoot>
@@ -230,7 +231,7 @@ export default async function LotLookupPage({
                         <td>{h.sales_orders?.customers?.name ?? "-"}</td>
                         <td>{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</td>
                         <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
-                          {Number(h.quantity).toLocaleString()}
+                          {formatNumber(Number(h.quantity))}
                         </td>
                       </tr>
                     ))}
@@ -249,7 +250,7 @@ export default async function LotLookupPage({
                           합계 출고
                         </td>
                         <td className="num" style={{ fontWeight: 700 }}>
-                          {totalOut.toLocaleString()}
+                          {formatNumber(totalOut)}
                         </td>
                       </tr>
                     </tfoot>

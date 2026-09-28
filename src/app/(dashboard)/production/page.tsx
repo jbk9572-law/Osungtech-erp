@@ -8,6 +8,7 @@ import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { deleteWorkOrder } from "@/app/(dashboard)/production/actions";
 import { matchesSearch } from "@/lib/search-match";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function ProductionPage({
   searchParams,
@@ -117,7 +118,7 @@ export default async function ProductionPage({
                     {row.products?.sku} · {row.products?.name}
                   </td>
                   <td className="num">
-                    {Number(row.quantity).toLocaleString()} {row.products?.unit}
+                    {formatNumber(Number(row.quantity))} {row.products?.unit}
                   </td>
                   <td>{row.warehouses?.name ?? "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>

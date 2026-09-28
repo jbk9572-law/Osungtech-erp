@@ -1,4 +1,5 @@
 import { calcVat } from "@/lib/tax";
+import { formatNumber } from "@/lib/format-number";
 
 type Company = {
   name: string;
@@ -117,7 +118,7 @@ export function QuotationDoc({
       </table>
 
       <div className="border-t border-black px-3 py-2 text-center text-sm font-semibold">
-        아래와 같이 견적합니다. (합계금액: {grandTotal.toLocaleString()}원, 부가세 포함)
+        아래와 같이 견적합니다. (합계금액: {formatNumber(grandTotal)}원, 부가세 포함)
       </div>
 
       <table className="w-full table-fixed border-collapse">
@@ -151,10 +152,10 @@ export function QuotationDoc({
             <tr key={row.id}>
               <td className="border border-black px-2 py-1">{row.productLabel}</td>
               <td className="border border-black px-2 py-1 text-center">{row.spec || "-"}</td>
-              <td className="border border-black px-2 py-1 text-right">{row.quantity.toLocaleString()}</td>
-              <td className="border border-black px-2 py-1 text-right">{row.unitPrice.toLocaleString()}</td>
-              <td className="border border-black px-2 py-1 text-right">{row.supplyAmount.toLocaleString()}</td>
-              <td className="border border-black px-2 py-1 text-right">{row.taxAmount.toLocaleString()}</td>
+              <td className="border border-black px-2 py-1 text-right">{formatNumber(row.quantity)}</td>
+              <td className="border border-black px-2 py-1 text-right">{formatNumber(row.unitPrice)}</td>
+              <td className="border border-black px-2 py-1 text-right">{formatNumber(row.supplyAmount)}</td>
+              <td className="border border-black px-2 py-1 text-right">{formatNumber(row.taxAmount)}</td>
               <td className="border border-black px-2 py-1 whitespace-pre-line">
                 {idx === 0 ? [memo, row.remark].filter(Boolean).join("\n") : row.remark ?? ""}
               </td>
@@ -177,8 +178,8 @@ export function QuotationDoc({
             <td className="border border-black px-2 py-1.5 text-right" colSpan={4}>
               합계
             </td>
-            <td className="border border-black px-2 py-1.5 text-right">{supplyTotal.toLocaleString()}</td>
-            <td className="border border-black px-2 py-1.5 text-right">{taxTotal.toLocaleString()}</td>
+            <td className="border border-black px-2 py-1.5 text-right">{formatNumber(supplyTotal)}</td>
+            <td className="border border-black px-2 py-1.5 text-right">{formatNumber(taxTotal)}</td>
             <td className="border border-black px-2 py-1.5" />
           </tr>
         </tfoot>

@@ -10,6 +10,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { PurchaseQuotePriceForm } from "@/components/purchase-quote-price-form";
 import { ConvertPurchaseQuoteRequestForm } from "@/components/convert-purchase-quote-request-form";
 import { deletePurchaseQuoteRequest } from "@/app/(dashboard)/purchase-quote-requests/actions";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function PurchaseQuoteRequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -97,13 +98,13 @@ export default async function PurchaseQuoteRequestDetailPage({ params }: { param
               <tr key={item.id}>
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.spec ?? "-"}</td>
-                <td className="num">{Number(item.quantity).toLocaleString()}</td>
+                <td className="num">{formatNumber(Number(item.quantity))}</td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{item.remark ?? "-"}</td>
                 {targetSuppliers.map((s) => {
                   const price = priceByItemAndSupplier.get(`${item.id}:${s.id}`);
                   return (
                     <td key={s.id} className="num">
-                      {price !== undefined ? price.toLocaleString() : "-"}
+                      {price !== undefined ? formatNumber(price) : "-"}
                     </td>
                   );
                 })}

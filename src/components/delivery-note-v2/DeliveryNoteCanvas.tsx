@@ -2,6 +2,7 @@ import { SNS_LINES, SNS_FILLS } from "./sns-lines";
 import { ZENITH_LINES, ZENITH_FILLS } from "./zenith-lines";
 import { KT_LINES, KT_FILLS } from "./kt-lines";
 import { PAGE_W, PAGE_H, FONT, pt, dash, Fill, Line, T, TCenter, TRight, type Company } from "./shared";
+import { formatNumber } from "@/lib/format-number";
 
 type Item = {
   id: string;
@@ -162,12 +163,12 @@ export function SnsFiltechCanvas({
             <TCenter centerX={SPEC_CENTER} y={y} size={9.96} width={SPEC_WIDTH}>{row.spec}</TCenter>
             {box != null && box > 0 && (
               <TCenter centerX={COL_B_CENTER} y={y} size={9.96}>
-                {Number(box.toFixed(2)).toLocaleString()} Box
+                {formatNumber(Number(box.toFixed(2)))} Box
               </TCenter>
             )}
             {row.quantity > 0 && (
               <TCenter centerX={COL_C_CENTER} y={y} size={9.96}>
-                {row.quantity.toLocaleString()}
+                {formatNumber(row.quantity)}
               </TCenter>
             )}
           </div>
@@ -182,8 +183,8 @@ export function SnsFiltechCanvas({
 
       {/* 합계 행 */}
       <TCenter centerX={SUM_LABEL_CENTER} y={688.04} size={9.96}>합계</TCenter>
-      <TCenter centerX={COL_B_CENTER} y={688.04} size={9.96}>{Number(totalBox.toFixed(2)).toLocaleString()} Box</TCenter>
-      <TCenter centerX={COL_C_CENTER} y={688.52} size={9.96}>{totalEa.toLocaleString()}</TCenter>
+      <TCenter centerX={COL_B_CENTER} y={688.04} size={9.96}>{formatNumber(Number(totalBox.toFixed(2)))} Box</TCenter>
+      <TCenter centerX={COL_C_CENTER} y={688.52} size={9.96}>{formatNumber(totalEa)}</TCenter>
 
       {/* 하단 도장란 */}
       <T x={102.48} y={730.4} size={9.96} bold>공급자</T>
@@ -343,7 +344,7 @@ export function ZenithTechCanvas({
               <TCenter centerX={Z_UNIT_CENTER} y={y} size={9.96}>{row.unit}</TCenter>
             )}
             {row.quantity > 0 && (
-              <TRight right={Z_EA_RIGHT} y={y} size={9.96}>{row.quantity.toLocaleString()}</TRight>
+              <TRight right={Z_EA_RIGHT} y={y} size={9.96}>{formatNumber(row.quantity)}</TRight>
             )}
             {row.remark && <T x={Z_REMARK_X} y={y} size={9.96}>{row.remark}</T>}
           </div>
@@ -358,7 +359,7 @@ export function ZenithTechCanvas({
 
       {/* 합계 행 */}
       <T x={222.12} y={689.36} size={9.96}>합계</T>
-      <TRight right={Z_EA_RIGHT} y={689.84} size={9.96}>{totalEa.toLocaleString()}</TRight>
+      <TRight right={Z_EA_RIGHT} y={689.84} size={9.96}>{formatNumber(totalEa)}</TRight>
 
       {/* 하단 도장란 */}
       <T x={102.48} y={732.08} size={9.96} bold>공급자</T>
@@ -512,7 +513,7 @@ export function KtSolutionCanvas({
             )}
             {row.quantity > 0 && (
               <TCenter centerX={KT_QTY_CENTER} y={y} size={9.96}>
-                {row.quantity.toLocaleString()} {row.unit || ""}
+                {formatNumber(row.quantity)} {row.unit || ""}
               </TCenter>
             )}
             {row.remark && <T x={KT_REMARK_X} y={y} size={9.96}>{row.remark}</T>}
@@ -528,7 +529,7 @@ export function KtSolutionCanvas({
 
       {/* 합계 행 */}
       <T x={222.12} y={688.04} size={9.96}>합계</T>
-      <TCenter centerX={KT_QTY_CENTER} y={688.52} size={9.96}>{Math.round(totalBox).toLocaleString()} box</TCenter>
+      <TCenter centerX={KT_QTY_CENTER} y={688.52} size={9.96}>{formatNumber(Math.round(totalBox))} box</TCenter>
 
       {/* 하단 도장란 */}
       <T x={102.48} y={729.92} size={9.96} bold>공급자</T>

@@ -6,6 +6,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function IncomeStatementPage({
   searchParams,
@@ -121,7 +122,7 @@ export default async function IncomeStatementPage({
                     color: r.value < 0 ? "var(--erp-danger)" : "var(--erp-text)",
                   }}
                 >
-                  {r.value.toLocaleString()}
+                  {formatNumber(r.value)}
                 </td>
               </tr>
             ))}

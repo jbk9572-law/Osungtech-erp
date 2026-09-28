@@ -4,6 +4,7 @@ import { useActionState, useMemo, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PageGuide } from "@/components/erp/page-guide";
+import { formatNumber } from "@/lib/format-number";
 
 type ComponentInfo = {
   productId: string;
@@ -167,10 +168,10 @@ export function WorkOrderForm({
                       {r.sku} · {r.name}
                     </td>
                     <td className="num">
-                      {r.needed.toLocaleString()} {r.unit}
+                      {formatNumber(r.needed)} {r.unit}
                     </td>
                     <td className="num">
-                      {r.currentStock.toLocaleString()} {r.unit}
+                      {formatNumber(r.currentStock)} {r.unit}
                     </td>
                     <td>
                       {r.short && (

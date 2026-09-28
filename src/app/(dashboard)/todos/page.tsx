@@ -7,6 +7,7 @@ import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { formatNumber } from "@/lib/format-number";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -136,14 +137,14 @@ export default async function TodosPage({
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             전체 할일
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{totalCount.toLocaleString()}건</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalCount)}건</div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             진행중
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
-            {inProgressCount.toLocaleString()}건
+            {formatNumber(inProgressCount)}건
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -151,7 +152,7 @@ export default async function TodosPage({
             기한초과
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: overdueCount ? "var(--erp-danger)" : undefined }}>
-            {overdueCount.toLocaleString()}건
+            {formatNumber(overdueCount)}건
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -159,7 +160,7 @@ export default async function TodosPage({
             완료
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-text-muted)" }}>
-            {doneCount.toLocaleString()}건
+            {formatNumber(doneCount)}건
           </div>
         </div>
       </div>
@@ -198,7 +199,7 @@ export default async function TodosPage({
           border: "1px solid var(--erp-info-border)",
         }}
       >
-        최근 {limit.toLocaleString()}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+        최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -258,7 +259,7 @@ export default async function TodosPage({
             }).toString()}`}
             className="erp-btn"
           >
-            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}건)
+            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
           </Link>
         </div>
       )}

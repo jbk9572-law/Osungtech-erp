@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { BACKUP_TABLES, BACKUP_FORMAT_VERSION, RESTORE_SKIP_TABLES, type BackupFile } from "@/lib/backup-tables";
 import { dispatchServerRestore } from "@/lib/github-restore";
 import type { FormState } from "@/components/form-message";
+import { formatNumber } from "@/lib/format-number";
 
 // db-backups 브랜치의 파일명은 항상 이 형식의 UTC 타임스탬프다
 // (.github/workflows/db-backup.yml의 `date -u +%Y-%m-%dT%H%M%SZ`).
@@ -110,7 +111,7 @@ export async function restoreBackup(_prevState: FormState, formData: FormData): 
 
   const failed = results.filter((r) => r.error);
   const totalRestored = results.reduce((sum, r) => sum + r.restored, 0);
-  const summary = `총 ${totalRestored.toLocaleString()}건을 새로 채워넣었습니다 (이미 있던 데이터는 건드리지 않았습니다).`;
+  const summary = `총 ${formatNumber(totalRestored)}건을 새로 채워넣었습니다 (이미 있던 데이터는 건드리지 않았습니다).`;
 
   if (failed.length > 0) {
     return {

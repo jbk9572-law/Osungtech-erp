@@ -8,6 +8,7 @@ import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { formatNumber } from "@/lib/format-number";
 
 type Row = {
   key: number;
@@ -122,7 +123,7 @@ export function NewQuoteForm({
                 <td>
                   <NumberInput value={row.unitPrice} onChange={(n) => updateRow(row.key, { unitPrice: n })} className="erp-input" />
                 </td>
-                <td className="num">{(row.quantity * row.unitPrice).toLocaleString()}</td>
+                <td className="num">{formatNumber((row.quantity * row.unitPrice))}</td>
                 <td>
                   <input
                     value={row.remark}
@@ -145,7 +146,7 @@ export function NewQuoteForm({
                 합계
               </td>
               <td className="num" style={{ fontWeight: 700 }}>
-                {total.toLocaleString()}
+                {formatNumber(total)}
               </td>
               <td colSpan={2} />
             </tr>

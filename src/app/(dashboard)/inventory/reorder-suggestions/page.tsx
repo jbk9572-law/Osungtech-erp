@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
 
 type SuggestionRow = {
   productId: string;
@@ -180,15 +181,15 @@ export default async function ReorderSuggestionsPage() {
                       <td>{row.name}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
                       <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
-                        {row.quantity.toLocaleString()} {row.unit ?? ""}
+                        {formatNumber(row.quantity)} {row.unit ?? ""}
                       </td>
                       <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                        {row.reorderPoint.toLocaleString()} {row.unit ?? ""}
+                        {formatNumber(row.reorderPoint)} {row.unit ?? ""}
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {row.suggestedQty.toLocaleString()} {row.unit ?? ""}
+                        {formatNumber(row.suggestedQty)} {row.unit ?? ""}
                       </td>
-                      <td className="num">{Math.round(row.suggestedQty * row.cost).toLocaleString()}원</td>
+                      <td className="num">{formatNumber(Math.round(row.suggestedQty * row.cost))}원</td>
                     </tr>
                   ))}
                 </tbody>
@@ -197,7 +198,7 @@ export default async function ReorderSuggestionsPage() {
                     <td colSpan={6} className="erp-grid-sticky-label">
                       예상 매입금액 합계
                     </td>
-                    <td className="num">{Math.round(totalEstimate).toLocaleString()}원</td>
+                    <td className="num">{formatNumber(Math.round(totalEstimate))}원</td>
                   </tr>
                 </tfoot>
               </table>

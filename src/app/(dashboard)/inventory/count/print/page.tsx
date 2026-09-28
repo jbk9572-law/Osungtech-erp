@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { PrintButton } from "@/components/print-button";
 import { todayKstStr } from "@/lib/kst-date";
+import { formatNumber } from "@/lib/format-number";
 
 const cellStyle: React.CSSProperties = {
   border: "1px solid #000",
@@ -72,7 +73,7 @@ export default async function InventoryCountPrintPage({
       <div className="mb-3 flex items-end justify-between" style={{ color: "#000" }}>
         <h1 style={{ fontSize: 18, fontWeight: 700 }}>재고 실사 목록{selectedWarehouseName ? ` — ${selectedWarehouseName}` : ""}</h1>
         <div style={{ fontSize: 12 }}>
-          기준일 {todayKstStr()} · {rows.length.toLocaleString()}개 품목
+          기준일 {todayKstStr()} · {formatNumber(rows.length)}개 품목
           {onlyNonZero === "1" && " (전산 재고 0 제외)"}
         </div>
       </div>
@@ -105,10 +106,10 @@ export default async function InventoryCountPrintPage({
               <td style={cellStyle}>{row.name}</td>
               <td style={cellStyle}>{row.spec || ""}</td>
               <td style={cellStyle}>
-                {row.basePackageQty ? `${Number(row.basePackageQty).toLocaleString()}${row.unit ?? ""}/박스` : ""}
+                {row.basePackageQty ? `${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}/박스` : ""}
               </td>
               <td style={{ ...cellStyle, textAlign: "right" }}>
-                {row.systemQuantity.toLocaleString()} {row.unit ?? ""}
+                {formatNumber(row.systemQuantity)} {row.unit ?? ""}
               </td>
               <td style={{ ...cellStyle, height: 26 }} />
               <td style={{ ...cellStyle, height: 26 }} />

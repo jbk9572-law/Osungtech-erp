@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnouncementItem, DueTodoItem, LowStockItem } from "@/components/erp/notification-bell";
+import { formatNumber } from "@/lib/format-number";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 10분마다 재확인
 const AUTO_HIDE_MS = 60 * 1000; // 1분
@@ -76,7 +77,7 @@ export function NotificationToaster() {
             key: `s-${p.id}`,
             href: `/inventory/${p.id}`,
             title: `⚠️ ${p.name} 안전재고 부족`,
-            meta: `현재 ${p.quantity.toLocaleString()} / 기준 ${p.reorderPoint.toLocaleString()}`,
+            meta: `현재 ${formatNumber(p.quantity)} / 기준 ${formatNumber(p.reorderPoint)}`,
           });
         });
       } catch {

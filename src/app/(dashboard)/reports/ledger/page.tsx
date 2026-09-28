@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
 
 const TYPE_LABEL: Record<string, string> = { in: "입고", out: "출고", adjustment: "조정" };
 
@@ -175,7 +176,7 @@ export default async function InventoryLedgerPage({
                 이월(전월 이전)
               </div>
               <div style={{ fontSize: 17, fontWeight: 700 }}>
-                {openingBalance.toLocaleString()} {selectedProduct.unit}
+                {formatNumber(openingBalance)} {selectedProduct.unit}
               </div>
             </div>
             <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -183,7 +184,7 @@ export default async function InventoryLedgerPage({
                 이번달 입고
               </div>
               <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
-                {inTotal.toLocaleString()} {selectedProduct.unit}
+                {formatNumber(inTotal)} {selectedProduct.unit}
               </div>
             </div>
             <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -191,7 +192,7 @@ export default async function InventoryLedgerPage({
                 이번달 출고
               </div>
               <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-danger)" }}>
-                {outTotal.toLocaleString()} {selectedProduct.unit}
+                {formatNumber(outTotal)} {selectedProduct.unit}
               </div>
             </div>
             <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -199,7 +200,7 @@ export default async function InventoryLedgerPage({
                 마감재고
               </div>
               <div style={{ fontSize: 17, fontWeight: 700 }}>
-                {closingBalance.toLocaleString()} {selectedProduct.unit}
+                {formatNumber(closingBalance)} {selectedProduct.unit}
               </div>
             </div>
           </div>
@@ -232,9 +233,9 @@ export default async function InventoryLedgerPage({
                       <td>{TYPE_LABEL[r.type] ?? r.type}</td>
                       <td className="num" style={{ color: r.delta < 0 ? "var(--erp-danger)" : "var(--erp-primary)" }}>
                         {r.delta > 0 ? "+" : ""}
-                        {r.delta.toLocaleString()}
+                        {formatNumber(r.delta)}
                       </td>
-                      <td className="num">{r.balance.toLocaleString()}</td>
+                      <td className="num">{formatNumber(r.balance)}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{r.reference ?? "-"}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{r.note ?? "-"}</td>
                     </tr>

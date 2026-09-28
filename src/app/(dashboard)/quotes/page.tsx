@@ -8,6 +8,7 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { formatNumber } from "@/lib/format-number";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -124,7 +125,7 @@ export default async function QuotesPage({
                   <td>{q.doc_no}</td>
                   <td>{q.customers?.name ?? "-"}</td>
                   <td className="num">{(q.quote_items ?? []).length}</td>
-                  <td className="num">{total.toLocaleString()}</td>
+                  <td className="num">{formatNumber(total)}</td>
                   <td>{q.valid_until ? q.valid_until.replaceAll("-", ".") : "-"}</td>
                   <td>
                     <QuoteStatusBadge status={q.status} />
@@ -147,7 +148,7 @@ export default async function QuotesPage({
       {hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}줄)
+            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>
         </div>
       )}

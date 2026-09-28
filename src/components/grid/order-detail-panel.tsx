@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
+import { formatNumber } from "@/lib/format-number";
 
 // 매출/매입 목록 화면의 마스터-디테일 레이아웃에서 공용으로 쓰는 "선택된
 // 명세표의 품목내역" 패널 — 매출/매입 품목 shape이 단가 필드 이름만
@@ -89,7 +90,7 @@ export function OrderDetailPanel({
                         style={selection.isReturn ? { color: "var(--erp-danger)" } : undefined}
                       >
                         {sign}
-                        {item.quantity.toLocaleString()} {item.unit ?? ""}
+                        {formatNumber(item.quantity)} {item.unit ?? ""}
                       </td>
                       <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                         {formatNumOrDash(item.unitPrice)}
@@ -99,14 +100,14 @@ export function OrderDetailPanel({
                         style={selection.isReturn ? { color: "var(--erp-danger)" } : undefined}
                       >
                         {amountSign}
-                        {item.supplyAmount.toLocaleString()}
+                        {formatNumber(item.supplyAmount)}
                       </td>
                       <td
                         className="num"
                         style={{ color: selection.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                       >
                         {amountSign}
-                        {item.taxAmount.toLocaleString()}
+                        {formatNumber(item.taxAmount)}
                       </td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
                     </tr>
@@ -132,10 +133,10 @@ export function OrderDetailPanel({
               <tfoot>
                 <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                   <td colSpan={3}>합계 ({selection.items.length}건)</td>
-                  <td className="num">{totalQuantity.toLocaleString()}</td>
+                  <td className="num">{formatNumber(totalQuantity)}</td>
                   <td />
-                  <td className="num">{totalSupply.toLocaleString()}</td>
-                  <td className="num">{totalTax.toLocaleString()}</td>
+                  <td className="num">{formatNumber(totalSupply)}</td>
+                  <td className="num">{formatNumber(totalTax)}</td>
                   <td />
                 </tr>
               </tfoot>

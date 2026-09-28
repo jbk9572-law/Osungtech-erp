@@ -5,6 +5,7 @@ import { PrintButton } from "@/components/print-button";
 import type { Item, NestResult } from "@/lib/paper-nest-engine";
 import { BatchCard, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
 import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+import { formatNumber } from "@/lib/format-number";
 
 // 인쇄 미리보기(계산 직후, localStorage 기반)와 저장된 계산 다시 보기(DB
 // 기반) 두 화면이 같은 보고서 레이아웃을 쓰기 때문에 공통 컴포넌트로 뺐다.
@@ -48,11 +49,11 @@ export function PaperCalcReport({
         {[
           {
             label: "총 원지",
-            value: `${result.totalPaper.toLocaleString()}장`,
+            value: `${formatNumber(result.totalPaper)}장`,
             sub: `${result.totalSheet}연 구매 (실사용 ${result.effectiveReams.toFixed(2)}연)`,
           },
-          { label: "총 생산", value: `${result.totalProd.toLocaleString()}매`, sub: "" },
-          { label: "초과 생산", value: `${result.overProd.toLocaleString()}매`, sub: "" },
+          { label: "총 생산", value: `${formatNumber(result.totalProd)}매`, sub: "" },
+          { label: "초과 생산", value: `${formatNumber(result.overProd)}매`, sub: "" },
           { label: "평균 사용률", value: usageAvg != null ? `${usageAvg.toFixed(1)}%` : "-", sub: "" },
           { label: "배치 수", value: `${result.layouts.length}개`, sub: "" },
         ].map((card) => (

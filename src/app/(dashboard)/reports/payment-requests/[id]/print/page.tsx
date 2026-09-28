@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
+import { formatNumber } from "@/lib/format-number";
 
 // 개인카드로 쓴 문서는 "지급결의양식", 법인카드(하나/신한)로 쓴 문서는
 // "사용내역" 큰 제목에 어느 카드인지 작게 덧붙여 표시한다 — 실제로는
@@ -184,7 +185,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
                 <td style={{ ...s, textAlign: "center" }}>{item.used_at.replaceAll("-", ".")}</td>
                 <td style={s}>{item.vendor}</td>
                 <td style={{ ...s, textAlign: "center" }}>{item.purpose || ""}</td>
-                <td style={{ ...s, textAlign: "right" }}>{Number(item.amount).toLocaleString()}</td>
+                <td style={{ ...s, textAlign: "right" }}>{formatNumber(Number(item.amount))}</td>
                 <td style={s}>{item.remark || ""}</td>
               </tr>
             );
@@ -193,7 +194,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
             <td style={{ ...itemCellStyle, textAlign: "center", fontWeight: 700 }} colSpan={3}>
               합 계
             </td>
-            <td style={{ ...itemCellStyle, textAlign: "right", fontWeight: 700 }}>{total.toLocaleString()}</td>
+            <td style={{ ...itemCellStyle, textAlign: "right", fontWeight: 700 }}>{formatNumber(total)}</td>
             <td style={itemCellStyle} />
           </tr>
         </tbody>

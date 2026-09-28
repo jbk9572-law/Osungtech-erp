@@ -52,6 +52,7 @@ import { DraftResumeBanner } from "@/components/draft-resume-banner";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
+import { formatNumber } from "@/lib/format-number";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -1612,7 +1613,7 @@ export function NewPurchaseForm({
                     </td>
                   )}
                   <td className="num">
-                    {pendingCalcUnitCost.toLocaleString()}
+                    {formatNumber(pendingCalcUnitCost)}
                   </td>
                   {alsoCreateSale && (
                     <td
@@ -1623,23 +1624,23 @@ export function NewPurchaseForm({
                     </td>
                   )}
                   <td className="num">
-                    {pendingCalcAmount.toLocaleString()}원
+                    {formatNumber(pendingCalcAmount)}원
                   </td>
                   <td
                     className="num"
                     style={{ color: "var(--erp-text-muted)" }}
                   >
-                    {calcVat(pendingCalcAmount).toLocaleString()}원
+                    {formatNumber(calcVat(pendingCalcAmount))}원
                   </td>
                   <td className="num">
-                    {(
+                    {formatNumber((
                       pendingCalcAmount + calcVat(pendingCalcAmount)
-                    ).toLocaleString()}
+                    ))}
                     원
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
-                      ? `자동값 ${pendingCalcSummary.totalSheet.toLocaleString()} → 수동 입력`
+                      ? `자동값 ${formatNumber(pendingCalcSummary.totalSheet)} → 수동 입력`
                       : "모조지 계산 자동 반영"}
                   </td>
                   <td className="num">
@@ -1936,20 +1937,20 @@ export function NewPurchaseForm({
                       </td>
                     )}
                     <td className="num">
-                      {(row.quantity * row.unitCost).toLocaleString()}원
+                      {formatNumber((row.quantity * row.unitCost))}원
                     </td>
                     <td
                       className="num"
                       style={{ color: "var(--erp-text-muted)" }}
                     >
-                      {calcVat(row.quantity * row.unitCost).toLocaleString()}
+                      {formatNumber(calcVat(row.quantity * row.unitCost))}
                       원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
-                      {(
+                      {formatNumber((
                         row.quantity * row.unitCost +
                         calcVat(row.quantity * row.unitCost)
-                      ).toLocaleString()}
+                      ))}
                       원
                     </td>
                     <td>
@@ -2003,14 +2004,14 @@ export function NewPurchaseForm({
                 </td>
                 <td className="num" colSpan={5}>
                   <div style={{ color: "var(--erp-text-muted)" }}>
-                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세{" "}
-                    {taxAmount.toLocaleString()}원
+                    공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
+                    {formatNumber(taxAmount)}원
                   </div>
                   <div
                     className="text-sm font-bold"
                     style={{ color: "var(--erp-text)" }}
                   >
-                    {total.toLocaleString()}원
+                    {formatNumber(total)}원
                   </div>
                 </td>
               </tr>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { PageGuide } from "@/components/erp/page-guide";
 import type { LocationOption } from "@/lib/location-stock-sync";
+import { formatNumber } from "@/lib/format-number";
 
 export type MultiLocationItem = {
   // 화면에 같이 떠야 하는 두 목록(예: 매입+출고 동시등록의 입고 품목과
@@ -157,7 +158,7 @@ export function LocationAllocationModal({
                     {item.spec && <span style={{ fontWeight: 400, color: "var(--erp-text-muted)" }}> ({item.spec})</span>}
                   </div>
                   <div style={{ fontSize: 12.5, color: "var(--erp-text-muted)", whiteSpace: "nowrap" }}>
-                    필요 {item.quantity.toLocaleString()} {item.unit}
+                    필요 {formatNumber(item.quantity)} {item.unit}
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -168,7 +169,7 @@ export function LocationAllocationModal({
                         <span style={{ color: "var(--erp-text-muted)" }}>
                           {" "}
                           ({loc.tier === 2 ? "2단" : "1단"}·{loc.position === 1 ? "좌측" : "우측"}) · 현재{" "}
-                          {loc.quantity.toLocaleString()}
+                          {formatNumber(loc.quantity)}
                         </span>
                       </div>
                       <input
@@ -189,7 +190,7 @@ export function LocationAllocationModal({
                     color: ok ? "var(--erp-success)" : "var(--erp-danger)",
                   }}
                 >
-                  배분 합계 {sum.toLocaleString()} / 필요 {item.quantity.toLocaleString()}
+                  배분 합계 {formatNumber(sum)} / 필요 {formatNumber(item.quantity)}
                   {!ok && " — 합계를 필요 수량과 맞춰주세요"}
                 </div>
               </div>

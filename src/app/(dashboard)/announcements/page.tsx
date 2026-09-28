@@ -7,6 +7,7 @@ import {
 } from "@/components/announcement-grid-table";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -103,7 +104,7 @@ export default async function AnnouncementsPage({
           border: "1px solid var(--erp-info-border)",
         }}
       >
-        최근 {limit.toLocaleString()}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+        최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
       <AnnouncementGridTable
@@ -117,7 +118,7 @@ export default async function AnnouncementsPage({
       {hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <Link href={`/announcements?limit=${limit + LIST_LIMIT_STEP}`} className="erp-btn">
-            더보기 (다음 {LIST_LIMIT_STEP.toLocaleString()}건)
+            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
           </Link>
         </div>
       )}

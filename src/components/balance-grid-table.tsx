@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ClickableRow } from "@/components/clickable-row";
+import { formatNumber } from "@/lib/format-number";
 
 export type BalanceRow = { id: string; name: string; total: number; paid: number; balance: number };
 
@@ -100,13 +101,13 @@ export function BalanceGridTable({
             {sortedRows.map((b) => (
               <ClickableRow key={b.id} href={`${hrefBase}/${b.id}`}>
                 <td>{b.name}</td>
-                <td className="num">{b.total.toLocaleString()}</td>
-                <td className="num">{b.paid.toLocaleString()}</td>
+                <td className="num">{formatNumber(b.total)}</td>
+                <td className="num">{formatNumber(b.paid)}</td>
                 <td
                   className="num"
                   style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}
                 >
-                  {b.balance.toLocaleString()}
+                  {formatNumber(b.balance)}
                 </td>
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   상세 →

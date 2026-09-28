@@ -7,6 +7,7 @@ import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import type { Database } from "@/types/database.types";
+import { formatNumber } from "@/lib/format-number";
 
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 
@@ -118,7 +119,7 @@ export default async function CustomersPage({
 
       {!keyword && (
         <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-          최근 등록순 {limit.toLocaleString()}개까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
+          최근 등록순 {formatNumber(limit)}개까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
         </p>
       )}
 
@@ -127,7 +128,7 @@ export default async function CustomersPage({
       {hasMore && (
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
           <Link href={moreHref} className="erp-btn">
-            더보기 ({LIST_LIMIT_STEP.toLocaleString()}개 더)
+            더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
           </Link>
         </div>
       )}

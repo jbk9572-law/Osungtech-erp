@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
 import { GridBadge } from "@/components/grid/badge";
+import { formatNumber } from "@/lib/format-number";
 
 export type AnnouncementRow = {
   id: string;
@@ -78,14 +79,14 @@ export function AnnouncementGridTable({
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             전체 공지
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{totalCount.toLocaleString()}건</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalCount)}건</div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             안읽음
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: unreadCount ? "var(--erp-danger)" : undefined }}>
-            {unreadCount.toLocaleString()}건
+            {formatNumber(unreadCount)}건
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -93,14 +94,14 @@ export function AnnouncementGridTable({
             고정 공지
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
-            {pinnedCount.toLocaleString()}건
+            {formatNumber(pinnedCount)}건
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             이번주 등록
           </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{thisWeekCount.toLocaleString()}건</div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(thisWeekCount)}건</div>
         </div>
       </div>
 

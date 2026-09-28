@@ -10,6 +10,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { groupByProductKey } from "@/lib/group-by-product";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { CloseButton } from "@/components/erp/close-button";
+import { formatNumber } from "@/lib/format-number";
 
 type Transaction = {
   date: string;
@@ -242,10 +243,10 @@ export default async function MonthlyReportCompanyPage({
                       </span>
                     </td>
                     <td className="num" style={{ fontWeight: 700 }}>
-                      {group.totalQuantity.toLocaleString()} {first.unit}
+                      {formatNumber(group.totalQuantity)} {first.unit}
                     </td>
                     <td className="num" style={{ fontWeight: 700 }}>
-                      {group.totalAmount.toLocaleString()}
+                      {formatNumber(group.totalAmount)}
                     </td>
                   </tr>
                   {group.items.map((t, i) => (
@@ -268,9 +269,9 @@ export default async function MonthlyReportCompanyPage({
                         {t.spec !== "-" ? t.spec : "-"}
                       </td>
                       <td className="num">
-                        {t.quantity.toLocaleString()} {t.unit}
+                        {formatNumber(t.quantity)} {t.unit}
                       </td>
-                      <td className="num">{t.amount.toLocaleString()}</td>
+                      <td className="num">{formatNumber(t.amount)}</td>
                     </ClickableRow>
                   ))}
                 </Fragment>
@@ -291,12 +292,12 @@ export default async function MonthlyReportCompanyPage({
                   합계 ({rows.length}건)
                 </td>
                 <td className="num">
-                  {inQty > 0 && `입고 ${inQty.toLocaleString()}`}
+                  {inQty > 0 && `입고 ${formatNumber(inQty)}`}
                   {inQty > 0 && outQty > 0 && " / "}
-                  {outQty > 0 && `출고 ${outQty.toLocaleString()}`}
+                  {outQty > 0 && `출고 ${formatNumber(outQty)}`}
                 </td>
                 <td className="num">
-                  {(inAmount + outAmount).toLocaleString()}
+                  {formatNumber((inAmount + outAmount))}
                 </td>
               </tr>
             </tfoot>

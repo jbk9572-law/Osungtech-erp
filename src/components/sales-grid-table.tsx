@@ -23,6 +23,7 @@ import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { nextMonthLabel } from "@/lib/carryover";
+import { formatNumber } from "@/lib/format-number";
 
 export type SalesRowItem = {
   productLabel: string;
@@ -374,7 +375,7 @@ export function SalesGridTable({
                   >
                     {isCollection
                       ? "-"
-                      : `${row.isReturn ? "+" : ""}${row.quantity.toLocaleString()} ${row.unit ?? ""}`}
+                      : `${row.isReturn ? "+" : ""}${formatNumber(row.quantity)} ${row.unit ?? ""}`}
                   </td>
                   <td
                     className="num"
@@ -387,13 +388,13 @@ export function SalesGridTable({
                     style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
                   >
                     {row.isReturn ? "-" : ""}
-                    {row.supplyAmount.toLocaleString()}
+                    {formatNumber(row.supplyAmount)}
                   </td>
                   <td
                     className="num"
                     style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                   >
-                    {isCollection ? "-" : `${row.isReturn ? "-" : ""}${row.taxAmount.toLocaleString()}`}
+                    {isCollection ? "-" : `${row.isReturn ? "-" : ""}${formatNumber(row.taxAmount)}`}
                   </td>
                   <td>
                     {isCollection ? (
@@ -470,10 +471,10 @@ export function SalesGridTable({
                   매출 합계 (
                   {sortedRows.filter((r) => r.kind === "sale").length}건)
                 </td>
-                <td className="num">{totalQuantity.toLocaleString()}</td>
+                <td className="num">{formatNumber(totalQuantity)}</td>
                 <td />
-                <td className="num">{totalSupply.toLocaleString()}</td>
-                <td className="num">{totalTax.toLocaleString()}</td>
+                <td className="num">{formatNumber(totalSupply)}</td>
+                <td className="num">{formatNumber(totalTax)}</td>
                 <td />
                 <td />
                 <td />

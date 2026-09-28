@@ -19,6 +19,7 @@ import {
 } from "@/lib/paper-nest-engine";
 import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
 import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+import { formatNumber } from "@/lib/format-number";
 
 type ItemRow = { key: number; width: number; height: number; qty: number };
 type Sheet = { placements: NestLayoutItem[] };
@@ -223,7 +224,7 @@ export function ManualLayoutClient({
     const placedCount = placedCountForItem(sheets, item.name);
     if (placedCount >= maxCount) {
       setWarning(
-        `${item.name}은(는) 목표 수량(${item.orderQty.toLocaleString()}개 = ${maxCount}배치)만큼 이미 배치되어 더 배치할 수 없습니다.`
+        `${item.name}은(는) 목표 수량(${formatNumber(item.orderQty)}개 = ${maxCount}배치)만큼 이미 배치되어 더 배치할 수 없습니다.`
       );
       return;
     }

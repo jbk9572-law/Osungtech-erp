@@ -6,6 +6,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { currentMonth, shiftMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchMonthlyReportData, type View } from "@/lib/monthly-report-data";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function MonthlyReportPage({
   searchParams,
@@ -176,7 +177,7 @@ export default async function MonthlyReportPage({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {totalSalesAmount.toLocaleString()}원
+            {formatNumber(totalSalesAmount)}원
           </div>
           {salesDelta && (
             <div
@@ -216,7 +217,7 @@ export default async function MonthlyReportPage({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {totalPurchaseAmount.toLocaleString()}원
+            {formatNumber(totalPurchaseAmount)}원
           </div>
           {purchaseDelta && (
             <div
@@ -256,7 +257,7 @@ export default async function MonthlyReportPage({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {itemGroups.length.toLocaleString()}개
+            {formatNumber(itemGroups.length)}개
           </div>
         </div>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
@@ -277,7 +278,7 @@ export default async function MonthlyReportPage({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {companyIds.size.toLocaleString()}곳
+            {formatNumber(companyIds.size)}곳
           </div>
         </div>
       </div>
@@ -305,9 +306,9 @@ export default async function MonthlyReportPage({
                   <td>
                     <GridBadge tone="danger">{r.reason}</GridBadge>
                   </td>
-                  <td className="num">{r.count.toLocaleString()}건</td>
-                  <td className="num">{r.quantity.toLocaleString()}</td>
-                  <td className="num">{r.amount.toLocaleString()}원</td>
+                  <td className="num">{formatNumber(r.count)}건</td>
+                  <td className="num">{formatNumber(r.quantity)}</td>
+                  <td className="num">{formatNumber(r.amount)}원</td>
                 </tr>
               ))}
             </tbody>
@@ -315,12 +316,12 @@ export default async function MonthlyReportPage({
               <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
                 <td>합계 (매출에서 차감됨)</td>
                 <td className="num">
-                  {returnReasonStats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}건
+                  {formatNumber(returnReasonStats.reduce((sum, r) => sum + r.count, 0))}건
                 </td>
                 <td className="num">
-                  {returnReasonStats.reduce((sum, r) => sum + r.quantity, 0).toLocaleString()}
+                  {formatNumber(returnReasonStats.reduce((sum, r) => sum + r.quantity, 0))}
                 </td>
-                <td className="num">{totalReturnAmount.toLocaleString()}원</td>
+                <td className="num">{formatNumber(totalReturnAmount)}원</td>
               </tr>
             </tfoot>
           </table>
@@ -388,19 +389,19 @@ export default async function MonthlyReportPage({
                       </td>
                       <td />
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {g.inQty.toLocaleString()} {g.unit}
+                        {formatNumber(g.inQty)} {g.unit}
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {g.inAmount.toLocaleString()}
+                        {formatNumber(g.inAmount)}
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {g.outQty.toLocaleString()} {g.unit}
+                        {formatNumber(g.outQty)} {g.unit}
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {g.outAmount.toLocaleString()}
+                        {formatNumber(g.outAmount)}
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {(g.inQty - g.outQty).toLocaleString()} {g.unit}
+                        {formatNumber((g.inQty - g.outQty))} {g.unit}
                       </td>
                     </tr>
                     {g.details.map((d) => (
@@ -433,28 +434,28 @@ export default async function MonthlyReportPage({
                           style={{ color: "var(--erp-text-muted)" }}
                         >
                           {d.type === "in"
-                            ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
+                            ? `${formatNumber(d.quantity)} ${g.unit ?? ""}`
                             : "-"}
                         </td>
                         <td
                           className="num"
                           style={{ color: "var(--erp-text-muted)" }}
                         >
-                          {d.type === "in" ? d.amount.toLocaleString() : "-"}
+                          {d.type === "in" ? formatNumber(d.amount) : "-"}
                         </td>
                         <td
                           className="num"
                           style={{ color: "var(--erp-text-muted)" }}
                         >
                           {d.type === "out"
-                            ? `${d.quantity.toLocaleString()} ${g.unit ?? ""}`
+                            ? `${formatNumber(d.quantity)} ${g.unit ?? ""}`
                             : "-"}
                         </td>
                         <td
                           className="num"
                           style={{ color: "var(--erp-text-muted)" }}
                         >
-                          {d.type === "out" ? d.amount.toLocaleString() : "-"}
+                          {d.type === "out" ? formatNumber(d.amount) : "-"}
                         </td>
                         <td
                           className="num"
@@ -481,12 +482,12 @@ export default async function MonthlyReportPage({
                   <td colSpan={2} className="erp-grid-sticky-label">
                     합계 ({itemGroups.length}개 품목)
                   </td>
-                  <td className="num">{totalInQty.toLocaleString()}</td>
-                  <td className="num">{totalInAmount.toLocaleString()}</td>
-                  <td className="num">{totalOutQty.toLocaleString()}</td>
-                  <td className="num">{totalOutAmount.toLocaleString()}</td>
+                  <td className="num">{formatNumber(totalInQty)}</td>
+                  <td className="num">{formatNumber(totalInAmount)}</td>
+                  <td className="num">{formatNumber(totalOutQty)}</td>
+                  <td className="num">{formatNumber(totalOutAmount)}</td>
                   <td className="num">
-                    {(totalInQty - totalOutQty).toLocaleString()}
+                    {formatNumber((totalInQty - totalOutQty))}
                   </td>
                 </tr>
               </tfoot>
@@ -624,7 +625,7 @@ export default async function MonthlyReportPage({
                         </div>
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {cg.totalQuantity.toLocaleString()}
+                        {formatNumber(cg.totalQuantity)}
                       </td>
                       <td className="num">
                         <GridBadge tone="info">
@@ -638,10 +639,10 @@ export default async function MonthlyReportPage({
                         -
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {cg.totalAmount.toLocaleString()}
+                        {formatNumber(cg.totalAmount)}
                       </td>
                       <td className="num" style={{ fontWeight: 700 }}>
-                        {cg.totalTax.toLocaleString()}
+                        {formatNumber(cg.totalTax)}
                       </td>
                       <td
                         className="num"
@@ -673,7 +674,7 @@ export default async function MonthlyReportPage({
                             className="num"
                             style={{ color: "var(--erp-text-muted)" }}
                           >
-                            {pg.totalQuantity.toLocaleString()} {first.unit}
+                            {formatNumber(pg.totalQuantity)} {first.unit}
                           </td>
                           <td
                             className="num"
@@ -685,19 +686,19 @@ export default async function MonthlyReportPage({
                             className="num"
                             style={{ color: "var(--erp-text-muted)" }}
                           >
-                            {Math.round(pg.avgUnitPrice).toLocaleString()}
+                            {formatNumber(Math.round(pg.avgUnitPrice))}
                           </td>
                           <td
                             className="num"
                             style={{ color: "var(--erp-text-muted)" }}
                           >
-                            {pg.totalAmount.toLocaleString()}
+                            {formatNumber(pg.totalAmount)}
                           </td>
                           <td
                             className="num"
                             style={{ color: "var(--erp-text-muted)" }}
                           >
-                            {pg.totalTax.toLocaleString()}
+                            {formatNumber(pg.totalTax)}
                           </td>
                           <td
                             className="num"
@@ -726,26 +727,22 @@ export default async function MonthlyReportPage({
                     합계 ({companyGroups.length}곳)
                   </td>
                   <td className="num">
-                    {companyGroups
-                      .reduce((sum, g) => sum + g.totalQuantity, 0)
-                      .toLocaleString()}
+                    {formatNumber(companyGroups
+                      .reduce((sum, g) => sum + g.totalQuantity, 0))}
                   </td>
                   <td className="num">
-                    {companyGroups
-                      .reduce((sum, g) => sum + g.transactionCount, 0)
-                      .toLocaleString()}
+                    {formatNumber(companyGroups
+                      .reduce((sum, g) => sum + g.transactionCount, 0))}
                     건
                   </td>
                   <td className="num">-</td>
                   <td className="num">
-                    {companyGroups
-                      .reduce((sum, g) => sum + g.totalAmount, 0)
-                      .toLocaleString()}
+                    {formatNumber(companyGroups
+                      .reduce((sum, g) => sum + g.totalAmount, 0))}
                   </td>
                   <td className="num">
-                    {companyGroups
-                      .reduce((sum, g) => sum + g.totalTax, 0)
-                      .toLocaleString()}
+                    {formatNumber(companyGroups
+                      .reduce((sum, g) => sum + g.totalTax, 0))}
                   </td>
                   <td className="num">100%</td>
                 </tr>

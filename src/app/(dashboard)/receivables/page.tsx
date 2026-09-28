@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { BalanceGridTable } from "@/components/balance-grid-table";
 import { getAllCustomerBalances, sumOutstandingBalance } from "@/lib/ar-ap";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function ReceivablesPage() {
   const supabase = await createClient();
@@ -26,7 +27,7 @@ export default async function ReceivablesPage() {
         </div>
         <div className="erp-detail-body">
           <span className="text-sm font-bold" style={{ color: "var(--erp-danger)" }}>
-            {totalBalance.toLocaleString()}원
+            {formatNumber(totalBalance)}원
           </span>
         </div>
       </div>

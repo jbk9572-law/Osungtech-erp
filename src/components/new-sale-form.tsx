@@ -58,6 +58,7 @@ import { ITEM_GRID_COLUMN_PX_WIDTHS } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
+import { formatNumber } from "@/lib/format-number";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -1375,7 +1376,7 @@ export function NewSaleForm({
                           }}
                         >
                           {item.supplierName} · {item.spec || "규격 미지정"} :{" "}
-                          {item.quantity.toLocaleString()}
+                          {formatNumber(item.quantity)}
                           {item.unit}
                         </div>
                       </div>
@@ -1576,26 +1577,26 @@ export function NewSaleForm({
                     />
                   </td>
                   <td className="num">
-                    {pendingCalcUnitPrice.toLocaleString()}
+                    {formatNumber(pendingCalcUnitPrice)}
                   </td>
                   <td className="num">
-                    {pendingCalcAmount.toLocaleString()}원
+                    {formatNumber(pendingCalcAmount)}원
                   </td>
                   <td
                     className="num"
                     style={{ color: "var(--erp-text-muted)" }}
                   >
-                    {calcVat(pendingCalcAmount).toLocaleString()}원
+                    {formatNumber(calcVat(pendingCalcAmount))}원
                   </td>
                   <td className="num">
-                    {(
+                    {formatNumber((
                       pendingCalcAmount + calcVat(pendingCalcAmount)
-                    ).toLocaleString()}
+                    ))}
                     원
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {tg0IsOverridden
-                      ? `자동값 ${pendingCalcSummary.totalSheet.toLocaleString()} → 수동 입력`
+                      ? `자동값 ${formatNumber(pendingCalcSummary.totalSheet)} → 수동 입력`
                       : "모조지 계산 자동 반영"}
                   </td>
                   <td className="num">
@@ -1828,7 +1829,7 @@ export function NewSaleForm({
                       )}
                     </td>
                     <td className="num">
-                      {(row.quantity * row.unitPrice).toLocaleString()}원
+                      {formatNumber((row.quantity * row.unitPrice))}원
                       {row.productId &&
                         product &&
                         (() => {
@@ -1845,9 +1846,9 @@ export function NewSaleForm({
                                 className="text-[10.5px]"
                                 style={{ color: "var(--erp-danger)" }}
                               >
-                                재고 {availableStock.toLocaleString()}
-                                {unit} + 반품 {row.quantity.toLocaleString()}
-                                {unit} = {afterReturn.toLocaleString()}
+                                재고 {formatNumber(availableStock)}
+                                {unit} + 반품 {formatNumber(row.quantity)}
+                                {unit} = {formatNumber(afterReturn)}
                                 {unit}
                               </p>
                             );
@@ -1872,13 +1873,13 @@ export function NewSaleForm({
                                   : "var(--erp-primary)",
                               }}
                             >
-                              재고 {availableStock.toLocaleString()}
-                              {unit} - 출고 {row.quantity.toLocaleString()}
+                              재고 {formatNumber(availableStock)}
+                              {unit} - 출고 {formatNumber(row.quantity)}
                               {unit}
                               {totalQty !== row.quantity &&
-                                ` (합계 ${totalQty.toLocaleString()}${unit})`}
+                                ` (합계 ${formatNumber(totalQty)}${unit})`}
                               {" = "}
-                              {remaining.toLocaleString()}
+                              {formatNumber(remaining)}
                               {unit}
                               {short && " (부족)"}
                             </p>
@@ -1889,14 +1890,14 @@ export function NewSaleForm({
                       className="num"
                       style={{ color: "var(--erp-text-muted)" }}
                     >
-                      {calcVat(row.quantity * row.unitPrice).toLocaleString()}
+                      {formatNumber(calcVat(row.quantity * row.unitPrice))}
                       원
                     </td>
                     <td className="num" style={{ fontWeight: 600 }}>
-                      {(
+                      {formatNumber((
                         row.quantity * row.unitPrice +
                         calcVat(row.quantity * row.unitPrice)
-                      ).toLocaleString()}
+                      ))}
                       원
                     </td>
                     <td>
@@ -1947,14 +1948,14 @@ export function NewSaleForm({
                 </td>
                 <td className="num" colSpan={5}>
                   <div style={{ color: "var(--erp-text-muted)" }}>
-                    공급가액 {supplyAmount.toLocaleString()}원 · 부가세{" "}
-                    {taxAmount.toLocaleString()}원
+                    공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
+                    {formatNumber(taxAmount)}원
                   </div>
                   <div
                     className="text-sm font-bold"
                     style={{ color: "var(--erp-text)" }}
                   >
-                    {total.toLocaleString()}원
+                    {formatNumber(total)}원
                   </div>
                 </td>
               </tr>

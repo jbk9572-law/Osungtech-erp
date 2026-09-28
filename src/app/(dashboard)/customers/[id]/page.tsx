@@ -30,6 +30,7 @@ import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { SalesActivityForm } from "@/components/sales-activity-form";
 import { deleteActivity } from "@/app/(dashboard)/sales-activities/actions";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function CustomerDetailPage({
   params,
@@ -164,10 +165,10 @@ export default async function CustomerDetailPage({
         <div className="erp-detail-body">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
             <div className="flex flex-wrap gap-x-6 gap-y-1">
-              <span>매출 누계: {balance.totalSales.toLocaleString()}원</span>
-              <span>수금 누계: {balance.totalPaid.toLocaleString()}원</span>
+              <span>매출 누계: {formatNumber(balance.totalSales)}원</span>
+              <span>수금 누계: {formatNumber(balance.totalPaid)}원</span>
               <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
-                잔액: {balance.balance.toLocaleString()}원
+                잔액: {formatNumber(balance.balance)}원
               </span>
             </div>
             <Link
@@ -204,9 +205,9 @@ export default async function CustomerDetailPage({
                     <ClickableRow key={o.id} href={`/sales/${o.id}`}>
                       <td>{o.date.replaceAll("-", ".")}</td>
                       <td>{o.docNo}</td>
-                      <td className="num">{o.total.toLocaleString()}</td>
+                      <td className="num">{formatNumber(o.total)}</td>
                       <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
-                        {o.outstanding.toLocaleString()}
+                        {formatNumber(o.outstanding)}
                       </td>
                       <td>
                         <AgingBadge days={o.daysOverdue} />
@@ -245,7 +246,7 @@ export default async function CustomerDetailPage({
                   {balance.payments.map((p) => (
                     <tr key={p.id}>
                       <td>{p.paid_at.replaceAll("-", ".")}</td>
-                      <td className="num">{Number(p.amount).toLocaleString()}</td>
+                      <td className="num">{formatNumber(Number(p.amount))}</td>
                       <td>{p.method ?? "-"}</td>
                       <td style={{ color: "var(--erp-text-muted)" }}>{p.memo ?? "-"}</td>
                       <td>

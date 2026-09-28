@@ -9,6 +9,7 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { formatNumber } from "@/lib/format-number";
 
 type Row = {
   key: number;
@@ -147,7 +148,7 @@ export function NewPurchaseRequestForm({
                     className="erp-input"
                   />
                 </td>
-                <td className="num">{(row.quantity * row.estimatedUnitPrice).toLocaleString()}</td>
+                <td className="num">{formatNumber((row.quantity * row.estimatedUnitPrice))}</td>
                 <td>
                   <input
                     value={row.remark}
@@ -170,7 +171,7 @@ export function NewPurchaseRequestForm({
                 합계
               </td>
               <td className="num" style={{ fontWeight: 700 }}>
-                {total.toLocaleString()}
+                {formatNumber(total)}
               </td>
               <td colSpan={3} />
             </tr>

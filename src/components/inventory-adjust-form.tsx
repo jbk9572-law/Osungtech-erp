@@ -6,6 +6,7 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { FormMessage } from "@/components/form-message";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { formatNumber } from "@/lib/format-number";
 
 type Product = {
   id: string;
@@ -124,8 +125,8 @@ export function InventoryAdjustForm({
       />
       {currentStock !== null && (
         <p className="text-xs md:col-span-4" style={{ color: "var(--erp-text-muted)" }}>
-          현재 재고: {currentStock.toLocaleString()}개 → 조정 후:{" "}
-          {(currentStock + signedQuantity).toLocaleString()}개
+          현재 재고: {formatNumber(currentStock)}개 → 조정 후:{" "}
+          {formatNumber((currentStock + signedQuantity))}개
         </p>
       )}
       <input

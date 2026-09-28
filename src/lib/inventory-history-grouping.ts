@@ -1,3 +1,5 @@
+import { formatNumber } from "@/lib/format-number";
+
 // 매입/매출 전표를 수정하면 재고이력에 "되돌림(adjustment, 기존 효과 취소)"과
 // "재반영(새 값)" 줄이 추가로 남는다(원장은 append-only라 지우지 않음).
 // 그래서 전표 하나를 고쳤을 뿐인데 화면엔 원래 등록분 + 되돌림 + 재반영,
@@ -85,8 +87,8 @@ export function groupOrderCorrections(
     // 삭제된 것이다 — 재발행이 있으면 "N개→M개로 수정"으로 표현한다.
     const wasDeleted = anchor.type === "adjustment";
     const correctionNote = wasDeleted
-      ? `${formatKoreanDate(earliest.date)} 등록된 ${origQty.toLocaleString()}개가 삭제됨`
-      : `${formatKoreanDate(earliest.date)} 등록 시 ${origQty.toLocaleString()}개 → ${finalQty.toLocaleString()}개로 수정`;
+      ? `${formatKoreanDate(earliest.date)} 등록된 ${formatNumber(origQty)}개가 삭제됨`
+      : `${formatKoreanDate(earliest.date)} 등록 시 ${formatNumber(origQty)}개 → ${formatNumber(finalQty)}개로 수정`;
 
     result.push({
       ...anchor,

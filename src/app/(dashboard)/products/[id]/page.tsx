@@ -9,6 +9,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { resolveListHref } from "@/lib/list-return";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
 
 export default async function ProductDetailPage({
   params,
@@ -134,7 +135,7 @@ export default async function ProductDetailPage({
                       <td>{row.component?.sku ?? "(삭제된 품목)"}</td>
                       <td>{row.component?.name ?? "-"}</td>
                       <td className="num">
-                        {row.quantityPerUnit.toLocaleString()} {row.component?.unit ?? ""}
+                        {formatNumber(row.quantityPerUnit)} {row.component?.unit ?? ""}
                       </td>
                       <td>
                         <InlineConfirmDelete

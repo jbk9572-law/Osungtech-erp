@@ -8,6 +8,7 @@ import { calcVat } from "@/lib/tax";
 import { nowInKst } from "@/lib/kst-date";
 import { shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
+import { formatNumber } from "@/lib/format-number";
 
 // [from, to] 구간에 걸쳐 있는 "YYYY-MM" 월 목록 — 이월(carryover) 건을
 // effectiveMonth 기준으로 걸러낼 때 쓴다. 분기 버튼은 항상 월 경계에
@@ -172,17 +173,17 @@ export default async function VatReportPage({
           <tbody>
             <tr>
               <td style={{ fontWeight: 700 }}>매출</td>
-              <td className="num">{salesSupply.과세.toLocaleString()}</td>
-              <td className="num">{salesSupply.영세.toLocaleString()}</td>
-              <td className="num">{salesSupply.면세.toLocaleString()}</td>
-              <td className="num" style={{ fontWeight: 700 }}>{salesTax.toLocaleString()}</td>
+              <td className="num">{formatNumber(salesSupply.과세)}</td>
+              <td className="num">{formatNumber(salesSupply.영세)}</td>
+              <td className="num">{formatNumber(salesSupply.면세)}</td>
+              <td className="num" style={{ fontWeight: 700 }}>{formatNumber(salesTax)}</td>
             </tr>
             <tr>
               <td style={{ fontWeight: 700 }}>매입</td>
-              <td className="num">{purchaseSupply.과세.toLocaleString()}</td>
-              <td className="num">{purchaseSupply.영세.toLocaleString()}</td>
-              <td className="num">{purchaseSupply.면세.toLocaleString()}</td>
-              <td className="num" style={{ fontWeight: 700 }}>{purchaseTax.toLocaleString()}</td>
+              <td className="num">{formatNumber(purchaseSupply.과세)}</td>
+              <td className="num">{formatNumber(purchaseSupply.영세)}</td>
+              <td className="num">{formatNumber(purchaseSupply.면세)}</td>
+              <td className="num" style={{ fontWeight: 700 }}>{formatNumber(purchaseTax)}</td>
             </tr>
           </tbody>
           <tfoot>
@@ -191,7 +192,7 @@ export default async function VatReportPage({
                 {payable >= 0 ? "납부(예상) 세액" : "환급(예상) 세액"}
               </td>
               <td className="num" style={{ fontWeight: 700, color: payable >= 0 ? "var(--erp-danger)" : "var(--erp-success)" }}>
-                {Math.abs(payable).toLocaleString()}
+                {formatNumber(Math.abs(payable))}
               </td>
             </tr>
           </tfoot>

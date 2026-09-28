@@ -9,6 +9,7 @@ import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { GridBadge } from "@/components/grid/badge";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
+import { formatNumber } from "@/lib/format-number";
 
 export type CountRow = {
   productId: string;
@@ -144,7 +145,7 @@ export function InventoryCountForm({
     return (
       <div className="erp-new-count-cta">
         <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-          전산 재고 {rows.length.toLocaleString()}개 품목 기준으로 새 실사를 시작합니다. 실제로 다른
+          전산 재고 {formatNumber(rows.length)}개 품목 기준으로 새 실사를 시작합니다. 실제로 다른
           품목만 고쳐서 저장하면 됩니다.
         </div>
         <button type="button" onClick={() => setStarted(true)} className="erp-btn erp-btn-primary">
@@ -312,8 +313,8 @@ export function InventoryCountForm({
                     <tr key={r.productId}>
                       <td>{r.sku}</td>
                       <td>{r.name}</td>
-                      <td className="num">{r.systemQuantity.toLocaleString()}</td>
-                      <td className="num">{r.countedQuantity.toLocaleString()}</td>
+                      <td className="num">{formatNumber(r.systemQuantity)}</td>
+                      <td className="num">{formatNumber(r.countedQuantity)}</td>
                       <td
                         className="num"
                         style={{
@@ -322,7 +323,7 @@ export function InventoryCountForm({
                         }}
                       >
                         {diff > 0 ? "+" : ""}
-                        {diff.toLocaleString()}
+                        {formatNumber(diff)}
                       </td>
                     </tr>
                   );
@@ -365,7 +366,7 @@ export function InventoryCountForm({
                   <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.basePackageQty
-                      ? `1박스 = ${Number(row.basePackageQty).toLocaleString()}${row.unit ?? ""}`
+                      ? `1박스 = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}`
                       : "-"}
                   </td>
                   <td className="num">
@@ -395,7 +396,7 @@ export function InventoryCountForm({
                     }}
                   >
                     {diff > 0 ? "+" : ""}
-                    {diff.toLocaleString()}
+                    {formatNumber(diff)}
                   </td>
                   <td>
                     {flagged && (

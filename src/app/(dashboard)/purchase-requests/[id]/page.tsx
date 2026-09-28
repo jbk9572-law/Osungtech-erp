@@ -19,6 +19,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
+import { formatNumber } from "@/lib/format-number";
 
 const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -127,9 +128,9 @@ export default async function PurchaseRequestDetailPage({ params }: { params: Pr
               <tr key={item.id}>
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.spec ?? "-"}</td>
-                <td className="num">{Number(item.quantity).toLocaleString()}</td>
-                <td className="num">{Number(item.estimated_unit_price).toLocaleString()}</td>
-                <td className="num">{(Number(item.quantity) * Number(item.estimated_unit_price)).toLocaleString()}</td>
+                <td className="num">{formatNumber(Number(item.quantity))}</td>
+                <td className="num">{formatNumber(Number(item.estimated_unit_price))}</td>
+                <td className="num">{formatNumber((Number(item.quantity) * Number(item.estimated_unit_price)))}</td>
                 <td>{item.remark ?? "-"}</td>
               </tr>
             ))}
@@ -140,7 +141,7 @@ export default async function PurchaseRequestDetailPage({ params }: { params: Pr
                 합계
               </td>
               <td className="num" style={{ fontWeight: 700 }}>
-                {total.toLocaleString()}
+                {formatNumber(total)}
               </td>
               <td />
             </tr>
