@@ -129,9 +129,11 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "근태", href: "/hr/attendance" },
       { label: "연차관리", href: "/hr/leave-balances", adminOnly: true },
-      { label: "급여 기준 설정", href: "/hr/payroll-settings", adminOnly: true },
-      { label: "직원 급여정보", href: "/hr/employee-pay-settings", adminOnly: true },
-      { label: "급여명세", href: "/hr/payroll", adminOnly: true },
+      // 급여 기준 설정/직원 급여정보/급여명세는 원래 메뉴 항목이 따로
+      // 있었는데, 서로 참조하며 쓰는 하나의 급여 처리 흐름이라("급여
+      // 기준을 먼저 등록해주세요" 식으로 actions.ts가 이미 서로를
+      // 언급하고 있었다) 화면 하나("급여관리")로 합쳤다.
+      { label: "급여관리", href: "/hr/payroll", adminOnly: true },
       { label: "문서함", href: "/hr/documents" },
       { label: "문서 양식 관리", href: "/hr/documents/templates", adminOnly: true },
     ],

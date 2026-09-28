@@ -448,7 +448,7 @@ export async function setPayrollRateSettings(_prevState: FormState, formData: Fo
 
   if (error) return { error: `저장에 실패했습니다: ${error.message}` };
 
-  revalidatePath("/hr/payroll-settings");
+  revalidatePath("/hr/payroll");
   return { success: "요율을 저장했습니다." };
 }
 
@@ -470,7 +470,7 @@ export async function setEmployeePaySetting(_prevState: FormState, formData: For
 
   if (error) return { error: `저장에 실패했습니다: ${error.message}` };
 
-  revalidatePath("/hr/employee-pay-settings");
+  revalidatePath("/hr/payroll");
   return { success: "저장했습니다." };
 }
 
@@ -491,10 +491,10 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
   ]);
 
   if (!rates) {
-    return { error: `${rateYear}년 급여 요율이 설정되지 않았습니다. 급여설정에서 먼저 등록해주세요.` };
+    return { error: `${rateYear}년 급여 요율이 설정되지 않았습니다. 위 "${rateYear}년 급여 기준"에서 먼저 등록해주세요.` };
   }
   if (!paySettings || paySettings.length === 0) {
-    return { error: "등록된 직원 급여정보가 없습니다. 직원 급여정보에서 먼저 등록해주세요." };
+    return { error: '등록된 직원 급여정보가 없습니다. 위 "직원 급여정보"에서 먼저 등록해주세요.' };
   }
 
   const confirmedUserIds = new Set((existing ?? []).filter((p) => p.status === "confirmed").map((p) => p.user_id));
