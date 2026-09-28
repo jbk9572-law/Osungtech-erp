@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { DetailPageHeader } from "@/components/erp/page-header";
@@ -9,6 +10,7 @@ import { formatNumber } from "@/lib/format-number";
 
 export default async function StockTransferDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const supabase = await createClient();
 
   const [{ data: transfer }, { data: items }] = await Promise.all([

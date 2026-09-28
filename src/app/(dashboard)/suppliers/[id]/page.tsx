@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PartnerForm } from "@/components/partner-form";
@@ -36,6 +37,7 @@ export default async function SupplierDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const supabase = await createClient();
 
   // 이 공급업체 화면을 열 때마다, 오늘 이미 도래한 매입단가 예약을 먼저

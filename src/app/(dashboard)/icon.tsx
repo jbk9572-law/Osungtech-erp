@@ -12,10 +12,12 @@ import { createClient } from "@/lib/supabase/server";
 // HTTP 요청(`https://${host}/branding/logo-mark.png`)을 보내 가져왔는데,
 // Cloudflare Workers에서 자기 자신에게 되돌아오는 이런 자기참조 fetch가
 // 가끔 정적 자산 대신 다른 응답을 받아 "Unsupported image type: unknown"
-// 으로 실패했다(Cloudflare Workers Logs에서 반복 확인). next/og가 공식
-// 권장하는 방식대로 로컬 번들 자산을 fetch(new URL(...))로 읽어 빌드
-// 시점에 번들에 포함시키면, 요청마다 나가는 네트워크 왕복 자체가 없어
-// 이 문제가 원천적으로 사라진다.
+// 으로 실패했다(Cloudflare Workers Logs에서 반복 확인). next/og 공식
+// 문서가 권장하는 fetch(new URL("./icon.png", import.meta.url)) 방식도
+// 시도해봤지만, Cloudflare Workers의 fetch는 번들러가 만들어내는
+// file:// 경로를 아예 못 읽어 "Fetch API cannot load: file://..."로
+// 실패했다(역시 로그로 확인). 파일이나 네트워크를 아예 안 쓰고 순수
+// JSX/CSS로 직접 그리면 이 런타임 문제 자체가 생길 수 없다.
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
@@ -23,11 +25,30 @@ export default async function Icon() {
   const supabase = await createClient();
   const { data: company } = await supabase.from("company_profile").select("logo_mark_url").maybeSingle();
 
-  const src = company?.logo_mark_url
-    ? company.logo_mark_url
-    : await fetch(new URL("../icon.png", import.meta.url))
-        .then((res) => res.arrayBuffer())
-        .then((buf) => `data:image/png;base64,${Buffer.from(buf).toString("base64")}`);
+  if (company?.logo_mark_url) {
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src={company.logo_mark_url}
+            width={size.width}
+            height={size.height}
+            style={{ objectFit: "contain" }}
+            alt=""
+          />
+        </div>
+      ),
+      size
+    );
+  }
 
   return new ImageResponse(
     (
@@ -38,15 +59,13 @@ export default async function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          background: "#132944",
+          color: "#fff",
+          fontSize: 20,
+          fontWeight: 700,
         }}
       >
-        <img
-          src={src}
-          width={size.width}
-          height={size.height}
-          style={{ objectFit: "contain" }}
-          alt=""
-        />
+        E
       </div>
     ),
     size

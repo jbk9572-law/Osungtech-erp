@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "@/components/product-form";
 import { DeleteButton } from "@/components/delete-button";
@@ -19,6 +20,7 @@ export default async function ProductDetailPage({
   searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const { back } = await searchParams;
   const closeHref = resolveListHref("/products", back);
   const supabase = await createClient();

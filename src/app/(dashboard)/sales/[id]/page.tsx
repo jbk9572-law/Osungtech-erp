@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
@@ -36,6 +37,7 @@ export default async function SaleDetailPage({
   searchParams: Promise<{ back?: string; warning?: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const { back, warning } = await searchParams;
   // 목록에서 검색/필터를 걸어둔 채로 이 화면에 들어왔으면, ESC/닫기로
   // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { GridBadge } from "@/components/grid/badge";
@@ -13,6 +14,7 @@ export default async function DocumentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const supabase = await createClient();
   const user = await getUser();
 

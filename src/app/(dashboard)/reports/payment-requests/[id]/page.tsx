@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
@@ -40,6 +41,7 @@ export default async function PaymentRequestDetailPage({
   searchParams: Promise<{ warning?: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const { warning } = await searchParams;
   const supabase = await createClient();
   const [{ data: row }, { data: items }, { data: receipts }, actor, departments, profiles, presetsRaw] =

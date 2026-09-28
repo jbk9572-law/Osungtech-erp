@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { DocumentTemplateForm } from "@/components/document-template-form";
 import { updateTemplate } from "@/app/(dashboard)/hr/documents/actions";
@@ -11,6 +12,7 @@ export default async function EditDocumentTemplatePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const supabase = await createClient();
   const { data: template } = await supabase
     .from("document_templates")

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarEventForm } from "@/components/calendar-event-form";
 import { updateCalendarEvent, deleteCalendarEvent } from "@/app/(dashboard)/calendar/actions";
@@ -13,6 +14,7 @@ export default async function EditCalendarEventPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const supabase = await createClient();
   const { data: event } = await supabase
     .from("calendar_events")

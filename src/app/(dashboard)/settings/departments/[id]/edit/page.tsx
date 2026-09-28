@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { DepartmentForm } from "@/components/department-form";
 import { updateDepartment } from "@/app/(dashboard)/settings/departments/actions";
@@ -13,6 +14,7 @@ export default async function EditDepartmentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const supabase = await createClient();
   const [{ data: department }, departments] = await Promise.all([
     supabase.from("departments").select("id, name, parent_department_id").eq("id", id).maybeSingle(),

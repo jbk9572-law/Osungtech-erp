@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -20,6 +21,7 @@ export default async function InventoryProductHistoryPage({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const { productId } = await params;
+  if (!isUuid(productId)) notFound();
   const { from, to } = await searchParams;
   const supabase = await createClient();
 
