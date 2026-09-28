@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { PwaRegister } from "@/components/pwa-register";
+import { ChunkErrorReload } from "@/components/chunk-error-reload";
 import "./globals.css";
 
 // Geist는 라틴 전용이라 한글은 시스템 기본폰트(맑은 고딕 등)로 대체돼
@@ -44,6 +45,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <PwaRegister />
+        <ChunkErrorReload />
         {children}
       </body>
     </html>
