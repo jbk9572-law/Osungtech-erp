@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -7,11 +8,14 @@ import { GeneratePayrollForm } from "@/components/generate-payroll-form";
 import { ConfirmPayslipButton } from "@/components/confirm-payslip-button";
 import { PayrollRateSettingsForm } from "@/components/payroll-rate-settings-form";
 import { EmployeePayForm } from "@/components/employee-pay-form";
+import { PayslipBonusForm } from "@/components/payslip-bonus-form";
+import { SendPayslipButton } from "@/components/send-payslip-button";
 import {
   generatePayroll,
   confirmPayslip,
   setPayrollRateSettings,
   setEmployeePaySetting,
+  setPayslipBonus,
 } from "@/app/(dashboard)/hr/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
@@ -54,7 +58,9 @@ export default async function PayrollPage({
   const [{ data: payslips }, { data: rates }, profiles, { data: paySettings }] = await Promise.all([
     supabase
       .from("payslips")
-      .select("id, user_id, base_pay, total_deduction, net_pay, status, profiles!user_id(full_name)")
+      .select(
+        "id, user_id, base_pay, bonus_performance, bonus_special, total_deduction, net_pay, status, profiles!user_id(full_name)",
+      )
       .eq("pay_month", payMonth)
       .order("created_at", { ascending: true }),
     supabase.from("payroll_rate_settings").select("*").eq("year", rateYear).maybeSingle(),
@@ -159,6 +165,8 @@ export default async function PayrollPage({
             <PageGuide>
               4대보험 공제까지만 반영된 급여명세입니다(소득세/지방소득세 별도).
               확정 전까지는 다시 생성하면 값이 갱신되고, 확정 후에는 유지됩니다.
+              성과금/특별상여금은 초안 상태에서 각 행에 직접 입력 후 &ldquo;반영&rdquo;을
+              누르면 공제/실지급액까지 다시 계산됩니다.
             </PageGuide>
 
             <GeneratePayrollForm action={generatePayroll} currentMonth={payMonth} />
@@ -173,17 +181,18 @@ export default async function PayrollPage({
                   <thead>
                     <tr>
                       <th>구성원</th>
-                      <th className="num" style={{ width: 120 }}>
+                      <th className="num" style={{ width: 100 }}>
                         기본급
                       </th>
-                      <th className="num" style={{ width: 120 }}>
+                      <th style={{ width: 230 }}>성과금 / 특별상여금</th>
+                      <th className="num" style={{ width: 100 }}>
                         공제합계
                       </th>
-                      <th className="num" style={{ width: 120 }}>
+                      <th className="num" style={{ width: 100 }}>
                         실지급액
                       </th>
                       <th style={{ width: 90 }}>상태</th>
-                      <th style={{ width: 90 }} />
+                      <th style={{ width: 200 }} />
                     </tr>
                   </thead>
                   <tbody>
@@ -191,6 +200,20 @@ export default async function PayrollPage({
                       <tr key={p.id}>
                         <td>{p.profiles?.full_name ?? "-"}</td>
                         <td className="num">{formatNumber(Number(p.base_pay))}</td>
+                        <td>
+                          {p.status === "draft" ? (
+                            <PayslipBonusForm
+                              id={p.id}
+                              action={setPayslipBonus}
+                              bonusPerformance={Number(p.bonus_performance)}
+                              bonusSpecial={Number(p.bonus_special)}
+                            />
+                          ) : (
+                            <span className="num" style={{ color: "var(--erp-text-muted)" }}>
+                              {formatNumber(Number(p.bonus_performance))} / {formatNumber(Number(p.bonus_special))}
+                            </span>
+                          )}
+                        </td>
                         <td className="num" style={{ color: "var(--erp-danger)" }}>
                           -{formatNumber(Number(p.total_deduction))}
                         </td>
@@ -202,7 +225,19 @@ export default async function PayrollPage({
                             {p.status === "confirmed" ? "확정" : "초안"}
                           </GridBadge>
                         </td>
-                        <td>{p.status === "draft" && <ConfirmPayslipButton id={p.id} action={confirmPayslip} />}</td>
+                        <td>
+                          <div className="flex items-center gap-1">
+                            {p.status === "draft" && <ConfirmPayslipButton id={p.id} action={confirmPayslip} />}
+                            <Link
+                              href={`/hr/payroll/${p.id}/print`}
+                              className="erp-btn"
+                              style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                            >
+                              미리보기/인쇄
+                            </Link>
+                            <SendPayslipButton id={p.id} />
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

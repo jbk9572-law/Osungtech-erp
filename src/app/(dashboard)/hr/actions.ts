@@ -6,6 +6,7 @@ import type { FormState } from "@/components/form-message";
 import { todayKstStr } from "@/lib/kst-date";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 // 위치 값은 브라우저 navigator.geolocation이 넘겨준 값을 그대로 믿고
 // 숫자로만 파싱한다 — 권한을 거부했거나 위치 확인에 실패한 경우 빈
@@ -474,8 +475,43 @@ export async function setEmployeePaySetting(_prevState: FormState, formData: For
   return { success: "저장했습니다." };
 }
 
+// 4대보험 계산 기준(gross)에서 순수 급여/공제 항목만 다시 계산한다 —
+// generatePayroll(새로 생성)과 setPayslipBonus(성과금/특별상여금 수정)가
+// 똑같은 계산식을 각자 들고 있으면 나중에 하나만 고치고 잊어버리기
+// 쉬우므로 하나로 모은다.
+function calcPayslipAmounts(
+  basePay: number,
+  bonusPerformance: number,
+  bonusSpecial: number,
+  rates: {
+    national_pension_rate: number;
+    health_insurance_rate: number;
+    long_term_care_rate: number;
+    employment_insurance_rate: number;
+  },
+) {
+  const gross = basePay + bonusPerformance + bonusSpecial;
+  const pension = Math.round(gross * Number(rates.national_pension_rate));
+  const health = Math.round(gross * Number(rates.health_insurance_rate));
+  const longTermCare = Math.round(health * Number(rates.long_term_care_rate));
+  const employment = Math.round(gross * Number(rates.employment_insurance_rate));
+  const totalDeduction = pension + health + longTermCare + employment;
+  return {
+    gross,
+    pension,
+    health,
+    longTermCare,
+    employment,
+    totalDeduction,
+    netPay: gross - totalDeduction,
+  };
+}
+
 // 급여명세 생성 — 이미 확정(confirmed)된 명세는 덮어쓰지 않는다(급여
 // 지급 후 요율이나 기본급이 바뀌어도 지난달 확정 명세는 그대로 유지).
+// 이미 초안이 있는 상태에서 다시 생성하면(기본급이 바뀌었을 때 등) 그
+// 초안에 이미 입력해둔 성과금/특별상여금은 0으로 날리지 않고 그대로
+// 이어받아 재계산한다.
 export async function generatePayroll(_prevState: FormState, formData: FormData): Promise<FormState> {
   const payMonth = String(formData.get("pay_month") ?? "");
   if (!/^\d{4}-\d{2}$/.test(payMonth)) {
@@ -484,11 +520,25 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
   const rateYear = Number(payMonth.slice(0, 4));
 
   const supabase = await createClient();
-  const [{ data: rates }, { data: paySettings }, { data: existing }] = await Promise.all([
-    supabase.from("payroll_rate_settings").select("*").eq("year", rateYear).maybeSingle(),
-    supabase.from("employee_pay_settings").select("user_id, monthly_base_pay"),
-    supabase.from("payslips").select("user_id, status").eq("pay_month", payMonth),
-  ]);
+  const [{ data: rates }, { data: paySettings }, { data: existing }, { data: leaveBalances }, leaveUsedRows] =
+    await Promise.all([
+      supabase.from("payroll_rate_settings").select("*").eq("year", rateYear).maybeSingle(),
+      supabase.from("employee_pay_settings").select("user_id, monthly_base_pay"),
+      supabase
+        .from("payslips")
+        .select("user_id, status, bonus_performance, bonus_special")
+        .eq("pay_month", payMonth),
+      supabase.from("leave_balances").select("user_id, total_days").eq("year", rateYear),
+      fetchAllRows<{ user_id: string; days: number }>((from, to) =>
+        supabase
+          .from("leave_requests")
+          .select("user_id, days")
+          .eq("status", "approved")
+          .gte("start_date", `${rateYear}-01-01`)
+          .lte("start_date", `${rateYear}-12-31`)
+          .range(from, to),
+      ),
+    ]);
 
   if (!rates) {
     return { error: `${rateYear}년 급여 요율이 설정되지 않았습니다. 위 "${rateYear}년 급여 기준"에서 먼저 등록해주세요.` };
@@ -498,29 +548,38 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
   }
 
   const confirmedUserIds = new Set((existing ?? []).filter((p) => p.status === "confirmed").map((p) => p.user_id));
+  const existingBonusByUser = new Map(
+    (existing ?? []).map((p) => [p.user_id, { performance: Number(p.bonus_performance), special: Number(p.bonus_special) }]),
+  );
+  const leaveTotalByUser = new Map((leaveBalances ?? []).map((b) => [b.user_id, Number(b.total_days)]));
+  const leaveUsedByUser = new Map<string, number>();
+  for (const row of leaveUsedRows) {
+    leaveUsedByUser.set(row.user_id, (leaveUsedByUser.get(row.user_id) ?? 0) + Number(row.days));
+  }
 
   const rows = paySettings
     .filter((p) => !confirmedUserIds.has(p.user_id))
     .map((p) => {
-      const gross = Number(p.monthly_base_pay);
-      const pension = Math.round(gross * Number(rates.national_pension_rate));
-      const health = Math.round(gross * Number(rates.health_insurance_rate));
-      const longTermCare = Math.round(health * Number(rates.long_term_care_rate));
-      const employment = Math.round(gross * Number(rates.employment_insurance_rate));
-      const totalDeduction = pension + health + longTermCare + employment;
+      const basePay = Number(p.monthly_base_pay);
+      const carriedBonus = existingBonusByUser.get(p.user_id) ?? { performance: 0, special: 0 };
+      const amounts = calcPayslipAmounts(basePay, carriedBonus.performance, carriedBonus.special, rates);
       return {
         user_id: p.user_id,
         pay_month: payMonth,
-        base_pay: gross,
-        gross_pay: gross,
-        pension_deduction: pension,
-        health_deduction: health,
-        long_term_care_deduction: longTermCare,
-        employment_deduction: employment,
-        total_deduction: totalDeduction,
-        net_pay: gross - totalDeduction,
+        base_pay: basePay,
+        gross_pay: amounts.gross,
+        bonus_performance: carriedBonus.performance,
+        bonus_special: carriedBonus.special,
+        pension_deduction: amounts.pension,
+        health_deduction: amounts.health,
+        long_term_care_deduction: amounts.longTermCare,
+        employment_deduction: amounts.employment,
+        total_deduction: amounts.totalDeduction,
+        net_pay: amounts.netPay,
         rate_year: rateYear,
         status: "draft",
+        annual_leave_total: leaveTotalByUser.get(p.user_id) ?? null,
+        annual_leave_used: leaveUsedByUser.get(p.user_id) ?? 0,
       };
     });
 
@@ -533,6 +592,63 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
 
   revalidatePath("/hr/payroll");
   return { success: `${rows.length}건의 급여명세(초안)를 생성했습니다.` };
+}
+
+// 성과금/특별상여금은 기본급처럼 매월 고정값이 아니라 급여명세를 생성한
+// "뒤에" 그 달 실적을 보고 채워 넣는 값이라, 직원 급여정보 설정이 아니라
+// 각 급여명세 행에서 바로 수정하게 한다. 확정된 명세는 RLS(update
+// admin만 + status 체크 없음, 대신 여기서 draft만 허용)와 무관하게
+// 이미 지급된 값이 바뀌면 안 되므로 초안일 때만 허용한다.
+export async function setPayslipBonus(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const bonusPerformance = Number(formData.get("bonus_performance") ?? NaN);
+  const bonusSpecial = Number(formData.get("bonus_special") ?? NaN);
+  if (!id) return { error: "잘못된 요청입니다." };
+  if (![bonusPerformance, bonusSpecial].every((v) => Number.isFinite(v) && v >= 0)) {
+    return { error: "값을 올바르게 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const { data: payslip } = await supabase
+    .from("payslips")
+    .select("base_pay, status, rate_year")
+    .eq("id", id)
+    .maybeSingle();
+  if (!payslip) return { error: "급여명세를 찾을 수 없습니다." };
+  if (payslip.status !== "draft") return { error: "확정된 급여명세는 수정할 수 없습니다." };
+
+  const { data: rates } = await supabase
+    .from("payroll_rate_settings")
+    .select("*")
+    .eq("year", payslip.rate_year)
+    .maybeSingle();
+  if (!rates) return { error: `${payslip.rate_year}년 급여 요율을 찾을 수 없습니다.` };
+
+  const amounts = calcPayslipAmounts(Number(payslip.base_pay), bonusPerformance, bonusSpecial, rates);
+  const result = await supabase
+    .from("payslips")
+    .update({
+      bonus_performance: bonusPerformance,
+      bonus_special: bonusSpecial,
+      gross_pay: amounts.gross,
+      pension_deduction: amounts.pension,
+      health_deduction: amounts.health,
+      long_term_care_deduction: amounts.longTermCare,
+      employment_deduction: amounts.employment,
+      total_deduction: amounts.totalDeduction,
+      net_pay: amounts.netPay,
+    })
+    .eq("id", id)
+    .eq("status", "draft")
+    .select("id");
+  const mutationError = requireMutatedRow(result, {
+    onError: "저장에 실패했습니다",
+    onForbidden: "관리자만 처리할 수 있거나 이미 확정된 명세입니다.",
+  });
+  if (mutationError) return mutationError;
+
+  revalidatePath("/hr/payroll");
+  return { success: "성과금/특별상여금을 반영했습니다." };
 }
 
 export async function confirmPayslip(_prevState: FormState, formData: FormData): Promise<FormState> {

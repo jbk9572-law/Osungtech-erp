@@ -685,6 +685,10 @@ export type Database = {
           created_at: string;
           confirmed_at: string | null;
           confirmed_by: string | null;
+          bonus_performance: number;
+          bonus_special: number;
+          annual_leave_total: number | null;
+          annual_leave_used: number | null;
         };
         Insert: {
           id?: string;
@@ -703,6 +707,10 @@ export type Database = {
           created_at?: string;
           confirmed_at?: string | null;
           confirmed_by?: string | null;
+          bonus_performance?: number;
+          bonus_special?: number;
+          annual_leave_total?: number | null;
+          annual_leave_used?: number | null;
         };
         Update: {
           id?: string;
@@ -721,6 +729,10 @@ export type Database = {
           created_at?: string;
           confirmed_at?: string | null;
           confirmed_by?: string | null;
+          bonus_performance?: number;
+          bonus_special?: number;
+          annual_leave_total?: number | null;
+          annual_leave_used?: number | null;
         };
         Relationships: [
           {
