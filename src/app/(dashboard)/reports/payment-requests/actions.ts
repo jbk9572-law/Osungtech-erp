@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import { requireMutatedRow, wasRowMutated } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
@@ -92,9 +92,7 @@ export async function createPaymentRequest(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   // 헤더(payment_requests) + 사용내역 줄을 DB 함수 하나로 묶어 원자적으로
   // 처리한다 — 매출/매입 등록과 동일한 이유로, 헤더만 만들어지고 줄 삽입이
@@ -154,9 +152,7 @@ export async function quickAddPaymentRequestItem(
   const monthKey = usedAt.slice(0, 7); // "YYYY-MM"
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { data: paymentRequestId, error: bucketError } = await supabase.rpc(
     "find_or_create_payment_request_bucket",
@@ -297,9 +293,7 @@ export async function addPaymentRequestReceipts(
   if (receipts.length === 0) return { error: "추가할 영수증을 선택해주세요." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   let firstError: string | null = null;
   for (const file of receipts) {

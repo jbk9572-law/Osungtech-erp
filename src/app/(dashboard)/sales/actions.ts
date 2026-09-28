@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import {
   attachCopiedPaperCalculations,
   attachPendingPaperCalculation,
@@ -86,9 +86,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   // 주문/품목/재고 반영을 DB 함수 하나로 묶어서 원자적으로 처리한다 —
   // 이전에는 세 단계를 개별 요청으로 보내고 실패 시 수동으로 delete해
@@ -237,9 +235,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   // 헤더 수정 + 기존 재고 되돌리기 + 품목 교체 + 새 재고 반영을 DB 함수
   // 하나로 묶어 원자적으로 처리한다 — createSale과 같은 이유로, 이전에는
@@ -325,9 +321,7 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { data: order } = await supabase.from("sales_orders").select("customer_id").eq("id", id).maybeSingle();
 
@@ -370,9 +364,7 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { data: orders } = await supabase.from("sales_orders").select("customer_id").in("id", ids);
 

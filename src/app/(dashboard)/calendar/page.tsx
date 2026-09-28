@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { CalendarMonthView } from "@/components/erp/calendar-month-view";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -42,9 +42,7 @@ export default async function CalendarPage({
   const month = m && Number(m) >= 1 && Number(m) <= 12 ? Number(m) : now.getMonth() + 1;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   const { data: profile } = user
     ? await supabase.from("profiles").select("id, tenant_id, is_demo, role").eq("id", user.id).maybeSingle()
     : { data: null };

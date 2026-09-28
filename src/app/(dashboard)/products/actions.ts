@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { readExcelRows, cell, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
 import { numberOrDefault, numberOrNull } from "@/lib/form-number";
@@ -50,9 +50,7 @@ async function recordPackageQtyChange(
   previousQty: number | null
 ) {
   if (newQty == null || newQty === previousQty) return;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   await supabase
     .from("product_package_qty_history")
     .insert({ product_id: productId, base_package_qty: newQty, changed_by: user?.id ?? null });
@@ -309,9 +307,7 @@ export async function importProductsExcel(_prevState: FormState, formData: FormD
           .range(from, to),
       )
     : [];
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   const existingBySku = new Map(existingProducts.map((p) => [p.sku, p]));
 
   // 행마다 공급처를 하나씩 조회/생성하면 수백 행짜리 파일은 그만큼 DB

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
@@ -24,9 +24,7 @@ export async function createActivity(_prevState: FormState, formData: FormData):
   if (!subject) return { error: "제목을 입력해주세요." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { error } = await supabase.from("sales_activities").insert({
     customer_id: customerId,

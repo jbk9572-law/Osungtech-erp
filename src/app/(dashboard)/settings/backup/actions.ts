@@ -7,6 +7,7 @@ import { BACKUP_TABLES, BACKUP_FORMAT_VERSION, RESTORE_SKIP_TABLES, type BackupF
 import { dispatchServerRestore } from "@/lib/github-restore";
 import type { FormState } from "@/components/form-message";
 import { formatNumber } from "@/lib/format-number";
+import { getUser } from "@/lib/supabase/server";
 
 // db-backups 브랜치의 파일명은 항상 이 형식의 UTC 타임스탬프다
 // (.github/workflows/db-backup.yml의 `date -u +%Y-%m-%dT%H%M%SZ`).
@@ -138,7 +139,7 @@ export async function restoreFromServerSnapshot(
   _prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const { supabase, isPlatformAdmin } = await requirePlatformAdmin();
+  const { isPlatformAdmin } = await requirePlatformAdmin();
   if (!isPlatformAdmin) return { error: "플랫폼 운영자만 복원할 수 있습니다." };
 
   const snapshot = formData.get("snapshot");
@@ -146,9 +147,7 @@ export async function restoreFromServerSnapshot(
     return { error: "복원할 백업 시점을 선택해주세요." };
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const result = await dispatchServerRestore(snapshot, user?.email ?? user?.id ?? "알 수 없음");
   if (!result.ok) {

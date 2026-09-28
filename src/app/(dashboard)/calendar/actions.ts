@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
@@ -34,9 +34,7 @@ export async function createCalendarEvent(_prevState: FormState, formData: FormD
   if (range.endAt < range.startAt) return { error: "종료 일시가 시작 일시보다 빠를 수 없습니다." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { data, error } = await supabase
     .from("calendar_events")

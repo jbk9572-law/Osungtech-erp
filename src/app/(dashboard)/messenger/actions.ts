@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { sanitizeUploadContentType } from "@/lib/upload-safety";
 import type { MessengerMessage } from "@/lib/messenger-types";
 
@@ -30,9 +30,7 @@ export async function sendMessage(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   if (!user) {
     return { error: "로그인이 필요합니다." };
   }
@@ -102,9 +100,7 @@ export async function deleteMessage(formData: FormData): Promise<{ error?: strin
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   if (!user) return { error: "로그인이 필요합니다." };
 
   // 관리자는 탈퇴한 계정이 남긴 메시지처럼 본인이 아니어도 정리할 수

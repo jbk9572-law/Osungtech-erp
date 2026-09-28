@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 
 export async function adjustInventory(
@@ -21,9 +21,7 @@ export async function adjustInventory(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { error } = await supabase.from("inventory_transactions").insert({
     product_id: productId,
@@ -85,9 +83,7 @@ export async function submitStockCount(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   // 위치 코드를 실제 위치 id로 바꾼다 — 이 창고에 없는 코드거나 그 사이
   // 위치 자체가 지워졌으면(드묾) 위치 구분 없이(창고 전체 기준) 처리한다.

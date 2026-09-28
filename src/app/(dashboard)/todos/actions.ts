@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/paper-calc-sync";
 import { parseTodoType } from "@/lib/todo-flow";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
@@ -150,9 +150,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
   const supabase = await createClient();
   const title = titleRaw || (await resolveAutoTitle(supabase, todoType, supplierId, customerId));
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { data: todo, error } = await supabase
     .from("todos")

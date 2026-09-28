@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { todayKstStr } from "@/lib/kst-date";
 import type { FormState } from "@/components/form-message";
@@ -109,9 +109,7 @@ export async function convertQuoteToSale(_prevState: FormState, formData: FormDa
   // 아닌 견적서로도 매출 전표는 만들어지는데 정작 견적서 쪽 링크 갱신만
   // RLS(quotes_update_owner_or_admin)에 막혀 조용히 실패하는 반쪽짜리
   // 상태가 될 수 있다 — 맨 앞에서 명시적으로 막는다.
-  const {
-    data: { user: actor },
-  } = await supabase.auth.getUser();
+  const actor = await getUser();
   const { data: actorProfile } = actor
     ? await supabase.from("profiles").select("role").eq("id", actor.id).maybeSingle()
     : { data: null };

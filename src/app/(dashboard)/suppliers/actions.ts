@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { combinePhone } from "@/lib/phone";
 import type { FormState } from "@/components/form-message";
 import {
@@ -198,9 +198,7 @@ export async function schedulePurchasePriceChange(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { error } = await supabase.from("purchase_price_change_schedules").insert({
     supplier_id: supplierId,
@@ -293,9 +291,7 @@ export async function addSupplierPayment(_prevState: FormState, formData: FormDa
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { error } = await supabase.from("supplier_payments").insert({
     supplier_id: supplierId,

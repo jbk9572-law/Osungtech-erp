@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import {
   AnnouncementGridTable,
   isThisWeek,
@@ -22,9 +22,7 @@ export default async function AnnouncementsPage({
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const [{ rows, hasMore }, summaryRows, readRows] = await Promise.all([
     fetchLimitedRows<{

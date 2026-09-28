@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 
 export async function changePassword(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -19,9 +19,7 @@ export async function changePassword(_prevState: FormState, formData: FormData):
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   if (!user?.email) {
     return { error: "로그인 정보를 확인할 수 없습니다." };
   }

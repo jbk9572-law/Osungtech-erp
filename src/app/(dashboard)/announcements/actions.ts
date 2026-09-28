@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
@@ -19,9 +19,7 @@ export async function createAnnouncement(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   const { data, error } = await supabase
     .from("announcements")
@@ -116,9 +114,7 @@ export async function toggleAnnouncementRead(formData: FormData): Promise<{ erro
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
   if (!user) return { error: "로그인이 필요합니다." };
 
   const { error } = currentlyRead
