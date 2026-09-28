@@ -7,6 +7,14 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Workers Logs(대시보드 Observability > Logs/실시간 이벤트)가 이 블록
+  // 없이는 아예 아무 이벤트도 수집하지 않는다 — "Waiting for events..."만
+  // 계속 뜨던 이유가 크래시를 놓친 게 아니라 로깅 자체가 꺼져있었기
+  // 때문이었다. 이제 이 Worker의 모든 요청/console.error 출력이 실제로
+  // 수집된다.
+  "observability": {
+    "enabled": true
+  },
   // NEXT_PUBLIC_ 접두사가 붙은 값은 원래 브라우저로 그대로 노출되는
   // 값이라(빌드 시점에 클라이언트 JS에 박힘) 여기 커밋해도 새로운 노출이
   // 아니다. 대시보드(Settings > Variables and Secrets)에 넣은 값이
