@@ -41,7 +41,7 @@ export async function createStockTransfer(_prevState: FormState, formData: FormD
     return { error: `이동 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  revalidatePath("/inventory/transfers");
+  revalidatePath("/inventory/warehouses");
   revalidatePath("/inventory");
   redirect(`/inventory/transfers/${transferId}`);
 }
@@ -56,7 +56,7 @@ export async function deleteStockTransfer(_prevState: FormState, formData: FormD
     return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
-  revalidatePath("/inventory/transfers");
+  revalidatePath("/inventory/warehouses");
   revalidatePath("/inventory");
-  redirect("/inventory/transfers");
+  redirect("/inventory/warehouses");
 }

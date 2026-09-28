@@ -33,6 +33,12 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M10 19v-5h4v5" />
     </svg>
   ),
+  게시판: (
+    <svg {...ICON_STROKE}>
+      <path d="M12 3a5 5 0 0 0-5 5v3l-2 5h14l-2-5V8a5 5 0 0 0-5-5z" />
+      <path d="M10 18a2 2 0 0 0 4 0" />
+    </svg>
+  ),
   매출관리: (
     <svg {...ICON_STROKE}>
       <path d="M6 16 16 6" />
@@ -52,39 +58,13 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M12 11v10" />
     </svg>
   ),
-  품목관리: (
-    <svg {...ICON_STROKE}>
-      <path d="M4 5h9l7 7-9 9-7-7z" />
-      <circle cx="8" cy="9" r="1.5" />
-    </svg>
-  ),
   생산관리: (
     <svg {...ICON_STROKE}>
       <circle cx="12" cy="12" r="3" />
       <path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2" />
     </svg>
   ),
-  거래처관리: (
-    <svg {...ICON_STROKE}>
-      <circle cx="9" cy="9" r="3" />
-      <path d="M4 19c1-3 3-5 5-5s4 2 5 5" />
-      <circle cx="18" cy="10" r="2.3" />
-      <path d="M15 14c2 0 4 2 5 5" />
-    </svg>
-  ),
-  영업관리: (
-    <svg {...ICON_STROKE}>
-      <path d="M4 19 10 13 14 17 20 8" />
-      <path d="M14 8h6v6" />
-    </svg>
-  ),
-  할일관리: (
-    <svg {...ICON_STROKE}>
-      <rect x="4" y="4" width="16" height="16" rx="3" />
-      <path d="m8 13 3 3 5-6" />
-    </svg>
-  ),
-  전자결재: (
+  "결재/문서": (
     <svg {...ICON_STROKE}>
       <path d="M6 3h9l3 3v15H6z" />
       <path d="M15 3v3h3" />
@@ -98,10 +78,10 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M16 8h4M18 6v4" />
     </svg>
   ),
-  공지사항: (
+  일정관리: (
     <svg {...ICON_STROKE}>
-      <path d="M12 3a5 5 0 0 0-5 5v3l-2 5h14l-2-5V8a5 5 0 0 0-5-5z" />
-      <path d="M10 18a2 2 0 0 0 4 0" />
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M4 10h16M8 3v4M16 3v4" />
     </svg>
   ),
   메일함: (
@@ -134,12 +114,6 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <circle cx="10" cy="12" r="2" />
       <path d="M4 17h16" />
       <circle cx="16" cy="17" r="2" />
-    </svg>
-  ),
-  시스템관리: (
-    <svg {...ICON_STROKE}>
-      <path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z" />
-      <path d="m9 12 2 2 4-5" />
     </svg>
   ),
 };

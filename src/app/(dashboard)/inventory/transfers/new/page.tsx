@@ -20,7 +20,7 @@ export default async function NewStockTransferPage() {
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/transfers" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/warehouses" } }} />
       <ListPageHeader title="재고관리 > 창고 > 이동 등록" />
 
       {warehouses.length < 2 ? (

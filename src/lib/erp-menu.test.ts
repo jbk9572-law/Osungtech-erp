@@ -9,21 +9,39 @@ describe("getVisibleMenuGroups", () => {
     expect(settings?.items.some((i) => i.label === "비밀번호 변경")).toBe(true);
   });
 
-  it("모든 항목이 adminOnly인 그룹은 관리자가 아니면 그룹째로 사라진다", () => {
-    const groups = getVisibleMenuGroups([], false);
-    expect(groups.some((g) => g.label === "시스템관리")).toBe(false);
-  });
-
   it("관리자는 adminOnly 항목도 모두 본다", () => {
     const groups = getVisibleMenuGroups([], true);
-    expect(groups.some((g) => g.label === "시스템관리")).toBe(true);
     const settings = groups.find((g) => g.label === "환경설정");
     expect(settings?.items.some((i) => i.label === "조직도 관리")).toBe(true);
   });
 
-  it("featureKey로 꺼진 그룹은 관리자 여부와 무관하게 빠진다", () => {
+  it("그룹 안의 모든 항목이 꺼지면 그룹째로 사라진다", () => {
+    const groups = getVisibleMenuGroups(["/calendar", "/todos"], true);
+    expect(groups.some((g) => g.label === "일정관리")).toBe(false);
+  });
+
+  it("항목 단위 featureKey로 꺼진 화면만 빠지고, 같은 그룹의 다른 featureKey 항목은 남는다", () => {
+    // 대메뉴 통폐합(전자결재+공문관리 → 결재/문서)으로 이 그룹 하나에
+    // approvals/official_documents 두 featureKey가 섞여 있다 — 하나만
+    // 꺼도 그룹 전체가 아니라 그 featureKey 항목만 빠져야 한다.
     const groups = getVisibleMenuGroups(["approvals"], true);
-    expect(groups.some((g) => g.label === "전자결재")).toBe(false);
+    const docs = groups.find((g) => g.label === "결재/문서");
+    expect(docs?.items.some((i) => i.href === "/approvals")).toBe(false);
+    expect(docs?.items.some((i) => i.href === "/official-documents")).toBe(true);
+  });
+
+  it("그룹 안의 모든 featureKey 항목이 꺼지면 그룹째로 사라진다", () => {
+    const groups = getVisibleMenuGroups(["approvals", "official_documents"], true);
+    expect(groups.some((g) => g.label === "결재/문서")).toBe(false);
+  });
+
+  it("매출관리 안의 crm 항목(영업활동/견적서)만 featureKey로 개별적으로 꺼진다", () => {
+    // 원래 영업관리(crm)라는 별도 그룹이었는데 매출관리로 흡수됐다 —
+    // 항목 단위 featureKey 덕에 매출관리 나머지는 그대로 남아야 한다.
+    const groups = getVisibleMenuGroups(["crm"], true);
+    const sales = groups.find((g) => g.label === "매출관리");
+    expect(sales?.items.some((i) => i.href === "/sales")).toBe(true);
+    expect(sales?.items.some((i) => i.href === "/quotes")).toBe(false);
   });
 });
 

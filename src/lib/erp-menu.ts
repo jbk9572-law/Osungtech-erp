@@ -17,12 +17,19 @@ export type MenuLeaf = {
   // 결재매트릭스)은 실제로 볼 게 있으니 여기 표시하지 않는다.
   adminOnly?: boolean;
   // 독립된 트리메뉴/빠른검색/즐겨찾기 진입점으로 노출할 필요가 없는
-  // 화면에 표시한다(예: 창고 이동 이력 — 이제 "창고" 화면 안의 탭으로만
-  // 들어간다). adminOnly와 달리 권한과 무관하게 항상 숨긴다. 다만
+  // 화면에 표시한다(예: 창고 이동 이력 — 이제 "창고" 화면 안에서 같이
+  // 보여준다). adminOnly와 달리 권한과 무관하게 항상 숨긴다. 다만
   // MENU_ITEMS(타이틀바 현재 위치 라벨, 최근메뉴 기록)에는 그대로
   // 남겨둔다 — 안 그러면 그 화면에 들어갔을 때 타이틀바가 더 짧은
   // prefix(예: "/inventory")로 잘못 매칭돼 엉뚱한 라벨을 보여준다.
   hidden?: boolean;
+  // 그룹 단위 featureKey(아래)와 별개로, 한 항목만 테넌트별로 껐다 켤 수
+  // 있게 한다. 대메뉴 통폐합(20개 → 13개)으로 예전엔 자기 featureKey를
+  // 가진 독립 그룹이었던 화면(예: 영업관리 crm, 공문관리
+  // official_documents)이 이제 항상 켜져 있는 다른 그룹(매출관리 등)
+  // 안의 항목 몇 개로 들어와 있어서, 그 항목들만 따로 끌 수 있어야
+  // 그룹 전체를 껐다 켰다 하던 기존 기능이 안 없어진다.
+  featureKey?: string;
 };
 // featureKey가 있는 그룹만 테넌트별로 껐다 켰다 할 수 있다(SaaS 판매용
 // 전환 — 회사마다 쓰는 기능이 다 다르니, 예를 들어 생산 안 하는 유통사는
@@ -32,19 +39,51 @@ export type MenuLeaf = {
 // 이 배열은 "무엇을 토글할 수 있는가"라는 카탈로그 역할만 한다.
 export type MenuGroup = { label: string; items: MenuLeaf[]; featureKey?: string };
 
+// 20개였던 대메뉴를 13개로 통폐합했다(사용자 지적: "메뉴가 너무 많다,
+// 상단 가로 메뉴바로 옮기는 것도 검토했지만 13개도 한 줄에 거의 꽉 차서
+// 오히려 가로 넘침 문제가 생겨 트리메뉴는 그대로 두고 통폐합만 하기로
+// 결정함"). 화면/라우트/서버 액션/RLS는 전부 그대로 두고, "어느 대메뉴
+// 밑에 뜨는가"만 재배치했다 — 기능을 없앤 게 아니라 정리한 것.
+//   - 거래처관리 → 매출관리(출고처/미수금)·매입관리(공급처/미지급금)로
+//     쪼개서 흡수: 파는 것 관련은 매출관리, 사는 것 관련은 매입관리로.
+//   - 영업관리(crm) → 매출관리로 흡수. 영업활동관리/견적서관리는
+//     featureKey를 그룹이 아니라 항목 단위로 옮겨 달아서, 이 두 화면만
+//     따로 켜고 끄던 기존 동작을 그대로 유지한다.
+//   - 품목관리 → 재고관리로 흡수(품목마스터도 결국 재고 기준정보).
+//   - 전자결재 + 공문관리 → "결재/문서"로 통합(공문관리가 이미 전자결재의
+//     결재선/전결권 인프라를 재사용하고 있어 논리적으로도 한 묶음).
+//     각각 approvals/official_documents featureKey를 항목 단위로 유지.
+//   - 캘린더 + 할일관리 → "일정관리"로 통합.
+//   - 시스템관리 → 환경설정으로 흡수(이미 전부 adminOnly라 위화감 없음).
+//   - 공지사항 → 게시판으로 흡수(게시판이 이미 공지사항을 모아 보여주고
+//     있어서 단독 메뉴가 사실상 중복이었다).
 export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
-  // 공지사항/인사문서함/공문함/기안함의 최근 항목을 한 화면에 모아
-  // 보여주는 훑어보기 전용 진입점 — 각 원본 화면(과 그 메뉴)은 그대로
-  // 둔 채 새로 추가한다(전체 감사 후 사용자 요청으로 도입).
-  { label: "게시판", items: [{ label: "게시판", href: "/board", flatLabel: "게시판" }] },
-  { label: "매출관리", items: [{ label: "출고관리", href: "/sales", flatLabel: "매출관리" }] },
+  {
+    label: "게시판",
+    items: [
+      { label: "게시판", href: "/board", flatLabel: "게시판" },
+      { label: "공지사항", href: "/announcements" },
+    ],
+  },
+  {
+    label: "매출관리",
+    items: [
+      { label: "출고관리", href: "/sales" },
+      { label: "출고처관리", href: "/customers" },
+      { label: "미수금현황", href: "/receivables" },
+      { label: "영업활동관리", href: "/sales-activities", featureKey: "crm" },
+      { label: "견적서관리", href: "/quotes", featureKey: "crm" },
+    ],
+  },
   {
     label: "매입관리",
     items: [
-      { label: "입고관리", href: "/purchases", flatLabel: "매입관리" },
+      { label: "입고관리", href: "/purchases" },
       { label: "구매요청", href: "/purchase-requests" },
       { label: "구매 견적요청", href: "/purchase-quote-requests" },
+      { label: "공급처관리", href: "/suppliers" },
+      { label: "미지급금현황", href: "/payables" },
     ],
   },
   {
@@ -57,58 +96,33 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
       // 창고 관리(마스터)와 창고 이동(거래 이력)은 원래 메뉴 항목이
       // 따로 있었는데, 사용자가 "두 화면이 단절돼 보인다"고 지적해서
-      // 화면 하나("창고")로 묶고 그 안에서 탭(창고 목록/창고 이동
-      // 이력)으로 오가게 바꿨다. 데이터/서버 액션/RLS는 그대로 완전히
-      // 분리돼 있다 — 합친 건 진입점(메뉴)과 화면 셸(탭 바)뿐이다.
+      // 화면 하나("창고")로 묶었다. 데이터/서버 액션/RLS는 그대로 완전히
+      // 분리돼 있다 — 합친 건 진입점(메뉴)과 화면(창고 목록 아래에 창고
+      // 이동 이력을 같이 보여줌)뿐이다.
       { label: "창고", href: "/inventory/warehouses" },
       { label: "창고 이동 이력", href: "/inventory/transfers", hidden: true },
       { label: "관리번호 조회", href: "/inventory/lot-lookup" },
+      { label: "품목관리", href: "/products" },
     ],
   },
-  { label: "품목관리", items: [{ label: "품목관리", href: "/products" }] },
   {
     label: "생산관리",
     items: [{ label: "생산지시 내역", href: "/production" }],
     featureKey: "production",
   },
   {
-    label: "거래처관리",
+    label: "결재/문서",
     items: [
-      { label: "출고처관리", href: "/customers" },
-      { label: "공급처관리", href: "/suppliers" },
-      { label: "미수금현황", href: "/receivables" },
-      { label: "미지급금현황", href: "/payables" },
+      { label: "기안함", href: "/approvals", featureKey: "approvals" },
+      { label: "임시저장함", href: "/approvals/drafts", featureKey: "approvals" },
+      { label: "공유 결재선", href: "/approvals/lines", featureKey: "approvals" },
+      { label: "결재매트릭스", href: "/approvals/matrix", featureKey: "approvals" },
+      // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로
+      // 재사용하되, 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈이라
+      // featureKey는 따로 유지한다.
+      { label: "내 공문함", href: "/official-documents", featureKey: "official_documents" },
+      { label: "받은 공문함", href: "/official-documents/received", featureKey: "official_documents" },
     ],
-  },
-  { label: "할일관리", items: [{ label: "할일관리", href: "/todos" }] },
-  {
-    label: "영업관리",
-    items: [
-      { label: "영업활동관리", href: "/sales-activities" },
-      { label: "견적서관리", href: "/quotes" },
-    ],
-    featureKey: "crm",
-  },
-  {
-    label: "전자결재",
-    items: [
-      { label: "기안함", href: "/approvals" },
-      { label: "임시저장함", href: "/approvals/drafts" },
-      { label: "공유 결재선", href: "/approvals/lines" },
-      { label: "결재매트릭스", href: "/approvals/matrix" },
-    ],
-    featureKey: "approvals",
-  },
-  {
-    // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로 재사용하되,
-    // 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈 — 전자결재 바로
-    // 옆에 둔다.
-    label: "공문관리",
-    items: [
-      { label: "내 공문함", href: "/official-documents" },
-      { label: "받은 공문함", href: "/official-documents/received" },
-    ],
-    featureKey: "official_documents",
   },
   {
     label: "인사관리",
@@ -123,8 +137,13 @@ export const MENU_GROUPS: MenuGroup[] = [
     ],
     featureKey: "hr",
   },
-  { label: "공지사항", items: [{ label: "공지사항", href: "/announcements" }] },
-  { label: "캘린더", items: [{ label: "캘린더", href: "/calendar", flatLabel: "캘린더" }] },
+  {
+    label: "일정관리",
+    items: [
+      { label: "캘린더", href: "/calendar" },
+      { label: "할일관리", href: "/todos" },
+    ],
+  },
   {
     label: "메일함",
     items: [{ label: "메일함", href: "/mail", flatLabel: "메일함" }],
@@ -170,11 +189,6 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "비밀번호 변경", href: "/settings/password" },
       { label: "운영자 문의", href: "/settings/support" },
       { label: "구독/결제", href: "/settings/billing", adminOnly: true },
-    ],
-  },
-  {
-    label: "시스템관리",
-    items: [
       { label: "권한관리", href: "/settings/users", adminOnly: true },
       { label: "백업/복원", href: "/settings/backup", adminOnly: true },
       { label: "변경 이력", href: "/settings/audit-log", adminOnly: true },
@@ -201,7 +215,11 @@ export function getVisibleMenuGroups(disabledFeatures: string[], isAdmin: boolea
     .map((g) => ({
       ...g,
       items: g.items.filter(
-        (i) => !disabledFeatures.includes(i.href) && (isAdmin || !i.adminOnly) && !i.hidden
+        (i) =>
+          !disabledFeatures.includes(i.href) &&
+          (isAdmin || !i.adminOnly) &&
+          !i.hidden &&
+          (!i.featureKey || !disabledFeatures.includes(i.featureKey))
       ),
     }))
     .filter((g) => g.items.length > 0);

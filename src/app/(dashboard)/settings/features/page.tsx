@@ -6,6 +6,16 @@ import { FeatureToggle } from "@/components/feature-toggle";
 import { setTenantFeatureEnabled } from "@/app/(dashboard)/settings/features/actions";
 import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS } from "@/lib/erp-menu";
 
+// 대메뉴 통폐합(20개 → 13개)으로 예전엔 자기 그룹을 가졌던 모듈(영업관리
+// crm, 전자결재 approvals, 공문관리 official_documents)이 이제 다른
+// 그룹 안의 항목 몇 개로 들어와 있다 — 그룹 헤더에 표시할 사람이 읽는
+// 이름이 없어졌으므로 여기서 따로 라벨을 붙인다.
+const FEATURE_KEY_LABELS: Record<string, string> = {
+  crm: "영업관리(CRM)",
+  approvals: "전자결재",
+  official_documents: "공문관리",
+};
+
 export default async function FeatureSettingsPage() {
   const supabase = await createClient();
   const { isAdmin } = await getCurrentActor(supabase);
@@ -35,18 +45,36 @@ export default async function FeatureSettingsPage() {
         왼쪽 메뉴에서 숨길 수 있습니다. 꺼도 데이터는 지워지지 않고, 언제든 다시 켤 수 있습니다.
       </PageGuide>
 
-      {MENU_GROUPS.map((group) => (
+      {MENU_GROUPS.map((group) => {
+        // 이 그룹 안에 있는 항목들이 저마다 다른 featureKey(예: 매출관리
+        // 안의 crm)를 들고 있을 수 있다 — 중복 없이 한 번씩만 토글로
+        // 보여준다.
+        const itemFeatureKeys = Array.from(
+          new Set(group.items.map((i) => i.featureKey).filter((k): k is string => !!k))
+        );
+        return (
         <div className="erp-detail" key={group.label}>
-          <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12 }}>
+          <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12, flexWrap: "wrap", rowGap: 6 }}>
             <span className="erp-detail-tab active">{group.label}</span>
-            {group.featureKey && (
-              <FeatureToggle
-                featureKey={group.featureKey}
-                label={group.label}
-                enabled={!disabledFeatures.includes(group.featureKey)}
-                action={setTenantFeatureEnabled}
-              />
-            )}
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {group.featureKey && (
+                <FeatureToggle
+                  featureKey={group.featureKey}
+                  label={group.label}
+                  enabled={!disabledFeatures.includes(group.featureKey)}
+                  action={setTenantFeatureEnabled}
+                />
+              )}
+              {itemFeatureKeys.map((fk) => (
+                <FeatureToggle
+                  key={fk}
+                  featureKey={fk}
+                  label={FEATURE_KEY_LABELS[fk] ?? fk}
+                  enabled={!disabledFeatures.includes(fk)}
+                  action={setTenantFeatureEnabled}
+                />
+              ))}
+            </div>
           </div>
           <div className="erp-detail-body">
             <div className="erp-grid-wrap">
@@ -82,7 +110,8 @@ export default async function FeatureSettingsPage() {
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

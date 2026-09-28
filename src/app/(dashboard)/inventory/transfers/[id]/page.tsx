@@ -28,7 +28,7 @@ export default async function StockTransferDetailPage({ params }: { params: Prom
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/transfers" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/warehouses" } }} />
       <DetailPageHeader
         title={`창고 이동 · ${transfer.from_warehouse?.name ?? "-"} → ${transfer.to_warehouse?.name ?? "-"}`}
         meta={
@@ -44,7 +44,7 @@ export default async function StockTransferDetailPage({ params }: { params: Prom
               id={transfer.id}
               confirmMessage="이 창고 이동을 취소하시겠습니까? 옮겨졌던 재고가 원래대로 되돌아갑니다."
             />
-            <CloseButton href="/inventory/transfers">ESC 목록으로</CloseButton>
+            <CloseButton href="/inventory/warehouses">ESC 목록으로</CloseButton>
           </>
         }
       />
