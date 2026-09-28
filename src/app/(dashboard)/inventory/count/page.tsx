@@ -87,17 +87,23 @@ export default async function InventoryCountPage({
   // 실사에서 보이는 큰 차이는 코드 문제가 아니라 실제 현실(파손/누락 등)의
   // 반영이라는 뜻이다 — DB에 직접 접근하지 않고도 화면에서 바로 확인된다.
   //
-  // inventory_transactions 테이블 전체를 필터 없이 훑는 쿼리라, 거래
-  // 이력이 쌓여 1000행을 넘으면 fetchAllRows가 여러 페이지를 순차로
-  // 받아온다 — 이게 페이지를 열 때마다 자동으로 돌면서 Cloudflare
-  // Workers의 요청당 리소스 한도를 넘겨 "Worker exceeded resource
-  // limits"로 사이트 전체가 죽는 사고로 이어졌다(qr-labels의 PNG->SVG
-  // 전환과 같은 종류의 문제). 그래서 기본으로는 실행하지 않고, "무결성
-  // 검사 실행" 버튼을 눌렀을 때(?verify=1)만 계산한다.
-  const allTx = verifyRequested
-    ? await fetchAllRows<{ product_id: string; type: string; quantity: number }>((from, to) =>
-        supabase.from("inventory_transactions").select("product_id, type, quantity").range(from, to),
-      )
+  // 예전엔 inventory_transactions 테이블 전체를 필터 없이 fetchAllRows로
+  // Worker까지 통째로 끌어와 JS에서 다시 더했다 — 거래 이력이 쌓인
+  // 테넌트에서 "무결성 검사 실행" 버튼을 누르면 Cloudflare Workers의
+  // 요청당 리소스 한도를 넘겨 "Worker exceeded resource limits"로 사이트
+  // 전체가 죽는 사고로 이어졌다. get_customer_balances()와 같은 방식으로
+  // 합산 자체를 SQL 집계로 DB 안에서 끝내는 RPC로 옮겨서, 불일치가 있는
+  // 품목 행만 받아온다(migration 155). 그래서 자동 실행 자체를 막을
+  // 필요도 없어졌지만, 평소엔 안 쓰는 검증 기능을 매번 계산할 이유는
+  // 없어서 버튼을 눌렀을 때(?verify=1)만 호출하는 것은 그대로 둔다.
+  const cacheMismatches = verifyRequested
+    ? ((await supabase.rpc("get_inventory_cache_mismatches")).data ?? []).map((m) => ({
+        sku: m.sku,
+        name: m.name,
+        spec: m.spec,
+        cached: Number(m.cached),
+        computed: Number(m.computed),
+      }))
     : [];
 
   // 실사는 실제로 물건을 세는 그 창고 하나를 대상으로 한다 — 창고가
@@ -127,32 +133,6 @@ export default async function InventoryCountPage({
       reorderPoint: p.reorder_point ?? 0,
     }))
     .filter((p) => p.reorderPoint > 0 && p.quantity <= p.reorderPoint);
-
-  // apply_inventory_transaction 트리거와 완전히 같은 부호 규칙으로
-  // 전체 이력을 직접 다시 더해, 캐시된 products.inventory.quantity와
-  // 실제로 일치하는지 전 품목 전수 비교한다.
-  const computedByProduct = new Map<string, number>();
-  for (const t of allTx) {
-    const signed = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
-    computedByProduct.set(t.product_id, (computedByProduct.get(t.product_id) ?? 0) + signed);
-  }
-  // 매입/매출 수량은 소수점 입력이 가능한데(decimal_quantity 마이그레이션),
-  // Postgres 쪽 캐시(inventory.quantity)는 numeric으로 정확히 누적되는 반면
-  // 여기 computedByProduct는 자바스크립트 부동소수점으로 다시 더한 값이라
-  // 0.1+0.2 같은 미세한 오차가 생길 수 있다. 오차 없는 실제 불일치만
-  // 잡히도록 아주 작은 허용오차(0.001) 이내 차이는 일치로 본다.
-  const EPSILON = 0.001;
-  const cacheMismatches = products
-    .map((p) => ({
-      sku: p.sku,
-      name: p.name,
-      spec: p.spec,
-      // allTx(계산 기준)가 창고 구분 없이 전체 거래를 다 더한 값이라,
-      // 비교 대상인 캐시 쪽도 창고 구분 없는 전체 합계여야 한다.
-      cached: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
-      computed: computedByProduct.get(p.id) ?? 0,
-    }))
-    .filter((p) => Math.abs(p.cached - p.computed) > EPSILON);
 
   const sessionsByRef = new Map<string, Session>();
   for (const t of countTx) {

@@ -4428,6 +4428,17 @@ export type Database = {
         Args: Record<string, never>;
         Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
       };
+      get_inventory_cache_mismatches: {
+        Args: Record<string, never>;
+        Returns: {
+          product_id: string;
+          sku: string;
+          name: string;
+          spec: string | null;
+          cached: number;
+          computed: number;
+        }[];
+      };
       is_admin: {
         Args: Record<string, never>;
         Returns: boolean;
