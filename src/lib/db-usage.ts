@@ -15,9 +15,13 @@ export async function getDatabaseSizeBytes(
   supabase: SupabaseClient<Database>,
 ): Promise<number | null> {
   return ttlCached("db-size-bytes", 5 * 60 * 1000, async () => {
-    const { data, error } = await supabase.rpc("get_database_size");
-    if (error || data == null) return null;
-    return Number(data);
+    try {
+      const { data, error } = await supabase.rpc("get_database_size");
+      if (error || data == null) return null;
+      return Number(data);
+    } catch {
+      return null;
+    }
   });
 }
 
@@ -25,8 +29,12 @@ export async function getStorageSizeBytes(
   supabase: SupabaseClient<Database>,
 ): Promise<number | null> {
   return ttlCached("storage-size-bytes", 5 * 60 * 1000, async () => {
-    const { data, error } = await supabase.rpc("get_storage_size");
-    if (error || data == null) return null;
-    return Number(data);
+    try {
+      const { data, error } = await supabase.rpc("get_storage_size");
+      if (error || data == null) return null;
+      return Number(data);
+    } catch {
+      return null;
+    }
   });
 }

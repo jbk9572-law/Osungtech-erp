@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import { toKstDateStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { safeQuery } from "@/lib/safe-query";
 
 export type AnnouncementNotice = { id: string; title: string; pinned: boolean };
 export type TodoNotice = {
@@ -29,19 +30,25 @@ export async function getNotificationSummary(
   const soonStr = toKstDateStr(soonDate);
 
   const [{ data: announcements }, { data: dueTodos }, stockedProducts] = await Promise.all([
-    supabase
-      .from("announcements")
-      .select("id, title, pinned, created_at")
-      .order("pinned", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(30),
-    supabase
-      .from("todos")
-      .select("id, title, due_date, items, todo_type, ship_date")
-      .eq("done", false)
-      .lte("due_date", soonStr)
-      .order("due_date", { ascending: true })
-      .limit(20),
+    safeQuery<{ id: string; title: string; pinned: boolean; created_at: string }[]>(
+      supabase
+        .from("announcements")
+        .select("id, title, pinned, created_at")
+        .order("pinned", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(30),
+    ),
+    safeQuery<
+      { id: string; title: string; due_date: string | null; items: unknown; todo_type: string; ship_date: string | null }[]
+    >(
+      supabase
+        .from("todos")
+        .select("id, title, due_date, items, todo_type, ship_date")
+        .eq("done", false)
+        .lte("due_date", soonStr)
+        .order("due_date", { ascending: true })
+        .limit(20),
+    ),
     // 안전재고를 실제로 설정해둔(0보다 큰) 품목만 대상으로 한다 — 미설정(0)
     // 품목까지 포함하면 재고가 조금만 있어도 항상 알림이 뜨게 된다.
     fetchAllRows<{ id: string; name: string; reorder_point: number; inventory: { quantity: number }[] }>(
@@ -60,11 +67,13 @@ export async function getNotificationSummary(
   // 있다.
   const announcementIds = (announcements ?? []).map((a) => a.id);
   const { data: reads } = announcementIds.length
-    ? await supabase
-        .from("announcement_reads")
-        .select("announcement_id")
-        .eq("user_id", userId)
-        .in("announcement_id", announcementIds)
+    ? await safeQuery<{ announcement_id: string }[]>(
+        supabase
+          .from("announcement_reads")
+          .select("announcement_id")
+          .eq("user_id", userId)
+          .in("announcement_id", announcementIds),
+      )
     : { data: [] as { announcement_id: string }[] };
 
   const readIds = new Set((reads ?? []).map((r) => r.announcement_id));

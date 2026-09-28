@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeQuery } from "@/lib/safe-query";
 import { MessengerWidget } from "@/components/erp/messenger-widget";
 import type { MessengerChannel } from "@/lib/messenger-types";
 
@@ -19,24 +20,42 @@ export async function MessengerWidgetPanel({
 }) {
   const supabase = await createClient();
 
-  const { data: allChannelId } = await supabase.rpc("get_or_create_all_channel");
+  const { data: allChannelId } = await safeQuery<string>(supabase.rpc("get_or_create_all_channel"));
 
   const [{ data: channelRows }, { data: memberRows }, { data: messages }] = await Promise.all([
-    supabase
-      .from("messenger_channels")
-      .select("id, type, name")
-      .order("created_at", { ascending: true })
-      .limit(500),
-    supabase.from("messenger_channel_members").select("channel_id, user_id").limit(2000),
+    safeQuery<{ id: string; type: string; name: string | null }[]>(
+      supabase
+        .from("messenger_channels")
+        .select("id, type, name")
+        .order("created_at", { ascending: true })
+        .limit(500),
+    ),
+    safeQuery<{ channel_id: string; user_id: string }[]>(
+      supabase.from("messenger_channel_members").select("channel_id, user_id").limit(2000),
+    ),
     allChannelId
-      ? supabase
-          .from("messenger_messages")
-          .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
-          .eq("channel_id", allChannelId)
-          // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로
-          // 오는 순서로 보여줘야 하므로 다시 뒤집는다.
-          .order("created_at", { ascending: false })
-          .limit(100)
+      ? safeQuery<
+          {
+            id: string;
+            channel_id: string;
+            sender_id: string | null;
+            content: string;
+            file_url: string | null;
+            file_path: string | null;
+            file_name: string | null;
+            file_size: number | null;
+            created_at: string;
+          }[]
+        >(
+          supabase
+            .from("messenger_messages")
+            .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
+            .eq("channel_id", allChannelId)
+            // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로
+            // 오는 순서로 보여줘야 하므로 다시 뒤집는다.
+            .order("created_at", { ascending: false })
+            .limit(100),
+        )
       : Promise.resolve({ data: null }),
   ]);
 
