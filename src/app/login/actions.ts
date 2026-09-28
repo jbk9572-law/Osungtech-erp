@@ -37,10 +37,19 @@ export async function login(_prevState: { error: string } | undefined, formData:
     } catch {
       return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
     }
-    const { data: resolvedEmail, error: lookupError } = await admin.rpc("get_email_for_username", {
-      p_slug: companyCode,
-      p_username: loginId,
-    });
+    // get_email_for_username과 get_login_block_reason은 둘 다 같은
+    // (companyCode, loginId) 조합만 보는 순수 조회라 서로 결과에 의존하지
+    // 않는다 — 순서대로 따로 기다리면 Supabase 왕복이 그만큼 늘어나
+    // 로그인이 느려지므로(클라우드플레어 Workers에서 회사코드+아이디
+    // 로그인마다 왕복 하나씩 아꼈다) 동시에 보낸다.
+    const [
+      { data: resolvedEmail, error: lookupError },
+      { data: blockReason, error: blockCheckError },
+    ] = await Promise.all([
+      admin.rpc("get_email_for_username", { p_slug: companyCode, p_username: loginId }),
+      admin.rpc("get_login_block_reason", { p_slug: companyCode, p_username: loginId }),
+    ]);
+
     // 조회 자체가 실패한 경우(네트워크 오류 등)와 "그런 아이디가 없음"을
     // 구분한다 — 둘 다 뭉뚱그려 "존재하지 않는 아이디입니다"라고 하면,
     // 실제로는 아이디가 있는데 일시적인 연결 문제였을 때도 사용자가
@@ -56,10 +65,6 @@ export async function login(_prevState: { error: string } | undefined, formData:
     // 플랫폼 관리자가 회사(테넌트)를 비활성화했거나 이용기간이 지났으면,
     // 비밀번호가 맞아도 로그인 자체를 막아야 한다 — 아래
     // signInWithPassword는 그 상태를 모르므로 여기서 먼저 확인한다.
-    const { data: blockReason, error: blockCheckError } = await admin.rpc("get_login_block_reason", {
-      p_slug: companyCode,
-      p_username: loginId,
-    });
     if (blockCheckError) {
       return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
     }
