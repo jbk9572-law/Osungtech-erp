@@ -29,7 +29,12 @@ export default function DashboardError({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "80px 20px",
+        // 화면 높이를 안 줬더니 에러 박스가 내용 높이만큼만 차지해서,
+        // 위에 타이틀바/리본/공지 배너가 있으면 박스가 화면 아래쪽에
+        // 어중간하게 걸치거나 버튼이 화면 밖으로 잘려 보이는 문제가
+        // 있었다 — 최소 높이를 줘서 항상 남은 공간 가운데 오게 한다.
+        minHeight: "60vh",
+        padding: "40px 20px",
         textAlign: "center",
       }}
     >
@@ -38,8 +43,33 @@ export default function DashboardError({
       </p>
       <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20, maxWidth: 420 }}>
         네트워크가 잠시 불안정했거나 데이터량이 많아 시간이 오래 걸렸을 수 있습니다.
-        아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 운영자에게 알려주세요.
+        아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 아래 내용과 함께 운영자에게 알려주세요.
       </p>
+      {(error.message || error.digest) && (
+        <p
+          style={{
+            fontSize: 11,
+            fontFamily: "monospace",
+            color: "var(--erp-text-muted)",
+            background: "var(--erp-bg-subtle)",
+            border: "1px solid var(--erp-border)",
+            borderRadius: 4,
+            padding: "8px 12px",
+            marginBottom: 20,
+            maxWidth: 520,
+            wordBreak: "break-word",
+            textAlign: "left",
+          }}
+        >
+          {error.message || "(메시지 없음)"}
+          {error.digest && (
+            <>
+              <br />
+              digest: {error.digest}
+            </>
+          )}
+        </p>
+      )}
       <div style={{ display: "flex", gap: 8 }}>
         <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
           다시 시도

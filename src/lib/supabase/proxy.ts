@@ -42,9 +42,25 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 미들웨어는 정적 파일(manifest.webmanifest 등)을 뺀 거의 모든 요청을
+  // 지나가므로, 여기서 예외가 나면 그 요청 하나가 아니라 화면 렌더링
+  // 자체가 통째로 막힌다 — Supabase Auth API가 순간적으로 응답이 늦거나
+  // 네트워크가 잠깐 끊기면(드물지만 항상 있을 수 있는 일) getUser()가
+  // 던지는 예외를 아무도 안 잡고 있어서, 그 순간 떠 있던 여러 화면이
+  // 동시에 "일시적인 오류"로 보였다(재고실사 크래시와 같은 순간 manifest.
+  // webmanifest 요청까지 깨진 게 그 증거 — 서로 무관한 두 요청이 같이
+  // 실패한 건 미들웨어라는 공통 지점이 원인이라는 뜻이다). 실패하면
+  // "로그인 안 된 사람"으로 fail-closed 처리한다 — 보호된 화면이면
+  // 로그인으로 보내고, 이미 열려있던 요청은 다음 재시도에서 복구된다.
+  let user = null;
+  try {
+    const {
+      data: { user: resolvedUser },
+    } = await supabase.auth.getUser();
+    user = resolvedUser;
+  } catch {
+    user = null;
+  }
 
   const pathname = request.nextUrl.pathname;
   const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
