@@ -101,7 +101,11 @@ export const MENU_GROUPS: MenuGroup[] = [
       // 이동 이력을 같이 보여줌)뿐이다.
       { label: "창고", href: "/inventory/warehouses" },
       { label: "창고 이동 이력", href: "/inventory/transfers", hidden: true },
-      { label: "관리번호 조회", href: "/inventory/lot-lookup" },
+      // 다른 소메뉴들과 달리 "관리번호 하나로 찾아보는" 보조 유틸리티라
+      // 소메뉴에 혼자 덩그러니 있는 게 어색하다는 지적으로, 재고현황
+      // 화면(가장 자연스러운 진입점) 툴바에 링크로 옮기고 트리메뉴/
+      // 빠른검색에서는 숨겼다.
+      { label: "관리번호 조회", href: "/inventory/lot-lookup", hidden: true },
       { label: "품목관리", href: "/products" },
     ],
   },

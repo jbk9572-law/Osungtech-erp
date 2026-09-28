@@ -46,6 +46,9 @@ export default async function InventoryPage({
       <div className="mb-1 erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; 재고현황</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href="/inventory/lot-lookup" className="erp-btn">
+            관리번호 조회
+          </Link>
           <Link href="/inventory/reorder-suggestions" className="erp-btn">
             재고 부족 자동 발주 제안
           </Link>
