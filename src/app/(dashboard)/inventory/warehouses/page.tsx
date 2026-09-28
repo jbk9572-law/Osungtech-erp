@@ -4,6 +4,7 @@ import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { WarehouseForm } from "@/components/warehouse-form";
+import { WarehouseNav } from "@/components/warehouse-nav";
 import { createWarehouse, deleteWarehouse } from "@/app/(dashboard)/inventory/warehouses/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
@@ -16,7 +17,8 @@ export default async function WarehousesPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <ListPageHeader title="재고관리 > 창고 관리" />
+      <ListPageHeader title="재고관리 > 창고" />
+      <WarehouseNav />
 
       <PageGuide>
         창고를 2개 이상 등록해야 창고 간 이동을 등록할 수 있습니다. 창고를

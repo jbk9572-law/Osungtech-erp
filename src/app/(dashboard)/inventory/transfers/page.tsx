@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { ClickableRow } from "@/components/clickable-row";
+import { WarehouseNav } from "@/components/warehouse-nav";
 
 export default async function StockTransfersPage() {
   const supabase = await createClient();
@@ -19,13 +20,14 @@ export default async function StockTransfersPage() {
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/inventory/transfers/new" }, Escape: { href: "/inventory" } }} />
       <ListPageHeader
-        title="재고관리 > 창고 이동"
+        title="재고관리 > 창고"
         actions={
           <Link href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
             F2 창고 이동 등록
           </Link>
         }
       />
+      <WarehouseNav />
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

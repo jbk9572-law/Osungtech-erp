@@ -16,6 +16,13 @@ export type MenuLeaf = {
   // 무관하게 "보는 건 누구나, 바꾸는 건 관리자만"인 화면(예:
   // 결재매트릭스)은 실제로 볼 게 있으니 여기 표시하지 않는다.
   adminOnly?: boolean;
+  // 독립된 트리메뉴/빠른검색/즐겨찾기 진입점으로 노출할 필요가 없는
+  // 화면에 표시한다(예: 창고 이동 이력 — 이제 "창고" 화면 안의 탭으로만
+  // 들어간다). adminOnly와 달리 권한과 무관하게 항상 숨긴다. 다만
+  // MENU_ITEMS(타이틀바 현재 위치 라벨, 최근메뉴 기록)에는 그대로
+  // 남겨둔다 — 안 그러면 그 화면에 들어갔을 때 타이틀바가 더 짧은
+  // prefix(예: "/inventory")로 잘못 매칭돼 엉뚱한 라벨을 보여준다.
+  hidden?: boolean;
 };
 // featureKey가 있는 그룹만 테넌트별로 껐다 켰다 할 수 있다(SaaS 판매용
 // 전환 — 회사마다 쓰는 기능이 다 다르니, 예를 들어 생산 안 하는 유통사는
@@ -48,8 +55,13 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "QR 자동실사", href: "/inventory/count/scan" },
       { label: "QR 라벨 인쇄", href: "/inventory/qr-labels" },
       { label: "재고 부족 자동 발주 제안", href: "/inventory/reorder-suggestions" },
-      { label: "창고 관리", href: "/inventory/warehouses" },
-      { label: "창고 이동", href: "/inventory/transfers" },
+      // 창고 관리(마스터)와 창고 이동(거래 이력)은 원래 메뉴 항목이
+      // 따로 있었는데, 사용자가 "두 화면이 단절돼 보인다"고 지적해서
+      // 화면 하나("창고")로 묶고 그 안에서 탭(창고 목록/창고 이동
+      // 이력)으로 오가게 바꿨다. 데이터/서버 액션/RLS는 그대로 완전히
+      // 분리돼 있다 — 합친 건 진입점(메뉴)과 화면 셸(탭 바)뿐이다.
+      { label: "창고", href: "/inventory/warehouses" },
+      { label: "창고 이동 이력", href: "/inventory/transfers", hidden: true },
       { label: "관리번호 조회", href: "/inventory/lot-lookup" },
     ],
   },
@@ -189,7 +201,7 @@ export function getVisibleMenuGroups(disabledFeatures: string[], isAdmin: boolea
     .map((g) => ({
       ...g,
       items: g.items.filter(
-        (i) => !disabledFeatures.includes(i.href) && (isAdmin || !i.adminOnly)
+        (i) => !disabledFeatures.includes(i.href) && (isAdmin || !i.adminOnly) && !i.hidden
       ),
     }))
     .filter((g) => g.items.length > 0);

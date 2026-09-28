@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getVisibleMenuGroups, getVisibleMenuItems } from "./erp-menu";
+import { getVisibleMenuGroups, getVisibleMenuItems, MENU_ITEMS } from "./erp-menu";
 
 describe("getVisibleMenuGroups", () => {
   it("관리자가 아니면 adminOnly 항목을 뺀다", () => {
@@ -43,5 +43,17 @@ describe("getVisibleMenuItems", () => {
     const items = getVisibleMenuItems([], false);
     expect(items.some((i) => i.href === "/hr/payroll")).toBe(false);
     expect(items.some((i) => i.href === "/hr/attendance")).toBe(true);
+  });
+
+  it("hidden 항목(창고 이동 이력)은 트리메뉴/빠른검색 목록에 없다", () => {
+    const items = getVisibleMenuItems([], true);
+    expect(items.some((i) => i.href === "/inventory/transfers")).toBe(false);
+    expect(items.some((i) => i.href === "/inventory/warehouses")).toBe(true);
+  });
+});
+
+describe("MENU_ITEMS", () => {
+  it("hidden 항목도 타이틀바/최근메뉴 라벨 매칭을 위해 전체 목록엔 남아있다", () => {
+    expect(MENU_ITEMS.some((i) => i.href === "/inventory/transfers")).toBe(true);
   });
 });
