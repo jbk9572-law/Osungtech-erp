@@ -27,8 +27,19 @@ export function renderTemplate(body: string, values: Record<string, string>): st
 
 // 자동 채움 후보 — 필드명이 이 키와 정확히 같을 때만 값을 미리 채워주고,
 // 그 외 필드는 전부 사람이 직접 입력한다(잘못 추측해서 채우는 것보다
-// 빈칸이 안전하다).
-export const AUTO_FILL_FIELD_KEYS = ["company_name", "employee_name"] as const;
+// 빈칸이 안전하다). representative_name/department_name/position_title/
+// hire_date는 재직증명서 등 기본 제공 양식이 매번 같은 값(회사 대표자,
+// 선택한 직원의 소속·직위·입사일)을 반복 입력하게 만들지 않으려고
+// company_profile/profiles에서 그대로 끌어온다 — 실제 값 매핑은
+// generate-document-form.tsx의 applyAutoFill 참고.
+export const AUTO_FILL_FIELD_KEYS = [
+  "company_name",
+  "employee_name",
+  "representative_name",
+  "department_name",
+  "position_title",
+  "hire_date",
+] as const;
 
 // "서버 자동" 필드 — 위 AUTO_FILL_FIELD_KEYS(입력칸은 그대로 두고 값만
 // 미리 채워주는 것)와 달리, 이 필드들은 애초에 문서 생성 화면에 입력칸

@@ -10,7 +10,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 export default async function NewDocumentPage() {
   const supabase = await createClient();
 
-  const [templates, employees, { data: company }] = await Promise.all([
+  const [templates, profileRows, { data: company }] = await Promise.all([
     fetchAllRows<{ id: string; name: string; body: string }>((from, to) =>
       supabase
         .from("document_templates")
@@ -19,11 +19,32 @@ export default async function NewDocumentPage() {
         .order("name")
         .range(from, to),
     ),
-    fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
-      supabase.from("profiles").select("id, full_name").order("full_name").range(from, to),
+    fetchAllRows<{
+      id: string;
+      full_name: string | null;
+      position_title: string | null;
+      hire_date: string | null;
+      departments: { name: string } | null;
+    }>((from, to) =>
+      supabase
+        .from("profiles")
+        .select("id, full_name, position_title, hire_date, departments(name)")
+        .order("full_name")
+        .range(from, to),
     ),
-    supabase.from("company_profile").select("name").maybeSingle(),
+    supabase.from("company_profile").select("name, representative_name").maybeSingle(),
   ]);
+
+  // 재직증명서 등 기본 양식이 소속/직위/입사일을 자동으로 채우려면 이
+  // 형태(department_name 평평한 필드)가 필요하다 — document-template.ts
+  // AUTO_FILL_FIELD_KEYS 참고.
+  const employees = profileRows.map((p) => ({
+    id: p.id,
+    full_name: p.full_name,
+    position_title: p.position_title,
+    hire_date: p.hire_date,
+    department_name: p.departments?.name ?? null,
+  }));
 
   return (
     <div>
@@ -50,6 +71,7 @@ export default async function NewDocumentPage() {
             templates={templates}
             employees={employees}
             companyName={company?.name ?? null}
+            representativeName={company?.representative_name ?? null}
           />
         </FormSection>
       )}

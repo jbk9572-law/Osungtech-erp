@@ -8,11 +8,28 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { PageGuide } from "@/components/erp/page-guide";
 
 type TemplateOption = { id: string; name: string; body: string };
-type EmployeeOption = { id: string; full_name: string | null };
+type EmployeeOption = {
+  id: string;
+  full_name: string | null;
+  position_title: string | null;
+  department_name: string | null;
+  hire_date: string | null;
+};
 
 const FIELD_LABELS: Record<string, string> = {
   company_name: "회사명",
   employee_name: "직원명",
+  representative_name: "대표자명",
+  department_name: "소속(부서)",
+  position_title: "직위",
+  hire_date: "입사일",
+  purpose: "용도",
+  submit_to: "제출처",
+  job_description: "담당업무",
+  leave_date: "퇴사일",
+  monthly_salary: "월급여(세전)",
+  resignation_date: "사직 예정일",
+  reason: "사유",
 };
 
 export function GenerateDocumentForm({
@@ -20,11 +37,13 @@ export function GenerateDocumentForm({
   templates,
   employees,
   companyName,
+  representativeName,
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
   templates: TemplateOption[];
   employees: EmployeeOption[];
   companyName: string | null;
+  representativeName: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -45,11 +64,15 @@ export function GenerateDocumentForm({
   const autoFields = useMemo(() => allFields.filter(isServerAutoField), [allFields]);
 
   function applyAutoFill(subjectId: string, fieldList: string[]) {
-    const employeeName = employees.find((e) => e.id === subjectId)?.full_name ?? "";
+    const employee = employees.find((e) => e.id === subjectId);
     const next: Record<string, string> = {};
     for (const f of fieldList) {
       if (f === "company_name") next[f] = companyName ?? "";
-      else if (f === "employee_name") next[f] = employeeName;
+      else if (f === "representative_name") next[f] = representativeName ?? "";
+      else if (f === "employee_name") next[f] = employee?.full_name ?? "";
+      else if (f === "department_name") next[f] = employee?.department_name ?? "";
+      else if (f === "position_title") next[f] = employee?.position_title ?? "";
+      else if (f === "hire_date") next[f] = employee?.hire_date ?? "";
       else next[f] = "";
     }
     setValues(next);
