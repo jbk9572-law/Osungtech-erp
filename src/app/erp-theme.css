@@ -431,6 +431,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.12s ease-out;
+}
+
+/* 닫기(X/ESC/배경클릭)는 실제 라우트 이동이 끝나길 기다리지 않고 클릭한
+   순간 바로 사라진다(registration-modal-shell.tsx) — 뒤에 이미 그려져
+   있던 목록 화면이 그대로 드러난다. 예전엔 이 어두운 배경막은 그대로
+   남아 있고 카드만 투명해져서, 실제 라우트 이동이 조금만 늦어도 "안
+   닫히고 먹통"처럼 보였다. pointer-events는 트랜지션을 기다리지 않고
+   즉시 꺼서, 페이드 중에도 바로 아래 목록을 클릭할 수 있게 한다. */
+.erp-modal-overlay.closing {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .erp-modal {
