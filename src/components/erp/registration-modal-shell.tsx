@@ -56,9 +56,19 @@ export function RegistrationModalShell({
   // 거쳐 왔는지에 따라 엉뚱한 화면으로 가버릴 수 있어 더 이상 기본
   // 닫기 수단으로 쓰지 않는다.
   const closeHrefRef = useRef<string | null>(null);
-  const registerCloseHref = useCallback((href: string) => {
-    closeHrefRef.current = href;
-  }, []);
+  // 목적지를 알게 되는 즉시 미리 가져와둔다(router.prefetch). 등록/수정
+  // 저장 직후처럼 revalidatePath로 목적지 화면의 캐시가 막 무효화된
+  // 상태면 push 시점에 서버 왕복이 걸려 "닫힘"이 아니라 "이동 중"으로
+  // 보이는 문제가 있었다 — X를 누르기 전에(모달이 열려 있는 동안) 미리
+  // 데워두면 실제 클릭 시점엔 캐시 히트라 즉시 닫히는 것처럼 보인다.
+  const registerCloseHref = useCallback(
+    (href: string) => {
+      if (closeHrefRef.current === href) return;
+      closeHrefRef.current = href;
+      router.prefetch(href);
+    },
+    [router],
+  );
 
   useEffect(() => {
     return () => {
