@@ -18,6 +18,8 @@ export type PayslipDocProps = {
   healthDeduction: number;
   longTermCareDeduction: number;
   employmentDeduction: number;
+  incomeTaxDeduction: number;
+  localIncomeTaxDeduction: number;
   totalDeduction: number;
   netPay: number;
   annualLeaveTotal: number | null;
@@ -26,9 +28,9 @@ export type PayslipDocProps = {
 
 // 견적서(quotation-doc.tsx)와 같은 검은 테두리 표 서식 언어를 그대로
 // 따른다 — 이 앱에서 "인쇄되는 문서"는 이 모양이라는 게 이미 정해져
-// 있어서다. 소득세/지방소득세는 이 앱 범위 밖이라(hr/payroll/page.tsx
-// PageGuide 참고) 지급/공제 항목에 넣지 않고 맨 아래 안내문으로만
-// 밝힌다 — 실제 급여명세로 오인해 세무 신고 등에 잘못 쓰이지 않도록.
+// 있어서다. 소득세/지방소득세는 간이세액표 조회로 계산해 반영하지만,
+// 어디까지나 회사가 직접 입력한 표 기준 개산액이고 연말정산 전 확정
+// 세액이 아니라는 점을 맨 아래 안내문으로 밝힌다.
 export function PayslipDoc({
   company,
   employeeName,
@@ -45,6 +47,8 @@ export function PayslipDoc({
   healthDeduction,
   longTermCareDeduction,
   employmentDeduction,
+  incomeTaxDeduction,
+  localIncomeTaxDeduction,
   totalDeduction,
   netPay,
   annualLeaveTotal,
@@ -64,6 +68,8 @@ export function PayslipDoc({
     { label: "건강보험", amount: healthDeduction },
     { label: "장기요양보험", amount: longTermCareDeduction },
     { label: "고용보험", amount: employmentDeduction },
+    { label: "소득세", amount: incomeTaxDeduction },
+    { label: "지방소득세", amount: localIncomeTaxDeduction },
   ];
   const rowCount = Math.max(earningRows.length, deductionRows.length);
 
@@ -158,7 +164,8 @@ export function PayslipDoc({
       </div>
 
       <div className="border-t border-black px-3 py-2 text-[11px] text-gray-600">
-        * 소득세/지방소득세 원천징수는 이 명세서에 반영되지 않았습니다(4대보험 공제까지만 계산).
+        * 소득세/지방소득세는 회사가 등록한 간이세액표 기준 개산액이며, 정확한 세액은
+        다음 해 연말정산에서 확정됩니다.
       </div>
     </div>
   );

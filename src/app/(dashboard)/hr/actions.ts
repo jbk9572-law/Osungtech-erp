@@ -7,6 +7,9 @@ import { todayKstStr } from "@/lib/kst-date";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { calcLocalIncomeTax, lookupIncomeTax, type WithholdingTaxBracket } from "@/lib/withholding-tax";
+import { readExcelRows, cellNumber, summarize, type ImportRowError } from "@/lib/excel-import";
+import { requireAdmin } from "@/lib/require-admin";
 
 // 위치 값은 브라우저 navigator.geolocation이 넘겨준 값을 그대로 믿고
 // 숫자로만 파싱한다 — 권한을 거부했거나 위치 확인에 실패한 경우 빈
@@ -456,18 +459,28 @@ export async function setPayrollRateSettings(_prevState: FormState, formData: Fo
 export async function setEmployeePaySetting(_prevState: FormState, formData: FormData): Promise<FormState> {
   const userId = String(formData.get("user_id") ?? "");
   const monthlyBasePay = Number(formData.get("monthly_base_pay") ?? NaN);
+  const dependentsCount = Number(formData.get("dependents_count") ?? NaN);
 
-  if (!userId || !Number.isFinite(monthlyBasePay) || monthlyBasePay < 0) {
-    return { error: "값을 올바르게 입력해주세요." };
+  if (
+    !userId ||
+    !Number.isFinite(monthlyBasePay) ||
+    monthlyBasePay < 0 ||
+    !Number.isInteger(dependentsCount) ||
+    dependentsCount < 1
+  ) {
+    return { error: "값을 올바르게 입력해주세요(부양가족 수는 본인 포함 1 이상 정수)." };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("employee_pay_settings")
-    .upsert(
-      { user_id: userId, monthly_base_pay: monthlyBasePay, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" },
-    );
+  const { error } = await supabase.from("employee_pay_settings").upsert(
+    {
+      user_id: userId,
+      monthly_base_pay: monthlyBasePay,
+      dependents_count: dependentsCount,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
 
   if (error) return { error: `저장에 실패했습니다: ${error.message}` };
 
@@ -478,7 +491,8 @@ export async function setEmployeePaySetting(_prevState: FormState, formData: For
 // 4대보험 계산 기준(gross)에서 순수 급여/공제 항목만 다시 계산한다 —
 // generatePayroll(새로 생성)과 setPayslipBonus(성과금/특별상여금 수정)가
 // 똑같은 계산식을 각자 들고 있으면 나중에 하나만 고치고 잊어버리기
-// 쉬우므로 하나로 모은다.
+// 쉬우므로 하나로 모은다. 소득세는 4대보험처럼 %가 아니라 간이세액표
+// 조회(withholding-tax.ts)로 구한다.
 function calcPayslipAmounts(
   basePay: number,
   bonusPerformance: number,
@@ -489,19 +503,25 @@ function calcPayslipAmounts(
     long_term_care_rate: number;
     employment_insurance_rate: number;
   },
+  dependentsCount: number,
+  taxBrackets: WithholdingTaxBracket[],
 ) {
   const gross = basePay + bonusPerformance + bonusSpecial;
   const pension = Math.round(gross * Number(rates.national_pension_rate));
   const health = Math.round(gross * Number(rates.health_insurance_rate));
   const longTermCare = Math.round(health * Number(rates.long_term_care_rate));
   const employment = Math.round(gross * Number(rates.employment_insurance_rate));
-  const totalDeduction = pension + health + longTermCare + employment;
+  const incomeTax = lookupIncomeTax(taxBrackets, gross, dependentsCount);
+  const localIncomeTax = calcLocalIncomeTax(incomeTax);
+  const totalDeduction = pension + health + longTermCare + employment + incomeTax + localIncomeTax;
   return {
     gross,
     pension,
     health,
     longTermCare,
     employment,
+    incomeTax,
+    localIncomeTax,
     totalDeduction,
     netPay: gross - totalDeduction,
   };
@@ -520,10 +540,10 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
   const rateYear = Number(payMonth.slice(0, 4));
 
   const supabase = await createClient();
-  const [{ data: rates }, { data: paySettings }, { data: existing }, { data: leaveBalances }, leaveUsedRows] =
+  const [{ data: rates }, { data: paySettings }, { data: existing }, { data: leaveBalances }, leaveUsedRows, taxBrackets] =
     await Promise.all([
       supabase.from("payroll_rate_settings").select("*").eq("year", rateYear).maybeSingle(),
-      supabase.from("employee_pay_settings").select("user_id, monthly_base_pay"),
+      supabase.from("employee_pay_settings").select("user_id, monthly_base_pay, dependents_count"),
       supabase
         .from("payslips")
         .select("user_id, status, bonus_performance, bonus_special")
@@ -537,6 +557,9 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
           .gte("start_date", `${rateYear}-01-01`)
           .lte("start_date", `${rateYear}-12-31`)
           .range(from, to),
+      ),
+      fetchAllRows<WithholdingTaxBracket>((from, to) =>
+        supabase.from("withholding_tax_brackets").select("*").order("salary_from").range(from, to),
       ),
     ]);
 
@@ -561,8 +584,16 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
     .filter((p) => !confirmedUserIds.has(p.user_id))
     .map((p) => {
       const basePay = Number(p.monthly_base_pay);
+      const dependentsCount = Number(p.dependents_count ?? 1);
       const carriedBonus = existingBonusByUser.get(p.user_id) ?? { performance: 0, special: 0 };
-      const amounts = calcPayslipAmounts(basePay, carriedBonus.performance, carriedBonus.special, rates);
+      const amounts = calcPayslipAmounts(
+        basePay,
+        carriedBonus.performance,
+        carriedBonus.special,
+        rates,
+        dependentsCount,
+        taxBrackets,
+      );
       return {
         user_id: p.user_id,
         pay_month: payMonth,
@@ -574,6 +605,8 @@ export async function generatePayroll(_prevState: FormState, formData: FormData)
         health_deduction: amounts.health,
         long_term_care_deduction: amounts.longTermCare,
         employment_deduction: amounts.employment,
+        income_tax_deduction: amounts.incomeTax,
+        local_income_tax_deduction: amounts.localIncomeTax,
         total_deduction: amounts.totalDeduction,
         net_pay: amounts.netPay,
         rate_year: rateYear,
@@ -611,20 +644,29 @@ export async function setPayslipBonus(_prevState: FormState, formData: FormData)
   const supabase = await createClient();
   const { data: payslip } = await supabase
     .from("payslips")
-    .select("base_pay, status, rate_year")
+    .select("user_id, base_pay, status, rate_year")
     .eq("id", id)
     .maybeSingle();
   if (!payslip) return { error: "급여명세를 찾을 수 없습니다." };
   if (payslip.status !== "draft") return { error: "확정된 급여명세는 수정할 수 없습니다." };
 
-  const { data: rates } = await supabase
-    .from("payroll_rate_settings")
-    .select("*")
-    .eq("year", payslip.rate_year)
-    .maybeSingle();
+  const [{ data: rates }, { data: paySetting }, taxBrackets] = await Promise.all([
+    supabase.from("payroll_rate_settings").select("*").eq("year", payslip.rate_year).maybeSingle(),
+    supabase.from("employee_pay_settings").select("dependents_count").eq("user_id", payslip.user_id).maybeSingle(),
+    fetchAllRows<WithholdingTaxBracket>((from, to) =>
+      supabase.from("withholding_tax_brackets").select("*").order("salary_from").range(from, to),
+    ),
+  ]);
   if (!rates) return { error: `${payslip.rate_year}년 급여 요율을 찾을 수 없습니다.` };
 
-  const amounts = calcPayslipAmounts(Number(payslip.base_pay), bonusPerformance, bonusSpecial, rates);
+  const amounts = calcPayslipAmounts(
+    Number(payslip.base_pay),
+    bonusPerformance,
+    bonusSpecial,
+    rates,
+    Number(paySetting?.dependents_count ?? 1),
+    taxBrackets,
+  );
   const result = await supabase
     .from("payslips")
     .update({
@@ -635,6 +677,8 @@ export async function setPayslipBonus(_prevState: FormState, formData: FormData)
       health_deduction: amounts.health,
       long_term_care_deduction: amounts.longTermCare,
       employment_deduction: amounts.employment,
+      income_tax_deduction: amounts.incomeTax,
+      local_income_tax_deduction: amounts.localIncomeTax,
       total_deduction: amounts.totalDeduction,
       net_pay: amounts.netPay,
     })
@@ -671,4 +715,159 @@ export async function confirmPayslip(_prevState: FormState, formData: FormData):
 
   revalidatePath("/hr/payroll");
   return { success: "급여명세를 확정했습니다." };
+}
+
+// 간이세액표 구간 하나를 관리자가 직접 추가/수정한다. 표 자체(실제
+// 세액 숫자)는 국세청 고시값을 그대로 옮겨 적는 것이라 여기서 값을
+// 추측하지 않는다 — withholding-tax.ts 상단 주석 참고. salary_to를
+// 비우면 "그 이상 전부"인 최고 구간으로 저장한다.
+export async function upsertWithholdingBracket(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "") || null;
+  const salaryFrom = Number(formData.get("salary_from") ?? NaN);
+  const salaryToRaw = String(formData.get("salary_to") ?? "").trim();
+  const salaryTo = salaryToRaw === "" ? null : Number(salaryToRaw);
+
+  if (!Number.isFinite(salaryFrom) || salaryFrom < 0) {
+    return { error: "월급여 구간 시작값을 올바르게 입력해주세요." };
+  }
+  if (salaryTo !== null && (!Number.isFinite(salaryTo) || salaryTo <= salaryFrom)) {
+    return { error: "월급여 구간 끝값은 시작값보다 커야 합니다(비우면 상한 없음)." };
+  }
+
+  const dependents: Record<string, number> = {};
+  for (let n = 1; n <= 11; n++) {
+    const v = Number(formData.get(`dependents_${n}`) ?? NaN);
+    if (!Number.isFinite(v) || v < 0) {
+      return { error: `부양가족 ${n}명 세액을 올바르게 입력해주세요.` };
+    }
+    dependents[`dependents_${n}`] = v;
+  }
+
+  const supabase = await createClient();
+  const user = await getUser();
+  const payload = {
+    salary_from: salaryFrom,
+    salary_to: salaryTo,
+    ...dependents,
+    updated_at: new Date().toISOString(),
+    updated_by: user?.id ?? null,
+  };
+
+  const { error } = id
+    ? await supabase.from("withholding_tax_brackets").update(payload).eq("id", id)
+    : await supabase.from("withholding_tax_brackets").insert(payload);
+
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/hr/payroll");
+  return { success: "간이세액표 구간을 저장했습니다." };
+}
+
+export async function deleteWithholdingBracket(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const result = await supabase.from("withholding_tax_brackets").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, {
+    onError: "삭제에 실패했습니다",
+    onForbidden: "관리자만 삭제할 수 있습니다.",
+  });
+  if (mutationError) return mutationError;
+
+  revalidatePath("/hr/payroll");
+  return { success: "삭제했습니다." };
+}
+
+// 엑셀 일괄 업로드 — 표 전체를 이번에 올린 내용으로 통째로 교체한다.
+// 직원 엑셀 일괄등록처럼 행별 upsert가 아니라 delete-then-insert인
+// 이유: 이 표는 "이름/아이디로 식별되는 각각의 레코드"가 아니라 국세청이
+// 통째로 갱신해서 배포하는 하나의 표 스냅샷이라, 새로 올린 파일이 곧
+// 새 정답 전체를 의미한다 — 기존 구간과 병합할 이유가 없다.
+export async function importWithholdingBracketsExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 일괄 업로드할 수 있습니다." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "엑셀 파일을 선택해주세요." };
+  }
+
+  let excelRows: Awaited<ReturnType<typeof readExcelRows>>;
+  try {
+    excelRows = await readExcelRows(file);
+  } catch {
+    return { error: "엑셀 파일을 읽을 수 없습니다. .xlsx 파일인지 확인해주세요." };
+  }
+  if (excelRows.length === 0) {
+    return { error: "엑셀에 데이터 행이 없습니다." };
+  }
+
+  type BracketInsertRow = {
+    salary_from: number;
+    salary_to: number | null;
+    dependents_1: number;
+    dependents_2: number;
+    dependents_3: number;
+    dependents_4: number;
+    dependents_5: number;
+    dependents_6: number;
+    dependents_7: number;
+    dependents_8: number;
+    dependents_9: number;
+    dependents_10: number;
+    dependents_11: number;
+  };
+  const errors: ImportRowError[] = [];
+  const rows: BracketInsertRow[] = [];
+  for (let i = 0; i < excelRows.length; i++) {
+    const rowNum = i + 2;
+    const row = excelRows[i];
+    const salaryFrom = cellNumber(row, "월급여이상");
+    const salaryTo = cellNumber(row, "월급여미만");
+    if (salaryFrom === null) {
+      errors.push({ row: rowNum, reason: "월급여(이상) 값이 없습니다." });
+      continue;
+    }
+    const dependents: number[] = [];
+    let rowValid = true;
+    for (let n = 1; n <= 11; n++) {
+      const v = cellNumber(row, `${n}명`);
+      if (v === null) {
+        errors.push({ row: rowNum, reason: `부양가족 ${n}명 칸 값이 없습니다.` });
+        rowValid = false;
+        break;
+      }
+      dependents.push(v);
+    }
+    if (!rowValid) continue;
+    rows.push({
+      salary_from: salaryFrom,
+      salary_to: salaryTo,
+      dependents_1: dependents[0],
+      dependents_2: dependents[1],
+      dependents_3: dependents[2],
+      dependents_4: dependents[3],
+      dependents_5: dependents[4],
+      dependents_6: dependents[5],
+      dependents_7: dependents[6],
+      dependents_8: dependents[7],
+      dependents_9: dependents[8],
+      dependents_10: dependents[9],
+      dependents_11: dependents[10],
+    });
+  }
+
+  if (rows.length === 0) {
+    return { error: `가져올 수 있는 행이 없습니다. ${errors[0]?.reason ?? ""}` };
+  }
+
+  const { error: deleteError } = await supabase.from("withholding_tax_brackets").delete().gte("salary_from", 0);
+  if (deleteError) return { error: `기존 표 삭제에 실패했습니다: ${deleteError.message}` };
+
+  const { error: insertError } = await supabase.from("withholding_tax_brackets").insert(rows);
+  if (insertError) return { error: `업로드에 실패했습니다: ${insertError.message}` };
+
+  revalidatePath("/hr/payroll");
+  return summarize(excelRows.length, rows.length, errors);
 }

@@ -33,7 +33,7 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
   const { data: payslip } = await supabase
     .from("payslips")
     .select(
-      "pay_month, status, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, email, position_title, departments(name))",
+      "pay_month, status, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, income_tax_deduction, local_income_tax_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, email, position_title, departments(name))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -72,12 +72,14 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
     Number(payslip.bonus_performance) > 0 ? `성과금: ${formatNumber(Number(payslip.bonus_performance))}원` : "",
     Number(payslip.bonus_special) > 0 ? `특별상여금: ${formatNumber(Number(payslip.bonus_special))}원` : "",
     `지급액 합계: ${formatNumber(Number(payslip.gross_pay))}원`,
-    `공제액 합계: -${formatNumber(Number(payslip.total_deduction))}원 (국민연금/건강보험/장기요양보험/고용보험)`,
+    `공제액 합계: -${formatNumber(Number(payslip.total_deduction))}원 (국민연금/건강보험/장기요양보험/고용보험/소득세/지방소득세)`,
+    `  - 소득세: ${formatNumber(Number(payslip.income_tax_deduction))}원`,
+    `  - 지방소득세: ${formatNumber(Number(payslip.local_income_tax_deduction))}원`,
     `실지급액: ${formatNumber(Number(payslip.net_pay))}원`,
     "",
     annualLeaveLine,
     "",
-    "※ 소득세/지방소득세 원천징수는 이 명세서에 반영되지 않았습니다.",
+    "※ 소득세/지방소득세는 회사가 등록한 간이세액표 기준 개산액이며, 정확한 세액은 다음 해 연말정산에서 확정됩니다.",
   ]
     .filter(Boolean)
     .join("\n");

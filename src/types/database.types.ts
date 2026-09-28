@@ -643,18 +643,21 @@ export type Database = {
           id: string;
           user_id: string;
           monthly_base_pay: number;
+          dependents_count: number;
           updated_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           monthly_base_pay?: number;
+          dependents_count?: number;
           updated_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           monthly_base_pay?: number;
+          dependents_count?: number;
           updated_at?: string;
         };
         Relationships: [
@@ -689,6 +692,8 @@ export type Database = {
           bonus_special: number;
           annual_leave_total: number | null;
           annual_leave_used: number | null;
+          income_tax_deduction: number;
+          local_income_tax_deduction: number;
         };
         Insert: {
           id?: string;
@@ -711,6 +716,8 @@ export type Database = {
           bonus_special?: number;
           annual_leave_total?: number | null;
           annual_leave_used?: number | null;
+          income_tax_deduction?: number;
+          local_income_tax_deduction?: number;
         };
         Update: {
           id?: string;
@@ -733,11 +740,78 @@ export type Database = {
           bonus_special?: number;
           annual_leave_total?: number | null;
           annual_leave_used?: number | null;
+          income_tax_deduction?: number;
+          local_income_tax_deduction?: number;
         };
         Relationships: [
           {
             foreignKeyName: "payslips_user_id_fkey";
             columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      withholding_tax_brackets: {
+        Row: {
+          id: string;
+          salary_from: number;
+          salary_to: number | null;
+          dependents_1: number;
+          dependents_2: number;
+          dependents_3: number;
+          dependents_4: number;
+          dependents_5: number;
+          dependents_6: number;
+          dependents_7: number;
+          dependents_8: number;
+          dependents_9: number;
+          dependents_10: number;
+          dependents_11: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          salary_from: number;
+          salary_to?: number | null;
+          dependents_1?: number;
+          dependents_2?: number;
+          dependents_3?: number;
+          dependents_4?: number;
+          dependents_5?: number;
+          dependents_6?: number;
+          dependents_7?: number;
+          dependents_8?: number;
+          dependents_9?: number;
+          dependents_10?: number;
+          dependents_11?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          salary_from?: number;
+          salary_to?: number | null;
+          dependents_1?: number;
+          dependents_2?: number;
+          dependents_3?: number;
+          dependents_4?: number;
+          dependents_5?: number;
+          dependents_6?: number;
+          dependents_7?: number;
+          dependents_8?: number;
+          dependents_9?: number;
+          dependents_10?: number;
+          dependents_11?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "withholding_tax_brackets_updated_by_fkey";
+            columns: ["updated_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

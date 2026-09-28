@@ -16,7 +16,7 @@ export default async function PayslipPrintPage({ params }: { params: Promise<{ i
     supabase
       .from("payslips")
       .select(
-        "pay_month, status, confirmed_at, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, position_title, departments(name))",
+        "pay_month, status, confirmed_at, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, income_tax_deduction, local_income_tax_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, position_title, departments(name))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -49,6 +49,8 @@ export default async function PayslipPrintPage({ params }: { params: Promise<{ i
         healthDeduction={Number(payslip.health_deduction)}
         longTermCareDeduction={Number(payslip.long_term_care_deduction)}
         employmentDeduction={Number(payslip.employment_deduction)}
+        incomeTaxDeduction={Number(payslip.income_tax_deduction)}
+        localIncomeTaxDeduction={Number(payslip.local_income_tax_deduction)}
         totalDeduction={Number(payslip.total_deduction)}
         netPay={Number(payslip.net_pay)}
         annualLeaveTotal={payslip.annual_leave_total === null ? null : Number(payslip.annual_leave_total)}
