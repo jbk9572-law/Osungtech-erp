@@ -5,6 +5,8 @@ type Company = { name: string } | null;
 export type PayslipDocProps = {
   company: Company;
   employeeName: string;
+  positionTitle: string | null;
+  departmentName: string | null;
   payMonth: string; // "YYYY-MM"
   status: string;
   confirmedAt: string | null;
@@ -30,6 +32,8 @@ export type PayslipDocProps = {
 export function PayslipDoc({
   company,
   employeeName,
+  positionTitle,
+  departmentName,
   payMonth,
   status,
   confirmedAt,
@@ -76,21 +80,25 @@ export function PayslipDoc({
         <tbody>
           <tr>
             <th className="w-24 border border-black bg-gray-50 px-2 py-1 font-medium">성명</th>
-            <td className="border border-black px-2 py-1" colSpan={3}>
-              {employeeName}
-            </td>
-            <th className="w-24 border border-black bg-gray-50 px-2 py-1 font-medium">지급일 상태</th>
-            <td className="border border-black px-2 py-1">
-              {status === "confirmed" ? `확정 (${confirmedAt ? new Date(confirmedAt).toLocaleDateString("ko-KR") : "-"})` : "초안"}
-            </td>
+            <td className="border border-black px-2 py-1">{employeeName}</td>
+            <th className="w-24 border border-black bg-gray-50 px-2 py-1 font-medium">소속</th>
+            <td className="border border-black px-2 py-1">{departmentName ?? "-"}</td>
+            <th className="w-24 border border-black bg-gray-50 px-2 py-1 font-medium">직위</th>
+            <td className="border border-black px-2 py-1">{positionTitle ?? "-"}</td>
           </tr>
           <tr>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">회사</th>
             <td className="border border-black px-2 py-1" colSpan={3}>
               {company?.name ?? "-"}
             </td>
-            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">대상 연차</th>
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">지급일 상태</th>
             <td className="border border-black px-2 py-1">
+              {status === "confirmed" ? `확정 (${confirmedAt ? new Date(confirmedAt).toLocaleDateString("ko-KR") : "-"})` : "초안"}
+            </td>
+          </tr>
+          <tr>
+            <th className="border border-black bg-gray-50 px-2 py-1 font-medium">대상 연차</th>
+            <td className="border border-black px-2 py-1" colSpan={5}>
               {annualLeaveTotal === null
                 ? "미등록"
                 : `총 ${annualLeaveTotal}일 · 사용 ${annualLeaveUsed}일 · 잔여 ${annualLeaveRemaining}일`}

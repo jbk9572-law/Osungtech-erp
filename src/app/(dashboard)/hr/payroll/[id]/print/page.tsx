@@ -16,7 +16,7 @@ export default async function PayslipPrintPage({ params }: { params: Promise<{ i
     supabase
       .from("payslips")
       .select(
-        "pay_month, status, confirmed_at, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name)",
+        "pay_month, status, confirmed_at, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, position_title, departments(name))",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -36,6 +36,8 @@ export default async function PayslipPrintPage({ params }: { params: Promise<{ i
       <PayslipDoc
         company={company}
         employeeName={payslip.profiles?.full_name ?? "구성원"}
+        positionTitle={payslip.profiles?.position_title ?? null}
+        departmentName={payslip.profiles?.departments?.name ?? null}
         payMonth={payslip.pay_month}
         status={payslip.status}
         confirmedAt={payslip.confirmed_at}

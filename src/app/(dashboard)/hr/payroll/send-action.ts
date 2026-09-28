@@ -33,7 +33,7 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
   const { data: payslip } = await supabase
     .from("payslips")
     .select(
-      "pay_month, status, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, email)",
+      "pay_month, status, base_pay, bonus_performance, bonus_special, gross_pay, pension_deduction, health_deduction, long_term_care_deduction, employment_deduction, total_deduction, net_pay, annual_leave_total, annual_leave_used, profiles!user_id(full_name, email, position_title, departments(name))",
     )
     .eq("id", id)
     .maybeSingle();
@@ -60,10 +60,13 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
       : "";
 
   const subject = `[급여명세서] ${year}년 ${Number(month)}월분`;
+  const orgLine = [payslip.profiles?.departments?.name, payslip.profiles?.position_title].filter(Boolean).join(" · ");
+
   const text = [
     `${payslip.profiles?.full_name ?? "구성원"}님께,`,
     "",
     `${year}년 ${Number(month)}월분 급여명세서를 보내드립니다.`,
+    orgLine ? `소속: ${orgLine}` : "",
     "",
     `기본급: ${formatNumber(Number(payslip.base_pay))}원`,
     Number(payslip.bonus_performance) > 0 ? `성과금: ${formatNumber(Number(payslip.bonus_performance))}원` : "",

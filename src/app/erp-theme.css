@@ -891,7 +891,9 @@
   .erp-messenger-fab,
   .erp-messenger-panel,
   .erp-nav-overlay,
-  .erp-toast-stack {
+  .erp-toast-stack,
+  .erp-demo-banner,
+  .erp-platform-announcement-banner {
     display: none !important;
   }
 
