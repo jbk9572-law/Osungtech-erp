@@ -23,60 +23,63 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        // 화면 높이를 안 줬더니 에러 박스가 내용 높이만큼만 차지해서,
-        // 위에 타이틀바/리본/공지 배너가 있으면 박스가 화면 아래쪽에
-        // 어중간하게 걸치거나 버튼이 화면 밖으로 잘려 보이는 문제가
-        // 있었다 — 최소 높이를 줘서 항상 남은 공간 가운데 오게 한다.
-        minHeight: "60vh",
-        padding: "40px 20px",
-        textAlign: "center",
-      }}
-    >
-      <p style={{ fontSize: 15, fontWeight: 700, color: "var(--erp-text)", marginBottom: 8 }}>
-        일시적인 오류로 화면을 불러오지 못했습니다.
-      </p>
-      <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20, maxWidth: 420 }}>
-        네트워크가 잠시 불안정했거나 데이터량이 많아 시간이 오래 걸렸을 수 있습니다.
-        아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 아래 내용과 함께 운영자에게 알려주세요.
-      </p>
-      {(error.message || error.digest) && (
-        <p
-          style={{
-            fontSize: 11,
-            fontFamily: "monospace",
-            color: "var(--erp-text-muted)",
-            background: "var(--erp-bg-subtle)",
-            border: "1px solid var(--erp-border)",
-            borderRadius: 4,
-            padding: "8px 12px",
-            marginBottom: 20,
-            maxWidth: 520,
-            wordBreak: "break-word",
-            textAlign: "left",
-          }}
-        >
-          {error.message || "(메시지 없음)"}
-          {error.digest && (
-            <>
-              <br />
-              digest: {error.digest}
-            </>
-          )}
+    // 예전엔 `minHeight: "60vh"`로 세로 가운데 정렬을 했는데, 이 vh는
+    // 브라우저 창 전체 높이 기준이라 타이틀바/리본/공지 배너/탭바가 위에
+    // 쌓여 실제 본문 영역(.erp-page)이 그보다 훨씬 좁아지는 화면(특히
+    // 모바일)에서는 60vh짜리 박스가 본문 영역의 스크롤 가능한 높이를
+    // 넘어버렸다 — 화면상 스크롤을 내려야 버튼이 보이는데, 딱 봐서는
+    // 스크롤 가능한 걸 알기 어려워 "화면이 반 잘려서 나온다"는 지적으로
+    // 이어졌다. 뷰포트 기준 최소 높이를 강제하는 대신 내용만큼만 차지하게
+    // 두고, 다른 화면의 알림 카드(erp-item-card 등)처럼 이 화면 영역
+    // "안에" 담겨 있는 것처럼 보이도록 테두리로 감싼다.
+    <div style={{ maxWidth: 560, margin: "32px auto", textAlign: "center" }}>
+      <div
+        style={{
+          border: "1px solid var(--erp-border)",
+          borderRadius: 0,
+          background: "var(--erp-panel)",
+          padding: "28px 20px",
+        }}
+      >
+        <p style={{ fontSize: 15, fontWeight: 700, color: "var(--erp-text)", marginBottom: 8 }}>
+          일시적인 오류로 화면을 불러오지 못했습니다.
         </p>
-      )}
-      <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
-          다시 시도
-        </button>
-        <Link href="/dashboard" className="erp-btn">
-          메인 화면으로
-        </Link>
+        <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>
+          네트워크가 잠시 불안정했거나 데이터량이 많아 시간이 오래 걸렸을 수 있습니다.
+          아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 아래 내용과 함께 운영자에게 알려주세요.
+        </p>
+        {(error.message || error.digest) && (
+          <p
+            style={{
+              fontSize: 11,
+              fontFamily: "monospace",
+              color: "var(--erp-text-muted)",
+              background: "var(--erp-bg-subtle)",
+              border: "1px solid var(--erp-border)",
+              borderRadius: 0,
+              padding: "8px 12px",
+              marginBottom: 20,
+              wordBreak: "break-word",
+              textAlign: "left",
+            }}
+          >
+            {error.message || "(메시지 없음)"}
+            {error.digest && (
+              <>
+                <br />
+                digest: {error.digest}
+              </>
+            )}
+          </p>
+        )}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
+            다시 시도
+          </button>
+          <Link href="/dashboard" className="erp-btn">
+            메인 화면으로
+          </Link>
+        </div>
       </div>
     </div>
   );
