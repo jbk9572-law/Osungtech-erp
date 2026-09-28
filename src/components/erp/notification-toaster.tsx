@@ -75,7 +75,7 @@ export function NotificationToaster() {
         data.lowStock.forEach((p) => {
           pushToast({
             key: `s-${p.id}`,
-            href: `/inventory/${p.id}`,
+            href: `/inventory/item/${p.id}`,
             title: `⚠️ ${p.name} 안전재고 부족`,
             meta: `현재 ${formatNumber(p.quantity)} / 기준 ${formatNumber(p.reorderPoint)}`,
           });

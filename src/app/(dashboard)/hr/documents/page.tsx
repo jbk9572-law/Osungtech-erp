@@ -55,7 +55,7 @@ export default async function DocumentsPage() {
             </thead>
             <tbody>
               {(docs ?? []).map((d) => (
-                <ClickableRow key={d.id} href={`/hr/documents/${d.id}`}>
+                <ClickableRow key={d.id} href={`/hr/documents/item/${d.id}`}>
                   <td>{new Date(d.created_at).toLocaleDateString("ko-KR")}</td>
                   <td>{d.title}</td>
                   <td>{d.profiles?.full_name ?? "-"}</td>

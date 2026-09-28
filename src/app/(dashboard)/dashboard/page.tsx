@@ -477,7 +477,7 @@ export default async function DashboardPage({
             <>
               <div className="erp-home-stock-list">
                 {lowStockItems.map((p) => (
-                  <Link key={p.id} href={`/inventory/${p.id}`} className="erp-home-stock-row">
+                  <Link key={p.id} href={`/inventory/item/${p.id}`} className="erp-home-stock-row">
                     <span className="name">{p.name}</span>
                     <span className="ratio">
                       현재 {formatNumber(p.quantity)} / 기준 {formatNumber(p.reorderPoint)}

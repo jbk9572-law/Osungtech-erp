@@ -150,7 +150,7 @@ export async function createDocument(_prevState: FormState, formData: FormData):
   }
 
   revalidatePath("/hr/documents");
-  redirect(`/hr/documents/${doc.id}`);
+  redirect(`/hr/documents/item/${doc.id}`);
 }
 
 export async function issueDocument(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -171,7 +171,7 @@ export async function issueDocument(_prevState: FormState, formData: FormData): 
   if (mutationError) return mutationError;
 
   revalidatePath("/hr/documents");
-  revalidatePath(`/hr/documents/${id}`);
+  revalidatePath(`/hr/documents/item/${id}`);
   return { success: "발급 완료로 표시했습니다." };
 }
 

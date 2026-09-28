@@ -86,7 +86,7 @@ export default async function BoardPage() {
         title: d.title,
         status: HR_DOC_STATUS[d.status as keyof typeof HR_DOC_STATUS] ?? { label: d.status, tone: "muted" },
         date: d.created_at,
-        href: `/hr/documents/${d.id}`,
+        href: `/hr/documents/item/${d.id}`,
       });
     }
   }

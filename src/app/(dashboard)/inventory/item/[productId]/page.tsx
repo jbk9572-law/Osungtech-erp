@@ -13,6 +13,15 @@ import { GridBadge } from "@/components/grid/badge";
 import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
 import { formatNumber } from "@/lib/format-number";
 
+// 주소가 /inventory/item/[productId]인 이유: 재고관리 하위에는 이 상세
+// 화면 말고도 count, qr-labels, warehouses 같은 정적 형제 메뉴가 여럿
+// 있는데, 예전엔 이 동적 세그먼트가 /inventory 바로 밑에 있어서 @modal
+// 인터셉트 라우트가 "qr-labels" 같은 정적 경로명까지 productId 값으로
+// 착각해 가로채는 문제가 반복됐다(개별 정적 pass-through로 땜질했다가
+// 오히려 새 회귀를 두 번 만든 전례가 있음). item/ 한 단계를 더 넣어
+// 동적 세그먼트를 정적 형제들과 완전히 분리했다 — 이제 구조적으로
+// 충돌이 불가능하다. isUuid() 가드는 그와 별개로 잘못된 주소(수동 입력
+// 등) 방어용으로 남겨둔다.
 export default async function InventoryProductHistoryPage({
   params,
   searchParams,
@@ -216,7 +225,7 @@ export default async function InventoryProductHistoryPage({
       </div>
 
       <DateRangeQuickFilters
-        basePath={`/inventory/${productId}`}
+        basePath={`/inventory/item/${productId}`}
         presets={presets}
         monthButtons={monthButtons}
         from={from}
@@ -246,7 +255,7 @@ export default async function InventoryProductHistoryPage({
           F5 조회
         </button>
         {(from || to) && (
-          <Link href={`/inventory/${productId}`} className="erp-btn">
+          <Link href={`/inventory/item/${productId}`} className="erp-btn">
             초기화
           </Link>
         )}

@@ -136,7 +136,7 @@ export function NotificationBell({
           {lowStock.length ? (
             lowStock.map((p) => (
               <div key={p.id} className="erp-ribbon-dropdown-item">
-                <button type="button" onClick={() => go(`/inventory/${p.id}`)}>
+                <button type="button" onClick={() => go(`/inventory/item/${p.id}`)}>
                   <span>{p.name}</span>
                   <span
                     style={{

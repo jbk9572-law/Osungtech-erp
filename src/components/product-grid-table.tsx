@@ -162,7 +162,7 @@ export function ProductGridTable({
             const href =
               mode === "products"
                 ? `/products/${row.id}${backParam ? `?back=${backParam}` : ""}`
-                : `/inventory/${row.id}`;
+                : `/inventory/item/${row.id}`;
             const isRowSelected = selected.has(row.id);
             return (
               <ClickableRow key={row.id} href={href} className={isRowSelected ? "selected" : undefined}>
