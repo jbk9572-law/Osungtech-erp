@@ -40,6 +40,9 @@ const ALLOWLIST = new Set([
   // 화면 사용법 안내가 아니라 예외 발생 시에만 보이는 에러 경계 문구다 —
   // 화면 가운데 정렬된 짧은 에러 메시지라 PageGuide 박스와는 성격이 다름.
   "src/app/(dashboard)/error.tsx:47",
+  "src/app/(dashboard)/@modal/error.tsx:53",
+  "src/app/(dashboard)/@modal/not-found.tsx:36",
+  "src/app/(dashboard)/not-found.tsx:22",
 ]);
 
 const MUTED_COLOR = /erp-text-muted/;
