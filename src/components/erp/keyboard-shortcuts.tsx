@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printInPlace } from "@/lib/print-in-place";
 import { startRouteProgress } from "@/lib/route-progress";
-import { useModalClose } from "@/lib/modal-context";
+import { useModalClose, useSetModalCloseHref } from "@/lib/modal-context";
 
 type ShortcutAction =
   | { href: string; newTab?: boolean }
@@ -39,6 +39,20 @@ export function KeyboardShortcuts({
   // 불릴지 보장할 수 없다). 그래서 모달 안에서는 Escape를 아예 처리하지
   // 않고 registration-modal-shell.tsx에게만 맡긴다.
   const closeModal = useModalClose();
+  const setCloseHref = useSetModalCloseHref();
+
+  // 모달 안이면, 이 페이지가 이미 알고 있는 Escape용 href를 모달 셸에
+  // 그대로 알려준다 — X 버튼/배경 클릭/ESC로 닫을 때 새로 계산하지 않고
+  // 이 값으로 이동하게 하기 위해서다(registration-modal-shell.tsx 참고).
+  // 저장 후 닫기(submitFormSelector)처럼 href가 아닌 단축키만 쓰는
+  // 페이지는 등록할 값이 없어 셸이 기존 router.back()으로 대체한다.
+  useEffect(() => {
+    if (!setCloseHref) return;
+    const escapeAction = shortcuts.Escape;
+    if (escapeAction && "href" in escapeAction) {
+      setCloseHref(escapeAction.href);
+    }
+  }, [shortcuts, setCloseHref]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 import { useRouter } from "next/navigation";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { startRouteProgress } from "@/lib/route-progress";
-import { ModalCloseProvider } from "@/lib/modal-context";
+import { ModalCloseProvider, ModalCloseHrefProvider } from "@/lib/modal-context";
 
 const SIZE_CLASS = {
   md: "erp-modal-md",
@@ -49,6 +49,16 @@ export function RegistrationModalShell({
   // 이동이 조금만 느려도 "눌린 건지 렉인지" 구분이 안 된다는 지적이 있었다.
   const [closing, setClosing] = useState(false);
   const closingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 이 모달의 페이지가 KeyboardShortcuts를 통해 알려주는 "진짜 닫기
+  // 목적지"(그 페이지의 Escape.href와 같은 값). 있으면 이걸로 명시
+  // 이동하고, 아직 등록되기 전(마운트 직후 극히 짧은 순간)이면만
+  // router.back()으로 대체한다 — 뒤로가기는 이 모달을 어떤 경로로
+  // 거쳐 왔는지에 따라 엉뚱한 화면으로 가버릴 수 있어 더 이상 기본
+  // 닫기 수단으로 쓰지 않는다.
+  const closeHrefRef = useRef<string | null>(null);
+  const registerCloseHref = useCallback((href: string) => {
+    closeHrefRef.current = href;
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -70,12 +80,19 @@ export function RegistrationModalShell({
     beginClosing();
     // 배경 목록으로 돌아가는 것도 실제 라우트 이동이라, 시간이 걸리면
     // "이동 중..." 표시가 뜨게 한다(Link로 닫는 버튼들은 클릭 자체가
-    // 감지되어 자동으로 뜨지만, 배경 클릭/ESC 키로 닫을 때는
-    // router.back()을 직접 호출하는 거라 그 클릭 감지에 걸리지 않는다).
-    // 뒤로가기는 이미 열려 있던 배경 화면을 그대로 복원하는 것이라, 새로
-    // 서버에 요청하는 방식보다 훨씬 안정적으로 끝난다.
+    // 감지되어 자동으로 뜨지만, 배경 클릭/ESC 키/X 버튼으로 닫을 때는
+    // 여기서 직접 이동을 걸어야 해서 그 클릭 감지에 걸리지 않는다).
     startRouteProgress();
-    router.back();
+    if (closeHrefRef.current) {
+      // 이 페이지가 등록해준 정확한 목적지로 명시 이동한다 — 브라우저
+      // 히스토리(router.back())에 기대지 않으므로 이 모달을 어떤 경로로
+      // 거쳐 들어왔든 항상 같은 곳으로 닫힌다.
+      router.push(closeHrefRef.current);
+    } else {
+      // 아직 목적지가 등록되지 않은 극히 짧은 순간(마운트 직후)에 대한
+      // 안전장치일 뿐, 정상 상태에서는 위 분기로만 닫힌다.
+      router.back();
+    }
   }, [router, beginClosing]);
 
   useEffect(() => {
@@ -124,7 +141,9 @@ export function RegistrationModalShell({
           ✕
         </button>
         <div className="erp-modal-body" style={{ flex: 1, minHeight: 0 }}>
-          <ModalCloseProvider value={close}>{children}</ModalCloseProvider>
+          <ModalCloseProvider value={close}>
+            <ModalCloseHrefProvider value={registerCloseHref}>{children}</ModalCloseHrefProvider>
+          </ModalCloseProvider>
         </div>
       </div>
     </div>

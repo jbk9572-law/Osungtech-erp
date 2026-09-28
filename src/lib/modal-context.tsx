@@ -15,3 +15,19 @@ export const ModalCloseProvider = ModalCloseContext.Provider;
 export function useModalClose(): (() => void) | null {
   return useContext(ModalCloseContext);
 }
+
+// 모달로 열려 있는 페이지가 이미 계산해 둔 "제대로 된 닫기 목적지"
+// (KeyboardShortcuts에 넘기는 Escape.href와 같은 값)를 모달 셸에
+// 그대로 알려주기 위한 채널. X 버튼/ESC/배경 클릭으로 모달을 닫을 때
+// router.back()(브라우저 히스토리에 의존 — 이 모달을 어떻게 거쳐 왔는지에
+// 따라 엉뚱한 화면으로 갈 수 있다) 대신 이 href로 명시적으로 이동하기
+// 위한 용도다. 각 페이지가 이 값을 새로 계산하지 않고, 이미 Escape
+// 단축키용으로 갖고 있는 href를 그대로 재사용하도록 KeyboardShortcuts가
+// 대신 등록해준다(registration-modal-shell.tsx 참고).
+const ModalCloseHrefContext = createContext<((href: string) => void) | null>(null);
+
+export const ModalCloseHrefProvider = ModalCloseHrefContext.Provider;
+
+export function useSetModalCloseHref(): ((href: string) => void) | null {
+  return useContext(ModalCloseHrefContext);
+}
