@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { PrintButton } from "@/components/print-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -46,7 +47,7 @@ export default async function InventoryQrLabelsPage({
     // 0인 품목은 체크박스로 숨길 수 있게 한다.
     // 창고가 여러 개면 [0]은 임의의 창고 하나만 가리킨다 — 전체(모든
     // 창고 합계) 재고가 0인지로 판단해야 한다.
-    .filter((p) => !hideZero || (p.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0) > 0);
+    .filter((p) => !hideZero || sumInventoryQuantity(p.inventory) > 0);
 
   // 예전엔 여기서 서버가 필터링된 품목 전부(수백 개)의 QR SVG를 한 요청
   // 안에서 만들어 내려보냈다 — PNG(toDataURL)에서 SVG로 바꿔서 한 번

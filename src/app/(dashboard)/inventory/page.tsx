@@ -6,6 +6,7 @@ import { ProductGridTable, type ProductGridRow } from "@/components/product-grid
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 
 export default async function InventoryPage({
   searchParams,
@@ -152,7 +153,7 @@ async function InventoryGrid({ q }: { q?: string }) {
     reorderPoint: p.reorder_point,
     // 창고가 여러 개면 [0]은 조회 순서에 따라 임의의 창고 하나만 골라와
     // 화면마다 다른 값이 보일 수 있었다 — 전체(모든 창고 합계)로 보여준다.
-    quantity: (p.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0),
+    quantity: sumInventoryQuantity(p.inventory),
   }));
 
   const keyword = q?.trim().toLowerCase();

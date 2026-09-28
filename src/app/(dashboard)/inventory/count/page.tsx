@@ -8,6 +8,7 @@ import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
 import { formatNumber } from "@/lib/format-number";
+import { findWarehouseQuantity, sumInventoryQuantity } from "@/lib/inventory-quantity";
 
 type CountTxRow = {
   id: string;
@@ -118,7 +119,7 @@ export default async function InventoryCountPage({
     name: p.name,
     spec: p.spec,
     unit: p.unit,
-    systemQuantity: p.inventory.find((inv) => inv.warehouse_id === selectedWarehouseId)?.quantity ?? 0,
+    systemQuantity: findWarehouseQuantity(p.inventory, selectedWarehouseId),
     basePackageQty: p.base_package_qty,
   }));
 
@@ -129,7 +130,7 @@ export default async function InventoryCountPage({
   const lowStockProducts = products
     .map((p) => ({
       name: p.name,
-      quantity: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
+      quantity: sumInventoryQuantity(p.inventory),
       reorderPoint: p.reorder_point ?? 0,
     }))
     .filter((p) => p.reorderPoint > 0 && p.quantity <= p.reorderPoint);

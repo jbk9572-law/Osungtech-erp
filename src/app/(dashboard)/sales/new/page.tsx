@@ -5,6 +5,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { inventoryQuantityByWarehouse, sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
@@ -126,12 +127,12 @@ export default async function NewSalePage({
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({
           ...p,
-          stock: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
+          stock: sumInventoryQuantity(p.inventory),
         }))}
         stockByWarehouse={Object.fromEntries(
           (products ?? []).map((p) => [
             p.id,
-            Object.fromEntries(p.inventory.map((inv) => [inv.warehouse_id, Number(inv.quantity)])),
+            inventoryQuantityByWarehouse(p.inventory),
           ]),
         )}
         warehouseId={warehouses[0]?.id ?? ""}

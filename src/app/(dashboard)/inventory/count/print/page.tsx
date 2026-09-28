@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { findWarehouseQuantity } from "@/lib/inventory-quantity";
 import { PrintButton } from "@/components/print-button";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
@@ -57,7 +58,7 @@ export default async function InventoryCountPrintPage({
       spec: p.spec,
       unit: p.unit,
       basePackageQty: p.base_package_qty,
-      systemQuantity: p.inventory.find((inv) => inv.warehouse_id === selectedWarehouseId)?.quantity ?? 0,
+      systemQuantity: findWarehouseQuantity(p.inventory, selectedWarehouseId),
     }))
     .filter((r) => onlyNonZero !== "1" || r.systemQuantity !== 0);
 

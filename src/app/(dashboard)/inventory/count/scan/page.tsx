@@ -5,6 +5,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { InventoryQrScanner } from "@/components/inventory-qr-scanner";
 import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { findWarehouseQuantity } from "@/lib/inventory-quantity";
 import type { ScanProduct } from "@/lib/qr-count-scan";
 
 export default async function InventoryQrScanPage({
@@ -44,7 +45,7 @@ export default async function InventoryQrScanPage({
     name: p.name,
     spec: p.spec,
     unit: p.unit,
-    systemQuantity: p.inventory.find((inv) => inv.warehouse_id === selectedWarehouseId)?.quantity ?? 0,
+    systemQuantity: findWarehouseQuantity(p.inventory, selectedWarehouseId),
     basePackageQty: p.base_package_qty,
   }));
 

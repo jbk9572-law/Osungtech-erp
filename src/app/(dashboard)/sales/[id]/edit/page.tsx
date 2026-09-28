@@ -7,6 +7,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { inventoryQuantityByWarehouse, sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 
@@ -149,12 +150,12 @@ export default async function EditSalePage({
           // 창고가 1개뿐인 화면(대부분)은 기존처럼 전체 합계를 쓰고,
           // 2개 이상이면 아래 stockByWarehouse가 선택된 창고 기준으로
           // 다시 계산해준다.
-          stock: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0),
+          stock: sumInventoryQuantity(p.inventory),
         }))}
         stockByWarehouse={Object.fromEntries(
           (products ?? []).map((p) => [
             p.id,
-            Object.fromEntries(p.inventory.map((inv) => [inv.warehouse_id, Number(inv.quantity)])),
+            inventoryQuantityByWarehouse(p.inventory),
           ]),
         )}
         warehouseId={warehouses[0]?.id ?? order.warehouse_id}
