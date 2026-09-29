@@ -5,7 +5,8 @@ import { ExcelImportForm } from "@/components/excel-import-form";
 import { SupplierDetailPanel } from "@/components/supplier-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { DeleteButton } from "@/components/delete-button";
-import { importSuppliersExcel, deleteSupplier } from "@/app/(dashboard)/suppliers/actions";
+import { SplitListBulkSelect, type SplitListBulkRow } from "@/components/erp/split-list-bulk-select";
+import { importSuppliersExcel, deleteSupplier, bulkDeleteSuppliers } from "@/app/(dashboard)/suppliers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
@@ -142,21 +143,25 @@ export default async function SuppliersPage({
             </button>
           </form>
           <div className="erp-split-list-body">
-            {suppliers.map((s) => (
-              <Link
-                key={s.id}
-                href={rowHref(s.id)}
-                className={`erp-split-list-row${s.id === selectedId ? " active" : ""}`}
-              >
-                {s.name}
-                <div className="erp-split-list-row-sub">{s.supplier_code}</div>
-              </Link>
-            ))}
-            {suppliers.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                조건에 맞는 공급처가 없습니다.
-              </p>
-            )}
+            <SplitListBulkSelect
+              rows={suppliers.map(
+                (s): SplitListBulkRow => ({
+                  id: s.id,
+                  href: rowHref(s.id),
+                  active: s.id === selectedId,
+                  label: s.name,
+                  content: (
+                    <>
+                      {s.name}
+                      <div className="erp-split-list-row-sub">{s.supplier_code}</div>
+                    </>
+                  ),
+                }),
+              )}
+              bulkDeleteAction={bulkDeleteSuppliers}
+              warningText="관련 매입/상품 내역이 있는 공급처는 삭제되지 않습니다."
+              emptyMessage="조건에 맞는 공급처가 없습니다."
+            />
           </div>
           {!keyword && hasMore && (
             <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>

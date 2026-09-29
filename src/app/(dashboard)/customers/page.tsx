@@ -5,7 +5,8 @@ import { ExcelImportForm } from "@/components/excel-import-form";
 import { CustomerDetailPanel } from "@/components/customer-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { DeleteButton } from "@/components/delete-button";
-import { importCustomersExcel, deleteCustomer } from "@/app/(dashboard)/customers/actions";
+import { SplitListBulkSelect, type SplitListBulkRow } from "@/components/erp/split-list-bulk-select";
+import { importCustomersExcel, deleteCustomer, bulkDeleteCustomers } from "@/app/(dashboard)/customers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
@@ -145,21 +146,25 @@ export default async function CustomersPage({
             </button>
           </form>
           <div className="erp-split-list-body">
-            {customers.map((c) => (
-              <Link
-                key={c.id}
-                href={rowHref(c.id)}
-                className={`erp-split-list-row${c.id === selectedId ? " active" : ""}`}
-              >
-                {c.name}
-                <div className="erp-split-list-row-sub">{c.customer_code}</div>
-              </Link>
-            ))}
-            {customers.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                조건에 맞는 거래처가 없습니다.
-              </p>
-            )}
+            <SplitListBulkSelect
+              rows={customers.map(
+                (c): SplitListBulkRow => ({
+                  id: c.id,
+                  href: rowHref(c.id),
+                  active: c.id === selectedId,
+                  label: c.name,
+                  content: (
+                    <>
+                      {c.name}
+                      <div className="erp-split-list-row-sub">{c.customer_code}</div>
+                    </>
+                  ),
+                }),
+              )}
+              bulkDeleteAction={bulkDeleteCustomers}
+              warningText="관련 매출 내역이 있는 거래처는 삭제되지 않습니다."
+              emptyMessage="조건에 맞는 거래처가 없습니다."
+            />
           </div>
           {!keyword && hasMore && (
             <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
