@@ -76,6 +76,10 @@ function channelIcon(type: MessengerChannel["type"]): string {
 }
 
 type View = "chat" | "list" | "newDm" | "newGroup";
+type WidgetPosition = "left" | "right";
+
+const MESSENGER_HIDDEN_KEY = "erp-messenger-hidden";
+const MESSENGER_POSITION_KEY = "erp-messenger-position";
 
 // 좌측 메뉴 대신 우측 하단에 떠 있는 사내메신저 위젯. 평소엔 동그란 버튼으로
 // 최소화돼 있다가 클릭하면 채팅창으로 펼쳐진다. 전체(회사 전체 공개
@@ -115,6 +119,44 @@ export function MessengerWidget({
   const [searchQuery, setSearchQuery] = useState("");
   const [groupName, setGroupName] = useState("");
   const [pickedMemberIds, setPickedMemberIds] = useState<string[]>([]);
+  // 위젯을 화면 구석에서 완전히 숨기거나(hiddenAway) 좌/우 어느 쪽에
+  // 띄울지(position)는 사람마다 취향이 다르고 자주 안 바뀌는 값이라
+  // 브라우저에만 저장한다(서버/다른 기기와 동기화할 필요 없음). 기본값
+  // (숨김 아님, 오른쪽)으로 먼저 그리고 마운트 후에 저장된 값으로
+  // 맞춘다 — localStorage는 서버 렌더링에는 없으므로.
+  const [hiddenAway, setHiddenAway] = useState(false);
+  const [position, setPosition] = useState<WidgetPosition>("right");
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
+      setHiddenAway(localStorage.getItem(MESSENGER_HIDDEN_KEY) === "1");
+      setPosition(localStorage.getItem(MESSENGER_POSITION_KEY) === "left" ? "left" : "right");
+    } catch {
+      // 프라이빗 브라우징 등으로 localStorage를 못 쓰면 기본값 그대로 둔다.
+    }
+  }, []);
+  function toggleHiddenAway() {
+    setHiddenAway((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(MESSENGER_HIDDEN_KEY, next ? "1" : "0");
+      } catch {
+        // 저장 실패해도 이번 세션 동안의 화면 동작은 그대로 진행한다.
+      }
+      return next;
+    });
+  }
+  function togglePosition() {
+    setPosition((prev) => {
+      const next: WidgetPosition = prev === "right" ? "left" : "right";
+      try {
+        localStorage.setItem(MESSENGER_POSITION_KEY, next);
+      } catch {
+        // 저장 실패해도 이번 세션 동안의 화면 동작은 그대로 진행한다.
+      }
+      return next;
+    });
+  }
   const [sending, startSendTransition] = useTransition();
   const [, startDeleteTransition] = useTransition();
   const [creatingChannel, startChannelTransition] = useTransition();
@@ -381,11 +423,25 @@ export function MessengerWidget({
     [profileNames, currentUserId]
   );
 
+  if (hiddenAway) {
+    return (
+      <button
+        type="button"
+        className={`erp-messenger-reshow-tab${position === "left" ? " pos-left" : ""}`}
+        onClick={toggleHiddenAway}
+        aria-label="사내메신저 다시 보이기"
+        title="사내메신저 다시 보이기"
+      >
+        💬
+      </button>
+    );
+  }
+
   if (!open) {
     return (
       <button
         type="button"
-        className="erp-messenger-fab"
+        className={`erp-messenger-fab${position === "left" ? " pos-left" : ""}`}
         onClick={() => {
           setOpen(true);
           setHasUnseen(false);
@@ -417,7 +473,7 @@ export function MessengerWidget({
   );
 
   return (
-    <div className="erp-messenger-panel">
+    <div className={`erp-messenger-panel${position === "left" ? " pos-left" : ""}`}>
       <div className="erp-messenger-header">
         {view === "chat" ? (
           <>
@@ -435,13 +491,25 @@ export function MessengerWidget({
               {view === "newDm" && "새 대화 상대 선택"}
               {view === "newGroup" && "새 그룹 만들기"}
             </span>
-            <button
-              type="button"
-              onClick={() => (view === "list" ? setOpen(false) : setView("list"))}
-              aria-label={view === "list" ? "최소화" : "취소"}
-            >
-              {view === "list" ? "─" : "✕"}
-            </button>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              {view === "list" && (
+                <>
+                  <button type="button" onClick={togglePosition} aria-label="반대쪽으로 이동" title="반대쪽으로 이동">
+                    ⇄
+                  </button>
+                  <button type="button" onClick={toggleHiddenAway} aria-label="숨기기" title="숨기기">
+                    숨김
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => (view === "list" ? setOpen(false) : setView("list"))}
+                aria-label={view === "list" ? "최소화" : "취소"}
+              >
+                {view === "list" ? "─" : "✕"}
+              </button>
+            </div>
           </>
         )}
       </div>

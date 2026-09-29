@@ -22,7 +22,7 @@ export default async function DocumentTemplatesPage() {
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 문서 양식 관리</h1>
+        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">그룹웨어 &gt; 문서 양식 관리</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>
@@ -43,7 +43,7 @@ export default async function DocumentTemplatesPage() {
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/hr/documents/templates/new" }, Escape: { href: "/hr/documents" } }} />
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 문서 양식 관리</h1>
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">그룹웨어 &gt; 문서 양식 관리</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href="/hr/documents/templates/new" className="erp-btn erp-btn-primary">
             F2 새 양식

@@ -21,18 +21,22 @@ describe("getVisibleMenuGroups", () => {
   });
 
   it("항목 단위 featureKey로 꺼진 화면만 빠지고, 같은 그룹의 다른 featureKey 항목은 남는다", () => {
-    // 대메뉴 통폐합(전자결재+공문관리 → 결재/문서)으로 이 그룹 하나에
-    // approvals/official_documents 두 featureKey가 섞여 있다 — 하나만
-    // 꺼도 그룹 전체가 아니라 그 featureKey 항목만 빠져야 한다.
+    // 대메뉴 통폐합(전자결재+공문관리+게시판+메일함 → 그룹웨어)으로 이
+    // 그룹 하나에 approvals/official_documents/mail 등 여러 featureKey가
+    // 섞여 있다 — 하나만 꺼도 그룹 전체가 아니라 그 featureKey 항목만
+    // 빠져야 한다.
     const groups = getVisibleMenuGroups(["approvals"], true);
-    const docs = groups.find((g) => g.label === "결재/문서");
-    expect(docs?.items.some((i) => i.href === "/approvals")).toBe(false);
-    expect(docs?.items.some((i) => i.href === "/official-documents")).toBe(true);
+    const groupware = groups.find((g) => g.label === "그룹웨어");
+    expect(groupware?.items.some((i) => i.href === "/approvals")).toBe(false);
+    expect(groupware?.items.some((i) => i.href === "/official-documents")).toBe(true);
   });
 
-  it("그룹 안의 모든 featureKey 항목이 꺼지면 그룹째로 사라진다", () => {
-    const groups = getVisibleMenuGroups(["approvals", "official_documents"], true);
-    expect(groups.some((g) => g.label === "결재/문서")).toBe(false);
+  it("그룹 안의 모든 featureKey 항목이 꺼져도 featureKey 없는 다른 항목(게시판 등)이 있으면 그룹은 남는다", () => {
+    const groups = getVisibleMenuGroups(["approvals", "official_documents", "mail"], true);
+    const groupware = groups.find((g) => g.label === "그룹웨어");
+    expect(groupware).toBeTruthy();
+    expect(groupware?.items.some((i) => i.href === "/board")).toBe(true);
+    expect(groupware?.items.some((i) => i.href === "/approvals")).toBe(false);
   });
 
   it("매출관리 안의 crm 항목(영업활동/견적서)만 featureKey로 개별적으로 꺼진다", () => {

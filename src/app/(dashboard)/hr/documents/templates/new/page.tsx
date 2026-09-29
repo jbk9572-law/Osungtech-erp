@@ -7,7 +7,7 @@ export default function NewDocumentTemplatePage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/hr/documents/templates" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 문서 양식 관리 &gt; 새 양식</h1>
+      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">그룹웨어 &gt; 문서 양식 관리 &gt; 새 양식</h1>
 
       <div className="erp-toolbar">
         <CloseButton href="/hr/documents/templates">ESC 목록으로</CloseButton>

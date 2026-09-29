@@ -57,13 +57,32 @@ export type MenuGroup = { label: string; items: MenuLeaf[]; featureKey?: string 
 //   - 시스템관리 → 환경설정으로 흡수(이미 전부 adminOnly라 위화감 없음).
 //   - 공지사항 → 게시판으로 흡수(게시판이 이미 공지사항을 모아 보여주고
 //     있어서 단독 메뉴가 사실상 중복이었다).
+//   - 게시판/메일함/결재·문서 → "그룹웨어"로 재통합(판매용 SaaS 전환
+//     시점에 커뮤니케이션·문서 관련 화면이 메뉴 여기저기(독립 그룹,
+//     인사관리 하위 등)에 흩어져 있어 한 묶음처럼 안 보인다는 지적).
+//     인사관리에 있던 문서함(사내 서식 발급)도 "문서"라는 성격이 같아
+//     같이 옮겼다 — 근태/연차/급여만 남아도 인사관리는 여전히 온전한
+//     묶음이다. 화면/라우트/서버 액션/RLS는 전혀 안 바꿨고 메뉴 배치만
+//     바꿨다.
 export const MENU_GROUPS: MenuGroup[] = [
   { label: "메인 대시보드", items: [{ label: "홈", href: "/dashboard", flatLabel: "메인 대시보드" }] },
   {
-    label: "게시판",
+    label: "그룹웨어",
     items: [
       { label: "게시판", href: "/board", flatLabel: "게시판" },
       { label: "공지사항", href: "/announcements" },
+      { label: "메일함", href: "/mail", featureKey: "mail" },
+      { label: "문서함", href: "/hr/documents" },
+      { label: "문서 양식 관리", href: "/hr/documents/templates", adminOnly: true },
+      { label: "기안함", href: "/approvals", featureKey: "approvals" },
+      { label: "임시저장함", href: "/approvals/drafts", featureKey: "approvals" },
+      { label: "공유 결재선", href: "/approvals/lines", featureKey: "approvals" },
+      { label: "결재매트릭스", href: "/approvals/matrix", featureKey: "approvals" },
+      // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로
+      // 재사용하되, 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈이라
+      // featureKey는 따로 유지한다.
+      { label: "내 공문함", href: "/official-documents", featureKey: "official_documents" },
+      { label: "받은 공문함", href: "/official-documents/received", featureKey: "official_documents" },
     ],
   },
   {
@@ -115,20 +134,6 @@ export const MENU_GROUPS: MenuGroup[] = [
     featureKey: "production",
   },
   {
-    label: "결재/문서",
-    items: [
-      { label: "기안함", href: "/approvals", featureKey: "approvals" },
-      { label: "임시저장함", href: "/approvals/drafts", featureKey: "approvals" },
-      { label: "공유 결재선", href: "/approvals/lines", featureKey: "approvals" },
-      { label: "결재매트릭스", href: "/approvals/matrix", featureKey: "approvals" },
-      // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로
-      // 재사용하되, 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈이라
-      // featureKey는 따로 유지한다.
-      { label: "내 공문함", href: "/official-documents", featureKey: "official_documents" },
-      { label: "받은 공문함", href: "/official-documents/received", featureKey: "official_documents" },
-    ],
-  },
-  {
     label: "인사관리",
     items: [
       { label: "근태", href: "/hr/attendance" },
@@ -138,8 +143,6 @@ export const MENU_GROUPS: MenuGroup[] = [
       // 기준을 먼저 등록해주세요" 식으로 actions.ts가 이미 서로를
       // 언급하고 있었다) 화면 하나("급여관리")로 합쳤다.
       { label: "급여관리", href: "/hr/payroll", adminOnly: true },
-      { label: "문서함", href: "/hr/documents" },
-      { label: "문서 양식 관리", href: "/hr/documents/templates", adminOnly: true },
     ],
     featureKey: "hr",
   },
@@ -149,11 +152,6 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "캘린더", href: "/calendar" },
       { label: "할일관리", href: "/todos" },
     ],
-  },
-  {
-    label: "메일함",
-    items: [{ label: "메일함", href: "/mail", flatLabel: "메일함" }],
-    featureKey: "mail",
   },
   {
     // 성격이 같은 회계/집계 화면 2개(지급결의양식·월별 리포트)를 한

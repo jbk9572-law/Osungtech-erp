@@ -33,10 +33,11 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M10 19v-5h4v5" />
     </svg>
   ),
-  게시판: (
+  그룹웨어: (
     <svg {...ICON_STROKE}>
-      <path d="M12 3a5 5 0 0 0-5 5v3l-2 5h14l-2-5V8a5 5 0 0 0-5-5z" />
-      <path d="M10 18a2 2 0 0 0 4 0" />
+      <path d="M6 3h9l3 3v15H6z" />
+      <path d="M15 3v3h3" />
+      <path d="m9 13 2 2 4-5" />
     </svg>
   ),
   매출관리: (
@@ -64,13 +65,6 @@ const GROUP_ICONS: Record<string, ReactNode> = {
       <path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2" />
     </svg>
   ),
-  "결재/문서": (
-    <svg {...ICON_STROKE}>
-      <path d="M6 3h9l3 3v15H6z" />
-      <path d="M15 3v3h3" />
-      <path d="m9 13 2 2 4-5" />
-    </svg>
-  ),
   인사관리: (
     <svg {...ICON_STROKE}>
       <circle cx="9" cy="7" r="3" />
@@ -82,12 +76,6 @@ const GROUP_ICONS: Record<string, ReactNode> = {
     <svg {...ICON_STROKE}>
       <rect x="4" y="5" width="16" height="15" rx="2" />
       <path d="M4 10h16M8 3v4M16 3v4" />
-    </svg>
-  ),
-  메일함: (
-    <svg {...ICON_STROKE}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m4 7 8 6 8-6" />
     </svg>
   ),
   "회계·보고서": (
