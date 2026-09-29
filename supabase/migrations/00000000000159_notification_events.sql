@@ -14,7 +14,7 @@
 -- 제대로 계산되지 않는다 — 그래서 notify()는 호출자의 일반 클라이언트로
 -- 먼저 tenant_id/is_demo를 구해서 매번 명시적으로 넘긴다(mail_accounts 등
 -- 이미 이 방식을 쓰는 테이블과 같은 이유).
-create table public.notification_events (
+create table if not exists public.notification_events (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null default public.current_tenant_id() references public.tenants (id) on delete cascade,
   is_demo boolean not null default public.is_demo_actor(),
@@ -33,16 +33,20 @@ create table public.notification_events (
   created_at timestamptz not null default now()
 );
 
-create index notification_events_user_id_created_at_idx
+create index if not exists notification_events_user_id_created_at_idx
   on public.notification_events (user_id, created_at desc);
-create index notification_events_tenant_id_idx on public.notification_events (tenant_id);
+create index if not exists notification_events_tenant_id_idx on public.notification_events (tenant_id);
 
 alter table public.notification_events enable row level security;
 
+-- 아래 정책들은 재실행 가능하도록 먼저 지우고 다시 만든다(이 저장소의
+-- 기존 마이그레이션들과 같은 관례 — 예: 00000000000099).
+drop policy if exists "notification_events_tenant_isolation" on public.notification_events;
 create policy "notification_events_tenant_isolation" on public.notification_events
   as restrictive for all
   using (tenant_id = public.current_tenant_id())
   with check (tenant_id = public.current_tenant_id());
+drop policy if exists "notification_events_demo_isolation" on public.notification_events;
 create policy "notification_events_demo_isolation" on public.notification_events
   as restrictive for all
   using (is_demo = public.is_demo_actor())
@@ -51,11 +55,14 @@ create policy "notification_events_demo_isolation" on public.notification_events
 -- 본인 몫만 조회/읽음처리/삭제할 수 있다. insert 정책은 일부러 안
 -- 만든다 — 알림은 항상 notify()가 관리자 클라이언트(RLS 우회)로만
 -- 쓰고, 사용자가 자기 자신 앞으로 알림을 직접 끼워넣을 이유가 없다.
+drop policy if exists "notification_events_select_own" on public.notification_events;
 create policy "notification_events_select_own" on public.notification_events
   for select using (auth.role() = 'authenticated' and user_id = auth.uid());
+drop policy if exists "notification_events_update_own" on public.notification_events;
 create policy "notification_events_update_own" on public.notification_events
   for update
   using (auth.role() = 'authenticated' and user_id = auth.uid())
   with check (auth.role() = 'authenticated' and user_id = auth.uid());
+drop policy if exists "notification_events_delete_own" on public.notification_events;
 create policy "notification_events_delete_own" on public.notification_events
   for delete using (auth.role() = 'authenticated' and user_id = auth.uid());
