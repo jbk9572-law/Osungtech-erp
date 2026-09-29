@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   sendMessage,
@@ -134,6 +135,27 @@ export function MessengerWidget({
   // "/todos/[id]"처럼 자체 Escape 단축키가 있는 화면에서 메신저를 열어둔
   // 채 Escape를 누르면 패널은 그대로 열려있고 화면만 목록으로 튕겨나간다.
   useEscapeToClose(open, () => setOpen(false));
+
+  // 알림(새 결재 요청 등과 같은 방식의 메신저 DM/그룹 알림, notify())을
+  // 클릭해서 들어온 경우, 그 알림이 가리키는 대화를 바로 열어준다.
+  // ?openMessenger=<channelId>를 한 번 읽고 나면 주소를 원래대로 되돌려서
+  // (replace) 뒤로가기/새로고침 때 같은 채널이 계속 다시 열리지 않게 한다.
+  // channels에 없는 id(권한 없는 채널, 오타 등)는 조용히 무시한다.
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const targetChannelId = searchParams.get("openMessenger");
+    if (!targetChannelId) return;
+    if (!channels.some((c) => c.id === targetChannelId)) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from the URL on mount
+    setOpen(true);
+    openChannel(targetChannelId);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("openMessenger");
+    const query = next.toString();
+    router.replace(`${window.location.pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 마운트 시 쿼리 1회만 확인한다
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();

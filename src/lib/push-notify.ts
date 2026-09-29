@@ -1,57 +1,6 @@
-import webpush from "web-push";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getServerEnv } from "@/lib/server-env";
+import { notify } from "@/lib/notify";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
-
-// VAPID 키가 아직 배포 환경변수에 없을 수 있다(선택 기능) — 그때는
-// 조용히 아무것도 안 보내고 넘어간다(기존 화면 동작에는 영향 없음).
-function configureWebPush(): boolean {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateKey = getServerEnv("VAPID_PRIVATE_KEY");
-  if (!publicKey || !privateKey) return false;
-  webpush.setVapidDetails("mailto:support@elvonix.app", publicKey, privateKey);
-  return true;
-}
-
-// 결재자 본인이 아닌 "다른 사람"에게 보내는 알림이라 RLS로는 그 사람의
-// 구독 정보를 조회할 수 없다 — 발송 전용으로 admin 클라이언트를 쓴다.
-async function sendToUsers(userIds: string[], payload: { title: string; body: string; url: string }) {
-  const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
-  if (uniqueIds.length === 0) return;
-  if (!configureWebPush()) return;
-
-  let admin;
-  try {
-    admin = createAdminClient();
-  } catch {
-    return;
-  }
-
-  const { data: subs } = await admin
-    .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth")
-    .in("user_id", uniqueIds);
-  if (!subs?.length) return;
-
-  const body = JSON.stringify(payload);
-  await Promise.all(
-    subs.map(async (s) => {
-      try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, body);
-      } catch (err: unknown) {
-        // 브라우저에서 구독이 만료/해지됐으면(410 Gone, 404 Not Found) 이
-        // 서버에도 조용히 정리한다 — 안 그러면 죽은 구독에 매번 실패한다.
-        const statusCode = (err as { statusCode?: number } | null)?.statusCode;
-        if (statusCode === 404 || statusCode === 410) {
-          await admin.from("push_subscriptions").delete().eq("id", s.id);
-        } else {
-          console.error("push 발송 실패:", err);
-        }
-      }
-    }),
-  );
-}
 
 // 기안 등록 직후, 또는 결재 처리 직후(반려/최종승인이 아니라 다음 결재자로
 // 넘어간 경우) 공통으로 부르는 함수 — 지금 이 문서가 "누구 차례인지"를
@@ -81,7 +30,9 @@ export async function notifyApprovalDocumentEvent(
       .limit(1)
       .maybeSingle();
     if (nextStep?.approver_id) {
-      await sendToUsers([nextStep.approver_id], {
+      await notify(supabase, {
+        userIds: [nextStep.approver_id],
+        type: "approval_pending",
         title: "새 결재 요청",
         body: doc.title,
         url,
@@ -91,7 +42,9 @@ export async function notifyApprovalDocumentEvent(
   }
 
   if (doc.created_by) {
-    await sendToUsers([doc.created_by], {
+    await notify(supabase, {
+      userIds: [doc.created_by],
+      type: "approval_result",
       title: doc.status === "approved" ? "결재가 승인되었습니다" : "결재가 반려되었습니다",
       body: doc.title,
       url,

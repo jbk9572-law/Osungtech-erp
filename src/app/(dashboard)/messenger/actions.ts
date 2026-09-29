@@ -2,6 +2,7 @@
 
 import { createClient, getUser } from "@/lib/supabase/server";
 import { sanitizeUploadContentType } from "@/lib/upload-safety";
+import { notify } from "@/lib/notify";
 import type { MessengerMessage } from "@/lib/messenger-types";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -88,7 +89,39 @@ export async function sendMessage(
     return { error: `전송에 실패했습니다.${error ? ` (${error.message})` : ""}` };
   }
 
+  await notifyChannelMembers(supabase, user.id, channelId, content, hasFile);
+
   return { success: "전송했습니다.", message: inserted };
+}
+
+// DM/그룹방에만 알림을 보낸다 — "전체" 채널은 테넌트 전원이 참여자라
+// 메시지마다 모두에게 알림을 쏘면 스팸이 되므로 제외한다(그 채널은
+// 지금까지처럼 위젯을 열어둔 동안의 실시간 구독으로만 확인).
+async function notifyChannelMembers(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  senderId: string,
+  channelId: string,
+  content: string,
+  hasFile: boolean,
+): Promise<void> {
+  const [{ data: channel }, { data: members }, { data: senderProfile }] = await Promise.all([
+    supabase.from("messenger_channels").select("type, name").eq("id", channelId).maybeSingle(),
+    supabase.from("messenger_channel_members").select("user_id").eq("channel_id", channelId).neq("user_id", senderId),
+    supabase.from("profiles").select("full_name").eq("id", senderId).maybeSingle(),
+  ]);
+  if (!channel || channel.type === "all" || !members?.length) return;
+
+  const senderName = senderProfile?.full_name ?? "구성원";
+  const body = content || (hasFile ? "파일을 보냈습니다." : "");
+  const title = channel.type === "group" ? `${channel.name ?? "그룹"} · ${senderName}` : `${senderName}님의 메시지`;
+
+  await notify(supabase, {
+    userIds: members.map((m) => m.user_id),
+    type: channel.type === "group" ? "messenger_group" : "messenger_dm",
+    title,
+    body,
+    url: `/dashboard?openMessenger=${channelId}`,
+  });
 }
 
 // 위젯이 삭제 성공 여부를 알아야 실패 시 화면에서 지웠던 메시지를 되돌릴 수

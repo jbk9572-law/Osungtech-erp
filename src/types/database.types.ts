@@ -3436,6 +3436,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification_events: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          user_id: string;
+          type: string;
+          title: string;
+          body: string;
+          url: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          user_id: string;
+          type: string;
+          title: string;
+          body?: string;
+          url?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          body?: string;
+          url?: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       support_tickets: {
         Row: {
           id: string;

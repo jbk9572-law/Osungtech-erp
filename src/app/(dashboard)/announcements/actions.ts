@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { notify } from "@/lib/notify";
 import type { FormState } from "@/components/form-message";
 
 export async function createAnnouncement(
@@ -39,6 +40,21 @@ export async function createAnnouncement(
   // settings/company/actions.ts의 로고 갱신과 같은 이유로 레이아웃도 같이
   // 무효화한다.
   revalidatePath("/", "layout");
+
+  // 작성자 본인을 뺀 같은 테넌트 전원에게 새 공지를 알린다(profiles는
+  // tenant_id RLS로 이미 같은 테넌트만 보인다). 공지는 흔한 이벤트가
+  // 아니라서(메신저 DM과 달리) 전원 알림이 스팸이 되지 않는다.
+  const { data: recipients } = await supabase.from("profiles").select("id").neq("id", user?.id ?? "");
+  if (recipients?.length) {
+    await notify(supabase, {
+      userIds: recipients.map((r) => r.id),
+      type: "announcement",
+      title: "새 공지사항",
+      body: title,
+      url: `/announcements/${data.id}`,
+    });
+  }
+
   return { redirectTo: `/announcements/${data.id}` };
 }
 
