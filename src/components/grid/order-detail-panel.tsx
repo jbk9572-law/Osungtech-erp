@@ -49,7 +49,7 @@ export function OrderDetailPanel({
           품목내역{selection ? ` — ${selection.dateLabel} ${selection.label}` : ""}
         </div>
       </div>
-      <div style={{ padding: 0 }}>
+      <div className="erp-detail-body" style={{ padding: 0 }}>
         <div className="erp-grid-wrap">
           <table className="erp-grid">
             <thead>
