@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader } from "@/components/erp/page-header";
-import { ClickableRow } from "@/components/clickable-row";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
+import { PurchaseRequestDetailPanel } from "@/components/purchase-request-detail-panel";
+import { NewPurchaseRequestForm } from "@/components/new-purchase-request-form";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { isUuid } from "@/lib/is-uuid";
+import { todayKstStr } from "@/lib/kst-date";
 
 const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -22,9 +26,10 @@ const LIST_LIMIT_STEP = 300;
 export default async function PurchaseRequestsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string; id?: string }>;
 }) {
-  const { from, to, q, limit: limitParam } = await searchParams;
+  const { from, to, q, limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
 
@@ -46,34 +51,63 @@ export default async function PurchaseRequestsPage({
   const keyword = q?.trim().toLowerCase();
   const requests = keyword
     ? (rawRequests ?? []).filter((r) => matchesSearch(keyword, r.suppliers?.name, r.memo, r.profiles?.full_name))
-    : rawRequests;
+    : rawRequests ?? [];
 
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
-  const moreParams = new URLSearchParams();
-  if (from) moreParams.set("from", from);
-  if (to) moreParams.set("to", to);
-  if (q) moreParams.set("q", q);
+
+  const listParams = new URLSearchParams();
+  if (from) listParams.set("from", from);
+  if (to) listParams.set("to", to);
+  if (q) listParams.set("q", q);
+  const rowHref = (reqId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", reqId);
+    return `/purchase-requests?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/purchase-requests?${moreParams.toString()}`;
+  const newHref = listParams.toString() ? `/purchase-requests?${listParams.toString()}` : "/purchase-requests";
+
+  let formData: {
+    suppliers: { id: string; name: string }[];
+    products: { id: string; sku: string; name: string; spec: string | null; cost: number }[];
+  } | null = null;
+  if (!selectedId) {
+    const [suppliers, products] = await Promise.all([
+      fetchAllRows<{ id: string; name: string }>((f, t) => supabase.from("suppliers").select("id, name").order("name").range(f, t)),
+      // 구매(매입) 문맥이라 판매단가(price)가 아니라 매입원가(cost)를
+      // 기본 예상단가로 쓴다 — new-purchase-form.tsx와 동일한 기준.
+      fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; cost: number }>((f, t) =>
+        supabase.from("products").select("id, sku, name, spec, cost").order("name").range(f, t),
+      ),
+    ]);
+    formData = { suppliers, products };
+  }
 
   return (
     <div>
       <KeyboardShortcuts
-        shortcuts={{
-          F2: { href: "/purchase-requests/new" },
-          F5: { submitFormSelector: "#purchase-requests-search-form" },
-          Escape: { href: "/dashboard" },
-        }}
+        shortcuts={{ F2: { href: newHref }, F5: { submitFormSelector: "#purchase-requests-search-form" }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
       />
-      <ListPageHeader
-        title="매입관리 > 구매요청"
-        actions={
-          <Link href="/purchase-requests/new" className="erp-btn erp-btn-primary">
-            F2 구매요청 작성
-          </Link>
-        }
-      />
+      <div className="erp-page-toolbar erp-detail-header-row">
+        <ListPageHeader
+          title="매입관리 > 구매요청"
+          actions={
+            <>
+              <Link href={newHref} className="erp-btn erp-btn-primary">
+                F2 구매요청 작성
+              </Link>
+              {selectedId && (
+                <Link href={newHref} className="erp-btn">
+                  목록
+                </Link>
+              )}
+            </>
+          }
+        />
+      </div>
 
       <DateRangeQuickFilters basePath="/purchase-requests" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
@@ -109,60 +143,63 @@ export default async function PurchaseRequestsPage({
         )}
       </form>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 90 }}>요청일</th>
-              <th style={{ width: 160 }}>공급처</th>
-              <th className="num" style={{ width: 70 }}>품목 수</th>
-              <th className="num" style={{ width: 120 }}>예상합계</th>
-              <th style={{ width: 90 }}>작성자</th>
-              <th style={{ width: 90 }}>상태</th>
-              <th style={{ width: 90 }}>발주전환</th>
-              <th>메모</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(requests ?? []).map((r) => {
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>구매요청 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(requests.length)}건</span>
+          </div>
+          <div className="erp-split-list-body">
+            {requests.map((r) => {
               const total = (r.purchase_request_items ?? []).reduce(
                 (sum, i) => sum + Number(i.quantity) * Number(i.estimated_unit_price),
                 0,
               );
               const status = STATUS_LABEL[r.status] ?? { label: r.status, tone: "muted" as const };
               return (
-                <ClickableRow key={r.id} href={`/purchase-requests/${r.id}`}>
-                  <td>{r.request_date.replaceAll("-", ".")}</td>
-                  <td>{r.suppliers?.name ?? "-"}</td>
-                  <td className="num">{(r.purchase_request_items ?? []).length}</td>
-                  <td className="num">{formatNumber(total)}</td>
-                  <td>{r.profiles?.full_name ?? "-"}</td>
-                  <td>
+                <Link
+                  key={r.id}
+                  href={rowHref(r.id)}
+                  className={`erp-split-list-row${r.id === selectedId ? " active" : ""}`}
+                >
+                  {r.suppliers?.name ?? "-"}
+                  <span style={{ marginLeft: 6 }}>
                     <GridBadge tone={status.tone}>{status.label}</GridBadge>
-                  </td>
-                  <td>{r.converted_purchase_order_id ? "전환됨" : "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{r.memo ?? "-"}</td>
-                </ClickableRow>
+                  </span>
+                  <div className="erp-split-list-row-sub">
+                    {formatNumber(total)}원 · {r.request_date.replaceAll("-", ".")} · {r.profiles?.full_name ?? "-"}
+                    {r.converted_purchase_order_id ? " · 발주전환됨" : ""}
+                  </div>
+                </Link>
               );
             })}
-            {(!requests || requests.length === 0) && (
-              <tr>
-                <td colSpan={8} className="erp-grid-empty">
-                  조건에 맞는 구매요청이 없습니다.
-                </td>
-              </tr>
+            {requests.length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                조건에 맞는 구매요청이 없습니다.
+              </p>
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
+          {hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
+              </Link>
+            </div>
+          )}
+        </section>
 
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
-          </Link>
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <PurchaseRequestDetailPanel id={selectedId} closeHref={newHref} />
+          ) : (
+            formData && (
+              <FormSection tabLabel="구매요청 작성">
+                <NewPurchaseRequestForm today={todayKstStr()} suppliers={formData.suppliers} products={formData.products} />
+              </FormSection>
+            )
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
