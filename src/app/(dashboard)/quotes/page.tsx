@@ -1,14 +1,18 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader } from "@/components/erp/page-header";
-import { ClickableRow } from "@/components/clickable-row";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { QuoteStatusBadge } from "@/components/quote-status-badge";
+import { QuoteDetailPanel } from "@/components/quote-detail-panel";
+import { NewQuoteForm } from "@/components/new-quote-form";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
 import { matchesSearch } from "@/lib/search-match";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { isUuid } from "@/lib/is-uuid";
+import { todayKstStr } from "@/lib/kst-date";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -16,9 +20,10 @@ const LIST_LIMIT_STEP = 300;
 export default async function QuotesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string; id?: string }>;
 }) {
-  const { from, to, q, limit: limitParam } = await searchParams;
+  const { from, to, q, limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
 
@@ -43,30 +48,61 @@ export default async function QuotesPage({
     ? (rawQuotes ?? []).filter((quote) =>
         matchesSearch(keyword, quote.customers?.name, quote.memo, String(quote.doc_no ?? "")),
       )
-    : rawQuotes;
+    : rawQuotes ?? [];
 
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
-  const moreParams = new URLSearchParams();
-  if (from) moreParams.set("from", from);
-  if (to) moreParams.set("to", to);
-  if (q) moreParams.set("q", q);
+
+  const listParams = new URLSearchParams();
+  if (from) listParams.set("from", from);
+  if (to) listParams.set("to", to);
+  if (q) listParams.set("q", q);
+  const rowHref = (quoteId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", quoteId);
+    return `/quotes?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/quotes?${moreParams.toString()}`;
+  const newHref = listParams.toString() ? `/quotes?${listParams.toString()}` : "/quotes";
+
+  let formData: {
+    customers: { id: string; name: string }[];
+    products: { id: string; sku: string; name: string; spec: string | null; price: number }[];
+  } | null = null;
+  if (!selectedId) {
+    const [customers, products] = await Promise.all([
+      fetchAllRows<{ id: string; name: string }>((f, t) => supabase.from("customers").select("id, name").order("name").range(f, t)),
+      fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; price: number }>((f, t) =>
+        supabase.from("products").select("id, sku, name, spec, price").order("name").range(f, t),
+      ),
+    ]);
+    formData = { customers, products };
+  }
 
   return (
     <div>
       <KeyboardShortcuts
-        shortcuts={{ F2: { href: "/quotes/new" }, F5: { submitFormSelector: "#quotes-search-form" }, Escape: { href: "/dashboard" } }}
+        shortcuts={{ F2: { href: newHref }, F5: { submitFormSelector: "#quotes-search-form" }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
       />
-      <ListPageHeader
-        title="견적서관리"
-        actions={
-          <Link href="/quotes/new" className="erp-btn erp-btn-primary">
-            F2 견적서 작성
-          </Link>
-        }
-      />
+      <div className="erp-page-toolbar erp-detail-header-row">
+        <ListPageHeader
+          title="견적서관리"
+          actions={
+            <>
+              <Link href={newHref} className="erp-btn erp-btn-primary">
+                F2 견적서 작성
+              </Link>
+              {selectedId && (
+                <Link href={newHref} className="erp-btn">
+                  목록
+                </Link>
+              )}
+            </>
+          }
+        />
+      </div>
 
       <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
@@ -102,56 +138,59 @@ export default async function QuotesPage({
         )}
       </form>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 90 }}>견적일</th>
-              <th style={{ width: 80 }}>견적번호</th>
-              <th style={{ width: 160 }}>거래처</th>
-              <th className="num" style={{ width: 70 }}>품목 수</th>
-              <th className="num" style={{ width: 120 }}>합계금액</th>
-              <th style={{ width: 90 }}>유효기한</th>
-              <th style={{ width: 90 }}>상태</th>
-              <th style={{ width: 90 }}>수주전환</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(quotes ?? []).map((q) => {
-              const total = (q.quote_items ?? []).reduce((sum, i) => sum + Number(i.quantity) * Number(i.unit_price), 0);
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>견적서 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(quotes.length)}건</span>
+          </div>
+          <div className="erp-split-list-body">
+            {quotes.map((quote) => {
+              const total = (quote.quote_items ?? []).reduce((sum, i) => sum + Number(i.quantity) * Number(i.unit_price), 0);
               return (
-                <ClickableRow key={q.id} href={`/quotes/${q.id}`}>
-                  <td>{q.quote_date.replaceAll("-", ".")}</td>
-                  <td>{q.doc_no}</td>
-                  <td>{q.customers?.name ?? "-"}</td>
-                  <td className="num">{(q.quote_items ?? []).length}</td>
-                  <td className="num">{formatNumber(total)}</td>
-                  <td>{q.valid_until ? q.valid_until.replaceAll("-", ".") : "-"}</td>
-                  <td>
-                    <QuoteStatusBadge status={q.status} />
-                  </td>
-                  <td>{q.converted_sales_order_id ? "전환됨" : "-"}</td>
-                </ClickableRow>
+                <Link
+                  key={quote.id}
+                  href={rowHref(quote.id)}
+                  className={`erp-split-list-row${quote.id === selectedId ? " active" : ""}`}
+                >
+                  {quote.customers?.name ?? "-"}
+                  <span style={{ marginLeft: 6 }}>
+                    <QuoteStatusBadge status={quote.status} />
+                  </span>
+                  <div className="erp-split-list-row-sub">
+                    #{quote.doc_no} · {formatNumber(total)}원 · {quote.quote_date.replaceAll("-", ".")}
+                    {quote.converted_sales_order_id ? " · 수주전환됨" : ""}
+                  </div>
+                </Link>
               );
             })}
-            {(!quotes || quotes.length === 0) && (
-              <tr>
-                <td colSpan={8} className="erp-grid-empty">
-                  조건에 맞는 견적서가 없습니다.
-                </td>
-              </tr>
+            {quotes.length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                조건에 맞는 견적서가 없습니다.
+              </p>
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
+          {hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
+              </Link>
+            </div>
+          )}
+        </section>
 
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <Link href={moreHref} className="erp-btn">
-            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
-          </Link>
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <QuoteDetailPanel id={selectedId} closeHref={newHref} />
+          ) : (
+            formData && (
+              <FormSection tabLabel="견적서 작성">
+                <NewQuoteForm today={todayKstStr()} customers={formData.customers} products={formData.products} />
+              </FormSection>
+            )
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
