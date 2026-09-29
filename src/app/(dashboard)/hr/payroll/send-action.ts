@@ -8,10 +8,16 @@
 // 단계가 깨진다. 이 함수를 쓰는 발송 버튼(SendPayslipButton)만 클라이언트
 // 컴포넌트에서 직접 import해 서버 액션 참조로만 쓰고, 페이지 자체의 서버
 // 모듈 그래프에는 안 들어가게 분리한다.
+// 파일 분리만으로는 next build의 "Collect page data" 단계만 피할 뿐,
+// 배포된 Cloudflare Worker에서 이 액션이 실제로 호출되는 시점에는 Next의
+// 액션 디스패처가 require()로 이 파일을 불러오는데, cloudflare:sockets는
+// 그 방식으로는 못 불러온다("Dynamic require of cloudflare:sockets is
+// not supported" — official-documents 발송 액션에서 실제 발생 확인).
+// api/cron/mail-sync/route.ts와 같은 이유로 sendMail import를 함수 본문
+// 안 동적 import로 미룬다.
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { decryptSecret } from "@/lib/mail/crypto";
-import { sendMail } from "@/lib/mail/smtp-send";
 import type { FormState } from "@/components/form-message";
 import { formatNumber } from "@/lib/format-number";
 
@@ -86,6 +92,7 @@ export async function sendPayslip(_prevState: FormState, formData: FormData): Pr
 
   try {
     const password = await decryptSecret(account.encrypted_app_password);
+    const { sendMail } = await import("@/lib/mail/smtp-send");
     await sendMail({
       smtpHost: account.smtp_host,
       smtpPort: account.smtp_port,

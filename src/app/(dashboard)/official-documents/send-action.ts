@@ -12,11 +12,19 @@
 // 안 들어가게 분리한다 — src/app/(dashboard)/mail/page.tsx가
 // ComposeMailButton을 통해 mail/actions.ts의 sendMailAction을 같은
 // 방식으로 격리해둔 것과 동일한 이유.
+//
+// 그런데 파일 분리는 next build의 "Collect page data" 단계(정적 분석)만
+// 피할 뿐이다 — 실제 배포된 Cloudflare Worker에서 이 서버 액션이
+// 호출되는 시점에도 Next의 액션 디스패처가 이 파일을 require()로
+// 불러오는데, cloudflare:sockets는 그 방식(동적 require)으로는 못
+// 불러온다("Dynamic require of cloudflare:sockets is not supported" —
+// 실제 배포에서 발생 확인). api/cron/mail-sync/route.ts와 같은 이유로,
+// sendMail import 자체를 함수 본문 안에서 실행 시점에만 평가되는 동적
+// import로 미룬다.
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptSecret } from "@/lib/mail/crypto";
-import { sendMail } from "@/lib/mail/smtp-send";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
@@ -87,6 +95,7 @@ export async function sendOfficialDocument(_prevState: FormState, formData: Form
 
     try {
       const password = await decryptSecret(account.encrypted_app_password);
+      const { sendMail } = await import("@/lib/mail/smtp-send");
       await sendMail({
         smtpHost: account.smtp_host,
         smtpPort: account.smtp_port,

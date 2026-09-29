@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { encryptSecret } from "@/lib/mail/crypto";
-import { ImapClient } from "@/lib/mail/imap-client";
+import type { ImapClient } from "@/lib/mail/imap-client";
 import type { FormState } from "@/components/form-message";
 
 type MailAccountInput = {
@@ -33,12 +33,20 @@ function parseInput(formData: FormData): MailAccountInput {
 // 저장 전에 실제 로그인이 되는지 먼저 확인해본다 — 앱 비밀번호를 잘못
 // 입력한 채로 저장해두면 나중에 동기화 버튼을 눌렀을 때에야 실패를
 // 알게 되므로, 등록 화면에서 바로 검증할 수 있게 한다.
+//
+// ImapClient 값 자체(타입 말고)는 함수 본문 안에서 동적 import로 불러온다
+// — 배포된 Cloudflare Worker에서 이 액션이 호출되는 시점에 Next의 액션
+// 디스패처가 require()로 이 파일을 불러오는데, cloudflare:sockets는 그
+// 방식으로는 못 불러온다("Dynamic require of cloudflare:sockets is not
+// supported" — official-documents 발송 액션에서 실제 발생 확인).
+// api/cron/mail-sync/route.ts와 같은 이유.
 export async function testMailConnection(_prevState: FormState, formData: FormData): Promise<FormState> {
   const input = parseInput(formData);
   if (!input.username || !input.appPassword) {
     return { error: "아이디와 앱 비밀번호를 입력해주세요." };
   }
 
+  const { ImapClient } = await import("@/lib/mail/imap-client");
   let client: ImapClient | null = null;
   try {
     client = await ImapClient.connect(input.imapHost, input.imapPort);

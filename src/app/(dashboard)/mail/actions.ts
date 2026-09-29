@@ -3,12 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/mail/crypto";
-import { sendMail, type SendMailAttachment } from "@/lib/mail/smtp-send";
-import { syncInbox } from "@/lib/mail/sync";
+import type { SendMailAttachment } from "@/lib/mail/smtp-send";
 import type { FormState } from "@/components/form-message";
 
+// sendMail/syncInbox는 각각 worker-mailer/imap-client(둘 다
+// cloudflare:sockets 기반)를 불러온다. 이 파일 맨 위에서 정적으로
+// import하면 배포된 Cloudflare Worker에서 이 서버 액션들이 호출되는
+// 시점에 Next의 액션 디스패처가 require()로 이 파일을 불러오려다
+// cloudflare:sockets를 못 찾아 "Dynamic require of cloudflare:sockets
+// is not supported" 오류가 난다(실제 배포에서 official-documents 발송
+// 액션이 이 문제로 죽는 것을 확인) — api/cron/mail-sync/route.ts와 같은
+// 이유로, 함수 본문 안에서 실행 시점에만 평가되는 동적 import로 미룬다.
 export async function syncMailAction(_prevState: FormState): Promise<FormState> {
   try {
+    const { syncInbox } = await import("@/lib/mail/sync");
     const result = await syncInbox();
     revalidatePath("/mail");
     return result.newCount > 0
@@ -80,6 +88,7 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
 
   try {
     const password = await decryptSecret(account.encrypted_app_password);
+    const { sendMail } = await import("@/lib/mail/smtp-send");
     await sendMail({
       smtpHost: account.smtp_host,
       smtpPort: account.smtp_port,

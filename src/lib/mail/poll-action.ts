@@ -7,8 +7,14 @@
 // notification-toaster.tsx(클라이언트 컴포넌트)만 직접 import해 서버
 // 액션 참조로만 쓰고, 페이지 자체의 서버 모듈 그래프에는 안 들어가게
 // 분리한다.
+//
+// 파일 분리만으로는 부족하다 — 배포된 Cloudflare Worker에서 이 액션이
+// 실제로 호출되는 시점에 Next의 액션 디스패처가 require()로 이 파일을
+// 불러오는데, cloudflare:sockets는 그 방식으로는 못 불러온다("Dynamic
+// require of cloudflare:sockets is not supported" — official-documents
+// 발송 액션에서 실제 발생 확인). api/cron/mail-sync/route.ts와 같은
+// 이유로 syncInbox import를 함수 본문 안 동적 import로 미룬다.
 import { getUser } from "@/lib/supabase/server";
-import { syncInbox } from "@/lib/mail/sync";
 
 // 탭이 열려 있는 동안 짧은 주기로 본인 메일함만 확인한다(notification-
 // toaster.tsx, 45초) — 5분짜리 크론(api/cron/mail-sync)은 탭을 안 보고
@@ -22,6 +28,7 @@ export async function pollMyMail(): Promise<{ newCount: number }> {
   if (!user) return { newCount: 0 };
 
   try {
+    const { syncInbox } = await import("@/lib/mail/sync");
     return await syncInbox();
   } catch (err) {
     console.error("메일 자동 확인 실패:", err);
