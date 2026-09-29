@@ -130,7 +130,7 @@ export async function saveApprovalDraft(_prevState: FormState, formData: FormDat
     return { error: `임시저장에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  revalidatePath("/approvals/drafts");
+  revalidatePath("/approvals");
   if (!draftId) {
     return { success: "임시저장되었습니다.", redirectTo: `/approvals/new?draft=${newId}` };
   }
@@ -175,7 +175,6 @@ export async function submitApprovalDraft(_prevState: FormState, formData: FormD
   }
 
   revalidatePath("/approvals");
-  revalidatePath("/approvals/drafts");
   redirect(`/approvals/${draftId}`);
 }
 
@@ -194,6 +193,6 @@ export async function deleteApprovalDraft(_prevState: FormState, formData: FormD
   });
   if (mutationError) return mutationError;
 
-  revalidatePath("/approvals/drafts");
+  revalidatePath("/approvals");
   return { success: "삭제했습니다." };
 }

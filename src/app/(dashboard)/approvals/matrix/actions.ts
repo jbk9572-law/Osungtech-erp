@@ -18,7 +18,7 @@ export async function setApprovalMatrixRule(_prevState: FormState, formData: For
   if (!presetId) {
     const { error } = await supabase.from("approval_matrix_rules").delete().eq("template_id", templateId);
     if (error) return { error: `저장에 실패했습니다: ${error.message}` };
-    revalidatePath("/approvals/matrix");
+    revalidatePath("/approvals/lines");
     return { success: "연결을 해제했습니다." };
   }
 
@@ -27,6 +27,6 @@ export async function setApprovalMatrixRule(_prevState: FormState, formData: For
     .upsert({ template_id: templateId, preset_id: presetId }, { onConflict: "template_id" });
   if (error) return { error: `저장에 실패했습니다: ${error.message}` };
 
-  revalidatePath("/approvals/matrix");
+  revalidatePath("/approvals/lines");
   return { success: "저장되었습니다." };
 }
