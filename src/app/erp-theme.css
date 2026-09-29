@@ -2346,7 +2346,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: min(78vh, 760px);
   min-height: 420px;
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border);
+  border: 2px solid var(--erp-border-strong);
   border-radius: 0;
   overflow: hidden;
 }
@@ -2478,6 +2478,9 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-selected);
   color: var(--erp-primary);
   font-weight: 700;
+  box-shadow:
+    inset 0 2px 0 var(--erp-select-accent),
+    inset 0 -2px 0 var(--erp-select-accent);
 }
 
 @media (max-width: 768px) {
