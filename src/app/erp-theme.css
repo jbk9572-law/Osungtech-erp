@@ -2291,6 +2291,58 @@ a.erp-detail-tab:hover:not(.active) {
   line-height: 14px;
 }
 
+/* 대화 탭 — 좌측 직원/대화 목록 + 우측 대화창의 2단 메신저 레이아웃.
+   넓은 화면에서는 항상 둘 다 보이고, 768px 아래(트리메뉴가 오버레이로
+   바뀌는 것과 같은 기준)에서는 지금 보고 있는 view에 따라 한쪽만
+   보이게 전환한다(messenger-page.tsx의 data-view 참고). */
+.erp-messenger-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.erp-messenger-sidebar {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--erp-border);
+}
+
+.erp-messenger-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.erp-messenger-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  color: var(--erp-text-muted);
+  font-size: 12.5px;
+}
+
+.erp-messenger-channel-row.active {
+  background: var(--erp-selected);
+  color: var(--erp-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .erp-messenger-layout[data-view="list"] .erp-messenger-main {
+    display: none;
+  }
+  .erp-messenger-layout:not([data-view="list"]) .erp-messenger-sidebar {
+    display: none;
+  }
+}
+
 .erp-messenger-search {
   position: relative;
   flex: 0 0 auto;

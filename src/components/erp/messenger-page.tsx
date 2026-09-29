@@ -668,303 +668,315 @@ export function MessengerPage({
           </div>
         )}
 
-        {hubTab === "chat" && view === "list" && (
-          <div className="erp-messenger-body" style={{ padding: 0 }}>
-            <div style={{ display: "flex", gap: 6, padding: 10, borderBottom: "1px solid var(--erp-border)" }}>
-              <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newDm")}>
-                + DM
-              </button>
-              <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newGroup")}>
-                + 그룹
-              </button>
-            </div>
-            {channelError && (
-              <p style={{ padding: "8px 12px 0", color: "var(--erp-danger)", fontSize: 11.5 }}>{channelError}</p>
-            )}
-            <div style={{ overflowY: "auto", flex: 1 }}>
-              {channels.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => openChannel(c.id)}
-                  className="erp-messenger-channel-row"
-                  style={{ position: "relative" }}
-                >
-                  <span style={{ marginRight: 8 }}>{channelIcon(c.type)}</span>
-                  <span style={{ flex: 1, textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
-                  {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
+        {/* 대화 탭 — 좌측 직원/대화 목록 + 우측 대화창의 2단 구성. 넓은
+            화면에서는 항상 둘 다 보이고(메신저 앱 통상 레이아웃), 좁은
+            화면에서는 data-view에 따라 한쪽만 보이게 CSS로 전환한다
+            (erp-theme.css의 @media 참고). */}
+        {hubTab === "chat" && (
+          <div className="erp-messenger-layout" data-view={view}>
+            <div className="erp-messenger-sidebar">
+              <div style={{ display: "flex", gap: 6, padding: 10, borderBottom: "1px solid var(--erp-border)" }}>
+                <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newDm")}>
+                  + DM
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {hubTab === "chat" && view === "newDm" && (
-          <div className="erp-messenger-body" style={{ padding: 0, overflowY: "auto" }}>
-            {otherProfiles.length === 0 && (
-              <p className="erp-grid-empty" style={{ fontSize: 12 }}>
-                대화할 수 있는 다른 구성원이 없습니다.
-              </p>
-            )}
-            {otherProfiles.map(([id, name]) => (
-              <button
-                key={id}
-                type="button"
-                disabled={creatingChannel}
-                onClick={() => handleStartDm(id)}
-                className="erp-messenger-channel-row"
-              >
-                👤 {name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {hubTab === "chat" && view === "newGroup" && (
-          <div className="erp-messenger-body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <input
-              type="text"
-              autoComplete="off"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="그룹 이름"
-              className="erp-input"
-              style={{ fontSize: 12.5 }}
-            />
-            <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-              {otherProfiles.map(([id, name]) => (
-                <label key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, padding: "4px 2px" }}>
-                  <input
-                    type="checkbox"
-                    checked={pickedMemberIds.includes(id)}
-                    onChange={(e) =>
-                      setPickedMemberIds((prev) =>
-                        e.target.checked ? [...prev, id] : prev.filter((m) => m !== id)
-                      )
-                    }
-                  />
-                  {name}
-                </label>
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={creatingChannel || !groupName.trim() || pickedMemberIds.length === 0}
-              onClick={handleCreateGroup}
-              className="erp-btn erp-btn-primary"
-            >
-              {creatingChannel ? "만드는 중..." : "그룹 만들기"}
-            </button>
-          </div>
-        )}
-
-        {hubTab === "chat" && view === "chat" && (
-          <>
-            <div className="erp-messenger-search">
-              <input
-                type="text"
-                autoComplete="off"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="🔍 메시지 검색"
-                className="erp-input"
-                style={{ width: "100%", fontSize: 12 }}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="erp-messenger-search-clear"
-                  aria-label="검색 지우기"
-                >
-                  ✕
+                <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newGroup")}>
+                  + 그룹
                 </button>
+              </div>
+              {channelError && (
+                <p style={{ padding: "8px 12px 0", color: "var(--erp-danger)", fontSize: 11.5 }}>{channelError}</p>
               )}
+              <div style={{ overflowY: "auto", flex: 1 }}>
+                {channels.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => openChannel(c.id)}
+                    className={`erp-messenger-channel-row${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
+                    style={{ position: "relative" }}
+                  >
+                    <span style={{ marginRight: 8 }}>{channelIcon(c.type)}</span>
+                    <span style={{ flex: 1, textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
+                    {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="erp-messenger-body">
-              {loadingChannel ? (
-                <p className="erp-grid-empty" style={{ fontSize: 12 }}>
-                  불러오는 중...
-                </p>
-              ) : (
-                <>
-                  {displayEntries.map(({ dateLabel, message: m }) => {
-                    const mine = m.sender_id === currentUserId;
-                    const isImg = m.file_name ? isImageFile(m.file_name) : false;
-                    return (
-                      <Fragment key={m.id}>
-                        {dateLabel && (
-                          <div className="erp-messenger-date-divider">
-                            <span>{dateLabel}</span>
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            alignSelf: mine ? "flex-end" : "flex-start",
-                            maxWidth: "80%",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 4,
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 10.5,
-                              color: "var(--erp-text-muted)",
-                              textAlign: mine ? "right" : "left",
-                            }}
-                          >
-                            {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleTimeString("ko-KR")}
-                          </div>
+            <div className="erp-messenger-main">
+              {view === "list" && (
+                <div className="erp-messenger-empty-state">왼쪽에서 대화를 선택하거나 새로 시작해보세요.</div>
+              )}
 
-                          {m.content && (
-                            <div
-                              style={{
-                                alignSelf: mine ? "flex-end" : "flex-start",
-                                background: mine ? "var(--erp-primary)" : "var(--erp-hover)",
-                                color: mine ? "#fff" : "var(--erp-text)",
-                                padding: "6px 10px",
-                                borderRadius: 0,
-                                fontSize: 12.5,
-                                whiteSpace: "pre-wrap",
-                                wordBreak: "break-word",
-                              }}
-                            >
-                              {highlightText(m.content, query)}
-                            </div>
-                          )}
-
-                          {m.file_url && m.file_name && (
-                            <div style={{ alignSelf: mine ? "flex-end" : "flex-start" }}>
-                              {isImg ? (
-                                <a
-                                  href={m.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="erp-attachment-image-link"
-                                >
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={m.file_url} alt={m.file_name} className="erp-attachment-image" />
-                                </a>
-                              ) : (
-                                <a
-                                  href={m.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="erp-attachment-row"
-                                >
-                                  <span className="erp-attachment-icon" aria-hidden>
-                                    {fileKindIcon(m.file_name)}
-                                  </span>
-                                  <span className="erp-attachment-info">
-                                    <span className="erp-attachment-name">{highlightText(m.file_name, query)}</span>
-                                    <span className="erp-attachment-meta">
-                                      {m.file_size ? formatFileSize(m.file_size) : ""}
-                                    </span>
-                                  </span>
-                                  <span className="erp-attachment-download" aria-hidden>
-                                    ⬇
-                                  </span>
-                                </a>
-                              )}
-                            </div>
-                          )}
-
-                          {(mine || isAdmin) && (
-                            <div style={{ alignSelf: mine ? "flex-end" : "flex-start", display: "flex", gap: 6 }}>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(m.id, m.file_path)}
-                                style={{
-                                  fontSize: 10,
-                                  color: confirmDelete.isArmed(m.id) ? "var(--erp-danger)" : "var(--erp-text-muted)",
-                                  fontWeight: confirmDelete.isArmed(m.id) ? 700 : 400,
-                                  background: "none",
-                                  border: "none",
-                                  padding: "2px 0",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                {confirmDelete.isArmed(m.id) ? "한 번 더 누르면 삭제" : "삭제"}
-                              </button>
-                              {confirmDelete.isArmed(m.id) && (
-                                <button
-                                  type="button"
-                                  onClick={confirmDelete.reset}
-                                  style={{
-                                    fontSize: 10,
-                                    color: "var(--erp-text-muted)",
-                                    background: "none",
-                                    border: "none",
-                                    padding: "2px 0",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  취소
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </Fragment>
-                    );
-                  })}
-                  {!displayEntries.length && (
+              {view === "newDm" && (
+                <div className="erp-messenger-body" style={{ padding: 0, overflowY: "auto" }}>
+                  {otherProfiles.length === 0 && (
                     <p className="erp-grid-empty" style={{ fontSize: 12 }}>
-                      {query ? "검색 결과가 없습니다." : "아직 메시지가 없습니다. 첫 메시지를 남겨보세요."}
+                      대화할 수 있는 다른 구성원이 없습니다.
                     </p>
                   )}
-                  <div ref={listEndRef} />
+                  {otherProfiles.map(([id, name]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={creatingChannel}
+                      onClick={() => handleStartDm(id)}
+                      className="erp-messenger-channel-row"
+                    >
+                      👤 {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {view === "newGroup" && (
+                <div className="erp-messenger-body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="그룹 이름"
+                    className="erp-input"
+                    style={{ fontSize: 12.5 }}
+                  />
+                  <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                    {otherProfiles.map(([id, name]) => (
+                      <label key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, padding: "4px 2px" }}>
+                        <input
+                          type="checkbox"
+                          checked={pickedMemberIds.includes(id)}
+                          onChange={(e) =>
+                            setPickedMemberIds((prev) =>
+                              e.target.checked ? [...prev, id] : prev.filter((m) => m !== id)
+                            )
+                          }
+                        />
+                        {name}
+                      </label>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={creatingChannel || !groupName.trim() || pickedMemberIds.length === 0}
+                    onClick={handleCreateGroup}
+                    className="erp-btn erp-btn-primary"
+                  >
+                    {creatingChannel ? "만드는 중..." : "그룹 만들기"}
+                  </button>
+                </div>
+              )}
+
+              {view === "chat" && (
+                <>
+                  <div className="erp-messenger-search">
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="🔍 메시지 검색"
+                      className="erp-input"
+                      style={{ width: "100%", fontSize: 12 }}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="erp-messenger-search-clear"
+                        aria-label="검색 지우기"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="erp-messenger-body">
+                    {loadingChannel ? (
+                      <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+                        불러오는 중...
+                      </p>
+                    ) : (
+                      <>
+                        {displayEntries.map(({ dateLabel, message: m }) => {
+                          const mine = m.sender_id === currentUserId;
+                          const isImg = m.file_name ? isImageFile(m.file_name) : false;
+                          return (
+                            <Fragment key={m.id}>
+                              {dateLabel && (
+                                <div className="erp-messenger-date-divider">
+                                  <span>{dateLabel}</span>
+                                </div>
+                              )}
+                              <div
+                                style={{
+                                  alignSelf: mine ? "flex-end" : "flex-start",
+                                  maxWidth: "80%",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 4,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: 10.5,
+                                    color: "var(--erp-text-muted)",
+                                    textAlign: mine ? "right" : "left",
+                                  }}
+                                >
+                                  {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleTimeString("ko-KR")}
+                                </div>
+
+                                {m.content && (
+                                  <div
+                                    style={{
+                                      alignSelf: mine ? "flex-end" : "flex-start",
+                                      background: mine ? "var(--erp-primary)" : "var(--erp-hover)",
+                                      color: mine ? "#fff" : "var(--erp-text)",
+                                      padding: "6px 10px",
+                                      borderRadius: 0,
+                                      fontSize: 12.5,
+                                      whiteSpace: "pre-wrap",
+                                      wordBreak: "break-word",
+                                    }}
+                                  >
+                                    {highlightText(m.content, query)}
+                                  </div>
+                                )}
+
+                                {m.file_url && m.file_name && (
+                                  <div style={{ alignSelf: mine ? "flex-end" : "flex-start" }}>
+                                    {isImg ? (
+                                      <a
+                                        href={m.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="erp-attachment-image-link"
+                                      >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={m.file_url} alt={m.file_name} className="erp-attachment-image" />
+                                      </a>
+                                    ) : (
+                                      <a
+                                        href={m.file_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="erp-attachment-row"
+                                      >
+                                        <span className="erp-attachment-icon" aria-hidden>
+                                          {fileKindIcon(m.file_name)}
+                                        </span>
+                                        <span className="erp-attachment-info">
+                                          <span className="erp-attachment-name">{highlightText(m.file_name, query)}</span>
+                                          <span className="erp-attachment-meta">
+                                            {m.file_size ? formatFileSize(m.file_size) : ""}
+                                          </span>
+                                        </span>
+                                        <span className="erp-attachment-download" aria-hidden>
+                                          ⬇
+                                        </span>
+                                      </a>
+                                    )}
+                                  </div>
+                                )}
+
+                                {(mine || isAdmin) && (
+                                  <div style={{ alignSelf: mine ? "flex-end" : "flex-start", display: "flex", gap: 6 }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(m.id, m.file_path)}
+                                      style={{
+                                        fontSize: 10,
+                                        color: confirmDelete.isArmed(m.id) ? "var(--erp-danger)" : "var(--erp-text-muted)",
+                                        fontWeight: confirmDelete.isArmed(m.id) ? 700 : 400,
+                                        background: "none",
+                                        border: "none",
+                                        padding: "2px 0",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      {confirmDelete.isArmed(m.id) ? "한 번 더 누르면 삭제" : "삭제"}
+                                    </button>
+                                    {confirmDelete.isArmed(m.id) && (
+                                      <button
+                                        type="button"
+                                        onClick={confirmDelete.reset}
+                                        style={{
+                                          fontSize: 10,
+                                          color: "var(--erp-text-muted)",
+                                          background: "none",
+                                          border: "none",
+                                          padding: "2px 0",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        취소
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </Fragment>
+                          );
+                        })}
+                        {!displayEntries.length && (
+                          <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+                            {query ? "검색 결과가 없습니다." : "아직 메시지가 없습니다. 첫 메시지를 남겨보세요."}
+                          </p>
+                        )}
+                        <div ref={listEndRef} />
+                      </>
+                    )}
+                  </div>
+
+                  <form ref={formRef} action={handleSend} className="erp-messenger-composer">
+                    <textarea
+                      name="content"
+                      placeholder="메시지를 입력하세요 (Enter: 전송 / Shift+Enter: 줄바꿈)"
+                      rows={2}
+                      className="erp-input"
+                      style={{ flex: 1, resize: "none", fontSize: 12.5 }}
+                      onKeyDown={handleComposerKeyDown}
+                    />
+                    <div className="erp-messenger-composer-actions">
+                      <FilePickerInput
+                        key={composerKey}
+                        name="file"
+                        iconOnly
+                        icon="📎"
+                        label="파일 첨부"
+                        onFileChange={(f) => setHasAttachment(!!f)}
+                      />
+                      {activeChannel?.type === "group" && (
+                        <button
+                          type="button"
+                          onClick={() => handleLeaveGroup(activeChannel.id)}
+                          className="erp-btn"
+                          style={{ minWidth: 0, fontSize: 10.5 }}
+                        >
+                          그룹 나가기
+                        </button>
+                      )}
+                      <span style={{ flex: 1 }} />
+                      <button type="submit" disabled={sending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+                        {sending ? <span className="erp-spinner" aria-hidden /> : "전송"}
+                      </button>
+                    </div>
+                  </form>
+                  {sendError && (
+                    <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
+                      {sendError}
+                    </p>
+                  )}
+                  {deleteError && (
+                    <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
+                      삭제 실패: {deleteError}
+                    </p>
+                  )}
                 </>
               )}
             </div>
-
-            <form ref={formRef} action={handleSend} className="erp-messenger-composer">
-              <textarea
-                name="content"
-                placeholder="메시지를 입력하세요 (Enter: 전송 / Shift+Enter: 줄바꿈)"
-                rows={2}
-                className="erp-input"
-                style={{ flex: 1, resize: "none", fontSize: 12.5 }}
-                onKeyDown={handleComposerKeyDown}
-              />
-              <div className="erp-messenger-composer-actions">
-                <FilePickerInput
-                  key={composerKey}
-                  name="file"
-                  iconOnly
-                  icon="📎"
-                  label="파일 첨부"
-                  onFileChange={(f) => setHasAttachment(!!f)}
-                />
-                {activeChannel?.type === "group" && (
-                  <button
-                    type="button"
-                    onClick={() => handleLeaveGroup(activeChannel.id)}
-                    className="erp-btn"
-                    style={{ minWidth: 0, fontSize: 10.5 }}
-                  >
-                    그룹 나가기
-                  </button>
-                )}
-                <span style={{ flex: 1 }} />
-                <button type="submit" disabled={sending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
-                  {sending ? <span className="erp-spinner" aria-hidden /> : "전송"}
-                </button>
-              </div>
-            </form>
-            {sendError && (
-              <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
-                {sendError}
-              </p>
-            )}
-            {deleteError && (
-              <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
-                삭제 실패: {deleteError}
-              </p>
-            )}
-          </>
+          </div>
         )}
       </div>
     </div>
