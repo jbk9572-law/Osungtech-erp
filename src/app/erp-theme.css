@@ -15,9 +15,19 @@
      warning/danger)은 브랜드 포인트색과 별개로 그대로 둔다. */
   --erp-primary: #132944;
   --erp-primary-dark: #0d1d30;
-  --erp-border: #e2e5eb;
+  /* 테두리 색을 옅은 회색(#e2e5eb)에서 슬레이트 톤으로 한 단계 짙게
+     올렸다 — "그림자로 구획을 나누던" 것에서 "테두리로 또렷하게
+     감싸는" 쪽으로 화면 전체를 옮기기 위한 것이다(사용자가 제미나이/
+     v0 두 외부 AI에 이 방향으로 디자인 언어를 물어봐서 나온 값을
+     그대로 반영). --erp-border 하나만 바꿔도 패널·입력창·버튼·탭·
+     구분선 등 이 변수를 쓰는 곳 전부(약 50곳)에 자동으로 퍼진다.
+     --erp-border-strong은 그중에서도 "1차 구조" 컨테이너(상세 패널,
+     표 바깥 테두리, 대시보드 카드)에만 별도로 얹는 한 단계 더 짙은
+     테두리다. */
+  --erp-border: #94a3b8;
+  --erp-border-strong: #1e293b;
   --erp-hover: #eef2f7;
-  --erp-selected: #e3eaf4;
+  --erp-selected: #dbeafe;
   /* WCAG AA(4.5:1) 명도대비를 배지 배경(erp-badge-*)과 흰 배경 양쪽에서
      맞추려고 기존 success/warning/danger보다 한 톤씩 어둡게 조정했다 —
      예전 값은 배지 위에서 대비가 3:1도 안 나오는 경우가 있었다. */
@@ -62,7 +72,11 @@
      "촘촘하게 칸이 다 보이는" 느낌을 주려고 위 --erp-divider보다 한 톤
      짙게 뺐다. 패널·카드 등 다른 곳의 옅은 구분선(--erp-divider)까지
      같이 짙어지면 화면 전체가 답답해 보여서, 표 칸에만 좁혀 쓴다. */
-  --erp-grid-line: #cdd3dc;
+  --erp-grid-line: #cbd5e1;
+  /* 표 헤더 배경 — 예전엔 페이지 배경(--erp-bg)과 같은 색이라 헤더/본문
+     경계가 테두리 한 줄에만 기대고 있었다. 헤더만 한 톤 더 진하게 줘서
+     "칸이 뚜렷하게 나뉘어 보이는" 느낌을 표 위쪽에서부터 시작한다. */
+  --erp-grid-header-bg: #e2e8f0;
   /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
      disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
   --erp-bg-disabled: #f5f6f8;
@@ -1224,7 +1238,7 @@
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
-  border: 1px solid var(--erp-border);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   overflow: auto;
   box-shadow: var(--erp-shadow-sm);
@@ -1238,7 +1252,7 @@
 
 .erp-grid thead th {
   height: 32px;
-  background: var(--erp-bg);
+  background: var(--erp-grid-header-bg);
   color: var(--erp-text);
   font-weight: 700;
   text-align: left;
@@ -1426,7 +1440,7 @@
      났다. 배경을 명시적으로 불투명하게 고정해서 어디서 쓰이든 항상
      또렷한 흰 카드로 보이게 한다. */
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   box-shadow: var(--erp-shadow-sm);
 }
@@ -1584,7 +1598,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-hero-card {
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border);
+  border: 1px solid var(--erp-border-strong);
   border-left: 3px solid var(--erp-primary);
   border-radius: 0;
   padding: 16px 18px;
@@ -1629,7 +1643,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-home-panel {
-  border: 1px solid var(--erp-border);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   background: var(--erp-panel);
   box-shadow: var(--erp-shadow-sm);
@@ -1657,7 +1671,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 12px;
   padding: 12px 14px;
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   box-shadow: var(--erp-shadow-sm);
   color: inherit;
