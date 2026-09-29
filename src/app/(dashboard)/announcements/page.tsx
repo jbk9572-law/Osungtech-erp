@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
-import {
-  AnnouncementGridTable,
-  isThisWeek,
-  type AnnouncementRow,
-} from "@/components/announcement-grid-table";
+import { AnnouncementListBody, isThisWeek, type AnnouncementRow } from "@/components/announcement-list-body";
+import { AnnouncementDetailPanel } from "@/components/announcement-detail-panel";
+import { AnnouncementForm } from "@/components/announcement-form";
+import { FormSection } from "@/components/erp/page-header";
+import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
+import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
 
 const DEFAULT_LIST_LIMIT = 300;
@@ -15,9 +16,10 @@ const LIST_LIMIT_STEP = 300;
 export default async function AnnouncementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ limit?: string }>;
+  searchParams: Promise<{ limit?: string; id?: string }>;
 }) {
-  const { limit: limitParam } = await searchParams;
+  const { limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
@@ -80,46 +82,88 @@ export default async function AnnouncementsPage({
   const pinnedCount = summaryRows.filter((r) => r.pinned).length;
   const thisWeekCount = summaryRows.filter((r) => isThisWeek(r.created_at)).length;
 
+  const newHref = limitParam ? `/announcements?limit=${limitParam}` : "/announcements";
+  const rowHref = (annId: string) => `${newHref}${newHref.includes("?") ? "&" : "?"}id=${annId}`;
+  const moreHref = `/announcements?limit=${limit + LIST_LIMIT_STEP}`;
+
   return (
     <div>
       <KeyboardShortcuts
-        shortcuts={{ F2: { href: "/announcements/new" }, Escape: { href: "/dashboard" } }}
+        shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">공지사항</h1>
-
-      <div className="erp-toolbar">
-        <Link href="/announcements/new" className="erp-btn erp-btn-primary">
-          F2 글쓰기
-        </Link>
-      </div>
-
-      <div
-        className="rounded p-2 text-xs"
-        style={{
-          marginBottom: 8,
-          background: "var(--erp-info-bg)",
-          color: "var(--erp-info-text)",
-          border: "1px solid var(--erp-info-border)",
-        }}
-      >
-        최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </div>
-
-      <AnnouncementGridTable
-        rows={gridRows}
-        totalCount={totalCount}
-        unreadCount={unreadCount}
-        pinnedCount={pinnedCount}
-        thisWeekCount={thisWeekCount}
-      />
-
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <Link href={`/announcements?limit=${limit + LIST_LIMIT_STEP}`} className="erp-btn">
-            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
+      <div className="erp-page-toolbar erp-detail-header-row">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">공지사항</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={newHref} className="erp-btn erp-btn-primary">
+            F2 글쓰기
           </Link>
+          {selectedId && (
+            <Link href={newHref} className="erp-btn">
+              목록
+            </Link>
+          )}
         </div>
-      )}
+      </div>
+
+      <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
+        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
+          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+            전체 공지
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalCount)}건</div>
+        </div>
+        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
+          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+            안읽음
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: unreadCount ? "var(--erp-danger)" : undefined }}>
+            {formatNumber(unreadCount)}건
+          </div>
+        </div>
+        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
+          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+            고정 공지
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
+            {formatNumber(pinnedCount)}건
+          </div>
+        </div>
+        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
+          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+            이번주 등록
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(thisWeekCount)}건</div>
+        </div>
+      </div>
+
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>공지 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+              최근 {formatNumber(limit)}건까지{hasMore ? " · 더 있음" : ""}
+            </span>
+          </div>
+          <AnnouncementListBody rows={gridRows} selectedId={selectedId} rowHref={rowHref} />
+          {hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <AnnouncementDetailPanel id={selectedId} closeHref={newHref} />
+          ) : (
+            <FormSection tabLabel="공지사항 작성">
+              <AnnouncementForm action={createAnnouncement} submitLabel="등록" />
+            </FormSection>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
