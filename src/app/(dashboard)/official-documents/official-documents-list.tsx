@@ -3,9 +3,13 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
-import { ClickableRow } from "@/components/clickable-row";
+import { OfficialDocumentDetailPanel } from "@/components/official-document-detail-panel";
+import { OfficialDocumentForm } from "@/components/official-document-form";
+import { createOfficialDocument } from "@/app/(dashboard)/official-documents/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { isUuid } from "@/lib/is-uuid";
+import { formatNumber } from "@/lib/format-number";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" | "info" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -15,6 +19,7 @@ const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "dange
   closed: { label: "종결", tone: "muted" },
   cancelled: { label: "취소", tone: "danger" },
 };
+const DISCLOSURE_LABEL: Record<string, string> = { public: "공개", partial: "부분공개", private: "비공개" };
 
 const TABS = [
   { key: "mine", label: "내 공문함", href: "/official-documents" },
@@ -23,10 +28,11 @@ const TABS = [
 
 // 내 공문함/받은 공문함 두 화면이 필터 조건만 다르고 목록 UI는
 // 똑같아서 공용 서버 컴포넌트로 뺐다 — 각 page.tsx는 box만 다르게 넘긴다.
-export async function OfficialDocumentsList({ box }: { box: "mine" | "received" }) {
+export async function OfficialDocumentsList({ box, id }: { box: "mine" | "received"; id?: string }) {
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "official_documents");
   const user = await getUser();
+  const selectedId = id && isUuid(id) ? id : undefined;
 
   let rows: {
     id: string;
@@ -68,14 +74,45 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
       : [];
   }
 
+  const boxHref = TABS.find((t) => t.key === box)?.href ?? "/official-documents";
+  const rowHref = (docId: string) => `${boxHref}?id=${docId}`;
+  const newHref = boxHref;
+
+  let formData: { templates: { id: string; name: string; body: string }[]; profiles: { id: string; name: string }[] } | null =
+    null;
+  if (!selectedId) {
+    const [templates, profiles] = await Promise.all([
+      fetchAllRows<{ id: string; name: string; body: string }>((from, to) =>
+        supabase
+          .from("document_templates")
+          .select("id, name, body")
+          .eq("category", "official")
+          .eq("is_active", true)
+          .order("name")
+          .range(from, to),
+      ),
+      fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+        supabase.from("profiles").select("id, full_name").order("full_name").range(from, to),
+      ),
+    ]);
+    formData = { templates, profiles: profiles.map((p) => ({ id: p.id, name: p.full_name || "구성원" })) };
+  }
+
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <div className="mb-1 erp-detail-header-row">
+      <KeyboardShortcuts shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
+      <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</h1>
-        <Link href="/official-documents/new" className="erp-btn erp-btn-primary">
-          + 새 공문
-        </Link>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={newHref} className="erp-btn erp-btn-primary">
+            F2 새 공문
+          </Link>
+          {selectedId && (
+            <Link href={newHref} className="erp-btn">
+              목록
+            </Link>
+          )}
+        </div>
       </div>
 
       <PageGuide>
@@ -92,41 +129,56 @@ export async function OfficialDocumentsList({ box }: { box: "mine" | "received" 
         ))}
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 90 }}>문서번호</th>
-              <th>제목</th>
-              <th style={{ width: 90 }}>공개구분</th>
-              <th style={{ width: 120 }}>상태</th>
-              <th style={{ width: 110 }}>작성일</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>공문 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(rows.length)}건</span>
+          </div>
+          <div className="erp-split-list-body">
             {rows.map((row) => {
               const status = STATUS_LABEL[row.status] ?? { label: row.status, tone: "muted" as const };
               return (
-                <ClickableRow key={row.id} href={`/official-documents/${row.id}`}>
-                  <td>{row.doc_no ? `${row.doc_no_year}-${row.doc_no}` : "-"}</td>
-                  <td>{row.title}</td>
-                  <td>{row.disclosure === "public" ? "공개" : row.disclosure === "partial" ? "부분공개" : "비공개"}</td>
-                  <td>
+                <Link
+                  key={row.id}
+                  href={rowHref(row.id)}
+                  className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
+                >
+                  {row.title}
+                  <span style={{ marginLeft: 6 }}>
                     <GridBadge tone={status.tone}>{status.label}</GridBadge>
-                  </td>
-                  <td>{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
-                </ClickableRow>
+                  </span>
+                  <div className="erp-split-list-row-sub">
+                    {row.doc_no ? `${row.doc_no_year}-${row.doc_no}` : "번호 미부여"} ·{" "}
+                    {DISCLOSURE_LABEL[row.disclosure] ?? row.disclosure} · {new Date(row.created_at).toLocaleDateString("ko-KR")}
+                  </div>
+                </Link>
               );
             })}
             {rows.length === 0 && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  공문이 없습니다.
-                </td>
-              </tr>
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                공문이 없습니다.
+              </p>
             )}
-          </tbody>
-        </table>
+          </div>
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <OfficialDocumentDetailPanel id={selectedId} closeHref={newHref} />
+          ) : (
+            formData && (
+              <div className="erp-detail" style={{ marginTop: 0 }}>
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">공문 작성</span>
+                </div>
+                <div className="erp-detail-body">
+                  <OfficialDocumentForm action={createOfficialDocument} templates={formData.templates} profiles={formData.profiles} />
+                </div>
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
