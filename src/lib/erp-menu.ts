@@ -83,8 +83,11 @@ export const MENU_GROUPS: MenuGroup[] = [
       // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로
       // 재사용하되, 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈이라
       // featureKey는 따로 유지한다.
-      { label: "내 공문함", href: "/official-documents", featureKey: "official_documents" },
-      { label: "받은 공문함", href: "/official-documents/received", featureKey: "official_documents" },
+      // 내 공문함/받은 공문함은 별도 메뉴 항목이 아니라 화면 안 탭으로
+      // 전환한다 — 페이지 자체(official-documents-list.tsx)가 이미
+      // TABS로 둘을 오갈 수 있어서, 기안함의 임시저장 탭처럼 메뉴 항목
+      // 중복이었다(사용자 지적).
+      { label: "공문함", href: "/official-documents", featureKey: "official_documents" },
     ],
   },
   {
