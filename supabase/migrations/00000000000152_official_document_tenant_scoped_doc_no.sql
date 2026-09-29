@@ -19,6 +19,7 @@ create table if not exists public.official_document_no_counters (
 );
 
 alter table public.official_document_no_counters enable row level security;
+drop policy if exists "official_document_no_counters_select" on public.official_document_no_counters;
 create policy "official_document_no_counters_select" on public.official_document_no_counters
   for select using (tenant_id = public.current_tenant_id());
 
