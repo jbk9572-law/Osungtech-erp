@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { CustomerDetailPanel } from "@/components/customer-detail-panel";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
@@ -75,10 +76,38 @@ export default async function CustomersPage({
   const moreParams = new URLSearchParams(listParams);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/customers?${moreParams.toString()}`;
+  // "신규"(F2) 목적지 — 지금 걸어둔 검색어(q)는 유지한 채 id만 지워서
+  // 우측 패널이 다시 등록폼으로 돌아가게 한다.
+  const newHref = listParams.toString() ? `/customers?${listParams.toString()}` : "/customers";
+  const currentHref = selectedId
+    ? `/customers?${new URLSearchParams({ ...(q ? { q } : {}), ...(limitParam ? { limit: limitParam } : {}), id: selectedId }).toString()}`
+    : newHref;
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 출고처관리</h1>
+      <KeyboardShortcuts
+        shortcuts={{
+          F2: { href: newHref },
+          F5: { submitFormSelector: "#customers-search-form" },
+          Escape: { href: selectedId ? newHref : "/dashboard" },
+        }}
+      />
+      <div className="mb-1 erp-detail-header-row">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 출고처관리</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={newHref} className="erp-btn erp-btn-primary">
+            F2 신규
+          </Link>
+          <Link href={currentHref} className="erp-btn">
+            새로고침
+          </Link>
+          {selectedId && (
+            <Link href={newHref} className="erp-btn">
+              목록
+            </Link>
+          )}
+        </div>
+      </div>
 
       <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
@@ -88,7 +117,12 @@ export default async function CustomersPage({
               총 {formatNumber(customers.length)}건
             </span>
           </div>
-          <form method="get" className="erp-search" style={{ margin: 8, padding: 8 }}>
+          <form
+            id="customers-search-form"
+            method="get"
+            className="erp-search"
+            style={{ margin: 8, padding: 8, gap: 6 }}
+          >
             <input
               type="text"
               name="q"
@@ -98,6 +132,9 @@ export default async function CustomersPage({
               className="erp-input"
               style={{ width: "100%" }}
             />
+            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+              F5 조회
+            </button>
           </form>
           <div className="erp-split-list-body">
             {customers.map((c) => (
