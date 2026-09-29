@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { safeQuery } from "@/lib/safe-query";
-import { MessengerWidget } from "@/components/erp/messenger-widget";
+import { isFeatureEnabled } from "@/lib/require-feature-enabled";
+import { MessengerWidget, type MailPreviewItem, type NotificationItem } from "@/components/erp/messenger-widget";
 import type { MessengerChannel } from "@/lib/messenger-types";
 
 // 최근 메신저 메시지 100건 조회를 (dashboard)/layout.tsx의 메인
@@ -20,9 +21,28 @@ export async function MessengerWidgetPanel({
 }) {
   const supabase = await createClient();
 
-  const { data: allChannelId } = await safeQuery<string>(supabase.rpc("get_or_create_all_channel"));
+  const mailEnabled = await isFeatureEnabled(supabase, "mail");
 
-  const [{ data: channelRows }, { data: memberRows }, { data: messages }] = await Promise.all([
+  // allChannelId/mailAccount는 그 뒤 조회들(메시지/메일 미리보기)의 필터
+  // 값으로 쓰여야 해서 먼저 구해둔다.
+  const [{ data: allChannelId }, { data: mailAccount }] = await Promise.all([
+    safeQuery<string>(supabase.rpc("get_or_create_all_channel")),
+    mailEnabled
+      ? safeQuery<{ id: string }>(
+          supabase.from("mail_accounts").select("id").eq("user_id", currentUserId).maybeSingle(),
+        )
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const [
+    { data: channelRows },
+    { data: memberRows },
+    { data: messages },
+    { data: mailPreviewRows },
+    { count: mailUnreadCount },
+    { data: notificationRows },
+    { count: notifUnreadCount },
+  ] = await Promise.all([
     safeQuery<{ id: string; type: string; name: string | null }[]>(
       supabase
         .from("messenger_channels")
@@ -57,6 +77,50 @@ export async function MessengerWidgetPanel({
             .limit(100),
         )
       : Promise.resolve({ data: null }),
+    mailAccount
+      ? safeQuery<
+          { id: string; subject: string | null; from_name: string | null; from_address: string | null; sent_at: string | null; is_read: boolean }[]
+        >(
+          supabase
+            .from("mail_messages")
+            .select("id, subject, from_name, from_address, sent_at, is_read")
+            .eq("mail_account_id", mailAccount.id)
+            .eq("folder", "INBOX")
+            .order("sent_at", { ascending: false, nullsFirst: false })
+            .limit(8),
+        )
+      : Promise.resolve({ data: null }),
+    mailAccount
+      ? supabase
+          .from("mail_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("mail_account_id", mailAccount.id)
+          .eq("folder", "INBOX")
+          .eq("is_read", false)
+          .then(
+            (r) => r,
+            () => ({ count: 0 }),
+          )
+      : Promise.resolve({ count: 0 }),
+    safeQuery<
+      { id: string; type: string; title: string; body: string | null; url: string | null; is_read: boolean; created_at: string }[]
+    >(
+      supabase
+        .from("notification_events")
+        .select("id, type, title, body, url, is_read, created_at")
+        .eq("user_id", currentUserId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ),
+    supabase
+      .from("notification_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", currentUserId)
+      .eq("is_read", false)
+      .then(
+        (r) => r,
+        () => ({ count: 0 }),
+      ),
   ]);
 
   const membersByChannel = new Map<string, string[]>();
@@ -73,6 +137,25 @@ export async function MessengerWidgetPanel({
     memberIds: membersByChannel.get(c.id) ?? [],
   }));
 
+  const mailPreview: MailPreviewItem[] = (mailPreviewRows ?? []).map((m) => ({
+    id: m.id,
+    subject: m.subject,
+    fromName: m.from_name,
+    fromAddress: m.from_address,
+    sentAt: m.sent_at,
+    isRead: m.is_read,
+  }));
+
+  const notifications: NotificationItem[] = (notificationRows ?? []).map((n) => ({
+    id: n.id,
+    type: n.type,
+    title: n.title,
+    body: n.body,
+    url: n.url,
+    isRead: n.is_read,
+    createdAt: n.created_at,
+  }));
+
   return (
     <MessengerWidget
       channels={channels}
@@ -81,6 +164,11 @@ export async function MessengerWidgetPanel({
       profileNames={profileNames}
       currentUserId={currentUserId}
       isAdmin={isAdmin}
+      mailEnabled={mailEnabled && !!mailAccount}
+      initialMailPreview={mailPreview}
+      initialMailUnreadCount={mailUnreadCount ?? 0}
+      initialNotifications={notifications}
+      initialNotifUnreadCount={notifUnreadCount ?? 0}
     />
   );
 }

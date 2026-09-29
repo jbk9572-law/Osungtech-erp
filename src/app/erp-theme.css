@@ -2303,6 +2303,57 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 4px 8px;
 }
 
+/* 대화/메일/알림 3탭 허브 — 각 탭의 "홈 화면"(목록)에서만 보인다. */
+.erp-messenger-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  border-bottom: 1px solid var(--erp-border);
+  background: var(--erp-bg-subtle);
+}
+
+.erp-messenger-tab {
+  flex: 1;
+  position: relative;
+  height: 34px;
+  border: none;
+  background: none;
+  color: var(--erp-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+
+.erp-messenger-tab.active {
+  color: var(--erp-primary);
+  border-bottom-color: var(--erp-primary);
+  background: var(--erp-panel);
+}
+
+.erp-messenger-tab-dot {
+  position: absolute;
+  top: 6px;
+  right: calc(50% - 22px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--erp-danger);
+}
+
+.erp-messenger-tab-count {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 26px);
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--erp-danger);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+}
+
 .erp-messenger-search {
   position: relative;
   flex: 0 0 auto;

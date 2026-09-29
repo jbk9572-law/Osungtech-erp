@@ -15,8 +15,28 @@ import { fileKindIcon, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { markNotificationRead, markAllNotificationsRead } from "@/lib/notification-actions";
 
 export type { MessengerMessage };
+
+export type MailPreviewItem = {
+  id: string;
+  subject: string | null;
+  fromName: string | null;
+  fromAddress: string | null;
+  sentAt: string | null;
+  isRead: boolean;
+};
+
+export type NotificationItem = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  url: string | null;
+  isRead: boolean;
+  createdAt: string;
+};
 
 const MESSAGE_COLUMNS = "id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at";
 
@@ -75,7 +95,37 @@ function channelIcon(type: MessengerChannel["type"]): string {
   return "👤";
 }
 
+const NOTIF_ICONS: Record<string, string> = {
+  announcement: "📢",
+  messenger_group: "👥",
+  messenger_dm: "👤",
+  approval_pending: "📝",
+  approval_result: "✅",
+  mail: "📧",
+};
+
+function notifIcon(type: string): string {
+  return NOTIF_ICONS[type] ?? "🔔";
+}
+
+// 알림/메일 미리보기 목록에서 "3분 전"/"어제" 같은 상대 시각을 짧게
+// 보여준다 — 메신저 쪽 날짜 구분선(formatDateLabel)과 달리 여기는 한
+// 줄짜리 목록이라 절대 날짜 대신 상대 시각이 더 쓸모 있다.
+function formatRelativeTime(iso: string | null): string {
+  if (!iso) return "";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "방금";
+  if (diffMin < 60) return `${diffMin}분 전`;
+  const diffHour = Math.floor(diffMin / 60);
+  if (diffHour < 24) return `${diffHour}시간 전`;
+  const diffDay = Math.floor(diffHour / 24);
+  if (diffDay < 7) return `${diffDay}일 전`;
+  return new Date(iso).toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" });
+}
+
 type View = "chat" | "list" | "newDm" | "newGroup";
+type HubTab = "chat" | "mail" | "notifications";
 type WidgetPosition = "left" | "right";
 
 const MESSENGER_HIDDEN_KEY = "erp-messenger-hidden";
@@ -92,6 +142,11 @@ export function MessengerWidget({
   profileNames,
   currentUserId,
   isAdmin,
+  mailEnabled,
+  initialMailPreview,
+  initialMailUnreadCount,
+  initialNotifications,
+  initialNotifUnreadCount,
 }: {
   channels: MessengerChannel[];
   activeChannelId: string | null;
@@ -99,6 +154,14 @@ export function MessengerWidget({
   profileNames: Record<string, string>;
   currentUserId: string;
   isAdmin: boolean;
+  // 메일 기능 자체가 꺼져 있거나(테넌트 기능관리), 로그인한 사람이 아직
+  // 메일 계정을 연동하지 않았으면 메일 탭을 아예 숨긴다 — 탭만 있고
+  // 눌러도 빈 화면만 나오는 걸 방지.
+  mailEnabled: boolean;
+  initialMailPreview: MailPreviewItem[];
+  initialMailUnreadCount: number;
+  initialNotifications: NotificationItem[];
+  initialNotifUnreadCount: number;
 }) {
   const [open, setOpen] = useState(false);
   const [hasUnseen, setHasUnseen] = useState(false);
@@ -157,6 +220,38 @@ export function MessengerWidget({
       return next;
     });
   }
+  // 대화/메일/알림 3탭 허브 — 대화 탭은 기존 view(list/chat/newDm/newGroup)
+  // 상태를 그대로 쓰고, 메일/알림 탭은 여기 hubTab으로만 구분한다. 메일
+  // 미리보기/알림 목록은 최초 진입 시 서버가 내려준 값으로 시작하고, 알림은
+  // 읽음 처리를 낙관적으로 반영해야 해서 로컬 state로 따로 든다.
+  const [hubTab, setHubTab] = useState<HubTab>("chat");
+  const [mailPreview] = useState(initialMailPreview);
+  const [mailUnreadCount] = useState(initialMailUnreadCount);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifUnreadCount, setNotifUnreadCount] = useState(initialNotifUnreadCount);
+  const [markingAllRead, startMarkAllTransition] = useTransition();
+
+  function handleOpenNotification(n: NotificationItem) {
+    if (!n.isRead) {
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, isRead: true } : x)));
+      setNotifUnreadCount((prev) => Math.max(0, prev - 1));
+      markNotificationRead(n.id);
+    }
+    if (n.url) {
+      setOpen(false);
+      router.push(n.url);
+    }
+  }
+
+  function handleMarkAllNotificationsRead() {
+    if (notifUnreadCount === 0) return;
+    setNotifications((prev) => prev.map((x) => ({ ...x, isRead: true })));
+    setNotifUnreadCount(0);
+    startMarkAllTransition(async () => {
+      await markAllNotificationsRead();
+    });
+  }
+
   const [sending, startSendTransition] = useTransition();
   const [, startDeleteTransition] = useTransition();
   const [creatingChannel, startChannelTransition] = useTransition();
@@ -177,6 +272,32 @@ export function MessengerWidget({
   // "/todos/[id]"처럼 자체 Escape 단축키가 있는 화면에서 메신저를 열어둔
   // 채 Escape를 누르면 패널은 그대로 열려있고 화면만 목록으로 튕겨나간다.
   useEscapeToClose(open, () => setOpen(false));
+
+  async function openChannel(channelId: string) {
+    setActiveChannelId(channelId);
+    setView("chat");
+    setSearchQuery("");
+    setUnseenChannelIds((prev) => {
+      if (!prev.has(channelId)) return prev;
+      const next = new Set(prev);
+      next.delete(channelId);
+      return next;
+    });
+    if (unseenChannelIds.size <= 1) setHasUnseen(false);
+
+    if (!messagesByChannel[channelId]) {
+      setLoadingChannel(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("messenger_messages")
+        .select(MESSAGE_COLUMNS)
+        .eq("channel_id", channelId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      setMessagesByChannel((prev) => ({ ...prev, [channelId]: (data ?? []).slice().reverse() }));
+      setLoadingChannel(false);
+    }
+  }
 
   // 알림(새 결재 요청 등과 같은 방식의 메신저 DM/그룹 알림, notify())을
   // 클릭해서 들어온 경우, 그 알림이 가리키는 대화를 바로 열어준다.
@@ -252,32 +373,6 @@ export function MessengerWidget({
   function nameFor(senderId: string | null) {
     if (!senderId) return "알 수 없음";
     return profileNames[senderId] ?? "구성원";
-  }
-
-  async function openChannel(channelId: string) {
-    setActiveChannelId(channelId);
-    setView("chat");
-    setSearchQuery("");
-    setUnseenChannelIds((prev) => {
-      if (!prev.has(channelId)) return prev;
-      const next = new Set(prev);
-      next.delete(channelId);
-      return next;
-    });
-    if (unseenChannelIds.size <= 1) setHasUnseen(false);
-
-    if (!messagesByChannel[channelId]) {
-      setLoadingChannel(true);
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("messenger_messages")
-        .select(MESSAGE_COLUMNS)
-        .eq("channel_id", channelId)
-        .order("created_at", { ascending: false })
-        .limit(100);
-      setMessagesByChannel((prev) => ({ ...prev, [channelId]: (data ?? []).slice().reverse() }));
-      setLoadingChannel(false);
-    }
   }
 
   function handleSend(formData: FormData) {
@@ -449,7 +544,9 @@ export function MessengerWidget({
         aria-label="사내메신저 열기"
       >
         💬
-        {hasUnseen && <span className="erp-messenger-fab-badge" aria-hidden />}
+        {(hasUnseen || mailUnreadCount > 0 || notifUnreadCount > 0) && (
+          <span className="erp-messenger-fab-badge" aria-hidden />
+        )}
       </button>
     );
   }
@@ -472,10 +569,15 @@ export function MessengerWidget({
     []
   );
 
+  // "홈 화면"(각 탭의 목록 화면)에서만 탭 바를 보여준다 — 대화창을 열었거나
+  // 새 DM/그룹 만들기처럼 뒤로가기가 있는 화면에서는 공간을 아끼려고 숨긴다.
+  const isHomeScreen = (hubTab === "chat" && view === "list") || hubTab === "mail" || hubTab === "notifications";
+  const anyChatUnseen = hasUnseen || unseenChannelIds.size > 0;
+
   return (
     <div className={`erp-messenger-panel${position === "left" ? " pos-left" : ""}`}>
       <div className="erp-messenger-header">
-        {view === "chat" ? (
+        {hubTab === "chat" && view === "chat" ? (
           <>
             <button type="button" onClick={() => setView("list")} aria-label="채널 목록">
               ‹ {activeChannel ? `${channelIcon(activeChannel.type)} ${channelLabel(activeChannel, profileNames, currentUserId)}` : "사내메신저"}
@@ -487,12 +589,14 @@ export function MessengerWidget({
         ) : (
           <>
             <span>
-              {view === "list" && "사내메신저"}
-              {view === "newDm" && "새 대화 상대 선택"}
-              {view === "newGroup" && "새 그룹 만들기"}
+              {hubTab === "chat" && view === "list" && "사내메신저"}
+              {hubTab === "chat" && view === "newDm" && "새 대화 상대 선택"}
+              {hubTab === "chat" && view === "newGroup" && "새 그룹 만들기"}
+              {hubTab === "mail" && "메일"}
+              {hubTab === "notifications" && "알림"}
             </span>
             <div style={{ display: "flex", alignItems: "center" }}>
-              {view === "list" && (
+              {isHomeScreen && (
                 <>
                   <button type="button" onClick={togglePosition} aria-label="반대쪽으로 이동" title="반대쪽으로 이동">
                     ⇄
@@ -504,17 +608,176 @@ export function MessengerWidget({
               )}
               <button
                 type="button"
-                onClick={() => (view === "list" ? setOpen(false) : setView("list"))}
-                aria-label={view === "list" ? "최소화" : "취소"}
+                onClick={() => (isHomeScreen ? setOpen(false) : setView("list"))}
+                aria-label={isHomeScreen ? "최소화" : "취소"}
               >
-                {view === "list" ? "─" : "✕"}
+                {isHomeScreen ? "─" : "✕"}
               </button>
             </div>
           </>
         )}
       </div>
 
-      {view === "list" && (
+      {isHomeScreen && (
+        <div className="erp-messenger-tabs">
+          <button
+            type="button"
+            className={`erp-messenger-tab${hubTab === "chat" ? " active" : ""}`}
+            onClick={() => {
+              setHubTab("chat");
+              setView("list");
+            }}
+          >
+            💬 대화
+            {anyChatUnseen && <span className="erp-messenger-tab-dot" aria-hidden />}
+          </button>
+          {mailEnabled && (
+            <button
+              type="button"
+              className={`erp-messenger-tab${hubTab === "mail" ? " active" : ""}`}
+              onClick={() => setHubTab("mail")}
+            >
+              📧 메일
+              {mailUnreadCount > 0 && <span className="erp-messenger-tab-count">{mailUnreadCount}</span>}
+            </button>
+          )}
+          <button
+            type="button"
+            className={`erp-messenger-tab${hubTab === "notifications" ? " active" : ""}`}
+            onClick={() => setHubTab("notifications")}
+          >
+            🔔 알림
+            {notifUnreadCount > 0 && <span className="erp-messenger-tab-count">{notifUnreadCount}</span>}
+          </button>
+        </div>
+      )}
+
+      {hubTab === "mail" && (
+        <div className="erp-messenger-body" style={{ padding: 0 }}>
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {mailPreview.length === 0 && (
+              <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+                받은 메일이 없습니다.
+              </p>
+            )}
+            {mailPreview.map((m) => (
+              <a
+                key={m.id}
+                href={`/mail?id=${m.id}`}
+                onClick={() => setOpen(false)}
+                className="erp-messenger-channel-row"
+                style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {!m.isRead && <span className="erp-messenger-fab-badge" style={{ position: "static" }} aria-hidden />}
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      fontWeight: m.isRead ? 500 : 700,
+                    }}
+                  >
+                    {m.subject || "(제목 없음)"}
+                  </span>
+                  <span style={{ flex: "0 0 auto", fontSize: 10.5, color: "var(--erp-text-muted)" }}>
+                    {formatRelativeTime(m.sentAt)}
+                  </span>
+                </span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--erp-text-muted)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {m.fromName || m.fromAddress || "발신자 미상"}
+                </span>
+              </a>
+            ))}
+          </div>
+          <a
+            href="/mail"
+            onClick={() => setOpen(false)}
+            className="erp-btn"
+            style={{ margin: 10, textAlign: "center", fontSize: 12 }}
+          >
+            메일함 전체보기
+          </a>
+        </div>
+      )}
+
+      {hubTab === "notifications" && (
+        <div className="erp-messenger-body" style={{ padding: 0 }}>
+          {notifUnreadCount > 0 && (
+            <div style={{ padding: "8px 10px 0", textAlign: "right" }}>
+              <button
+                type="button"
+                onClick={handleMarkAllNotificationsRead}
+                disabled={markingAllRead}
+                style={{ fontSize: 11, color: "var(--erp-primary)", background: "none", border: "none", cursor: "pointer" }}
+              >
+                모두 읽음
+              </button>
+            </div>
+          )}
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {notifications.length === 0 && (
+              <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+                알림이 없습니다.
+              </p>
+            )}
+            {notifications.map((n) => (
+              <button
+                key={n.id}
+                type="button"
+                onClick={() => handleOpenNotification(n)}
+                className="erp-messenger-channel-row"
+                style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span aria-hidden>{notifIcon(n.type)}</span>
+                  {!n.isRead && <span className="erp-messenger-fab-badge" style={{ position: "static" }} aria-hidden />}
+                  <span
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      fontWeight: n.isRead ? 500 : 700,
+                    }}
+                  >
+                    {n.title}
+                  </span>
+                  <span style={{ flex: "0 0 auto", fontSize: 10.5, color: "var(--erp-text-muted)" }}>
+                    {formatRelativeTime(n.createdAt)}
+                  </span>
+                </span>
+                {n.body && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--erp-text-muted)",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {n.body}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hubTab === "chat" && view === "list" && (
         <div className="erp-messenger-body" style={{ padding: 0 }}>
           <div style={{ display: "flex", gap: 6, padding: 10, borderBottom: "1px solid var(--erp-border)" }}>
             <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newDm")}>
@@ -545,7 +808,7 @@ export function MessengerWidget({
         </div>
       )}
 
-      {view === "newDm" && (
+      {hubTab === "chat" && view === "newDm" && (
         <div className="erp-messenger-body" style={{ padding: 0, overflowY: "auto" }}>
           {otherProfiles.length === 0 && (
             <p className="erp-grid-empty" style={{ fontSize: 12 }}>
@@ -566,7 +829,7 @@ export function MessengerWidget({
         </div>
       )}
 
-      {view === "newGroup" && (
+      {hubTab === "chat" && view === "newGroup" && (
         <div className="erp-messenger-body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <input
             type="text"
@@ -604,7 +867,7 @@ export function MessengerWidget({
         </div>
       )}
 
-      {view === "chat" && (
+      {hubTab === "chat" && view === "chat" && (
         <>
           <div className="erp-messenger-search">
             <input
