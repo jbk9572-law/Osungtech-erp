@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateSupplierForm } from "@/components/create-supplier-form";
-import { SupplierGridTable } from "@/components/supplier-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
-import { importSuppliersExcel } from "@/app/(dashboard)/suppliers/actions";
+import { SupplierDetailPanel } from "@/components/supplier-detail-panel";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { DeleteButton } from "@/components/delete-button";
+import { importSuppliersExcel, deleteSupplier } from "@/app/(dashboard)/suppliers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { isUuid } from "@/lib/is-uuid";
 import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
 
@@ -17,9 +20,10 @@ const LIST_LIMIT_STEP = 300;
 export default async function SuppliersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; limit?: string }>;
+  searchParams: Promise<{ q?: string; limit?: string; id?: string }>;
 }) {
-  const { q, limit: limitParam } = await searchParams;
+  const { q, limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const keyword = q?.trim().toLowerCase();
@@ -61,76 +65,138 @@ export default async function SuppliersPage({
       )
     : allSuppliers;
 
-  const moreParams = new URLSearchParams();
-  if (q) moreParams.set("q", q);
+  const listParams = new URLSearchParams();
+  if (q) listParams.set("q", q);
+  if (limitParam) listParams.set("limit", limitParam);
+  const rowHref = (supplierId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", supplierId);
+    return `/suppliers?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/suppliers?${moreParams.toString()}`;
+  const newHref = listParams.toString() ? `/suppliers?${listParams.toString()}` : "/suppliers";
+  const currentHref = selectedId
+    ? `/suppliers?${new URLSearchParams({ ...(q ? { q } : {}), ...(limitParam ? { limit: limitParam } : {}), id: selectedId }).toString()}`
+    : newHref;
 
   return (
     <div>
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 공급처관리</h1>
-
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">공급처 추가</span>
-        </div>
-        <div className="erp-detail-body">
-          <CreateSupplierForm />
+      <KeyboardShortcuts
+        shortcuts={{
+          F2: { href: newHref },
+          F5: { submitFormSelector: "#suppliers-search-form" },
+          Escape: { href: selectedId ? newHref : "/dashboard" },
+        }}
+      />
+      <div className="mb-1 erp-detail-header-row">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 공급처관리</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={newHref} className="erp-btn erp-btn-primary">
+            F2 신규
+          </Link>
+          <Link href={currentHref} className="erp-btn">
+            새로고침
+          </Link>
+          {selectedId && (
+            <>
+              <Link href={newHref} className="erp-btn">
+                목록
+              </Link>
+              <DeleteButton
+                action={deleteSupplier}
+                id={selectedId}
+                confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
+              />
+            </>
+          )}
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">엑셀 일괄등록</span>
-        </div>
-        <div className="erp-detail-body">
-          <ExcelImportForm
-            action={importSuppliersExcel}
-            templateHref="/templates/suppliers-template.xlsx"
-            exportHref="/api/suppliers/export"
-          />
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>공급처 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+              총 {formatNumber(suppliers.length)}건
+            </span>
+          </div>
+          <form
+            id="suppliers-search-form"
+            method="get"
+            className="erp-search"
+            style={{ margin: 8, padding: 8, gap: 6 }}
+          >
+            <input
+              type="text"
+              name="q"
+              autoComplete="off"
+              defaultValue={q ?? ""}
+              placeholder="업체명, 사업자번호, 담당자 검색"
+              className="erp-input"
+              style={{ width: "100%" }}
+            />
+            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+              F5 조회
+            </button>
+          </form>
+          <div className="erp-split-list-body">
+            {suppliers.map((s) => (
+              <Link
+                key={s.id}
+                href={rowHref(s.id)}
+                className={`erp-split-list-row${s.id === selectedId ? " active" : ""}`}
+              >
+                {s.name}
+                <div className="erp-split-list-row-sub">{s.supplier_code}</div>
+              </Link>
+            ))}
+            {suppliers.length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                조건에 맞는 공급처가 없습니다.
+              </p>
+            )}
+          </div>
+          {!keyword && hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <SupplierDetailPanel id={selectedId} />
+          ) : (
+            <>
+              <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">공급처 추가</span>
+                </div>
+                <div className="erp-detail-body">
+                  <CreateSupplierForm />
+                </div>
+              </div>
+
+              <div className="erp-detail">
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">엑셀 일괄등록</span>
+                </div>
+                <div className="erp-detail-body">
+                  <ExcelImportForm
+                    action={importSuppliersExcel}
+                    templateHref="/templates/suppliers-template.xlsx"
+                    exportHref="/api/suppliers/export"
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <form method="get" className="erp-search">
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label htmlFor="search-q">공급처 검색</label>
-          <input
-            id="search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="업체명, 사업자번호, 대표자, 담당자, 연락처, 이메일, 주소, 메모"
-            className="erp-input"
-            style={{ width: "100%" }}
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          조회
-        </button>
-        {q && (
-          <Link href="/suppliers" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
-
-      {!keyword && (
-        <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-          최근 등록순 {formatNumber(limit)}개까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-        </p>
-      )}
-
-      <SupplierGridTable rows={suppliers} />
-
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <Link href={moreHref} className="erp-btn">
-            더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
