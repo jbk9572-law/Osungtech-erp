@@ -5,7 +5,6 @@ import { safeQuery } from "@/lib/safe-query";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
-import { MessengerWidgetPanel } from "@/components/erp/messenger-widget-panel";
 import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
 import "@/app/erp-theme.css";
 
@@ -41,7 +40,7 @@ export default async function DashboardLayout({
   // 있던 설계 의도를 safeQuery로 실제로 구현한다.
   const [
     { data: company },
-    { data: profiles },
+    { data: myProfile },
     { data: tenant },
     { data: isPlatformAdmin },
     { data: announcements },
@@ -53,7 +52,14 @@ export default async function DashboardLayout({
           .select("name, logo_mark_url")
           .maybeSingle(),
       ),
-      safeQuery(supabase.from("profiles").select("id, full_name, is_demo, role")),
+      // 예전엔 메신저 위젯의 상대방 이름 표시(profileNames)까지 여기서
+      // 같이 챙기느라 전 직원 프로필을 통째로 가져왔다 — 메신저가 팝업
+      // 위젯에서 /messenger 전용 화면으로 옮겨가면서(그 화면이 필요할 때
+      // 직접 가져옴) 여기서는 내 프로필 한 행(데모/관리자 여부 판정용)만
+      // 있으면 된다.
+      safeQuery<{ is_demo: boolean; role: string }>(
+        supabase.from("profiles").select("is_demo, role").eq("id", user.id).maybeSingle(),
+      ),
       // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
       // 별도 id 조건이 필요 없다. 멀티테넌트 전환(migration 098~) 적용
       // 전이거나 실패해도 화면 전체가 죽으면 안 되므로 그냥 빈 배열로
@@ -84,10 +90,6 @@ export default async function DashboardLayout({
       ),
     ]);
 
-  const profileNames = Object.fromEntries(
-    (profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]),
-  );
-  const myProfile = (profiles ?? []).find((p) => p.id === user.id);
   const isDemo = myProfile?.is_demo ?? false;
   const isAdmin = myProfile?.role === "admin";
   const disabledFeatures = tenant?.disabled_features ?? [];
@@ -105,11 +107,6 @@ export default async function DashboardLayout({
       notificationBell={
         <Suspense fallback={<button type="button" className="erp-bell-btn" aria-label="알림">🔔</button>}>
           <NotificationBellPanel userId={user.id} />
-        </Suspense>
-      }
-      messengerWidget={
-        <Suspense fallback={null}>
-          <MessengerWidgetPanel profileNames={profileNames} currentUserId={user.id} isAdmin={isAdmin} />
         </Suspense>
       }
       usageWidget={

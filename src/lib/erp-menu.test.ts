@@ -58,7 +58,7 @@ describe("getVisibleMenuItems", () => {
 
   it("공유 결재선처럼 관리자 전용이 아닌 화면은 비관리자에게도 보인다", () => {
     const items = getVisibleMenuItems([], false);
-    expect(items.some((i) => i.href === "/approvals/matrix")).toBe(true);
+    expect(items.some((i) => i.href === "/approvals/lines")).toBe(true);
   });
 
   it("인사관리 중 관리자 전용 화면(급여명세 등)은 비관리자 목록에 없다", () => {

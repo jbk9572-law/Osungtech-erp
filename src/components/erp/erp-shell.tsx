@@ -28,7 +28,6 @@ export function ErpShell({
   logoUrl,
   email,
   notificationBell,
-  messengerWidget,
   usageWidget,
   disabledFeatures,
   isAdmin,
@@ -42,7 +41,6 @@ export function ErpShell({
   logoUrl?: string | null;
   email: string | null;
   notificationBell: React.ReactNode;
-  messengerWidget: React.ReactNode;
   usageWidget: React.ReactNode;
   disabledFeatures: string[];
   isAdmin: boolean;
@@ -144,7 +142,6 @@ export function ErpShell({
         </div>
       </div>
       <StatusBar email={email} companyName={companyName} />
-      {messengerWidget}
       {modal}
     </div>
   );

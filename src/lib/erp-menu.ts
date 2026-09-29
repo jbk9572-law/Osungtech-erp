@@ -71,13 +71,15 @@ export const MENU_GROUPS: MenuGroup[] = [
     items: [
       { label: "게시판", href: "/board", flatLabel: "게시판" },
       { label: "공지사항", href: "/announcements" },
+      { label: "메신저", href: "/messenger", featureKey: "messenger" },
       { label: "메일함", href: "/mail", featureKey: "mail" },
       { label: "문서함", href: "/hr/documents" },
       { label: "문서 양식 관리", href: "/hr/documents/templates", adminOnly: true },
       { label: "기안함", href: "/approvals", featureKey: "approvals" },
-      { label: "임시저장함", href: "/approvals/drafts", featureKey: "approvals" },
-      { label: "공유 결재선", href: "/approvals/lines", featureKey: "approvals" },
-      { label: "결재매트릭스", href: "/approvals/matrix", featureKey: "approvals" },
+      // 임시저장함(구 별도 화면)은 기안함의 "임시저장" 탭으로,
+      // 공유결재선/결재매트릭스(구 별도 화면 2개)는 이 화면의 탭으로
+      // 통폐합했다 — 감사에서 지적된 화면 통폐합(2026-09-29).
+      { label: "결재선 설정", href: "/approvals/lines", featureKey: "approvals" },
       // 전자결재(사내 기안)와 결재 인프라(결재선/전결권)는 그대로
       // 재사용하되, 회사 밖으로 나가는 공식 문서를 다루는 별도 모듈이라
       // featureKey는 따로 유지한다.

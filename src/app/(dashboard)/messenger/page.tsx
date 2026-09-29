@@ -1,38 +1,40 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { safeQuery } from "@/lib/safe-query";
 import { isFeatureEnabled } from "@/lib/require-feature-enabled";
-import { MessengerWidget, type MailPreviewItem, type NotificationItem } from "@/components/erp/messenger-widget";
+import { MessengerPage, type MailPreviewItem, type NotificationItem } from "@/components/erp/messenger-page";
 import type { MessengerChannel } from "@/lib/messenger-types";
 
-// 최근 메신저 메시지 100건 조회를 (dashboard)/layout.tsx의 메인
-// Promise.all에서 분리했다 — usage-widget/notification-bell과 같은
-// 이유: 페이지 이동마다 항상 같이 돌던 조회 하나를 줄여 요청당 CPU
-// 부담을 낮춘다. profileNames/currentUserId는 layout.tsx가 이미(같은
-// 요청 안에서) profiles를 가져온 김에 그대로 넘겨받는다 — isDemo
-// 판별에도 그 값이 필요해서 profiles 조회 자체는 메인 경로에 남겨뒀다.
-export async function MessengerWidgetPanel({
-  profileNames,
-  currentUserId,
-  isAdmin,
-}: {
-  profileNames: Record<string, string>;
-  currentUserId: string;
-  isAdmin: boolean;
-}) {
+// 예전엔 우측하단에 항상 떠 있는 팝업 위젯이었는데(모든 화면 전역),
+// 이제 그룹웨어 > 메신저로 찾아 들어오는 일반 페이지다 — 다른
+// featureKey 붙은 화면들처럼 이 화면도 꺼둘 수 있어야 해서
+// requireFeatureEnabled로 가드한다.
+export default async function MessengerPageRoute() {
   const supabase = await createClient();
+  await isFeatureEnabled(supabase, "messenger").then((enabled) => {
+    if (!enabled) redirect("/dashboard");
+  });
+
+  const user = await getUser();
+  if (!user) redirect("/login");
 
   const mailEnabled = await isFeatureEnabled(supabase, "mail");
 
-  // allChannelId/mailAccount는 그 뒤 조회들(메시지/메일 미리보기)의 필터
-  // 값으로 쓰여야 해서 먼저 구해둔다.
-  const [{ data: allChannelId }, { data: mailAccount }] = await Promise.all([
-    safeQuery<string>(supabase.rpc("get_or_create_all_channel")),
+  const [{ data: profiles }, { data: mailAccount }] = await Promise.all([
+    safeQuery<{ id: string; full_name: string | null; role: string }[]>(
+      supabase.from("profiles").select("id, full_name, role"),
+    ),
     mailEnabled
       ? safeQuery<{ id: string }>(
-          supabase.from("mail_accounts").select("id").eq("user_id", currentUserId).maybeSingle(),
+          supabase.from("mail_accounts").select("id").eq("user_id", user.id).maybeSingle(),
         )
       : Promise.resolve({ data: null }),
   ]);
+
+  const profileNames = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]));
+  const isAdmin = (profiles ?? []).find((p) => p.id === user.id)?.role === "admin";
+
+  const { data: allChannelId } = await safeQuery<string>(supabase.rpc("get_or_create_all_channel"));
 
   const [
     { data: channelRows },
@@ -108,14 +110,14 @@ export async function MessengerWidgetPanel({
       supabase
         .from("notification_events")
         .select("id, type, title, body, url, is_read, created_at")
-        .eq("user_id", currentUserId)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20),
     ),
     supabase
       .from("notification_events")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", currentUserId)
+      .eq("user_id", user.id)
       .eq("is_read", false)
       .then(
         (r) => r,
@@ -157,12 +159,12 @@ export async function MessengerWidgetPanel({
   }));
 
   return (
-    <MessengerWidget
+    <MessengerPage
       channels={channels}
       activeChannelId={allChannelId ?? channels[0]?.id ?? null}
       initialMessages={(messages ?? []).slice().reverse()}
       profileNames={profileNames}
-      currentUserId={currentUserId}
+      currentUserId={user.id}
       isAdmin={isAdmin}
       mailEnabled={mailEnabled && !!mailAccount}
       initialMailPreview={mailPreview}

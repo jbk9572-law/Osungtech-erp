@@ -900,8 +900,6 @@
   .erp-tree-backdrop,
   .erp-tabbar,
   .erp-statusbar,
-  .erp-messenger-fab,
-  .erp-messenger-panel,
   .erp-nav-overlay,
   .erp-toast-stack,
   .erp-demo-banner,
@@ -2192,68 +2190,22 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-primary);
 }
 
-/* ── 사내메신저 위젯(우측 하단 최소화/팝업) ───────────────────── */
-.erp-messenger-fab {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 400;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: none;
-  background: var(--erp-primary);
-  color: #fff;
-  font-size: 22px;
-  box-shadow: var(--erp-shadow-lg);
+/* ── 사내메신저(그룹웨어 > 메신저 페이지) ───────────────────── */
+/* 예전엔 우측 하단에 항상 떠 있는 팝업 위젯이었는데, 메뉴로 찾아
+   들어오는 일반 페이지로 바꿨다 — 그래서 position:fixed 대신 다른
+   목록/상세 화면들처럼 .erp-page 안에서 자연스러운 카드 높이로 앉힌다. */
+.erp-messenger-page {
   display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.erp-messenger-fab:hover {
-  background: var(--erp-primary-dark);
-}
-
-/* 위젯을 화면 반대쪽(왼쪽)에 띄우기로 한 경우 — messenger-widget.tsx의
-   position 상태에 따라 붙는다. */
-.erp-messenger-fab.pos-left,
-.erp-messenger-panel.pos-left {
-  left: 20px;
-  right: auto;
-}
-
-/* "숨김" 버튼을 눌러 완전히 숨긴 상태 — 동그란 버튼조차 안 보이는 대신,
-   눈에 거의 안 띄는 작은 탭 하나만 남겨서 다시 꺼낼 방법은 있게 한다. */
-.erp-messenger-reshow-tab {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 400;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 1px solid var(--erp-border);
+  flex-direction: column;
+  height: min(78vh, 760px);
+  min-height: 420px;
   background: var(--erp-panel);
-  color: var(--erp-text-muted);
-  font-size: 13px;
-  opacity: 0.55;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.12s ease;
+  border: 1px solid var(--erp-border);
+  border-radius: 0;
+  overflow: hidden;
 }
 
-.erp-messenger-reshow-tab:hover {
-  opacity: 1;
-}
-
-.erp-messenger-reshow-tab.pos-left {
-  left: 20px;
-  right: auto;
-}
-
-.erp-messenger-fab-badge {
+.erp-messenger-unread-dot {
   position: absolute;
   top: 2px;
   right: 2px;
@@ -2262,24 +2214,6 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 50%;
   background: var(--erp-danger);
   border: 2px solid #fff;
-}
-
-.erp-messenger-panel {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 400;
-  width: 340px;
-  height: 460px;
-  max-height: calc(100vh - 40px);
-  background: var(--erp-panel);
-  border: 1px solid var(--erp-border);
-  border-radius: 0;
-  box-shadow: var(--erp-shadow-lg);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: erp-toast-in 0.2s ease-out;
 }
 
 .erp-messenger-header {
@@ -2303,7 +2237,8 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 4px 8px;
 }
 
-/* 대화/메일/알림 3탭 허브 — 각 탭의 "홈 화면"(목록)에서만 보인다. */
+/* 대화/메일/알림 3탭 허브 — 항상 보이고, "대화" 탭 안에서만 목록/채팅/
+   새 DM·그룹 만들기로 한 번 더 나뉜다. */
 .erp-messenger-tabs {
   flex: 0 0 auto;
   display: flex;
@@ -2311,9 +2246,17 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-bg-subtle);
 }
 
+/* 배지(dot/count)를 절대좌표 대신 flex 자식으로 라벨 옆에 나란히 둔다 —
+   이전엔 "탭 중앙 텍스트 기준 오른쪽으로 N px" 식 절대좌표였는데, 그
+   N이 "메일"/"알림" 같은 라벨 실제 폭을 가정한 매직넘버라 화면 폭이
+   달라지면(플로팅 위젯의 좁은 폭 vs 전체 페이지의 넓은 탭 폭) 배지가
+   글자 위에 겹쳐 보이는 버그가 있었다. */
 .erp-messenger-tab {
   flex: 1;
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   height: 34px;
   border: none;
   background: none;
@@ -2330,9 +2273,6 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-messenger-tab-dot {
-  position: absolute;
-  top: 6px;
-  right: calc(50% - 22px);
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -2340,9 +2280,6 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-messenger-tab-count {
-  position: absolute;
-  top: 4px;
-  right: calc(50% - 26px);
   min-width: 14px;
   height: 14px;
   padding: 0 3px;
@@ -2704,20 +2641,11 @@ a.erp-detail-tab:hover:not(.active) {
     z-index: 499;
   }
 
-  /* 사내메신저 패널: 고정 340px 폭이 좁은 화면에서는 여백 없이 꽉 끼므로,
-     화면 좌우에 여백만 두고 폭을 화면에 맞춰 늘어나게 한다. */
-  .erp-messenger-panel {
-    left: 12px;
-    right: 12px;
-    width: auto;
-  }
-
   /* 알림 종 드롭다운: 종 오른쪽에 백업/복원·비밀번호 변경·로그아웃이
      더 있어서 종 버튼이 화면 맨 오른쪽 끝에 붙어있지 않다. 그 상태로
      고정폭(300px) 드롭다운을 종 버튼 기준 오른쪽 정렬하면 왼쪽으로
      화면 밖까지 밀려나가 .erp의 overflow-x: hidden에 잘려 보였다.
-     사내메신저 패널과 같은 방식으로, 종 버튼이 아니라 화면 기준
-     좌우 여백만 주는 고정 위치로 바꾼다. */
+     종 버튼이 아니라 화면 기준 좌우 여백만 주는 고정 위치로 바꾼다. */
   .erp-bell-dropdown {
     position: fixed;
     top: 40px;
