@@ -4,7 +4,8 @@ import { CreateCustomerForm } from "@/components/create-customer-form";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { CustomerDetailPanel } from "@/components/customer-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
+import { DeleteButton } from "@/components/delete-button";
+import { importCustomersExcel, deleteCustomer } from "@/app/(dashboard)/customers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
@@ -102,9 +103,16 @@ export default async function CustomersPage({
             새로고침
           </Link>
           {selectedId && (
-            <Link href={newHref} className="erp-btn">
-              목록
-            </Link>
+            <>
+              <Link href={newHref} className="erp-btn">
+                목록
+              </Link>
+              <DeleteButton
+                action={deleteCustomer}
+                id={selectedId}
+                confirmMessage="이 출고처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
+              />
+            </>
           )}
         </div>
       </div>

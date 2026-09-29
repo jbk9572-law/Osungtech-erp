@@ -12,7 +12,6 @@ import { ClickableRow } from "@/components/clickable-row";
 import { AgingBadge } from "@/components/aging-badge";
 import {
   updateCustomer,
-  deleteCustomer,
   addCustomerPayment,
   deleteCustomerPayment,
   updateCustomerProductPriceNotes,
@@ -81,16 +80,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
 
   return (
     <>
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">{customer.name}</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <DeleteButton
-            action={deleteCustomer}
-            id={customer.id}
-            confirmMessage="이 출고처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
-          />
-        </div>
-      </div>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">{customer.name}</h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {customer.business_number ?? "사업자번호 미등록"} · {customer.contact_name ?? "담당자 미등록"}
       </p>

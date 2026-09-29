@@ -1522,14 +1522,14 @@ a.erp-detail-tab:hover:not(.active) {
    기준(768px)을 그대로 따른다 — 넓은 화면에선 항상 둘 다 보이고,
    좁은 화면에선 목록 또는 상세 중 하나만 보이게 전환한다. */
 .erp-split-shell {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(220px, 25%) minmax(0, 1fr);
   gap: 10px;
   align-items: stretch;
   min-height: 0;
 }
 
 .erp-split-list {
-  flex: 0 0 280px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -1583,8 +1583,13 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-split-detail {
-  flex: 1;
   min-width: 0;
+  min-height: 0;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  border: 1px solid var(--erp-border-strong);
+  background: var(--erp-panel);
+  padding: 14px;
 }
 
 @media (max-width: 768px) {
@@ -1598,7 +1603,8 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-split-shell[data-mobile-view="detail"] .erp-split-list {
     display: none;
   }
-  .erp-split-list {
+  .erp-split-list,
+  .erp-split-detail {
     max-height: none;
   }
 }
