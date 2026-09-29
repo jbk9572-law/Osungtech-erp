@@ -1516,6 +1516,93 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 16px;
 }
 
+/* ── 7-1. List + detail split view (거래처/제품 등 기준정보 화면) ──
+   왼쪽엔 좁은 목록, 오른쪽엔 선택한 항목의 상세를 나란히 보여준다.
+   메신저 2단 레이아웃(.erp-messenger-layout)과 같은 구조/반응형
+   기준(768px)을 그대로 따른다 — 넓은 화면에선 항상 둘 다 보이고,
+   좁은 화면에선 목록 또는 상세 중 하나만 보이게 전환한다. */
+.erp-split-shell {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.erp-split-list {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100vh - 140px);
+  border: 1px solid var(--erp-border-strong);
+  background: var(--erp-panel);
+}
+
+.erp-split-list-head {
+  height: 32px;
+  flex: 0 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border);
+}
+
+.erp-split-list-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.erp-split-list-row {
+  display: block;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--erp-divider);
+}
+
+.erp-split-list-row:hover {
+  background: var(--erp-hover);
+}
+
+.erp-split-list-row.active {
+  background: var(--erp-selected);
+  font-weight: 700;
+}
+
+.erp-split-list-row-sub {
+  margin-top: 1px;
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+  font-weight: 400;
+}
+
+.erp-split-detail {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .erp-split-shell {
+    display: block;
+  }
+  /* 특정 항목을 선택했을 때만 목록을 숨기고 상세를 전체 폭으로 보여준다
+     — 아무것도 선택 안 한 기본 상태(신규 등록 폼)는 목록과 함께 계속
+     세로로 쌓아 보여준다(모바일에서 신규 등록 폼 자체가 안 보이게
+     숨어버리는 걸 막기 위함). */
+  .erp-split-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+  .erp-split-list {
+    max-height: none;
+  }
+}
+
 /* ── 8. Status bar ─────────────────────────────────────────── */
 .erp-statusbar {
   height: 26px;

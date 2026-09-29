@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
-import { CustomerGridTable } from "@/components/customer-grid-table";
 import { ExcelImportForm } from "@/components/excel-import-form";
+import { CustomerDetailPanel } from "@/components/customer-detail-panel";
 import { importCustomersExcel } from "@/app/(dashboard)/customers/actions";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { isUuid } from "@/lib/is-uuid";
 import type { Database } from "@/types/database.types";
 import { formatNumber } from "@/lib/format-number";
 
@@ -17,9 +18,10 @@ const LIST_LIMIT_STEP = 300;
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; limit?: string }>;
+  searchParams: Promise<{ q?: string; limit?: string; id?: string }>;
 }) {
-  const { q, limit: limitParam } = await searchParams;
+  const { q, limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const keyword = q?.trim().toLowerCase();
@@ -62,8 +64,15 @@ export default async function CustomersPage({
     : allCustomers;
 
   const exportHref = "/api/customers/export";
-  const moreParams = new URLSearchParams();
-  if (q) moreParams.set("q", q);
+  const listParams = new URLSearchParams();
+  if (q) listParams.set("q", q);
+  if (limitParam) listParams.set("limit", limitParam);
+  const rowHref = (customerId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", customerId);
+    return `/customers?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/customers?${moreParams.toString()}`;
 
@@ -71,67 +80,81 @@ export default async function CustomersPage({
     <div>
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 출고처관리</h1>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">출고처 추가</span>
-        </div>
-        <div className="erp-detail-body">
-          <CreateCustomerForm />
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>거래처 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+              총 {formatNumber(customers.length)}건
+            </span>
+          </div>
+          <form method="get" className="erp-search" style={{ margin: 8, padding: 8 }}>
+            <input
+              type="text"
+              name="q"
+              autoComplete="off"
+              defaultValue={q ?? ""}
+              placeholder="업체명, 사업자번호, 담당자 검색"
+              className="erp-input"
+              style={{ width: "100%" }}
+            />
+          </form>
+          <div className="erp-split-list-body">
+            {customers.map((c) => (
+              <Link
+                key={c.id}
+                href={rowHref(c.id)}
+                className={`erp-split-list-row${c.id === selectedId ? " active" : ""}`}
+              >
+                {c.name}
+                <div className="erp-split-list-row-sub">{c.customer_code}</div>
+              </Link>
+            ))}
+            {customers.length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                조건에 맞는 거래처가 없습니다.
+              </p>
+            )}
+          </div>
+          {!keyword && hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <CustomerDetailPanel id={selectedId} />
+          ) : (
+            <>
+              <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">출고처 추가</span>
+                </div>
+                <div className="erp-detail-body">
+                  <CreateCustomerForm />
+                </div>
+              </div>
+
+              <div className="erp-detail">
+                <div className="erp-detail-tabs">
+                  <span className="erp-detail-tab active">엑셀 일괄등록</span>
+                </div>
+                <div className="erp-detail-body">
+                  <ExcelImportForm
+                    action={importCustomersExcel}
+                    templateHref="/templates/customers-template.xlsx"
+                    exportHref={exportHref}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">엑셀 일괄등록</span>
-        </div>
-        <div className="erp-detail-body">
-          <ExcelImportForm
-            action={importCustomersExcel}
-            templateHref="/templates/customers-template.xlsx"
-            exportHref={exportHref}
-          />
-        </div>
-      </div>
-
-      <form method="get" className="erp-search">
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label htmlFor="search-q">출고처 검색</label>
-          <input
-            id="search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="업체명, 사업자번호, 대표자, 담당자, 연락처, 이메일, 주소, 메모"
-            className="erp-input"
-            style={{ width: "100%" }}
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          조회
-        </button>
-        {q && (
-          <Link href="/customers" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
-
-      {!keyword && (
-        <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-          최근 등록순 {formatNumber(limit)}개까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-        </p>
-      )}
-
-      <CustomerGridTable rows={customers} />
-
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <Link href={moreHref} className="erp-btn">
-            더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
