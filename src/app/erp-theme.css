@@ -614,7 +614,7 @@
   width: 240px;
   display: flex;
   flex-direction: column;
-  background: var(--erp-panel);
+  background: var(--erp-bg-subtle);
   border-right: 1px solid var(--erp-border);
   transition:
     width 0.15s ease,
