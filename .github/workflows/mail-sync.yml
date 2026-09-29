@@ -1,0 +1,28 @@
+name: Mail sync
+
+# 그룹웨어 메일함이 탭을 안 열어둔 사이에도 최소한 5분 안에는 새 메일을
+# 받아오게 하는 안전망(실제 탭이 열려 있는 동안은 훨씬 짧은 주기로
+# src/app/api/mail/poll가 따로 돈다). 이 배포 방식(OpenNext/Cloudflare)은
+# Cloudflare Cron Trigger를 못 써서(어댑터가 scheduled() 훅을 지원하지
+# 않음) GitHub Actions 스케줄로 대신한다 — GitHub Actions 스케줄의 최소
+# 주기가 5분이라 이보다 짧게는 못 돌린다.
+#
+# 사용 전 준비: 이 저장소의 Settings > Secrets and variables > Actions에
+# SITE_URL(예: https://elvonix.app, 끝에 슬래시 없이), CRON_SECRET(직접
+# 정한 임의의 긴 문자열 — 배포 환경변수의 CRON_SECRET과 반드시 같은 값)
+# 두 개를 등록해야 한다.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger mail sync
+        run: |
+          curl -sS -f -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/cron/mail-sync" \
+            -o /dev/null

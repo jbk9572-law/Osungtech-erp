@@ -1,5 +1,7 @@
 import PostalMime from "postal-mime";
 import type { Email, Address } from "postal-mime";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database.types";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/mail/crypto";
 import { ImapClient, type ImapRawMessage } from "@/lib/mail/imap-client";
@@ -32,25 +34,29 @@ function toUint8Array(content: ArrayBuffer | Uint8Array | string): Uint8Array {
 
 export type SyncResult = { newCount: number };
 
-// 받은편지함(INBOX)만 동기화한다 — 보낸 메일은 이 앱에서 발송할 때 바로
-// mail_messages에 folder='SENT'로 직접 남기므로 다음 서버의 "보낸편지함"을
-// 따로 IMAP으로 다시 읽어올 필요가 없다. 스팸함/휴지통 등 다른 폴더 동기화는
-// 후속 작업으로 남겨둔다(폴더 목록 조회 자체는 imap-client.ts에 이미 있음).
-export async function syncInbox(): Promise<SyncResult> {
-  const user = await getUser();
-  if (!user) throw new Error("인증되지 않은 요청입니다.");
+export type MailAccountForSync = {
+  id: string;
+  user_id: string;
+  imap_host: string;
+  imap_port: number;
+  username: string;
+  encrypted_app_password: string;
+  last_synced_uid: unknown;
+};
 
-  const supabase = await createClient();
-  const { data: account, error: accountError } = await supabase
-    .from("mail_accounts")
-    .select("id, imap_host, imap_port, username, encrypted_app_password, last_synced_uid")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (accountError || !account) {
-    throw new Error("연동된 메일 계정이 없습니다. 환경설정 > 메일 계정 연동에서 먼저 등록해주세요.");
-  }
-
+// 받은편지함(INBOX) 동기화의 실제 로직 — 계정 정보(account)와 그걸로 쓸
+// supabase 클라이언트를 밖에서 받는다. 세션 기반 요청(아래 syncInbox, 본인
+// 계정 하나)과 세션이 아예 없는 크론(sync-all.ts, 관리자 클라이언트로 여러
+// 계정 순회)이 이 함수 하나를 그대로 같이 쓴다 — account를 직접 넘기므로
+// 로그인 세션이 있어야만 동작하던 예전 제약이 없다. 보낸 메일은 이 앱에서
+// 발송할 때 바로 mail_messages에 folder='SENT'로 직접 남기므로 다음 서버의
+// "보낸편지함"을 따로 IMAP으로 다시 읽어올 필요가 없다. 스팸함/휴지통 등
+// 다른 폴더 동기화는 후속 작업으로 남겨둔다(폴더 목록 조회 자체는
+// imap-client.ts에 이미 있음).
+export async function syncMailAccount(
+  supabase: SupabaseClient<Database>,
+  account: MailAccountForSync,
+): Promise<SyncResult> {
   let client: ImapClient | null = null;
   try {
     const password = await decryptSecret(account.encrypted_app_password);
@@ -93,7 +99,7 @@ export async function syncInbox(): Promise<SyncResult> {
         .upsert(
           {
             mail_account_id: account.id,
-            user_id: user.id,
+            user_id: account.user_id,
             folder: INBOX_FOLDER,
             uid: msg.uid,
             message_id: parsed.messageId ?? null,
@@ -119,7 +125,7 @@ export async function syncInbox(): Promise<SyncResult> {
 
       for (const att of parsed.attachments) {
         if (!att.filename) continue;
-        const path = `${user.id}/${inserted_row.id}/${att.filename}`;
+        const path = `${account.user_id}/${inserted_row.id}/${att.filename}`;
         const bytes = toUint8Array(att.content);
         const { error: uploadError } = await supabase.storage
           .from("mail-attachments")
@@ -128,7 +134,7 @@ export async function syncInbox(): Promise<SyncResult> {
 
         const { error: attachmentInsertError } = await supabase.from("mail_attachments").insert({
           mail_message_id: inserted_row.id,
-          user_id: user.id,
+          user_id: account.user_id,
           filename: att.filename,
           content_type: att.mimeType,
           size_bytes: bytes.byteLength,
@@ -166,4 +172,24 @@ export async function syncInbox(): Promise<SyncResult> {
   } finally {
     if (client) await client.logout();
   }
+}
+
+// 로그인한 본인 계정 하나를 동기화한다 — "동기화" 버튼, 그리고 탭이 열려
+// 있는 동안의 짧은 주기 자동 확인(src/app/api/mail/poll/route.ts)이 쓴다.
+export async function syncInbox(): Promise<SyncResult> {
+  const user = await getUser();
+  if (!user) throw new Error("인증되지 않은 요청입니다.");
+
+  const supabase = await createClient();
+  const { data: account, error: accountError } = await supabase
+    .from("mail_accounts")
+    .select("id, user_id, imap_host, imap_port, username, encrypted_app_password, last_synced_uid")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (accountError || !account) {
+    throw new Error("연동된 메일 계정이 없습니다. 환경설정 > 메일 계정 연동에서 먼저 등록해주세요.");
+  }
+
+  return syncMailAccount(supabase, account);
 }

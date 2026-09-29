@@ -3444,9 +3444,10 @@ export type Database = {
           user_id: string;
           type: string;
           title: string;
-          body: string;
-          url: string;
-          read_at: string | null;
+          body: string | null;
+          url: string | null;
+          source_id: string | null;
+          is_read: boolean;
           created_at: string;
         };
         Insert: {
@@ -3456,9 +3457,10 @@ export type Database = {
           user_id: string;
           type: string;
           title: string;
-          body?: string;
-          url?: string;
-          read_at?: string | null;
+          body?: string | null;
+          url?: string | null;
+          source_id?: string | null;
+          is_read?: boolean;
           created_at?: string;
         };
         Update: {
@@ -3468,9 +3470,10 @@ export type Database = {
           user_id?: string;
           type?: string;
           title?: string;
-          body?: string;
-          url?: string;
-          read_at?: string | null;
+          body?: string | null;
+          url?: string | null;
+          source_id?: string | null;
+          is_read?: boolean;
           created_at?: string;
         };
         Relationships: [];
