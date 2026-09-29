@@ -7,6 +7,7 @@ import { SyncMailButton } from "@/components/mail/sync-mail-button";
 import { ComposeMailButton } from "@/components/mail/compose-mail";
 import { MarkAsRead } from "@/components/mail/mark-as-read";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { formatNumber } from "@/lib/format-number";
 
 type Folder = "INBOX" | "SENT";
 
@@ -89,15 +90,22 @@ export default async function MailPage({
     })
   );
 
+  const newHref = `/mail?folder=${folder}`;
+
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: id ? newHref : "/dashboard" } }} />
       <ListPageHeader
         title="메일함"
         actions={
           <>
             <ComposeMailButton />
             <SyncMailButton />
+            {id && (
+              <Link href={newHref} className="erp-btn">
+                목록
+              </Link>
+            )}
           </>
         }
       />
@@ -117,35 +125,43 @@ export default async function MailPage({
         </Link>
       </div>
 
-      <div className={`erp-mail-layout${id ? " has-selection" : ""}`}>
-        <div className="erp-mail-list">
-          {(messages ?? []).length === 0 && (
-            <div className="erp-mail-detail-empty">메일이 없습니다.</div>
-          )}
-          {(messages ?? []).map((m) => (
-            <Link
-              key={m.id}
-              href={`/mail?folder=${folder}&id=${m.id}`}
-              className={`erp-mail-row${!m.is_read ? " unread" : ""}${m.id === id ? " active" : ""}`}
-            >
-              <div className="erp-mail-row-top">
-                <span>{folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"}</span>
-                <span>{formatDate(m.sent_at)}</span>
-              </div>
-              <span className="erp-mail-row-subject">
-                {m.subject || "(제목 없음)"} {m.has_attachments ? "📎" : ""}
-              </span>
-              <span className="erp-mail-row-snippet">{m.snippet}</span>
-            </Link>
-          ))}
-        </div>
+      <div className="erp-split-shell" data-mobile-view={id ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>{folder === "INBOX" ? "받은편지함" : "보낸편지함"}</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+              총 {formatNumber((messages ?? []).length)}건
+            </span>
+          </div>
+          <div className="erp-split-list-body">
+            {(messages ?? []).map((m) => (
+              <Link
+                key={m.id}
+                href={`/mail?folder=${folder}&id=${m.id}`}
+                className={`erp-split-list-row${m.id === id ? " active" : ""}`}
+              >
+                <span style={m.is_read ? undefined : { fontWeight: 700 }}>
+                  {m.subject || "(제목 없음)"} {m.has_attachments ? "📎" : ""}
+                </span>
+                <div className="erp-split-list-row-sub">
+                  {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"} · {formatDate(m.sent_at)}
+                  {m.snippet ? ` · ${m.snippet}` : ""}
+                </div>
+              </Link>
+            ))}
+            {(messages ?? []).length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                메일이 없습니다.
+              </p>
+            )}
+          </div>
+        </section>
 
-        <div className="erp-mail-detail">
-          <Link href={`/mail?folder=${folder}`} className="erp-mail-back-link erp-btn">
-            ← 목록으로
-          </Link>
+        <div className="erp-split-detail">
           {!selected ? (
-            <div className="erp-mail-detail-empty">메일을 선택해주세요.</div>
+            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              메일을 선택해주세요.
+            </p>
           ) : (
             <>
               <MarkAsRead messageId={selected.id} isRead={selected.is_read} />
