@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TodoCheckbox } from "@/components/todo-checkbox";
+import { TodoForm } from "@/components/todo-form";
+import { TodoDetailPanel } from "@/components/todo-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { todoTypeLabel } from "@/lib/todo-flow";
 import { todayKstStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
+import { isUuid } from "@/lib/is-uuid";
+import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
+import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { formatNumber } from "@/lib/format-number";
 
 const DEFAULT_LIST_LIMIT = 300;
@@ -33,52 +37,71 @@ function summarizeItems(
 export default async function TodosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; warning?: string; limit?: string }>;
+  searchParams: Promise<{ q?: string; warning?: string; limit?: string; id?: string }>;
 }) {
-  const { q, warning, limit: limitParam } = await searchParams;
+  const { q, warning, limit: limitParam, id } = await searchParams;
+  const selectedId = id && isUuid(id) ? id : undefined;
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const supabase = await createClient();
-  const [{ rows: allRows, hasMore }, products, summaryRows] = await Promise.all([
-    fetchLimitedRows<{
-      id: string;
-      title: string;
-      memo: string;
-      items: unknown;
-      todo_type: string;
-      ship_date: string | null;
-      purchase_done_at: string | null;
-      sale_done_at: string | null;
-      due_date: string | null;
-      done: boolean;
-      profiles: { full_name: string | null } | null;
-      suppliers: { name: string } | null;
-      customers: { name: string } | null;
-    }>(
-      (from, to) =>
+  const [{ rows: allRows, hasMore }, products, summaryRows, suppliers, customers, paperCalcEnabled] =
+    await Promise.all([
+      fetchLimitedRows<{
+        id: string;
+        title: string;
+        memo: string;
+        items: unknown;
+        todo_type: string;
+        ship_date: string | null;
+        purchase_done_at: string | null;
+        sale_done_at: string | null;
+        due_date: string | null;
+        done: boolean;
+        profiles: { full_name: string | null } | null;
+        suppliers: { name: string } | null;
+        customers: { name: string } | null;
+      }>(
+        (from, to) =>
+          supabase
+            .from("todos")
+            .select(
+              "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
+            )
+            .order("done", { ascending: true })
+            .order("due_date", { ascending: true, nullsFirst: false })
+            .range(from, to),
+        limit,
+      ),
+      fetchAllRows<{
+        id: string;
+        sku: string;
+        name: string;
+        spec: string | null;
+        unit: string;
+        base_package_qty: number | null;
+        cost: number;
+        price: number;
+      }>((from, to) =>
         supabase
-          .from("todos")
-          .select(
-            "id, title, memo, items, todo_type, ship_date, purchase_done_at, sale_done_at, due_date, done, profiles!created_by(full_name), suppliers(name), customers(name)",
-          )
-          .order("done", { ascending: true })
-          .order("due_date", { ascending: true, nullsFirst: false })
+          .from("products")
+          .select("id, sku, name, spec, unit, base_package_qty, cost, price")
+          .order("name")
           .range(from, to),
-      limit,
-    ),
-    fetchAllRows<{ id: string; name: string }>((from, to) =>
-      supabase.from("products").select("id, name").range(from, to),
-    ),
-    // 요약카드(전체/진행중/기한초과/완료)는 화면에 보이는 목록이 limit으로
-    // 잘려도 항상 실제 전체 건수를 반영해야 한다 — 목록이 300건에서 잘린
-    // 상태로 요약카드까지 같이 줄어들면 "완료했는데 왜 전체 건수가 그대로냐"
-    // 같은 혼란이 생긴다(sales/purchases 리스트의 합계를 별도 쿼리로 다시
-    // 구하는 것과 같은 이유).
-    fetchAllRows<{ done: boolean; due_date: string | null }>((from, to) =>
-      supabase.from("todos").select("done, due_date").range(from, to),
-    ),
-  ]);
+      ),
+      // 요약카드(전체/진행중/기한초과/완료)는 화면에 보이는 목록이 limit으로
+      // 잘려도 항상 실제 전체 건수를 반영해야 한다.
+      fetchAllRows<{ done: boolean; due_date: string | null }>((from, to) =>
+        supabase.from("todos").select("done, due_date").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("suppliers").select("id, name").order("name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase.from("customers").select("id, name").order("name").range(from, to),
+      ),
+      isPaperCalcEnabled(supabase),
+    ]);
 
   const productNameById = new Map(products.map((p) => [p.id, p.name]));
   const todayStr = todayKstStr();
@@ -92,9 +115,6 @@ export default async function TodosPage({
       })
     : allRows;
 
-  // 요약카드는 검색어와도, 목록 표시 limit과도 무관하게 전체 할일 기준으로
-  // 보여준다("검색해봤더니/최근 N건만 보이는데 전체 건수가 줄어보인다" 같은
-  // 혼란을 피하기 위함).
   const totalCount = summaryRows.length;
   const doneCount = summaryRows.filter((r) => r.done).length;
   const overdueCount = summaryRows.filter(
@@ -102,37 +122,46 @@ export default async function TodosPage({
   ).length;
   const inProgressCount = totalCount - doneCount;
 
+  const listParams = new URLSearchParams();
+  if (q) listParams.set("q", q);
+  if (limitParam) listParams.set("limit", limitParam);
+  const rowHref = (todoId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", todoId);
+    return `/todos?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
+  moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
+  const moreHref = `/todos?${moreParams.toString()}`;
+  const newHref = listParams.toString() ? `/todos?${listParams.toString()}` : "/todos";
+
   return (
     <div>
-      <KeyboardShortcuts
-        shortcuts={{
-          F2: { href: "/todos/new" },
-          Escape: { href: "/dashboard" },
-        }}
-      />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
-        할일관리
-      </h1>
+      <KeyboardShortcuts shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
+      <div className="erp-page-toolbar erp-detail-header-row">
+        <h1 className="text-lg font-bold text-[var(--erp-text)]">할일관리</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={newHref} className="erp-btn erp-btn-primary">
+            F2 글쓰기
+          </Link>
+          {selectedId && (
+            <Link href={newHref} className="erp-btn">
+              목록
+            </Link>
+          )}
+        </div>
+      </div>
 
       {warning && (
         <p
           className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{
-            background: "var(--erp-warning-bg)",
-            color: "var(--erp-warning)",
-          }}
+          style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
         >
           ⚠ 할일은 정상 등록됐지만: {warning}
         </p>
       )}
 
-      <div className="erp-toolbar">
-        <Link href="/todos/new" className="erp-btn erp-btn-primary">
-          F2 글쓰기
-        </Link>
-      </div>
-
-      <div className="erp-kpi-row">
+      <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
         <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
           <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
             전체 할일
@@ -165,104 +194,100 @@ export default async function TodosPage({
         </div>
       </div>
 
-      <form method="get" className="erp-search">
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
-          <label htmlFor="search-q">할 일 검색</label>
-          <input
-            id="search-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="제목, 메모, 품목명, 공급처, 납품처"
-            className="erp-input"
-            style={{ width: "100%" }}
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          조회
-        </button>
-        {limitParam && <input type="hidden" name="limit" value={limitParam} />}
-        {q && (
-          <Link href="/todos" className="erp-btn">
-            초기화
-          </Link>
-        )}
-      </form>
-
-      <div
-        className="rounded p-2 text-xs"
-        style={{
-          marginBottom: 8,
-          background: "var(--erp-info-bg)",
-          color: "var(--erp-info-text)",
-          border: "1px solid var(--erp-info-border)",
-        }}
-      >
-        최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {rows.map((row) => {
-          const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
-          const items = Array.isArray(row.items) ? (row.items as TodoItemInput[]) : [];
-          const partner = row.suppliers?.name ?? row.customers?.name ?? null;
-          return (
-            <Link key={row.id} href={`/todos/${row.id}`} className="erp-item-card">
-              <TodoCheckbox id={row.id} done={row.done} label={row.title} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3, flexWrap: "wrap" }}>
-                  <span
-                    style={
-                      row.done
-                        ? { fontSize: 13.5, fontWeight: 500, color: "var(--erp-text-muted)" }
-                        : { fontSize: 13.5, fontWeight: 700, color: "var(--erp-text)" }
-                    }
-                  >
-                    {row.title}
-                  </span>
-                  <GridBadge tone="muted">
-                    {todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}
-                  </GridBadge>
-                  {!row.done && row.todo_type === "both" && row.purchase_done_at && (
-                    <GridBadge tone="ok">매입완료</GridBadge>
-                  )}
-                  {overdue && <GridBadge tone="danger">기한초과</GridBadge>}
-                </div>
-                <div style={{ fontSize: 12, color: "var(--erp-text-muted)" }}>
-                  {partner && <>{partner} · </>}
-                  {summarizeItems(items, productNameById)}
-                </div>
-              </div>
-              <div style={{ textAlign: "right", fontSize: 11, color: "var(--erp-text-muted)", flexShrink: 0 }}>
-                <div>{row.profiles?.full_name ?? "-"}</div>
-                <div style={overdue ? { color: "var(--erp-danger)", fontWeight: 700 } : undefined}>
-                  {row.due_date ? `마감 ${row.due_date}` : "-"}
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-        {!rows.length && (
-          <p className="erp-grid-empty">
-            {q ? "검색 결과가 없습니다." : "등록된 할 일이 없습니다."}
-          </p>
-        )}
-      </div>
-
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <Link
-            href={`/todos?${new URLSearchParams({
-              ...(q ? { q } : {}),
-              limit: String(limit + LIST_LIMIT_STEP),
-            }).toString()}`}
-            className="erp-btn"
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>할 일 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+              총 {formatNumber(rows.length)}건
+            </span>
+          </div>
+          <form
+            id="todos-search-form"
+            method="get"
+            className="erp-search"
+            style={{ margin: 8, padding: 8, gap: 6 }}
           >
-            더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
-          </Link>
+            <input
+              type="text"
+              name="q"
+              autoComplete="off"
+              defaultValue={q ?? ""}
+              placeholder="제목, 메모, 품목명, 거래처 검색"
+              className="erp-input"
+              style={{ width: "100%" }}
+            />
+            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+              조회
+            </button>
+          </form>
+          <div className="erp-split-list-body">
+            {rows.map((row) => {
+              const overdue = !row.done && !!row.due_date && row.due_date < todayStr;
+              const items = Array.isArray(row.items) ? (row.items as TodoItemInput[]) : [];
+              const partner = row.suppliers?.name ?? row.customers?.name ?? null;
+              return (
+                <div
+                  key={row.id}
+                  className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 6 }}
+                >
+                  <TodoCheckbox id={row.id} done={row.done} label={row.title} />
+                  <Link href={rowHref(row.id)} style={{ flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>
+                    <span style={row.done ? { color: "var(--erp-text-muted)" } : { fontWeight: 600 }}>
+                      {row.title}
+                    </span>
+                    {overdue && (
+                      <span style={{ marginLeft: 6 }}>
+                        <GridBadge tone="danger">기한초과</GridBadge>
+                      </span>
+                    )}
+                    <div className="erp-split-list-row-sub">
+                      {partner && <>{partner} · </>}
+                      {summarizeItems(items, productNameById)}
+                      {row.due_date ? ` · 마감 ${row.due_date}` : ""}
+                    </div>
+                  </Link>
+                </div>
+              );
+            })}
+            {!rows.length && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                {q ? "검색 결과가 없습니다." : "등록된 할 일이 없습니다."}
+              </p>
+            )}
+          </div>
+          {!keyword && hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
+              </Link>
+            </div>
+          )}
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <TodoDetailPanel id={selectedId} />
+          ) : (
+            <div className="erp-detail" style={{ marginTop: 0 }}>
+              <div className="erp-detail-tabs">
+                <span className="erp-detail-tab active">할 일 등록</span>
+              </div>
+              <div className="erp-detail-body">
+                <TodoForm
+                  action={createTodo}
+                  submitLabel="등록"
+                  products={products}
+                  suppliers={suppliers}
+                  customers={customers}
+                  paperCalcEnabled={paperCalcEnabled}
+                />
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
