@@ -1,13 +1,22 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader } from "@/components/erp/page-header";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
-import { ClickableRow } from "@/components/clickable-row";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
-import { deleteApprovalDraft } from "@/app/(dashboard)/approvals/actions";
+import { ApprovalDetailPanel } from "@/components/approval-detail-panel";
+import { ApprovalDocumentForm } from "@/components/approval-document-form";
+import {
+  deleteApprovalDraft,
+  submitApprovalDocument,
+  saveApprovalDraft,
+} from "@/app/(dashboard)/approvals/actions";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { buildOrgTree } from "@/lib/org-chart";
+import { isUuid } from "@/lib/is-uuid";
+import { formatNumber } from "@/lib/format-number";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   pending: { label: "결재중", tone: "warn" },
@@ -18,10 +27,7 @@ const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "dange
 
 // "임시저장"은 결재선도 없는 상신 전 문서라 다른 탭과 조회 조건이
 // 완전히 다르다(created_by=본인만, approval_steps 계산 자체가 불필요) —
-// 그래서 목록 렌더링을 별도 분기로 다룬다(아래 activeTab === "draft").
-// 예전엔 /approvals/drafts라는 별도 화면이었는데, 같은
-// approval_documents 테이블을 status로만 가른 것뿐이라 기안함의 탭
-//하나로 합쳤다(감사에서 지적됨 — 화면 통폐합).
+// 그래서 목록+상세 분할에도 안 태우고 지금처럼 전체 폭 표로 따로 둔다.
 const TABS: { key: string; label: string }[] = [
   { key: "all", label: "전체" },
   { key: "pending", label: "진행중" },
@@ -34,40 +40,53 @@ const TABS: { key: string; label: string }[] = [
 export default async function ApprovalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; id?: string }>;
 }) {
-  const { status: statusParam } = await searchParams;
+  const { status: statusParam, id } = await searchParams;
   const activeTab = TABS.some((t) => t.key === statusParam) ? statusParam! : "all";
+  const selectedId = id && isUuid(id) ? id : undefined;
 
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "approvals");
   const user = await getUser();
 
+  const tabHref = (key: string) => (key === "all" ? "/approvals" : `/approvals?status=${key}`);
+  const newHref = tabHref(activeTab);
+
   const header = (
     <>
-      <KeyboardShortcuts shortcuts={{ F2: { href: "/approvals/new" }, Escape: { href: "/dashboard" } }} />
-      <ListPageHeader
-        title="전자결재 > 기안함"
-        actions={
-          <>
-            <Link href="/approvals/new" className="erp-btn erp-btn-primary">
-              F2 기안
-            </Link>
-            <Link href="/approvals/lines" className="erp-btn">
-              결재선 설정
-            </Link>
-            <Link href="/settings/delegations" className="erp-btn">
-              전결권 관리
-            </Link>
-          </>
-        }
+      <KeyboardShortcuts
+        shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
       />
+      <div className="erp-page-toolbar">
+        <ListPageHeader
+          title="전자결재 > 기안함"
+          actions={
+            <>
+              <Link href={newHref} className="erp-btn erp-btn-primary">
+                F2 기안
+              </Link>
+              <Link href="/approvals/lines" className="erp-btn">
+                결재선 설정
+              </Link>
+              <Link href="/settings/delegations" className="erp-btn">
+                전결권 관리
+              </Link>
+              {selectedId && (
+                <Link href={newHref} className="erp-btn">
+                  목록
+                </Link>
+              )}
+            </>
+          }
+        />
+      </div>
 
       <div className="erp-date-presets" style={{ marginBottom: 12 }}>
         {TABS.map((t) => (
           <Link
             key={t.key}
-            href={t.key === "all" ? "/approvals" : `/approvals?status=${t.key}`}
+            href={tabHref(t.key)}
             className={`erp-date-preset-btn${activeTab === t.key ? " active" : ""}`}
           >
             {t.label}
@@ -185,8 +204,6 @@ export default async function ApprovalsPage({
   // role='approver'만 본다).
   const currentStepByDoc = new Map<string, { approverId: string; stepOrder: number }>();
   for (const s of steps ?? []) {
-    // role="approver"로 이미 걸러서 조회했으니 실제로는 항상 값이
-    // 있지만, 타입 상으로는 nullable(참조자용)이라 방어적으로 건너뛴다.
     if (s.status !== "pending" || s.step_order == null) continue;
     const existing = currentStepByDoc.get(s.document_id);
     if (!existing || s.step_order < existing.stepOrder) {
@@ -203,6 +220,60 @@ export default async function ApprovalsPage({
     return { ...d, myTurn };
   });
 
+  const listParams = new URLSearchParams();
+  if (activeTab !== "all") listParams.set("status", activeTab);
+  const rowHref = (docId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", docId);
+    return `/approvals?${p.toString()}`;
+  };
+
+  // 기본(선택 없음) 상태에서 새 기안 폼을 그대로 띄우기 위한 데이터 —
+  // approvals/new/page.tsx와 동일한 조회. draft 이어쓰기는 그 화면(별도
+  // 페이지)에서 그대로 처리하고, 여기 기본 상태는 "새로 쓰기"만 다룬다.
+  let formData: {
+    orgTree: ReturnType<typeof buildOrgTree>;
+    templates: { id: string; name: string; body: string }[];
+    presets: { id: string; name: string; approverIds: string[]; referenceIds: string[] }[];
+    matrixByTemplate: Record<string, string>;
+    profileNameById: Record<string, string>;
+  } | null = null;
+  if (!selectedId) {
+    const [departments, profiles, templates, presetsRaw, matrixRaw] = await Promise.all([
+      fetchAllRows<{ id: string; name: string; parent_department_id: string | null; sort_order: number }>((from, to) =>
+        supabase.from("departments").select("id, name, parent_department_id, sort_order").order("sort_order").range(from, to),
+      ),
+      fetchAllRows<{ id: string; full_name: string | null; position_title: string | null; department_id: string | null }>(
+        (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").order("full_name").range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string; body: string }>((from, to) =>
+        supabase
+          .from("document_templates")
+          .select("id, name, body")
+          .eq("category", "approval")
+          .eq("is_active", true)
+          .order("name")
+          .range(from, to),
+      ),
+      fetchAllRows<{ id: string; name: string; approver_ids: string[]; reference_ids: string[] }>((from, to) =>
+        supabase.from("approval_line_presets").select("id, name, approver_ids, reference_ids").order("name").range(from, to),
+      ),
+      fetchAllRows<{ template_id: string; preset_id: string }>((from, to) =>
+        supabase.from("approval_matrix_rules").select("template_id, preset_id").range(from, to),
+      ),
+    ]);
+    const orgTree = buildOrgTree(
+      departments.map((d) => ({ id: d.id, name: d.name, parentDepartmentId: d.parent_department_id, sortOrder: d.sort_order })),
+      profiles.map((p) => ({ id: p.id, fullName: p.full_name, positionTitle: p.position_title, departmentId: p.department_id })),
+    );
+    const profileNameById: Record<string, string> = {};
+    for (const p of profiles) profileNameById[p.id] = p.full_name || "구성원";
+    const presets = presetsRaw.map((p) => ({ id: p.id, name: p.name, approverIds: p.approver_ids, referenceIds: p.reference_ids }));
+    const matrixByTemplate: Record<string, string> = {};
+    for (const m of matrixRaw) matrixByTemplate[m.template_id] = m.preset_id;
+    formData = { orgTree, templates, presets, matrixByTemplate, profileNameById };
+  }
+
   return (
     <div>
       {header}
@@ -213,43 +284,64 @@ export default async function ApprovalsPage({
         문서도 포함), 아직 상신 전인 문서는 임시저장 탭에서 이어 씁니다.
       </PageGuide>
 
-      {rows.length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-          해당하는 문서가 없습니다.
-        </p>
-      ) : (
-        <div className="erp-grid-wrap">
-          <table className="erp-grid">
-            <thead>
-              <tr>
-                <th style={{ width: 130 }}>일시</th>
-                <th>제목</th>
-                <th style={{ width: 110 }}>기안자</th>
-                <th style={{ width: 90 }}>상태</th>
-                <th style={{ width: 90 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((d) => {
-                const status = STATUS_LABEL[d.status] ?? { label: d.status, tone: "muted" as const };
-                return (
-                  <ClickableRow key={d.id} href={`/approvals/${d.id}`}>
-                    <td>{new Date(d.created_at).toLocaleString("ko-KR")}</td>
-                    <td>{d.title}</td>
-                    <td>{d.profiles?.full_name ?? "-"}</td>
-                    <td>
-                      <GridBadge tone={status.tone}>{status.label}</GridBadge>
-                    </td>
-                    <td>
-                      {d.myTurn && <GridBadge tone="warn">내 차례</GridBadge>}
-                    </td>
-                  </ClickableRow>
-                );
-              })}
-            </tbody>
-          </table>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>기안 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+              총 {formatNumber(rows.length)}건
+            </span>
+          </div>
+          <div className="erp-split-list-body">
+            {rows.map((d) => {
+              const status = STATUS_LABEL[d.status] ?? { label: d.status, tone: "muted" as const };
+              return (
+                <Link
+                  key={d.id}
+                  href={rowHref(d.id)}
+                  className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
+                >
+                  {d.title}
+                  {d.myTurn && (
+                    <span style={{ marginLeft: 6 }}>
+                      <GridBadge tone="warn">내 차례</GridBadge>
+                    </span>
+                  )}
+                  <div className="erp-split-list-row-sub">
+                    {d.profiles?.full_name ?? "-"} · {new Date(d.created_at).toLocaleDateString("ko-KR")} ·{" "}
+                    {status.label}
+                  </div>
+                </Link>
+              );
+            })}
+            {rows.length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                해당하는 문서가 없습니다.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <div className="erp-split-detail">
+          {selectedId ? (
+            <ApprovalDetailPanel id={selectedId} closeHref={newHref} />
+          ) : (
+            formData && (
+              <FormSection tabLabel="기안서 작성">
+                <ApprovalDocumentForm
+                  action={submitApprovalDocument}
+                  draftAction={saveApprovalDraft}
+                  orgTree={formData.orgTree}
+                  templates={formData.templates}
+                  presets={formData.presets}
+                  matrixByTemplate={formData.matrixByTemplate}
+                  profileNameById={formData.profileNameById}
+                />
+              </FormSection>
+            )
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
