@@ -90,7 +90,7 @@ export default async function SuppliersPage({
           Escape: { href: selectedId ? newHref : "/dashboard" },
         }}
       />
-      <div className="mb-1 erp-detail-header-row">
+      <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 공급처관리</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href={newHref} className="erp-btn erp-btn-primary">

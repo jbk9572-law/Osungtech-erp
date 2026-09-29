@@ -28,6 +28,10 @@
   --erp-border-strong: #1e293b;
   --erp-hover: #eef2f7;
   --erp-selected: #dbeafe;
+  /* 표에서 선택된 행 위/아래에 얹는 강조선 — 배경(--erp-selected)만으로는
+     약해서, 브랜드 남색(--erp-primary)과는 또 다른 "지금 이 줄이
+     선택됨"을 알려주는 비비드한 블루를 따로 뺐다. */
+  --erp-select-accent: #2563eb;
   /* WCAG AA(4.5:1) 명도대비를 배지 배경(erp-badge-*)과 흰 배경 양쪽에서
      맞추려고 기존 success/warning/danger보다 한 톤씩 어둡게 조정했다 —
      예전 값은 배지 위에서 대비가 3:1도 안 나오는 경우가 있었다. */
@@ -75,8 +79,11 @@
   --erp-grid-line: #cbd5e1;
   /* 표 헤더 배경 — 예전엔 페이지 배경(--erp-bg)과 같은 색이라 헤더/본문
      경계가 테두리 한 줄에만 기대고 있었다. 헤더만 한 톤 더 진하게 줘서
-     "칸이 뚜렷하게 나뉘어 보이는" 느낌을 표 위쪽에서부터 시작한다. */
-  --erp-grid-header-bg: #e2e8f0;
+     "칸이 뚜렷하게 나뉘어 보이는" 느낌을 표 위쪽에서부터 시작한다.
+     한 차례 더 진하게(#e2e8f0 → #d1d5db) 올렸다 — 목록+상세 분할
+     화면뿐 아니라 매출/매입처럼 컬럼이 많은 넓은 표에서도 헤더 행이
+     스크롤해도 눈에 띄게. */
+  --erp-grid-header-bg: #d1d5db;
   /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
      disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
   --erp-bg-disabled: #f5f6f8;
@@ -1101,6 +1108,18 @@
   margin-bottom: 10px;
 }
 
+/* 목록+상세 분할 화면(거래처/품목/공급처 등) 맨 위 제목+액션바 줄에만
+   얹는 "도구 단상" 느낌의 배경/밑줄 — .erp-toolbar/.erp-detail-header-row
+   자체는 다른 화면 11곳 이상에서 액션바 아닌 용도로도 쓰여서, 그 두
+   클래스를 직접 바꾸지 않고 이 화면들에만 별도 클래스로 추가한다. */
+.erp-page-toolbar {
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border);
+  border-bottom-width: 2px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+}
+
 /* 상세 화면 제목 줄(제목/배지 + 툴바 버튼들)이 화면마다 "flex items-center
    justify-between"를 그대로 복붙하고 있었는데(11곳), 그 유틸리티 조합에는
    flex-wrap이 없어서 제목이 길고 버튼이 2개 이상이면 좁은 화면에서 버튼이
@@ -1238,7 +1257,7 @@
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   border-radius: 0;
   overflow: auto;
   box-shadow: var(--erp-shadow-sm);
@@ -1254,10 +1273,10 @@
   height: 32px;
   background: var(--erp-grid-header-bg);
   color: var(--erp-text);
-  font-weight: 700;
+  font-weight: 800;
   text-align: left;
   padding: 0 10px;
-  border-bottom: 1px solid #c9ced8;
+  border-bottom: 2px solid var(--erp-border-strong);
   border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   position: sticky;
@@ -1339,6 +1358,14 @@
 
 .erp-grid tbody tr.selected {
   background: var(--erp-selected);
+  font-weight: 600;
+  /* border 대신 inset box-shadow를 쓴다 — border-collapse: collapse인
+     표에서 tr에 직접 border를 주면 인접 행과 폭을 다투며 레이아웃이
+     들쭉날쭉해지기 쉽다(테두리가 위/아래 행과 절반씩 겹쳐 계산됨).
+     box-shadow는 레이아웃에 영향 없이 시각적으로만 얹힌다. */
+  box-shadow:
+    inset 0 2px 0 var(--erp-select-accent),
+    inset 0 -2px 0 var(--erp-select-accent);
 }
 
 /* 매출/매입 목록의 마스터-디테일 레이아웃에서, 지금 아래 품목내역
@@ -1440,7 +1467,7 @@
      났다. 배경을 명시적으로 불투명하게 고정해서 어디서 쓰이든 항상
      또렷한 흰 카드로 보이게 한다. */
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   border-radius: 0;
   box-shadow: var(--erp-shadow-sm);
 }
@@ -1534,7 +1561,7 @@ a.erp-detail-tab:hover:not(.active) {
   flex-direction: column;
   min-height: 0;
   max-height: calc(100vh - 140px);
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   background: var(--erp-panel);
 }
 
@@ -1573,6 +1600,9 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-split-list-row.active {
   background: var(--erp-selected);
   font-weight: 700;
+  box-shadow:
+    inset 0 2px 0 var(--erp-select-accent),
+    inset 0 -2px 0 var(--erp-select-accent);
 }
 
 .erp-split-list-row-sub {
@@ -1587,7 +1617,7 @@ a.erp-detail-tab:hover:not(.active) {
   min-height: 0;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   background: var(--erp-panel);
   padding: 14px;
 }
@@ -1691,7 +1721,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-hero-card {
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   border-left: 3px solid var(--erp-primary);
   border-radius: 0;
   padding: 16px 18px;
@@ -1736,7 +1766,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-home-panel {
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   border-radius: 0;
   background: var(--erp-panel);
   box-shadow: var(--erp-shadow-sm);
@@ -1764,7 +1794,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 12px;
   padding: 12px 14px;
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
+  border: 2px solid var(--erp-border-strong);
   border-radius: 0;
   box-shadow: var(--erp-shadow-sm);
   color: inherit;
