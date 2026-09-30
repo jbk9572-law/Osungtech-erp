@@ -21,8 +21,47 @@ export function extractTemplateFields(body: string): string[] {
   return fields;
 }
 
+// body는 이제 스마트에디터(리치텍스트)로 작성된 HTML이라, 그대로
+// dangerouslySetInnerHTML로 렌더링된다 — 치환해 넣는 값(직원 이름 등,
+// 병합필드 입력칸에 사람이 직접 타이핑한 문자열)에 "<"/"&" 같은 HTML
+// 특수문자가 섞여 있으면 마크업이 깨지거나 최악의 경우 스크립트 삽입
+// 통로가 될 수 있어, 치환 시점에 반드시 이스케이프한다. 원본 양식
+// body 자체는 에디터(Tiptap) 스키마로 이미 제한돼 있어 이스케이프
+// 대상이 아니다.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function renderTemplate(body: string, values: Record<string, string>): string {
-  return body.replace(FIELD_PATTERN, (_match, name: string) => values[name] ?? "");
+  return body.replace(FIELD_PATTERN, (_match, name: string) => {
+    const value = values[name];
+    return value !== undefined ? escapeHtml(value) : "";
+  });
+}
+
+// 리치텍스트(HTML)로 저장된 양식 body를, 아직 리치에디터로 전환 안 된
+// 화면(예: 전자결재 작성의 일반 textarea "내용" 칸)에 프리필할 때 쓴다
+// — 태그를 벗겨 사람이 읽을 수 있는 일반 텍스트로 근사한다. 블록
+// 요소(p/div/li/h1-6) 경계와 <br>은 줄바꿈으로 살리고, 나머지 태그는
+// 제거한다.
+export function htmlToPlainText(html: string): string {
+  const withBreaks = html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, "\n");
+  if (typeof document === "undefined") {
+    return withBreaks
+      .replace(/<[^>]+>/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+  const el = document.createElement("div");
+  el.innerHTML = withBreaks;
+  return (el.textContent ?? "").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 // 자동 채움 후보 — 필드명이 이 키와 정확히 같을 때만 값을 미리 채워주고,

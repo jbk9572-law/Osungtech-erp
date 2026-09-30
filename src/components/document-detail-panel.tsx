@@ -53,7 +53,14 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
           <span className="erp-detail-tab active">문서 내용</span>
         </div>
         <div className="erp-detail-body">
-          <div style={{ whiteSpace: "pre-wrap", fontSize: 13.5, lineHeight: 1.7 }}>{doc.rendered_body}</div>
+          {/* rendered_body는 양식 작성 시 스마트에디터로 만든 HTML에
+              병합필드 값을 채워 넣은 결과다 — hr/documents/actions.ts의
+              renderTemplate이 값을 이스케이프해서 넣으므로 안전하다. */}
+          <div
+            className="erp-richtext-content"
+            style={{ padding: 0, fontSize: 13.5 }}
+            dangerouslySetInnerHTML={{ __html: doc.rendered_body }}
+          />
         </div>
       </div>
     </>

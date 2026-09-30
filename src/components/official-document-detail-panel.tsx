@@ -159,9 +159,14 @@ export async function OfficialDocumentDetailPanel({ id, closeHref }: { id: strin
         </div>
 
         <div className="erp-post-title">{doc.title}</div>
-        <div className="mt-2 whitespace-pre-wrap text-sm" style={{ color: "var(--erp-text)" }}>
-          {doc.body}
-        </div>
+        {/* body는 스마트에디터(리치텍스트)로 작성된 HTML이다 — 병합필드
+            치환 값은 lib/document-template.ts의 renderTemplate이 이미
+            이스케이프해서 넣으므로 여기서 그대로 렌더링해도 안전하다. */}
+        <div
+          className="erp-richtext-content mt-2 text-sm"
+          style={{ color: "var(--erp-text)", padding: 0 }}
+          dangerouslySetInnerHTML={{ __html: doc.body }}
+        />
       </div>
 
       {!doc.internal_only && (

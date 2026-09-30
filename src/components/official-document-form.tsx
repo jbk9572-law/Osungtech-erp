@@ -6,6 +6,7 @@ import { useFormRedirect } from "@/lib/use-form-redirect";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { extractTemplateFields, isServerAutoField, renderTemplate, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { PageGuide } from "@/components/erp/page-guide";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 type TemplateOption = { id: string; name: string; body: string };
 type ProfileOption = { id: string; name: string };
@@ -161,14 +162,8 @@ export function OfficialDocumentForm({
 
       <div className="erp-field">
         <label htmlFor="od-body">본문</label>
-        <textarea
-          id="od-body"
-          name="body"
-          rows={10}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          className="erp-input w-full"
-        />
+        <input type="hidden" name="body" value={body} />
+        <RichTextEditor id="od-body" value={body} onChange={setBody} placeholder="본문을 입력하세요..." minHeight={220} />
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">

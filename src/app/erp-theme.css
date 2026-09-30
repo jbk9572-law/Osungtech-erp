@@ -1507,6 +1507,107 @@
   gap: 6px;
 }
 
+/* ── 6-2. Rich text editor (문서 양식/공문 본문) ─────────────────
+   문서양식관리(양식 등록)와 공문 작성 본문에 쓰는 스마트에디터. 테두리/
+   포커스 톤은 .erp-input과 맞추고, 안쪽 타이포는 인쇄되는 실제 문서에
+   가깝게 살짝 크게 잡는다. */
+.erp-richtext {
+  border: 1px solid var(--erp-border);
+  background: var(--erp-panel);
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.erp-richtext:focus-within {
+  border-color: var(--erp-primary);
+  box-shadow: 0 0 0 3px rgba(19, 41, 68, 0.16);
+}
+
+.erp-richtext-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-bottom: 1px solid var(--erp-divider);
+  background: var(--erp-bg-subtle);
+}
+
+.erp-richtext-toolbar-btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--erp-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.erp-richtext-toolbar-btn:hover {
+  background: var(--erp-hover);
+  color: var(--erp-text);
+}
+
+.erp-richtext-toolbar-btn[data-active="1"] {
+  background: var(--erp-selected);
+  border-color: var(--erp-primary);
+  color: var(--erp-primary);
+}
+
+.erp-richtext-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--erp-border);
+  margin: 0 3px;
+}
+
+.erp-richtext-content {
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--erp-text);
+}
+
+.erp-richtext-content .ProseMirror {
+  outline: none;
+  min-height: inherit;
+}
+
+.erp-richtext-content h1 {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0.6em 0 0.3em;
+}
+
+.erp-richtext-content h2 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0.6em 0 0.3em;
+}
+
+.erp-richtext-content p {
+  margin: 0.3em 0;
+}
+
+.erp-richtext-content ul,
+.erp-richtext-content ol {
+  padding-left: 1.4em;
+  margin: 0.3em 0;
+}
+
+/* @tiptap/extension-placeholder가 비어있는 첫 문단에 이 클래스/속성을
+   달아준다 — .erp-richtext-content 자체가 곧 ProseMirror 루트
+   엘리먼트라(에디터가 attributes.class로 얹은 것), 후손이 아니라 같은
+   엘리먼트 기준으로 골라야 한다. */
+.erp-richtext-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--erp-text-muted);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 .erp-doc-header-value .erp-input,
 .erp-doc-header-value .erp-select {
   border: none;

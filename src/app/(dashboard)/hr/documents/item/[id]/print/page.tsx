@@ -25,7 +25,11 @@ export default async function DocumentPrintPage({
       <h1 style={{ textAlign: "center", fontSize: 20, fontWeight: 700, marginBottom: 32, letterSpacing: 4 }}>
         {doc.title}
       </h1>
-      <div style={{ whiteSpace: "pre-wrap", fontSize: 13.5, lineHeight: 1.9 }}>{doc.rendered_body}</div>
+      <div
+        className="erp-richtext-content"
+        style={{ padding: 0, fontSize: 13.5, lineHeight: 1.9 }}
+        dangerouslySetInnerHTML={{ __html: doc.rendered_body }}
+      />
     </div>
   );
 }
