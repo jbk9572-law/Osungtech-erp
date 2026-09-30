@@ -148,7 +148,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         <tbody>
           <tr>
             <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
-            <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden" }}>
+            <td style={{ ...cellStyle, textAlign: "center", wordBreak: "break-word" }}>
               {row.department || "-"}
             </td>
             <td style={{ ...cellStyle, textAlign: "center" }}>기간</td>
@@ -180,12 +180,16 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           {rows.map((item) => {
             const s = highlightCellStyle(item.is_highlighted);
             return (
-              <tr key={item.id}>
+              // 사용처/비고가 길어 두 줄로 줄바꿈된 행이 페이지 경계에 걸리면
+              // 인쇄 시 그 행이 위/아래 페이지로 잘려 나뉠 수 있다 —
+              // breakInside: avoid로 한 행 전체가 같은 페이지에 통째로
+              // 찍히게 한다.
+              <tr key={item.id} style={{ breakInside: "avoid" }}>
                 <td style={{ ...s, textAlign: "center" }}>{item.used_at.replaceAll("-", ".")}</td>
-                <td style={s}>{item.vendor}</td>
+                <td style={{ ...s, wordBreak: "break-word" }}>{item.vendor}</td>
                 <td style={{ ...s, textAlign: "center" }}>{item.purpose || ""}</td>
                 <td style={{ ...s, textAlign: "right" }}>{Number(item.amount).toLocaleString()}</td>
-                <td style={s}>{item.remark || ""}</td>
+                <td style={{ ...s, wordBreak: "break-word" }}>{item.remark || ""}</td>
               </tr>
             );
           })}
