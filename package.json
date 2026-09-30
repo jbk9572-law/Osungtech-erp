@@ -21,6 +21,7 @@
     "check:admin-menu-visibility": "node scripts/check-admin-menu-visibility.mjs",
     "check:locale-number-format": "node scripts/check-locale-number-format.mjs",
     "check:inventory-null-safety": "node scripts/check-inventory-null-safety.mjs",
+    "dev:seed": "tsx scripts/dev-seed.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
@@ -42,6 +43,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260929.1",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -49,10 +51,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "dotenv": "^16.4.5",
     "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5",
     "vitest": "^4.1.10",
     "wrangler": "^4.129.0"

@@ -1,11 +1,21 @@
 {
   "name": "elvonix-erp",
-  "main": ".open-next/worker.js",
+  // 기본 OpenNext 워커(.open-next/worker.js)에 scheduled() 핸들러를 얹은
+  // 커스텀 워커 — worker.ts 참고. fetch 처리는 그대로 위임되므로 앱
+  // 동작에는 영향이 없고, 매일 크론(아래 triggers)만 추가로 처리한다.
+  "main": "worker.ts",
   "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  // 더미(테스트용) 직원/게시글을 매일 자동으로 채워주는 크론 —
+  // 한국시간 새벽 6시(UTC 21:00, 전날 기준). DEV_SEED_TENANT_SLUG가
+  // 설정된 테넌트에만 적용되며, 대상을 바꾸려면 아래 vars의 값만
+  // 고치면 된다(worker.ts의 scheduled() 핸들러 참고).
+  "triggers": {
+    "crons": ["0 21 * * *"]
   },
   // Workers Logs(대시보드 Observability > Logs/실시간 이벤트)가 이 블록
   // 없이는 아예 아무 이벤트도 수집하지 않는다 — "Waiting for events..."만
@@ -28,6 +38,9 @@
     // 안전하다(공개키). 짝을 이루는 VAPID_PRIVATE_KEY는 여기 넣지 않고
     // Cloudflare 대시보드에서 "Secret"으로 등록한다(SUPABASE_SERVICE_ROLE_KEY와
     // 같은 방식).
-    "NEXT_PUBLIC_VAPID_PUBLIC_KEY": "BOc7G27LJBnLwHIDb7h7KdFk7Epk9PQHf7jt00pSqNj-wi996hCXy0ShrfIKuMbkN_8zSxGdrT6zUzeoUL8VX_k"
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY": "BOc7G27LJBnLwHIDb7h7KdFk7Epk9PQHf7jt00pSqNj-wi996hCXy0ShrfIKuMbkN_8zSxGdrT6zUzeoUL8VX_k",
+    // 더미 데이터 크론이 채울 대상 테넌트(slug 또는 이름, 대소문자 무관).
+    // 비워두거나 지우면 크론이 아무것도 하지 않고 건너뛴다.
+    "DEV_SEED_TENANT_SLUG": "Elvonix"
   }
 }
