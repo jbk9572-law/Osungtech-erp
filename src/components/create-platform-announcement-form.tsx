@@ -20,7 +20,7 @@ export function CreatePlatformAnnouncementForm() {
       </div>
       <div className="erp-field">
         <label htmlFor="pa-content">내용</label>
-        <textarea id="pa-content" name="content" rows={3} className="erp-input" />
+        <textarea id="pa-content" name="content" rows={3} className="erp-input erp-textarea-compact w-full" />
       </div>
       <div>
         <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">

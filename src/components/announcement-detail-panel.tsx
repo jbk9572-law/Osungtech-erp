@@ -98,17 +98,16 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
           />
         ) : (
           <div>
-            <p
-              style={{
-                whiteSpace: "pre-wrap",
-                fontSize: 13.5,
-                lineHeight: 1.7,
-                color: "var(--erp-text)",
-                margin: 0,
-              }}
-            >
-              {row.content || "-"}
-            </p>
+            {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
+            {row.content ? (
+              <div
+                className="erp-richtext-content"
+                style={{ padding: 0, fontSize: 13.5, color: "var(--erp-text)" }}
+                dangerouslySetInnerHTML={{ __html: row.content }}
+              />
+            ) : (
+              <p style={{ margin: 0, color: "var(--erp-text)" }}>-</p>
+            )}
             <PageGuide className="mt-4">본인이 등록한 공지사항만 수정할 수 있습니다.</PageGuide>
           </div>
         )}

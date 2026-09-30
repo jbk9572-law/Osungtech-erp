@@ -122,7 +122,12 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
               {SOURCE_LINK[doc.source_type].label} →
             </Link>
           )}
-          <p style={{ whiteSpace: "pre-wrap" }}>{doc.content || "(내용 없음)"}</p>
+          {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
+          {doc.content ? (
+            <div className="erp-richtext-content" style={{ padding: 0 }} dangerouslySetInnerHTML={{ __html: doc.content }} />
+          ) : (
+            <p>(내용 없음)</p>
+          )}
         </div>
       </div>
 

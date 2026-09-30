@@ -1101,6 +1101,19 @@
   box-shadow: 0 0 0 3px rgba(19, 41, 68, 0.16);
 }
 
+/* 캘린더 일정 설명, 창고이동/구매요청류 메모칸처럼 2~3줄짜리 짧은
+   메모용 — 문서형 화면(공지사항/전자결재/고객지원)의 스마트에디터와
+   달리 서식 지정이 필요 없는 칸이라 그냥 <textarea>를 쓰되, 높이를
+   고정하고 테두리를 조금 더 또렷하게(erp-border-strong) 준다.
+   .erp-input과 같이 쓴다(className="erp-input erp-textarea-compact"). */
+.erp-textarea-compact {
+  height: 72px;
+  border-color: var(--erp-border-strong);
+  font-size: 12px;
+  padding: 6px 8px;
+  resize: vertical;
+}
+
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
 /* .erp는 뷰포트보다 넓어지는 걸 막으려고 overflow-x: hidden을 두고
    있어서, 버튼이 여러 개인 툴바가 좁은 화면에서 줄바꿈하지 않으면

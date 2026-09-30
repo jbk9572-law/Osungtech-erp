@@ -49,9 +49,12 @@ export default async function PlatformSupportPage() {
                   </span>
                   <GridBadge tone={status.tone}>{status.label}</GridBadge>
                 </div>
-                <p className="mb-2 whitespace-pre-line text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                  {t.message}
-                </p>
+                {/* message는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
+                <div
+                  className="erp-richtext-content mb-2 text-xs"
+                  style={{ padding: 0, color: "var(--erp-text-muted)" }}
+                  dangerouslySetInnerHTML={{ __html: t.message }}
+                />
                 <SupportTicketReplyForm ticketId={t.id} defaultReply={t.reply} action={replySupportTicket} />
               </div>
             );

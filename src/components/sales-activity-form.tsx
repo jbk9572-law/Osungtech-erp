@@ -78,7 +78,7 @@ export function SalesActivityForm({
 
       <div className="erp-field">
         <label htmlFor="sa-content">내용(선택)</label>
-        <textarea id="sa-content" name="content" rows={3} className="erp-input" style={{ resize: "vertical" }} />
+        <textarea id="sa-content" name="content" rows={3} className="erp-input erp-textarea-compact w-full" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

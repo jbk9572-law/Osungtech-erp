@@ -56,16 +56,19 @@ export default async function SupportPage() {
                       </span>
                       <GridBadge tone={status.tone}>{status.label}</GridBadge>
                     </div>
-                    <p className="mb-2 whitespace-pre-line text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                      {t.message}
-                    </p>
+                    {/* message/reply는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
+                    <div
+                      className="erp-richtext-content mb-2 text-xs"
+                      style={{ padding: 0, color: "var(--erp-text-muted)" }}
+                      dangerouslySetInnerHTML={{ __html: t.message }}
+                    />
                     {t.reply && (
                       <div
                         className="rounded p-2 text-xs"
                         style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
                       >
                         <strong>운영자 답변</strong>
-                        <p className="mt-1 whitespace-pre-line">{t.reply}</p>
+                        <div className="erp-richtext-content mt-1" style={{ padding: 0 }} dangerouslySetInnerHTML={{ __html: t.reply }} />
                       </div>
                     )}
                   </div>

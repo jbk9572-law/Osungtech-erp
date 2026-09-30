@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useFormRedirect } from "@/lib/use-form-redirect";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 export function AnnouncementForm({
   action,
@@ -18,6 +19,7 @@ export function AnnouncementForm({
   useFormRedirect(state);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const [content, setContent] = useState(initial?.content ?? "");
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -34,14 +36,10 @@ export function AnnouncementForm({
         <input type="checkbox" name="pinned" defaultChecked={initial?.pinned} />
         상단 고정
       </label>
-      <textarea
-        name="content"
-        placeholder="내용"
-        rows={10}
-        defaultValue={initial?.content}
-        className="erp-input md:col-span-3"
-        style={{ resize: "vertical" }}
-      />
+      <div className="md:col-span-3">
+        <input type="hidden" name="content" value={content} />
+        <RichTextEditor value={content} onChange={setContent} placeholder="내용을 입력하세요..." minHeight={260} />
+      </div>
       <div className="md:col-span-3 flex items-center gap-2">
         <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? (

@@ -82,7 +82,7 @@ export function NewStockTransferForm({
 
       <div className="erp-field" style={{ maxWidth: 720 }}>
         <label htmlFor="st-memo">메모(선택)</label>
-        <textarea id="st-memo" name="memo" rows={2} className="erp-input" style={{ resize: "vertical" }} />
+        <textarea id="st-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full" />
       </div>
 
       <div className="erp-grid-wrap">

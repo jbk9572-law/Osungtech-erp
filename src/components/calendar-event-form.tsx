@@ -125,8 +125,7 @@ export function CalendarEventForm({
           name="description"
           rows={3}
           defaultValue={initial?.description}
-          className="erp-input w-full"
-          style={{ height: "auto", padding: "6px 8px" }}
+          className="erp-input erp-textarea-compact w-full"
         />
       </div>
 

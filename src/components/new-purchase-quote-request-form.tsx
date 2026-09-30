@@ -92,7 +92,7 @@ export function NewPurchaseQuoteRequestForm({
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <label htmlFor="pq-memo" className="erp-doc-header-label">메모</label>
           <span className="erp-doc-header-value">
-            <textarea id="pq-memo" name="memo" rows={2} className="erp-input w-full" style={{ resize: "vertical", border: "none" }} />
+            <textarea id="pq-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full" style={{ border: "none" }} />
           </span>
         </div>
       </div>

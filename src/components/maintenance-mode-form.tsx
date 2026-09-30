@@ -36,8 +36,7 @@ export function MaintenanceModeForm({
           rows={3}
           defaultValue={initialMessage ?? ""}
           placeholder="예: 9/28(일) 02:00~04:00 시스템 점검이 진행 중입니다. 잠시 후 다시 접속해주세요."
-          className="erp-input"
-          style={{ width: "100%", height: "auto", padding: "8px", resize: "vertical" }}
+          className="erp-input erp-textarea-compact w-full"
         />
       </div>
       <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ alignSelf: "flex-start" }}>

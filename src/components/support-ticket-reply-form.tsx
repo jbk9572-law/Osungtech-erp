@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 export function SupportTicketReplyForm({
   ticketId,
@@ -13,19 +14,13 @@ export function SupportTicketReplyForm({
   action: (state: FormState, formData: FormData) => Promise<FormState>;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [reply, setReply] = useState(defaultReply ?? "");
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="id" value={ticketId} />
-      <textarea
-        name="reply"
-        defaultValue={defaultReply ?? ""}
-        placeholder="답변 내용을 입력하세요."
-        rows={3}
-        required
-        className="erp-input"
-        style={{ resize: "vertical" }}
-      />
+      <input type="hidden" name="reply" value={reply} />
+      <RichTextEditor value={reply} onChange={setReply} placeholder="답변 내용을 입력하세요." minHeight={120} />
       <div className="flex items-center gap-2">
         <select name="status" defaultValue="answered" className="erp-input" style={{ width: 120 }}>
           <option value="answered">답변 완료</option>

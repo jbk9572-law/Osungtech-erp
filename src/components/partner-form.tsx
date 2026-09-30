@@ -97,8 +97,7 @@ export function PartnerForm({
         aria-label="비고 / 특이사항"
         defaultValue={initial?.notes ?? ""}
         rows={2}
-        className="erp-input md:col-span-3"
-        style={{ height: "auto", paddingTop: 6, paddingBottom: 6 }}
+        className="erp-input erp-textarea-compact md:col-span-3"
       />
       {showDocumentType && (
         <div className="erp-field">

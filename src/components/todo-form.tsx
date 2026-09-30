@@ -454,8 +454,7 @@ export function TodoForm({
           rows={4}
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
-          className="erp-input w-full"
-          style={{ resize: "vertical" }}
+          className="erp-input erp-textarea-compact w-full"
         />
       </div>
 

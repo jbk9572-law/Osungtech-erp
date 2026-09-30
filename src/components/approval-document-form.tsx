@@ -7,7 +7,8 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
 import type { OrgDepartmentNode } from "@/lib/org-chart";
-import { extractTemplateFields, renderTemplate, htmlToPlainText } from "@/lib/document-template";
+import { extractTemplateFields, renderTemplate } from "@/lib/document-template";
+import { RichTextEditor } from "@/components/rich-text-editor";
 
 type TemplateOption = { id: string; name: string; body: string };
 export type ApprovalLinePresetOption = { id: string; name: string; approverIds: string[]; referenceIds: string[] };
@@ -69,10 +70,9 @@ export function ApprovalDocumentForm({
     const values: Record<string, string> = {};
     for (const f of fields) values[f] = "";
     setTemplateValues(values);
-    // 양식 본문(t.body)은 문서양식관리의 스마트에디터로 작성된 HTML일 수
-    // 있는데, 이 화면의 "내용"은 아직 일반 textarea라 태그를 벗겨 읽을
-    // 수 있는 텍스트로 근사해서 채운다(lib/document-template.ts 참고).
-    setContent(fields.length === 0 ? htmlToPlainText(t.body) : htmlToPlainText(renderTemplate(t.body, values)));
+    // 이 화면의 "내용"도 이제 스마트에디터라 양식 본문(HTML)을 그대로
+    // 채워도 서식이 살아있다.
+    setContent(fields.length === 0 ? t.body : renderTemplate(t.body, values));
 
     // 결재매트릭스에 이 양식용 규칙이 있으면 결재선을 자동으로 제안한다
     // — 강제 고정이 아니라 제안일 뿐이라, 아래 org-chart picker에서
@@ -152,7 +152,7 @@ export function ApprovalDocumentForm({
                 onChange={(e) => {
                   const nextValues = { ...templateValues, [f]: e.target.value };
                   setTemplateValues(nextValues);
-                  if (selectedTemplate) setContent(htmlToPlainText(renderTemplate(selectedTemplate.body, nextValues)));
+                  if (selectedTemplate) setContent(renderTemplate(selectedTemplate.body, nextValues));
                 }}
                 className="erp-input w-full"
               />
@@ -163,7 +163,8 @@ export function ApprovalDocumentForm({
 
       <div className="erp-field">
         <label htmlFor="ad-content">내용</label>
-        <textarea id="ad-content" name="content" rows={8} value={content} onChange={(e) => setContent(e.target.value)} className="erp-input w-full" />
+        <input type="hidden" name="content" value={content} />
+        <RichTextEditor id="ad-content" value={content} onChange={setContent} placeholder="내용을 입력하세요..." minHeight={220} />
       </div>
 
       <div>
