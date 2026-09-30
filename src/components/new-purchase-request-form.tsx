@@ -80,24 +80,32 @@ export function NewPurchaseRequestForm({
   );
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
+    <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
+      <div className="erp-doc-paper flex flex-col gap-3">
       <input type="hidden" name="supplier_id" value={supplierId} />
       <input type="hidden" name="items" value={itemsJson} />
 
-      <div className="grid grid-cols-2 gap-3" style={{ maxWidth: 500 }}>
-        <div className="erp-field">
-          <label htmlFor="pr-supplier">공급처</label>
-          <PartySearchSelect parties={suppliers} value={supplierId} onChange={setSupplierId} id="pr-supplier" />
-        </div>
-        <div className="erp-field">
-          <label htmlFor="pr-date">요청일</label>
-          <input id="pr-date" name="request_date" type="date" defaultValue={today} className="erp-input" />
-        </div>
-      </div>
+      <h2 className="erp-doc-title">구 매 요 청 서</h2>
 
-      <div className="erp-field" style={{ maxWidth: 720 }}>
-        <label htmlFor="pr-memo">메모(선택)</label>
-        <textarea id="pr-memo" name="memo" rows={2} className="erp-input" style={{ resize: "vertical" }} />
+      <div className="erp-doc-header">
+        <div className="erp-doc-header-row">
+          <label htmlFor="pr-supplier" className="erp-doc-header-label">공급처</label>
+          <span className="erp-doc-header-value">
+            <PartySearchSelect parties={suppliers} value={supplierId} onChange={setSupplierId} id="pr-supplier" />
+          </span>
+        </div>
+        <div className="erp-doc-header-row">
+          <label htmlFor="pr-date" className="erp-doc-header-label">요청일</label>
+          <span className="erp-doc-header-value">
+            <input id="pr-date" name="request_date" type="date" defaultValue={today} className="erp-input" />
+          </span>
+        </div>
+        <div className="erp-doc-header-row erp-doc-header-row-full">
+          <label htmlFor="pr-memo" className="erp-doc-header-label">메모</label>
+          <span className="erp-doc-header-value">
+            <textarea id="pr-memo" name="memo" rows={2} className="erp-input w-full" style={{ resize: "vertical", border: "none" }} />
+          </span>
+        </div>
       </div>
 
       <div className="erp-grid-wrap">
@@ -170,7 +178,7 @@ export function NewPurchaseRequestForm({
               <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
                 합계
               </td>
-              <td className="num" style={{ fontWeight: 700 }}>
+              <td className="num erp-doc-total">
                 {formatNumber(total)}
               </td>
               <td colSpan={3} />
@@ -193,6 +201,7 @@ export function NewPurchaseRequestForm({
           {pending ? "등록 중..." : "F7 구매요청 등록"}
         </button>
         <FormMessage state={state} />
+      </div>
       </div>
     </form>
   );

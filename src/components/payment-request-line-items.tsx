@@ -163,7 +163,7 @@ export function PaymentRequestLineItems({
         <button type="button" onClick={addRow} className="erp-btn">
           + 줄 추가
         </button>
-        <span className="text-sm font-semibold">합계: {formatNumber(total)}원</span>
+        <span className="erp-doc-total">합계: {formatNumber(total)}원</span>
       </div>
     </div>
   );

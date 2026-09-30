@@ -856,7 +856,7 @@ export function NewSaleForm({
     <form
       ref={formRef}
       action={formAction}
-      className="space-y-6"
+      className="erp-doc-sheet"
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // ESC는 이 화면에서 "그냥 닫기"가 아니라 F7과 같은 "저장 후
@@ -890,6 +890,8 @@ export function NewSaleForm({
         if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
       }}
     >
+      <div className="erp-doc-paper space-y-6">
+      <h2 className="erp-doc-title">{isReturn ? "반 품 전 표" : "매 출 전 표"}</h2>
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -1951,10 +1953,7 @@ export function NewSaleForm({
                     공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
                     {formatNumber(taxAmount)}원
                   </div>
-                  <div
-                    className="text-sm font-bold"
-                    style={{ color: "var(--erp-text)" }}
-                  >
+                  <div className="erp-doc-total">
                     {formatNumber(total)}원
                   </div>
                 </td>
@@ -1994,6 +1993,7 @@ export function NewSaleForm({
               })}
           </div>
         )}
+      </div>
       </div>
     </form>
   );

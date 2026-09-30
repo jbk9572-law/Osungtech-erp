@@ -146,14 +146,7 @@ export default async function PaymentRequestsPage({
           {selectedId ? (
             <PaymentRequestDetailPanel id={selectedId} closeHref={newHref} />
           ) : (
-            <div className="erp-detail" style={{ marginTop: 0 }}>
-              <div className="erp-detail-tabs">
-                <span className="erp-detail-tab active">지급결의서(사용내역) 작성</span>
-              </div>
-              <div className="erp-detail-body">
-                <PaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
-              </div>
-            </div>
+            <PaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
           )}
         </div>
       </div>

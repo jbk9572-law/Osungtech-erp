@@ -55,28 +55,38 @@ export function NewQuoteForm({
   );
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
+    <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
+      <div className="erp-doc-paper flex flex-col gap-3">
       <input type="hidden" name="customer_id" value={customerId} />
       <input type="hidden" name="items" value={itemsJson} />
 
-      <div className="grid grid-cols-3 gap-3" style={{ maxWidth: 720 }}>
-        <div className="erp-field">
-          <label htmlFor="q-customer">거래처</label>
-          <PartySearchSelect parties={customers} value={customerId} onChange={setCustomerId} id="q-customer" />
-        </div>
-        <div className="erp-field">
-          <label htmlFor="q-date">견적일</label>
-          <input id="q-date" name="quote_date" type="date" defaultValue={today} className="erp-input" />
-        </div>
-        <div className="erp-field">
-          <label htmlFor="q-valid-until">유효기간(선택)</label>
-          <input id="q-valid-until" name="valid_until" type="date" className="erp-input" />
-        </div>
-      </div>
+      <h2 className="erp-doc-title">견 적 서</h2>
 
-      <div className="erp-field" style={{ maxWidth: 720 }}>
-        <label htmlFor="q-memo">메모(선택)</label>
-        <textarea id="q-memo" name="memo" rows={2} className="erp-input" style={{ resize: "vertical" }} />
+      <div className="erp-doc-header">
+        <div className="erp-doc-header-row">
+          <label htmlFor="q-customer" className="erp-doc-header-label">거래처</label>
+          <span className="erp-doc-header-value">
+            <PartySearchSelect parties={customers} value={customerId} onChange={setCustomerId} id="q-customer" />
+          </span>
+        </div>
+        <div className="erp-doc-header-row">
+          <label htmlFor="q-date" className="erp-doc-header-label">견적일</label>
+          <span className="erp-doc-header-value">
+            <input id="q-date" name="quote_date" type="date" defaultValue={today} className="erp-input" />
+          </span>
+        </div>
+        <div className="erp-doc-header-row">
+          <label htmlFor="q-valid-until" className="erp-doc-header-label">유효기간</label>
+          <span className="erp-doc-header-value">
+            <input id="q-valid-until" name="valid_until" type="date" className="erp-input" />
+          </span>
+        </div>
+        <div className="erp-doc-header-row erp-doc-header-row-full">
+          <label htmlFor="q-memo" className="erp-doc-header-label">메모</label>
+          <span className="erp-doc-header-value">
+            <textarea id="q-memo" name="memo" rows={2} className="erp-input w-full" style={{ resize: "vertical", border: "none" }} />
+          </span>
+        </div>
       </div>
 
       <div className="erp-grid-wrap">
@@ -145,7 +155,7 @@ export function NewQuoteForm({
               <td colSpan={4} className="num" style={{ fontWeight: 700 }}>
                 합계
               </td>
-              <td className="num" style={{ fontWeight: 700 }}>
+              <td className="num erp-doc-total">
                 {formatNumber(total)}
               </td>
               <td colSpan={2} />
@@ -163,6 +173,7 @@ export function NewQuoteForm({
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || !customerId || validRows.length === 0} style={{ alignSelf: "flex-start" }}>
         {pending ? "등록 중..." : "견적서 등록"}
       </button>
+      </div>
     </form>
   );
 }

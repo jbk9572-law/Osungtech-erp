@@ -44,50 +44,57 @@ export function NewPurchaseQuoteRequestForm({
   );
 
   return (
-    <form action={formAction} onKeyDown={preventEnterSubmit} className="flex flex-col gap-3">
+    <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
+      <div className="erp-doc-paper flex flex-col gap-3">
       {supplierIds.map((id) => (
         <input key={id} type="hidden" name="supplier_id" value={id} />
       ))}
       <input type="hidden" name="items" value={itemsJson} />
 
-      <div className="erp-field" style={{ maxWidth: 620 }}>
-        <label>견적을 받을 공급처 (복수 선택 가능)</label>
-        <div className="erp-grid-wrap" style={{ maxHeight: 200, overflowY: "auto" }}>
-          <table className="erp-grid">
-            <tbody>
-              {suppliers.map((s) => (
-                <tr key={s.id}>
-                  <td style={{ width: 32 }}>
-                    <input
-                      type="checkbox"
-                      checked={supplierIds.includes(s.id)}
-                      onChange={() => toggleSupplier(s.id)}
-                      aria-label={`${s.name} 선택`}
-                    />
-                  </td>
-                  <td>{s.name}</td>
-                </tr>
-              ))}
-              {suppliers.length === 0 && (
-                <tr>
-                  <td className="erp-grid-empty">등록된 공급처가 없습니다.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <h2 className="erp-doc-title">구 매 견 적 요 청 서</h2>
 
-      <div className="grid grid-cols-2 gap-3" style={{ maxWidth: 400 }}>
-        <div className="erp-field">
-          <label htmlFor="pq-date">요청일</label>
-          <input id="pq-date" name="request_date" type="date" defaultValue={today} className="erp-input" />
+      <div className="erp-doc-header">
+        <div className="erp-doc-header-row erp-doc-header-row-full">
+          <span className="erp-doc-header-label">공급처</span>
+          <span className="erp-doc-header-value" style={{ display: "block", padding: 0 }}>
+            <div className="erp-grid-wrap" style={{ maxHeight: 160, overflowY: "auto", border: "none" }}>
+              <table className="erp-grid">
+                <tbody>
+                  {suppliers.map((s) => (
+                    <tr key={s.id}>
+                      <td style={{ width: 32 }}>
+                        <input
+                          type="checkbox"
+                          checked={supplierIds.includes(s.id)}
+                          onChange={() => toggleSupplier(s.id)}
+                          aria-label={`${s.name} 선택`}
+                        />
+                      </td>
+                      <td>{s.name}</td>
+                    </tr>
+                  ))}
+                  {suppliers.length === 0 && (
+                    <tr>
+                      <td className="erp-grid-empty">등록된 공급처가 없습니다.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </span>
         </div>
-      </div>
-
-      <div className="erp-field" style={{ maxWidth: 720 }}>
-        <label htmlFor="pq-memo">메모(선택)</label>
-        <textarea id="pq-memo" name="memo" rows={2} className="erp-input" style={{ resize: "vertical" }} />
+        <div className="erp-doc-header-row erp-doc-header-row-full">
+          <label htmlFor="pq-date" className="erp-doc-header-label">요청일</label>
+          <span className="erp-doc-header-value">
+            <input id="pq-date" name="request_date" type="date" defaultValue={today} className="erp-input" style={{ maxWidth: 180 }} />
+          </span>
+        </div>
+        <div className="erp-doc-header-row erp-doc-header-row-full">
+          <label htmlFor="pq-memo" className="erp-doc-header-label">메모</label>
+          <span className="erp-doc-header-value">
+            <textarea id="pq-memo" name="memo" rows={2} className="erp-input w-full" style={{ resize: "vertical", border: "none" }} />
+          </span>
+        </div>
       </div>
 
       <div className="erp-grid-wrap">
@@ -158,6 +165,7 @@ export function NewPurchaseQuoteRequestForm({
           {pending ? "등록 중..." : "F7 견적요청 등록"}
         </button>
         <FormMessage state={state} />
+      </div>
       </div>
     </form>
   );

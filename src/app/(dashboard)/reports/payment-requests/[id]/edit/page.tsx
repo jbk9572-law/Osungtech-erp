@@ -72,33 +72,26 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
         </Link>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">지급결의서(사용내역) 수정</span>
-        </div>
-        <div className="erp-detail-body">
-          <PaymentRequestForm
-            defaultDepartment={row.department ?? ""}
-            today={today}
-            initial={{
-              id: row.id,
-              department: row.department ?? "",
-              periodFrom: row.period_from ?? today,
-              periodTo: row.period_to ?? today,
-              cardType: row.card_type,
-              items: (items ?? []).map((item, i) => ({
-                key: `row-${i}`,
-                usedAt: item.used_at,
-                vendor: item.vendor,
-                purpose: item.purpose ?? "",
-                amount: String(item.amount),
-                remark: item.remark ?? "",
-                highlighted: item.is_highlighted,
-              })),
-            }}
-          />
-        </div>
-      </div>
+      <PaymentRequestForm
+        defaultDepartment={row.department ?? ""}
+        today={today}
+        initial={{
+          id: row.id,
+          department: row.department ?? "",
+          periodFrom: row.period_from ?? today,
+          periodTo: row.period_to ?? today,
+          cardType: row.card_type,
+          items: (items ?? []).map((item, i) => ({
+            key: `row-${i}`,
+            usedAt: item.used_at,
+            vendor: item.vendor,
+            purpose: item.purpose ?? "",
+            amount: String(item.amount),
+            remark: item.remark ?? "",
+            highlighted: item.is_highlighted,
+          })),
+        }}
+      />
 
       <div className="erp-detail" style={{ marginBottom: 12 }}>
         <div className="erp-detail-tabs">

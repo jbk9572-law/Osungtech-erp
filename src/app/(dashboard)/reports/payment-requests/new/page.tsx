@@ -17,14 +17,7 @@ export default async function NewPaymentRequestPage() {
         <CloseButton href="/reports/payment-requests">ESC 목록으로</CloseButton>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">지급결의서(사용내역) 작성</span>
-        </div>
-        <div className="erp-detail-body">
-          <PaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
-        </div>
-      </div>
+      <PaymentRequestForm defaultDepartment={company?.name ?? ""} today={todayKstStr()} />
     </div>
   );
 }

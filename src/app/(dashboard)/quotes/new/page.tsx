@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { NewQuoteForm } from "@/components/new-quote-form";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
@@ -22,9 +22,7 @@ export default async function NewQuotePage() {
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/quotes" } }} />
       <ListPageHeader title="견적서관리 > 견적서 작성" />
 
-      <FormSection tabLabel="견적서 작성">
-        <NewQuoteForm today={todayKstStr()} customers={customers} products={products} />
-      </FormSection>
+      <NewQuoteForm today={todayKstStr()} customers={customers} products={products} />
     </div>
   );
 }

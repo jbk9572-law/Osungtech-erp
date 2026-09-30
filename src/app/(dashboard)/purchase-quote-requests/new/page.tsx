@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { NewPurchaseQuoteRequestForm } from "@/components/new-purchase-quote-request-form";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
@@ -22,9 +22,7 @@ export default async function NewPurchaseQuoteRequestPage() {
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchase-quote-requests" } }} />
       <ListPageHeader title="매입관리 > 구매 견적요청 > 작성" />
 
-      <FormSection tabLabel="견적요청 작성">
-        <NewPurchaseQuoteRequestForm today={todayKstStr()} suppliers={suppliers} products={products} />
-      </FormSection>
+      <NewPurchaseQuoteRequestForm today={todayKstStr()} suppliers={suppliers} products={products} />
     </div>
   );
 }

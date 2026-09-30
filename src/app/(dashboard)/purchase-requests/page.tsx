@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { PurchaseRequestDetailPanel } from "@/components/purchase-request-detail-panel";
 import { NewPurchaseRequestForm } from "@/components/new-purchase-request-form";
@@ -193,9 +193,7 @@ export default async function PurchaseRequestsPage({
             <PurchaseRequestDetailPanel id={selectedId} closeHref={newHref} />
           ) : (
             formData && (
-              <FormSection tabLabel="구매요청 작성">
-                <NewPurchaseRequestForm today={todayKstStr()} suppliers={formData.suppliers} products={formData.products} />
-              </FormSection>
+              <NewPurchaseRequestForm today={todayKstStr()} suppliers={formData.suppliers} products={formData.products} />
             )
           )}
         </div>

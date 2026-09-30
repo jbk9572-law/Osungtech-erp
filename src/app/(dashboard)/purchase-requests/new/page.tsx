@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { NewPurchaseRequestForm } from "@/components/new-purchase-request-form";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
@@ -47,15 +47,13 @@ export default async function NewPurchaseRequestPage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchase-requests" } }} />
       <ListPageHeader title="매입관리 > 구매요청 > 작성" />
 
-      <FormSection tabLabel="구매요청 작성">
-        <NewPurchaseRequestForm
-          today={todayKstStr()}
-          suppliers={suppliers}
-          products={products}
-          prefillSupplierId={prefillSupplierId}
-          prefillItems={prefillItems}
-        />
-      </FormSection>
+      <NewPurchaseRequestForm
+        today={todayKstStr()}
+        suppliers={suppliers}
+        products={products}
+        prefillSupplierId={prefillSupplierId}
+        prefillItems={prefillItems}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { QuoteStatusBadge } from "@/components/quote-status-badge";
 import { QuoteDetailPanel } from "@/components/quote-detail-panel";
 import { NewQuoteForm } from "@/components/new-quote-form";
@@ -184,9 +184,7 @@ export default async function QuotesPage({
             <QuoteDetailPanel id={selectedId} closeHref={newHref} />
           ) : (
             formData && (
-              <FormSection tabLabel="견적서 작성">
-                <NewQuoteForm today={todayKstStr()} customers={formData.customers} products={formData.products} />
-              </FormSection>
+              <NewQuoteForm today={todayKstStr()} customers={formData.customers} products={formData.products} />
             )
           )}
         </div>

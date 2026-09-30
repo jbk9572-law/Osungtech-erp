@@ -1411,6 +1411,110 @@
   background: inherit;
 }
 
+/* ── 6-1. Document sheet (전표/문서 작성 화면) ─────────────────
+   구매요청/구매견적요청/견적서/매출/매입/지급결의처럼 "문서를 작성한다"는
+   느낌이 필요한 작성 화면 전용 클래스. 색은 전부 기존 토큰 재사용 —
+   --erp-bg가 이미 사이트 전체의 은은한 쿨그레이 페이지 배경이라 그대로
+   "캔버스"로 쓰고, --erp-panel(흰색)을 그 위에 얹는 "종이" 카드로 쓴다.
+   새 색을 만들지 않아서 다른 화면과 톤이 갈라지지 않는다. */
+.erp-doc-sheet {
+  background: var(--erp-bg);
+  padding: 20px;
+}
+
+.erp-doc-paper {
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  box-shadow: var(--erp-shadow-sm);
+  padding: 24px;
+}
+
+.erp-doc-title {
+  text-align: center;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.3em;
+  color: var(--erp-text);
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--erp-border-strong);
+}
+
+/* 필드 라벨만 옅은 배경으로 구분해서(실제 서식지의 라벨칸 느낌) 문서
+   정보 구획을 표시한다 — 입력 동작/마크업은 기존 .erp-field 그대로
+   두고 라벨 쪽 배경만 얹는 가벼운 방식(매출/매입처럼 동적 필드가 많은
+   화면에 씀). */
+.erp-doc-sheet .erp-field > label {
+  background: var(--erp-bg-subtle);
+  display: inline-block;
+  padding: 1px 6px;
+}
+
+.erp-doc-total {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--erp-text);
+}
+
+/* 구매요청/구매견적요청/견적서처럼 필드가 단순한 화면은 문서 정보를
+   실제 2열 표처럼 라벨칸+값칸으로 짠다. */
+.erp-doc-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--erp-border-strong);
+  margin-bottom: 16px;
+}
+
+.erp-doc-header-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--erp-border);
+}
+
+/* 바깥 .erp-doc-header 테두리와 겹쳐서 시각적으로는 한 줄로 보인다 —
+   맨 아래 줄인지 여부를 행 개수(짝/홀수, 마지막 줄 폭 등)로 따지지
+   않아도 되게 매 줄에 그대로 둔다. */
+.erp-doc-header-row:nth-child(odd) {
+  border-right: 1px solid var(--erp-border);
+}
+
+/* 메모처럼 2열을 통째로 차지하는 줄은 오른쪽 경계가 곧 바깥 테두리라
+   따로 안 그린다. */
+.erp-doc-header-row-full {
+  grid-column: 1 / -1;
+  border-right: none !important;
+}
+
+.erp-doc-header-label {
+  width: 84px;
+  flex-shrink: 0;
+  background: var(--erp-bg-subtle);
+  border-right: 1px solid var(--erp-border);
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.erp-doc-header-value {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-doc-header-value .erp-input,
+.erp-doc-header-value .erp-select {
+  border: none;
+  height: 26px;
+  padding: 0 4px;
+  width: 100%;
+}
+
 /* ── Status badges ─────────────────────────────────────────── */
 .erp-badge {
   display: inline-flex;

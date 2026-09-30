@@ -41,66 +41,77 @@ export function PaymentRequestForm({
   const [cardType, setCardType] = useState<PaymentRequestCardType>(initial?.cardType ?? "개인카드");
 
   return (
-    <form
-      action={formAction}
-      className="grid grid-cols-1 gap-3 md:grid-cols-4"
-      onKeyDown={preventEnterSubmit}
-    >
+    <form action={formAction} className="erp-doc-sheet" onKeyDown={preventEnterSubmit}>
+      <div className="erp-doc-paper grid grid-cols-1 gap-3 md:grid-cols-4">
+      <h2 className="erp-doc-title md:col-span-4">지 급 결 의 서</h2>
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="department" value={department} />
       <input type="hidden" name="period_from" value={periodFrom} />
       <input type="hidden" name="period_to" value={periodTo} />
 
-      <div className="erp-field">
-        <label htmlFor="pr-department">부서명</label>
-        <input
-          id="pr-department"
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-          placeholder="부서명"
-          className="erp-input w-full"
-        />
+      <div className="erp-doc-header md:col-span-4">
+        <div className="erp-doc-header-row">
+          <label htmlFor="pr-department" className="erp-doc-header-label">부서명</label>
+          <span className="erp-doc-header-value">
+            <input
+              id="pr-department"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="부서명"
+              className="erp-input w-full"
+              style={{ border: "none" }}
+            />
+          </span>
+        </div>
+        <div className="erp-doc-header-row">
+          <label htmlFor="pr-card-type" className="erp-doc-header-label">사용카드</label>
+          <span className="erp-doc-header-value">
+            <select
+              id="pr-card-type"
+              name="card_type"
+              value={cardType}
+              onChange={(e) => setCardType(e.target.value as PaymentRequestCardType)}
+              className="erp-select w-full"
+              style={{ border: "none" }}
+            >
+              {PAYMENT_REQUEST_CARD_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </span>
+        </div>
+        <div className="erp-doc-header-row">
+          <label htmlFor="pr-period-from" className="erp-doc-header-label">기간 시작</label>
+          <span className="erp-doc-header-value">
+            <input
+              id="pr-period-from"
+              type="date"
+              value={periodFrom}
+              onChange={(e) => setPeriodFrom(e.target.value)}
+              className="erp-input w-full"
+              style={{ border: "none" }}
+            />
+          </span>
+        </div>
+        <div className="erp-doc-header-row">
+          <label htmlFor="pr-period-to" className="erp-doc-header-label">기간 종료</label>
+          <span className="erp-doc-header-value">
+            <input
+              id="pr-period-to"
+              type="date"
+              value={periodTo}
+              onChange={(e) => setPeriodTo(e.target.value)}
+              className="erp-input w-full"
+              style={{ border: "none" }}
+            />
+          </span>
+        </div>
       </div>
-      <div className="erp-field">
-        <label htmlFor="pr-period-from">기간 시작</label>
-        <input
-          id="pr-period-from"
-          type="date"
-          value={periodFrom}
-          onChange={(e) => setPeriodFrom(e.target.value)}
-          className="erp-input w-full"
-        />
-      </div>
-      <div className="erp-field">
-        <label htmlFor="pr-period-to">기간 종료</label>
-        <input
-          id="pr-period-to"
-          type="date"
-          value={periodTo}
-          onChange={(e) => setPeriodTo(e.target.value)}
-          className="erp-input w-full"
-        />
-      </div>
-
-      <div className="erp-field">
-        <label htmlFor="pr-card-type">사용카드</label>
-        <select
-          id="pr-card-type"
-          name="card_type"
-          value={cardType}
-          onChange={(e) => setCardType(e.target.value as PaymentRequestCardType)}
-          className="erp-input w-full"
-        >
-          {PAYMENT_REQUEST_CARD_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
-          한 문서에는 한 카드로 쓴 내역만 담아주세요 (신한/하나/개인 각각 따로 작성).
-        </p>
-      </div>
+      <p className="md:col-span-4 -mt-2 text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+        한 문서에는 한 카드로 쓴 내역만 담아주세요 (신한/하나/개인 각각 따로 작성).
+      </p>
 
       <PaymentRequestLineItems initialRows={initial?.items} defaultDate={today} />
 
@@ -126,6 +137,7 @@ export function PaymentRequestForm({
           )}
         </button>
         <FormMessage state={state} />
+      </div>
       </div>
     </form>
   );

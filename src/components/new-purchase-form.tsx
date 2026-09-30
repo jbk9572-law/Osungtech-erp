@@ -941,7 +941,7 @@ export function NewPurchaseForm({
     <form
       ref={formRef}
       action={formAction}
-      className="space-y-6"
+      className="erp-doc-sheet"
       onKeyDown={(e) => {
         preventEnterSubmit(e);
         // new-sale-form.tsx와 동일 — ESC를 F7과 같은 "저장 후 닫기"로
@@ -970,6 +970,8 @@ export function NewPurchaseForm({
           localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
       }}
     >
+      <div className="erp-doc-paper space-y-6">
+      <h2 className="erp-doc-title">매 입 전 표</h2>
       <LocationAllocationModal
         open={allocationModalOpen}
         items={multiLocationItems}
@@ -2007,10 +2009,7 @@ export function NewPurchaseForm({
                     공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
                     {formatNumber(taxAmount)}원
                   </div>
-                  <div
-                    className="text-sm font-bold"
-                    style={{ color: "var(--erp-text)" }}
-                  >
+                  <div className="erp-doc-total">
                     {formatNumber(total)}원
                   </div>
                 </td>
@@ -2056,6 +2055,7 @@ export function NewPurchaseForm({
               })}
           </div>
         )}
+      </div>
       </div>
 
     </form>
