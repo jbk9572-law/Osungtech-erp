@@ -52,6 +52,10 @@ type PaperCalcPartnerEntry = {
   amount: number;
 };
 
+// 이월 건의 전표날짜 쪽 캘린더에 "다른 날 작업분이 여기로 이월되어
+// 왔다"고 표시하기 위한 요약(page.tsx의 같은 이름 타입 참고).
+type CarryoverInSummary = { fromDate: string; itemCount: number };
+
 type DayData = {
   salesCount: number;
   salesTotal: number;
@@ -61,6 +65,8 @@ type DayData = {
   purchaseItems: ItemRow[];
   salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
   purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
+  carryoverInSales: CarryoverInSummary[];
+  carryoverInPurchases: CarryoverInSummary[];
   notes: {
     id: string;
     authorName: string;
@@ -743,6 +749,12 @@ function buildMemoCopyText(
   return lines.join("\n");
 }
 
+// "2026-09-30" -> "9/30" — 이월 유입 표시에서 짧게 보여줄 때 쓴다.
+function formatMonthDay(dateStr: string): string {
+  const [, m, d] = dateStr.split("-");
+  return `${Number(m)}/${Number(d)}`;
+}
+
 function CarryoverBadge() {
   return (
     <span
@@ -832,6 +844,8 @@ export function DashboardCalendar({
     purchaseItems: [],
     salesPaperCalcByPartner: {},
     purchasePaperCalcByPartner: {},
+    carryoverInSales: [],
+    carryoverInPurchases: [],
     notes: [],
     calendarItems: [],
   };
@@ -944,6 +958,12 @@ export function DashboardCalendar({
                 carryoverPurchaseCount
                   ? `이월 매입 ${carryoverPurchaseCount}건`
                   : null,
+                ...(data?.carryoverInSales.map(
+                  (e) => `${formatMonthDay(e.fromDate)} 작업분 이월됨(매출 ${e.itemCount}건)`,
+                ) ?? []),
+                ...(data?.carryoverInPurchases.map(
+                  (e) => `${formatMonthDay(e.fromDate)} 작업분 이월됨(매입 ${e.itemCount}건)`,
+                ) ?? []),
                 data?.notes.length ? "메모 있음" : null,
                 hasScheduleDot ? `일정 ${data!.calendarItems.length}건` : null,
                 showLowStockDot ? "안전재고 부족" : null,
@@ -1066,6 +1086,31 @@ export function DashboardCalendar({
                 </button>
               </div>
             </div>
+
+            {(selectedData.carryoverInSales.length > 0 ||
+              selectedData.carryoverInPurchases.length > 0) && (
+              <div
+                className="mb-3 border-l-[3px] p-2 text-xs font-medium"
+                style={{
+                  borderLeftColor: "var(--erp-warning)",
+                  background: "var(--erp-warning-bg)",
+                  color: "var(--erp-warning)",
+                }}
+              >
+                {selectedData.carryoverInSales.map((e, i) => (
+                  <p key={`s-${i}`} className="m-0">
+                    {formatMonthDay(e.fromDate)} 작업분이 이월됨 — 매출 품목{" "}
+                    {e.itemCount}건
+                  </p>
+                ))}
+                {selectedData.carryoverInPurchases.map((e, i) => (
+                  <p key={`p-${i}`} className="m-0">
+                    {formatMonthDay(e.fromDate)} 작업분이 이월됨 — 매입 품목{" "}
+                    {e.itemCount}건
+                  </p>
+                ))}
+              </div>
+            )}
 
             <div
               className="mb-3 border-l-[3px] border-l-[var(--erp-primary)] p-2"

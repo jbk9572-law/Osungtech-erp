@@ -7,7 +7,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
-import { nowInKst } from "@/lib/kst-date";
+import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumber } from "@/lib/format-number";
@@ -18,6 +18,15 @@ function pad(n: number) {
 
 function toDateStr(year: number, month: number, day: number) {
   return `${year}-${pad(month)}-${pad(day)}`;
+}
+
+// created_at(timestamptz)으로 "이번 달에 실제 작업했는지"를 걸러낼 때 쓴다 —
+// order_date(시간 없는 날짜)와 달리 시각까지 있는 컬럼이라, KST 자정 경계를
+// UTC 기준으로 환산해서 넘겨야 gte/lt 필터가 정확히 그 달 하루하루와 맞는다.
+function kstMonthRangeUtcIso(year: number, month: number) {
+  const start = new Date(Date.UTC(year, month - 1, 1) - 9 * 60 * 60 * 1000);
+  const end = new Date(Date.UTC(year, month, 1) - 9 * 60 * 60 * 1000);
+  return { start: start.toISOString(), end: end.toISOString() };
 }
 
 function buildWeeks(year: number, month: number) {
@@ -70,6 +79,10 @@ export default async function DashboardPage({
     prevDate.getMonth() + 1,
     new Date(prevDate.getFullYear(), prevDate.getMonth() + 1, 0).getDate()
   );
+  // 이월(is_carryover) 건은 전표날짜(order_date)를 다른 달/날짜로 찍어도,
+  // 실제 작업일(created_at) 기준으로는 이번 달 "오늘의 업무"에 그대로
+  // 남아있어야 한다 — 아래 carryoverWorkSales/Purchases 조회에서 쓴다.
+  const workDateRange = kstMonthRangeUtcIso(year, month);
 
   const [user, { userId: currentUserId, isAdmin }, paperCalcEnabled] = await Promise.all([
     getUser(),
@@ -81,6 +94,8 @@ export default async function DashboardPage({
     { count: productCount },
     { data: salesItems },
     { data: purchaseItems },
+    { data: carryoverWorkSales },
+    { data: carryoverWorkPurchases },
     { data: salesPaperCalcs },
     { data: purchasePaperCalcs },
     { data: paperStockProduct },
@@ -96,17 +111,37 @@ export default async function DashboardPage({
     supabase
       .from("sales_order_items")
       .select(
-        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, customers(name))"
+        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
       )
       .gte("sales_orders.order_date", monthStart)
       .lte("sales_orders.order_date", monthEnd),
     supabase
       .from("purchase_order_items")
       .select(
-        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, suppliers(name))"
+        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
       )
       .gte("purchase_orders.purchase_date", monthStart)
       .lte("purchase_orders.purchase_date", monthEnd),
+    // 이월 건은 전표날짜가 이번 달 밖(예: 9/30 작업 -> 10/1 전표)일 수도
+    // 있어, 위 order_date 기준 조회로는 아예 안 잡힌다 — 실제 작업일
+    // (created_at)이 이번 달인 이월 건만 따로 걷어서 "오늘의 업무"에
+    // 채운다(전표날짜/월별 집계에는 영향 없음, 아래 본문 루프 참고).
+    supabase
+      .from("sales_order_items")
+      .select(
+        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+      )
+      .eq("sales_orders.is_carryover", true)
+      .gte("sales_orders.created_at", workDateRange.start)
+      .lt("sales_orders.created_at", workDateRange.end),
+    supabase
+      .from("purchase_order_items")
+      .select(
+        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+      )
+      .eq("purchase_orders.is_carryover", true)
+      .gte("purchase_orders.created_at", workDateRange.start)
+      .lt("purchase_orders.created_at", workDateRange.end),
     paperCalcEnabled
       ? supabase
           .from("paper_calculations")
@@ -194,6 +229,11 @@ export default async function DashboardPage({
 
   type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
 
+  // 이월 건의 전표날짜(order_date) 쪽 캘린더에 "다른 날 작업분이 여기로
+  // 이월되어 왔다"고 표시하기 위한 요약 — 실제 항목 상세는 그 작업일
+  // (fromDate) 쪽 캘린더에서 보여주고, 여기서는 건수만 가볍게 모은다.
+  type CarryoverInSummary = { fromDate: string; itemCount: number };
+
   type DayData = {
     salesCount: number;
     salesTotal: number;
@@ -203,6 +243,8 @@ export default async function DashboardPage({
     purchaseItems: ItemRow[];
     salesPaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
     purchasePaperCalcByPartner: Record<string, PaperCalcPartnerEntry>;
+    carryoverInSales: CarryoverInSummary[];
+    carryoverInPurchases: CarryoverInSummary[];
     notes: {
       id: string;
       authorName: string;
@@ -226,11 +268,19 @@ export default async function DashboardPage({
         purchaseItems: [],
         salesPaperCalcByPartner: {},
         purchasePaperCalcByPartner: {},
+        carryoverInSales: [],
+        carryoverInPurchases: [],
         notes: [],
         calendarItems: [],
       };
     }
     return dataByDate[date];
+  }
+
+  function addCarryoverIn(list: CarryoverInSummary[], fromDate: string) {
+    const entry = list.find((e) => e.fromDate === fromDate);
+    if (entry) entry.itemCount += 1;
+    else list.push({ fromDate, itemCount: 1 });
   }
 
   // 거래처별로 모조지 계산 사이즈를 누적한다. 매출/매입 목록에서 거래처 이름
@@ -261,22 +311,22 @@ export default async function DashboardPage({
     entry.sizes = mergePaperCalcInputItems(entry.sizes, inputItems);
   }
 
-  for (const item of salesItems ?? []) {
-    const date = item.sales_orders.order_date;
+  type SalesItemRow = NonNullable<typeof salesItems>[number];
+  type PurchaseItemRow = NonNullable<typeof purchaseItems>[number];
+
+  // 매출 한 줄을 실제로 잡을 날짜(workDate) 기준 버킷에 채운다 — 일반
+  // 건은 전표날짜(order_date)가 곧 작업일이라 그대로 넘기고, 이월 건은
+  // 호출부(아래 두 루프)에서 각자 맞는 날짜를 넘긴다. includeInTotal이
+  // false면(이월 건) 금액은 그 달 salesTotal에 더하지 않는다 — 그만큼은
+  // carryoverInSalesTotal이 회계상 맞는 달의 monthSalesTotal에 더해준다.
+  function addSalesItem(item: SalesItemRow, workDate: string, includeInTotal: boolean) {
     const isReturn = item.sales_orders.is_return;
-    const itemIsCarryover = item.sales_orders.is_carryover;
     // 반품 건은 재고가 늘어나는 반대 방향 거래라 매출 합계에서 차감해야
-    // 하므로, 이 라인의 금액 자체를 음수로 뒤집어서 담는다 — 그러면
-    // salesTotal 누계에도, 화면에 그대로 찍히는 개별 금액에도 부호가
-    // 자연스럽게 반영된다.
+    // 하므로, 이 라인의 금액 자체를 음수로 뒤집어서 담는다.
     const amount = item.quantity * Number(item.unit_price) * (isReturn ? -1 : 1);
-    const bucket = ensure(date);
+    const bucket = ensure(workDate);
     bucket.salesCount += 1;
-    // 이월(is_carryover) 건은 실제로 오늘 처리한 거래라 건수에는 반영하되,
-    // 금액은 다음 달 실적으로 잡히므로 이번 달 salesTotal에는 더하지
-    // 않는다(그만큼은 위에서 구한 carryoverInSalesTotal이 "다음 달"의
-    // monthSalesTotal에 더해준다).
-    if (!itemIsCarryover) bucket.salesTotal += amount;
+    if (includeInTotal) bucket.salesTotal += amount;
     // 모조지(TG0) 라인은 계산에서 자동 반영된 것이라 규격이 없다.
     // 아래 "모조지 사용량" 섹션에서 사이즈별로 정확히 보여주므로 목록에는
     // 넣지 않되, 이 라인의 실제 금액은 그 섹션의 합계 가격으로 옮겨 담는다.
@@ -285,7 +335,7 @@ export default async function DashboardPage({
       const entry = ensurePaperCalcPartner(bucket.salesPaperCalcByPartner, partnerName);
       entry.amount += amount;
       entry.totalSheet += item.quantity;
-      continue;
+      return;
     }
     bucket.salesItems.push({
       partnerName: item.sales_orders.customers?.name ?? "출고처 미상",
@@ -299,24 +349,22 @@ export default async function DashboardPage({
       amount,
       orderId: item.sales_order_id,
       remark: item.remark,
-      isCarryover: itemIsCarryover,
+      isCarryover: item.sales_orders.is_carryover,
       isReturn,
     });
   }
 
-  for (const item of purchaseItems ?? []) {
-    const date = item.purchase_orders.purchase_date;
-    const itemIsCarryover = item.purchase_orders.is_carryover;
+  function addPurchaseItem(item: PurchaseItemRow, workDate: string, includeInTotal: boolean) {
     const amount = item.quantity * Number(item.unit_cost);
-    const bucket = ensure(date);
+    const bucket = ensure(workDate);
     bucket.purchaseCount += 1;
-    if (!itemIsCarryover) bucket.purchaseTotal += amount;
+    if (includeInTotal) bucket.purchaseTotal += amount;
     if (item.products?.sku === PAPER_STOCK_SKU) {
       const partnerName = item.purchase_orders.suppliers?.name ?? "공급처 미상";
       const entry = ensurePaperCalcPartner(bucket.purchasePaperCalcByPartner, partnerName);
       entry.amount += amount;
       entry.totalSheet += item.quantity;
-      continue;
+      return;
     }
     bucket.purchaseItems.push({
       partnerName: item.purchase_orders.suppliers?.name ?? "공급처 미상",
@@ -330,9 +378,47 @@ export default async function DashboardPage({
       amount,
       orderId: item.purchase_order_id,
       remark: item.remark,
-      isCarryover: itemIsCarryover,
+      isCarryover: item.purchase_orders.is_carryover,
       isReturn: false,
     });
+  }
+
+  for (const item of salesItems ?? []) {
+    const orderDate = item.sales_orders.order_date;
+    if (item.sales_orders.is_carryover) {
+      // 이월 건은 실제 작업일(created_at) 기준 버킷은 아래
+      // carryoverWorkSales 루프에서 따로 채운다 — 여기서는 전표날짜
+      // (order_date)가 작업일과 다를 때만, 전표날짜 쪽 캘린더에 "이월
+      // 유입" 표시를 남긴다.
+      const workDate = toKstDateStr(new Date(item.sales_orders.created_at));
+      if (workDate !== orderDate) {
+        addCarryoverIn(ensure(orderDate).carryoverInSales, workDate);
+      }
+      continue;
+    }
+    addSalesItem(item, orderDate, true);
+  }
+
+  for (const item of carryoverWorkSales ?? []) {
+    const workDate = toKstDateStr(new Date(item.sales_orders.created_at));
+    addSalesItem(item, workDate, false);
+  }
+
+  for (const item of purchaseItems ?? []) {
+    const orderDate = item.purchase_orders.purchase_date;
+    if (item.purchase_orders.is_carryover) {
+      const workDate = toKstDateStr(new Date(item.purchase_orders.created_at));
+      if (workDate !== orderDate) {
+        addCarryoverIn(ensure(orderDate).carryoverInPurchases, workDate);
+      }
+      continue;
+    }
+    addPurchaseItem(item, orderDate, true);
+  }
+
+  for (const item of carryoverWorkPurchases ?? []) {
+    const workDate = toKstDateStr(new Date(item.purchase_orders.created_at));
+    addPurchaseItem(item, workDate, false);
   }
 
   for (const calc of salesPaperCalcs ?? []) {
