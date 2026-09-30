@@ -25,7 +25,14 @@
      표 바깥 테두리, 대시보드 카드)에만 별도로 얹는 한 단계 더 짙은
      테두리다. */
   --erp-border: #94a3b8;
-  --erp-border-strong: #1e293b;
+  /* --erp-border-strong은 한때 #1e293b(거의 검정) 2px로, "1차 구조"
+     컨테이너(상세 패널, 표 바깥 테두리, 대시보드 카드)를 진하게
+     감싸는 용도였다 — 화면마다 이 테두리 + 그 안에 또 --erp-grid-wrap
+     테두리가 겹치면서 "박스 안에 박스"로 답답해 보인다는 지적을 받아,
+     --erp-grid-line과 같은 옅은 슬레이트(#cbd5e1) 1px로 낮췄다.
+     구획 구분은 이제 테두리 굵기/명도 대신 배경 차이(--erp-bg-subtle
+     캔버스 위에 --erp-panel 흰 카드)가 주로 맡는다. */
+  --erp-border-strong: #cbd5e1;
   --erp-hover: #eef2f7;
   --erp-selected: #dbeafe;
   /* 표에서 선택된 행 위/아래에 얹는 강조선 — 배경(--erp-selected)만으로는
@@ -1257,17 +1264,16 @@
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   overflow: auto;
-  box-shadow: var(--erp-shadow-sm);
 }
 
-/* .erp-detail(2px 테두리) 안에 패딩 없이 .erp-grid-wrap(마찬가지로 2px
-   테두리) 하나만 꽉 채워 넣는 패턴(매출/매입 품목내역, 거래처/공급처
-   거래품목 등)에서, 두 2px 테두리가 서로 딱 붙어 하나의 굵고 이상한
-   테두리처럼 겹쳐 보이던 문제 — 바깥 .erp-detail 테두리가 이미 그 역할을
-   하므로 이 경우엔 안쪽 테두리를 없앤다. */
+/* .erp-detail 테두리 안에 패딩 없이 .erp-grid-wrap(마찬가지로 테두리가
+   있음) 하나만 꽉 채워 넣는 패턴(매출/매입 품목내역, 거래처/공급처
+   거래품목 등)에서, 두 테두리가 서로 딱 붙어 겹쳐 보이던 문제 — 바깥
+   .erp-detail 테두리가 이미 그 역할을 하므로 이 경우엔 안쪽 테두리를
+   없앤다. */
 .erp-detail-body > .erp-grid-wrap:only-child {
   border: none;
 }
@@ -1285,7 +1291,7 @@
   font-weight: 800;
   text-align: left;
   padding: 0 10px;
-  border-bottom: 2px solid var(--erp-border-strong);
+  border-bottom: 1px solid var(--erp-border-strong);
   border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   position: sticky;
@@ -1476,9 +1482,8 @@
      났다. 배경을 명시적으로 불투명하게 고정해서 어디서 쓰이든 항상
      또렷한 흰 카드로 보이게 한다. */
   background: var(--erp-panel);
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
-  box-shadow: var(--erp-shadow-sm);
 }
 
 /* overflow: hidden은 일부러 안 준다 — 상세박스 안에 "입고 불러오기" 같은
@@ -1570,7 +1575,7 @@ a.erp-detail-tab:hover:not(.active) {
   flex-direction: column;
   min-height: 0;
   max-height: calc(100vh - 140px);
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
 }
 
@@ -1626,7 +1631,7 @@ a.erp-detail-tab:hover:not(.active) {
   min-height: 0;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
   padding: 14px;
 }
@@ -1730,11 +1735,10 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-hero-card {
   background: var(--erp-panel);
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   border-left: 3px solid var(--erp-primary);
   border-radius: 0;
   padding: 16px 18px;
-  box-shadow: var(--erp-shadow-sm);
 }
 
 .erp-hero-label {
@@ -1775,10 +1779,9 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-home-panel {
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   background: var(--erp-panel);
-  box-shadow: var(--erp-shadow-sm);
   overflow: hidden;
 }
 
@@ -1803,9 +1806,8 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 12px;
   padding: 12px 14px;
   background: var(--erp-panel);
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
-  box-shadow: var(--erp-shadow-sm);
   color: inherit;
   text-decoration: none;
 }
@@ -2346,7 +2348,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: min(78vh, 760px);
   min-height: 420px;
   background: var(--erp-panel);
-  border: 2px solid var(--erp-border-strong);
+  border: 1px solid var(--erp-border-strong);
   border-radius: 0;
   overflow: hidden;
 }
