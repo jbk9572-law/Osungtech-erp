@@ -255,14 +255,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(
-    180deg,
-    var(--erp-primary),
-    var(--erp-primary-dark)
-  );
+  background: var(--erp-primary);
   color: #fff;
   padding: 0 12px;
-  box-shadow: var(--erp-shadow-md);
+  box-shadow: var(--erp-shadow-sm);
   position: relative;
   z-index: 20;
 }
