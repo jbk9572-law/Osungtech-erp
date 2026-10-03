@@ -159,24 +159,11 @@ export default async function MonthlyReportPage({
       </form>
 
       <div className="erp-kpi-row">
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div
-            style={{
-              fontSize: 11,
-              color: "var(--erp-text-muted)",
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">
             {year}년 {Number(monthNum)}월 매출액
           </div>
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
+          <div className="erp-kpi-value">
             {formatNumber(totalSalesAmount)}원
           </div>
           {salesDelta && (
@@ -199,24 +186,11 @@ export default async function MonthlyReportPage({
             </div>
           )}
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div
-            style={{
-              fontSize: 11,
-              color: "var(--erp-text-muted)",
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">
             {year}년 {Number(monthNum)}월 매입액
           </div>
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
+          <div className="erp-kpi-value">
             {formatNumber(totalPurchaseAmount)}원
           </div>
           {purchaseDelta && (
@@ -239,47 +213,13 @@ export default async function MonthlyReportPage({
             </div>
           )}
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div
-            style={{
-              fontSize: 11,
-              color: "var(--erp-text-muted)",
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            거래 품목 수
-          </div>
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {formatNumber(itemGroups.length)}개
-          </div>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">거래 품목 수</div>
+          <div className="erp-kpi-value">{formatNumber(itemGroups.length)}개</div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div
-            style={{
-              fontSize: 11,
-              color: "var(--erp-text-muted)",
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            거래처 수
-          </div>
-          <div
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {formatNumber(companyIds.size)}곳
-          </div>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">거래처 수</div>
+          <div className="erp-kpi-value">{formatNumber(companyIds.size)}곳</div>
         </div>
       </div>
 

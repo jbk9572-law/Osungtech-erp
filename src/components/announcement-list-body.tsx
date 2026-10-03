@@ -111,14 +111,33 @@ export function AnnouncementListBody({
       </div>
 
       {filter === "all" && pinnedRows.length > 0 && (
-        <div style={{ margin: "0 8px 8px", background: "var(--erp-info-bg)", border: "1px solid var(--erp-info-border)", padding: "8px 10px" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: "var(--erp-info-text)", margin: "0 0 6px" }}>고정 공지</p>
+        <div
+          style={{
+            margin: "0 8px 8px",
+            background: "var(--erp-bg)",
+            borderLeft: "3px solid var(--erp-primary)",
+            padding: "6px 10px",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 10.5,
+              fontWeight: 700,
+              color: "var(--erp-text-muted)",
+              margin: "0 0 4px",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            📌 고정 공지
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {pinnedRows.map((row) => (
               <Link
                 key={row.id}
                 href={rowHref(row.id)}
-                style={{ fontSize: 12, fontWeight: 600, color: "var(--erp-info-text)", display: "block", padding: "2px 0" }}
+                style={{ fontSize: 12, fontWeight: 600, color: "var(--erp-text)", display: "block", padding: "2px 0" }}
               >
                 {row.title} · {new Date(row.createdAt).toLocaleDateString("ko-KR")}
               </Link>
@@ -134,7 +153,19 @@ export function AnnouncementListBody({
             href={rowHref(row.id)}
             className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
           >
-            <span style={row.read ? { color: "var(--erp-text-muted)" } : { fontWeight: 700 }}>{row.title}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 999,
+                  flex: "0 0 auto",
+                  background: row.read ? "var(--erp-border-strong)" : "var(--erp-primary)",
+                }}
+              />
+              <span style={row.read ? { color: "var(--erp-text-muted)" } : { fontWeight: 700 }}>{row.title}</span>
+            </span>
             {!row.read && (
               <span style={{ marginLeft: 6 }}>
                 <GridBadge tone="danger">안읽음</GridBadge>

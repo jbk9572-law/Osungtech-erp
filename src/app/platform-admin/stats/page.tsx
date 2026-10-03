@@ -31,31 +31,23 @@ export default async function PlatformStatsPage() {
       {stats && (
         <>
           <div className="erp-kpi-row">
-            <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-                전체 테넌트
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(stats.totalTenants)}개</div>
+            <div className="erp-home-panel erp-kpi-card">
+              <div className="erp-kpi-label">전체 테넌트</div>
+              <div className="erp-kpi-value">{formatNumber(stats.totalTenants)}개</div>
             </div>
-            <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-                활성 테넌트
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
+            <div className="erp-home-panel erp-kpi-card">
+              <div className="erp-kpi-label">활성 테넌트</div>
+              <div className="erp-kpi-value" style={{ color: "var(--erp-primary)" }}>
                 {formatNumber(stats.activeTenants)}개
               </div>
             </div>
-            <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-                전체 사용자
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(stats.totalUsers)}명</div>
+            <div className="erp-home-panel erp-kpi-card">
+              <div className="erp-kpi-label">전체 사용자</div>
+              <div className="erp-kpi-value">{formatNumber(stats.totalUsers)}명</div>
             </div>
-            <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-                이번 달 가입
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700 }}>
+            <div className="erp-home-panel erp-kpi-card">
+              <div className="erp-kpi-label">이번 달 가입</div>
+              <div className="erp-kpi-value">
                 {formatNumber((monthlySignups.at(-1)?.count ?? 0))}개
               </div>
             </div>

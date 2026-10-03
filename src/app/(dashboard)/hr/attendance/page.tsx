@@ -193,36 +193,29 @@ export default async function AttendancePage() {
       />
 
       <div className="erp-kpi-row" style={{ marginBottom: 16 }}>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            {year}년 연차 총일수
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalDays)}일</div>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">{year}년 연차 총일수</div>
+          <div className="erp-kpi-value">{formatNumber(totalDays)}일</div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            사용(승인 기준)
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">사용(승인 기준)</div>
+          <div className="erp-kpi-value" style={{ color: "var(--erp-primary)" }}>
             {formatNumber(usedThisYear)}일
           </div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            잔여
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: remaining < 0 ? "var(--erp-danger)" : undefined }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">잔여</div>
+          <div className="erp-kpi-value" style={{ color: remaining < 0 ? "var(--erp-danger)" : undefined }}>
             {formatNumber(remaining)}일
           </div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">
             이번주 근무시간 ({week.start.slice(5)}~{week.end.slice(5)})
           </div>
           <div
+            className="erp-kpi-value"
             style={{
-              fontSize: 17,
-              fontWeight: 700,
               color:
                 myWeekTone === "danger"
                   ? "var(--erp-danger)"

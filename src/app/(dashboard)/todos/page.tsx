@@ -162,33 +162,25 @@ export default async function TodosPage({
       )}
 
       <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            전체 할일
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalCount)}건</div>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">전체 할일</div>
+          <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            진행중
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">진행중</div>
+          <div className="erp-kpi-value" style={{ color: "var(--erp-primary)" }}>
             {formatNumber(inProgressCount)}건
           </div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            기한초과
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: overdueCount ? "var(--erp-danger)" : undefined }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">기한초과</div>
+          <div className="erp-kpi-value" style={{ color: overdueCount ? "var(--erp-danger)" : undefined }}>
             {formatNumber(overdueCount)}건
           </div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            완료
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-text-muted)" }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">완료</div>
+          <div className="erp-kpi-value" style={{ color: "var(--erp-text-muted)" }}>
             {formatNumber(doneCount)}건
           </div>
         </div>

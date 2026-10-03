@@ -106,33 +106,25 @@ export default async function AnnouncementsPage({
       </div>
 
       <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            전체 공지
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(totalCount)}건</div>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">전체 공지</div>
+          <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            안읽음
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: unreadCount ? "var(--erp-danger)" : undefined }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">안읽음</div>
+          <div className="erp-kpi-value" style={{ color: unreadCount ? "var(--erp-danger)" : undefined }}>
             {formatNumber(unreadCount)}건
           </div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            고정 공지
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--erp-primary)" }}>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">고정 공지</div>
+          <div className="erp-kpi-value" style={{ color: "var(--erp-primary)" }}>
             {formatNumber(pinnedCount)}건
           </div>
         </div>
-        <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-          <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
-            이번주 등록
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700 }}>{formatNumber(thisWeekCount)}건</div>
+        <div className="erp-home-panel erp-kpi-card">
+          <div className="erp-kpi-label">이번주 등록</div>
+          <div className="erp-kpi-value">{formatNumber(thisWeekCount)}건</div>
         </div>
       </div>
 
