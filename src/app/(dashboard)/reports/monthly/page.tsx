@@ -537,7 +537,7 @@ export default async function MonthlyReportPage({
                             style={{
                               flex: 1,
                               height: 5,
-                              borderRadius: 0,
+                              borderRadius: 999,
                               background: "var(--erp-divider)",
                               overflow: "hidden",
                             }}
@@ -545,7 +545,7 @@ export default async function MonthlyReportPage({
                             <div
                               style={{
                                 height: "100%",
-                                borderRadius: 0,
+                                borderRadius: 999,
                                 background: "var(--erp-primary)",
                                 width: `${Math.min(share, 100)}%`,
                               }}
