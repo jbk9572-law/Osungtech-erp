@@ -1568,6 +1568,9 @@ export type Database = {
           doc_no: number;
           created_by: string | null;
           created_at: string;
+          status: "pending" | "material_issued" | "completed" | "cancelled";
+          material_issued_at: string | null;
+          completed_at: string | null;
         };
         Insert: {
           id?: string;
@@ -1579,6 +1582,9 @@ export type Database = {
           doc_no?: number;
           created_by?: string | null;
           created_at?: string;
+          status?: "pending" | "material_issued" | "completed" | "cancelled";
+          material_issued_at?: string | null;
+          completed_at?: string | null;
         };
         Update: {
           id?: string;
@@ -1590,6 +1596,9 @@ export type Database = {
           doc_no?: number;
           created_by?: string | null;
           created_at?: string;
+          status?: "pending" | "material_issued" | "completed" | "cancelled";
+          material_issued_at?: string | null;
+          completed_at?: string | null;
         };
         Relationships: [
           {
@@ -1611,6 +1620,217 @@ export type Database = {
             columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      production_processes: {
+        Row: { id: string; name: string; sort_order: number; created_at: string };
+        Insert: { id?: string; name: string; sort_order?: number; created_at?: string };
+        Update: { id?: string; name?: string; sort_order?: number; created_at?: string };
+        Relationships: [];
+      };
+      product_process_routes: {
+        Row: { id: string; product_id: string; process_id: string; sort_order: number; created_at: string };
+        Insert: { id?: string; product_id: string; process_id: string; sort_order?: number; created_at?: string };
+        Update: { id?: string; product_id?: string; process_id?: string; sort_order?: number; created_at?: string };
+        Relationships: [
+          {
+            foreignKeyName: "product_process_routes_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_process_routes_process_id_fkey";
+            columns: ["process_id"];
+            isOneToOne: false;
+            referencedRelation: "production_processes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      work_order_process_steps: {
+        Row: {
+          id: string;
+          work_order_id: string;
+          process_id: string;
+          process_name: string;
+          sort_order: number;
+          status: "pending" | "in_progress" | "done";
+          started_at: string | null;
+          completed_at: string | null;
+          note: string | null;
+        };
+        Insert: {
+          id?: string;
+          work_order_id: string;
+          process_id: string;
+          process_name: string;
+          sort_order?: number;
+          status?: "pending" | "in_progress" | "done";
+          started_at?: string | null;
+          completed_at?: string | null;
+          note?: string | null;
+        };
+        Update: {
+          id?: string;
+          work_order_id?: string;
+          process_id?: string;
+          process_name?: string;
+          sort_order?: number;
+          status?: "pending" | "in_progress" | "done";
+          started_at?: string | null;
+          completed_at?: string | null;
+          note?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_order_process_steps_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      customer_portal_accounts: {
+        Row: {
+          id: string;
+          user_id: string;
+          customer_id: string;
+          username: string;
+          disabled: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          customer_id: string;
+          username: string;
+          disabled?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          customer_id?: string;
+          username?: string;
+          disabled?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_portal_accounts_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      customer_orders: {
+        Row: {
+          id: string;
+          customer_id: string;
+          requested_by: string;
+          status: "requested" | "approved" | "rejected" | "cancelled";
+          memo: string | null;
+          reject_reason: string | null;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          work_order_id: string | null;
+          sales_order_id: string | null;
+          shipping_status: "pending" | "shipped" | "delivered";
+          shipped_at: string | null;
+          delivered_at: string | null;
+          doc_no: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          requested_by: string;
+          status?: "requested" | "approved" | "rejected" | "cancelled";
+          memo?: string | null;
+          reject_reason?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          work_order_id?: string | null;
+          sales_order_id?: string | null;
+          shipping_status?: "pending" | "shipped" | "delivered";
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          doc_no?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          requested_by?: string;
+          status?: "requested" | "approved" | "rejected" | "cancelled";
+          memo?: string | null;
+          reject_reason?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          work_order_id?: string | null;
+          sales_order_id?: string | null;
+          shipping_status?: "pending" | "shipped" | "delivered";
+          shipped_at?: string | null;
+          delivered_at?: string | null;
+          doc_no?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_orders_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_orders_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      customer_order_items: {
+        Row: { id: string; customer_order_id: string; product_id: string; quantity: number; unit_price: number };
+        Insert: {
+          id?: string;
+          customer_order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price?: number;
+        };
+        Update: {
+          id?: string;
+          customer_order_id?: string;
+          product_id?: string;
+          quantity?: number;
+          unit_price?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "customer_order_items_customer_order_id_fkey";
+            columns: ["customer_order_id"];
+            isOneToOne: false;
+            referencedRelation: "customer_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_order_items_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];
@@ -4353,6 +4573,81 @@ export type Database = {
       delete_work_order: {
         Args: { p_id: string };
         Returns: void;
+      };
+      issue_work_order_materials: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      complete_work_order: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      update_work_order_process_step: {
+        Args: { p_id: string; p_status: string };
+        Returns: void;
+      };
+      portal_whoami: {
+        Args: Record<PropertyKey, never>;
+        Returns: { customer_id: string; customer_name: string; username: string }[];
+      };
+      portal_list_catalog: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          product_id: string;
+          sku: string;
+          name: string;
+          spec: string | null;
+          unit: string;
+          unit_price: number;
+        }[];
+      };
+      portal_create_order: {
+        Args: { p_items: Json; p_memo?: string | null };
+        Returns: string;
+      };
+      portal_list_orders: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+          doc_no: number;
+          status: string;
+          memo: string | null;
+          created_at: string;
+          work_order_status: string | null;
+          shipping_status: string;
+          item_count: number;
+          total_amount: number;
+        }[];
+      };
+      portal_get_order: {
+        Args: { p_order_id: string };
+        Returns: {
+          id: string;
+          doc_no: number;
+          status: string;
+          memo: string | null;
+          reject_reason: string | null;
+          created_at: string;
+          work_order_status: string | null;
+          shipping_status: string;
+          shipped_at: string | null;
+          delivered_at: string | null;
+        }[];
+      };
+      portal_get_order_items: {
+        Args: { p_order_id: string };
+        Returns: {
+          product_id: string;
+          name: string;
+          spec: string | null;
+          unit: string;
+          quantity: number;
+          unit_price: number;
+        }[];
+      };
+      portal_get_order_process_steps: {
+        Args: { p_order_id: string };
+        Returns: { process_name: string; sort_order: number; status: string }[];
       };
       apply_location_stock_delta: {
         Args: { p_product_id: string; p_location_id: string; p_delta: number };

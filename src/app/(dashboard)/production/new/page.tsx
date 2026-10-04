@@ -97,8 +97,8 @@ export default async function NewWorkOrderPage() {
 
       <PageGuide>
         완제품을 고르면 BOM에 등록된 구성품별 소요량과 현재 재고를 보여줍니다.
-        등록하는 즉시 구성품이 출고 처리되고 완제품이 입고 처리됩니다(1차
-        범위: 대기/진행 상태 없이 즉시 처리).
+        여기서는 생산지시 등록만 하고(상태: 대기), 구성품 출고(자재투입)와
+        완제품 입고(생산완료)는 목록 화면에서 단계별로 직접 처리합니다.
       </PageGuide>
 
       <FormSection tabLabel="생산지시 등록">

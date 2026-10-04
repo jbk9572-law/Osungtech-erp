@@ -5,10 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 
-// 생산지시 등록 — create_work_order() RPC(migration 100) 하나로 등록+
-// 구성품 소모(출고)+완제품 입고를 원자적으로 처리한다. create_sale_with_items
-// 등과 같은 이유(재고 반영까지 한 번에 묶어야 중간에 실패해도 고아 데이터가
-// 안 남는다)로 RPC를 쓴다.
+// 생산지시 등록(migration 161 이후) — 더 이상 재고를 바로 움직이지
+// 않는다. create_work_order() RPC는 지시 자체와(제품에 공정 라우팅이
+// 있으면) 공정 체크리스트만 만들고, 실제 재고는 아래 자재투입/생산완료
+// 두 동작으로 각각 옮긴다.
 export async function createWorkOrder(_prevState: FormState, formData: FormData): Promise<FormState> {
   const productId = String(formData.get("product_id") ?? "");
   const warehouseId = String(formData.get("warehouse_id") ?? "");
@@ -54,4 +54,51 @@ export async function deleteWorkOrder(_prevState: FormState, formData: FormData)
   revalidatePath("/production");
   revalidatePath("/inventory");
   return { success: "생산지시를 삭제했습니다." };
+}
+
+export async function issueWorkOrderMaterials(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("issue_work_order_materials", { p_id: id });
+  if (error) {
+    return { error: `자재투입 처리에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  revalidatePath("/inventory");
+  return { success: "자재투입 처리했습니다." };
+}
+
+export async function completeWorkOrder(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("complete_work_order", { p_id: id });
+  if (error) {
+    return { error: `생산완료 처리에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  revalidatePath("/inventory");
+  return { success: "생산완료 처리했습니다." };
+}
+
+export async function updateWorkOrderProcessStep(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!id || !["pending", "in_progress", "done"].includes(status)) {
+    return { error: "잘못된 요청입니다." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_work_order_process_step", { p_id: id, p_status: status });
+  if (error) {
+    return { error: `공정 상태 변경에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  return { success: "공정 상태를 변경했습니다." };
 }

@@ -5,6 +5,7 @@ import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
+import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
 import { deleteWorkOrder } from "@/app/(dashboard)/production/actions";
 import { matchesSearch } from "@/lib/search-match";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -29,7 +30,7 @@ export default async function ProductionPage({
   const { data: rawRows } = await supabase
     .from("work_orders")
     .select(
-      "id, doc_no, order_date, quantity, memo, products(sku, name, unit), warehouses(name), profiles!created_by(full_name)",
+      "id, doc_no, order_date, quantity, status, memo, products(sku, name, unit), warehouses(name), profiles!created_by(full_name)",
     )
     .gte("order_date", effectiveFrom)
     .lte("order_date", effectiveTo)
@@ -43,6 +44,21 @@ export default async function ProductionPage({
       )
     : rawRows;
 
+  // 공정 체크리스트가 있는 생산지시만 "N/M 공정" 진행률을 같이 보여준다
+  // (라우팅을 아직 안 쓰는 제품이 더 많아서, 전부에 0/0으로 표시하면
+  // 오히려 잡음이다).
+  const workOrderIds = (rows ?? []).map((r) => r.id);
+  const { data: stepRows } = workOrderIds.length
+    ? await supabase.from("work_order_process_steps").select("work_order_id, status").in("work_order_id", workOrderIds)
+    : { data: [] as { work_order_id: string; status: string }[] };
+  const stepProgressByOrder = new Map<string, { done: number; total: number }>();
+  for (const s of stepRows ?? []) {
+    const cur = stepProgressByOrder.get(s.work_order_id) ?? { done: 0, total: 0 };
+    cur.total += 1;
+    if (s.status === "done") cur.done += 1;
+    stepProgressByOrder.set(s.work_order_id, cur);
+  }
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/production/new" }, Escape: { href: "/dashboard" } }} />
@@ -55,8 +71,9 @@ export default async function ProductionPage({
       </div>
 
       <PageGuide>
-        완제품 BOM을 기준으로 등록한 생산지시 내역입니다. 등록 즉시 구성품이
-        출고 처리되고 완제품이 입고 처리됩니다(1차 범위: MRP-lite).
+        완제품 BOM을 기준으로 등록한 생산지시 내역입니다. 등록(대기) →
+        자재투입(구성품 출고) → 생산완료(완제품 입고) 세 단계로 진행되며,
+        각 단계는 담당자가 직접 눌러 처리합니다.
       </PageGuide>
 
       <DateRangeQuickFilters
@@ -104,38 +121,49 @@ export default async function ProductionPage({
                   수량
                 </th>
                 <th style={{ width: 110 }}>창고</th>
+                <th style={{ width: 70 }}>공정</th>
+                <th style={{ width: 150 }}>상태</th>
                 <th>메모</th>
                 <th style={{ width: 90 }}>등록자</th>
                 <th style={{ width: 70 }} />
               </tr>
             </thead>
             <tbody>
-              {(rows ?? []).map((row) => (
-                <tr key={row.id}>
-                  <td>{row.order_date.replaceAll("-", ".")}</td>
-                  <td>{row.doc_no}</td>
-                  <td>
-                    {row.products?.sku} · {row.products?.name}
-                  </td>
-                  <td className="num">
-                    {formatNumber(Number(row.quantity))} {row.products?.unit}
-                  </td>
-                  <td>{row.warehouses?.name ?? "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
-                  <td>{row.profiles?.full_name ?? "-"}</td>
-                  <td>
-                    <InlineConfirmDelete
-                      action={deleteWorkOrder}
-                      hiddenFields={{ id: row.id }}
-                      warningText="이 생산지시를 삭제하시겠습니까? 구성품/완제품 재고가 되돌려집니다."
-                      triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
-                    />
-                  </td>
-                </tr>
-              ))}
+              {(rows ?? []).map((row) => {
+                const progress = stepProgressByOrder.get(row.id);
+                return (
+                  <tr key={row.id}>
+                    <td>{row.order_date.replaceAll("-", ".")}</td>
+                    <td>{row.doc_no}</td>
+                    <td>
+                      {row.products?.sku} · {row.products?.name}
+                    </td>
+                    <td className="num">
+                      {formatNumber(Number(row.quantity))} {row.products?.unit}
+                    </td>
+                    <td>{row.warehouses?.name ?? "-"}</td>
+                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      {progress ? `${progress.done}/${progress.total}` : "-"}
+                    </td>
+                    <td>
+                      <WorkOrderStatusActions id={row.id} status={row.status} />
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
+                    <td>{row.profiles?.full_name ?? "-"}</td>
+                    <td>
+                      <InlineConfirmDelete
+                        action={deleteWorkOrder}
+                        hiddenFields={{ id: row.id }}
+                        warningText="이 생산지시를 삭제하시겠습니까? 지금까지 진행된 만큼 구성품/완제품 재고가 되돌려집니다."
+                        triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
               {!rows?.length && (
                 <tr>
-                  <td colSpan={8} className="erp-grid-empty">
+                  <td colSpan={10} className="erp-grid-empty">
                     조건에 맞는 생산지시가 없습니다.
                   </td>
                 </tr>
