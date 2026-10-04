@@ -15,6 +15,12 @@
      warning/danger)은 브랜드 포인트색과 별개로 그대로 둔다. */
   --erp-primary: #132944;
   --erp-primary-dark: #0d1d30;
+  /* 아이폰 노치/다이나믹 아일랜드가 있는 화면에서 타이틀바 남색이
+     그 영역까지 꽉 차 보이게, 실제 칸 높이(40px)에 safe-area 인셋을
+     더한 값. 노치가 없는 일반 화면/브라우저에선 inset이 0이라 그냥
+     40px과 같다. 타이틀바 아래에 고정 위치(top:)로 겹치는 모바일
+     드로어/드롭다운도 이 값을 같이 써야 어긋나지 않는다. */
+  --erp-titlebar-h: calc(40px + env(safe-area-inset-top, 0px));
   /* 테두리 색을 옅은 회색(#e2e5eb)에서 슬레이트 톤으로 한 단계 짙게
      올렸다 — "그림자로 구획을 나누던" 것에서 "테두리로 또렷하게
      감싸는" 쪽으로 화면 전체를 옮기기 위한 것이다(사용자가 제미나이/
@@ -250,14 +256,15 @@
 
 /* ── 1. Title Bar (40px) ───────────────────────────────────── */
 .erp-titlebar {
-  height: 40px;
-  flex: 0 0 40px;
+  height: var(--erp-titlebar-h);
+  flex: 0 0 var(--erp-titlebar-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--erp-primary);
   color: #fff;
   padding: 0 12px;
+  padding-top: env(safe-area-inset-top, 0px);
   box-shadow: var(--erp-shadow-sm);
   position: relative;
   z-index: 20;
@@ -3172,7 +3179,7 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-tree,
   .erp-tree.collapsed {
     position: fixed;
-    top: 40px;
+    top: var(--erp-titlebar-h);
     bottom: 0;
     left: 0;
     width: 240px;
@@ -3189,7 +3196,7 @@ a.erp-detail-tab:hover:not(.active) {
 
   .erp-tree-backdrop {
     position: fixed;
-    top: 40px;
+    top: var(--erp-titlebar-h);
     right: 0;
     bottom: 0;
     left: 0;
@@ -3204,7 +3211,7 @@ a.erp-detail-tab:hover:not(.active) {
      종 버튼이 아니라 화면 기준 좌우 여백만 주는 고정 위치로 바꾼다. */
   .erp-bell-dropdown {
     position: fixed;
-    top: 40px;
+    top: var(--erp-titlebar-h);
     left: 12px;
     right: 12px;
     width: auto;
