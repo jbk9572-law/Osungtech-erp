@@ -370,6 +370,8 @@
   border-radius: 0;
   font-size: 12px;
   color: var(--erp-text);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .erp-ribbon-btn:hover {
@@ -3016,11 +3018,6 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-titlebar-menu-toggle:hover {
   background: rgba(255, 255, 255, 0.12);
-}
-
-.erp-ribbon-btn {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

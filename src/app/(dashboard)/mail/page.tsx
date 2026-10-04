@@ -140,8 +140,20 @@ export default async function MailPage({
                 href={`/mail?folder=${folder}&id=${m.id}`}
                 className={`erp-split-list-row${m.id === id ? " active" : ""}`}
               >
-                <span style={m.is_read ? undefined : { fontWeight: 700 }}>
-                  {m.subject || "(제목 없음)"} {m.has_attachments ? "📎" : ""}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 999,
+                      flex: "0 0 auto",
+                      background: m.is_read ? "var(--erp-border-strong)" : "var(--erp-primary)",
+                    }}
+                  />
+                  <span style={m.is_read ? undefined : { fontWeight: 700 }}>
+                    {m.subject || "(제목 없음)"} {m.has_attachments ? "📎" : ""}
+                  </span>
                 </span>
                 <div className="erp-split-list-row-sub">
                   {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"} · {formatDate(m.sent_at)}

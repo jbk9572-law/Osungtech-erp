@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { GridBadge } from "@/components/grid/badge";
 import { GenerateDocumentForm } from "@/components/generate-document-form";
 import { DocumentDetailPanel } from "@/components/document-detail-panel";
 import { createDocument } from "@/app/(dashboard)/hr/documents/actions";
@@ -100,10 +101,14 @@ export default async function DocumentsPage({
                 className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
               >
                 {d.title}
+                <span style={{ marginLeft: 6 }}>
+                  <GridBadge tone={d.status === "issued" ? "ok" : "warn"}>
+                    {d.status === "issued" ? "발급완료" : "초안"}
+                  </GridBadge>
+                </span>
                 <div className="erp-split-list-row-sub">
                   {new Date(d.created_at).toLocaleDateString("ko-KR")}
-                  {d.profiles?.full_name ? ` · ${d.profiles.full_name}` : ""} ·{" "}
-                  {d.status === "issued" ? "발급완료" : "초안"}
+                  {d.profiles?.full_name ? ` · ${d.profiles.full_name}` : ""}
                 </div>
               </Link>
             ))}

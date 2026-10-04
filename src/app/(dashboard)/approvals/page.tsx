@@ -302,14 +302,16 @@ export default async function ApprovalsPage({
                   className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
                 >
                   {d.title}
+                  <span style={{ marginLeft: 6 }}>
+                    <GridBadge tone={status.tone}>{status.label}</GridBadge>
+                  </span>
                   {d.myTurn && (
                     <span style={{ marginLeft: 6 }}>
                       <GridBadge tone="warn">내 차례</GridBadge>
                     </span>
                   )}
                   <div className="erp-split-list-row-sub">
-                    {d.profiles?.full_name ?? "-"} · {new Date(d.created_at).toLocaleDateString("ko-KR")} ·{" "}
-                    {status.label}
+                    {d.profiles?.full_name ?? "-"} · {new Date(d.created_at).toLocaleDateString("ko-KR")}
                   </div>
                 </Link>
               );
