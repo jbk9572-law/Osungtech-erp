@@ -135,7 +135,10 @@ export const MENU_GROUPS: MenuGroup[] = [
   },
   {
     label: "생산관리",
-    items: [{ label: "생산지시 내역", href: "/production" }],
+    items: [
+      { label: "거래처 발주 승인", href: "/customer-orders" },
+      { label: "생산지시 내역", href: "/production" },
+    ],
     featureKey: "production",
   },
   {

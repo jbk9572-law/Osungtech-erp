@@ -15,6 +15,8 @@ import {
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/require-admin";
 
 const DELIVERY_NOTE_VARIANTS = ["sns_filtech", "zenith_tech", "ket_solution"] as const;
 
@@ -559,4 +561,69 @@ export async function getCustomerTransactionHistory(
 
   const filtered = fromDate ? withBalance.filter((r) => r.date >= fromDate) : withBalance;
   return filtered.reverse();
+}
+
+function generatePortalPassword(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+}
+
+// 거래처 포털 계정 발급 — settings/users/actions.ts의 createUserAccount와
+// 같은 service_role 경로를 쓰지만, user_metadata에 tenant_id 대신
+// portal_customer_id를 실어서 handle_new_user() 트리거가 완전히 다른
+// 분기(customer_portal_accounts 전용, profiles/tenant_members는 안 건드림)를
+// 타게 한다 — 그래서 포털 계정은 내부 직원 권한 체계에 전혀 섞이지 않는다.
+// 비밀번호는 화면에 "한 번만" 보여주고 저장하지 않는다(직원이 그 자리에서
+// 거래처에 전달).
+export async function createPortalAccount(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 포털 계정을 발급할 수 있습니다." };
+
+  const customerId = String(formData.get("customer_id") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!customerId || !email) {
+    return { error: "거래처와 이메일을 확인해주세요." };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "이메일 형식이 올바르지 않습니다." };
+  }
+
+  const { data: customer } = await supabase.from("customers").select("name").eq("id", customerId).maybeSingle();
+  if (!customer) return { error: "거래처를 찾을 수 없습니다." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const password = generatePortalPassword();
+  const { data: created, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { portal_customer_id: customerId, username: email },
+  });
+
+  if (error || !created.user) {
+    const isDuplicate = error?.message?.toLowerCase().includes("already");
+    return { error: isDuplicate ? "이미 사용 중인 이메일입니다." : (error?.message ?? "계정 생성에 실패했습니다.") };
+  }
+
+  revalidatePath("/customers");
+  return { success: `포털 계정을 발급했습니다. 이메일: ${email} / 임시 비밀번호: ${password} (지금 거래처에 전달해주세요 — 다시 보여드리지 않습니다)` };
+}
+
+export async function disablePortalAccount(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 처리할 수 있습니다." };
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const { error } = await supabase.from("customer_portal_accounts").update({ disabled: true }).eq("id", id);
+  if (error) return { error: `비활성화에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/customers");
+  return { success: "포털 계정을 비활성화했습니다." };
 }

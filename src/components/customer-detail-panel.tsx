@@ -20,6 +20,7 @@ import {
   cancelPriceSchedule,
 } from "@/app/(dashboard)/customers/actions";
 import { PartyProductNoteForm } from "@/components/party-product-note-form";
+import { PortalAccountForm, PortalAccountDisableForm } from "@/components/portal-account-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
@@ -41,7 +42,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
   // (별도 크론 없이 "그 날짜가 된 뒤 누군가 화면을 열면 그때 적용"되는 방식).
   await applyDuePriceSchedules(supabase, id);
 
-  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance, { data: activities }] =
+  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance, { data: activities }, { data: portalAccounts }] =
     await Promise.all([
       supabase.from("customers").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -64,6 +65,11 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
         .select("id, activity_type, subject, content, activity_date, next_action_date, next_action_memo")
         .eq("customer_id", id)
         .order("activity_date", { ascending: false }),
+      supabase
+        .from("customer_portal_accounts")
+        .select("id, username, disabled, created_at")
+        .eq("customer_id", id)
+        .order("created_at", { ascending: false }),
     ]);
 
   if (!customer) {
@@ -350,6 +356,49 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div className="erp-detail">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">거래처 포털 계정</span>
+        </div>
+        <div className="erp-detail-body">
+          <PageGuide>
+            이 거래처가 외부에서 직접 로그인해 발주를 넣고 진행 상태를
+            조회할 수 있는 포털 계정입니다(내부 직원 계정과는 완전히
+            분리되어 있어, 자사 데이터는 이 거래처 범위 밖은 보이지
+            않습니다). 판매단가가 등록된 품목만 포털 카탈로그에 노출됩니다.
+          </PageGuide>
+          <PortalAccountForm customerId={customer.id} defaultEmail={customer.email ?? ""} />
+          {portalAccounts && portalAccounts.length > 0 && (
+            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th>로그인 이메일</th>
+                    <th style={{ width: 90 }}>상태</th>
+                    <th style={{ width: 110 }}>발급일</th>
+                    <th style={{ width: 90 }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {portalAccounts.map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.username}</td>
+                      <td>
+                        <span className={`erp-badge ${a.disabled ? "erp-badge-muted" : "erp-badge-success"}`}>
+                          {a.disabled ? "비활성" : "사용중"}
+                        </span>
+                      </td>
+                      <td>{new Date(a.created_at).toLocaleDateString("ko-KR")}</td>
+                      <td>{!a.disabled && <PortalAccountDisableForm id={a.id} />}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </>
