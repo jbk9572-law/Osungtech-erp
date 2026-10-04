@@ -17,6 +17,7 @@ import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { GridBadge } from "@/components/grid/badge";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
@@ -1961,6 +1962,14 @@ export function NewSaleForm({
             </tfoot>
           </table>
         </div>
+
+        <KeyboardHintBar
+          items={[
+            { key: "Tab", label: "다음 칸" },
+            { key: "F7", label: "저장" },
+            { key: "Esc", label: "저장 후 닫기" },
+          ]}
+        />
 
         {rows.some(
           (r) =>

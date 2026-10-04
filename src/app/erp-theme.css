@@ -1405,6 +1405,14 @@
 .erp-grid .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
+}
+
+/* 키보드로 행을 옮겨다닐 때(Tab/Enter) 지금 입력 중인 행이 어디인지
+   한눈에 보이게 — 칸 하나(.erp-input:focus)만 알려주던 걸 행 전체
+   배경으로 넓혀서, 넓은 그리드에서도 커서 위치를 놓치지 않게 한다. */
+.erp-grid tbody tr:focus-within td {
+  background: var(--erp-selected);
 }
 
 .erp-grid-empty {
@@ -1789,6 +1797,101 @@ a.erp-detail-tab:hover:not(.active) {
   min-height: 0;
 }
 
+/* 카테고리 사이드바까지 들어가는 3분할(사이드바+목록+상세, 2:2:6
+   비율) — 공지사항처럼 "분류로 거를 수 있는" 목록형 화면 전용.
+   2분할(.erp-split-shell)과 같은 반응형 기준(768px)을 쓴다. */
+.erp-split3-shell {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.2fr) minmax(200px, 0.2fr) minmax(0, 0.6fr);
+  gap: 10px;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.erp-cat-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-height: 0;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  border: 1px solid var(--erp-border-strong);
+  background: var(--erp-panel);
+  padding: 8px 6px;
+}
+
+.erp-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--erp-text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.erp-cat-item:hover {
+  background: var(--erp-hover);
+  color: var(--erp-text);
+}
+
+.erp-cat-item.active {
+  background: var(--erp-selected);
+  color: var(--erp-primary);
+  font-weight: 700;
+}
+
+.erp-cat-item .cnt {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+
+.erp-cat-item.active .cnt {
+  color: var(--erp-primary);
+}
+
+/* F2/F5/F8 같은 실제 키보드 단축키를 화면 하단에 작게 보여주는 힌트
+   바 — KeyboardShortcuts에 이미 등록된 동작인데 화면엔 안 보이던
+   것을 가시화한다(새 기능이 아니라 있던 기능을 드러내는 것). */
+.erp-key-hint-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border: 1px solid var(--erp-border-strong);
+  background: var(--erp-bg-subtle);
+  font-size: 11px;
+  color: var(--erp-text-muted);
+  font-weight: 600;
+}
+
+.erp-key-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.erp-key-hint kbd {
+  background: var(--erp-panel);
+  color: var(--erp-text);
+  border: 1px solid var(--erp-border-strong);
+  padding: 2px 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
+}
+
 .erp-split-list {
   display: flex;
   flex-direction: column;
@@ -1869,6 +1972,18 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-split-list,
   .erp-split-detail {
     max-height: none;
+  }
+
+  .erp-split3-shell {
+    display: block;
+  }
+  .erp-split3-shell[data-mobile-view="detail"] .erp-cat-sidebar,
+  .erp-split3-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+  .erp-cat-sidebar {
+    max-height: none;
+    margin-bottom: 10px;
   }
 }
 
@@ -2036,6 +2151,7 @@ a.erp-detail-tab:hover:not(.active) {
   font-size: 20px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
 }
 
 /* 공지사항/할일관리 목록의 카드형 목록 항목 — 표 대신 클릭 가능한 카드로

@@ -128,23 +128,15 @@ export default async function AnnouncementsPage({
         </div>
       </div>
 
-      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
-        <section className="erp-split-list">
-          <div className="erp-split-list-head">
-            <span>공지 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
-              최근 {formatNumber(limit)}건까지{hasMore ? " · 더 있음" : ""}
-            </span>
-          </div>
-          <AnnouncementListBody rows={gridRows} selectedId={selectedId} rowHref={rowHref} />
-          {hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
-              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
-                더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
-              </Link>
-            </div>
-          )}
-        </section>
+      <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <AnnouncementListBody
+          rows={gridRows}
+          selectedId={selectedId}
+          rowHref={rowHref}
+          limit={limit}
+          hasMore={hasMore}
+          moreHref={moreHref}
+        />
 
         <div className="erp-split-detail">
           {selectedId ? (
