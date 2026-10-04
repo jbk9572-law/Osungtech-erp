@@ -17,6 +17,7 @@ import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav"
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { formatNumber } from "@/lib/format-number";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Product = {
   id: string;
@@ -470,6 +471,7 @@ export function TodoForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

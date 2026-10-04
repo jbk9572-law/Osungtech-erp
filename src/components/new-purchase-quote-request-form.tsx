@@ -8,6 +8,7 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Row = { key: number; productId: string; spec: string; quantity: number; remark: string };
 
@@ -167,6 +168,7 @@ export function NewPurchaseQuoteRequestForm({
         <FormMessage state={state} />
       </div>
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

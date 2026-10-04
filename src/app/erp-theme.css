@@ -1869,6 +1869,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 16px;
   flex-wrap: wrap;
   padding: 8px 12px;
+  margin-bottom: 10px;
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-bg-subtle);
   font-size: 11px;

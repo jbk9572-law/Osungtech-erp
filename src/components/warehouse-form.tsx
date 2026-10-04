@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function WarehouseForm({
   action,
@@ -32,6 +33,7 @@ export function WarehouseForm({
       <div className="md:col-span-3">
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

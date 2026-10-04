@@ -9,6 +9,7 @@ import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-char
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import { extractTemplateFields, renderTemplate } from "@/lib/document-template";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type TemplateOption = { id: string; name: string; body: string };
 export type ApprovalLinePresetOption = { id: string; name: string; approverIds: string[]; referenceIds: string[] };
@@ -190,6 +191,7 @@ export function ApprovalDocumentForm({
         <FormMessage state={state} />
         <FormMessage state={draftState} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

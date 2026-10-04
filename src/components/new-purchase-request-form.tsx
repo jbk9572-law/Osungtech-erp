@@ -10,6 +10,7 @@ import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Row = {
   key: number;
@@ -203,6 +204,7 @@ export function NewPurchaseRequestForm({
         <FormMessage state={state} />
       </div>
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

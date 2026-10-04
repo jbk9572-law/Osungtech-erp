@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type PayrollRates = {
   year: number;
@@ -63,6 +64,7 @@ export function PayrollRateSettingsForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

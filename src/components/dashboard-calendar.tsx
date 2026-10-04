@@ -27,6 +27,7 @@ import {
 import { formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type ItemRow = {
   partnerName: string;
@@ -1681,6 +1682,7 @@ function NoteForm({
           )}
         </button>
         <FormMessage state={state} />
+        <KeyboardHintBar items={[{ key: "F7", label: "메모 추가" }]} />
       </form>
     </div>
   );

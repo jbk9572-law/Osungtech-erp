@@ -5,6 +5,7 @@ import { createActivity } from "@/app/(dashboard)/sales-activities/actions";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 const ACTIVITY_TYPES = ["전화", "방문", "이메일", "기타"] as const;
 
@@ -98,6 +99,7 @@ export function SalesActivityForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

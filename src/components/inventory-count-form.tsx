@@ -10,6 +10,7 @@ import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { GridBadge } from "@/components/grid/badge";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
 import { formatNumber } from "@/lib/format-number";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type CountRow = {
   productId: string;
@@ -422,6 +423,7 @@ export function InventoryCountForm({
           </tbody>
         </table>
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>
       </div>
     </div>

@@ -36,7 +36,7 @@ const ALLOWLIST = new Set([
   "src/app/(dashboard)/settings/password/page.tsx:15",
   // .erp-new-count-cta 자체가 이미 점선 테두리 있는 카드형 콜아웃이라,
   // 안에서 또 PageGuide로 박스 안의 박스를 만들면 오히려 더 지저분해짐.
-  "src/components/inventory-count-form.tsx:147",
+  "src/components/inventory-count-form.tsx:148",
   // 화면 사용법 안내가 아니라 예외 발생 시에만 보이는 에러 경계 문구다 —
   // 화면 가운데 정렬된 짧은 에러 메시지라 PageGuide 박스와는 성격이 다름.
   "src/app/(dashboard)/error.tsx:47",

@@ -5,6 +5,7 @@ import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -62,6 +63,7 @@ export function PriceScheduleForm({
       <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

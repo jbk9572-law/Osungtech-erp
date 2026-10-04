@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { saveMailAccount, deleteMailAccount, testMailConnection } from "@/app/(dashboard)/settings/mail/actions";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type MailAccount = {
   email_address: string;
@@ -147,6 +148,7 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
             {testPending ? "연결 확인 중..." : "연결 테스트"}
           </button>
         </div>
+        <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>
 
       {account && (

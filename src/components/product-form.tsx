@@ -7,6 +7,7 @@ import { PartySearchSelect } from "@/components/party-search-select";
 import { PackageQtyHistoryHint } from "@/components/package-qty-history-hint";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Category = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -210,6 +211,7 @@ export function ProductForm({
       <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

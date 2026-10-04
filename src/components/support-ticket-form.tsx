@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function SupportTicketForm({
   action,
@@ -53,6 +54,7 @@ export function SupportTicketForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

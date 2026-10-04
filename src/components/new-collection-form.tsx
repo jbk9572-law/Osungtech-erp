@@ -7,6 +7,7 @@ import { PartyTransactionHistory } from "@/components/party-transaction-history"
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 // 매출 등록 화면의 "유형: 수금" 모드 — 품목 그리드 없이 출고처의 미수금에
 // 바로 반영되는 수금 내역을 등록한다. addCustomerPayment를 그대로 쓰므로
@@ -96,6 +97,7 @@ export function NewCollectionForm({
           </button>
           <FormMessage state={state} />
         </div>
+        <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>
 
       <PartyTransactionHistory

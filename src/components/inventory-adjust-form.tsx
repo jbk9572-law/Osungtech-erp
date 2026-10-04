@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/form-message";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Product = {
   id: string;
@@ -148,6 +149,7 @@ export function InventoryAdjustForm({
       <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

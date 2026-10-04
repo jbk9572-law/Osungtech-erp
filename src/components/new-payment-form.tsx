@@ -6,6 +6,7 @@ import { PartySearchSelect } from "@/components/party-search-select";
 import { PartyTransactionHistory } from "@/components/party-transaction-history";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 
 // 매입 등록 화면의 "유형: 지급" 모드 — new-collection-form.tsx(수금)과
@@ -95,6 +96,7 @@ export function NewPaymentForm({
           </button>
           <FormMessage state={state} />
         </div>
+        <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>
 
       <PartyTransactionHistory

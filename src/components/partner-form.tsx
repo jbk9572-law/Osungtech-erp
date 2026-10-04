@@ -5,6 +5,7 @@ import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { FieldHint } from "@/components/field-hint";
 
 export type PartnerFormInitial = {
@@ -145,6 +146,7 @@ export function PartnerForm({
       <div className="md:col-span-3">
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

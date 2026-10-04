@@ -10,6 +10,7 @@ import { createPaymentRequest, updatePaymentRequest } from "@/app/(dashboard)/re
 import type { FormState } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useFormRedirect } from "@/lib/use-form-redirect";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Initial = {
   id: string;
@@ -139,6 +140,7 @@ export function PaymentRequestForm({
         <FormMessage state={state} />
       </div>
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

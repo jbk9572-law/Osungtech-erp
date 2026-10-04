@@ -5,11 +5,27 @@ import { useRouter } from "next/navigation";
 import { printInPlace } from "@/lib/print-in-place";
 import { startRouteProgress } from "@/lib/route-progress";
 import { useModalClose, useSetModalCloseHref } from "@/lib/modal-context";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type ShortcutAction =
   | { href: string; newTab?: boolean }
   | { submitFormSelector: string }
   | { printHref: string };
+
+// shortcuts prop에 실제로 들어있는 키만, 항상 같은 순서로 라벨링한다 —
+// 화면마다 직접 힌트바 문구를 적어주는 대신 여기 한 곳에서만 매핑을
+// 관리하면, 새 화면이 KeyboardShortcuts를 쓰는 순간 힌트바도 자동으로
+// 따라온다(키 이름과 실제 동작이 어긋날 일이 없다).
+const HINT_LABELS: Record<string, string> = {
+  F2: "신규",
+  F4: "수정",
+  F5: "검색",
+  F7: "저장",
+  F8: "내보내기",
+  F9: "인쇄",
+  Escape: "닫기",
+};
+const HINT_ORDER = ["F2", "F4", "F5", "F7", "F8", "F9", "Escape"];
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -84,5 +100,10 @@ export function KeyboardShortcuts({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [shortcuts, router, closeModal]);
 
-  return null;
+  const items = HINT_ORDER.filter((key) => shortcuts[key]).map((key) => ({
+    key: key === "Escape" ? "Esc" : key,
+    label: HINT_LABELS[key],
+  }));
+  if (items.length === 0) return null;
+  return <KeyboardHintBar items={items} />;
 }

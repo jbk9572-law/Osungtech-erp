@@ -8,6 +8,7 @@ import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-char
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
 import { LEAVE_UNIT_DAYS, LEAVE_UNIT_LABEL, LEAVE_UNIT_OPTIONS, type LeaveUnit } from "@/lib/leave-unit";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function LeaveRequestForm({
   action,
@@ -168,6 +169,7 @@ export function LeaveRequestForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

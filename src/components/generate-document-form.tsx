@@ -6,6 +6,7 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { PageGuide } from "@/components/erp/page-guide";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type TemplateOption = { id: string; name: string; body: string };
 type EmployeeOption = {
@@ -179,6 +180,7 @@ export function GenerateDocumentForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

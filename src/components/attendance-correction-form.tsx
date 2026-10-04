@@ -7,6 +7,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
+import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function AttendanceCorrectionForm({
   action,
@@ -102,6 +103,7 @@ export function AttendanceCorrectionForm({
         </button>
         <FormMessage state={state} />
       </div>
+      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }
