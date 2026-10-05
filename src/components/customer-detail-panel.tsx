@@ -370,13 +370,13 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
             분리되어 있어, 자사 데이터는 이 거래처 범위 밖은 보이지
             않습니다). 판매단가가 등록된 품목만 포털 카탈로그에 노출됩니다.
           </PageGuide>
-          <PortalAccountForm customerId={customer.id} defaultEmail={customer.email ?? ""} />
+          <PortalAccountForm customerId={customer.id} />
           {portalAccounts && portalAccounts.length > 0 && (
             <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th>로그인 이메일</th>
+                    <th>아이디</th>
                     <th style={{ width: 90 }}>상태</th>
                     <th style={{ width: 110 }}>발급일</th>
                     <th style={{ width: 90 }} />

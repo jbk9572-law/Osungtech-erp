@@ -4466,6 +4466,10 @@ export type Database = {
         Args: { p_slug: string; p_username: string };
         Returns: string | null;
       };
+      get_portal_email_for_username: {
+        Args: { p_username: string };
+        Returns: string | null;
+      };
       set_tenant_feature_enabled: {
         Args: { p_feature_key: string; p_enabled: boolean };
         Returns: void;

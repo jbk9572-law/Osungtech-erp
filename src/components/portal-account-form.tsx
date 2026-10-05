@@ -4,7 +4,7 @@ import { useActionState, useRef, useEffect } from "react";
 import { createPortalAccount, disablePortalAccount } from "@/app/(dashboard)/customers/actions";
 import { FormMessage } from "@/components/form-message";
 
-export function PortalAccountForm({ customerId, defaultEmail }: { customerId: string; defaultEmail: string }) {
+export function PortalAccountForm({ customerId }: { customerId: string }) {
   const [state, formAction, pending] = useActionState(createPortalAccount, undefined);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -15,9 +15,13 @@ export function PortalAccountForm({ customerId, defaultEmail }: { customerId: st
   return (
     <form ref={formRef} action={formAction} className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="customer_id" value={customerId} />
-      <div className="erp-field" style={{ minWidth: 220 }}>
-        <label>로그인 이메일</label>
-        <input name="email" type="email" autoComplete="off" defaultValue={defaultEmail} required className="erp-input" style={{ width: "100%" }} />
+      <div className="erp-field" style={{ minWidth: 160 }}>
+        <label>아이디</label>
+        <input name="username" type="text" autoComplete="off" required className="erp-input" style={{ width: "100%" }} />
+      </div>
+      <div className="erp-field" style={{ minWidth: 160 }}>
+        <label>비밀번호 (비워두면 자동 생성)</label>
+        <input name="password" type="text" autoComplete="off" className="erp-input" style={{ width: "100%" }} />
       </div>
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
         {pending ? "발급 중..." : "포털 계정 발급"}
