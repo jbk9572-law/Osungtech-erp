@@ -8,6 +8,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
 import { WorkOrderProcessStepActions } from "@/components/work-order-process-step-actions";
 import { WorkOrderProcessStepAssignCell } from "@/components/work-order-process-step-assign-cell";
+import { WorkOrderStepDefectResolveButton } from "@/components/work-order-step-defect-resolve-button";
 
 export default async function WorkOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,7 +25,9 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
       .maybeSingle(),
     supabase
       .from("work_order_process_steps")
-      .select("id, process_name, sort_order, status, assignee_kind, subcontractor_id, subcontractors(name)")
+      .select(
+        "id, process_name, sort_order, status, assignee_kind, subcontractor_id, defect_hold, defect_quantity, subcontractors(name)",
+      )
       .eq("work_order_id", id)
       .order("sort_order"),
     supabase.from("subcontractors").select("id, name").order("name"),
@@ -134,7 +137,8 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                     <th>공정</th>
                     <th style={{ width: 110 }}>이전 담당</th>
                     <th style={{ width: 160 }}>담당</th>
-                    <th style={{ width: 160 }}>상태</th>
+                    <th style={{ width: 90 }}>불량</th>
+                    <th style={{ width: 200 }}>상태</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -159,8 +163,23 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                           subcontractors={subcontractors ?? []}
                         />
                       </td>
+                      <td style={{ color: Number(s.defect_quantity) > 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}>
+                        {Number(s.defect_quantity) > 0 ? `${formatNumber(Number(s.defect_quantity))}개` : "-"}
+                      </td>
                       <td>
-                        <WorkOrderProcessStepActions id={s.id} workOrderId={workOrder.id} status={s.status} />
+                        {s.defect_hold ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
+                            <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
+                          </div>
+                        ) : (
+                          <WorkOrderProcessStepActions
+                            id={s.id}
+                            workOrderId={workOrder.id}
+                            status={s.status}
+                            defectHold={s.defect_hold}
+                          />
+                        )}
                       </td>
                     </tr>
                     );

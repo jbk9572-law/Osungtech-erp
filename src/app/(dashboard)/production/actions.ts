@@ -90,7 +90,7 @@ export async function updateWorkOrderProcessStep(_prevState: FormState, formData
   const id = String(formData.get("id") ?? "");
   const workOrderId = String(formData.get("work_order_id") ?? "");
   const status = String(formData.get("status") ?? "");
-  if (!id || !["pending", "in_progress", "done", "shipped"].includes(status)) {
+  if (!id || !["pending", "received", "in_progress", "done", "shipped"].includes(status)) {
     return { error: "잘못된 요청입니다." };
   }
 
@@ -160,4 +160,22 @@ export async function createAndAssignSubcontractor(_prevState: FormState, formDa
   revalidatePath("/subcontractors");
   if (workOrderId) revalidatePath(`/production/${workOrderId}`);
   return { success: `${name} 업체를 등록하고 배정했습니다.` };
+}
+
+// 입고시 불량으로 보류된 공정을 원청(사내)에서 확인 후 해제한다 — 이전
+// 공정/업체와 공유가 끝나 작업을 진행해도 된다고 판단했을 때 누른다.
+export async function resolveStepDefectHold(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("resolve_step_defect_hold", { p_step_id: id });
+  if (error) {
+    return { error: `불량 보류 해제에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
+  return { success: "불량 보류를 해제했습니다. 작업을 진행할 수 있습니다." };
 }

@@ -1658,12 +1658,15 @@ export type Database = {
           process_id: string;
           process_name: string;
           sort_order: number;
-          status: "pending" | "in_progress" | "done" | "shipped";
+          status: "pending" | "received" | "in_progress" | "done" | "shipped";
           assignee_kind: "internal" | "subcontractor";
           subcontractor_id: string | null;
+          received_at: string | null;
           started_at: string | null;
           completed_at: string | null;
           shipped_at: string | null;
+          defect_hold: boolean;
+          defect_quantity: number;
           note: string | null;
         };
         Insert: {
@@ -1672,12 +1675,15 @@ export type Database = {
           process_id: string;
           process_name: string;
           sort_order?: number;
-          status?: "pending" | "in_progress" | "done" | "shipped";
+          status?: "pending" | "received" | "in_progress" | "done" | "shipped";
           assignee_kind?: "internal" | "subcontractor";
           subcontractor_id?: string | null;
+          received_at?: string | null;
           started_at?: string | null;
           completed_at?: string | null;
           shipped_at?: string | null;
+          defect_hold?: boolean;
+          defect_quantity?: number;
           note?: string | null;
         };
         Update: {
@@ -1686,12 +1692,15 @@ export type Database = {
           process_id?: string;
           process_name?: string;
           sort_order?: number;
-          status?: "pending" | "in_progress" | "done" | "shipped";
+          status?: "pending" | "received" | "in_progress" | "done" | "shipped";
           assignee_kind?: "internal" | "subcontractor";
           subcontractor_id?: string | null;
+          received_at?: string | null;
           started_at?: string | null;
           completed_at?: string | null;
           shipped_at?: string | null;
+          defect_hold?: boolean;
+          defect_quantity?: number;
           note?: string | null;
         };
         Relationships: [
@@ -1707,6 +1716,59 @@ export type Database = {
             columns: ["subcontractor_id"];
             isOneToOne: false;
             referencedRelation: "subcontractors";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      work_order_step_defects: {
+        Row: {
+          id: string;
+          step_id: string;
+          defect_type: "receiving" | "work";
+          quantity: number;
+          note: string | null;
+          reported_by: string;
+          reported_by_label: string;
+          created_at: string;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          step_id: string;
+          defect_type: "receiving" | "work";
+          quantity: number;
+          note?: string | null;
+          reported_by: string;
+          reported_by_label: string;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          step_id?: string;
+          defect_type?: "receiving" | "work";
+          quantity?: number;
+          note?: string | null;
+          reported_by?: string;
+          reported_by_label?: string;
+          created_at?: string;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_order_step_defects_step_id_fkey";
+            columns: ["step_id"];
+            isOneToOne: false;
+            referencedRelation: "work_order_process_steps";
             referencedColumns: ["id"];
           },
         ];
@@ -4705,6 +4767,29 @@ export type Database = {
         Args: { p_step_id: string; p_status: string };
         Returns: void;
       };
+      subcontractor_confirm_receiving: {
+        Args: {
+          p_step_id: string;
+          p_has_defect: boolean;
+          p_defect_quantity?: number | null;
+          p_note?: string | null;
+        };
+        Returns: {
+          tenant_id: string;
+          is_demo: boolean;
+          work_order_id: string;
+          process_name: string;
+          subcontractor_name: string;
+        }[];
+      };
+      subcontractor_report_work_defect: {
+        Args: { p_step_id: string; p_quantity: number; p_note?: string | null };
+        Returns: void;
+      };
+      resolve_step_defect_hold: {
+        Args: { p_step_id: string };
+        Returns: void;
+      };
       subcontractor_list_work_orders: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -4743,6 +4828,9 @@ export type Database = {
           started_at: string | null;
           completed_at: string | null;
           shipped_at: string | null;
+          received_at: string | null;
+          defect_hold: boolean;
+          defect_quantity: number;
           is_mine: boolean;
         }[];
       };
