@@ -66,6 +66,19 @@ export const MAIL_SUBJECTS = [
   "계약서 검토 부탁드립니다",
 ];
 
+export const CALENDAR_EVENT_TITLES = [
+  "주간 생산 회의",
+  "거래처 미팅",
+  "품질 점검 일정",
+  "월간 영업 보고",
+  "신규 설비 점검",
+  "협력업체 방문",
+  "재고 실사 일정 조율",
+  "팀 워크숍",
+];
+
+export const CALENDAR_LOCATIONS = ["본사 대회의실", "본사 소회의실", "생산1팀 미팅룸", "거래처 방문", "온라인(Zoom)"];
+
 export const MESSENGER_LINES = [
   "확인했습니다, 감사합니다.",
   "오늘 오후에 처리하겠습니다.",

@@ -8,6 +8,7 @@ import { seedApprovals } from "./boards/approvals";
 import { seedHrDocuments } from "./boards/hr-documents";
 import { seedMessenger } from "./boards/messenger";
 import { seedMail } from "./boards/mail";
+import { seedCalendar } from "./boards/calendar";
 import type { ActingSession, BoardSeedResult, SeedContext } from "./types";
 
 export type DevSeedOptions = {
@@ -99,6 +100,7 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
     () => seedHrDocuments(employees, actors, postsPerBoard),
     () => seedMessenger(actors, postsPerBoard),
     () => seedMail(actors, postsPerBoard),
+    () => seedCalendar(ctx, actors, postsPerBoard),
   ];
 
   const boards: BoardSeedResult[] = [];
