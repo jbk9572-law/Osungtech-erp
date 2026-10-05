@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { portalHref } from "@/lib/portal-path";
 
 export async function portalLogin(
   _prevState: { error: string } | undefined,
@@ -30,11 +31,11 @@ export async function portalLogin(
     return { error: "포털 계정이 아니거나 비활성화된 계정입니다. 담당 직원에게 문의해주세요." };
   }
 
-  redirect("/portal");
+  redirect(await portalHref(""));
 }
 
 export async function portalLogout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/portal/login");
+  redirect(await portalHref("/login"));
 }

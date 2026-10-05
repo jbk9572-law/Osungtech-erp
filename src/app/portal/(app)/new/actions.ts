@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { portalHref } from "@/lib/portal-path";
 
 export async function portalCreateOrder(
   _prevState: { error: string } | undefined,
@@ -30,5 +31,5 @@ export async function portalCreateOrder(
     return { error: `발주 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  redirect("/portal/orders");
+  redirect(await portalHref("/orders"));
 }

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatNumber } from "@/lib/format-number";
+import { portalHref } from "@/lib/portal-path";
 
 function describeProgress(row: {
   status: string;
@@ -40,7 +41,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
         <h1 style={{ fontSize: 16, fontWeight: 700 }}>주문 {order.doc_no}</h1>
-        <Link href="/portal/orders" className="erp-btn">
+        <Link href={await portalHref("/orders")} className="erp-btn">
           목록
         </Link>
       </div>
