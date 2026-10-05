@@ -8,6 +8,7 @@ import {
   CustomerOrderApproveForm,
   CustomerOrderRejectForm,
   ConvertToWorkOrderForm,
+  ConvertToSaleForm,
   ShippingStatusForm,
 } from "@/components/customer-order-review-forms";
 
@@ -34,7 +35,7 @@ export default async function CustomerOrdersPage({
     supabase
       .from("customer_orders")
       .select(
-        "id, doc_no, status, memo, reject_reason, shipping_status, created_at, work_order_id, customers(name), customer_order_items(product_id, quantity, unit_price, products(sku, name, spec, unit)), work_orders(status)",
+        "id, doc_no, status, memo, reject_reason, shipping_status, created_at, customer_id, work_order_id, sales_order_id, customers(name), customer_order_items(product_id, quantity, unit_price, products(sku, name, spec, unit)), work_orders(status)",
       )
       .eq("status", activeTab)
       .order("created_at", { ascending: false })
@@ -42,15 +43,28 @@ export default async function CustomerOrdersPage({
     supabase.from("warehouses").select("id, name").order("name"),
   ]);
 
+  // 품목별로 "우리가 만드는 품목(BOM 있음)"인지 "사입해서 그대로 파는
+  // 품목(BOM 없음)"인지에 따라 승인 후 전환 버튼을 생산지시/판매로
+  // 가른다 — BOM 없는 품목엔 생산지시를 낼 수 없어서(create_work_order가
+  // 거부함), 지금까지는 그런 주문을 승인해도 전환할 방법이 없었다.
+  const productIds = Array.from(
+    new Set((orders ?? []).flatMap((o) => (o.customer_order_items ?? []).map((i) => i.product_id))),
+  );
+  const { data: bomRows } = productIds.length
+    ? await supabase.from("bom_items").select("parent_product_id").in("parent_product_id", productIds)
+    : { data: [] as { parent_product_id: string }[] };
+  const manufacturedProductIds = new Set((bomRows ?? []).map((b) => b.parent_product_id));
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">생산관리 &gt; 거래처 발주 승인</h1>
 
       <PageGuide>
-        거래처가 외부 포털에서 넣은 발주 요청입니다. 승인하면 아래에서
-        품목별로 생산지시로 전환하거나(재고가 충분하면 생략 가능), 배송
-        상태를 거래처 포털에 보여줄 수 있습니다.
+        거래처가 외부 포털에서 넣은 발주 요청입니다. 승인하면 품목이
+        BOM(구성품)이 등록된 제조품인지, 사입해서 그대로 파는 사입품인지에
+        따라 아래에서 생산지시 또는 판매로 전환하고, 배송 상태를 거래처
+        포털에 보여줄 수 있습니다.
       </PageGuide>
 
       <div className="erp-toolbar">
@@ -85,42 +99,70 @@ export default async function CustomerOrdersPage({
                 </span>
               </div>
 
-              <table className="erp-grid" style={{ marginBottom: 8 }}>
-                <thead>
-                  <tr>
-                    <th>품목</th>
-                    <th style={{ width: 90 }}>규격</th>
-                    <th className="num" style={{ width: 100 }}>수량</th>
-                    <th className="num" style={{ width: 100 }}>단가</th>
-                    {activeTab === "approved" && !o.work_order_id && <th style={{ width: 280 }}>생산지시 전환</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(o.customer_order_items ?? []).map((item) => (
-                    <tr key={item.product_id}>
-                      <td>
-                        {item.products?.sku} · {item.products?.name}
-                      </td>
-                      <td>{item.products?.spec ?? "-"}</td>
-                      <td className="num">
-                        {formatNumber(Number(item.quantity))} {item.products?.unit}
-                      </td>
-                      <td className="num">{formatNumber(Number(item.unit_price))}</td>
-                      {activeTab === "approved" && !o.work_order_id && (
-                        <td>
-                          <ConvertToWorkOrderForm
-                            orderId={o.id}
-                            productId={item.product_id}
-                            quantity={Number(item.quantity)}
-                            warehouses={warehouses ?? []}
-                            today={todayKstStr()}
-                          />
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {(() => {
+                const isConverted = Boolean(o.work_order_id || o.sales_order_id);
+                return (
+                  <table className="erp-grid" style={{ marginBottom: 8 }}>
+                    <thead>
+                      <tr>
+                        <th>품목</th>
+                        <th style={{ width: 90 }}>규격</th>
+                        <th className="num" style={{ width: 100 }}>수량</th>
+                        <th className="num" style={{ width: 100 }}>단가</th>
+                        {activeTab === "approved" && !isConverted && <th style={{ width: 280 }}>전환</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(o.customer_order_items ?? []).map((item) => {
+                        const manufactured = manufacturedProductIds.has(item.product_id);
+                        return (
+                          <tr key={item.product_id}>
+                            <td>
+                              {item.products?.sku} · {item.products?.name}
+                              {activeTab === "approved" && !isConverted && (
+                                <span
+                                  className={`erp-badge ${manufactured ? "erp-badge-info" : "erp-badge-muted"}`}
+                                  style={{ marginLeft: 6 }}
+                                >
+                                  {manufactured ? "제조품" : "사입품"}
+                                </span>
+                              )}
+                            </td>
+                            <td>{item.products?.spec ?? "-"}</td>
+                            <td className="num">
+                              {formatNumber(Number(item.quantity))} {item.products?.unit}
+                            </td>
+                            <td className="num">{formatNumber(Number(item.unit_price))}</td>
+                            {activeTab === "approved" && !isConverted && (
+                              <td>
+                                {manufactured ? (
+                                  <ConvertToWorkOrderForm
+                                    orderId={o.id}
+                                    productId={item.product_id}
+                                    quantity={Number(item.quantity)}
+                                    warehouses={warehouses ?? []}
+                                    today={todayKstStr()}
+                                  />
+                                ) : (
+                                  <ConvertToSaleForm
+                                    orderId={o.id}
+                                    customerId={o.customer_id}
+                                    productId={item.product_id}
+                                    quantity={Number(item.quantity)}
+                                    unitPrice={Number(item.unit_price)}
+                                    warehouses={warehouses ?? []}
+                                    today={todayKstStr()}
+                                  />
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
 
               {o.memo && (
                 <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 8 }}>요청사항: {o.memo}</p>
@@ -135,11 +177,15 @@ export default async function CustomerOrdersPage({
 
               {activeTab === "approved" && (
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span className="erp-badge erp-badge-info">
-                    {o.work_order_id
-                      ? `생산지시 연결됨(${o.work_orders?.status === "completed" ? "생산완료" : o.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`
-                      : "생산지시 미연결"}
-                  </span>
+                  {o.work_order_id ? (
+                    <span className="erp-badge erp-badge-info">
+                      {`생산지시 연결됨(${o.work_orders?.status === "completed" ? "생산완료" : o.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`}
+                    </span>
+                  ) : o.sales_order_id ? (
+                    <span className="erp-badge erp-badge-info">판매로 연결됨</span>
+                  ) : (
+                    <span className="erp-badge erp-badge-muted">생산지시/판매 미연결</span>
+                  )}
                   <span className="erp-badge erp-badge-muted">
                     배송: {o.shipping_status === "delivered" ? "완료" : o.shipping_status === "shipped" ? "배송중" : "대기"}
                   </span>

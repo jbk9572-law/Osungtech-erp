@@ -90,6 +90,53 @@ export async function convertCustomerOrderItemToWorkOrder(
   return { success: "생산지시로 전환했습니다." };
 }
 
+// 주문 품목이 BOM 없는(= 우리가 만드는 게 아니라 사입해서 그대로 파는)
+// 품목이면 생산지시가 아니라 바로 판매로 넘겨야 한다. "매출관리 > 출고관리"에서
+// 수동 등록할 때와 같은 create_sale_with_items() RPC를 그대로 재사용한다 —
+// 거래처 포털 주문 전환이라는 출처만 다르고 재고 반영 등은 완전히 동일한
+// 경로다.
+export async function convertCustomerOrderItemToSale(
+  _prevState: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const orderId = String(formData.get("order_id") ?? "");
+  const customerId = String(formData.get("customer_id") ?? "");
+  const productId = String(formData.get("product_id") ?? "");
+  const quantity = Number(formData.get("quantity") ?? 0);
+  const unitPrice = Number(formData.get("unit_price") ?? 0);
+  const warehouseId = String(formData.get("warehouse_id") ?? "");
+  const orderDate = String(formData.get("order_date") ?? "");
+
+  if (!orderId || !customerId || !productId || !warehouseId || !orderDate || !(quantity > 0)) {
+    return { error: "창고와 거래일자를 확인해주세요." };
+  }
+
+  const supabase = await createClient();
+  const user = await getUser();
+  const { data: salesOrderId, error } = await supabase.rpc("create_sale_with_items", {
+    p_customer_id: customerId,
+    p_warehouse_id: warehouseId,
+    p_order_date: orderDate,
+    p_memo: "거래처 포털 주문 전환",
+    p_created_by: user?.id ?? null,
+    p_items: [{ productId, quantity, unitPrice, remark: null }],
+  });
+
+  if (error || !salesOrderId) {
+    return { error: `판매 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+  }
+
+  const { error: linkError } = await supabase
+    .from("customer_orders")
+    .update({ sales_order_id: salesOrderId })
+    .eq("id", orderId);
+  if (linkError) return { error: `판매는 등록됐지만 주문과 연결에 실패했습니다: ${linkError.message}` };
+
+  revalidatePath("/customer-orders");
+  revalidatePath("/sales");
+  return { success: "판매로 전환했습니다." };
+}
+
 export async function updateCustomerOrderShipping(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   const shippingStatus = String(formData.get("shipping_status") ?? "");
