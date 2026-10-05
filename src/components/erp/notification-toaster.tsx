@@ -5,8 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnouncementItem, DueTodoItem, LowStockItem } from "@/components/erp/notification-bell";
 import { formatNumber } from "@/lib/format-number";
 import { pollMyMail } from "@/lib/mail/poll-action";
+import { playAlertSound } from "@/lib/play-alert-sound";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 공지/할일/재고 재확인 — 10분마다
+// 거래처 발주처럼 놓치면 안 되는 알림은 훨씬 짧은 주기로 확인하고 소리까지
+// 울린다(메일 확인과 같은 수준의 체감 실시간성 — 아래 MAIL_POLL_INTERVAL_MS
+// 참고).
+const URGENT_POLL_INTERVAL_MS = 30 * 1000;
+const URGENT_AUTO_HIDE_MS = 3 * 60 * 1000; // 일반 토스트(1분)보다 길게 — 놓치지 않게
 // 메일은 훨씬 짧게 잡는다 — "업무 보다가 메일 기다리기엔 5분(크론 주기)도
 // 길다"는 지적이 있어서, 탭이 열려 있는 동안만큼은 이 주기로 체감상
 // 실시간에 가깝게 확인한다(pollMyMail — 본인 세션으로만 도는 가벼운
@@ -22,6 +28,7 @@ type ToastEntry = {
   href: string;
   title: string;
   meta?: string;
+  urgent?: boolean;
 };
 
 // 타이틀바 종/대시보드 배너를 확인하지 않고 놔두면, 메신저 알림처럼 주기적으로
@@ -47,7 +54,7 @@ export function NotificationToaster() {
     if (existing) clearTimeout(existing);
     timers.set(
       entry.key,
-      setTimeout(() => dismiss(entry.key), AUTO_HIDE_MS)
+      setTimeout(() => dismiss(entry.key), entry.urgent ? URGENT_AUTO_HIDE_MS : AUTO_HIDE_MS)
     );
   }, [dismiss]);
 
@@ -135,6 +142,53 @@ export function NotificationToaster() {
   }, [pushToast]);
 
   useEffect(() => {
+    let cancelled = false;
+    // DB에서는 계속 "안 읽음"으로 남아있는 게 맞다(/customer-orders를
+    // 실제로 열어야 읽음 처리) — 그렇다고 30초마다 같은 알림에 소리를
+    // 또 울리면 안 되니, 이 탭에서 이미 토스트로 보여준 알림 id는 따로
+    // 기억해 그 뒤로는 조용히 건너뛴다.
+    const seenIds = new Set<string>();
+
+    async function checkUrgent() {
+      try {
+        const res = await fetch("/api/notifications/urgent", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data: { notices: { id: string; title: string; body: string | null; url: string | null }[] } =
+          await res.json();
+        if (cancelled) return;
+        const freshNotices = data.notices.filter((n) => !seenIds.has(n.id));
+        freshNotices.forEach((n) => seenIds.add(n.id));
+        if (freshNotices.length === 0) return;
+
+        playAlertSound();
+        freshNotices.forEach((n) => {
+          pushToast({
+            key: `urgent-${n.id}`,
+            href: n.url ?? "/dashboard",
+            title: `🔔 ${n.title}`,
+            meta: n.body ?? undefined,
+            urgent: true,
+          });
+        });
+      } catch {
+        // 네트워크 오류는 조용히 무시하고 다음 주기에 다시 시도한다.
+      }
+    }
+
+    checkUrgent();
+    const interval = setInterval(checkUrgent, URGENT_POLL_INTERVAL_MS);
+    const onVisible = () => {
+      if (!document.hidden) checkUrgent();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [pushToast]);
+
+  useEffect(() => {
     const timers = timersRef.current;
     return () => {
       timers.forEach((timer) => clearTimeout(timer));
@@ -147,7 +201,11 @@ export function NotificationToaster() {
   return (
     <div className="erp-toast-stack">
       {toasts.map((toast) => (
-        <div key={toast.key} className="erp-toast" role="status">
+        <div
+          key={toast.key}
+          className={toast.urgent ? "erp-toast erp-toast-urgent" : "erp-toast"}
+          role={toast.urgent ? "alert" : "status"}
+        >
           <button
             type="button"
             className="erp-toast-close"

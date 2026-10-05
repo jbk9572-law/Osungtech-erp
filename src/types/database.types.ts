@@ -1750,6 +1750,8 @@ export type Database = {
           delivered_at: string | null;
           doc_no: number;
           created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
         };
         Insert: {
           id?: string;
@@ -1767,6 +1769,8 @@ export type Database = {
           delivered_at?: string | null;
           doc_no?: number;
           created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
         };
         Update: {
           id?: string;
@@ -1784,6 +1788,8 @@ export type Database = {
           delivered_at?: string | null;
           doc_no?: number;
           created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
         };
         Relationships: [
           {
@@ -1798,6 +1804,13 @@ export type Database = {
             columns: ["work_order_id"];
             isOneToOne: false;
             referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_orders_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
         ];

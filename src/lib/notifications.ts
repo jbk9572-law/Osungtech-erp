@@ -14,6 +14,33 @@ export type TodoNotice = {
   shipDate: string | null;
 };
 export type LowStockNotice = { id: string; name: string; quantity: number; reorderPoint: number };
+export type UrgentNotice = { id: string; title: string; body: string | null; url: string | null; createdAt: string };
+
+// 거래처 포털 발주처럼 "놓치면 사업상 손실"인 이벤트만 담는, 알림 종과는
+// 별도의 긴급 알림 목록 — notification_events(notify()가 쌓는 공용 테이블)
+// 중 아직 안 읽은 것만, 지정한 type만 가져온다. 일반 알림 종 요약
+// (getNotificationSummary)과 분리한 이유: 저건 10분 주기로 느긋하게
+// 확인해도 되지만, 이건 훨씬 짧은 주기로 폴링해서 토스트+소리로 바로
+// 알려야 하기 때문이다.
+export async function getUrgentNotices(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  types: string[],
+): Promise<UrgentNotice[]> {
+  const { data } = await safeQuery<
+    { id: string; title: string; body: string | null; url: string | null; created_at: string }[]
+  >(
+    supabase
+      .from("notification_events")
+      .select("id, title, body, url, created_at")
+      .eq("user_id", userId)
+      .eq("is_read", false)
+      .in("type", types)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  );
+  return (data ?? []).map((n) => ({ id: n.id, title: n.title, body: n.body, url: n.url, createdAt: n.created_at }));
+}
 
 // 타이틀바 알림 종/대시보드 배너/알림 팝업이 공유하는 "지금 확인해야 할 것" 조회 로직.
 // 안 읽은 공지사항 + 마감 3일 이내(지난 것 포함)인 미완료 할일 + 안전재고(재주문
