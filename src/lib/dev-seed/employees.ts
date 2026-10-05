@@ -118,6 +118,47 @@ export async function ensureDummyEmployees(
   return [...existing, ...created];
 }
 
+export const DUMMY_PORTAL_PASSWORD = "DevSeedPortal!2026";
+
+// 거래처 포털 계정도 더미로 몇 개 만들어둬야 "거래처 발주 승인"
+// (/customer-orders) 화면이 안 비어 보인다 — handle_new_user() 트리거가
+// raw_user_meta_data.portal_customer_id를 보고 자동으로
+// customer_portal_accounts 행을 만들어주는 그 경로를 그대로 쓴다(설정
+// 화면에서 직원이 거래처 포털 계정을 발급할 때와 동일한 경로).
+export async function ensurePortalAccounts(
+  admin: Db,
+  tenantId: string,
+  tenantSlug: string,
+  customers: { id: string; name: string }[],
+): Promise<{ customerId: string; email: string; password: string }[]> {
+  const existing = await fetchAllRows<{ customer_id: string }>((from, to) =>
+    admin.from("customer_portal_accounts").select("customer_id").range(from, to),
+  );
+  const covered = new Set(existing.map((r) => r.customer_id));
+
+  // 이메일은 거래처 id에서 결정적으로 만들고 비밀번호도 고정값이라,
+  // 이미 만들어둔 계정이면 다시 만들 필요 없이 바로 로그인용으로
+  // 돌려주면 된다(비밀번호는 auth.users에서 다시 읽어올 수 없으므로,
+  // 재실행 때마다 "이미 있음"으로 건너뛰고 빈 값만 돌려주면 둘째 날부터
+  // 로그인 자체가 안 됨 — 그걸 피하려고 일부러 결정적 이메일/고정
+  // 비밀번호를 쓴다).
+  const result: { customerId: string; email: string; password: string }[] = [];
+  for (const customer of customers) {
+    const email = `portal-${customer.id.slice(0, 8)}@${tenantSlug}.elvonix.local`;
+    if (!covered.has(customer.id)) {
+      const { error: createError } = await admin.auth.admin.createUser({
+        email,
+        password: DUMMY_PORTAL_PASSWORD,
+        email_confirm: true,
+        user_metadata: { portal_customer_id: customer.id, tenant_id: tenantId },
+      });
+      if (createError) continue;
+    }
+    result.push({ customerId: customer.id, email, password: DUMMY_PORTAL_PASSWORD });
+  }
+  return result;
+}
+
 function randomPastDate(maxDaysAgo: number): string {
   const daysAgo = Math.floor(Math.random() * maxDaysAgo);
   const d = new Date();

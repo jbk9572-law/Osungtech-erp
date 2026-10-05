@@ -34,3 +34,8 @@ export type BoardSeedResult = { board: string; created: number; error?: string }
 // 로그인 시도 제한에 걸릴 수 있어서, 실행 한 번에 몇 명만 로그인해
 // 게시판마다 돌아가며 "작성자"로 쓴다.
 export type ActingSession = { employee: DummyEmployee; client: Db };
+
+// 거래처 포털 계정으로 실제 로그인한 세션 — 발주(customer_orders)는
+// portal_create_order() RPC가 auth.uid()로 스스로를 스코프하기 때문에,
+// 직원 세션이 아니라 반드시 포털 계정 세션으로 호출해야 한다.
+export type PortalSession = { customerId: string; client: Db };
