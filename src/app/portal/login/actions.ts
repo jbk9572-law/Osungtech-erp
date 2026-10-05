@@ -24,9 +24,9 @@ export async function portalLogin(
   // 내부 직원 계정으로 여기 로그인하거나(가능하지만 포털 전용 데이터가
   // 하나도 없음), 비활성화된 포털 계정이면 바로 로그아웃시키고 안내한다
   // — 로그인 자체는 성공했어도 이 화면에 들어올 자격이 없는 세션을
-  // 남겨두지 않는다.
-  const { data: whoami, error: whoamiError } = await supabase.rpc("portal_whoami");
-  if (whoamiError || !whoami || whoami.length === 0) {
+  // 남겨두지 않는다. 거래처/업체(하청) 포털 계정 둘 다 받아준다.
+  const { data: identity, error: identityError } = await supabase.rpc("portal_identity");
+  if (identityError || !identity || identity.length === 0) {
     await supabase.auth.signOut();
     return { error: "포털 계정이 아니거나 비활성화된 계정입니다. 담당 직원에게 문의해주세요." };
   }

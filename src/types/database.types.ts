@@ -1658,9 +1658,12 @@ export type Database = {
           process_id: string;
           process_name: string;
           sort_order: number;
-          status: "pending" | "in_progress" | "done";
+          status: "pending" | "in_progress" | "done" | "shipped";
+          assignee_kind: "internal" | "subcontractor";
+          subcontractor_id: string | null;
           started_at: string | null;
           completed_at: string | null;
+          shipped_at: string | null;
           note: string | null;
         };
         Insert: {
@@ -1669,9 +1672,12 @@ export type Database = {
           process_id: string;
           process_name: string;
           sort_order?: number;
-          status?: "pending" | "in_progress" | "done";
+          status?: "pending" | "in_progress" | "done" | "shipped";
+          assignee_kind?: "internal" | "subcontractor";
+          subcontractor_id?: string | null;
           started_at?: string | null;
           completed_at?: string | null;
+          shipped_at?: string | null;
           note?: string | null;
         };
         Update: {
@@ -1680,9 +1686,12 @@ export type Database = {
           process_id?: string;
           process_name?: string;
           sort_order?: number;
-          status?: "pending" | "in_progress" | "done";
+          status?: "pending" | "in_progress" | "done" | "shipped";
+          assignee_kind?: "internal" | "subcontractor";
+          subcontractor_id?: string | null;
           started_at?: string | null;
           completed_at?: string | null;
+          shipped_at?: string | null;
           note?: string | null;
         };
         Relationships: [
@@ -1693,35 +1702,54 @@ export type Database = {
             referencedRelation: "work_orders";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "work_order_process_steps_subcontractor_id_fkey";
+            columns: ["subcontractor_id"];
+            isOneToOne: false;
+            referencedRelation: "subcontractors";
+            referencedColumns: ["id"];
+          },
         ];
       };
       customer_portal_accounts: {
         Row: {
           id: string;
           user_id: string;
-          customer_id: string;
+          kind: "customer" | "subcontractor";
+          customer_id: string | null;
+          subcontractor_id: string | null;
           username: string;
+          email: string | null;
           disabled: boolean;
           created_by: string | null;
           created_at: string;
+          tenant_id: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          customer_id: string;
+          kind?: "customer" | "subcontractor";
+          customer_id?: string | null;
+          subcontractor_id?: string | null;
           username: string;
+          email?: string | null;
           disabled?: boolean;
           created_by?: string | null;
           created_at?: string;
+          tenant_id: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          customer_id?: string;
+          kind?: "customer" | "subcontractor";
+          customer_id?: string | null;
+          subcontractor_id?: string | null;
           username?: string;
+          email?: string | null;
           disabled?: boolean;
           created_by?: string | null;
           created_at?: string;
+          tenant_id?: string;
         };
         Relationships: [
           {
@@ -1731,7 +1759,47 @@ export type Database = {
             referencedRelation: "customers";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "customer_portal_accounts_subcontractor_id_fkey";
+            columns: ["subcontractor_id"];
+            isOneToOne: false;
+            referencedRelation: "subcontractors";
+            referencedColumns: ["id"];
+          },
         ];
+      };
+      subcontractors: {
+        Row: {
+          id: string;
+          name: string;
+          contact_name: string | null;
+          phone: string | null;
+          memo: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          contact_name?: string | null;
+          phone?: string | null;
+          memo?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          contact_name?: string | null;
+          phone?: string | null;
+          memo?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [];
       };
       customer_orders: {
         Row: {
@@ -4628,6 +4696,61 @@ export type Database = {
       update_work_order_process_step: {
         Args: { p_id: string; p_status: string };
         Returns: void;
+      };
+      assign_work_order_process_step: {
+        Args: { p_id: string; p_subcontractor_id: string | null };
+        Returns: void;
+      };
+      subcontractor_update_step_status: {
+        Args: { p_step_id: string; p_status: string };
+        Returns: void;
+      };
+      subcontractor_list_work_orders: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+          doc_no: number;
+          product_name: string;
+          quantity: number;
+          status: string;
+          order_date: string;
+          created_at: string;
+        }[];
+      };
+      subcontractor_get_work_order: {
+        Args: { p_work_order_id: string };
+        Returns: {
+          id: string;
+          doc_no: number;
+          product_name: string;
+          quantity: number;
+          status: string;
+          order_date: string;
+          memo: string | null;
+        }[];
+      };
+      subcontractor_get_work_order_steps: {
+        Args: { p_work_order_id: string };
+        Returns: {
+          id: string;
+          process_name: string;
+          sort_order: number;
+          status: string;
+          assignee_kind: string;
+          subcontractor_name: string | null;
+          started_at: string | null;
+          completed_at: string | null;
+          shipped_at: string | null;
+          is_mine: boolean;
+        }[];
+      };
+      subcontractor_whoami: {
+        Args: Record<PropertyKey, never>;
+        Returns: { subcontractor_id: string; subcontractor_name: string; username: string }[];
+      };
+      portal_identity: {
+        Args: Record<PropertyKey, never>;
+        Returns: { kind: string; display_name: string; username: string }[];
       };
       portal_whoami: {
         Args: Record<PropertyKey, never>;

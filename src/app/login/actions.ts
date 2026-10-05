@@ -93,17 +93,18 @@ export async function login(_prevState: { error: string } | undefined, formData:
     return { error: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요." };
   }
 
-  // 로그인 주소를 하나로 통일한다 — 직원이든 거래처 포털 계정이든 같은
-  // /login에서 이메일(또는 회사코드+아이디)+비밀번호로 로그인하고,
-  // 로그인에 성공한 뒤에야 "이 계정이 거래처 포털 계정인가"를
-  // portal_whoami()로 판단해 보내는 화면을 가른다. 로그인 전에는 입력된
-  // 아이디만으로 직원/거래처를 구분할 방법이 없다(이메일 형식이면 둘 다
-  // 가능한 입력이라).
-  const { data: portalWhoami, error: portalWhoamiError } = await supabase.rpc("portal_whoami");
-  if (portalWhoamiError) {
+  // 로그인 주소를 하나로 통일한다 — 직원이든 거래처/업체(하청) 포털
+  // 계정이든 같은 /login에서 이메일(또는 회사코드+아이디)+비밀번호로
+  // 로그인하고, 로그인에 성공한 뒤에야 "이 계정이 포털 계정인가, 어느
+  // 종류인가"를 portal_identity()로 판단해 보내는 화면을 가른다(거래처는
+  // /portal/orders, 업체는 /portal/assignments — 실제 분기는 포털
+  // 레이아웃이 한다). 로그인 전에는 입력된 아이디만으로 직원/포털 종류를
+  // 구분할 방법이 없다(이메일 형식이면 둘 다 가능한 입력이라).
+  const { data: portalIdentity, error: portalIdentityError } = await supabase.rpc("portal_identity");
+  if (portalIdentityError) {
     return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
   }
-  if (portalWhoami && portalWhoami.length > 0) {
+  if (portalIdentity && portalIdentity.length > 0) {
     redirect("/portal");
   }
 

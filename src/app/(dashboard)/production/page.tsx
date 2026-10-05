@@ -134,7 +134,9 @@ export default async function ProductionPage({
                 return (
                   <tr key={row.id}>
                     <td>{row.order_date.replaceAll("-", ".")}</td>
-                    <td>{row.doc_no}</td>
+                    <td>
+                      <Link href={`/production/${row.id}`}>{row.doc_no}</Link>
+                    </td>
                     <td>
                       {row.products?.sku} · {row.products?.name}
                     </td>

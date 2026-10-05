@@ -16,13 +16,14 @@ import { NextResponse, type NextRequest } from "next/server";
 // 약관/개인정보처리방침 화면인데 여기 빠져 있어서 클릭하면 /login으로
 // 되튕겨나가는 버그가 있었다 — 같은 "로그인 화면에서 링크로 노출되는데
 // PUBLIC_PATHS엔 없는" 패턴이라 같이 고친다.
-// "/portal"은 거래처 포털 전용 영역 — 내부 직원 로그인(auth.users의 다른
-// 계정)과 완전히 분리된 자기 로그인 화면(/portal/login)을 갖고 있고,
-// 실제 접근 제어는 portal/(app)/layout.tsx가 portal_whoami()로 직접
-// 한다. 여기 안 넣으면, 사내 직원 세션이 전혀 없는 "처음 방문하는
-// 거래처"가 /portal/login에 들어오는 순간 (user가 없고 PUBLIC_PATHS에도
-// 없어서) 엉뚱하게 직원용 /login으로 튕겨나가는 버그가 난다 — 이 세션
-// 안에서는 계속 직원으로 로그인된 채 테스트해서 못 보고 지나갔던 경로다.
+// "/portal"은 거래처/업체(하청) 포털 전용 영역 — 내부 직원 로그인
+// (auth.users의 다른 계정)과 완전히 분리된 자기 로그인 화면
+// (/portal/login)을 갖고 있고, 실제 접근 제어는 portal/(app)/layout.tsx가
+// portal_identity()로 직접 한다. 여기 안 넣으면, 사내 직원 세션이 전혀
+// 없는 "처음 방문하는 거래처/업체"가 /portal/login에 들어오는 순간
+// (user가 없고 PUBLIC_PATHS에도 없어서) 엉뚱하게 직원용 /login으로
+// 튕겨나가는 버그가 난다 — 이 세션 안에서는 계속 직원으로 로그인된 채
+// 테스트해서 못 보고 지나갔던 경로다.
 const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/terms", "/privacy", "/portal"];
 
 export async function updateSession(request: NextRequest) {

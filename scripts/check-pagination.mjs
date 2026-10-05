@@ -44,6 +44,7 @@ const SAFE_UNBOUNDED_TABLES = new Set([
   "profiles", // 이 회사 구성원 계정 수 — 거래량과 무관, 수십 명 규모
   "leave_balances", // 구성원 수 × 연도 수 — profiles와 같은 이유로 거래량과 무관
   "employee_pay_settings", // 구성원 1인당 1행 — profiles와 같은 이유로 거래량과 무관
+  "subcontractors", // 공정을 맡기는 외부 업체 — warehouses와 같은 이유로 거래량과 무관, 사실상 수십 곳 규모
 ]);
 
 const ALLOWLIST = new Set([

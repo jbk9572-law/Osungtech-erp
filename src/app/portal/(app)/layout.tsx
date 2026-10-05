@@ -15,12 +15,13 @@ export default async function PortalAppLayout({ children }: { children: React.Re
     redirect(await portalHref("/login"));
   }
 
-  const { data: whoami, error: whoamiError } = await supabase.rpc("portal_whoami");
-  const me = whoami?.[0];
-  if (whoamiError || !me) {
+  const { data: identity, error: identityError } = await supabase.rpc("portal_identity");
+  const me = identity?.[0];
+  if (identityError || !me) {
     await supabase.auth.signOut();
     redirect(await portalHref("/login"));
   }
+  const isSubcontractor = me.kind === "subcontractor";
 
   return (
     <div className="erp" style={{ minHeight: "100vh" }}>
@@ -29,16 +30,24 @@ export default async function PortalAppLayout({ children }: { children: React.Re
         style={{ justifyContent: "space-between" }}
       >
         <div className="erp-titlebar-left">
-          <span style={{ fontWeight: 700 }}>{me.customer_name}</span>
-          <span style={{ fontSize: 11, opacity: 0.8 }}>거래처 포털</span>
+          <span style={{ fontWeight: 700 }}>{me.display_name}</span>
+          <span style={{ fontSize: 11, opacity: 0.8 }}>{isSubcontractor ? "업체 포털" : "거래처 포털"}</span>
         </div>
         <nav className="erp-titlebar-right" style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <Link href={await portalHref("/new")} style={{ color: "#fff" }}>
-            발주하기
-          </Link>
-          <Link href={await portalHref("/orders")} style={{ color: "#fff" }}>
-            주문내역
-          </Link>
+          {isSubcontractor ? (
+            <Link href={await portalHref("/assignments")} style={{ color: "#fff" }}>
+              배정된 공정
+            </Link>
+          ) : (
+            <>
+              <Link href={await portalHref("/new")} style={{ color: "#fff" }}>
+                발주하기
+              </Link>
+              <Link href={await portalHref("/orders")} style={{ color: "#fff" }}>
+                주문내역
+              </Link>
+            </>
+          )}
           <form action={portalLogout}>
             <button type="submit" style={{ color: "#fff" }}>
               로그아웃

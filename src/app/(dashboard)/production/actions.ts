@@ -88,8 +88,9 @@ export async function completeWorkOrder(_prevState: FormState, formData: FormDat
 
 export async function updateWorkOrderProcessStep(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
   const status = String(formData.get("status") ?? "");
-  if (!id || !["pending", "in_progress", "done"].includes(status)) {
+  if (!id || !["pending", "in_progress", "done", "shipped"].includes(status)) {
     return { error: "잘못된 요청입니다." };
   }
 
@@ -100,5 +101,28 @@ export async function updateWorkOrderProcessStep(_prevState: FormState, formData
   }
 
   revalidatePath("/production");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
   return { success: "공정 상태를 변경했습니다." };
+}
+
+// 공정 단계를 내부(사내)에서 처리할지, 특정 하청업체에 맡길지 배정한다
+// — subcontractor_id가 비어 있으면(또는 "internal") 내부로 되돌린다.
+export async function assignWorkOrderProcessStep(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
+  const subcontractorIdRaw = String(formData.get("subcontractor_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("assign_work_order_process_step", {
+    p_id: id,
+    p_subcontractor_id: subcontractorIdRaw || null,
+  });
+  if (error) {
+    return { error: `공정 배정 변경에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
+  return { success: "공정 배정을 변경했습니다." };
 }

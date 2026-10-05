@@ -131,10 +131,10 @@ export async function ensurePortalAccounts(
   tenantSlug: string,
   customers: { id: string; name: string }[],
 ): Promise<{ customerId: string; email: string; password: string }[]> {
-  const existing = await fetchAllRows<{ customer_id: string }>((from, to) =>
-    admin.from("customer_portal_accounts").select("customer_id").range(from, to),
+  const existing = await fetchAllRows<{ customer_id: string | null }>((from, to) =>
+    admin.from("customer_portal_accounts").select("customer_id").eq("kind", "customer").range(from, to),
   );
-  const covered = new Set(existing.map((r) => r.customer_id));
+  const covered = new Set(existing.map((r) => r.customer_id).filter((id): id is string => id !== null));
 
   // 이메일은 거래처 id에서 결정적으로 만들고 비밀번호도 고정값이라,
   // 이미 만들어둔 계정이면 다시 만들 필요 없이 바로 로그인용으로
