@@ -48,13 +48,13 @@ export function CustomerOrderRejectForm({ id }: { id: string }) {
 }
 
 export function ConvertToWorkOrderForm({
-  orderId,
+  itemId,
   productId,
   quantity,
   warehouses,
   today,
 }: {
-  orderId: string;
+  itemId: string;
   productId: string;
   quantity: number;
   warehouses: { id: string; name: string }[];
@@ -63,7 +63,7 @@ export function ConvertToWorkOrderForm({
   const [state, formAction, pending] = useActionState(convertCustomerOrderItemToWorkOrder, undefined);
   return (
     <form action={formAction} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-      <input type="hidden" name="order_id" value={orderId} />
+      <input type="hidden" name="item_id" value={itemId} />
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="quantity" value={quantity} />
       <input type="hidden" name="order_date" value={today} />
@@ -83,7 +83,7 @@ export function ConvertToWorkOrderForm({
 }
 
 export function ConvertToSaleForm({
-  orderId,
+  itemId,
   customerId,
   productId,
   quantity,
@@ -91,7 +91,7 @@ export function ConvertToSaleForm({
   warehouses,
   today,
 }: {
-  orderId: string;
+  itemId: string;
   customerId: string;
   productId: string;
   quantity: number;
@@ -102,7 +102,7 @@ export function ConvertToSaleForm({
   const [state, formAction, pending] = useActionState(convertCustomerOrderItemToSale, undefined);
   return (
     <form action={formAction} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-      <input type="hidden" name="order_id" value={orderId} />
+      <input type="hidden" name="item_id" value={itemId} />
       <input type="hidden" name="customer_id" value={customerId} />
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="quantity" value={quantity} />

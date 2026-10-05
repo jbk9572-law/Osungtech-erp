@@ -367,7 +367,10 @@ export function MessengerPage({
   }, [view, activeChannelId, messagesByChannel]);
 
   function nameFor(senderId: string | null) {
-    if (!senderId) return "알 수 없음";
+    // sender_id가 없는 메시지는 사람이 아니라 시스템이 자동으로 남긴
+    // 것이다(예: 거래처 포털 발주 알림 — 포털 계정은 profiles가 없어
+    // sender_id를 달 수 없다).
+    if (!senderId) return "시스템";
     return profileNames[senderId] ?? "구성원";
   }
 

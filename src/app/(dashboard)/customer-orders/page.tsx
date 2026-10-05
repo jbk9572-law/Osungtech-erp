@@ -35,7 +35,7 @@ export default async function CustomerOrdersPage({
     supabase
       .from("customer_orders")
       .select(
-        "id, doc_no, status, memo, reject_reason, shipping_status, created_at, customer_id, work_order_id, sales_order_id, customers(name), customer_order_items(product_id, quantity, unit_price, products(sku, name, spec, unit)), work_orders(status)",
+        "id, doc_no, status, memo, reject_reason, shipping_status, created_at, customer_id, customers(name), customer_order_items(id, product_id, quantity, unit_price, work_order_id, sales_order_id, products(sku, name, spec, unit), work_orders(status))",
       )
       .eq("status", activeTab)
       .order("created_at", { ascending: false })
@@ -85,8 +85,10 @@ export default async function CustomerOrdersPage({
             (sum, i) => sum + Number(i.quantity) * Number(i.unit_price),
             0,
           );
+          const items = o.customer_order_items ?? [];
+          const allConverted = items.length > 0 && items.every((i) => i.work_order_id || i.sales_order_id);
           return (
-            <div key={o.id} className="erp-home-panel" style={{ padding: 14 }}>
+            <div id={`order-${o.id}`} key={o.id} className="erp-home-panel" style={{ padding: 14, scrollMarginTop: 60 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <div>
                   <span style={{ fontWeight: 700 }}>{o.customers?.name ?? "-"}</span>
@@ -99,70 +101,73 @@ export default async function CustomerOrdersPage({
                 </span>
               </div>
 
-              {(() => {
-                const isConverted = Boolean(o.work_order_id || o.sales_order_id);
-                return (
-                  <table className="erp-grid" style={{ marginBottom: 8 }}>
-                    <thead>
-                      <tr>
-                        <th>품목</th>
-                        <th style={{ width: 90 }}>규격</th>
-                        <th className="num" style={{ width: 100 }}>수량</th>
-                        <th className="num" style={{ width: 100 }}>단가</th>
-                        {activeTab === "approved" && !isConverted && <th style={{ width: 280 }}>전환</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(o.customer_order_items ?? []).map((item) => {
-                        const manufactured = manufacturedProductIds.has(item.product_id);
-                        return (
-                          <tr key={item.product_id}>
-                            <td>
-                              {item.products?.sku} · {item.products?.name}
-                              {activeTab === "approved" && !isConverted && (
-                                <span
-                                  className={`erp-badge ${manufactured ? "erp-badge-info" : "erp-badge-muted"}`}
-                                  style={{ marginLeft: 6 }}
-                                >
-                                  {manufactured ? "제조품" : "사입품"}
-                                </span>
-                              )}
-                            </td>
-                            <td>{item.products?.spec ?? "-"}</td>
-                            <td className="num">
-                              {formatNumber(Number(item.quantity))} {item.products?.unit}
-                            </td>
-                            <td className="num">{formatNumber(Number(item.unit_price))}</td>
-                            {activeTab === "approved" && !isConverted && (
-                              <td>
-                                {manufactured ? (
-                                  <ConvertToWorkOrderForm
-                                    orderId={o.id}
-                                    productId={item.product_id}
-                                    quantity={Number(item.quantity)}
-                                    warehouses={warehouses ?? []}
-                                    today={todayKstStr()}
-                                  />
-                                ) : (
-                                  <ConvertToSaleForm
-                                    orderId={o.id}
-                                    customerId={o.customer_id}
-                                    productId={item.product_id}
-                                    quantity={Number(item.quantity)}
-                                    unitPrice={Number(item.unit_price)}
-                                    warehouses={warehouses ?? []}
-                                    today={todayKstStr()}
-                                  />
-                                )}
-                              </td>
+              <table className="erp-grid" style={{ marginBottom: 8 }}>
+                <thead>
+                  <tr>
+                    <th>품목</th>
+                    <th style={{ width: 90 }}>규격</th>
+                    <th className="num" style={{ width: 100 }}>수량</th>
+                    <th className="num" style={{ width: 100 }}>단가</th>
+                    {activeTab === "approved" && !allConverted && <th style={{ width: 280 }}>전환</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => {
+                    const manufactured = manufacturedProductIds.has(item.product_id);
+                    const itemConverted = Boolean(item.work_order_id || item.sales_order_id);
+                    return (
+                      <tr key={item.id}>
+                        <td>
+                          {item.products?.sku} · {item.products?.name}
+                          {activeTab === "approved" && (
+                            <span
+                              className={`erp-badge ${manufactured ? "erp-badge-info" : "erp-badge-muted"}`}
+                              style={{ marginLeft: 6 }}
+                            >
+                              {manufactured ? "제조품" : "사입품"}
+                            </span>
+                          )}
+                          {itemConverted && (
+                            <span className="erp-badge erp-badge-success" style={{ marginLeft: 6 }}>
+                              {item.work_order_id
+                                ? `생산지시 연결됨(${item.work_orders?.status === "completed" ? "생산완료" : item.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`
+                                : "판매로 연결됨"}
+                            </span>
+                          )}
+                        </td>
+                        <td>{item.products?.spec ?? "-"}</td>
+                        <td className="num">
+                          {formatNumber(Number(item.quantity))} {item.products?.unit}
+                        </td>
+                        <td className="num">{formatNumber(Number(item.unit_price))}</td>
+                        {activeTab === "approved" && !allConverted && (
+                          <td>
+                            {itemConverted ? null : manufactured ? (
+                              <ConvertToWorkOrderForm
+                                itemId={item.id}
+                                productId={item.product_id}
+                                quantity={Number(item.quantity)}
+                                warehouses={warehouses ?? []}
+                                today={todayKstStr()}
+                              />
+                            ) : (
+                              <ConvertToSaleForm
+                                itemId={item.id}
+                                customerId={o.customer_id}
+                                productId={item.product_id}
+                                quantity={Number(item.quantity)}
+                                unitPrice={Number(item.unit_price)}
+                                warehouses={warehouses ?? []}
+                                today={todayKstStr()}
+                              />
                             )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                );
-              })()}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
               {o.memo && (
                 <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 8 }}>요청사항: {o.memo}</p>
@@ -177,14 +182,12 @@ export default async function CustomerOrdersPage({
 
               {activeTab === "approved" && (
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  {o.work_order_id ? (
-                    <span className="erp-badge erp-badge-info">
-                      {`생산지시 연결됨(${o.work_orders?.status === "completed" ? "생산완료" : o.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`}
+                  {!allConverted && (
+                    <span className="erp-badge erp-badge-muted">
+                      {items.some((i) => i.work_order_id || i.sales_order_id)
+                        ? "일부 품목 미연결"
+                        : "생산지시/판매 미연결"}
                     </span>
-                  ) : o.sales_order_id ? (
-                    <span className="erp-badge erp-badge-info">판매로 연결됨</span>
-                  ) : (
-                    <span className="erp-badge erp-badge-muted">생산지시/판매 미연결</span>
                   )}
                   <span className="erp-badge erp-badge-muted">
                     배송: {o.shipping_status === "delivered" ? "완료" : o.shipping_status === "shipped" ? "배송중" : "대기"}

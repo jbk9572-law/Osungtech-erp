@@ -49,20 +49,21 @@ export async function rejectCustomerOrder(_prevState: FormState, formData: FormD
 
 // 주문 품목 중 하나를 골라 생산지시로 전환한다(기존 create_work_order()
 // RPC를 그대로 재사용 — 생산관리에서 수동으로 등록하는 것과 완전히
-// 같은 경로다). 거래처 주문 1건에 여러 품목이 섞여 있으면 품목별로
-// 각각 눌러야 하는데, 지금은 거의 단일 품목 주문이라 이 정도로도 충분하고
-// 앞으로 품목이 여러 개인 주문이 흔해지면 일괄 전환을 추가하면 된다.
+// 같은 경로다). 전환 여부는 주문이 아니라 "이 품목 줄"(customer_order_items.
+// work_order_id) 단위로 기록한다 — 주문 단위로 기록하면 품목이 여러 개인
+// 주문에서 하나만 전환해도 나머지 품목의 버튼이 전부 사라지는 버그가
+// 생긴다(실제로 있었던 버그).
 export async function convertCustomerOrderItemToWorkOrder(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const orderId = String(formData.get("order_id") ?? "");
+  const itemId = String(formData.get("item_id") ?? "");
   const productId = String(formData.get("product_id") ?? "");
   const quantity = Number(formData.get("quantity") ?? 0);
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const orderDate = String(formData.get("order_date") ?? "");
 
-  if (!orderId || !productId || !warehouseId || !orderDate || !(quantity > 0)) {
+  if (!itemId || !productId || !warehouseId || !orderDate || !(quantity > 0)) {
     return { error: "창고와 지시일자를 확인해주세요." };
   }
 
@@ -80,9 +81,9 @@ export async function convertCustomerOrderItemToWorkOrder(
   }
 
   const { error: linkError } = await supabase
-    .from("customer_orders")
+    .from("customer_order_items")
     .update({ work_order_id: workOrderId })
-    .eq("id", orderId);
+    .eq("id", itemId);
   if (linkError) return { error: `생산지시는 만들어졌지만 주문과 연결에 실패했습니다: ${linkError.message}` };
 
   revalidatePath("/customer-orders");
@@ -94,12 +95,13 @@ export async function convertCustomerOrderItemToWorkOrder(
 // 품목이면 생산지시가 아니라 바로 판매로 넘겨야 한다. "매출관리 > 출고관리"에서
 // 수동 등록할 때와 같은 create_sale_with_items() RPC를 그대로 재사용한다 —
 // 거래처 포털 주문 전환이라는 출처만 다르고 재고 반영 등은 완전히 동일한
-// 경로다.
+// 경로다. 전환 여부는 convertCustomerOrderItemToWorkOrder와 같은 이유로
+// 품목 줄(customer_order_items.sales_order_id) 단위로 기록한다.
 export async function convertCustomerOrderItemToSale(
   _prevState: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const orderId = String(formData.get("order_id") ?? "");
+  const itemId = String(formData.get("item_id") ?? "");
   const customerId = String(formData.get("customer_id") ?? "");
   const productId = String(formData.get("product_id") ?? "");
   const quantity = Number(formData.get("quantity") ?? 0);
@@ -107,7 +109,7 @@ export async function convertCustomerOrderItemToSale(
   const warehouseId = String(formData.get("warehouse_id") ?? "");
   const orderDate = String(formData.get("order_date") ?? "");
 
-  if (!orderId || !customerId || !productId || !warehouseId || !orderDate || !(quantity > 0)) {
+  if (!itemId || !customerId || !productId || !warehouseId || !orderDate || !(quantity > 0)) {
     return { error: "창고와 거래일자를 확인해주세요." };
   }
 
@@ -127,9 +129,9 @@ export async function convertCustomerOrderItemToSale(
   }
 
   const { error: linkError } = await supabase
-    .from("customer_orders")
+    .from("customer_order_items")
     .update({ sales_order_id: salesOrderId })
-    .eq("id", orderId);
+    .eq("id", itemId);
   if (linkError) return { error: `판매는 등록됐지만 주문과 연결에 실패했습니다: ${linkError.message}` };
 
   revalidatePath("/customer-orders");

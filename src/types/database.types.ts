@@ -1816,13 +1816,23 @@ export type Database = {
         ];
       };
       customer_order_items: {
-        Row: { id: string; customer_order_id: string; product_id: string; quantity: number; unit_price: number };
+        Row: {
+          id: string;
+          customer_order_id: string;
+          product_id: string;
+          quantity: number;
+          unit_price: number;
+          work_order_id: string | null;
+          sales_order_id: string | null;
+        };
         Insert: {
           id?: string;
           customer_order_id: string;
           product_id: string;
           quantity: number;
           unit_price?: number;
+          work_order_id?: string | null;
+          sales_order_id?: string | null;
         };
         Update: {
           id?: string;
@@ -1830,6 +1840,8 @@ export type Database = {
           product_id?: string;
           quantity?: number;
           unit_price?: number;
+          work_order_id?: string | null;
+          sales_order_id?: string | null;
         };
         Relationships: [
           {
@@ -1844,6 +1856,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_order_items_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "customer_order_items_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_orders";
             referencedColumns: ["id"];
           },
         ];
