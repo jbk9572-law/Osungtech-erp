@@ -49,12 +49,17 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/production" } }} />
+      <KeyboardShortcuts
+        shortcuts={{ F9: { href: `/production/${workOrder.id}/print` }, Escape: { href: "/production" } }}
+      />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">
           생산관리 &gt; 생산지시 내역 &gt; {workOrder.doc_no}
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <Link href={`/production/${workOrder.id}/print`} className="erp-btn">
+            F9 출력
+          </Link>
           <Link href="/production" className="erp-btn">
             목록
           </Link>
