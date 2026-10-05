@@ -18,7 +18,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
     supabase
       .from("work_orders")
       .select(
-        "id, doc_no, order_date, quantity, status, memo, products(sku, name, unit), warehouses(name), profiles!created_by(full_name)",
+        "id, doc_no, order_date, quantity, status, memo, products(sku, name, spec, unit), warehouses(name), profiles!created_by(full_name)",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -80,6 +80,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                   <th style={{ width: 110 }}>완제품</th>
                   <td>
                     {workOrder.products?.sku} · {workOrder.products?.name}
+                    {workOrder.products?.spec && ` (${workOrder.products.spec})`}
                   </td>
                   <th style={{ width: 90 }}>수량</th>
                   <td className="num">
@@ -87,8 +88,10 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                   </td>
                 </tr>
                 <tr>
-                  <th>지시일자</th>
-                  <td>{workOrder.order_date.replaceAll("-", ".")}</td>
+                  <th>LOT번호 / 제조일</th>
+                  <td>
+                    LOT {workOrder.doc_no} · {workOrder.order_date.replaceAll("-", ".")}
+                  </td>
                   <th>창고</th>
                   <td>{workOrder.warehouses?.name ?? "-"}</td>
                 </tr>
@@ -124,15 +127,24 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                   <tr>
                     <th style={{ width: 40 }}>순서</th>
                     <th>공정</th>
+                    <th style={{ width: 110 }}>이전 담당</th>
                     <th style={{ width: 160 }}>담당</th>
                     <th style={{ width: 160 }}>상태</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {steps.map((s) => (
+                  {steps.map((s, idx) => {
+                    const prev = idx > 0 ? steps[idx - 1] : null;
+                    const prevLabel = prev
+                      ? prev.assignee_kind === "subcontractor"
+                        ? (prev.subcontractors?.name ?? "업체")
+                        : "사내"
+                      : null;
+                    return (
                     <tr key={s.id}>
                       <td className="num">{s.sort_order}</td>
                       <td>{s.process_name}</td>
+                      <td style={{ color: "var(--erp-text-muted)" }}>{prevLabel ?? "-"}</td>
                       <td>
                         <WorkOrderProcessStepAssignCell
                           id={s.id}
@@ -146,7 +158,8 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                         <WorkOrderProcessStepActions id={s.id} workOrderId={workOrder.id} status={s.status} />
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

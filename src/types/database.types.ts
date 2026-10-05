@@ -4711,6 +4711,7 @@ export type Database = {
           id: string;
           doc_no: number;
           product_name: string;
+          product_spec: string | null;
           quantity: number;
           status: string;
           order_date: string;
@@ -4723,6 +4724,7 @@ export type Database = {
           id: string;
           doc_no: number;
           product_name: string;
+          product_spec: string | null;
           quantity: number;
           status: string;
           order_date: string;

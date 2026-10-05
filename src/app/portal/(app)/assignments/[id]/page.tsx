@@ -34,8 +34,11 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
         </Link>
       </div>
       <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 16 }}>
-        {workOrder.product_name} · {formatNumber(Number(workOrder.quantity))} ·{" "}
+        {workOrder.product_name}
+        {workOrder.product_spec && ` (${workOrder.product_spec})`} · {formatNumber(Number(workOrder.quantity))} ·{" "}
         {STATUS_LABEL[workOrder.status] ?? workOrder.status}
+        <br />
+        LOT {workOrder.doc_no} · 제조일 {workOrder.order_date.replaceAll("-", ".")}
       </p>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>
@@ -48,7 +51,14 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
             업체 담당이며, 그 단계만 직접 상태를 올릴 수 있습니다.
           </PageGuide>
           <div className="flex flex-col gap-2">
-            {(steps ?? []).map((s) => (
+            {(steps ?? []).map((s, idx) => {
+              const prev = idx > 0 ? steps![idx - 1] : null;
+              const prevLabel = prev
+                ? prev.assignee_kind === "subcontractor"
+                  ? (prev.subcontractor_name ?? "업체")
+                  : "사내"
+                : null;
+              return (
               <div
                 key={s.id}
                 className="erp-home-panel"
@@ -66,6 +76,11 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
                   <span style={{ marginLeft: 8, fontSize: 11.5, color: "var(--erp-text-muted)" }}>
                     {s.assignee_kind === "subcontractor" ? (s.subcontractor_name ?? "업체") : "사내"}
                   </span>
+                  {prevLabel && (
+                    <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginTop: 2 }}>
+                      이전 작업: {prev!.process_name} ({prevLabel})
+                    </div>
+                  )}
                 </div>
                 {s.is_mine ? (
                   <PortalAssignmentStepActions
@@ -85,7 +100,8 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
                   </span>
                 )}
               </div>
-            ))}
+              );
+            })}
             {!steps?.length && (
               <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
                 공정 정보가 없습니다.

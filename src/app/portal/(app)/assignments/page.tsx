@@ -29,14 +29,17 @@ export default async function PortalAssignmentsPage() {
             className="erp-home-panel"
             style={{ padding: 14, display: "block" }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <div>
                 <span style={{ fontWeight: 700 }}>{wo.product_name}</span>
-                <span style={{ marginLeft: 8, color: "var(--erp-text-muted)", fontSize: 12 }}>
-                  지시 {wo.doc_no} · {formatNumber(Number(wo.quantity))}
-                </span>
+                {wo.product_spec && (
+                  <span style={{ marginLeft: 6, fontSize: 12, color: "var(--erp-text-muted)" }}>({wo.product_spec})</span>
+                )}
               </div>
               <span className="erp-badge erp-badge-muted">{STATUS_LABEL[wo.status] ?? wo.status}</span>
+            </div>
+            <div style={{ marginTop: 4, fontSize: 11.5, color: "var(--erp-text-muted)" }}>
+              LOT {wo.doc_no} · 제조일 {wo.order_date.replaceAll("-", ".")} · 수량 {formatNumber(Number(wo.quantity))}
             </div>
           </Link>
         ))}
