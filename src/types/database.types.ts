@@ -4690,7 +4690,13 @@ export type Database = {
       };
       portal_get_order_process_steps: {
         Args: { p_order_id: string };
-        Returns: { process_name: string; sort_order: number; status: string }[];
+        Returns: {
+          item_id: string;
+          product_name: string;
+          process_name: string;
+          sort_order: number;
+          status: string;
+        }[];
       };
       apply_location_stock_delta: {
         Args: { p_product_id: string; p_location_id: string; p_delta: number };

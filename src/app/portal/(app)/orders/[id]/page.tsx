@@ -165,26 +165,49 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
           {steps && steps.length > 0 && (
             <div style={{ marginTop: 18 }}>
               <p style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginBottom: 6 }}>공정별 진행상황</p>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {steps.map((s) => (
-                  <span key={s.process_name} className="erp-key-hint" style={{ fontSize: 12 }}>
-                    <span
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 999,
-                        background:
-                          s.status === "done"
-                            ? "var(--erp-success)"
-                            : s.status === "in_progress"
-                              ? "var(--erp-warning)"
-                              : "var(--erp-border-strong)",
-                      }}
-                    />
-                    {s.process_name}({STEP_LABEL[s.status]})
-                  </span>
-                ))}
-              </div>
+              {(() => {
+                // 품목이 여러 개면 품목마다 생산지시(공정)가 따로 있을 수 있어
+                // product_name으로 묶어 구분한다. 1개뿐이면 굳이 품목명을
+                // 반복해서 보여줄 필요가 없다.
+                const itemIds = Array.from(new Set(steps.map((s) => s.item_id)));
+                const showProductLabel = itemIds.length > 1;
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {itemIds.map((itemId) => {
+                      const itemSteps = steps.filter((s) => s.item_id === itemId);
+                      return (
+                        <div key={itemId}>
+                          {showProductLabel && (
+                            <p style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 4 }}>
+                              {itemSteps[0].product_name}
+                            </p>
+                          )}
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {itemSteps.map((s) => (
+                              <span key={`${s.item_id}-${s.process_name}`} className="erp-key-hint" style={{ fontSize: 12 }}>
+                                <span
+                                  style={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: 999,
+                                    background:
+                                      s.status === "done"
+                                        ? "var(--erp-success)"
+                                        : s.status === "in_progress"
+                                          ? "var(--erp-warning)"
+                                          : "var(--erp-border-strong)",
+                                  }}
+                                />
+                                {s.process_name}({STEP_LABEL[s.status]})
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
