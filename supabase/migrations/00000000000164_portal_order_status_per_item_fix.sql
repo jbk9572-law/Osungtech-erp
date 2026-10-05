@@ -73,7 +73,11 @@ $$;
 
 -- 공정 체크리스트: 품목마다 생산지시가 다를 수 있으므로 어느 품목의
 -- 공정인지(product_name)까지 같이 돌려준다 — 화면에서 품목이 여럿이면
--- 품목명으로 구분해 보여줄 수 있게.
+-- 품목명으로 구분해 보여줄 수 있게. 반환 컬럼 자체가 바뀌어서(기존
+-- process_name/sort_order/status 3개 -> item_id/product_name 추가된 5개)
+-- CREATE OR REPLACE만으로는 안 되고 먼저 DROP해야 한다(Postgres는 OUT
+-- 파라미터로 정의된 행 타입이 다르면 교체를 거부한다).
+drop function if exists public.portal_get_order_process_steps(uuid);
 create or replace function public.portal_get_order_process_steps(p_order_id uuid)
 returns table (item_id uuid, product_name text, process_name text, sort_order int, status text)
 language sql
