@@ -126,3 +126,38 @@ export async function assignWorkOrderProcessStep(_prevState: FormState, formData
   if (workOrderId) revalidatePath(`/production/${workOrderId}`);
   return { success: "공정 배정을 변경했습니다." };
 }
+
+// 업체 등록(하청업체관리)과 공정 배정(생산지시 상세)이 서로 다른 화면에
+// 나뉘어 있어 "이 업체 아직 등록 안 했는데 어디서 만들지?" 하고 매번
+// 하청업체관리로 건너갔다 돌아와야 했다 — 생산지시 상세에서 업체명만
+// 입력하면 바로 등록하고 그 자리에서 이 단계에 배정까지 끝낸다(상세
+// 정보는 나중에 하청업체관리에서 보완하면 된다).
+export async function createAndAssignSubcontractor(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!id || !name) return { error: "업체명을 입력해주세요." };
+
+  const supabase = await createClient();
+  const { data: created, error: createError } = await supabase
+    .from("subcontractors")
+    .insert({ name })
+    .select("id")
+    .single();
+  if (createError || !created) {
+    return { error: `업체 등록에 실패했습니다: ${createError?.message ?? "알 수 없는 오류"}` };
+  }
+
+  const { error: assignError } = await supabase.rpc("assign_work_order_process_step", {
+    p_id: id,
+    p_subcontractor_id: created.id,
+  });
+  if (assignError) {
+    return { error: `업체는 등록됐지만 배정에 실패했습니다: ${assignError.message}` };
+  }
+
+  revalidatePath("/production");
+  revalidatePath("/subcontractors");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
+  return { success: `${name} 업체를 등록하고 배정했습니다.` };
+}

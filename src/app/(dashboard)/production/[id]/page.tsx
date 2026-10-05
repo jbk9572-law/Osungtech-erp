@@ -7,7 +7,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
 import { WorkOrderProcessStepActions } from "@/components/work-order-process-step-actions";
-import { WorkOrderProcessStepAssignForm } from "@/components/work-order-process-step-assign-form";
+import { WorkOrderProcessStepAssignCell } from "@/components/work-order-process-step-assign-cell";
 
 export default async function WorkOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,6 +31,21 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
   ]);
 
   if (!workOrder) notFound();
+
+  // 배정된 업체가 이미 포털 계정이 있는지 — 없으면 이 화면에서 바로
+  // 발급 버튼을 보여준다(하청업체관리로 따로 넘어가지 않아도 되게).
+  const assignedSubcontractorIds = Array.from(
+    new Set((steps ?? []).map((s) => s.subcontractor_id).filter((sid): sid is string => sid !== null)),
+  );
+  const { data: accountRows } = assignedSubcontractorIds.length
+    ? await supabase
+        .from("customer_portal_accounts")
+        .select("subcontractor_id")
+        .eq("kind", "subcontractor")
+        .eq("disabled", false)
+        .in("subcontractor_id", assignedSubcontractorIds)
+    : { data: [] as { subcontractor_id: string | null }[] };
+  const subcontractorsWithAccount = new Set((accountRows ?? []).map((a) => a.subcontractor_id));
 
   return (
     <div>
@@ -119,10 +134,11 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                       <td className="num">{s.sort_order}</td>
                       <td>{s.process_name}</td>
                       <td>
-                        <WorkOrderProcessStepAssignForm
+                        <WorkOrderProcessStepAssignCell
                           id={s.id}
                           workOrderId={workOrder.id}
                           subcontractorId={s.subcontractor_id}
+                          hasPortalAccount={s.subcontractor_id ? subcontractorsWithAccount.has(s.subcontractor_id) : true}
                           subcontractors={subcontractors ?? []}
                         />
                       </td>
