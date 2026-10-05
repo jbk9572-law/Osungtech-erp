@@ -50,6 +50,7 @@ export default async function PortalOrdersPage() {
               <th className="num" style={{ width: 120 }}>합계</th>
               <th style={{ width: 160 }}>진행상태</th>
               <th>요청사항</th>
+              <th style={{ width: 90 }} />
             </tr>
           </thead>
           <tbody>
@@ -69,11 +70,16 @@ export default async function PortalOrdersPage() {
                   </span>
                 </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{o.memo ?? "-"}</td>
+                <td>
+                  <Link href={`${ordersHref}/${o.id}`} className="erp-btn" style={{ height: 24, padding: "1px 10px", fontSize: 11 }}>
+                    상세보기
+                  </Link>
+                </td>
               </tr>
             ))}
             {(!orders || orders.length === 0) && (
               <tr>
-                <td colSpan={6} className="erp-grid-empty">
+                <td colSpan={7} className="erp-grid-empty">
                   아직 주문 내역이 없습니다.
                 </td>
               </tr>
