@@ -6,6 +6,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { SyncMailButton } from "@/components/mail/sync-mail-button";
 import { ComposeMailButton } from "@/components/mail/compose-mail";
 import { MarkAsRead } from "@/components/mail/mark-as-read";
+import { PaperclipIcon } from "@/components/erp/groupware-icons";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
 
@@ -19,6 +20,11 @@ function formatDate(iso: string | null): string {
   return sameDay
     ? d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
     : d.toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" });
+}
+
+function initial(name: string | null, address: string | null): string {
+  const source = (name || address || "").trim();
+  return source ? source[0].toUpperCase() : "?";
 }
 
 export default async function MailPage({
@@ -139,26 +145,25 @@ export default async function MailPage({
                 key={m.id}
                 href={`/mail?folder=${folder}&id=${m.id}`}
                 className={`erp-split-list-row${m.id === id ? " active" : ""}`}
+                style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
               >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <span
-                    aria-hidden
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 999,
-                      flex: "0 0 auto",
-                      background: m.is_read ? "var(--erp-border-strong)" : "var(--erp-primary)",
-                    }}
-                  />
-                  <span style={m.is_read ? undefined : { fontWeight: 700 }}>
-                    {m.subject || "(제목 없음)"} {m.has_attachments ? "📎" : ""}
-                  </span>
+                <span className={`erp-avatar${m.is_read ? " muted" : ""}`} style={{ width: 26, height: 26, fontSize: 11, marginTop: 1 }} aria-hidden>
+                  {folder === "INBOX" ? initial(m.from_name, m.from_address) : "나"}
                 </span>
-                <div className="erp-split-list-row-sub">
-                  {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"} · {formatDate(m.sent_at)}
-                  {m.snippet ? ` · ${m.snippet}` : ""}
-                </div>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span style={m.is_read ? undefined : { fontWeight: 700 }}>{m.subject || "(제목 없음)"}</span>
+                    {m.has_attachments && (
+                      <span className="erp-icon" style={{ width: 13, height: 13, color: "var(--erp-text-muted)" }} aria-hidden>
+                        <PaperclipIcon />
+                      </span>
+                    )}
+                  </span>
+                  <div className="erp-split-list-row-sub">
+                    {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"} · {formatDate(m.sent_at)}
+                    {m.snippet ? ` · ${m.snippet}` : ""}
+                  </div>
+                </span>
               </Link>
             ))}
             {(messages ?? []).length === 0 && (
@@ -180,31 +185,42 @@ export default async function MailPage({
               <h2 className="mb-2 text-base font-bold text-[var(--erp-text)]">
                 {selected.subject || "(제목 없음)"}
               </h2>
-              <div className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                <p>
-                  보낸사람: {selected.from_name || selected.from_address || "-"}
-                  {selected.from_name && selected.from_address ? ` <${selected.from_address}>` : ""}
-                </p>
-                <p>
-                  받는사람:{" "}
-                  {((selected.to_addresses as { name: string | null; email: string | null }[]) ?? [])
-                    .map((a) => a.email)
-                    .filter(Boolean)
-                    .join(", ") || "-"}
-                </p>
-                <p>{formatDate(selected.sent_at)}</p>
+              <div className="mb-3" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className="erp-avatar" style={{ width: 32, height: 32 }} aria-hidden>
+                  {initial(selected.from_name, selected.from_address)}
+                </span>
+                <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  <p>
+                    보낸사람: {selected.from_name || selected.from_address || "-"}
+                    {selected.from_name && selected.from_address ? ` <${selected.from_address}>` : ""}
+                  </p>
+                  <p>
+                    받는사람:{" "}
+                    {((selected.to_addresses as { name: string | null; email: string | null }[]) ?? [])
+                      .map((a) => a.email)
+                      .filter(Boolean)
+                      .join(", ") || "-"}
+                  </p>
+                  <p>{formatDate(selected.sent_at)}</p>
+                </div>
               </div>
 
               {attachmentLinks.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
                   {attachmentLinks.map((att) =>
                     att.url ? (
-                      <a key={att.id} href={att.url} target="_blank" rel="noreferrer" className="erp-btn">
-                        📎 {att.filename}
+                      <a key={att.id} href={att.url} target="_blank" rel="noreferrer" className="erp-btn" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
+                          <PaperclipIcon />
+                        </span>
+                        {att.filename}
                       </a>
                     ) : (
-                      <span key={att.id} className="erp-btn" style={{ opacity: 0.5 }}>
-                        📎 {att.filename}
+                      <span key={att.id} className="erp-btn" style={{ opacity: 0.5, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
+                          <PaperclipIcon />
+                        </span>
+                        {att.filename}
                       </span>
                     )
                   )}

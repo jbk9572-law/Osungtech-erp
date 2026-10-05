@@ -12,14 +12,16 @@ export function isImageFile(fileName: string): boolean {
   return IMAGE_EXTENSIONS.includes(extOf(fileName));
 }
 
-export function fileKindIcon(fileName: string): string {
+export type FileKind = "image" | "spreadsheet" | "pdf" | "word" | "archive" | "file";
+
+export function fileKind(fileName: string): FileKind {
   const ext = extOf(fileName);
-  if (IMAGE_EXTENSIONS.includes(ext)) return "🖼️";
-  if (EXCEL_EXTENSIONS.includes(ext)) return "📊";
-  if (PDF_EXTENSIONS.includes(ext)) return "📕";
-  if (WORD_EXTENSIONS.includes(ext)) return "📘";
-  if (ARCHIVE_EXTENSIONS.includes(ext)) return "🗜️";
-  return "📄";
+  if (IMAGE_EXTENSIONS.includes(ext)) return "image";
+  if (EXCEL_EXTENSIONS.includes(ext)) return "spreadsheet";
+  if (PDF_EXTENSIONS.includes(ext)) return "pdf";
+  if (WORD_EXTENSIONS.includes(ext)) return "word";
+  if (ARCHIVE_EXTENSIONS.includes(ext)) return "archive";
+  return "file";
 }
 
 export function formatFileSize(bytes: number): string {

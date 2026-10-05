@@ -11,12 +11,24 @@ import {
   leaveGroup,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel } from "@/lib/messenger-types";
-import { fileKindIcon, formatFileSize, isImageFile } from "@/lib/file-display";
+import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { markNotificationRead, markAllNotificationsRead } from "@/lib/notification-actions";
 import { ListPageHeader } from "@/components/erp/page-header";
+import {
+  PaperclipIcon,
+  ChatIcon,
+  GroupIcon,
+  MegaphoneIcon,
+  DocumentIcon,
+  CheckCircleIcon,
+  MailIcon,
+  BellIcon,
+  DownloadIcon,
+  FileKindIcon,
+} from "@/components/erp/groupware-icons";
 
 export type { MessengerMessage };
 
@@ -90,23 +102,43 @@ function channelLabel(channel: MessengerChannel, profileNames: Record<string, st
   return otherId ? (profileNames[otherId] ?? "구성원") : "DM";
 }
 
-function channelIcon(type: MessengerChannel["type"]): string {
-  if (type === "all") return "💬";
-  if (type === "group") return "👥";
-  return "👤";
+// "전체"/그룹 채널은 선 아이콘으로, 1:1 DM은 상대방 이니셜 아바타로
+// 보여준다(이모지 👤보다 실제로 누구인지 한눈에 더 잘 들어온다).
+function ChannelAvatar({ channel, profileNames, currentUserId }: { channel: MessengerChannel; profileNames: Record<string, string>; currentUserId: string }) {
+  if (channel.type === "all") {
+    return (
+      <span className="erp-icon" style={{ width: 20, height: 20, color: "var(--erp-primary)" }} aria-hidden>
+        <ChatIcon />
+      </span>
+    );
+  }
+  if (channel.type === "group") {
+    return (
+      <span className="erp-icon" style={{ width: 20, height: 20, color: "var(--erp-primary)" }} aria-hidden>
+        <GroupIcon />
+      </span>
+    );
+  }
+  const label = channelLabel(channel, profileNames, currentUserId);
+  return (
+    <span className="erp-avatar" style={{ width: 22, height: 22, fontSize: 10 }} aria-hidden>
+      {label[0] ?? "?"}
+    </span>
+  );
 }
 
-const NOTIF_ICONS: Record<string, string> = {
-  announcement: "📢",
-  messenger_group: "👥",
-  messenger_dm: "👤",
-  approval_pending: "📝",
-  approval_result: "✅",
-  mail: "📧",
+const NOTIF_ICONS: Record<string, () => React.JSX.Element> = {
+  announcement: MegaphoneIcon,
+  messenger_group: GroupIcon,
+  messenger_dm: ChatIcon,
+  approval_pending: DocumentIcon,
+  approval_result: CheckCircleIcon,
+  mail: MailIcon,
 };
 
-function notifIcon(type: string): string {
-  return NOTIF_ICONS[type] ?? "🔔";
+function NotifIcon({ type }: { type: string }) {
+  const Icon = NOTIF_ICONS[type] ?? BellIcon;
+  return <Icon />;
 }
 
 // 알림/메일 미리보기 목록에서 "3분 전"/"어제" 같은 상대 시각을 짧게
@@ -503,7 +535,7 @@ export function MessengerPage({
   const anyChatUnseen = hasUnseen || unseenChannelIds.size > 0;
   const headerTitle =
     hubTab === "chat" && view === "chat" && activeChannel
-      ? `그룹웨어 > 메신저 > ${channelIcon(activeChannel.type)} ${channelLabel(activeChannel, profileNames, currentUserId)}`
+      ? `그룹웨어 > 메신저 > ${channelLabel(activeChannel, profileNames, currentUserId)}`
       : "그룹웨어 > 메신저";
 
   return (
@@ -526,7 +558,10 @@ export function MessengerPage({
             className={`erp-messenger-tab${hubTab === "chat" ? " active" : ""}`}
             onClick={() => setHubTab("chat")}
           >
-            💬 대화
+            <span className="erp-icon" style={{ width: 15, height: 15 }} aria-hidden>
+              <ChatIcon />
+            </span>
+            대화
             {anyChatUnseen && <span className="erp-messenger-tab-dot" aria-hidden />}
           </button>
           {mailEnabled && (
@@ -535,7 +570,10 @@ export function MessengerPage({
               className={`erp-messenger-tab${hubTab === "mail" ? " active" : ""}`}
               onClick={() => setHubTab("mail")}
             >
-              📧 메일
+              <span className="erp-icon" style={{ width: 15, height: 15 }} aria-hidden>
+                <MailIcon />
+              </span>
+              메일
               {mailUnreadCount > 0 && <span className="erp-messenger-tab-count">{mailUnreadCount}</span>}
             </button>
           )}
@@ -544,7 +582,10 @@ export function MessengerPage({
             className={`erp-messenger-tab${hubTab === "notifications" ? " active" : ""}`}
             onClick={() => setHubTab("notifications")}
           >
-            🔔 알림
+            <span className="erp-icon" style={{ width: 15, height: 15 }} aria-hidden>
+              <BellIcon />
+            </span>
+            알림
             {notifUnreadCount > 0 && <span className="erp-messenger-tab-count">{notifUnreadCount}</span>}
           </button>
         </div>
@@ -631,7 +672,9 @@ export function MessengerPage({
                   style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span aria-hidden>{notifIcon(n.type)}</span>
+                    <span className="erp-icon" style={{ width: 14, height: 14, color: "var(--erp-text-muted)" }} aria-hidden>
+                      <NotifIcon type={n.type} />
+                    </span>
                     {!n.isRead && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
                     <span
                       style={{
@@ -695,7 +738,9 @@ export function MessengerPage({
                     className={`erp-messenger-channel-row${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
                     style={{ position: "relative" }}
                   >
-                    <span style={{ marginRight: 8 }}>{channelIcon(c.type)}</span>
+                    <span style={{ marginRight: 8, display: "inline-flex" }}>
+                      <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
+                    </span>
                     <span style={{ flex: 1, textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
                     {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
                   </button>
@@ -722,8 +767,12 @@ export function MessengerPage({
                       disabled={creatingChannel}
                       onClick={() => handleStartDm(id)}
                       className="erp-messenger-channel-row"
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
                     >
-                      👤 {name}
+                      <span className="erp-avatar" style={{ width: 22, height: 22, fontSize: 10 }} aria-hidden>
+                        {name[0] ?? "?"}
+                      </span>
+                      {name}
                     </button>
                   ))}
                 </div>
@@ -864,7 +913,9 @@ export function MessengerPage({
                                         className="erp-attachment-row"
                                       >
                                         <span className="erp-attachment-icon" aria-hidden>
-                                          {fileKindIcon(m.file_name)}
+                                          <span className="erp-icon" style={{ width: 16, height: 16, color: "var(--erp-primary)" }}>
+                                            <FileKindIcon kind={fileKind(m.file_name)} />
+                                          </span>
                                         </span>
                                         <span className="erp-attachment-info">
                                           <span className="erp-attachment-name">{highlightText(m.file_name, query)}</span>
@@ -873,7 +924,9 @@ export function MessengerPage({
                                           </span>
                                         </span>
                                         <span className="erp-attachment-download" aria-hidden>
-                                          ⬇
+                                          <span className="erp-icon" style={{ width: 13, height: 13 }}>
+                                            <DownloadIcon />
+                                          </span>
                                         </span>
                                       </a>
                                     )}
@@ -943,7 +996,11 @@ export function MessengerPage({
                         key={composerKey}
                         name="file"
                         iconOnly
-                        icon="📎"
+                        icon={
+                          <span className="erp-icon" style={{ width: 16, height: 16 }}>
+                            <PaperclipIcon />
+                          </span>
+                        }
                         label="파일 첨부"
                         onFileChange={(f) => setHasAttachment(!!f)}
                       />

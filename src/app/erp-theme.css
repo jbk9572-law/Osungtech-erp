@@ -2220,6 +2220,23 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-text-muted);
 }
 
+/* 이모지 아이콘을 대체하는 24x24 선 아이콘(groupware-icons.tsx) 공용
+   래퍼 — 크기는 기본 16px, 쓰는 자리마다 style={{width,height}}로
+   덮어쓴다(탭바는 15px, 목록 줄 안쪽은 14px 등). */
+.erp-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.erp-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
 /* 공지사항/할일 상세 — 탭바 형태 대신 실제 게시글처럼 제목/작성자를
    보여주는 헤더+본문 카드. */
 .erp-post-header {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { formatFileSize } from "@/lib/file-display";
 
 // 파일 입력을 눈에 보이지 않는 input + 실제 버튼(.click() 트리거) 조합으로
@@ -18,7 +18,9 @@ export function FilePickerInput({
   name: string;
   accept?: string;
   required?: boolean;
-  icon?: string;
+  // 기존 호출부(branding/signature/excel-import)는 그대로 이모지
+  // 문자열을 쓰고, 선 아이콘으로 바꾼 자리(메신저)만 ReactNode를 넘긴다.
+  icon?: string | ReactNode;
   label?: string;
   iconOnly?: boolean;
   onFileChange?: (file: File | null) => void;
@@ -55,7 +57,13 @@ export function FilePickerInput({
         className={iconOnly ? "erp-file-picker-btn erp-file-picker-btn-icon" : "erp-file-picker-btn"}
         title={iconOnly ? label : undefined}
       >
-        {iconOnly ? icon : `${icon} ${label}`}
+        {iconOnly ? (
+          icon
+        ) : (
+          <>
+            {icon} {label}
+          </>
+        )}
       </button>
       {file && (
         <span className="erp-file-picker-name">
