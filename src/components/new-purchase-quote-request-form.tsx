@@ -102,7 +102,7 @@ export function NewPurchaseQuoteRequestForm({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 280 }}>품목</th>
+              <th style={{ width: 320 }}>품목</th>
               <th style={{ width: 140 }}>규격</th>
               <th className="num" style={{ width: 100 }}>수량</th>
               <th>비고</th>

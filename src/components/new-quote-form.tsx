@@ -93,7 +93,7 @@ export function NewQuoteForm({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 260 }}>품목</th>
+              <th style={{ width: 320 }}>품목</th>
               <th style={{ width: 140 }}>규격</th>
               <th className="num" style={{ width: 90 }}>수량</th>
               <th className="num" style={{ width: 110 }}>단가</th>

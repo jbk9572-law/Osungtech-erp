@@ -90,7 +90,7 @@ export function NewStockTransferForm({
         <table className="erp-grid">
           <thead>
             <tr>
-              <th style={{ width: 280 }}>품목</th>
+              <th style={{ width: 320 }}>품목</th>
               <th className="num" style={{ width: 110 }}>수량</th>
               <th>비고</th>
               <th style={{ width: 50 }} />
