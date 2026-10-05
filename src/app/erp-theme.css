@@ -266,7 +266,17 @@
   padding: 0 12px;
   padding-top: env(safe-area-inset-top, 0px);
   box-shadow: var(--erp-shadow-sm);
-  position: relative;
+  /* relative가 아니라 sticky여야 하는 이유: iOS Safari(최신 버전)는
+     theme-color 메타 태그를 더 이상 안정적으로 읽지 않고, 대신 뷰포트
+     맨 위 4px 안쪽 지점에서 히트테스트해 거기 걸리는 첫 position:fixed/
+     sticky 요소(화면폭 80%+, 높이 3px+, 불투명 배경)의 배경색을 상단
+     상태바(노치 포함)에 그대로 채운다. .erp는 항상 height:100vh로
+     고정되고 실제 스크롤은 .erp-page 안에서만 일어나(.erp 자체는
+     스크롤되지 않음) sticky로 바꿔도 레이아웃/위치는 relative일 때와
+     100% 동일하지만, 이제 이 요소가 Safari의 샘플링 대상 조건을
+     충족한다. */
+  position: sticky;
+  top: 0;
   z-index: 20;
 }
 
