@@ -6,9 +6,10 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 
-// 거래처(출고처)의 수금, 공급처의 지급 등록 폼 — 필드 구성이 완전히 같아서
-// 하나로 공유한다. 실제로 다른 테이블(customer_payments/supplier_payments)에
-// 쓰는 건 넘겨받은 action이 결정한다.
+// 거래처(출고처)의 수금, 공급처/외주업체의 지급 등록 폼 — 필드 구성이
+// 완전히 같아서 하나로 공유한다. 실제로 다른 테이블(customer_payments/
+// supplier_payments/subcontractor_payments)에 쓰는 건 넘겨받은 action이
+// 결정한다.
 export function PartyPaymentForm({
   action,
   partyIdField,
@@ -17,7 +18,7 @@ export function PartyPaymentForm({
   label,
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
-  partyIdField: "customer_id" | "supplier_id";
+  partyIdField: "customer_id" | "supplier_id" | "subcontractor_id";
   partyId: string;
   today: string;
   label: string;

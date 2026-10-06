@@ -3,8 +3,8 @@
 import type { FormState } from "@/components/form-message";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 
-// 수금/지급 내역 한 줄 삭제 — 거래처/공급처 공용(넘겨받은 action이 실제
-// 테이블을 결정).
+// 수금/지급 내역 한 줄 삭제 — 거래처/공급처/외주업체 공용(넘겨받은
+// action이 실제 테이블을 결정).
 export function PartyPaymentDeleteForm({
   action,
   id,
@@ -13,7 +13,7 @@ export function PartyPaymentDeleteForm({
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>;
   id: string;
-  partyIdField: "customer_id" | "supplier_id";
+  partyIdField: "customer_id" | "supplier_id" | "subcontractor_id";
   partyId: string;
 }) {
   return (

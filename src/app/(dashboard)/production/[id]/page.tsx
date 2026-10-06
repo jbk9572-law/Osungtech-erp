@@ -9,6 +9,9 @@ import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
 import { WorkOrderProcessStepActions } from "@/components/work-order-process-step-actions";
 import { WorkOrderProcessStepAssignCell } from "@/components/work-order-process-step-assign-cell";
 import { WorkOrderStepDefectResolveButton } from "@/components/work-order-step-defect-resolve-button";
+import { WorkOrderStepDefectRejectButton } from "@/components/work-order-step-defect-reject-button";
+import { WorkOrderStepUnitCostForm } from "@/components/work-order-step-unit-cost-form";
+import { WorkOrderStepReturnForm } from "@/components/work-order-step-return-form";
 
 export default async function WorkOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,7 +29,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
     supabase
       .from("work_order_process_steps")
       .select(
-        "id, process_name, sort_order, status, assignee_kind, subcontractor_id, defect_hold, defect_quantity, subcontractors(name)",
+        "id, process_name, sort_order, status, assignee_kind, subcontractor_id, defect_hold, defect_quantity, unit_cost, returned_quantity, subcontractors(name)",
       )
       .eq("work_order_id", id)
       .order("sort_order"),
@@ -49,6 +52,10 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
         .in("subcontractor_id", assignedSubcontractorIds)
     : { data: [] as { subcontractor_id: string | null }[] };
   const subcontractorsWithAccount = new Set((accountRows ?? []).map((a) => a.subcontractor_id));
+
+  // 1차 공정이 외주로 배정돼 있으면 "자재투입" 대신 "외주 자재출고"로
+  // 바뀐다(자재가 우리 창고가 아니라 업체 보유재고로 넘어감).
+  const firstStepIsSubcontractor = steps?.[0]?.assignee_kind === "subcontractor";
 
   return (
     <div>
@@ -108,7 +115,11 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                   <td>{workOrder.profiles?.full_name ?? "-"}</td>
                   <th>상태</th>
                   <td>
-                    <WorkOrderStatusActions id={workOrder.id} status={workOrder.status} />
+                    <WorkOrderStatusActions
+                      id={workOrder.id}
+                      status={workOrder.status}
+                      firstStepIsSubcontractor={firstStepIsSubcontractor}
+                    />
                   </td>
                 </tr>
                 {workOrder.memo && (
@@ -137,8 +148,9 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                     <th>공정</th>
                     <th style={{ width: 110 }}>이전 담당</th>
                     <th style={{ width: 160 }}>담당</th>
-                    <th style={{ width: 90 }}>불량</th>
-                    <th style={{ width: 200 }}>상태</th>
+                    <th style={{ width: 110 }}>단가</th>
+                    <th style={{ width: 90 }}>불량/반품</th>
+                    <th style={{ width: 220 }}>상태</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,22 +175,41 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                           subcontractors={subcontractors ?? []}
                         />
                       </td>
-                      <td style={{ color: Number(s.defect_quantity) > 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}>
-                        {Number(s.defect_quantity) > 0 ? `${formatNumber(Number(s.defect_quantity))}개` : "-"}
+                      <td>
+                        {s.assignee_kind === "subcontractor" ? (
+                          <WorkOrderStepUnitCostForm
+                            id={s.id}
+                            workOrderId={workOrder.id}
+                            unitCost={s.unit_cost != null ? Number(s.unit_cost) : null}
+                          />
+                        ) : (
+                          <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+                        )}
+                      </td>
+                      <td style={{ color: Number(s.defect_quantity) > 0 || Number(s.returned_quantity) > 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}>
+                        {Number(s.defect_quantity) > 0 && <div>불량 {formatNumber(Number(s.defect_quantity))}</div>}
+                        {Number(s.returned_quantity) > 0 && <div>반품 {formatNumber(Number(s.returned_quantity))}</div>}
+                        {!(Number(s.defect_quantity) > 0) && !(Number(s.returned_quantity) > 0) && "-"}
                       </td>
                       <td>
                         {s.defect_hold ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                             <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
                             <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
+                            <WorkOrderStepDefectRejectButton id={s.id} workOrderId={workOrder.id} />
                           </div>
                         ) : (
-                          <WorkOrderProcessStepActions
-                            id={s.id}
-                            workOrderId={workOrder.id}
-                            status={s.status}
-                            defectHold={s.defect_hold}
-                          />
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <WorkOrderProcessStepActions
+                              id={s.id}
+                              workOrderId={workOrder.id}
+                              status={s.status}
+                              defectHold={s.defect_hold}
+                            />
+                            {s.assignee_kind === "subcontractor" && ["done", "shipped"].includes(s.status) && (
+                              <WorkOrderStepReturnForm id={s.id} workOrderId={workOrder.id} />
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>

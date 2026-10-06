@@ -189,3 +189,71 @@ export async function getAllSupplierBalances(supabase: SupabaseServerClient): Pr
     balance: Number(r.balance),
   }));
 }
+
+export async function getAllSubcontractorBalances(supabase: SupabaseServerClient): Promise<PartyBalance[]> {
+  const { data, error } = await supabase.rpc("get_subcontractor_balances");
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    total: Number(r.total),
+    paid: Number(r.paid),
+    balance: Number(r.balance),
+  }));
+}
+
+// 외주비 정산 — 매입채무(getSupplierBalance)와 똑같은 방식: 가공비
+// 누계(단가*(지시수량-반품수량), 반품으로 종료된 단계는 제외) - 지급
+// 누계로 그때그때 계산한다. 전표별 FIFO 상계 대신 공정단계를 "전표"
+// 취급해 같은 consumeOldestFirst를 재사용한다(날짜는 완료일 우선, 없으면
+// 생산지시일).
+export async function getSubcontractorBalance(supabase: SupabaseServerClient, subcontractorId: string) {
+  const [steps, payments] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      unit_cost: string | number | null;
+      returned_quantity: string | number;
+      status: string;
+      process_name: string;
+      completed_at: string | null;
+      work_orders: { id: string; doc_no: number | null; order_date: string; quantity: string | number } | null;
+    }>((from, to) =>
+      supabase
+        .from("work_order_process_steps")
+        .select(
+          "id, unit_cost, returned_quantity, status, process_name, completed_at, work_orders(id, doc_no, order_date, quantity)",
+        )
+        .eq("subcontractor_id", subcontractorId)
+        .eq("assignee_kind", "subcontractor")
+        .neq("status", "returned")
+        .order("completed_at", { ascending: true, nullsFirst: true })
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
+      (from, to) =>
+        supabase
+          .from("subcontractor_payments")
+          .select("id, paid_at, amount, method, memo")
+          .eq("subcontractor_id", subcontractorId)
+          .order("paid_at", { ascending: false })
+          .range(from, to),
+    ),
+  ]);
+
+  const feeLines = (steps ?? [])
+    .filter((s) => s.work_orders && s.unit_cost != null)
+    .map((s) => ({
+      id: s.id,
+      workOrderId: s.work_orders!.id,
+      docNo: s.work_orders!.doc_no,
+      processName: s.process_name,
+      date: (s.completed_at ?? s.work_orders!.order_date).slice(0, 10),
+      total: Number(s.unit_cost) * (Number(s.work_orders!.quantity) - Number(s.returned_quantity)),
+    }));
+
+  const totalFees = feeLines.reduce((sum, f) => sum + f.total, 0);
+  const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
+  const unpaidSteps = consumeOldestFirst(feeLines, totalPaid);
+
+  return { totalFees, totalPaid, balance: totalFees - totalPaid, payments: payments ?? [], unpaidSteps };
+}

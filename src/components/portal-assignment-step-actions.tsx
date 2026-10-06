@@ -9,7 +9,7 @@ import {
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { FormMessage } from "@/components/form-message";
 
-type StepStatus = "pending" | "received" | "in_progress" | "done" | "shipped";
+type StepStatus = "pending" | "received" | "in_progress" | "done" | "shipped" | "returned";
 
 const STATUS_LABEL: Record<StepStatus, { label: string; tone: BadgeTone }> = {
   pending: { label: "입고 대기", tone: "muted" },
@@ -17,6 +17,7 @@ const STATUS_LABEL: Record<StepStatus, { label: string; tone: BadgeTone }> = {
   in_progress: { label: "작업중", tone: "warn" },
   done: { label: "완료", tone: "ok" },
   shipped: { label: "출고완료", tone: "ok" },
+  returned: { label: "반품됨", tone: "danger" },
 };
 
 export function PortalAssignmentStepActions({

@@ -179,3 +179,98 @@ export async function resolveStepDefectHold(_prevState: FormState, formData: For
   if (workOrderId) revalidatePath(`/production/${workOrderId}`);
   return { success: "불량 보류를 해제했습니다. 작업을 진행할 수 있습니다." };
 }
+
+// 입고시 불량으로 보류된 공정을 "해결" 대신 "반품"으로 종료한다 —
+// 외주검사반품(영림원 용어): 이 건은 재고/정산에 전혀 반영되지 않는다.
+export async function rejectStepDefectHold(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reject_step_defect_hold", { p_step_id: id });
+  if (error) {
+    return { error: `반품 처리에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
+  return { success: "반품 처리했습니다." };
+}
+
+// 이미 완료/출고된 공정도 나중에 수량 반품이 가능하다(입고 후 반품) —
+// 생산지시가 이미 완료돼 완제품이 창고에 들어와 있으면 그만큼 재고도
+// 마이너스로 조정되고, 정산 금액은 반품 수량만큼 자동으로 줄어든다.
+export async function returnWorkOrderProcessStepQuantity(
+  _prevState: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
+  const quantity = Number(formData.get("quantity") ?? 0);
+  const note = String(formData.get("note") ?? "").trim() || null;
+  if (!id || !(quantity > 0)) {
+    return { error: "반품 수량을 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("return_work_order_process_step_quantity", {
+    p_step_id: id,
+    p_quantity: quantity,
+    p_note: note,
+  });
+  if (error) {
+    return { error: `반품 처리에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  revalidatePath("/inventory");
+  revalidatePath("/subcontractor-payables");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
+  return { success: "반품 처리했습니다." };
+}
+
+// 공정 배정 시 자동으로 채워진 단가를, 생산지시 상세에서 그 자리에서
+// 수정할 수 있게.
+export async function setStepUnitCost(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  const workOrderId = String(formData.get("work_order_id") ?? "");
+  const unitCostRaw = String(formData.get("unit_cost") ?? "").trim();
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_work_order_process_step_unit_cost", {
+    p_id: id,
+    p_unit_cost: unitCostRaw ? Number(unitCostRaw) : null,
+  });
+  if (error) {
+    return { error: `단가 저장에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  revalidatePath("/subcontractor-payables");
+  if (workOrderId) revalidatePath(`/production/${workOrderId}`);
+  return { success: "단가를 저장했습니다." };
+}
+
+// 1차 공정이 외주로 배정된 생산지시의 자재투입 — 우리 창고 차감은
+// issueWorkOrderMaterials와 같지만, 동시에 그 수량을 업체 보유재고로
+// 넘긴다(issue_work_order_materials_to_subcontractor RPC).
+export async function issueWorkOrderMaterialsToSubcontractor(
+  _prevState: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("issue_work_order_materials_to_subcontractor", { p_id: id });
+  if (error) {
+    return { error: `외주 자재출고에 실패했습니다: ${error.message}` };
+  }
+
+  revalidatePath("/production");
+  revalidatePath("/inventory");
+  revalidatePath("/subcontractors");
+  return { success: "외주 자재출고 처리했습니다." };
+}

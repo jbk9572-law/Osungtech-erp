@@ -1658,7 +1658,7 @@ export type Database = {
           process_id: string;
           process_name: string;
           sort_order: number;
-          status: "pending" | "received" | "in_progress" | "done" | "shipped";
+          status: "pending" | "received" | "in_progress" | "done" | "shipped" | "returned";
           assignee_kind: "internal" | "subcontractor";
           subcontractor_id: string | null;
           received_at: string | null;
@@ -1667,6 +1667,8 @@ export type Database = {
           shipped_at: string | null;
           defect_hold: boolean;
           defect_quantity: number;
+          unit_cost: number | null;
+          returned_quantity: number;
           note: string | null;
         };
         Insert: {
@@ -1675,7 +1677,7 @@ export type Database = {
           process_id: string;
           process_name: string;
           sort_order?: number;
-          status?: "pending" | "received" | "in_progress" | "done" | "shipped";
+          status?: "pending" | "received" | "in_progress" | "done" | "shipped" | "returned";
           assignee_kind?: "internal" | "subcontractor";
           subcontractor_id?: string | null;
           received_at?: string | null;
@@ -1684,6 +1686,8 @@ export type Database = {
           shipped_at?: string | null;
           defect_hold?: boolean;
           defect_quantity?: number;
+          unit_cost?: number | null;
+          returned_quantity?: number;
           note?: string | null;
         };
         Update: {
@@ -1692,7 +1696,7 @@ export type Database = {
           process_id?: string;
           process_name?: string;
           sort_order?: number;
-          status?: "pending" | "received" | "in_progress" | "done" | "shipped";
+          status?: "pending" | "received" | "in_progress" | "done" | "shipped" | "returned";
           assignee_kind?: "internal" | "subcontractor";
           subcontractor_id?: string | null;
           received_at?: string | null;
@@ -1701,6 +1705,8 @@ export type Database = {
           shipped_at?: string | null;
           defect_hold?: boolean;
           defect_quantity?: number;
+          unit_cost?: number | null;
+          returned_quantity?: number;
           note?: string | null;
         };
         Relationships: [
@@ -1837,6 +1843,7 @@ export type Database = {
           contact_name: string | null;
           phone: string | null;
           memo: string | null;
+          default_unit_cost: number | null;
           created_at: string;
           is_demo: boolean;
           tenant_id: string;
@@ -1847,6 +1854,7 @@ export type Database = {
           contact_name?: string | null;
           phone?: string | null;
           memo?: string | null;
+          default_unit_cost?: number | null;
           created_at?: string;
           is_demo?: boolean;
           tenant_id?: string;
@@ -1857,11 +1865,171 @@ export type Database = {
           contact_name?: string | null;
           phone?: string | null;
           memo?: string | null;
+          default_unit_cost?: number | null;
           created_at?: string;
           is_demo?: boolean;
           tenant_id?: string;
         };
         Relationships: [];
+      };
+      subcontractor_inventory: {
+        Row: {
+          id: string;
+          subcontractor_id: string;
+          product_id: string;
+          quantity: number;
+          updated_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          subcontractor_id: string;
+          product_id: string;
+          quantity?: number;
+          updated_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          subcontractor_id?: string;
+          product_id?: string;
+          quantity?: number;
+          updated_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_inventory_subcontractor_id_fkey";
+            columns: ["subcontractor_id"];
+            isOneToOne: false;
+            referencedRelation: "subcontractors";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subcontractor_inventory_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subcontractor_inventory_transactions: {
+        Row: {
+          id: string;
+          subcontractor_id: string;
+          product_id: string;
+          type: "issued" | "consumed" | "returned" | "adjustment";
+          quantity: number;
+          work_order_id: string | null;
+          reference: string | null;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          subcontractor_id: string;
+          product_id: string;
+          type: "issued" | "consumed" | "returned" | "adjustment";
+          quantity: number;
+          work_order_id?: string | null;
+          reference?: string | null;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          subcontractor_id?: string;
+          product_id?: string;
+          type?: "issued" | "consumed" | "returned" | "adjustment";
+          quantity?: number;
+          work_order_id?: string | null;
+          reference?: string | null;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_inventory_transactions_subcontractor_id_fkey";
+            columns: ["subcontractor_id"];
+            isOneToOne: false;
+            referencedRelation: "subcontractors";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subcontractor_inventory_transactions_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subcontractor_inventory_transactions_work_order_id_fkey";
+            columns: ["work_order_id"];
+            isOneToOne: false;
+            referencedRelation: "work_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subcontractor_payments: {
+        Row: {
+          id: string;
+          subcontractor_id: string;
+          paid_at: string;
+          amount: number;
+          method: string | null;
+          memo: string | null;
+          created_by: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          subcontractor_id: string;
+          paid_at: string;
+          amount: number;
+          method?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          subcontractor_id?: string;
+          paid_at?: string;
+          amount?: number;
+          method?: string | null;
+          memo?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_payments_subcontractor_id_fkey";
+            columns: ["subcontractor_id"];
+            isOneToOne: false;
+            referencedRelation: "subcontractors";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       customer_orders: {
         Row: {
@@ -4831,8 +4999,33 @@ export type Database = {
           received_at: string | null;
           defect_hold: boolean;
           defect_quantity: number;
+          returned_quantity: number;
           is_mine: boolean;
         }[];
+      };
+      set_work_order_process_step_unit_cost: {
+        Args: { p_id: string; p_unit_cost: number | null };
+        Returns: void;
+      };
+      issue_work_order_materials_to_subcontractor: {
+        Args: { p_id: string };
+        Returns: void;
+      };
+      consume_subcontractor_material_for_step: {
+        Args: { p_step_id: string };
+        Returns: void;
+      };
+      reject_step_defect_hold: {
+        Args: { p_step_id: string };
+        Returns: void;
+      };
+      return_work_order_process_step_quantity: {
+        Args: { p_step_id: string; p_quantity: number; p_note?: string | null };
+        Returns: void;
+      };
+      get_subcontractor_balances: {
+        Args: Record<PropertyKey, never>;
+        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
       };
       subcontractor_whoami: {
         Args: Record<PropertyKey, never>;

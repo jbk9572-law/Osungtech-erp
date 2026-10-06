@@ -1,7 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { issueWorkOrderMaterials, completeWorkOrder } from "@/app/(dashboard)/production/actions";
+import {
+  issueWorkOrderMaterials,
+  issueWorkOrderMaterialsToSubcontractor,
+  completeWorkOrder,
+} from "@/app/(dashboard)/production/actions";
 import { GridBadge, type BadgeTone } from "@/components/grid/badge";
 import { FormMessage } from "@/components/form-message";
 
@@ -14,14 +18,40 @@ const STATUS_LABEL: Record<Status, { label: string; tone: BadgeTone }> = {
   cancelled: { label: "취소", tone: "danger" },
 };
 
-export function WorkOrderStatusActions({ id, status }: { id: string; status: Status }) {
+export function WorkOrderStatusActions({
+  id,
+  status,
+  firstStepIsSubcontractor = false,
+}: {
+  id: string;
+  status: Status;
+  firstStepIsSubcontractor?: boolean;
+}) {
   const [issueState, issueAction, issuePending] = useActionState(issueWorkOrderMaterials, undefined);
+  const [issueToSubState, issueToSubAction, issueToSubPending] = useActionState(
+    issueWorkOrderMaterialsToSubcontractor,
+    undefined,
+  );
   const [completeState, completeAction, completePending] = useActionState(completeWorkOrder, undefined);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
       <GridBadge tone={STATUS_LABEL[status].tone}>{STATUS_LABEL[status].label}</GridBadge>
-      {status === "pending" && (
+      {status === "pending" && firstStepIsSubcontractor && (
+        <form action={issueToSubAction}>
+          <input type="hidden" name="id" value={id} />
+          <button
+            type="submit"
+            className="erp-btn"
+            style={{ height: 22, padding: "1px 8px", fontSize: 11 }}
+            disabled={issueToSubPending}
+            title="1차 공정 업체에게 자재를 보내고 보유재고로 기록합니다"
+          >
+            {issueToSubPending ? "처리 중..." : "외주 자재출고"}
+          </button>
+        </form>
+      )}
+      {status === "pending" && !firstStepIsSubcontractor && (
         <form action={issueAction}>
           <input type="hidden" name="id" value={id} />
           <button type="submit" className="erp-btn" style={{ height: 22, padding: "1px 8px", fontSize: 11 }} disabled={issuePending}>
@@ -38,6 +68,7 @@ export function WorkOrderStatusActions({ id, status }: { id: string; status: Sta
         </form>
       )}
       <FormMessage state={issueState} />
+      <FormMessage state={issueToSubState} />
       <FormMessage state={completeState} />
     </div>
   );

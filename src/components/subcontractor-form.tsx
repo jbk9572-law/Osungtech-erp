@@ -12,6 +12,7 @@ export type SubcontractorFormInitial = {
   contact_name?: string | null;
   phone?: string | null;
   memo?: string | null;
+  default_unit_cost?: number | string | null;
 };
 
 export function SubcontractorForm({
@@ -50,6 +51,19 @@ export function SubcontractorForm({
         className="erp-input"
       />
       <PhoneInputGroup namePrefix="phone" defaultValue={initial?.phone} />
+      <div className="erp-field">
+        <label htmlFor="sc-default-unit-cost">기본 가공비 단가 (원, 선택)</label>
+        <input
+          id="sc-default-unit-cost"
+          name="default_unit_cost"
+          type="number"
+          min="0"
+          step="1"
+          autoComplete="off"
+          defaultValue={initial?.default_unit_cost ?? ""}
+          className="erp-input"
+        />
+      </div>
       <textarea
         name="memo"
         placeholder="비고 (맡기는 공정, 특이사항 등)"

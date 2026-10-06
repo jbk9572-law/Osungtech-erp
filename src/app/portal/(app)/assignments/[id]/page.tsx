@@ -13,6 +13,15 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "취소",
 };
 
+const NON_MINE_STATUS_LABEL: Record<string, string> = {
+  pending: "입고 대기",
+  received: "입고완료",
+  in_progress: "작업중",
+  done: "완료",
+  shipped: "출고완료",
+  returned: "반품됨",
+};
+
 export default async function PortalAssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
@@ -86,23 +95,17 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
                   <PortalAssignmentStepActions
                     stepId={s.id}
                     workOrderId={workOrder.id}
-                    status={s.status as "pending" | "received" | "in_progress" | "done" | "shipped"}
+                    status={s.status as "pending" | "received" | "in_progress" | "done" | "shipped" | "returned"}
                     defectHold={s.defect_hold}
                     defectQuantity={Number(s.defect_quantity)}
                   />
                 ) : (
-                  <span className={`erp-badge ${s.defect_hold ? "erp-badge-danger" : "erp-badge-muted"}`}>
+                  <span
+                    className={`erp-badge ${s.defect_hold || s.status === "returned" ? "erp-badge-danger" : "erp-badge-muted"}`}
+                  >
                     {s.defect_hold
                       ? "입고 불량 보류"
-                      : s.status === "pending"
-                        ? "입고 대기"
-                        : s.status === "received"
-                          ? "입고완료"
-                          : s.status === "in_progress"
-                            ? "작업중"
-                            : s.status === "done"
-                              ? "완료"
-                              : "출고완료"}
+                      : (NON_MINE_STATUS_LABEL[s.status] ?? s.status)}
                   </span>
                 )}
               </div>
