@@ -22,7 +22,7 @@ export default async function BackupSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">시스템관리 &gt; 백업/복원</h1>
+      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 백업/복원</h1>
 
       {!isAdmin ? (
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>

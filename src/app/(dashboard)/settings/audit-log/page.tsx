@@ -230,7 +230,7 @@ export default async function AuditLogPage({
     return (
       <div>
         <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-          시스템관리 &gt; 변경 이력
+          환경설정 &gt; 변경 이력
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
@@ -406,9 +406,9 @@ export default async function AuditLogPage({
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/company" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-        시스템관리 &gt; 변경 이력
+        환경설정 &gt; 변경 이력
       </h1>
       <PageGuide>
         매출·매입·품목·거래처·계정 권한의 등록/수정/삭제 이력과 재고 조정 이력입니다. 관리자만 볼 수

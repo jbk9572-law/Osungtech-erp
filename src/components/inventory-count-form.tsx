@@ -35,6 +35,12 @@ function isLargeDiscrepancy(systemQuantity: number, diff: number): boolean {
   return Math.abs(diff) >= 10 && Math.abs(diff) / base >= 0.5;
 }
 
+// table-layout: auto(기본값)로는 모바일 폭에서 <th style={{width}}>가 그냥
+// "희망 폭"이라 실사 수량 입력칸(QuantityWithBoxInput)이 찌그러진다 —
+// new-quote-form.tsx와 같은 기법으로 표를 모든 칸 폭의 합만큼 고정폭으로
+// 못박아 erp-grid-wrap의 overflow:auto가 가로 스크롤을 대신하게 한다.
+const COUNT_GRID_TOTAL_WIDTH = 100 + 220 + 140 + 130 + 130 + 140 + 100 + 90;
+
 export function InventoryCountForm({
   rows,
   warehouseId,
@@ -335,11 +341,14 @@ export function InventoryCountForm({
         </div>
       )}
       <div className="erp-grid-wrap" style={{ marginTop: 8 }}>
-        <table className="erp-grid">
+        <table
+          className="erp-grid"
+          style={{ tableLayout: "fixed", width: COUNT_GRID_TOTAL_WIDTH, minWidth: COUNT_GRID_TOTAL_WIDTH }}
+        >
           <thead>
             <tr>
-              <th>SKU</th>
-              <th>품목명</th>
+              <th style={{ width: 100 }}>SKU</th>
+              <th style={{ width: 220 }}>품목명</th>
               <th style={{ width: 140 }}>규격</th>
               <th style={{ width: 130 }}>포장수량</th>
               <th className="num" style={{ width: 130 }}>

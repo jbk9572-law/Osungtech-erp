@@ -17,7 +17,7 @@ export default async function UsersSettingsPage() {
     return (
       <div>
         <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-          시스템관리 &gt; 권한관리
+          환경설정 &gt; 권한관리
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
@@ -35,7 +35,7 @@ export default async function UsersSettingsPage() {
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-        시스템관리 &gt; 권한관리
+        환경설정 &gt; 권한관리
       </h1>
       <PageGuide>
         새 계정을 만들고 역할(권한)을 지정합니다. 아이디로 로그인하며,

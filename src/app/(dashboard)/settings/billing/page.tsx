@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -14,6 +15,18 @@ const PLAN_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger"
 
 export default async function BillingPage() {
   const supabase = await createClient();
+  const { isAdmin } = await getCurrentActor(supabase);
+
+  if (!isAdmin) {
+    return (
+      <div>
+        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 구독/결제</h1>
+        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+          이 화면은 관리자만 볼 수 있습니다.
+        </p>
+      </div>
+    );
+  }
 
   const [{ data: tenant }, { data: plans }] = await Promise.all([
     supabase.from("tenants").select("name, plan, plan_key, plan_expires_at").maybeSingle(),

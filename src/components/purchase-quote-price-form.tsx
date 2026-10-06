@@ -9,6 +9,12 @@ import { formatNumber } from "@/lib/format-number";
 
 type Item = { id: string; label: string; spec: string | null; quantity: number };
 
+// table-layout: auto(기본값)로는 모바일 폭에서 <th style={{width}}>가 그냥
+// "희망 폭"이라 견적단가 입력칸이 찌그러진다 — new-quote-form.tsx와 같은
+// 기법으로 표를 모든 칸 폭의 합만큼 고정폭으로 못박아 erp-grid-wrap의
+// overflow:auto가 가로 스크롤을 대신하게 한다.
+const PRICE_GRID_TOTAL_WIDTH = 240 + 120 + 90 + 120 + 120;
+
 export function PurchaseQuotePriceForm({
   purchaseQuoteRequestId,
   supplierId,
@@ -30,10 +36,13 @@ export function PurchaseQuotePriceForm({
       <input type="hidden" name="supplier_id" value={supplierId} />
 
       <div className="erp-grid-wrap">
-        <table className="erp-grid">
+        <table
+          className="erp-grid"
+          style={{ tableLayout: "fixed", width: PRICE_GRID_TOTAL_WIDTH, minWidth: PRICE_GRID_TOTAL_WIDTH }}
+        >
           <thead>
             <tr>
-              <th>품목</th>
+              <th style={{ width: 240 }}>품목</th>
               <th style={{ width: 120 }}>규격</th>
               <th className="num" style={{ width: 90 }}>수량</th>
               <th className="num" style={{ width: 120 }}>견적단가</th>

@@ -15,6 +15,13 @@ type CatalogRow = {
   unit_price: number;
 };
 
+// table-layout: auto(기본값)로는 모바일 폭에서 <th style={{width}}>가 그냥
+// "희망 폭"이라 품목 칸이 찌그러진다 — 거래처가 외부에서 모바일로 접속할
+// 가능성이 높은 화면이라 특히 중요하다. new-quote-form.tsx와 같은 기법으로
+// 표를 모든 칸 폭의 합만큼 고정폭으로 못박아 erp-grid-wrap의 overflow:auto가
+// 가로 스크롤을 대신하게 한다.
+const ORDER_GRID_TOTAL_WIDTH = 240 + 90 + 100 + 110 + 120;
+
 export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
   const [qtyByProduct, setQtyByProduct] = useState<Record<string, string>>({});
   const [memo, setMemo] = useState("");
@@ -41,10 +48,13 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
         value={JSON.stringify(items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })))}
       />
       <div className="erp-grid-wrap">
-        <table className="erp-grid">
+        <table
+          className="erp-grid"
+          style={{ tableLayout: "fixed", width: ORDER_GRID_TOTAL_WIDTH, minWidth: ORDER_GRID_TOTAL_WIDTH }}
+        >
           <thead>
             <tr>
-              <th>품목</th>
+              <th style={{ width: 240 }}>품목</th>
               <th style={{ width: 90 }}>규격</th>
               <th className="num" style={{ width: 100 }}>단가</th>
               <th className="num" style={{ width: 110 }}>수량</th>

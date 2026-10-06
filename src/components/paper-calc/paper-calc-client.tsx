@@ -64,6 +64,12 @@ type SavedCalculation = {
 const BATCHES_PER_PAGE = 2;
 const MAX_ROWS = 10;
 
+// table-layout: auto(기본값)로는 모바일 폭에서 가로/세로/수량 입력칸이
+// 찌그러진다 — new-quote-form.tsx와 같은 기법으로 표를 모든 칸 폭의
+// 합만큼 고정폭으로 못박아 erp-grid-wrap의 overflow:auto가 가로
+// 스크롤을 대신하게 한다(manual-layout-client.tsx의 같은 표와 동일).
+const ORDER_INPUT_GRID_TOTAL_WIDTH = 40 + 150 + 150 + 150 + 60;
+
 function computeAverageUsage(layouts: NestLayout[]): number | null {
   const weighted = layouts.filter((l) => l.margin.usage != null);
   const totalW = weighted.reduce((sum, l) => sum + l.sheetCount, 0);
@@ -413,16 +419,19 @@ export function PaperCalcClient({
             </div>
             <div className="erp-detail-body flex flex-col gap-3">
               <div className="erp-grid-wrap">
-                <table className="erp-grid">
+                <table
+                  className="erp-grid"
+                  style={{ tableLayout: "fixed", width: ORDER_INPUT_GRID_TOTAL_WIDTH, minWidth: ORDER_INPUT_GRID_TOTAL_WIDTH }}
+                >
                   <thead>
                     <tr>
                       <th style={{ width: 40 }}>#</th>
-                      <th>
+                      <th style={{ width: 150 }}>
                         가로(mm)
                         <FieldHint text="원지에서 재단해 낼 완성 조각의 가로 길이. 아래 원지 크기와 다른 값입니다." />
                       </th>
-                      <th>세로(mm)</th>
-                      <th>수량(매)</th>
+                      <th style={{ width: 150 }}>세로(mm)</th>
+                      <th style={{ width: 150 }}>수량(매)</th>
                       <th style={{ width: 60 }}></th>
                     </tr>
                   </thead>

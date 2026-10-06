@@ -7,6 +7,8 @@ import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { PushSubscribeToggle } from "@/components/erp/push-subscribe-toggle";
+import { BellIcon } from "@/components/erp/groupware-icons";
+import { GridBadge } from "@/components/grid/badge";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 
@@ -41,7 +43,9 @@ export function NotificationBell({ announcements }: { announcements: Announcemen
         onClick={() => setOpen((o) => !o)}
         aria-label="알림"
       >
-        🔔
+        <span className="erp-icon" aria-hidden style={{ width: 15, height: 15 }}>
+          <BellIcon />
+        </span>
         {count > 0 && (
           <span className="erp-bell-badge">{count > 99 ? "99+" : count}</span>
         )}
@@ -58,8 +62,9 @@ export function NotificationBell({ announcements }: { announcements: Announcemen
                 <button
                   type="button"
                   onClick={() => go(`/announcements/${a.id}`)}
+                  style={{ display: "flex", alignItems: "center", gap: 6 }}
                 >
-                  {a.pinned ? "📌 " : ""}
+                  {a.pinned && <GridBadge tone="info">고정</GridBadge>}
                   {a.title}
                 </button>
               </div>

@@ -37,6 +37,12 @@ type DragStart = {
 const MAX_ROWS = 10;
 const REAM_SHEETS = SHEET_PER_REAM;
 
+// table-layout: auto(기본값)로는 모바일 폭에서 가로/세로/수량 입력칸이
+// 찌그러진다 — new-quote-form.tsx와 같은 기법으로 표를 모든 칸 폭의
+// 합만큼 고정폭으로 못박아 erp-grid-wrap의 overflow:auto가 가로
+// 스크롤을 대신하게 한다(paper-calc-client.tsx의 같은 표와 동일).
+const ITEM_PALETTE_GRID_TOTAL_WIDTH = 40 + 150 + 150 + 150 + 60;
+
 // 배치 1건 = 1연(500장)이라, 품목 1개를 원지에 한 번 놓을 때마다 그
 // 배치 전체에서 500개씩 나온다. 그래서 발주수량을 다 채우는 데 필요한
 // 배치 횟수는 500장 단위로 올림한 값이고, 그 이상은 배치할 필요가
@@ -569,13 +575,16 @@ export function ManualLayoutClient({
         </div>
         <div className="erp-detail-body flex flex-col gap-3">
           <div className="erp-grid-wrap">
-            <table className="erp-grid">
+            <table
+              className="erp-grid"
+              style={{ tableLayout: "fixed", width: ITEM_PALETTE_GRID_TOTAL_WIDTH, minWidth: ITEM_PALETTE_GRID_TOTAL_WIDTH }}
+            >
               <thead>
                 <tr>
                   <th style={{ width: 40 }}>#</th>
-                  <th>가로(mm)</th>
-                  <th>세로(mm)</th>
-                  <th>목표 수량(매)</th>
+                  <th style={{ width: 150 }}>가로(mm)</th>
+                  <th style={{ width: 150 }}>세로(mm)</th>
+                  <th style={{ width: 150 }}>목표 수량(매)</th>
                   <th style={{ width: 60 }}></th>
                 </tr>
               </thead>

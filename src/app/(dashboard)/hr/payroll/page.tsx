@@ -31,6 +31,14 @@ const WITHHOLDING_BRACKET_PAGE_SIZE = 50;
 
 const CONFIRM_STALE_DAYS = 180;
 
+// table-layout: auto(기본값)로는 모바일 폭에서 칸 일부에만 준 width가
+// 그냥 "희망 폭"일 뿐이라 입력칸(EmployeePayForm/PayslipBonusForm의
+// 숫자입력)이 찌그러진다 — new-quote-form.tsx와 같은 기법으로 표를
+// 모든 칸 폭의 합만큼 고정폭으로 못박아 erp-grid-wrap의 overflow:auto가
+// 가로 스크롤을 대신하게 한다.
+const PAY_SETTING_GRID_TOTAL_WIDTH = 180 + 320;
+const PAYSLIP_GRID_TOTAL_WIDTH = 140 + 100 + 230 + 100 + 100 + 100 + 90 + 200;
+
 // 급여 기준 설정(요율)/직원 급여정보(기본급)/급여명세(생성·확정)는 각자
 // 독립 화면이었는데, 실제로는 하나의 순서 있는 급여 처리 흐름이라("급여
 // 설정에서 먼저 등록해주세요" 식으로 서로를 참조하는 에러 메시지가 이미
@@ -160,10 +168,13 @@ export default async function PayrollPage({
               계산합니다(연장/야간수당은 포함되지 않습니다).
             </PageGuide>
             <div className="erp-grid-wrap">
-              <table className="erp-grid">
+              <table
+                className="erp-grid"
+                style={{ tableLayout: "fixed", width: PAY_SETTING_GRID_TOTAL_WIDTH, minWidth: PAY_SETTING_GRID_TOTAL_WIDTH }}
+              >
                 <thead>
                   <tr>
-                    <th>구성원</th>
+                    <th style={{ width: 180 }}>구성원</th>
                     <th style={{ width: 320 }}>월 기본급 / 부양가족 수</th>
                   </tr>
                 </thead>
@@ -261,10 +272,13 @@ export default async function PayrollPage({
               </p>
             ) : (
               <div className="erp-grid-wrap">
-                <table className="erp-grid">
+                <table
+                  className="erp-grid"
+                  style={{ tableLayout: "fixed", width: PAYSLIP_GRID_TOTAL_WIDTH, minWidth: PAYSLIP_GRID_TOTAL_WIDTH }}
+                >
                   <thead>
                     <tr>
-                      <th>구성원</th>
+                      <th style={{ width: 140 }}>구성원</th>
                       <th className="num" style={{ width: 100 }}>
                         기본급
                       </th>
