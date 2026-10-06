@@ -167,7 +167,10 @@ export async function seedPaymentRequests(
 ): Promise<BoardSeedResult> {
   let created = 0;
   let lastError: string | undefined;
-  const cardTypes = ["법인카드", "현금"];
+  // payment_requests.card_type은 ('개인카드', '하나법인카드', '신한법인카드')만
+  // 허용한다(migration 58) — "법인카드"/"현금"은 그 이전 값이라 전부
+  // check constraint 위반으로 막혔다.
+  const cardTypes = ["개인카드", "하나법인카드", "신한법인카드"];
   for (let i = 0; i < count; i++) {
     const actor = pick(actors);
     const department = actor.employee.departmentId

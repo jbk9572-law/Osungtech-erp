@@ -9,25 +9,33 @@ function todayStr(): string {
 // count번 무작위 반복이 아니라 오늘 하루 서로 다른 직원 몇 명을 골라
 // 출퇴근 기록을 한 줄씩 채운다 — 크론이 매일 돌면서 날짜가 바뀔 때마다
 // 자연히 새 줄이 쌓인다.
+//
+// attendance_records_insert_own 정책(migration 105)은 user_id = auth.uid()
+// (본인 것만)만 허용한다. 예전엔 전체 직원(employees) 중에서 무작위로
+// 골라 user_id에 넣고, 그 직원이 로그인 세션이 없으면(세션 풀은
+// actorPoolSize만큼만 로그인됨 — run.ts 참고) 엉뚱한 다른 로그인된
+// 직원(actor)으로 대신 insert를 시도했다 — auth.uid()(그 actor 자신)와
+// user_id(원래 뽑힌 직원)가 달라서 거의 항상 RLS에 막혔다(세션 풀
+// 크기만큼의 확률로만 우연히 맞아떨어짐). 로그인 세션이 있는 actor
+// 본인 몫으로만 기록하도록 바꿨다.
 export async function seedAttendance(
-  employees: DummyEmployee[],
+  _employees: DummyEmployee[],
   actors: ActingSession[],
   count: number,
 ): Promise<BoardSeedResult> {
   let created = 0;
   let lastError: string | undefined;
-  const todaysEmployees = pickMany(employees, Math.min(count, employees.length));
+  const todaysActors = pickMany(actors, Math.min(count, actors.length));
   const today = todayStr();
 
-  for (const employee of todaysEmployees) {
-    const actor = actors.find((a) => a.employee.id === employee.id) ?? pick(actors);
+  for (const actor of todaysActors) {
     const clockIn = new Date();
     clockIn.setHours(8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60), 0, 0);
     const clockOut = new Date(clockIn);
     clockOut.setHours(clockIn.getHours() + 8 + Math.floor(Math.random() * 2));
 
     const { error } = await actor.client.from("attendance_records").insert({
-      user_id: employee.id,
+      user_id: actor.employee.id,
       work_date: today,
       clock_in_at: clockIn.toISOString(),
       clock_out_at: clockOut.toISOString(),

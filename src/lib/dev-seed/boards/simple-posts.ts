@@ -57,13 +57,17 @@ export async function seedOfficialDocuments(
   let created = 0;
   let lastError: string | undefined;
   const retentions = ["1", "3", "5", "10"];
+  // disclosure는 ('public', 'partial', 'private')만 허용한다(migration
+  // 142) — "internal"은 그 어느 값도 아니라 check constraint 위반으로
+  // 전부 막혔다.
+  const disclosures = ["public", "partial", "private"];
   for (let i = 0; i < count; i++) {
     const actor = pick(actors);
     const { error } = await actor.client.from("official_documents").insert({
       title: `테스트 공문 ${todayStr()}-${i + 1}`,
       body: "테스트용 더미 공문 본문입니다. 실제 공문이 아닙니다.",
       effective_date: todayStr(),
-      disclosure: "internal",
+      disclosure: pick(disclosures),
       retention: pick(retentions),
       visibility_scope: "related",
       internal_only: true,

@@ -24,10 +24,18 @@ export async function seedApprovals(
       continue;
     }
     const approverIds = pickMany(others, Math.min(2, others.length)).map((e) => e.id);
+    // submit_approval_document는 migration 102(3개 인자)와 migration
+    // 110(참조자 지원, 4번째 p_reference_ids가 기본값 '{}')이 서로 다른
+    // 시그니처의 오버로드 2개로 공존한다(같은 이름의 create or replace가
+    // 매개변수 목록이 다르면 교체가 아니라 새 오버로드로 추가된다) — 3개
+    // 인자만 주면 Postgres가 어느 쪽인지 고르지 못해 모호함 오류가 난다.
+    // 실제 화면(approvals/actions.ts)은 항상 p_reference_ids까지 넘겨서
+    // 이 문제를 피하고 있어 여기도 같은 방식으로 맞춘다.
     const { error } = await actor.client.rpc("submit_approval_document", {
       p_title: `${pick(TITLES)} (테스트)`,
       p_content: "테스트용 더미 기안 내용입니다. 실제 결재 요청이 아닙니다.",
       p_approver_ids: approverIds,
+      p_reference_ids: [],
     });
     if (error) lastError = error.message;
     else created++;
