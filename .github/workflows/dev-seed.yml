@@ -1,0 +1,47 @@
+name: Dev seed
+
+# 더미(테스트용) 직원/게시글을 매일 자동으로 채우는 크론. worker.ts의
+# scheduled() 핸들러로도 같은 일을 할 수 있지만, 그건 실제로 배포된
+# Cloudflare Worker에서만 동작한다 — 지금은 dev 브랜치에 버그가 많아
+# 운영 사이트에 배포하지 않기로 했으므로, 그 대신 npm run dev:seed(순수
+# Node 스크립트, Cloudflare/Next.js 런타임과 무관하게 Supabase에 직접
+# 접속)를 GitHub Actions에서 직접 돌린다 — 운영 배포를 전혀 건드리지
+# 않는다.
+#
+# 한국시간 오전 9시(UTC 0시)에 돈다. DEV_SEED_TENANT_SLUG 대상 테넌트는
+# wrangler.jsonc와 같은 값("Elvonix")을 --tenant 인자로 직접 넘긴다.
+#
+# 사용 전 준비: 이 저장소에 이미 등록된 SUPABASE_SERVICE_ROLE_KEY
+# 시크릿(.github/workflows/ci.yml의 e2e 잡이 이미 쓰고 있음)을 그대로
+# 재사용한다 — 추가 설정 불필요. NEXT_PUBLIC_SUPABASE_URL/ANON_KEY는
+# 민감한 값이 아니라(클라이언트 JS에 그대로 노출되는 공개 값) ci.yml과
+# 마찬가지로 이 파일에 직접 적어둔다.
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+
+env:
+  NEXT_PUBLIC_SUPABASE_URL: https://bqetemkilbtjjbgywmbp.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run dev seed
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run dev:seed -- --tenant=Elvonix
