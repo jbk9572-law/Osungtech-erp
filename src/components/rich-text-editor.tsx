@@ -7,10 +7,12 @@ import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
 import TiptapImage from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
+import { TextStyle, FontSize } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
 
 export type RichTextEditorHandle = {
   // 병합필드 삽입 버튼처럼, 외부에서 지금 커서 위치에 텍스트를 끼워
@@ -71,6 +73,19 @@ const UnderlineIcon = () => (
 );
 const Heading1Icon = () => <LetterIcon style={{ fontWeight: 800 }}>H1</LetterIcon>;
 const Heading2Icon = () => <LetterIcon style={{ fontWeight: 800 }}>H2</LetterIcon>;
+const Heading3Icon = () => <LetterIcon style={{ fontWeight: 800, fontSize: 13 }}>H3</LetterIcon>;
+const SubscriptIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <text x="9" y="15" fontSize="14" fill="currentColor" stroke="none">X</text>
+    <text x="15" y="20" fontSize="9" fill="currentColor" stroke="none">2</text>
+  </svg>
+);
+const SuperscriptIcon = () => (
+  <svg viewBox="0 0 24 24">
+    <text x="9" y="17" fontSize="14" fill="currentColor" stroke="none">X</text>
+    <text x="15" y="9" fontSize="9" fill="currentColor" stroke="none">2</text>
+  </svg>
+);
 
 function UndoIcon() {
   return (
@@ -201,6 +216,74 @@ function HighlightIcon() {
     </svg>
   );
 }
+function FontSizeIcon() {
+  return (
+    <svg viewBox="0 0 24 24">
+      <text x="7" y="17" fontSize="13" fontWeight="700" fill="currentColor" stroke="none">가</text>
+      <text x="17" y="19" fontSize="7" fontWeight="700" fill="currentColor" stroke="none">가</text>
+    </svg>
+  );
+}
+function HorizontalRuleIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M4 12h16" />
+    </svg>
+  );
+}
+function ClearFormatIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M6 5h11M9 5l1.5 14M13.5 5 12 19" />
+      <path d="M5 19 19 5" stroke="currentColor" />
+    </svg>
+  );
+}
+function AddRowIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3.5" y="3.5" width="17" height="10" rx="1" />
+      <path d="M3.5 8.5h17" />
+      <path d="M12 17v5M9.5 19.5h5" />
+    </svg>
+  );
+}
+function DeleteRowIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3.5" y="6.5" width="17" height="10" rx="1" />
+      <path d="M3.5 11.5h17" />
+      <path d="M9 2.5l6 6M15 2.5l-6 6" />
+    </svg>
+  );
+}
+function AddColumnIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3.5" y="3.5" width="10" height="17" rx="1" />
+      <path d="M8.5 3.5v17" />
+      <path d="M17 9.5v5M19.5 12h-5" />
+    </svg>
+  );
+}
+function DeleteColumnIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="6.5" y="3.5" width="10" height="17" rx="1" />
+      <path d="M11.5 3.5v17" />
+      <path d="M2.5 9l6 6M2.5 15l6-6" />
+    </svg>
+  );
+}
+function DeleteTableIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="1" />
+      <path d="M3.5 9.5h17M3.5 14.5h17M9.5 4.5v15M15 4.5v15" opacity="0.45" />
+      <path d="M8 8l8 8M16 8l-8 8" strokeWidth="2" />
+    </svg>
+  );
+}
 
 const TEXT_COLORS = [
   { label: "기본", value: null },
@@ -216,6 +299,14 @@ const HIGHLIGHT_COLORS = [
   { label: "주황", value: "#fff3e0" },
   { label: "빨강", value: "#fdeaec" },
   { label: "파랑", value: "#eef2ff" },
+];
+// 자유 입력(px 임의값) 대신 프리셋만 둔다 — 조회기간/카드종류 등 이
+// 앱 전체가 "자유 입력 아닌 프리셋 버튼" 규칙을 쓰는 것과 같은 이유.
+const FONT_SIZES = [
+  { label: "기본", value: null },
+  { label: "작게", value: "11px" },
+  { label: "크게", value: "17px" },
+  { label: "아주 크게", value: "22px" },
 ];
 
 function ToolbarButton({
@@ -262,7 +353,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   { id, value, onChange, placeholder, minHeight = 220 },
   ref,
 ) {
-  const [openPopover, setOpenPopover] = useState<"link" | "image" | "color" | "highlight" | null>(null);
+  const [openPopover, setOpenPopover] = useState<
+    "link" | "image" | "color" | "highlight" | "fontSize" | null
+  >(null);
   const [popoverUrl, setPopoverUrl] = useState("");
   const toolbarRef = useRef<HTMLDivElement>(null);
 
@@ -274,12 +367,15 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
       TiptapImage,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       TextStyle,
+      FontSize,
       Color,
       Highlight.configure({ multicolor: true }),
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
+      Subscript,
+      Superscript,
     ],
     content: value,
     // Next.js는 클라이언트 컴포넌트도 서버에서 먼저 렌더링하는데,
@@ -381,6 +477,13 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         >
           <Heading2Icon />
         </ToolbarButton>
+        <ToolbarButton
+          title="제목 3"
+          active={editor.isActive("heading", { level: 3 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        >
+          <Heading3Icon />
+        </ToolbarButton>
         <span className="erp-richtext-toolbar-sep" />
         <ToolbarButton
           title="굵게 (Ctrl+B)"
@@ -410,7 +513,51 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         >
           <StrikeIcon />
         </ToolbarButton>
+        <ToolbarButton
+          title="아래 첨자"
+          active={editor.isActive("subscript")}
+          onClick={() => editor.chain().focus().toggleSubscript().run()}
+        >
+          <SubscriptIcon />
+        </ToolbarButton>
+        <ToolbarButton
+          title="위 첨자"
+          active={editor.isActive("superscript")}
+          onClick={() => editor.chain().focus().toggleSuperscript().run()}
+        >
+          <SuperscriptIcon />
+        </ToolbarButton>
+        <ToolbarButton title="서식 지우기" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
+          <ClearFormatIcon />
+        </ToolbarButton>
         <span className="erp-richtext-toolbar-sep" />
+        <div style={{ position: "relative" }}>
+          <ToolbarButton
+            title="글자 크기"
+            active={!!editor.getAttributes("textStyle").fontSize}
+            onClick={() => setOpenPopover(openPopover === "fontSize" ? null : "fontSize")}
+          >
+            <FontSizeIcon />
+          </ToolbarButton>
+          {openPopover === "fontSize" && (
+            <div className="erp-richtext-popover" role="menu">
+              {FONT_SIZES.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  className="erp-richtext-swatch-row"
+                  onClick={() => {
+                    if (s.value) editor.chain().focus().setFontSize(s.value).run();
+                    else editor.chain().focus().unsetFontSize().run();
+                    setOpenPopover(null);
+                  }}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div style={{ position: "relative" }}>
           <ToolbarButton
             title="글자 색"
@@ -526,6 +673,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         >
           <CodeBlockIcon />
         </ToolbarButton>
+        <ToolbarButton title="구분선" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+          <HorizontalRuleIcon />
+        </ToolbarButton>
         <span className="erp-richtext-toolbar-sep" />
         <div style={{ position: "relative" }}>
           <ToolbarButton title="링크" active={editor.isActive("link")} onClick={openLinkPopover}>
@@ -594,6 +744,26 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
         >
           <TableIcon />
         </ToolbarButton>
+        {editor.isActive("table") && (
+          <>
+            <span className="erp-richtext-toolbar-sep" />
+            <ToolbarButton title="행 추가" onClick={() => editor.chain().focus().addRowAfter().run()}>
+              <AddRowIcon />
+            </ToolbarButton>
+            <ToolbarButton title="행 삭제" onClick={() => editor.chain().focus().deleteRow().run()}>
+              <DeleteRowIcon />
+            </ToolbarButton>
+            <ToolbarButton title="열 추가" onClick={() => editor.chain().focus().addColumnAfter().run()}>
+              <AddColumnIcon />
+            </ToolbarButton>
+            <ToolbarButton title="열 삭제" onClick={() => editor.chain().focus().deleteColumn().run()}>
+              <DeleteColumnIcon />
+            </ToolbarButton>
+            <ToolbarButton title="표 삭제" onClick={() => editor.chain().focus().deleteTable().run()}>
+              <DeleteTableIcon />
+            </ToolbarButton>
+          </>
+        )}
       </div>
       <EditorContent editor={editor} style={{ minHeight }} />
     </div>
