@@ -94,7 +94,12 @@ export async function ensureDummyEmployees(
     });
     if (createError || !authUser.user) {
       // 이미 존재하는 이메일이면 건너뛰고 다음 번호로 — 그 외 오류는
-      // 이 직원 하나만 실패로 남기고 나머지는 계속 진행한다.
+      // 이 직원 하나만 실패로 남기고 나머지는 계속 진행한다. 다만 실패
+      // 사유를 그냥 버리면(이전엔 그랬다) 전원이 실패해도 "SUPABASE_
+      // SERVICE_ROLE_KEY 권한을 확인해주세요"라는 뭉뚱그린 메시지만
+      // 남고 실제 원인(키 자체가 틀렸는지, rate limit인지, 다른 이유인지)을
+      // 알 수 없었다 — GitHub Actions 로그에서 바로 보이게 남긴다.
+      if (createError) console.error(`[dev-seed] 더미 직원 계정(${email}) 생성 실패: ${createError.message}`);
       continue;
     }
 
@@ -108,6 +113,7 @@ export async function ensureDummyEmployees(
       })
       .eq("id", authUser.user.id);
     if (profileError) {
+      console.error(`[dev-seed] 더미 직원(${email}) 프로필 갱신 실패: ${profileError.message}`);
       await admin.auth.admin.deleteUser(authUser.user.id);
       continue;
     }
@@ -159,7 +165,10 @@ export async function ensurePortalAccounts(
         email_confirm: true,
         user_metadata: { portal_customer_id: customer.id, tenant_id: tenantId },
       });
-      if (createError) continue;
+      if (createError) {
+        console.error(`[dev-seed] 더미 거래처 포털 계정(${email}) 생성 실패: ${createError.message}`);
+        continue;
+      }
     }
     result.push({ customerId: customer.id, email, password: DUMMY_PORTAL_PASSWORD });
   }
