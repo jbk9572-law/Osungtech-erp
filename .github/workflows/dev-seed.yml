@@ -8,7 +8,9 @@ name: Dev seed
 # 접속)를 GitHub Actions에서 직접 돌린다 — 운영 배포를 전혀 건드리지
 # 않는다.
 #
-# 한국시간 오전 9시(UTC 0시)에 돈다. --tenant는 "1test"(주)테스트).
+# 한국시간 오전 9시(UTC 0시)에 돈다. --tenant는 "elvonix"(엘보닉스) —
+# dev 프로젝트(ubfarxeqaiuzizqkszcy)에 실제로 있는 테넌트명이다(운영
+# 프로젝트의 테스트 테넌트 "1test"와는 다른 프로젝트라 이름도 다르다).
 #
 # 중요: 아래 NEXT_PUBLIC_SUPABASE_URL/ANON_KEY는 운영 프로젝트
 # (bqetemkilbtjjbgywmbp)가 아니라 별도의 dev 전용 Supabase 프로젝트
@@ -53,4 +55,4 @@ jobs:
       - name: Run dev seed
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-        run: npm run dev:seed -- --tenant=1test
+        run: npm run dev:seed -- --tenant=elvonix
