@@ -1,54 +1,102 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { portalHref } from "@/lib/portal-path";
-import { formatNumber } from "@/lib/format-number";
+import {
+  getQuickDatePresets,
+  getYearMonthButtons,
+  currentMonth,
+  getMonthRange,
+} from "@/lib/date-presets";
+import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
+import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import {
+  PortalAssignmentsGridTable,
+  type PortalAssignmentRow,
+  type PortalAssignmentStep,
+} from "@/components/portal-assignments-grid-table";
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "대기",
-  material_issued: "생산중",
-  completed: "생산완료",
-  cancelled: "취소",
-};
+export default async function PortalAssignmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const { from, to } = await searchParams;
+  // 주문내역(portal/orders)과 같은 이유로 기본값은 "이번달" — 업체당
+  // 배정 건수가 적어 "오늘"로 좁히면 평소엔 화면이 거의 비어 보인다.
+  const thisMonth = getMonthRange(currentMonth());
+  const effectiveFrom = from || thisMonth.from;
+  const effectiveTo = to || thisMonth.to;
 
-export default async function PortalAssignmentsPage() {
   const supabase = await createClient();
-  const { data: workOrders, error } = await supabase.rpc("subcontractor_list_work_orders");
+  const [{ data: workOrders, error }, { data: stepRows }] = await Promise.all([
+    supabase.rpc("subcontractor_list_work_orders"),
+    supabase.rpc("subcontractor_list_all_work_order_steps"),
+  ]);
   if (error) {
     return <p style={{ fontSize: 13, color: "var(--erp-danger)" }}>배정된 공정을 불러오지 못했습니다.</p>;
   }
-  const assignmentsBase = await portalHref("/assignments");
+
+  const stepsByWorkOrderId = new Map<string, PortalAssignmentStep[]>();
+  for (const s of stepRows ?? []) {
+    const list = stepsByWorkOrderId.get(s.work_order_id) ?? [];
+    list.push({ processName: s.process_name, sortOrder: s.sort_order, status: s.status, isMine: s.is_mine });
+    stepsByWorkOrderId.set(s.work_order_id, list);
+  }
+
+  const rows: PortalAssignmentRow[] = (workOrders ?? [])
+    .filter((wo) => wo.order_date >= effectiveFrom && wo.order_date <= effectiveTo)
+    .map((wo) => ({
+      id: wo.id,
+      docNo: wo.doc_no,
+      productName: wo.product_name,
+      productSpec: wo.product_spec,
+      quantity: Number(wo.quantity),
+      status: wo.status,
+      orderDate: wo.order_date,
+      steps: (stepsByWorkOrderId.get(wo.id) ?? []).sort((a, b) => a.sortOrder - b.sortOrder),
+    }));
+
+  const assignmentsHref = await portalHref("/assignments");
+  const presets = getQuickDatePresets();
+  const monthButtons = getYearMonthButtons();
 
   return (
     <div>
+      <KeyboardShortcuts
+        shortcuts={{
+          F5: { submitFormSelector: "#portal-assignments-search-form" },
+        }}
+      />
       <h1 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>배정된 공정</h1>
-      <div className="flex flex-col gap-3">
-        {(workOrders ?? []).map((wo) => (
-          <Link
-            key={wo.id}
-            href={`${assignmentsBase}/${wo.id}`}
-            className="erp-home-panel"
-            style={{ padding: 14, display: "block" }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <div>
-                <span style={{ fontWeight: 700 }}>{wo.product_name}</span>
-                {wo.product_spec && (
-                  <span style={{ marginLeft: 6, fontSize: 12, color: "var(--erp-text-muted)" }}>({wo.product_spec})</span>
-                )}
-              </div>
-              <span className="erp-badge erp-badge-muted">{STATUS_LABEL[wo.status] ?? wo.status}</span>
-            </div>
-            <div style={{ marginTop: 4, fontSize: 11.5, color: "var(--erp-text-muted)" }}>
-              LOT {wo.doc_no} · 제조일 {wo.order_date.replaceAll("-", ".")} · 수량 {formatNumber(Number(wo.quantity))}
-            </div>
+
+      <DateRangeQuickFilters
+        basePath={assignmentsHref}
+        presets={presets}
+        monthButtons={monthButtons}
+        from={effectiveFrom}
+        to={effectiveTo}
+      />
+
+      <form method="get" id="portal-assignments-search-form" className="erp-search">
+        <div className="erp-field">
+          <label htmlFor="portal-assignments-from">시작일</label>
+          <input id="portal-assignments-from" type="date" name="from" defaultValue={effectiveFrom} className="erp-input" />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="portal-assignments-to">종료일</label>
+          <input id="portal-assignments-to" type="date" name="to" defaultValue={effectiveTo} className="erp-input" />
+        </div>
+        <button type="submit" className="erp-btn erp-btn-primary">
+          F5 조회
+        </button>
+        {(from || to) && (
+          <Link href={assignmentsHref} className="erp-btn">
+            초기화
           </Link>
-        ))}
-        {!workOrders?.length && (
-          <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-            아직 배정된 공정이 없습니다.
-          </p>
         )}
-      </div>
+      </form>
+
+      <PortalAssignmentsGridTable rows={rows} assignmentsHref={assignmentsHref} />
     </div>
   );
 }

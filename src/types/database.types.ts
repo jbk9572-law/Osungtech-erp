@@ -5048,6 +5048,26 @@ export type Database = {
           is_mine: boolean;
         }[];
       };
+      subcontractor_list_all_work_order_steps: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          work_order_id: string;
+          id: string;
+          process_name: string;
+          sort_order: number;
+          status: string;
+          assignee_kind: string;
+          subcontractor_name: string | null;
+          started_at: string | null;
+          completed_at: string | null;
+          shipped_at: string | null;
+          received_at: string | null;
+          defect_hold: boolean;
+          defect_quantity: number;
+          returned_quantity: number;
+          is_mine: boolean;
+        }[];
+      };
       set_work_order_process_step_unit_cost: {
         Args: { p_id: string; p_unit_cost: number | null };
         Returns: void;
@@ -5131,6 +5151,18 @@ export type Database = {
       portal_get_order_items: {
         Args: { p_order_id: string };
         Returns: {
+          product_id: string;
+          name: string;
+          spec: string | null;
+          unit: string;
+          quantity: number;
+          unit_price: number;
+        }[];
+      };
+      portal_list_order_items: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          order_id: string;
           product_id: string;
           name: string;
           spec: string | null;
