@@ -29,13 +29,6 @@ function compareValues(a: AnnouncementRow, b: AnnouncementRow, key: SortKey): nu
   return String(a[key] ?? "").localeCompare(String(b[key] ?? ""), "ko");
 }
 
-export function isThisWeek(dateStr: string): boolean {
-  const d = new Date(dateStr);
-  const now = new Date();
-  const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
-  return diffDays >= 0 && diffDays < 7;
-}
-
 // announcements/page.tsx의 3분할(카테고리+목록+상세) 화면에서 왼쪽 두
 // 칸(사이드바+목록)을 전부 이 컴포넌트가 그린다 — 사이드바의 "고정"
 // 버튼이 목록의 filter 상태를 그대로 조작해야 해서 하나의 클라이언트

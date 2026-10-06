@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { AnnouncementListBody, isThisWeek, type AnnouncementRow } from "@/components/announcement-list-body";
+import { AnnouncementListBody, type AnnouncementRow } from "@/components/announcement-list-body";
+import { isThisWeek } from "@/lib/is-this-week";
 import { AnnouncementDetailPanel } from "@/components/announcement-detail-panel";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { FormSection } from "@/components/erp/page-header";
