@@ -41,19 +41,22 @@ export function isThisWeek(dateStr: string): boolean {
 // 버튼이 목록의 filter 상태를 그대로 조작해야 해서 하나의 클라이언트
 // 컴포넌트로 묶여 있다(Fragment라 실제 DOM/그리드에서는 두 개의 형제
 // 칸으로 따로 배치됨). 검색·필터·정렬 상태는 클라이언트에만 있어도
-// 되므로(서버 재조회 불필요) 여기서 들고 있는다 — rowHref만 서버가
-// 계산해 넘겨준 함수를 그대로 쓴다.
+// 되므로(서버 재조회 불필요) 여기서 들고 있는다 — basePath 문자열만
+// 서버에서 넘겨받아 여기서 직접 href를 조립한다(서버 컴포넌트가 만든
+// 클로저 함수를 클라이언트 컴포넌트 prop으로 그대로 넘기면 RSC
+// 직렬화 경계를 넘지 못해 "Minified React error #441"로 깨진다 —
+// 이전엔 rowHref를 함수로 그대로 넘겼었다).
 export function AnnouncementListBody({
   rows,
   selectedId,
-  rowHref,
+  basePath,
   limit,
   hasMore,
   moreHref,
 }: {
   rows: AnnouncementRow[];
   selectedId?: string;
-  rowHref: (id: string) => string;
+  basePath: string;
   limit: number;
   hasMore: boolean;
   moreHref: string;
@@ -143,7 +146,7 @@ export function AnnouncementListBody({
           {gridRows.map((row) => (
             <Link
               key={row.id}
-              href={rowHref(row.id)}
+              href={`${basePath}${basePath.includes("?") ? "&" : "?"}id=${row.id}`}
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>

@@ -83,7 +83,6 @@ export default async function AnnouncementsPage({
   const thisWeekCount = summaryRows.filter((r) => isThisWeek(r.created_at)).length;
 
   const newHref = limitParam ? `/announcements?limit=${limitParam}` : "/announcements";
-  const rowHref = (annId: string) => `${newHref}${newHref.includes("?") ? "&" : "?"}id=${annId}`;
   const moreHref = `/announcements?limit=${limit + LIST_LIMIT_STEP}`;
 
   return (
@@ -132,7 +131,7 @@ export default async function AnnouncementsPage({
         <AnnouncementListBody
           rows={gridRows}
           selectedId={selectedId}
-          rowHref={rowHref}
+          basePath={newHref}
           limit={limit}
           hasMore={hasMore}
           moreHref={moreHref}
