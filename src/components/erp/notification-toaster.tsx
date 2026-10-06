@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AnnouncementItem } from "@/components/erp/notification-bell";
 import { pollMyMail } from "@/lib/mail/poll-action";
 import { playAlertSound } from "@/lib/play-alert-sound";
+import { markNotificationRead } from "@/lib/notification-actions";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 공지 재확인 — 10분마다(할일 마감/안전재고는 메신저 시스템봇으로 옮겼다)
 // 거래처 발주처럼 놓치면 안 되는 알림은 훨씬 짧은 주기로 확인하고 소리까지
@@ -28,6 +29,10 @@ type ToastEntry = {
   title: string;
   meta?: string;
   urgent?: boolean;
+  // urgent 토스트만 채운다 — 실제로 이 알림이 가리키는 화면을 열었을 때만
+  // notification_events.is_read를 세우기 위한 원본 id(코멘트 참고: "DB에서는
+  // 계속 안 읽음으로 남아있는 게 맞다 — 실제로 열어야 읽음 처리").
+  notificationId?: string;
 };
 
 // 타이틀바 종을 확인하지 않고 놔두면, 미확인 공지·새 메일을 화면 구석에
@@ -149,6 +154,7 @@ export function NotificationToaster() {
             title: `🔔 ${n.title}`,
             meta: n.body ?? undefined,
             urgent: true,
+            notificationId: n.id,
           });
         });
       } catch {
@@ -195,7 +201,14 @@ export function NotificationToaster() {
           >
             ✕
           </button>
-          <Link href={toast.href} className="erp-toast-item" onClick={() => dismiss(toast.key)}>
+          <Link
+            href={toast.href}
+            className="erp-toast-item"
+            onClick={() => {
+              dismiss(toast.key);
+              if (toast.notificationId) markNotificationRead(toast.notificationId);
+            }}
+          >
             {toast.title}
             {toast.meta && <span style={{ marginLeft: 6, opacity: 0.7 }}>{toast.meta}</span>}
           </Link>

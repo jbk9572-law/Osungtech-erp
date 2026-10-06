@@ -2,13 +2,16 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { safeQuery } from "@/lib/safe-query";
 import { isFeatureEnabled } from "@/lib/require-feature-enabled";
-import { MessengerPage, type MailPreviewItem, type NotificationItem } from "@/components/erp/messenger-page";
+import { MessengerPage } from "@/components/erp/messenger-page";
 import type { MessengerChannel } from "@/lib/messenger-types";
 
 // 예전엔 우측하단에 항상 떠 있는 팝업 위젯이었는데(모든 화면 전역),
 // 이제 그룹웨어 > 메신저로 찾아 들어오는 일반 페이지다 — 다른
 // featureKey 붙은 화면들처럼 이 화면도 꺼둘 수 있어야 해서
-// requireFeatureEnabled로 가드한다.
+// requireFeatureEnabled로 가드한다. 메일/알림은 더 이상 이 화면에서
+// 안 다룬다(메일함은 독립된 /mail 화면, 알림은 "전체" 대화방에 시스템봇
+// 메시지로 흡수됐다 — messenger-page.tsx 주석 참고) — 그래서 이 페이지는
+// 대화 채널/메시지만 조회한다.
 export default async function MessengerPageRoute() {
   const supabase = await createClient();
   await isFeatureEnabled(supabase, "messenger").then((enabled) => {
@@ -18,33 +21,16 @@ export default async function MessengerPageRoute() {
   const user = await getUser();
   if (!user) redirect("/login");
 
-  const mailEnabled = await isFeatureEnabled(supabase, "mail");
-
-  const [{ data: profiles }, { data: mailAccount }] = await Promise.all([
-    safeQuery<{ id: string; full_name: string | null; role: string }[]>(
-      supabase.from("profiles").select("id, full_name, role"),
-    ),
-    mailEnabled
-      ? safeQuery<{ id: string }>(
-          supabase.from("mail_accounts").select("id").eq("user_id", user.id).maybeSingle(),
-        )
-      : Promise.resolve({ data: null }),
-  ]);
+  const { data: profiles } = await safeQuery<{ id: string; full_name: string | null; role: string }[]>(
+    supabase.from("profiles").select("id, full_name, role"),
+  );
 
   const profileNames = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.full_name || "구성원"]));
   const isAdmin = (profiles ?? []).find((p) => p.id === user.id)?.role === "admin";
 
   const { data: allChannelId } = await safeQuery<string>(supabase.rpc("get_or_create_all_channel"));
 
-  const [
-    { data: channelRows },
-    { data: memberRows },
-    { data: messages },
-    { data: mailPreviewRows },
-    { count: mailUnreadCount },
-    { data: notificationRows },
-    { count: notifUnreadCount },
-  ] = await Promise.all([
+  const [{ data: channelRows }, { data: memberRows }, { data: messages }] = await Promise.all([
     safeQuery<{ id: string; type: string; name: string | null }[]>(
       supabase
         .from("messenger_channels")
@@ -79,50 +65,6 @@ export default async function MessengerPageRoute() {
             .limit(100),
         )
       : Promise.resolve({ data: null }),
-    mailAccount
-      ? safeQuery<
-          { id: string; subject: string | null; from_name: string | null; from_address: string | null; sent_at: string | null; is_read: boolean }[]
-        >(
-          supabase
-            .from("mail_messages")
-            .select("id, subject, from_name, from_address, sent_at, is_read")
-            .eq("mail_account_id", mailAccount.id)
-            .eq("folder", "INBOX")
-            .order("sent_at", { ascending: false, nullsFirst: false })
-            .limit(8),
-        )
-      : Promise.resolve({ data: null }),
-    mailAccount
-      ? supabase
-          .from("mail_messages")
-          .select("id", { count: "exact", head: true })
-          .eq("mail_account_id", mailAccount.id)
-          .eq("folder", "INBOX")
-          .eq("is_read", false)
-          .then(
-            (r) => r,
-            () => ({ count: 0 }),
-          )
-      : Promise.resolve({ count: 0 }),
-    safeQuery<
-      { id: string; type: string; title: string; body: string | null; url: string | null; is_read: boolean; created_at: string }[]
-    >(
-      supabase
-        .from("notification_events")
-        .select("id, type, title, body, url, is_read, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ),
-    supabase
-      .from("notification_events")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("is_read", false)
-      .then(
-        (r) => r,
-        () => ({ count: 0 }),
-      ),
   ]);
 
   const membersByChannel = new Map<string, string[]>();
@@ -139,25 +81,6 @@ export default async function MessengerPageRoute() {
     memberIds: membersByChannel.get(c.id) ?? [],
   }));
 
-  const mailPreview: MailPreviewItem[] = (mailPreviewRows ?? []).map((m) => ({
-    id: m.id,
-    subject: m.subject,
-    fromName: m.from_name,
-    fromAddress: m.from_address,
-    sentAt: m.sent_at,
-    isRead: m.is_read,
-  }));
-
-  const notifications: NotificationItem[] = (notificationRows ?? []).map((n) => ({
-    id: n.id,
-    type: n.type,
-    title: n.title,
-    body: n.body,
-    url: n.url,
-    isRead: n.is_read,
-    createdAt: n.created_at,
-  }));
-
   return (
     <MessengerPage
       channels={channels}
@@ -166,11 +89,6 @@ export default async function MessengerPageRoute() {
       profileNames={profileNames}
       currentUserId={user.id}
       isAdmin={isAdmin}
-      mailEnabled={mailEnabled && !!mailAccount}
-      initialMailPreview={mailPreview}
-      initialMailUnreadCount={mailUnreadCount ?? 0}
-      initialNotifications={notifications}
-      initialNotifUnreadCount={notifUnreadCount ?? 0}
     />
   );
 }

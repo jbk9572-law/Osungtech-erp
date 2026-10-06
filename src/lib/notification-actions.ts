@@ -19,17 +19,3 @@ export async function markNotificationRead(id: string): Promise<{ error?: string
   if (error) return { error: error.message };
   return {};
 }
-
-export async function markAllNotificationsRead(): Promise<{ error?: string }> {
-  const user = await getUser();
-  if (!user) return { error: "로그인이 필요합니다." };
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("notification_events")
-    .update({ is_read: true })
-    .eq("user_id", user.id)
-    .eq("is_read", false);
-  if (error) return { error: error.message };
-  return {};
-}

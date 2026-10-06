@@ -2,9 +2,44 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { portalHref } from "@/lib/portal-path";
 import { notifyForTenant } from "@/lib/notify";
 import type { FormState } from "@/components/form-message";
+
+// 거래처 포털 발주 알림(src/app/portal/(app)/new/actions.ts)과 같은 패턴 —
+// 알림 종/탭이 없어진 자리를 그룹웨어 메신저 "전체" 채널의 시스템봇
+// 메시지(sender_id=null)가 대신한다. 포털 세션은 current_tenant_id()가
+// 비어 있어 get_or_create_all_channel() RPC를 못 쓰므로, 이미 알고 있는
+// tenant_id로 관리자 클라이언트로 직접 조회/생성한다.
+async function postSystemMessageToAllChannel(tenantId: string, isDemo: boolean, content: string) {
+  const admin = createAdminClient();
+  const { data: existingChannel } = await admin
+    .from("messenger_channels")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("is_demo", isDemo)
+    .eq("type", "all")
+    .maybeSingle();
+  let channelId = existingChannel?.id ?? null;
+  if (!channelId) {
+    const { data: createdChannel, error } = await admin
+      .from("messenger_channels")
+      .insert({ tenant_id: tenantId, is_demo: isDemo, type: "all" })
+      .select("id")
+      .single();
+    if (error) {
+      console.error("전체 채널 생성 실패:", error.message);
+      return;
+    }
+    channelId = createdChannel?.id ?? null;
+  }
+  if (!channelId) return;
+  const { error: messageError } = await admin
+    .from("messenger_messages")
+    .insert({ channel_id: channelId, sender_id: null, content });
+  if (messageError) console.error("시스템 알림 메시지 전송 실패:", messageError.message);
+}
 
 // 입고확인 — 정상/불량 둘 다 같은 액션에서 처리한다. 불량이면 RPC가
 // 공정을 보류 상태로 멈추고, 알림에 필요한 정보(tenant_id 등)를
@@ -55,6 +90,11 @@ export async function subcontractorConfirmReceiving(
         sourceId: stepId,
       });
     }
+    await postSystemMessageToAllChannel(
+      notice.tenant_id,
+      notice.is_demo,
+      `🚫 [입고 불량] ${notice.subcontractor_name} · ${notice.process_name} 공정 입고 시 불량 발견 — 생산지시 상세에서 확인해주세요.`,
+    );
   }
 
   revalidatePath(await portalHref(`/assignments/${workOrderId}`));
