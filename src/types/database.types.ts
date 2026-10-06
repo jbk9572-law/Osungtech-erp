@@ -69,6 +69,8 @@ export type Database = {
           parent_department_id: string | null;
           sort_order: number;
           created_at: string;
+          tenant_id: string;
+          is_demo: boolean;
         };
         Insert: {
           id?: string;
@@ -76,6 +78,8 @@ export type Database = {
           parent_department_id?: string | null;
           sort_order?: number;
           created_at?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Update: {
           id?: string;
@@ -83,6 +87,8 @@ export type Database = {
           parent_department_id?: string | null;
           sort_order?: number;
           created_at?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Relationships: [
           {

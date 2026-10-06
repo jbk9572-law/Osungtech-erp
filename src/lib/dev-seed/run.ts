@@ -60,7 +60,7 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
   if (employees.length === 0) {
     throw new Error("더미 직원을 한 명도 만들지 못했습니다 — SUPABASE_SERVICE_ROLE_KEY 권한을 확인해주세요.");
   }
-  const departments = await ensureDepartments(admin);
+  const departments = await ensureDepartments(admin, tenant.id);
 
   // 게시글마다 매번 새로 로그인하지 않도록, 더미 직원 중 일부만 실제
   // 로그인시켜 세션 풀로 돌려쓴다(client.ts의 signInAsEmployee 주석 참고).

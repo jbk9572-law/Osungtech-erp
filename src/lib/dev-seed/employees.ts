@@ -18,21 +18,28 @@ function usernameFor(n: number): string {
 
 // departments 테이블에 DEPARTMENTS 풀에 있는 부서가 없으면 만들어
 // 채운다 — 더미 직원을 부서 없이 만들면 조직도/기안 결재선 관련 화면이
-// 휑하게 보인다.
-export async function ensureDepartments(admin: Db): Promise<{ id: string; name: string }[]> {
+// 휑하게 보인다. admin은 서비스 롤(RLS 우회 + 세션 없음)이라
+// tenant_id 컬럼 기본값(current_tenant_id())이 null로 평가돼 insert가
+// not-null 제약에 막힌다 — 반드시 명시적으로 넘겨야 한다. 같은 이유로
+// 조회도 tenant_id로 걸러야 한다, 안 그러면 다른 테넌트의 부서 이름이
+// "이미 있음"으로 잡혀 이 테넌트엔 하나도 안 만들어지거나, 다른
+// 테넌트의 department_id가 더미 직원에게 잘못 배정될 수 있다.
+export async function ensureDepartments(admin: Db, tenantId: string): Promise<{ id: string; name: string }[]> {
   const existing = await fetchAllRows<{ id: string; name: string }>((from, to) =>
-    admin.from("departments").select("id, name").range(from, to),
+    admin.from("departments").select("id, name").eq("tenant_id", tenantId).range(from, to),
   );
   const existingNames = new Set(existing.map((d) => d.name));
   const missing = DEPARTMENTS.filter((name) => !existingNames.has(name));
 
   if (missing.length > 0) {
-    const { error: insertError } = await admin.from("departments").insert(missing.map((name) => ({ name })));
+    const { error: insertError } = await admin
+      .from("departments")
+      .insert(missing.map((name) => ({ name, tenant_id: tenantId })));
     if (insertError) throw new Error(`부서 생성 실패: ${insertError.message}`);
   }
 
   return fetchAllRows<{ id: string; name: string }>((from, to) =>
-    admin.from("departments").select("id, name").range(from, to),
+    admin.from("departments").select("id, name").eq("tenant_id", tenantId).range(from, to),
   );
 }
 
@@ -46,7 +53,7 @@ export async function ensureDummyEmployees(
   tenantSlug: string,
   targetCount: number,
 ): Promise<DummyEmployee[]> {
-  const departments = await ensureDepartments(admin);
+  const departments = await ensureDepartments(admin, tenantId);
 
   const { data: existingProfiles, error: profilesError } = await admin
     .from("profiles")
