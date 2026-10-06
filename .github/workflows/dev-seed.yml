@@ -8,8 +8,10 @@ name: Dev seed
 # 접속)를 GitHub Actions에서 직접 돌린다 — 운영 배포를 전혀 건드리지
 # 않는다.
 #
-# 한국시간 오전 9시(UTC 0시)에 돈다. DEV_SEED_TENANT_SLUG 대상 테넌트는
-# wrangler.jsonc와 같은 값("Elvonix")을 --tenant 인자로 직접 넘긴다.
+# 한국시간 오전 9시(UTC 0시)에 돈다. --tenant는 "1test"(주)테스트) — 실제
+# 회사 테넌트(오성테크)가 아니라 더미데이터 전용 테스트 테넌트를 쓴다.
+# (wrangler.jsonc의 DEV_SEED_TENANT_SLUG가 "Elvonix"로 돼 있었는데, 실제
+# DB엔 그런 테넌트가 없어 애초부터 잘못된 값이었다 — 같이 고쳤다.)
 #
 # 사용 전 준비: 이 저장소에 이미 등록된 SUPABASE_SERVICE_ROLE_KEY
 # 시크릿(.github/workflows/ci.yml의 e2e 잡이 이미 쓰고 있음)을 그대로
@@ -44,4 +46,4 @@ jobs:
       - name: Run dev seed
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: npm run dev:seed -- --tenant=Elvonix
+        run: npm run dev:seed -- --tenant=1test
