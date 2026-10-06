@@ -212,18 +212,26 @@ export async function ensureCustomerProductPrices(
 // 급여관리 화면이 완전히 비어 보이지 않게, 직원별 기준 월급(기본급)만
 // 한 번 채운다 — 실제 급여명세(payslips)는 세금 계산이 들어가는 민감한
 // 산출물이라 더미로 자동 생성하지 않는다(판단 보류, 아래 run.ts 주석).
-export async function ensureEmployeePaySettings(actingClient: Db, employeeIds: string[]): Promise<void> {
-  const { data: existing } = await actingClient.from("employee_pay_settings").select("user_id");
+// employee_pay_settings는 급여정보라 insert 정책이 is_admin()만 허용한다
+// (migration 106) — 더미 직원은 전부 role:'staff'라 로그인 세션
+// (actingClient)으로는 전부 RLS에 막힌다. departments와 같은 이유로
+// service-role(admin) 클라이언트를 쓰고 tenant_id를 직접 채운다.
+export async function ensureEmployeePaySettings(admin: Db, tenantId: string, employeeIds: string[]): Promise<void> {
+  const { data: existing } = await admin
+    .from("employee_pay_settings")
+    .select("user_id")
+    .eq("tenant_id", tenantId);
   const covered = new Set((existing ?? []).map((r) => r.user_id));
   const rows = employeeIds
     .filter((id) => !covered.has(id))
     .map((id) => ({
       user_id: id,
+      tenant_id: tenantId,
       monthly_base_pay: 2500000 + Math.floor(Math.random() * 15) * 100000,
       dependents_count: 1,
     }));
   if (rows.length > 0) {
-    const { error } = await actingClient.from("employee_pay_settings").insert(rows);
+    const { error } = await admin.from("employee_pay_settings").insert(rows);
     if (error) throw new Error(`직원 급여 기준정보 생성 실패: ${error.message}`);
   }
 }
@@ -231,16 +239,21 @@ export async function ensureEmployeePaySettings(actingClient: Db, employeeIds: s
 // 연차관리 화면(leave_balances)도 1년치 총일수를 한 번 깔아둔다 —
 // submit_leave_request()는 이 값을 검증하진 않지만, 화면에
 // "0/0"만 보이면 연차 신청 더미(seedLeaveRequests)가 떠도 맥락 없이
-// 보인다.
-export async function ensureLeaveBalances(actingClient: Db, employeeIds: string[]): Promise<void> {
+// 보인다. leave_balances도 insert 정책이 is_admin()만 허용해(migration
+// 105) 위 employee_pay_settings와 같은 이유로 admin 클라이언트를 쓴다.
+export async function ensureLeaveBalances(admin: Db, tenantId: string, employeeIds: string[]): Promise<void> {
   const year = new Date().getFullYear();
-  const { data: existing } = await actingClient.from("leave_balances").select("user_id").eq("year", year);
+  const { data: existing } = await admin
+    .from("leave_balances")
+    .select("user_id")
+    .eq("year", year)
+    .eq("tenant_id", tenantId);
   const covered = new Set((existing ?? []).map((r) => r.user_id));
   const rows = employeeIds
     .filter((id) => !covered.has(id))
-    .map((id) => ({ user_id: id, year, total_days: 15 }));
+    .map((id) => ({ user_id: id, tenant_id: tenantId, year, total_days: 15 }));
   if (rows.length > 0) {
-    const { error } = await actingClient.from("leave_balances").insert(rows);
+    const { error } = await admin.from("leave_balances").insert(rows);
     if (error) throw new Error(`연차 기준정보 생성 실패: ${error.message}`);
   }
 }

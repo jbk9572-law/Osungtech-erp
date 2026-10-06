@@ -520,6 +520,8 @@ export type Database = {
       leave_balances: {
         Row: {
           id: string;
+          tenant_id: string;
+          is_demo: boolean;
           user_id: string;
           year: number;
           total_days: number;
@@ -527,6 +529,8 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
           user_id: string;
           year: number;
           total_days?: number;
@@ -534,6 +538,8 @@ export type Database = {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
           user_id?: string;
           year?: number;
           total_days?: number;
@@ -653,6 +659,8 @@ export type Database = {
       employee_pay_settings: {
         Row: {
           id: string;
+          tenant_id: string;
+          is_demo: boolean;
           user_id: string;
           monthly_base_pay: number;
           dependents_count: number;
@@ -660,6 +668,8 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
           user_id: string;
           monthly_base_pay?: number;
           dependents_count?: number;
@@ -667,6 +677,8 @@ export type Database = {
         };
         Update: {
           id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
           user_id?: string;
           monthly_base_pay?: number;
           dependents_count?: number;

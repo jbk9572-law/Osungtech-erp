@@ -93,8 +93,8 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
   // 갖춰두면 되는 기준정보라 ensure 패턴으로 미리 준비한다.
   const bom = await ensureBomAndProcesses(actors[0].client, products);
   const pricedCustomers = await ensureCustomerProductPrices(actors[0].client, customers, products);
-  await ensureEmployeePaySettings(actors[0].client, employees.map((e) => e.id));
-  await ensureLeaveBalances(actors[0].client, employees.map((e) => e.id));
+  await ensureEmployeePaySettings(admin, tenant.id, employees.map((e) => e.id));
+  await ensureLeaveBalances(admin, tenant.id, employees.map((e) => e.id));
 
   // 거래처 포털 계정도 더미로 몇 개 만들어 실제 portal_create_order()
   // 경로로 발주를 넣는다 — "거래처 발주 승인" 화면이 빈 채로 남지 않게.
