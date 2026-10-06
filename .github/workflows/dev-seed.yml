@@ -8,24 +8,31 @@ name: Dev seed
 # 접속)를 GitHub Actions에서 직접 돌린다 — 운영 배포를 전혀 건드리지
 # 않는다.
 #
-# 한국시간 오전 9시(UTC 0시)에 돈다. --tenant는 "1test"(주)테스트) — 실제
-# 회사 테넌트(오성테크)가 아니라 더미데이터 전용 테스트 테넌트를 쓴다.
-# (wrangler.jsonc의 DEV_SEED_TENANT_SLUG가 "Elvonix"로 돼 있었는데, 실제
-# DB엔 그런 테넌트가 없어 애초부터 잘못된 값이었다 — 같이 고쳤다.)
+# 한국시간 오전 9시(UTC 0시)에 돈다. --tenant는 "1test"(주)테스트).
 #
-# 사용 전 준비: 이 저장소에 이미 등록된 SUPABASE_SERVICE_ROLE_KEY
-# 시크릿(.github/workflows/ci.yml의 e2e 잡이 이미 쓰고 있음)을 그대로
-# 재사용한다 — 추가 설정 불필요. NEXT_PUBLIC_SUPABASE_URL/ANON_KEY는
-# 민감한 값이 아니라(클라이언트 JS에 그대로 노출되는 공개 값) ci.yml과
-# 마찬가지로 이 파일에 직접 적어둔다.
+# 중요: 아래 NEXT_PUBLIC_SUPABASE_URL/ANON_KEY는 운영 프로젝트
+# (bqetemkilbtjjbgywmbp)가 아니라 별도의 dev 전용 Supabase 프로젝트
+# (ubfarxeqaiuzizqkszcy)를 가리킨다 — 처음엔 실수로 운영 프로젝트
+# 주소를 그대로 썼다가(ci.yml/wrangler.jsonc와 같은 값을 복사), 운영
+# 사이트에는 절대 더미데이터를 만들면 안 된다는 지적을 받고 바로잡았다.
+# ci.yml의 e2e 잡과 wrangler.jsonc는 실제 배포/운영 사이트 테스트용이라
+# 계속 운영 프로젝트를 가리켜야 하므로 건드리지 않는다 — 이 파일만 dev
+# 프로젝트 전용.
+#
+# 사용 전 준비: 이 저장소에 dev 프로젝트의 service_role 키를
+# DEV_SUPABASE_SERVICE_ROLE_KEY라는 이름의 레포 시크릿으로 등록해야
+# 한다(운영 프로젝트용 SUPABASE_SERVICE_ROLE_KEY와는 다른 프로젝트라
+# 재사용 불가). NEXT_PUBLIC_SUPABASE_ANON_KEY는 민감한 값이 아니라
+# (클라이언트 JS에 그대로 노출되는 공개 값) ci.yml과 마찬가지로 이
+# 파일에 직접 적어둔다.
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch: {}
 
 env:
-  NEXT_PUBLIC_SUPABASE_URL: https://bqetemkilbtjjbgywmbp.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0
+  NEXT_PUBLIC_SUPABASE_URL: https://ubfarxeqaiuzizqkszcy.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZmFyeGVxYWl1eml6cWtzemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5Mzc4NjQsImV4cCI6MjEwNTUxMzg2NH0.lfDuWUDY8A5R_Yx3HWDVY7sey-_vLrZsxSV3gcG2D8c
 
 jobs:
   seed:
@@ -45,5 +52,5 @@ jobs:
 
       - name: Run dev seed
         env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run dev:seed -- --tenant=1test
