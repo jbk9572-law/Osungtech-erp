@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AnnouncementItem, DueTodoItem, LowStockItem } from "@/components/erp/notification-bell";
-import { formatNumber } from "@/lib/format-number";
+import type { AnnouncementItem } from "@/components/erp/notification-bell";
 import { pollMyMail } from "@/lib/mail/poll-action";
 import { playAlertSound } from "@/lib/play-alert-sound";
 
-const POLL_INTERVAL_MS = 10 * 60 * 1000; // 공지/할일/재고 재확인 — 10분마다
+const POLL_INTERVAL_MS = 10 * 60 * 1000; // 공지 재확인 — 10분마다(할일 마감/안전재고는 메신저 시스템봇으로 옮겼다)
 // 거래처 발주처럼 놓치면 안 되는 알림은 훨씬 짧은 주기로 확인하고 소리까지
 // 울린다(메일 확인과 같은 수준의 체감 실시간성 — 아래 MAIL_POLL_INTERVAL_MS
 // 참고).
@@ -21,7 +20,7 @@ const URGENT_AUTO_HIDE_MS = 3 * 60 * 1000; // 일반 토스트(1분)보다 길�
 const MAIL_POLL_INTERVAL_MS = 45 * 1000;
 const AUTO_HIDE_MS = 60 * 1000; // 1분
 
-type Summary = { announcements: AnnouncementItem[]; todos: DueTodoItem[]; lowStock: LowStockItem[] };
+type Summary = { announcements: AnnouncementItem[] };
 
 type ToastEntry = {
   key: string;
@@ -31,9 +30,11 @@ type ToastEntry = {
   urgent?: boolean;
 };
 
-// 타이틀바 종/대시보드 배너를 확인하지 않고 놔두면, 메신저 알림처럼 주기적으로
-// 미확인 공지·마감 임박 할일·새 메일을 화면 구석에 다시 띄워준다. 항목을
-// 하나로 뭉쳐서 보여주지 않고, 항목마다 각자 독립된 박스로 하나씩 쌓아 올린다.
+// 타이틀바 종을 확인하지 않고 놔두면, 미확인 공지·새 메일을 화면 구석에
+// 주기적으로 다시 띄워준다(할일 마감임박/지연·안전재고부족은 그룹웨어
+// 메신저 "전체" 채널에 시스템봇이 올리는 쪽으로 옮겨서 여기서는 뺐다 —
+// notification-bell.tsx 참고). 항목을 하나로 뭉쳐서 보여주지 않고,
+// 항목마다 각자 독립된 박스로 하나씩 쌓아 올린다.
 export function NotificationToaster() {
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -72,26 +73,6 @@ export function NotificationToaster() {
             key: `a-${a.id}`,
             href: `/announcements/${a.id}`,
             title: `${a.pinned ? "📌 " : ""}${a.title}`,
-          });
-        });
-        data.todos.forEach((t) => {
-          const metaParts = [
-            t.due_date ? `마감 ${t.due_date}` : null,
-            t.itemCount > 0 ? `품목 ${t.itemCount}건` : null,
-          ].filter(Boolean);
-          pushToast({
-            key: `t-${t.id}`,
-            href: `/todos/${t.id}`,
-            title: t.title,
-            meta: metaParts.length ? metaParts.join(" · ") : undefined,
-          });
-        });
-        data.lowStock.forEach((p) => {
-          pushToast({
-            key: `s-${p.id}`,
-            href: `/inventory/item/${p.id}`,
-            title: `⚠️ ${p.name} 안전재고 부족`,
-            meta: `현재 ${formatNumber(p.quantity)} / 기준 ${formatNumber(p.reorderPoint)}`,
           });
         });
       } catch {

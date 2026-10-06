@@ -12,11 +12,5 @@ export async function NotificationBellPanel({ userId }: { userId: string }) {
   const supabase = await createClient();
   const notifications = await getNotificationSummary(supabase, userId);
 
-  return (
-    <NotificationBell
-      announcements={notifications.announcements}
-      todos={notifications.todos}
-      lowStock={notifications.lowStock}
-    />
-  );
+  return <NotificationBell announcements={notifications.announcements} />;
 }

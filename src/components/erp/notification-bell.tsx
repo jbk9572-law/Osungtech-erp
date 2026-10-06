@@ -6,37 +6,20 @@ import { useCallback, useRef, useState } from "react";
 import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
-import { GridBadge } from "@/components/grid/badge";
 import { PushSubscribeToggle } from "@/components/erp/push-subscribe-toggle";
-import { formatNumber } from "@/lib/format-number";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
-export type DueTodoItem = {
-  id: string;
-  title: string;
-  due_date: string | null;
-  itemCount: number;
-};
-export type LowStockItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  reorderPoint: number;
-};
 
-export function NotificationBell({
-  announcements,
-  todos,
-  lowStock,
-}: {
-  announcements: AnnouncementItem[];
-  todos: DueTodoItem[];
-  lowStock: LowStockItem[];
-}) {
+// 할일 마감임박/지연·안전재고부족은 예전엔 이 종 드롭다운 + 토스트
+// 팝업에도 떴는데, 그룹웨어 메신저 "전체" 채널에도 시스템봇이 똑같은
+// 내용을 올리게 되면서(src/lib/messenger-system-alerts.ts, 15분 주기
+// 크론) 확인할 곳이 두 군데로 쪼개지는 중복이 생겼다 — 다들 평소에
+// 열어두는 메신저 쪽으로 몰아주고, 종은 공지사항만 남긴다.
+export function NotificationBell({ announcements }: { announcements: AnnouncementItem[] }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const count = announcements.length + todos.length + lowStock.length;
+  const count = announcements.length;
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(open, wrapRef, close);
   // 캡처 단계에서 먼저 가로채 stopPropagation한다 — 안 그러면 이 Escape가
@@ -49,8 +32,6 @@ export function NotificationBell({
     startRouteProgress();
     router.push(href);
   }
-
-  const todayStr = new Date().toLocaleDateString("sv-SE");
 
   return (
     <div style={{ position: "relative" }} ref={wrapRef}>
@@ -89,84 +70,12 @@ export function NotificationBell({
             </p>
           )}
 
-          <div className="erp-bell-section-title">
-            할 일 마감임박/지연{todos.length > 0 ? ` (${todos.length})` : ""}
-          </div>
-          {todos.length ? (
-            todos.map((t) => {
-              const overdue = !!t.due_date && t.due_date < todayStr;
-              const itemCount = t.itemCount;
-              return (
-                <div key={t.id} className="erp-ribbon-dropdown-item">
-                  <button type="button" onClick={() => go(`/todos/${t.id}`)}>
-                    <span>{t.title}</span>
-                    {itemCount > 0 && (
-                      <GridBadge tone="muted" style={{ marginLeft: 6 }}>
-                        품목 {itemCount}건
-                      </GridBadge>
-                    )}
-                    {t.due_date && (
-                      <span
-                        style={{
-                          display: "block",
-                          marginTop: 2,
-                          fontSize: 11,
-                          color: overdue
-                            ? "var(--erp-danger)"
-                            : "var(--erp-text-muted)",
-                          fontWeight: overdue ? 600 : undefined,
-                        }}
-                      >
-                        {overdue ? "지연" : "마감"} {t.due_date}
-                      </span>
-                    )}
-                  </button>
-                </div>
-              );
-            })
-          ) : (
-            <p className="erp-ribbon-dropdown-empty">
-              마감 임박하거나 지연된 할 일이 없습니다.
-            </p>
-          )}
-
-          <div className="erp-bell-section-title">
-            안전재고 부족{lowStock.length > 0 ? ` (${lowStock.length})` : ""}
-          </div>
-          {lowStock.length ? (
-            lowStock.map((p) => (
-              <div key={p.id} className="erp-ribbon-dropdown-item">
-                <button type="button" onClick={() => go(`/inventory/item/${p.id}`)}>
-                  <span>{p.name}</span>
-                  <span
-                    style={{
-                      display: "block",
-                      marginTop: 2,
-                      fontSize: 11,
-                      color: "var(--erp-text-muted)",
-                    }}
-                  >
-                    현재 {formatNumber(p.quantity)} / 기준{" "}
-                    {formatNumber(p.reorderPoint)}
-                  </span>
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="erp-ribbon-dropdown-empty">
-              안전재고 이하인 품목이 없습니다.
-            </p>
-          )}
-
           <div className="erp-bell-footer">
             <Link href="/announcements" onClick={() => setOpen(false)}>
               공지사항 전체보기
             </Link>
-            <Link href="/todos" onClick={() => setOpen(false)}>
-              할일 전체보기
-            </Link>
-            <Link href="/inventory" onClick={() => setOpen(false)}>
-              재고현황 보기
+            <Link href="/messenger" onClick={() => setOpen(false)}>
+              할일·재고 알림은 메신저에서 →
             </Link>
           </div>
           <PushSubscribeToggle />

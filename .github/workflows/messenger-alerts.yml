@@ -1,0 +1,25 @@
+name: Messenger system alerts
+
+# 안전재고부족/할일 마감임박·지연을 감지해 그룹웨어 메신저 "전체" 채널에
+# 시스템봇으로 올리는 크론 — mail-sync.yml과 같은 이유(이 배포 방식은
+# Cloudflare Cron Trigger를 못 씀)로 GitHub Actions 스케줄을 쓴다.
+# 메일만큼 긴급하지 않은 데이터라(10분 주기로 느긋하게 확인해도 되는
+# 수준) mail-sync(5분)보다 느슨한 15분 주기로 돈다.
+#
+# 사용 전 준비: mail-sync.yml과 같은 SITE_URL/CRON_SECRET 시크릿을 그대로
+# 재사용한다(이미 등록돼 있다면 추가 설정 불필요).
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger messenger alert sync
+        run: |
+          curl -sS -f -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/cron/messenger-alerts" \
+            -o /dev/null

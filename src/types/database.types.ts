@@ -243,6 +243,8 @@ export type Database = {
           label_direction: string;
           created_at: string;
           updated_at: string;
+          tenant_id: string;
+          is_demo: boolean;
         };
         Insert: {
           id?: string;
@@ -261,6 +263,8 @@ export type Database = {
           label_direction?: string;
           created_at?: string;
           updated_at?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Update: {
           id?: string;
@@ -279,6 +283,8 @@ export type Database = {
           label_direction?: string;
           created_at?: string;
           updated_at?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Relationships: [
           {
@@ -4274,6 +4280,8 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           updated_at: string;
+          tenant_id: string;
+          is_demo: boolean;
         };
         Insert: {
           id?: string;
@@ -4292,6 +4300,8 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Update: {
           id?: string;
@@ -4310,6 +4320,8 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
         };
         Relationships: [
           {
@@ -4518,6 +4530,33 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      messenger_system_alert_state: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          alert_type: "low_stock" | "todo_due";
+          source_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          is_demo: boolean;
+          alert_type: "low_stock" | "todo_due";
+          source_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          alert_type?: "low_stock" | "todo_due";
+          source_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       mail_accounts: {
         Row: {
