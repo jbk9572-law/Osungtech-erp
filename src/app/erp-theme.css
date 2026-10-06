@@ -1598,6 +1598,26 @@
   margin: 0 3px;
 }
 
+/* 버튼 하나하나가 아니라 묶음(실행취소/제목/글자서식/정렬 등) 단위로
+   줄바꿈되게 한다 — 구분선을 묶음과 별개의 flex 아이템으로 두면, 좁은
+   화면에서 줄이 꺾일 때 구분선만 혼자 다음 줄 맨 앞에 남아 정렬이
+   흐트러져 보인다(실제로 이 문제로 지적받음). 구분선을 묶음 자체의
+   오른쪽 테두리로 흡수시켜 묶음이 항상 한 덩어리로만 줄바꿈되게 한다. */
+.erp-richtext-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 5px;
+  margin-right: 3px;
+  border-right: 1px solid var(--erp-border);
+}
+
+.erp-richtext-toolbar-group:last-child {
+  padding-right: 0;
+  margin-right: 0;
+  border-right: none;
+}
+
 .erp-richtext-content {
   padding: 10px 12px;
   font-size: 13px;

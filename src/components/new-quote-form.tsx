@@ -23,6 +23,14 @@ function blankRow(key: number): Row {
   return { key, productId: "", spec: "", quantity: 0, unitPrice: 0, remark: "" };
 }
 
+// table-layout: auto(기본값)인 상태로 폭이 좁은(모바일) 화면에 들어가면,
+// <th style={{width}}>는 그냥 "희망 폭"일 뿐이라 브라우저가 입력칸을 글자 하나
+// 들어갈 만큼까지 찌그러뜨려 버린다(모바일에서 상품 검색 드롭다운이 그 찌그러진
+// 폭을 그대로 물려받아 글자가 겹쳐 보이는 버그로 나타났다) — erp-grid-wrap의
+// overflow:auto가 가로 스크롤을 대신하게 하려면 표 자체를 모든 칸 폭의 합만큼
+// 고정폭으로 못박아야 한다(new-sale-form.tsx/new-purchase-form.tsx와 같은 기법).
+const ITEM_GRID_TOTAL_WIDTH = 320 + 140 + 90 + 110 + 110 + 200 + 50;
+
 export function NewQuoteForm({
   today,
   customers,
@@ -90,7 +98,7 @@ export function NewQuoteForm({
       </div>
 
       <div className="erp-grid-wrap">
-        <table className="erp-grid">
+        <table className="erp-grid" style={{ tableLayout: "fixed", width: ITEM_GRID_TOTAL_WIDTH, minWidth: ITEM_GRID_TOTAL_WIDTH }}>
           <thead>
             <tr>
               <th style={{ width: 320 }}>품목</th>
@@ -98,7 +106,7 @@ export function NewQuoteForm({
               <th className="num" style={{ width: 90 }}>수량</th>
               <th className="num" style={{ width: 110 }}>단가</th>
               <th className="num" style={{ width: 110 }}>금액</th>
-              <th>비고</th>
+              <th style={{ width: 200 }}>비고</th>
               <th style={{ width: 50 }} />
             </tr>
           </thead>

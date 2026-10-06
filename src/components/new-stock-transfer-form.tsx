@@ -16,6 +16,13 @@ function blankRow(key: number): Row {
   return { key, productId: "", quantity: 0, remark: "" };
 }
 
+// table-layout: auto(기본값)로는 모바일 폭에서 <th style={{width}}>가 그냥
+// "희망 폭"이라 입력칸이 찌그러지고 상품 검색 드롭다운도 그 폭을 물려받아
+// 겹쳐 보인다 — new-sale-form.tsx/new-purchase-form.tsx와 같은 기법으로
+// 표를 모든 칸 폭의 합만큼 고정폭으로 못박아 erp-grid-wrap의 overflow:auto가
+// 가로 스크롤을 대신하게 한다.
+const ITEM_GRID_TOTAL_WIDTH = 320 + 110 + 200 + 50;
+
 export function NewStockTransferForm({
   today,
   warehouses,
@@ -87,12 +94,12 @@ export function NewStockTransferForm({
       </div>
 
       <div className="erp-grid-wrap">
-        <table className="erp-grid">
+        <table className="erp-grid" style={{ tableLayout: "fixed", width: ITEM_GRID_TOTAL_WIDTH, minWidth: ITEM_GRID_TOTAL_WIDTH }}>
           <thead>
             <tr>
               <th style={{ width: 320 }}>품목</th>
               <th className="num" style={{ width: 110 }}>수량</th>
-              <th>비고</th>
+              <th style={{ width: 200 }}>비고</th>
               <th style={{ width: 50 }} />
             </tr>
           </thead>

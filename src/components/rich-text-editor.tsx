@@ -456,81 +456,85 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
   return (
     <div className="erp-richtext">
       <div className="erp-richtext-toolbar" ref={toolbarRef}>
-        <ToolbarButton title="실행 취소 (Ctrl+Z)" onClick={() => editor.chain().focus().undo().run()}>
-          <UndoIcon />
-        </ToolbarButton>
-        <ToolbarButton title="다시 실행 (Ctrl+Y)" onClick={() => editor.chain().focus().redo().run()}>
-          <RedoIcon />
-        </ToolbarButton>
-        <span className="erp-richtext-toolbar-sep" />
-        <ToolbarButton
-          title="제목 1"
-          active={editor.isActive("heading", { level: 1 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        >
-          <Heading1Icon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="제목 2"
-          active={editor.isActive("heading", { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        >
-          <Heading2Icon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="제목 3"
-          active={editor.isActive("heading", { level: 3 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        >
-          <Heading3Icon />
-        </ToolbarButton>
-        <span className="erp-richtext-toolbar-sep" />
-        <ToolbarButton
-          title="굵게 (Ctrl+B)"
-          active={editor.isActive("bold")}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-        >
-          <BoldIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="기울임 (Ctrl+I)"
-          active={editor.isActive("italic")}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        >
-          <ItalicIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="밑줄 (Ctrl+U)"
-          active={editor.isActive("underline")}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-        >
-          <UnderlineIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="취소선"
-          active={editor.isActive("strike")}
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-        >
-          <StrikeIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="아래 첨자"
-          active={editor.isActive("subscript")}
-          onClick={() => editor.chain().focus().toggleSubscript().run()}
-        >
-          <SubscriptIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="위 첨자"
-          active={editor.isActive("superscript")}
-          onClick={() => editor.chain().focus().toggleSuperscript().run()}
-        >
-          <SuperscriptIcon />
-        </ToolbarButton>
-        <ToolbarButton title="서식 지우기" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
-          <ClearFormatIcon />
-        </ToolbarButton>
-        <span className="erp-richtext-toolbar-sep" />
+        <span className="erp-richtext-toolbar-group">
+          <ToolbarButton title="실행 취소 (Ctrl+Z)" onClick={() => editor.chain().focus().undo().run()}>
+            <UndoIcon />
+          </ToolbarButton>
+          <ToolbarButton title="다시 실행 (Ctrl+Y)" onClick={() => editor.chain().focus().redo().run()}>
+            <RedoIcon />
+          </ToolbarButton>
+        </span>
+        <span className="erp-richtext-toolbar-group">
+          <ToolbarButton
+            title="제목 1"
+            active={editor.isActive("heading", { level: 1 })}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          >
+            <Heading1Icon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="제목 2"
+            active={editor.isActive("heading", { level: 2 })}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          >
+            <Heading2Icon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="제목 3"
+            active={editor.isActive("heading", { level: 3 })}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          >
+            <Heading3Icon />
+          </ToolbarButton>
+        </span>
+        <span className="erp-richtext-toolbar-group">
+          <ToolbarButton
+            title="굵게 (Ctrl+B)"
+            active={editor.isActive("bold")}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            <BoldIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="기울임 (Ctrl+I)"
+            active={editor.isActive("italic")}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <ItalicIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="밑줄 (Ctrl+U)"
+            active={editor.isActive("underline")}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+          >
+            <UnderlineIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="취소선"
+            active={editor.isActive("strike")}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <StrikeIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="아래 첨자"
+            active={editor.isActive("subscript")}
+            onClick={() => editor.chain().focus().toggleSubscript().run()}
+          >
+            <SubscriptIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="위 첨자"
+            active={editor.isActive("superscript")}
+            onClick={() => editor.chain().focus().toggleSuperscript().run()}
+          >
+            <SuperscriptIcon />
+          </ToolbarButton>
+          <ToolbarButton title="서식 지우기" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
+            <ClearFormatIcon />
+          </ToolbarButton>
+        </span>
+        <span className="erp-richtext-toolbar-group">
         <div style={{ position: "relative" }}>
           <ToolbarButton
             title="글자 크기"
@@ -622,61 +626,64 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
             </div>
           )}
         </div>
-        <span className="erp-richtext-toolbar-sep" />
-        <ToolbarButton
-          title="왼쪽 정렬"
-          active={editor.isActive({ textAlign: "left" })}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        >
-          <AlignLeftIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="가운데 정렬"
-          active={editor.isActive({ textAlign: "center" })}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        >
-          <AlignCenterIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="오른쪽 정렬"
-          active={editor.isActive({ textAlign: "right" })}
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        >
-          <AlignRightIcon />
-        </ToolbarButton>
-        <span className="erp-richtext-toolbar-sep" />
-        <ToolbarButton
-          title="글머리 기호 목록"
-          active={editor.isActive("bulletList")}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        >
-          <BulletListIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="번호 매기기 목록"
-          active={editor.isActive("orderedList")}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        >
-          <OrderedListIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="인용구"
-          active={editor.isActive("blockquote")}
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        >
-          <BlockquoteIcon />
-        </ToolbarButton>
-        <ToolbarButton
-          title="코드 블록"
-          active={editor.isActive("codeBlock")}
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        >
-          <CodeBlockIcon />
-        </ToolbarButton>
-        <ToolbarButton title="구분선" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
-          <HorizontalRuleIcon />
-        </ToolbarButton>
-        <span className="erp-richtext-toolbar-sep" />
+        </span>
+        <span className="erp-richtext-toolbar-group">
+          <ToolbarButton
+            title="왼쪽 정렬"
+            active={editor.isActive({ textAlign: "left" })}
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          >
+            <AlignLeftIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="가운데 정렬"
+            active={editor.isActive({ textAlign: "center" })}
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          >
+            <AlignCenterIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="오른쪽 정렬"
+            active={editor.isActive({ textAlign: "right" })}
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          >
+            <AlignRightIcon />
+          </ToolbarButton>
+        </span>
+        <span className="erp-richtext-toolbar-group">
+          <ToolbarButton
+            title="글머리 기호 목록"
+            active={editor.isActive("bulletList")}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            <BulletListIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="번호 매기기 목록"
+            active={editor.isActive("orderedList")}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          >
+            <OrderedListIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="인용구"
+            active={editor.isActive("blockquote")}
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          >
+            <BlockquoteIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            title="코드 블록"
+            active={editor.isActive("codeBlock")}
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          >
+            <CodeBlockIcon />
+          </ToolbarButton>
+          <ToolbarButton title="구분선" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+            <HorizontalRuleIcon />
+          </ToolbarButton>
+        </span>
+        <span className="erp-richtext-toolbar-group">
         <div style={{ position: "relative" }}>
           <ToolbarButton title="링크" active={editor.isActive("link")} onClick={openLinkPopover}>
             <LinkIcon />
@@ -738,15 +745,15 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
             </div>
           )}
         </div>
-        <ToolbarButton
-          title="표 삽입"
-          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-        >
-          <TableIcon />
-        </ToolbarButton>
+          <ToolbarButton
+            title="표 삽입"
+            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+          >
+            <TableIcon />
+          </ToolbarButton>
+        </span>
         {editor.isActive("table") && (
-          <>
-            <span className="erp-richtext-toolbar-sep" />
+          <span className="erp-richtext-toolbar-group">
             <ToolbarButton title="행 추가" onClick={() => editor.chain().focus().addRowAfter().run()}>
               <AddRowIcon />
             </ToolbarButton>
@@ -762,7 +769,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
             <ToolbarButton title="표 삭제" onClick={() => editor.chain().focus().deleteTable().run()}>
               <DeleteTableIcon />
             </ToolbarButton>
-          </>
+          </span>
         )}
       </div>
       <EditorContent editor={editor} style={{ minHeight }} />
