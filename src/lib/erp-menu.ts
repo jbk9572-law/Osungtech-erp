@@ -16,6 +16,10 @@ export type MenuLeaf = {
   // 무관하게 "보는 건 누구나, 바꾸는 건 관리자만"인 화면(예:
   // 결재매트릭스)은 실제로 볼 게 있으니 여기 표시하지 않는다.
   adminOnly?: boolean;
+  // adminOnly와 같은 이유지만 기준이 "관리자만"이 아니라 "관리자 또는
+  // 매니저"인 화면(예: 운영자 문의 — 일반 직원이 쓰는 채널이 아니라
+  // 회사를 대표해 운영자와 소통하는 공식 채널로 보기로 함)에 쓴다.
+  managerOrAdminOnly?: boolean;
   // 독립된 트리메뉴/빠른검색/즐겨찾기 진입점으로 노출할 필요가 없는
   // 화면에 표시한다(예: 창고 이동 이력 — 이제 "창고" 화면 안에서 같이
   // 보여준다). adminOnly와 달리 권한과 무관하게 항상 숨긴다. 다만
@@ -200,8 +204,9 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "전자서명 등록", href: "/settings/signature" },
       { label: "메일 계정 연동", href: "/settings/mail" },
       { label: "기능 관리", href: "/settings/features", adminOnly: true },
+      { label: "화면별 부서 접근 권한", href: "/settings/page-access", adminOnly: true },
       { label: "비밀번호 변경", href: "/settings/password" },
-      { label: "운영자 문의", href: "/settings/support" },
+      { label: "운영자 문의", href: "/settings/support", managerOrAdminOnly: true },
       { label: "구독/결제", href: "/settings/billing", adminOnly: true },
       { label: "권한관리", href: "/settings/users", adminOnly: true },
       { label: "백업/복원", href: "/settings/backup", adminOnly: true },
@@ -224,7 +229,11 @@ export const MENU_GROUPS: MenuGroup[] = [
 // 같은 배열에 섞여 들어간다 — 서로 형태가 겹치지 않아(featureKey는
 // "production" 같은 짧은 단어, href는 "/production"처럼 슬래시로
 // 시작) 충돌하지 않는다.
-export function getVisibleMenuGroups(disabledFeatures: string[], isAdmin: boolean): MenuGroup[] {
+export function getVisibleMenuGroups(
+  disabledFeatures: string[],
+  isAdmin: boolean,
+  isManagerOrAdmin: boolean = isAdmin,
+): MenuGroup[] {
   return MENU_GROUPS.filter((g) => !g.featureKey || !disabledFeatures.includes(g.featureKey))
     .map((g) => ({
       ...g,
@@ -232,6 +241,7 @@ export function getVisibleMenuGroups(disabledFeatures: string[], isAdmin: boolea
         (i) =>
           !disabledFeatures.includes(i.href) &&
           (isAdmin || !i.adminOnly) &&
+          (isManagerOrAdmin || !i.managerOrAdminOnly) &&
           !i.hidden &&
           (!i.featureKey || !disabledFeatures.includes(i.featureKey))
       ),
@@ -264,8 +274,12 @@ export const MENU_ITEMS: MenuItem[] = flatten(MENU_GROUPS);
 // 함수를 안 쓰고 전체 MENU_ITEMS를 그대로 쓴다 — 꺼진 기능/관리자 전용
 // 페이지에 어쩌다 남아있는 링크로 들어가도 타이틀바 라벨 자체는 정상
 // 표시돼야 한다.
-export function getVisibleMenuItems(disabledFeatures: string[], isAdmin: boolean): MenuItem[] {
-  return flatten(getVisibleMenuGroups(disabledFeatures, isAdmin));
+export function getVisibleMenuItems(
+  disabledFeatures: string[],
+  isAdmin: boolean,
+  isManagerOrAdmin: boolean = isAdmin,
+): MenuItem[] {
+  return flatten(getVisibleMenuGroups(disabledFeatures, isAdmin, isManagerOrAdmin));
 }
 
 export function findMenuItem(pathname: string): MenuItem | undefined {

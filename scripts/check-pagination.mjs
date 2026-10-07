@@ -45,6 +45,7 @@ const SAFE_UNBOUNDED_TABLES = new Set([
   "leave_balances", // 구성원 수 × 연도 수 — profiles와 같은 이유로 거래량과 무관
   "employee_pay_settings", // 구성원 1인당 1행 — profiles와 같은 이유로 거래량과 무관
   "subcontractors", // 공정을 맡기는 외부 업체 — warehouses와 같은 이유로 거래량과 무관, 사실상 수십 곳 규모
+  "department_page_access", // 제한 가능 화면 수(한 자릿수) × 부서 수(수십 곳) — profiles와 같은 이유로 거래량과 무관
 ]);
 
 const ALLOWLIST = new Set([

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { notify } from "@/lib/notify";
+import { getCurrentActor } from "@/lib/current-actor";
 import type { FormState } from "@/components/form-message";
 
 export async function createAnnouncement(
@@ -21,6 +22,15 @@ export async function createAnnouncement(
 
   const supabase = await createClient();
   const user = await getUser();
+
+  // RLS(announcements_insert_manager_or_admin)가 최종 방어선이지만, 그
+  // 경우 사용자에게 날것의 DB 에러가 보이므로 여기서 먼저 분명한
+  // 메시지로 막는다 — 화면 쪽(새 공지 작성 버튼/폼) 가드를 우회해서
+  // 직접 폼을 제출해도 이 action 자체가 막는다.
+  const { isManagerOrAdmin } = await getCurrentActor(supabase);
+  if (!isManagerOrAdmin) {
+    return { error: "공지사항 작성은 관리자/매니저만 할 수 있습니다." };
+  }
 
   const { data, error } = await supabase
     .from("announcements")

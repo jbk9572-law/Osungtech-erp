@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getAllSubcontractorBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
+import { canViewPage } from "@/lib/department-page-access";
+import { AccessWall } from "@/components/erp/access-wall";
 
 // 매입채무(/payables)와 완전히 같은 계산 방식(가공비 누계 - 지급 누계,
 // 그때그때 계산)이지만, 하청업체 상세는 /suppliers/[id] 같은 별도 라우트가
@@ -11,6 +13,16 @@ import { PageGuide } from "@/components/erp/page-guide";
 // 직접 그린다.
 export default async function SubcontractorPayablesPage() {
   const supabase = await createClient();
+
+  if (!(await canViewPage(supabase, "/subcontractor-payables"))) {
+    return (
+      <AccessWall
+        title="생산관리 > 외주비정산"
+        message="이 화면은 접근 권한이 있는 부서만 볼 수 있습니다. 필요하다면 관리자에게 요청하세요."
+      />
+    );
+  }
+
   const balances = await getAllSubcontractorBalances(supabase);
 
   const withBalance = balances.filter((b) => b.balance !== 0).sort((a, b) => b.balance - a.balance);

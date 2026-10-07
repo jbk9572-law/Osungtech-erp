@@ -100,6 +100,41 @@ export type Database = {
           },
         ];
       };
+      department_page_access: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          page_key: string;
+          department_id: string;
+          is_demo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          page_key: string;
+          department_id: string;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          page_key?: string;
+          department_id?: string;
+          is_demo?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "department_page_access_department_id_fkey";
+            columns: ["department_id"];
+            isOneToOne: false;
+            referencedRelation: "departments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       categories: {
         Row: {
           id: string;

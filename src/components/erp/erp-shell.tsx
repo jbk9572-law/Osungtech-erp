@@ -31,6 +31,7 @@ export function ErpShell({
   usageWidget,
   disabledFeatures,
   isAdmin,
+  isManagerOrAdmin,
   isPlatformAdmin,
   platformAnnouncements,
   children,
@@ -44,6 +45,7 @@ export function ErpShell({
   usageWidget: React.ReactNode;
   disabledFeatures: string[];
   isAdmin: boolean;
+  isManagerOrAdmin: boolean;
   isPlatformAdmin?: boolean;
   // 플랫폼 운영자가 platform-admin > 공지사항에서 등록해 켜둔 전체
   // 테넌트 공지 — 회사 구분 없이 로그인한 모든 사용자에게 보인다.
@@ -123,7 +125,7 @@ export function ErpShell({
         onToggleMenu={() => setCollapsed((c) => !c)}
         isPlatformAdmin={isPlatformAdmin}
       />
-      <Ribbon disabledFeatures={disabledFeatures} isAdmin={isAdmin} />
+      <Ribbon disabledFeatures={disabledFeatures} isAdmin={isAdmin} isManagerOrAdmin={isManagerOrAdmin} />
       <div className="erp-body">
         <TreeMenu
           usageWidget={usageWidget}
@@ -132,6 +134,7 @@ export function ErpShell({
           onToggleCollapsed={() => setCollapsed((c) => !c)}
           disabledFeatures={disabledFeatures}
           isAdmin={isAdmin}
+          isManagerOrAdmin={isManagerOrAdmin}
         />
         <div className="erp-workspace">
           <RouteProgressBar />

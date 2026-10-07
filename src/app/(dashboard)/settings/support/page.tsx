@@ -1,8 +1,10 @@
 import { createClient, getUser } from "@/lib/supabase/server";
+import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
+import { AccessWall } from "@/components/erp/access-wall";
 import { SupportTicketForm } from "@/components/support-ticket-form";
 import { createSupportTicket } from "@/app/(dashboard)/settings/support/actions";
 
@@ -15,6 +17,16 @@ const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "muted
 export default async function SupportPage() {
   const supabase = await createClient();
   const user = await getUser();
+  const { isManagerOrAdmin } = await getCurrentActor(supabase);
+
+  if (!isManagerOrAdmin) {
+    return (
+      <AccessWall
+        title="환경설정 > 운영자 문의"
+        message="운영자 문의는 관리자/매니저만 작성·조회할 수 있습니다."
+      />
+    );
+  }
 
   const { data: tickets } = await supabase
     .from("support_tickets")
@@ -28,7 +40,8 @@ export default async function SupportPage() {
       <ListPageHeader title="환경설정 > 운영자 문의" />
       <PageGuide>
         서비스 이용 중 궁금한 점이나 문제가 있으면 아래에 남겨주세요. 플랫폼 운영자가 확인 후 답변을
-        등록하면 이 화면에 그대로 표시됩니다.
+        등록하면 이 화면에 그대로 표시됩니다. 회사를 대표해 운영자와 소통하는 채널이라 관리자/매니저만
+        쓸 수 있습니다.
       </PageGuide>
 
       <FormSection tabLabel="문의 등록">
@@ -37,7 +50,7 @@ export default async function SupportPage() {
 
       <div className="erp-detail">
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">내 문의 이력</span>
+          <span className="erp-detail-tab active">문의 이력</span>
         </div>
         <div className="erp-detail-body">
           {!user ? null : (tickets ?? []).length === 0 ? (

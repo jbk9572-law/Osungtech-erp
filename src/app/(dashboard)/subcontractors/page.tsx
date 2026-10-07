@@ -8,6 +8,8 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { createSubcontractor, deleteSubcontractor } from "@/app/(dashboard)/subcontractors/actions";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { canViewPage } from "@/lib/department-page-access";
+import { AccessWall } from "@/components/erp/access-wall";
 
 export default async function SubcontractorsPage({
   searchParams,
@@ -17,6 +19,15 @@ export default async function SubcontractorsPage({
   const { id } = await searchParams;
   const selectedId = id && isUuid(id) ? id : undefined;
   const supabase = await createClient();
+
+  if (!(await canViewPage(supabase, "/subcontractors"))) {
+    return (
+      <AccessWall
+        title="생산관리 > 하청업체관리"
+        message="이 화면은 접근 권한이 있는 부서만 볼 수 있습니다. 필요하다면 관리자에게 요청하세요."
+      />
+    );
+  }
 
   const { data: subcontractors } = await supabase
     .from("subcontractors")

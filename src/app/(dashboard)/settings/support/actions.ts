@@ -2,10 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
+import { getCurrentActor } from "@/lib/current-actor";
 import type { FormState } from "@/components/form-message";
 
 // 운영자 문의 등록 — 답변은 플랫폼 운영자만 reply_support_ticket()
-// RPC로 남길 수 있다(migration 136). 일반 사용자는 등록/조회만 한다.
+// RPC로 남길 수 있다(migration 136). 작성/조회는 관리자+매니저만
+// 가능하다(일반 직원이 쓰는 채널이 아니라 회사를 대표해 운영자와
+// 소통하는 공식 채널로 본다) — RLS(support_tickets_insert_manager_or_
+// admin)가 최종 방어선이지만, 날것의 DB 에러 대신 분명한 메시지로
+// 먼저 막는다.
 export async function createSupportTicket(_prevState: FormState, formData: FormData): Promise<FormState> {
   const subject = String(formData.get("subject") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
@@ -16,6 +21,11 @@ export async function createSupportTicket(_prevState: FormState, formData: FormD
   const supabase = await createClient();
   const user = await getUser();
   if (!user) return { error: "로그인이 필요합니다." };
+
+  const { isManagerOrAdmin } = await getCurrentActor(supabase);
+  if (!isManagerOrAdmin) {
+    return { error: "운영자 문의는 관리자/매니저만 작성할 수 있습니다." };
+  }
 
   const { error } = await supabase.from("support_tickets").insert({
     subject,

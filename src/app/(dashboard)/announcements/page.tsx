@@ -10,6 +10,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { getCurrentActor } from "@/lib/current-actor";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -27,7 +28,7 @@ export default async function AnnouncementsPage({
   const supabase = await createClient();
   const user = await getUser();
 
-  const [{ rows, hasMore }, summaryRows, readRows] = await Promise.all([
+  const [{ rows, hasMore }, summaryRows, readRows, { isManagerOrAdmin }] = await Promise.all([
     fetchLimitedRows<{
       id: string;
       title: string;
@@ -65,6 +66,7 @@ export default async function AnnouncementsPage({
             .range(from, to),
         )
       : Promise.resolve([] as { announcement_id: string }[]),
+    getCurrentActor(supabase),
   ]);
 
   const readIds = new Set(readRows.map((r) => r.announcement_id));
@@ -89,14 +91,19 @@ export default async function AnnouncementsPage({
   return (
     <div>
       <KeyboardShortcuts
-        shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
+        shortcuts={{
+          ...(isManagerOrAdmin ? { F2: { href: newHref } } : {}),
+          Escape: { href: selectedId ? newHref : "/dashboard" },
+        }}
       />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="text-lg font-bold text-[var(--erp-text)]">공지사항</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 글쓰기
-          </Link>
+          {isManagerOrAdmin && (
+            <Link href={newHref} className="erp-btn erp-btn-primary">
+              F2 글쓰기
+            </Link>
+          )}
           {selectedId && (
             <Link href={newHref} className="erp-btn">
               목록
@@ -141,10 +148,14 @@ export default async function AnnouncementsPage({
         <div className="erp-split-detail">
           {selectedId ? (
             <AnnouncementDetailPanel id={selectedId} closeHref={newHref} />
-          ) : (
+          ) : isManagerOrAdmin ? (
             <FormSection tabLabel="공지사항 작성">
               <AnnouncementForm action={createAnnouncement} submitLabel="등록" />
             </FormSection>
+          ) : (
+            <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+              공지사항 작성은 관리자/매니저만 할 수 있습니다. 왼쪽 목록에서 공지를 눌러 내용을 확인하세요.
+            </p>
           )}
         </div>
       </div>

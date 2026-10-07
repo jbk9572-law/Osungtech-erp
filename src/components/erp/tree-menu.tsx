@@ -113,6 +113,7 @@ export function TreeMenu({
   onToggleCollapsed,
   disabledFeatures,
   isAdmin,
+  isManagerOrAdmin,
 }: {
   // DB/스토리지/서버 사용량 위젯은 서버 컴포넌트(usage-widget-panel.tsx)가
   // 별도로 조회해서 미리 렌더링해 넘겨준다 — 레이아웃의 다른 데이터와
@@ -133,9 +134,12 @@ export function TreeMenu({
   // 일반 사용자에게 아예 노출하지 않는다 — 눌러봤자 "관리자만 볼 수
   // 있습니다" 벽만 보게 되는 항목을 미리 걸러낸다.
   isAdmin: boolean;
+  // adminOnly와 같은 이유지만 "관리자 또는 매니저" 기준인 화면(운영자
+  // 문의 등)을 거를 때 쓴다.
+  isManagerOrAdmin: boolean;
 }) {
   const pathname = usePathname();
-  const TREE: GroupItem[] = getVisibleMenuGroups(disabledFeatures, isAdmin);
+  const TREE: GroupItem[] = getVisibleMenuGroups(disabledFeatures, isAdmin, isManagerOrAdmin);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     for (const group of TREE) {

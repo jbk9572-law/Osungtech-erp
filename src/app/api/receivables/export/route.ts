@@ -1,12 +1,18 @@
 import { buildXlsxResponse } from "@/lib/xlsx-response";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { getAllCustomerBalances, sumOutstandingBalance } from "@/lib/ar-ap";
+import { canViewPage } from "@/lib/department-page-access";
 
 // 미수금현황 엑셀 다운로드 — 거래처관리 엑셀 다운로드와 같은 방식으로,
 // 화면에 보이는 잔액 있는 거래처만(0원 제외) 화면과 같은 정렬로 내려준다.
+// /receivables 화면 자체가 부서별 접근 제한 대상이라, 이 라우트를 직접
+// 호출해서 화면의 벽을 우회하지 못하게 같은 검사를 거친다.
 export async function GET() {
   const { supabase, user } = await requireAuthedApiUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!(await canViewPage(supabase, "/receivables"))) {
+    return new Response("Forbidden", { status: 403 });
+  }
 
   const balances = await getAllCustomerBalances(supabase);
   const withBalance = balances.filter((b) => b.balance !== 0).sort((a, b) => b.balance - a.balance);

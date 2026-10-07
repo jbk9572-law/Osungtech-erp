@@ -6,6 +6,7 @@ import { ErpShell } from "@/components/erp/erp-shell";
 import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
 import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
+import { BellIcon } from "@/components/erp/groupware-icons";
 import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
@@ -45,6 +46,7 @@ export default async function DashboardLayout({
     { data: isPlatformAdmin },
     { data: announcements },
     { data: platformSettings },
+    { data: departmentPageAccessRows },
   ] = await Promise.all([
       safeQuery<{ name: string | null; logo_mark_url: string | null }>(
         supabase
@@ -55,10 +57,10 @@ export default async function DashboardLayout({
       // 예전엔 메신저 위젯의 상대방 이름 표시(profileNames)까지 여기서
       // 같이 챙기느라 전 직원 프로필을 통째로 가져왔다 — 메신저가 팝업
       // 위젯에서 /messenger 전용 화면으로 옮겨가면서(그 화면이 필요할 때
-      // 직접 가져옴) 여기서는 내 프로필 한 행(데모/관리자 여부 판정용)만
-      // 있으면 된다.
-      safeQuery<{ is_demo: boolean; role: string }>(
-        supabase.from("profiles").select("is_demo, role").eq("id", user.id).maybeSingle(),
+      // 직접 가져옴) 여기서는 내 프로필 한 행(데모/관리자/매니저/부서
+      // 여부 판정용)만 있으면 된다.
+      safeQuery<{ is_demo: boolean; role: string; department_id: string | null }>(
+        supabase.from("profiles").select("is_demo, role, department_id").eq("id", user.id).maybeSingle(),
       ),
       // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러주므로
       // 별도 id 조건이 필요 없다. 멀티테넌트 전환(migration 098~) 적용
@@ -88,11 +90,40 @@ export default async function DashboardLayout({
       safeQuery<{ maintenance_mode: boolean; maintenance_message: string | null }>(
         supabase.from("platform_settings").select("maintenance_mode, maintenance_message").eq("id", true).maybeSingle(),
       ),
+      // 미수금현황/하청업체관리 등 부서별로 열람을 제한할 수 있는 화면
+      // 목록(department-page-access.ts) — 이 사용자의 소속 부서가 허용
+      // 목록에 없는 page_key를 메뉴에서도 숨기기 위해 전부 가져온다.
+      // 설정된 page_key가 거의 없을 테이블이라 테넌트 전체를 한 번에
+      // 가져와도 가볍다.
+      safeQuery<{ page_key: string; department_id: string }[]>(
+        supabase.from("department_page_access").select("page_key, department_id"),
+      ),
     ]);
 
   const isDemo = myProfile?.is_demo ?? false;
   const isAdmin = myProfile?.role === "admin";
-  const disabledFeatures = tenant?.disabled_features ?? [];
+  const isManagerOrAdmin = isAdmin || myProfile?.role === "manager";
+
+  // 부서별 접근 제한(department_page_access)이 설정된 page_key 중,
+  // 관리자가 아니면서 내 부서가 허용 목록에 없는 건 트리메뉴/빠른검색/
+  // 즐겨찾기에서도 숨긴다 — adminOnly 메뉴가 "disabledFeatures 배열에
+  // href를 넣어 숨기는" 것과 완전히 같은 매커니즘을 재사용한다(새
+  // 매개변수를 따로 안 만들어도 됨). 실제 화면 접근 차단은 각 page.tsx가
+  // canViewPage()로 직접 한다 — 이건 메뉴에만 영향을 주는 UX 편의다.
+  const myDepartmentId = myProfile?.department_id ?? null;
+  const deniedPageKeys = isAdmin
+    ? []
+    : Array.from(
+        (departmentPageAccessRows ?? []).reduce((byPageKey, row) => {
+          if (!byPageKey.has(row.page_key)) byPageKey.set(row.page_key, []);
+          byPageKey.get(row.page_key)!.push(row.department_id);
+          return byPageKey;
+        }, new Map<string, string[]>()),
+      )
+        .filter(([, departmentIds]) => !myDepartmentId || !departmentIds.includes(myDepartmentId))
+        .map(([pageKey]) => pageKey);
+
+  const disabledFeatures = [...(tenant?.disabled_features ?? []), ...deniedPageKeys];
 
   if (platformSettings?.maintenance_mode && isPlatformAdmin !== true) {
     return <MaintenanceScreen message={platformSettings.maintenance_message} />;
@@ -105,7 +136,15 @@ export default async function DashboardLayout({
       logoUrl={company?.logo_mark_url}
       email={user.email ?? null}
       notificationBell={
-        <Suspense fallback={<button type="button" className="erp-bell-btn" aria-label="알림">🔔</button>}>
+        <Suspense
+          fallback={
+            <button type="button" className="erp-bell-btn" aria-label="알림">
+              <span className="erp-icon" aria-hidden style={{ width: 15, height: 15 }}>
+                <BellIcon />
+              </span>
+            </button>
+          }
+        >
           <NotificationBellPanel userId={user.id} />
         </Suspense>
       }
@@ -118,6 +157,7 @@ export default async function DashboardLayout({
       }
       disabledFeatures={disabledFeatures}
       isAdmin={isAdmin}
+      isManagerOrAdmin={isManagerOrAdmin}
       isPlatformAdmin={isPlatformAdmin === true}
       platformAnnouncements={announcements ?? []}
       modal={modal}

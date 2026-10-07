@@ -2,8 +2,18 @@ import { AnnouncementForm } from "@/components/announcement-form";
 import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { AccessWall } from "@/components/erp/access-wall";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentActor } from "@/lib/current-actor";
 
-export default function NewAnnouncementPage() {
+export default async function NewAnnouncementPage() {
+  const supabase = await createClient();
+  const { isManagerOrAdmin } = await getCurrentActor(supabase);
+
+  if (!isManagerOrAdmin) {
+    return <AccessWall title="공지사항 > 글쓰기" message="공지사항 작성은 관리자/매니저만 할 수 있습니다." />;
+  }
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />

@@ -2,9 +2,21 @@ import { createClient } from "@/lib/supabase/server";
 import { BalanceGridTable } from "@/components/balance-grid-table";
 import { getAllCustomerBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
+import { canViewPage } from "@/lib/department-page-access";
+import { AccessWall } from "@/components/erp/access-wall";
 
 export default async function ReceivablesPage() {
   const supabase = await createClient();
+
+  if (!(await canViewPage(supabase, "/receivables"))) {
+    return (
+      <AccessWall
+        title="거래처관리 > 미수금현황"
+        message="이 화면은 접근 권한이 있는 부서만 볼 수 있습니다. 필요하다면 관리자에게 요청하세요."
+      />
+    );
+  }
+
   const balances = await getAllCustomerBalances(supabase);
 
   const withBalance = balances.filter((b) => b.balance !== 0).sort((a, b) => b.balance - a.balance);

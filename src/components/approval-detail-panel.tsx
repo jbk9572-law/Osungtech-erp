@@ -33,7 +33,7 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
   const supabase = await createClient();
   const user = await getUser();
 
-  const [{ data: doc }, { data: steps }, { data: delegations }] = await Promise.all([
+  const [{ data: doc }, { data: steps }] = await Promise.all([
     supabase
       .from("approval_documents")
       .select(
@@ -48,9 +48,6 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
       )
       .eq("document_id", id)
       .order("step_order", { ascending: true, nullsFirst: false }),
-    user
-      ? supabase.from("approval_delegations").select("delegator_id, start_date, end_date").eq("delegate_id", user.id)
-      : Promise.resolve({ data: [] as { delegator_id: string; start_date: string; end_date: string }[] }),
   ]);
 
   if (!doc) {
@@ -61,9 +58,24 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
   const approverSteps = allSteps.filter((s) => s.role === "approver");
   const referenceSteps = allSteps.filter((s) => s.role === "reference");
   const currentStep = approverSteps.find((s) => s.status === "pending");
+
+  // 결재선에 있는 결재자 중 누구라도 "지금" 전결권(대리 결재)을 설정해
+  // 뒀으면, 아직 결재 전인 단계에서도 "이 사람은 지금 대리인이 처리
+  // 중"이라는 걸 결재함 안에서 바로 보여준다 — 예전엔 /settings/
+  // delegations에 따로 들어가야만 알 수 있어서, 결재 순서를 기다리는
+  // 사람이 "왜 안 넘어오지" 하고 헷갈리는 흐름 단절이 있었다.
+  const approverIds = Array.from(new Set(approverSteps.map((s) => s.approver_id)));
+  const { data: delegations } =
+    user && approverIds.length
+      ? await supabase
+          .from("approval_delegations")
+          .select("delegator_id, delegate_id, start_date, end_date, profiles!delegate_id(full_name)")
+          .in("delegator_id", approverIds)
+      : { data: [] as { delegator_id: string; delegate_id: string; start_date: string; end_date: string; profiles: { full_name: string | null } | null }[] };
   const today = new Date().toISOString().slice(0, 10);
-  const isActiveDelegateFor = (approverId: string) =>
-    (delegations ?? []).some((d) => d.delegator_id === approverId && d.start_date <= today && today <= d.end_date);
+  const activeDelegationFor = (approverId: string) =>
+    (delegations ?? []).find((d) => d.delegator_id === approverId && d.start_date <= today && today <= d.end_date);
+  const isActiveDelegateFor = (approverId: string) => activeDelegationFor(approverId)?.delegate_id === user?.id;
   const myTurn = doc.status === "pending" && !!currentStep && (currentStep.approver_id === user?.id || isActiveDelegateFor(currentStep.approver_id));
   const canDelete = doc.created_by === user?.id;
   const canRecall = canDelete && doc.status === "pending" && approverSteps.every((s) => s.status === "pending");
@@ -140,6 +152,7 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
             {approverSteps.map((s) => {
               const tone = s.status === "approved" ? "ok" : s.status === "rejected" ? "danger" : "muted";
               const decidedByDelegate = s.decided_by && s.decided_by !== s.approver_id;
+              const pendingDelegation = s.status === "pending" ? activeDelegationFor(s.approver_id) : null;
               return (
                 <div
                   key={s.id}
@@ -161,6 +174,11 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
                   {decidedByDelegate && (
                     <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
                       (대결: {s.decider?.full_name ?? "대리인"})
+                    </span>
+                  )}
+                  {pendingDelegation && (
+                    <span className="text-xs" style={{ color: "var(--erp-info-text)" }}>
+                      (지금 {pendingDelegation.profiles?.full_name ?? "대리인"}이 대리 결재 중)
                     </span>
                   )}
                   {s.comment && (
