@@ -10,6 +10,7 @@ import { TaxInvoiceForm } from "@/components/tax-invoice-form";
 import { TaxInvoiceDetail } from "@/components/tax-invoice-detail";
 import { cancelTaxInvoice } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { todayKstStr } from "@/lib/kst-date";
+import { canIssueTaxInvoice, isTaxExempt, defaultInvoiceTypeFromTaxType } from "@/lib/tax-evidence-type";
 
 export default async function TaxInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,7 +20,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
   const [{ data: order }, { data: company }, { data: existing }, actor] = await Promise.all([
     supabase
       .from("sales_orders")
-      .select("id, created_by, customers(*)")
+      .select("id, created_by, tax_type, evidence_type, customers(*)")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -44,6 +45,28 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
   const allowManage = canManage(order.created_by, actor.userId, actor.isAdmin);
   if (!allowManage) {
     return <AccessWall title="매출관리 > 세금계산서" message="본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." />;
+  }
+
+  // 이미 발행된 세금계산서가 있으면(existing) 과세구분/증빙유형이 나중에
+  // 바뀌었더라도 기존 건 열람/관리는 그대로 허용한다 — 아래 차단은 "새로
+  // 작성"하려는 경우에만 적용한다.
+  if (!existing) {
+    if (isTaxExempt(order.tax_type)) {
+      return (
+        <AccessWall
+          title="매출관리 > 세금계산서"
+          message="이 매출 건은 과세구분이 면세입니다. 면세 거래는 세금계산서가 아니라 계산서(부가세 없는 별도 문서)를 발행해야 하며, 계산서 발행 기능은 아직 없습니다. 매출 수정 화면에서 과세구분을 확인해주세요."
+        />
+      );
+    }
+    if (!canIssueTaxInvoice(order.evidence_type)) {
+      return (
+        <AccessWall
+          title="매출관리 > 세금계산서"
+          message={`이 매출 건은 증빙유형이 "${order.evidence_type}"로 이미 지정돼 있습니다. 해당 증빙이 세금계산서를 대신하므로 별도 발행이 필요 없습니다. 증빙유형을 바꾸려면 매출 수정 화면에서 수정해주세요.`}
+        />
+      );
+    }
   }
 
   const [{ data: items }, { data: corrections }] = await Promise.all([
@@ -81,6 +104,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
         <TaxInvoiceForm
           salesOrderId={id}
           today={todayKstStr()}
+          defaultInvoiceType={defaultInvoiceTypeFromTaxType(order.tax_type)}
           supplier={{
             name: company?.name ?? null,
             businessNumber: company?.business_number ?? null,

@@ -158,6 +158,8 @@ export default async function EditPurchasePage({
           deliveryMethod: order.delivery_method,
           docNo: order.doc_no,
           isCarryover: order.is_carryover,
+          taxType: order.tax_type,
+          evidenceType: order.evidence_type,
           items: (items ?? []).map((item) => ({
             productId: item.product_id,
             customName: item.custom_name,

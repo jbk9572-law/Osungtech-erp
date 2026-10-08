@@ -53,6 +53,8 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   const isReturn = formData.get("is_return") === "1";
   const returnReason = isReturn ? String(formData.get("return_reason") ?? "") || null : null;
   const isCarryover = formData.get("is_carryover") === "1";
+  const taxType = String(formData.get("tax_type") ?? "") || "과세";
+  const evidenceType = String(formData.get("evidence_type") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
   // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
@@ -112,6 +114,8 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     p_is_return: isReturn,
     p_return_reason: returnReason,
     p_is_carryover: isCarryover,
+    p_tax_type: taxType,
+    p_evidence_type: evidenceType,
   });
 
   if (error || !salesOrderId) {
@@ -218,6 +222,8 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const isReturn = formData.get("is_return") === "1";
   const returnReason = isReturn ? String(formData.get("return_reason") ?? "") || null : null;
   const isCarryover = formData.get("is_carryover") === "1";
+  const taxType = String(formData.get("tax_type") ?? "") || "과세";
+  const evidenceType = String(formData.get("evidence_type") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
@@ -263,6 +269,8 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     p_is_return: isReturn,
     p_return_reason: returnReason,
     p_is_carryover: isCarryover,
+    p_tax_type: taxType,
+    p_evidence_type: evidenceType,
   });
 
   if (error) {

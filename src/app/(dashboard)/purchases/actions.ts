@@ -168,6 +168,8 @@ export async function createPurchase(
   const saleDeliveryMethod = String(formData.get("sale_delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const isCarryover = formData.get("is_carryover") === "1";
+  const taxType = String(formData.get("tax_type") ?? "") || "과세";
+  const evidenceType = String(formData.get("evidence_type") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
   // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
@@ -282,6 +284,8 @@ export async function createPurchase(
         // 재발하지 않게 한다.
         p_sale_doc_no: null,
         p_sale_delivery_method: saleDeliveryMethod,
+        p_tax_type: taxType,
+        p_evidence_type: evidenceType,
       })
       .single();
 
@@ -331,6 +335,8 @@ export async function createPurchase(
       p_delivery_method: deliveryMethod,
       p_doc_no: docNo,
       p_is_carryover: isCarryover,
+      p_tax_type: taxType,
+      p_evidence_type: evidenceType,
     });
 
     if (error || !newPurchaseId) {
@@ -494,6 +500,8 @@ export async function updatePurchase(
   const deliveryMethod = String(formData.get("delivery_method") ?? "") || null;
   const docNo = parseDocNo(String(formData.get("doc_no") ?? ""));
   const isCarryover = formData.get("is_carryover") === "1";
+  const taxType = String(formData.get("tax_type") ?? "") || "과세";
+  const evidenceType = String(formData.get("evidence_type") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
@@ -537,6 +545,8 @@ export async function updatePurchase(
     p_delivery_method: deliveryMethod,
     p_doc_no: docNo,
     p_is_carryover: isCarryover,
+    p_tax_type: taxType,
+    p_evidence_type: evidenceType,
   });
 
   if (error) {

@@ -42,6 +42,7 @@ import {
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
+import { TAX_TYPES, EVIDENCE_TYPES } from "@/lib/tax-evidence-type";
 import { RETURN_REASONS } from "@/lib/return-reason";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
@@ -114,6 +115,8 @@ type SaleDraft = {
   deliveryMethod: string;
   isCarryover: boolean;
   returnReason: string;
+  taxType: string;
+  evidenceType: string;
   rows: Row[];
 };
 
@@ -133,6 +136,8 @@ export type SaleInitial = {
   isReturn?: boolean;
   returnReason?: string | null;
   isCarryover?: boolean;
+  taxType?: string | null;
+  evidenceType?: string | null;
   items: {
     productId: string | null;
     customName?: string | null;
@@ -226,6 +231,13 @@ export function NewSaleForm({
   const [deliveryMethod, setDeliveryMethod] = useState(
     initial?.deliveryMethod ?? "직납",
   );
+  // 세금계산서 발행 화면이 이 값을 보고 종류(일반/영세율)를 자동으로
+  // 맞추고, 면세 건은 발행 대상에서 뺀다(sales/[id]/tax-invoice/page.tsx).
+  const [taxType, setTaxType] = useState(initial?.taxType ?? "과세");
+  // 증빙유형을 현금영수증/카드매출전표/계산서로 정해두면, 그 증빙이 이미
+  // 세금계산서를 대신하므로 "세금계산서 작성" 진입점을 숨긴다. 아직
+  // 안 정했으면(기본값, 빈 문자열=null) 평소대로 세금계산서 작성 가능.
+  const [evidenceType, setEvidenceType] = useState(initial?.evidenceType ?? "");
   // 인쇄되는 거래명세표의 No와 값을 맞출 수 있게, 비워두면 자동 채번되는
   // 전표번호를 직접 입력/수정할 수 있게 한다.
   const [docNo, setDocNo] = useState(
@@ -302,6 +314,8 @@ export function NewSaleForm({
     setDeliveryMethod(draft.deliveryMethod);
     setIsCarryover(draft.isCarryover);
     setReturnReason(draft.returnReason);
+    setTaxType(draft.taxType);
+    setEvidenceType(draft.evidenceType);
     addFilledRows((startKey) => draft.rows.map((r, i) => ({ ...r, key: startKey + i })), () => true);
     setDraftChoiceMade(true);
   }
@@ -326,6 +340,8 @@ export function NewSaleForm({
       deliveryMethod,
       isCarryover,
       returnReason,
+      taxType,
+      evidenceType,
       rows,
     };
     if (!draftHasContent(data)) {
@@ -344,6 +360,8 @@ export function NewSaleForm({
     deliveryMethod,
     isCarryover,
     returnReason,
+    taxType,
+    evidenceType,
     rows,
   ]);
 
@@ -923,6 +941,8 @@ export function NewSaleForm({
         value={alwaysCredit ? "" : paymentMethod}
       />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
+      <input type="hidden" name="tax_type" value={taxType} />
+      <input type="hidden" name="evidence_type" value={evidenceType} />
       <input type="hidden" name="is_return" value={isReturn ? "1" : ""} />
       {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
       <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
@@ -1170,6 +1190,37 @@ export function NewSaleForm({
               {DELIVERY_METHODS.map((m) => (
                 <option key={m} value={m}>
                   {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="erp-field">
+            <label htmlFor="sale-tax-type">과세구분</label>
+            <select
+              id="sale-tax-type"
+              value={taxType}
+              onChange={(e) => setTaxType(e.target.value)}
+              className="erp-select"
+            >
+              {TAX_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="erp-field">
+            <label htmlFor="sale-evidence-type">증빙유형</label>
+            <select
+              id="sale-evidence-type"
+              value={evidenceType}
+              onChange={(e) => setEvidenceType(e.target.value)}
+              className="erp-select"
+            >
+              <option value="">(미정)</option>
+              {EVIDENCE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>

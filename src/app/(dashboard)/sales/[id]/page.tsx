@@ -24,6 +24,7 @@ import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
+import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 
 export default async function SaleDetailPage({
   params,
@@ -268,6 +269,10 @@ export default async function SaleDetailPage({
                     세금계산서 보기
                   </Link>
                 </>
+              ) : isTaxExempt(order.tax_type) ? (
+                <GridBadge tone="muted">면세 — 계산서 발행 대상(아직 미구현)</GridBadge>
+              ) : !canIssueTaxInvoice(order.evidence_type) ? (
+                <GridBadge tone="muted">증빙유형: {order.evidence_type} (세금계산서 불필요)</GridBadge>
               ) : (
                 <>
                   <GridBadge tone="muted">계산서 미발행</GridBadge>

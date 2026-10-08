@@ -5496,6 +5496,8 @@ export type Database = {
           p_is_return?: boolean;
           p_return_reason?: string | null;
           p_is_carryover?: boolean;
+          p_tax_type?: string;
+          p_evidence_type?: string | null;
         };
         Returns: string;
       };
@@ -5511,6 +5513,8 @@ export type Database = {
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
           p_is_carryover?: boolean;
+          p_tax_type?: string;
+          p_evidence_type?: string | null;
         };
         Returns: string;
       };
@@ -5529,6 +5533,8 @@ export type Database = {
           p_is_return?: boolean | null;
           p_return_reason?: string | null;
           p_is_carryover?: boolean | null;
+          p_tax_type?: string | null;
+          p_evidence_type?: string | null;
         };
         Returns: string;
       };
@@ -5545,6 +5551,8 @@ export type Database = {
           p_delivery_method?: string | null;
           p_doc_no?: number | null;
           p_is_carryover?: boolean | null;
+          p_tax_type?: string | null;
+          p_evidence_type?: string | null;
         };
         Returns: string;
       };
@@ -5564,6 +5572,9 @@ export type Database = {
           p_delivery_method?: string | null;
           p_purchase_doc_no?: number | null;
           p_sale_doc_no?: number | null;
+          p_sale_delivery_method?: string | null;
+          p_tax_type?: string;
+          p_evidence_type?: string | null;
         };
         Returns: { purchase_order_id: string; sale_order_id: string }[];
       };

@@ -52,6 +52,7 @@ export function TaxInvoiceForm({
   supplier,
   buyer,
   initialRows,
+  defaultInvoiceType = "general",
 }: {
   salesOrderId: string;
   today: string;
@@ -61,11 +62,15 @@ export function TaxInvoiceForm({
   // 비어있으면 거래처 정보 화면에서 채워달라는 안내만 보여준다).
   buyer: SupplierInfo;
   initialRows: { itemName: string; spec: string; quantity: number; unitPrice: number }[];
+  // 매출 건의 과세구분(tax_type)에서 맞춰 온 기본값 — 과세→일반,
+  // 영세→영세율(lib/tax-evidence-type.ts). 사용자가 여기서 직접 바꿀 수도
+  // 있다(위수탁 등은 과세구분만으로 알 수 없어서 수동 선택 영역).
+  defaultInvoiceType?: "general" | "zero_rate";
 }) {
   const [state, formAction, pending] = useActionState(createTaxInvoice, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
-  const [invoiceType, setInvoiceType] = useState<"general" | "zero_rate" | "consignment" | "consignment_zero_rate">("general");
+  const [invoiceType, setInvoiceType] = useState<"general" | "zero_rate" | "consignment" | "consignment_zero_rate">(defaultInvoiceType);
   const isConsignment = invoiceType === "consignment" || invoiceType === "consignment_zero_rate";
 
   const seeded = useMemo<Row[]>(() => {

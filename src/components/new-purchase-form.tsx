@@ -36,6 +36,7 @@ import {
 } from "@/app/(dashboard)/todos/actions";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
+import { TAX_TYPES, EVIDENCE_TYPES } from "@/lib/tax-evidence-type";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { nextMonthLabel } from "@/lib/carryover";
 import { calcVat } from "@/lib/tax";
@@ -107,6 +108,8 @@ type PurchaseDraft = {
   paymentMethod: string;
   deliveryMethod: string;
   isCarryover: boolean;
+  taxType: string;
+  evidenceType: string;
   alsoCreateSale: boolean;
   saleCustomerId: string;
   saleDate: string;
@@ -136,6 +139,8 @@ export type PurchaseInitial = {
   deliveryMethod?: string | null;
   docNo?: number | null;
   isCarryover?: boolean;
+  taxType?: string | null;
+  evidenceType?: string | null;
   items: {
     productId: string | null;
     customName?: string | null;
@@ -247,6 +252,10 @@ export function NewPurchaseForm({
   const [docNo, setDocNo] = useState(
     initial?.docNo ? String(initial.docNo) : "",
   );
+  // 세금계산서(매입 쪽에서는 "수취") 관련 분류 — 매출 등록 폼과 같은
+  // 이유로 추가(sales_orders와 스키마를 그대로 미러링해둔 컬럼).
+  const [taxType, setTaxType] = useState(initial?.taxType ?? "과세");
+  const [evidenceType, setEvidenceType] = useState(initial?.evidenceType ?? "");
   // 매입일자는 항상 실제 입고일 그대로 두고, "다음 달 실적으로 잡을지"만
   // 이 체크박스로 명시적으로 관리한다(매출 등록 폼과 동일한 방식).
   // "매출도 같이 등록"(당일 즉시 출고)과는 개념이 겹치지 않아 같이 켤 필요가
@@ -402,6 +411,8 @@ export function NewPurchaseForm({
     setPaymentMethod(draft.paymentMethod);
     setDeliveryMethod(draft.deliveryMethod);
     setIsCarryover(draft.isCarryover);
+    setTaxType(draft.taxType);
+    setEvidenceType(draft.evidenceType);
     setAlsoCreateSale(draft.alsoCreateSale);
     setSaleCustomerId(draft.saleCustomerId);
     setSaleDate(draft.saleDate);
@@ -429,6 +440,8 @@ export function NewPurchaseForm({
       paymentMethod,
       deliveryMethod,
       isCarryover,
+      taxType,
+      evidenceType,
       alsoCreateSale,
       saleCustomerId,
       saleDate,
@@ -450,6 +463,8 @@ export function NewPurchaseForm({
     paymentMethod,
     deliveryMethod,
     isCarryover,
+    taxType,
+    evidenceType,
     alsoCreateSale,
     saleCustomerId,
     saleDate,
@@ -1006,6 +1021,8 @@ export function NewPurchaseForm({
         value={alwaysCredit ? "" : paymentMethod}
       />
       <input type="hidden" name="delivery_method" value={deliveryMethod} />
+      <input type="hidden" name="tax_type" value={taxType} />
+      <input type="hidden" name="evidence_type" value={evidenceType} />
       {!alsoCreateSale && (
         <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
       )}
@@ -1230,6 +1247,37 @@ export function NewPurchaseForm({
               {DELIVERY_METHODS.map((m) => (
                 <option key={m} value={m}>
                   {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="erp-field">
+            <label htmlFor="purchase-tax-type">과세구분</label>
+            <select
+              id="purchase-tax-type"
+              value={taxType}
+              onChange={(e) => setTaxType(e.target.value)}
+              className="erp-select"
+            >
+              {TAX_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="erp-field">
+            <label htmlFor="purchase-evidence-type">증빙유형</label>
+            <select
+              id="purchase-evidence-type"
+              value={evidenceType}
+              onChange={(e) => setEvidenceType(e.target.value)}
+              className="erp-select"
+            >
+              <option value="">(미정)</option>
+              {EVIDENCE_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>
