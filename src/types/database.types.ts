@@ -3649,7 +3649,7 @@ export type Database = {
           tenant_id: string;
           sales_order_id: string;
           customer_id: string;
-          invoice_type: "general" | "zero_rate";
+          invoice_type: "general" | "zero_rate" | "consignment" | "consignment_zero_rate";
           issue_date: string;
           supply_amount: number;
           tax_amount: number;
@@ -3660,6 +3660,18 @@ export type Database = {
           credit_amount: number;
           claim_type: "claim" | "receipt";
           remark: string | null;
+          consignee_name: string | null;
+          consignee_business_number: string | null;
+          consignee_representative_name: string | null;
+          original_invoice_id: string | null;
+          modification_reason:
+            | "error_correction"
+            | "duplicate_issued"
+            | "supply_amount_change"
+            | "contract_cancelled"
+            | "goods_returned"
+            | "export_lc_after"
+            | null;
           created_by: string | null;
           created_at: string;
           is_demo: boolean;
@@ -3670,7 +3682,7 @@ export type Database = {
           tenant_id?: string;
           sales_order_id: string;
           customer_id: string;
-          invoice_type?: "general" | "zero_rate";
+          invoice_type?: "general" | "zero_rate" | "consignment" | "consignment_zero_rate";
           issue_date: string;
           supply_amount?: number;
           tax_amount?: number;
@@ -3681,6 +3693,18 @@ export type Database = {
           credit_amount?: number;
           claim_type?: "claim" | "receipt";
           remark?: string | null;
+          consignee_name?: string | null;
+          consignee_business_number?: string | null;
+          consignee_representative_name?: string | null;
+          original_invoice_id?: string | null;
+          modification_reason?:
+            | "error_correction"
+            | "duplicate_issued"
+            | "supply_amount_change"
+            | "contract_cancelled"
+            | "goods_returned"
+            | "export_lc_after"
+            | null;
           created_by?: string | null;
           created_at?: string;
           is_demo?: boolean;
@@ -3691,7 +3715,7 @@ export type Database = {
           tenant_id?: string;
           sales_order_id?: string;
           customer_id?: string;
-          invoice_type?: "general" | "zero_rate";
+          invoice_type?: "general" | "zero_rate" | "consignment" | "consignment_zero_rate";
           issue_date?: string;
           supply_amount?: number;
           tax_amount?: number;
@@ -3702,6 +3726,18 @@ export type Database = {
           credit_amount?: number;
           claim_type?: "claim" | "receipt";
           remark?: string | null;
+          consignee_name?: string | null;
+          consignee_business_number?: string | null;
+          consignee_representative_name?: string | null;
+          original_invoice_id?: string | null;
+          modification_reason?:
+            | "error_correction"
+            | "duplicate_issued"
+            | "supply_amount_change"
+            | "contract_cancelled"
+            | "goods_returned"
+            | "export_lc_after"
+            | null;
           created_by?: string | null;
           created_at?: string;
           is_demo?: boolean;
@@ -3711,7 +3747,7 @@ export type Database = {
           {
             foreignKeyName: "tax_invoices_sales_order_id_fkey";
             columns: ["sales_order_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "sales_orders";
             referencedColumns: ["id"];
           },
@@ -3720,6 +3756,13 @@ export type Database = {
             columns: ["customer_id"];
             isOneToOne: false;
             referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tax_invoices_original_invoice_id_fkey";
+            columns: ["original_invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "tax_invoices";
             referencedColumns: ["id"];
           },
         ];

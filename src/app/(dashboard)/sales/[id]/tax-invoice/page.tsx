@@ -29,9 +29,12 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
     supabase
       .from("tax_invoices")
       .select(
-        "id, invoice_type, issue_date, supply_amount, tax_amount, total_amount, cash_amount, check_amount, note_amount, credit_amount, claim_type, remark, tax_invoice_items(id, line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
+        "id, invoice_type, issue_date, supply_amount, tax_amount, total_amount, cash_amount, check_amount, note_amount, credit_amount, claim_type, remark, consignee_name, consignee_business_number, consignee_representative_name, tax_invoice_items(id, line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
       )
       .eq("sales_order_id", id)
+      // 원본(= 수정이 아닌 최초 발행분)만 — 수정세금계산서가 쌓이면
+      // sales_order_id가 더는 유일하지 않아 is()로 원본만 골라낸다.
+      .is("original_invoice_id", null)
       .maybeSingle(),
     getCurrentActor(supabase),
   ]);
@@ -43,13 +46,24 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
     return <AccessWall title="매출관리 > 세금계산서" message="본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." />;
   }
 
-  const { data: items } = existing
-    ? { data: null }
-    : await supabase
-        .from("sales_order_items")
-        .select("quantity, unit_price, spec, custom_name, products(name)")
-        .eq("sales_order_id", id)
-        .order("created_at");
+  const [{ data: items }, { data: corrections }] = await Promise.all([
+    existing
+      ? Promise.resolve({ data: null })
+      : supabase
+          .from("sales_order_items")
+          .select("quantity, unit_price, spec, custom_name, products(name)")
+          .eq("sales_order_id", id)
+          .order("created_at"),
+    existing
+      ? supabase
+          .from("tax_invoices")
+          .select(
+            "id, issue_date, modification_reason, supply_amount, tax_amount, total_amount, remark, tax_invoice_items(id, line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
+          )
+          .eq("original_invoice_id", existing.id)
+          .order("issue_date")
+      : Promise.resolve({ data: null }),
+  ]);
 
   return (
     <div>
@@ -62,7 +76,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
       </div>
 
       {existing ? (
-        <TaxInvoiceDetail invoice={existing} salesOrderId={id} cancelAction={cancelTaxInvoice} />
+        <TaxInvoiceDetail invoice={existing} corrections={corrections ?? []} salesOrderId={id} cancelAction={cancelTaxInvoice} />
       ) : (
         <TaxInvoiceForm
           salesOrderId={id}

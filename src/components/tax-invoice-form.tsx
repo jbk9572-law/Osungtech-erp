@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useRef } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { createTaxInvoice } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
@@ -8,6 +8,7 @@ import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { PageGuide } from "@/components/erp/page-guide";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
 
@@ -64,6 +65,8 @@ export function TaxInvoiceForm({
   const [state, formAction, pending] = useActionState(createTaxInvoice, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
+  const [invoiceType, setInvoiceType] = useState<"general" | "zero_rate" | "consignment" | "consignment_zero_rate">("general");
+  const isConsignment = invoiceType === "consignment" || invoiceType === "consignment_zero_rate";
 
   const seeded = useMemo<Row[]>(() => {
     if (initialRows.length === 0) return [blankRow(0, today)];
@@ -168,9 +171,17 @@ export function TaxInvoiceForm({
           <div className="erp-doc-header-row">
             <label htmlFor="ti-type" className="erp-doc-header-label">종류</label>
             <span className="erp-doc-header-value">
-              <select id="ti-type" name="invoice_type" defaultValue="general" className="erp-select">
+              <select
+                id="ti-type"
+                name="invoice_type"
+                value={invoiceType}
+                onChange={(e) => setInvoiceType(e.target.value as typeof invoiceType)}
+                className="erp-select"
+              >
                 <option value="general">일반</option>
                 <option value="zero_rate">영세율</option>
+                <option value="consignment">위수탁</option>
+                <option value="consignment_zero_rate">위수탁영세</option>
               </select>
             </span>
           </div>
@@ -183,6 +194,28 @@ export function TaxInvoiceForm({
               </select>
             </span>
           </div>
+          {isConsignment && (
+            <>
+              <div className="erp-doc-header-row">
+                <label htmlFor="ti-consignee-name" className="erp-doc-header-label">수탁자 상호</label>
+                <span className="erp-doc-header-value">
+                  <input id="ti-consignee-name" name="consignee_name" className="erp-input" autoComplete="off" required />
+                </span>
+              </div>
+              <div className="erp-doc-header-row">
+                <label htmlFor="ti-consignee-biz" className="erp-doc-header-label">수탁자 등록번호</label>
+                <span className="erp-doc-header-value">
+                  <input id="ti-consignee-biz" name="consignee_business_number" className="erp-input" autoComplete="off" required />
+                </span>
+              </div>
+              <div className="erp-doc-header-row">
+                <label htmlFor="ti-consignee-rep" className="erp-doc-header-label">수탁자 성명</label>
+                <span className="erp-doc-header-value">
+                  <input id="ti-consignee-rep" name="consignee_representative_name" className="erp-input" autoComplete="off" required />
+                </span>
+              </div>
+            </>
+          )}
           <div className="erp-doc-header-row erp-doc-header-row-full">
             <label htmlFor="ti-remark" className="erp-doc-header-label">비고</label>
             <span className="erp-doc-header-value">
@@ -190,6 +223,11 @@ export function TaxInvoiceForm({
             </span>
           </div>
         </div>
+        {isConsignment && (
+          <PageGuide className="mb-0">
+            위수탁 거래 — 실제 공급자(위탁자)는 위 &ldquo;공급자&rdquo; 칸 그대로이고, 수탁자는 이 거래를 대신 처리/발급하는 쪽의 정보입니다.
+          </PageGuide>
+        )}
 
         <div className="erp-grid-wrap">
           <table
