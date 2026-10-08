@@ -17,16 +17,8 @@ alter table public.tax_invoices add column if not exists consignee_business_numb
 alter table public.tax_invoices add column if not exists consignee_representative_name text;
 
 -- 2) 수정세금계산서 — 당초 세금계산서를 가리키는 자기참조 + 수정사유.
---    기존엔 sales_order_id가 unique(매출 건당 세금계산서 1장)였는데, 수정발행을
---    허용하면 같은 매출 건에 "원본 1장 + 수정분 N장"이 쌓일 수 있다. unique
---    제약을 풀고, 대신 "원본(= original_invoice_id is null)은 매출 건당 최대
---    1장"이라는 더 약한 제약을 부분 유니크 인덱스로 건다 — 수정분은 원본처럼
---    sales_order_id가 겹쳐도 된다.
-alter table public.tax_invoices drop constraint if exists tax_invoices_sales_order_id_key;
-create unique index if not exists tax_invoices_one_original_per_order_idx
-  on public.tax_invoices (sales_order_id)
-  where original_invoice_id is null;
-
+--    원본/수정분을 구분할 original_invoice_id 컬럼을 먼저 만들어야 그걸
+--    가리키는 부분 유니크 인덱스(바로 아래)를 걸 수 있다 — 순서 중요.
 alter table public.tax_invoices add column if not exists original_invoice_id uuid references public.tax_invoices (id) on delete cascade;
 -- 부가가치세법 시행령 제70조 기준 수정 사유. duplicate_issued(착오에 의한
 -- 이중발급)는 엄밀히는 error_correction의 특수 케이스지만, 전체 금액을
@@ -36,5 +28,15 @@ alter table public.tax_invoices add column if not exists modification_reason tex
     'error_correction', 'duplicate_issued', 'supply_amount_change',
     'contract_cancelled', 'goods_returned', 'export_lc_after'
   ));
+
+-- 기존엔 sales_order_id가 unique(매출 건당 세금계산서 1장)였는데, 수정발행을
+-- 허용하면 같은 매출 건에 "원본 1장 + 수정분 N장"이 쌓일 수 있다. unique
+-- 제약을 풀고, 대신 "원본(= original_invoice_id is null)은 매출 건당 최대
+-- 1장"이라는 더 약한 제약을 부분 유니크 인덱스로 건다 — 수정분은 원본처럼
+-- sales_order_id가 겹쳐도 된다.
+alter table public.tax_invoices drop constraint if exists tax_invoices_sales_order_id_key;
+create unique index if not exists tax_invoices_one_original_per_order_idx
+  on public.tax_invoices (sales_order_id)
+  where original_invoice_id is null;
 
 create index if not exists tax_invoices_original_invoice_id_idx on public.tax_invoices (original_invoice_id);
