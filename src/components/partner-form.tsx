@@ -19,6 +19,10 @@ export type PartnerFormInitial = {
   notes?: string | null;
   document_type?: "출고증" | "명세표" | null;
   delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
+  // 세금계산서 공급받는자 칸에 필요(company_profile은 이미 갖고 있던
+  // 항목 — 거래처 쪽엔 없었다).
+  business_type?: string | null;
+  business_item?: string | null;
 };
 
 export function PartnerForm({
@@ -73,6 +77,22 @@ export function PartnerForm({
         placeholder="담당자"
         aria-label="담당자"
         defaultValue={initial?.contact_name ?? ""}
+        className="erp-input"
+      />
+      <input
+        name="business_type"
+        autoComplete="off"
+        placeholder="업태"
+        aria-label="업태"
+        defaultValue={initial?.business_type ?? ""}
+        className="erp-input"
+      />
+      <input
+        name="business_item"
+        autoComplete="off"
+        placeholder="종목"
+        aria-label="종목"
+        defaultValue={initial?.business_item ?? ""}
         className="erp-input"
       />
       <input

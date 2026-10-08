@@ -170,6 +170,8 @@ export type Database = {
           notes: string | null;
           purchase_export_template: "generic" | "standard_ledger" | "leaders_special" | "wote_ledger";
           purchase_price_basis: "box" | "quantity";
+          business_type: string | null;
+          business_item: string | null;
           created_at: string;
         };
         Insert: {
@@ -185,6 +187,8 @@ export type Database = {
           notes?: string | null;
           purchase_export_template?: "generic" | "standard_ledger" | "leaders_special" | "wote_ledger";
           purchase_price_basis?: "box" | "quantity";
+          business_type?: string | null;
+          business_item?: string | null;
           created_at?: string;
         };
         Update: {
@@ -200,6 +204,8 @@ export type Database = {
           notes?: string | null;
           purchase_export_template?: "generic" | "standard_ledger" | "leaders_special" | "wote_ledger";
           purchase_price_basis?: "box" | "quantity";
+          business_type?: string | null;
+          business_item?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -2727,6 +2733,8 @@ export type Database = {
           document_type: "출고증" | "명세표";
           delivery_note_variant: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
+          business_type: string | null;
+          business_item: string | null;
           created_at: string;
           tenant_id: string;
         };
@@ -2744,6 +2752,8 @@ export type Database = {
           document_type?: "출고증" | "명세표";
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template?: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
+          business_type?: string | null;
+          business_item?: string | null;
           created_at?: string;
           tenant_id?: string;
         };
@@ -2761,6 +2771,8 @@ export type Database = {
           document_type?: "출고증" | "명세표";
           delivery_note_variant?: "sns_filtech" | "zenith_tech" | "ket_solution" | null;
           sales_export_template?: "generic" | "filter_box" | "filter_no_box" | "paper_roll" | "wote_ledger";
+          business_type?: string | null;
+          business_item?: string | null;
           created_at?: string;
           tenant_id?: string;
         };
@@ -3627,6 +3639,143 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tax_invoices: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          sales_order_id: string;
+          customer_id: string;
+          invoice_type: "general" | "zero_rate";
+          issue_date: string;
+          supply_amount: number;
+          tax_amount: number;
+          total_amount: number;
+          cash_amount: number;
+          check_amount: number;
+          note_amount: number;
+          credit_amount: number;
+          claim_type: "claim" | "receipt";
+          remark: string | null;
+          created_by: string | null;
+          created_at: string;
+          is_demo: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          sales_order_id: string;
+          customer_id: string;
+          invoice_type?: "general" | "zero_rate";
+          issue_date: string;
+          supply_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          cash_amount?: number;
+          check_amount?: number;
+          note_amount?: number;
+          credit_amount?: number;
+          claim_type?: "claim" | "receipt";
+          remark?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          sales_order_id?: string;
+          customer_id?: string;
+          invoice_type?: "general" | "zero_rate";
+          issue_date?: string;
+          supply_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          cash_amount?: number;
+          check_amount?: number;
+          note_amount?: number;
+          credit_amount?: number;
+          claim_type?: "claim" | "receipt";
+          remark?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tax_invoices_sales_order_id_fkey";
+            columns: ["sales_order_id"];
+            isOneToOne: true;
+            referencedRelation: "sales_orders";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tax_invoices_customer_id_fkey";
+            columns: ["customer_id"];
+            isOneToOne: false;
+            referencedRelation: "customers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tax_invoice_items: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          tax_invoice_id: string;
+          line_date: string | null;
+          item_name: string;
+          spec: string | null;
+          quantity: number | null;
+          unit_price: number | null;
+          supply_amount: number;
+          tax_amount: number;
+          remark: string | null;
+          sort_order: number;
+          is_demo: boolean;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          tax_invoice_id: string;
+          line_date?: string | null;
+          item_name: string;
+          spec?: string | null;
+          quantity?: number | null;
+          unit_price?: number | null;
+          supply_amount?: number;
+          tax_amount?: number;
+          remark?: string | null;
+          sort_order?: number;
+          is_demo?: boolean;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          tax_invoice_id?: string;
+          line_date?: string | null;
+          item_name?: string;
+          spec?: string | null;
+          quantity?: number | null;
+          unit_price?: number | null;
+          supply_amount?: number;
+          tax_amount?: number;
+          remark?: string | null;
+          sort_order?: number;
+          is_demo?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tax_invoice_items_tax_invoice_id_fkey";
+            columns: ["tax_invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "tax_invoices";
             referencedColumns: ["id"];
           },
         ];

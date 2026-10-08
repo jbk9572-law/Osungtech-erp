@@ -16,8 +16,6 @@ import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel
 import {
   overrideSalesPaperStock,
   revertSalesPaperStock,
-  markInvoiceIssued,
-  cancelInvoiceIssued,
 } from "@/app/(dashboard)/sales/actions";
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -25,8 +23,6 @@ import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
-import { InvoiceStatusPanel } from "@/components/invoice-status-panel";
-import { todayKstStr } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
 
 export default async function SaleDetailPage({
@@ -261,15 +257,26 @@ export default async function SaleDetailPage({
             </p>
           )}
           {allowManage && (
-            <InvoiceStatusPanel
-              orderId={id}
-              status={order.invoice_status}
-              invoiceNumber={order.invoice_number}
-              invoiceIssuedAt={order.invoice_issued_at}
-              today={todayKstStr()}
-              markIssuedAction={markInvoiceIssued}
-              cancelAction={cancelInvoiceIssued}
-            />
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              {order.invoice_status === "issued" ? (
+                <>
+                  <GridBadge tone="ok">계산서 발행완료</GridBadge>
+                  <span style={{ color: "var(--erp-text-muted)" }}>
+                    {order.invoice_issued_at ? new Date(order.invoice_issued_at).toLocaleDateString("ko-KR") : "-"}
+                  </span>
+                  <Link href={`/sales/${id}/tax-invoice`} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
+                    세금계산서 보기
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <GridBadge tone="muted">계산서 미발행</GridBadge>
+                  <Link href={`/sales/${id}/tax-invoice`} className="erp-btn erp-btn-primary" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
+                    세금계산서 작성
+                  </Link>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>

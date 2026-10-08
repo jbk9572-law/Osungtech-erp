@@ -25,6 +25,8 @@ function customerFieldsFrom(formData: FormData) {
     business_number: String(formData.get("business_number") ?? "") || null,
     representative_name: String(formData.get("representative_name") ?? "") || null,
     contact_name: String(formData.get("contact_name") ?? "") || null,
+    business_type: String(formData.get("business_type") ?? "") || null,
+    business_item: String(formData.get("business_item") ?? "") || null,
     email: String(formData.get("email") ?? "") || null,
     phone: combinePhone(formData),
     address: String(formData.get("address") ?? "") || null,
