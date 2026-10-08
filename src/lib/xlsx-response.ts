@@ -2,8 +2,12 @@ import * as XLSX from "xlsx";
 import type { CellValue, Workbook } from "exceljs";
 import { nowInKst } from "@/lib/kst-date";
 
-export function buildXlsxResponse(rows: Record<string, unknown>[], filename: string): Response {
-  const sheet = XLSX.utils.json_to_sheet(rows);
+// header를 명시하면 그 순서/구성 그대로 헤더 행을 쓴다 — 국세청 홈택스
+// 일괄발급 양식처럼 "헤더 이름이 아니라 열 위치"로 읽는 외부 시스템에
+// 내려줄 땐, 데이터가 0건이어도 헤더 행이 빠지지 않고 열 순서가
+// row 객체의 키 삽입 순서에 우연히 의존하지 않도록 반드시 넘긴다.
+export function buildXlsxResponse(rows: Record<string, unknown>[], filename: string, header?: string[]): Response {
+  const sheet = XLSX.utils.json_to_sheet(rows, header ? { header } : undefined);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, "Sheet1");
   const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;

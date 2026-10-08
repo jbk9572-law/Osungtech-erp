@@ -417,6 +417,9 @@ export default async function SalesPage({
         >
           📥 엑셀 다운로드
         </a>
+        <Link href="/sales/tax-invoice-export" className="erp-btn" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
+          📥 홈택스 일괄발급 엑셀
+        </Link>
       </div>
 
       <SalesGridTable
