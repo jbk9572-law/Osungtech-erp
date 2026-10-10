@@ -3513,6 +3513,7 @@ export type Database = {
           invoice_provider: string;
           tax_type: "과세" | "면세" | "영세";
           evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at: string | null;
           tenant_id: string;
         };
         Insert: {
@@ -3535,6 +3536,7 @@ export type Database = {
           invoice_provider?: string;
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
           tenant_id?: string;
         };
         Update: {
@@ -3557,6 +3559,7 @@ export type Database = {
           invoice_provider?: string;
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
           tenant_id?: string;
         };
         Relationships: [
@@ -3835,6 +3838,7 @@ export type Database = {
           is_carryover: boolean;
           tax_type: "과세" | "면세" | "영세";
           evidence_type: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at: string | null;
           tenant_id: string;
         };
         Insert: {
@@ -3851,6 +3855,7 @@ export type Database = {
           is_carryover?: boolean;
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
           tenant_id?: string;
         };
         Update: {
@@ -3867,6 +3872,7 @@ export type Database = {
           is_carryover?: boolean;
           tax_type?: "과세" | "면세" | "영세";
           evidence_type?: "세금계산서" | "계산서" | "현금영수증" | "카드매출전표" | null;
+          statement_issued_at?: string | null;
           tenant_id?: string;
         };
         Relationships: [
