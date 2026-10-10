@@ -50,7 +50,6 @@ export type PurchaseRow = {
   supplierCode?: string | null;
   taxType?: "과세" | "면세" | "영세" | null;
   evidenceType?: string | null;
-  statementIssued?: boolean;
   date: string | undefined;
   supplierName: string | undefined;
   authorName: string | null | undefined;
@@ -262,7 +261,6 @@ export function PurchaseGridTable({
               <th className="num">매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
-              <th style={{ width: 76 }}>명세서</th>
               <th>비고</th>
               <th />
             </tr>
@@ -378,15 +376,6 @@ export function PurchaseGridTable({
                     style={{ color: "var(--erp-text-muted)" }}
                   >
                     {isPayment ? "-" : formatNumber(row.taxAmount)}
-                  </td>
-                  <td>
-                    {isPayment ? (
-                      "-"
-                    ) : row.statementIssued ? (
-                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 수령</span>
-                    ) : (
-                      <span style={{ color: "var(--erp-text-muted)" }}>미수령</span>
-                    )}
                   </td>
                   <td style={{ color: "var(--erp-text-muted)" }}>
                     {row.remark || "-"}

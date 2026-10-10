@@ -46,7 +46,7 @@ export default async function PurchasesPage({
   let query = supabase
     .from("purchase_order_items")
     .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, doc_no, tax_type, evidence_type, statement_issued_at, suppliers(id, name, supplier_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
+      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, doc_no, tax_type, evidence_type, suppliers(id, name, supplier_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
     )
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
@@ -170,7 +170,6 @@ export default async function PurchasesPage({
             supplierCode: item.purchase_orders?.suppliers?.supplier_code,
             taxType: item.purchase_orders?.tax_type,
             evidenceType: item.purchase_orders?.evidence_type,
-            statementIssued: !!item.purchase_orders?.statement_issued_at,
             date: item.purchase_orders?.purchase_date,
             supplierName: item.purchase_orders?.suppliers?.name,
             authorName: item.purchase_orders?.profiles?.full_name,

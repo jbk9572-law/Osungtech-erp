@@ -50,7 +50,6 @@ export type SalesRow = {
   customerCode?: string | null;
   taxType?: "과세" | "면세" | "영세" | null;
   evidenceType?: string | null;
-  statementIssued?: boolean;
   invoiceStatus?: string;
   date: string | undefined;
   customerName: string | undefined;
@@ -269,7 +268,6 @@ export function SalesGridTable({
               <th className="num">공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
-              <th style={{ width: 76 }}>명세서발행</th>
               <th style={{ width: 76 }}>계산서발행</th>
               <th>비고</th>
               <th />
@@ -395,15 +393,6 @@ export function SalesGridTable({
                     style={{ color: row.isReturn ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
                   >
                     {isCollection ? "-" : `${row.isReturn ? "-" : ""}${formatNumber(row.taxAmount)}`}
-                  </td>
-                  <td>
-                    {isCollection ? (
-                      "-"
-                    ) : row.statementIssued ? (
-                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
-                    ) : (
-                      <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
-                    )}
                   </td>
                   <td>
                     {isCollection ? (
