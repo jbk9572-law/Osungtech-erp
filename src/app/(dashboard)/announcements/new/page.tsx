@@ -11,7 +11,7 @@ export default async function NewAnnouncementPage() {
   const { isManagerOrAdmin } = await getCurrentActor(supabase);
 
   if (!isManagerOrAdmin) {
-    return <AccessWall title="공지사항 > 글쓰기" message="공지사항 작성은 관리자/매니저만 할 수 있습니다." />;
+    return <AccessWall title="공지사항 > 글쓰기" message="공지사항 작성은 관리자/매니저만 할 수 있습니다." backHref="/announcements" />;
   }
 
   return (

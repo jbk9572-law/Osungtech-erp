@@ -31,7 +31,7 @@ export default async function TaxInvoiceCorrectionPage({ params }: { params: Pro
 
   const allowManage = canManage(order.created_by, actor.userId, actor.isAdmin);
   if (!allowManage) {
-    return <AccessWall title="매출관리 > 수정세금계산서" message="본인이 등록한 매출 건에만 수정세금계산서를 발행할 수 있습니다." />;
+    return <AccessWall title="매출관리 > 수정세금계산서" message="본인이 등록한 매출 건에만 수정세금계산서를 발행할 수 있습니다." backHref={`/sales/${id}/tax-invoice`} />;
   }
 
   return (

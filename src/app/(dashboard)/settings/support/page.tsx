@@ -24,6 +24,7 @@ export default async function SupportPage() {
       <AccessWall
         title="환경설정 > 운영자 문의"
         message="운영자 문의는 관리자/매니저만 작성·조회할 수 있습니다."
+        backHref="/dashboard"
       />
     );
   }

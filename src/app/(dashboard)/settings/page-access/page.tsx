@@ -13,7 +13,7 @@ export default async function PageAccessSettingsPage() {
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {
-    return <AccessWall title="환경설정 > 화면별 부서 접근 권한" message="이 화면은 관리자만 볼 수 있습니다." />;
+    return <AccessWall title="환경설정 > 화면별 부서 접근 권한" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
   }
 
   const [departments, accessRows] = await Promise.all([

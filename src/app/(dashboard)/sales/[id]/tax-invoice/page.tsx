@@ -44,7 +44,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
 
   const allowManage = canManage(order.created_by, actor.userId, actor.isAdmin);
   if (!allowManage) {
-    return <AccessWall title="매출관리 > 세금계산서" message="본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." />;
+    return <AccessWall title="매출관리 > 세금계산서" message="본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." backHref={`/sales/${id}`} />;
   }
 
   // 이미 발행된 세금계산서가 있으면(existing) 과세구분/증빙유형이 나중에
@@ -56,6 +56,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
         <AccessWall
           title="매출관리 > 세금계산서"
           message="이 매출 건은 과세구분이 면세입니다. 면세 거래는 세금계산서가 아니라 계산서(부가세 없는 별도 문서)를 발행해야 하며, 계산서 발행 기능은 아직 없습니다. 매출 수정 화면에서 과세구분을 확인해주세요."
+          backHref={`/sales/${id}`}
         />
       );
     }
@@ -64,6 +65,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
         <AccessWall
           title="매출관리 > 세금계산서"
           message={`이 매출 건은 증빙유형이 "${order.evidence_type}"로 이미 지정돼 있습니다. 해당 증빙이 세금계산서를 대신하므로 별도 발행이 필요 없습니다. 증빙유형을 바꾸려면 매출 수정 화면에서 수정해주세요.`}
+          backHref={`/sales/${id}`}
         />
       );
     }

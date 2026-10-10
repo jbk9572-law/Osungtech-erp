@@ -19,6 +19,7 @@ export default async function SubcontractorPayablesPage() {
       <AccessWall
         title="생산관리 > 외주비정산"
         message="이 화면은 접근 권한이 있는 부서만 볼 수 있습니다. 필요하다면 관리자에게 요청하세요."
+        backHref="/dashboard"
       />
     );
   }
