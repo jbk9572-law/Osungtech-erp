@@ -12,6 +12,8 @@
 // 그 이상이면 요약(상위 3개 + "외 N건" 합산)하거나 이 양식 대상에서
 // 제외해야 한다 — 국세청 서버 쪽 규칙이라 우리 쪽에서 칸을 늘려 해결할
 // 수 없다.
+import { fetchAllRows } from "@/lib/fetch-all-rows";
+
 export const HOMETAX_BULK_EXCEL_HEADERS = [
   '전자(세금)계산서 종류\n(01:일반, 02:영세율)',
   '작성일자',
@@ -189,25 +191,31 @@ export async function fetchHometaxBulkExportData(
   eligible: BulkExportInvoice[];
   ineligibleByType: { salesOrderId: string; customerName: string; issueDate: string; invoiceType: string }[];
 }> {
-  const [{ data: company }, { data: invoices }] = await Promise.all([
+  const [{ data: company }, invoices] = await Promise.all([
     supabase
       .from("company_profile")
       .select("business_number, name, representative_name, address, business_type, business_item, email")
       .maybeSingle(),
-    supabase
-      .from("tax_invoices")
-      .select(
-        "id, sales_order_id, invoice_type, issue_date, supply_amount, tax_amount, cash_amount, check_amount, note_amount, credit_amount, claim_type, remark, customers(name, business_number, representative_name, address, business_type, business_item, email), tax_invoice_items(line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
-      )
-      .is("original_invoice_id", null)
-      // 이미 "홈택스 업로드 완료"로 표시된 건은 기본적으로 다시 조회
-      // 대상에 넣지 않는다 — 겹치는 기간으로 다시 export하면 이미 올린
-      // 걸 또 포함해서 홈택스에 중복 업로드하게 되는 문제(사용자 지적)를
-      // 막기 위함.
-      .is("hometax_uploaded_at", null)
-      .gte("issue_date", from)
-      .lte("issue_date", to)
-      .order("issue_date"),
+    // 기간이 넓으면 PostgREST 기본 max_rows(1000)를 넘을 수 있어
+    // fetchAllRows로 끝까지 받는다 — .range() 없이 그냥 조회하면
+    // 1000건에서 조용히 잘려 일부 세금계산서가 엑셀에서 빠질 수 있다.
+    fetchAllRows((pageFrom, pageTo) =>
+      supabase
+        .from("tax_invoices")
+        .select(
+          "id, sales_order_id, invoice_type, issue_date, supply_amount, tax_amount, cash_amount, check_amount, note_amount, credit_amount, claim_type, remark, customers(name, business_number, representative_name, address, business_type, business_item, email), tax_invoice_items(line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
+        )
+        .is("original_invoice_id", null)
+        // 이미 "홈택스 업로드 완료"로 표시된 건은 기본적으로 다시 조회
+        // 대상에 넣지 않는다 — 겹치는 기간으로 다시 export하면 이미 올린
+        // 걸 또 포함해서 홈택스에 중복 업로드하게 되는 문제(사용자 지적)를
+        // 막기 위함.
+        .is("hometax_uploaded_at", null)
+        .gte("issue_date", from)
+        .lte("issue_date", to)
+        .order("issue_date")
+        .range(pageFrom, pageTo),
+    ),
   ]);
 
   const supplier: SupplierInfo = {

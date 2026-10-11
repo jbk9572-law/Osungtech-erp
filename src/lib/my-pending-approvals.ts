@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
+import { todayKstStr } from "@/lib/kst-date";
 
 export type PendingApproval = { id: string; title: string; authorName: string | null; createdAt: string };
 
@@ -27,7 +28,7 @@ export async function getMyPendingApprovals(
     .select("delegator_id, start_date, end_date")
     .eq("delegate_id", userId);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKstStr();
   const delegatedForIds = new Set(
     (delegations ?? []).filter((d) => d.start_date <= today && today <= d.end_date).map((d) => d.delegator_id)
   );

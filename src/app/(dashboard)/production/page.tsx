@@ -49,14 +49,26 @@ export default async function ProductionPage({
   // 오히려 잡음이다).
   const workOrderIds = (rows ?? []).map((r) => r.id);
   const { data: stepRows } = workOrderIds.length
-    ? await supabase.from("work_order_process_steps").select("work_order_id, status").in("work_order_id", workOrderIds)
-    : { data: [] as { work_order_id: string; status: string }[] };
+    ? await supabase
+        .from("work_order_process_steps")
+        .select("work_order_id, status, sort_order, assignee_kind")
+        .in("work_order_id", workOrderIds)
+        .order("sort_order", { ascending: true })
+    : { data: [] as { work_order_id: string; status: string; sort_order: number; assignee_kind: string }[] };
   const stepProgressByOrder = new Map<string, { done: number; total: number }>();
+  // 1차 공정(가장 작은 sort_order)이 외주 배정이면 목록에서도 상세화면과
+  // 똑같이 "외주 자재출고"를 타야 한다 — 여기가 빠져 있으면 목록에서
+  // 자재투입을 눌렀을 때 항상 사내용 RPC가 호출돼 업체 보유재고 커스터디가
+  // 전혀 안 생기고도 성공한 것처럼 보이는 문제가 있었다(상세화면만 정상).
+  const firstStepIsSubcontractorByOrder = new Map<string, boolean>();
   for (const s of stepRows ?? []) {
     const cur = stepProgressByOrder.get(s.work_order_id) ?? { done: 0, total: 0 };
     cur.total += 1;
     if (s.status === "done") cur.done += 1;
     stepProgressByOrder.set(s.work_order_id, cur);
+    if (!firstStepIsSubcontractorByOrder.has(s.work_order_id)) {
+      firstStepIsSubcontractorByOrder.set(s.work_order_id, s.assignee_kind === "subcontractor");
+    }
   }
 
   return (
@@ -159,7 +171,11 @@ export default async function ProductionPage({
                       {progress ? `${progress.done}/${progress.total}` : "-"}
                     </td>
                     <td>
-                      <WorkOrderStatusActions id={row.id} status={row.status} />
+                      <WorkOrderStatusActions
+                        id={row.id}
+                        status={row.status}
+                        firstStepIsSubcontractor={firstStepIsSubcontractorByOrder.get(row.id) ?? false}
+                      />
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
                     <td>{row.profiles?.full_name ?? "-"}</td>

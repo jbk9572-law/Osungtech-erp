@@ -163,7 +163,7 @@ export async function convertPurchaseRequestToPurchaseOrder(
   const { data: purchaseOrderId, error: createError } = await supabase.rpc("create_purchase_with_items", {
     p_supplier_id: request.supplier_id,
     p_warehouse_id: warehouseId,
-    p_purchase_date: new Date().toISOString().slice(0, 10),
+    p_purchase_date: todayKstStr(),
     p_memo: request.memo ? `[구매요청전환] ${request.memo}` : "[구매요청전환]",
     p_created_by: actor?.id ?? null,
     p_items: items.map((item) => ({

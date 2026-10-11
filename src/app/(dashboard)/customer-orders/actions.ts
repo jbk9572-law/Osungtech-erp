@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
+import { requireMutatedRow } from "@/lib/require-mutated-row";
 import type { FormState } from "@/components/form-message";
 
 export async function approveCustomerOrder(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -10,13 +11,21 @@ export async function approveCustomerOrder(_prevState: FormState, formData: Form
 
   const supabase = await createClient();
   const user = await getUser();
-  const { error } = await supabase
+  const result = await supabase
     .from("customer_orders")
     .update({ status: "approved", reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString() })
     .eq("id", id)
-    .eq("status", "requested");
+    .eq("status", "requested")
+    .select("id");
 
-  if (error) return { error: `승인 처리에 실패했습니다: ${error.message}` };
+  // .eq("status", "requested")만으로는 이미 다른 담당자가 먼저 승인/반려해
+  // "requested"가 아니게 된 주문을 또 승인하려 할 때 실제로는 0건
+  // 갱신인데 성공 메시지가 그대로 뜨는 문제가 있었다.
+  const mutationError = requireMutatedRow(result, {
+    onError: "승인 처리에 실패했습니다",
+    onForbidden: "이미 다른 담당자가 처리한 주문입니다. 화면을 새로고침해주세요.",
+  });
+  if (mutationError) return mutationError;
 
   revalidatePath("/customer-orders");
   return { success: "승인했습니다. 필요하면 아래에서 생산지시로 전환하세요." };
@@ -30,7 +39,7 @@ export async function rejectCustomerOrder(_prevState: FormState, formData: FormD
 
   const supabase = await createClient();
   const user = await getUser();
-  const { error } = await supabase
+  const result = await supabase
     .from("customer_orders")
     .update({
       status: "rejected",
@@ -39,9 +48,14 @@ export async function rejectCustomerOrder(_prevState: FormState, formData: FormD
       reviewed_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("status", "requested");
+    .eq("status", "requested")
+    .select("id");
 
-  if (error) return { error: `반려 처리에 실패했습니다: ${error.message}` };
+  const mutationError = requireMutatedRow(result, {
+    onError: "반려 처리에 실패했습니다",
+    onForbidden: "이미 다른 담당자가 처리한 주문입니다. 화면을 새로고침해주세요.",
+  });
+  if (mutationError) return mutationError;
 
   revalidatePath("/customer-orders");
   return { success: "반려했습니다." };

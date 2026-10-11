@@ -312,6 +312,17 @@ export async function fetchMonthlyReportData(
     ? Array.from(companyNameByKey.keys()).filter((key) => (companyNameByKey.get(key) ?? "").toLowerCase().includes(keyword))
     : [];
 
+  // "거래처 수" KPI는 검색어로 좁힌 결과 기준이어야 하는데, companyIds는
+  // 검색 전 전체 달 기준으로 채워진 Set이라 그대로 쓰면 검색을 해도 숫자가
+  // 안 줄어드는 버그가 있었다 — 필터링된 매입/매출 거래처 행에서 다시
+  // 센다(품목 검색어로도 걸러진 거래처까지 정확히 반영됨).
+  const filteredCompanyIds = keyword
+    ? new Set([
+        ...purchaseCompanyRowsFiltered.map((r) => `s:${r.companyId}`),
+        ...salesCompanyRowsFiltered.map((r) => `c:${r.companyId}`),
+      ])
+    : companyIds;
+
   const totalSalesAmount = itemGroups.reduce((sum, g) => sum + g.outAmount, 0);
   const totalPurchaseAmount = itemGroups.reduce((sum, g) => sum + g.inAmount, 0);
   const totalInQty = itemGroups.reduce((sum, g) => sum + g.inQty, 0);
@@ -341,7 +352,7 @@ export async function fetchMonthlyReportData(
     itemGroups,
     supplierGroups,
     customerGroups,
-    companyIds,
+    companyIds: filteredCompanyIds,
     companyNameByKey,
     totalSalesAmount,
     totalPurchaseAmount,

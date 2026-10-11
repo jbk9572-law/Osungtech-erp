@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
+import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -32,7 +33,7 @@ export default async function ApprovalDelegationsPage() {
     ),
   ]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKstStr();
 
   return (
     <div>

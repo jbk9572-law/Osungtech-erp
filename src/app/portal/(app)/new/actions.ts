@@ -30,7 +30,11 @@ export async function portalCreateOrder(
   });
 
   if (error || !orderId) {
-    return { error: `발주 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
+    // 포털은 외부 거래처가 접근하는 화면이라, 제약조건 위반/타입 캐스팅
+    // 실패 같은 예상 못 한 DB 에러 메시지(테이블/컬럼명이 섞인 원문)를
+    // 그대로 보여주지 않는다 — 원본은 서버 로그에만 남긴다.
+    if (error) console.error("portal_create_order 실패:", error.message);
+    return { error: "발주 등록에 실패했습니다. 잠시 후 다시 시도해주세요." };
   }
 
   // 거래처 포털 세션은 tenant_members가 없어 current_tenant_id()가 비어

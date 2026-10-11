@@ -24,6 +24,7 @@ import { PortalAccountForm, PortalAccountDisableForm } from "@/components/portal
 import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
+import { canViewPage } from "@/lib/department-page-access";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -75,6 +76,12 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
   if (!customer) {
     notFound();
   }
+
+  // /receivables 화면을 부서별로 막아도, 이 상세패널에서 똑같은 거래처별
+  // 미수금 누계/미결제 전표를 그대로 보여주면 그 제한이 무력화된다 —
+  // 같은 page_key로 요약 섹션만 따로 게이팅한다(전체 패널을 막으면
+  // 출고처 정보 수정 등 무관한 기능까지 같이 막혀버려서, 섹션 단위로만).
+  const canViewReceivables = await canViewPage(supabase, "/receivables");
 
   // 단가 예약 목록에 "기존가 → 변경가 (차액)"을 보여주려면 상품별 현재
   // 판매단가가 필요하다. customer_product_prices는 거래처+상품당 최신
@@ -151,6 +158,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
         </div>
       </div>
 
+      {canViewReceivables && (
       <div className="erp-detail">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">미수금 현황</span>
@@ -258,6 +266,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           )}
         </div>
       </div>
+      )}
 
       <div className="erp-detail">
         <div className="erp-detail-tabs">

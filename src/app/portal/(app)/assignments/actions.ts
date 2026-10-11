@@ -69,7 +69,9 @@ export async function subcontractorConfirmReceiving(
     p_note: note,
   });
   if (error) {
-    return { error: `입고확인 처리에 실패했습니다: ${error.message}` };
+    // 포털(하청업체) 세션이라 Postgres 원본 에러를 그대로 보여주지 않는다.
+    console.error("subcontractor_confirm_receiving 실패:", error.message);
+    return { error: "입고확인 처리에 실패했습니다. 잠시 후 다시 시도해주세요." };
   }
 
   const notice = data?.[0];
@@ -124,7 +126,8 @@ export async function subcontractorReportWorkDefect(
     p_note: note,
   });
   if (error) {
-    return { error: `불량 신고에 실패했습니다: ${error.message}` };
+    console.error("subcontractor_report_work_defect 실패:", error.message);
+    return { error: "불량 신고에 실패했습니다. 잠시 후 다시 시도해주세요." };
   }
 
   revalidatePath(await portalHref(`/assignments/${workOrderId}`));
@@ -142,7 +145,8 @@ export async function subcontractorUpdateStepStatus(_prevState: FormState, formD
   const supabase = await createClient();
   const { error } = await supabase.rpc("subcontractor_update_step_status", { p_step_id: stepId, p_status: status });
   if (error) {
-    return { error: `상태 변경에 실패했습니다: ${error.message}` };
+    console.error("subcontractor_update_step_status 실패:", error.message);
+    return { error: "상태 변경에 실패했습니다. 잠시 후 다시 시도해주세요." };
   }
 
   revalidatePath(await portalHref(`/assignments/${workOrderId}`));

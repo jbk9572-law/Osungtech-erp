@@ -1,6 +1,7 @@
 import { buildXlsxResponse } from "@/lib/xlsx-response";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { currentMonth, getMonthRange } from "@/lib/date-presets";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 const TYPE_LABEL: Record<string, string> = { in: "입고", out: "출고", adjustment: "조정" };
 
@@ -25,28 +26,32 @@ export async function GET(request: Request) {
   const fromIso = `${from}T00:00:00+09:00`;
   const toIso = `${to}T23:59:59.999+09:00`;
 
-  const [{ data: opening }, { data: periodRows }] = await Promise.all([
+  // QR 자동실사 등으로 한 품목이 한 달에 1000건 넘는 재고 트랜잭션을
+  // 만들 수 있어, .range() 없이 조회하면 엑셀의 입고/출고 합계·마감재고가
+  // 조용히 틀어진다 — fetchAllRows로 끝까지 받는다(화면 쪽과 동일).
+  const [{ data: opening }, periodRows] = await Promise.all([
     supabase.rpc("get_ledger_opening_balance", {
       p_product_id: productId,
       p_warehouse_id: warehouseId || null,
       p_before: fromIso,
     }),
-    (() => {
+    fetchAllRows((f, t) => {
       let q = supabase
         .from("inventory_transactions")
         .select("type, quantity, reference, note, created_at")
         .eq("product_id", productId)
         .gte("created_at", fromIso)
         .lte("created_at", toIso)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .range(f, t);
       if (warehouseId) q = q.eq("warehouse_id", warehouseId);
       return q;
-    })(),
+    }),
   ]);
 
   const openingBalance = Number(opening ?? 0);
   let balance = openingBalance;
-  const rows = (periodRows ?? []).map((r) => {
+  const rows = periodRows.map((r) => {
     const delta = r.type === "out" ? -Math.abs(Number(r.quantity)) : Number(r.quantity);
     balance += delta;
     return {

@@ -48,26 +48,30 @@ export default async function InventoryLedgerPage({
   }[] = [];
 
   if (selectedProduct) {
-    const [{ data: opening }, { data: periodRows }] = await Promise.all([
+    // QR 자동실사 등으로 한 품목이 한 달에 1000건 넘는 재고 트랜잭션을
+    // 만들 수 있어, .range() 없이 조회하면 입고/출고 합계·마감재고가
+    // 조용히 틀어진다 — fetchAllRows로 끝까지 받는다.
+    const [{ data: opening }, periodRows] = await Promise.all([
       supabase.rpc("get_ledger_opening_balance", {
         p_product_id: selectedProduct.id,
         p_warehouse_id: warehouseId || null,
         p_before: fromIso,
       }),
-      (() => {
+      fetchAllRows((f, t) => {
         let q = supabase
           .from("inventory_transactions")
           .select("id, type, quantity, reference, note, created_at")
           .eq("product_id", selectedProduct.id)
           .gte("created_at", fromIso)
           .lte("created_at", toIso)
-          .order("created_at", { ascending: true });
+          .order("created_at", { ascending: true })
+          .range(f, t);
         if (warehouseId) q = q.eq("warehouse_id", warehouseId);
         return q;
-      })(),
+      }),
     ]);
     openingBalance = Number(opening ?? 0);
-    rows = periodRows ?? [];
+    rows = periodRows;
   }
 
   const ledgerRows = rows.reduce<

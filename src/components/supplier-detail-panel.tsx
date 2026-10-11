@@ -22,6 +22,7 @@ import { PartyProductNoteForm } from "@/components/party-product-note-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
 import { getSupplierBalance } from "@/lib/ar-ap";
+import { canViewPage } from "@/lib/department-page-access";
 import { todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -61,6 +62,11 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
     notFound();
   }
 
+  // /payables 화면을 부서별로 막아도 이 상세패널이 똑같은 미지급금
+  // 누계/미결제 전표를 보여주면 제한이 무력화된다 — customer-detail-panel.tsx
+  // 와 동일한 이유로 요약 섹션만 같은 page_key로 게이팅한다.
+  const canViewPayables = await canViewPage(supabase, "/payables");
+
   // 단가 예약 목록에 "기존가 → 변경가 (차액)"을 보여주려면 상품별 현재
   // 매입단가가 필요하다. supplier_product_prices는 공급처+상품당 최신 단가
   // 하나만 남기는 구조라 이 맵으로 바로 조회할 수 있다.
@@ -85,6 +91,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
         </div>
       </div>
 
+      {canViewPayables && (
       <div className="erp-detail">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">미지급금 현황</span>
@@ -192,6 +199,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
           )}
         </div>
       </div>
+      )}
 
       <div className="erp-detail">
         <div className="erp-detail-tabs">

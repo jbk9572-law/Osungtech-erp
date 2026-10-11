@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -25,36 +26,51 @@ export default async function BulkTaxInvoicePage({
   // (can-manage-order.ts)이라, 목록 자체도 그 기준으로 미리 좁혀서
   // 보여준다 — 선택은 가능한데 제출하면 "본인 건이 아닙니다"로 전부
   // 튕기는 혼란을 막는다.
-  let query = supabase
-    .from("sales_orders")
-    .select("id, doc_no, order_date, tax_type, evidence_type, created_by, customers(name)")
-    .gte("order_date", from)
-    .lte("order_date", to)
-    .order("order_date", { ascending: false });
-  if (!actor.isAdmin) query = query.eq("created_by", actor.userId ?? "");
-  const { data: orders } = await query;
+  // 기간이 넓으면 PostgREST 기본 max_rows(1000)를 넘을 수 있어 전부
+  // fetchAllRows로 받는다 — 안 그러면 일부 매출 건이 조용히 빠진 채
+  // "대상 없음"처럼 보일 수 있다.
+  const orders = await fetchAllRows((pageFrom, pageTo) => {
+    let q = supabase
+      .from("sales_orders")
+      .select("id, doc_no, order_date, tax_type, evidence_type, created_by, customers(name)")
+      .gte("order_date", from)
+      .lte("order_date", to)
+      .order("order_date", { ascending: false })
+      .range(pageFrom, pageTo);
+    if (!actor.isAdmin) q = q.eq("created_by", actor.userId ?? "");
+    return q;
+  });
 
-  const candidateIds = (orders ?? []).map((o) => o.id);
-  const { data: issuedRows } = candidateIds.length
-    ? await supabase
-        .from("tax_invoices")
-        .select("sales_order_id")
-        .in("sales_order_id", candidateIds)
-        .is("original_invoice_id", null)
-    : { data: [] as { sales_order_id: string }[] };
-  const issuedSet = new Set((issuedRows ?? []).map((r) => r.sales_order_id));
+  const candidateIds = orders.map((o) => o.id);
+  const issuedRows = candidateIds.length
+    ? await fetchAllRows((pageFrom, pageTo) =>
+        supabase
+          .from("tax_invoices")
+          .select("sales_order_id")
+          .in("sales_order_id", candidateIds)
+          .is("original_invoice_id", null)
+          .range(pageFrom, pageTo),
+      )
+    : [];
+  const issuedSet = new Set(issuedRows.map((r) => r.sales_order_id));
 
-  const eligibleOrders = (orders ?? []).filter(
+  const eligibleOrders = orders.filter(
     (o) => !issuedSet.has(o.id) && !isTaxExempt(o.tax_type) && canIssueTaxInvoice(o.evidence_type),
   );
-  const excludedCount = (orders ?? []).length - eligibleOrders.length;
+  const excludedCount = orders.length - eligibleOrders.length;
 
   const eligibleIds = eligibleOrders.map((o) => o.id);
-  const { data: itemRows } = eligibleIds.length
-    ? await supabase.from("sales_order_items").select("sales_order_id, quantity, unit_price").in("sales_order_id", eligibleIds)
-    : { data: [] as { sales_order_id: string; quantity: number; unit_price: number }[] };
+  const itemRows = eligibleIds.length
+    ? await fetchAllRows((pageFrom, pageTo) =>
+        supabase
+          .from("sales_order_items")
+          .select("sales_order_id, quantity, unit_price")
+          .in("sales_order_id", eligibleIds)
+          .range(pageFrom, pageTo),
+      )
+    : [];
   const supplyByOrder = new Map<string, number>();
-  for (const item of itemRows ?? []) {
+  for (const item of itemRows) {
     const prev = supplyByOrder.get(item.sales_order_id) ?? 0;
     supplyByOrder.set(item.sales_order_id, prev + Number(item.quantity) * Number(item.unit_price));
   }

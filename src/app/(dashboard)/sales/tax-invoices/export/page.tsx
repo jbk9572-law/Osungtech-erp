@@ -45,6 +45,11 @@ export default async function TaxInvoiceExportPage({
   const formatIssues = rows
     .map((row, i) => ({ invoice: includedInvoices[i], errors: validateHometaxRow(HOMETAX_BULK_EXCEL_HEADERS, row) }))
     .filter((r) => r.errors.length > 0);
+  // 형식 오류가 있는 건은 실제로 국세청에 거부됐을 가능성이 높으므로,
+  // "업로드 완료로 표시" 대상(다음부터 조회에서 제외됨)에서 빼야 한다 —
+  // 안 그러면 실제론 미발행인 건이 "처리됨"으로 영구히 묻힌다.
+  const formatIssueIds = new Set(formatIssues.map((fi) => fi.invoice.id));
+  const uploadableInvoices = includedInvoices.filter((inv) => !formatIssueIds.has(inv.id));
 
   const overCapCount = eligible.filter((inv) => inv.items.length > 4).length;
   const downloadParams = new URLSearchParams({ from, to, summarize: summarize ? "1" : "0" });
@@ -88,7 +93,7 @@ export default async function TaxInvoiceExportPage({
         <a href={downloadHref} className="erp-btn erp-btn-primary">
           📥 엑셀 다운로드 ({formatNumber(rows.length)}건)
         </a>
-        <MarkHometaxUploadedButton taxInvoiceIds={includedInvoices.map((inv) => inv.id)} />
+        <MarkHometaxUploadedButton taxInvoiceIds={uploadableInvoices.map((inv) => inv.id)} />
       </div>
 
       {alreadyUploadedCount != null && alreadyUploadedCount > 0 && (

@@ -908,10 +908,15 @@
   justify-content: center;
   width: 16px;
   height: 16px;
+  border: none;
   border-radius: 0;
+  background: transparent;
+  font: inherit;
   font-size: 12px;
   color: inherit;
   opacity: 0.6;
+  cursor: pointer;
+  padding: 0;
 }
 
 .erp-tab-close:hover {
@@ -1821,7 +1826,7 @@
 }
 
 .erp-badge-muted {
-  background: #eef0f3;
+  background: var(--erp-divider);
   color: var(--erp-text-muted);
 }
 
@@ -2767,17 +2772,17 @@ a.erp-detail-tab:hover:not(.active) {
   align-items: center;
   gap: 6px;
   padding: 5px 10px 5px 6px;
-  border: 1px solid #f0e1c4;
+  border: 1px solid var(--erp-warning-border);
   border-radius: 0;
   background: var(--erp-panel);
-  color: #6a4d1c;
+  color: var(--erp-warning);
   font-size: 12px;
   font-weight: 600;
   text-decoration: none;
 }
 
 .erp-alert-item:hover {
-  background: #fff7ec;
+  background: var(--erp-warning-bg);
 }
 
 .erp-alert-item.danger {

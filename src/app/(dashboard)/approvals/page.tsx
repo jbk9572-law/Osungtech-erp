@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
+import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -184,7 +185,7 @@ export default async function ApprovalsPage({
         .select("delegator_id, start_date, end_date")
         .eq("delegate_id", user.id)
     : { data: [] as { delegator_id: string; start_date: string; end_date: string }[] };
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKstStr();
   const delegatedForIds = new Set(
     (delegations ?? []).filter((d) => d.start_date <= today && today <= d.end_date).map((d) => d.delegator_id),
   );

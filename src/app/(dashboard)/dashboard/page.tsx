@@ -11,6 +11,7 @@ import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumber } from "@/lib/format-number";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -92,70 +93,92 @@ export default async function DashboardPage({
 
   const [
     { count: productCount },
-    { data: salesItems },
-    { data: purchaseItems },
-    { data: carryoverWorkSales },
-    { data: carryoverWorkPurchases },
-    { data: salesPaperCalcs },
-    { data: purchasePaperCalcs },
+    salesItems,
+    purchaseItems,
+    carryoverWorkSales,
+    carryoverWorkPurchases,
+    salesPaperCalcs,
+    purchasePaperCalcs,
     { data: paperStockProduct },
     { data: notes },
     { data: recentNotes },
     { data: company },
-    { data: carryoverInSales },
-    { data: carryoverInPurchases },
+    carryoverInSales,
+    carryoverInPurchases,
     { data: myProfile },
     notifications,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase
-      .from("sales_order_items")
-      .select(
-        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
-      )
-      .gte("sales_orders.order_date", monthStart)
-      .lte("sales_orders.order_date", monthEnd),
-    supabase
-      .from("purchase_order_items")
-      .select(
-        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
-      )
-      .gte("purchase_orders.purchase_date", monthStart)
-      .lte("purchase_orders.purchase_date", monthEnd),
+    // 매출/매입 라인아이템은 거래량이 많은 테넌트에서 한 달에 PostgREST
+    // 기본 max_rows(1000)를 쉽게 넘을 수 있어, 메인 대시보드 집계가
+    // 조용히 과소 집계되는 걸 막으려고 fetchAllRows로 끝까지 받는다
+    // (월별 리포트/VAT/손익계산서 등 다른 집계 화면과 같은 이유).
+    fetchAllRows((from, to) =>
+      supabase
+        .from("sales_order_items")
+        .select(
+          "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+        )
+        .gte("sales_orders.order_date", monthStart)
+        .lte("sales_orders.order_date", monthEnd)
+        .range(from, to),
+    ),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("purchase_order_items")
+        .select(
+          "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+        )
+        .gte("purchase_orders.purchase_date", monthStart)
+        .lte("purchase_orders.purchase_date", monthEnd)
+        .range(from, to),
+    ),
     // 이월 건은 전표날짜가 이번 달 밖(예: 9/30 작업 -> 10/1 전표)일 수도
     // 있어, 위 order_date 기준 조회로는 아예 안 잡힌다 — 실제 작업일
     // (created_at)이 이번 달인 이월 건만 따로 걷어서 "오늘의 업무"에
     // 채운다(전표날짜/월별 집계에는 영향 없음, 아래 본문 루프 참고).
-    supabase
-      .from("sales_order_items")
-      .select(
-        "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
-      )
-      .eq("sales_orders.is_carryover", true)
-      .gte("sales_orders.created_at", workDateRange.start)
-      .lt("sales_orders.created_at", workDateRange.end),
-    supabase
-      .from("purchase_order_items")
-      .select(
-        "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
-      )
-      .eq("purchase_orders.is_carryover", true)
-      .gte("purchase_orders.created_at", workDateRange.start)
-      .lt("purchase_orders.created_at", workDateRange.end),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("sales_order_items")
+        .select(
+          "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+        )
+        .eq("sales_orders.is_carryover", true)
+        .gte("sales_orders.created_at", workDateRange.start)
+        .lt("sales_orders.created_at", workDateRange.end)
+        .range(from, to),
+    ),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("purchase_order_items")
+        .select(
+          "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+        )
+        .eq("purchase_orders.is_carryover", true)
+        .gte("purchase_orders.created_at", workDateRange.start)
+        .lt("purchase_orders.created_at", workDateRange.end)
+        .range(from, to),
+    ),
     paperCalcEnabled
-      ? supabase
-          .from("paper_calculations")
-          .select("input_items, sales_orders!inner(order_date, customers(name))")
-          .gte("sales_orders.order_date", monthStart)
-          .lte("sales_orders.order_date", monthEnd)
-      : Promise.resolve({ data: [] as { input_items: unknown; sales_orders: { order_date: string; customers: { name: string } | null } }[] }),
+      ? fetchAllRows((from, to) =>
+          supabase
+            .from("paper_calculations")
+            .select("input_items, sales_orders!inner(order_date, customers(name))")
+            .gte("sales_orders.order_date", monthStart)
+            .lte("sales_orders.order_date", monthEnd)
+            .range(from, to),
+        )
+      : Promise.resolve([] as { input_items: unknown; sales_orders: { order_date: string; customers: { name: string } | null } }[]),
     paperCalcEnabled
-      ? supabase
-          .from("paper_calculations")
-          .select("input_items, purchase_orders!inner(purchase_date, suppliers(name))")
-          .gte("purchase_orders.purchase_date", monthStart)
-          .lte("purchase_orders.purchase_date", monthEnd)
-      : Promise.resolve({ data: [] as { input_items: unknown; purchase_orders: { purchase_date: string; suppliers: { name: string } | null } }[] }),
+      ? fetchAllRows((from, to) =>
+          supabase
+            .from("paper_calculations")
+            .select("input_items, purchase_orders!inner(purchase_date, suppliers(name))")
+            .gte("purchase_orders.purchase_date", monthStart)
+            .lte("purchase_orders.purchase_date", monthEnd)
+            .range(from, to),
+        )
+      : Promise.resolve([] as { input_items: unknown; purchase_orders: { purchase_date: string; suppliers: { name: string } | null } }[]),
     paperCalcEnabled
       ? supabase.from("products").select("name").eq("sku", PAPER_STOCK_SKU).maybeSingle()
       : Promise.resolve({ data: null as { name: string } | null }),
@@ -173,18 +196,24 @@ export default async function DashboardPage({
       .order("created_at", { ascending: false })
       .limit(5),
     supabase.from("company_profile").select("name, logo_mark_url").maybeSingle(),
-    supabase
-      .from("sales_order_items")
-      .select("quantity, unit_price, sales_orders!inner(order_date, is_return, is_carryover)")
-      .eq("sales_orders.is_carryover", true)
-      .gte("sales_orders.order_date", prevMonthStart)
-      .lte("sales_orders.order_date", prevMonthEnd),
-    supabase
-      .from("purchase_order_items")
-      .select("quantity, unit_cost, purchase_orders!inner(purchase_date, is_carryover)")
-      .eq("purchase_orders.is_carryover", true)
-      .gte("purchase_orders.purchase_date", prevMonthStart)
-      .lte("purchase_orders.purchase_date", prevMonthEnd),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("sales_order_items")
+        .select("quantity, unit_price, sales_orders!inner(order_date, is_return, is_carryover)")
+        .eq("sales_orders.is_carryover", true)
+        .gte("sales_orders.order_date", prevMonthStart)
+        .lte("sales_orders.order_date", prevMonthEnd)
+        .range(from, to),
+    ),
+    fetchAllRows((from, to) =>
+      supabase
+        .from("purchase_order_items")
+        .select("quantity, unit_cost, purchase_orders!inner(purchase_date, is_carryover)")
+        .eq("purchase_orders.is_carryover", true)
+        .gte("purchase_orders.purchase_date", prevMonthStart)
+        .lte("purchase_orders.purchase_date", prevMonthEnd)
+        .range(from, to),
+    ),
     user
       ? supabase.from("profiles").select("tenant_id, is_demo").eq("id", user.id).maybeSingle()
       : Promise.resolve({ data: null }),

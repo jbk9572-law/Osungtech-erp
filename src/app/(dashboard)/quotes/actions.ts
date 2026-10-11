@@ -129,7 +129,7 @@ export async function convertQuoteToSale(_prevState: FormState, formData: FormDa
   const { data: salesOrderId, error: createError } = await supabase.rpc("create_sale_with_items", {
     p_customer_id: quote.customer_id,
     p_warehouse_id: warehouseId,
-    p_order_date: new Date().toISOString().slice(0, 10),
+    p_order_date: todayKstStr(),
     p_memo: quote.memo ? `[견적전환] ${quote.memo}` : "[견적전환]",
     p_created_by: actor?.id ?? null,
     p_items: items.map((item) => ({

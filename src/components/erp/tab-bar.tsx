@@ -94,12 +94,14 @@ export function TabBar() {
         >
           {tab.label}
           {tabs.length > 1 && (
-            <span
+            <button
+              type="button"
               className="erp-tab-close"
+              aria-label={`${tab.label} 탭 닫기`}
               onClick={(e) => closeTab(tab.label, e)}
             >
               ×
-            </span>
+            </button>
           )}
         </a>
       ))}
