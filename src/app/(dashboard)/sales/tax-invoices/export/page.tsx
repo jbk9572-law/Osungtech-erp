@@ -7,6 +7,7 @@ import { currentMonthRange } from "@/lib/xlsx-response";
 import { fetchHometaxBulkExportData, classifyAndBuildRows, HOMETAX_BULK_EXCEL_HEADERS } from "@/lib/hometax-bulk-export";
 import { validateHometaxRow } from "@/lib/hometax-bulk-export-rules";
 import { formatNumber } from "@/lib/format-number";
+import { MarkHometaxUploadedButton } from "@/components/mark-hometax-uploaded-button";
 
 const INVOICE_TYPE_LABEL: Record<string, string> = {
   consignment: "위수탁",
@@ -25,7 +26,16 @@ export default async function TaxInvoiceExportPage({
   const summarize = summarizeParam !== "0";
 
   const supabase = await createClient();
-  const { supplier, eligible, ineligibleByType } = await fetchHometaxBulkExportData(supabase, from, to);
+  const [{ supplier, eligible, ineligibleByType }, { count: alreadyUploadedCount }] = await Promise.all([
+    fetchHometaxBulkExportData(supabase, from, to),
+    supabase
+      .from("tax_invoices")
+      .select("id", { count: "exact", head: true })
+      .is("original_invoice_id", null)
+      .not("hometax_uploaded_at", "is", null)
+      .gte("issue_date", from)
+      .lte("issue_date", to),
+  ]);
   const { rows, excluded } = classifyAndBuildRows(eligible, supplier, summarize);
 
   // classifyAndBuildRows가 건너뛰는 건(품목 4개 초과 + 자동요약 꺼짐)만
@@ -78,7 +88,14 @@ export default async function TaxInvoiceExportPage({
         <a href={downloadHref} className="erp-btn erp-btn-primary">
           📥 엑셀 다운로드 ({formatNumber(rows.length)}건)
         </a>
+        <MarkHometaxUploadedButton taxInvoiceIds={includedInvoices.map((inv) => inv.id)} />
       </div>
+
+      {alreadyUploadedCount != null && alreadyUploadedCount > 0 && (
+        <PageGuide>
+          이미 업로드 완료로 표시된 {formatNumber(alreadyUploadedCount)}건은 이 조회에서 제외했습니다.
+        </PageGuide>
+      )}
 
       {formatIssues.length > 0 && (
         <div className="erp-detail" style={{ marginTop: 0 }}>

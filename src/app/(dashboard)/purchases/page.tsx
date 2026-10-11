@@ -69,6 +69,15 @@ export default async function PurchasesPage({
     .limit(limit);
   paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
 
+  const receivedInvoiceRows = await fetchAllRows<{ purchase_order_id: string }>((from, to) =>
+    supabase
+      .from("purchase_received_invoices")
+      .select("purchase_order_id")
+      .not("purchase_order_id", "is", null)
+      .range(from, to),
+  );
+  const receivedPurchaseOrderIds = new Set(receivedInvoiceRows.map((r) => r.purchase_order_id));
+
   const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
     query,
     paymentQuery,
@@ -170,6 +179,7 @@ export default async function PurchasesPage({
             supplierCode: item.purchase_orders?.suppliers?.supplier_code,
             taxType: item.purchase_orders?.tax_type,
             evidenceType: item.purchase_orders?.evidence_type,
+            invoiceReceived: receivedPurchaseOrderIds.has(orderId),
             date: item.purchase_orders?.purchase_date,
             supplierName: item.purchase_orders?.suppliers?.name,
             authorName: item.purchase_orders?.profiles?.full_name,
@@ -404,6 +414,9 @@ export default async function PurchasesPage({
         >
           📥 엑셀 다운로드
         </a>
+        <Link href="/purchases/tax-invoices/import" className="erp-btn" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
+          📤 매입세금계산서 수취 관리
+        </Link>
       </div>
 
       <PurchaseGridTable

@@ -11,7 +11,10 @@ export function ExcelImportForm({
   exportHref,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
-  templateHref: string;
+  // 품목/거래처처럼 "우리가 정한 양식"을 채워 올리는 화면은 템플릿을
+  // 내려받게 하지만, 홈택스처럼 외부 시스템이 내려준 파일을 그대로
+  // 올리는 경우엔 우리가 줄 템플릿이 없다 — 그런 화면은 생략한다.
+  templateHref?: string;
   exportHref?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
@@ -33,9 +36,11 @@ export function ExcelImportForm({
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-wrap items-center gap-2">
-      <a href={templateHref} download className="erp-btn">
-        ⬇ 템플릿 다운로드
-      </a>
+      {templateHref && (
+        <a href={templateHref} download className="erp-btn">
+          ⬇ 템플릿 다운로드
+        </a>
+      )}
       {exportHref && (
         <a href={exportHref} className="erp-btn">
           📥 엑셀로 내보내기

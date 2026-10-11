@@ -67,6 +67,7 @@ export type BulkExportItem = {
 };
 
 export type BulkExportInvoice = {
+  id: string;
   salesOrderId: string;
   invoiceType: "general" | "zero_rate";
   issueDate: string; // YYYY-MM-DD
@@ -196,9 +197,14 @@ export async function fetchHometaxBulkExportData(
     supabase
       .from("tax_invoices")
       .select(
-        "sales_order_id, invoice_type, issue_date, supply_amount, tax_amount, cash_amount, check_amount, note_amount, credit_amount, claim_type, remark, customers(name, business_number, representative_name, address, business_type, business_item, email), tax_invoice_items(line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
+        "id, sales_order_id, invoice_type, issue_date, supply_amount, tax_amount, cash_amount, check_amount, note_amount, credit_amount, claim_type, remark, customers(name, business_number, representative_name, address, business_type, business_item, email), tax_invoice_items(line_date, item_name, spec, quantity, unit_price, supply_amount, tax_amount, remark, sort_order)",
       )
       .is("original_invoice_id", null)
+      // 이미 "홈택스 업로드 완료"로 표시된 건은 기본적으로 다시 조회
+      // 대상에 넣지 않는다 — 겹치는 기간으로 다시 export하면 이미 올린
+      // 걸 또 포함해서 홈택스에 중복 업로드하게 되는 문제(사용자 지적)를
+      // 막기 위함.
+      .is("hometax_uploaded_at", null)
       .gte("issue_date", from)
       .lte("issue_date", to)
       .order("issue_date"),
@@ -228,6 +234,7 @@ export async function fetchHometaxBulkExportData(
       continue;
     }
     eligible.push({
+      id: inv.id,
       salesOrderId: inv.sales_order_id,
       invoiceType: inv.invoice_type,
       issueDate: inv.issue_date,

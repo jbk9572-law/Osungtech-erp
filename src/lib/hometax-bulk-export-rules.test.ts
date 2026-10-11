@@ -122,6 +122,7 @@ describe("classifyAndBuildRows로 만든 행 검증", () => {
 
   it("품목 1~4개인 일반적인 세금계산서는 오류 없이 통과한다", () => {
     const invoice: BulkExportInvoice = {
+      id: "ti-a",
       salesOrderId: "a",
       invoiceType: "general",
       issueDate: "2026-10-08",
@@ -173,6 +174,7 @@ describe("classifyAndBuildRows로 만든 행 검증", () => {
       sort_order: i,
     }));
     const invoice: BulkExportInvoice = {
+      id: "ti-b",
       salesOrderId: "b",
       invoiceType: "zero_rate",
       issueDate: "2026-10-05",

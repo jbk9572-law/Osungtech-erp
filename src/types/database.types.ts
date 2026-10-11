@@ -3672,6 +3672,7 @@ export type Database = {
             | "goods_returned"
             | "export_lc_after"
             | null;
+          hometax_uploaded_at: string | null;
           created_by: string | null;
           created_at: string;
           is_demo: boolean;
@@ -3705,6 +3706,7 @@ export type Database = {
             | "goods_returned"
             | "export_lc_after"
             | null;
+          hometax_uploaded_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           is_demo?: boolean;
@@ -3738,6 +3740,7 @@ export type Database = {
             | "goods_returned"
             | "export_lc_after"
             | null;
+          hometax_uploaded_at?: string | null;
           created_by?: string | null;
           created_at?: string;
           is_demo?: boolean;
@@ -3949,6 +3952,68 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      purchase_received_invoices: {
+        Row: {
+          id: string;
+          hometax_approval_number: string;
+          issue_date: string;
+          supplier_business_number: string | null;
+          supplier_name: string;
+          supply_amount: number;
+          tax_amount: number;
+          total_amount: number;
+          item_summary: string | null;
+          purchase_order_id: string | null;
+          matched_at: string | null;
+          imported_by: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          hometax_approval_number: string;
+          issue_date: string;
+          supplier_business_number?: string | null;
+          supplier_name: string;
+          supply_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          item_summary?: string | null;
+          purchase_order_id?: string | null;
+          matched_at?: string | null;
+          imported_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          hometax_approval_number?: string;
+          issue_date?: string;
+          supplier_business_number?: string | null;
+          supplier_name?: string;
+          supply_amount?: number;
+          tax_amount?: number;
+          total_amount?: number;
+          item_summary?: string | null;
+          purchase_order_id?: string | null;
+          matched_at?: string | null;
+          imported_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchase_received_invoices_purchase_order_id_fkey";
+            columns: ["purchase_order_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_orders";
             referencedColumns: ["id"];
           },
         ];
@@ -5202,6 +5267,10 @@ export type Database = {
       issue_work_order_materials: {
         Args: { p_id: string };
         Returns: void;
+      };
+      mark_tax_invoices_hometax_uploaded: {
+        Args: { p_ids: string[] };
+        Returns: number;
       };
       complete_work_order: {
         Args: { p_id: string };
