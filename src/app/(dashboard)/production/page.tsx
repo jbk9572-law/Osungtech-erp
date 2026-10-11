@@ -68,6 +68,9 @@ export default async function ProductionPage({
         <Link href="/production/new" className="erp-btn erp-btn-primary">
           F2 생산지시 등록
         </Link>
+        <Link href="/inventory/lot-lookup" className="erp-btn">
+          품목·관리번호 통합조회
+        </Link>
       </div>
 
       <PageGuide>
@@ -138,7 +141,15 @@ export default async function ProductionPage({
                       <Link href={`/production/${row.id}`}>{row.doc_no}</Link>
                     </td>
                     <td>
-                      {row.products?.sku} · {row.products?.name}
+                      {row.products?.sku} · {row.products?.name}{" "}
+                      <Link
+                        href={`/inventory/lot-lookup?q=${encodeURIComponent(`LOT${row.doc_no}`)}`}
+                        className="erp-badge erp-badge-muted"
+                        style={{ textDecoration: "none" }}
+                        title="이 생산지시의 매입/매출/생산 통합조회"
+                      >
+                        LOT{row.doc_no} 조회
+                      </Link>
                     </td>
                     <td className="num">
                       {formatNumber(Number(row.quantity))} {row.products?.unit}

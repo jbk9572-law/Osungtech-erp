@@ -132,8 +132,10 @@ export const MENU_GROUPS: MenuGroup[] = [
       // 다른 소메뉴들과 달리 "관리번호 하나로 찾아보는" 보조 유틸리티라
       // 소메뉴에 혼자 덩그러니 있는 게 어색하다는 지적으로, 재고현황
       // 화면(가장 자연스러운 진입점) 툴바에 링크로 옮기고 트리메뉴/
-      // 빠른검색에서는 숨겼다.
-      { label: "관리번호 조회", href: "/inventory/lot-lookup", hidden: true },
+      // 빠른검색에서는 숨겼다. 매입/매출 품목 로트뿐 아니라 생산지시
+      // (LOT {지시번호} 관례)까지 같이 조회되게 넓혀서, 매출/매입 상세의
+      // 로트 배지와 생산관리 상세의 LOT번호에서도 들어올 수 있다.
+      { label: "품목·관리번호 통합조회", href: "/inventory/lot-lookup", hidden: true },
       { label: "품목관리", href: "/products" },
     ],
   },

@@ -105,7 +105,14 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                 <tr>
                   <th>LOT번호 / 제조일</th>
                   <td>
-                    LOT {workOrder.doc_no} · {workOrder.order_date.replaceAll("-", ".")}
+                    <Link
+                      href={`/inventory/lot-lookup?q=${encodeURIComponent(`LOT${workOrder.doc_no}`)}`}
+                      style={{ color: "inherit" }}
+                      title="이 LOT의 매입/매출/생산 통합조회"
+                    >
+                      LOT {workOrder.doc_no}
+                    </Link>{" "}
+                    · {workOrder.order_date.replaceAll("-", ".")}
                   </td>
                   <th>창고</th>
                   <td>{workOrder.warehouses?.name ?? "-"}</td>

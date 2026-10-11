@@ -2,12 +2,15 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
+import { GridBadge } from "@/components/grid/badge";
+import { LotLookupSearchForm } from "@/components/lot-lookup-search-form";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { formatNumber } from "@/lib/format-number";
 
 type PurchaseHit = {
   id: string;
+  product_id: string | null;
   quantity: number;
   products: { sku: string; name: string } | null;
   purchase_orders: {
@@ -19,6 +22,7 @@ type PurchaseHit = {
 
 type SaleHit = {
   id: string;
+  product_id: string | null;
   quantity: number;
   products: { sku: string; name: string } | null;
   sales_orders: {
@@ -28,39 +32,96 @@ type SaleHit = {
   } | null;
 };
 
+type WorkOrderHit = {
+  id: string;
+  doc_no: number;
+  order_date: string;
+  quantity: number;
+  status: "pending" | "material_issued" | "completed" | "cancelled";
+  products: { sku: string; name: string; unit: string | null } | null;
+};
+
+const WORK_ORDER_STATUS_LABEL: Record<WorkOrderHit["status"], { label: string; tone: "muted" | "warn" | "ok" | "danger" }> = {
+  pending: { label: "대기", tone: "muted" },
+  material_issued: { label: "생산중", tone: "warn" },
+  completed: { label: "완료", tone: "ok" },
+  cancelled: { label: "취소", tone: "danger" },
+};
+
 export default async function LotLookupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; productId?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, productId: productIdParam } = await searchParams;
   const lotNumber = q ? normalizeLotNumber(q) : "";
+  const productId = productIdParam ?? "";
   const supabase = await createClient();
+
+  const products = await fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
+    supabase.from("products").select("id, sku, name, spec").order("name").range(from, to),
+  );
 
   let purchaseHits: PurchaseHit[] = [];
   let saleHits: SaleHit[] = [];
+  let workOrderHits: WorkOrderHit[] = [];
+  // "doc_no": 생산관리 상세 화면이 생산지시를 "LOT {doc_no}"로 표시하는
+  // 바로 그 관례를 그대로 이용해, 관리번호 텍스트가 이 형식과 정확히
+  // 일치하면 해당 생산지시 1건을 정확히 찾아낸다. "product": 로트가 그
+  // 형식이 아니거나 품목으로만 검색한 경우, 같은 품목의 생산지시 이력을
+  // 참고용으로 같이 보여준다(생산관리는 매입/매출과 달리 아직 건별
+  // 관리번호를 저장하지 않는다 — product_id까지만 매칭 가능).
+  let workOrderMatchMode: "doc_no" | "product" | null = null;
 
-  if (lotNumber) {
+  const hasQuery = !!lotNumber || !!productId;
+
+  if (hasQuery) {
     [purchaseHits, saleHits] = await Promise.all([
-      fetchAllRows<PurchaseHit>((from, to) =>
-        supabase
+      fetchAllRows<PurchaseHit>((from, to) => {
+        let query = supabase
           .from("purchase_order_items")
-          .select(
-            "id, quantity, products(sku, name), purchase_orders(id, purchase_date, suppliers(name))",
-          )
-          .eq("lot_number", lotNumber)
-          .range(from, to),
-      ),
-      fetchAllRows<SaleHit>((from, to) =>
-        supabase
+          .select("id, product_id, quantity, products(sku, name), purchase_orders(id, purchase_date, suppliers(name))")
+          .range(from, to);
+        if (lotNumber) query = query.eq("lot_number", lotNumber);
+        if (productId) query = query.eq("product_id", productId);
+        return query;
+      }),
+      fetchAllRows<SaleHit>((from, to) => {
+        let query = supabase
           .from("sales_order_items")
-          .select(
-            "id, quantity, products(sku, name), sales_orders(id, order_date, customers(name))",
-          )
-          .eq("lot_number", lotNumber)
-          .range(from, to),
-      ),
+          .select("id, product_id, quantity, products(sku, name), sales_orders(id, order_date, customers(name))")
+          .range(from, to);
+        if (lotNumber) query = query.eq("lot_number", lotNumber);
+        if (productId) query = query.eq("product_id", productId);
+        return query;
+      }),
     ]);
+
+    const lotDocNoMatch = lotNumber.match(/^LOT(\d+)$/);
+    if (lotDocNoMatch) {
+      const { data } = await supabase
+        .from("work_orders")
+        .select("id, doc_no, order_date, quantity, status, products(sku, name, unit)")
+        .eq("doc_no", Number(lotDocNoMatch[1]))
+        .limit(1);
+      workOrderHits = data ?? [];
+      workOrderMatchMode = "doc_no";
+    } else {
+      const targetProductIds = productId
+        ? [productId]
+        : [...new Set([...purchaseHits, ...saleHits].map((h) => h.product_id).filter((id): id is string => !!id))];
+      if (targetProductIds.length > 0) {
+        workOrderHits = await fetchAllRows<WorkOrderHit>((from, to) =>
+          supabase
+            .from("work_orders")
+            .select("id, doc_no, order_date, quantity, status, products(sku, name, unit)")
+            .in("product_id", targetProductIds)
+            .order("order_date", { ascending: false })
+            .range(from, to),
+        );
+        workOrderMatchMode = "product";
+      }
+    }
   }
 
   const totalIn = purchaseHits.reduce((sum, h) => sum + Number(h.quantity), 0);
@@ -72,15 +133,16 @@ export default async function LotLookupPage({
     ...purchaseHits.map((h) => h.purchase_orders?.suppliers?.name).filter(Boolean),
     ...saleHits.map((h) => h.sales_orders?.customers?.name).filter(Boolean),
   ]);
+  const noHits = purchaseHits.length === 0 && saleHits.length === 0 && workOrderHits.length === 0;
 
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
       <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
-        재고관리 &gt; 관리번호 조회
+        재고관리 &gt; 품목·관리번호 통합조회
       </h1>
       <PageGuide>
-        불량/리콜 발생 시 특정 관리번호(로트)가 어디서 들어와서 어디로 나갔는지 품목·거래처 상관없이 전부 추적합니다.
+        불량/리콜 발생 시 관리번호(로트)나 품목으로 매입·매출·생산지시 내역을 한 화면에서 함께 추적합니다.
       </PageGuide>
 
       <div className="erp-toolbar">
@@ -89,38 +151,21 @@ export default async function LotLookupPage({
         </Link>
       </div>
 
-      <form method="get" className="erp-search">
-        <div className="erp-field" style={{ minWidth: 240 }}>
-          <label htmlFor="lot-q">관리번호</label>
-          <input
-            id="lot-q"
-            type="text"
-            name="q"
-            autoComplete="off"
-            defaultValue={q ?? ""}
-            placeholder="예: LOT-A"
-            className="erp-input"
-            style={{ width: "100%", textTransform: "uppercase" }}
-          />
-        </div>
-        <button type="submit" className="erp-btn erp-btn-primary">
-          F5 조회
-        </button>
-      </form>
+      <LotLookupSearchForm products={products} q={q ?? ""} productId={productId} />
 
-      {!lotNumber && (
+      {!hasQuery && (
         <p className="erp-grid-empty" style={{ marginTop: 12 }}>
-          관리번호를 입력해서 조회해주세요.
+          관리번호(로트) 또는 품목을 입력해서 조회해주세요.
         </p>
       )}
 
-      {lotNumber && purchaseHits.length === 0 && saleHits.length === 0 && (
+      {hasQuery && noHits && (
         <p className="erp-grid-empty" style={{ marginTop: 12 }}>
-          &quot;{lotNumber}&quot;로 등록된 매입/매출 내역이 없습니다.
+          조건에 맞는 매입/매출/생산지시 내역이 없습니다.
         </p>
       )}
 
-      {lotNumber && (purchaseHits.length > 0 || saleHits.length > 0) && (
+      {hasQuery && !noHits && (
         <>
           <div
             className="rounded p-2 text-xs"
@@ -132,10 +177,10 @@ export default async function LotLookupPage({
               border: "1px solid var(--erp-warning-border)",
             }}
           >
-            &quot;{lotNumber}&quot;로 등록된 거래 {purchaseHits.length + saleHits.length}건 · 관련 품목{" "}
-            {productNames.size}개 · 관련 거래처 {partnerNames.size}곳 · 입고 합계{" "}
+            매입/매출 {purchaseHits.length + saleHits.length}건 · 생산지시 {workOrderHits.length}건 ·
+            관련 품목 {productNames.size}개 · 관련 거래처 {partnerNames.size}곳 · 입고 합계{" "}
             {formatNumber(totalIn)} · 출고 합계 {formatNumber(totalOut)} · 추정 잔량{" "}
-            {formatNumber((totalIn - totalOut))}
+            {formatNumber(totalIn - totalOut)}
           </div>
 
           <div className="erp-detail" style={{ marginTop: 0 }}>
@@ -255,6 +300,59 @@ export default async function LotLookupPage({
                       </tr>
                     </tfoot>
                   )}
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div className="erp-detail" style={{ marginTop: 14 }}>
+            <div className="erp-detail-tabs">
+              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+                생산지시 이력 {workOrderHits.length}건
+                {workOrderMatchMode === "doc_no" && " · LOT 정확 일치"}
+                {workOrderMatchMode === "product" && " · 품목 기준(로트 단위 아님)"}
+              </span>
+            </div>
+            <div className="erp-detail-body">
+              <div className="erp-grid-wrap">
+                <table className="erp-grid">
+                  <thead>
+                    <tr>
+                      <th>날짜</th>
+                      <th>지시번호</th>
+                      <th>완제품</th>
+                      <th className="num">수량</th>
+                      <th>상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {workOrderHits.map((w) => (
+                      <tr key={w.id}>
+                        <td>
+                          <Link href={`/production/${w.id}`} style={{ color: "inherit" }}>
+                            {new Date(w.order_date).toLocaleDateString("ko-KR")}
+                          </Link>
+                        </td>
+                        <td>LOT {w.doc_no}</td>
+                        <td>{w.products ? `${w.products.sku} · ${w.products.name}` : "-"}</td>
+                        <td className="num">
+                          {formatNumber(Number(w.quantity))} {w.products?.unit ?? ""}
+                        </td>
+                        <td>
+                          <GridBadge tone={WORK_ORDER_STATUS_LABEL[w.status].tone}>
+                            {WORK_ORDER_STATUS_LABEL[w.status].label}
+                          </GridBadge>
+                        </td>
+                      </tr>
+                    ))}
+                    {workOrderHits.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="erp-grid-empty">
+                          생산지시 내역 없음
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
                 </table>
               </div>
             </div>
