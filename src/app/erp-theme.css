@@ -1461,7 +1461,8 @@
 .erp-doc-paper {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  box-shadow: var(--erp-shadow-sm);
+  border-top: 3px solid var(--erp-primary);
+  box-shadow: var(--erp-shadow-md);
   padding: 24px;
 }
 
@@ -1469,11 +1470,11 @@
   text-align: center;
   font-weight: 800;
   font-size: 17px;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.15em;
   color: var(--erp-text);
   margin: 0 0 18px;
   padding-bottom: 14px;
-  border-bottom: 2px solid var(--erp-border-strong);
+  border-bottom: 1.5px solid var(--erp-primary);
 }
 
 /* 필드 라벨만 옅은 배경으로 구분해서(실제 서식지의 라벨칸 느낌) 문서
@@ -1489,7 +1490,7 @@
 .erp-doc-total {
   font-size: 19px;
   font-weight: 800;
-  color: var(--erp-text);
+  color: var(--erp-primary);
 }
 
 /* 구매요청/구매견적요청/견적서처럼 필드가 단순한 화면은 문서 정보를
@@ -1529,7 +1530,7 @@
   padding: 0 10px;
   font-size: 12px;
   font-weight: 700;
-  color: var(--erp-text-muted);
+  color: var(--erp-primary);
   display: flex;
   align-items: center;
 }
