@@ -40,6 +40,12 @@ export function InventoryAdjustForm({
   const [productId, setProductId] = useState("");
   const [direction, setDirection] = useState<"increase" | "decrease">("increase");
   const [amount, setAmount] = useState(0);
+  // "용도"를 고르면 사유(note)에 자동으로 꼬리표를 붙인다 — 재고실사의
+  // "재고실사: ..." 접두사와 같은 방식으로, 입출고내역에서 이 조정이 왜
+  // 생겼는지 한눈에 구분할 수 있게 한다. "샘플 증정(무상)"을 고르면 재고가
+  // 줄어드는 경우만 말이 되므로 방향을 차감으로 고정한다.
+  const [reason, setReason] = useState<"" | "sample">("");
+  const [noteText, setNoteText] = useState("");
 
   // 저장에 성공해도 예전엔 방금 고른 상품/수량이 폼에 그대로 남아있어서,
   // 다음 조정을 하려면 매번 직접 지워야 했고 깜빡하면 같은 조정이 중복
@@ -50,9 +56,13 @@ export function InventoryAdjustForm({
       setProductId("");
       setDirection("increase");
       setAmount(0);
+      setReason("");
+      setNoteText("");
       formRef.current?.reset();
     }
   }, [state]);
+
+  const finalNote = reason === "sample" ? `[샘플증정] ${noteText}`.trim() : noteText;
 
   const currentStock = useMemo(() => {
     if (!productId) return null;
@@ -94,7 +104,8 @@ export function InventoryAdjustForm({
         <button
           type="button"
           onClick={() => setDirection("increase")}
-          className="flex-1 text-xs font-semibold"
+          disabled={reason === "sample"}
+          className="flex-1 text-xs font-semibold disabled:opacity-50"
           style={{
             padding: "0 10px",
             height: 30,
@@ -107,7 +118,8 @@ export function InventoryAdjustForm({
         <button
           type="button"
           onClick={() => setDirection("decrease")}
-          className="flex-1 text-xs font-semibold"
+          disabled={reason === "sample"}
+          className="flex-1 text-xs font-semibold disabled:opacity-50"
           style={{
             padding: "0 10px",
             height: 30,
@@ -130,10 +142,29 @@ export function InventoryAdjustForm({
           {formatNumber((currentStock + signedQuantity))}개
         </p>
       )}
+      <input type="hidden" name="note" value={finalNote} />
+      <select
+        value={reason}
+        onChange={(e) => {
+          const next = e.target.value as "" | "sample";
+          setReason(next);
+          if (next === "sample") setDirection("decrease");
+        }}
+        aria-label="용도"
+        className="erp-input"
+      >
+        <option value="">직접 입력</option>
+        <option value="sample">샘플 증정(무상)</option>
+      </select>
       <input
-        name="note"
+        value={noteText}
+        onChange={(e) => setNoteText(e.target.value)}
         autoComplete="off"
-        placeholder="사유 (예: 기초재고, 실사 조정)"
+        placeholder={
+          reason === "sample"
+            ? "샘플 제공 사유 (예: OO업체 영업용 샘플 3박스)"
+            : "사유 (예: 기초재고, 실사 조정)"
+        }
         aria-label="사유"
         className="erp-input md:col-span-3"
       />

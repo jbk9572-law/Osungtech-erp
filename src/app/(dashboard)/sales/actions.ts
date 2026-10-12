@@ -55,6 +55,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   const isCarryover = formData.get("is_carryover") === "1";
   const taxType = String(formData.get("tax_type") ?? "") || "과세";
   const evidenceType = String(formData.get("evidence_type") ?? "") || null;
+  const isSample = formData.get("is_sample") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
   // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
   // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
@@ -86,6 +87,12 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   if (items.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
+  // 샘플(무상증정)은 화면에서 이미 단가를 0으로 고정해 보내지만, 요청이
+  // 조작됐을 가능성에 대비해 서버에서도 한 번 더 강제한다 — 매출/세액이
+  // 조금이라도 잡히면 "무상 증정"이라는 전제 자체가 깨진다.
+  if (isSample) {
+    for (const item of items) item.unitPrice = 0;
+  }
 
   const supabase = await createClient();
   const user = await getUser();
@@ -116,6 +123,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     p_is_carryover: isCarryover,
     p_tax_type: taxType,
     p_evidence_type: evidenceType,
+    p_is_sample: isSample,
   });
 
   if (error || !salesOrderId) {
@@ -224,6 +232,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   const isCarryover = formData.get("is_carryover") === "1";
   const taxType = String(formData.get("tax_type") ?? "") || "과세";
   const evidenceType = String(formData.get("evidence_type") ?? "") || null;
+  const isSample = formData.get("is_sample") === "1";
   const items = parseItems(String(formData.get("items") ?? "[]"));
   const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
   // 목록에서 검색/필터를 걸어둔 채로 상세 → 수정으로 들어왔으면, 저장 후
@@ -238,6 +247,9 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   }
   if (items.length === 0) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
+  }
+  if (isSample) {
+    for (const item of items) item.unitPrice = 0;
   }
 
   const supabase = await createClient();
@@ -271,6 +283,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
     p_is_carryover: isCarryover,
     p_tax_type: taxType,
     p_evidence_type: evidenceType,
+    p_is_sample: isSample,
   });
 
   if (error) {

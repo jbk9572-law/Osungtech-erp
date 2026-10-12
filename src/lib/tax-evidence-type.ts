@@ -8,7 +8,11 @@
 export const TAX_TYPES = ["과세", "면세", "영세"] as const;
 export type TaxType = (typeof TAX_TYPES)[number];
 
-export const EVIDENCE_TYPES = ["세금계산서", "계산서", "현금영수증", "카드매출전표"] as const;
+// "샘플증정"은 매출 전용 — 무상증정(재고만 차감, 매출/세액 없음) 건에
+// new-sale-form이 "샘플(무상증정)" 체크박스를 켰을 때 자동으로 넣는다.
+// null/"세금계산서"가 아닌 값은 전부 canIssueTaxInvoice()에서 걸러지므로
+// 세금계산서 발행 대상·일괄작성 목록에 자동으로 빠진다(별도 분기 불필요).
+export const EVIDENCE_TYPES = ["세금계산서", "계산서", "현금영수증", "카드매출전표", "샘플증정"] as const;
 export type EvidenceType = (typeof EVIDENCE_TYPES)[number];
 
 // 세금계산서를 발행해도 되는 조건 — evidence_type이 이미 다른 증빙(현금

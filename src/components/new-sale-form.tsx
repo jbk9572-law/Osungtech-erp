@@ -114,6 +114,7 @@ type SaleDraft = {
   paymentMethod: string;
   deliveryMethod: string;
   isCarryover: boolean;
+  isSample: boolean;
   returnReason: string;
   taxType: string;
   evidenceType: string;
@@ -136,6 +137,7 @@ export type SaleInitial = {
   isReturn?: boolean;
   returnReason?: string | null;
   isCarryover?: boolean;
+  isSample?: boolean;
   taxType?: string | null;
   evidenceType?: string | null;
   items: {
@@ -257,6 +259,19 @@ export function NewSaleForm({
   const [isCarryover, setIsCarryover] = useState(
     initial?.isCarryover ?? false,
   );
+  // 샘플(무상증정) — 체크하면 모든 품목의 단가가 0원으로 강제되고(아래
+  // resolvePrice/useEffect 참고), 증빙유형이 자동으로 "샘플증정"으로
+  // 맞춰져 세금계산서 발행 대상에서도 자동으로 빠진다
+  // (canIssueTaxInvoice가 null/"세금계산서" 외의 값은 전부 걸러낸다).
+  const [isSample, setIsSample] = useState(initial?.isSample ?? false);
+  function handleSampleChange(checked: boolean) {
+    setIsSample(checked);
+    if (checked) {
+      setEvidenceType("샘플증정");
+    } else if (evidenceType === "샘플증정") {
+      setEvidenceType("");
+    }
+  }
   function makeBlankRow(key: number): Row {
     return {
       key,
@@ -313,6 +328,7 @@ export function NewSaleForm({
     setPaymentMethod(draft.paymentMethod);
     setDeliveryMethod(draft.deliveryMethod);
     setIsCarryover(draft.isCarryover);
+    setIsSample(draft.isSample);
     setReturnReason(draft.returnReason);
     setTaxType(draft.taxType);
     setEvidenceType(draft.evidenceType);
@@ -339,6 +355,7 @@ export function NewSaleForm({
       paymentMethod,
       deliveryMethod,
       isCarryover,
+      isSample,
       returnReason,
       taxType,
       evidenceType,
@@ -359,6 +376,7 @@ export function NewSaleForm({
     paymentMethod,
     deliveryMethod,
     isCarryover,
+    isSample,
     returnReason,
     taxType,
     evidenceType,
@@ -632,11 +650,25 @@ export function NewSaleForm({
   }, [rows]);
 
   function resolvePrice(forCustomerId: string, productId: string) {
+    // 샘플(무상증정)이면 거래처 단가/품목 기본가와 무관하게 항상 0원 —
+    // 이 함수 하나로 품목 추가/거래처 변경/입고·할일 가져오기 등 품목 줄을
+    // 채우는 모든 경로가 자동으로 0원을 받는다.
+    if (isSample) return 0;
     const fromCustomer = lookupPartyProductValue(priceMap, forCustomerId, productId);
     if (fromCustomer !== undefined) return fromCustomer;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.price) : 0;
   }
+
+  // 샘플 체크를 켜는 순간, 그 전에 이미 입력해둔 줄들의 단가도 한 번에
+  // 0원으로 맞춘다(새로 추가되는 줄은 위 resolvePrice가 이미 0원을 준다).
+  useEffect(() => {
+    if (!isSample) return;
+    setRows((prev) =>
+      prev.map((row) => (row.unitPrice !== 0 || row.manualPrice ? { ...row, unitPrice: 0, manualPrice: false } : row)),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSample]);
 
   // 케이아이티솔루션·제니스테크·타이거일렉처럼 같은 거래처+품목 조합에
   // 매번 같은 관리번호를 써온 경우, 지난번 값을 다시 찾아 입력할 필요
@@ -946,6 +978,7 @@ export function NewSaleForm({
       <input type="hidden" name="is_return" value={isReturn ? "1" : ""} />
       {isReturn && <input type="hidden" name="return_reason" value={returnReason} />}
       <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
+      <input type="hidden" name="is_sample" value={isSample ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
       <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
       {pendingPaperCalc && (
@@ -1040,6 +1073,24 @@ export function NewSaleForm({
           거래일자는 {orderDate} 그대로 저장되고, 월별 리포트·대시보드 집계에서만{" "}
           {nextMonthLabel(orderDate)} 실적으로 잡힙니다. 목록/달력에는 오늘 처리한 건으로
           그대로 표시됩니다.
+        </div>
+      )}
+
+      {isSample && (
+        <div
+          className="rounded p-2 text-xs"
+          style={{
+            marginBottom: 12,
+            background: "var(--erp-info-bg)",
+            color: "var(--erp-info-text)",
+            border: "1px solid var(--erp-info-border)",
+          }}
+        >
+          샘플(무상증정)로 등록하면 모든 품목의 단가가 0원으로 고정되어 재고만
+          차감되고 매출·세액에는 반영되지 않습니다. 증빙유형도 자동으로
+          &quot;샘플증정&quot;으로 설정되어 세금계산서 발행 대상에서 빠집니다.
+          매출목록에서는 &quot;샘플&quot; 배지로 거래처별 제공 이력을 구분해
+          조회할 수 있습니다.
         </div>
       )}
 
@@ -1175,6 +1226,37 @@ export function NewSaleForm({
                 }}
               >
                 {nextMonthLabel(orderDate)} 실적으로 이월
+              </span>
+            </label>
+          </div>
+          <div className="erp-field">
+            <label aria-hidden="true">&nbsp;</label>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                height: 34,
+                padding: "0 14px",
+                borderRadius: 0,
+                background: isSample ? "var(--erp-info-bg)" : "transparent",
+                border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`,
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={isSample}
+                onChange={(e) => handleSampleChange(e.target.checked)}
+              />
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: isSample ? "var(--erp-info-text)" : "var(--erp-text-muted)",
+                }}
+              >
+                샘플(무상증정)
               </span>
             </label>
           </div>
@@ -1857,10 +1939,10 @@ export function NewSaleForm({
                         placeholder="단가"
                         value={row.unitPrice}
                         onChange={(n) => updateRow(row.key, { unitPrice: n })}
-                        disabled={!row.manualPrice}
+                        disabled={isSample || !row.manualPrice}
                         className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
                       />
-                      {row.productId && customerId && (
+                      {row.productId && customerId && !isSample && (
                         <label
                           className="mt-1 flex items-center justify-end gap-1 text-[10.5px]"
                           style={{ color: "var(--erp-text-muted)" }}
