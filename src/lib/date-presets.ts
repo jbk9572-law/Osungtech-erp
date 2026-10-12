@@ -52,9 +52,6 @@ export function getDatePresets(now: Date = new Date()): DatePreset[] {
   ];
 }
 
-// 매출/매입 목록의 기본 조회기간(오늘 하루) — 날짜를 직접 안 걸었으면
-// "오늘" 프리셋을 누른 것과 똑같이 오늘 하루만 보여준다. 그보다 이전
-// 내역은 프리셋/날짜 필터로 직접 조회한다.
 export function todayStr(now: Date = new Date()): string {
   const kstNow = nowInKst(now);
   const today = new Date(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate());
@@ -72,6 +69,17 @@ export function getMonthRange(month: string): { from: string; to: string } {
   const from = new Date(y, m - 1, 1);
   const to = new Date(y, m, 0);
   return { from: toDateStr(from), to: toDateStr(to) };
+}
+
+// 매출/매입/생산지시 목록의 기본 조회기간(이번달) — 날짜를 직접 안 걸었으면
+// "이번달" 월별 버튼을 누른 것과 똑같이 이번달 1일~말일을 보여준다. 그보다
+// 이전 내역은 프리셋/날짜 필터로 직접 조회한다. (예전엔 "오늘" 하루만
+// 기본으로 보여줬는데, 화면을 열 때마다 오늘 등록분만 보이는 게 혼란스럽다는
+// 지적을 받아 이번달 전체로 바꿨다 — 같은 패턴을 쓰는 화면 전부 여기 하나로
+// 모아서, 다음에 또 바꿀 일이 있으면 한 곳만 고치면 되게 한다.)
+export function defaultListRange(from?: string, to?: string): { from: string; to: string } {
+  const thisMonth = getMonthRange(currentMonth());
+  return { from: from || thisMonth.from, to: to || thisMonth.to };
 }
 
 export function shiftMonth(month: string, delta: number): string {

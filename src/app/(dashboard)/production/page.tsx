@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getQuickDatePresets, getYearMonthButtons, todayStr } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -19,10 +19,9 @@ export default async function ProductionPage({
   searchParams: Promise<{ from?: string; to?: string; q?: string }>;
 }) {
   const { from, to, q } = await searchParams;
-  // 매출/매입 목록과 같은 기본값(오늘) — 그 이전 내역은 프리셋/날짜
+  // 매출/매입 목록과 같은 기본값(이번달) — 그 이전 내역은 프리셋/날짜
   // 필터로 직접 조회한다.
-  const effectiveFrom = from || todayStr();
-  const effectiveTo = to || todayStr();
+  const { from: effectiveFrom, to: effectiveTo } = defaultListRange(from, to);
   const supabase = await createClient();
   // 메뉴에서는 이미 가려지지만, URL을 직접 쳐서 들어오는 경우까지 막으려면
   // 화면 진입 자체를 여기서 한 번 더 확인해야 한다(paper-calc/page.tsx와

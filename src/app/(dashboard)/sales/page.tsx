@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getQuickDatePresets, getYearMonthButtons, todayStr, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { buildListReturnParam } from "@/lib/list-return";
@@ -34,10 +34,9 @@ export default async function SalesPage({
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
   const limit =
     Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
-  // 날짜를 직접 안 걸었으면 "오늘" 프리셋과 똑같이 오늘 하루만 보여준다
-  // — 그 이전 내역은 프리셋/날짜 필터로 직접 조회한다.
-  const effectiveFrom = from || todayStr();
-  const effectiveTo = to || todayStr();
+  // 날짜를 직접 안 걸었으면 "이번달" 프리셋과 똑같이 이번달 1일~말일을
+  // 보여준다 — 그 이전 내역은 프리셋/날짜 필터로 직접 조회한다.
+  const { from: effectiveFrom, to: effectiveTo } = defaultListRange(from, to);
   // 상세 화면에서 ESC/닫기를 누르면 지금 걸어둔 검색/필터로 되돌아오게,
   // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
@@ -397,7 +396,7 @@ export default async function SalesPage({
           border: "1px solid var(--erp-info-border)",
         }}
       >
-        {from ? "" : `날짜를 지정하지 않으면 오늘(${effectiveFrom})만 표시됩니다. `}
+        {from ? "" : `날짜를 지정하지 않으면 이번달(${effectiveFrom} ~ ${effectiveTo})만 표시됩니다. `}
         최근 {formatNumber(limit)}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </div>
 
