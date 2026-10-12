@@ -72,8 +72,17 @@ export async function GET() {
   // 없이 결과를 그 값까지만 잘라서 돌려준다 — .range()로 직접 페이지를
   // 넘기며 전부 받아와야 1000건 넘는 테이블(거래 이력 등)이 뒷부분만
   // 조용히 누락되는 일을 막을 수 있다.
+  //
+  // 복원(restoreBackup, settings/backup/actions.ts)은 외래키 제약 때문에
+  // BACKUP_TABLES 순서를 반드시 지켜 한 테이블씩 순서대로 넣어야 하지만,
+  // 내보내기는 그냥 읽기만 할 뿐 테이블 간 순서 의존성이 없다 — 예전엔
+  // 복원과 같은 습관으로 여기도 테이블마다 await을 순서대로 기다렸는데,
+  // 테이블이 28개라 왕복 지연이 그대로 쌓여 느렸다. 테이블 단위는
+  // Promise.all로 동시에 돌리고, 같은 테이블 안의 페이지만 순서대로
+  // 받는다(한 테이블의 다음 페이지는 그 앞 페이지가 1000건 꽉 찼는지
+  // 봐야 알 수 있어서 페이지 자체는 병렬화할 수 없다).
   const PAGE_SIZE = 1000;
-  for (const table of BACKUP_TABLES) {
+  async function fetchAllRowsForTable(table: (typeof BACKUP_TABLES)[number]) {
     const rows: Record<string, unknown>[] = [];
     for (let page = 0; ; page++) {
       const from = page * PAGE_SIZE;
@@ -84,12 +93,21 @@ export async function GET() {
         .eq("is_demo", isDemo === true)
         .range(from, from + PAGE_SIZE - 1);
       if (error) {
-        return new Response(`백업 중 오류 (${table}): ${error.message}`, { status: 500 });
+        throw new Error(`백업 중 오류 (${table}): ${error.message}`);
       }
       rows.push(...(data ?? []));
       if (!data || data.length < PAGE_SIZE) break;
     }
-    backup.tables[table] = rows;
+    return { table, rows };
+  }
+
+  try {
+    const results = await Promise.all(BACKUP_TABLES.map((table) => fetchAllRowsForTable(table)));
+    for (const { table, rows } of results) {
+      backup.tables[table] = rows;
+    }
+  } catch (e) {
+    return new Response(e instanceof Error ? e.message : "백업 중 알 수 없는 오류가 발생했습니다.", { status: 500 });
   }
 
   const stamp = backup.createdAt.replace(/[:.]/g, "-");
