@@ -14,12 +14,18 @@ const NEW_OPTION = "__new__";
 export function WorkOrderProcessStepAssignCell({
   id,
   workOrderId,
+  status,
   subcontractorId,
   hasPortalAccount,
   subcontractors,
 }: {
   id: string;
   workOrderId: string;
+  // 자재투입/입고 전(대기) 상태에서만 담당자를 재배정할 수 있다 — 서버
+  // RPC(assign_work_order_process_step)의 가드와 같은 기준. 이미 진행
+  // 중이거나 완료된 단계는 재배정 시도 시 서버 에러만 보고 끝나는 대신,
+  // 여기서 아예 바꿀 수 없는 담당자 이름으로 보여준다.
+  status: string;
   subcontractorId: string | null;
   hasPortalAccount: boolean;
   subcontractors: { id: string; name: string }[];
@@ -81,6 +87,29 @@ export function WorkOrderProcessStepAssignCell({
         >
           닫기
         </button>
+      </div>
+    );
+  }
+
+  if (status !== "pending") {
+    const assignedName = subcontractorId
+      ? (subcontractors.find((s) => s.id === subcontractorId)?.name ?? "업체")
+      : "사내 공정";
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <span style={{ fontSize: 11, color: "var(--erp-text-muted)" }} title="자재투입/입고 전(대기 상태)에만 담당자를 바꿀 수 있습니다.">
+          {assignedName}
+        </span>
+        {subcontractorId && !hasPortalAccount && (
+          <button
+            type="button"
+            className="erp-badge erp-badge-warning"
+            style={{ border: "none", cursor: "pointer", width: "fit-content" }}
+            onClick={() => setMode("issue")}
+          >
+            포털 계정 없음 · 발급하기
+          </button>
+        )}
       </div>
     );
   }

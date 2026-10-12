@@ -178,6 +178,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                         <WorkOrderProcessStepAssignCell
                           id={s.id}
                           workOrderId={workOrder.id}
+                          status={s.status}
                           subcontractorId={s.subcontractor_id}
                           hasPortalAccount={s.subcontractor_id ? subcontractorsWithAccount.has(s.subcontractor_id) : true}
                           subcontractors={subcontractors ?? []}
