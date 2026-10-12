@@ -12,6 +12,7 @@ import { WorkOrderStepDefectResolveButton } from "@/components/work-order-step-d
 import { WorkOrderStepDefectRejectButton } from "@/components/work-order-step-defect-reject-button";
 import { WorkOrderStepUnitCostForm } from "@/components/work-order-step-unit-cost-form";
 import { WorkOrderStepReturnForm } from "@/components/work-order-step-return-form";
+import { isFirstStepSubcontractor } from "@/lib/work-order-steps";
 
 export default async function WorkOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -55,7 +56,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
 
   // 1차 공정이 외주로 배정돼 있으면 "자재투입" 대신 "외주 자재출고"로
   // 바뀐다(자재가 우리 창고가 아니라 업체 보유재고로 넘어감).
-  const firstStepIsSubcontractor = steps?.[0]?.assignee_kind === "subcontractor";
+  const firstStepIsSubcontractor = isFirstStepSubcontractor(steps);
 
   return (
     <div>

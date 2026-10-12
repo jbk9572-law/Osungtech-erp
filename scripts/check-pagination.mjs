@@ -23,10 +23,16 @@
 //       반대로 .eq("is_return", true)처럼 카테고리/플래그로만 거르는
 //       필터는 시간이 지나며 전체 테이블처럼 계속 자랄 수 있어 안전하다고
 //       보지 않는다 — 이 구분이 이 스크립트의 핵심이다.
-//   - .gte/.gt와 .lte/.lt가 둘 다 있음    위아래로 닫힌 날짜/숫자 구간
-//     (대시보드의 "이번 달" 집계처럼 — 구간 하나가 항상 유한하다)
 //   - fetchAllRows(...) 콜백 안           이미 자체 페이지네이션 처리됨
 // 그 외에는(필터 없이 테이블 전체를 그냥 select) 위반으로 보고한다.
+//
+// 예전에는 .gte/.gt와 .lte/.lt가 둘 다 있으면("위아래로 닫힌 구간") 무조건
+// 안전하다고 봤는데, 실제로는 이 "구간"의 폭이 /sales, /reports/ledger 같은
+// 화면의 searchParams(from/to)처럼 사용자가 URL로 직접 고르는 값이면 전혀
+// 유한하지 않다 — "조회기간"을 길게 잡으면 똑같이 1000행을 넘을 수 있다.
+// 이 느슨한 예외 때문에 대시보드 집계/원장 리포트의 실제 pagination 누락
+// 버그(헌법검사 739ebb5)가 이 스크립트를 그대로 통과했었다. 그래서 이
+// 예외는 없앴다 — gte+lte만으로는 더 이상 안전으로 보지 않는다.
 
 import ts from "typescript";
 import { readFileSync, readdirSync } from "node:fs";
@@ -49,7 +55,14 @@ const SAFE_UNBOUNDED_TABLES = new Set([
 ]);
 
 const ALLOWLIST = new Set([
-  // "src/app/(dashboard)/foo/page.tsx:12" 형태로 추가하고 이유를 여기 적을 것
+  // 달력메모(calendar_notes)는 month 파라미터로 달이 바뀌어도 항상 "그 달
+  // 하루~말일" 고정폭이고(사용자가 폭을 임의로 넓힐 수 있는 from/to 쿼리와
+  // 다름), 사람이 직접 입력하는 메모라 한 달에 1000건을 넘을 수 없다.
+  "src/app/(dashboard)/dashboard/page.tsx:185",
+  // 홈택스 매입세금계산서 수취 매칭 후보 — DATE_WINDOW_DAYS(5)만큼의 고정
+  // ±5일 폭이라 사용자가 넓힐 수 없고, 이 회사 거래량에서 11일치 매입건은
+  // 1000행에 크게 못 미친다.
+  "src/app/(dashboard)/purchases/tax-invoices/import/actions.ts:99",
 ]);
 
 const ID_LIKE_COLUMN = /(^id$|_id$)/;
@@ -60,8 +73,6 @@ const ID_LIKE_COLUMN = /(^id$|_id$)/;
 // 규모라 사실상 1000행을 넘을 수 없다(날짜 구간 필터와 같은 근거).
 const DATE_LIKE_COLUMN = /date|month/i;
 const BOUNDING_FILTER_NAMES = new Set(["eq", "is", "match", "in"]);
-const UPPER_BOUND_NAMES = new Set(["lte", "lt"]);
-const LOWER_BOUND_NAMES = new Set(["gte", "gt"]);
 
 function walkDir(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -152,10 +163,6 @@ function isChainSafe(calls, outermost) {
     return ID_LIKE_COLUMN.test(arg.text) || DATE_LIKE_COLUMN.test(arg.text);
   });
   if (hasNarrowingFilter) return true;
-
-  const hasLowerBound = names.some((n) => LOWER_BOUND_NAMES.has(n));
-  const hasUpperBound = names.some((n) => UPPER_BOUND_NAMES.has(n));
-  if (hasLowerBound && hasUpperBound) return true;
 
   if (isInsideFetchAllRows(outermost)) return true;
 

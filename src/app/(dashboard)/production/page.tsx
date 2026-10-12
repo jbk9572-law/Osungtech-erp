@@ -10,6 +10,8 @@ import { deleteWorkOrder } from "@/app/(dashboard)/production/actions";
 import { matchesSearch } from "@/lib/search-match";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
+import { buildFirstStepIsSubcontractorMap } from "@/lib/work-order-steps";
+import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 export default async function ProductionPage({
   searchParams,
@@ -27,19 +29,22 @@ export default async function ProductionPage({
   // 동일한 방식 — 전체 감사에서 이 화면엔 이 검사가 빠져 있던 걸 발견).
   await requireFeatureEnabled(supabase, "production");
 
-  const { data: rawRows } = await supabase
-    .from("work_orders")
-    .select(
-      "id, doc_no, order_date, quantity, status, memo, products(sku, name, unit), warehouses(name), profiles!created_by(full_name)",
-    )
-    .gte("order_date", effectiveFrom)
-    .lte("order_date", effectiveTo)
-    .order("order_date", { ascending: false })
-    .order("doc_no", { ascending: false });
+  const rawRows = await fetchAllRows((from, to) =>
+    supabase
+      .from("work_orders")
+      .select(
+        "id, doc_no, order_date, quantity, status, memo, products(sku, name, unit), warehouses(name), profiles!created_by(full_name)",
+      )
+      .gte("order_date", effectiveFrom)
+      .lte("order_date", effectiveTo)
+      .order("order_date", { ascending: false })
+      .order("doc_no", { ascending: false })
+      .range(from, to),
+  );
 
   const keyword = q?.trim().toLowerCase();
   const rows = keyword
-    ? rawRows?.filter((row) =>
+    ? rawRows.filter((row) =>
         matchesSearch(keyword, row.products?.sku, row.products?.name, row.memo, row.warehouses?.name),
       )
     : rawRows;
@@ -47,7 +52,7 @@ export default async function ProductionPage({
   // 공정 체크리스트가 있는 생산지시만 "N/M 공정" 진행률을 같이 보여준다
   // (라우팅을 아직 안 쓰는 제품이 더 많아서, 전부에 0/0으로 표시하면
   // 오히려 잡음이다).
-  const workOrderIds = (rows ?? []).map((r) => r.id);
+  const workOrderIds = rows.map((r) => r.id);
   const { data: stepRows } = workOrderIds.length
     ? await supabase
         .from("work_order_process_steps")
@@ -56,20 +61,17 @@ export default async function ProductionPage({
         .order("sort_order", { ascending: true })
     : { data: [] as { work_order_id: string; status: string; sort_order: number; assignee_kind: string }[] };
   const stepProgressByOrder = new Map<string, { done: number; total: number }>();
-  // 1차 공정(가장 작은 sort_order)이 외주 배정이면 목록에서도 상세화면과
-  // 똑같이 "외주 자재출고"를 타야 한다 — 여기가 빠져 있으면 목록에서
-  // 자재투입을 눌렀을 때 항상 사내용 RPC가 호출돼 업체 보유재고 커스터디가
-  // 전혀 안 생기고도 성공한 것처럼 보이는 문제가 있었다(상세화면만 정상).
-  const firstStepIsSubcontractorByOrder = new Map<string, boolean>();
   for (const s of stepRows ?? []) {
     const cur = stepProgressByOrder.get(s.work_order_id) ?? { done: 0, total: 0 };
     cur.total += 1;
     if (s.status === "done") cur.done += 1;
     stepProgressByOrder.set(s.work_order_id, cur);
-    if (!firstStepIsSubcontractorByOrder.has(s.work_order_id)) {
-      firstStepIsSubcontractorByOrder.set(s.work_order_id, s.assignee_kind === "subcontractor");
-    }
   }
+  // 1차 공정(가장 작은 sort_order)이 외주 배정이면 목록에서도 상세화면과
+  // 똑같이 "외주 자재출고"를 타야 한다 — 여기가 빠져 있으면 목록에서
+  // 자재투입을 눌렀을 때 항상 사내용 RPC가 호출돼 업체 보유재고 커스터디가
+  // 전혀 안 생기고도 성공한 것처럼 보이는 문제가 있었다(상세화면만 정상).
+  const firstStepIsSubcontractorByOrder = buildFirstStepIsSubcontractorMap(stepRows);
 
   return (
     <div>
@@ -144,7 +146,7 @@ export default async function ProductionPage({
               </tr>
             </thead>
             <tbody>
-              {(rows ?? []).map((row) => {
+              {rows.map((row) => {
                 const progress = stepProgressByOrder.get(row.id);
                 return (
                   <tr key={row.id}>
@@ -190,7 +192,7 @@ export default async function ProductionPage({
                   </tr>
                 );
               })}
-              {!rows?.length && (
+              {!rows.length && (
                 <tr>
                   <td colSpan={10} className="erp-grid-empty">
                     조건에 맞는 생산지시가 없습니다.
