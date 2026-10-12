@@ -3,9 +3,10 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { LeaveBalanceForm } from "@/components/leave-balance-form";
+import { LeaveGrantForm } from "@/components/leave-grant-form";
 import { HireDateForm } from "@/components/hire-date-form";
 import { LeavePromotionButton } from "@/components/leave-promotion-button";
-import { setLeaveBalance, setHireDate, sendLeavePromotionNotice } from "@/app/(dashboard)/hr/actions";
+import { setLeaveBalance, setHireDate, sendLeavePromotionNotice, grantExtraLeave } from "@/app/(dashboard)/hr/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { todayKstStr } from "@/lib/kst-date";
 import { calcStatutoryAnnualLeaveDays, leavePromotionWindow } from "@/lib/leave-accrual";
@@ -86,7 +87,9 @@ export default async function LeaveBalancesPage() {
         보여줍니다(1년 미만: 개근 월 1일씩 최대 11일 / 1년 이상: 15일 +
         3년째부터 2년마다 1일 가산, 25일 상한). 회사 특약이 있으면 자동계산
         값을 참고만 하고 직접 입력해도 됩니다 — 저장은 항상 사람이
-        확인하고 눌러야 반영됩니다.
+        확인하고 눌러야 반영됩니다. 잔여일수를 초과하는 연차 신청은
+        자동으로 막히며, &quot;추가 부여&quot;로 사유와 함께 연차를 더
+        줄 수 있습니다.
       </PageGuide>
 
       <div className="erp-grid-wrap">
@@ -102,6 +105,7 @@ export default async function LeaveBalancesPage() {
               <th className="num" style={{ width: 80 }}>
                 잔여
               </th>
+              <th style={{ width: 200 }}>추가 부여</th>
             </tr>
           </thead>
           <tbody>
@@ -122,6 +126,9 @@ export default async function LeaveBalancesPage() {
                 </td>
                 <td className="num">{usedDays}</td>
                 <td className="num">{remaining}</td>
+                <td>
+                  <LeaveGrantForm action={grantExtraLeave} userId={p.id} year={year} />
+                </td>
               </tr>
             ))}
           </tbody>

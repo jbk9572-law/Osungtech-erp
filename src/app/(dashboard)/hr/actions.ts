@@ -351,6 +351,38 @@ export async function setLeaveBalance(_prevState: FormState, formData: FormData)
   return { success: "저장했습니다." };
 }
 
+// 연차 신청이 잔여일수 부족으로 막혔을 때(submit_leave_request의 하드
+// 블록), 관리자가 사유와 함께 추가 연차를 부여한다. setLeaveBalance처럼
+// 총일수를 덮어쓰는 게 아니라 기존 총일수에 더하는 증분형이고, 누가
+// 언제 왜 부여했는지가 leave_grants에 이력으로 남는다.
+export async function grantExtraLeave(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const userId = String(formData.get("user_id") ?? "");
+  const year = Number(formData.get("year") ?? 0);
+  const days = Number(formData.get("days") ?? NaN);
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  if (!userId || !year || !Number.isFinite(days) || days <= 0) {
+    return { error: "부여할 일수를 올바르게 입력해주세요." };
+  }
+  if (!reason) {
+    return { error: "부여 사유를 입력해주세요." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("grant_extra_leave", {
+    p_user_id: userId,
+    p_year: year,
+    p_days: days,
+    p_reason: reason,
+  });
+
+  if (error) return { error: `부여에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/hr/leave-balances");
+  revalidatePath("/hr/attendance");
+  return { success: `${days}일을 추가로 부여했습니다.` };
+}
+
 // 연차 자동 계산(leave-accrual.ts)의 유일한 입력값. profiles.hire_date를
 // 저장만 하면 연차관리 화면이 그 값으로 법정 연차/사용촉진 시점을 다시
 // 계산해 보여준다 — 여기서는 날짜 형식 검증만 하고 계산은 하지 않는다.

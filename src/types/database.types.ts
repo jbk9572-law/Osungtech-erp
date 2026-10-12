@@ -596,6 +596,57 @@ export type Database = {
           },
         ];
       };
+      leave_grants: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          user_id: string;
+          year: number;
+          days: number;
+          reason: string;
+          granted_by: string;
+          granted_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          user_id: string;
+          year: number;
+          days: number;
+          reason: string;
+          granted_by: string;
+          granted_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          user_id?: string;
+          year?: number;
+          days?: number;
+          reason?: string;
+          granted_by?: string;
+          granted_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_grants_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "leave_grants_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       leave_promotion_notices: {
         Row: {
           id: string;
@@ -5213,6 +5264,10 @@ export type Database = {
           p_leave_unit?: string;
         };
         Returns: string;
+      };
+      grant_extra_leave: {
+        Args: { p_user_id: string; p_year: number; p_days: number; p_reason: string };
+        Returns: number;
       };
       submit_payment_request: {
         Args: { p_id: string; p_approver_ids: string[]; p_reference_ids?: string[] };
