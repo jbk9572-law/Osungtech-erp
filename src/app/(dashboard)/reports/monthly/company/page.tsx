@@ -1,9 +1,9 @@
 import { Fragment } from "react";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { MonthNavigator } from "@/components/erp/month-navigator";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
 import { GridBadge } from "@/components/grid/badge";
@@ -147,9 +147,6 @@ export default async function MonthlyReportCompanyPage({
     (t) => t.amount,
   );
 
-  const prevMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
-  const thisMonth = currentMonth();
   const companySuffix = `&company=${encodeURIComponent(company ?? "")}`;
 
   return (
@@ -163,26 +160,7 @@ export default async function MonthlyReportCompanyPage({
         확장모듈 &gt; 월별 리포트 &gt; {companyName || "거래처"} 상세내역
       </h1>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
-        <Link
-          href={`/reports/monthly/company?month=${prevMonth}${companySuffix}`}
-          className="erp-date-preset-btn"
-        >
-          ◀ 이전달
-        </Link>
-        <Link
-          href={`/reports/monthly/company?month=${thisMonth}${companySuffix}`}
-          className={`erp-date-preset-btn${month === thisMonth ? " active" : ""}`}
-        >
-          이번달
-        </Link>
-        <Link
-          href={`/reports/monthly/company?month=${nextMonth}${companySuffix}`}
-          className="erp-date-preset-btn"
-        >
-          다음달 ▶
-        </Link>
-      </div>
+      <MonthNavigator baseHref="/reports/monthly/company" month={month} suffix={companySuffix} />
 
       <div className="erp-toolbar" style={{ marginBottom: 12 }}>
         <CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>

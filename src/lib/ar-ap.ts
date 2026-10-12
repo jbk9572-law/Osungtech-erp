@@ -24,6 +24,29 @@ export function daysSince(dateStr: string, today: string = todayKstStr()): numbe
   return Math.max(0, Math.round(ms / 86400000));
 }
 
+type PartyPaymentRow = { id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null };
+
+// 외상 전표(creditOrders, date 오름차순 전제)와 결제 내역으로 잔액/미결제
+// 전표 목록을 계산하는 공통 로직 — getCustomerBalance/getSupplierBalance/
+// getSubcontractorBalance가 각자 거의 똑같이 들고 있던 FIFO 상계 계산을
+// 한 곳으로 모았다. total이 음수인 전표(거래처의 반품)는 먼저 결제 풀에
+// 합쳐 넣어야 더 이전 전표의 미수금을 정확히 되돌릴 수 있다(날짜순으로
+// 섞어 훑으면 안 되는 이유는 아래 getCustomerBalance 주석 참고) — 공급처/
+// 외주비처럼 반품 개념이 없는 쪽은 음수 전표가 없어 그대로 지금까지의
+// 동작과 동일하다. consumeOldestFirst처럼 제네릭으로 둬서, 외주비정산의
+// processName/workOrderId 같은 호출부별 추가 필드가 그대로 보존된다.
+function computePartyBalance<T extends { total: number; date: string }>(
+  creditOrders: T[],
+  payments: PartyPaymentRow[],
+) {
+  const totalAmount = creditOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalNegative = creditOrders.filter((o) => o.total < 0).reduce((sum, o) => sum - o.total, 0);
+  const positiveOrders = creditOrders.filter((o) => o.total > 0);
+  const unpaidOrders = consumeOldestFirst(positiveOrders, totalPaid + totalNegative);
+  return { totalAmount, totalPaid, balance: totalAmount - totalPaid, unpaidOrders };
+}
+
 export async function getCustomerBalance(supabase: SupabaseServerClient, customerId: string) {
   const [orders, payments] = await Promise.all([
     fetchAllRows<{
@@ -67,22 +90,17 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
         (o.is_return ? -1 : 1),
     }));
 
-  const totalSales = creditOrders.reduce((sum, o) => sum + o.total, 0);
-  const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
   // 반품(음수 total)을 그대로 날짜순 목록에 섞어서 훑으면, 반품이 원본
   // 매출보다 나중 날짜일 때(가장 흔한 경우) 이미 "미결제"로 확정해버린
   // 더 이전 전표의 미수금을 되돌리지 못한다 — pool은 그 시점 이후로만
   // 적용되기 때문이다. 그래서 반품 금액은 처음부터 결제 풀에 합쳐 넣고,
-  // FIFO 소진 자체는 실제 매출 전표(양수)에만 적용한다 — balance(총
-  // 잔액)는 어차피 totalSales에 이미 반품이 반영돼 있어 그대로 정확하고,
-  // "미결제 전표" 목록도 그 총 잔액과 일치하게 된다.
-  const totalReturns = creditOrders
-    .filter((o) => o.total < 0)
-    .reduce((sum, o) => sum - o.total, 0);
-  const positiveOrders = creditOrders.filter((o) => o.total > 0);
-  const unpaidOrders = consumeOldestFirst(positiveOrders, totalPaid + totalReturns);
+  // FIFO 소진 자체는 실제 매출 전표(양수)에만 적용한다(computePartyBalance).
+  const { totalAmount: totalSales, totalPaid, balance, unpaidOrders } = computePartyBalance(
+    creditOrders,
+    payments ?? [],
+  );
 
-  return { totalSales, totalPaid, balance: totalSales - totalPaid, payments: payments ?? [], unpaidOrders };
+  return { totalSales, totalPaid, balance, payments: payments ?? [], unpaidOrders };
 }
 
 export async function getSupplierBalance(supabase: SupabaseServerClient, supplierId: string) {
@@ -120,11 +138,12 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
       total: (o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0),
     }));
 
-  const totalPurchases = creditOrders.reduce((sum, o) => sum + o.total, 0);
-  const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
-  const unpaidOrders = consumeOldestFirst(creditOrders, totalPaid);
+  const { totalAmount: totalPurchases, totalPaid, balance, unpaidOrders } = computePartyBalance(
+    creditOrders,
+    payments ?? [],
+  );
 
-  return { totalPurchases, totalPaid, balance: totalPurchases - totalPaid, payments: payments ?? [], unpaidOrders };
+  return { totalPurchases, totalPaid, balance, payments: payments ?? [], unpaidOrders };
 }
 
 // 전표별로 얼마가 남았는지는 따로 저장하지 않으므로, 수금/지급 총액을
@@ -251,9 +270,10 @@ export async function getSubcontractorBalance(supabase: SupabaseServerClient, su
       total: Number(s.unit_cost) * (Number(s.work_orders!.quantity) - Number(s.returned_quantity)),
     }));
 
-  const totalFees = feeLines.reduce((sum, f) => sum + f.total, 0);
-  const totalPaid = (payments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
-  const unpaidSteps = consumeOldestFirst(feeLines, totalPaid);
+  const { totalAmount: totalFees, totalPaid, balance, unpaidOrders: unpaidSteps } = computePartyBalance(
+    feeLines,
+    payments ?? [],
+  );
 
-  return { totalFees, totalPaid, balance: totalFees - totalPaid, payments: payments ?? [], unpaidSteps };
+  return { totalFees, totalPaid, balance, payments: payments ?? [], unpaidSteps };
 }

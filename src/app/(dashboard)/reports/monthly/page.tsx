@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { currentMonth, shiftMonth } from "@/lib/date-presets";
+import { MonthNavigator } from "@/components/erp/month-navigator";
+import { currentMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchMonthlyReportData, type View } from "@/lib/monthly-report-data";
 import { formatNumber } from "@/lib/format-number";
@@ -51,9 +52,6 @@ export default async function MonthlyReportPage({
   }
 
   const [year, monthNum] = month.split("-");
-  const prevMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
-  const thisMonth = currentMonth();
   const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
   const viewSuffix = view !== "product" ? `&view=${view}` : "";
   const suffix = `${qSuffix}${viewSuffix}`;
@@ -70,25 +68,8 @@ export default async function MonthlyReportPage({
         확장모듈 &gt; 월별 리포트
       </h1>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
-        <Link
-          href={`/reports/monthly?month=${prevMonth}${suffix}`}
-          className="erp-date-preset-btn"
-        >
-          ◀ 이전달
-        </Link>
-        <Link
-          href={`/reports/monthly?month=${thisMonth}${suffix}`}
-          className={`erp-date-preset-btn${month === thisMonth ? " active" : ""}`}
-        >
-          이번달
-        </Link>
-        <Link
-          href={`/reports/monthly?month=${nextMonth}${suffix}`}
-          className="erp-date-preset-btn"
-        >
-          다음달 ▶
-        </Link>
+      <MonthNavigator baseHref="/reports/monthly" month={month} suffix={suffix} />
+      <div className="erp-toolbar" style={{ marginBottom: 8 }}>
         <a
           href={`/api/reports/monthly/export?month=${month}${suffix}`}
           className="erp-btn"

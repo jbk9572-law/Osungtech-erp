@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { MonthNavigator } from "@/components/erp/month-navigator";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
@@ -16,8 +16,6 @@ export default async function IncomeStatementPage({
   const { month: monthParam } = await searchParams;
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
-  const prevMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
 
   const supabase = await createClient();
 
@@ -85,14 +83,8 @@ export default async function IncomeStatementPage({
         실제 세무 신고용 재무제표가 아니라 내부 경영 참고용입니다(감가상각, 인건비 등은 포함되지 않습니다).
       </PageGuide>
 
-      <div className="erp-toolbar">
-        <Link href={`/reports/income-statement?month=${prevMonth}`} className="erp-btn">
-          ← {prevMonth}
-        </Link>
-        <span style={{ fontWeight: 700, padding: "0 8px" }}>{month}</span>
-        <Link href={`/reports/income-statement?month=${nextMonth}`} className="erp-btn">
-          {nextMonth} →
-        </Link>
+      <MonthNavigator baseHref="/reports/income-statement" month={month} />
+      <div className="erp-toolbar" style={{ marginBottom: 8 }}>
         <a
           href={`/api/reports/income-statement/export?month=${month}`}
           className="erp-btn"
