@@ -1139,10 +1139,10 @@ export function NewSaleForm({
           </div>
         )}
         <div
-          className="erp-detail-body erp-search"
+          className="erp-detail-body erp-field-grid erp-pilot-anim"
           style={{ border: "none", padding: 14, margin: 0 }}
         >
-          <div className="erp-field">
+          <div className="erp-field erp-span-2">
             <label htmlFor="sale-docno">No</label>
             <input
               id="sale-docno"
@@ -1152,11 +1152,11 @@ export function NewSaleForm({
               value={docNo}
               onChange={(e) => setDocNo(e.target.value.replace(/[^0-9]/g, ""))}
               className="erp-input"
-              style={{ width: 80 }}
+              style={{ width: "100%" }}
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-3">
             <label htmlFor="sale-customer">출고처</label>
             <PartySearchSelect
               id="sale-customer"
@@ -1167,7 +1167,7 @@ export function NewSaleForm({
               placeholder="출고처명 검색"
             />
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-2">
             <label htmlFor="sale-order-date">거래일자</label>
             <input
               id="sale-order-date"
@@ -1180,7 +1180,7 @@ export function NewSaleForm({
             />
           </div>
           {warehouses.length > 1 && (
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="sale-warehouse">출고창고</label>
               <select
                 id="sale-warehouse"
@@ -1198,7 +1198,7 @@ export function NewSaleForm({
               </select>
             </div>
           )}
-          <div className="erp-field">
+          <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
             <label
               style={{
@@ -1229,7 +1229,7 @@ export function NewSaleForm({
               </span>
             </label>
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
             <label
               style={{
@@ -1260,7 +1260,7 @@ export function NewSaleForm({
               </span>
             </label>
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-2">
             <label htmlFor="sale-delivery-method">배송방법</label>
             <select
               id="sale-delivery-method"
@@ -1276,7 +1276,7 @@ export function NewSaleForm({
               ))}
             </select>
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-2">
             <label htmlFor="sale-tax-type">과세구분</label>
             <select
               id="sale-tax-type"
@@ -1291,7 +1291,7 @@ export function NewSaleForm({
               ))}
             </select>
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-2">
             <label htmlFor="sale-evidence-type">증빙유형</label>
             <select
               id="sale-evidence-type"
@@ -1307,7 +1307,7 @@ export function NewSaleForm({
               ))}
             </select>
           </div>
-          <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
+          <div className="erp-field erp-span-6">
             <label htmlFor="sale-memo">적요 (선택)</label>
             <input
               id="sale-memo"
@@ -1319,7 +1319,7 @@ export function NewSaleForm({
               style={{ width: "100%" }}
             />
           </div>
-          <div className="erp-field">
+          <div className="erp-field erp-span-3">
             <label>결제방법</label>
             <label
               style={{
@@ -1340,7 +1340,7 @@ export function NewSaleForm({
             </label>
           </div>
           {!alwaysCredit && (
-            <div className="erp-field">
+            <div className="erp-field erp-span-3">
               <label aria-hidden="true">&nbsp;</label>
               <select
                 aria-label="결제방법"

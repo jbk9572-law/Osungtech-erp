@@ -1134,6 +1134,102 @@
   resize: vertical;
 }
 
+/* ── 4-1. 공용 입력칸 그리드 (파일럿: new-sale-form.tsx만 사용) ──────
+   화면마다 .erp-field에 flex/minWidth를 직접 흩어 써서, 윗줄이 2칸인데
+   아랫줄이 4칸이면 칸 경계가 서로 안 맞고 폭도 들쭉날쭉했다. 12등분
+   그리드 위에서 각 칸이 몇 칸을 차지할지(erp-span-N)만 정하면, 줄마다
+   칸 개수가 달라도 경계가 항상 같은 그리드 선 위에 떨어진다. 매출 등록
+   폼에서 먼저 검증하고, 확정되면 .erp-search 자체를 이 그리드로 바꿔
+   전체 화면에 적용한다. */
+.erp-field-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+
+.erp-field-grid > .erp-field {
+  grid-column: span 3;
+}
+
+.erp-field-grid > .erp-field.erp-span-2 {
+  grid-column: span 2;
+}
+
+.erp-field-grid > .erp-field.erp-span-3 {
+  grid-column: span 3;
+}
+
+.erp-field-grid > .erp-field.erp-span-4 {
+  grid-column: span 4;
+}
+
+.erp-field-grid > .erp-field.erp-span-6 {
+  grid-column: span 6;
+}
+
+.erp-field-grid > .erp-field.erp-span-12 {
+  grid-column: span 12;
+}
+
+@media (max-width: 640px) {
+  .erp-field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .erp-field-grid > .erp-field {
+    grid-column: span 1 !important;
+  }
+}
+
+/* ── 4-2. 입력 상호작용 애니메이션 (파일럿: .erp-pilot-anim 안에서만) ──
+   기존 .erp-input/.erp-btn에도 트랜지션은 있었지만(0.12s ease), 포커스
+   시 살짝 떠오르는 느낌/정지 직전 감속이 없어 뚝뚝 끊겨 보였다. 이징을
+   감속 곡선(cubic-bezier(0.4,0,0.2,1) — 로딩 게이지에서 이미 쓰던 값과
+   동일)으로 바꾸고, 포커스/호버/누름 상태에 미세한 떠오름·눌림을 더한다.
+   기존 공용 규칙(.erp-input, .erp-btn)은 건드리지 않고 이 래퍼 클래스
+   안에서만 겹쳐써서, 확정 전까지 다른 화면에는 전혀 영향이 없다. */
+.erp-pilot-anim .erp-input,
+.erp-pilot-anim .erp-select {
+  transition:
+    border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.erp-pilot-anim .erp-input:focus,
+.erp-pilot-anim .erp-select:focus {
+  box-shadow:
+    0 0 0 3px rgba(19, 41, 68, 0.14),
+    0 1px 2px rgba(19, 41, 68, 0.08);
+  transform: translateY(-0.5px);
+}
+
+.erp-pilot-anim .erp-btn {
+  transition:
+    background 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.14s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.erp-pilot-anim .erp-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
+}
+
+.erp-pilot-anim .erp-btn:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-pilot-anim .erp-input,
+  .erp-pilot-anim .erp-select,
+  .erp-pilot-anim .erp-btn {
+    transition: none;
+  }
+}
+
 /* ── 5. Toolbar buttons ────────────────────────────────────── */
 /* .erp는 뷰포트보다 넓어지는 걸 막으려고 overflow-x: hidden을 두고
    있어서, 버튼이 여러 개인 툴바가 좁은 화면에서 줄바꿈하지 않으면
