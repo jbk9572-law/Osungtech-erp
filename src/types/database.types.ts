@@ -2474,7 +2474,7 @@ export type Database = {
       order_item_location_stock: {
         Row: {
           id: string;
-          order_type: "sale" | "purchase";
+          order_type: "sale" | "purchase" | "production";
           order_id: string;
           product_id: string;
           location_id: string;
@@ -2483,7 +2483,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
-          order_type: "sale" | "purchase";
+          order_type: "sale" | "purchase" | "production";
           order_id: string;
           product_id: string;
           location_id: string;
@@ -2492,7 +2492,7 @@ export type Database = {
         };
         Update: {
           id?: string;
-          order_type?: "sale" | "purchase";
+          order_type?: "sale" | "purchase" | "production";
           order_id?: string;
           product_id?: string;
           location_id?: string;

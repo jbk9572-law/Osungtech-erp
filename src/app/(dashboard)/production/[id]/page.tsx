@@ -23,7 +23,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
     supabase
       .from("work_orders")
       .select(
-        "id, doc_no, order_date, quantity, status, memo, products(sku, name, spec, unit), warehouses(name), profiles!created_by(full_name)",
+        "id, doc_no, order_date, quantity, status, memo, product_id, warehouse_id, products(sku, name, spec, unit), warehouses(name), profiles!created_by(full_name)",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -57,6 +57,21 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
   // 1차 공정이 외주로 배정돼 있으면 "자재투입" 대신 "외주 자재출고"로
   // 바뀐다(자재가 우리 창고가 아니라 업체 보유재고로 넘어감).
   const firstStepIsSubcontractor = isFirstStepSubcontractor(steps);
+
+  // 완제품을 보관할 위치가 2곳 이상이면, "생산완료" 버튼이 매출/매입
+  // 등록과 똑같은 위치 배분 확인 모달을 띄운다(location-allocation-modal.tsx
+  // 재사용) — 1곳이면 자동 반영, 0곳이면 위치 추적 대상이 아닌 품목이라
+  // 건너뛴다(applyOrderLocationStock과 동일한 기준).
+  const completableLocations =
+    workOrder.status === "material_issued"
+      ? (
+          await supabase
+            .from("inventory_locations")
+            .select("location_id, quantity, locations!inner(code, tier, position, warehouse_id)")
+            .eq("product_id", workOrder.product_id)
+            .eq("locations.warehouse_id", workOrder.warehouse_id)
+        ).data ?? []
+      : [];
 
   return (
     <div>
@@ -127,6 +142,24 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
                       id={workOrder.id}
                       status={workOrder.status}
                       firstStepIsSubcontractor={firstStepIsSubcontractor}
+                      completeLocationContext={
+                        completableLocations.length >= 2
+                          ? {
+                              productId: workOrder.product_id,
+                              productName: workOrder.products?.name ?? "완제품",
+                              spec: workOrder.products?.spec ?? null,
+                              unit: workOrder.products?.unit ?? "",
+                              quantity: Number(workOrder.quantity),
+                              locations: completableLocations.map((l) => ({
+                                locationId: l.location_id,
+                                code: l.locations.code,
+                                tier: l.locations.tier,
+                                position: l.locations.position,
+                                quantity: Number(l.quantity),
+                              })),
+                            }
+                          : undefined
+                      }
                     />
                   </td>
                 </tr>

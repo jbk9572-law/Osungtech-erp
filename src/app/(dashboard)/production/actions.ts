@@ -4,6 +4,42 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
+import { applyOrderLocationStock, parseAllocationChoices } from "@/lib/location-stock-sync";
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+// 자재투입(사내/외주 공통) — BOM 구성품을 우리 창고에서 차감한 만큼
+// 위치별 재고(inventory_locations)에도 반영한다. 매출/매입과 동일하게
+// "등록(투입) 자체는 이미 끝난 뒤"라 여기서 실패해도 투입 처리를 막지
+// 않고 경고만 덧붙인다.
+async function syncMaterialIssueLocationStock(
+  supabase: SupabaseServerClient,
+  workOrderId: string,
+): Promise<string | null> {
+  const { data: wo } = await supabase
+    .from("work_orders")
+    .select("product_id, warehouse_id, quantity")
+    .eq("id", workOrderId)
+    .maybeSingle();
+  if (!wo) return null;
+
+  const { data: bomItems } = await supabase
+    .from("bom_items")
+    .select("component_product_id, quantity_per_unit")
+    .eq("parent_product_id", wo.product_id);
+  if (!bomItems || bomItems.length === 0) return null;
+
+  return applyOrderLocationStock(supabase, {
+    orderType: "production",
+    orderId: workOrderId,
+    warehouseId: wo.warehouse_id,
+    items: bomItems.map((b) => ({
+      productId: b.component_product_id,
+      quantity: Number(b.quantity_per_unit) * Number(wo.quantity),
+    })),
+    direction: "out",
+  });
+}
 
 // 생산지시 등록(migration 161 이후) — 더 이상 재고를 바로 움직이지
 // 않는다. create_work_order() RPC는 지시 자체와(제품에 공정 라우팅이
@@ -65,15 +101,17 @@ export async function issueWorkOrderMaterials(_prevState: FormState, formData: F
   if (error) {
     return { error: `자재투입 처리에 실패했습니다: ${error.message}` };
   }
+  const locationWarning = await syncMaterialIssueLocationStock(supabase, id);
 
   revalidatePath("/production");
   revalidatePath("/inventory");
-  return { success: "자재투입 처리했습니다." };
+  return { success: `자재투입 처리했습니다.${locationWarning ? ` (${locationWarning})` : ""}` };
 }
 
 export async function completeWorkOrder(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   if (!id) return { error: "잘못된 요청입니다." };
+  const locationAllocations = parseAllocationChoices(String(formData.get("location_allocations") ?? ""));
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("complete_work_order", { p_id: id });
@@ -81,9 +119,28 @@ export async function completeWorkOrder(_prevState: FormState, formData: FormDat
     return { error: `생산완료 처리에 실패했습니다: ${error.message}` };
   }
 
+  // 완제품을 위치별 재고(inventory_locations)에도 입고 반영한다 — 생산완료
+  // 자체는 이미 끝난 뒤라 여기서 실패해도 처리를 막지 않고 경고만 덧붙인다.
+  let locationWarning: string | null = null;
+  const { data: wo } = await supabase
+    .from("work_orders")
+    .select("product_id, warehouse_id, quantity")
+    .eq("id", id)
+    .maybeSingle();
+  if (wo) {
+    locationWarning = await applyOrderLocationStock(supabase, {
+      orderType: "production",
+      orderId: id,
+      warehouseId: wo.warehouse_id,
+      items: [{ productId: wo.product_id, quantity: Number(wo.quantity) }],
+      direction: "in",
+      allocationChoices: locationAllocations,
+    });
+  }
+
   revalidatePath("/production");
   revalidatePath("/inventory");
-  return { success: "생산완료 처리했습니다." };
+  return { success: `생산완료 처리했습니다.${locationWarning ? ` (${locationWarning})` : ""}` };
 }
 
 export async function updateWorkOrderProcessStep(_prevState: FormState, formData: FormData): Promise<FormState> {
@@ -268,9 +325,10 @@ export async function issueWorkOrderMaterialsToSubcontractor(
   if (error) {
     return { error: `외주 자재출고에 실패했습니다: ${error.message}` };
   }
+  const locationWarning = await syncMaterialIssueLocationStock(supabase, id);
 
   revalidatePath("/production");
   revalidatePath("/inventory");
   revalidatePath("/subcontractors");
-  return { success: "외주 자재출고 처리했습니다." };
+  return { success: `외주 자재출고 처리했습니다.${locationWarning ? ` (${locationWarning})` : ""}` };
 }

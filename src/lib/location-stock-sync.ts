@@ -2,7 +2,7 @@ import type { createClient } from "@/lib/supabase/server";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
-export type OrderType = "sale" | "purchase";
+export type OrderType = "sale" | "purchase" | "production";
 
 export type LocationOption = {
   locationId: string;
