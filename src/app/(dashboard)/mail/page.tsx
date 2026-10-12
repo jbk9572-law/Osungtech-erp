@@ -6,6 +6,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { SyncMailButton } from "@/components/mail/sync-mail-button";
 import { ComposeMailButton } from "@/components/mail/compose-mail";
 import { MarkAsRead } from "@/components/mail/mark-as-read";
+import { MailAttachmentChip } from "@/components/mail/mail-attachment-chip";
 import { PaperclipIcon } from "@/components/erp/groupware-icons";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
@@ -116,22 +117,16 @@ export default async function MailPage({
         }
       />
 
-      <div className="erp-toolbar" style={{ marginTop: -4 }}>
-        <Link
-          href="/mail?folder=INBOX"
-          className={`erp-btn${folder === "INBOX" ? " erp-btn-primary" : ""}`}
-        >
-          받은편지함
-        </Link>
-        <Link
-          href="/mail?folder=SENT"
-          className={`erp-btn${folder === "SENT" ? " erp-btn-primary" : ""}`}
-        >
-          보낸편지함
-        </Link>
-      </div>
+      <div className="erp-split3-shell" data-mobile-view={id ? "detail" : "list"}>
+        <nav className="erp-cat-sidebar" aria-label="메일함 폴더">
+          <Link href="/mail?folder=INBOX" className={`erp-cat-item${folder === "INBOX" ? " active" : ""}`}>
+            <span>받은편지함</span>
+          </Link>
+          <Link href="/mail?folder=SENT" className={`erp-cat-item${folder === "SENT" ? " active" : ""}`}>
+            <span>보낸편지함</span>
+          </Link>
+        </nav>
 
-      <div className="erp-split-shell" data-mobile-view={id ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>{folder === "INBOX" ? "받은편지함" : "보낸편지함"}</span>
@@ -207,23 +202,14 @@ export default async function MailPage({
 
               {attachmentLinks.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
-                  {attachmentLinks.map((att) =>
-                    att.url ? (
-                      <a key={att.id} href={att.url} target="_blank" rel="noreferrer" className="erp-btn" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
-                          <PaperclipIcon />
-                        </span>
-                        {att.filename}
-                      </a>
-                    ) : (
-                      <span key={att.id} className="erp-btn" style={{ opacity: 0.5, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
-                          <PaperclipIcon />
-                        </span>
-                        {att.filename}
-                      </span>
-                    )
-                  )}
+                  {attachmentLinks.map((att) => (
+                    <MailAttachmentChip
+                      key={att.id}
+                      filename={att.filename}
+                      contentType={att.content_type}
+                      url={att.url}
+                    />
+                  ))}
                 </div>
               )}
 
