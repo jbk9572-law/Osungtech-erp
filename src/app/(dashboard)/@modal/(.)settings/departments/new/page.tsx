@@ -3,7 +3,7 @@ import NewDepartmentPage from "@/app/(dashboard)/settings/departments/new/page";
 
 export default async function InterceptedNewDepartmentPage() {
   return (
-    <RegistrationModalShell size="md">
+    <RegistrationModalShell size="md" closeHref="/settings/departments">
       <NewDepartmentPage />
     </RegistrationModalShell>
   );

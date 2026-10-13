@@ -32,9 +32,19 @@ function isInternalNavAnchor(target: EventTarget | null): boolean {
 export function RegistrationModalShell({
   children,
   size = "xl",
+  closeHref,
 }: {
   children: React.ReactNode;
   size?: "md" | "lg" | "xl";
+  // 이 모달 인터셉트 라우트가 항상 닫히는 고정 목적지(예: "/sales",
+  // "/sales/123") — 호출부(@modal/(.)... 라우트 파일)가 자기 자신의
+  // 위치만 보고 이미 알 수 있는 값이라 거의 모든 라우트가 넘긴다.
+  // 아래 closeHrefRef의 "등록되기 전" 공백을 없애는 안전장치다: 이
+  // 값이 있으면 마운트 즉시(= 첫 클릭부터) router.back() 대체 없이
+  // push로 닫히고, 목록 화면이 조회필터(backParam)까지 유지해 돌아가야
+  // 하는 화면은 KeyboardShortcuts의 Escape href 등록이 뒤이어 이
+  // 값을 더 구체적인 것으로 덮어쓴다(registerCloseHref).
+  closeHref?: string;
 }) {
   const router = useRouter();
   // 닫기는 실제 라우트 이동이 끝나는 걸 절대 기다리지 않는다 — 클릭한
@@ -45,12 +55,12 @@ export function RegistrationModalShell({
   // 체감 속도가 그 이동 성공/실패나 속도에 더 이상 좌우되지 않는다).
   const [closing, setClosing] = useState(false);
   // 이 모달의 페이지가 KeyboardShortcuts를 통해 알려주는 "진짜 닫기
-  // 목적지"(그 페이지의 Escape.href와 같은 값). 있으면 이걸로 명시
-  // 이동하고, 아직 등록되기 전(마운트 직후 극히 짧은 순간)이면만
-  // router.back()으로 대체한다 — 뒤로가기는 이 모달을 어떤 경로로
-  // 거쳐 왔는지에 따라 엉뚱한 화면으로 가버릴 수 있어 더 이상 기본
-  // 닫기 수단으로 쓰지 않는다.
-  const closeHrefRef = useRef<string | null>(null);
+  // 목적지"(그 페이지의 Escape.href와 같은 값)로 덮어쓰기 전까지는
+  // 위 closeHref prop을 기본값으로 쓴다 — 그래서 그 등록을 깜빡한
+  // 화면(인쇄 미리보기 등)이나 마운트 직후의 극히 짧은 순간에도
+  // router.back()(이 모달을 어떤 경로로 거쳐 왔는지에 따라 엉뚱한
+  // 화면으로 가버릴 수 있다) 대신 항상 올바른 곳으로 닫힌다.
+  const closeHrefRef = useRef<string | null>(closeHref ?? null);
   // 목적지를 알게 되는 즉시 미리 가져와둔다(router.prefetch). 등록/수정
   // 저장 직후처럼 revalidatePath로 목적지 화면의 캐시가 막 무효화된
   // 상태면 push 시점에 서버 왕복이 걸려 "닫힘"이 아니라 "이동 중"으로
@@ -102,6 +112,11 @@ export function RegistrationModalShell({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [close]);
+
+  useEffect(() => {
+    if (closeHref) router.prefetch(closeHref);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [closeHref]);
 
   useScrollLock(true);
 

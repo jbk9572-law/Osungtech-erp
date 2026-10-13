@@ -3,7 +3,7 @@ import NewPurchaseQuoteRequestPage from "@/app/(dashboard)/purchase-quote-reques
 
 export default async function InterceptedNewPurchaseQuoteRequestPage() {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/purchase-quote-requests">
       <NewPurchaseQuoteRequestPage />
     </RegistrationModalShell>
   );

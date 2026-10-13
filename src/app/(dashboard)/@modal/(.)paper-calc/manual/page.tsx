@@ -5,7 +5,7 @@ export default async function InterceptedPaperCalcManualPage(props: {
   searchParams: Promise<{ for?: string }>;
 }) {
   return (
-    <RegistrationModalShell>
+    <RegistrationModalShell closeHref="/paper-calc">
       <PaperCalcManualPage {...props} />
     </RegistrationModalShell>
   );

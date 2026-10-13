@@ -3,7 +3,7 @@ import NewTodoPage from "@/app/(dashboard)/todos/new/page";
 
 export default async function InterceptedNewTodoPage() {
   return (
-    <RegistrationModalShell size="md">
+    <RegistrationModalShell size="md" closeHref="/todos">
       <NewTodoPage />
     </RegistrationModalShell>
   );

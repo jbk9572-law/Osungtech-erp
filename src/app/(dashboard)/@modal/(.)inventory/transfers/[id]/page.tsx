@@ -5,7 +5,7 @@ export default async function InterceptedStockTransferDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/inventory/warehouses">
       <StockTransferDetailPage {...props} />
     </RegistrationModalShell>
   );

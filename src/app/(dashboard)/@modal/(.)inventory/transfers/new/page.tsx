@@ -3,7 +3,7 @@ import NewStockTransferPage from "@/app/(dashboard)/inventory/transfers/new/page
 
 export default async function InterceptedNewStockTransferPage() {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/inventory/warehouses">
       <NewStockTransferPage />
     </RegistrationModalShell>
   );

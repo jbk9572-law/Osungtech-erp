@@ -5,7 +5,7 @@ export default async function InterceptedEditDepartmentPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="md">
+    <RegistrationModalShell size="md" closeHref="/settings/departments">
       <EditDepartmentPage {...props} />
     </RegistrationModalShell>
   );

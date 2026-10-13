@@ -10,7 +10,7 @@ export default async function InterceptedInventoryProductHistoryPage(props: {
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/inventory">
       <InventoryProductHistoryPage {...props} />
     </RegistrationModalShell>
   );

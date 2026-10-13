@@ -7,8 +7,9 @@ export default async function InterceptedEditPurchasePage(props: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ back?: string }>;
 }) {
+  const { id } = await props.params;
   return (
-    <RegistrationModalShell size="xl">
+    <RegistrationModalShell size="xl" closeHref={`/purchases/${id}`}>
       <EditPurchasePage {...props} />
     </RegistrationModalShell>
   );

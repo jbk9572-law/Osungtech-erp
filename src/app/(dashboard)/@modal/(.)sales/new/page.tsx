@@ -9,7 +9,7 @@ export default async function InterceptedNewSalePage(props: {
   searchParams: Promise<{ saved?: string }>;
 }) {
   return (
-    <RegistrationModalShell>
+    <RegistrationModalShell closeHref="/sales">
       <NewSalePage {...props} />
     </RegistrationModalShell>
   );

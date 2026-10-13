@@ -3,7 +3,7 @@ import NewDocumentTemplatePage from "@/app/(dashboard)/hr/documents/templates/ne
 
 export default function InterceptedNewDocumentTemplatePage() {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/hr/documents/templates">
       <NewDocumentTemplatePage />
     </RegistrationModalShell>
   );

@@ -5,7 +5,7 @@ export default async function InterceptedUserDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="md">
+    <RegistrationModalShell size="md" closeHref="/settings/users">
       <UserDetailPage {...props} />
     </RegistrationModalShell>
   );

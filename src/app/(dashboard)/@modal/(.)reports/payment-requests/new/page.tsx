@@ -3,7 +3,7 @@ import NewPaymentRequestPage from "@/app/(dashboard)/reports/payment-requests/ne
 
 export default async function InterceptedNewPaymentRequestPage() {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/reports/payment-requests">
       <NewPaymentRequestPage />
     </RegistrationModalShell>
   );

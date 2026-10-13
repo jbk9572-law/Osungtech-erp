@@ -3,7 +3,7 @@ import NewWorkOrderPage from "@/app/(dashboard)/production/new/page";
 
 export default async function InterceptedNewWorkOrderPage() {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/production">
       <NewWorkOrderPage />
     </RegistrationModalShell>
   );

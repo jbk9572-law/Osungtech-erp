@@ -3,7 +3,7 @@ import NewQuotePage from "@/app/(dashboard)/quotes/new/page";
 
 export default async function InterceptedNewQuotePage() {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/quotes">
       <NewQuotePage />
     </RegistrationModalShell>
   );

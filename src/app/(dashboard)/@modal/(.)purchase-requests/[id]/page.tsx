@@ -5,7 +5,7 @@ export default async function InterceptedPurchaseRequestDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/purchase-requests">
       <PurchaseRequestDetailPage {...props} />
     </RegistrationModalShell>
   );

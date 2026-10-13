@@ -5,7 +5,7 @@ export default async function InterceptedTodoDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="md">
+    <RegistrationModalShell size="md" closeHref="/todos">
       <TodoDetailPage {...props} />
     </RegistrationModalShell>
   );

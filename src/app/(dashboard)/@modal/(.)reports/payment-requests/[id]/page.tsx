@@ -6,7 +6,7 @@ export default async function InterceptedPaymentRequestDetailPage(props: {
   searchParams: Promise<{ warning?: string }>;
 }) {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/reports/payment-requests">
       <PaymentRequestDetailPage {...props} />
     </RegistrationModalShell>
   );

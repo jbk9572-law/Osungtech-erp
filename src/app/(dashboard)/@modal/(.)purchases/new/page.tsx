@@ -8,7 +8,7 @@ export default async function InterceptedNewPurchasePage(props: {
   searchParams: Promise<{ supplier_id?: string; reorder_items?: string; saved?: string }>;
 }) {
   return (
-    <RegistrationModalShell>
+    <RegistrationModalShell closeHref="/purchases">
       <NewPurchasePage {...props} />
     </RegistrationModalShell>
   );

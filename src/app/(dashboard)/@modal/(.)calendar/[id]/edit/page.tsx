@@ -5,7 +5,7 @@ export default async function InterceptedEditCalendarEventPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="md">
+    <RegistrationModalShell size="md" closeHref="/calendar">
       <EditCalendarEventPage {...props} />
     </RegistrationModalShell>
   );

@@ -7,8 +7,12 @@ import MonthlyReportCompanyPage from "@/app/(dashboard)/reports/monthly/company/
 export default async function InterceptedMonthlyReportCompanyPage(props: {
   searchParams: Promise<{ month?: string; company?: string }>;
 }) {
+  const { month } = await props.searchParams;
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell
+      size="lg"
+      closeHref={month ? `/reports/monthly?month=${month}` : "/reports/monthly"}
+    >
       <MonthlyReportCompanyPage {...props} />
     </RegistrationModalShell>
   );

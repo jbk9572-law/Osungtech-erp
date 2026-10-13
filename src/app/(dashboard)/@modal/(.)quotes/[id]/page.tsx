@@ -5,7 +5,7 @@ export default async function InterceptedQuoteDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
   return (
-    <RegistrationModalShell size="lg">
+    <RegistrationModalShell size="lg" closeHref="/quotes">
       <QuoteDetailPage {...props} />
     </RegistrationModalShell>
   );
