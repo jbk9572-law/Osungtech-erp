@@ -458,10 +458,15 @@ export function SalesGridTable({
                           aria-label="세금계산서 바로 작성"
                           className="erp-icon-link"
                         >
+                          {/* "명세표 조회"와 같은 문서 윤곽에 체크 표시만 달랐더니
+                              실제로 구분이 안 된다는 지적 — 돈/세금 문서임을
+                              바로 알 수 있게 안에 원화 기호(₩)를 넣는다. */}
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                             <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
                             <path d="M13.5 3.5V8h4" />
-                            <path d="M9 14.5l1.8 1.8L15 12.5" />
+                            <text x="12" y="18.5" textAnchor="middle" fontSize="11.5" fontWeight="800" stroke="none" fill="currentColor">
+                              ₩
+                            </text>
                           </svg>
                         </Link>
                       )}
