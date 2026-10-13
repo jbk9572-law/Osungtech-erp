@@ -9,10 +9,6 @@ const SIZE_CLASS = {
   md: "erp-modal-md",
   lg: "erp-modal-lg",
   xl: "erp-modal-xl",
-  // 매출 등록/수정에서 시범 적용 중인 슬라이드오버 — 화면 오른쪽에서
-  // 전체 높이로 밀고 들어온다(erp-theme.css의 .erp-modal-slideover 참고).
-  // 다른 등록 폼으로의 확장은 이 시범 결과를 본 뒤 결정한다.
-  slideover: "erp-modal-slideover",
 } as const;
 
 function isInternalNavAnchor(target: EventTarget | null): boolean {
@@ -38,7 +34,7 @@ export function RegistrationModalShell({
   size = "xl",
 }: {
   children: React.ReactNode;
-  size?: "md" | "lg" | "xl" | "slideover";
+  size?: "md" | "lg" | "xl";
 }) {
   const router = useRouter();
   // 닫기는 실제 라우트 이동이 끝나는 걸 절대 기다리지 않는다 — 클릭한
