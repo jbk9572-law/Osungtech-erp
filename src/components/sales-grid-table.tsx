@@ -411,11 +411,24 @@ export function SalesGridTable({
                   >
                     {isCollection ? "-" : `${row.isReturn ? "-" : ""}${formatNumber(row.taxAmount)}`}
                   </td>
-                  <td>
+                  <td onClick={(e) => canQuickIssue && e.stopPropagation()}>
                     {isCollection ? (
                       "-"
                     ) : row.invoiceStatus === "issued" ? (
                       <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
+                    ) : canQuickIssue ? (
+                      // 아이콘(₩ 표시)으로는 "세금계산서"라는 걸 못 알아보겠다는
+                      // 지적 — 글자로 바로 보여준다. 상태 그대로("미발행")
+                      // 두고 바로 옆에 실제 동작을 적은 링크를 붙인다.
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+                        <Link
+                          href={`/sales/${row.orderId}/tax-invoice`}
+                          style={{ color: "var(--erp-primary)", fontWeight: 700, textDecoration: "underline" }}
+                        >
+                          세금계산서 작성
+                        </Link>
+                      </span>
                     ) : (
                       <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
                     )}
@@ -448,25 +461,6 @@ export function SalesGridTable({
                             <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
                             <path d="M13.5 3.5V8h4" />
                             <path d="M9 13h6M9 16.5h6" />
-                          </svg>
-                        </Link>
-                      )}
-                      {canQuickIssue && (
-                        <Link
-                          href={`/sales/${row.orderId}/tax-invoice`}
-                          title="세금계산서 바로 작성"
-                          aria-label="세금계산서 바로 작성"
-                          className="erp-icon-link"
-                        >
-                          {/* "명세표 조회"와 같은 문서 윤곽에 체크 표시만 달랐더니
-                              실제로 구분이 안 된다는 지적 — 돈/세금 문서임을
-                              바로 알 수 있게 안에 원화 기호(₩)를 넣는다. */}
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
-                            <path d="M13.5 3.5V8h4" />
-                            <text x="12" y="18.5" textAnchor="middle" fontSize="11.5" fontWeight="800" stroke="none" fill="currentColor">
-                              ₩
-                            </text>
                           </svg>
                         </Link>
                       )}
