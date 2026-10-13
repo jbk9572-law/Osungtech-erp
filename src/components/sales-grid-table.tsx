@@ -24,6 +24,7 @@ import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/o
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { nextMonthLabel } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
+import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 
 export type SalesRowItem = {
   productLabel: string;
@@ -286,6 +287,19 @@ export function SalesGridTable({
                   ? `/customers/${row.customerId}`
                   : null;
               const isActive = row.key === activeKey;
+              // 세금계산서를 바로 작성할 수 있는 건만 목록에서 바로
+              // 진입 아이콘을 보여준다 — 이미 발행됐거나(issued),
+              // 면세/다른 증빙(현금영수증 등)으로 발행 대상이 아닌
+              // 건은 눌러도 바로 막히는 화면만 보게 되므로 아예
+              // 숨긴다(상세→세금계산서 화면의 차단 조건과 동일, 두
+              // 군데가 따로 놀지 않게 같은 헬퍼를 그대로 쓴다).
+              const canQuickIssue =
+                !isCollection &&
+                !!row.orderId &&
+                row.invoiceStatus !== "issued" &&
+                !!row.taxType &&
+                !isTaxExempt(row.taxType) &&
+                canIssueTaxInvoice(row.evidenceType ?? null);
               return (
                 <tr
                   key={row.key}
@@ -434,6 +448,20 @@ export function SalesGridTable({
                             <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
                             <path d="M13.5 3.5V8h4" />
                             <path d="M9 13h6M9 16.5h6" />
+                          </svg>
+                        </Link>
+                      )}
+                      {canQuickIssue && (
+                        <Link
+                          href={`/sales/${row.orderId}/tax-invoice`}
+                          title="세금계산서 바로 작성"
+                          aria-label="세금계산서 바로 작성"
+                          className="erp-icon-link"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" />
+                            <path d="M13.5 3.5V8h4" />
+                            <path d="M9 14.5l1.8 1.8L15 12.5" />
                           </svg>
                         </Link>
                       )}
