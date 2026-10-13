@@ -37,7 +37,7 @@ export default async function NewTodoPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">할일관리 &gt; 글쓰기</h1>
+      <h1 className="mb-3 erp-h1">할일관리 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
         <CloseButton href="/todos">ESC 목록으로</CloseButton>

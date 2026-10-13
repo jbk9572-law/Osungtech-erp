@@ -41,7 +41,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
     return (
       <div>
         <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
-        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+        <h1 className="mb-4 erp-h1">보고서 &gt; 지급결의양식 &gt; 수정</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           본인이 작성한 지급결의서만 수정할 수 있습니다.
         </p>
@@ -53,7 +53,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
     return (
       <div>
         <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
-        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+        <h1 className="mb-4 erp-h1">보고서 &gt; 지급결의양식 &gt; 수정</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이미 제출(마감)된 지급결의서는 수정할 수 없습니다. 회수 후 다시 시도해주세요.
         </p>
@@ -64,7 +64,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">보고서 &gt; 지급결의양식 &gt; 수정</h1>
+      <h1 className="mb-3 erp-h1">보고서 &gt; 지급결의양식 &gt; 수정</h1>
 
       <div className="erp-toolbar">
         <Link href={`/reports/payment-requests/${id}`} className="erp-btn erp-btn-dark">

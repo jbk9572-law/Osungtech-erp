@@ -229,7 +229,7 @@ export default async function AuditLogPage({
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="mb-1 erp-h1">
           환경설정 &gt; 변경 이력
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
@@ -407,7 +407,7 @@ export default async function AuditLogPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-1 erp-h1">
         환경설정 &gt; 변경 이력
       </h1>
       <PageGuide>

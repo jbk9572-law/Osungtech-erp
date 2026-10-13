@@ -1,14 +1,28 @@
 import type { ReactNode } from "react";
 
 // 목록/등록 화면 공통 헤더 — 제목이 툴바 위에 단독 줄로 오는 레이아웃.
-// 지금까지 화면마다 <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">를
+// 지금까지 화면마다 <h1 className="mb-3 erp-h1">를
 // 손으로 반복해서 짰는데, 여백 값이나 클래스가 한 곳만 바뀌고 다른 곳은
 // 그대로 남는 식으로 "같은 화면 종류인데 미묘하게 다른" 상태가 되기
 // 쉬웠다. 이 레이아웃을 쓰는 화면은 전부 이 컴포넌트만 쓴다.
-export function ListPageHeader({ title, actions }: { title: string; actions?: ReactNode }) {
+export function ListPageHeader({
+  title,
+  actions,
+  eyebrow,
+  description,
+}: {
+  title: string;
+  actions?: ReactNode;
+  // 둘 다 선택값 — 안 넘기면 지금까지와 똑같이 제목 한 줄만 나온다.
+  // 기존 36개 호출부를 전부 고치지 않아도 되게 하려고 선택값으로 둠.
+  eyebrow?: ReactNode;
+  description?: ReactNode;
+}) {
   return (
     <>
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">{title}</h1>
+      {eyebrow && <span className="erp-eyebrow">{eyebrow}</span>}
+      <h1 className="mb-3 erp-h1">{title}</h1>
+      {description && <p className="erp-page-desc" style={{ marginTop: -8, marginBottom: 12 }}>{description}</p>}
       {actions && <div className="erp-toolbar">{actions}</div>}
     </>
   );
@@ -28,7 +42,7 @@ export function DetailPageHeader({
   return (
     <>
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">{title}</h1>
+        <h1 className="erp-h1">{title}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           {actions}
         </div>

@@ -26,7 +26,7 @@ export default async function ReceivablesPage() {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">거래처관리 &gt; 미수금현황</h1>
+        <h1 className="erp-h1">거래처관리 &gt; 미수금현황</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <a href="/api/receivables/export" className="erp-btn" title="현재 화면 그대로 엑셀로 다운로드">
             📥 엑셀 다운로드

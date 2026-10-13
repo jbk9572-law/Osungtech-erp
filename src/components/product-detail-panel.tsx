@@ -63,7 +63,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
 
   return (
     <>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">{product.name}</h1>
+      <h1 className="mb-1 erp-h1">{product.name}</h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{product.sku}</p>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

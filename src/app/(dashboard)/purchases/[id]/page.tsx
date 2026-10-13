@@ -111,7 +111,7 @@ export default async function PurchaseDetailPage({
         }}
       />
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="flex items-center gap-2 text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="flex items-center gap-2 erp-h1">
           매입관리 &gt; 발주 상세
           {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
         </h1>

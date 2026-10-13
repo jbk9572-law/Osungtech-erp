@@ -102,7 +102,7 @@ export async function PaymentRequestDetailPanel({
           F9: { printHref: `/reports/payment-requests/${row.id}/print` },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-3 erp-h1">
         보고서 &gt; 지급결의양식 &gt; 본문{" "}
         <GridBadge tone={(STATUS_LABEL[row.status] ?? { tone: "muted" as const }).tone}>
           {STATUS_LABEL[row.status]?.label ?? row.status}

@@ -98,7 +98,7 @@ export default async function NewSalePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/sales" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-3 erp-h1">
         새 판매 거래 등록
       </h1>
       {saved && (

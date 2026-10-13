@@ -64,7 +64,7 @@ export default async function MonthlyReportPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-3 erp-h1">
         확장모듈 &gt; 월별 리포트
       </h1>
 

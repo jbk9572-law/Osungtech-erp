@@ -89,7 +89,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
   return (
     <>
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">{allowManage ? "수정" : "상세"}</h1>
+        <h1 className="erp-h1">{allowManage ? "수정" : "상세"}</h1>
         {allowManage && (
           <div className="erp-toolbar" style={{ marginBottom: 0 }}>
             <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />

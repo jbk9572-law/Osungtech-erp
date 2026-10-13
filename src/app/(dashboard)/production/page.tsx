@@ -75,7 +75,7 @@ export default async function ProductionPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/production/new" }, Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">생산관리 &gt; 생산지시 내역</h1>
+      <h1 className="mb-3 erp-h1">생산관리 &gt; 생산지시 내역</h1>
 
       <div className="erp-toolbar">
         <Link href="/production/new" className="erp-btn erp-btn-primary">

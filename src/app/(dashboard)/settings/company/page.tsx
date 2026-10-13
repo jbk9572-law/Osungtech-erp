@@ -11,7 +11,7 @@ export default async function CompanySettingsPage() {
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 회사정보</h1>
+        <h1 className="mb-1 erp-h1">환경설정 &gt; 회사정보</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>
@@ -28,7 +28,7 @@ export default async function CompanySettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 회사정보</h1>
+      <h1 className="mb-1 erp-h1">환경설정 &gt; 회사정보</h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">거래명세표의 공급자 정보로 사용됩니다.</p>
 
       <CompanyProfileForm company={company} />

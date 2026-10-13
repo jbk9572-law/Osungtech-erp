@@ -69,7 +69,7 @@ export default async function DocumentsPage({
         shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
       />
       <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">그룹웨어 &gt; 문서함</h1>
+        <h1 className="erp-h1">그룹웨어 &gt; 문서함</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <Link href={newHref} className="erp-btn erp-btn-primary">
             F2 새 문서

@@ -77,7 +77,7 @@ export default async function PaperCalcPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">확장모듈 &gt; 모조지 계산</h1>
+      <h1 className="mb-1 erp-h1">확장모듈 &gt; 모조지 계산</h1>
       <div style={{ marginTop: 12 }}>
         <PaperCalcClient
           salesOrderId={salesOrderId ?? null}

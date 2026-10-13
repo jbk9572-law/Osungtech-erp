@@ -77,7 +77,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
 
   return (
     <>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">{supplier.name}</h1>
+      <h1 className="mb-1 erp-h1">{supplier.name}</h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {supplier.business_number ?? "사업자번호 미등록"} · {supplier.contact_name ?? "담당자 미등록"}
       </p>

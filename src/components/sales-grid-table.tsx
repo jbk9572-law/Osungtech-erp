@@ -332,7 +332,10 @@ export function SalesGridTable({
                     {row.customerCode ?? "-"}
                   </td>
                   <td>
-                    <GridBadge tone={isCollection ? "muted" : row.isReturn ? "danger" : row.isSample ? "info" : "danger"}>
+                    {/* 평범한 매출 건까지 danger(빨강) 톤으로 떨어지던 버그 —
+                        danger는 반품(실제로 주의가 필요한 상태)에만 쓰고,
+                        매출은 info(파랑, 중립적 정보)로 바꾼다. */}
+                    <GridBadge tone={isCollection ? "muted" : row.isReturn ? "danger" : row.isSample ? "warn" : "info"}>
                       {isCollection ? "수금" : row.isReturn ? "반품" : row.isSample ? "샘플" : "매출"}
                     </GridBadge>
                   </td>

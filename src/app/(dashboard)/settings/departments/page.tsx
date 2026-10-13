@@ -55,7 +55,7 @@ export default async function DepartmentsPage() {
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 조직도 관리</h1>
+        <h1 className="mb-1 erp-h1">환경설정 &gt; 조직도 관리</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>

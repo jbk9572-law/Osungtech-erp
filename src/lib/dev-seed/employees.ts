@@ -138,9 +138,13 @@ export async function ensureDummyEmployees(
 // 서비스 롤로 직접 꽂아 넣거나(메일), 다른 더미 직원이 기안한 문서의
 // 결재자 id로만 쓴다(결재선).
 export async function findPlatformAdminMembers(admin: Db, tenantId: string): Promise<PlatformAdminMember[]> {
+  // 플랫폼관리자는 실제 엘보닉스 운영자 수만큼만 있는 전역 테이블이라
+  // 1000행을 넘을 일이 없다 — 그래도 check:pagination이 안전장치 없는
+  // 쿼리로 잡아내길래 명시적으로 상한을 둔다.
   const { data: platformAdmins, error: platformAdminsError } = await admin
     .from("platform_admins")
-    .select("user_id");
+    .select("user_id")
+    .limit(1000);
   if (platformAdminsError || !platformAdmins?.length) return [];
 
   const ids = platformAdmins.map((p) => p.user_id);

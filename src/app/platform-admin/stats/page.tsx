@@ -19,7 +19,7 @@ export default async function PlatformStatsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">플랫폼 관리 &gt; 통계</h1>
+      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 통계</h1>
       <PageGuide>플랫폼 전체 테넌트/사용자 현황과 최근 12개월 신규 가입 추이입니다.</PageGuide>
 
       {error && (

@@ -140,6 +140,41 @@
   cursor: pointer;
 }
 
+/* ── 타이포 위계 ───────────────────────────────────────────────
+   예전엔 화면 전체가 거의 12.5~13px로 평평해서 "이게 제목인지
+   라벨인지"가 눈으로 안 구분됐다 — 페이지 제목(h1) 하나만이라도
+   먼저 명확한 위계를 준다. 기존 75개 화면이 각자
+   text-lg(18px)/font-bold(700)를 그대로 복붙해 쓰던 걸 이 클래스
+   하나로 통일했다(mb-3/mb-1 같은 여백 유틸은 호출부에 그대로 둔다). */
+.erp-h1 {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--erp-text);
+  letter-spacing: -0.01em;
+}
+
+/* 목록/등록 화면 제목 위에 선택적으로 붙이는 상위 분류 라벨
+   ("SALES MANAGEMENT" 같은) — 작고 흐리게, 자간을 넓혀서 h1과
+   확실히 구분되게 한다. */
+.erp-eyebrow {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* h1 아래 붙는 한 줄 설명 — "출고 및 세금계산서 발행 내역을
+   조회합니다" 같은 화면 용도 설명. */
+.erp-page-desc {
+  font-size: 12px;
+  color: var(--erp-text-muted);
+  margin: 4px 0 0;
+  line-height: 1.6;
+}
+
 /* 마우스 없이 Tab만으로 화면을 조작할 때, 지금 포커스가 어디 있는지
    항상 눈에 보이게 한다 — 입력창/셀렉트는 이미 자체 포커스 링이
    있으니 제외. */
@@ -1093,7 +1128,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 9px;
-  border-radius: 0;
+  border-radius: 3px;
   border: 1px solid var(--erp-border);
   background: var(--erp-panel);
   color: var(--erp-text-muted);
@@ -1161,7 +1196,9 @@
 .erp-select {
   height: 30px;
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  /* 0 → 3px: 표/그리드는 각진 모서리를 유지하지만, 입력칸/버튼까지
+     전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만. */
+  border-radius: 3px;
   padding: 0 8px;
   font-size: 12.5px;
   background: var(--erp-panel);
@@ -1322,7 +1359,7 @@
   height: 32px;
   min-width: 90px;
   padding: 0 12px;
-  border-radius: 0;
+  border-radius: 3px;
   border: 1px solid var(--erp-border);
   background: var(--erp-panel);
   color: var(--erp-text);

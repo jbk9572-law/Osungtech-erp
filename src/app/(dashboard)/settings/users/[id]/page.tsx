@@ -20,7 +20,7 @@ export default async function UserDetailPage({
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 계정관리</h1>
+        <h1 className="mb-1 erp-h1">환경설정 &gt; 계정관리</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>
@@ -44,7 +44,7 @@ export default async function UserDetailPage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/users" } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 계정관리 &gt; {target.full_name ?? target.username}</h1>
+        <h1 className="erp-h1">환경설정 &gt; 계정관리 &gt; {target.full_name ?? target.username}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           {!isSelf && (
             <DeleteButton

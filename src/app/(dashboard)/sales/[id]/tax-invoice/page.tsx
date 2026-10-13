@@ -94,7 +94,7 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">매출관리 &gt; 세금계산서</h1>
+        <h1 className="erp-h1">매출관리 &gt; 세금계산서</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <CloseButton href={`/sales/${id}`}>ESC 매출 상세로</CloseButton>
         </div>

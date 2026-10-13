@@ -22,7 +22,7 @@ export default async function PlatformSupportPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">플랫폼 관리 &gt; 고객지원</h1>
+      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 고객지원</h1>
       <PageGuide>
         전체 테넌트가 남긴 문의입니다. 답변을 등록하면 해당 회사의 환경설정 &gt; 고객지원 화면에 바로
         표시됩니다.

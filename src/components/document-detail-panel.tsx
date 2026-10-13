@@ -28,7 +28,7 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
   return (
     <>
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">{doc.title}</h1>
+        <h1 className="erp-h1">{doc.title}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <PrintInPlaceButton href={`/hr/documents/item/${id}/print`}>F9 인쇄</PrintInPlaceButton>
           {canManage && (

@@ -110,7 +110,7 @@ export default async function EditSalePage({
     return (
       <div>
         <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
-        <h1 className="mb-4 text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="mb-4 erp-h1">
           매출 거래 수정
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
@@ -134,7 +134,7 @@ export default async function EditSalePage({
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="erp-h1">
           매출 거래 수정
         </h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>

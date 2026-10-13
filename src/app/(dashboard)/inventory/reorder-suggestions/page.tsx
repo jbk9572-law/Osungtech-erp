@@ -91,7 +91,7 @@ export default async function ReorderSuggestionsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-1 erp-h1">
         재고관리 &gt; 재고 부족 자동 발주 제안
       </h1>
       <PageGuide>

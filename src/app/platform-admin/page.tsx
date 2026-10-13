@@ -30,7 +30,7 @@ export default async function PlatformAdminPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">플랫폼 관리 &gt; 고객사</h1>
+      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 고객사</h1>
       <PageGuide>엘보닉스를 쓰는 회사(테넌트) 목록과, 새 고객사를 추가하는 화면입니다.</PageGuide>
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>

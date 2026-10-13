@@ -98,7 +98,7 @@ export default async function InventoryLedgerPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">회계·보고서 &gt; 수불부</h1>
+      <h1 className="mb-3 erp-h1">회계·보고서 &gt; 수불부</h1>
 
       <PageGuide>
         품목을 고르면 그 달의 이월(전월 이전 누적재고)부터 입고/출고 내역,

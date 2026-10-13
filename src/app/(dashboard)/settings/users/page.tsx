@@ -16,7 +16,7 @@ export default async function UsersSettingsPage() {
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="mb-1 erp-h1">
           환경설정 &gt; 권한관리
         </h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
@@ -34,7 +34,7 @@ export default async function UsersSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-1 erp-h1">
         환경설정 &gt; 권한관리
       </h1>
       <PageGuide>

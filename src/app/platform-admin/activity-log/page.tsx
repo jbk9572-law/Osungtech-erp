@@ -14,7 +14,7 @@ export default async function PlatformActivityLogPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">플랫폼 관리 &gt; 활동 로그</h1>
+      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 활동 로그</h1>
       <PageGuide>
         전체 테넌트를 넘나드는 최근 활동 로그입니다(최근 200건). 각 회사가 개별적으로 보는 감사
         로그와 달리, 회사 구분 없이 전체를 훑어볼 때만 씁니다.

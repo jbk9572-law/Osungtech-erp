@@ -70,7 +70,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
   return (
     <>
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">공지사항 &gt; {allowManage ? "수정" : "상세"}</h1>
+        <h1 className="erp-h1">공지사항 &gt; {allowManage ? "수정" : "상세"}</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           {allowManage && (
             <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />

@@ -17,7 +17,7 @@ export default async function NewAnnouncementPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">공지사항 &gt; 글쓰기</h1>
+      <h1 className="mb-3 erp-h1">공지사항 &gt; 글쓰기</h1>
 
       <div className="erp-toolbar">
         <CloseButton href="/announcements">ESC 목록으로</CloseButton>

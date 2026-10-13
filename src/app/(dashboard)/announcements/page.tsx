@@ -97,7 +97,7 @@ export default async function AnnouncementsPage({
         }}
       />
       <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">공지사항</h1>
+        <h1 className="erp-h1">공지사항</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           {isManagerOrAdmin && (
             <Link href={newHref} className="erp-btn erp-btn-primary">

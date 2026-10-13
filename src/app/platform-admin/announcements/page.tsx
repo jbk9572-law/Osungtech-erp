@@ -16,7 +16,7 @@ export default async function PlatformAnnouncementsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">플랫폼 관리 &gt; 공지사항</h1>
+      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 공지사항</h1>
       <PageGuide>
         여기 등록한 공지는 개별 회사의 자체 공지사항과 별개로, 노출 중(사용)으로 켜둔 항목이 모든
         회사의 모든 사용자 대시보드 상단에 배너로 보입니다.

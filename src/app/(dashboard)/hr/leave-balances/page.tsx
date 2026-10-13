@@ -20,7 +20,7 @@ export default async function LeaveBalancesPage() {
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 연차관리</h1>
+        <h1 className="mb-1 erp-h1">인사관리 &gt; 연차관리</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>
@@ -80,7 +80,7 @@ export default async function LeaveBalancesPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">인사관리 &gt; 연차관리</h1>
+      <h1 className="mb-3 erp-h1">인사관리 &gt; 연차관리</h1>
 
       <PageGuide>
         입사일을 등록하면 근로기준법 기준 법정 연차 일수를 자동 계산해

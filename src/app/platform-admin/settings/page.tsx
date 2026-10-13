@@ -18,7 +18,7 @@ export default async function PlatformSettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">플랫폼 관리 &gt; 환경설정</h1>
+      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 환경설정</h1>
       <PageGuide>
         여기서 정한 값은 새로 만들어지는 테넌트(고객사)에만 기본값으로 적용됩니다. 이미 만들어진
         회사의 설정은 각 회사의 환경설정 &gt; 기능 관리 화면에서 따로 바꿀 수 있습니다.

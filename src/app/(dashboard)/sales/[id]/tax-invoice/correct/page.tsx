@@ -38,7 +38,7 @@ export default async function TaxInvoiceCorrectionPage({ params }: { params: Pro
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}/tax-invoice` } }} />
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">매출관리 &gt; 수정세금계산서</h1>
+        <h1 className="erp-h1">매출관리 &gt; 수정세금계산서</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
           <CloseButton href={`/sales/${id}/tax-invoice`}>ESC 세금계산서로</CloseButton>
         </div>

@@ -62,7 +62,7 @@ export default async function InventoryQrLabelsPage({
     <div className="print-page-margin">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
       <div className="mb-3 flex items-center justify-between print:hidden">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">재고관리 &gt; QR 라벨 인쇄</h1>
+        <h1 className="erp-h1">재고관리 &gt; QR 라벨 인쇄</h1>
       </div>
       <PageGuide className="print:hidden">
         아래 라벨을 인쇄해서 품목/박스에 붙이면, QR 자동실사 화면에서 스캔으로 바로 인식됩니다.

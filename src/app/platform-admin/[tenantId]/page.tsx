@@ -68,7 +68,7 @@ export default async function PlatformAdminTenantDetailPage({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="erp-h1">
           플랫폼 관리 &gt; 고객사 &gt; {tenant.name}
         </h1>
         <Link href="/platform-admin" className="erp-btn">

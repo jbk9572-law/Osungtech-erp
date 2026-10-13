@@ -112,7 +112,7 @@ export default async function SaleDetailPage({
         }}
       />
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="flex items-center gap-2 text-lg font-bold text-[var(--erp-text)]">
+        <h1 className="flex items-center gap-2 erp-h1">
           매출관리 &gt; 수주 상세
           {order.is_return && <GridBadge tone="danger">반품</GridBadge>}
           {order.is_sample && <GridBadge tone="info">샘플</GridBadge>}

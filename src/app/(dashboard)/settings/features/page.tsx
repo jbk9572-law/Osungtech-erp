@@ -23,7 +23,7 @@ export default async function FeatureSettingsPage() {
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 기능 관리</h1>
+        <h1 className="mb-1 erp-h1">환경설정 &gt; 기능 관리</h1>
         <p className="erp-grid-empty" style={{ marginTop: 24 }}>
           이 화면은 관리자만 볼 수 있습니다.
         </p>
@@ -38,7 +38,7 @@ export default async function FeatureSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">환경설정 &gt; 기능 관리</h1>
+      <h1 className="mb-1 erp-h1">환경설정 &gt; 기능 관리</h1>
 
       <PageGuide>
         모든 회사가 모든 기능을 쓰지는 않으므로, 안 쓰는 메뉴는 그룹 전체 또는 세부 항목 단위로 꺼서

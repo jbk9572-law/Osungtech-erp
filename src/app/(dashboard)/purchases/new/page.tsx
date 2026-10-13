@@ -129,7 +129,7 @@ export default async function NewPurchasePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-3 erp-h1">
         새 매입(입고) 등록
       </h1>
       {saved && (

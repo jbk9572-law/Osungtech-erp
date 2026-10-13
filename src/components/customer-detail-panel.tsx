@@ -93,7 +93,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
 
   return (
     <>
-      <h1 className="mb-1 text-lg font-bold text-[var(--erp-text)]">{customer.name}</h1>
+      <h1 className="mb-1 erp-h1">{customer.name}</h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
         {customer.business_number ?? "사업자번호 미등록"} · {customer.contact_name ?? "담당자 미등록"}
       </p>

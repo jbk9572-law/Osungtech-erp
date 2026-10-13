@@ -333,7 +333,7 @@ export default async function SalesPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">
+      <h1 className="mb-3 erp-h1">
         매출관리
       </h1>
 

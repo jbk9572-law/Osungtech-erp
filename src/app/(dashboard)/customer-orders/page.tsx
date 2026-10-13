@@ -58,7 +58,7 @@ export default async function CustomerOrdersPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 text-lg font-bold text-[var(--erp-text)]">생산관리 &gt; 거래처 발주 승인</h1>
+      <h1 className="mb-3 erp-h1">생산관리 &gt; 거래처 발주 승인</h1>
 
       <PageGuide>
         거래처가 외부 포털에서 넣은 발주 요청입니다. 승인하면 품목이
