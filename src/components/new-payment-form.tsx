@@ -41,8 +41,8 @@ export function NewPaymentForm({
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">기본정보</span>
           </div>
-          <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
-            <div className="erp-field">
+          <div className="erp-detail-body erp-field-grid" style={{ border: "none", padding: 14, margin: 0 }}>
+            <div className="erp-field erp-span-3">
               <label htmlFor="np-supplier">공급처</label>
               <PartySearchSelect
                 id="np-supplier"
@@ -52,15 +52,15 @@ export function NewPaymentForm({
                 placeholder="공급처명 검색"
               />
             </div>
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="np-paid-at">일자</label>
               <input id="np-paid-at" type="date" name="paid_at" defaultValue={today} className="erp-input" required />
             </div>
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="np-amount">금액</label>
               <input id="np-amount" type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input" required />
             </div>
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="np-method">방법</label>
               <select id="np-method" name="method" className="erp-input" defaultValue="">
                 <option value="">-</option>
@@ -71,7 +71,7 @@ export function NewPaymentForm({
                 ))}
               </select>
             </div>
-            <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
+            <div className="erp-field erp-span-3">
               <label htmlFor="np-memo">적요 (선택)</label>
               <input
                 id="np-memo"

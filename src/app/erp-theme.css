@@ -1109,16 +1109,35 @@
   font-size: 12.5px;
   background: var(--erp-panel);
   color: var(--erp-text);
+  /* 감속 곡선(cubic-bezier(0.4,0,0.2,1) — 로딩 게이지에서 이미 쓰던
+     값과 동일)으로 통일해, 포커스에 들어가고 나올 때 뚝뚝 끊기지 않고
+     자연스럽게 멈추는 느낌을 준다. */
   transition:
-    border-color 0.12s ease,
-    box-shadow 0.12s ease;
+    border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .erp-input:focus,
 .erp-select:focus {
   outline: none;
   border-color: var(--erp-primary);
-  box-shadow: 0 0 0 3px rgba(19, 41, 68, 0.16);
+  box-shadow:
+    0 0 0 3px rgba(19, 41, 68, 0.16),
+    0 1px 2px rgba(19, 41, 68, 0.08);
+  transform: translateY(-0.5px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-input,
+  .erp-select {
+    transition: none;
+  }
+
+  .erp-input:focus,
+  .erp-select:focus {
+    transform: none;
+  }
 }
 
 /* 캘린더 일정 설명, 창고이동/구매요청류 메모칸처럼 2~3줄짜리 짧은
@@ -1134,13 +1153,15 @@
   resize: vertical;
 }
 
-/* ── 4-1. 공용 입력칸 그리드 (파일럿: new-sale-form.tsx만 사용) ──────
+/* ── 4-1. 공용 입력칸 그리드 (여러 줄짜리 등록/수정 폼에서 사용) ─────
    화면마다 .erp-field에 flex/minWidth를 직접 흩어 써서, 윗줄이 2칸인데
    아랫줄이 4칸이면 칸 경계가 서로 안 맞고 폭도 들쭉날쭉했다. 12등분
    그리드 위에서 각 칸이 몇 칸을 차지할지(erp-span-N)만 정하면, 줄마다
-   칸 개수가 달라도 경계가 항상 같은 그리드 선 위에 떨어진다. 매출 등록
-   폼에서 먼저 검증하고, 확정되면 .erp-search 자체를 이 그리드로 바꿔
-   전체 화면에 적용한다. */
+   칸 개수가 달라도 경계가 항상 같은 그리드 선 위에 떨어진다. 매출/매입
+   등록, 수금/지급 등록, 할일 등록 폼에 적용했다(new-sale-form.tsx,
+   new-purchase-form.tsx, new-payment-form.tsx, new-collection-form.tsx,
+   todo-form.tsx) — 단순 검색창 한 줄짜리 .erp-search는 애초에 줄이
+   하나뿐이라 경계가 어긋날 일이 없어 그대로 둔다. */
 .erp-field-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -1178,55 +1199,6 @@
 
   .erp-field-grid > .erp-field {
     grid-column: span 1 !important;
-  }
-}
-
-/* ── 4-2. 입력 상호작용 애니메이션 (파일럿: .erp-pilot-anim 안에서만) ──
-   기존 .erp-input/.erp-btn에도 트랜지션은 있었지만(0.12s ease), 포커스
-   시 살짝 떠오르는 느낌/정지 직전 감속이 없어 뚝뚝 끊겨 보였다. 이징을
-   감속 곡선(cubic-bezier(0.4,0,0.2,1) — 로딩 게이지에서 이미 쓰던 값과
-   동일)으로 바꾸고, 포커스/호버/누름 상태에 미세한 떠오름·눌림을 더한다.
-   기존 공용 규칙(.erp-input, .erp-btn)은 건드리지 않고 이 래퍼 클래스
-   안에서만 겹쳐써서, 확정 전까지 다른 화면에는 전혀 영향이 없다. */
-.erp-pilot-anim .erp-input,
-.erp-pilot-anim .erp-select {
-  transition:
-    border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.erp-pilot-anim .erp-input:focus,
-.erp-pilot-anim .erp-select:focus {
-  box-shadow:
-    0 0 0 3px rgba(19, 41, 68, 0.14),
-    0 1px 2px rgba(19, 41, 68, 0.08);
-  transform: translateY(-0.5px);
-}
-
-.erp-pilot-anim .erp-btn {
-  transition:
-    background 0.16s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.14s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.16s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.erp-pilot-anim .erp-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
-}
-
-.erp-pilot-anim .erp-btn:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .erp-pilot-anim .erp-input,
-  .erp-pilot-anim .erp-select,
-  .erp-pilot-anim .erp-btn {
-    transition: none;
   }
 }
 
@@ -1287,21 +1259,37 @@
   font-weight: 500;
   text-decoration: none;
   box-shadow: var(--erp-shadow-sm);
+  /* 감속 곡선(cubic-bezier(0.4,0,0.2,1))으로 통일 — 호버에 살짝
+     떠오르고 누르면 살짝 눌리는 느낌까지 더해, 뚝뚝 끊기지 않고
+     자연스럽게 정지한다. */
   transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    transform 0.08s ease,
-    box-shadow 0.12s ease;
+    background 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.14s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.16s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .erp-btn:hover {
   background: var(--erp-hover);
   border-color: #c3cee0;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(19, 41, 68, 0.14);
 }
 
 .erp-btn:active {
-  transform: translateY(1px);
+  transform: translateY(0) scale(0.97);
   box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-btn {
+    transition: none;
+  }
+
+  .erp-btn:hover,
+  .erp-btn:active {
+    transform: none;
+  }
 }
 
 .erp-btn:disabled {

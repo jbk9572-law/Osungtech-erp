@@ -42,8 +42,8 @@ export function NewCollectionForm({
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">기본정보</span>
           </div>
-          <div className="erp-detail-body erp-search" style={{ border: "none", padding: 14, margin: 0 }}>
-            <div className="erp-field">
+          <div className="erp-detail-body erp-field-grid" style={{ border: "none", padding: 14, margin: 0 }}>
+            <div className="erp-field erp-span-3">
               <label htmlFor="nc-customer">출고처</label>
               <PartySearchSelect
                 id="nc-customer"
@@ -53,15 +53,15 @@ export function NewCollectionForm({
                 placeholder="출고처명 검색"
               />
             </div>
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="nc-paid-at">일자</label>
               <input id="nc-paid-at" type="date" name="paid_at" defaultValue={today} className="erp-input" required />
             </div>
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="nc-amount">금액</label>
               <input id="nc-amount" type="number" name="amount" step="1" min="1" placeholder="-" className="erp-input" required />
             </div>
-            <div className="erp-field">
+            <div className="erp-field erp-span-2">
               <label htmlFor="nc-method">방법</label>
               <select id="nc-method" name="method" className="erp-input" defaultValue="">
                 <option value="">-</option>
@@ -72,7 +72,7 @@ export function NewCollectionForm({
                 ))}
               </select>
             </div>
-            <div className="erp-field" style={{ flex: 1, minWidth: 220 }}>
+            <div className="erp-field erp-span-3">
               <label htmlFor="nc-memo">적요 (선택)</label>
               <input
                 id="nc-memo"

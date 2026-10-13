@@ -1139,7 +1139,7 @@ export function NewSaleForm({
           </div>
         )}
         <div
-          className="erp-detail-body erp-field-grid erp-pilot-anim"
+          className="erp-detail-body erp-field-grid"
           style={{ border: "none", padding: 14, margin: 0 }}
         >
           <div className="erp-field erp-span-2">

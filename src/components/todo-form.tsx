@@ -231,8 +231,8 @@ export function TodoForm({
         />
       </div>
 
-      <div className="erp-search">
-        <div className="erp-field">
+      <div className="erp-field-grid">
+        <div className="erp-field erp-span-4">
           <label>
             유형
             <FieldHint text="매입/매출 등록 화면에서 '할일 가져오기'로 이 할일을 불러와 등록해야 완료 처리됩니다. 매입+출고는 입고와 출고 둘 다 등록해야 완료됩니다." />
@@ -262,7 +262,7 @@ export function TodoForm({
           </div>
         </div>
         {todoType !== "sale" && (
-          <div className="erp-field">
+          <div className="erp-field erp-span-4">
             <label htmlFor="todo-supplier">공급처</label>
             <PartySearchSelect
               id="todo-supplier"
@@ -275,7 +275,7 @@ export function TodoForm({
           </div>
         )}
         {todoType !== "purchase" && (
-          <div className="erp-field">
+          <div className="erp-field erp-span-4">
             <label htmlFor="todo-customer">출고처</label>
             <PartySearchSelect
               id="todo-customer"
@@ -288,7 +288,7 @@ export function TodoForm({
           </div>
         )}
         {todoType === "both" && (
-          <div className="erp-field">
+          <div className="erp-field erp-span-6">
             <label htmlFor="todo-ship-date">출고예정일 (비우면 마감일 당일출고)</label>
             <input id="todo-ship-date" name="ship_date" type="date" defaultValue={initial?.shipDate ?? ""} className="erp-input" />
           </div>
