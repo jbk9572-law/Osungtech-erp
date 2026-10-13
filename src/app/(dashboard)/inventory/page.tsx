@@ -78,8 +78,8 @@ export default async function InventoryPage({
         </div>
       </div>
 
-      <form method="get" className="erp-search">
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+      <form method="get" className="erp-field-grid">
+        <div className="erp-field erp-span-6">
           <label htmlFor="search-q">품목 / 규격 검색</label>
           <input
             id="search-q"

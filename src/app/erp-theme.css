@@ -475,6 +475,10 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.12s ease-out;
+  /* 열릴 때는 배경막이 페이드인 — 닫힐 때(.closing)는 바로 아래
+     transition이 담당하므로 서로 안 겹친다(애니메이션은 한 번 재생되고
+     끝나면 멈추고, 그 뒤로는 평소처럼 transition만 반응한다). */
+  animation: erp-modal-overlay-in 0.16s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 닫기(X/ESC/배경클릭)는 실제 라우트 이동이 끝나길 기다리지 않고 클릭한
@@ -508,6 +512,10 @@
   transition:
     opacity 0.12s ease-out,
     transform 0.12s ease-out;
+  /* 열릴 때 아주 살짝 작은 상태(0.96)에서 커지며 자리 잡는다 — 애플
+     시스템 시트/팝오버가 "튀어나오는" 느낌과 비슷하게, 감속이 강한
+     곡선(ease-out-expo에 가까움)으로 끝부분에서 자연스럽게 멈춘다. */
+  animation: erp-modal-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 닫기 클릭/ESC 즉시 — 실제 이동이 끝나길 기다리지 않고 눌리자마자
@@ -516,6 +524,33 @@
   opacity: 0;
   transform: scale(0.98);
   pointer-events: none;
+}
+
+@keyframes erp-modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes erp-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-modal-overlay,
+  .erp-modal {
+    animation: none;
+  }
 }
 
 /* 등록 모달 셸(registration-modal-shell.tsx) 전용 — 화면마다 제각각
@@ -930,6 +965,28 @@
   overflow-y: auto;
   background: var(--erp-panel);
   padding: 18px;
+  /* 메뉴 이동마다(erp-shell.tsx가 pathname을 key로 줘서 매번 새로
+     마운트시킨다) 콘텐츠가 뚝 끊기지 않고 살짝 아래에서 떠오르며 자연스럽게
+     자리 잡는다. "이동 중..." 오버레이(route-progress-bar.tsx)는 200ms
+     넘게 걸리는 느린 이동에만 따로 뜨므로 서로 겹치지 않는다. */
+  animation: erp-page-fade-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes erp-page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-page {
+    animation: none;
+  }
 }
 
 /* 셸 크롬(타이틀바/리본/트리메뉴/탭바/상태바/메신저/토스트)은 화면
@@ -1153,19 +1210,24 @@
   resize: vertical;
 }
 
-/* ── 4-1. 공용 입력칸 그리드 (여러 줄짜리 등록/수정 폼에서 사용) ─────
+/* ── 4-1. 공용 입력칸 그리드 (등록/수정 폼 + 조회 검색창 전체 공용) ────
    화면마다 .erp-field에 flex/minWidth를 직접 흩어 써서, 윗줄이 2칸인데
    아랫줄이 4칸이면 칸 경계가 서로 안 맞고 폭도 들쭉날쭉했다. 12등분
    그리드 위에서 각 칸이 몇 칸을 차지할지(erp-span-N)만 정하면, 줄마다
    칸 개수가 달라도 경계가 항상 같은 그리드 선 위에 떨어진다. 매출/매입
-   등록, 수금/지급 등록, 할일 등록 폼에 적용했다(new-sale-form.tsx,
-   new-purchase-form.tsx, new-payment-form.tsx, new-collection-form.tsx,
-   todo-form.tsx) — 단순 검색창 한 줄짜리 .erp-search는 애초에 줄이
-   하나뿐이라 경계가 어긋날 일이 없어 그대로 둔다. */
+   등록 같은 여러 줄짜리 폼은 물론, 목록 화면 상단의 한 줄짜리 검색창
+   (.erp-search를 쓰던 곳 전부)에도 통일해서 적용했다 — .erp-search
+   (flex-wrap)는 더 이상 새로 쓰지 않지만, 과거 데이터/스크린샷 참고용
+   스타일은 남겨둔다. */
 .erp-field-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 14px;
+  /* 검색창들은 "라벨+입력칸" 세트인 .erp-field와 달리 제출/초기화
+     버튼을 라벨 없이 바로 그리드 자식으로 두는 경우가 많다 — 버튼도
+     .erp-field와 같은 아래쪽 기준선에 맞춰 정렬되게 한다(.erp-field는
+     라벨+입력칸이 세로로 쌓여 있어 자연히 아래쪽이 입력칸 높이가 됨). */
+  align-items: end;
 }
 
 .erp-field-grid > .erp-field {
@@ -1192,12 +1254,21 @@
   grid-column: span 12;
 }
 
+/* 검색창의 "조회"/"초기화" 버튼처럼 .erp-field로 감싸지 않고 바로
+   그리드 자식으로 두는 버튼 — 명시 span이 없으면 그리드가 기본으로
+   1칸(12분의 1)만 줘서 글자가 넘치거나 줄이 들쭉날쭉해진다. 버튼 종류는
+   항상 .erp-btn을 쓰므로 그 클래스 기준으로 넉넉한 폭을 기본값으로 준다. */
+.erp-field-grid > .erp-btn {
+  grid-column: span 2;
+}
+
 @media (max-width: 640px) {
   .erp-field-grid {
     grid-template-columns: 1fr;
   }
 
-  .erp-field-grid > .erp-field {
+  .erp-field-grid > .erp-field,
+  .erp-field-grid > .erp-btn {
     grid-column: span 1 !important;
   }
 }

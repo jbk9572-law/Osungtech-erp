@@ -345,8 +345,8 @@ export default async function SalesPage({
         to={effectiveTo}
       />
 
-      <form method="get" id="sales-search-form" className="erp-search">
-        <div className="erp-field">
+      <form method="get" id="sales-search-form" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label htmlFor="search-from">시작일</label>
           <input
             id="search-from"
@@ -356,7 +356,7 @@ export default async function SalesPage({
             className="erp-input"
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-2">
           <label htmlFor="search-to">종료일</label>
           <input
             id="search-to"
@@ -366,7 +366,7 @@ export default async function SalesPage({
             className="erp-input"
           />
         </div>
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+        <div className="erp-field erp-span-6">
           <label htmlFor="search-q">출고처 / 상품 / 규격 검색</label>
           <input
             id="search-q"

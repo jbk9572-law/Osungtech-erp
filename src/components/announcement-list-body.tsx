@@ -105,8 +105,8 @@ export function AnnouncementListBody({
           </span>
         </div>
 
-        <div className="erp-search" style={{ margin: 8, padding: 8, gap: 6, flexWrap: "wrap" }}>
-          <div className="erp-field" style={{ minWidth: 90 }}>
+        <div className="erp-field-grid" style={{ margin: 8, padding: 8, gap: 6 }}>
+          <div className="erp-field erp-span-3" style={{ minWidth: 90 }}>
             <label htmlFor="ann-sort">정렬</label>
             <select
               id="ann-sort"
@@ -120,7 +120,7 @@ export function AnnouncementListBody({
               <option value="authorName">작성자순</option>
             </select>
           </div>
-          <div className="erp-field" style={{ minWidth: "100%" }}>
+          <div className="erp-field erp-span-12">
             <label htmlFor="ann-search-q">제목 검색</label>
             <input
               id="ann-search-q"

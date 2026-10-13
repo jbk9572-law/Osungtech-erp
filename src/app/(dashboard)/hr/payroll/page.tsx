@@ -217,9 +217,9 @@ export default async function PayrollPage({
               templateHref="/templates/withholding-tax-brackets-template.xlsx"
             />
             <div style={{ marginTop: 12 }}>
-              <form method="get" className="erp-search" style={{ marginBottom: 12 }}>
+              <form method="get" className="erp-field-grid" style={{ marginBottom: 12 }}>
                 <input type="hidden" name="pay_month" value={payMonth} />
-                <div className="erp-field">
+                <div className="erp-field erp-span-4">
                   <label>월급여로 구간 찾기</label>
                   <input
                     type="number"
@@ -229,6 +229,7 @@ export default async function PayrollPage({
                     defaultValue={wbSalary ?? ""}
                     className="erp-input"
                     placeholder="예: 3000000"
+                    style={{ width: "100%" }}
                   />
                 </div>
                 <button type="submit" className="erp-btn erp-btn-primary">

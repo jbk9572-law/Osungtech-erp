@@ -38,12 +38,12 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
     <form action={formAction} className="flex flex-col gap-3">
       <input type="hidden" name="sales_order_ids" value={JSON.stringify([...selected])} />
 
-      <div className="erp-search">
-        <div className="erp-field" style={{ minWidth: 160 }}>
+      <div className="erp-field-grid">
+        <div className="erp-field erp-span-2" style={{ minWidth: 160 }}>
           <label htmlFor="bulk-ti-date">작성일자</label>
           <input id="bulk-ti-date" name="issue_date" type="date" defaultValue={today} className="erp-input" required />
         </div>
-        <div className="erp-field" style={{ minWidth: 120 }}>
+        <div className="erp-field erp-span-2" style={{ minWidth: 120 }}>
           <label htmlFor="bulk-ti-claim">청구/영수</label>
           <select id="bulk-ti-claim" name="claim_type" defaultValue="claim" className="erp-select">
             <option value="claim">청구</option>

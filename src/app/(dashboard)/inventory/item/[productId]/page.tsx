@@ -232,8 +232,8 @@ export default async function InventoryProductHistoryPage({
         to={to}
       />
 
-      <form method="get" className="erp-search">
-        <div className="erp-field">
+      <form method="get" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label>시작일</label>
           <input
             type="date"
@@ -242,7 +242,7 @@ export default async function InventoryProductHistoryPage({
             className="erp-input"
           />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-2">
           <label>종료일</label>
           <input
             type="date"

@@ -77,12 +77,12 @@ export default async function PortalAssignmentsPage({
         to={effectiveTo}
       />
 
-      <form method="get" id="portal-assignments-search-form" className="erp-search">
-        <div className="erp-field">
+      <form method="get" id="portal-assignments-search-form" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label htmlFor="portal-assignments-from">시작일</label>
           <input id="portal-assignments-from" type="date" name="from" defaultValue={effectiveFrom} className="erp-input" />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-2">
           <label htmlFor="portal-assignments-to">종료일</label>
           <input id="portal-assignments-to" type="date" name="to" defaultValue={effectiveTo} className="erp-input" />
         </div>

@@ -21,8 +21,8 @@ export function LotLookupSearchForm({
   const [selectedProductId, setSelectedProductId] = useState(productId);
 
   return (
-    <form method="get" className="erp-search">
-      <div className="erp-field" style={{ minWidth: 200 }}>
+    <form method="get" className="erp-field-grid">
+      <div className="erp-field erp-span-3">
         <label htmlFor="lot-q">관리번호(LOT)</label>
         <input
           id="lot-q"
@@ -35,7 +35,7 @@ export function LotLookupSearchForm({
           style={{ width: "100%", textTransform: "uppercase" }}
         />
       </div>
-      <div className="erp-field" style={{ minWidth: 260 }}>
+      <div className="erp-field erp-span-4">
         <label htmlFor="lot-product">또는 품목으로 찾기</label>
         <ProductSearchSelect
           id="lot-product"

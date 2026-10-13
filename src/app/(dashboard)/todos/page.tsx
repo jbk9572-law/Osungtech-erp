@@ -197,21 +197,25 @@ export default async function TodosPage({
           <form
             id="todos-search-form"
             method="get"
-            className="erp-search"
+            className="erp-field-grid"
             style={{ margin: 8, padding: 8, gap: 6 }}
           >
-            <input
-              type="text"
-              name="q"
-              autoComplete="off"
-              defaultValue={q ?? ""}
-              placeholder="제목, 메모, 품목명, 거래처 검색"
-              className="erp-input"
-              style={{ width: "100%" }}
-            />
-            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
-              조회
-            </button>
+            <div className="erp-field erp-span-12">
+              <input
+                type="text"
+                name="q"
+                autoComplete="off"
+                defaultValue={q ?? ""}
+                placeholder="제목, 메모, 품목명, 거래처 검색"
+                className="erp-input"
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="erp-field erp-span-12">
+              <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+                조회
+              </button>
+            </div>
           </form>
           <div className="erp-split-list-body">
             {rows.map((row) => {

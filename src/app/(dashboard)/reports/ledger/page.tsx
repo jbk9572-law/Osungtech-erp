@@ -106,8 +106,8 @@ export default async function InventoryLedgerPage({
         합산 기준입니다.
       </PageGuide>
 
-      <form method="get" className="erp-search" style={{ marginBottom: 8 }}>
-        <div className="erp-field" style={{ minWidth: 220 }}>
+      <form method="get" className="erp-field-grid" style={{ marginBottom: 8 }}>
+        <div className="erp-field erp-span-4">
           <label htmlFor="ledger-product">품목</label>
           <select id="ledger-product" name="product_id" className="erp-input w-full" defaultValue={productId ?? ""} required>
             <option value="" disabled>
@@ -120,7 +120,7 @@ export default async function InventoryLedgerPage({
             ))}
           </select>
         </div>
-        <div className="erp-field" style={{ minWidth: 160 }}>
+        <div className="erp-field erp-span-3">
           <label htmlFor="ledger-warehouse">창고</label>
           <select id="ledger-warehouse" name="warehouse_id" className="erp-input w-full" defaultValue={warehouseId ?? ""}>
             <option value="">전체 창고</option>

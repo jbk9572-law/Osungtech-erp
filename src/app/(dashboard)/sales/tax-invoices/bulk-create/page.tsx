@@ -95,12 +95,12 @@ export default async function BulkTaxInvoicePage({
         거래나 수탁자 정보가 필요한 건은 매출 상세의 개별 세금계산서 작성 화면을 이용해주세요.
       </PageGuide>
 
-      <form method="get" className="erp-search">
-        <div className="erp-field">
+      <form method="get" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label htmlFor="bulk-from">시작일</label>
           <input id="bulk-from" type="date" name="from" defaultValue={from} className="erp-input" />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-2">
           <label htmlFor="bulk-to">종료일</label>
           <input id="bulk-to" type="date" name="to" defaultValue={to} className="erp-input" />
         </div>

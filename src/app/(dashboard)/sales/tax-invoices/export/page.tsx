@@ -71,12 +71,12 @@ export default async function TaxInvoiceExportPage({
         (여기서 국세청으로 바로 전송하지는 않습니다).
       </PageGuide>
 
-      <form method="get" className="erp-search">
-        <div className="erp-field">
+      <form method="get" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label htmlFor="export-from">시작일</label>
           <input id="export-from" type="date" name="from" defaultValue={from} className="erp-input" />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-2">
           <label htmlFor="export-to">종료일</label>
           <input id="export-to" type="date" name="to" defaultValue={to} className="erp-input" />
         </div>

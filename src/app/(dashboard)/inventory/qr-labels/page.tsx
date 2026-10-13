@@ -68,8 +68,8 @@ export default async function InventoryQrLabelsPage({
         아래 라벨을 인쇄해서 품목/박스에 붙이면, QR 자동실사 화면에서 스캔으로 바로 인식됩니다.
       </PageGuide>
 
-      <form method="get" className="erp-search print:hidden">
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+      <form method="get" className="erp-field-grid print:hidden">
+        <div className="erp-field erp-span-6">
           <label htmlFor="search-q">품목 검색 (비워두면 전체 품목)</label>
           <input
             id="search-q"
@@ -82,7 +82,7 @@ export default async function InventoryQrLabelsPage({
             style={{ width: "100%" }}
           />
         </div>
-        <div className="erp-field" style={{ justifyContent: "flex-end" }}>
+        <div className="erp-field erp-span-3" style={{ justifyContent: "flex-end" }}>
           <label aria-hidden="true">&nbsp;</label>
           <label
             style={{

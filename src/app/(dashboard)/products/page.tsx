@@ -131,18 +131,20 @@ export default async function ProductsPage({
           <form
             id="products-search-form"
             method="get"
-            className="erp-search"
+            className="erp-field-grid"
             style={{ margin: 8, padding: 8, gap: 6 }}
           >
-            <input
-              type="text"
-              name="q"
-              autoComplete="off"
-              defaultValue={q ?? ""}
-              placeholder="상품명, SKU, 규격 검색"
-              className="erp-input"
-              style={{ width: "100%" }}
-            />
+            <div className="erp-field erp-span-6">
+              <input
+                type="text"
+                name="q"
+                autoComplete="off"
+                defaultValue={q ?? ""}
+                placeholder="상품명, SKU, 규격 검색"
+                className="erp-input"
+                style={{ width: "100%" }}
+              />
+            </div>
             <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
               F5 조회
             </button>

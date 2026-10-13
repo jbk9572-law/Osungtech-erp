@@ -106,16 +106,16 @@ export default async function QuotesPage({
 
       <DateRangeQuickFilters basePath="/quotes" presets={presets} monthButtons={monthButtons} from={from} to={to} />
 
-      <form method="get" id="quotes-search-form" className="erp-search">
-        <div className="erp-field">
+      <form method="get" id="quotes-search-form" className="erp-field-grid">
+        <div className="erp-field erp-span-2">
           <label htmlFor="quotes-search-from">시작일</label>
           <input id="quotes-search-from" type="date" name="from" defaultValue={from ?? ""} className="erp-input" />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-2">
           <label htmlFor="quotes-search-to">종료일</label>
           <input id="quotes-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+        <div className="erp-field erp-span-6">
           <label htmlFor="quotes-search-q">거래처 / 견적번호 / 메모 검색</label>
           <input
             id="quotes-search-q"

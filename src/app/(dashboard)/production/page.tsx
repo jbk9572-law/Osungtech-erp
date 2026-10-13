@@ -100,10 +100,10 @@ export default async function ProductionPage({
         to={effectiveTo}
       />
 
-      <form method="get" className="erp-search" style={{ marginBottom: 12 }}>
+      <form method="get" className="erp-field-grid" style={{ marginBottom: 12 }}>
         {from && <input type="hidden" name="from" value={from} />}
         {to && <input type="hidden" name="to" value={to} />}
-        <div className="erp-field" style={{ minWidth: 220, flex: 1 }}>
+        <div className="erp-field erp-span-6">
           <label htmlFor="production-search-q">완제품 / 창고 / 메모 검색</label>
           <input
             id="production-search-q"

@@ -126,18 +126,20 @@ export default async function SuppliersPage({
           <form
             id="suppliers-search-form"
             method="get"
-            className="erp-search"
+            className="erp-field-grid"
             style={{ margin: 8, padding: 8, gap: 6 }}
           >
-            <input
-              type="text"
-              name="q"
-              autoComplete="off"
-              defaultValue={q ?? ""}
-              placeholder="업체명, 사업자번호, 담당자 검색"
-              className="erp-input"
-              style={{ width: "100%" }}
-            />
+            <div className="erp-field erp-span-6">
+              <input
+                type="text"
+                name="q"
+                autoComplete="off"
+                defaultValue={q ?? ""}
+                placeholder="업체명, 사업자번호, 담당자 검색"
+                className="erp-input"
+                style={{ width: "100%" }}
+              />
+            </div>
             <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
               F5 조회
             </button>
