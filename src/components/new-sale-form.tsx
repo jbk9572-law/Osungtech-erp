@@ -941,7 +941,7 @@ export function NewSaleForm({
         if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
       }}
     >
-      <div className="erp-doc-paper space-y-6">
+      <div className="erp-doc-paper flex flex-col gap-6">
       <h2 className="erp-doc-title">{isReturn ? "반 품 전 표" : "매 출 전 표"}</h2>
       <LocationAllocationModal
         open={allocationModalOpen}

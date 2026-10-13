@@ -609,6 +609,65 @@
   max-height: 92vh;
 }
 
+/* 매출 등록/수정 시범 적용 — 작은 중앙 카드 대신 화면 오른쪽에서 전체
+   높이로 밀고 들어오는 패널. 목록 화면이 왼쪽으로 일부 비쳐 보여
+   "목록 위에 떠 있다"는 느낌을 유지하면서, 품목 그리드가 있는 큰
+   폼에 중앙 모달보다 훨씬 넓은 작업 공간을 준다. 오버레이의
+   flex 중앙정렬과 무관하게 뷰포트 오른쪽에 바로 고정되도록
+   position을 absolute로 바꾼다(.erp-modal의 기본 relative를 덮어씀). */
+.erp-modal-slideover {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 92vw;
+  max-width: calc(100vw - 48px);
+  height: 100vh;
+  max-height: 100vh;
+  margin: 0;
+  border-radius: 0;
+  border-top: none;
+  border-left: 3px solid var(--erp-primary);
+  box-shadow: -8px 0 24px rgba(19, 41, 68, 0.18);
+  animation: erp-slideover-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes erp-slideover-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 닫힐 때는 중앙 모달처럼 살짝 작아지는 대신, 들어온 방향 그대로
+   오른쪽으로 밀려 나간다. */
+.erp-modal-slideover.closing {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.erp-modal-slideover .erp-modal-window-close {
+  top: 14px;
+  right: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erp-modal-slideover {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .erp-modal-slideover {
+    width: 100vw;
+    max-width: 100vw;
+  }
+}
+
 .erp-modal-title {
   display: flex;
   align-items: center;

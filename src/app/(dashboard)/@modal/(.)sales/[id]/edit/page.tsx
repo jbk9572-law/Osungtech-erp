@@ -8,7 +8,7 @@ export default async function InterceptedEditSalePage(props: {
   searchParams: Promise<{ back?: string }>;
 }) {
   return (
-    <RegistrationModalShell size="xl">
+    <RegistrationModalShell size="slideover">
       <EditSalePage {...props} />
     </RegistrationModalShell>
   );

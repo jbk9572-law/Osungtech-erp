@@ -199,7 +199,7 @@ export function TodoForm({
   return (
     <form
       action={formAction}
-      className="space-y-4"
+      className="flex flex-col gap-4"
       onKeyDown={preventEnterSubmit}
       onSubmit={() => {
         // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다
