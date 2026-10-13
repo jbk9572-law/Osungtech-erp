@@ -1,4 +1,4 @@
-import type { Db, DummyEmployee } from "./types";
+import type { Db, DummyEmployee, PlatformAdminMember } from "./types";
 import { DEPARTMENTS, POSITIONS, randomFullName } from "./korean-data";
 import { fetchAllRows } from "../fetch-all-rows";
 
@@ -129,6 +129,33 @@ export async function ensureDummyEmployees(
   }
 
   return [...existing, ...created];
+}
+
+// 이 테넌트에 속한 플랫폼관리자(엘보닉스 운영자) 찾기 — platform_admins는
+// 테넌트와 무관한 전역 테이블이라, 이 테넌트 profiles에도 있는 사람만
+// "이 테넌트에서 테스트해볼 사람"으로 본다. 더미 직원과 달리 실제 사람
+// 계정이라 비밀번호를 모르므로 로그인 세션은 만들 수 없다 — 호출부가
+// 서비스 롤로 직접 꽂아 넣거나(메일), 다른 더미 직원이 기안한 문서의
+// 결재자 id로만 쓴다(결재선).
+export async function findPlatformAdminMembers(admin: Db, tenantId: string): Promise<PlatformAdminMember[]> {
+  const { data: platformAdmins, error: platformAdminsError } = await admin
+    .from("platform_admins")
+    .select("user_id");
+  if (platformAdminsError || !platformAdmins?.length) return [];
+
+  const ids = platformAdmins.map((p) => p.user_id);
+  const { data: profiles, error: profilesError } = await admin
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("tenant_id", tenantId)
+    .in("id", ids);
+  if (profilesError || !profiles?.length) return [];
+
+  return profiles.map((p) => ({
+    id: p.id,
+    email: p.email ?? "",
+    fullName: p.full_name ?? "플랫폼관리자",
+  }));
 }
 
 export const DUMMY_PORTAL_PASSWORD = "DevSeedPortal!2026";

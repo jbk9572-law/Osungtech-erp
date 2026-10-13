@@ -1,5 +1,5 @@
 import { createAdminClient, resolveTenant, signInAsEmployee } from "./client";
-import { ensureDepartments, ensureDummyEmployees, ensurePortalAccounts } from "./employees";
+import { ensureDepartments, ensureDummyEmployees, ensurePortalAccounts, findPlatformAdminMembers } from "./employees";
 import {
   ensureAndGrowCustomers,
   ensureAndGrowProducts,
@@ -39,6 +39,7 @@ export type DevSeedOptions = {
 export type DevSeedResult = {
   tenant: { id: string; slug: string; name: string };
   employeeCount: number;
+  platformAdminCount: number;
   boards: BoardSeedResult[];
 };
 
@@ -61,6 +62,11 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
     throw new Error("더미 직원을 한 명도 만들지 못했습니다 — SUPABASE_SERVICE_ROLE_KEY 권한을 확인해주세요.");
   }
   const departments = await ensureDepartments(admin, tenant.id);
+  // 이 테넌트 소속 플랫폼관리자 — 지금 로그인해서 테스트해볼 실제 계정이
+  // 있다면 메일/결재선 더미에도 참여시킨다(아래 seedMail/seedApprovals).
+  // 없으면(이 테넌트에 플랫폼관리자가 아직 없음) 그냥 빈 배열로 더미
+  // 직원끼리만 채우던 기존 동작 그대로.
+  const platformAdmins = await findPlatformAdminMembers(admin, tenant.id);
 
   // 게시글마다 매번 새로 로그인하지 않도록, 더미 직원 중 일부만 실제
   // 로그인시켜 세션 풀로 돌려쓴다(client.ts의 signInAsEmployee 주석 참고).
@@ -147,10 +153,10 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
     () => seedTodos(ctx, actors, postsPerBoard),
     () => seedAnnouncements(ctx, actors, postsPerBoard),
     () => seedOfficialDocuments(ctx, actors, postsPerBoard),
-    () => seedApprovals(employees, actors, postsPerBoard),
+    () => seedApprovals(employees, actors, platformAdmins, postsPerBoard),
     () => seedHrDocuments(employees, actors, postsPerBoard),
     () => seedMessenger(actors, postsPerBoard),
-    () => seedMail(actors, postsPerBoard),
+    () => seedMail(admin, tenant.id, actors, platformAdmins, postsPerBoard),
     () => seedCalendar(ctx, actors, postsPerBoard),
     () => seedSalesActivities(ctx, actors, postsPerBoard),
     () => seedAttendance(employees, actors, postsPerBoard),
@@ -169,5 +175,5 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
     }
   }
 
-  return { tenant, employeeCount: employees.length, boards };
+  return { tenant, employeeCount: employees.length, platformAdminCount: platformAdmins.length, boards };
 }

@@ -40,6 +40,11 @@ async function main() {
 
   console.log(`\n[dev-seed] 테넌트: ${result.tenant.name} (${result.tenant.slug})`);
   console.log(`[dev-seed] 더미 직원: 총 ${result.employeeCount}명 (아이디: dummy01 ~ , 비밀번호는 employees.ts의 DUMMY_EMPLOYEE_PASSWORD 참고)`);
+  if (result.platformAdminCount > 0) {
+    console.log(`[dev-seed] 이 테넌트 소속 플랫폼관리자 ${result.platformAdminCount}명도 메일함/결재선 더미에 포함했습니다 — 그 계정으로 로그인해서 바로 확인할 수 있습니다.`);
+  } else {
+    console.log("[dev-seed] 이 테넌트에 속한 플랫폼관리자 계정을 찾지 못해, 메일함/결재선 더미는 더미 직원끼리만 채워졌습니다.");
+  }
   console.log("[dev-seed] 게시판별 생성 결과:");
   for (const b of result.boards) {
     const status = b.error ? `⚠ ${b.created}건 성공, 오류: ${b.error}` : `${b.created}건`;

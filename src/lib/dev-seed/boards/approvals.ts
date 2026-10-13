@@ -1,4 +1,4 @@
-import type { ActingSession, BoardSeedResult, DummyEmployee } from "../types";
+import type { ActingSession, BoardSeedResult, DummyEmployee, PlatformAdminMember } from "../types";
 import { pick, pickMany } from "../korean-data";
 
 const TITLES = [
@@ -12,6 +12,7 @@ const TITLES = [
 export async function seedApprovals(
   employees: DummyEmployee[],
   actors: ActingSession[],
+  platformAdmins: PlatformAdminMember[],
   count: number,
 ): Promise<BoardSeedResult> {
   let created = 0;
@@ -24,6 +25,13 @@ export async function seedApprovals(
       continue;
     }
     const approverIds = pickMany(others, Math.min(2, others.length)).map((e) => e.id);
+    // 플랫폼관리자가 결재함을 테스트해볼 수 있게, 기안마다 결재선 끝에
+    // 플랫폼관리자를 끼워 넣는다 — 기안자는 그대로 더미 직원이고
+    // (submit_approval_document는 그 직원 세션으로 호출), 결재자
+    // 목록에만 실제 사람 id를 섞는다.
+    for (const admin_ of platformAdmins) {
+      approverIds.push(admin_.id);
+    }
     // submit_approval_document는 migration 102(3개 인자)와 migration
     // 110(참조자 지원, 4번째 p_reference_ids가 기본값 '{}')이 서로 다른
     // 시그니처의 오버로드 2개로 공존한다(같은 이름의 create or replace가

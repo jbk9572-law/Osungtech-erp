@@ -16,6 +16,13 @@ export type DummyEmployee = {
   departmentId: string | null;
 };
 
+// 이 테넌트 소속이면서 동시에 platform_admins에 올라있는 사람 —
+// 실제 로그인 비밀번호를 모르므로(더미 직원과 달리 진짜 사람 계정)
+// signInAsEmployee로 세션을 만들 수 없다. 메일/결재선 더미데이터는
+// 이 사람들의 user_id를 그대로 꽂아 넣는 방식(서비스 롤 직접 insert,
+// 혹은 다른 더미 직원이 기안한 문서의 결재자 id로 사용)으로만 채운다.
+export type PlatformAdminMember = { id: string; email: string; fullName: string };
+
 export type SeedContext = {
   tenantId: string;
   tenantSlug: string;
