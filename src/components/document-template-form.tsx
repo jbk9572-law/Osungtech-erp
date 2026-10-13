@@ -4,7 +4,8 @@ import { useActionState, useMemo, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
-import { RichTextEditor, type RichTextEditorHandle } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
+import type { RichTextEditorHandle } from "@/components/rich-text-editor";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 const CATEGORY_LABELS: Record<string, string> = {

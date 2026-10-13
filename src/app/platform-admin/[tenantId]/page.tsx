@@ -23,35 +23,34 @@ export default async function PlatformAdminTenantDetailPage({
   // service_role 클라이언트로 직접 조회한다(플랫폼 관리자 화면 전용 패턴).
   const admin = createAdminClient();
 
-  const { data: tenant } = await admin
-    .from("tenants")
-    .select("id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance")
-    .eq("id", tenantId)
-    .maybeSingle();
+  // 네 조회 모두 tenantId만 있으면 바로 돌 수 있는 독립적인 조회라
+  // (plans/pointTransactions/members는 tenant 행 자체의 어떤 값도
+  // 참조하지 않는다) 순서대로 기다리는 대신 한 번에 묶어서 보낸다.
+  const [{ data: tenant }, { data: plans }, { data: pointTransactions }, { data: members }] = await Promise.all([
+    admin
+      .from("tenants")
+      .select("id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance")
+      .eq("id", tenantId)
+      .maybeSingle(),
+    admin
+      .from("platform_plans")
+      .select("plan_key, name")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(200),
+    admin
+      .from("point_transactions")
+      .select("id, delta, action_type, reason, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    admin.from("tenant_members").select("user_id").eq("tenant_id", tenantId).limit(1000),
+  ]);
 
   if (!tenant) {
     notFound();
   }
 
-  const { data: plans } = await admin
-    .from("platform_plans")
-    .select("plan_key, name")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .limit(200);
-
-  const { data: pointTransactions } = await admin
-    .from("point_transactions")
-    .select("id, delta, action_type, reason, created_at")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  const { data: members } = await admin
-    .from("tenant_members")
-    .select("user_id")
-    .eq("tenant_id", tenantId)
-    .limit(1000);
   const userIds = (members ?? []).map((m) => m.user_id);
 
   const { data: users } = userIds.length

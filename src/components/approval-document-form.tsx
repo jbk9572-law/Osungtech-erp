@@ -8,7 +8,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import { extractTemplateFields, renderTemplate } from "@/lib/document-template";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type TemplateOption = { id: string; name: string; body: string };

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/is-uuid";
 import { createClient } from "@/lib/supabase/server";
-import { getQuickDatePresets, getYearMonthButtons } from "@/lib/date-presets";
+import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
@@ -31,10 +31,24 @@ export default async function InventoryProductHistoryPage({
 }) {
   const { productId } = await params;
   if (!isUuid(productId)) notFound();
-  const { from, to } = await searchParams;
+  const { from: fromParam, to: toParam } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: product }, txRaw, saleLotRows, purchaseLotRows] = await Promise.all([
+  // 날짜를 직접 안 걸었으면 매출/매입 목록과 같은 기본값(이번달)을 쓴다
+  // — 예전엔 기본이 "전체 이력"이라, 거래가 많이 쌓인 인기 품목일수록
+  // 상세 화면을 열 때마다 처음부터 끝까지 풀스캔해서 느려졌다(수불부
+  // 화면이 먼저 겪은 문제와 같은 종류 — get_ledger_opening_balance RPC
+  // 주석 참고). "이번달" 이전 잔량은 전체 이력을 다시 더하는 대신 그
+  // RPC로 DB 안에서 한 번에 집계한다(창고 구분 없이 합산 — 이 화면
+  // 자체가 전체 창고 합산 기준이라 p_warehouse_id는 비워둔다).
+  const { from, to } = defaultListRange(fromParam, toParam);
+  // inventory_transactions.created_at은 timestamptz라, 문자열 비교만 하면
+  // 월 경계 근처(자정 전후) 거래가 잘못된 쪽으로 샐 수 있다 — 한국시간
+  // 기준 자정을 명시적으로 못박는다(reports/ledger/page.tsx와 동일).
+  const fromIso = `${from}T00:00:00+09:00`;
+  const toIso = `${to}T23:59:59.999+09:00`;
+
+  const [{ data: product }, { data: openingBalanceRaw }, txRaw] = await Promise.all([
     supabase
       .from("products")
       .select(
@@ -42,12 +56,10 @@ export default async function InventoryProductHistoryPage({
       )
       .eq("id", productId)
       .maybeSingle(),
-    // 재고 잔량은 전체 이력을 처음부터 누적해야 정확하다. 예전에는 여기
-    // limit(1000)이 있었는데, 오름차순 정렬 + limit 조합이라 거래가 1000건을
-    // 넘는 순간 정작 최신 거래가 잘려서 화면에도 안 보이고 잔량 계산도
-    // 틀어지는 문제가 있었다(오래된 거래는 남고 최신 거래가 사라짐). 그
-    // limit을 없앤 뒤에도 PostgREST의 max_rows(1000, supabase/config.toml)가
-    // 여전히 조용히 같은 상한을 적용하므로, fetchAllRows로 전량을 받아온다.
+    supabase.rpc("get_ledger_opening_balance", {
+      p_product_id: productId,
+      p_before: fromIso,
+    }),
     fetchAllRows<{
       id: string;
       type: string;
@@ -60,33 +72,17 @@ export default async function InventoryProductHistoryPage({
       sales_orders: { order_date: string; customers: { name: string | null } | null } | null;
       purchase_orders: { purchase_date: string; suppliers: { name: string | null } | null } | null;
       profiles: { full_name: string | null } | null;
-    }>((from, to) =>
+    }>((f, t) =>
       supabase
         .from("inventory_transactions")
         .select(
           "id, type, quantity, note, reference, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
         )
         .eq("product_id", productId)
+        .gte("created_at", fromIso)
+        .lte("created_at", toIso)
         .order("created_at", { ascending: true })
-        .range(from, to),
-    ),
-    // 관리번호는 inventory_transactions에 직접 없고 그 전표의 품목 줄
-    // (sales_order_items/purchase_order_items)에 있다 — 이 품목 기준으로
-    // 미리 전표ID→관리번호 맵을 만들어둔다(되돌림 줄은 전표ID 연결이
-    // 없어 관리번호도 없지만, 합쳐지는 앵커/최초 줄 쪽에서 채워진다).
-    fetchAllRows<{ sales_order_id: string; lot_number: string | null }>((from, to) =>
-      supabase
-        .from("sales_order_items")
-        .select("sales_order_id, lot_number")
-        .eq("product_id", productId)
-        .range(from, to),
-    ),
-    fetchAllRows<{ purchase_order_id: string; lot_number: string | null }>((from, to) =>
-      supabase
-        .from("purchase_order_items")
-        .select("purchase_order_id, lot_number")
-        .eq("product_id", productId)
-        .range(from, to),
+        .range(f, t),
     ),
   ]);
 
@@ -94,16 +90,46 @@ export default async function InventoryProductHistoryPage({
     notFound();
   }
 
+  // 관리번호는 inventory_transactions에 직접 없고 그 전표의 품목 줄
+  // (sales_order_items/purchase_order_items)에 있다 — 이번달(선택한
+  // 기간) 조회분에 실제로 등장하는 전표ID만 추려서 그만큼만 찾는다
+  // (품목 전체 역사의 전표를 다 긁어올 필요 없음).
+  const saleOrderIds = Array.from(new Set(txRaw.map((t) => t.sales_order_id).filter((id): id is string => !!id)));
+  const purchaseOrderIds = Array.from(new Set(txRaw.map((t) => t.purchase_order_id).filter((id): id is string => !!id)));
+  const [saleLotRows, purchaseLotRows] = await Promise.all([
+    saleOrderIds.length
+      ? fetchAllRows<{ sales_order_id: string; lot_number: string | null }>((f, t) =>
+          supabase
+            .from("sales_order_items")
+            .select("sales_order_id, lot_number")
+            .eq("product_id", productId)
+            .in("sales_order_id", saleOrderIds)
+            .range(f, t),
+        )
+      : Promise.resolve([]),
+    purchaseOrderIds.length
+      ? fetchAllRows<{ purchase_order_id: string; lot_number: string | null }>((f, t) =>
+          supabase
+            .from("purchase_order_items")
+            .select("purchase_order_id, lot_number")
+            .eq("product_id", productId)
+            .in("purchase_order_id", purchaseOrderIds)
+            .range(f, t),
+        )
+      : Promise.resolve([]),
+  ]);
+
   const lotBySalesOrderId = new Map(saleLotRows.map((r) => [r.sales_order_id, r.lot_number]));
   const lotByPurchaseOrderId = new Map(purchaseLotRows.map((r) => [r.purchase_order_id, r.lot_number]));
 
+  const openingBalance = Number(openingBalanceRaw ?? 0);
   const allTx = txRaw.reduce<InventoryHistoryRow[]>((acc, t) => {
     const date =
       t.sales_orders?.order_date ??
       t.purchase_orders?.purchase_date ??
       t.created_at.slice(0, 10);
     const signedQty = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
-    const balance = (acc.at(-1)?.balance ?? 0) + signedQty;
+    const balance = (acc.at(-1)?.balance ?? openingBalance) + signedQty;
     acc.push({
       id: t.id,
       date,
@@ -135,6 +161,10 @@ export default async function InventoryProductHistoryPage({
   // 때만(추측 없이) 최신 줄 하나로 합친다 — inventory-history-grouping.ts 참고.
   const groupedTx = groupOrderCorrections(allTx);
 
+  // created_at 기준으로 조회했지만 화면 표시/정렬은 전표상 거래일자
+  // 기준이라(당일 입고분을 다음날 등록하는 등 날짜가 어긋날 수 있음),
+  // 혹시 거래일자가 조회기간을 살짝 벗어난 줄이 섞여 있으면 한 번 더
+  // 걸러낸다.
   const rows = groupedTx
     .filter((t) => (!from || t.date >= from) && (!to || t.date <= to))
     .reverse();
@@ -254,12 +284,24 @@ export default async function InventoryProductHistoryPage({
         <button type="submit" className="erp-btn erp-btn-primary">
           F5 조회
         </button>
-        {(from || to) && (
+        {(fromParam || toParam) && (
           <Link href={`/inventory/item/${productId}`} className="erp-btn">
             초기화
           </Link>
         )}
       </form>
+      <div
+        className="rounded p-2 text-xs"
+        style={{
+          marginBottom: 8,
+          background: "var(--erp-info-bg)",
+          color: "var(--erp-info-text)",
+          border: "1px solid var(--erp-info-border)",
+        }}
+      >
+        {fromParam ? "" : `날짜를 지정하지 않으면 이번달(${from} ~ ${to})만 표시됩니다. `}
+        재고 잔량은 조회기간 시작 시점의 누적 재고(이월)부터 정확히 반영됩니다.
+      </div>
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

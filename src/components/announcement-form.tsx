@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useFormRedirect } from "@/lib/use-form-redirect";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function AnnouncementForm({

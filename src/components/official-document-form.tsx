@@ -6,7 +6,7 @@ import { useFormRedirect } from "@/lib/use-form-redirect";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { extractTemplateFields, isServerAutoField, renderTemplate, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { PageGuide } from "@/components/erp/page-guide";
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 
 type TemplateOption = { id: string; name: string; body: string };
 type ProfileOption = { id: string; name: string };

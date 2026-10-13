@@ -467,13 +467,16 @@ export async function bulkDeletePaymentRequests(
     .select("id, approval_document_id")
     .in("id", ids)
     .eq("status", "pending");
+  // 건마다 따로 회수 RPC를 순서대로 기다리면 N건 삭제에 왕복이 N번
+  // 직렬로 쌓인다 — 서로 다른 전표라 완전히 독립적이므로 동시에 보낸다.
   const recallFailedIds = new Set<string>();
-  for (const row of pendingRows ?? []) {
-    if (row.approval_document_id) {
+  await Promise.all(
+    (pendingRows ?? []).map(async (row) => {
+      if (!row.approval_document_id) return;
       const { error: recallError } = await supabase.rpc("recall_approval_document", { p_id: row.approval_document_id });
       if (recallError) recallFailedIds.add(row.id);
-    }
-  }
+    }),
+  );
   const idsToDelete = ids.filter((id) => !recallFailedIds.has(id));
   if (idsToDelete.length === 0) {
     return { error: "선택한 문서를 모두 회수하지 못해 삭제할 수 없습니다." };

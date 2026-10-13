@@ -171,15 +171,20 @@ export async function submitStockCount(
   // 위치 기준으로 실사한 품목은 그 위치의 재고(inventory_locations)도
   // 같이 맞춘다 — apply_location_stock_delta가 상대값(delta)만큼 더하고,
   // 부호에 따라 위치 이력에 "입고"/"출고"로 남긴다. 이 단계가 실패해도
-  // 위의 재고 실사 자체는 이미 저장됐으니 등록을 막지 않는다.
-  for (const r of changedLocation) {
-    const { error: locationError } = await supabase.rpc("apply_location_stock_delta", {
-      p_product_id: r.productId,
-      p_location_id: r.locationId,
-      p_delta: r.delta,
-    });
-    if (locationError) console.error("위치별 재고 실사 반영 실패:", locationError.message);
-  }
+  // 위의 재고 실사 자체는 이미 저장됐으니 등록을 막지 않는다. 서로 다른
+  // 품목/위치라 완전히 독립적인데 예전엔 한 줄씩 순서대로 기다렸다 —
+  // 위치 실사 대상이 많은 회차(예: 창고 전체 QR 실사)는 그만큼 Supabase
+  // 왕복이 직렬로 쌓였다. 동시에 보낸다.
+  await Promise.all(
+    changedLocation.map(async (r) => {
+      const { error: locationError } = await supabase.rpc("apply_location_stock_delta", {
+        p_product_id: r.productId,
+        p_location_id: r.locationId,
+        p_delta: r.delta,
+      });
+      if (locationError) console.error("위치별 재고 실사 반영 실패:", locationError.message);
+    }),
+  );
 
   revalidatePath("/inventory");
   revalidatePath("/inventory/locations");

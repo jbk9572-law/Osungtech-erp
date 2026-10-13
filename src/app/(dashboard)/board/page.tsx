@@ -46,104 +46,112 @@ export default async function BoardPage() {
 
   const rows: BoardRow[] = [];
 
-  // ── 공지사항 (항상 켜져 있는 핵심 기능이라 featureKey 없음) ──────────
-  const { data: notices } = await supabase
-    .from("announcements")
-    .select("id, title, pinned, created_at")
-    .order("created_at", { ascending: false })
-    .limit(PER_CATEGORY_LIMIT);
-  const noticeIds = (notices ?? []).map((n) => n.id);
-  const { data: readRows } =
-    user && noticeIds.length
-      ? await supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id).in("announcement_id", noticeIds)
-      : { data: [] as { announcement_id: string }[] };
-  const readIds = new Set((readRows ?? []).map((r) => r.announcement_id));
-  for (const n of notices ?? []) {
-    const unread = !readIds.has(n.id);
-    rows.push({
-      id: n.id,
-      category: "notice",
-      title: n.title,
-      status: unread ? { label: "안읽음", tone: "danger" } : n.pinned ? { label: "고정", tone: "info" } : null,
-      date: n.created_at,
-      href: `/announcements/${n.id}`,
-    });
-  }
-
-  // ── 인사관리 > 문서함 ────────────────────────────────────────────
-  if (hrEnabled) {
-    // document_instances_select RLS가 이미 "내가 만들었거나 나에 대한
-    // 문서 또는 관리자"로 걸러준다(hr/documents/page.tsx와 동일).
-    const { data: hrDocs } = await supabase
-      .from("document_instances")
-      .select("id, title, status, created_at")
-      .order("created_at", { ascending: false })
-      .limit(PER_CATEGORY_LIMIT);
-    for (const d of hrDocs ?? []) {
-      rows.push({
-        id: d.id,
-        category: "hr_doc",
-        title: d.title,
-        status: HR_DOC_STATUS[d.status as keyof typeof HR_DOC_STATUS] ?? { label: d.status, tone: "muted" },
-        date: d.created_at,
-        href: `/hr/documents/item/${d.id}`,
-      });
-    }
-  }
-
-  // ── 공문관리(내 공문함 + 받은 공문함 합침) ───────────────────────
-  if (officialEnabled && user) {
-    const [{ data: mineDocs }, { data: recipientRows }] = await Promise.all([
-      supabase
-        .from("official_documents")
-        .select("id, title, status, created_at")
-        .eq("created_by", user.id)
+  // 4개 섹션은 서로 전혀 무관한 조회라, 이전에는 순서대로(공지→인사→
+  // 공문→결재) 하나씩 기다려서 한 화면에 최대 5~6번 Supabase 왕복이
+  // 직렬로 걸렸다. 켤지 말지(hrEnabled 등)는 이미 위에서 다 알고 있으니,
+  // 섹션별로 함수 하나씩 묶어 Promise.all로 동시에 돌린다 — 각 섹션
+  // 내부의 진짜 의존관계(공지→읽음여부, 공문 내문서+수신목록→실제
+  // 공문)는 그대로 유지된다.
+  const [noticeRows, hrDocRows, officialRows, approvalRows] = await Promise.all([
+    // ── 공지사항 (항상 켜져 있는 핵심 기능이라 featureKey 없음) ────────
+    (async (): Promise<BoardRow[]> => {
+      const { data: notices } = await supabase
+        .from("announcements")
+        .select("id, title, pinned, created_at")
         .order("created_at", { ascending: false })
-        .limit(PER_CATEGORY_LIMIT),
-      supabase.from("official_document_recipients").select("official_document_id").eq("user_id", user.id).limit(PER_CATEGORY_LIMIT),
-    ]);
-    const receivedIds = Array.from(new Set((recipientRows ?? []).map((r) => r.official_document_id)));
-    const { data: receivedDocs } = receivedIds.length
-      ? await supabase
-          .from("official_documents")
-          .select("id, title, status, created_at")
-          .in("id", receivedIds)
-          .order("created_at", { ascending: false })
-          .limit(PER_CATEGORY_LIMIT)
-      : { data: [] as { id: string; title: string; status: string; created_at: string }[] };
-    const officialById = new Map<string, { id: string; title: string; status: string; created_at: string }>();
-    for (const d of [...(mineDocs ?? []), ...(receivedDocs ?? [])]) officialById.set(d.id, d);
-    for (const d of officialById.values()) {
-      rows.push({
-        id: d.id,
-        category: "official",
-        title: d.title,
-        status: OFFICIAL_STATUS[d.status] ?? { label: d.status, tone: "muted" },
-        date: d.created_at,
-        href: `/official-documents/${d.id}`,
+        .limit(PER_CATEGORY_LIMIT);
+      const noticeIds = (notices ?? []).map((n) => n.id);
+      const { data: readRows } =
+        user && noticeIds.length
+          ? await supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id).in("announcement_id", noticeIds)
+          : { data: [] as { announcement_id: string }[] };
+      const readIds = new Set((readRows ?? []).map((r) => r.announcement_id));
+      return (notices ?? []).map((n) => {
+        const unread = !readIds.has(n.id);
+        return {
+          id: n.id,
+          category: "notice" as const,
+          title: n.title,
+          status: unread ? { label: "안읽음", tone: "danger" as const } : n.pinned ? { label: "고정", tone: "info" as const } : null,
+          date: n.created_at,
+          href: `/announcements/${n.id}`,
+        };
       });
-    }
-  }
-
-  // ── 전자결재 > 기안함(임시저장 제외 — approvals/page.tsx와 동일) ──
-  if (approvalsEnabled) {
-    const { data: approvalDocs } = await supabase
-      .from("approval_documents")
-      .select("id, title, status, created_at")
-      .neq("status", "draft")
-      .order("created_at", { ascending: false })
-      .limit(PER_CATEGORY_LIMIT);
-    for (const d of approvalDocs ?? []) {
-      rows.push({
-        id: d.id,
-        category: "approval",
-        title: d.title,
-        status: APPROVAL_STATUS[d.status] ?? { label: d.status, tone: "muted" },
-        date: d.created_at,
-        href: `/approvals/${d.id}`,
-      });
-    }
-  }
+    })(),
+    // ── 인사관리 > 문서함 ──────────────────────────────────────────
+    hrEnabled
+      ? (async (): Promise<BoardRow[]> => {
+          // document_instances_select RLS가 이미 "내가 만들었거나 나에
+          // 대한 문서 또는 관리자"로 걸러준다(hr/documents/page.tsx와 동일).
+          const { data: hrDocs } = await supabase
+            .from("document_instances")
+            .select("id, title, status, created_at")
+            .order("created_at", { ascending: false })
+            .limit(PER_CATEGORY_LIMIT);
+          return (hrDocs ?? []).map((d) => ({
+            id: d.id,
+            category: "hr_doc" as const,
+            title: d.title,
+            status: HR_DOC_STATUS[d.status as keyof typeof HR_DOC_STATUS] ?? { label: d.status, tone: "muted" as const },
+            date: d.created_at,
+            href: `/hr/documents/item/${d.id}`,
+          }));
+        })()
+      : Promise.resolve([]),
+    // ── 공문관리(내 공문함 + 받은 공문함 합침) ─────────────────────
+    officialEnabled && user
+      ? (async (): Promise<BoardRow[]> => {
+          const [{ data: mineDocs }, { data: recipientRows }] = await Promise.all([
+            supabase
+              .from("official_documents")
+              .select("id, title, status, created_at")
+              .eq("created_by", user.id)
+              .order("created_at", { ascending: false })
+              .limit(PER_CATEGORY_LIMIT),
+            supabase.from("official_document_recipients").select("official_document_id").eq("user_id", user.id).limit(PER_CATEGORY_LIMIT),
+          ]);
+          const receivedIds = Array.from(new Set((recipientRows ?? []).map((r) => r.official_document_id)));
+          const { data: receivedDocs } = receivedIds.length
+            ? await supabase
+                .from("official_documents")
+                .select("id, title, status, created_at")
+                .in("id", receivedIds)
+                .order("created_at", { ascending: false })
+                .limit(PER_CATEGORY_LIMIT)
+            : { data: [] as { id: string; title: string; status: string; created_at: string }[] };
+          const officialById = new Map<string, { id: string; title: string; status: string; created_at: string }>();
+          for (const d of [...(mineDocs ?? []), ...(receivedDocs ?? [])]) officialById.set(d.id, d);
+          return Array.from(officialById.values()).map((d) => ({
+            id: d.id,
+            category: "official" as const,
+            title: d.title,
+            status: OFFICIAL_STATUS[d.status] ?? { label: d.status, tone: "muted" as const },
+            date: d.created_at,
+            href: `/official-documents/${d.id}`,
+          }));
+        })()
+      : Promise.resolve([]),
+    // ── 전자결재 > 기안함(임시저장 제외 — approvals/page.tsx와 동일) ──
+    approvalsEnabled
+      ? (async (): Promise<BoardRow[]> => {
+          const { data: approvalDocs } = await supabase
+            .from("approval_documents")
+            .select("id, title, status, created_at")
+            .neq("status", "draft")
+            .order("created_at", { ascending: false })
+            .limit(PER_CATEGORY_LIMIT);
+          return (approvalDocs ?? []).map((d) => ({
+            id: d.id,
+            category: "approval" as const,
+            title: d.title,
+            status: APPROVAL_STATUS[d.status] ?? { label: d.status, tone: "muted" as const },
+            date: d.created_at,
+            href: `/approvals/${d.id}`,
+          }));
+        })()
+      : Promise.resolve([]),
+  ]);
+  rows.push(...noticeRows, ...hrDocRows, ...officialRows, ...approvalRows);
 
   rows.sort((a, b) => b.date.localeCompare(a.date));
 
