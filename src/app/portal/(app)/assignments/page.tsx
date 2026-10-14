@@ -67,7 +67,7 @@ export default async function PortalAssignmentsPage({
           F5: { submitFormSelector: "#portal-assignments-search-form" },
         }}
       />
-      <h1 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>배정된 공정</h1>
+      <h1 className="erp-portal-h1" style={{ marginBottom: 12 }}>배정된 공정</h1>
 
       <DateRangeQuickFilters
         basePath={assignmentsHref}

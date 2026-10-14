@@ -37,7 +37,7 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <h1 style={{ fontSize: 16, fontWeight: 700 }}>지시 {workOrder.doc_no}</h1>
+        <h1 className="erp-portal-h1">지시 {workOrder.doc_no}</h1>
         <Link href={await portalHref("/assignments")} className="erp-btn">
           목록
         </Link>

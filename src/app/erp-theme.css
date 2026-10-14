@@ -82,6 +82,11 @@
   --erp-highlight-bg: #fff7d6;
   --erp-text: #182338;
   --erp-text-muted: #6b7280;
+  /* 아래 세 값은 비활성 글자/비활성 아이콘/연한 구분선 역할로 파일
+     곳곳에 똑같은 hex가 하드코딩돼 있던 걸(헌법검사에서 발견) 묶었다. */
+  --erp-text-disabled: #b9bfc8;
+  --erp-icon-muted: #b7bec9;
+  --erp-glyph-muted: #d0d5db;
   --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
   /* 패널 헤더/서브 배경과 셀 경계선에 거의 같은 회색조가 파일 곳곳에
@@ -156,6 +161,16 @@
   font-weight: 800;
   color: var(--erp-text);
   letter-spacing: -0.01em;
+}
+
+/* 포털(portal/(app)/**)은 대시보드 셸의 TitleBar 없이 더 가벼운 레이아웃을
+   의도적으로 쓰므로 .erp-h1보다 한 단계 작은 전용 제목 톤이 필요했는데,
+   5개 화면이 각자 style={{ fontSize: 16, fontWeight: 700 }}를 복붙하고
+   있었다(헌법검사에서 발견 — .erp-h1을 만든 이유와 같은 패턴). */
+.erp-portal-h1 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--erp-text);
 }
 
 /* 목록/등록 화면 제목 위에 선택적으로 붙이는 상위 분류 라벨
@@ -454,7 +469,7 @@
 }
 
 .erp-ribbon-btn:disabled {
-  color: #b9bfc8;
+  color: var(--erp-text-disabled);
   cursor: not-allowed;
 }
 
@@ -505,7 +520,7 @@
 .erp-ribbon-star {
   cursor: pointer;
   padding: 0 10px;
-  color: #d0d5db;
+  color: var(--erp-glyph-muted);
   font-size: 13px;
   background: none;
   border: none;
@@ -927,7 +942,7 @@
 }
 
 .erp-tree-group-label.disabled {
-  color: #b7bec9;
+  color: var(--erp-icon-muted);
   cursor: default;
 }
 
@@ -1485,7 +1500,7 @@ form.erp-field-grid {
 }
 
 .erp-btn:disabled {
-  color: #b9bfc8;
+  color: var(--erp-text-disabled);
   cursor: not-allowed;
   background: var(--erp-bg-disabled);
   /* .erp-btn-primary/-danger가 지정한 색깔 있는 border-color를 여기서
@@ -2501,7 +2516,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-statusbar .sep {
-  color: #d0d5db;
+  color: var(--erp-glyph-muted);
 }
 
 /* ── 대시보드 상단 요약 카드(오늘 매출/매입 등을 한눈에) ───────────── */
@@ -3724,7 +3739,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp ::-webkit-scrollbar-thumb:hover {
-  background: #b7bec9;
+  background: var(--erp-icon-muted);
   background-clip: padding-box;
 }
 

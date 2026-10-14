@@ -101,7 +101,7 @@ export default async function PortalOrdersPage({
           F5: { submitFormSelector: "#portal-orders-search-form" },
         }}
       />
-      <h1 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>주문내역</h1>
+      <h1 className="erp-portal-h1" style={{ marginBottom: 12 }}>주문내역</h1>
 
       <DateRangeQuickFilters
         basePath={ordersHref}

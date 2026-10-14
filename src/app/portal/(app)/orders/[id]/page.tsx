@@ -76,7 +76,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <h1 style={{ fontSize: 16, fontWeight: 700 }}>주문 {order.doc_no}</h1>
+        <h1 className="erp-portal-h1">주문 {order.doc_no}</h1>
         <Link href={await portalHref("/orders")} className="erp-btn">
           목록
         </Link>
