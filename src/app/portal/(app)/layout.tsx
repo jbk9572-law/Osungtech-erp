@@ -35,21 +35,21 @@ export default async function PortalAppLayout({ children }: { children: React.Re
         </div>
         <nav className="erp-titlebar-right" style={{ display: "flex", gap: 14, alignItems: "center" }}>
           {isSubcontractor ? (
-            <Link href={await portalHref("/assignments")} style={{ color: "#fff" }}>
+            <Link href={await portalHref("/assignments")} style={{ color: "var(--erp-on-primary)" }}>
               배정된 공정
             </Link>
           ) : (
             <>
-              <Link href={await portalHref("/new")} style={{ color: "#fff" }}>
+              <Link href={await portalHref("/new")} style={{ color: "var(--erp-on-primary)" }}>
                 발주하기
               </Link>
-              <Link href={await portalHref("/orders")} style={{ color: "#fff" }}>
+              <Link href={await portalHref("/orders")} style={{ color: "var(--erp-on-primary)" }}>
                 주문내역
               </Link>
             </>
           )}
           <form action={portalLogout}>
-            <button type="submit" style={{ color: "#fff" }}>
+            <button type="submit" style={{ color: "var(--erp-on-primary)" }}>
               로그아웃
             </button>
           </form>

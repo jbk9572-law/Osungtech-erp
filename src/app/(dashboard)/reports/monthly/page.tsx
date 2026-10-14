@@ -455,7 +455,7 @@ export default async function MonthlyReportPage({
                 const rank = groupIndex + 1;
                 const rankStyle =
                   rank === 1
-                    ? { background: "var(--erp-primary)", color: "#fff" }
+                    ? { background: "var(--erp-primary)", color: "var(--erp-on-primary)" }
                     : rank === 2
                       ? {
                           background: "var(--erp-selected)",

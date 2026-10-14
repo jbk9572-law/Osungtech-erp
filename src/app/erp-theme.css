@@ -15,6 +15,11 @@
      warning/danger)은 브랜드 포인트색과 별개로 그대로 둔다. */
   --erp-primary: #132944;
   --erp-primary-dark: #0d1d30;
+  /* primary/text/danger처럼 짙은 색 위에 올라가는 흰 글자용 — 지금은
+     이 세 배경 모두 흰 글자로 충분한 대비가 나와서 하나로 공용화했다.
+     색칠된 배경 위 흰 글자를 쓸 땐 "#fff"를 직접 박지 말고 이 변수를
+     쓴다(화면 7곳 + 컴포넌트 여러 곳에서 각자 #fff를 반복하던 걸 통합). */
+  --erp-on-primary: #fff;
   /* 아이폰 노치/다이나믹 아일랜드가 있는 화면에서 타이틀바 남색이
      그 영역까지 꽉 차 보이게, 실제 칸 높이(40px)에 safe-area 인셋을
      더한 값. 노치가 없는 일반 화면/브라우저에선 inset이 0이라 그냥
@@ -194,7 +199,7 @@
   left: 8px;
   z-index: 1000;
   background: var(--erp-primary);
-  color: #fff;
+  color: var(--erp-on-primary);
   font-size: 12.5px;
   font-weight: 700;
   padding: 8px 14px;
@@ -297,7 +302,7 @@
   align-items: center;
   justify-content: space-between;
   background: var(--erp-primary);
-  color: #fff;
+  color: var(--erp-on-primary);
   padding: 0 12px;
   padding-top: env(safe-area-inset-top, 0px);
   box-shadow: var(--erp-shadow-sm);
@@ -609,7 +614,7 @@
   border: 1px solid var(--erp-border);
   border-radius: 0;
   background: var(--erp-text);
-  color: #fff;
+  color: var(--erp-on-primary);
   font-size: 14px;
   line-height: 1;
   box-shadow: var(--erp-shadow-md);
@@ -654,14 +659,14 @@
   font-size: 13px;
   font-weight: 700;
   background: var(--erp-primary);
-  color: #fff;
+  color: var(--erp-on-primary);
   border-radius: 0;
 }
 
 .erp-modal-close {
   background: none;
   border: none;
-  color: #fff;
+  color: var(--erp-on-primary);
   font-size: 13px;
   padding: 4px 6px;
 }
@@ -1484,7 +1489,7 @@
 
 .erp-seg-btn.active {
   background: var(--erp-primary);
-  color: #fff;
+  color: var(--erp-on-primary);
 }
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
@@ -2864,7 +2869,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 0 3px;
   border-radius: 999px;
   background: var(--erp-danger);
-  color: #fff;
+  color: var(--erp-on-primary);
   font-size: 10px;
   font-weight: 700;
   line-height: 15px;
