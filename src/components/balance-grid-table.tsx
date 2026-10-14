@@ -71,7 +71,7 @@ export function BalanceGridTable({
   return (
     <>
       <div className="erp-field-grid">
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-12">
           <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input
             id="balance-search-q"

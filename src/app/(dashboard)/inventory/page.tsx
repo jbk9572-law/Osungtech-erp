@@ -79,7 +79,7 @@ export default async function InventoryPage({
       </div>
 
       <form method="get" className="erp-field-grid">
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-12">
           <label htmlFor="search-q">품목 / 규격 검색</label>
           <input
             id="search-q"

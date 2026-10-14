@@ -103,7 +103,7 @@ export default async function ProductionPage({
       <form method="get" className="erp-field-grid" style={{ marginBottom: 12 }}>
         {from && <input type="hidden" name="from" value={from} />}
         {to && <input type="hidden" name="to" value={to} />}
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-12">
           <label htmlFor="production-search-q">완제품 / 창고 / 메모 검색</label>
           <input
             id="production-search-q"

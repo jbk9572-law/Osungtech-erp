@@ -69,7 +69,7 @@ export function BoardGridTable({ rows, counts }: { rows: BoardRow[]; counts: Rec
       </div>
 
       <div className="erp-field-grid" style={{ marginBottom: 10 }}>
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-12">
           <label htmlFor="board-search-q">제목 검색</label>
           <input
             id="board-search-q"
