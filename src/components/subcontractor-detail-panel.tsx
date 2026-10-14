@@ -45,6 +45,11 @@ export async function SubcontractorDetailPanel({ id }: { id: string }) {
 
   return (
     <>
+      <h1 className="mb-1 erp-h1">{subcontractor.name}</h1>
+      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
+        {subcontractor.contact_name ?? "담당자 미등록"} · {subcontractor.phone ?? "연락처 미등록"}
+      </p>
+
       <div className="erp-detail" style={{ marginTop: 0 }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">업체 정보</span>
@@ -194,7 +199,7 @@ export async function SubcontractorDetailPanel({ id }: { id: string }) {
           <span className="erp-detail-tab active">외주비 정산</span>
         </div>
         <div className="erp-detail-body">
-          <div style={{ display: "flex", gap: 16, marginBottom: 12, flexWrap: "wrap" }}>
+          <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
             <span>가공비 누계: {formatNumber(balance.totalFees)}원</span>
             <span>지급 누계: {formatNumber(balance.totalPaid)}원</span>
             <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>

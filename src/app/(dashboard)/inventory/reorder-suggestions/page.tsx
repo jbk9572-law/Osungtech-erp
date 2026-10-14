@@ -138,19 +138,9 @@ export default async function ReorderSuggestionsPage() {
                   </Link>
                 </div>
               ) : (
-                <span
-                  className="text-xs"
-                  style={{
-                    margin: 4,
-                    padding: "4px 10px",
-                    borderRadius: 0,
-                    background: "var(--erp-info-bg)",
-                    color: "var(--erp-info-text)",
-                    border: "1px solid var(--erp-info-border)",
-                  }}
-                >
+                <PageGuide tone="info" className="m-1">
                   품목에 매입처가 지정되어 있지 않아 바로 등록할 수 없습니다.
-                </span>
+                </PageGuide>
               )}
             </div>
             <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
