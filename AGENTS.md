@@ -8,6 +8,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+# 개발헌법 — 설계/구현 판단의 최상위 원칙
+
+@DEV_CONSTITUTION.md
+
+아래 "버그 수정 규칙"·"절대 규칙(헌법)"·"정기 헌법검사"는 위 개발헌법과
+영역이 다르다(운영/감사 규칙) — 설계·모듈화·일관성 판단은 항상 개발헌법이
+우선이고, 아래 섹션들은 그 구체 사례/운영 절차로 읽는다.
+
 # 버그 수정 시 반드시 지킬 규칙 (모든 세션에 적용, 정기 감사 세션 포함)
 
 한 곳의 버그를 고칠 때, 같은 패턴이 다른 곳에도 있는지 확인하지 않고 그
