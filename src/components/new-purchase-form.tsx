@@ -1084,12 +1084,9 @@ export function NewPurchaseForm({
         </PageGuide>
       )}
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div
-          className="erp-detail-tabs"
-          style={{ justifyContent: "space-between" }}
-        >
-          <span className="erp-detail-tab active">기본정보</span>
+      <div>
+        <div className="erp-form-section-head">
+          <span className="erp-eyebrow" style={{ margin: 0 }}>기본정보</span>
           <div style={{ display: "flex", gap: 6 }}>
             {/* 수정 화면(initial.id 있음)에는 "다음 건"이라는 개념이 없어서
                 신규 등록일 때만 보여준다 — 하루에 여러 건을 연달아 입력할
@@ -1128,10 +1125,7 @@ export function NewPurchaseForm({
             <FormMessage state={messageDismissed ? undefined : state} />
           </div>
         )}
-        <div
-          className="erp-detail-body erp-field-grid"
-          style={{ border: "none", padding: 14, margin: 0 }}
-        >
+        <div className="erp-field-grid">
           <div className="erp-field erp-span-2">
             <label htmlFor="purchase-docno">No</label>
             <input
@@ -1411,12 +1405,12 @@ export function NewPurchaseForm({
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div>
         <div
-          className="erp-detail-tabs"
-          style={{ justifyContent: "space-between", position: "relative" }}
+          className="erp-form-section-head"
+          style={{ position: "relative" }}
         >
-          <span className="erp-detail-tab active">품목</span>
+          <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
           <div
             style={{
               display: "flex",
@@ -1574,7 +1568,7 @@ export function NewPurchaseForm({
 
         <div
           className="erp-grid-wrap"
-          style={{ border: "none", borderRadius: 0, minHeight: "50vh" }}
+          style={{ borderRadius: 0, minHeight: "50vh" }}
         >
           <table
             className="erp-grid"
@@ -2065,7 +2059,7 @@ export function NewPurchaseForm({
           (r) =>
             r.productId && supplierId && getHistoryFor(r.productId).length > 0,
         ) && (
-          <div className="erp-detail-body" style={{ paddingTop: 8 }}>
+          <div style={{ paddingTop: 8 }}>
             {rows
               .filter((r) => r.productId && supplierId)
               .map((r) => {
