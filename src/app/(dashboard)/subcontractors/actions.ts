@@ -49,8 +49,9 @@ export async function deleteSubcontractor(_prevState: FormState, formData: FormD
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("subcontractors").delete().eq("id", id);
-  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
+  const result = await supabase.from("subcontractors").delete().eq("id", id).select("id");
+  const mutationError = requireMutatedRow(result, "업체를 찾을 수 없습니다.");
+  if (mutationError) return mutationError;
 
   revalidatePath("/subcontractors");
   return { success: "업체를 삭제했습니다." };

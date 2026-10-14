@@ -28,11 +28,19 @@ export async function deleteParty(
   id: string,
   foreignKeyMessage: string,
 ): Promise<ActionResult> {
-  const { error } = await supabase.from(table).delete().eq("id", id);
-  if (!error) return null;
-  return {
-    error: error.message.includes("foreign key") ? foreignKeyMessage : `삭제에 실패했습니다: ${error.message}`,
-  };
+  // .select()를 붙여 실제로 지워진 행을 돌려받는다 — RLS가 막거나
+  // id가 이미 없으면 error 없이 조용히 0건으로 끝나므로, error만 보면
+  // "삭제했습니다"가 거짓으로 뜰 수 있다(require-mutated-row.ts 참고).
+  const { data, error } = await supabase.from(table).delete().eq("id", id).select("id");
+  if (error) {
+    return {
+      error: error.message.includes("foreign key") ? foreignKeyMessage : `삭제에 실패했습니다: ${error.message}`,
+    };
+  }
+  if (!data || data.length === 0) {
+    return { error: "삭제에 실패했습니다: 대상을 찾을 수 없거나 권한이 없습니다." };
+  }
+  return null;
 }
 
 export async function bulkDeleteParty(
@@ -40,8 +48,10 @@ export async function bulkDeleteParty(
   table: "customers" | "suppliers",
   ids: string[],
 ): Promise<{ failCount: number }> {
-  const results = await Promise.all(ids.map((id) => supabase.from(table).delete().eq("id", id)));
-  return { failCount: results.filter((r) => r.error).length };
+  // 단건 삭제(deleteParty)와 같은 이유로 .select()를 붙여 "error 없이
+  // 0건 삭제"도 실패로 집계한다.
+  const results = await Promise.all(ids.map((id) => supabase.from(table).delete().eq("id", id).select("id")));
+  return { failCount: results.filter((r) => r.error || !r.data || r.data.length === 0).length };
 }
 
 export async function upsertPartyPrice(
