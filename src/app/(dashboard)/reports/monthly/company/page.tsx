@@ -12,6 +12,7 @@ import { groupByProductKey } from "@/lib/group-by-product";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { CloseButton } from "@/components/erp/close-button";
 import { formatNumber } from "@/lib/format-number";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 type Transaction = {
   date: string;
@@ -163,14 +164,7 @@ export default async function MonthlyReportCompanyPage({
 
       <div className="erp-toolbar" style={{ marginBottom: 12 }}>
         <CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>
-        <a
-          href={`/api/reports/monthly/company/export?month=${month}${companySuffix}`}
-          className="erp-btn"
-          title="현재 화면 그대로 엑셀로 다운로드"
-          style={{ marginLeft: "auto" }}
-        >
-          📥 엑셀 다운로드
-        </a>
+        <ExcelDownloadLink href={`/api/reports/monthly/company/export?month=${month}${companySuffix}`} pushRight />
       </div>
 
       <div className="erp-grid-wrap">

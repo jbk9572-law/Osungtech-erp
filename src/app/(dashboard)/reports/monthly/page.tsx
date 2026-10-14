@@ -9,6 +9,7 @@ import { currentMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchMonthlyReportData, type View } from "@/lib/monthly-report-data";
 import { formatNumber } from "@/lib/format-number";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 export default async function MonthlyReportPage({
   searchParams,
@@ -69,14 +70,7 @@ export default async function MonthlyReportPage({
 
       <MonthNavigator baseHref="/reports/monthly" month={month} suffix={suffix} />
       <div className="erp-toolbar" style={{ marginBottom: 8 }}>
-        <a
-          href={`/api/reports/monthly/export?month=${month}${suffix}`}
-          className="erp-btn"
-          title="현재 화면 그대로 엑셀로 다운로드"
-          style={{ marginLeft: "auto" }}
-        >
-          📥 엑셀 다운로드
-        </a>
+        <ExcelDownloadLink href={`/api/reports/monthly/export?month=${month}${suffix}`} pushRight />
       </div>
 
       <div className="erp-date-presets" style={{ marginBottom: 8 }}>

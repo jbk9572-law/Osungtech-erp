@@ -7,6 +7,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 export default async function IncomeStatementPage({
   searchParams,
@@ -85,14 +86,7 @@ export default async function IncomeStatementPage({
 
       <MonthNavigator baseHref="/reports/income-statement" month={month} />
       <div className="erp-toolbar" style={{ marginBottom: 8 }}>
-        <a
-          href={`/api/reports/income-statement/export?month=${month}`}
-          className="erp-btn"
-          title="현재 화면 그대로 엑셀로 다운로드"
-          style={{ marginLeft: "auto" }}
-        >
-          📥 엑셀 다운로드
-        </a>
+        <ExcelDownloadLink href={`/api/reports/income-statement/export?month=${month}`} pushRight />
       </div>
 
       <div className="erp-grid-wrap">

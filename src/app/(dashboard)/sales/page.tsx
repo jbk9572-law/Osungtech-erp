@@ -20,6 +20,7 @@ import { calcVat } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 type DisplayRow = SalesRow;
 
@@ -398,17 +399,10 @@ export default async function SalesPage({
         <Link href="/sales/new" className="erp-btn erp-btn-primary">
           F2 신규
         </Link>
-        <a
+        <ExcelDownloadLink
           href={exportHref}
-          className="erp-btn"
-          title={
-            q
-              ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드`
-              : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"
-          }
-        >
-          📥 엑셀 다운로드
-        </a>
+          title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
+        />
         <Link href="/sales/tax-invoices/export" className="erp-btn" title="발행된 세금계산서를 홈택스 일괄발급용 엑셀로 다운로드">
           📥 홈택스 일괄발급 엑셀
         </Link>

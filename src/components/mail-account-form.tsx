@@ -86,7 +86,7 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
         </button>
 
         {showAdvanced && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div className="erp-field">
               <label htmlFor="ma-imap-host">IMAP 서버</label>
               <input

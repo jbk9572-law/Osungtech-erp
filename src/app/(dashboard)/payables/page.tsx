@@ -4,6 +4,7 @@ import { getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 export default async function PayablesPage() {
   const supabase = await createClient();
@@ -28,9 +29,7 @@ export default async function PayablesPage() {
       <div className="mb-3 flex items-center justify-between">
         <h1 className="erp-h1">거래처관리 &gt; 미지급금현황</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <a href="/api/payables/export" className="erp-btn" title="현재 화면 그대로 엑셀로 다운로드">
-            📥 엑셀 다운로드
-          </a>
+          <ExcelDownloadLink href="/api/payables/export" />
         </div>
       </div>
 

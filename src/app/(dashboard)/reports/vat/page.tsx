@@ -9,6 +9,7 @@ import { nowInKst } from "@/lib/kst-date";
 import { shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 // [from, to] 구간에 걸쳐 있는 "YYYY-MM" 월 목록 — 이월(carryover) 건을
 // effectiveMonth 기준으로 걸러낼 때 쓴다. 분기 버튼은 항상 월 경계에
@@ -145,14 +146,7 @@ export default async function VatReportPage({
         <button type="submit" className="erp-btn">
           조회
         </button>
-        <a
-          href={`/api/reports/vat/export?from=${from}&to=${to}`}
-          className="erp-btn"
-          title="현재 화면 그대로 엑셀로 다운로드"
-          style={{ marginLeft: "auto" }}
-        >
-          📥 엑셀 다운로드
-        </a>
+        <ExcelDownloadLink href={`/api/reports/vat/export?from=${from}&to=${to}`} pushRight />
       </form>
 
       <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>

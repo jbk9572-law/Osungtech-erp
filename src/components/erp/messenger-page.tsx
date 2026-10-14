@@ -598,44 +598,17 @@ export function MessengerPage({
                                   <span>{dateLabel}</span>
                                 </div>
                               )}
-                              <div
-                                style={{
-                                  alignSelf: mine ? "flex-end" : "flex-start",
-                                  maxWidth: "80%",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 4,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    fontSize: 10.5,
-                                    color: "var(--erp-text-muted)",
-                                    textAlign: mine ? "right" : "left",
-                                  }}
-                                >
+                              <div className="erp-messenger-bubble-group" data-mine={mine ? "1" : undefined}>
+                                <div className="erp-messenger-bubble-meta">
                                   {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleTimeString("ko-KR")}
                                 </div>
 
                                 {m.content && (
-                                  <div
-                                    style={{
-                                      alignSelf: mine ? "flex-end" : "flex-start",
-                                      background: mine ? "var(--erp-primary)" : "var(--erp-hover)",
-                                      color: mine ? "var(--erp-on-primary)" : "var(--erp-text)",
-                                      padding: "6px 10px",
-                                      borderRadius: 0,
-                                      fontSize: 12.5,
-                                      whiteSpace: "pre-wrap",
-                                      wordBreak: "break-word",
-                                    }}
-                                  >
-                                    {highlightText(m.content, query)}
-                                  </div>
+                                  <div className="erp-messenger-bubble">{highlightText(m.content, query)}</div>
                                 )}
 
                                 {m.file_url && m.file_name && (
-                                  <div style={{ alignSelf: mine ? "flex-end" : "flex-start" }}>
+                                  <div className="erp-messenger-bubble-attachment">
                                     {isImg ? (
                                       <a
                                         href={m.file_url}
@@ -675,19 +648,12 @@ export function MessengerPage({
                                 )}
 
                                 {(mine || isAdmin) && (
-                                  <div style={{ alignSelf: mine ? "flex-end" : "flex-start", display: "flex", gap: 6 }}>
+                                  <div className="erp-messenger-bubble-actions">
                                     <button
                                       type="button"
                                       onClick={() => handleDelete(m.id, m.file_path)}
-                                      style={{
-                                        fontSize: 10,
-                                        color: confirmDelete.isArmed(m.id) ? "var(--erp-danger)" : "var(--erp-text-muted)",
-                                        fontWeight: confirmDelete.isArmed(m.id) ? 700 : 400,
-                                        background: "none",
-                                        border: "none",
-                                        padding: "2px 0",
-                                        cursor: "pointer",
-                                      }}
+                                      className="erp-messenger-bubble-action-btn"
+                                      data-armed={confirmDelete.isArmed(m.id) ? "1" : undefined}
                                     >
                                       {confirmDelete.isArmed(m.id) ? "한 번 더 누르면 삭제" : "삭제"}
                                     </button>
@@ -695,14 +661,7 @@ export function MessengerPage({
                                       <button
                                         type="button"
                                         onClick={confirmDelete.reset}
-                                        style={{
-                                          fontSize: 10,
-                                          color: "var(--erp-text-muted)",
-                                          background: "none",
-                                          border: "none",
-                                          padding: "2px 0",
-                                          cursor: "pointer",
-                                        }}
+                                        className="erp-messenger-bubble-action-btn"
                                       >
                                         취소
                                       </button>

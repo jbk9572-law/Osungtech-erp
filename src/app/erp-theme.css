@@ -87,6 +87,14 @@
   --erp-text-disabled: #b9bfc8;
   --erp-icon-muted: #b7bec9;
   --erp-glyph-muted: #d0d5db;
+  /* 영수증 라이트박스(고정 어두운 배경 bg-black/85) 위에 뜨는 반투명
+     흰색 이전/다음 버튼 — 카메라 실시간 영상 위의 오버레이와 달리
+     배경이 고정값이라 변수로 뽑을 수 있다. */
+  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.15);
+  /* 가벼운 커스텀 다이얼로그(alertdialog/dialog role, .erp-modal
+     체계를 쓰지 않는 단순 오버레이)의 배경 어둡기 — 두 파일이 각자
+     같은 값을 복붙하고 있었다. */
+  --erp-dialog-overlay-bg: rgba(15, 20, 30, 0.55);
   --erp-bg: #eef1f5;
   --erp-panel: #ffffff;
   /* 패널 헤더/서브 배경과 셀 경계선에 거의 같은 회색조가 파일 곳곳에
@@ -3372,6 +3380,76 @@ a.erp-detail-tab:hover:not(.active) {
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;
+}
+
+/* 말풍선 — 채널행/날짜구분선/검색창은 전부 .erp-messenger-* 클래스를
+   쓰는데 말풍선만 렌더마다 mine/not-mine 분기를 큰 인라인 style로
+   직접 조립하고 있던 걸(헌법검사에서 발견) 이 파일 자신의 기존
+   관례대로 클래스+data-mine 속성으로 뽑았다. */
+.erp-messenger-bubble-group {
+  align-self: flex-start;
+  max-width: 80%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.erp-messenger-bubble-group[data-mine="1"] {
+  align-self: flex-end;
+}
+
+.erp-messenger-bubble-meta {
+  font-size: 10.5px;
+  color: var(--erp-text-muted);
+  text-align: left;
+}
+.erp-messenger-bubble-group[data-mine="1"] .erp-messenger-bubble-meta {
+  text-align: right;
+}
+
+.erp-messenger-bubble {
+  align-self: flex-start;
+  background: var(--erp-hover);
+  color: var(--erp-text);
+  padding: 6px 10px;
+  border-radius: 0;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.erp-messenger-bubble-group[data-mine="1"] .erp-messenger-bubble {
+  align-self: flex-end;
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+}
+
+.erp-messenger-bubble-attachment {
+  align-self: flex-start;
+}
+.erp-messenger-bubble-group[data-mine="1"] .erp-messenger-bubble-attachment {
+  align-self: flex-end;
+}
+
+.erp-messenger-bubble-actions {
+  align-self: flex-start;
+  display: flex;
+  gap: 6px;
+}
+.erp-messenger-bubble-group[data-mine="1"] .erp-messenger-bubble-actions {
+  align-self: flex-end;
+}
+
+.erp-messenger-bubble-action-btn {
+  font-size: 10px;
+  color: var(--erp-text-muted);
+  font-weight: 400;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.erp-messenger-bubble-action-btn[data-armed="1"] {
+  color: var(--erp-danger);
+  font-weight: 700;
 }
 
 .erp-messenger-body {

@@ -20,6 +20,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 type DisplayRow = PurchaseRow;
 
@@ -395,17 +396,10 @@ export default async function PurchasesPage({
         <Link href="/purchases/new" className="erp-btn erp-btn-primary">
           F2 신규
         </Link>
-        <a
+        <ExcelDownloadLink
           href={exportHref}
-          className="erp-btn"
-          title={
-            q
-              ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드`
-              : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"
-          }
-        >
-          📥 엑셀 다운로드
-        </a>
+          title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
+        />
         <Link href="/purchases/tax-invoices/import" className="erp-btn" title="홈택스 매입내역 엑셀을 업로드해 세금계산서 수취 여부를 매칭">
           📤 매입세금계산서 수취 관리
         </Link>

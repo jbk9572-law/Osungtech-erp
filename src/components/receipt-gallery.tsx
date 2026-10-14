@@ -100,7 +100,7 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
                 onClick={() => go(-1)}
                 aria-label="이전 영수증"
                 className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white"
-                style={{ background: "rgba(255,255,255,0.15)" }}
+                style={{ background: "var(--erp-lightbox-btn-bg)" }}
               >
                 ‹
               </button>
@@ -117,7 +117,7 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
                 onClick={() => go(1)}
                 aria-label="다음 영수증"
                 className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white"
-                style={{ background: "rgba(255,255,255,0.15)" }}
+                style={{ background: "var(--erp-lightbox-btn-bg)" }}
               >
                 ›
               </button>

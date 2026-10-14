@@ -6,6 +6,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 const TYPE_LABEL: Record<string, string> = { in: "입고", out: "출고", adjustment: "조정" };
 
@@ -158,14 +159,10 @@ export default async function InventoryLedgerPage({
           다음달 ▶
         </Link>
         {selectedProduct && (
-          <a
+          <ExcelDownloadLink
             href={`/api/reports/ledger/export?product_id=${selectedProduct.id}&month=${month}${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`}
-            className="erp-btn"
-            title="현재 화면 그대로 엑셀로 다운로드"
-            style={{ marginLeft: "auto" }}
-          >
-            📥 엑셀 다운로드
-          </a>
+            pushRight
+          />
         )}
       </div>
 

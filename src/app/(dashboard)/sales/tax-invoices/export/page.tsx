@@ -8,6 +8,7 @@ import { fetchHometaxBulkExportData, classifyAndBuildRows, HOMETAX_BULK_EXCEL_HE
 import { validateHometaxRow } from "@/lib/hometax-bulk-export-rules";
 import { formatNumber } from "@/lib/format-number";
 import { MarkHometaxUploadedButton } from "@/components/mark-hometax-uploaded-button";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 const INVOICE_TYPE_LABEL: Record<string, string> = {
   consignment: "위수탁",
@@ -90,9 +91,7 @@ export default async function TaxInvoiceExportPage({
         <Link href={`?${toggleParams.toString()}`} className="erp-btn">
           {summarize ? "✓ 품목 5개 이상 건 자동 요약 (켜짐)" : "품목 5개 이상 건 자동 요약 (꺼짐)"}
         </Link>
-        <a href={downloadHref} className="erp-btn erp-btn-primary">
-          📥 엑셀 다운로드 ({formatNumber(rows.length)}건)
-        </a>
+        <ExcelDownloadLink href={downloadHref} label={`📥 엑셀 다운로드 (${formatNumber(rows.length)}건)`} primary />
         <MarkHometaxUploadedButton taxInvoiceIds={uploadableInvoices.map((inv) => inv.id)} />
       </div>
 

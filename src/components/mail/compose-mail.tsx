@@ -21,7 +21,7 @@ function ComposeModal({ onClose }: { onClose: () => void }) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(15, 20, 30, 0.55)",
+        background: "var(--erp-dialog-overlay-bg)",
         zIndex: 2000,
         display: "flex",
         alignItems: "center",

@@ -6,7 +6,9 @@
 // 새로 생기면 똑같이 또 찾아야 하니 자동화한다.
 //
 // 검사 방법: JSX style={{ ... }} 객체 리터럴 안의 문자열 프로퍼티 값이
-// hex 색상 패턴(#abc, #aabbcc)이면 위반으로 잡는다.
+// hex 색상 패턴(#abc, #aabbcc) 또는 rgb()/rgba() 리터럴이면 위반으로
+// 잡는다(감사에서 receipt-gallery.tsx의 rgba(255,255,255,0.15)가 hex만
+// 잡던 정규식의 사각지대로 남아있던 걸 발견해 범위를 넓혔다).
 //
 // 예외(파일 전체를 FILE_ALLOWLIST에 둔다, 이유는 각 줄에 명시):
 // - 인쇄(print) 전용 페이지/카드: 인쇄물은 화면 테마(다크모드 등)와
@@ -48,7 +50,7 @@ const FILE_ALLOWLIST = new Set([
 
 const ALLOWLIST = new Set([]);
 
-const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$|^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\)$/;
 
 function walkDir(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
