@@ -697,6 +697,56 @@
   overflow-y: auto;
 }
 
+/* 모달(.erp-modal-body) 안에서 .erp-detail을 쓰면 모달 자신의 상단
+   브랜드색 테두리와 겹쳐 "박스 안의 박스"가 된다(개발헌법 3번 반면교사
+   사례 — "모달 내부" 맥락). 매출/매입 등록 폼은 이 문제를 마크업 자체를
+   .erp-form-section-head로 바꿔서 풀었지만, 그 외에 모달 안에서
+   .erp-detail을 쓰는 화면(예: 세금계산서 발행/수정 이력 — tax-
+   invoice-detail.tsx)을 매번 찾아 손으로 고치는 대신 여기서 한 번에
+   잡는다 — .erp-split-detail 쪽과 같은 접근. */
+.erp-modal-body .erp-detail {
+  border: none;
+  background: transparent;
+  margin-top: 20px;
+}
+
+.erp-modal-body .erp-detail:first-child {
+  margin-top: 0;
+}
+
+.erp-modal-body .erp-detail-tabs {
+  background: none;
+  border-bottom: 1px solid var(--erp-divider);
+  border-radius: 0;
+  padding: 0 0 7px;
+  margin-bottom: 14px;
+}
+
+.erp-modal-body .erp-detail-tab {
+  border-right: none;
+  padding: 0;
+  height: auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.erp-modal-body .erp-detail-tab.active {
+  background: none;
+  color: var(--erp-text-muted);
+  font-weight: 700;
+}
+
+.erp-modal-body .erp-detail-body {
+  padding: 0;
+}
+
+.erp-modal-body .erp-detail-body > .erp-grid-wrap:only-child {
+  border: 1px solid var(--erp-border-strong);
+}
+
 .erp-ribbon-searchlist {
   display: flex;
   flex-direction: column;
@@ -2322,6 +2372,63 @@ a.erp-detail-tab:hover:not(.active) {
   font-size: 10.5px;
   color: var(--erp-text-muted);
   font-weight: 400;
+}
+
+/* 분할뷰 오른쪽 패널(.erp-split-detail) 안의 .erp-detail 섹션들 —
+   .erp-split-detail 자신이 이미 테두리를 두르고 있어서, 안에서
+   .erp-detail이 또 테두리를 두르면 모달과 똑같은 "박스 안의 박스"
+   문제가 생긴다(개발헌법 3번 반면교사 사례 — "모달 내부/분할뷰" 두
+   맥락 중 분할뷰 쪽). customer-detail-panel.tsx 등은 독립 페이지
+   ([id]/page.tsx)에서 .erp-detail이 바로 렌더링될 때도 있는데, 그땐
+   이 테두리가 유일한 경계라 그대로 둬야 하므로 전역이 아니라
+   .erp-split-detail 안에 중첩된 경우로만 범위를 좁힌다 — 매출/매입
+   등록 모달 섹션 헤더에 적용한 것과 같은 eyebrow+헤어라인 언어로
+   통일한다. */
+.erp-split-detail .erp-detail {
+  border: none;
+  background: transparent;
+  margin-top: 20px;
+}
+
+.erp-split-detail .erp-detail:first-child {
+  margin-top: 0;
+}
+
+.erp-split-detail .erp-detail-tabs {
+  background: none;
+  border-bottom: 1px solid var(--erp-divider);
+  border-radius: 0;
+  padding: 0 0 7px;
+  margin-bottom: 14px;
+}
+
+.erp-split-detail .erp-detail-tab {
+  border-right: none;
+  padding: 0;
+  height: auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.erp-split-detail .erp-detail-tab.active {
+  background: none;
+  color: var(--erp-text-muted);
+  font-weight: 700;
+}
+
+.erp-split-detail .erp-detail-body {
+  padding: 0;
+}
+
+/* .erp-detail-body > .erp-grid-wrap:only-child은 .erp-detail 테두리와
+   겹치지 않게 전역에서 테두리를 지우는데, 여기서는 .erp-detail 자신의
+   테두리를 없앴으니 표가 자기 테두리를 가져야 다른 화면 표와 같은
+   모양이 된다. */
+.erp-split-detail .erp-detail-body > .erp-grid-wrap:only-child {
+  border: 1px solid var(--erp-border-strong);
 }
 
 .erp-split-detail {
