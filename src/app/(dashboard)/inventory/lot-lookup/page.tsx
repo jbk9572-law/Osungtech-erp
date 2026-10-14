@@ -167,21 +167,12 @@ export default async function LotLookupPage({
 
       {hasQuery && !noHits && (
         <>
-          <div
-            className="rounded p-2 text-xs"
-            style={{
-              marginTop: 8,
-              marginBottom: 14,
-              background: "var(--erp-warning-bg)",
-              color: "var(--erp-warning)",
-              border: "1px solid var(--erp-warning-border)",
-            }}
-          >
+          <PageGuide tone="warning" className="mt-2">
             매입/매출 {purchaseHits.length + saleHits.length}건 · 생산지시 {workOrderHits.length}건 ·
             관련 품목 {productNames.size}개 · 관련 거래처 {partnerNames.size}곳 · 입고 합계{" "}
             {formatNumber(totalIn)} · 출고 합계 {formatNumber(totalOut)} · 추정 잔량{" "}
             {formatNumber(totalIn - totalOut)}
-          </div>
+          </PageGuide>
 
           <div className="erp-detail" style={{ marginTop: 0 }}>
             <div className="erp-detail-tabs">

@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { formatNumber } from "@/lib/format-number";
+import { PageGuide } from "@/components/erp/page-guide";
 
 export type PaperStockOverrideEntry = {
   id: string;
@@ -43,10 +44,7 @@ export function PaperStockOverridePanel({
   return (
     <div className="mt-2">
       {activeOverride && (
-        <div
-          className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded p-2 text-xs"
-          style={{ background: "var(--erp-warning-bg)", border: "1px solid var(--erp-warning-border)" }}
-        >
+        <PageGuide tone="warning" className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span>
             수동값 적용 중: <strong>{formatNumber(Number(activeOverride.override_quantity))}연</strong>{" "}
             (자동값 {formatNumber(Number(activeOverride.auto_quantity))}연)
@@ -72,7 +70,7 @@ export function PaperStockOverridePanel({
           >
             {confirmRevert.isArmed("revert") ? "한 번 더 누르면 되돌림" : "자동값으로 되돌리기"}
           </button>
-        </div>
+        </PageGuide>
       )}
       {revertError && (
         <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>

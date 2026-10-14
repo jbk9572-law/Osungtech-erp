@@ -51,6 +51,7 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import { PageGuide } from "@/components/erp/page-guide";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
@@ -1069,33 +1070,18 @@ export function NewPurchaseForm({
       {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       {isCarryover && !alsoCreateSale && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            marginBottom: 12,
-            background: "var(--erp-warning-bg)",
-            color: "var(--erp-warning)",
-            border: "1px solid var(--erp-warning-border)",
-          }}
-        >
+        <PageGuide tone="warning">
           매입일자는 {purchaseDate} 그대로 저장되고, 월별 리포트·대시보드 집계에서만{" "}
           {nextMonthLabel(purchaseDate)} 실적으로 잡힙니다. 목록/달력에는 오늘 처리한 건으로
           그대로 표시됩니다.
-        </div>
+        </PageGuide>
       )}
 
       {pendingPaperCalc && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            background: "var(--erp-info-bg)",
-            color: "var(--erp-info-text)",
-            border: "1px solid var(--erp-info-border)",
-          }}
-        >
+        <PageGuide>
           모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0
           자동 반영 줄로 표시됩니다. 등록하면 실제로 저장됩니다.
-        </div>
+        </PageGuide>
       )}
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

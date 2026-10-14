@@ -10,6 +10,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
+import { PageGuide } from "@/components/erp/page-guide";
 import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
 import { formatNumber } from "@/lib/format-number";
 
@@ -290,18 +291,10 @@ export default async function InventoryProductHistoryPage({
           </Link>
         )}
       </form>
-      <div
-        className="rounded p-2 text-xs"
-        style={{
-          marginBottom: 8,
-          background: "var(--erp-info-bg)",
-          color: "var(--erp-info-text)",
-          border: "1px solid var(--erp-info-border)",
-        }}
-      >
+      <PageGuide>
         {fromParam ? "" : `날짜를 지정하지 않으면 이번달(${from} ~ ${to})만 표시됩니다. `}
         재고 잔량은 조회기간 시작 시점의 누적 재고(이월)부터 정확히 반영됩니다.
-      </div>
+      </PageGuide>
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

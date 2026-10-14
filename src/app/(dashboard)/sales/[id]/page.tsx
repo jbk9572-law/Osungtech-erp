@@ -25,6 +25,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
+import { PageGuide } from "@/components/erp/page-guide";
 
 export default async function SaleDetailPage({
   params,
@@ -148,15 +149,9 @@ export default async function SaleDetailPage({
       </p>
 
       {warning && (
-        <p
-          className="mb-4 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{
-            background: "var(--erp-warning-bg)",
-            color: "var(--erp-warning)",
-          }}
-        >
+        <PageGuide tone="warning" className="font-medium">
           ⚠ 거래는 정상 등록됐지만: {warning}
-        </p>
+        </PageGuide>
       )}
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>

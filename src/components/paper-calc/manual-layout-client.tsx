@@ -20,6 +20,7 @@ import {
 import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
 import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
 import { formatNumber } from "@/lib/format-number";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type ItemRow = { key: number; width: number; height: number; qty: number };
 type Sheet = { placements: NestLayoutItem[] };
@@ -511,15 +512,12 @@ export function ManualLayoutClient({
 
   return (
     <div className="flex flex-col gap-3">
-      <div
-        className="rounded p-2 text-xs"
-        style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
-      >
+      <PageGuide>
         자동 계산 결과와 직접 비교해볼 수 있는 수동 배치 도구입니다. 아래에서 품목을 등록하고, 원하는 품목을
         클릭한 뒤 원지 위에 마우스를 올리면 놓일 자리가 미리 보입니다(초록: 배치 가능, 빨강: 겹치거나 밖으로
         나감) — 그 상태에서 클릭하면 배치됩니다. 이미 배치된 조각은 클릭하면 선택되어 회전/삭제할 수 있고,
         마우스나 손가락으로 드래그해서 다른 자리로 옮길 수도 있습니다. 배치 1건 = 1연(500장)으로 계산됩니다.
-      </div>
+      </PageGuide>
 
       <div className="flex items-center gap-2">
         <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
@@ -928,14 +926,7 @@ export function ManualLayoutClient({
             </div>
           )}
 
-          {warning && (
-            <div
-              className="rounded p-2 text-xs"
-              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)", border: "1px solid var(--erp-warning-border)" }}
-            >
-              {warning}
-            </div>
-          )}
+          {warning && <PageGuide tone="warning">{warning}</PageGuide>}
         </div>
       </div>
 
@@ -953,10 +944,7 @@ export function ManualLayoutClient({
       </div>
 
       {staged && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{ background: "var(--erp-success-bg)", color: "var(--erp-success)", border: "1px solid var(--erp-success-border)" }}
-        >
+        <PageGuide tone="success">
           {pendingFor === "purchase" ? (
             <>
               배치 결과를 임시 저장했습니다. 이 화면을 닫고 매입 등록 화면에서 주문을 등록하면
@@ -974,7 +962,7 @@ export function ManualLayoutClient({
               </Link>
             </>
           )}
-        </div>
+        </PageGuide>
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

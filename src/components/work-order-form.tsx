@@ -190,13 +190,10 @@ export function WorkOrderForm({
             </table>
           </div>
           {hasShortage && (
-            <p
-              className="mt-2 rounded-sm px-3 py-2 text-xs font-medium"
-              style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
-            >
+            <PageGuide tone="warning" className="mt-2 font-medium">
               ⚠ 구성품 재고가 부족합니다. 그래도 등록하면 해당 구성품 재고가
               음수가 될 수 있습니다.
-            </p>
+            </PageGuide>
           )}
         </div>
       )}

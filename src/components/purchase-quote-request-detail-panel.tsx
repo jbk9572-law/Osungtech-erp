@@ -123,17 +123,14 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
       </div>
 
       {request.status === "closed" ? (
-        <p
-          className="mb-4 rounded p-2 text-xs"
-          style={{ background: "var(--erp-success-bg)", color: "var(--erp-success)", border: "1px solid var(--erp-success-border)" }}
-        >
+        <PageGuide tone="success">
           {supplierNameById.get(request.selected_supplier_id ?? "") ?? "-"}(으)로 확정되어 구매요청으로 전환되었습니다.{" "}
           {request.converted_purchase_request_id && (
             <Link href={`/purchase-requests/${request.converted_purchase_request_id}`} style={{ textDecoration: "underline" }}>
               구매요청 보기
             </Link>
           )}
-        </p>
+        </PageGuide>
       ) : (
         <>
           {targetSuppliers.map((s) => (

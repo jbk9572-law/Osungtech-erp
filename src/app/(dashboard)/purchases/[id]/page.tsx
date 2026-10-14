@@ -18,6 +18,7 @@ import {
   revertPurchasePaperStock,
 } from "@/app/(dashboard)/purchases/actions";
 import { resolveListHref } from "@/lib/list-return";
+import { PageGuide } from "@/components/erp/page-guide";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -148,15 +149,9 @@ export default async function PurchaseDetailPage({
       </p>
 
       {warning && (
-        <p
-          className="mb-4 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{
-            background: "var(--erp-warning-bg)",
-            color: "var(--erp-warning)",
-          }}
-        >
+        <PageGuide tone="warning" className="font-medium">
           ⚠ 거래는 정상 등록됐지만: {warning}
-        </p>
+        </PageGuide>
       )}
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>

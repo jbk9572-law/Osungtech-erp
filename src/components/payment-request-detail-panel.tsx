@@ -133,12 +133,9 @@ export async function PaymentRequestDetailPanel({
       </div>
 
       {warning && (
-        <p
-          className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
-        >
+        <PageGuide tone="warning" className="font-medium">
           ⚠ {warning}
-        </p>
+        </PageGuide>
       )}
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

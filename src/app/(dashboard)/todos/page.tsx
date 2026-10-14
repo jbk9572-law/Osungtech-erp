@@ -12,6 +12,7 @@ import { isUuid } from "@/lib/is-uuid";
 import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { formatNumber } from "@/lib/format-number";
+import { PageGuide } from "@/components/erp/page-guide";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -153,12 +154,9 @@ export default async function TodosPage({
       </div>
 
       {warning && (
-        <p
-          className="mb-3 rounded-sm px-3 py-2 text-xs font-medium"
-          style={{ background: "var(--erp-warning-bg)", color: "var(--erp-warning)" }}
-        >
+        <PageGuide tone="warning" className="font-medium">
           ⚠ 할일은 정상 등록됐지만: {warning}
-        </p>
+        </PageGuide>
       )}
 
       <div className="erp-kpi-row" style={{ marginBottom: 12 }}>

@@ -9,6 +9,7 @@ import { inventoryQuantityByWarehouse, sumInventoryQuantity } from "@/lib/invent
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
+import { PageGuide } from "@/components/erp/page-guide";
 
 export default async function NewSalePage({
   searchParams,
@@ -102,20 +103,13 @@ export default async function NewSalePage({
         새 판매 거래 등록
       </h1>
       {saved && (
-        <p
-          className="mb-3 rounded p-2 text-xs"
-          style={{
-            background: "var(--erp-success-bg)",
-            color: "var(--erp-success)",
-            border: "1px solid var(--erp-success-border)",
-          }}
-        >
+        <PageGuide tone="success">
           방금 등록한 거래가 저장되었습니다.{" "}
           <Link href={`/sales/${saved}`} className="underline">
             방금 건 보기
           </Link>{" "}
           — 이어서 다음 건을 등록하세요.
-        </p>
+        </PageGuide>
       )}
       <NewSaleTypeSwitcher
         // "저장 후 계속 등록"은 모달 안에서 같은 경로로(쿼리만 바뀌어)

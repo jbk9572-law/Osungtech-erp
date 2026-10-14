@@ -25,6 +25,7 @@ import {
 } from "@/app/(dashboard)/paper-calc/actions";
 import { FormMessage } from "@/components/form-message";
 import { FieldHint } from "@/components/field-hint";
+import { PageGuide } from "@/components/erp/page-guide";
 import { formatNumber } from "@/lib/format-number";
 import {
   PENDING_PAPER_CALC_KEY,
@@ -302,30 +303,16 @@ export function PaperCalcClient({
   return (
     <div className="flex flex-col gap-3">
       {salesOrderLabel && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            background: "var(--erp-info-bg)",
-            color: "var(--erp-info-text)",
-            border: "1px solid var(--erp-info-border)",
-          }}
-        >
+        <PageGuide>
           이 출고 건({salesOrderLabel})에 대한 모조지 계산입니다. 계산 후
           저장하면 주문 상세에서 원지 사용량을 바로 확인할 수 있습니다.
-        </div>
+        </PageGuide>
       )}
       {purchaseOrderLabel && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            background: "var(--erp-info-bg)",
-            color: "var(--erp-info-text)",
-            border: "1px solid var(--erp-info-border)",
-          }}
-        >
+        <PageGuide>
           이 매입 건({purchaseOrderLabel})에 대한 모조지 계산입니다. 계산 후
           저장하면 주문 상세에서 원지 사용량을 바로 확인할 수 있습니다.
-        </div>
+        </PageGuide>
       )}
 
       {canSwitchPendingFor && (
@@ -711,16 +698,9 @@ export function PaperCalcClient({
               {saveState && <FormMessage state={saveState} />}
 
               {warning && (
-                <div
-                  className="rounded p-3 text-xs whitespace-pre-line"
-                  style={{
-                    background: "var(--erp-warning-bg)",
-                    color: "var(--erp-warning)",
-                    border: "1px solid var(--erp-warning-border)",
-                  }}
-                >
+                <PageGuide tone="warning" className="whitespace-pre-line">
                   {warning}
-                </div>
+                </PageGuide>
               )}
             </div>
           </div>

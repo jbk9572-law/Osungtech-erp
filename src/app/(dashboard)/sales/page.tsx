@@ -19,6 +19,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type DisplayRow = SalesRow;
 
@@ -388,18 +389,10 @@ export default async function SalesPage({
           </Link>
         )}
       </form>
-      <div
-        className="rounded p-2 text-xs"
-        style={{
-          marginBottom: 8,
-          background: "var(--erp-info-bg)",
-          color: "var(--erp-info-text)",
-          border: "1px solid var(--erp-info-border)",
-        }}
-      >
+      <PageGuide>
         {from ? "" : `날짜를 지정하지 않으면 이번달(${effectiveFrom} ~ ${effectiveTo})만 표시됩니다. `}
         최근 {formatNumber(limit)}줄까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </div>
+      </PageGuide>
 
       <div className="erp-toolbar">
         <Link href="/sales/new" className="erp-btn erp-btn-primary">

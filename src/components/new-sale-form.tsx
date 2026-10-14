@@ -55,6 +55,7 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import { PageGuide } from "@/components/erp/page-guide";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
@@ -1009,29 +1010,14 @@ export function NewSaleForm({
       {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
       {(pendingPaperCalc || copiedPaperCalcs.length > 0) && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            background: "var(--erp-info-bg)",
-            color: "var(--erp-info-text)",
-            border: "1px solid var(--erp-info-border)",
-          }}
-        >
+        <PageGuide>
           모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0
           자동 반영 줄로 표시됩니다. 등록하면 실제로 저장됩니다.
-        </div>
+        </PageGuide>
       )}
 
       {isReturn && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            marginBottom: 12,
-            background: "var(--erp-danger-bg)",
-            color: "var(--erp-danger)",
-            border: "1px solid var(--erp-danger-border)",
-          }}
-        >
+        <PageGuide tone="danger">
           <div style={{ marginBottom: 8 }}>
             반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
           </div>
@@ -1057,41 +1043,25 @@ export function NewSaleForm({
               ))}
             </select>
           </label>
-        </div>
+        </PageGuide>
       )}
 
       {isCarryover && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            marginBottom: 12,
-            background: "var(--erp-warning-bg)",
-            color: "var(--erp-warning)",
-            border: "1px solid var(--erp-warning-border)",
-          }}
-        >
+        <PageGuide tone="warning">
           거래일자는 {orderDate} 그대로 저장되고, 월별 리포트·대시보드 집계에서만{" "}
           {nextMonthLabel(orderDate)} 실적으로 잡힙니다. 목록/달력에는 오늘 처리한 건으로
           그대로 표시됩니다.
-        </div>
+        </PageGuide>
       )}
 
       {isSample && (
-        <div
-          className="rounded p-2 text-xs"
-          style={{
-            marginBottom: 12,
-            background: "var(--erp-info-bg)",
-            color: "var(--erp-info-text)",
-            border: "1px solid var(--erp-info-border)",
-          }}
-        >
+        <PageGuide>
           샘플(무상증정)로 등록하면 모든 품목의 단가가 0원으로 고정되어 재고만
           차감되고 매출·세액에는 반영되지 않습니다. 증빙유형도 자동으로
           &quot;샘플증정&quot;으로 설정되어 세금계산서 발행 대상에서 빠집니다.
           매출목록에서는 &quot;샘플&quot; 배지로 거래처별 제공 이력을 구분해
           조회할 수 있습니다.
-        </div>
+        </PageGuide>
       )}
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

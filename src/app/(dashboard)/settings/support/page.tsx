@@ -77,13 +77,10 @@ export default async function SupportPage() {
                       dangerouslySetInnerHTML={{ __html: t.message }}
                     />
                     {t.reply && (
-                      <div
-                        className="rounded p-2 text-xs"
-                        style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
-                      >
+                      <PageGuide className="mb-0">
                         <strong>운영자 답변</strong>
                         <div className="erp-richtext-content mt-1" style={{ padding: 0 }} dangerouslySetInnerHTML={{ __html: t.reply }} />
-                      </div>
+                      </PageGuide>
                     )}
                   </div>
                 );

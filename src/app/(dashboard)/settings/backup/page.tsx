@@ -52,18 +52,11 @@ export default async function BackupSettingsPage() {
               <span className="erp-detail-tab active">복원하기</span>
             </div>
             <div className="erp-detail-body">
-              <p
-                className="mb-3 rounded-sm p-2 text-xs"
-                style={{
-                  background: "var(--erp-info-bg)",
-                  color: "var(--erp-info-text)",
-                  border: "1px solid var(--erp-info-border)",
-                }}
-              >
+              <PageGuide>
                 <strong>안전한 복원입니다.</strong> 백업 파일 안의 데이터 중 지금 DB에 없는
                 것만 다시 채워넣습니다 — 실수로 지운 거래처/매출/할일 등을 되살릴 때 쓰세요.
                 백업 이후 새로 등록했거나 수정한 데이터는 절대 지워지거나 덮어써지지 않습니다.
-              </p>
+              </PageGuide>
               <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
                 (DB 전체가 완전히 사라진 재해 상황처럼 백업 시점 그대로 통째로 되돌려야 한다면
                 이 기능이 아니라{" "}
@@ -79,20 +72,12 @@ export default async function BackupSettingsPage() {
                 <span className="erp-detail-tab active">재해복구 (서버에서 시점 복원)</span>
               </div>
               <div className="erp-detail-body">
-                <p
-                  className="mb-3 rounded-sm p-2 text-xs"
-                  style={{
-                    background: "var(--erp-danger-bg)",
-                    color: "var(--erp-danger)",
-                    border: "1px solid var(--erp-danger-border)",
-                    fontWeight: 600,
-                  }}
-                >
+                <PageGuide tone="danger" className="font-semibold">
                   ⚠ 위험한 복원입니다. 이 회사만이 아니라 이 서버에 있는 모든 회사의 DB
                   전체를 선택한 시점 기준으로 지우고 통째로 되돌립니다 — 그 시점 이후
                   등록/수정한 데이터는 전부 사라집니다. 되돌릴 수 없으니 정말 필요할 때만
                   쓰세요. (그래서 일반 회사 관리자가 아니라 플랫폼 운영자에게만 보입니다.)
-                </p>
+                </PageGuide>
                 <PageGuide>
                   매시간 GitHub Actions가 자동으로 떠두는 백업 시점 중 하나를 골라, 이 화면에서
                   바로 서버(GitHub Actions)에 복원을 요청합니다. 실제 복원 작업은

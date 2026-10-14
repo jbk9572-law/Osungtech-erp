@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PageGuide } from "@/components/erp/page-guide";
 
 const DISMISS_KEY = "erp-onboarding-dismissed";
 
@@ -29,10 +30,7 @@ export function OnboardingBanner() {
   }
 
   return (
-    <div
-      className="mb-3 flex flex-wrap items-center gap-2 rounded-sm px-3 py-2 text-xs"
-      style={{ background: "var(--erp-info-bg)", border: "1px solid var(--erp-info-border)", color: "var(--erp-info-text)" }}
-    >
+    <PageGuide className="mb-3 flex flex-wrap items-center gap-2">
       <span style={{ fontWeight: 700 }}>처음이신가요?</span>
       <span>
         <kbd
@@ -58,6 +56,6 @@ export function OnboardingBanner() {
       >
         ✕
       </button>
-    </div>
+    </PageGuide>
   );
 }

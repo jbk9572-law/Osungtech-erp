@@ -79,7 +79,7 @@ function attrStringValue(attr) {
 }
 
 // 태그 자체(className/style)가 "흐린 작은 보조 텍스트" 스타일인지 —
-// PageGuide 내부 <p>는 --erp-info-* 변수를 쓰므로 여기 안 걸린다.
+// PageGuide 내부 요소는 --erp-info-*(또는 다른 톤) 변수를 쓰므로 여기 안 걸린다.
 function looksLikeMutedSmallText(attributes) {
   const classValue = attrStringValue(getAttr(attributes, "className"));
   const styleValue = attrStringValue(getAttr(attributes, "style"));

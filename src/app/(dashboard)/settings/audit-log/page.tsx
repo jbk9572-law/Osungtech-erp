@@ -439,17 +439,9 @@ export default async function AuditLogPage({
         </Link>
       </div>
 
-      <div
-        className="rounded p-2 text-xs"
-        style={{
-          marginBottom: 8,
-          background: "var(--erp-info-bg)",
-          color: "var(--erp-info-text)",
-          border: "1px solid var(--erp-info-border)",
-        }}
-      >
+      <PageGuide>
         최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
-      </div>
+      </PageGuide>
 
       <div className="erp-grid-wrap">
         <table className="erp-grid">

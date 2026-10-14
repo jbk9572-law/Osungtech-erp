@@ -66,12 +66,12 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
       </div>
 
       {quote.converted_sales_order_id ? (
-        <p className="mb-4 rounded p-2 text-xs" style={{ background: "var(--erp-success-bg)", color: "var(--erp-success)", border: "1px solid var(--erp-success-border)" }}>
+        <PageGuide tone="success">
           이 견적서는 매출로 전환되었습니다.{" "}
           <Link href={`/sales/${quote.converted_sales_order_id}`} style={{ textDecoration: "underline" }}>
             매출 전표 보기
           </Link>
-        </p>
+        </PageGuide>
       ) : (
         <div className="erp-detail" style={{ marginTop: 0 }}>
           <div className="erp-detail-tabs">

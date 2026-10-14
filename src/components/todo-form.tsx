@@ -18,6 +18,7 @@ import { normalizeLotNumber } from "@/lib/lot-number";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type Product = {
   id: string;
@@ -310,10 +311,7 @@ export function TodoForm({
         </div>
 
         {pendingCalcSummary && (
-          <div
-            className="mb-2 flex items-center justify-between gap-2 rounded p-2 text-xs"
-            style={{ background: "var(--erp-info-bg)", color: "var(--erp-info-text)", border: "1px solid var(--erp-info-border)" }}
-          >
+          <PageGuide className="mb-2 flex items-center justify-between gap-2">
             <span>모조지 계산 연결됨 — {formatNumber(pendingCalcSummary)}연</span>
             <button
               type="button"
@@ -326,7 +324,7 @@ export function TodoForm({
             >
               취소
             </button>
-          </div>
+          </PageGuide>
         )}
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
