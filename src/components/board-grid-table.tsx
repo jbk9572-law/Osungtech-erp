@@ -69,7 +69,7 @@ export function BoardGridTable({ rows, counts }: { rows: BoardRow[]; counts: Rec
       </div>
 
       <div className="erp-field-grid" style={{ marginBottom: 10 }}>
-        <div className="erp-field erp-span-12">
+        <div className="erp-field erp-span-6">
           <label htmlFor="board-search-q">제목 검색</label>
           <input
             id="board-search-q"
@@ -81,6 +81,14 @@ export function BoardGridTable({ rows, counts }: { rows: BoardRow[]; counts: Rec
             className="erp-input"
             style={{ width: "100%" }}
           />
+        </div>
+        <div
+          className="erp-field erp-span-6"
+          style={{ alignItems: "flex-end", flexDirection: "row", justifyContent: "flex-end" }}
+        >
+          <span style={{ fontSize: 12, color: "var(--erp-text-muted)", height: 30, display: "flex", alignItems: "center" }}>
+            총 {filtered.length}건
+          </span>
         </div>
       </div>
 

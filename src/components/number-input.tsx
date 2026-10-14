@@ -88,6 +88,7 @@ export function NumberInput({
         onChange(parseNumber(raw));
       }}
       className={`text-right ${className}`}
+      style={{ width: "100%" }}
     />
   );
 }

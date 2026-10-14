@@ -71,7 +71,7 @@ export function BalanceGridTable({
   return (
     <>
       <div className="erp-field-grid">
-        <div className="erp-field erp-span-12">
+        <div className="erp-field erp-span-6">
           <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input
             id="balance-search-q"
@@ -83,6 +83,15 @@ export function BalanceGridTable({
             className="erp-input"
             style={{ width: "100%" }}
           />
+        </div>
+        <div
+          className="erp-field erp-span-6"
+          style={{ alignItems: "flex-end", flexDirection: "row", justifyContent: "flex-end" }}
+        >
+          <span style={{ fontSize: 12, color: "var(--erp-text-muted)", height: 30, display: "flex", alignItems: "center" }}>
+            총 {sortedRows.length}건
+            {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
+          </span>
         </div>
       </div>
 

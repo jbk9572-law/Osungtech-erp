@@ -121,6 +121,7 @@ export function NewStockTransferForm({
                     value={row.remark}
                     onChange={(e) => updateRow(row.key, { remark: e.target.value })}
                     className="erp-input"
+                    style={{ width: "100%" }}
                     autoComplete="off"
                   />
                 </td>
