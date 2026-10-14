@@ -39,24 +39,23 @@ export function SalesActivityForm({
   }
 
   return (
-    <form action={formAction} key={formKey} className="flex flex-col gap-3" style={{ maxWidth: 560 }}>
-      {fixedCustomerId ? (
-        <input type="hidden" name="customer_id" value={fixedCustomerId} />
-      ) : (
-        <div className="erp-field">
-          <label htmlFor="sa-customer">거래처</label>
-          <PartySearchSelect
-            parties={customers ?? []}
-            value={customerId}
-            onChange={setCustomerId}
-            name="customer_id"
-            id="sa-customer"
-          />
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="erp-field">
+    <form action={formAction} key={formKey} className="flex flex-col gap-3">
+      <div className="erp-field-grid">
+        {fixedCustomerId ? (
+          <input type="hidden" name="customer_id" value={fixedCustomerId} />
+        ) : (
+          <div className="erp-field erp-span-4">
+            <label htmlFor="sa-customer">거래처</label>
+            <PartySearchSelect
+              parties={customers ?? []}
+              value={customerId}
+              onChange={setCustomerId}
+              name="customer_id"
+              id="sa-customer"
+            />
+          </div>
+        )}
+        <div className={`erp-field ${fixedCustomerId ? "erp-span-6" : "erp-span-4"}`}>
           <label htmlFor="sa-type">활동 유형</label>
           <select id="sa-type" name="activity_type" defaultValue="방문" className="erp-input">
             {ACTIVITY_TYPES.map((t) => (
@@ -66,30 +65,28 @@ export function SalesActivityForm({
             ))}
           </select>
         </div>
-        <div className="erp-field">
+        <div className={`erp-field ${fixedCustomerId ? "erp-span-6" : "erp-span-4"}`}>
           <label htmlFor="sa-date">활동일</label>
           <input id="sa-date" name="activity_date" type="date" defaultValue={today} className="erp-input" />
         </div>
-      </div>
 
-      <div className="erp-field">
-        <label htmlFor="sa-subject">제목</label>
-        <input id="sa-subject" name="subject" autoComplete="off" required className="erp-input" placeholder="예: 9월 발주 관련 미팅" />
-      </div>
+        <div className="erp-field erp-span-12">
+          <label htmlFor="sa-subject">제목</label>
+          <input id="sa-subject" name="subject" autoComplete="off" required className="erp-input" style={{ width: "100%" }} placeholder="예: 9월 발주 관련 미팅" />
+        </div>
 
-      <div className="erp-field">
-        <label htmlFor="sa-content">내용(선택)</label>
-        <textarea id="sa-content" name="content" rows={3} className="erp-input erp-textarea-compact w-full" />
-      </div>
+        <div className="erp-field erp-span-12">
+          <label htmlFor="sa-content">내용(선택)</label>
+          <textarea id="sa-content" name="content" rows={3} className="erp-input erp-textarea-compact w-full" />
+        </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="erp-field">
+        <div className="erp-field erp-span-4">
           <label htmlFor="sa-next-date">다음 팔로우업 예정일(선택)</label>
           <input id="sa-next-date" name="next_action_date" type="date" className="erp-input" />
         </div>
-        <div className="erp-field">
+        <div className="erp-field erp-span-8">
           <label htmlFor="sa-next-memo">팔로우업 메모(선택)</label>
-          <input id="sa-next-memo" name="next_action_memo" autoComplete="off" className="erp-input" />
+          <input id="sa-next-memo" name="next_action_memo" autoComplete="off" className="erp-input" style={{ width: "100%" }} />
         </div>
       </div>
 
