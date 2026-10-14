@@ -46,7 +46,7 @@ export default async function PayablesPage() {
 
       <BalanceGridTable
         rows={withBalance}
-        rowHref={(id) => `/suppliers/${id}`}
+        hrefBase="/suppliers"
         partyLabel="공급처명"
         totalLabel="매입 누계"
         paidLabel="지급 누계"

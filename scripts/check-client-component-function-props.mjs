@@ -8,13 +8,19 @@
 // 같은 근본 원인(서버 컴포넌트가 만든 함수는 클라이언트 컴포넌트로 건널
 // 수 없음)의 또 다른 모양이라 별도 검사로 잡는다.
 //
-// 검사 방법: "use client" 지시어가 없는 .tsx 파일(=서버 컴포넌트)에서,
-// 그 파일 안에서 지역적으로 정의된 함수(const name = (...) => ... /
-// const name = arg => ... / function name(...) {...})의 이름을 모아둔다.
-// 그 다음 대문자로 시작하는 JSX 태그(커스텀 컴포넌트 — 네이티브 DOM
-// 태그는 제외)의 속성값이 그 함수 이름을 "그대로"(호출하지 않고) 참조하면
-// 위반으로 본다 — action={importedServerAction}처럼 별도 "use server"
-// 파일에서 가져온 함수는 이 지역 함수 목록에 없으므로 걸리지 않는다.
+// 검사 방법: "use client" 지시어가 없는 .tsx 파일(=서버 컴포넌트)에서
+// 대문자로 시작하는 JSX 태그(커스텀 컴포넌트 — 네이티브 DOM 태그는
+// 제외)의 속성값이 함수면 위반으로 본다. 두 가지 모양을 다 잡는다:
+// (1) 그 파일 안에서 지역적으로 정의된 함수(const name = (...) => ... /
+//     const name = arg => ... / function name(...) {...})를 이름으로
+//     그대로(호출하지 않고) 참조하는 경우.
+// (2) prop={(...) => ...} 처럼 JSX 안에서 바로 쓴 인라인 화살표/함수
+//     표현식 — balance-grid-table.tsx를 BalanceGridTable(hrefBase 문자열
+//     → rowHref 콜백)로 바꿨다가 receivables/payables 페이지에서 똑같은
+//     RSC 직렬화 에러가 다시 난 걸 보고 추가했다. (1)번 검사가 "이름으로
+//     참조"만 잡아서 인라인 함수 리터럴은 그물을 빠져나갔었다.
+// action={importedServerAction}처럼 별도 "use server" 파일에서 가져온
+// 함수는 식별자가 지역 함수 목록에 없으므로 (1)에 걸리지 않는다.
 //
 // 오탐이 있으면 ALLOWLIST에 "파일:줄번호"와 이유를 추가한다.
 
@@ -82,7 +88,6 @@ function checkFile(file) {
   if (isUseClientFile(sourceFile)) return [];
 
   const localFns = collectLocalFunctionNames(sourceFile);
-  if (localFns.size === 0) return [];
 
   const relPath = path.relative(path.join(__dirname, ".."), file);
   const violations = [];
@@ -91,12 +96,16 @@ function checkFile(file) {
     if (!ts.isJsxAttribute(attrNode) || !attrNode.initializer) return;
     if (!ts.isJsxExpression(attrNode.initializer) || !attrNode.initializer.expression) return;
     const expr = attrNode.initializer.expression;
-    if (ts.isIdentifier(expr) && localFns.has(expr.text) && isCapitalizedTag(tagNameNode)) {
-      const { line } = sourceFile.getLineAndCharacterOfPosition(attrNode.getStart());
-      const key = `${relPath}:${line + 1}`;
-      if (!ALLOWLIST.has(key)) {
-        violations.push({ key, attr: attrNode.name.getText(), fn: expr.text });
-      }
+    if (!isCapitalizedTag(tagNameNode)) return;
+
+    const isNamedLocalFn = ts.isIdentifier(expr) && localFns.has(expr.text);
+    const isInlineFn = ts.isArrowFunction(expr) || ts.isFunctionExpression(expr);
+    if (!isNamedLocalFn && !isInlineFn) return;
+
+    const { line } = sourceFile.getLineAndCharacterOfPosition(attrNode.getStart());
+    const key = `${relPath}:${line + 1}`;
+    if (!ALLOWLIST.has(key)) {
+      violations.push({ key, attr: attrNode.name.getText(), fn: isNamedLocalFn ? expr.text : "(인라인 함수)" });
     }
   }
 

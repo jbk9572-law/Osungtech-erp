@@ -17,18 +17,22 @@ function compareValues(a: BalanceRow, b: BalanceRow, key: SortKey): number {
 
 export function BalanceGridTable({
   rows,
-  rowHref,
+  hrefBase,
+  hrefQueryParam,
   partyLabel,
   totalLabel,
   paidLabel,
   emptyLabel,
 }: {
   rows: BalanceRow[];
-  // 대부분 화면은 상세가 `${고정 경로}/${id}` 형태라 hrefBase 문자열
-  // 하나로 충분했지만, 하청업체 상세는 별도 라우트가 아니라
-  // /subcontractors?id= 쿼리 파라미터라 고정 접두사로는 표현이 안 됐다
-  // — 콜백으로 바꿔 어떤 URL 모양이든 이 공용 테이블을 그대로 쓸 수 있게 했다.
-  rowHref: (id: string) => string;
+  hrefBase: string;
+  // 대부분 화면은 상세가 `${hrefBase}/${id}` 경로 형태라 생략하면 되지만,
+  // 하청업체 상세는 별도 라우트가 아니라 /subcontractors?id= 쿼리
+  // 파라미터라 이 값을 주면 `${hrefBase}?${hrefQueryParam}=${id}`로 만든다.
+  // (함수 prop으로 뒀던 적이 있는데, 이 컴포넌트가 "use client"라 서버
+  // 컴포넌트에서 함수를 그대로 내려줄 수 없어 런타임 에러가 났다 —
+  // 직렬화 가능한 문자열 두 개로 되돌렸다.)
+  hrefQueryParam?: string;
   partyLabel: string;
   totalLabel: string;
   paidLabel: string;
@@ -58,6 +62,10 @@ export function BalanceGridTable({
   function sortIndicator(key: SortKey) {
     if (!sort || sort.key !== key) return "";
     return sort.dir === 1 ? " ▲" : " ▼";
+  }
+
+  function rowHref(id: string): string {
+    return hrefQueryParam ? `${hrefBase}?${hrefQueryParam}=${id}` : `${hrefBase}/${id}`;
   }
 
   function sortableHeader(label: string, key: SortKey, className?: string) {

@@ -54,7 +54,8 @@ export default async function SubcontractorPayablesPage() {
 
       <BalanceGridTable
         rows={withBalance}
-        rowHref={(id) => `/subcontractors?id=${id}`}
+        hrefBase="/subcontractors"
+        hrefQueryParam="id"
         partyLabel="업체명"
         totalLabel="가공비 누계"
         paidLabel="지급 누계"
