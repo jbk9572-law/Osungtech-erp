@@ -17,14 +17,18 @@ function compareValues(a: BalanceRow, b: BalanceRow, key: SortKey): number {
 
 export function BalanceGridTable({
   rows,
-  hrefBase,
+  rowHref,
   partyLabel,
   totalLabel,
   paidLabel,
   emptyLabel,
 }: {
   rows: BalanceRow[];
-  hrefBase: string;
+  // 대부분 화면은 상세가 `${고정 경로}/${id}` 형태라 hrefBase 문자열
+  // 하나로 충분했지만, 하청업체 상세는 별도 라우트가 아니라
+  // /subcontractors?id= 쿼리 파라미터라 고정 접두사로는 표현이 안 됐다
+  // — 콜백으로 바꿔 어떤 URL 모양이든 이 공용 테이블을 그대로 쓸 수 있게 했다.
+  rowHref: (id: string) => string;
   partyLabel: string;
   totalLabel: string;
   paidLabel: string;
@@ -108,7 +112,7 @@ export function BalanceGridTable({
           </thead>
           <tbody>
             {sortedRows.map((b) => (
-              <ClickableRow key={b.id} href={`${hrefBase}/${b.id}`}>
+              <ClickableRow key={b.id} href={rowHref(b.id)}>
                 <td>{b.name}</td>
                 <td className="num">{formatNumber(b.total)}</td>
                 <td className="num">{formatNumber(b.paid)}</td>

@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { BalanceGridTable } from "@/components/balance-grid-table";
 import { getAllSubcontractorBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -7,10 +7,10 @@ import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
 
 // 매입채무(/payables)와 완전히 같은 계산 방식(가공비 누계 - 지급 누계,
-// 그때그때 계산)이지만, 하청업체 상세는 /suppliers/[id] 같은 별도 라우트가
-// 아니라 /subcontractors?id= 쿼리 파라미터라서 BalanceGridTable(고정으로
-// `${hrefBase}/${id}` 링크를 만듦)을 그대로 재사용할 수 없다 — 같은 모양을
-// 직접 그린다.
+// 그때그때 계산). 하청업체 상세는 /suppliers/[id] 같은 별도 라우트가
+// 아니라 /subcontractors?id= 쿼리 파라미터라 BalanceGridTable의
+// rowHref 콜백으로 그 모양 그대로 넘긴다(검색/정렬/"총 N건"을 매입
+// 채무와 동일하게 재사용).
 export default async function SubcontractorPayablesPage() {
   const supabase = await createClient();
 
@@ -52,43 +52,14 @@ export default async function SubcontractorPayablesPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>업체명</th>
-              <th className="num">가공비 누계</th>
-              <th className="num">지급 누계</th>
-              <th className="num">잔액</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {withBalance.map((b) => (
-              <tr key={b.id}>
-                <td>
-                  <Link href={`/subcontractors?id=${b.id}`}>{b.name}</Link>
-                </td>
-                <td className="num">{formatNumber(b.total)}</td>
-                <td className="num">{formatNumber(b.paid)}</td>
-                <td className="num" style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
-                  {formatNumber(b.balance)}
-                </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
-                  <Link href={`/subcontractors?id=${b.id}`}>상세 →</Link>
-                </td>
-              </tr>
-            ))}
-            {!withBalance.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  미정산 잔액이 있는 업체가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <BalanceGridTable
+        rows={withBalance}
+        rowHref={(id) => `/subcontractors?id=${id}`}
+        partyLabel="업체명"
+        totalLabel="가공비 누계"
+        paidLabel="지급 누계"
+        emptyLabel="미정산 잔액이 있는 업체가 없습니다."
+      />
     </div>
   );
 }
