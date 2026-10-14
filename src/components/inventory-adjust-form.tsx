@@ -8,6 +8,7 @@ import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { PageGuide } from "@/components/erp/page-guide";
 
 type Product = {
   id: string;
@@ -73,6 +74,7 @@ export function InventoryAdjustForm({
   }, [productId, warehouseId, stockLevels]);
 
   const signedQuantity = direction === "decrease" ? -amount : amount;
+  const projectedStock = (currentStock ?? 0) + signedQuantity;
   const selectedProduct = products.find((p) => p.id === productId);
 
   return (
@@ -137,10 +139,23 @@ export function InventoryAdjustForm({
         className="erp-input"
       />
       {currentStock !== null && (
-        <p className="text-xs md:col-span-4" style={{ color: "var(--erp-text-muted)" }}>
-          현재 재고: {formatNumber(currentStock)}개 → 조정 후:{" "}
-          {formatNumber((currentStock + signedQuantity))}개
-        </p>
+        <>
+          <p
+            className="text-xs md:col-span-4"
+            style={{ color: projectedStock < 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
+          >
+            현재 재고: {formatNumber(currentStock)}개 → 조정 후: {formatNumber(projectedStock)}개
+            {projectedStock < 0 && " (재고 부족)"}
+          </p>
+          {/* 매출/매입/생산지시 등록 화면과 같은 소프트 경고 — 등록 자체를
+              막지는 않는다(재고가 0 밑으로 내려가도 DB에서 막지 않는
+              기존 정책과 동일). */}
+          {projectedStock < 0 && (
+            <PageGuide tone="warning" className="md:col-span-4">
+              ⚠ 조정 후 재고가 음수가 됩니다. 그래도 등록하면 재고가 음수로 저장됩니다.
+            </PageGuide>
+          )}
+        </>
       )}
       <input type="hidden" name="note" value={finalNote} />
       <select
