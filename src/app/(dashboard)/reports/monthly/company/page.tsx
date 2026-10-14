@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { MonthNavigator } from "@/components/erp/month-navigator";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { effectiveMonth } from "@/lib/carryover";
@@ -156,9 +157,7 @@ export default async function MonthlyReportCompanyPage({
           Escape: { href: `/reports/monthly?month=${month}` },
         }}
       />
-      <h1 className="mb-3 erp-h1">
-        확장모듈 &gt; 월별 리포트 &gt; {companyName || "거래처"} 상세내역
-      </h1>
+      <ListPageHeader title={`확장모듈 > 월별 리포트 > ${companyName || "거래처"} 상세내역`} />
 
       <MonthNavigator baseHref="/reports/monthly/company" month={month} suffix={companySuffix} />
 

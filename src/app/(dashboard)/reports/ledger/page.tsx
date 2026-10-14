@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -98,7 +99,7 @@ export default async function InventoryLedgerPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 erp-h1">회계·보고서 &gt; 수불부</h1>
+      <ListPageHeader title="회계·보고서 > 수불부" />
 
       <PageGuide>
         품목을 고르면 그 달의 이월(전월 이전 누적재고)부터 입고/출고 내역,

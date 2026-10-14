@@ -3,6 +3,7 @@ import { PaymentRequestForm } from "@/components/payment-request-form";
 import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { ListPageHeader } from "@/components/erp/page-header";
 
 export default async function NewPaymentRequestPage() {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export default async function NewPaymentRequestPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/reports/payment-requests" } }} />
-      <h1 className="mb-3 erp-h1">보고서 &gt; 지급결의양식 &gt; 글쓰기</h1>
+      <ListPageHeader title="보고서 > 지급결의양식 > 글쓰기" />
 
       <div className="erp-toolbar">
         <CloseButton href="/reports/payment-requests">ESC 목록으로</CloseButton>

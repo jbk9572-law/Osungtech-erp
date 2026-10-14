@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { MonthNavigator } from "@/components/erp/month-navigator";
 import { currentMonth } from "@/lib/date-presets";
 import { GridBadge } from "@/components/grid/badge";
@@ -64,9 +65,7 @@ export default async function MonthlyReportPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 erp-h1">
-        확장모듈 &gt; 월별 리포트
-      </h1>
+      <ListPageHeader title="확장모듈 > 월별 리포트" />
 
       <MonthNavigator baseHref="/reports/monthly" month={month} suffix={suffix} />
       <div className="erp-toolbar" style={{ marginBottom: 8 }}>
