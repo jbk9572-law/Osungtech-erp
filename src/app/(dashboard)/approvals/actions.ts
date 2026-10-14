@@ -73,11 +73,15 @@ export async function deleteApprovalDocument(_prevState: FormState, formData: Fo
   const id = String(formData.get("id") ?? "");
   if (!id) return { error: "잘못된 요청입니다." };
 
+  // RLS(approval_documents_delete_own, migration 181)가 본인 기안은
+  // draft/pending/recalled 상태로만 삭제를 허용한다 — 이미 승인완료/
+  // 반려된 기안서는 작성자도 못 지운다(결재 이력 보존). 관리자는
+  // 상태와 무관하게 삭제할 수 있다.
   const supabase = await createClient();
   const result = await supabase.from("approval_documents").delete().eq("id", id).select("id");
   const mutationError = requireMutatedRow(result, {
     onError: "삭제에 실패했습니다",
-    onForbidden: "본인이 기안한 문서만 삭제할 수 있습니다.",
+    onForbidden: "본인이 기안한 문서 중 아직 승인/반려로 확정되지 않은 문서만 삭제할 수 있습니다.",
   });
   if (mutationError) return mutationError;
 
