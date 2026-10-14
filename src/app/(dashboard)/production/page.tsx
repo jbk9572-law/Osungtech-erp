@@ -100,7 +100,7 @@ export default async function ProductionPage({
         to={effectiveTo}
       />
 
-      <form method="get" className="erp-field-grid" style={{ marginBottom: 12 }}>
+      <form method="get" className="erp-field-grid">
         {from && <input type="hidden" name="from" value={from} />}
         {to && <input type="hidden" name="to" value={to} />}
         <div className="erp-field erp-span-12">
