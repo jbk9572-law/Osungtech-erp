@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PrintButton } from "@/components/print-button";
+import { RichTextView } from "@/components/erp/rich-text-view";
 
 export default async function DocumentPrintPage({
   params,
@@ -25,11 +26,7 @@ export default async function DocumentPrintPage({
       <h1 style={{ textAlign: "center", fontSize: 20, fontWeight: 700, marginBottom: 32, letterSpacing: 4 }}>
         {doc.title}
       </h1>
-      <div
-        className="erp-richtext-content"
-        style={{ padding: 0, fontSize: 13.5, lineHeight: 1.9 }}
-        dangerouslySetInnerHTML={{ __html: doc.rendered_body }}
-      />
+      <RichTextView html={doc.rendered_body} className="erp-richtext-content" style={{ padding: 0, fontSize: 13.5, lineHeight: 1.9 }} />
     </div>
   );
 }

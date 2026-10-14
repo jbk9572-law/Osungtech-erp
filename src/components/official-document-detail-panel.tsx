@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
+import { DetailPageHeader } from "@/components/erp/page-header";
+import { RichTextView } from "@/components/erp/rich-text-view";
 import { DeleteButton } from "@/components/delete-button";
 import { OfficialDocumentSubmitForm } from "@/components/official-document-submit-form";
 import { OfficialDocumentStatusButton } from "@/components/official-document-status-button";
@@ -97,34 +99,34 @@ export async function OfficialDocumentDetailPanel({ id, closeHref }: { id: strin
 
   return (
     <>
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="flex items-center gap-2 erp-h1">
-          공문관리 &gt; {doc.doc_no ? `#${doc.doc_no_year}-${doc.doc_no}` : "상세"}
-          <GridBadge tone={status.tone}>{status.label}</GridBadge>
-        </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          {doc.status === "pending_approval" && doc.approval_document_id && (
-            <Link href={`/approvals/${doc.approval_document_id}`} className="erp-btn">
-              결재 문서 보기
+      <DetailPageHeader
+        title={`공문관리 > ${doc.doc_no ? `#${doc.doc_no_year}-${doc.doc_no}` : "상세"}`}
+        meta={<GridBadge tone={status.tone}>{status.label}</GridBadge>}
+        actions={
+          <>
+            {doc.status === "pending_approval" && doc.approval_document_id && (
+              <Link href={`/approvals/${doc.approval_document_id}`} className="erp-btn">
+                결재 문서 보기
+              </Link>
+            )}
+            {allowManage && doc.status === "draft" && (
+              <DeleteButton action={deleteOfficialDocument} id={doc.id} confirmMessage="이 공문(작성중)을 삭제하시겠습니까?" />
+            )}
+            {allowManage && (doc.status === "draft" || doc.status === "approved") && (
+              <OfficialDocumentStatusButton
+                id={doc.id}
+                action={cancelOfficialDocument}
+                label="취소"
+                pendingLabel="처리 중..."
+                tone="danger"
+              />
+            )}
+            <Link href={closeHref} className="erp-btn">
+              목록
             </Link>
-          )}
-          {allowManage && doc.status === "draft" && (
-            <DeleteButton action={deleteOfficialDocument} id={doc.id} confirmMessage="이 공문(작성중)을 삭제하시겠습니까?" />
-          )}
-          {allowManage && (doc.status === "draft" || doc.status === "approved") && (
-            <OfficialDocumentStatusButton
-              id={doc.id}
-              action={cancelOfficialDocument}
-              label="취소"
-              pendingLabel="처리 중..."
-              tone="danger"
-            />
-          )}
-          <Link href={closeHref} className="erp-btn">
-            목록
-          </Link>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="erp-post-body">
         <div className="erp-info-grid mb-3">
@@ -159,13 +161,15 @@ export async function OfficialDocumentDetailPanel({ id, closeHref }: { id: strin
         </div>
 
         <div className="erp-post-title">{doc.title}</div>
-        {/* body는 스마트에디터(리치텍스트)로 작성된 HTML이다 — 병합필드
-            치환 값은 lib/document-template.ts의 renderTemplate이 이미
-            이스케이프해서 넣으므로 여기서 그대로 렌더링해도 안전하다. */}
-        <div
+        {/* body는 스마트에디터(리치텍스트)로 작성된 HTML이다. 병합필드 치환
+            값은 lib/document-template.ts의 renderTemplate이 이미
+            이스케이프해서 넣지만, 공문 본문(템플릿) 자체는 에디터를
+            거치지 않고 저장될 수 있으므로 RichTextView가 렌더링 전
+            한 번 더 걸러낸다. */}
+        <RichTextView
+          html={doc.body}
           className="erp-richtext-content mt-2 text-sm"
           style={{ color: "var(--erp-text)", padding: 0 }}
-          dangerouslySetInnerHTML={{ __html: doc.body }}
         />
       </div>
 

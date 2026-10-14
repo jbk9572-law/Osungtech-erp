@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
+import { DetailPageHeader } from "@/components/erp/page-header";
+import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
 import { IssueDocumentButton } from "@/components/issue-document-button";
 import { PrintInPlaceButton } from "@/components/print-in-place-button";
@@ -27,20 +29,24 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
 
   return (
     <>
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="erp-h1">{doc.title}</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <PrintInPlaceButton href={`/hr/documents/item/${id}/print`}>F9 인쇄</PrintInPlaceButton>
-          {canManage && (
-            <DeleteButton action={deleteDocument} id={id} confirmMessage="이 문서를 삭제하시겠습니까?" />
-          )}
-        </div>
-      </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        {doc.profiles?.full_name ? `대상: ${doc.profiles.full_name} · ` : ""}
-        {new Date(doc.created_at).toLocaleString("ko-KR")} ·{" "}
-        <GridBadge tone={doc.status === "issued" ? "ok" : "warn"}>{doc.status === "issued" ? "발급완료" : "초안"}</GridBadge>
-      </p>
+      <DetailPageHeader
+        title={doc.title}
+        meta={
+          <>
+            {doc.profiles?.full_name ? `대상: ${doc.profiles.full_name} · ` : ""}
+            {new Date(doc.created_at).toLocaleString("ko-KR")} ·{" "}
+            <GridBadge tone={doc.status === "issued" ? "ok" : "warn"}>{doc.status === "issued" ? "발급완료" : "초안"}</GridBadge>
+          </>
+        }
+        actions={
+          <>
+            <PrintInPlaceButton href={`/hr/documents/item/${id}/print`}>F9 인쇄</PrintInPlaceButton>
+            {canManage && (
+              <DeleteButton action={deleteDocument} id={id} confirmMessage="이 문서를 삭제하시겠습니까?" />
+            )}
+          </>
+        }
+      />
 
       {canManage && doc.status === "draft" && (
         <div style={{ marginBottom: 12 }}>
@@ -54,13 +60,11 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
         </div>
         <div className="erp-detail-body">
           {/* rendered_body는 양식 작성 시 스마트에디터로 만든 HTML에
-              병합필드 값을 채워 넣은 결과다 — hr/documents/actions.ts의
-              renderTemplate이 값을 이스케이프해서 넣으므로 안전하다. */}
-          <div
-            className="erp-richtext-content"
-            style={{ padding: 0, fontSize: 13.5 }}
-            dangerouslySetInnerHTML={{ __html: doc.rendered_body }}
-          />
+              병합필드 값을 채워 넣은 결과다. 병합필드 값 자체는
+              renderTemplate이 이스케이프해서 넣지만, 양식 본문(템플릿)
+              쪽은 에디터를 거치지 않고 직접 저장될 수 있으므로
+              RichTextView가 렌더링 전 한 번 더 걸러낸다. */}
+          <RichTextView html={doc.rendered_body} className="erp-richtext-content" style={{ padding: 0, fontSize: 13.5 }} />
         </div>
       </div>
     </>

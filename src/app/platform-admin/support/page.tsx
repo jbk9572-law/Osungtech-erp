@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
+import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
 import { SupportTicketReplyForm } from "@/components/support-ticket-reply-form";
 import { replySupportTicket } from "@/app/platform-admin/support/actions";
@@ -49,11 +50,12 @@ export default async function PlatformSupportPage() {
                   </span>
                   <GridBadge tone={status.tone}>{status.label}</GridBadge>
                 </div>
-                {/* message는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
-                <div
+                {/* message는 스마트에디터(리치텍스트)로 작성된 HTML이다 — RichTextView가
+                    렌더링 전에 서버에서 한 번 더 걸러낸다. */}
+                <RichTextView
+                  html={t.message}
                   className="erp-richtext-content mb-2 text-xs"
                   style={{ padding: 0, color: "var(--erp-text-muted)" }}
-                  dangerouslySetInnerHTML={{ __html: t.message }}
                 />
                 <SupportTicketReplyForm ticketId={t.id} defaultReply={t.reply} action={replySupportTicket} />
               </div>

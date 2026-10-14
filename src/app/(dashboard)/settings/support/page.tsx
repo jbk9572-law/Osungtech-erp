@@ -3,6 +3,7 @@ import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
 import { AccessWall } from "@/components/erp/access-wall";
 import { SupportTicketForm } from "@/components/support-ticket-form";
@@ -70,16 +71,17 @@ export default async function SupportPage() {
                       </span>
                       <GridBadge tone={status.tone}>{status.label}</GridBadge>
                     </div>
-                    {/* message/reply는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
-                    <div
+                    {/* message/reply는 스마트에디터(리치텍스트)로 작성된 HTML이다 — RichTextView가
+                        렌더링 전에 서버에서 한 번 더 걸러낸다. */}
+                    <RichTextView
+                      html={t.message}
                       className="erp-richtext-content mb-2 text-xs"
                       style={{ padding: 0, color: "var(--erp-text-muted)" }}
-                      dangerouslySetInnerHTML={{ __html: t.message }}
                     />
                     {t.reply && (
                       <PageGuide className="mb-0">
                         <strong>운영자 답변</strong>
-                        <div className="erp-richtext-content mt-1" style={{ padding: 0 }} dangerouslySetInnerHTML={{ __html: t.reply }} />
+                        <RichTextView html={t.reply} className="erp-richtext-content mt-1" style={{ padding: 0 }} />
                       </PageGuide>
                     )}
                   </div>

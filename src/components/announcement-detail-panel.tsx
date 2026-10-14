@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
+import { DetailPageHeader } from "@/components/erp/page-header";
 import { AnnouncementForm } from "@/components/announcement-form";
 import { deleteAnnouncement, updateAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -9,6 +10,7 @@ import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
 import { markAnnouncementRead } from "@/lib/announcement-reads";
 import { PageGuide } from "@/components/erp/page-guide";
+import { RichTextView } from "@/components/erp/rich-text-view";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 
 // announcements/page.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이
@@ -69,17 +71,19 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
 
   return (
     <>
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="erp-h1">공지사항 &gt; {allowManage ? "수정" : "상세"}</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          {allowManage && (
-            <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
-          )}
-          <Link href={closeHref} className="erp-btn">
-            목록
-          </Link>
-        </div>
-      </div>
+      <DetailPageHeader
+        title={`공지사항 > ${allowManage ? "수정" : "상세"}`}
+        actions={
+          <>
+            {allowManage && (
+              <DeleteButton action={deleteAnnouncement} id={row.id} confirmMessage="이 공지사항을 삭제하시겠습니까?" />
+            )}
+            <Link href={closeHref} className="erp-btn">
+              목록
+            </Link>
+          </>
+        }
+      />
 
       <div className="erp-post-header">
         {row.pinned && <GridBadge tone="info">고정</GridBadge>}
@@ -98,12 +102,13 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
           />
         ) : (
           <div>
-            {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
+            {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다 — RichTextView가
+                렌더링 전에 서버에서 한 번 더 걸러낸다. */}
             {row.content ? (
-              <div
+              <RichTextView
+                html={row.content}
                 className="erp-richtext-content"
                 style={{ padding: 0, fontSize: 13.5, color: "var(--erp-text)" }}
-                dangerouslySetInnerHTML={{ __html: row.content }}
               />
             ) : (
               <p style={{ margin: 0, color: "var(--erp-text)" }}>-</p>

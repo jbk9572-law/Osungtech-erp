@@ -2,11 +2,19 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DetailPageHeader } from "@/components/erp/page-header";
+import { RichTextView } from "@/components/erp/rich-text-view";
 import { DeleteButton } from "@/components/delete-button";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { GridBadge } from "@/components/grid/badge";
 import { decideApprovalStep, deleteApprovalDocument, recallApprovalDocument } from "@/app/(dashboard)/approvals/actions";
 import { ApprovalDecisionForm } from "@/components/approval-decision-form";
+import { getCurrentActor } from "@/lib/current-actor";
+
+// 작성자 본인이 삭제할 수 있는 상태 — DB 정책(migration 181,
+// approval_documents_delete_own)과 정확히 같은 기준이어야 한다. 이미
+// 승인완료/반려된 기안서(최종 확정된 결재 이력)는 작성자도 지울 수
+// 없게 해서, 버튼 노출 단계에서부터 DB 정책과 일치시킨다.
+const OWNER_DELETABLE_STATUSES = new Set(["draft", "pending", "recalled"]);
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   pending: { label: "결재중", tone: "warn" },
@@ -32,6 +40,7 @@ const SOURCE_LINK: Record<string, { label: string; href: (id: string) => string 
 export async function ApprovalDetailPanel({ id, closeHref }: { id: string; closeHref: string }) {
   const supabase = await createClient();
   const user = await getUser();
+  const { isAdmin } = await getCurrentActor(supabase);
 
   const [{ data: doc }, { data: steps }] = await Promise.all([
     supabase
@@ -77,8 +86,9 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
     (delegations ?? []).find((d) => d.delegator_id === approverId && d.start_date <= today && today <= d.end_date);
   const isActiveDelegateFor = (approverId: string) => activeDelegationFor(approverId)?.delegate_id === user?.id;
   const myTurn = doc.status === "pending" && !!currentStep && (currentStep.approver_id === user?.id || isActiveDelegateFor(currentStep.approver_id));
-  const canDelete = doc.created_by === user?.id;
-  const canRecall = canDelete && doc.status === "pending" && approverSteps.every((s) => s.status === "pending");
+  const isOwner = doc.created_by === user?.id;
+  const canDelete = isAdmin || (isOwner && OWNER_DELETABLE_STATUSES.has(doc.status));
+  const canRecall = isOwner && doc.status === "pending" && approverSteps.every((s) => s.status === "pending");
 
   return (
     <>
@@ -134,9 +144,10 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
               {SOURCE_LINK[doc.source_type].label} →
             </Link>
           )}
-          {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다. */}
+          {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다 — RichTextView가
+              렌더링 전에 서버에서 한 번 더 걸러낸다(sanitize-rich-text.ts). */}
           {doc.content ? (
-            <div className="erp-richtext-content" style={{ padding: 0 }} dangerouslySetInnerHTML={{ __html: doc.content }} />
+            <RichTextView html={doc.content} className="erp-richtext-content" style={{ padding: 0 }} />
           ) : (
             <p>(내용 없음)</p>
           )}
