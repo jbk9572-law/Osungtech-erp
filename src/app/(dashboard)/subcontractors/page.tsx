@@ -5,19 +5,30 @@ import { SubcontractorDetailPanel } from "@/components/subcontractor-detail-pane
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { DeleteButton } from "@/components/delete-button";
 import { PageGuide } from "@/components/erp/page-guide";
-import { createSubcontractor, deleteSubcontractor } from "@/app/(dashboard)/subcontractors/actions";
+import { SplitListBulkSelect, type SplitListBulkRow } from "@/components/erp/split-list-bulk-select";
+import { createSubcontractor, deleteSubcontractor, bulkDeleteSubcontractors } from "@/app/(dashboard)/subcontractors/actions";
+import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
+import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
 
+type SubcontractorRow = { id: string; name: string; contact_name: string | null; phone: string | null };
+
+const DEFAULT_LIST_LIMIT = 300;
+const LIST_LIMIT_STEP = 300;
+
 export default async function SubcontractorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string }>;
+  searchParams: Promise<{ q?: string; limit?: string; id?: string }>;
 }) {
-  const { id } = await searchParams;
+  const { q, limit: limitParam, id } = await searchParams;
   const selectedId = id && isUuid(id) ? id : undefined;
+  const parsedLimit = limitParam ? parseInt(limitParam, 10) : NaN;
+  const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
+  const keyword = q?.trim().toLowerCase();
   const supabase = await createClient();
 
   if (!(await canViewPage(supabase, "/subcontractors"))) {
@@ -30,19 +41,47 @@ export default async function SubcontractorsPage({
     );
   }
 
-  const { data: subcontractors } = await supabase
-    .from("subcontractors")
-    .select("id, name, contact_name, phone")
-    .order("created_at", { ascending: false });
+  // customers/page.tsx와 같은 이유 — 업체 수가 늘어날수록 전체를 매번
+  // 다 내려받으면 안 된다. 검색 중이 아닐 때만 상한을 둔다.
+  let allSubcontractors: SubcontractorRow[];
+  let hasMore = false;
+  if (keyword) {
+    allSubcontractors = await fetchAllRows<SubcontractorRow>((from, to) =>
+      supabase.from("subcontractors").select("id, name, contact_name, phone").order("created_at", { ascending: false }).range(from, to),
+    );
+  } else {
+    const result = await fetchLimitedRows<SubcontractorRow>(
+      (from, to) =>
+        supabase.from("subcontractors").select("id, name, contact_name, phone").order("created_at", { ascending: false }).range(from, to),
+      limit,
+    );
+    allSubcontractors = result.rows;
+    hasMore = result.hasMore;
+  }
 
-  const rowHref = (subcontractorId: string) => `/subcontractors?id=${subcontractorId}`;
-  const newHref = "/subcontractors";
+  const subcontractors = keyword
+    ? allSubcontractors.filter((s) => matchesSearch(keyword, s.name, s.contact_name, s.phone))
+    : allSubcontractors;
+
+  const listParams = new URLSearchParams();
+  if (q) listParams.set("q", q);
+  if (limitParam) listParams.set("limit", limitParam);
+  const rowHref = (subcontractorId: string) => {
+    const p = new URLSearchParams(listParams);
+    p.set("id", subcontractorId);
+    return `/subcontractors?${p.toString()}`;
+  };
+  const moreParams = new URLSearchParams(listParams);
+  moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
+  const moreHref = `/subcontractors?${moreParams.toString()}`;
+  const newHref = listParams.toString() ? `/subcontractors?${listParams.toString()}` : "/subcontractors";
 
   return (
     <div>
       <KeyboardShortcuts
         shortcuts={{
           F2: { href: newHref },
+          F5: { submitFormSelector: "#subcontractors-search-form" },
           Escape: { href: selectedId ? newHref : "/dashboard" },
         }}
       />
@@ -78,22 +117,58 @@ export default async function SubcontractorsPage({
           <div className="erp-split-list-head">
             <span>업체 목록</span>
             <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
-              총 {formatNumber(subcontractors?.length ?? 0)}건
+              총 {formatNumber(subcontractors.length)}건
             </span>
           </div>
+          <form
+            id="subcontractors-search-form"
+            method="get"
+            className="erp-field-grid"
+            style={{ margin: 8, padding: 8, gap: 6 }}
+          >
+            <div className="erp-field erp-span-6">
+              <input
+                type="text"
+                name="q"
+                autoComplete="off"
+                defaultValue={q ?? ""}
+                placeholder="업체명, 담당자, 연락처 검색"
+                className="erp-input"
+                style={{ width: "100%" }}
+              />
+            </div>
+            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+              F5 조회
+            </button>
+          </form>
           <div className="erp-split-list-body">
-            {(subcontractors ?? []).map((s) => (
-              <Link
-                key={s.id}
-                href={rowHref(s.id)}
-                className={`erp-split-list-row${s.id === selectedId ? " active" : ""}`}
-              >
-                {s.name}
-                <div className="erp-split-list-row-sub">{s.contact_name ?? s.phone ?? "-"}</div>
-              </Link>
-            ))}
-            {!subcontractors?.length && <p className="erp-grid-empty">등록된 업체가 없습니다.</p>}
+            <SplitListBulkSelect
+              rows={subcontractors.map(
+                (s): SplitListBulkRow => ({
+                  id: s.id,
+                  href: rowHref(s.id),
+                  active: s.id === selectedId,
+                  label: s.name,
+                  content: (
+                    <>
+                      {s.name}
+                      <div className="erp-split-list-row-sub">{s.contact_name ?? s.phone ?? "-"}</div>
+                    </>
+                  ),
+                }),
+              )}
+              bulkDeleteAction={bulkDeleteSubcontractors}
+              warningText="발급된 포털 계정도 함께 삭제됩니다."
+              emptyMessage="조건에 맞는 업체가 없습니다."
+            />
           </div>
+          {!keyword && hasMore && (
+            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+              <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
+                더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
+              </Link>
+            </div>
+          )}
         </section>
 
         <div className="erp-split-detail">

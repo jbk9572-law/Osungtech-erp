@@ -57,6 +57,31 @@ export async function deleteSubcontractor(_prevState: FormState, formData: FormD
   return { success: "업체를 삭제했습니다." };
 }
 
+export async function bulkDeleteSubcontractors(_prevState: FormState, formData: FormData): Promise<FormState> {
+  let ids: string[];
+  try {
+    ids = JSON.parse(String(formData.get("ids") ?? "[]"));
+  } catch {
+    return { error: "잘못된 요청입니다." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: "삭제할 항목을 선택해주세요." };
+  }
+
+  const supabase = await createClient();
+  // deleteSubcontractor와 같은 이유(.select()로 실제 삭제 행 확인)로
+  // error 없이 0건 삭제된 것도 실패로 집계한다.
+  const results = await Promise.all(ids.map((id) => supabase.from("subcontractors").delete().eq("id", id).select("id")));
+  const failCount = results.filter((r) => r.error || !r.data || r.data.length === 0).length;
+
+  revalidatePath("/subcontractors");
+
+  if (failCount > 0) {
+    return { error: `${ids.length - failCount}건 삭제, ${failCount}건은 삭제하지 못했습니다.` };
+  }
+  return { success: `${ids.length}건 삭제했습니다.` };
+}
+
 export async function addSubcontractorPayment(_prevState: FormState, formData: FormData): Promise<FormState> {
   const subcontractorId = String(formData.get("subcontractor_id") ?? "");
   const paidAt = String(formData.get("paid_at") ?? "");
