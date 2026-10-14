@@ -1574,7 +1574,7 @@ export function NewPurchaseForm({
             className="erp-grid"
             style={{
               tableLayout: "fixed",
-              width: itemGridTotalWidth,
+              width: "100%",
               minWidth: itemGridTotalWidth,
             }}
           >

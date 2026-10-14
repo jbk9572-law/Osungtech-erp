@@ -38,7 +38,7 @@ export function PurchaseQuotePriceForm({
       <div className="erp-grid-wrap">
         <table
           className="erp-grid"
-          style={{ tableLayout: "fixed", width: PRICE_GRID_TOTAL_WIDTH, minWidth: PRICE_GRID_TOTAL_WIDTH }}
+          style={{ tableLayout: "fixed", width: "100%", minWidth: PRICE_GRID_TOTAL_WIDTH }}
         >
           <thead>
             <tr>

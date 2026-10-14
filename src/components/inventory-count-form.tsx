@@ -343,7 +343,7 @@ export function InventoryCountForm({
       <div className="erp-grid-wrap" style={{ marginTop: 8 }}>
         <table
           className="erp-grid"
-          style={{ tableLayout: "fixed", width: COUNT_GRID_TOTAL_WIDTH, minWidth: COUNT_GRID_TOTAL_WIDTH }}
+          style={{ tableLayout: "fixed", width: "100%", minWidth: COUNT_GRID_TOTAL_WIDTH }}
         >
           <thead>
             <tr>

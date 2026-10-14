@@ -1619,7 +1619,7 @@ export function NewSaleForm({
         >
           <table
             className="erp-grid"
-            style={{ tableLayout: "fixed", width: itemGridTotalWidth, minWidth: itemGridTotalWidth }}
+            style={{ tableLayout: "fixed", width: "100%", minWidth: itemGridTotalWidth }}
           >
             <thead>
               <tr>

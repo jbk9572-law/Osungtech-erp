@@ -106,7 +106,7 @@ export function NewPurchaseQuoteRequestForm({
       </div>
 
       <div className="erp-grid-wrap">
-        <table className="erp-grid" style={{ tableLayout: "fixed", width: ITEM_GRID_TOTAL_WIDTH, minWidth: ITEM_GRID_TOTAL_WIDTH }}>
+        <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: ITEM_GRID_TOTAL_WIDTH }}>
           <thead>
             <tr>
               <th style={{ width: 320 }}>품목</th>

@@ -21,6 +21,13 @@
 //      (실제로 이 버그로 모바일 화면이 깨졌었다). minWidth로 바닥을
 //      깔아서 그 밑으로는 erp-grid-wrap의 overflow:auto가 가로
 //      스크롤을 대신하게 해야 한다.
+//   D) 표의 width와 minWidth가 똑같은 값(같은 상수/변수/숫자)이면 위반 —
+//      표가 그 값 그대로 고정돼 컨테이너가 더 넓어도 안 늘어나고, 남는
+//      폭이 카드 오른쪽에 빈 여백으로 남는다(실사용자가 발견한 실제
+//      버그 — 견적서 등 품목입력 표 15곳에서 width를 minWidth와
+//      똑같은 고정값으로 줬던 실수). width는 "100%"로 두고 minWidth만
+//      바닥값으로 줘야 한다(todo-form.tsx/payment-request-line-items.tsx가
+//      이미 올바른 예).
 //
 // 권장 해결책: 모든 칸에 %로 폭을 주고 합이 100%가 되게 하면서(표는
 // width:100%인 기본값 그대로) 표에 minWidth도 같이 주면 세 문제가
@@ -93,7 +100,13 @@ function readStyleObject(attributes) {
   for (const prop of expr.properties) {
     if (!ts.isPropertyAssignment(prop)) continue;
     const key = prop.name.getText().replace(/["']/g, "");
-    map.set(key, { literal: stringLiteralText(prop.initializer), percent: looksLikePercent(prop.initializer) });
+    map.set(key, {
+      literal: stringLiteralText(prop.initializer),
+      percent: looksLikePercent(prop.initializer),
+      // 값 자체의 소스 텍스트(식별자/숫자/문자열 리터럴 전부 포함) — width와
+      // minWidth가 똑같은 값인지(규칙 D) 비교할 때 쓴다.
+      raw: prop.initializer.getText().trim(),
+    });
   }
   return map;
 }
@@ -148,6 +161,14 @@ function checkFile(filePath) {
             violations.push({
               key,
               reason: `표 자체에 width: "${width}"가 있어 컨테이너보다 작아져 잘려 보일 수 있음`,
+            });
+          }
+          const widthRaw = style.get("width")?.raw;
+          const minWidthRaw = style.get("minWidth")?.raw;
+          if (widthRaw && minWidthRaw && widthRaw === minWidthRaw) {
+            violations.push({
+              key,
+              reason: `width와 minWidth가 둘 다 ${widthRaw}로 똑같아 표가 그 값에 고정되고, 컨테이너가 더 넓으면 오른쪽에 빈 여백이 남음 — width는 "100%"로 바꾸세요`,
             });
           }
           if (isTableJsxElement) {

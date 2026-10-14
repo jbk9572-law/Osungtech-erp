@@ -50,7 +50,7 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
       <div className="erp-grid-wrap">
         <table
           className="erp-grid"
-          style={{ tableLayout: "fixed", width: ORDER_GRID_TOTAL_WIDTH, minWidth: ORDER_GRID_TOTAL_WIDTH }}
+          style={{ tableLayout: "fixed", width: "100%", minWidth: ORDER_GRID_TOTAL_WIDTH }}
         >
           <thead>
             <tr>

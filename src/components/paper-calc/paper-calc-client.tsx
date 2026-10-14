@@ -408,7 +408,7 @@ export function PaperCalcClient({
               <div className="erp-grid-wrap">
                 <table
                   className="erp-grid"
-                  style={{ tableLayout: "fixed", width: ORDER_INPUT_GRID_TOTAL_WIDTH, minWidth: ORDER_INPUT_GRID_TOTAL_WIDTH }}
+                  style={{ tableLayout: "fixed", width: "100%", minWidth: ORDER_INPUT_GRID_TOTAL_WIDTH }}
                 >
                   <thead>
                     <tr>

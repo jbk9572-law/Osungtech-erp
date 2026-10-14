@@ -171,7 +171,7 @@ export default async function PayrollPage({
             <div className="erp-grid-wrap">
               <table
                 className="erp-grid"
-                style={{ tableLayout: "fixed", width: PAY_SETTING_GRID_TOTAL_WIDTH, minWidth: PAY_SETTING_GRID_TOTAL_WIDTH }}
+                style={{ tableLayout: "fixed", width: "100%", minWidth: PAY_SETTING_GRID_TOTAL_WIDTH }}
               >
                 <thead>
                   <tr>
@@ -276,7 +276,7 @@ export default async function PayrollPage({
               <div className="erp-grid-wrap">
                 <table
                   className="erp-grid"
-                  style={{ tableLayout: "fixed", width: PAYSLIP_GRID_TOTAL_WIDTH, minWidth: PAYSLIP_GRID_TOTAL_WIDTH }}
+                  style={{ tableLayout: "fixed", width: "100%", minWidth: PAYSLIP_GRID_TOTAL_WIDTH }}
                 >
                   <thead>
                     <tr>
