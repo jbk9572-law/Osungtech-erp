@@ -3,7 +3,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { isFeatureEnabled } from "@/lib/require-feature-enabled";
-import { BoardGridTable, type BoardRow } from "@/components/board-grid-table";
+import { BoardGridTable, type BoardRow, type BoardWriteLink } from "@/components/board-grid-table";
 
 const PER_CATEGORY_LIMIT = 100;
 
@@ -163,6 +163,18 @@ export default async function BoardPage() {
     approval: rows.filter((r) => r.category === "approval").length,
   };
 
+  // 공지사항/문서함/공문함/기안함을 트리메뉴 독립 항목에서 내리면서
+  // (erp-menu.ts) 게시판이 이 4개의 유일한 진입점이 됐다 — 그런데 이
+  // 목록은 "이미 있는 글"만 보여줘서 각 화면의 "새로 작성" 진입점(목록
+  // 화면 자체에 있음, F2/새 글쓰기 버튼)으로 가는 길이 없어진다. 꺼진
+  // 기능은 바로가기도 넣지 않는다 — 꺼진 화면으로 안내하면 안 되므로.
+  const writeLinks: BoardWriteLink[] = [
+    { category: "notice", label: "새 공지", href: "/announcements" },
+    ...(hrEnabled ? [{ category: "hr_doc" as const, label: "새 인사문서", href: "/hr/documents" }] : []),
+    ...(officialEnabled ? [{ category: "official" as const, label: "새 공문", href: "/official-documents" }] : []),
+    ...(approvalsEnabled ? [{ category: "approval" as const, label: "새 기안", href: "/approvals" }] : []),
+  ];
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
@@ -172,7 +184,7 @@ export default async function BoardPage() {
         그대로 연결되며, 여기서는 훑어보기용입니다 — 상세 필터·처리는 각 메뉴에서 그대로 이용하세요.
       </PageGuide>
 
-      <BoardGridTable rows={rows} counts={counts} />
+      <BoardGridTable rows={rows} counts={counts} writeLinks={writeLinks} />
     </div>
   );
 }

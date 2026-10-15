@@ -73,13 +73,26 @@ export const MENU_GROUPS: MenuGroup[] = [
   {
     label: "그룹웨어",
     items: [
+      // 게시판이 공지사항/인사문서함/공문함/기안함 4개를 전부 한 화면에
+      // 모아 보여주는데(board/page.tsx) 그 4개가 트리메뉴에도 각각 따로
+      // 떠 있으면 "같은 걸 두 번 찾아 들어가야 하는" 중복 메뉴가 된다는
+      // 지적(2026-10-15)으로, 이 4개는 독립 메뉴 항목에서 내리고
+      // 게시판을 단일 진입점으로 삼는다. 화면/라우트/서버 액션/RLS는
+      // 전혀 안 건드렸다 — hidden은 "창고 이동 이력"과 같은 기존
+      // 패턴으로, 트리메뉴/빠른검색/즐겨찾기에서만 숨기고 직접 URL
+      // 접근이나 다른 화면에서의 링크(게시판의 글쓰기 바로가기, 상세
+      // 패널의 로트/문서 링크 등)는 그대로 동작한다. 각 화면은 목록
+      // 화면 자체에 "새로 작성" 진입점이 이미 있어서(F2/새 글쓰기
+      // 버튼), 게시판의 바로가기로 들어가면 거기서 바로 새로 쓸 수
+      // 있다 — 작성 진입점을 잃는 게 아니라 게시판을 거쳐 가게
+      // 바뀌었을 뿐이다.
       { label: "게시판", href: "/board", flatLabel: "게시판" },
-      { label: "공지사항", href: "/announcements" },
+      { label: "공지사항", href: "/announcements", hidden: true },
       { label: "메신저", href: "/messenger", featureKey: "messenger" },
       { label: "메일함", href: "/mail", featureKey: "mail" },
-      { label: "문서함", href: "/hr/documents" },
+      { label: "문서함", href: "/hr/documents", hidden: true },
       { label: "문서 양식 관리", href: "/hr/documents/templates", adminOnly: true },
-      { label: "기안함", href: "/approvals", featureKey: "approvals" },
+      { label: "기안함", href: "/approvals", featureKey: "approvals", hidden: true },
       // 임시저장함(구 별도 화면)은 기안함의 "임시저장" 탭으로,
       // 공유결재선/결재매트릭스(구 별도 화면 2개)는 이 화면의 탭으로
       // 통폐합했다 — 감사에서 지적된 화면 통폐합(2026-09-29).
@@ -91,7 +104,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       // 전환한다 — 페이지 자체(official-documents-list.tsx)가 이미
       // TABS로 둘을 오갈 수 있어서, 기안함의 임시저장 탭처럼 메뉴 항목
       // 중복이었다(사용자 지적).
-      { label: "공문함", href: "/official-documents", featureKey: "official_documents" },
+      { label: "공문함", href: "/official-documents", featureKey: "official_documents", hidden: true },
     ],
   },
   {

@@ -28,7 +28,7 @@ describe("getVisibleMenuGroups", () => {
     const groups = getVisibleMenuGroups(["approvals"], true);
     const groupware = groups.find((g) => g.label === "그룹웨어");
     expect(groupware?.items.some((i) => i.href === "/approvals")).toBe(false);
-    expect(groupware?.items.some((i) => i.href === "/official-documents")).toBe(true);
+    expect(groupware?.items.some((i) => i.href === "/mail")).toBe(true);
   });
 
   it("그룹 안의 모든 featureKey 항목이 꺼져도 featureKey 없는 다른 항목(게시판 등)이 있으면 그룹은 남는다", () => {
@@ -71,6 +71,18 @@ describe("getVisibleMenuItems", () => {
     const items = getVisibleMenuItems([], true);
     expect(items.some((i) => i.href === "/inventory/transfers")).toBe(false);
     expect(items.some((i) => i.href === "/inventory/warehouses")).toBe(true);
+  });
+
+  it("게시판이 모아 보여주는 4개(공지사항/문서함/기안함/공문함)는 hidden 처리되어 트리메뉴/빠른검색에 없고, 게시판 자체는 남는다", () => {
+    const items = getVisibleMenuItems([], true);
+    expect(items.some((i) => i.href === "/announcements")).toBe(false);
+    expect(items.some((i) => i.href === "/hr/documents")).toBe(false);
+    expect(items.some((i) => i.href === "/approvals")).toBe(false);
+    expect(items.some((i) => i.href === "/official-documents")).toBe(false);
+    expect(items.some((i) => i.href === "/board")).toBe(true);
+    // 기안함과 달리 결재선 설정(/approvals/lines)은 게시판이 대신해줄 수
+    // 없는 설정 화면이라 독립 메뉴 항목으로 그대로 남아있어야 한다.
+    expect(items.some((i) => i.href === "/approvals/lines")).toBe(true);
   });
 });
 
