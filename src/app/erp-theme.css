@@ -2503,6 +2503,18 @@ a.erp-detail-tab:hover:not(.active) {
     max-height: none;
     margin-bottom: 10px;
   }
+
+  /* split3-shell을 쓰는 화면(메일함/공지사항)의 상세(메일 본문/글
+     읽기)는, 다른 분할뷰 화면(거래처 상세 등)과 달리 "목록에서 글 하나
+     열어본다"는 성격이 최신 SNS/메일 앱의 "전체화면으로 펼쳐지는
+     글/대화" 느낌에 가깝다(사용자 요청). 그래서 이 화면들에서만
+     .erp-split-detail의 카드 테두리를 없애 전용 화면처럼 보이게 한다
+     — .erp-split-shell(거래처/품목 등 13개 화면)이 쓰는 같은 클래스는
+     선택자를 .erp-split3-shell 안으로 좁혀서 그대로 둔다. */
+  .erp-split3-shell .erp-split-detail {
+    border: none;
+    padding: 14px 0 0;
+  }
 }
 
 /* ── 8. Status bar ─────────────────────────────────────────── */
@@ -3328,6 +3340,20 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 @media (max-width: 768px) {
+  /* 좁은 화면에서는 78vh로 높이가 제한된 떠있는 카드(테두리 있음)로
+     보이던 걸, 최신 메신저 앱(카카오톡 등)처럼 대화목록/대화창 각각이
+     화면 대부분을 차지하는 전용 화면처럼 보이게 한다(사용자 요청 —
+     "모바일환경 ui 레이아웃은 현대 sns를 따라가야할것 같은데").
+     calc(100vh - 140px)는 분할뷰 목록/상세(.erp-split-list 등)가 이미
+     쓰는 "상단 크롬을 뺀 나머지 화면" 공식과 같은 값이다 — 메신저도
+     카드 테두리 없이 그 높이를 그대로 채운다. */
+  .erp-messenger-page {
+    height: calc(100vh - 140px);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
   .erp-messenger-layout[data-view="list"] .erp-messenger-main {
     display: none;
   }
