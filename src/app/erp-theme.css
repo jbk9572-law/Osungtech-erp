@@ -3777,6 +3777,46 @@ a.erp-detail-tab:hover:not(.active) {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* 모달(폼/상세를 목록 위에 띄우는 registration-modal-shell.tsx 및
+     같은 틀을 쓰는 몇몇 커스텀 모달 — paper-calc 미리보기, 메일 첨부
+     미리보기, 등록 모달 전부)을 좁은 화면에서 떠있는 카드로 보여주면
+     폼이 조금만 길어도 안 그래도 좁은 화면이 더 좁아 보이고, 모서리
+     밖으로 살짝 걸친 닫기(X) 버튼도 누르기 애매하다(실제로 지적받음).
+     이 ERP가 분할뷰에서 모바일이면 목록/상세를 번갈아 전체화면으로
+     보여주는 것과 같은 방식으로, 크기 지정이 있는 모달(md/lg/xl —
+     전부 필드가 여러 개인 폼이나 표가 들어가는 "내용 있는" 모달)은
+     카드 느낌(테두리·그림자·둥근여백)을 없애고 화면을 그대로 채운다.
+     즐겨찾기/최근메뉴 같은 작은 목록을 띄우는 크기 지정 없는 기본
+     .erp-modal(ribbon.tsx)은 원래도 짧은 내용이라 전체화면으로 키우면
+     오히려 휑해 보이므로 그대로 둔다. */
+  .erp-modal-overlay {
+    padding: 0;
+  }
+
+  .erp-modal-md,
+  .erp-modal-lg,
+  .erp-modal-xl {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-top: none;
+    box-shadow: none;
+  }
+
+  /* 평소엔 모달 박스 모서리에 살짝 걸치게(음수 offset) 떠서 카드
+     테두리를 "창 닫기 버튼"처럼 보이게 하는데, 모달이 화면 전체를
+     채우면 그 모서리가 화면 밖이라 버튼이 잘려 안 보이거나 눌리지
+     않는다 — 뷰포트 기준 고정 위치로 바꿔서 모달 내용을 아무리
+     스크롤해도 항상 같은 자리(화면 우상단)에 눌리는 상태로 남게 한다. */
+  .erp-modal-md .erp-modal-window-close,
+  .erp-modal-lg .erp-modal-window-close,
+  .erp-modal-xl .erp-modal-window-close {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: 10px;
+  }
 }
 
 /* ⚠ 이 파일 전체와 관련된 컨벤션 메모:
