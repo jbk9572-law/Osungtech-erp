@@ -129,7 +129,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
         ))}
       </div>
 
-      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>공문 목록</span>

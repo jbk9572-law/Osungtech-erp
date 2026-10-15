@@ -2270,12 +2270,23 @@ a.erp-detail-tab:hover:not(.active) {
    메신저 2단 레이아웃(.erp-messenger-layout)과 같은 구조/반응형
    기준(768px)을 그대로 따른다 — 넓은 화면에선 항상 둘 다 보이고,
    좁은 화면에선 목록 또는 상세 중 하나만 보이게 전환한다. */
+/* height를 안 주고 max-height만 자식들에 줬더니(아래 .erp-split-list 등),
+   grid 행 자체의 높이가 "가장 짧은 칸의 내용"에 맞춰 자동으로 줄어드는
+   문제가 있었다 — 예: 메일함에서 보낸편지함처럼 목록이 비어 있고
+   상세도 "메일을 선택해주세요" 한 줄뿐이면, align-items:stretch가
+   있어도 늘어날 기준 행 높이 자체가 짧아서 화면 전체가 작은 박스로
+   쪼그라들어 보였다(실제로 지적받음). 컨테이너 자체에 높이를 고정해
+   행 트랙 높이를 강제하면, 내용이 짧은 칸도 끝까지 늘어나고(안은
+   비어 보이되) 내용이 넘치는 칸만 자기 영역 안에서 스크롤된다 —
+   거래처/품목 등 이 구조를 같이 쓰는 다른 화면에도 전부 적용되는
+   일반적인 버그 수정이다. */
 .erp-split-shell {
   display: grid;
   grid-template-columns: minmax(220px, 25%) minmax(0, 1fr);
   gap: 10px;
   align-items: stretch;
   min-height: 0;
+  height: calc(100vh - 140px);
 }
 
 /* 카테고리 사이드바까지 들어가는 3분할(사이드바+목록+상세, 2:2:6
@@ -2287,6 +2298,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 10px;
   align-items: stretch;
   min-height: 0;
+  height: calc(100vh - 140px);
 }
 
 .erp-cat-sidebar {
@@ -2563,9 +2575,59 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 14px;
 }
 
+/* ── 커뮤니케이션 서피스 공용 래퍼("읽기/작성" 성격의 split-shell
+   화면 전용) ──────────────────────────────────────────────
+   공지사항·인사문서함·공문함·기안함 — 게시판에서 넘어가는 이 4개
+   화면이 전부 같은 split-shell/split3-shell 구조(.erp-split-list,
+   .erp-cat-sidebar, .erp-split-detail, .erp-split-list-row,
+   .erp-cat-item)를 그대로 쓰고 있어서, 화면마다 메일함의
+   .erp-mail-row 같은 전용 클래스를 또 만드는 대신 이 클래스 하나를
+   화면 최상위 wrapper에 붙이면 기존 공용 클래스들이 커뮤니케이션
+   서피스 톤(둥근 모서리+옅은 그림자)으로 같이 바뀐다. 거래처/품목 등
+   같은 split-shell을 쓰지만 이 클래스가 없는 나머지 13개 화면(진짜
+   "그리드"가 필요한 화면)은 전혀 영향받지 않는다 — 선택자가 전부
+   .erp-comm-shell 뒤에만 걸리기 때문. */
+.erp-comm-shell .erp-split-list,
+.erp-comm-shell .erp-cat-sidebar,
+.erp-comm-shell .erp-split-detail {
+  border-radius: var(--erp-comm-radius);
+  border-color: var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow);
+}
+
+.erp-comm-shell .erp-split-list-row,
+.erp-comm-shell .erp-cat-item {
+  border-radius: var(--erp-comm-radius-row);
+}
+
+.erp-comm-shell .erp-split-list-row.active {
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow-row);
+}
+
+.erp-comm-shell .erp-cat-item.active {
+  box-shadow: var(--erp-comm-shadow-row);
+}
+
+/* 이 화면들 안의 입력칸/셀렉트/텍스트영역도 같은 톤으로 — 전역
+   .erp-input이 이미 "완전 각짐은 아니다"라는 뜻으로 3px를 쓰고
+   있던 걸(모든 화면 공통) 이 4개 화면에서만 더 크게 둥글린다. */
+.erp-comm-shell .erp-input,
+.erp-comm-shell .erp-select,
+.erp-comm-shell textarea {
+  border-radius: var(--erp-comm-radius-pill);
+}
+
 @media (max-width: 768px) {
+  /* 데스크톱에서 방금 추가한 고정 height(calc(100vh - 140px))는 목록+
+     상세를 나란히 보여줄 때만 필요하다 — 모바일은 display:block으로
+     풀어서 목록/상세를 세로로 자연스럽게 쌓으므로, height를 그대로
+     두면 컨테이너가 화면 높이만큼 고정된 채 내용이 넘쳐도 안 늘어나
+     잘려 보인다. auto로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
   .erp-split-shell {
     display: block;
+    height: auto;
   }
   /* 특정 항목을 선택했을 때만 목록을 숨기고 상세를 전체 폭으로 보여준다
      — 아무것도 선택 안 한 기본 상태(신규 등록 폼)는 목록과 함께 계속
@@ -2581,6 +2643,7 @@ a.erp-detail-tab:hover:not(.active) {
 
   .erp-split3-shell {
     display: block;
+    height: auto;
   }
   .erp-split3-shell[data-mobile-view="detail"] .erp-cat-sidebar,
   .erp-split3-shell[data-mobile-view="detail"] .erp-split-list {
@@ -2601,6 +2664,8 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-split3-shell .erp-split-detail {
     border: none;
     padding: 14px 0 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 

@@ -135,7 +135,7 @@ export default async function AnnouncementsPage({
         </div>
       </div>
 
-      <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split3-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <AnnouncementListBody
           rows={gridRows}
           selectedId={selectedId}
