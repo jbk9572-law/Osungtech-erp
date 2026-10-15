@@ -16,7 +16,7 @@ import { FilePickerInput } from "@/components/file-picker-input";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
-import { PaperclipIcon, ChatIcon, GroupIcon, DownloadIcon, FileKindIcon } from "@/components/erp/groupware-icons";
+import { PaperclipIcon, ChatIcon, GroupIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
 
 export type { MessengerMessage };
 
@@ -73,24 +73,36 @@ function channelLabel(channel: MessengerChannel, profileNames: Record<string, st
 
 // "전체"/그룹 채널은 선 아이콘으로, 1:1 DM은 상대방 이니셜 아바타로
 // 보여준다(이모지 👤보다 실제로 누구인지 한눈에 더 잘 들어온다).
-function ChannelAvatar({ channel, profileNames, currentUserId }: { channel: MessengerChannel; profileNames: Record<string, string>; currentUserId: string }) {
+function ChannelAvatar({
+  channel,
+  profileNames,
+  currentUserId,
+  size = 20,
+}: {
+  channel: MessengerChannel;
+  profileNames: Record<string, string>;
+  currentUserId: string;
+  // 사이드바 채널 목록(기본값, 아이콘만)과 대화창 상단 헤더(더 크게)가
+  // 같은 컴포넌트를 공유하면서 크기만 다르게 쓴다.
+  size?: number;
+}) {
   if (channel.type === "all") {
     return (
-      <span className="erp-icon" style={{ width: 20, height: 20, color: "var(--erp-primary)" }} aria-hidden>
+      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-primary)" }} aria-hidden>
         <ChatIcon />
       </span>
     );
   }
   if (channel.type === "group") {
     return (
-      <span className="erp-icon" style={{ width: 20, height: 20, color: "var(--erp-primary)" }} aria-hidden>
+      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-primary)" }} aria-hidden>
         <GroupIcon />
       </span>
     );
   }
   const label = channelLabel(channel, profileNames, currentUserId);
   return (
-    <span className="erp-avatar" style={{ width: 22, height: 22, fontSize: 10 }} aria-hidden>
+    <span className="erp-avatar" style={{ width: size, height: size, fontSize: Math.round(size * 0.45) }} aria-hidden>
       {label[0] ?? "?"}
     </span>
   );
@@ -557,8 +569,15 @@ export function MessengerPage({
                 </div>
               )}
 
-              {view === "chat" && (
+              {view === "chat" && activeChannel && (
                 <>
+                  <div className="erp-messenger-chat-header">
+                    <ChannelAvatar channel={activeChannel} profileNames={profileNames} currentUserId={currentUserId} size={36} />
+                    <span className="erp-messenger-chat-header-name">
+                      {channelLabel(activeChannel, profileNames, currentUserId)}
+                    </span>
+                  </div>
+
                   <div className="erp-messenger-search">
                     <input
                       type="text"
@@ -715,8 +734,19 @@ export function MessengerPage({
                         </button>
                       )}
                       <span style={{ flex: 1 }} />
-                      <button type="submit" disabled={sending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
-                        {sending ? <span className="erp-spinner" aria-hidden /> : "전송"}
+                      <button
+                        type="submit"
+                        disabled={sending}
+                        className="erp-btn erp-btn-primary erp-messenger-send-btn"
+                        aria-label="전송"
+                      >
+                        {sending ? (
+                          <span className="erp-spinner" aria-hidden />
+                        ) : (
+                          <span className="erp-icon" style={{ width: 16, height: 16 }} aria-hidden>
+                            <SendIcon />
+                          </span>
+                        )}
                       </button>
                     </div>
                   </form>

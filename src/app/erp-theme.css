@@ -127,6 +127,19 @@
      그림자를 하나로 묶었다(육안 차이 없는 톤이었다). */
   --erp-shadow-lg:
     0 8px 24px rgba(32, 28, 43, 0.2), 0 16px 40px -12px rgba(32, 28, 43, 0.28);
+  /* 게시판/메신저/메일함("커뮤니케이션 서피스") 전용 토큰 — 그 외
+     화면은 전부 각진 모서리(border-radius:0) 그리드 스타일을 그대로
+     쓰고, 이 3개 화면만 카드/말풍선에 둥근 모서리+그림자를 쓴다(사용자
+     요청: "매출/재고는 그리드가 필요하니 그대로 두고, 메신저 같은
+     화면만 토스/애플처럼"). 그림자는 새로 만들지 않고 기존
+     --erp-shadow-sm을 그대로 재사용한다 — 대신 그림자만으로 카드를
+     띄우면 흐릿해 보여서("AI가 만든 듯하다"는 지적), 그림자보다 더
+     옅은 헤어라인 보더를 같이 둘러 윤곽을 또렷하게 한다(실제
+     토스/애플 카드가 쓰는 조합).
+  */
+  --erp-comm-radius: 18px;
+  --erp-comm-radius-sm: 5px;
+  --erp-comm-border: rgba(32, 28, 43, 0.06);
 }
 
 .erp {
@@ -2409,6 +2422,72 @@ a.erp-detail-tab:hover:not(.active) {
   font-weight: 400;
 }
 
+/* ── 메일함 목록 행("커뮤니케이션 서피스") ───────────────────
+   메일함만 쓰는 전용 클래스 — .erp-split-list-row(거래처/품목 등
+   다른 분할뷰 13개 화면이 같이 쓰는 각진 행)와는 별개라 서로 영향
+   없다. 평소엔 장식 없는 민무늬 행이다가, 선택된 메일만 카드처럼
+   살짝 떠서(둥근 모서리+보더+그림자) 구분되게 한다. */
+.erp-mail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: var(--erp-comm-radius);
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-mail-row.active {
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-shadow-sm);
+}
+
+.erp-mail-row-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 12.5px;
+  margin-top: 1px;
+}
+
+.erp-mail-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.erp-mail-row-subject-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-mail-row-subject {
+  font-size: 13.5px;
+  color: var(--erp-text);
+}
+
+.erp-mail-row-subject[data-unread="1"] {
+  font-weight: 700;
+}
+
+.erp-mail-row-preview {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--erp-text-muted);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.erp-mail-row-time {
+  font-size: 11px;
+  color: var(--erp-text-muted);
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-top: 1px;
+}
+
 /* 분할뷰 오른쪽 패널(.erp-split-detail) 안의 .erp-detail 섹션들 —
    .erp-split-detail 자신이 이미 테두리를 두르고 있어서, 안에서
    .erp-detail이 또 테두리를 두르면 모달과 똑같은 "박스 안의 박스"
@@ -2705,6 +2784,77 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-item-card.unread {
   border-left: 3px solid var(--erp-primary);
+}
+
+/* ── 게시판 카드("커뮤니케이션 서피스") ─────────────────────
+   공지사항/인사문서/공문/결재를 한 화면에 모아 보여주는 게시판 전용
+   카드 — .erp-item-card(재고실사 등 그리드 화면도 같이 쓰는 각진
+   카드)와는 별개 클래스라 서로 영향 없다. 카테고리는 색칠된 뱃지
+   대신 중립색 라벨 텍스트로 두고(화면마다 무지개색 점을 박는 건
+   장식일 뿐 실제 상태 정보가 아니었다), 실제 상태(안읽음/결재중/
+   반려 등 의미 있는 상태)만 작은 점 색으로 구분한다. */
+.erp-board-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-comm-border);
+  border-radius: var(--erp-comm-radius);
+  box-shadow: var(--erp-shadow-sm);
+  padding: 15px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-board-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.erp-board-card-cat {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--erp-text-muted);
+  margin-bottom: 5px;
+}
+
+.erp-board-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: var(--erp-text);
+}
+
+.erp-board-card-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--erp-text-muted);
+  margin-top: 4px;
+}
+
+.erp-board-card-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: var(--erp-text-muted);
+}
+.erp-board-card-status-dot[data-tone="ok"] { background: var(--erp-success); }
+.erp-board-card-status-dot[data-tone="warn"] { background: var(--erp-warning); }
+.erp-board-card-status-dot[data-tone="danger"] { background: var(--erp-danger); }
+.erp-board-card-status-dot[data-tone="info"] { background: var(--erp-primary); }
+
+.erp-board-card-time {
+  font-size: 11px;
+  color: var(--erp-text-muted);
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding-top: 1px;
 }
 
 /* 재고 실사: 평소엔 이력만 보이다가, "+ 새 실사 시작"을 누르기 전까지는
@@ -3270,14 +3420,18 @@ a.erp-detail-tab:hover:not(.active) {
 /* 예전엔 우측 하단에 항상 떠 있는 팝업 위젯이었는데, 메뉴로 찾아
    들어오는 일반 페이지로 바꿨다 — 그래서 position:fixed 대신 다른
    목록/상세 화면들처럼 .erp-page 안에서 자연스러운 카드 높이로 앉힌다. */
+/* 메신저는 게시판/메일함과 같은 "커뮤니케이션 서피스"라 바깥 틀도
+   다른 화면(각진 .erp-border-strong 박스)과 달리 둥근 모서리를 쓴다
+   — 안의 말풍선만 둥글고 바깥 틀은 각지면 서로 안 어울려 보인다. */
 .erp-messenger-page {
   display: flex;
   flex-direction: column;
   height: min(78vh, 760px);
   min-height: 420px;
   background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
-  border-radius: 0;
+  border: 1px solid var(--erp-comm-border);
+  border-radius: var(--erp-comm-radius);
+  box-shadow: var(--erp-shadow-sm);
   overflow: hidden;
 }
 
@@ -3352,6 +3506,8 @@ a.erp-detail-tab:hover:not(.active) {
     border-left: none;
     border-right: none;
     border-bottom: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .erp-messenger-layout[data-view="list"] .erp-messenger-main {
@@ -3360,6 +3516,25 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-messenger-layout:not([data-view="list"]) .erp-messenger-sidebar {
     display: none;
   }
+}
+
+/* 대화창 상단에 지금 누구와 대화 중인지 아바타+이름으로 보여준다 —
+   예전엔 타이틀바 글자("그룹웨어 > 메신저 > 박현우")만 있어서 실제
+   대화 상대가 누군지 시각적으로 와닿지 않았다. */
+.erp-messenger-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--erp-divider);
+}
+
+.erp-messenger-chat-header-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--erp-text);
 }
 
 .erp-messenger-search {
@@ -3432,13 +3607,22 @@ a.erp-detail-tab:hover:not(.active) {
   text-align: right;
 }
 
+/* 말풍선은 게시판/메일함과 같은 "커뮤니케이션 서피스" 토큰
+   (--erp-comm-*)을 써서 둥근 모서리+그림자로 보여준다 — 내가 보낸
+   말풍선은 포인트색 배경이 이미 또렷해 보여 그림자가 필요 없고,
+   상대방 말풍선만 옅은 보더+그림자로 배경과 구분한다. 말풍선 꼬리는
+   모서리 하나만 작게 깎아(--erp-comm-radius-sm) 방향을 표시한다. */
 .erp-messenger-bubble {
   align-self: flex-start;
-  background: var(--erp-hover);
+  background: var(--erp-panel);
   color: var(--erp-text);
-  padding: 6px 10px;
-  border-radius: 0;
-  font-size: 12.5px;
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-shadow-sm);
+  padding: 9px 13px;
+  border-radius: var(--erp-comm-radius);
+  border-bottom-left-radius: var(--erp-comm-radius-sm);
+  font-size: 14px;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -3446,6 +3630,10 @@ a.erp-detail-tab:hover:not(.active) {
   align-self: flex-end;
   background: var(--erp-primary);
   color: var(--erp-on-primary);
+  border: none;
+  box-shadow: none;
+  border-radius: var(--erp-comm-radius);
+  border-bottom-right-radius: var(--erp-comm-radius-sm);
 }
 
 .erp-messenger-bubble-attachment {
@@ -3521,10 +3709,34 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 6px;
 }
 
+/* 입력칸 자체는 앱 전체가 공유하는 .erp-input인데, 여기서는 조상
+   선택자로 메신저 입력창에만 둥근 테두리를 준다 — .erp-input 전역
+   정의는 그대로 둬서 다른 폼 입력칸에는 영향이 없다. */
+.erp-messenger-composer .erp-input {
+  border-radius: var(--erp-comm-radius);
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-shadow-sm);
+}
+
 .erp-messenger-composer-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* 전송 버튼 — .erp-btn-primary 전역 스타일 위에 이 클래스를 덧붙여
+   원형 아이콘 버튼으로만 바꾼다(다른 화면의 .erp-btn-primary는
+   영향 없음). */
+.erp-messenger-send-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 0;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
 /* ── 첨부파일 카드(메신저 수신 메시지) ───────────────────── */

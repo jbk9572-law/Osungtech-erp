@@ -39,6 +39,15 @@ export function GroupIcon() {
   );
 }
 
+export function SendIcon() {
+  return (
+    <svg {...ICON_STROKE}>
+      <path d="M12 19V5" />
+      <path d="M6 11l6-6 6 6" />
+    </svg>
+  );
+}
+
 export function MegaphoneIcon() {
   return (
     <svg {...ICON_STROKE}>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { GridBadge, type BadgeTone } from "@/components/grid/badge";
+import type { BadgeTone } from "@/components/grid/badge";
 
 export type BoardCategory = "notice" | "hr_doc" | "official" | "approval";
 
@@ -20,13 +20,6 @@ const CATEGORY_LABEL: Record<BoardCategory, string> = {
   hr_doc: "인사문서",
   official: "공문",
   approval: "결재",
-};
-
-const CATEGORY_TONE: Record<BoardCategory, BadgeTone> = {
-  notice: "info",
-  hr_doc: "muted",
-  official: "danger",
-  approval: "warn",
 };
 
 type Filter = "all" | BoardCategory;
@@ -117,19 +110,20 @@ export function BoardGridTable({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
         {filtered.map((row) => (
-          <Link key={`${row.category}-${row.id}`} href={row.href} className="erp-item-card" style={{ textDecoration: "none" }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <GridBadge tone={CATEGORY_TONE[row.category]}>{CATEGORY_LABEL[row.category]}</GridBadge>
-                <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--erp-text)" }}>{row.title}</span>
-                {row.status && <GridBadge tone={row.status.tone}>{row.status.label}</GridBadge>}
-              </div>
+          <Link key={`${row.category}-${row.id}`} href={row.href} className="erp-board-card">
+            <div className="erp-board-card-body">
+              <div className="erp-board-card-cat">{CATEGORY_LABEL[row.category]}</div>
+              <div className="erp-board-card-title">{row.title}</div>
+              {row.status && (
+                <div className="erp-board-card-sub">
+                  <span className="erp-board-card-status-dot" data-tone={row.status.tone} />
+                  {row.status.label}
+                </div>
+              )}
             </div>
-            <div style={{ fontSize: 11, color: "var(--erp-text-muted)", flexShrink: 0 }}>
-              {new Date(row.date).toLocaleDateString("ko-KR")}
-            </div>
+            <div className="erp-board-card-time">{new Date(row.date).toLocaleDateString("ko-KR")}</div>
           </Link>
         ))}
         {!filtered.length && (

@@ -139,26 +139,28 @@ export default async function MailPage({
               <Link
                 key={m.id}
                 href={`/mail?folder=${folder}&id=${m.id}`}
-                className={`erp-split-list-row${m.id === id ? " active" : ""}`}
-                style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
+                className={`erp-mail-row${m.id === id ? " active" : ""}`}
               >
-                <span className={`erp-avatar${m.is_read ? " muted" : ""}`} style={{ width: 26, height: 26, fontSize: 11, marginTop: 1 }} aria-hidden>
+                <span className={`erp-avatar erp-mail-row-avatar${m.is_read ? " muted" : ""}`} aria-hidden>
                   {folder === "INBOX" ? initial(m.from_name, m.from_address) : "나"}
                 </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    <span style={m.is_read ? undefined : { fontWeight: 700 }}>{m.subject || "(제목 없음)"}</span>
+                <span className="erp-mail-row-body">
+                  <span className="erp-mail-row-subject-line">
+                    <span className="erp-mail-row-subject" data-unread={m.is_read ? undefined : "1"}>
+                      {m.subject || "(제목 없음)"}
+                    </span>
                     {m.has_attachments && (
-                      <span className="erp-icon" style={{ width: 13, height: 13, color: "var(--erp-text-muted)" }} aria-hidden>
+                      <span className="erp-icon" style={{ width: 12, height: 12, color: "var(--erp-text-muted)" }} aria-hidden>
                         <PaperclipIcon />
                       </span>
                     )}
                   </span>
-                  <div className="erp-split-list-row-sub">
-                    {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"} · {formatDate(m.sent_at)}
+                  <div className="erp-mail-row-preview">
+                    {folder === "INBOX" ? m.from_name || m.from_address || "(발신자 없음)" : "나"}
                     {m.snippet ? ` · ${m.snippet}` : ""}
                   </div>
                 </span>
+                <span className="erp-mail-row-time">{formatDate(m.sent_at)}</span>
               </Link>
             ))}
             {(messages ?? []).length === 0 && (
