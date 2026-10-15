@@ -3764,6 +3764,19 @@ a.erp-detail-tab:hover:not(.active) {
     width: auto;
     max-height: calc(100vh - 56px);
   }
+
+  /* 리치텍스트 에디터 툴바: 아이콘 묶음(실행취소/제목/글자서식/글자색/
+     정렬/목록/삽입) 7개를 좁은 화면에서 줄바꿈하면 묶음마다 줄에 걸치는
+     개수가 달라 들쭉날쭉해 보인다(실제로 지적받음 — 공지사항 작성
+     화면). 표가 넓을 때 칸을 찌그러뜨리는 대신 .erp-grid-wrap이 가로
+     스크롤을 대신하는 것과 같은 방식으로, 툴바도 한 줄에 다 담고
+     넘치는 만큼만 옆으로 스크롤하게 한다 — 항상 한 줄이라 줄마다
+     다르게 끊기는 문제 자체가 없어진다. */
+  .erp-richtext-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* ⚠ 이 파일 전체와 관련된 컨벤션 메모:
