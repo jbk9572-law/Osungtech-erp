@@ -3550,7 +3550,7 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border-right: 1px solid var(--erp-border);
+  border-right: 1px solid var(--erp-comm-border);
 }
 
 .erp-messenger-main {
@@ -3573,12 +3573,11 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-messenger-channel-row.active {
-  background: var(--erp-selected);
+  background: var(--erp-panel);
   color: var(--erp-primary);
   font-weight: 700;
-  box-shadow:
-    inset 0 2px 0 var(--erp-select-accent),
-    inset 0 -2px 0 var(--erp-select-accent);
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow-row);
 }
 
 @media (max-width: 768px) {
@@ -3603,6 +3602,13 @@ a.erp-detail-tab:hover:not(.active) {
   }
   .erp-messenger-layout:not([data-view="list"]) .erp-messenger-sidebar {
     display: none;
+  }
+  /* 목록만 보이는 모바일 상태에서도 사이드바가 데스크톱 폭(260px)에
+     고정된 채로 남아있어 화면 오른쪽 전체가 빈 채로 잘려 보이던 버그 —
+     main이 숨겨지면 sidebar가 남은 폭을 전부 채우게 한다. */
+  .erp-messenger-layout[data-view="list"] .erp-messenger-sidebar {
+    flex: 1 1 auto;
+    border-right: none;
   }
 }
 
@@ -3629,11 +3635,16 @@ a.erp-detail-tab:hover:not(.active) {
   position: relative;
   flex: 0 0 auto;
   padding: 8px 10px;
-  border-bottom: 1px solid var(--erp-border);
+  border-bottom: 1px solid var(--erp-comm-border);
 }
 
+/* 작성칸(.erp-messenger-composer .erp-input)과 같은 톤 — 검색창만 각진
+   채로 남아있던 걸 맞췄다. */
 .erp-messenger-search input {
   padding-right: 26px;
+  border-radius: var(--erp-comm-radius-pill);
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow-row);
 }
 
 .erp-messenger-search-clear {
@@ -3764,14 +3775,20 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 /* 채널 목록/새 DM·그룹 만들기 화면의 항목 한 줄 — 버튼이지만 목록
-   행처럼 보이게 전체 폭+가로 정렬로 통일한다(erp-btn류와는 다른 결). */
+   행처럼 보이게 전체 폭+가로 정렬로 통일한다(erp-btn류와는 다른 결).
+   메일함(.erp-mail-row)과 같은 "커뮤니케이션 서피스" 행 톤으로 맞췄다
+   — 칸마다 가로줄로 나누던 것(각진 목록 느낌)을 둥근 모서리 + 여백으로
+   바꾸고, 선택된 채널은 파란 배경+인셋 액센트 선 대신 메일 선택행과
+   같은 "살짝 뜬 카드"로 보이게 한다(사용자가 메일함과 통일해달라고
+   반복 요청). */
 .erp-messenger-channel-row {
   display: flex;
   align-items: center;
-  width: 100%;
-  padding: 10px 12px;
+  width: calc(100% - 12px);
+  margin: 3px 6px;
+  padding: 10px 10px;
   border: none;
-  border-bottom: 1px solid var(--erp-divider);
+  border-radius: var(--erp-comm-radius-row);
   background: none;
   color: var(--erp-text);
   font-size: 12.5px;
