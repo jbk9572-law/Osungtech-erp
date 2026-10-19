@@ -13,6 +13,7 @@ import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
+import { FormSection } from "@/components/erp/page-header";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -184,7 +185,7 @@ export default async function TodosPage({
         </div>
       </div>
 
-      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>할 일 목록</span>
@@ -264,21 +265,16 @@ export default async function TodosPage({
           {selectedId ? (
             <TodoDetailPanel id={selectedId} />
           ) : (
-            <div className="erp-detail" style={{ marginTop: 0 }}>
-              <div className="erp-detail-tabs">
-                <span className="erp-detail-tab active">할 일 등록</span>
-              </div>
-              <div className="erp-detail-body">
-                <TodoForm
-                  action={createTodo}
-                  submitLabel="등록"
-                  products={products}
-                  suppliers={suppliers}
-                  customers={customers}
-                  paperCalcEnabled={paperCalcEnabled}
-                />
-              </div>
-            </div>
+            <FormSection tabLabel="할 일 등록">
+              <TodoForm
+                action={createTodo}
+                submitLabel="등록"
+                products={products}
+                suppliers={suppliers}
+                customers={customers}
+                paperCalcEnabled={paperCalcEnabled}
+              />
+            </FormSection>
           )}
         </div>
       </div>

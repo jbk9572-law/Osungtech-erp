@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
-import { currentMonth, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { MonthNavigator } from "@/components/erp/month-navigator";
+import { currentMonth, getMonthRange } from "@/lib/date-presets";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
@@ -18,9 +18,6 @@ export default async function InventoryLedgerPage({
   const { product_id: productId, warehouse_id: warehouseId, month: monthParam } = await searchParams;
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
-  const prevMonth = shiftMonth(month, -1);
-  const nextMonth = shiftMonth(month, 1);
-  const thisMonth = currentMonth();
   // inventory_transactions.created_at은 timestamptz라, 그냥 "YYYY-MM-DD"
   // 문자열로 비교하면 서버가 어느 시간대로 파싱하느냐에 따라 월 경계
   // 근처(자정 전후) 거래가 잘못된 달로 새어 들어갈 수 있다 — 한국시간
@@ -28,6 +25,7 @@ export default async function InventoryLedgerPage({
   const fromIso = `${from}T00:00:00+09:00`;
   const toIso = `${to}T23:59:59.999+09:00`;
   const suffix = `${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`;
+  const monthNavSuffix = `${productId ? `&product_id=${productId}` : ""}${suffix}`;
 
   const supabase = await createClient();
   const [products, warehouses] = await Promise.all([
@@ -139,32 +137,15 @@ export default async function InventoryLedgerPage({
         </button>
       </form>
 
-      <div className="erp-date-presets" style={{ marginBottom: 12 }}>
-        <Link
-          href={`/reports/ledger?month=${prevMonth}${productId ? `&product_id=${productId}` : ""}${suffix}`}
-          className="erp-date-preset-btn"
-        >
-          ◀ 이전달
-        </Link>
-        <Link
-          href={`/reports/ledger?month=${thisMonth}${productId ? `&product_id=${productId}` : ""}${suffix}`}
-          className={`erp-date-preset-btn${month === thisMonth ? " active" : ""}`}
-        >
-          이번달
-        </Link>
-        <Link
-          href={`/reports/ledger?month=${nextMonth}${productId ? `&product_id=${productId}` : ""}${suffix}`}
-          className="erp-date-preset-btn"
-        >
-          다음달 ▶
-        </Link>
-        {selectedProduct && (
+      <MonthNavigator baseHref="/reports/ledger" month={month} suffix={monthNavSuffix} />
+      {selectedProduct && (
+        <div className="erp-toolbar" style={{ marginBottom: 12 }}>
           <ExcelDownloadLink
             href={`/api/reports/ledger/export?product_id=${selectedProduct.id}&month=${month}${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`}
             pushRight
           />
-        )}
-      </div>
+        </div>
+      )}
 
       {!selectedProduct ? (
         <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>

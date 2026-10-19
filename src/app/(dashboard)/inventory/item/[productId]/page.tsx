@@ -10,6 +10,7 @@ import { ClickableRow } from "@/components/clickable-row";
 import { QtyWithBoxes } from "@/components/qty-with-boxes";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { GridBadge } from "@/components/grid/badge";
+import { DetailPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { groupOrderCorrections, type InventoryHistoryRow } from "@/lib/inventory-history-grouping";
 import { formatNumber } from "@/lib/format-number";
@@ -188,15 +189,17 @@ export default async function InventoryProductHistoryPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 erp-h1">
-        재고관리 &gt; 재고현황 &gt; 입출고내역
-      </h1>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        {product.sku} · {product.name}
-        {product.spec && ` (${product.spec})`} · 현재 재고{" "}
-        <QtyWithBoxes quantity={currentQuantity} basePackageQty={product.base_package_qty} />
-        {product.unit ?? ""}
-      </p>
+      <DetailPageHeader
+        title="재고관리 > 재고현황 > 입출고내역"
+        meta={
+          <>
+            {product.sku} · {product.name}
+            {product.spec && ` (${product.spec})`} · 현재 재고{" "}
+            <QtyWithBoxes quantity={currentQuantity} basePackageQty={product.base_package_qty} />
+            {product.unit ?? ""}
+          </>
+        }
+      />
 
       {countAdjustments.length > 0 && (
         <div

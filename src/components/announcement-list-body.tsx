@@ -143,16 +143,7 @@ export function AnnouncementListBody({
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <span
-                  aria-hidden
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 999,
-                    flex: "0 0 auto",
-                    background: row.read ? "var(--erp-border-strong)" : "var(--erp-primary)",
-                  }}
-                />
+                <span className="erp-status-dot" data-tone={row.read ? undefined : "info"} aria-hidden />
                 <span style={row.read ? { color: "var(--erp-text-muted)" } : { fontWeight: 700 }}>{row.title}</span>
               </span>
               {!row.read && (

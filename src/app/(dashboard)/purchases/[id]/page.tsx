@@ -25,6 +25,7 @@ import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
+import { DetailPageHeader, DetailInfoRow } from "@/components/erp/page-header";
 
 export default async function PurchaseDetailPage({
   params,
@@ -111,42 +112,44 @@ export default async function PurchaseDetailPage({
           Escape: { href: closeHref },
         }}
       />
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="flex items-center gap-2 erp-h1">
-          매입관리 &gt; 발주 상세
-          {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
-        </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/purchases/${id}/print`} className="erp-btn">
-            F9 명세표
-          </Link>
-          {allowManage && (
-            <Link href={editHref} className="erp-btn">
-              F4 수정
+      <DetailPageHeader
+        title={
+          <>
+            매입관리 &gt; 발주 상세
+            {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
+          </>
+        }
+        meta={`${new Date(order.purchase_date).toLocaleDateString("ko-KR")} 입고`}
+        actions={
+          <>
+            <Link href={`/purchases/${id}/print`} className="erp-btn">
+              F9 명세표
             </Link>
-          )}
-          {allowManage && paperCalcEnabled && (
-            <PaperCalcNavLink
-              href={`/paper-calc?purchaseOrderId=${id}`}
-              className="erp-btn"
-            >
-              {paperCalcs && paperCalcs.length > 0
-                ? "모조지 계산 이력"
-                : "모조지 계산"}
-            </PaperCalcNavLink>
-          )}
-          {allowManage && (
-            <DeleteButton
-              action={deletePurchase}
-              id={id}
-              confirmMessage="이 매입 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
-            />
-          )}
-        </div>
-      </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        {new Date(order.purchase_date).toLocaleDateString("ko-KR")} 입고
-      </p>
+            {allowManage && (
+              <Link href={editHref} className="erp-btn">
+                F4 수정
+              </Link>
+            )}
+            {allowManage && paperCalcEnabled && (
+              <PaperCalcNavLink
+                href={`/paper-calc?purchaseOrderId=${id}`}
+                className="erp-btn"
+              >
+                {paperCalcs && paperCalcs.length > 0
+                  ? "모조지 계산 이력"
+                  : "모조지 계산"}
+              </PaperCalcNavLink>
+            )}
+            {allowManage && (
+              <DeleteButton
+                action={deletePurchase}
+                id={id}
+                confirmMessage="이 매입 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
+              />
+            )}
+          </>
+        }
+      />
 
       {warning && (
         <PageGuide tone="warning" className="font-medium">
@@ -162,76 +165,11 @@ export default async function PurchaseDetailPage({
           className="erp-detail-body"
           style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              No
-            </span>
-            <span>{order.doc_no}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              업체명
-            </span>
-            <span>{order.suppliers?.name ?? "-"}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              담당자
-            </span>
-            <span>{order.suppliers?.contact_name ?? "-"}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              연락처
-            </span>
-            <span>{order.suppliers?.phone ?? "-"}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              작성자
-            </span>
-            <span>{order.profiles?.full_name ?? "-"}</span>
-          </div>
+          <DetailInfoRow label="No">{order.doc_no}</DetailInfoRow>
+          <DetailInfoRow label="업체명">{order.suppliers?.name ?? "-"}</DetailInfoRow>
+          <DetailInfoRow label="담당자">{order.suppliers?.contact_name ?? "-"}</DetailInfoRow>
+          <DetailInfoRow label="연락처">{order.suppliers?.phone ?? "-"}</DetailInfoRow>
+          <DetailInfoRow label="작성자">{order.profiles?.full_name ?? "-"}</DetailInfoRow>
           {allowManage && paperCalcEnabled && paperCalcs && paperCalcs.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <PaperStockOverridePanel

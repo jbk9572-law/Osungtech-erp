@@ -5,6 +5,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { OfficialDocumentDetailPanel } from "@/components/official-document-detail-panel";
 import { OfficialDocumentForm } from "@/components/official-document-form";
+import { FormSection } from "@/components/erp/page-header";
 import { createOfficialDocument } from "@/app/(dashboard)/official-documents/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -168,14 +169,9 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
             <OfficialDocumentDetailPanel id={selectedId} closeHref={newHref} />
           ) : (
             formData && (
-              <div className="erp-detail" style={{ marginTop: 0 }}>
-                <div className="erp-detail-tabs">
-                  <span className="erp-detail-tab active">공문 작성</span>
-                </div>
-                <div className="erp-detail-body">
-                  <OfficialDocumentForm action={createOfficialDocument} templates={formData.templates} profiles={formData.profiles} />
-                </div>
-              </div>
+              <FormSection tabLabel="공문 작성">
+                <OfficialDocumentForm action={createOfficialDocument} templates={formData.templates} profiles={formData.profiles} />
+              </FormSection>
             )
           )}
         </div>

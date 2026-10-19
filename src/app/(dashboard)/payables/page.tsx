@@ -5,6 +5,7 @@ import { formatNumber } from "@/lib/format-number";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
+import { DetailPageHeader } from "@/components/erp/page-header";
 
 export default async function PayablesPage() {
   const supabase = await createClient();
@@ -26,12 +27,10 @@ export default async function PayablesPage() {
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <h1 className="erp-h1">거래처관리 &gt; 미지급금현황</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <ExcelDownloadLink href="/api/payables/export" />
-        </div>
-      </div>
+      <DetailPageHeader
+        title="거래처관리 > 미지급금현황"
+        actions={<ExcelDownloadLink href="/api/payables/export" />}
+      />
 
       <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
         <div className="erp-detail-tabs">

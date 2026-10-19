@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryCountForm, type CountRow } from "@/components/inventory-count-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
@@ -232,7 +233,7 @@ export default async function InventoryCountPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 erp-h1">재고관리 &gt; 재고 실사</h1>
+      <ListPageHeader title="재고관리 > 재고 실사" />
       <PageGuide>
         전산 재고와 실제 수량을 비교해 맞추고, 지금까지의 실사 이력을 함께 확인합니다.
       </PageGuide>

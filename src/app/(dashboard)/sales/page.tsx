@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { buildListReturnParam } from "@/lib/list-return";
 import {
   SalesGridTable,
@@ -335,9 +336,7 @@ export default async function SalesPage({
           Escape: { href: "/dashboard" },
         }}
       />
-      <h1 className="mb-3 erp-h1">
-        매출관리
-      </h1>
+      <ListPageHeader title="매출관리" />
 
       <DateRangeQuickFilters
         basePath="/sales"

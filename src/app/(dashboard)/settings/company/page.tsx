@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { CompanyProfileForm } from "@/components/company-profile-form";
 import { BrandingImageForm } from "@/components/branding-image-form";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
+import { AccessWall } from "@/components/erp/access-wall";
+import { PageGuide } from "@/components/erp/page-guide";
 import { getCurrentActor } from "@/lib/current-actor";
 
 export default async function CompanySettingsPage() {
@@ -9,14 +12,7 @@ export default async function CompanySettingsPage() {
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {
-    return (
-      <div>
-        <h1 className="mb-1 erp-h1">환경설정 &gt; 회사정보</h1>
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
-          이 화면은 관리자만 볼 수 있습니다.
-        </p>
-      </div>
-    );
+    return <AccessWall title="환경설정 > 회사정보" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
   }
 
   // id로 직접 고르지 않는다 — RLS(RESTRICTIVE 정책)가 실제 계정에는
@@ -28,8 +24,8 @@ export default async function CompanySettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 erp-h1">환경설정 &gt; 회사정보</h1>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">거래명세표의 공급자 정보로 사용됩니다.</p>
+      <ListPageHeader title="환경설정 > 회사정보" />
+      <PageGuide>거래명세표의 공급자 정보로 사용됩니다.</PageGuide>
 
       <CompanyProfileForm company={company} />
 

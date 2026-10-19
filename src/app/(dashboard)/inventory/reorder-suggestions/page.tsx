@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
+import { ListPageHeader } from "@/components/erp/page-header";
 
 type SuggestionRow = {
   productId: string;
@@ -91,9 +92,7 @@ export default async function ReorderSuggestionsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 erp-h1">
-        재고관리 &gt; 재고 부족 자동 발주 제안
-      </h1>
+      <ListPageHeader title="재고관리 > 재고 부족 자동 발주 제안" />
       <PageGuide>
         안전재고 이하로 떨어진 품목을 매입처별로 묶어 보여줍니다. 제안수량은 안전재고의 2배를
         목표로 부족분을 채우는 값이며, 실제 수량은 다음 화면에서 얼마든지 고칠 수 있습니다.

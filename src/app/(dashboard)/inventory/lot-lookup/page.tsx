@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { LotLookupSearchForm } from "@/components/lot-lookup-search-form";
@@ -138,18 +139,17 @@ export default async function LotLookupPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <h1 className="mb-1 erp-h1">
-        재고관리 &gt; 품목·관리번호 통합조회
-      </h1>
+      <ListPageHeader
+        title="재고관리 > 품목·관리번호 통합조회"
+        actions={
+          <Link href="/inventory" className="erp-btn erp-btn-dark">
+            ESC 목록으로
+          </Link>
+        }
+      />
       <PageGuide>
         불량/리콜 발생 시 관리번호(로트)나 품목으로 매입·매출·생산지시 내역을 한 화면에서 함께 추적합니다.
       </PageGuide>
-
-      <div className="erp-toolbar">
-        <Link href="/inventory" className="erp-btn erp-btn-dark">
-          ESC 목록으로
-        </Link>
-      </div>
 
       <LotLookupSearchForm products={products} q={q ?? ""} productId={productId} />
 

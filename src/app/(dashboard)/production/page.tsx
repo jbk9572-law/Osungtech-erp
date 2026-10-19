@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
@@ -75,16 +76,19 @@ export default async function ProductionPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ F2: { href: "/production/new" }, Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-3 erp-h1">생산관리 &gt; 생산지시 내역</h1>
-
-      <div className="erp-toolbar">
-        <Link href="/production/new" className="erp-btn erp-btn-primary">
-          F2 생산지시 등록
-        </Link>
-        <Link href="/inventory/lot-lookup" className="erp-btn">
-          품목·관리번호 통합조회
-        </Link>
-      </div>
+      <ListPageHeader
+        title="생산관리 > 생산지시 내역"
+        actions={
+          <>
+            <Link href="/production/new" className="erp-btn erp-btn-primary">
+              F2 생산지시 등록
+            </Link>
+            <Link href="/inventory/lot-lookup" className="erp-btn">
+              품목·관리번호 통합조회
+            </Link>
+          </>
+        }
+      />
 
       <PageGuide>
         완제품 BOM을 기준으로 등록한 생산지시 내역입니다. 등록(대기) →

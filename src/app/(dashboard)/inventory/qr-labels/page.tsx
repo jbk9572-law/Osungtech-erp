@@ -4,6 +4,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { PrintButton } from "@/components/print-button";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { QrLabelCard } from "@/components/qr-label-card";
@@ -61,8 +62,8 @@ export default async function InventoryQrLabelsPage({
   return (
     <div className="print-page-margin">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory" } }} />
-      <div className="mb-3 flex items-center justify-between print:hidden">
-        <h1 className="erp-h1">재고관리 &gt; QR 라벨 인쇄</h1>
+      <div className="print:hidden">
+        <ListPageHeader title="재고관리 > QR 라벨 인쇄" />
       </div>
       <PageGuide className="print:hidden">
         아래 라벨을 인쇄해서 품목/박스에 붙이면, QR 자동실사 화면에서 스캔으로 바로 인식됩니다.

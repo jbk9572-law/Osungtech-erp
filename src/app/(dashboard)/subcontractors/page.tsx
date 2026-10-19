@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SubcontractorForm } from "@/components/subcontractor-form";
 import { SubcontractorDetailPanel } from "@/components/subcontractor-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { DeleteButton } from "@/components/delete-button";
 import { PageGuide } from "@/components/erp/page-guide";
 import { SplitListBulkSelect, type SplitListBulkRow } from "@/components/erp/split-list-bulk-select";
@@ -75,6 +76,11 @@ export default async function SubcontractorsPage({
   moreParams.set("limit", String(limit + LIST_LIMIT_STEP));
   const moreHref = `/subcontractors?${moreParams.toString()}`;
   const newHref = listParams.toString() ? `/subcontractors?${listParams.toString()}` : "/subcontractors";
+  // "새로고침" 목적지 — customers/products 목록과 같은 관례(F2 신규와 달리
+  // 지금 선택된 항목(id)까지 유지한 채 같은 화면을 다시 불러온다).
+  const currentHref = selectedId
+    ? `/subcontractors?${new URLSearchParams({ ...(q ? { q } : {}), ...(limitParam ? { limit: limitParam } : {}), id: selectedId }).toString()}`
+    : newHref;
 
   return (
     <div>
@@ -86,24 +92,31 @@ export default async function SubcontractorsPage({
         }}
       />
       <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">생산관리 &gt; 하청업체관리</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 신규
-          </Link>
-          {selectedId && (
+        <ListPageHeader
+          title="생산관리 > 하청업체관리"
+          actions={
             <>
-              <Link href={newHref} className="erp-btn">
-                목록
+              <Link href={newHref} className="erp-btn erp-btn-primary">
+                F2 신규
               </Link>
-              <DeleteButton
-                action={deleteSubcontractor}
-                id={selectedId}
-                confirmMessage="이 업체를 삭제하시겠습니까? 발급된 포털 계정도 함께 삭제됩니다."
-              />
+              <Link href={currentHref} className="erp-btn">
+                새로고침
+              </Link>
+              {selectedId && (
+                <>
+                  <Link href={newHref} className="erp-btn">
+                    목록
+                  </Link>
+                  <DeleteButton
+                    action={deleteSubcontractor}
+                    id={selectedId}
+                    confirmMessage="이 업체를 삭제하시겠습니까? 발급된 포털 계정도 함께 삭제됩니다."
+                  />
+                </>
+              )}
             </>
-          )}
-        </div>
+          }
+        />
       </div>
 
       <PageGuide>

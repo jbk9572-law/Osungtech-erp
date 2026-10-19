@@ -186,17 +186,9 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                             {itemSteps.map((s) => (
                               <span key={`${s.item_id}-${s.process_name}`} className="erp-key-hint" style={{ fontSize: 12 }}>
                                 <span
-                                  style={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: 999,
-                                    background:
-                                      s.status === "done"
-                                        ? "var(--erp-success)"
-                                        : s.status === "in_progress"
-                                          ? "var(--erp-warning)"
-                                          : "var(--erp-border-strong)",
-                                  }}
+                                  className="erp-status-dot"
+                                  data-tone={s.status === "done" ? "ok" : s.status === "in_progress" ? "warn" : undefined}
+                                  aria-hidden
                                 />
                                 {s.process_name}({STEP_LABEL[s.status]})
                               </span>

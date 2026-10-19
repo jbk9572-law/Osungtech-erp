@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
+import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumber } from "@/lib/format-number";
@@ -18,14 +19,7 @@ export default async function BillingPage() {
   const { isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {
-    return (
-      <div>
-        <h1 className="mb-1 erp-h1">환경설정 &gt; 구독/결제</h1>
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
-          이 화면은 관리자만 볼 수 있습니다.
-        </p>
-      </div>
-    );
+    return <AccessWall title="환경설정 > 구독/결제" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
   }
 
   const [{ data: tenant }, { data: plans }] = await Promise.all([

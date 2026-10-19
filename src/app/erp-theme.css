@@ -87,6 +87,14 @@
   --erp-text-disabled: #b9bfc8;
   --erp-icon-muted: #b7bec9;
   --erp-glyph-muted: #d0d5db;
+  /* 트리 메뉴 배지 테두리/탭바 2단 배경 — 다른 톤과 안 겹치는 전용
+     회색이라 억지로 위 셋에 끼워맞추지 않고 각자 변수로 뺐다. */
+  --erp-tree-badge-border: #d9dee5;
+  --erp-tabbar-bg: #e4e8ee;
+  --erp-tab-bg: #d3d9e1;
+  /* 메신저 검색어 하이라이트 — 지급결의 하이라이트(--erp-highlight-bg)와
+     톤이 달라(더 진한 노랑) 별도 변수로 뺐다. */
+  --erp-search-hit-bg: #ffe58f;
   /* 영수증 라이트박스(고정 어두운 배경 bg-black/85) 위에 뜨는 반투명
      흰색 이전/다음 버튼 — 카메라 실시간 영상 위의 오버레이와 달리
      배경이 고정값이라 변수로 뽑을 수 있다. */
@@ -1021,7 +1029,7 @@
 }
 
 .erp-tree-item.disabled {
-  color: #c3c9d1;
+  color: var(--erp-text-disabled);
   cursor: default;
 }
 
@@ -1033,7 +1041,7 @@
   margin-left: auto;
   font-size: 9px;
   color: var(--erp-text-muted);
-  border: 1px solid #d9dee5;
+  border: 1px solid var(--erp-tree-badge-border);
   border-radius: 999px;
   padding: 1px 5px;
 }
@@ -1054,7 +1062,7 @@
   gap: 2px;
   height: 34px;
   flex: 0 0 34px;
-  background: #e4e8ee;
+  background: var(--erp-tabbar-bg);
   padding: 4px 8px 0;
   overflow-x: auto;
 }
@@ -1065,7 +1073,7 @@
   gap: 8px;
   height: 30px;
   padding: 0 10px 0 14px;
-  background: #d3d9e1;
+  background: var(--erp-tab-bg);
   color: var(--erp-text-muted);
   font-size: 12.5px;
   border-radius: 0;
@@ -2446,8 +2454,11 @@ a.erp-detail-tab:hover:not(.active) {
    메일함만 쓰는 전용 클래스 — .erp-split-list-row(거래처/품목 등
    다른 분할뷰 13개 화면이 같이 쓰는 각진 행)와는 별개라 서로 영향
    없다. 평소엔 장식 없는 민무늬 행이다가, 선택된 메일만 카드처럼
-   살짝 떠서(둥근 모서리+보더+그림자) 구분되게 한다. */
-.erp-mail-row {
+   살짝 떠서(둥근 모서리+보더+그림자) 구분되게 한다. comm 토큰을
+   전역에서 직접 참조하지 않고 다른 5개 커뮤니케이션 화면과 같은
+   .erp-comm-shell 스코프를 통해서만 쓴다(mail/page.tsx 래퍼에 이미
+   이 클래스가 붙어 있다). */
+.erp-comm-shell .erp-mail-row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -2457,7 +2468,7 @@ a.erp-detail-tab:hover:not(.active) {
   text-decoration: none;
 }
 
-.erp-mail-row.active {
+.erp-comm-shell .erp-mail-row.active {
   background: var(--erp-panel);
   border: 1px solid var(--erp-comm-border);
   box-shadow: var(--erp-comm-shadow-row);
@@ -2615,7 +2626,8 @@ a.erp-detail-tab:hover:not(.active) {
    있던 걸(모든 화면 공통) 이 4개 화면에서만 더 크게 둥글린다. */
 .erp-comm-shell .erp-input,
 .erp-comm-shell .erp-select,
-.erp-comm-shell textarea {
+.erp-comm-shell textarea,
+.erp-comm-shell .erp-richtext {
   border-radius: var(--erp-comm-radius-pill);
 }
 
@@ -2910,17 +2922,20 @@ a.erp-detail-tab:hover:not(.active) {
   margin-top: 4px;
 }
 
-.erp-board-card-status-dot {
+/* 게시판 카드 전용이던 걸 범용 "상태 점" 프리미티브로 올렸다 — 공지
+   읽음/안읽음, 포털 공정 진행상태 점 등 여러 화면이 각자 인라인
+   style로 같은 모양을 다시 조립하고 있었다(헌법검사에서 발견). */
+.erp-status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   flex: 0 0 auto;
   background: var(--erp-text-muted);
 }
-.erp-board-card-status-dot[data-tone="ok"] { background: var(--erp-success); }
-.erp-board-card-status-dot[data-tone="warn"] { background: var(--erp-warning); }
-.erp-board-card-status-dot[data-tone="danger"] { background: var(--erp-danger); }
-.erp-board-card-status-dot[data-tone="info"] { background: var(--erp-primary); }
+.erp-status-dot[data-tone="ok"] { background: var(--erp-success); }
+.erp-status-dot[data-tone="warn"] { background: var(--erp-warning); }
+.erp-status-dot[data-tone="danger"] { background: var(--erp-danger); }
+.erp-status-dot[data-tone="info"] { background: var(--erp-primary); }
 
 .erp-board-card-time {
   font-size: 11px;
@@ -3516,7 +3531,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 12px;
   border-radius: 50%;
   background: var(--erp-danger);
-  border: 2px solid #fff;
+  border: 2px solid var(--erp-on-primary);
 }
 
 
@@ -3634,7 +3649,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-messenger-search-hit {
-  background: #ffe58f;
+  background: var(--erp-search-hit-bg);
   color: inherit;
   border-radius: 0;
   padding: 0 1px;

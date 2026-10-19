@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import {
   applyDuePriceSchedules,
   applyDuePurchasePriceSchedules,
@@ -130,9 +131,7 @@ export default async function NewPurchasePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/purchases" } }} />
-      <h1 className="mb-3 erp-h1">
-        새 매입(입고) 등록
-      </h1>
+      <ListPageHeader title="새 매입(입고) 등록" />
       {saved && (
         <PageGuide tone="success">
           방금 등록한 거래가 저장되었습니다.{" "}

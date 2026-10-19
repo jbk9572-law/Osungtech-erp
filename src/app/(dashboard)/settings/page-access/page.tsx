@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { AccessWall } from "@/components/erp/access-wall";
 import { FeatureToggle } from "@/components/feature-toggle";
@@ -32,7 +33,7 @@ export default async function PageAccessSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 erp-h1">환경설정 &gt; 화면별 부서 접근 권한</h1>
+      <ListPageHeader title="환경설정 > 화면별 부서 접근 권한" />
 
       <PageGuide>
         미수금현황처럼 민감한 화면을 특정 부서만 볼 수 있게 제한합니다. 화면 하나에 체크된 부서가 하나도

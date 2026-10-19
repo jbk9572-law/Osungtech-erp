@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryAdjustForm } from "@/components/inventory-adjust-form";
 import { ProductGridTable, type ProductGridRow } from "@/components/product-grid-table";
+import { DetailPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
@@ -44,20 +45,22 @@ export default async function InventoryPage({
 
   return (
     <div>
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="erp-h1">재고관리 &gt; 재고현황</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href="/inventory/lot-lookup" className="erp-btn">
-            품목·관리번호 통합조회
-          </Link>
-          <Link href="/inventory/reorder-suggestions" className="erp-btn">
-            재고 부족 자동 발주 제안
-          </Link>
-          <Link href="/inventory/count" className="erp-btn erp-btn-primary">
-            재고 실사
-          </Link>
-        </div>
-      </div>
+      <DetailPageHeader
+        title="재고관리 > 재고현황"
+        actions={
+          <>
+            <Link href="/inventory/lot-lookup" className="erp-btn">
+              품목·관리번호 통합조회
+            </Link>
+            <Link href="/inventory/reorder-suggestions" className="erp-btn">
+              재고 부족 자동 발주 제안
+            </Link>
+            <Link href="/inventory/count" className="erp-btn erp-btn-primary">
+              재고 실사
+            </Link>
+          </>
+        }
+      />
       <PageGuide>
         재고 수량은 매입(입고) · 매출(출고) · 재고 조정 내역의 합으로 자동 계산됩니다. 직접 수량을
         바꿀 수는 없고, 기초재고를 등록할 때는 아래 재고 조정을, 전체 품목을 한 번에 실사해 맞출

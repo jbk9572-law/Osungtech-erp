@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleTypeSwitcher } from "@/components/new-sale-type-switcher";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -99,9 +100,7 @@ export default async function NewSalePage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/sales" } }} />
-      <h1 className="mb-3 erp-h1">
-        새 판매 거래 등록
-      </h1>
+      <ListPageHeader title="새 판매 거래 등록" />
       {saved && (
         <PageGuide tone="success">
           방금 등록한 거래가 저장되었습니다.{" "}

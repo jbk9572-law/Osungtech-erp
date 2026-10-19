@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { InventoryQrScanner } from "@/components/inventory-qr-scanner";
 import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
@@ -52,18 +53,21 @@ export default async function InventoryQrScanPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/inventory/count" } }} />
-      <h1 className="mb-1 erp-h1">재고관리 &gt; QR 자동실사</h1>
+      <ListPageHeader
+        title="재고관리 > QR 자동실사"
+        actions={
+          <>
+            <Link href="/inventory/count" className="erp-btn erp-btn-dark">
+              ESC 목록 실사로
+            </Link>
+            {warehouses.length > 1 && <WarehouseQuerySelect warehouses={warehouses} value={selectedWarehouseId} />}
+          </>
+        }
+      />
       <PageGuide>
         품목 QR을 순서대로 스캔하세요. 다음 품목을 스캔하면 방금 품목은 전산 재고와 일치하는
         것으로 자동 처리되고, 실물 수량이 다르면 &quot;수량 다름&quot; 버튼을 눌러 그 자리에서 정정합니다.
       </PageGuide>
-
-      <div className="erp-toolbar">
-        <Link href="/inventory/count" className="erp-btn erp-btn-dark">
-          ESC 목록 실사로
-        </Link>
-        {warehouses.length > 1 && <WarehouseQuerySelect warehouses={warehouses} value={selectedWarehouseId} />}
-      </div>
 
       <InventoryQrScanner products={scanProducts} warehouseId={selectedWarehouseId} />
     </div>

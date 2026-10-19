@@ -18,6 +18,7 @@ function ComposeModal({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-modal="true"
+      className="erp-comm-shell"
       style={{
         position: "fixed",
         inset: 0,

@@ -6,6 +6,8 @@ import { ExcelImportForm } from "@/components/excel-import-form";
 import { ROLE_LABELS } from "@/lib/user-roles";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
+import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { importEmployeesExcel } from "@/app/(dashboard)/settings/users/actions";
 
@@ -14,16 +16,7 @@ export default async function UsersSettingsPage() {
   const { userId, isAdmin } = await getCurrentActor(supabase);
 
   if (!isAdmin) {
-    return (
-      <div>
-        <h1 className="mb-1 erp-h1">
-          환경설정 &gt; 권한관리
-        </h1>
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
-          이 화면은 관리자만 볼 수 있습니다.
-        </p>
-      </div>
-    );
+    return <AccessWall title="환경설정 > 권한관리" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
   }
 
   const { data: profiles } = await supabase
@@ -34,9 +27,7 @@ export default async function UsersSettingsPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 erp-h1">
-        환경설정 &gt; 권한관리
-      </h1>
+      <ListPageHeader title="환경설정 > 권한관리" />
       <PageGuide>
         새 계정을 만들고 역할(권한)을 지정합니다. 아이디로 로그인하며,
         비밀번호는 최초 생성 시 값 그대로 유지되니 본인이 직접 로그인 후

@@ -26,6 +26,7 @@ import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { PageGuide } from "@/components/erp/page-guide";
+import { DetailPageHeader, DetailInfoRow } from "@/components/erp/page-header";
 
 export default async function SaleDetailPage({
   params,
@@ -112,41 +113,43 @@ export default async function SaleDetailPage({
           Escape: { href: closeHref },
         }}
       />
-      <div className="mb-1 erp-detail-header-row">
-        <h1 className="flex items-center gap-2 erp-h1">
-          매출관리 &gt; 수주 상세
-          {order.is_return && <GridBadge tone="danger">반품</GridBadge>}
-          {order.is_sample && <GridBadge tone="info">샘플</GridBadge>}
-          {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
-        </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/sales/${id}/print`} className="erp-btn">
-            F9 명세표
-          </Link>
-          {allowManage && (
-            <Link href={editHref} className="erp-btn">
-              F4 수정
+      <DetailPageHeader
+        title={
+          <>
+            매출관리 &gt; 수주 상세
+            {order.is_return && <GridBadge tone="danger">반품</GridBadge>}
+            {order.is_sample && <GridBadge tone="info">샘플</GridBadge>}
+            {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
+          </>
+        }
+        meta={`${new Date(order.order_date).toLocaleDateString("ko-KR")} 출고`}
+        actions={
+          <>
+            <Link href={`/sales/${id}/print`} className="erp-btn">
+              F9 명세표
             </Link>
-          )}
-          {allowManage && paperCalcEnabled && (
-            <PaperCalcNavLink href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
-              {paperCalcs && paperCalcs.length > 0
-                ? "모조지 계산 이력"
-                : "모조지 계산"}
-            </PaperCalcNavLink>
-          )}
-          {allowManage && (
-            <DeleteButton
-              action={deleteSale}
-              id={id}
-              confirmMessage="이 매출 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
-            />
-          )}
-        </div>
-      </div>
-      <p className="mb-4 text-xs text-[var(--erp-text-muted)]">
-        {new Date(order.order_date).toLocaleDateString("ko-KR")} 출고
-      </p>
+            {allowManage && (
+              <Link href={editHref} className="erp-btn">
+                F4 수정
+              </Link>
+            )}
+            {allowManage && paperCalcEnabled && (
+              <PaperCalcNavLink href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
+                {paperCalcs && paperCalcs.length > 0
+                  ? "모조지 계산 이력"
+                  : "모조지 계산"}
+              </PaperCalcNavLink>
+            )}
+            {allowManage && (
+              <DeleteButton
+                action={deleteSale}
+                id={id}
+                confirmMessage="이 매출 거래를 삭제하시겠습니까? 재고 수량이 자동으로 되돌아갑니다."
+              />
+            )}
+          </>
+        }
+      />
 
       {warning && (
         <PageGuide tone="warning" className="font-medium">
@@ -162,76 +165,11 @@ export default async function SaleDetailPage({
           className="erp-detail-body"
           style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              No
-            </span>
-            <span>{order.doc_no}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              출고처명
-            </span>
-            <span>{order.customers?.name ?? "-"}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              담당자
-            </span>
-            <span>{order.customers?.contact_name ?? "-"}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              연락처
-            </span>
-            <span>{order.customers?.phone ?? "-"}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minHeight: 26,
-              marginBottom: 8,
-            }}
-          >
-            <span style={{ width: 72, color: "var(--erp-text-muted)" }}>
-              작성자
-            </span>
-            <span>{order.profiles?.full_name ?? "-"}</span>
-          </div>
+          <DetailInfoRow label="No">{order.doc_no}</DetailInfoRow>
+          <DetailInfoRow label="출고처명">{order.customers?.name ?? "-"}</DetailInfoRow>
+          <DetailInfoRow label="담당자">{order.customers?.contact_name ?? "-"}</DetailInfoRow>
+          <DetailInfoRow label="연락처">{order.customers?.phone ?? "-"}</DetailInfoRow>
+          <DetailInfoRow label="작성자">{order.profiles?.full_name ?? "-"}</DetailInfoRow>
           {allowManage && paperCalcEnabled && paperCalcs && paperCalcs.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <PaperStockOverridePanel

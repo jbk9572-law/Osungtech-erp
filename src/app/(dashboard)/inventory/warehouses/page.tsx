@@ -9,25 +9,48 @@ import { ClickableRow } from "@/components/clickable-row";
 import { createWarehouse, deleteWarehouse } from "@/app/(dashboard)/inventory/warehouses/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
+import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
+import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 
 // 창고 관리(마스터: 창고 목록)와 창고 이동(거래 이력)을 탭으로 나눠뒀었는데,
 // "탭으로 나누지 말고 하나로 합쳐달라"는 요청으로 한 페이지에 세로로
 // 같이 보여주는 방식으로 바꿨다. 데이터/서버 액션/RLS는 그대로 완전히
 // 분리돼 있다 — 합친 건 이 화면(진입점) 하나뿐이고, 창고 이동 등록/상세는
 // 지금처럼 /inventory/transfers/new, /inventory/transfers/[id]를 그대로 쓴다.
-export default async function WarehousesPage() {
+export default async function WarehousesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const { from, to } = await searchParams;
+  // 매출/매입/생산지시 목록과 같은 기본값(이번달) — 예전엔 조회기간
+  // 필터가 없어 최근 300건으로 고정돼 있었는데, 그보다 오래된 이동
+  // 이력은 아예 조회할 수 없었다(헌법검사에서 발견).
+  const { from: effectiveFrom, to: effectiveTo } = defaultListRange(from, to);
   const supabase = await createClient();
-  const [warehouses, { data: transfers }] = await Promise.all([
-    fetchAllRows<{ id: string; name: string; location: string | null; created_at: string }>((from, to) =>
-      supabase.from("warehouses").select("id, name, location, created_at").order("created_at").range(from, to),
+  const [warehouses, transfers] = await Promise.all([
+    fetchAllRows<{ id: string; name: string; location: string | null; created_at: string }>((f, t) =>
+      supabase.from("warehouses").select("id, name, location, created_at").order("created_at").range(f, t),
     ),
-    supabase
-      .from("stock_transfers")
-      .select(
-        "id, transfer_date, memo, from_warehouse:warehouses!from_warehouse_id(name), to_warehouse:warehouses!to_warehouse_id(name), profiles!created_by(full_name), stock_transfer_items(quantity)",
-      )
-      .order("transfer_date", { ascending: false })
-      .limit(300),
+    fetchAllRows<{
+      id: string;
+      transfer_date: string;
+      memo: string | null;
+      from_warehouse: { name: string };
+      to_warehouse: { name: string };
+      profiles: { full_name: string | null } | null;
+      stock_transfer_items: { quantity: number }[];
+    }>((f, t) =>
+      supabase
+        .from("stock_transfers")
+        .select(
+          "id, transfer_date, memo, from_warehouse:warehouses!from_warehouse_id(name), to_warehouse:warehouses!to_warehouse_id(name), profiles!created_by(full_name), stock_transfer_items(quantity)",
+        )
+        .gte("transfer_date", effectiveFrom)
+        .lte("transfer_date", effectiveTo)
+        .order("transfer_date", { ascending: false })
+        .range(f, t),
+    ),
   ]);
 
   return (
@@ -84,12 +107,35 @@ export default async function WarehousesPage() {
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <FormSection tabLabel={`창고 이동 이력 (${transfers?.length ?? 0})`}>
+        <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
             <Link href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
               F2 창고 이동 등록
             </Link>
           </div>
+
+          <DateRangeQuickFilters
+            basePath="/inventory/warehouses"
+            presets={getQuickDatePresets()}
+            monthButtons={getYearMonthButtons()}
+            from={effectiveFrom}
+            to={effectiveTo}
+          />
+
+          <form method="get" className="erp-field-grid" style={{ marginBottom: 10 }}>
+            <div className="erp-field erp-span-2">
+              <label htmlFor="transfer-from">시작일</label>
+              <input id="transfer-from" type="date" name="from" defaultValue={from ?? effectiveFrom} className="erp-input" />
+            </div>
+            <div className="erp-field erp-span-2">
+              <label htmlFor="transfer-to">종료일</label>
+              <input id="transfer-to" type="date" name="to" defaultValue={to ?? effectiveTo} className="erp-input" />
+            </div>
+            <button type="submit" className="erp-btn erp-btn-primary">
+              조회
+            </button>
+          </form>
+
           <div className="erp-grid-wrap">
             <table className="erp-grid">
               <thead>
@@ -104,7 +150,7 @@ export default async function WarehousesPage() {
                 </tr>
               </thead>
               <tbody>
-                {(transfers ?? []).map((t) => {
+                {transfers.map((t) => {
                   const items = t.stock_transfer_items ?? [];
                   const totalQty = items.reduce((sum, i) => sum + Number(i.quantity), 0);
                   return (
@@ -119,10 +165,10 @@ export default async function WarehousesPage() {
                     </ClickableRow>
                   );
                 })}
-                {(!transfers || transfers.length === 0) && (
+                {transfers.length === 0 && (
                   <tr>
                     <td colSpan={7} className="erp-grid-empty">
-                      등록된 창고 이동이 없습니다.
+                      이 기간에 등록된 창고 이동이 없습니다.
                     </td>
                   </tr>
                 )}

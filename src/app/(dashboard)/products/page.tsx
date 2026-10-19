@@ -4,6 +4,7 @@ import { CreateProductForm } from "@/components/create-product-form";
 import { ExcelImportForm } from "@/components/excel-import-form";
 import { ProductDetailPanel } from "@/components/product-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { DeleteButton } from "@/components/delete-button";
 import { importProductsExcel, deleteProduct } from "@/app/(dashboard)/products/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -97,27 +98,31 @@ export default async function ProductsPage({
         }}
       />
       <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">품목관리</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={newHref} className="erp-btn erp-btn-primary">
-            F2 신규
-          </Link>
-          <Link href={currentHref} className="erp-btn">
-            새로고침
-          </Link>
-          {selectedId && (
+        <ListPageHeader
+          title="품목관리"
+          actions={
             <>
-              <Link href={newHref} className="erp-btn">
-                목록
+              <Link href={newHref} className="erp-btn erp-btn-primary">
+                F2 신규
               </Link>
-              <DeleteButton
-                action={deleteProduct}
-                id={selectedId}
-                confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
-              />
+              <Link href={currentHref} className="erp-btn">
+                새로고침
+              </Link>
+              {selectedId && (
+                <>
+                  <Link href={newHref} className="erp-btn">
+                    목록
+                  </Link>
+                  <DeleteButton
+                    action={deleteProduct}
+                    id={selectedId}
+                    confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
+                  />
+                </>
+              )}
             </>
-          )}
-        </div>
+          }
+        />
       </div>
 
       <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>

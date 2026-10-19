@@ -5,6 +5,7 @@ import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
+import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 
 // 매입채무(/payables)와 완전히 같은 계산 방식(가공비 누계 - 지급 누계,
 // 그때그때 계산). 하청업체 상세는 /suppliers/[id] 같은 별도 라우트가
@@ -33,6 +34,9 @@ export default async function SubcontractorPayablesPage() {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h1 className="erp-h1">생산관리 &gt; 외주비정산</h1>
+        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <ExcelDownloadLink href="/api/subcontractor-payables/export" />
+        </div>
       </div>
 
       <PageGuide>

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { ListPageHeader } from "@/components/erp/page-header";
+import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { computeBalanceAfterById } from "@/lib/inventory-balance";
@@ -227,16 +229,7 @@ export default async function AuditLogPage({
 }) {
   const { isAdmin } = await requireAdmin();
   if (!isAdmin) {
-    return (
-      <div>
-        <h1 className="mb-1 erp-h1">
-          환경설정 &gt; 변경 이력
-        </h1>
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
-          이 화면은 관리자만 볼 수 있습니다.
-        </p>
-      </div>
-    );
+    return <AccessWall title="환경설정 > 변경 이력" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
   }
 
   const { table: tableParam, limit: limitParam } = await searchParams;
@@ -407,9 +400,7 @@ export default async function AuditLogPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
-      <h1 className="mb-1 erp-h1">
-        환경설정 &gt; 변경 이력
-      </h1>
+      <ListPageHeader title="환경설정 > 변경 이력" />
       <PageGuide>
         매출·매입·품목·거래처·계정 권한의 등록/수정/삭제 이력과 재고 조정 이력입니다. 관리자만 볼 수
         있습니다.

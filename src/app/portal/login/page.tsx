@@ -8,8 +8,8 @@ export default function PortalLoginPage() {
   const [state, formAction, pending] = useActionState(portalLogin, undefined);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#eef1f5] px-4">
-      <div className="w-full max-w-[380px] rounded-sm border border-[#e2e5eb] bg-white p-6 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--erp-bg)] px-4">
+      <div className="w-full max-w-[380px] rounded-sm border border-[var(--erp-border)] bg-white p-6 shadow-sm">
         <div style={{ fontSize: 18, fontWeight: 700, color: "var(--erp-primary)", marginBottom: 4 }}>
           거래처 포털
         </div>

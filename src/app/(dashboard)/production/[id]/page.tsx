@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { DetailPageHeader } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { WorkOrderStatusActions } from "@/components/work-order-status-actions";
 import { WorkOrderProcessStepActions } from "@/components/work-order-process-step-actions";
@@ -78,18 +79,20 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
       <KeyboardShortcuts
         shortcuts={{ F9: { href: `/production/${workOrder.id}/print` }, Escape: { href: "/production" } }}
       />
-      <div className="erp-page-toolbar erp-detail-header-row">
-        <h1 className="erp-h1">
-          생산관리 &gt; 생산지시 내역 &gt; {workOrder.doc_no}
-        </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <Link href={`/production/${workOrder.id}/print`} className="erp-btn">
-            F9 출력
-          </Link>
-          <Link href="/production" className="erp-btn">
-            목록
-          </Link>
-        </div>
+      <div className="erp-page-toolbar">
+        <DetailPageHeader
+          title={`생산관리 > 생산지시 내역 > ${workOrder.doc_no}`}
+          actions={
+            <>
+              <Link href={`/production/${workOrder.id}/print`} className="erp-btn">
+                F9 출력
+              </Link>
+              <Link href="/production" className="erp-btn">
+                목록
+              </Link>
+            </>
+          }
+        />
       </div>
 
       <PageGuide>

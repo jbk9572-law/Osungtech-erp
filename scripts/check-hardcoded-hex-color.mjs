@@ -51,6 +51,10 @@ const FILE_ALLOWLIST = new Set([
 const ALLOWLIST = new Set([]);
 
 const HEX_COLOR = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$|^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\)$/;
+// box-shadow:"0 1px 2px #fff" 처럼 색상 혼자만 있는 게 아니라 다른 값과
+// 섞인 문자열도 잡는다(헌법검사에서 삼항식/템플릿 리터럴과 함께 발견된
+// 사각지대 — 전체일치만 보던 HEX_COLOR로는 못 잡혔다).
+const HEX_ANYWHERE = /#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\b/;
 
 function walkDir(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -84,14 +88,30 @@ function checkFile(filePath) {
       ts.isObjectLiteralExpression(node.initializer.expression)
     ) {
       for (const prop of node.initializer.expression.properties) {
-        if (ts.isPropertyAssignment(prop) && ts.isStringLiteral(prop.initializer)) {
-          if (HEX_COLOR.test(prop.initializer.text.trim())) {
-            const { line } = sourceFile.getLineAndCharacterOfPosition(prop.getStart());
-            const key = `${relPath}:${line + 1}`;
-            if (!ALLOWLIST.has(key)) {
-              violations.push({ key, value: prop.initializer.text });
-            }
+        if (!ts.isPropertyAssignment(prop)) continue;
+        const flagIfHex = (value) => {
+          if (!HEX_COLOR.test(value.trim()) && !HEX_ANYWHERE.test(value)) return;
+          const { line } = sourceFile.getLineAndCharacterOfPosition(prop.getStart());
+          const key = `${relPath}:${line + 1}`;
+          if (!ALLOWLIST.has(key)) violations.push({ key, value });
+        };
+        const init = prop.initializer;
+        if (ts.isStringLiteral(init)) {
+          flagIfHex(init.text);
+        } else if (ts.isConditionalExpression(init)) {
+          // style={{ color: cond ? "#fff" : "var(--erp-text)" }} — 삼항식
+          // 양쪽 분기 중 하나만 리터럴 hex여도 잡는다.
+          for (const branch of [init.whenTrue, init.whenFalse]) {
+            if (ts.isStringLiteral(branch)) flagIfHex(branch.text);
           }
+        } else if (ts.isNoSubstitutionTemplateLiteral(init)) {
+          flagIfHex(init.text);
+        } else if (ts.isTemplateExpression(init)) {
+          // `rgba(${r}, ${g}, ${b}, 1)`처럼 값이 끼워지는 건 원래 대상이
+          // 아니고, 템플릿의 고정 리터럴 부분(head/각 span 사이)에 hex가
+          // 그대로 박혀있는 경우만 잡는다.
+          flagIfHex(init.head.text);
+          for (const span of init.templateSpans) flagIfHex(span.literal.text);
         }
       }
     }

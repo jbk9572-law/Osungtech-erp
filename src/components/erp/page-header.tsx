@@ -29,26 +29,46 @@ export function ListPageHeader({
 }
 
 // 상세 화면 공통 헤더 — 제목과 툴바가 한 줄에 나란히 오고, 그 아래
-// "작성자 · 일시 · 상태" 같은 메타 정보 한 줄이 붙는 레이아웃.
+// "작성자 · 일시 · 상태" 같은 메타 정보 한 줄이 붙는 레이아웃. title을
+// ReactNode로 받는다 — 매출/매입 상세처럼 제목 옆에 반품/샘플/이월
+// 뱃지가 붙는 화면이 있어서(문자열만 받으면 이 화면들이 공용 컴포넌트를
+// 못 쓰고 손으로 재구현하게 된다), flex 정렬을 기본으로 둬 뱃지가
+// 와도 줄바꿈 없이 나란히 붙는다.
 export function DetailPageHeader({
   title,
   meta,
   actions,
 }: {
-  title: string;
+  title: ReactNode;
   meta?: ReactNode;
-  actions: ReactNode;
+  // 상세화면은 거의 항상 뒤로가기/수정 같은 액션이 있지만, 입출고내역처럼
+  // 액션 없이 제목+메타만 있는 화면도 있어 선택값으로 둔다.
+  actions?: ReactNode;
 }) {
   return (
     <>
       <div className="mb-1 erp-detail-header-row">
-        <h1 className="erp-h1">{title}</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          {actions}
-        </div>
+        <h1 className="flex items-center gap-2 erp-h1">{title}</h1>
+        {actions && (
+          <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+            {actions}
+          </div>
+        )}
       </div>
       {meta && <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{meta}</p>}
     </>
+  );
+}
+
+// 상세 패널의 "라벨 · 값" 한 줄짜리 정보행 — sales/[id], purchases/[id]
+// 같은 화면이 각각 5번씩 style={{display:"flex",...,minHeight:26,
+// marginBottom:8}}을 복붙하고 있던 패턴(헌법검사에서 발견)을 공용화했다.
+export function DetailInfoRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
+      <span style={{ width: 72, color: "var(--erp-text-muted)" }}>{label}</span>
+      <span>{children}</span>
+    </div>
   );
 }
 
