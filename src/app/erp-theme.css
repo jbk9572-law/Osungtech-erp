@@ -147,7 +147,7 @@
      전부 똑같은 반경 하나를 쓰던 것보다 위계가 또렷하다). */
   --erp-comm-radius: 16px;
   --erp-comm-radius-row: 11px;
-  --erp-comm-radius-pill: 13px;
+  --erp-comm-radius-pill: 9px;
   --erp-comm-radius-bubble: 14px;
   --erp-comm-radius-sm: 5px;
   --erp-comm-border: rgba(32, 28, 43, 0.06);
@@ -2629,6 +2629,18 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-comm-shell textarea,
 .erp-comm-shell .erp-richtext {
   border-radius: var(--erp-comm-radius-pill);
+}
+
+/* 결재선/기안서 작성폼의 조직도 선택기(org-chart-approver-picker.tsx) —
+   입력칸은 pill인데 트리 선택행·선택된 사람 칩은 인라인 style로 각진
+   테두리를 그대로 쓰고 있어 한 폼 안에서 모서리 톤이 깨져 있었다
+   (사용자 지적 — "선택된상자는 여전히 다 네모네모"). 이 컴포넌트는
+   그리드 화면(지급결의/구매요청 등)에서도 공유해서 쓰므로 전역이 아니라
+   .erp-comm-shell 스코프 안에서만 둥글린다. */
+.erp-comm-shell .org-picker-tree,
+.erp-comm-shell .org-picker-row,
+.erp-comm-shell .org-picker-chip {
+  border-radius: var(--erp-comm-radius-row);
 }
 
 @media (max-width: 768px) {

@@ -60,7 +60,7 @@ export function OrgChartApproverPicker({
                   key={e.id}
                   type="button"
                   onClick={() => togglePerson({ id: e.id, name: e.fullName })}
-                  className="flex w-full items-center justify-between text-xs"
+                  className="org-picker-row flex w-full items-center justify-between text-xs"
                   style={{
                     padding: "4px 8px",
                     border: "1px solid transparent",
@@ -106,7 +106,7 @@ export function OrgChartApproverPicker({
             참조자에 추가
           </button>
         </div>
-        <div className="erp-grid-wrap" style={{ maxHeight: 280, overflowY: "auto", padding: 8 }}>
+        <div className="org-picker-tree erp-grid-wrap" style={{ maxHeight: 280, overflowY: "auto", padding: 8 }}>
           {tree.length === 0 ? (
             <PageGuide>등록된 조직도가 없습니다. 환경설정 &gt; 조직도 관리에서 부서를 먼저 만들어주세요.</PageGuide>
           ) : (
@@ -124,7 +124,7 @@ export function OrgChartApproverPicker({
           ) : (
             <ol className="flex flex-col gap-1">
               {approvers.map((a, idx) => (
-                <li key={a.id} className="flex items-center justify-between text-xs" style={{ padding: "3px 8px", border: "1px solid var(--erp-border)" }}>
+                <li key={a.id} className="org-picker-chip flex items-center justify-between text-xs" style={{ padding: "3px 8px", border: "1px solid var(--erp-border)" }}>
                   <span>
                     {idx + 1}. {a.name}
                   </span>
@@ -150,7 +150,7 @@ export function OrgChartApproverPicker({
           ) : (
             <ul className="flex flex-col gap-1">
               {references.map((r) => (
-                <li key={r.id} className="flex items-center justify-between text-xs" style={{ padding: "3px 8px", border: "1px solid var(--erp-border)" }}>
+                <li key={r.id} className="org-picker-chip flex items-center justify-between text-xs" style={{ padding: "3px 8px", border: "1px solid var(--erp-border)" }}>
                   <span>{r.name}</span>
                   <button
                     type="button"
