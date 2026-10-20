@@ -176,7 +176,7 @@ export default async function BoardPage() {
   ];
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <ListPageHeader title="게시판" />
       <PageGuide>

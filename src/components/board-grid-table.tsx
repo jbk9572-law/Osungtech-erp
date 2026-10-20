@@ -110,7 +110,7 @@ export function BoardGridTable({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+      <div className="erp-board-feed">
         {filtered.map((row) => (
           <Link key={`${row.category}-${row.id}`} href={row.href} className="erp-board-card">
             <div className="erp-board-card-body">
@@ -118,7 +118,7 @@ export function BoardGridTable({
               <div className="erp-board-card-title">{row.title}</div>
               {row.status && (
                 <div className="erp-board-card-sub">
-                  <span className="erp-board-card-status-dot" data-tone={row.status.tone} />
+                  <span className="erp-status-dot" data-tone={row.status.tone} />
                   {row.status.label}
                 </div>
               )}

@@ -2959,6 +2959,39 @@ a.erp-detail-tab:hover:not(.active) {
   margin-top: 4px;
 }
 
+/* 게시판 카드 목록이 담길 틀 없이 페이지 배경 위에 바로 떠 있어서(사용자
+   지적 — "흰바탕에 글자만 둥둥 떠있는 느낌", 최대 400건이라 "스크롤
+   압박"도 심했다. 다른 분할뷰 화면(.erp-split-list)과 같은 "안에서
+   스크롤되는 패널" 틀을 줘서 카드가 떠 보이지 않게 하고, 페이지 자체가
+   무한정 길어지는 대신 이 패널 안에서만 스크롤되게 한다. 배경은
+   --erp-panel(흰색)이 아니라 한 톤 낮은 --erp-bg-subtle을 써서, 흰
+   카드들이 완전히 흰 바탕 위가 아니라 살짝 톤이 있는 캔버스 위에 놓여
+   또렷하게 도드라져 보이게 했다. */
+.erp-board-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  height: calc(100vh - 320px);
+  min-height: 320px;
+  overflow-y: auto;
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border-strong);
+  padding: 12px;
+}
+
+.erp-comm-shell .erp-board-feed {
+  border-radius: var(--erp-comm-radius);
+  border-color: var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow);
+}
+
+@media (max-width: 768px) {
+  .erp-board-feed {
+    height: auto;
+    max-height: none;
+  }
+}
+
 /* 게시판 카드 전용이던 걸 범용 "상태 점" 프리미티브로 올렸다 — 공지
    읽음/안읽음, 포털 공정 진행상태 점 등 여러 화면이 각자 인라인
    style로 같은 모양을 다시 조립하고 있었다(헌법검사에서 발견). */
