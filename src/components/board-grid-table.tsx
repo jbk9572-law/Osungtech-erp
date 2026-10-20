@@ -110,7 +110,7 @@ export function BoardGridTable({
         </div>
       </div>
 
-      <div className="erp-board-feed">
+      <div className="erp-card-feed">
         {filtered.map((row) => (
           <Link key={`${row.category}-${row.id}`} href={row.href} className="erp-board-card">
             <div className="erp-board-card-body">
