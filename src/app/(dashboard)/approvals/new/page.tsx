@@ -83,18 +83,20 @@ export default async function NewApprovalDocumentPage({
         actions={<CloseButton href="/approvals">ESC 목록으로</CloseButton>}
       />
 
-      <FormSection tabLabel="기안서 작성">
-        <ApprovalDocumentForm
-          action={initialDraft ? submitApprovalDraft : submitApprovalDocument}
-          draftAction={saveApprovalDraft}
-          orgTree={orgTree}
-          templates={templates}
-          presets={presets}
-          matrixByTemplate={matrixByTemplate}
-          profileNameById={profileNameById}
-          initialDraft={initialDraft}
-        />
-      </FormSection>
+      <div className="erp-comm-shell">
+        <FormSection tabLabel="기안서 작성">
+          <ApprovalDocumentForm
+            action={initialDraft ? submitApprovalDraft : submitApprovalDocument}
+            draftAction={saveApprovalDraft}
+            orgTree={orgTree}
+            templates={templates}
+            presets={presets}
+            matrixByTemplate={matrixByTemplate}
+            profileNameById={profileNameById}
+            initialDraft={initialDraft}
+          />
+        </FormSection>
+      </div>
     </div>
   );
 }

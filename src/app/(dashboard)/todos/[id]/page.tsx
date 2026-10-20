@@ -3,6 +3,7 @@ import { isUuid } from "@/lib/is-uuid";
 import { TodoDetailPanel } from "@/components/todo-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { ListPageHeader } from "@/components/erp/page-header";
 
 export default async function TodoDetailPage({
   params,
@@ -15,11 +16,13 @@ export default async function TodoDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
-      <h1 className="mb-3 erp-h1">할일관리</h1>
-      <div className="erp-toolbar">
-        <CloseButton href="/todos">ESC 목록으로</CloseButton>
+      <ListPageHeader
+        title="할일관리"
+        actions={<CloseButton href="/todos">ESC 목록으로</CloseButton>}
+      />
+      <div className="erp-comm-shell">
+        <TodoDetailPanel id={id} />
       </div>
-      <TodoDetailPanel id={id} />
     </div>
   );
 }

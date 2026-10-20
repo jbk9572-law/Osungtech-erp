@@ -43,19 +43,21 @@ export default async function EditApprovalLinePresetPage({
         title="전자결재 > 공유 결재선 > 결재선 수정"
         actions={<CloseButton href="/approvals/lines">ESC 목록으로</CloseButton>}
       />
-      <FormSection tabLabel="결재선 수정">
-        <ApprovalLinePresetForm
-          action={updateApprovalLinePreset}
-          orgTree={orgTree}
-          submitLabel="저장"
-          initial={{
-            id: preset.id,
-            name: preset.name,
-            approvers: preset.approver_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
-            references: preset.reference_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
-          }}
-        />
-      </FormSection>
+      <div className="erp-comm-shell">
+        <FormSection tabLabel="결재선 수정">
+          <ApprovalLinePresetForm
+            action={updateApprovalLinePreset}
+            orgTree={orgTree}
+            submitLabel="저장"
+            initial={{
+              id: preset.id,
+              name: preset.name,
+              approvers: preset.approver_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
+              references: preset.reference_ids.map((pid) => ({ id: pid, name: nameById[pid] ?? "구성원" })),
+            }}
+          />
+        </FormSection>
+      </div>
     </div>
   );
 }

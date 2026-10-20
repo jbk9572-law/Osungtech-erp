@@ -4,6 +4,7 @@ import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 
 export default async function NewTodoPage() {
@@ -37,17 +38,13 @@ export default async function NewTodoPage() {
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
-      <h1 className="mb-3 erp-h1">할일관리 &gt; 글쓰기</h1>
+      <ListPageHeader
+        title="할일관리 > 글쓰기"
+        actions={<CloseButton href="/todos">ESC 목록으로</CloseButton>}
+      />
 
-      <div className="erp-toolbar">
-        <CloseButton href="/todos">ESC 목록으로</CloseButton>
-      </div>
-
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">할 일 등록</span>
-        </div>
-        <div className="erp-detail-body">
+      <div className="erp-comm-shell">
+        <FormSection tabLabel="할 일 등록">
           <TodoForm
             action={createTodo}
             submitLabel="등록"
@@ -56,7 +53,7 @@ export default async function NewTodoPage() {
             customers={customers}
             paperCalcEnabled={paperCalcEnabled}
           />
-        </div>
+        </FormSection>
       </div>
     </div>
   );

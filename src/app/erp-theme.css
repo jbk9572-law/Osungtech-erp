@@ -3647,6 +3647,14 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: var(--erp-comm-shadow-row);
 }
 
+/* "새 그룹 만들기" 화면의 그룹 이름 입력칸도 같은 톤 — 작성칸/검색창만
+   맞추고 이 입력칸을 빠뜨렸었다. */
+.erp-messenger-body input.erp-input {
+  border-radius: var(--erp-comm-radius-pill);
+  border: 1px solid var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow-row);
+}
+
 .erp-messenger-search-clear {
   position: absolute;
   right: 18px;
