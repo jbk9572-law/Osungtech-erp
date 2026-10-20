@@ -55,7 +55,7 @@ export default async function DocumentTemplatesPage({
   ]);
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts
         shortcuts={{
           F2: { href: "/hr/documents/templates/new" },
@@ -83,7 +83,7 @@ export default async function DocumentTemplatesPage({
         생성 시 입력값으로 채워집니다.
       </PageGuide>
 
-      <div className="erp-split3-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <DocumentTemplateListBody
           rows={templates.map((t) => ({ id: t.id, name: t.name, category: t.category, isActive: t.is_active }))}
           selectedId={selectedId}

@@ -100,7 +100,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
   }
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">공문관리 &gt; {TABS.find((t) => t.key === box)?.label}</h1>
@@ -130,7 +130,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
         ))}
       </div>
 
-      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>공문 목록</span>

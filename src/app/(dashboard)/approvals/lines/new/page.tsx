@@ -24,13 +24,13 @@ export default async function NewApprovalLinePresetPage() {
   );
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals/lines" } }} />
       <ListPageHeader
         title="전자결재 > 공유 결재선 > 새 결재선"
         actions={<CloseButton href="/approvals/lines">ESC 목록으로</CloseButton>}
       />
-      <div className="erp-comm-shell">
+      <div>
         <FormSection tabLabel="결재선 등록">
           <ApprovalLinePresetForm action={createApprovalLinePreset} orgTree={orgTree} submitLabel="추가" />
         </FormSection>

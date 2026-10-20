@@ -276,7 +276,7 @@ export default async function ApprovalsPage({
   }
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       {header}
 
       <PageGuide>
@@ -285,7 +285,7 @@ export default async function ApprovalsPage({
         문서도 포함), 아직 상신 전인 문서는 임시저장 탭에서 이어 씁니다.
       </PageGuide>
 
-      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>기안 목록</span>

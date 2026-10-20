@@ -26,14 +26,14 @@ export default async function EditDocumentTemplatePage({
   }
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/hr/documents/templates" } }} />
       <ListPageHeader
         title="그룹웨어 > 문서 양식 관리 > 수정"
         actions={<CloseButton href="/hr/documents/templates">ESC 목록으로</CloseButton>}
       />
 
-      <div className="erp-comm-shell">
+      <div>
         <FormSection tabLabel="양식 수정">
           <DocumentTemplateForm
             action={updateTemplate}

@@ -14,13 +14,13 @@ export default async function TodoDetailPage({
   if (!isUuid(id)) notFound();
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
       <ListPageHeader
         title="할일관리"
         actions={<CloseButton href="/todos">ESC 목록으로</CloseButton>}
       />
-      <div className="erp-comm-shell">
+      <div>
         <TodoDetailPanel id={id} />
       </div>
     </div>

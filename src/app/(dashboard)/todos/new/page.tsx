@@ -36,14 +36,14 @@ export default async function NewTodoPage() {
   ]);
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/todos" } }} />
       <ListPageHeader
         title="할일관리 > 글쓰기"
         actions={<CloseButton href="/todos">ESC 목록으로</CloseButton>}
       />
 
-      <div className="erp-comm-shell">
+      <div>
         <FormSection tabLabel="할 일 등록">
           <TodoForm
             action={createTodo}

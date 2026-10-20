@@ -106,7 +106,7 @@ export default async function ApprovalLinesPage({
     for (const r of rules) presetIdByTemplate[r.template_id] = r.preset_id;
 
     return (
-      <div>
+      <div className="erp-comm-shell">
         <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals" } }} />
         {header("결재매트릭스")}
         {tabs}
@@ -121,7 +121,7 @@ export default async function ApprovalLinesPage({
         {templates.length === 0 ? (
           <p className="erp-grid-empty">전자결재용 문서 양식(양식관리 &gt; 분류 &quot;전자결재&quot;)이 없습니다.</p>
         ) : (
-          <div className="erp-comm-shell" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {templates.map((t) => (
               <div
                 key={t.id}
@@ -184,7 +184,7 @@ export default async function ApprovalLinesPage({
   const listHref = "/approvals/lines";
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts
         shortcuts={{
           F2: { href: "/approvals/lines/new" },
@@ -201,7 +201,7 @@ export default async function ApprovalLinesPage({
         때 자동으로 제안됩니다.
       </PageGuide>
 
-      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>결재선 목록</span>

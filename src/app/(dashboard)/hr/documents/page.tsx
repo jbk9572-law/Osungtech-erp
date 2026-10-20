@@ -64,7 +64,7 @@ export default async function DocumentsPage({
   const newHref = "/hr/documents";
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts
         shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
       />
@@ -85,7 +85,7 @@ export default async function DocumentsPage({
         </div>
       </div>
 
-      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>문서 목록</span>

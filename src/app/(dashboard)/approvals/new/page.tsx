@@ -76,14 +76,14 @@ export default async function NewApprovalDocumentPage({
     : undefined;
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals" } }} />
       <ListPageHeader
         title={initialDraft ? "전자결재 > 기안 (임시저장 이어쓰기)" : "전자결재 > 기안"}
         actions={<CloseButton href="/approvals">ESC 목록으로</CloseButton>}
       />
 
-      <div className="erp-comm-shell">
+      <div>
         <FormSection tabLabel="기안서 작성">
           <ApprovalDocumentForm
             action={initialDraft ? submitApprovalDraft : submitApprovalDocument}

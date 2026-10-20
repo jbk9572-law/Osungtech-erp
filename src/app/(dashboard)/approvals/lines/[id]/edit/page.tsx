@@ -37,13 +37,13 @@ export default async function EditApprovalLinePresetPage({
   for (const p of profiles) nameById[p.id] = p.full_name || "구성원";
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals/lines" } }} />
       <ListPageHeader
         title="전자결재 > 공유 결재선 > 결재선 수정"
         actions={<CloseButton href="/approvals/lines">ESC 목록으로</CloseButton>}
       />
-      <div className="erp-comm-shell">
+      <div>
         <FormSection tabLabel="결재선 수정">
           <ApprovalLinePresetForm
             action={updateApprovalLinePreset}

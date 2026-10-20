@@ -46,7 +46,7 @@ export default async function MailPage({
 
   if (!account) {
     return (
-      <div>
+      <div className="erp-comm-shell">
         <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
         <ListPageHeader title="메일함" />
         <PageGuide>
@@ -100,7 +100,7 @@ export default async function MailPage({
   const newHref = `/mail?folder=${folder}`;
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: id ? newHref : "/dashboard" } }} />
       <ListPageHeader
         title="메일함"
@@ -117,7 +117,7 @@ export default async function MailPage({
         }
       />
 
-      <div className="erp-split3-shell erp-comm-shell" data-mobile-view={id ? "detail" : "list"}>
+      <div className="erp-split3-shell" data-mobile-view={id ? "detail" : "list"}>
         <nav className="erp-cat-sidebar" aria-label="메일함 폴더">
           <Link href="/mail?folder=INBOX" className={`erp-cat-item${folder === "INBOX" ? " active" : ""}`}>
             <span>받은편지함</span>

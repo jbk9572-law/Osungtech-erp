@@ -138,7 +138,7 @@ export default async function TodosPage({
   const newHref = listParams.toString() ? `/todos?${listParams.toString()}` : "/todos";
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">할일관리</h1>
@@ -185,7 +185,7 @@ export default async function TodosPage({
         </div>
       </div>
 
-      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+      <div className="erp-split-shell" data-mobile-view={selectedId ? "detail" : "list"}>
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>할 일 목록</span>
