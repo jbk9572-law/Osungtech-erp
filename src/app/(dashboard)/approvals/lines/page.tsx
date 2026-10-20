@@ -11,23 +11,53 @@ import { deleteApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/acti
 import { setApprovalMatrixRule } from "@/app/(dashboard)/approvals/matrix/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
+import { isUuid } from "@/lib/is-uuid";
 
 // 공유 결재선(누가 결재하는지)과 결재매트릭스(어느 양식이 어느 결재선을
 // 자동으로 쓰는지)가 전에는 별도 화면이었는데, 둘 다 소규모 설정
 // 화면이고 항상 붙어 다니는 개념이라(매트릭스가 결재선 목록을 그대로
-// 참조) 탭 하나로 합쳤다(감사에서 지적됨 — 화면 통폐합).
+// 참조) 탭 하나로 합쳤다(감사에서 지적됨 — 화면 통폐합). 표 기반
+// 관리화면이었던 걸, 다른 그룹웨어 화면(메일함/게시판)과 같은
+// "커뮤니케이션 서피스" 목록+상세 분할뷰·카드 리스트로 다시 디자인했다
+// (/design 탐색 후 사용자 승인 — 레이아웃은 유지한 채 디자인만 통일).
 const TABS = [
   { key: "lines", label: "공유 결재선", href: "/approvals/lines" },
   { key: "matrix", label: "결재매트릭스", href: "/approvals/lines?tab=matrix" },
 ] as const;
 
+const chipAvatarStyle = (bg: string) =>
+  ({
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    background: bg,
+    color: "var(--erp-on-primary)",
+    fontSize: 10,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: "0 0 auto",
+  }) as const;
+
+const chipStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 12px 6px 6px",
+  borderRadius: 999,
+  background: "var(--erp-bg)",
+  border: "1px solid var(--erp-comm-border)",
+} as const;
+
 export default async function ApprovalLinesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; id?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, id } = await searchParams;
   const activeTab = tab === "matrix" ? "matrix" : "lines";
+  const selectedId = id && isUuid(id) ? id : undefined;
 
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "approvals");
@@ -91,57 +121,76 @@ export default async function ApprovalLinesPage({
         {templates.length === 0 ? (
           <p className="erp-grid-empty">전자결재용 문서 양식(양식관리 &gt; 분류 &quot;전자결재&quot;)이 없습니다.</p>
         ) : (
-          <div className="erp-grid-wrap">
-            <table className="erp-grid">
-              <thead>
-                <tr>
-                  <th>결재양식</th>
-                  <th style={{ width: 220 }}>연결된 결재선</th>
-                </tr>
-              </thead>
-              <tbody>
-                {templates.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.name}</td>
-                    <td>
-                      {isAdmin ? (
-                        <ApprovalMatrixRuleSelect
-                          templateId={t.id}
-                          presetId={presetIdByTemplate[t.id] ?? ""}
-                          presets={presets}
-                          action={setApprovalMatrixRule}
-                        />
-                      ) : (
-                        presets.find((p) => p.id === presetIdByTemplate[t.id])?.name ?? "연결 안 함"
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="erp-comm-shell" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {templates.map((t) => (
+              <div
+                key={t.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  background: "var(--erp-panel)",
+                  border: "1px solid var(--erp-comm-border)",
+                  borderRadius: "var(--erp-comm-radius-row)",
+                  boxShadow: "var(--erp-comm-shadow-row)",
+                  padding: "13px 18px",
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>{t.name}</div>
+                {isAdmin ? (
+                  <ApprovalMatrixRuleSelect
+                    templateId={t.id}
+                    presetId={presetIdByTemplate[t.id] ?? ""}
+                    presets={presets}
+                    action={setApprovalMatrixRule}
+                  />
+                ) : (
+                  <span style={{ fontSize: 12.5, color: "var(--erp-text-muted)" }}>
+                    {presets.find((p) => p.id === presetIdByTemplate[t.id])?.name ?? "연결 안 함"}
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
     );
   }
 
-  const presets = await fetchAllRows<{
-    id: string;
-    name: string;
-    approver_ids: string[];
-    reference_ids: string[];
-    profiles: { full_name: string | null } | null;
-  }>((from, to) =>
-    supabase
-      .from("approval_line_presets")
-      .select("id, name, approver_ids, reference_ids, profiles!created_by(full_name)")
-      .order("name")
-      .range(from, to),
-  );
+  const [presets, profiles] = await Promise.all([
+    fetchAllRows<{
+      id: string;
+      name: string;
+      approver_ids: string[];
+      reference_ids: string[];
+      profiles: { full_name: string | null } | null;
+    }>((from, to) =>
+      supabase
+        .from("approval_line_presets")
+        .select("id, name, approver_ids, reference_ids, profiles!created_by(full_name)")
+        .order("name")
+        .range(from, to),
+    ),
+    fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
+      supabase.from("profiles").select("id, full_name").range(from, to),
+    ),
+  ]);
+
+  const nameById: Record<string, string> = {};
+  for (const p of profiles) nameById[p.id] = p.full_name || "구성원";
+
+  const selected = selectedId ? presets.find((p) => p.id === selectedId) : undefined;
+  const listHref = "/approvals/lines";
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ F2: { href: "/approvals/lines/new" }, Escape: { href: "/approvals" } }} />
+      <KeyboardShortcuts
+        shortcuts={{
+          F2: { href: "/approvals/lines/new" },
+          Escape: { href: selectedId ? listHref : "/approvals" },
+        }}
+      />
       {header("공유 결재선")}
       {tabs}
 
@@ -152,50 +201,95 @@ export default async function ApprovalLinesPage({
         때 자동으로 제안됩니다.
       </PageGuide>
 
-      {presets.length === 0 ? (
-        <p className="erp-grid-empty">등록된 결재선이 없습니다.</p>
-      ) : (
-        <div className="erp-grid-wrap">
-          <table className="erp-grid">
-            <thead>
-              <tr>
-                <th>이름</th>
-                <th style={{ width: 90 }}>결재자</th>
-                <th style={{ width: 90 }}>참조자</th>
-                <th style={{ width: 110 }}>만든이</th>
-                <th style={{ width: 140 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {presets.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.name}</td>
-                  <td className="num">{p.approver_ids.length}명</td>
-                  <td className="num">{p.reference_ids.length}명</td>
-                  <td>{p.profiles?.full_name ?? "-"}</td>
-                  <td>
-                    <div className="flex items-center gap-1">
-                      <Link
-                        href={`/approvals/lines/${p.id}/edit`}
-                        className="erp-btn"
-                        style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
-                      >
-                        수정
-                      </Link>
-                      <InlineConfirmDelete
-                        action={deleteApprovalLinePreset}
-                        hiddenFields={{ id: p.id }}
-                        warningText="이 결재선을 삭제하시겠습니까? 결재매트릭스에 연결돼 있다면 그 규칙도 함께 삭제됩니다."
-                        triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="erp-split-shell erp-comm-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <section className="erp-split-list">
+          <div className="erp-split-list-head">
+            <span>결재선 목록</span>
+            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {presets.length}건</span>
+          </div>
+          <div className="erp-split-list-body">
+            {presets.map((p) => (
+              <Link
+                key={p.id}
+                href={`${listHref}?id=${p.id}`}
+                className={`erp-split-list-row${p.id === selectedId ? " active" : ""}`}
+              >
+                <span style={{ fontWeight: p.id === selectedId ? 700 : 500 }}>{p.name}</span>
+                <div className="erp-split-list-row-sub">
+                  결재자 {p.approver_ids.length}명 · 참조자 {p.reference_ids.length}명
+                </div>
+              </Link>
+            ))}
+            {presets.length === 0 && (
+              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                등록된 결재선이 없습니다.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <div className="erp-split-detail">
+          {selected ? (
+            <>
+              <h2 className="mb-1 text-base font-bold" style={{ color: "var(--erp-text)" }}>
+                {selected.name}
+              </h2>
+              <p className="mb-5 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                만든이 {selected.profiles?.full_name ?? "-"}
+              </p>
+
+              <div className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+                결재자 순서
+              </div>
+              <div className="mb-5 flex flex-wrap items-center gap-1.5">
+                {selected.approver_ids.map((aid, i) => (
+                  <span key={aid} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span style={chipStyle}>
+                      <span style={chipAvatarStyle("var(--erp-primary)")}>{(nameById[aid] ?? "구성원")[0]}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600 }}>{nameById[aid] ?? "구성원"}</span>
+                    </span>
+                    {i < selected.approver_ids.length - 1 && (
+                      <span style={{ color: "var(--erp-text-muted)", fontSize: 13 }}>→</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+                참조자
+              </div>
+              <div className="mb-5 flex flex-wrap items-center gap-1.5">
+                {selected.reference_ids.map((rid) => (
+                  <span key={rid} style={chipStyle}>
+                    <span style={chipAvatarStyle("#64748b")}>{(nameById[rid] ?? "구성원")[0]}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{nameById[rid] ?? "구성원"}</span>
+                  </span>
+                ))}
+                {selected.reference_ids.length === 0 && (
+                  <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                    없음
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <Link href={`/approvals/lines/${selected.id}/edit`} className="erp-btn">
+                  수정
+                </Link>
+                <InlineConfirmDelete
+                  action={deleteApprovalLinePreset}
+                  hiddenFields={{ id: selected.id }}
+                  warningText="이 결재선을 삭제하시겠습니까? 결재매트릭스에 연결돼 있다면 그 규칙도 함께 삭제됩니다."
+                />
+              </div>
+            </>
+          ) : (
+            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              결재선을 선택해주세요.
+            </p>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
