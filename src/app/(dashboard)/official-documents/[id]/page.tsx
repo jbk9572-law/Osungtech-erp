@@ -5,7 +5,7 @@ export default async function OfficialDocumentDetailPage({ params }: { params: P
   const { id } = await params;
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/official-documents" } }} />
       <OfficialDocumentDetailPanel id={id} closeHref="/official-documents" />
     </div>

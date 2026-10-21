@@ -17,7 +17,7 @@ export default async function DocumentDetailPage({
   if (!isUuid(id)) notFound();
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F9: { printHref: `/hr/documents/item/${id}/print` }, Escape: { href: "/hr/documents" } }} />
       <DocumentDetailPanel id={id} />
     </div>

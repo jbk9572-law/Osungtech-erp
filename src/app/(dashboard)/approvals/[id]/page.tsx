@@ -9,7 +9,7 @@ export default async function ApprovalDocumentDetailPage({
   const { id } = await params;
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/approvals" } }} />
       <ApprovalDetailPanel id={id} closeHref="/approvals" />
     </div>

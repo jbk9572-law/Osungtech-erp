@@ -8,7 +8,7 @@ export default async function AnnouncementDetailPage({ params }: { params: Promi
   if (!isUuid(id)) notFound();
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/announcements" } }} />
       <AnnouncementDetailPanel id={id} closeHref="/announcements" />
     </div>
