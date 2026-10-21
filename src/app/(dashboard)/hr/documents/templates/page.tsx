@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { AccessWall } from "@/components/erp/access-wall";
-import { ListPageHeader } from "@/components/erp/page-header";
+import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { GridBadge } from "@/components/grid/badge";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { DocumentTemplateListBody } from "@/components/document-template-list-body";
@@ -129,9 +130,11 @@ export default async function DocumentTemplatesPage({
               </div>
             </>
           ) : (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              왼쪽 목록에서 양식을 선택해주세요.
-            </p>
+            <SplitDetailEmpty
+              icon={<DocumentIcon />}
+              title="양식을 선택해주세요"
+              hint="왼쪽 목록에서 문서 양식을 누르면 여기에 내용이 표시됩니다."
+            />
           )}
         </div>
       </div>

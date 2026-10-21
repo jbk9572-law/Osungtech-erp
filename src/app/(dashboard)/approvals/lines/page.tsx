@@ -2,9 +2,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader } from "@/components/erp/page-header";
+import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { CloseButton } from "@/components/erp/close-button";
+import { CheckCircleIcon } from "@/components/erp/groupware-icons";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ApprovalMatrixRuleSelect } from "@/components/approval-matrix-rule-select";
 import { deleteApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/actions";
@@ -285,9 +286,11 @@ export default async function ApprovalLinesPage({
               </div>
             </>
           ) : (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              결재선을 선택해주세요.
-            </p>
+            <SplitDetailEmpty
+              icon={<CheckCircleIcon />}
+              title="결재선을 선택해주세요"
+              hint="왼쪽 목록에서 결재선을 누르면 결재자 순서가 여기에 표시됩니다."
+            />
           )}
         </div>
       </div>

@@ -108,7 +108,15 @@ function ChannelAvatar({
   );
 }
 
-type View = "chat" | "list" | "newDm" | "newGroup";
+// 사원목록(roster)/채팅방목록(rooms)/대화창(chat)/그룹만들기(newGroup) —
+// 넓은 화면에서는 roster+rooms+본문이 항상 셋 다 보이는 3단 레이아웃이라
+// view는 "본문 자리에 뭘 보여줄지"만 정하고(chat|newGroup, 그 외엔 빈
+// 상태), 좁은 화면에서는 이 값이 그대로 "지금 전체화면으로 보여줄 패널
+// 하나"가 된다(roster|rooms|chat|newGroup, erp-theme.css의 data-view
+// 참고). 예전의 "newDm"은 본문 자리를 밀어내는 임시 화면이었는데, 항상
+// 보이는 사원목록 패널로 승격되며 사라졌다 — 거기서 사람을 누르면 바로
+// DM이 열린다.
+type View = "chat" | "rooms" | "roster" | "newGroup";
 
 // 우측하단에 항상 떠 있던 팝업 위젯을 없애고, 다른 화면들처럼 좌측 메뉴
 // (그룹웨어 > 메신저)로 들어오는 일반 페이지로 바꿨다 — 팝업이 화면을
@@ -140,7 +148,8 @@ export function MessengerPage({
   currentUserId: string;
   isAdmin: boolean;
 }) {
-  const [view, setView] = useState<View>("list");
+  const [view, setView] = useState<View>("rooms");
+  const [rosterQuery, setRosterQuery] = useState("");
   const [channels, setChannels] = useState(initialChannels);
   const [activeChannelId, setActiveChannelId] = useState(initialActiveChannelId);
   const [messagesByChannel, setMessagesByChannel] = useState<Record<string, MessengerMessage[]>>(() =>
@@ -171,12 +180,12 @@ export function MessengerPage({
     activeChannelIdRef.current = activeChannelId;
   }, [activeChannelId]);
 
-  // "홈 화면"(대화 탭의 채널 목록)에서는 Esc가 대시보드로 나가고, 대화창/새
-  // DM·그룹 만들기처럼 하위 화면에서는 목록으로 한 단계만 돌아간다 —
-  // 목록/상세가 있는 다른 화면들의 ESC 관례와 맞춘다.
+  // "홈 화면"(채팅방목록)에서는 Esc가 대시보드로 나가고, 대화창/그룹
+  // 만들기처럼 하위 화면이나 사원목록에서는 채팅방목록으로 한 단계만
+  // 돌아간다 — 목록/상세가 있는 다른 화면들의 ESC 관례와 맞춘다.
   useEscapeToClose(true, () => {
-    if (view !== "list") {
-      setView("list");
+    if (view !== "rooms") {
+      setView("rooms");
     } else {
       router.push("/dashboard");
     }
@@ -413,7 +422,7 @@ export function MessengerPage({
         return next;
       });
       const allChannel = channels.find((c) => c.type === "all");
-      setView("list");
+      setView("rooms");
       if (allChannel) setActiveChannelId(allChannel.id);
     });
   }
@@ -427,6 +436,10 @@ export function MessengerPage({
     () => Object.entries(profileNames).filter(([id]) => id !== currentUserId),
     [profileNames, currentUserId]
   );
+  const rosterQueryTrimmed = rosterQuery.trim().toLowerCase();
+  const filteredRoster = rosterQueryTrimmed
+    ? otherProfiles.filter(([, name]) => name.toLowerCase().includes(rosterQueryTrimmed))
+    : otherProfiles;
 
   const query = searchQuery.trim();
   const filteredMessages = query
@@ -450,14 +463,15 @@ export function MessengerPage({
     view === "chat" && activeChannel
       ? `그룹웨어 > 메신저 > ${channelLabel(activeChannel, profileNames, currentUserId)}`
       : "그룹웨어 > 메신저";
+  const isDrilledIn = view === "chat" || view === "newGroup";
 
   return (
     <div>
       <ListPageHeader
         title={headerTitle}
         actions={
-          view !== "list" ? (
-            <button type="button" className="erp-btn" onClick={() => setView("list")}>
+          isDrilledIn ? (
+            <button type="button" className="erp-btn" onClick={() => setView("rooms")}>
               ‹ 목록으로
             </button>
           ) : undefined
@@ -465,55 +479,44 @@ export function MessengerPage({
       />
 
       <div className="erp-messenger-page">
-        {/* 좌측 직원/대화 목록 + 우측 대화창의 2단 구성. 넓은 화면에서는
-            항상 둘 다 보이고(메신저 앱 통상 레이아웃), 좁은 화면에서는
-            data-view에 따라 한쪽만 보이게 CSS로 전환한다(erp-theme.css의
-            @media 참고). */}
+        {/* 좌측 사원목록 + 가운데 채팅방목록 + 우측 대화창의 3단 구성.
+            넓은 화면에서는 셋 다 항상 보이고(메신저 앱 통상 레이아웃),
+            좁은 화면에서는 data-view에 따라 한 패널만 보이게 CSS로
+            전환한다(erp-theme.css의 @media 참고). */}
         <div className="erp-messenger-layout" data-view={view}>
-            <div className="erp-messenger-sidebar">
-              <div style={{ display: "flex", gap: 6, padding: 10, borderBottom: "1px solid var(--erp-border)" }}>
-                <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newDm")}>
-                  + DM
+            <div className="erp-messenger-lists">
+              <div className="erp-messenger-mobile-tabs">
+                <button
+                  type="button"
+                  className={`erp-messenger-mobile-tab${view === "roster" ? " active" : ""}`}
+                  onClick={() => setView("roster")}
+                >
+                  사원
                 </button>
-                <button type="button" className="erp-btn" style={{ flex: 1, minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newGroup")}>
-                  + 그룹
+                <button
+                  type="button"
+                  className={`erp-messenger-mobile-tab${view !== "roster" ? " active" : ""}`}
+                  onClick={() => setView("rooms")}
+                >
+                  채팅방
                 </button>
               </div>
-              {channelError && (
-                <p style={{ padding: "8px 12px 0", color: "var(--erp-danger)", fontSize: 11.5 }}>{channelError}</p>
-              )}
-              <div style={{ overflowY: "auto", flex: 1 }}>
-                {channels.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => openChannel(c.id)}
-                    className={`erp-messenger-channel-row${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
-                    style={{ position: "relative" }}
-                  >
-                    <span style={{ marginRight: 8, display: "inline-flex" }}>
-                      <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
-                    </span>
-                    <span style={{ flex: 1, textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
-                    {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            <div className="erp-messenger-main">
-              {view === "list" && (
-                <div className="erp-messenger-empty-state">왼쪽에서 대화를 선택하거나 새로 시작해보세요.</div>
-              )}
-
-              {view === "newDm" && (
-                <div className="erp-messenger-body" style={{ padding: 0, overflowY: "auto" }}>
-                  {otherProfiles.length === 0 && (
-                    <p className="erp-grid-empty" style={{ fontSize: 12 }}>
-                      대화할 수 있는 다른 구성원이 없습니다.
-                    </p>
-                  )}
-                  {otherProfiles.map(([id, name]) => (
+              <div className="erp-messenger-roster">
+                <div className="erp-messenger-roster-head">사원목록</div>
+                <div style={{ padding: "0 8px 8px" }}>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    value={rosterQuery}
+                    onChange={(e) => setRosterQuery(e.target.value)}
+                    placeholder="🔍 이름 검색"
+                    className="erp-input"
+                    style={{ width: "100%", fontSize: 12 }}
+                  />
+                </div>
+                <div style={{ overflowY: "auto", flex: 1 }}>
+                  {filteredRoster.map(([id, name]) => (
                     <button
                       key={id}
                       type="button"
@@ -528,7 +531,49 @@ export function MessengerPage({
                       {name}
                     </button>
                   ))}
+                  {filteredRoster.length === 0 && (
+                    <p className="erp-grid-empty" style={{ fontSize: 11.5, padding: "8px 10px" }}>
+                      {rosterQueryTrimmed ? "검색 결과가 없습니다." : "대화할 수 있는 다른 구성원이 없습니다."}
+                    </p>
+                  )}
                 </div>
+              </div>
+
+              <div className="erp-messenger-sidebar">
+                <div style={{ display: "flex", gap: 6, padding: 10, borderBottom: "1px solid var(--erp-border)" }}>
+                  <span style={{ flex: 1, fontSize: 11.5, fontWeight: 700, color: "var(--erp-text-muted)", alignSelf: "center" }}>
+                    채팅방목록
+                  </span>
+                  <button type="button" className="erp-btn" style={{ minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newGroup")}>
+                    + 그룹
+                  </button>
+                </div>
+                {channelError && (
+                  <p style={{ padding: "8px 12px 0", color: "var(--erp-danger)", fontSize: 11.5 }}>{channelError}</p>
+                )}
+                <div style={{ overflowY: "auto", flex: 1 }}>
+                  {channels.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => openChannel(c.id)}
+                      className={`erp-messenger-channel-row${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
+                      style={{ position: "relative" }}
+                    >
+                      <span style={{ marginRight: 8, display: "inline-flex" }}>
+                        <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
+                      </span>
+                      <span style={{ flex: 1, textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
+                      {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="erp-messenger-main">
+              {!isDrilledIn && (
+                <div className="erp-messenger-empty-state">왼쪽에서 사원을 골라 DM을 시작하거나, 채팅방을 선택해보세요.</div>
               )}
 
               {view === "newGroup" && (

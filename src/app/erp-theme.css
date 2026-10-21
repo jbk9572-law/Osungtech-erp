@@ -2571,6 +2571,55 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 14px;
 }
 
+/* 분할뷰 상세 패널에서 아무것도 선택 안 했을 때의 빈 상태 — 메일함/
+   문서양식관리/결재선처럼 미선택 시 바로 쓸 작성폼이 없는 화면들이
+   회색 글자 한 줄만 패널 맨 위에 덩그러니 띄워서 "너무 휑하다"는
+   지적을 받았다(사용자 피드백). 아이콘+문구를 패널 한가운데로 모아
+   빈 상태임을 분명히 보여준다. */
+.erp-split-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: calc(100vh - 320px);
+  text-align: center;
+  padding: 24px;
+}
+
+.erp-split-detail-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--erp-bg-subtle);
+  color: var(--erp-text-muted);
+}
+
+.erp-comm-shell .erp-split-detail-empty-icon {
+  color: var(--erp-primary);
+}
+
+.erp-split-detail-empty-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.erp-split-detail-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--erp-text);
+}
+
+.erp-split-detail-empty-hint {
+  font-size: 11.5px;
+  color: var(--erp-text-muted);
+  max-width: 220px;
+  line-height: 1.5;
+}
+
 /* ── 커뮤니케이션 서피스 공용 래퍼("읽기/작성" 성격의 split-shell
    화면 전용) ──────────────────────────────────────────────
    공지사항·인사문서함·공문함·기안함 — 게시판에서 넘어가는 이 4개
@@ -3608,18 +3657,53 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 
-/* 대화 탭 — 좌측 직원/대화 목록 + 우측 대화창의 2단 메신저 레이아웃.
-   넓은 화면에서는 항상 둘 다 보이고, 768px 아래(트리메뉴가 오버레이로
-   바뀌는 것과 같은 기준)에서는 지금 보고 있는 view에 따라 한쪽만
-   보이게 전환한다(messenger-page.tsx의 data-view 참고). */
+/* 대화 탭 — 3단 메신저 레이아웃(사용자 요청: "젤 왼쪽에 친구목록
+   사원목록, 가운데 채팅방목록, 젤우측에 채팅창 본문"). 예전엔 "직원
+   검색"이 대화창 자리를 밀어내는 임시 화면(newDm view)이었는데,
+   항상 보이는 전용 패널로 승격했다 — 카카오톡/슬랙처럼 사원 찾기와
+   대화방 전환이 동시에 눈에 들어와야 한다는 취지.
+   넓은 화면에서는 사원목록+채팅방목록+본문 셋 다 항상 보이고, 768px
+   아래(트리메뉴가 오버레이로 바뀌는 것과 같은 기준)에서는 한 번에
+   한 패널만 보이게 전환한다(messenger-page.tsx의 data-view: "roster"|
+   "rooms"|"chat"|"newGroup" 참고). */
 .erp-messenger-layout {
   flex: 1;
   min-height: 0;
   display: flex;
 }
 
+/* 사원목록 + 채팅방목록을 한 묶음으로 — 모바일에서 이 둘 중 하나만
+   보이게 전환하고(안은 data-view로 각자 토글), "본문 전체화면" 상태일
+   때는 묶음째로 숨긴다. */
+.erp-messenger-lists {
+  display: flex;
+  min-height: 0;
+}
+
+.erp-messenger-mobile-tabs {
+  display: none;
+}
+
+.erp-messenger-roster {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--erp-comm-border);
+  background: var(--erp-bg-subtle);
+}
+
+.erp-messenger-roster-head {
+  flex: 0 0 auto;
+  padding: 10px 12px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--erp-text-muted);
+  letter-spacing: 0.02em;
+}
+
 .erp-messenger-sidebar {
-  flex: 0 0 260px;
+  flex: 0 0 240px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -3670,17 +3754,61 @@ a.erp-detail-tab:hover:not(.active) {
     box-shadow: none;
   }
 
-  .erp-messenger-layout[data-view="list"] .erp-messenger-main {
-    display: none;
+  /* 3단이 한 화면에 다 못 들어가므로, data-view가 가리키는 패널
+     하나만 전체 폭으로 보여준다. */
+  .erp-messenger-mobile-tabs {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+    padding: 8px;
+    border-bottom: 1px solid var(--erp-comm-border);
   }
-  .erp-messenger-layout:not([data-view="list"]) .erp-messenger-sidebar {
-    display: none;
+
+  .erp-messenger-mobile-tab {
+    flex: 1;
+    padding: 7px 0;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--erp-text-muted);
+    background: var(--erp-bg-subtle);
+    border: 1px solid var(--erp-comm-border);
+    border-radius: var(--erp-comm-radius-pill);
   }
-  /* 목록만 보이는 모바일 상태에서도 사이드바가 데스크톱 폭(260px)에
-     고정된 채로 남아있어 화면 오른쪽 전체가 빈 채로 잘려 보이던 버그 —
-     main이 숨겨지면 sidebar가 남은 폭을 전부 채우게 한다. */
-  .erp-messenger-layout[data-view="list"] .erp-messenger-sidebar {
+
+  .erp-messenger-mobile-tab.active {
+    color: var(--erp-on-primary);
+    background: var(--erp-primary);
+    border-color: var(--erp-primary);
+  }
+
+  .erp-messenger-lists {
+    flex-direction: column;
     flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .erp-messenger-layout[data-view="chat"] .erp-messenger-lists,
+  .erp-messenger-layout[data-view="newGroup"] .erp-messenger-lists {
+    display: none;
+  }
+  .erp-messenger-layout:not([data-view="chat"]):not([data-view="newGroup"]) .erp-messenger-main {
+    display: none;
+  }
+
+  .erp-messenger-layout[data-view="roster"] .erp-messenger-sidebar {
+    display: none;
+  }
+  .erp-messenger-layout[data-view="rooms"] .erp-messenger-roster {
+    display: none;
+  }
+  /* 패널 하나만 보이는 모바일 상태에서도 데스크톱 고정폭(200px/240px)에
+     묶여 있어 화면 오른쪽이 빈 채로 잘려 보이던 버그 — 나머지가
+     숨겨지면 남은 패널이 폭을 전부 채우게 한다. */
+  .erp-messenger-layout[data-view="roster"] .erp-messenger-roster,
+  .erp-messenger-layout[data-view="rooms"] .erp-messenger-sidebar {
+    flex: 1 1 auto;
+    width: 100%;
     border-right: none;
   }
 }

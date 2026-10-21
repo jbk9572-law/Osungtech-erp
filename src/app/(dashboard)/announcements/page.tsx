@@ -4,7 +4,8 @@ import { AnnouncementListBody, type AnnouncementRow } from "@/components/announc
 import { isThisWeek } from "@/lib/is-this-week";
 import { AnnouncementDetailPanel } from "@/components/announcement-detail-panel";
 import { AnnouncementForm } from "@/components/announcement-form";
-import { FormSection } from "@/components/erp/page-header";
+import { FormSection, SplitDetailEmpty } from "@/components/erp/page-header";
+import { MegaphoneIcon } from "@/components/erp/groupware-icons";
 import { createAnnouncement } from "@/app/(dashboard)/announcements/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
@@ -153,9 +154,11 @@ export default async function AnnouncementsPage({
               <AnnouncementForm action={createAnnouncement} submitLabel="등록" />
             </FormSection>
           ) : (
-            <p className="erp-grid-empty" style={{ marginTop: 24 }}>
-              공지사항 작성은 관리자/매니저만 할 수 있습니다. 왼쪽 목록에서 공지를 눌러 내용을 확인하세요.
-            </p>
+            <SplitDetailEmpty
+              icon={<MegaphoneIcon />}
+              title="공지를 선택해주세요"
+              hint="공지사항 작성은 관리자/매니저만 할 수 있습니다. 왼쪽 목록에서 공지를 누르면 여기에 내용이 표시됩니다."
+            />
           )}
         </div>
       </div>

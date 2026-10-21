@@ -1,5 +1,24 @@
 import type { ReactNode } from "react";
 
+// 목록+상세 분할뷰(.erp-split-detail)에서 아무것도 선택 안 했을 때 —
+// 메일함/문서양식관리/결재선처럼 "고른 걸 보여주는" 화면(할일관리·
+// 기안함처럼 미선택 시 바로 작성폼을 띄우는 화면과 다름)은 그동안
+// 흰 패널 맨 위에 회색 글자 한 줄("메일을 선택해주세요.")만 덩그러니
+// 있어서 "너무 휑하다"는 지적을 받았다(사용자 피드백). 아이콘+안내
+// 문구를 패널 한가운데에 놓는 빈 상태를 공용화해서 세 화면이 같이
+// 쓴다 — 네 번째로 같은 화면이 생기면 바로 얹으면 된다.
+export function SplitDetailEmpty({ icon, title, hint }: { icon: ReactNode; title: string; hint?: string }) {
+  return (
+    <div className="erp-split-detail-empty">
+      <span className="erp-split-detail-empty-icon" aria-hidden>
+        {icon}
+      </span>
+      <p className="erp-split-detail-empty-title">{title}</p>
+      {hint && <p className="erp-split-detail-empty-hint">{hint}</p>}
+    </div>
+  );
+}
+
 // 목록/등록 화면 공통 헤더 — 제목이 툴바 위에 단독 줄로 오는 레이아웃.
 // 지금까지 화면마다 <h1 className="mb-3 erp-h1">를
 // 손으로 반복해서 짰는데, 여백 값이나 클래스가 한 곳만 바뀌고 다른 곳은

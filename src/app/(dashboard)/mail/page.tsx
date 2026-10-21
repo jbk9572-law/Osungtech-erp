@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader } from "@/components/erp/page-header";
+import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { SyncMailButton } from "@/components/mail/sync-mail-button";
 import { ComposeMailButton } from "@/components/mail/compose-mail";
 import { MarkAsRead } from "@/components/mail/mark-as-read";
 import { MailAttachmentChip } from "@/components/mail/mail-attachment-chip";
-import { PaperclipIcon } from "@/components/erp/groupware-icons";
+import { PaperclipIcon, MailIcon } from "@/components/erp/groupware-icons";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
 
@@ -173,9 +173,11 @@ export default async function MailPage({
 
         <div className="erp-split-detail">
           {!selected ? (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              메일을 선택해주세요.
-            </p>
+            <SplitDetailEmpty
+              icon={<MailIcon />}
+              title="메일을 선택해주세요"
+              hint="왼쪽 목록에서 메일을 누르면 여기에 내용이 표시됩니다."
+            />
           ) : (
             <>
               <MarkAsRead messageId={selected.id} isRead={selected.is_read} />
