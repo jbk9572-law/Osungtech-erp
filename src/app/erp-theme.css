@@ -2651,6 +2651,18 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: var(--erp-comm-shadow);
 }
 
+/* .erp-detail-tabs와 같은 이유로 같은 버그 — .erp-split-list-head가
+   각진 흰/회색 배경으로 꽉 채운 첫 자식이라, 부모(.erp-split-list)를
+   둥글려도 모서리가 그대로 가려졌다(메일함/문서양식관리/결재선/
+   공지사항 등 분할뷰 목록 전부가 같은 구조라 전부 해당). .erp-cat-
+   sidebar·.erp-split-detail은 자기 자신에 padding이 있어 자식이
+   가장자리에 딱 붙지 않으므로 이 버그가 없다 — .erp-split-list만
+   따로 overflow: hidden을 준다(.erp-split-list-body의 자체
+   overflow-y: auto는 그대로 유지되어 내부 스크롤에 영향 없음). */
+.erp-comm-shell .erp-split-list {
+  overflow: hidden;
+}
+
 .erp-comm-shell .erp-split-list-row,
 .erp-comm-shell .erp-cat-item {
   border-radius: var(--erp-comm-radius-row);
@@ -2688,6 +2700,20 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: var(--erp-comm-radius-row);
 }
 
+/* 기안 상세의 결재자 순서 칩(1. 홍길동 [대기])도 org-picker-chip과
+   똑같이 rounded-sm(2px)+각진 테두리를 인라인으로 직접 조립하고
+   있었다 — 옆에 붙는 상태 뱃지(.erp-badge)는 완전한 필(999px)인데
+   칩 자체는 거의 각져 보여서 안 어울렸다(사용자 스크린샷 지적).
+   이 컴포넌트는 comm 화면(기안함)에서만 쓰여서 전역 class로 바로
+   둔다 — org-picker-chip처럼 그리드 화면과 공유하지 않는다. */
+.erp-approver-chip {
+  padding: 8px 12px;
+  border: 1px solid var(--erp-comm-border);
+  border-radius: var(--erp-comm-radius-row);
+  background: var(--erp-panel);
+  box-shadow: var(--erp-comm-shadow-row);
+}
+
 /* .erp-split-detail 없이 .erp-detail이 화면에 바로 놓이는 독립 작성폼
    (approvals/new, approvals/lines/new 등)은 입력칸만 comm 톤으로
    둥글고 그 바깥 카드(탭 줄 포함)는 그대로 각진 기본 .erp-detail이라
@@ -2699,9 +2725,18 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: var(--erp-comm-shadow);
 }
 
+/* border-top-*-radius만 주는 걸로는 실제로 안 둥글어 보였다(사용자
+   스크린샷 지적) — 탭 안의 활성 탭(.erp-detail-tab.active)이 각진
+   흰 배경으로 꽉 채워서, 부모가 둥글어도 자식이 그 모서리를 그대로
+   가려버렸다. overflow: hidden을 얹어서 자식도 부모의 둥근 모양대로
+   잘리게 한다 — .erp-detail(카드 전체)에는 일부러 안 준 것과 같은
+   이유(드롭다운이 카드 아래로 튀어나오는 화면이 있음)가 여기엔 해당
+   없다: 드롭다운은 .erp-detail-body쪽 필드에서 나오지 탭 스트립
+   자체에서 나오지 않는다. */
 .erp-comm-shell .erp-detail-tabs {
   border-top-left-radius: var(--erp-comm-radius);
   border-top-right-radius: var(--erp-comm-radius);
+  overflow: hidden;
 }
 
 /* .erp-split-detail 안에 중첩된 .erp-detail(공지/기안 등 분할뷰 안

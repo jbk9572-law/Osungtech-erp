@@ -165,11 +165,7 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
               const decidedByDelegate = s.decided_by && s.decided_by !== s.approver_id;
               const pendingDelegation = s.status === "pending" ? activeDelegationFor(s.approver_id) : null;
               return (
-                <div
-                  key={s.id}
-                  className="flex items-center gap-2 rounded-sm border px-3 py-2 text-sm"
-                  style={{ borderColor: "var(--erp-border)" }}
-                >
+                <div key={s.id} className="erp-approver-chip flex items-center gap-2 text-sm">
                   <span style={{ color: "var(--erp-text-muted)" }}>{s.step_order}.</span>
                   <span>{s.profiles?.full_name ?? "구성원"}</span>
                   {s.status === "approved" && s.decider?.signature_image_url ? (
