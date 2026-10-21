@@ -2587,6 +2587,17 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 24px;
 }
 
+/* 흰 배경 위에 회색 글자만 떠 있어 "너무 휑하다"던 지적(사용자 피드백,
+   B안 채택)이 빈 상태에만 있던 게 아니라, 글을 읽는 중에도 패널이
+   그냥 흰 바탕이라 똑같이 휑해 보였다. 메일함/문서양식관리/결재선뿐
+   아니라 공지사항·인사문서함·공문함·기안함·할일관리까지 comm-shell의
+   .erp-split-detail을 쓰는 화면 전부가 같은 구조라 한 규칙으로
+   일괄 적용한다 — 미선택/선택 상태 둘 다, 화면마다 따로 손대지
+   않아도 자동으로 같이 바뀐다. */
+.erp-comm-shell .erp-split-detail {
+  background: var(--erp-bg-subtle);
+}
+
 .erp-split-detail-empty-icon {
   display: flex;
   align-items: center;
@@ -2715,6 +2726,49 @@ a.erp-detail-tab:hover:not(.active) {
    중구난방"). */
 .erp-comm-shell .erp-btn {
   border-radius: var(--erp-comm-radius-pill);
+}
+
+/* 페이지 상단에서 "같은 메뉴의 다른 화면끼리" 전환하는 탭(공유
+   결재선/결재매트릭스, 내공문함/받은공문함)은 .erp-detail-tab을 그대로
+   가져다 썼더니 카드 안에서 쓸 때는 자연스러운 "각진 회색 박스"가,
+   카드 밖 페이지 레벨에 혼자 놓이니 주변 둥근 버튼/행들 사이에서
+   유독 튀어 보였다(사용자 스크린샷 지적 — 동그라미 친 부분). 카드
+   안 탭(.erp-detail-tabs, FormSection 등 70여 곳이 씀)은 그대로 두고,
+   이 "페이지 모드 전환" 역할만 세그먼트 필 스타일로 따로 뺐다 —
+   메신저 모바일 탭(.erp-messenger-mobile-tab)과 같은 톤. */
+.erp-comm-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-comm-border);
+  border-radius: var(--erp-comm-radius-row);
+}
+
+.erp-comm-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 16px;
+  border-radius: var(--erp-comm-radius-pill);
+  border: none;
+  background: none;
+  color: var(--erp-text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.erp-comm-tab:hover:not(.active) {
+  color: var(--erp-text);
+}
+
+.erp-comm-tab.active {
+  background: var(--erp-panel);
+  color: var(--erp-primary);
+  box-shadow: var(--erp-comm-shadow-row);
 }
 
 @media (max-width: 768px) {
@@ -3981,6 +4035,10 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* 채팅창이 흰 바탕이라 말풍선이 붕 떠 보였다 — 다른 comm 화면들과
+     같은 톤다운(--erp-bg-subtle)을 대화 본문 영역에도 맞춘다(실제
+     메신저 앱들도 대화창 배경과 말풍선 배경을 다르게 둬서 구분한다). */
+  background: var(--erp-bg-subtle);
 }
 
 /* 채널 목록/새 DM·그룹 만들기 화면의 항목 한 줄 — 버튼이지만 목록

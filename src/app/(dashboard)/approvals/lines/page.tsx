@@ -80,9 +80,9 @@ export default async function ApprovalLinesPage({
   );
 
   const tabs = (
-    <div className="erp-detail-tabs" style={{ marginBottom: 12 }}>
+    <div className="erp-comm-tabs" style={{ marginBottom: 12 }}>
       {TABS.map((t) => (
-        <Link key={t.key} href={t.href} className={`erp-detail-tab${activeTab === t.key ? " active" : ""}`}>
+        <Link key={t.key} href={t.href} className={`erp-comm-tab${activeTab === t.key ? " active" : ""}`}>
           {t.label}
         </Link>
       ))}
