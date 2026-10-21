@@ -1,11 +1,18 @@
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader } from "@/components/erp/page-header";
+import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { isFeatureEnabled } from "@/lib/require-feature-enabled";
-import { BoardGridTable, type BoardRow, type BoardWriteLink } from "@/components/board-grid-table";
+import { BoardListBody, type BoardCategory, type BoardRow, type BoardWriteLink } from "@/components/board-list-body";
+import { AnnouncementDetailPanel } from "@/components/announcement-detail-panel";
+import { DocumentDetailPanel } from "@/components/document-detail-panel";
+import { OfficialDocumentDetailPanel } from "@/components/official-document-detail-panel";
+import { ApprovalDetailPanel } from "@/components/approval-detail-panel";
+import { isUuid } from "@/lib/is-uuid";
 
 const PER_CATEGORY_LIMIT = 100;
+const CATEGORIES: BoardCategory[] = ["notice", "hr_doc", "official", "approval"];
 
 const HR_DOC_STATUS = {
   issued: { label: "발급완료", tone: "ok" as const },
@@ -32,11 +39,24 @@ const APPROVAL_STATUS: Record<string, { label: string; tone: "ok" | "warn" | "da
 // 전부 "확인해야 할 문서 목록"이라는 성격은 같은데 트리메뉴의 4개
 // 다른 그룹에 흩어져 있어서 한눈에 훑어보려면 4번 들어가야 했다.
 // 각 화면/테이블/RLS/워크플로우는 하나도 안 건드리고, 최근 항목만 모아
-// 보여주는 진입점 하나를 새로 만든다 — 클릭하면 원래 상세 화면으로
-// 그대로 이동한다.
-export default async function BoardPage() {
+// 보여주는 진입점 하나를 새로 만든다.
+//
+// 예전엔 글을 누르면 각자의 원래 화면(/announcements/[id] 등)으로 아예
+// 이동해버려서 "게시판은 훑어보기용, 상세는 딴 데 가서"라는 안내문이
+// 따로 필요했다(사용자 지적 — "이건 왜 3분할 디자인 안 한 거야?").
+// 메일함/공지사항이 쓰는 것과 같은 .erp-split3-shell(카테고리
+// 사이드바+목록+상세) 구조로 바꿔서, 선택한 글의 카테고리에 맞는 상세
+// 패널(AnnouncementDetailPanel 등 — 각 화면이 원래 쓰던 것 그대로)을
+// 이 화면 안에 바로 꽂아 보여준다. id만으로는 어느 테이블 글인지 알 수
+// 없으니 category도 함께 쿼리스트링(?id=&type=)으로 들고 다닌다.
+export default async function BoardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string; type?: string }>;
+}) {
   const supabase = await createClient();
   const user = await getUser();
+  const { id, type } = await searchParams;
 
   const [hrEnabled, officialEnabled, approvalsEnabled] = await Promise.all([
     isFeatureEnabled(supabase, "hr"),
@@ -175,16 +195,43 @@ export default async function BoardPage() {
     ...(approvalsEnabled ? [{ category: "approval" as const, label: "새 기안", href: "/approvals" }] : []),
   ];
 
+  const listHref = "/board";
+  const selectedId = id && isUuid(id) ? id : undefined;
+  const selectedType = selectedId && CATEGORIES.includes(type as BoardCategory) ? (type as BoardCategory) : undefined;
+
   return (
     <div className="erp-comm-shell">
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: selectedId ? listHref : "/dashboard" } }} />
       <ListPageHeader title="게시판" />
       <PageGuide>
-        공지사항 / 인사문서함 / 공문함 / 결재·기안함의 최근 항목을 한 화면에 모아 보여줍니다. 각 항목은 원래 화면으로
-        그대로 연결되며, 여기서는 훑어보기용입니다 — 상세 필터·처리는 각 메뉴에서 그대로 이용하세요.
+        공지사항 / 인사문서함 / 공문함 / 결재·기안함의 최근 항목을 한 화면에 모아 보여줍니다. 각 항목은 이 화면 안에서
+        바로 확인할 수 있고, 수정·삭제 같은 세부 처리는 원래 메뉴와 완전히 같은 화면을 그대로 씁니다.
       </PageGuide>
 
-      <BoardGridTable rows={rows} counts={counts} writeLinks={writeLinks} />
+      <div className="erp-split3-shell" data-mobile-view={selectedId ? "detail" : "list"}>
+        <BoardListBody
+          rows={rows}
+          counts={counts}
+          writeLinks={writeLinks}
+          selectedId={selectedId}
+          selectedType={selectedType}
+          basePath={listHref}
+        />
+
+        <div className="erp-split-detail">
+          {selectedId && selectedType === "notice" && <AnnouncementDetailPanel id={selectedId} closeHref={listHref} />}
+          {selectedId && selectedType === "hr_doc" && <DocumentDetailPanel id={selectedId} />}
+          {selectedId && selectedType === "official" && <OfficialDocumentDetailPanel id={selectedId} closeHref={listHref} />}
+          {selectedId && selectedType === "approval" && <ApprovalDetailPanel id={selectedId} closeHref={listHref} />}
+          {!selectedId && (
+            <SplitDetailEmpty
+              icon={<DocumentIcon />}
+              title="글을 선택해주세요"
+              hint="왼쪽 목록에서 글을 누르면 여기에 내용이 표시됩니다."
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

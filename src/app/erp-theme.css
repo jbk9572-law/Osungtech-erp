@@ -3046,58 +3046,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-left: 3px solid var(--erp-primary);
 }
 
-/* ── 게시판 카드("커뮤니케이션 서피스") ─────────────────────
-   공지사항/인사문서/공문/결재를 한 화면에 모아 보여주는 게시판 전용
-   카드 — .erp-item-card(재고실사 등 그리드 화면도 같이 쓰는 각진
-   카드)와는 별개 클래스라 서로 영향 없다. 카테고리는 색칠된 뱃지
-   대신 중립색 라벨 텍스트로 두고(화면마다 무지개색 점을 박는 건
-   장식일 뿐 실제 상태 정보가 아니었다), 실제 상태(안읽음/결재중/
-   반려 등 의미 있는 상태)만 작은 점 색으로 구분한다. */
-.erp-board-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  background: var(--erp-panel);
-  border: 1px solid var(--erp-comm-border);
-  border-radius: var(--erp-comm-radius-row);
-  box-shadow: var(--erp-comm-shadow-row);
-  padding: 15px 16px;
-  color: inherit;
-  text-decoration: none;
-}
-
-.erp-board-card-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.erp-board-card-cat {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--erp-text-muted);
-  margin-bottom: 5px;
-}
-
-.erp-board-card-title {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: -0.005em;
-  color: var(--erp-text);
-}
-
-.erp-board-card-sub {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--erp-text-muted);
-  margin-top: 4px;
-}
-
-/* 카드를 세로로 쌓아 보여주는 화면(게시판, 결재매트릭스 등)이 .erp-split-list
+/* 카드를 세로로 쌓아 보여주는 화면(결재매트릭스 등)이 .erp-split-list
    같은 분할뷰 구조를 안 쓰고 제각각 틀 없이 페이지 배경 위에 카드를 바로
    늘어놓고 있어서(사용자 지적 — "흰바탕에 글자만 둥둥 떠있는 느낌"),
    건수가 많아지면 페이지 자체가 무한정 길어져 "스크롤 압박"도 심했다.
@@ -3105,9 +3054,10 @@ a.erp-detail-tab:hover:not(.active) {
    공용 클래스로 묶어서, 카드가 떠 보이지 않고 패널 안에서만 스크롤되게
    한다. 배경은 --erp-panel(흰색)이 아니라 한 톤 낮은 --erp-bg-subtle을
    써서, 흰 카드들이 완전히 흰 바탕 위가 아니라 살짝 톤이 있는 캔버스
-   위에 놓여 또렷하게 도드라져 보이게 했다. 게시판(board-grid-table)과
-   결재매트릭스(approvals/lines)가 같이 쓴다 — 세 번째로 같은 모양의
-   카드 스택이 생기면 여기에 그대로 얹으면 된다. */
+   위에 놓여 또렷하게 도드라져 보이게 했다(게시판도 한때 이 클래스를
+   썼지만, 이후 다른 그룹웨어 화면과 같은 .erp-split3-shell 목록+상세
+   구조로 바뀌면서 더 이상 쓰지 않는다 — 결재매트릭스만 남음). 두 번째로
+   같은 모양의 카드 스택이 생기면 여기에 그대로 얹으면 된다. */
 .erp-card-feed {
   display: flex;
   flex-direction: column;
@@ -3147,14 +3097,6 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-status-dot[data-tone="warn"] { background: var(--erp-warning); }
 .erp-status-dot[data-tone="danger"] { background: var(--erp-danger); }
 .erp-status-dot[data-tone="info"] { background: var(--erp-primary); }
-
-.erp-board-card-time {
-  font-size: 11px;
-  color: var(--erp-text-muted);
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding-top: 1px;
-}
 
 /* 재고 실사: 평소엔 이력만 보이다가, "+ 새 실사 시작"을 누르기 전까지는
    품목 246개짜리 큰 표 대신 이 안내 박스만 보인다(모조지계산의 "저장된
