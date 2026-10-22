@@ -42,51 +42,50 @@ export default async function PlatformAdminPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>회사명</th>
-              <th>슬러그</th>
-              <th style={{ width: 90 }}>상태</th>
-              <th style={{ width: 100 }}>요금제</th>
-              <th style={{ width: 140 }}>가입일</th>
-              <th style={{ width: 80 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {(tenants ?? []).map((t) => {
-              const isExpired = isPlanExpired(t.plan_expires_at);
-              const isBlocked = t.disabled_at !== null || isExpired;
-              return (
-              <tr key={t.id}>
-                <td>{t.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{t.slug}</td>
-                <td>
-                  <span className={`erp-badge ${isBlocked ? "erp-badge-danger" : "erp-badge-success"}`}>
-                    {t.disabled_at ? "비활성" : isExpired ? "만료됨" : "활성"}
-                  </span>
-                </td>
-                <td>{PLAN_LABELS[t.plan] ?? t.plan}</td>
-                <td>{new Date(t.created_at).toLocaleDateString("ko-KR")}</td>
-                <td>
-                  <Link href={`/platform-admin/${t.id}`} className="erp-btn" style={{ minWidth: 0 }}>
-                    상세
-                  </Link>
-                </td>
-              </tr>
-              );
-            })}
-            {!tenants?.length && (
-              <tr>
-                <td colSpan={6} className="erp-grid-empty">
-                  등록된 회사가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {!tenants?.length ? (
+        <p className="erp-grid-empty">등록된 회사가 없습니다.</p>
+      ) : (
+        <div className="erp-card-feed erp-card-feed-compact">
+          {tenants.map((t) => {
+            const isExpired = isPlanExpired(t.plan_expires_at);
+            const isBlocked = t.disabled_at !== null || isExpired;
+            return (
+              <div
+                key={t.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  background: "var(--erp-panel)",
+                  border: "1px solid var(--erp-comm-border)",
+                  borderRadius: "var(--erp-comm-radius-row)",
+                  boxShadow: "var(--erp-comm-shadow-row)",
+                  padding: "13px 18px",
+                  flex: "0 0 auto",
+                }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>
+                    {t.name}
+                    <span style={{ marginLeft: 6 }}>
+                      <span className={`erp-badge ${isBlocked ? "erp-badge-danger" : "erp-badge-success"}`}>
+                        {t.disabled_at ? "비활성" : isExpired ? "만료됨" : "활성"}
+                      </span>
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                    {t.slug} · {PLAN_LABELS[t.plan] ?? t.plan} · {new Date(t.created_at).toLocaleDateString("ko-KR")}
+                  </div>
+                </div>
+                <Link href={`/platform-admin/${t.id}`} className="erp-btn" style={{ minWidth: 0, flex: "0 0 auto" }}>
+                  상세
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

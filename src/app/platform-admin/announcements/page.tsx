@@ -31,41 +31,40 @@ export default async function PlatformAnnouncementsPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>제목</th>
-              <th>내용</th>
-              <th style={{ width: 90 }}>노출</th>
-              <th style={{ width: 140 }}>등록일</th>
-              <th style={{ width: 100 }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {(announcements ?? []).map((a) => (
-              <tr key={a.id}>
-                <td>{a.title}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{a.content ?? "-"}</td>
-                <td>
-                  <PlatformAnnouncementActiveCheckbox id={a.id} isActive={a.is_active} title={a.title} />
-                </td>
-                <td>{new Date(a.created_at).toLocaleDateString("ko-KR")}</td>
-                <td>
-                  <DeleteButton action={deletePlatformAnnouncement} id={a.id} confirmMessage="이 공지를 삭제하시겠습니까?" />
-                </td>
-              </tr>
-            ))}
-            {!announcements?.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  등록된 공지가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {!announcements?.length ? (
+        <p className="erp-grid-empty">등록된 공지가 없습니다.</p>
+      ) : (
+        <div className="erp-card-feed erp-card-feed-compact">
+          {announcements.map((a) => (
+            <div
+              key={a.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                background: "var(--erp-panel)",
+                border: "1px solid var(--erp-comm-border)",
+                borderRadius: "var(--erp-comm-radius-row)",
+                boxShadow: "var(--erp-comm-shadow-row)",
+                padding: "13px 18px",
+                flex: "0 0 auto",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>{a.title}</div>
+                <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                  {a.content ?? "-"} · {new Date(a.created_at).toLocaleDateString("ko-KR")}
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "0 0 auto" }}>
+                <PlatformAnnouncementActiveCheckbox id={a.id} isActive={a.is_active} title={a.title} />
+                <DeleteButton action={deletePlatformAnnouncement} id={a.id} confirmMessage="이 공지를 삭제하시겠습니까?" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -122,7 +122,7 @@ export default async function ApprovalLinesPage({
         {templates.length === 0 ? (
           <p className="erp-grid-empty">전자결재용 문서 양식(양식관리 &gt; 분류 &quot;전자결재&quot;)이 없습니다.</p>
         ) : (
-          <div className="erp-card-feed">
+          <div className="erp-card-feed erp-card-feed-compact">
             {templates.map((t) => (
               <div
                 key={t.id}

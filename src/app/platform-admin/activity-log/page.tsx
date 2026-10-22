@@ -20,37 +20,44 @@ export default async function PlatformActivityLogPage() {
         로그와 달리, 회사 구분 없이 전체를 훑어볼 때만 씁니다.
       </PageGuide>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 160 }}>회사</th>
-              <th>테이블</th>
-              <th style={{ width: 90 }}>동작</th>
-              <th>처리자</th>
-              <th style={{ width: 160 }}>시각</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(rows ?? []).map((r) => (
-              <tr key={r.id}>
-                <td>{r.tenant_name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{r.table_name}</td>
-                <td>{ACTION_LABELS[r.action] ?? r.action}</td>
-                <td>{r.actor_name ?? "-"}</td>
-                <td>{new Date(r.created_at).toLocaleString("ko-KR")}</td>
-              </tr>
-            ))}
-            {!rows?.length && (
-              <tr>
-                <td colSpan={5} className="erp-grid-empty">
-                  {error ? `조회에 실패했습니다: ${error.message}` : "표시할 활동 로그가 없습니다."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {!rows?.length ? (
+        <p className="erp-grid-empty">{error ? `조회에 실패했습니다: ${error.message}` : "표시할 활동 로그가 없습니다."}</p>
+      ) : (
+        <div className="erp-card-feed">
+          {rows.map((r) => (
+            <div
+              key={r.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                background: "var(--erp-panel)",
+                border: "1px solid var(--erp-comm-border)",
+                borderRadius: "var(--erp-comm-radius-row)",
+                boxShadow: "var(--erp-comm-shadow-row)",
+                padding: "11px 16px",
+                flex: "0 0 auto",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--erp-text)" }}>
+                  {r.tenant_name ?? "-"}
+                  <span style={{ marginLeft: 6 }}>
+                    <span className="erp-badge erp-badge-muted">{ACTION_LABELS[r.action] ?? r.action}</span>
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                  {r.table_name} · {r.actor_name ?? "-"}
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", flex: "0 0 auto" }}>
+                {new Date(r.created_at).toLocaleString("ko-KR")}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

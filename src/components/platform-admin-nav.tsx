@@ -27,12 +27,12 @@ export function PlatformAdminNav() {
   const pathname = usePathname();
 
   return (
-    <div className="erp-detail-tabs erp-detail-tabs-scroll" style={{ marginBottom: 16 }}>
+    <div className="erp-comm-tabs erp-comm-tabs-scroll" style={{ marginBottom: 16 }}>
       {NAV_ITEMS.map((item) => (
         <Link
           key={item.href}
           href={item.href}
-          className={`erp-detail-tab${isActive(pathname, item.href) ? " active" : ""}`}
+          className={`erp-comm-tab${isActive(pathname, item.href) ? " active" : ""}`}
         >
           {item.label}
         </Link>

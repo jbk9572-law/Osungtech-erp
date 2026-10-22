@@ -77,27 +77,26 @@ export default async function PlatformAdminTenantDetailPage({
       </div>
       <PageGuide>이 회사의 정보 수정, 로그인 허용 여부, 요금제 상태, 소속 계정을 관리합니다.</PageGuide>
 
-        <div className="erp-grid-wrap" style={{ marginBottom: 16 }}>
-          <table className="erp-grid">
-            <thead>
-              <tr>
-                <th>매출 건수</th>
-                <th>매입 건수</th>
-                <th>거래처 수</th>
-                <th>계정 수</th>
-                <th style={{ width: 140 }}>가입일</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{salesCount ?? 0}</td>
-                <td>{purchasesCount ?? 0}</td>
-                <td>{customersCount ?? 0}</td>
-                <td>{userIds.length}</td>
-                <td>{new Date(tenant.created_at).toLocaleDateString("ko-KR")}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="erp-kpi-row" style={{ marginBottom: 16 }}>
+          <div className="erp-home-panel erp-kpi-card">
+            <div className="erp-kpi-label">매출 건수</div>
+            <div className="erp-kpi-value">{salesCount ?? 0}</div>
+          </div>
+          <div className="erp-home-panel erp-kpi-card">
+            <div className="erp-kpi-label">매입 건수</div>
+            <div className="erp-kpi-value">{purchasesCount ?? 0}</div>
+          </div>
+          <div className="erp-home-panel erp-kpi-card">
+            <div className="erp-kpi-label">거래처 수</div>
+            <div className="erp-kpi-value">{customersCount ?? 0}</div>
+          </div>
+          <div className="erp-home-panel erp-kpi-card">
+            <div className="erp-kpi-label">계정 수 / 가입일</div>
+            <div className="erp-kpi-value">{userIds.length}명</div>
+            <div style={{ fontSize: 10.5, color: "var(--erp-text-muted)", marginTop: 2 }}>
+              {new Date(tenant.created_at).toLocaleDateString("ko-KR")}
+            </div>
+          </div>
         </div>
 
         <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
@@ -147,53 +146,45 @@ export default async function PlatformAdminTenantDetailPage({
             <div style={{ marginBottom: 12 }}>
               <CreateTenantDemoAccountForm tenantId={tenant.id} />
             </div>
-            <div className="erp-grid-wrap">
-              <table className="erp-grid">
-                <thead>
-                  <tr>
-                    <th>이름</th>
-                    <th>아이디</th>
-                    <th>역할</th>
-                    <th style={{ width: 260 }}>비밀번호</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(users ?? []).map((u) => (
-                    <tr key={u.id}>
-                      <td>
+            {!users?.length ? (
+              <p className="erp-grid-empty">소속 계정이 없습니다.</p>
+            ) : (
+              <div className="erp-card-feed erp-card-feed-compact">
+                {users.map((u) => (
+                  <div
+                    key={u.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      background: "var(--erp-panel)",
+                      border: "1px solid var(--erp-comm-border)",
+                      borderRadius: "var(--erp-comm-radius-row)",
+                      boxShadow: "var(--erp-comm-shadow-row)",
+                      padding: "11px 16px",
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>
                         {u.full_name}
                         {u.is_demo && (
-                          <span
-                            style={{
-                              marginLeft: 6,
-                              padding: "1px 6px",
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: "var(--erp-warning)",
-                              background: "var(--erp-warning-bg)",
-                            }}
-                          >
-                            데모
+                          <span style={{ marginLeft: 6 }}>
+                            <span className="erp-badge erp-badge-warning">데모</span>
                           </span>
                         )}
-                      </td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{u.username}</td>
-                      <td>{ROLE_LABELS[u.role] ?? u.role}</td>
-                      <td>
-                        <ResetTenantUserPasswordForm tenantId={tenant.id} userId={u.id} />
-                      </td>
-                    </tr>
-                  ))}
-                  {!users?.length && (
-                    <tr>
-                      <td colSpan={4} className="erp-grid-empty">
-                        소속 계정이 없습니다.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        <span style={{ marginLeft: 6 }}>
+                          <span className="erp-badge erp-badge-muted">{ROLE_LABELS[u.role] ?? u.role}</span>
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>{u.username}</div>
+                    </div>
+                    <ResetTenantUserPasswordForm tenantId={tenant.id} userId={u.id} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
     </div>

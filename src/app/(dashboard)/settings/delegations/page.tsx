@@ -56,7 +56,7 @@ export default async function ApprovalDelegationsPage() {
         {delegations.length === 0 ? (
           <p className="erp-grid-empty">등록된 위임이 없습니다.</p>
         ) : (
-          <div className="erp-card-feed">
+          <div className="erp-card-feed erp-card-feed-compact">
             {delegations.map((d) => {
               const active = d.start_date <= today && today <= d.end_date;
               return (

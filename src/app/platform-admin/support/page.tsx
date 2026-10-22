@@ -38,12 +38,22 @@ export default async function PlatformSupportPage() {
           등록된 문의가 없습니다.
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="erp-card-feed">
           {(tickets ?? []).map((t) => {
             const status = STATUS_LABEL[t.status] ?? { label: t.status, tone: "muted" as const };
             const tenantName = (t.tenants as { name: string } | null)?.name ?? "-";
             return (
-              <div key={t.id} className="rounded border p-3" style={{ borderColor: "var(--erp-border)" }}>
+              <div
+                key={t.id}
+                style={{
+                  background: "var(--erp-panel)",
+                  border: "1px solid var(--erp-comm-border)",
+                  borderRadius: "var(--erp-comm-radius-row)",
+                  boxShadow: "var(--erp-comm-shadow-row)",
+                  padding: "13px 16px",
+                  flex: "0 0 auto",
+                }}
+              >
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="text-sm font-bold">
                     [{tenantName}] #{t.doc_no} {t.subject}
