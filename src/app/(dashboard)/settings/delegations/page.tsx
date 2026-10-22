@@ -36,7 +36,7 @@ export default async function ApprovalDelegationsPage() {
   const today = todayKstStr();
 
   return (
-    <div>
+    <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <ListPageHeader title="환경설정 > 전결권 관리" />
 
@@ -56,51 +56,48 @@ export default async function ApprovalDelegationsPage() {
         {delegations.length === 0 ? (
           <p className="erp-grid-empty">등록된 위임이 없습니다.</p>
         ) : (
-          <div className="erp-grid-wrap">
-            <table className="erp-grid">
-              <thead>
-                <tr>
-                  <th>위임자</th>
-                  <th>대리 결재자</th>
-                  <th style={{ width: 200 }}>기간</th>
-                  <th>사유</th>
-                  <th style={{ width: 90 }} />
-                </tr>
-              </thead>
-              <tbody>
-                {delegations.map((d) => {
-                  const active = d.start_date <= today && today <= d.end_date;
-                  return (
-                    <tr key={d.id}>
-                      <td>{d.delegator?.full_name ?? "-"}</td>
-                      <td>
-                        {d.delegate?.full_name ?? "-"}
-                        {active && (
-                          <span
-                            className="erp-badge erp-badge-success"
-                            style={{ marginLeft: 6 }}
-                          >
-                            진행중
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {d.start_date} ~ {d.end_date}
-                      </td>
-                      <td>{d.reason || "-"}</td>
-                      <td>
-                        <InlineConfirmDelete
-                          action={deleteApprovalDelegation}
-                          hiddenFields={{ id: d.id }}
-                          warningText="이 위임을 삭제하시겠습니까?"
-                          triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="erp-card-feed">
+            {delegations.map((d) => {
+              const active = d.start_date <= today && today <= d.end_date;
+              return (
+                <div
+                  key={d.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    background: "var(--erp-panel)",
+                    border: "1px solid var(--erp-comm-border)",
+                    borderRadius: "var(--erp-comm-radius-row)",
+                    boxShadow: "var(--erp-comm-shadow-row)",
+                    padding: "13px 18px",
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>
+                      {d.delegator?.full_name ?? "-"} → {d.delegate?.full_name ?? "-"}
+                      {active && (
+                        <span className="erp-badge erp-badge-success" style={{ marginLeft: 6 }}>
+                          진행중
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                      {d.start_date} ~ {d.end_date}
+                      {d.reason ? ` · ${d.reason}` : ""}
+                    </div>
+                  </div>
+                  <InlineConfirmDelete
+                    action={deleteApprovalDelegation}
+                    hiddenFields={{ id: d.id }}
+                    warningText="이 위임을 삭제하시겠습니까?"
+                    triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11, flex: "0 0 auto" }}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
