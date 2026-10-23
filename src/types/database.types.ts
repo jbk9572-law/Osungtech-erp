@@ -5771,7 +5771,14 @@ export type Database = {
       };
       get_customer_balances: {
         Args: Record<string, never>;
-        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
+        Returns: {
+          id: string;
+          name: string;
+          total: number;
+          paid: number;
+          balance: number;
+          oldest_unpaid_date: string | null;
+        }[];
       };
       get_supplier_balances: {
         Args: Record<string, never>;

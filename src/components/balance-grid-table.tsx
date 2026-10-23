@@ -3,8 +3,22 @@
 import { useMemo, useState } from "react";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatNumber } from "@/lib/format-number";
+import { GridBadge } from "@/components/grid/badge";
 
-export type BalanceRow = { id: string; name: string; total: number; paid: number; balance: number };
+export type BalanceRow = {
+  id: string;
+  name: string;
+  total: number;
+  paid: number;
+  balance: number;
+  // 가장 오래된 미결제 전표 기준 경과일수 — 서버(daysSince, KST 기준)에서
+  // 미리 계산해 내려준다("use client" 컴포넌트는 서버 타임존 헬퍼를 쓰지
+  // 않는다는 관례, kst-date.ts 참고). 이 필드를 안 주는 화면(지급현황/
+  // 외주비정산 — 아직 거래처 데이터만 있음)은 연체 열/필터 자체가 안 보인다.
+  daysOverdue?: number | null;
+};
+
+type Filter = "all" | "overdue" | "30" | "90";
 
 type SortKey = "name" | "total" | "paid" | "balance";
 
@@ -13,6 +27,19 @@ function compareValues(a: BalanceRow, b: BalanceRow, key: SortKey): number {
   const bv = b[key];
   if (typeof av === "number" && typeof bv === "number") return av - bv;
   return String(av ?? "").localeCompare(String(bv ?? ""), "ko");
+}
+
+const AGING_FILTER_OPTIONS: { key: Filter; label: string }[] = [
+  { key: "all", label: "전체" },
+  { key: "overdue", label: "연체만" },
+  { key: "30", label: "30일+" },
+  { key: "90", label: "90일+" },
+];
+
+function agingBadge(days: number | null | undefined): { tone: "ok" | "warn" | "danger"; label: string } {
+  if (!days || days <= 0) return { tone: "ok", label: "정상" };
+  if (days < 90) return { tone: "warn", label: `D+${days} 연체` };
+  return { tone: "danger", label: `D+${days} 연체` };
 }
 
 export function BalanceGridTable({
@@ -40,11 +67,25 @@ export function BalanceGridTable({
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>({ key: "balance", dir: -1 });
+  const [agingFilter, setAgingFilter] = useState<Filter>("all");
+
+  // daysOverdue를 넘겨주는 화면(미수금현황)에서만 연체 열/필터를 보여준다.
+  const showAging = rows.some((r) => r.daysOverdue !== undefined);
+
+  const agingFilteredRows = useMemo(() => {
+    if (!showAging || agingFilter === "all") return rows;
+    return rows.filter((r) => {
+      const d = r.daysOverdue ?? 0;
+      if (agingFilter === "overdue") return d > 0;
+      if (agingFilter === "30") return d >= 30;
+      return d >= 90;
+    });
+  }, [rows, showAging, agingFilter]);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
-  }, [rows, query]);
+    return q ? agingFilteredRows.filter((r) => r.name.toLowerCase().includes(q)) : agingFilteredRows;
+  }, [agingFilteredRows, query]);
 
   const sortedRows = useMemo(() => {
     if (!sort) return filteredRows;
@@ -107,6 +148,21 @@ export function BalanceGridTable({
         </div>
       </div>
 
+      {showAging && (
+        <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+          {AGING_FILTER_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setAgingFilter(opt.key)}
+              className={`erp-date-preset-btn${agingFilter === opt.key ? " active" : ""}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="erp-grid-wrap">
         <table className="erp-grid">
           <thead>
@@ -115,6 +171,7 @@ export function BalanceGridTable({
               {sortableHeader(totalLabel, "total", "num")}
               {sortableHeader(paidLabel, "paid", "num")}
               {sortableHeader("잔액", "balance", "num")}
+              {showAging && <th>연체</th>}
               <th />
             </tr>
           </thead>
@@ -130,6 +187,14 @@ export function BalanceGridTable({
                 >
                   {formatNumber(b.balance)}
                 </td>
+                {showAging && (
+                  <td>
+                    {(() => {
+                      const { tone, label } = agingBadge(b.daysOverdue);
+                      return <GridBadge tone={tone}>{label}</GridBadge>;
+                    })()}
+                  </td>
+                )}
                 <td className="num" style={{ color: "var(--erp-text-muted)" }}>
                   상세 →
                 </td>
@@ -137,7 +202,7 @@ export function BalanceGridTable({
             ))}
             {!sortedRows.length && (
               <tr>
-                <td colSpan={5} className="erp-grid-empty">
+                <td colSpan={showAging ? 6 : 5} className="erp-grid-empty">
                   {query.trim() ? "검색 결과가 없습니다." : emptyLabel}
                 </td>
               </tr>

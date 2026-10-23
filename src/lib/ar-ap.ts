@@ -168,7 +168,14 @@ export function consumeOldestFirst<T extends { total: number; date: string }>(
   return unpaid;
 }
 
-export type PartyBalance = { id: string; name: string; total: number; paid: number; balance: number };
+export type PartyBalance = {
+  id: string;
+  name: string;
+  total: number;
+  paid: number;
+  balance: number;
+  oldestUnpaidDate?: string | null;
+};
 
 // 미수금/미지급금현황 "전체 합계"용 — 잔액이 음수(과입금/과지급으로
 // 생긴 크레딧)인 거래처를 그대로 더하면, 한 거래처의 크레딧이 다른
@@ -194,6 +201,7 @@ export async function getAllCustomerBalances(supabase: SupabaseServerClient): Pr
     total: Number(r.total),
     paid: Number(r.paid),
     balance: Number(r.balance),
+    oldestUnpaidDate: r.oldest_unpaid_date,
   }));
 }
 

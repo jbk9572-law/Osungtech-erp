@@ -3159,6 +3159,49 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-status-dot[data-tone="danger"] { background: var(--erp-danger); }
 .erp-status-dot[data-tone="info"] { background: var(--erp-primary); }
 
+/* 미수금현황 등 "연체 구간별 분포" 가로 막대 — aging-distribution-bar.tsx 공용 */
+.erp-aging-dist {
+  margin-bottom: 12px;
+}
+
+.erp-aging-dist-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--erp-border);
+}
+
+.erp-aging-dist-seg {
+  height: 100%;
+}
+
+.erp-aging-dist-seg-ok { background: var(--erp-success); }
+.erp-aging-dist-seg-warn { background: var(--erp-warning); }
+.erp-aging-dist-seg-danger { background: var(--erp-danger); }
+
+.erp-aging-dist-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-aging-dist-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.erp-aging-dist-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
 /* 재고 실사: 평소엔 이력만 보이다가, "+ 새 실사 시작"을 누르기 전까지는
    품목 246개짜리 큰 표 대신 이 안내 박스만 보인다(모조지계산의 "저장된
    계산 → + 새로 계산하기"와 같은 자리 아끼기). */
