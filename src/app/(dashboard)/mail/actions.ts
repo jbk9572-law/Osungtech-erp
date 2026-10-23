@@ -166,5 +166,9 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
   }
 
   revalidatePath("/mail");
-  return { success: "메일을 보냈습니다." };
+  // 보낸 메일은 보낸편지함에 쌓이므로, 작성 폼이 erp-split-detail 안에서
+  // 닫히면서 그 폴더로 돌아가게 한다(모달로 떠 있던 시절엔 같은 화면에
+  // 머물며 모달만 닫았지만, 지금은 작성 폼 자체가 그 자리를 차지하고
+  // 있으므로 닫을 곳이 필요하다).
+  return { success: "메일을 보냈습니다.", redirectTo: "/mail?folder=SENT" };
 }

@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { BalanceGridTable } from "@/components/balance-grid-table";
-import { getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
-import { formatNumber } from "@/lib/format-number";
+import { BalanceGridTable, type BalanceRow } from "@/components/balance-grid-table";
+import { getAllSupplierBalances, daysSince } from "@/lib/ar-ap";
 import { canViewPage } from "@/lib/department-page-access";
 import { AccessWall } from "@/components/erp/access-wall";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 import { DetailPageHeader } from "@/components/erp/page-header";
+import { BalanceAgingSummary } from "@/components/erp/balance-aging-summary";
 
 export default async function PayablesPage() {
   const supabase = await createClient();
@@ -22,8 +22,19 @@ export default async function PayablesPage() {
 
   const balances = await getAllSupplierBalances(supabase);
 
-  const withBalance = balances.filter((b) => b.balance !== 0).sort((a, b) => b.balance - a.balance);
-  const totalBalance = sumOutstandingBalance(withBalance);
+  const withBalance: BalanceRow[] = balances
+    .filter((b) => b.balance !== 0)
+    .sort((a, b) => b.balance - a.balance)
+    .map((b) => ({
+      id: b.id,
+      name: b.name,
+      total: b.total,
+      paid: b.paid,
+      balance: b.balance,
+      // balance<=0(미지급금 없음)인 공급처는 oldest_unpaid_date가 애초에 null이다.
+      // daysSince는 서버 컴포넌트에서만 호출(KST 기준 todayKstStr() 기본값 사용).
+      daysOverdue: b.balance > 0 && b.oldestUnpaidDate ? daysSince(b.oldestUnpaidDate) : 0,
+    }));
 
   return (
     <div>
@@ -32,16 +43,7 @@ export default async function PayablesPage() {
         actions={<ExcelDownloadLink href="/api/payables/export" />}
       />
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
-        <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">전체 미지급금 합계</span>
-        </div>
-        <div className="erp-detail-body">
-          <span className="text-sm font-bold" style={{ color: "var(--erp-danger)" }}>
-            {formatNumber(totalBalance)}원
-          </span>
-        </div>
-      </div>
+      <BalanceAgingSummary rows={withBalance} totalLabel="전체 미지급금 합계" partyCountLabel="미지급 거래처" />
 
       <BalanceGridTable
         rows={withBalance}

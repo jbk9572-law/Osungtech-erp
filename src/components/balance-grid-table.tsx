@@ -123,7 +123,7 @@ export function BalanceGridTable({
 
   return (
     <>
-      <div className="erp-field-grid">
+      <div className="erp-field-grid" style={{ marginBottom: "var(--erp-space-4)" }}>
         <div className="erp-field erp-span-6">
           <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input

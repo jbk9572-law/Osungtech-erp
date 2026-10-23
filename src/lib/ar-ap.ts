@@ -214,6 +214,7 @@ export async function getAllSupplierBalances(supabase: SupabaseServerClient): Pr
     total: Number(r.total),
     paid: Number(r.paid),
     balance: Number(r.balance),
+    oldestUnpaidDate: r.oldest_unpaid_date,
   }));
 }
 

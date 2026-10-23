@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
+import { ListPageHeader, SplitDetailEmpty, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { SyncMailButton } from "@/components/mail/sync-mail-button";
-import { ComposeMailButton } from "@/components/mail/compose-mail";
+import { ComposeMailForm } from "@/components/mail/compose-mail";
 import { MarkAsRead } from "@/components/mail/mark-as-read";
 import { MailAttachmentChip } from "@/components/mail/mail-attachment-chip";
 import { PaperclipIcon, MailIcon } from "@/components/erp/groupware-icons";
@@ -31,10 +31,14 @@ function initial(name: string | null, address: string | null): string {
 export default async function MailPage({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string; id?: string }>;
+  searchParams: Promise<{ folder?: string; id?: string; compose?: string }>;
 }) {
-  const { folder: folderParam, id } = await searchParams;
+  const { folder: folderParam, id, compose: composeParam } = await searchParams;
   const folder: Folder = folderParam === "SENT" ? "SENT" : "INBOX";
+  // id가 있으면(메일을 보고 있으면) 작성 모드는 무시한다 — 둘이 동시에
+  // 켜질 일은 없지만(작성 버튼은 /mail?folder=...&compose=1만 가리킴),
+  // 혹시 둘 다 쿼리에 남아있어도 "보던 메일"이 우선하게 한다.
+  const compose = composeParam === "1" && !id;
 
   const user = await getUser();
   const supabase = await createClient();
@@ -98,17 +102,20 @@ export default async function MailPage({
   );
 
   const newHref = `/mail?folder=${folder}`;
+  const composeHref = `/mail?folder=${folder}&compose=1`;
 
   return (
     <div className="erp-comm-shell">
-      <KeyboardShortcuts shortcuts={{ Escape: { href: id ? newHref : "/dashboard" } }} />
+      <KeyboardShortcuts shortcuts={{ F2: { href: composeHref }, Escape: { href: id || compose ? newHref : "/dashboard" } }} />
       <ListPageHeader
         title="메일함"
         actions={
           <>
-            <ComposeMailButton />
+            <Link href={composeHref} className="erp-btn erp-btn-primary">
+              F2 메일쓰기
+            </Link>
             <SyncMailButton />
-            {id && (
+            {(id || compose) && (
               <Link href={newHref} className="erp-btn">
                 목록
               </Link>
@@ -117,7 +124,7 @@ export default async function MailPage({
         }
       />
 
-      <div className="erp-split3-shell" data-mobile-view={id ? "detail" : "list"}>
+      <div className="erp-split3-shell" data-mobile-view={id || compose ? "detail" : "list"}>
         <nav className="erp-cat-sidebar" aria-label="메일함 폴더">
           <Link href="/mail?folder=INBOX" className={`erp-cat-item${folder === "INBOX" ? " active" : ""}`}>
             <span>받은편지함</span>
@@ -172,7 +179,11 @@ export default async function MailPage({
         </section>
 
         <div className="erp-split-detail">
-          {!selected ? (
+          {compose ? (
+            <FormSection tabLabel="메일쓰기">
+              <ComposeMailForm closeHref={newHref} />
+            </FormSection>
+          ) : !selected ? (
             <SplitDetailEmpty
               icon={<MailIcon />}
               title="메일을 선택해주세요"

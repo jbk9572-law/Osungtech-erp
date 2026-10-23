@@ -5782,7 +5782,14 @@ export type Database = {
       };
       get_supplier_balances: {
         Args: Record<string, never>;
-        Returns: { id: string; name: string; total: number; paid: number; balance: number }[];
+        Returns: {
+          id: string;
+          name: string;
+          total: number;
+          paid: number;
+          balance: number;
+          oldest_unpaid_date: string | null;
+        }[];
       };
       get_inventory_cache_mismatches: {
         Args: Record<string, never>;

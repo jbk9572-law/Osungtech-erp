@@ -15,6 +15,13 @@
 --      oldest_unpaid_date로 돌려준다.
 -- 거래처 전체 balance가 0 이하(미수금 없음)면 oldest_unpaid_date는
 -- null이다(어차피 화면에서도 미수금 있는 거래처만 보여준다).
+--
+-- 주의(초안에서 빠뜨렸다가 커밋 전 재검토로 발견/수정): migration 120이
+-- is_demo_actor()/current_tenant_id() 필터를 이 함수에 추가한 이유(데모
+-- 계정·다른 테넌트 데이터가 security definer로 그대로 새어 보이는 사고)가
+-- 있다 — 이 함수를 create or replace로 다시 정의하면서 그 필터를 빠뜨리면
+-- 120의 보안 수정 자체가 조용히 되돌아간다. sales_orders/customer_payments/
+-- customers 세 곳 모두 120과 동일한 필터를 유지한다.
 
 create or replace function public.get_customer_balances()
 returns table (id uuid, name text, total numeric, paid numeric, balance numeric, oldest_unpaid_date date)
@@ -32,6 +39,8 @@ as $$
     from public.sales_orders so
     join public.sales_order_items soi on soi.sales_order_id = so.id
     where so.payment_method is null
+      and so.is_demo = public.is_demo_actor()
+      and so.tenant_id = public.current_tenant_id()
     group by so.id, so.customer_id, so.order_date, so.is_return
   ),
   pos_orders as (
@@ -56,6 +65,8 @@ as $$
   pay_sum as (
     select customer_id, sum(amount) as paid
     from public.customer_payments
+    where is_demo = public.is_demo_actor()
+      and tenant_id = public.current_tenant_id()
     group by customer_id
   ),
   pool_per_customer as (
@@ -91,6 +102,8 @@ as $$
   left join sales_total on sales_total.customer_id = c.id
   left join pay_sum on pay_sum.customer_id = c.id
   left join oldest_unpaid on oldest_unpaid.customer_id = c.id
+  where c.is_demo = public.is_demo_actor()
+    and c.tenant_id = public.current_tenant_id()
   order by c.name;
 $$;
 
