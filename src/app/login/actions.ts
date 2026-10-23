@@ -111,9 +111,12 @@ export async function login(_prevState: { error: string } | undefined, formData:
   // 위치 QR처럼 로그인 안 된 상태에서 특정 화면으로 바로 들어왔을 때
   // 되돌아갈 경로. 다른 사이트로 튕기는 오픈 리다이렉트를 막기 위해
   // "/"로 시작하고 "//"(스킴 없는 절대 URL)로는 시작하지 않는 내부
-  // 경로만 허용한다.
+  // 경로만 허용한다. "/\evil.com"도 막는다 — WHATWG URL 파서는 http(s)
+  // 같은 "특수 스킴"에서 백슬래시를 슬래시와 동등하게 취급해서, 브라우저가
+  // 이 경로를 https://evil.com/로 해석할 수 있다(헌법검사에서 발견 —
+  // list-return.ts의 resolveBackHref와 같은 검사로 맞춤).
   const nextRaw = String(formData.get("next") ?? "");
-  const next = nextRaw.startsWith("/") && !nextRaw.startsWith("//") ? nextRaw : "/dashboard";
+  const next = /^\/[^/\\]/.test(nextRaw) ? nextRaw : "/dashboard";
 
   redirect(next);
 }

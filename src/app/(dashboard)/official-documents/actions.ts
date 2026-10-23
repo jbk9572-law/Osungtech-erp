@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
+import { getCurrentActor } from "@/lib/current-actor";
+import { canManage } from "@/lib/can-manage";
 import type { FormState } from "@/components/form-message";
 
 // sendOfficialDocument는 이 파일이 아니라 send-action.ts에 따로 있다 —
@@ -134,7 +136,15 @@ export async function markRecipientDeliveredManually(_prevState: FormState, form
     .eq("id", officialDocumentId)
     .maybeSingle();
   const user = await getUser();
-  if (!doc || doc.created_by !== user?.id) return { error: "본인이 작성한 공문만 처리할 수 있습니다." };
+  // 화면(official-document-detail-panel.tsx)은 canManage(작성자 본인 또는
+  // 관리자)로 버튼을 보여주는데, 여기서는 작성자 본인만 검사해 관리자가
+  // 눌러도 매번 거부됐다(헌법검사 발견 — 버튼은 보이는데 항상 실패).
+  // getCurrentActor로 직접 조회해서(클라이언트가 보낸 값을 믿지 않고)
+  // canManage()와 같은 기준으로 맞춘다.
+  const { isAdmin } = await getCurrentActor(supabase);
+  if (!doc || !canManage(doc.created_by, user?.id ?? null, isAdmin)) {
+    return { error: "본인이 작성했거나 관리자만 처리할 수 있습니다." };
+  }
   if (doc.status !== "sent") return { error: "발송 처리 후에만 직접 발송을 기록할 수 있습니다." };
 
   const admin = createAdminClient();
@@ -154,7 +164,13 @@ async function requireOwnedDocument(id: string, expectedStatuses: string[]) {
   const supabase = await createClient();
   const user = await getUser();
   const { data: doc } = await supabase.from("official_documents").select("id, status, created_by").eq("id", id).maybeSingle();
-  if (!doc || doc.created_by !== user?.id) return { error: "본인이 작성한 공문만 처리할 수 있습니다." };
+  // 종결/취소 버튼은 canManage(작성자 본인 또는 관리자)로 화면에 노출되는데
+  // (official-document-detail-panel.tsx), 여기서는 작성자 본인만 검사해
+  // 관리자가 눌러도 매번 거부됐다(헌법검사 발견).
+  const { isAdmin } = await getCurrentActor(supabase);
+  if (!doc || !canManage(doc.created_by, user?.id ?? null, isAdmin)) {
+    return { error: "본인이 작성했거나 관리자만 처리할 수 있습니다." };
+  }
   if (!expectedStatuses.includes(doc.status)) return { error: "지금 상태에서는 처리할 수 없습니다." };
   return null;
 }

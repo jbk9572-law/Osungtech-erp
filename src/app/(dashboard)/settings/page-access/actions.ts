@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
+import { requireAdmin } from "@/lib/require-admin";
 
 // FeatureToggle(설정 > 기능 관리와 같은 컴포넌트)을 그대로 재사용한다 —
 // 그 컴포넌트는 "feature_key 문자열 하나 + 켤지 끌지"만 다루므로, 여기서는
@@ -13,7 +13,12 @@ export async function toggleDepartmentPageAccess(_prevState: FormState, formData
   const [pageKey, departmentId] = compositeKey.split("::");
   if (!pageKey || !departmentId) return { error: "잘못된 요청입니다." };
 
-  const supabase = await createClient();
+  // RLS(department_page_access_insert_admin/_delete_admin)가 관리자만
+  // 허용하긴 하지만, 이 함수는 그 거부를 확인하지 않고 있었다(헌법검사
+  // 발견 — 이 저장소의 다른 관리자 전용 액션들처럼 앞에서 먼저 명시적으로
+  // 막는다).
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 변경할 수 있습니다." };
 
   if (enabled) {
     // 이미 켜둔 칸을 중복 저장하려는 경쟁 상태를 대비해 upsert(중복이면

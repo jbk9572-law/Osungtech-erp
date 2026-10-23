@@ -6,8 +6,9 @@ import { ProductDetailPanel } from "@/components/product-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { DeleteButton } from "@/components/delete-button";
-import { importProductsExcel, deleteProduct } from "@/app/(dashboard)/products/actions";
-import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { SplitListBulkSelect, type SplitListBulkRow } from "@/components/erp/split-list-bulk-select";
+import { importProductsExcel, deleteProduct, bulkDeleteProducts } from "@/app/(dashboard)/products/actions";
+import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
@@ -49,13 +50,18 @@ export default async function ProductsPage({
       supabase.from("products").select(PRODUCT_COLUMNS).order("created_at", { ascending: false }).range(from, to),
     );
   } else {
-    const { data } = await supabase
-      .from("products")
-      .select(PRODUCT_COLUMNS)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-    allProducts = data ?? [];
-    hasMore = allProducts.length >= limit;
+    // .limit(limit)을 직접 걸면 limit이 PostgREST max_rows(1000, supabase/
+    // config.toml)를 넘을 때 조용히 1000건에서 잘린다 — "더보기"를 3번
+    // 누르면 limit=1200인데 1000개만 돌아와 hasMore가 false로 잘못
+    // 판정되고, 1000번째 이후 등록된 품목은 검색 없이는 영원히 안 보이게
+    // 된다(헌법검사에서 발견). customers/suppliers/subcontractors가 이미
+    // 쓰는 fetchLimitedRows로 맞춘다.
+    const result = await fetchLimitedRows<ProductQueryRow>(
+      (from, to) => supabase.from("products").select(PRODUCT_COLUMNS).order("created_at", { ascending: false }).range(from, to),
+      limit,
+    );
+    allProducts = result.rows;
+    hasMore = result.hasMore;
   }
 
   const [categories, suppliers] = await Promise.all([
@@ -155,24 +161,28 @@ export default async function ProductsPage({
             </button>
           </form>
           <div className="erp-split-list-body">
-            {products.map((p) => (
-              <Link
-                key={p.id}
-                href={rowHref(p.id)}
-                className={`erp-split-list-row${p.id === selectedId ? " active" : ""}`}
-              >
-                {p.name}
-                <div className="erp-split-list-row-sub">
-                  {p.sku}
-                  {p.spec ? ` · ${p.spec}` : ""}
-                </div>
-              </Link>
-            ))}
-            {products.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                조건에 맞는 품목이 없습니다.
-              </p>
-            )}
+            <SplitListBulkSelect
+              rows={products.map(
+                (p): SplitListBulkRow => ({
+                  id: p.id,
+                  href: rowHref(p.id),
+                  active: p.id === selectedId,
+                  label: p.name,
+                  content: (
+                    <>
+                      {p.name}
+                      <div className="erp-split-list-row-sub">
+                        {p.sku}
+                        {p.spec ? ` · ${p.spec}` : ""}
+                      </div>
+                    </>
+                  ),
+                }),
+              )}
+              bulkDeleteAction={bulkDeleteProducts}
+              warningText="관련 매입/매출 내역이 있는 품목은 삭제되지 않습니다."
+              emptyMessage="조건에 맞는 품목이 없습니다."
+            />
           </div>
           {!keyword && hasMore && (
             <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>

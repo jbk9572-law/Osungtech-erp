@@ -42,10 +42,13 @@ export function resolveBackHref(fallback: string, back: string | undefined): str
     const decoded = decodeURIComponent(back);
     // 완전한 경로가 아니면(예: back 파라미터가 손상됐거나 외부에서
     // 임의로 조작된 값이면) 기본 목적지로 안전하게 되돌아간다 — 절대
-    // 경로가 아닌 값으로 이동을 시도하지 않는다(오픈 리다이렉트 방지:
-    // "//evil.com" 같은 프로토콜-상대 경로는 브라우저가 외부 호스트로
-    // 해석할 수 있어 "/"로 시작하되 "//"로는 시작하지 않는 값만 허용).
-    return decoded.startsWith("/") && !decoded.startsWith("//") ? decoded : fallback;
+    // 경로가 아닌 값으로 이동을 시도하지 않는다(오픈 리다이렉트 방지).
+    // "//evil.com"(프로토콜-상대 경로)뿐 아니라 "/\evil.com"도 막는다 —
+    // WHATWG URL 파서는 http(s) 같은 "특수 스킴"에서 백슬래시를 슬래시와
+    // 동등하게 취급해서, 브라우저가 이 href를 https://evil.com/로 해석할
+    // 수 있다(헌법검사에서 발견된 잘 알려진 오픈 리다이렉트 우회 패턴 —
+    // login/actions.ts의 같은 검사도 함께 고침).
+    return /^\/[^/\\]/.test(decoded) ? decoded : fallback;
   } catch {
     return fallback;
   }

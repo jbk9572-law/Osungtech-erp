@@ -10,6 +10,7 @@ import { decideApprovalStep, deleteApprovalDocument, recallApprovalDocument } fr
 import { ApprovalDecisionForm } from "@/components/approval-decision-form";
 import { getCurrentActor } from "@/lib/current-actor";
 import { buildBackHref } from "@/lib/list-return";
+import { todayKstStr } from "@/lib/kst-date";
 
 // 작성자 본인이 삭제할 수 있는 상태 — DB 정책(migration 181,
 // approval_documents_delete_own)과 정확히 같은 기준이어야 한다. 이미
@@ -96,7 +97,11 @@ export async function ApprovalDetailPanel({
           .select("delegator_id, delegate_id, start_date, end_date, profiles!delegate_id(full_name)")
           .in("delegator_id", approverIds)
       : { data: [] as { delegator_id: string; delegate_id: string; start_date: string; end_date: string; profiles: { full_name: string | null } | null }[] };
-  const today = new Date().toISOString().slice(0, 10);
+  // UTC 기준으로 "오늘"을 구하면 자정~오전 9시(KST) 사이에 전결권 관리
+  // 화면(settings/delegations/page.tsx, todayKstStr() 사용)과 "오늘"이
+  // 하루 어긋나 대리결재 활성 여부 판정이 서로 달라질 수 있었다(헌법검사
+  // 발견 — myTurn 판정에 직접 쓰여 "누가 지금 결재할 수 있는가"에 영향).
+  const today = todayKstStr();
   const activeDelegationFor = (approverId: string) =>
     (delegations ?? []).find((d) => d.delegator_id === approverId && d.start_date <= today && today <= d.end_date);
   const isActiveDelegateFor = (approverId: string) => activeDelegationFor(approverId)?.delegate_id === user?.id;

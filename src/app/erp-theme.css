@@ -2291,25 +2291,6 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-text);
 }
 
-/* 플랫폼 관리자 상단 페이지 이동 탭 전용 변형 — 기본 .erp-detail-tabs는
-   화면이 좁아지면 탭이 다음 줄로 줄바꿈되는데(위 flex-wrap 참고), 이
-   탭들은 "화면 이동 메뉴"라서 줄바꿈되면 창 크기에 따라 메뉴 자체의
-   높이가 늘었다 줄었다 하며 화면이 덜컹거리는 문제가 있었다("관리자
-   페이지 반응형으로 하더라도 기본 메뉴가 있어야지, 커졌다 줄어들었다
-   보기가 너무 안좋아" 지적). 줄바꿈 대신 한 줄을 유지하고 좁은 화면에서는
-   가로 스크롤로 나머지 탭을 보게 한다 — 메뉴 구성 자체는 항상 그대로
-   유지되고 화면 높이도 변하지 않는다. 다른 화면의 .erp-detail-tabs(품목
-   탭 등)는 그대로 두기 위해 별도 클래스로 얹는다. */
-.erp-detail-tabs-scroll {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.erp-detail-tabs-scroll .erp-detail-tab {
-  flex: 0 0 auto;
-}
-
 .erp-detail-body {
   padding: 16px;
 }
