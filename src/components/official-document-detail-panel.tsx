@@ -200,7 +200,7 @@ export async function OfficialDocumentDetailPanel({ id, closeHref }: { id: strin
                         <td style={{ color: "var(--erp-text-muted)" }}>
                           {r.email ?? "-"}
                           {r.bounce_reason && (
-                            <div style={{ color: "var(--erp-danger)", fontSize: 10.5 }}>{r.bounce_reason}</div>
+                            <div style={{ color: "var(--erp-danger)", fontSize: "var(--erp-font-xs)" }}>{r.bounce_reason}</div>
                           )}
                         </td>
                         <td>

@@ -27,7 +27,7 @@ function ComposeModal({ onClose }: { onClose: () => void }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 16,
+        padding: "var(--erp-space-5)",
       }}
     >
       <div

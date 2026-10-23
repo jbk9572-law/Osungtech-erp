@@ -139,7 +139,7 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
             <Link
               href={SOURCE_LINK[doc.source_type].href(doc.source_id)}
               className="erp-btn"
-              style={{ display: "inline-flex", marginBottom: 12 }}
+              style={{ display: "inline-flex", marginBottom: "var(--erp-space-4)" }}
             >
               {SOURCE_LINK[doc.source_type].label} →
             </Link>
@@ -159,7 +159,7 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
           <span className="erp-detail-tab active">결재선</span>
         </div>
         <div className="erp-detail-body">
-          <div className="m-steps flex flex-wrap gap-2" style={{ marginBottom: 12 }}>
+          <div className="m-steps flex flex-wrap gap-2" style={{ marginBottom: "var(--erp-space-4)" }}>
             {approverSteps.map((s) => {
               const tone = s.status === "approved" ? "ok" : s.status === "rejected" ? "danger" : "muted";
               const decidedByDelegate = s.decided_by && s.decided_by !== s.approver_id;

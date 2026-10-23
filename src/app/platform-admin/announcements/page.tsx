@@ -22,7 +22,7 @@ export default async function PlatformAnnouncementsPage() {
         회사의 모든 사용자 대시보드 상단에 배너로 보입니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">새 공지 등록</span>
         </div>
@@ -42,7 +42,7 @@ export default async function PlatformAnnouncementsPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                gap: 16,
+                gap: "var(--erp-space-5)",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-comm-border)",
                 borderRadius: "var(--erp-comm-radius-row)",
@@ -52,8 +52,8 @@ export default async function PlatformAnnouncementsPage() {
               }}
             >
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>{a.title}</div>
-                <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>{a.title}</div>
+                <div style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", marginTop: 3 }}>
                   {a.content ?? "-"} · {new Date(a.created_at).toLocaleDateString("ko-KR")}
                 </div>
               </div>

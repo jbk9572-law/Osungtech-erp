@@ -33,7 +33,7 @@ export default async function PlatformAdminPage() {
       <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 고객사</h1>
       <PageGuide>엘보닉스를 쓰는 회사(테넌트) 목록과, 새 고객사를 추가하는 화면입니다.</PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">새 회사 추가</span>
         </div>
@@ -56,7 +56,7 @@ export default async function PlatformAdminPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 16,
+                  gap: "var(--erp-space-5)",
                   background: "var(--erp-panel)",
                   border: "1px solid var(--erp-comm-border)",
                   borderRadius: "var(--erp-comm-radius-row)",
@@ -66,15 +66,15 @@ export default async function PlatformAdminPage() {
                 }}
               >
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>
+                  <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>
                     {t.name}
-                    <span style={{ marginLeft: 6 }}>
+                    <span style={{ marginLeft: "var(--erp-space-2)" }}>
                       <span className={`erp-badge ${isBlocked ? "erp-badge-danger" : "erp-badge-success"}`}>
                         {t.disabled_at ? "비활성" : isExpired ? "만료됨" : "활성"}
                       </span>
                     </span>
                   </div>
-                  <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                  <div style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", marginTop: 3 }}>
                     {t.slug} · {PLAN_LABELS[t.plan] ?? t.plan} · {new Date(t.created_at).toLocaleDateString("ko-KR")}
                   </div>
                 </div>

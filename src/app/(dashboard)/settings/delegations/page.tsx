@@ -66,7 +66,7 @@ export default async function ApprovalDelegationsPage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: 16,
+                    gap: "var(--erp-space-5)",
                     background: "var(--erp-panel)",
                     border: "1px solid var(--erp-comm-border)",
                     borderRadius: "var(--erp-comm-radius-row)",
@@ -76,15 +76,15 @@ export default async function ApprovalDelegationsPage() {
                   }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>
+                    <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>
                       {d.delegator?.full_name ?? "-"} → {d.delegate?.full_name ?? "-"}
                       {active && (
-                        <span className="erp-badge erp-badge-success" style={{ marginLeft: 6 }}>
+                        <span className="erp-badge erp-badge-success" style={{ marginLeft: "var(--erp-space-2)" }}>
                           진행중
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                    <div style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", marginTop: 3 }}>
                       {d.start_date} ~ {d.end_date}
                       {d.reason ? ` · ${d.reason}` : ""}
                     </div>

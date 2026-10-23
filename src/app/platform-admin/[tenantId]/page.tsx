@@ -77,7 +77,7 @@ export default async function PlatformAdminTenantDetailPage({
       </div>
       <PageGuide>이 회사의 정보 수정, 로그인 허용 여부, 요금제 상태, 소속 계정을 관리합니다.</PageGuide>
 
-        <div className="erp-kpi-row" style={{ marginBottom: 16 }}>
+        <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-5)" }}>
           <div className="erp-home-panel erp-kpi-card">
             <div className="erp-kpi-label">매출 건수</div>
             <div className="erp-kpi-value">{salesCount ?? 0}</div>
@@ -93,13 +93,13 @@ export default async function PlatformAdminTenantDetailPage({
           <div className="erp-home-panel erp-kpi-card">
             <div className="erp-kpi-label">계정 수 / 가입일</div>
             <div className="erp-kpi-value">{userIds.length}명</div>
-            <div style={{ fontSize: 10.5, color: "var(--erp-text-muted)", marginTop: 2 }}>
+            <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginTop: 2 }}>
               {new Date(tenant.created_at).toLocaleDateString("ko-KR")}
             </div>
           </div>
         </div>
 
-        <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+        <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">회사 정보</span>
           </div>
@@ -108,7 +108,7 @@ export default async function PlatformAdminTenantDetailPage({
           </div>
         </div>
 
-        <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+        <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">이용 상태</span>
           </div>
@@ -125,7 +125,7 @@ export default async function PlatformAdminTenantDetailPage({
           </div>
         </div>
 
-        <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+        <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">포인트</span>
           </div>
@@ -143,7 +143,7 @@ export default async function PlatformAdminTenantDetailPage({
             <span className="erp-detail-tab active">소속 계정 ({(users ?? []).length})</span>
           </div>
           <div className="erp-detail-body">
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: "var(--erp-space-4)" }}>
               <CreateTenantDemoAccountForm tenantId={tenant.id} />
             </div>
             {!users?.length ? (
@@ -157,7 +157,7 @@ export default async function PlatformAdminTenantDetailPage({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      gap: 16,
+                      gap: "var(--erp-space-5)",
                       background: "var(--erp-panel)",
                       border: "1px solid var(--erp-comm-border)",
                       borderRadius: "var(--erp-comm-radius-row)",
@@ -167,18 +167,18 @@ export default async function PlatformAdminTenantDetailPage({
                     }}
                   >
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>
+                      <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>
                         {u.full_name}
                         {u.is_demo && (
-                          <span style={{ marginLeft: 6 }}>
+                          <span style={{ marginLeft: "var(--erp-space-2)" }}>
                             <span className="erp-badge erp-badge-warning">데모</span>
                           </span>
                         )}
-                        <span style={{ marginLeft: 6 }}>
+                        <span style={{ marginLeft: "var(--erp-space-2)" }}>
                           <span className="erp-badge erp-badge-muted">{ROLE_LABELS[u.role] ?? u.role}</span>
                         </span>
                       </div>
-                      <div style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginTop: 3 }}>{u.username}</div>
+                      <div style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", marginTop: 3 }}>{u.username}</div>
                     </div>
                     <ResetTenantUserPasswordForm tenantId={tenant.id} userId={u.id} />
                   </div>

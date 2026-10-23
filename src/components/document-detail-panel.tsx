@@ -49,7 +49,7 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
       />
 
       {canManage && doc.status === "draft" && (
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: "var(--erp-space-4)" }}>
           <IssueDocumentButton id={id} action={issueDocument} />
         </div>
       )}

@@ -58,7 +58,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
 
   if (error) {
     return (
-      <div className="erp-grid-empty" style={{ padding: 24 }}>
+      <div className="erp-grid-empty" style={{ padding: "var(--erp-space-6)" }}>
         할 일을 불러오지 못했습니다: {error.message}
       </div>
     );
@@ -98,7 +98,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
       </div>
 
       <div className="erp-post-header">
-        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+        <div style={{ display: "flex", gap: "var(--erp-space-2)", marginBottom: "var(--erp-space-3)" }}>
           <GridBadge tone="muted">{todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</GridBadge>
           {overdue && <GridBadge tone="danger">기한초과</GridBadge>}
           {row.done && <GridBadge tone="ok">완료</GridBadge>}

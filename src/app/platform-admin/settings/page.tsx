@@ -24,7 +24,7 @@ export default async function PlatformSettingsPage() {
         회사의 설정은 각 회사의 환경설정 &gt; 기능 관리 화면에서 따로 바꿀 수 있습니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">점검 모드</span>
         </div>
@@ -36,7 +36,7 @@ export default async function PlatformSettingsPage() {
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginBottom: 16 }}>
+      <div className="erp-detail" style={{ marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본 요금제</span>
         </div>
@@ -47,7 +47,7 @@ export default async function PlatformSettingsPage() {
 
       {MENU_GROUPS.map((group) => (
         <div className="erp-detail" key={group.label}>
-          <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12 }}>
+          <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: "var(--erp-space-4)" }}>
             <span className="erp-detail-tab active">{group.label}</span>
             {group.featureKey && (
               <FeatureToggle

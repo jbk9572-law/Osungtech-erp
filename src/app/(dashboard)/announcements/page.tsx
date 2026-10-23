@@ -113,7 +113,7 @@ export default async function AnnouncementsPage({
         </div>
       </div>
 
-      <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
+      <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-4)" }}>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">전체 공지</div>
           <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>

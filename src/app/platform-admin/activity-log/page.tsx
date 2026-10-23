@@ -31,7 +31,7 @@ export default async function PlatformActivityLogPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                gap: 16,
+                gap: "var(--erp-space-5)",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-comm-border)",
                 borderRadius: "var(--erp-comm-radius-row)",
@@ -41,9 +41,9 @@ export default async function PlatformActivityLogPage() {
               }}
             >
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--erp-text)" }}>
+                <div style={{ fontSize: "var(--erp-font-base)", fontWeight: 600, color: "var(--erp-text)" }}>
                   {r.tenant_name ?? "-"}
-                  <span style={{ marginLeft: 6 }}>
+                  <span style={{ marginLeft: "var(--erp-space-2)" }}>
                     <span className="erp-badge erp-badge-muted">{ACTION_LABELS[r.action] ?? r.action}</span>
                   </span>
                 </div>

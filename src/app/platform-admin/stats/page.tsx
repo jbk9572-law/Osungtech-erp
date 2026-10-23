@@ -23,7 +23,7 @@ export default async function PlatformStatsPage() {
       <PageGuide>플랫폼 전체 테넌트/사용자 현황과 최근 12개월 신규 가입 추이입니다.</PageGuide>
 
       {error && (
-        <p className="erp-grid-empty" style={{ marginTop: 12 }}>
+        <p className="erp-grid-empty" style={{ marginTop: "var(--erp-space-4)" }}>
           조회에 실패했습니다: {error.message}
         </p>
       )}

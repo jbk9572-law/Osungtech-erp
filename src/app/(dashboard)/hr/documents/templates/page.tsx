@@ -108,7 +108,7 @@ export default async function DocumentTemplatesPage({
                   border: "1px solid var(--erp-divider)",
                   borderRadius: "var(--erp-comm-radius-row)",
                   padding: "18px 20px",
-                  fontSize: 12.5,
+                  fontSize: "var(--erp-font-base)",
                   lineHeight: 1.8,
                   color: "var(--erp-text)",
                   whiteSpace: "pre-line",

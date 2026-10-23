@@ -217,7 +217,7 @@ export default async function MailPage({
                 </div>
               )}
 
-              <div style={{ borderTop: "1px solid var(--erp-divider)", paddingTop: 12 }}>
+              <div style={{ borderTop: "1px solid var(--erp-divider)", paddingTop: "var(--erp-space-4)" }}>
                 {selected.body_html ? (
                   // 외부에서 온 메일 원문 HTML은 절대 신뢰할 수 없다(악성 스크립트가
                   // 섞여 들어올 수 있음) — dangerouslySetInnerHTML로 이 앱 페이지에

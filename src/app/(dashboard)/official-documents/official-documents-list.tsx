@@ -122,7 +122,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
         시도하고, 그 외에는 직접 발송 처리로 기록합니다.
       </PageGuide>
 
-      <div className="erp-comm-tabs" style={{ marginBottom: 12 }}>
+      <div className="erp-comm-tabs" style={{ marginBottom: "var(--erp-space-4)" }}>
         {TABS.map((t) => (
           <Link key={t.key} href={t.href} className={`erp-comm-tab${box === t.key ? " active" : ""}`}>
             {t.label}
@@ -146,7 +146,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
                   className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
                 >
                   {row.title}
-                  <span style={{ marginLeft: 6 }}>
+                  <span style={{ marginLeft: "var(--erp-space-2)" }}>
                     <GridBadge tone={status.tone}>{status.label}</GridBadge>
                   </span>
                   <div className="erp-split-list-row-sub">

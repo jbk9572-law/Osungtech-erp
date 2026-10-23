@@ -29,7 +29,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
 
   if (error) {
     return (
-      <div className="erp-grid-empty" style={{ padding: 24 }}>
+      <div className="erp-grid-empty" style={{ padding: "var(--erp-space-6)" }}>
         공지사항을 불러오지 못했습니다: {error.message}
       </div>
     );

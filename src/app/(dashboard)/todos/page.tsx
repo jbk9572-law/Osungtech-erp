@@ -160,7 +160,7 @@ export default async function TodosPage({
         </PageGuide>
       )}
 
-      <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
+      <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-4)" }}>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">전체 할일</div>
           <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>
@@ -197,7 +197,7 @@ export default async function TodosPage({
             id="todos-search-form"
             method="get"
             className="erp-field-grid"
-            style={{ margin: 8, padding: 8, gap: 6 }}
+            style={{ margin: "var(--erp-space-3)", padding: "var(--erp-space-3)", gap: "var(--erp-space-2)" }}
           >
             <div className="erp-field erp-span-12">
               <input
@@ -225,7 +225,7 @@ export default async function TodosPage({
                 <div
                   key={row.id}
                   className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
-                  style={{ display: "flex", alignItems: "flex-start", gap: 6 }}
+                  style={{ display: "flex", alignItems: "flex-start", gap: "var(--erp-space-2)" }}
                 >
                   <TodoCheckbox id={row.id} done={row.done} label={row.title} />
                   <Link href={rowHref(row.id)} style={{ flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>
@@ -233,7 +233,7 @@ export default async function TodosPage({
                       {row.title}
                     </span>
                     {overdue && (
-                      <span style={{ marginLeft: 6 }}>
+                      <span style={{ marginLeft: "var(--erp-space-2)" }}>
                         <GridBadge tone="danger">기한초과</GridBadge>
                       </span>
                     )}
@@ -253,7 +253,7 @@ export default async function TodosPage({
             )}
           </div>
           {!keyword && hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+            <div style={{ padding: "var(--erp-space-3)", borderTop: "1px solid var(--erp-border)" }}>
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
               </Link>

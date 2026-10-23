@@ -44,7 +44,7 @@ const chipAvatarStyle = (bg: string) =>
 const chipStyle = {
   display: "inline-flex",
   alignItems: "center",
-  gap: 6,
+  gap: "var(--erp-space-2)",
   padding: "6px 12px 6px 6px",
   borderRadius: 999,
   background: "var(--erp-bg)",
@@ -80,7 +80,7 @@ export default async function ApprovalLinesPage({
   );
 
   const tabs = (
-    <div className="erp-comm-tabs" style={{ marginBottom: 12 }}>
+    <div className="erp-comm-tabs" style={{ marginBottom: "var(--erp-space-4)" }}>
       {TABS.map((t) => (
         <Link key={t.key} href={t.href} className={`erp-comm-tab${activeTab === t.key ? " active" : ""}`}>
           {t.label}
@@ -130,7 +130,7 @@ export default async function ApprovalLinesPage({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 16,
+                  gap: "var(--erp-space-5)",
                   background: "var(--erp-panel)",
                   border: "1px solid var(--erp-comm-border)",
                   borderRadius: "var(--erp-comm-radius-row)",
@@ -139,7 +139,7 @@ export default async function ApprovalLinesPage({
                   flex: "0 0 auto",
                 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--erp-text)" }}>{t.name}</div>
+                <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>{t.name}</div>
                 {isAdmin ? (
                   <ApprovalMatrixRuleSelect
                     templateId={t.id}
@@ -148,7 +148,7 @@ export default async function ApprovalLinesPage({
                     action={setApprovalMatrixRule}
                   />
                 ) : (
-                  <span style={{ fontSize: 12.5, color: "var(--erp-text-muted)" }}>
+                  <span style={{ fontSize: "var(--erp-font-base)", color: "var(--erp-text-muted)" }}>
                     {presets.find((p) => p.id === presetIdByTemplate[t.id])?.name ?? "연결 안 함"}
                   </span>
                 )}
@@ -245,13 +245,13 @@ export default async function ApprovalLinesPage({
               </div>
               <div className="mb-5 flex flex-wrap items-center gap-1.5">
                 {selected.approver_ids.map((aid, i) => (
-                  <span key={aid} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span key={aid} style={{ display: "inline-flex", alignItems: "center", gap: "var(--erp-space-2)" }}>
                     <span style={chipStyle}>
                       <span style={chipAvatarStyle("var(--erp-primary)")}>{(nameById[aid] ?? "구성원")[0]}</span>
                       <span style={{ fontSize: 12, fontWeight: 600 }}>{nameById[aid] ?? "구성원"}</span>
                     </span>
                     {i < selected.approver_ids.length - 1 && (
-                      <span style={{ color: "var(--erp-text-muted)", fontSize: 13 }}>→</span>
+                      <span style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-md)" }}>→</span>
                     )}
                   </span>
                 ))}
