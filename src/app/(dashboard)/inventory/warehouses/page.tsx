@@ -11,6 +11,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
+import { buildBackHref } from "@/lib/list-return";
 
 // 창고 관리(마스터: 창고 목록)와 창고 이동(거래 이력)을 탭으로 나눠뒀었는데,
 // "탭으로 나누지 말고 하나로 합쳐달라"는 요청으로 한 페이지에 세로로
@@ -27,6 +28,9 @@ export default async function WarehousesPage({
   // 필터가 없어 최근 300건으로 고정돼 있었는데, 그보다 오래된 이동
   // 이력은 아예 조회할 수 없었다(헌법검사에서 발견).
   const { from: effectiveFrom, to: effectiveTo } = defaultListRange(from, to);
+  // 창고 이동 상세를 눌렀다가 닫으면 지금 이 조회기간 그대로 돌아와야
+  // 한다(사용자 지적).
+  const selfBack = buildBackHref(`/inventory/warehouses?from=${effectiveFrom}&to=${effectiveTo}`);
   const supabase = await createClient();
   const [warehouses, transfers] = await Promise.all([
     fetchAllRows<{ id: string; name: string; location: string | null; created_at: string }>((f, t) =>
@@ -154,7 +158,7 @@ export default async function WarehousesPage({
                   const items = t.stock_transfer_items ?? [];
                   const totalQty = items.reduce((sum, i) => sum + Number(i.quantity), 0);
                   return (
-                    <ClickableRow key={t.id} href={`/inventory/transfers/${t.id}`}>
+                    <ClickableRow key={t.id} href={`/inventory/transfers/${t.id}?back=${selfBack}`}>
                       <td>{t.transfer_date.replaceAll("-", ".")}</td>
                       <td>{t.from_warehouse?.name ?? "-"}</td>
                       <td>{t.to_warehouse?.name ?? "-"}</td>

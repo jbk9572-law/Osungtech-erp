@@ -166,7 +166,11 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <OfficialDocumentDetailPanel id={selectedId} closeHref={newHref} />
+            <OfficialDocumentDetailPanel
+              id={selectedId}
+              closeHref={newHref}
+              selfHref={`${newHref}${newHref.includes("?") ? "&" : "?"}id=${selectedId}`}
+            />
           ) : (
             formData && (
               <FormSection tabLabel="공문 작성">

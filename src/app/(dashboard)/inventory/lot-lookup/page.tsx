@@ -8,6 +8,7 @@ import { LotLookupSearchForm } from "@/components/lot-lookup-search-form";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { formatNumber } from "@/lib/format-number";
+import { buildBackHref } from "@/lib/list-return";
 
 type PurchaseHit = {
   id: string;
@@ -57,6 +58,13 @@ export default async function LotLookupPage({
   const { q, productId: productIdParam } = await searchParams;
   const lotNumber = q ? normalizeLotNumber(q) : "";
   const productId = productIdParam ?? "";
+  // 생산지시 상세를 눌렀다가 닫으면 생산관리 목록이 아니라 지금 이
+  // 조회 화면(검색 조건 포함)으로 돌아와야 한다(사용자 지적).
+  const usp = new URLSearchParams();
+  if (q) usp.set("q", q);
+  if (productIdParam) usp.set("productId", productIdParam);
+  const query = usp.toString();
+  const selfBack = buildBackHref(query ? `/inventory/lot-lookup?${query}` : "/inventory/lot-lookup");
   const supabase = await createClient();
 
   const products = await fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
@@ -320,7 +328,7 @@ export default async function LotLookupPage({
                     {workOrderHits.map((w) => (
                       <tr key={w.id}>
                         <td>
-                          <Link href={`/production/${w.id}`} style={{ color: "inherit" }}>
+                          <Link href={`/production/${w.id}?back=${selfBack}`} style={{ color: "inherit" }}>
                             {new Date(w.order_date).toLocaleDateString("ko-KR")}
                           </Link>
                         </td>

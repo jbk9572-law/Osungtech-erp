@@ -9,6 +9,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { decideApprovalStep, deleteApprovalDocument, recallApprovalDocument } from "@/app/(dashboard)/approvals/actions";
 import { ApprovalDecisionForm } from "@/components/approval-decision-form";
 import { getCurrentActor } from "@/lib/current-actor";
+import { buildBackHref } from "@/lib/list-return";
 
 // 작성자 본인이 삭제할 수 있는 상태 — DB 정책(migration 181,
 // approval_documents_delete_own)과 정확히 같은 기준이어야 한다. 이미
@@ -37,7 +38,21 @@ const SOURCE_LINK: Record<string, { label: string; href: (id: string) => string 
 // approvals/page.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이
 // 컴포넌트를 그대로 렌더링한다. 모달/직접 URL 접근
 // (approvals/[id]/page.tsx)도 같은 컴포넌트를 쓴다.
-export async function ApprovalDetailPanel({ id, closeHref }: { id: string; closeHref: string }) {
+export async function ApprovalDetailPanel({
+  id,
+  closeHref,
+  selfHref,
+}: {
+  id: string;
+  closeHref: string;
+  // "구매요청 원본 열기" 같은 교차 링크를 눌렀다가 닫으면 그 레코드의
+  // 기본 목록이 아니라 지금 이 기안 상세로 돌아와야 한다(사용자 지적 —
+  // "상세보기 끄면 엉뚱한 메뉴로 이동해버린다") — 이 패널이 지금 실제로
+  // 떠 있는 전체 경로(이 패널 자신도 어딘가의 back을 달고 열렸을 수
+  // 있으니, 호출부가 그 값까지 포함해 넘겨준다). 없으면(선택) 교차
+  // 링크에 back을 안 붙인다 — 기존 동작 그대로.
+  selfHref?: string;
+}) {
   const supabase = await createClient();
   const user = await getUser();
   const { isAdmin } = await getCurrentActor(supabase);
@@ -137,7 +152,10 @@ export async function ApprovalDetailPanel({ id, closeHref }: { id: string; close
         <div className="erp-detail-body">
           {doc.source_type && doc.source_id && SOURCE_LINK[doc.source_type] && (
             <Link
-              href={SOURCE_LINK[doc.source_type].href(doc.source_id)}
+              href={
+                SOURCE_LINK[doc.source_type].href(doc.source_id) +
+                (selfHref ? `?back=${buildBackHref(selfHref)}` : "")
+              }
               className="erp-btn"
               style={{ display: "inline-flex", marginBottom: "var(--erp-space-4)" }}
             >

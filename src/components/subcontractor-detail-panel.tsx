@@ -8,13 +8,23 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { formatNumber } from "@/lib/format-number";
 import { todayKstStr } from "@/lib/kst-date";
 import { getSubcontractorBalance } from "@/lib/ar-ap";
+import { buildBackHref } from "@/lib/list-return";
 import {
   updateSubcontractor,
   addSubcontractorPayment,
   deleteSubcontractorPayment,
 } from "@/app/(dashboard)/subcontractors/actions";
 
-export async function SubcontractorDetailPanel({ id }: { id: string }) {
+export async function SubcontractorDetailPanel({
+  id,
+  selfHref,
+}: {
+  id: string;
+  // 생산지시 상세를 눌렀다가 닫으면 하청업체 목록이 아니라 지금 이
+  // 상세로 돌아와야 한다(사용자 지적). 없으면(선택) 교차 링크에 back을
+  // 안 붙인다 — 기존 동작 그대로.
+  selfHref?: string;
+}) {
   const supabase = await createClient();
 
   const [{ data: subcontractor }, { data: portalAccounts }, { data: assignedSteps }, { data: custody }, balance] =
@@ -124,7 +134,9 @@ export async function SubcontractorDetailPanel({ id }: { id: string }) {
                     <tr key={s.id}>
                       <td>
                         {s.work_orders?.id ? (
-                          <Link href={`/production/${s.work_orders.id}`}>{s.work_orders.doc_no}</Link>
+                          <Link href={`/production/${s.work_orders.id}${selfHref ? `?back=${buildBackHref(selfHref)}` : ""}`}>
+                            {s.work_orders.doc_no}
+                          </Link>
                         ) : (
                           "-"
                         )}

@@ -186,7 +186,10 @@ export default async function SubcontractorsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <SubcontractorDetailPanel id={selectedId} />
+            <SubcontractorDetailPanel
+              id={selectedId}
+              selfHref={`${newHref}${newHref.includes("?") ? "&" : "?"}id=${selectedId}`}
+            />
           ) : (
             <div className="erp-detail" style={{ marginTop: 0 }}>
               <div className="erp-detail-tabs">

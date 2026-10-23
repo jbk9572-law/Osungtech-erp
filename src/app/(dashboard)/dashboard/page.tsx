@@ -3,6 +3,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { getNotificationSummary } from "@/lib/notifications";
+import { buildBackHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/lib/paper-calc-summary";
@@ -516,13 +517,18 @@ export default async function DashboardPage({
   const hasAlerts =
     unreadAnnouncements.length > 0 || dueSoonTodos.length > 0 || lowStockItems.length > 0;
 
+  // 대시보드에서 공지/할일을 열었다가 닫으면 그 레코드의 기본 목록이
+  // 아니라 대시보드로 돌아와야 한다(사용자 지적 — "상세보기 끄면 엉뚱한
+  // 메뉴로 이동해버린다").
+  const dashboardBack = buildBackHref("/dashboard");
+
   return (
     <>
       <OnboardingBanner />
       {hasAlerts && (
         <div className="erp-alert-banner">
           {unreadAnnouncements.slice(0, 3).map((a) => (
-            <Link key={`a-${a.id}`} href={`/announcements/${a.id}`} className="erp-alert-item">
+            <Link key={`a-${a.id}`} href={`/announcements/${a.id}?back=${dashboardBack}`} className="erp-alert-item">
               <span className="erp-alert-tag">공지</span>
               {a.pinned ? "📌 " : ""}
               {a.title}
@@ -534,7 +540,7 @@ export default async function DashboardPage({
             return (
               <Link
                 key={`d-${t.id}`}
-                href={`/todos/${t.id}`}
+                href={`/todos/${t.id}?back=${dashboardBack}`}
                 className={`erp-alert-item${overdue ? " danger" : ""}`}
               >
                 <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>

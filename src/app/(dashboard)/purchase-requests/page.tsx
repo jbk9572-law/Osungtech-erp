@@ -190,7 +190,11 @@ export default async function PurchaseRequestsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <PurchaseRequestDetailPanel id={selectedId} closeHref={newHref} />
+            <PurchaseRequestDetailPanel
+              id={selectedId}
+              closeHref={newHref}
+              selfHref={`${newHref}${newHref.includes("?") ? "&" : "?"}id=${selectedId}`}
+            />
           ) : (
             formData && (
               <NewPurchaseRequestForm today={todayKstStr()} suppliers={formData.suppliers} products={formData.products} />

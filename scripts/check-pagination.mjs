@@ -58,7 +58,7 @@ const ALLOWLIST = new Set([
   // 달력메모(calendar_notes)는 month 파라미터로 달이 바뀌어도 항상 "그 달
   // 하루~말일" 고정폭이고(사용자가 폭을 임의로 넓힐 수 있는 from/to 쿼리와
   // 다름), 사람이 직접 입력하는 메모라 한 달에 1000건을 넘을 수 없다.
-  "src/app/(dashboard)/dashboard/page.tsx:185",
+  "src/app/(dashboard)/dashboard/page.tsx:186",
   // 홈택스 매입세금계산서 수취 매칭 후보 — DATE_WINDOW_DAYS(5)만큼의 고정
   // ±5일 폭이라 사용자가 넓힐 수 없고, 이 회사 거래량에서 11일치 매입건은
   // 1000행에 크게 못 미친다.

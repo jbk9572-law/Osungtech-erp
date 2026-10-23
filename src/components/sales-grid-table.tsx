@@ -25,6 +25,7 @@ import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { nextMonthLabel } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
+import { buildBackHref, resolveListHref } from "@/lib/list-return";
 
 export type SalesRowItem = {
   productLabel: string;
@@ -284,7 +285,10 @@ export function SalesGridTable({
               const detailHref = row.orderId
                 ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
                 : row.customerId
-                  ? `/customers/${row.customerId}`
+                  ? // 거래처 상세를 닫으면 거래처 목록이 아니라 지금 이
+                    // 매출 화면(필터까지 포함)으로 돌아와야 한다(사용자
+                    // 지적 — "상세보기 끄면 엉뚱한 메뉴로 이동해버린다").
+                    `/customers/${row.customerId}?back=${buildBackHref(resolveListHref("/sales", backParam))}`
                   : null;
               const isActive = row.key === activeKey;
               // 세금계산서를 바로 작성할 수 있는 건만 목록에서 바로

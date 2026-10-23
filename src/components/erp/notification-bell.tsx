@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { PushSubscribeToggle } from "@/components/erp/push-subscribe-toggle";
 import { BellIcon } from "@/components/erp/groupware-icons";
 import { GridBadge } from "@/components/grid/badge";
+import { buildBackHref } from "@/lib/list-return";
 
 export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 
@@ -17,10 +18,16 @@ export type AnnouncementItem = { id: string; title: string; pinned: boolean };
 // 내용을 올리게 되면서(src/lib/messenger-system-alerts.ts, 15분 주기
 // 크론) 확인할 곳이 두 군데로 쪼개지는 중복이 생겼다 — 다들 평소에
 // 열어두는 메신저 쪽으로 몰아주고, 종은 공지사항만 남긴다.
-export function NotificationBell({ announcements }: { announcements: AnnouncementItem[] }) {
+// useSearchParams()를 쓰므로(지금 보고 있는 화면으로 되돌아가기 위한
+// back 파라미터 계산용) route-progress-bar.tsx와 같은 이유로 이 안에서
+// 직접 Suspense로 감싼다 — 모든 화면 레이아웃에 떠 있는 전역 컴포넌트라
+// 호출부마다 Suspense를 씌우게 하면 깜빡하기 쉽다.
+function NotificationBellInner({ announcements }: { announcements: AnnouncementItem[] }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const count = announcements.length;
   const close = useCallback(() => setOpen(false), []);
   useClickOutside(open, wrapRef, close);
@@ -32,7 +39,12 @@ export function NotificationBell({ announcements }: { announcements: Announcemen
   function go(href: string) {
     setOpen(false);
     startRouteProgress();
-    router.push(href);
+    // 이 종은 모든 화면에 떠 있어서, 공지사항을 열었다가 닫으면 공지
+    // 목록이 아니라 지금 보고 있던 화면 그대로 돌아와야 한다(사용자
+    // 지적 — "상세보기 끄면 엉뚱한 메뉴로 이동해버린다").
+    const query = searchParams.toString();
+    const back = buildBackHref(query ? `${pathname}?${query}` : pathname);
+    router.push(`${href}${href.includes("?") ? "&" : "?"}back=${back}`);
   }
 
   return (
@@ -87,5 +99,13 @@ export function NotificationBell({ announcements }: { announcements: Announcemen
         </div>
       )}
     </div>
+  );
+}
+
+export function NotificationBell({ announcements }: { announcements: AnnouncementItem[] }) {
+  return (
+    <Suspense fallback={null}>
+      <NotificationBellInner announcements={announcements} />
+    </Suspense>
   );
 }

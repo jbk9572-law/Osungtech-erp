@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { AnnouncementItem } from "@/components/erp/notification-bell";
 import { pollMyMail } from "@/lib/mail/poll-action";
 import { playAlertSound } from "@/lib/play-alert-sound";
 import { markNotificationRead } from "@/lib/notification-actions";
+import { buildBackHref } from "@/lib/list-return";
 
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 공지 재확인 — 10분마다(할일 마감/안전재고는 메신저 시스템봇으로 옮겼다)
 // 거래처 발주처럼 놓치면 안 되는 알림은 훨씬 짧은 주기로 확인하고 소리까지
@@ -40,9 +42,26 @@ type ToastEntry = {
 // 메신저 "전체" 채널에 시스템봇이 올리는 쪽으로 옮겨서 여기서는 뺐다 —
 // notification-bell.tsx 참고). 항목을 하나로 뭉쳐서 보여주지 않고,
 // 항목마다 각자 독립된 박스로 하나씩 쌓아 올린다.
-export function NotificationToaster() {
+// useSearchParams()를 쓰므로(지금 화면으로 되돌아가기 위한 back
+// 파라미터 계산용) notification-bell.tsx와 같은 이유로 자체적으로
+// Suspense로 감싼다(아래 NotificationToaster 참고).
+function NotificationToasterInner() {
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // 알림을 열었다가 닫았을 때 공지사항 목록이 아니라 지금 보고 있던
+  // 화면 그대로 돌아오게 한다(사용자 지적 — "상세보기 끄면 엉뚱한
+  // 메뉴로 이동해버린다"). ref로 들고 있는 이유: 이 값을 아래 10분짜리
+  // 폴링 useEffect의 의존성에 넣으면 페이지를 이동할 때마다 그 타이머가
+  // 매번 초기화돼버린다 — 실제로 쓰는 시점(토스트에 담을 때)의 최신
+  // 값만 필요하지, 그 때문에 interval 자체를 다시 걸 필요는 없다.
+  const backHrefRef = useRef("");
+  useEffect(() => {
+    backHrefRef.current = buildBackHref(
+      searchParams.toString() ? `${pathname}?${searchParams.toString()}` : pathname,
+    );
+  }, [pathname, searchParams]);
 
   const dismiss = useCallback((key: string) => {
     setToasts((prev) => prev.filter((t) => t.key !== key));
@@ -76,7 +95,7 @@ export function NotificationToaster() {
         data.announcements.forEach((a) => {
           pushToast({
             key: `a-${a.id}`,
-            href: `/announcements/${a.id}`,
+            href: `/announcements/${a.id}?back=${backHrefRef.current}`,
             title: `${a.pinned ? "📌 " : ""}${a.title}`,
           });
         });
@@ -215,5 +234,13 @@ export function NotificationToaster() {
         </div>
       ))}
     </div>
+  );
+}
+
+export function NotificationToaster() {
+  return (
+    <Suspense fallback={null}>
+      <NotificationToasterInner />
+    </Suspense>
   );
 }

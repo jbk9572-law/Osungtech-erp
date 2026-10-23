@@ -14,9 +14,18 @@ import { WorkOrderStepDefectRejectButton } from "@/components/work-order-step-de
 import { WorkOrderStepUnitCostForm } from "@/components/work-order-step-unit-cost-form";
 import { WorkOrderStepReturnForm } from "@/components/work-order-step-return-form";
 import { isFirstStepSubcontractor } from "@/lib/work-order-steps";
+import { resolveBackHref } from "@/lib/list-return";
 
-export default async function WorkOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WorkOrderDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
+}) {
   const { id } = await params;
+  const { back } = await searchParams;
+  const closeHref = resolveBackHref("/production", back);
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "production");
 
@@ -77,7 +86,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
   return (
     <div>
       <KeyboardShortcuts
-        shortcuts={{ F9: { href: `/production/${workOrder.id}/print` }, Escape: { href: "/production" } }}
+        shortcuts={{ F9: { href: `/production/${workOrder.id}/print` }, Escape: { href: closeHref } }}
       />
       <div className="erp-page-toolbar">
         <DetailPageHeader
@@ -87,7 +96,7 @@ export default async function WorkOrderDetailPage({ params }: { params: Promise<
               <Link href={`/production/${workOrder.id}/print`} className="erp-btn">
                 F9 출력
               </Link>
-              <Link href="/production" className="erp-btn">
+              <Link href={closeHref} className="erp-btn">
                 목록
               </Link>
             </>

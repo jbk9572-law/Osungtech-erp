@@ -4,18 +4,23 @@ import { SupplierDetailPanel } from "@/components/supplier-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { DeleteButton } from "@/components/delete-button";
 import { deleteSupplier } from "@/app/(dashboard)/suppliers/actions";
+import { resolveBackHref } from "@/lib/list-return";
 
 export default async function SupplierDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
+  const { back } = await searchParams;
+  const closeHref = resolveBackHref("/suppliers", back);
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/suppliers" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <div className="mb-1 flex justify-end">
         <DeleteButton
           action={deleteSupplier}

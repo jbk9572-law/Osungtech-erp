@@ -21,6 +21,7 @@ import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { formatNumber } from "@/lib/format-number";
+import { buildBackHref } from "@/lib/list-return";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -43,10 +44,15 @@ export async function PaymentRequestDetailPanel({
   id,
   closeHref,
   warning,
+  selfHref,
 }: {
   id: string;
   closeHref: string;
   warning?: string;
+  // "결재 문서 보기"(/approvals/{id})를 눌렀다가 닫으면 지급결의서
+  // 목록이 아니라 지금 이 상세로 돌아와야 한다(사용자 지적). 없으면
+  // (선택) 교차 링크에 back을 안 붙인다 — 기존 동작 그대로.
+  selfHref?: string;
 }) {
   const supabase = await createClient();
   const [{ data: row }, { data: items }, { data: receipts }, actor, departments, profiles, presetsRaw] =
@@ -241,7 +247,10 @@ export async function PaymentRequestDetailPanel({
             <span className="erp-detail-tab active">결재</span>
           </div>
           <div className="erp-detail-body">
-            <Link href={`/approvals/${row.approval_document_id}`} className="erp-btn erp-btn-primary">
+            <Link
+              href={`/approvals/${row.approval_document_id}${selfHref ? `?back=${buildBackHref(selfHref)}` : ""}`}
+              className="erp-btn erp-btn-primary"
+            >
               결재 문서 보기
             </Link>
           </div>

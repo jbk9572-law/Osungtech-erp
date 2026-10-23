@@ -20,6 +20,7 @@ import {
   cancelOfficialDocument,
   markRecipientDeliveredManually,
 } from "@/app/(dashboard)/official-documents/actions";
+import { buildBackHref } from "@/lib/list-return";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" | "info" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -48,7 +49,18 @@ const RECIPIENT_STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn
 // official-documents-list.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이
 // 컴포넌트를 그대로 렌더링한다. 모달/직접 URL 접근
 // (official-documents/[id]/page.tsx)도 같은 컴포넌트를 쓴다.
-export async function OfficialDocumentDetailPanel({ id, closeHref }: { id: string; closeHref: string }) {
+export async function OfficialDocumentDetailPanel({
+  id,
+  closeHref,
+  selfHref,
+}: {
+  id: string;
+  closeHref: string;
+  // "결재 문서 보기"(/approvals/{id})를 눌렀다가 닫으면 공문함 목록이
+  // 아니라 지금 이 공문 상세로 돌아와야 한다(사용자 지적). 없으면
+  // (선택) 교차 링크에 back을 안 붙인다 — 기존 동작 그대로.
+  selfHref?: string;
+}) {
   const supabase = await createClient();
   const { userId, isAdmin } = await getCurrentActor(supabase);
 
@@ -105,7 +117,10 @@ export async function OfficialDocumentDetailPanel({ id, closeHref }: { id: strin
         actions={
           <>
             {doc.status === "pending_approval" && doc.approval_document_id && (
-              <Link href={`/approvals/${doc.approval_document_id}`} className="erp-btn">
+              <Link
+                href={`/approvals/${doc.approval_document_id}${selfHref ? `?back=${buildBackHref(selfHref)}` : ""}`}
+                className="erp-btn"
+              >
                 결재 문서 보기
               </Link>
             )}

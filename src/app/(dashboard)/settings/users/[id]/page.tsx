@@ -8,14 +8,19 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { AccessWall } from "@/components/erp/access-wall";
 import { deleteUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { getCurrentActor } from "@/lib/current-actor";
+import { resolveBackHref } from "@/lib/list-return";
 
 export default async function UserDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
+  const { back } = await searchParams;
+  const closeHref = resolveBackHref("/settings/users", back);
   const supabase = await createClient();
   const { userId, isAdmin } = await getCurrentActor(supabase);
 
@@ -37,7 +42,7 @@ export default async function UserDetailPage({
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: "/settings/users" } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <ListPageHeader
         title={`환경설정 > 계정관리 > ${target.full_name ?? target.username}`}
         actions={

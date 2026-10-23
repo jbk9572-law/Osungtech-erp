@@ -24,6 +24,7 @@ import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/o
 import { nextMonthLabel } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
+import { buildBackHref, resolveListHref } from "@/lib/list-return";
 
 export type PurchaseRowItem = {
   productLabel: string;
@@ -274,7 +275,10 @@ export function PurchaseGridTable({
               const detailHref = row.orderId
                 ? `/purchases/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
                 : row.supplierId
-                  ? `/suppliers/${row.supplierId}`
+                  ? // 공급처 상세를 닫으면 공급처 목록이 아니라 지금 이
+                    // 매입 화면(필터까지 포함)으로 돌아와야 한다(사용자
+                    // 지적 — "상세보기 끄면 엉뚱한 메뉴로 이동해버린다").
+                    `/suppliers/${row.supplierId}?back=${buildBackHref(resolveListHref("/purchases", backParam))}`
                   : null;
               const isActive = row.key === activeKey;
               return (

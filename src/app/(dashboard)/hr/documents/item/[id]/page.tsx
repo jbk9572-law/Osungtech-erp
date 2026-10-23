@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/is-uuid";
 import { DocumentDetailPanel } from "@/components/document-detail-panel";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
+import { resolveBackHref } from "@/lib/list-return";
 
 // 주소가 /hr/documents/item/[id]인 이유: inventory/item/[productId]와
 // 같다 — /hr/documents 하위의 정적 형제 메뉴(templates)와 이 동적
@@ -10,15 +11,19 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 // 분리했다.
 export default async function DocumentDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
 }) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
+  const { back } = await searchParams;
+  const closeHref = resolveBackHref("/hr/documents", back);
 
   return (
     <div className="erp-comm-shell">
-      <KeyboardShortcuts shortcuts={{ F9: { printHref: `/hr/documents/item/${id}/print` }, Escape: { href: "/hr/documents" } }} />
+      <KeyboardShortcuts shortcuts={{ F9: { printHref: `/hr/documents/item/${id}/print` }, Escape: { href: closeHref } }} />
       <DocumentDetailPanel id={id} />
     </div>
   );
