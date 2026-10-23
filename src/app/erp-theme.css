@@ -156,6 +156,32 @@
   --erp-comm-shadow-row:
     0 1px 1px rgba(32, 28, 43, 0.02), 0 6px 16px -10px rgba(32, 28, 43, 0.14);
   --erp-comm-shadow-btn: 0 2px 8px -3px rgba(19, 41, 68, 0.3);
+
+  /* 폰트 크기 스케일 — 새 값을 지어내지 않고, 지금 코드 전체에서
+     실제로 반복돼 쓰이던 값들을 그대로 토큰 이름만 붙였다(정합성
+     감사 1단계). 거의 붙어있던 근접값(10px/10.5px, 11px/11.5px,
+     12px/12.5px)은 0.5px 안쪽이라 눈으로 구별이 안 가는 수준의
+     드리프트로 보고 더 많이 쓰인 쪽으로 합쳤다 — 그 외 가운데
+     하나만 쓰이던 값(13.5/14.5/16.5/17~20px 등)은 특정 화면 전용
+     숫자라 스케일에 넣지 않고 그대로 뒀다. */
+  --erp-font-2xs: 9px;
+  --erp-font-xs: 10.5px;
+  --erp-font-sm: 11.5px;
+  --erp-font-base: 12.5px;
+  --erp-font-md: 13px;
+  --erp-font-lg: 14px;
+  --erp-font-xl: 16px;
+
+  /* 여백(gap/padding/margin) 스케일 — 폰트와 같은 방식으로, 코드
+     전체에서 실제로 많이 쓰인 값만 토큰화했다. 폭/높이처럼 내용에
+     따라 달라지는 숫자(열 너비, 아바타 크기 등)는 "여백"이 아니라서
+     대상이 아니다. */
+  --erp-space-1: 4px;
+  --erp-space-2: 6px;
+  --erp-space-3: 8px;
+  --erp-space-4: 12px;
+  --erp-space-5: 16px;
+  --erp-space-6: 24px;
 }
 
 .erp {
@@ -175,7 +201,7 @@
     "Segoe UI",
     -apple-system,
     sans-serif;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
 }
 
 .erp * {
@@ -205,7 +231,7 @@
    5개 화면이 각자 style={{ fontSize: 16, fontWeight: 700 }}를 복붙하고
    있었다(헌법검사에서 발견 — .erp-h1을 만든 이유와 같은 패턴). */
 .erp-portal-h1 {
-  font-size: 16px;
+  font-size: var(--erp-font-xl);
   font-weight: 700;
   color: var(--erp-text);
 }
@@ -215,7 +241,7 @@
    확실히 구분되게 한다. */
 .erp-eyebrow {
   display: block;
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
   color: var(--erp-text-muted);
   letter-spacing: 0.08em;
@@ -243,7 +269,7 @@
 /* h1 아래 붙는 한 줄 설명 — "출고 및 세금계산서 발행 내역을
    조회합니다" 같은 화면 용도 설명. */
 .erp-page-desc {
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text-muted);
   margin: 4px 0 0;
   line-height: 1.6;
@@ -269,7 +295,7 @@
   z-index: 1000;
   background: var(--erp-primary);
   color: var(--erp-on-primary);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 700;
   padding: 8px 14px;
   border-radius: 0;
@@ -288,7 +314,7 @@
   background: var(--erp-warning-bg);
   color: var(--erp-warning);
   border-bottom: 1px solid var(--erp-warning-border);
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   font-weight: 700;
   text-align: center;
   padding: 4px 8px;
@@ -305,7 +331,7 @@
   background: var(--erp-led-bg);
   color: var(--erp-led-text);
   border-bottom: 1px solid var(--erp-primary-dark);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   font-weight: 700;
   padding: 4px 12px;
 }
@@ -425,7 +451,7 @@
 
 .erp-titlebar-name {
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   white-space: nowrap;
   /* 회사명은 회사정보 설정에서 자유롭게 입력하는 값이라 길이가 정해져
      있지 않다 — .erp-titlebar-menu(가운데 경로 표시)처럼 좁은 화면에서
@@ -438,7 +464,7 @@
 }
 
 .erp-titlebar-menu {
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: #cfe0ff;
   white-space: nowrap;
   overflow: hidden;
@@ -449,7 +475,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: #dbe6f9;
   /* 좁은 화면에서 flex 아이템이 줄어들 때 안의 텍스트("백업/복원" 등)가
      단어 중간에서 줄바꿈되며 타이틀바가 여러 줄로 깨지는 걸 막는다.
@@ -462,7 +488,7 @@
   background: none;
   border: none;
   color: inherit;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   padding: 4px 6px;
   border-radius: 0;
 }
@@ -494,7 +520,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text);
   flex-shrink: 0;
   white-space: nowrap;
@@ -546,7 +572,7 @@
   padding: 0 10px;
   background: none;
   border: none;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text);
 }
 
@@ -558,7 +584,7 @@
   cursor: pointer;
   padding: 0 10px;
   color: var(--erp-glyph-muted);
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   background: none;
   border: none;
 }
@@ -569,7 +595,7 @@
 
 .erp-ribbon-dropdown-empty {
   padding: 12px 10px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text-muted);
   max-width: 220px;
 }
@@ -684,7 +710,7 @@
   border-radius: 0;
   background: var(--erp-text);
   color: var(--erp-on-primary);
-  font-size: 14px;
+  font-size: var(--erp-font-lg);
   line-height: 1;
   box-shadow: var(--erp-shadow-md);
 }
@@ -725,7 +751,7 @@
   height: 40px;
   flex: 0 0 40px;
   padding: 0 14px;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   font-weight: 700;
   background: var(--erp-primary);
   color: var(--erp-on-primary);
@@ -736,7 +762,7 @@
   background: none;
   border: none;
   color: var(--erp-on-primary);
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   padding: 4px 6px;
 }
 
@@ -778,7 +804,7 @@
   border-right: none;
   padding: 0;
   height: auto;
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
   color: var(--erp-text-muted);
   letter-spacing: 0.08em;
@@ -815,7 +841,7 @@
   background: none;
   border: none;
   border-bottom: 1px solid var(--erp-divider);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text);
 }
 
@@ -869,14 +895,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   font-weight: 600;
   color: var(--erp-text-muted);
 }
 
 .erp-tree-usage-sub {
   margin-top: 2px;
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   color: var(--erp-text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -912,7 +938,7 @@
 .erp-usage-donut-pct {
   position: relative;
   z-index: 1;
-  font-size: 9px;
+  font-size: var(--erp-font-2xs);
   font-weight: 800;
   color: var(--erp-text);
 }
@@ -932,7 +958,7 @@
   border-bottom: 1px solid var(--erp-border);
   background: var(--erp-bg-subtle);
   color: var(--erp-text-muted);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
 }
 
 .erp-tree-group {
@@ -948,7 +974,7 @@
   padding: 0 12px;
   background: var(--erp-bg-subtle);
   border: none;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   font-weight: 700;
   color: var(--erp-primary-dark);
   text-align: left;
@@ -984,7 +1010,7 @@
 }
 
 .erp-tree-caret {
-  font-size: 9px;
+  font-size: var(--erp-font-2xs);
   width: 10px;
   color: var(--erp-text-muted);
 }
@@ -1001,7 +1027,7 @@
   margin: 1px 8px;
   padding: 0 10px 0 22px;
   border-radius: 0;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 500;
   color: var(--erp-text-muted);
   border: none;
@@ -1039,7 +1065,7 @@
 
 .erp-tree-badge {
   margin-left: auto;
-  font-size: 9px;
+  font-size: var(--erp-font-2xs);
   color: var(--erp-text-muted);
   border: 1px solid var(--erp-tree-badge-border);
   border-radius: 999px;
@@ -1075,7 +1101,7 @@
   padding: 0 10px 0 14px;
   background: var(--erp-tab-bg);
   color: var(--erp-text-muted);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   border-radius: 0;
   border-top: 2px solid transparent;
   text-decoration: none;
@@ -1106,7 +1132,7 @@
   border-radius: 0;
   background: transparent;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: inherit;
   opacity: 0.6;
   cursor: pointer;
@@ -1256,7 +1282,7 @@
   border: 1px solid var(--erp-border);
   background: var(--erp-panel);
   color: var(--erp-text-muted);
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1279,7 +1305,7 @@
 }
 
 .erp-field label {
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
 }
 
@@ -1310,7 +1336,7 @@
   background: var(--erp-info-bg);
   color: var(--erp-info-text);
   border: 1px solid var(--erp-info-border);
-  font-size: 9px;
+  font-size: var(--erp-font-2xs);
   font-weight: 800;
   cursor: help;
   margin-left: 3px;
@@ -1324,7 +1350,7 @@
      전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만. */
   border-radius: 3px;
   padding: 0 8px;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   background: var(--erp-panel);
   color: var(--erp-text);
   /* 감속 곡선(cubic-bezier(0.4,0,0.2,1) — 로딩 게이지에서 이미 쓰던
@@ -1366,7 +1392,7 @@
 .erp-textarea-compact {
   height: 72px;
   border-color: var(--erp-border-strong);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   padding: 6px 8px;
   resize: vertical;
 }
@@ -1499,7 +1525,7 @@ form.erp-field-grid {
   border: 1px solid var(--erp-border);
   background: var(--erp-panel);
   color: var(--erp-text);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 500;
   text-decoration: none;
   box-shadow: var(--erp-shadow-sm);
@@ -1607,7 +1633,7 @@ form.erp-field-grid {
 .erp-seg-btn {
   border: none;
   padding: 8px 22px;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   font-weight: 600;
   cursor: pointer;
   background: var(--erp-panel);
@@ -1642,7 +1668,7 @@ form.erp-field-grid {
 .erp-grid {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
 }
 
 .erp-grid thead th {
@@ -1846,7 +1872,7 @@ form.erp-field-grid {
   background: var(--erp-bg-subtle);
   border-right: 1px solid var(--erp-border);
   padding: 0 10px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   font-weight: 700;
   color: var(--erp-primary);
   display: flex;
@@ -1892,7 +1918,7 @@ form.erp-field-grid {
 .erp-richtext-toolbar-btn {
   height: 24px;
   padding: 0 8px;
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   font-weight: 600;
   color: var(--erp-text-muted);
   background: transparent;
@@ -1932,7 +1958,7 @@ form.erp-field-grid {
 
 .erp-richtext-content {
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   line-height: 1.7;
   color: var(--erp-text);
 }
@@ -1949,7 +1975,7 @@ form.erp-field-grid {
 }
 
 .erp-richtext-content h2 {
-  font-size: 16px;
+  font-size: var(--erp-font-xl);
   font-weight: 800;
   margin: 0.6em 0 0.3em;
 }
@@ -2018,7 +2044,7 @@ form.erp-field-grid {
   gap: 6px;
   width: 100%;
   padding: 5px 8px;
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text);
   background: transparent;
   border: none;
@@ -2062,7 +2088,7 @@ form.erp-field-grid {
   background: var(--erp-bg-subtle);
   border: 1px solid var(--erp-border);
   overflow-x: auto;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
 }
 
 .erp-richtext-content pre code {
@@ -2091,7 +2117,7 @@ form.erp-field-grid {
 .erp-richtext-content td {
   border: 1px solid var(--erp-border);
   padding: 5px 8px;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   text-align: left;
   vertical-align: top;
 }
@@ -2119,7 +2145,7 @@ form.erp-field-grid {
   gap: 4px;
   padding: 2px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   font-weight: 600;
 }
 
@@ -2209,7 +2235,7 @@ form.erp-field-grid {
   display: flex;
   align-items: center;
   padding: 0 14px;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text-muted);
   background: none;
   border: none;
@@ -2316,7 +2342,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: none;
   border-radius: 0;
   background: none;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 500;
   font-family: inherit;
   color: var(--erp-text-muted);
@@ -2337,7 +2363,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-cat-item .cnt {
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
   color: var(--erp-text-muted);
 }
@@ -2358,7 +2384,7 @@ a.erp-detail-tab:hover:not(.active) {
   margin-bottom: 10px;
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-bg-subtle);
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   font-weight: 600;
 }
@@ -2374,7 +2400,7 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-text);
   border: 1px solid var(--erp-border-strong);
   padding: 2px 6px;
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
   font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
 }
@@ -2395,7 +2421,7 @@ a.erp-detail-tab:hover:not(.active) {
   align-items: center;
   justify-content: space-between;
   padding: 0 10px;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 700;
   background: var(--erp-bg-subtle);
   border-bottom: 1px solid var(--erp-border);
@@ -2410,7 +2436,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-split-list-row {
   display: block;
   padding: 7px 10px;
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   color: inherit;
   text-decoration: none;
   border-bottom: 1px solid var(--erp-divider);
@@ -2430,7 +2456,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-split-list-row-sub {
   margin-top: 1px;
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   color: var(--erp-text-muted);
   font-weight: 400;
 }
@@ -2462,7 +2488,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-mail-row-avatar {
   width: 32px;
   height: 32px;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   margin-top: 1px;
 }
 
@@ -2488,7 +2514,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-mail-row-preview {
   margin-top: 2px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text-muted);
   line-height: 1.4;
   white-space: nowrap;
@@ -2497,7 +2523,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-mail-row-time {
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   flex: 0 0 auto;
   margin-left: auto;
@@ -2536,7 +2562,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-right: none;
   padding: 0;
   height: auto;
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
   color: var(--erp-text-muted);
   letter-spacing: 0.08em;
@@ -2619,13 +2645,13 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-split-detail-empty-title {
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   font-weight: 600;
   color: var(--erp-text);
 }
 
 .erp-split-detail-empty-hint {
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   max-width: 220px;
   line-height: 1.5;
@@ -2790,7 +2816,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: none;
   background: none;
   color: var(--erp-text-muted);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -2890,7 +2916,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 0 12px;
   background: var(--erp-bg-subtle);
   border-top: 1px solid var(--erp-border);
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
 }
 
@@ -2969,7 +2995,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-hero-label {
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   font-weight: 700;
   color: var(--erp-text-muted);
 }
@@ -3018,7 +3044,7 @@ a.erp-detail-tab:hover:not(.active) {
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 700;
   background: var(--erp-bg);
   border-bottom: 1px solid var(--erp-border);
@@ -3034,7 +3060,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-kpi-label {
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   font-weight: 600;
   margin-bottom: 6px;
@@ -3158,7 +3184,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 50%;
   background: var(--erp-selected);
   color: var(--erp-primary);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   font-weight: 800;
   flex-shrink: 0;
 }
@@ -3206,7 +3232,7 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text-muted);
 }
 
@@ -3235,14 +3261,14 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-info-label {
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   color: var(--erp-text-muted);
   font-weight: 600;
   margin-bottom: 3px;
 }
 
 .erp-info-value {
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   font-weight: 700;
   color: var(--erp-text);
 }
@@ -3260,7 +3286,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 2px;
   padding: 7px 10px;
   border-radius: 0;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   text-decoration: none;
   color: var(--erp-text);
   border: 1px solid var(--erp-divider);
@@ -3273,7 +3299,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-home-empty {
   padding: 16px 12px;
   color: var(--erp-text-muted);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
 }
 
 /* ── 대시보드 재고위험 카드: 안전재고 이하 품목이 많아져도 카드 안에서만
@@ -3296,7 +3322,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 0;
   border: 1px solid var(--erp-danger-border);
   background: var(--erp-danger-bg);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   text-decoration: none;
   color: var(--erp-text);
 }
@@ -3313,7 +3339,7 @@ a.erp-detail-tab:hover:not(.active) {
   font-variant-numeric: tabular-nums;
   color: var(--erp-danger);
   font-weight: 700;
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
 }
 
 .erp-home-stock-footer {
@@ -3322,7 +3348,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-home-stock-footer a {
-  font-size: 11.5px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-primary);
   text-decoration: none;
   font-weight: 600;
@@ -3395,7 +3421,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-nav-text {
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 600;
   color: var(--erp-text-muted);
 }
@@ -3424,7 +3450,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 100%;
   min-height: 200px;
   color: var(--erp-text-muted);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
 }
 
 @keyframes erp-loading-gauge-fill {
@@ -3467,7 +3493,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 999px;
   background: var(--erp-danger);
   color: var(--erp-on-primary);
-  font-size: 10px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
   line-height: 15px;
   text-align: center;
@@ -3483,7 +3509,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-bell-section-title {
   padding: 8px 10px 4px;
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   font-weight: 700;
   color: var(--erp-text-muted);
   background: var(--erp-bg-subtle);
@@ -3499,7 +3525,7 @@ a.erp-detail-tab:hover:not(.active) {
   flex: 1;
   text-align: center;
   padding: 8px 6px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-primary);
   text-decoration: none;
 }
@@ -3525,7 +3551,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: none;
   border: none;
   padding: 4px 0;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-primary);
   text-align: left;
   cursor: pointer;
@@ -3570,7 +3596,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 0;
   background: var(--erp-panel);
   color: var(--erp-warning);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   font-weight: 600;
   text-decoration: none;
 }
@@ -3590,7 +3616,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 999px;
   background: var(--erp-bg);
   color: var(--erp-text-muted);
-  font-size: 10px;
+  font-size: var(--erp-font-xs);
   font-weight: 700;
 }
 
@@ -3676,14 +3702,14 @@ a.erp-detail-tab:hover:not(.active) {
   background: none;
   border: none;
   color: var(--erp-text-muted);
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   padding: 2px;
 }
 
 .erp-toast-item {
   display: block;
   padding-right: 16px;
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   color: var(--erp-text);
   text-decoration: none;
 }
@@ -3762,7 +3788,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-messenger-roster-head {
   flex: 0 0 auto;
   padding: 10px 12px 6px;
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   font-weight: 700;
   color: var(--erp-text-muted);
   letter-spacing: 0.02em;
@@ -3792,7 +3818,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 24px;
   text-align: center;
   color: var(--erp-text-muted);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
 }
 
 .erp-messenger-channel-row.active {
@@ -3833,7 +3859,7 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-messenger-mobile-tab {
     flex: 1;
     padding: 7px 0;
-    font-size: 12px;
+    font-size: var(--erp-font-base);
     font-weight: 700;
     text-align: center;
     color: var(--erp-text-muted);
@@ -3930,7 +3956,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: none;
   border: none;
   color: var(--erp-text-muted);
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   cursor: pointer;
 }
 
@@ -3951,7 +3977,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-messenger-date-divider span {
   background: var(--erp-hover);
   color: var(--erp-text-muted);
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;
@@ -3973,7 +3999,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-messenger-bubble-meta {
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   color: var(--erp-text-muted);
   text-align: left;
 }
@@ -3995,7 +4021,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 9px 13px;
   border-radius: var(--erp-comm-radius-bubble);
   border-bottom-left-radius: var(--erp-comm-radius-sm);
-  font-size: 14px;
+  font-size: var(--erp-font-lg);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -4027,7 +4053,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-messenger-bubble-action-btn {
-  font-size: 10px;
+  font-size: var(--erp-font-xs);
   color: var(--erp-text-muted);
   font-weight: 400;
   background: none;
@@ -4070,7 +4096,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: var(--erp-comm-radius-row);
   background: none;
   color: var(--erp-text);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   text-align: left;
   cursor: pointer;
 }
@@ -4154,7 +4180,7 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: var(--erp-font-lg);
 }
 
 .erp-attachment-info {
@@ -4166,7 +4192,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-attachment-name {
-  font-size: 12px;
+  font-size: var(--erp-font-base);
   font-weight: 600;
   color: var(--erp-text);
   white-space: nowrap;
@@ -4175,13 +4201,13 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-attachment-meta {
-  font-size: 10.5px;
+  font-size: var(--erp-font-xs);
   color: var(--erp-text-muted);
 }
 
 .erp-attachment-download {
   flex: 0 0 auto;
-  font-size: 13px;
+  font-size: var(--erp-font-md);
   color: var(--erp-primary);
 }
 
@@ -4233,7 +4259,7 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 0;
   background: var(--erp-panel);
   box-shadow: var(--erp-shadow-sm);
-  font-size: 12.5px;
+  font-size: var(--erp-font-base);
   font-weight: 500;
   color: var(--erp-text);
   white-space: nowrap;
@@ -4242,7 +4268,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-file-picker-btn-icon {
   padding: 0 9px;
-  font-size: 14px;
+  font-size: var(--erp-font-lg);
 }
 
 .erp-file-picker-btn:hover,
@@ -4259,7 +4285,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 4px 8px;
   background: var(--erp-hover);
   border-radius: 0;
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -4273,7 +4299,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 0;
   color: var(--erp-text-muted);
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--erp-font-sm);
 }
 
 .erp-file-picker-clear:hover {
@@ -4305,7 +4331,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: none;
   border: none;
   color: inherit;
-  font-size: 16px;
+  font-size: var(--erp-font-xl);
   border-radius: 0;
   flex: 0 0 auto;
 }
