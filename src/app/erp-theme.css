@@ -1157,6 +1157,34 @@
   animation: erp-page-fade-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 거래처/품목/메일함 등 분할뷰(.erp-split-shell/.erp-split3-shell) 화면
+   전용 — 그 화면의 루트 div를 세로 flex 컨테이너로 바꿔 분할뷰가 "제목
+   줄을 뺀 나머지 전부"를 차지하게 한다. 예전엔 분할뷰 자신에게
+   calc(100vh - 140px) 같은 매직넘버 높이를 직접 줬는데, 타이틀바/리본/
+   탭바/페이지 패딩처럼 "위에서 이미 차지한 공간"이 조금만 달라져도(예:
+   데모/공지 배너가 뜨거나, 화면마다 제목 줄 높이가 미묘하게 다르거나)
+   그 숫자가 실제보다 작게 어긋나 분할뷰가 실제 가용 공간보다 짧게
+   그려지고, 그 아래 아무것도 없는 빈 여백까지 .erp-page가 스크롤되는
+   버그가 났다(사용자 지적 — "스크롤을 내리면 하단에 빈칸처럼 없는공간에
+   더 내려간다", 거래처관리에서 재현·확인됨). 매직넘버 대신 flex:1로
+   "남는 공간을 그대로" 차지하게 하면 위쪽 chrome 높이가 얼마든 항상
+   정확히 맞는다. :has()로 분할뷰를 가진 화면에만 좁혀서, 나머지 150여
+   개 일반 화면(block 레이아웃에 의존)에는 전혀 영향이 없게 한다. */
+.erp-page:has(> div > .erp-split-shell),
+.erp-page:has(> div > .erp-split3-shell) {
+  display: flex;
+  flex-direction: column;
+}
+
+.erp-page:has(> div > .erp-split-shell) > div,
+.erp-page:has(> div > .erp-split3-shell) > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
 @keyframes erp-page-fade-in {
   from {
     opacity: 0;
@@ -2305,18 +2333,24 @@ a.erp-detail-tab:hover:not(.active) {
    문제가 있었다 — 예: 메일함에서 보낸편지함처럼 목록이 비어 있고
    상세도 "메일을 선택해주세요" 한 줄뿐이면, align-items:stretch가
    있어도 늘어날 기준 행 높이 자체가 짧아서 화면 전체가 작은 박스로
-   쪼그라들어 보였다(실제로 지적받음). 컨테이너 자체에 높이를 고정해
-   행 트랙 높이를 강제하면, 내용이 짧은 칸도 끝까지 늘어나고(안은
-   비어 보이되) 내용이 넘치는 칸만 자기 영역 안에서 스크롤된다 —
-   거래처/품목 등 이 구조를 같이 쓰는 다른 화면에도 전부 적용되는
-   일반적인 버그 수정이다. */
+   쪼그라들어 보였다(실제로 지적받음). 컨테이너 자체에 정해진(auto가
+   아닌) 높이를 줘서 행 트랙 높이를 강제하면, 내용이 짧은 칸도 끝까지
+   늘어나고(안은 비어 보이되) 내용이 넘치는 칸만 자기 영역 안에서
+   스크롤된다 — 거래처/품목 등 이 구조를 같이 쓰는 다른 화면에도 전부
+   적용되는 일반적인 버그 수정이다. 그 "정해진 높이"를 예전엔 calc(100vh
+   - 140px) 매직넘버로 직접 줬는데, 타이틀바/리본/탭바/페이지 패딩처럼
+   "위에서 이미 차지한 공간"이 달라지면 숫자가 어긋나 분할뷰가 실제보다
+   짧게 그려지고 그 아래 빈 여백까지 스크롤되는 버그로 이어졌다(사용자
+   지적 — "하단에 빈칸처럼 없는공간에 더 내려간다"). 지금은 flex:1로
+   바꿔서(.erp-page:has(...) 규칙 참고) 위쪽 chrome 높이가 얼마든 항상
+   "남는 공간 전부"를 정확히 차지한다. */
 .erp-split-shell {
   display: grid;
   grid-template-columns: minmax(220px, 25%) minmax(0, 1fr);
   gap: 10px;
   align-items: stretch;
   min-height: 0;
-  height: calc(100vh - 140px);
+  flex: 1;
 }
 
 /* 카테고리 사이드바까지 들어가는 3분할(사이드바+목록+상세, 2:2:6
@@ -2328,7 +2362,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 10px;
   align-items: stretch;
   min-height: 0;
-  height: calc(100vh - 140px);
+  flex: 1;
 }
 
 .erp-cat-sidebar {
@@ -2336,7 +2370,6 @@ a.erp-detail-tab:hover:not(.active) {
   flex-direction: column;
   gap: 1px;
   min-height: 0;
-  max-height: calc(100vh - 140px);
   overflow-y: auto;
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
@@ -2420,7 +2453,6 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: calc(100vh - 140px);
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
 }
@@ -2601,7 +2633,6 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-split-detail {
   min-width: 0;
   min-height: 0;
-  max-height: calc(100vh - 140px);
   overflow-y: auto;
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
@@ -2868,14 +2899,22 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 @media (max-width: 768px) {
-  /* 데스크톱에서 방금 추가한 고정 height(calc(100vh - 140px))는 목록+
-     상세를 나란히 보여줄 때만 필요하다 — 모바일은 display:block으로
-     풀어서 목록/상세를 세로로 자연스럽게 쌓으므로, height를 그대로
-     두면 컨테이너가 화면 높이만큼 고정된 채 내용이 넘쳐도 안 늘어나
-     잘려 보인다. auto로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
+  /* 데스크톱 전용 flex-fill 트릭(.erp-page:has(...) 등 — 위 ".erp-page가
+     분할뷰를 가진 화면에서만" 규칙 참고)은 목록+상세를 나란히 보여줄
+     때만 필요하다 — 모바일은 display:block으로 풀어서 목록/상세를
+     세로로 자연스럽게 쌓으므로, flex를 그대로 두면 컨테이너가 화면
+     높이만큼 고정된 채 내용이 넘쳐도 안 늘어나 잘려 보인다. 체인 전체를
+     block으로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
+  .erp-page:has(> div > .erp-split-shell),
+  .erp-page:has(> div > .erp-split3-shell) {
+    display: block;
+  }
+  .erp-page:has(> div > .erp-split-shell) > div,
+  .erp-page:has(> div > .erp-split3-shell) > div {
+    display: block;
+  }
   .erp-split-shell {
     display: block;
-    height: auto;
   }
   /* 특정 항목을 선택했을 때만 목록을 숨기고 상세를 전체 폭으로 보여준다
      — 아무것도 선택 안 한 기본 상태(신규 등록 폼)는 목록과 함께 계속
@@ -2891,7 +2930,6 @@ a.erp-detail-tab:hover:not(.active) {
 
   .erp-split3-shell {
     display: block;
-    height: auto;
   }
   .erp-split3-shell[data-mobile-view="detail"] .erp-cat-sidebar,
   .erp-split3-shell[data-mobile-view="detail"] .erp-split-list {
