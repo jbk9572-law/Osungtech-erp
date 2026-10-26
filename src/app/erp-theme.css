@@ -1157,27 +1157,32 @@
   animation: erp-page-fade-in 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 거래처/품목/메일함 등 분할뷰(.erp-split-shell/.erp-split3-shell) 화면
-   전용 — 그 화면의 루트 div를 세로 flex 컨테이너로 바꿔 분할뷰가 "제목
-   줄을 뺀 나머지 전부"를 차지하게 한다. 예전엔 분할뷰 자신에게
-   calc(100vh - 140px) 같은 매직넘버 높이를 직접 줬는데, 타이틀바/리본/
-   탭바/페이지 패딩처럼 "위에서 이미 차지한 공간"이 조금만 달라져도(예:
-   데모/공지 배너가 뜨거나, 화면마다 제목 줄 높이가 미묘하게 다르거나)
-   그 숫자가 실제보다 작게 어긋나 분할뷰가 실제 가용 공간보다 짧게
-   그려지고, 그 아래 아무것도 없는 빈 여백까지 .erp-page가 스크롤되는
-   버그가 났다(사용자 지적 — "스크롤을 내리면 하단에 빈칸처럼 없는공간에
-   더 내려간다", 거래처관리에서 재현·확인됨). 매직넘버 대신 flex:1로
-   "남는 공간을 그대로" 차지하게 하면 위쪽 chrome 높이가 얼마든 항상
-   정확히 맞는다. :has()로 분할뷰를 가진 화면에만 좁혀서, 나머지 150여
-   개 일반 화면(block 레이아웃에 의존)에는 전혀 영향이 없게 한다. */
+/* 거래처/품목/메일함 등 분할뷰(.erp-split-shell/.erp-split3-shell) 화면,
+   그리고 플랫폼관리자 고객지원/활동로그처럼 "카드 스택이 화면 나머지를
+   꽉 채워야 하는" .erp-card-feed(압축형 -compact 제외 — 그건 이미
+   max-height로 안전하게 동작한다) 화면 전용 — 그 화면의 루트 div를
+   세로 flex 컨테이너로 바꿔 분할뷰/카드피드가 "제목 줄을 뺀 나머지
+   전부"를 차지하게 한다. 예전엔 각자 calc(100vh - 140px)/calc(100vh -
+   320px) 같은 매직넘버 높이를 직접 줬는데, 타이틀바/리본/탭바/페이지
+   패딩처럼 "위에서 이미 차지한 공간"이 조금만 달라져도(예: 데모/공지
+   배너가 뜨거나, 화면마다 제목 줄 높이가 미묘하게 다르거나) 그 숫자가
+   실제보다 작게 어긋나 박스가 실제 가용 공간보다 짧게 그려지고, 그 아래
+   아무것도 없는 빈 여백까지 .erp-page가 스크롤되는 버그가 났다(사용자
+   지적 — "스크롤을 내리면 하단에 빈칸처럼 없는공간에 더 내려간다",
+   거래처관리에서 재현·확인됨). 매직넘버 대신 flex:1로 "남는 공간을
+   그대로" 차지하게 하면 위쪽 chrome 높이가 얼마든 항상 정확히 맞는다.
+   :has()로 이 구조를 가진 화면에만 좁혀서, 나머지 150여 개 일반
+   화면(block 레이아웃에 의존)에는 전혀 영향이 없게 한다. */
 .erp-page:has(> div > .erp-split-shell),
-.erp-page:has(> div > .erp-split3-shell) {
+.erp-page:has(> div > .erp-split3-shell),
+.erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) {
   display: flex;
   flex-direction: column;
 }
 
 .erp-page:has(> div > .erp-split-shell) > div,
-.erp-page:has(> div > .erp-split3-shell) > div {
+.erp-page:has(> div > .erp-split3-shell) > div,
+.erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) > div {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -2906,11 +2911,13 @@ a.erp-detail-tab:hover:not(.active) {
      높이만큼 고정된 채 내용이 넘쳐도 안 늘어나 잘려 보인다. 체인 전체를
      block으로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
   .erp-page:has(> div > .erp-split-shell),
-  .erp-page:has(> div > .erp-split3-shell) {
+  .erp-page:has(> div > .erp-split3-shell),
+  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) {
     display: block;
   }
   .erp-page:has(> div > .erp-split-shell) > div,
-  .erp-page:has(> div > .erp-split3-shell) > div {
+  .erp-page:has(> div > .erp-split3-shell) > div,
+  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) > div {
     display: block;
   }
   .erp-split-shell {
@@ -3161,7 +3168,7 @@ a.erp-detail-tab:hover:not(.active) {
   display: flex;
   flex-direction: column;
   gap: 9px;
-  height: calc(100vh - 320px);
+  flex: 1;
   min-height: 320px;
   overflow-y: auto;
   background: var(--erp-bg-subtle);
