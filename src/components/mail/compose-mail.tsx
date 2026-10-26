@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { sendMailAction } from "@/app/(dashboard)/mail/actions";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { FormMessage } from "@/components/form-message";
+import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
+import { FilePickerInput } from "@/components/file-picker-input";
 
 // 전엔 화면 중앙에 뜨는 모달이었다(사용자 지적 — "메일쓰기가 3분할 가장
 // 우측에 떠야지 모달로 뜨면 디자인언어가 깨진다") — 메일함/게시판/공지
@@ -18,6 +20,12 @@ import { FormMessage } from "@/components/form-message";
 export function ComposeMailForm({ closeHref }: { closeHref: string }) {
   const [state, formAction, pending] = useActionState(sendMailAction, undefined);
   useFormRedirect(state);
+  // 공지사항/기안함 등 다른 작성 화면과 같은 리치텍스트 에디터
+  // (RichTextEditor) — 예전엔 메일쓰기만 평문 textarea라 본문 서식을
+  // 전혀 못 넣었다(사용자 지적: "제목쓰듯이 저렇게 하고... 게시판
+  // 에디터랑 같은 에디터를 쓰던가"). hidden input에 HTML을 담아
+  // 보내고, 발송 액션 쪽에서 SMTP 멀티파트(html+text)로 나눠 보낸다.
+  const [bodyHtml, setBodyHtml] = useState("");
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
@@ -35,11 +43,12 @@ export function ComposeMailForm({ closeHref }: { closeHref: string }) {
       </div>
       <div className="erp-field">
         <label htmlFor="cm-body">내용</label>
-        <textarea id="cm-body" name="body" rows={10} className="erp-input" style={{ resize: "vertical" }} />
+        <input type="hidden" name="body" value={bodyHtml} />
+        <RichTextEditor id="cm-body" value={bodyHtml} onChange={setBodyHtml} placeholder="내용을 입력하세요..." minHeight={260} />
       </div>
       <div className="erp-field">
         <label htmlFor="cm-attachments">첨부파일(선택)</label>
-        <input id="cm-attachments" name="attachments" type="file" multiple className="erp-input" />
+        <FilePickerInput name="attachments" multiple label="파일 선택" />
       </div>
 
       <FormMessage state={state} />

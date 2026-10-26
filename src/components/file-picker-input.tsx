@@ -13,6 +13,7 @@ export function FilePickerInput({
   icon = "📁",
   label = "파일 선택",
   iconOnly = false,
+  multiple = false,
   onFileChange,
 }: {
   name: string;
@@ -23,19 +24,31 @@ export function FilePickerInput({
   icon?: string | ReactNode;
   label?: string;
   iconOnly?: boolean;
+  // 메일쓰기처럼 여러 파일을 한 번에 첨부해야 하는 화면용 — 브라우저
+  // 기본 파일칸(파일 선택/선택된 파일 없음)이 다른 화면의 버튼형
+  // 피커와 톤이 달라 보이던 걸 통일한다. 네이티브 FileList는 항목
+  // 하나만 골라 뺄 수 없어서(개별 제거 UI는 DataTransfer 재구성이
+  // 필요해 과하다), 선택 개수만 보여주고 "전체 취소"만 지원한다.
+  multiple?: boolean;
   onFileChange?: (file: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<{ name: string; size: number } | null>(null);
+  const [fileCount, setFileCount] = useState(0);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0] ?? null;
-    setFile(picked ? { name: picked.name, size: picked.size } : null);
+    if (multiple) {
+      setFileCount(e.target.files?.length ?? 0);
+    } else {
+      setFile(picked ? { name: picked.name, size: picked.size } : null);
+    }
     onFileChange?.(picked);
   }
 
   function clear() {
     setFile(null);
+    setFileCount(0);
     if (inputRef.current) inputRef.current.value = "";
     onFileChange?.(null);
   }
@@ -48,6 +61,7 @@ export function FilePickerInput({
         name={name}
         accept={accept}
         required={required}
+        multiple={multiple}
         className="erp-file-picker-hidden-input"
         onChange={handleChange}
       />
@@ -68,6 +82,19 @@ export function FilePickerInput({
       {file && (
         <span className="erp-file-picker-name">
           {file.name} · {formatFileSize(file.size)}
+          <button
+            type="button"
+            onClick={clear}
+            className="erp-file-picker-clear"
+            aria-label="선택 취소"
+          >
+            ✕
+          </button>
+        </span>
+      )}
+      {multiple && fileCount > 0 && (
+        <span className="erp-file-picker-name">
+          파일 {fileCount}개 선택됨
           <button
             type="button"
             onClick={clear}

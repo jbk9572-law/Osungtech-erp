@@ -5,6 +5,7 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/mail/crypto";
 import type { SendMailAttachment } from "@/lib/mail/smtp-send";
 import type { FormState } from "@/components/form-message";
+import { htmlToPlainText } from "@/lib/document-template";
 
 // sendMail/syncInbox는 각각 worker-mailer/imap-client(둘 다
 // cloudflare:sockets 기반)를 불러온다. 이 파일 맨 위에서 정적으로
@@ -60,7 +61,12 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
   const cc = splitAddresses(String(formData.get("cc") ?? ""));
   const bcc = splitAddresses(String(formData.get("bcc") ?? ""));
   const subject = String(formData.get("subject") ?? "").trim();
-  const bodyText = String(formData.get("body") ?? "");
+  // 작성 폼이 리치텍스트 에디터로 바뀌면서 "body"는 이제 HTML이다 —
+  // HTML을 못 읽는 메일 클라이언트를 위한 대체 텍스트(text 파트)는
+  // document-template.ts의 공용 변환 함수로 만든다(양식 프리필에
+  // 쓰던 것과 같은 함수 재사용 — 새로 만들지 않음).
+  const bodyHtml = String(formData.get("body") ?? "");
+  const bodyText = htmlToPlainText(bodyHtml);
 
   if (to.length === 0) return { error: "받는 사람을 입력해주세요." };
   if (!subject) return { error: "제목을 입력해주세요." };
@@ -101,6 +107,7 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
       bcc: bcc.length > 0 ? bcc : undefined,
       subject,
       text: bodyText,
+      html: bodyHtml,
     });
   } catch (err) {
     return { error: `발송에 실패했습니다: ${err instanceof Error ? err.message : String(err)}` };
@@ -133,6 +140,7 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
       cc_addresses: cc.map((email) => ({ name: null, email })),
       sent_at: new Date().toISOString(),
       body_text: bodyText,
+      body_html: bodyHtml,
       snippet: bodyText.slice(0, 200),
       has_attachments: attachments.length > 0,
       is_read: true,
