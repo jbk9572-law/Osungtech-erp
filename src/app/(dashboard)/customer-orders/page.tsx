@@ -101,7 +101,8 @@ export default async function CustomerOrdersPage({
                 </span>
               </div>
 
-              <table className="erp-grid" style={{ marginBottom: 8 }}>
+              <div className="erp-grid-wrap" style={{ marginBottom: 8 }}>
+                <table className="erp-grid">
                 <thead>
                   <tr>
                     <th>품목</th>
@@ -167,7 +168,8 @@ export default async function CustomerOrdersPage({
                     );
                   })}
                 </tbody>
-              </table>
+                </table>
+              </div>
 
               {o.memo && (
                 <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 8 }}>요청사항: {o.memo}</p>

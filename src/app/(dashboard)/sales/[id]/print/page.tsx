@@ -77,23 +77,32 @@ export default async function SalesPrintPage({
       }));
 
       return (
-        <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+        <div>
           <div className="mb-4 flex items-center justify-between print:hidden">
             <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
             </CloseButton>
             <PrintButton />
           </div>
-          <SnsFiltechCanvas
-            company={company}
-            customerName={order.customers?.name ?? ""}
-            customerAddress={order.customers?.address ?? null}
-            customerContactName={order.customers?.contact_name ?? null}
-            customerContactPhone={order.customers?.phone ?? null}
-            orderDate={order.order_date}
-            items={canvasItems}
-            note={order.memo}
-          />
+          {/* 실제 PDF 벡터 좌표를 그대로 옮긴 정밀 재현이라 폭을 줄이면
+              레이아웃이 깨진다 — 모바일에서 줄이는 대신, 표처럼
+              가로스크롤로 전체를 볼 수 있게 한다(.erp의 overflow-x:
+              hidden에 그냥 잘려서 안 보이던 버그, 헌법검사에서 발견).
+              인쇄 시에는 종이 크기 기준이라 스크롤과 무관하다. */}
+          <div className="overflow-x-auto print:overflow-visible">
+            <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+              <SnsFiltechCanvas
+                company={company}
+                customerName={order.customers?.name ?? ""}
+                customerAddress={order.customers?.address ?? null}
+                customerContactName={order.customers?.contact_name ?? null}
+                customerContactPhone={order.customers?.phone ?? null}
+                orderDate={order.order_date}
+                items={canvasItems}
+                note={order.memo}
+              />
+            </div>
+          </div>
         </div>
       );
     }
@@ -113,23 +122,27 @@ export default async function SalesPrintPage({
       }));
 
       return (
-        <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+        <div>
           <div className="mb-4 flex items-center justify-between print:hidden">
             <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
             </CloseButton>
             <PrintButton />
           </div>
-          <ZenithTechCanvas
-            company={company}
-            customerName={order.customers?.name ?? ""}
-            customerAddress={order.customers?.address ?? null}
-            customerContactName={order.customers?.contact_name ?? null}
-            customerContactPhone={order.customers?.phone ?? null}
-            orderDate={order.order_date}
-            items={canvasItems}
-            note={order.memo}
-          />
+          <div className="overflow-x-auto print:overflow-visible">
+            <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+              <ZenithTechCanvas
+                company={company}
+                customerName={order.customers?.name ?? ""}
+                customerAddress={order.customers?.address ?? null}
+                customerContactName={order.customers?.contact_name ?? null}
+                customerContactPhone={order.customers?.phone ?? null}
+                orderDate={order.order_date}
+                items={canvasItems}
+                note={order.memo}
+              />
+            </div>
+          </div>
         </div>
       );
     }
@@ -152,22 +165,26 @@ export default async function SalesPrintPage({
       }));
 
       return (
-        <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+        <div>
           <div className="mb-4 flex items-center justify-between print:hidden">
             <CloseButton href="/sales" className="erp-btn erp-btn-dark print:hidden">
               목록으로
             </CloseButton>
             <PrintButton />
           </div>
-          <KtSolutionCanvas
-            company={company}
-            customerName={order.customers?.name ?? ""}
-            customerAddress={order.customers?.address ?? null}
-            customerContactName={order.customers?.contact_name ?? null}
-            customerContactPhone={order.customers?.phone ?? null}
-            orderDate={order.order_date}
-            items={canvasItems}
-          />
+          <div className="overflow-x-auto print:overflow-visible">
+            <div className="mx-auto print:mx-0" style={{ width: "595.32pt" }}>
+              <KtSolutionCanvas
+                company={company}
+                customerName={order.customers?.name ?? ""}
+                customerAddress={order.customers?.address ?? null}
+                customerContactName={order.customers?.contact_name ?? null}
+                customerContactPhone={order.customers?.phone ?? null}
+                orderDate={order.order_date}
+                items={canvasItems}
+              />
+            </div>
+          </div>
         </div>
       );
     }

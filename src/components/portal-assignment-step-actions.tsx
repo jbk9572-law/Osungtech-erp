@@ -82,16 +82,14 @@ export function PortalAssignmentStepActions({
         <div style={{ display: "flex", gap: 6 }}>
           <button
             type="submit"
-            className="erp-btn erp-btn-danger"
-            style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+            className="erp-btn erp-btn-danger erp-portal-action-btn"
             disabled={receivingPending}
           >
             {receivingPending ? "..." : "불량 보고"}
           </button>
           <button
             type="button"
-            className="erp-btn"
-            style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+            className="erp-btn erp-portal-action-btn"
             onClick={() => setMode("default")}
           >
             취소
@@ -128,16 +126,14 @@ export function PortalAssignmentStepActions({
         <div style={{ display: "flex", gap: 6 }}>
           <button
             type="submit"
-            className="erp-btn erp-btn-danger"
-            style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+            className="erp-btn erp-btn-danger erp-portal-action-btn"
             disabled={workDefectPending}
           >
             {workDefectPending ? "..." : "불량 신고"}
           </button>
           <button
             type="button"
-            className="erp-btn"
-            style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+            className="erp-btn erp-portal-action-btn"
             onClick={() => setMode("default")}
           >
             취소
@@ -163,8 +159,7 @@ export function PortalAssignmentStepActions({
               <input type="hidden" name="has_defect" value="false" />
               <button
                 type="submit"
-                className="erp-btn erp-btn-primary"
-                style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+                className="erp-btn erp-btn-primary erp-portal-action-btn"
                 disabled={receivingPending}
               >
                 {receivingPending ? "..." : "입고확인"}
@@ -172,8 +167,7 @@ export function PortalAssignmentStepActions({
             </form>
             <button
               type="button"
-              className="erp-btn erp-btn-danger"
-              style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+              className="erp-btn erp-btn-danger erp-portal-action-btn"
               onClick={() => setMode("receiving-defect")}
             >
               불량 신고
@@ -188,8 +182,7 @@ export function PortalAssignmentStepActions({
             <input type="hidden" name="status" value="in_progress" />
             <button
               type="submit"
-              className="erp-btn erp-btn-primary"
-              style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+              className="erp-btn erp-btn-primary erp-portal-action-btn"
               disabled={updatePending}
             >
               {updatePending ? "..." : "작업시작"}
@@ -205,8 +198,7 @@ export function PortalAssignmentStepActions({
               <input type="hidden" name="status" value="done" />
               <button
                 type="submit"
-                className="erp-btn erp-btn-primary"
-                style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+                className="erp-btn erp-btn-primary erp-portal-action-btn"
                 disabled={updatePending}
               >
                 {updatePending ? "..." : "완료"}
@@ -214,8 +206,7 @@ export function PortalAssignmentStepActions({
             </form>
             <button
               type="button"
-              className="erp-btn erp-btn-danger"
-              style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+              className="erp-btn erp-btn-danger erp-portal-action-btn"
               onClick={() => setMode("work-defect")}
             >
               불량 신고
@@ -230,8 +221,7 @@ export function PortalAssignmentStepActions({
             <input type="hidden" name="status" value="shipped" />
             <button
               type="submit"
-              className="erp-btn erp-btn-primary"
-              style={{ height: 24, padding: "1px 10px", fontSize: 11 }}
+              className="erp-btn erp-btn-primary erp-portal-action-btn"
               disabled={updatePending}
             >
               {updatePending ? "..." : "출고"}

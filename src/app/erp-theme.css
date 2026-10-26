@@ -236,6 +236,27 @@
   color: var(--erp-text);
 }
 
+/* 하청업체 포털에서 LOT/공정 상태를 바꾸는 주요 액션 버튼 — 입고확인/
+   작업시작/완료/출고/불량신고/상세보기 등. portal-assignment-step-
+   actions.tsx 한 파일에서만 { height: 24, padding: "1px 10px",
+   fontSize: 11 } 똑같은 인라인 style을 10번 복붙하고 있었다(헌법검사
+   발견). 현장에서 폰으로 누르는 용도라 데스크톱 관리자 화면의 촘촘한
+   24px 그리드 버튼과 같은 크기를 그대로 쓰면 터치 타겟이 너무 작다 —
+   모바일에서는 더 키운다. */
+.erp-portal-action-btn {
+  height: 30px;
+  padding: 3px 12px;
+  font-size: var(--erp-font-base);
+}
+
+@media (max-width: 768px) {
+  .erp-portal-action-btn {
+    height: 40px;
+    padding: 6px 14px;
+    font-size: var(--erp-font-md);
+  }
+}
+
 /* 목록/등록 화면 제목 위에 선택적으로 붙이는 상위 분류 라벨
    ("SALES MANAGEMENT" 같은) — 작고 흐리게, 자간을 넓혀서 h1과
    확실히 구분되게 한다. */
@@ -2655,7 +2676,12 @@ a.erp-detail-tab:hover:not(.active) {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: calc(100vh - 320px);
+  /* 부모 .erp-split-detail은 이제 분할뷰(.erp-split-shell 등) 쪽에서
+     flex:1로 정해진(auto가 아닌) 높이를 갖는다 — 매직넘버
+     calc(100vh - 320px) 대신 100%로 그 높이를 그대로 물려받아서, 빈
+     상태 문구가 패널 안에서 항상 정확히 가운데로 온다(위쪽 chrome 높이가
+     달라져도 항상 맞음). */
+  min-height: 100%;
   text-align: center;
   padding: 24px;
 }
@@ -3932,17 +3958,34 @@ a.erp-detail-tab:hover:not(.active) {
   /* 좁은 화면에서는 78vh로 높이가 제한된 떠있는 카드(테두리 있음)로
      보이던 걸, 최신 메신저 앱(카카오톡 등)처럼 대화목록/대화창 각각이
      화면 대부분을 차지하는 전용 화면처럼 보이게 한다(사용자 요청 —
-     "모바일환경 ui 레이아웃은 현대 sns를 따라가야할것 같은데").
-     calc(100vh - 140px)는 분할뷰 목록/상세(.erp-split-list 등)가 이미
-     쓰는 "상단 크롬을 뺀 나머지 화면" 공식과 같은 값이다 — 메신저도
-     카드 테두리 없이 그 높이를 그대로 채운다. */
+     "모바일환경 ui 레이아웃은 현대 sns를 따라가야할것 같은데"). 예전엔
+     분할뷰가 쓰던 것과 똑같은 calc(100vh - 140px) 매직넘버로 높이를
+     고정했는데, 그 공식 자체가 이미 "위쪽 chrome 높이를 어림짐작한
+     숫자라 실제와 어긋나면 하단에 빈 여백까지 스크롤된다"고 밝혀진
+     공식이다(헌법검사 — 거래처관리에서 재현·확인됨) — 메신저는 분할뷰와
+     다른 클래스(.erp-messenger-page)라 그 수정에 포함되지 않고 남아
+     있었다. 분할뷰와 같은 방식(flex:1)으로 고친다 — 부모 체인도
+     같이(아래 .erp-page:has(...) 규칙). */
   .erp-messenger-page {
-    height: calc(100vh - 140px);
+    flex: 1;
+    min-height: 0;
     border-left: none;
     border-right: none;
     border-bottom: none;
     border-radius: 0;
     box-shadow: none;
+  }
+
+  .erp-page:has(> div > .erp-messenger-page) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .erp-page:has(> div > .erp-messenger-page) > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
   }
 
   /* 3단이 한 화면에 다 못 들어가므로, data-view가 가리키는 패널
@@ -4001,6 +4044,14 @@ a.erp-detail-tab:hover:not(.active) {
     flex: 1 1 auto;
     width: 100%;
     border-right: none;
+  }
+
+  /* 말풍선 아래 "삭제"/"취소" 버튼은 글자 크기(10.5px) + 상하 2px
+     패딩뿐이라 실제 탭 가능한 높이가 20px이 채 안 됐다(헌법검사에서
+     발견 — 권장 터치 타겟 24px 미만). 글자 크기는 그대로 두고 패딩만
+     키워서 탭 영역을 넓힌다. */
+  .erp-messenger-bubble-action-btn {
+    padding: 8px 6px;
   }
 }
 
@@ -4511,6 +4562,22 @@ a.erp-detail-tab:hover:not(.active) {
     right: 12px;
     width: auto;
     max-height: calc(100vh - 56px);
+  }
+
+  /* 알림 토스트도 종 드롭다운과 같은 이유로 좁은 화면 전용 재배치가
+     필요하다 — 고정 폭(일반 280px/긴급 320px) + right:20px 조합은
+     320px급 좁은 화면에서 왼쪽으로 .erp의 overflow-x: hidden에 잘려
+     보일 수 있다(헌법검사에서 발견 — 종 드롭다운만 이미 이 처리가
+     있었다). 화면 기준 좌우 여백만 주는 고정 위치로 바꾸고, 토스트
+     자체도 고정 폭 대신 그 안에서 꽉 채우게 한다. */
+  .erp-toast-stack {
+    left: 12px;
+    right: 12px;
+  }
+
+  .erp-toast,
+  .erp-toast-urgent {
+    width: 100%;
   }
 
   /* 리치텍스트 에디터 툴바: 아이콘 묶음(실행취소/제목/글자서식/글자색/

@@ -86,7 +86,7 @@ export function PortalAssignmentsGridTable({
                   <span className="erp-badge erp-badge-muted">{WORK_ORDER_STATUS_LABEL[row.status] ?? row.status}</span>
                 </td>
                 <td className="num" onClick={(e) => e.stopPropagation()}>
-                  <Link href={`${assignmentsHref}/${row.id}`} className="erp-btn" style={{ height: 24, padding: "1px 10px", fontSize: 11 }}>
+                  <Link href={`${assignmentsHref}/${row.id}`} className="erp-btn erp-portal-action-btn">
                     상세보기
                   </Link>
                 </td>
