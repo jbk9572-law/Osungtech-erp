@@ -11,10 +11,18 @@ import { TaxInvoiceDetail } from "@/components/tax-invoice-detail";
 import { cancelTaxInvoice } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { todayKstStr } from "@/lib/kst-date";
 import { canIssueTaxInvoice, isTaxExempt, defaultInvoiceTypeFromTaxType } from "@/lib/tax-evidence-type";
+import { resolveListHref } from "@/lib/list-return";
 
-export default async function TaxInvoicePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TaxInvoicePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
+}) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
+  const { back } = await searchParams;
   const supabase = await createClient();
 
   const [{ data: order }, { data: company }, { data: existing }, actor] = await Promise.all([
@@ -90,13 +98,22 @@ export default async function TaxInvoicePage({ params }: { params: Promise<{ id:
       : Promise.resolve({ data: null }),
   ]);
 
+  // 이미 발행된 세금계산서를 "보기"만 하는 경우(existing)는 수정 중인
+  // 내용이 없는 보기 전용 화면이라, 상세 모달을 거쳐 들어왔어도 닫으면
+  // 그 상세로 "뒤로가기"하지 않고 바로 목록까지 닫는다. 아직 발행 전이라
+  // 폼을 채우고 있는 경우(else)는 기존처럼 상세로 돌아간다 — 매출 수정
+  // 폼(edit)과 같은 이유로, 취소하면 방금 작성하던 그 건을 다시 보여주는
+  // 쪽이 자연스럽다.
+  const detailHref = `/sales/${id}`;
+  const closeHref = existing ? resolveListHref("/sales", back) : detailHref;
+
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
+      <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <div className="mb-1 erp-detail-header-row">
         <h1 className="erp-h1">매출관리 &gt; 세금계산서</h1>
         <div className="erp-toolbar" style={{ marginBottom: 0 }}>
-          <CloseButton href={`/sales/${id}`}>ESC 매출 상세로</CloseButton>
+          <CloseButton href={closeHref}>{existing ? "ESC 목록으로" : "ESC 매출 상세로"}</CloseButton>
         </div>
       </div>
 

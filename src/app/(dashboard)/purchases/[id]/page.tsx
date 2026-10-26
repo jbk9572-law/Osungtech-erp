@@ -41,6 +41,7 @@ export default async function PurchaseDetailPage({
   // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const closeHref = resolveListHref("/purchases", back);
   const editHref = `/purchases/${id}/edit${back ? `?back=${back}` : ""}`;
+  const printHref = `/purchases/${id}/print${back ? `?back=${back}` : ""}`;
   const supabase = await createClient();
 
   const [
@@ -107,7 +108,7 @@ export default async function PurchaseDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F9: { href: `/purchases/${id}/print` },
+          F9: { href: printHref },
           ...(allowManage && { F4: { href: editHref } }),
           Escape: { href: closeHref },
         }}
@@ -122,7 +123,7 @@ export default async function PurchaseDetailPage({
         meta={`${new Date(order.purchase_date).toLocaleDateString("ko-KR")} 입고`}
         actions={
           <>
-            <Link href={`/purchases/${id}/print`} className="erp-btn">
+            <Link href={printHref} className="erp-btn">
               F9 명세표
             </Link>
             {allowManage && (

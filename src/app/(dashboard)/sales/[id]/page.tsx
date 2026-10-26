@@ -42,6 +42,8 @@ export default async function SaleDetailPage({
   // 나갈 때 그 조건 그대로(전체 목록이 아니라) 되돌아가게 한다.
   const closeHref = resolveListHref("/sales", back);
   const editHref = `/sales/${id}/edit${back ? `?back=${back}` : ""}`;
+  const printHref = `/sales/${id}/print${back ? `?back=${back}` : ""}`;
+  const taxInvoiceHref = `/sales/${id}/tax-invoice${back ? `?back=${back}` : ""}`;
   const supabase = await createClient();
 
   const [
@@ -108,7 +110,7 @@ export default async function SaleDetailPage({
     <div>
       <KeyboardShortcuts
         shortcuts={{
-          F9: { href: `/sales/${id}/print` },
+          F9: { href: printHref },
           ...(allowManage && { F4: { href: editHref } }),
           Escape: { href: closeHref },
         }}
@@ -125,7 +127,7 @@ export default async function SaleDetailPage({
         meta={`${new Date(order.order_date).toLocaleDateString("ko-KR")} 출고`}
         actions={
           <>
-            <Link href={`/sales/${id}/print`} className="erp-btn">
+            <Link href={printHref} className="erp-btn">
               F9 명세표
             </Link>
             {allowManage && (
@@ -199,7 +201,7 @@ export default async function SaleDetailPage({
                   <span style={{ color: "var(--erp-text-muted)" }}>
                     {order.invoice_issued_at ? new Date(order.invoice_issued_at).toLocaleDateString("ko-KR") : "-"}
                   </span>
-                  <Link href={`/sales/${id}/tax-invoice`} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
+                  <Link href={taxInvoiceHref} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
                     세금계산서 보기
                   </Link>
                 </>
@@ -210,7 +212,7 @@ export default async function SaleDetailPage({
               ) : (
                 <>
                   <GridBadge tone="muted">계산서 미발행</GridBadge>
-                  <Link href={`/sales/${id}/tax-invoice`} className="erp-btn erp-btn-primary" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
+                  <Link href={taxInvoiceHref} className="erp-btn erp-btn-primary" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
                     세금계산서 작성
                   </Link>
                 </>

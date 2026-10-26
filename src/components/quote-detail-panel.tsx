@@ -10,6 +10,7 @@ import { ConvertQuoteForm } from "@/components/convert-quote-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { deleteQuote } from "@/app/(dashboard)/quotes/actions";
 import { formatNumber } from "@/lib/format-number";
+import { buildBackHref } from "@/lib/list-return";
 
 // quotes/page.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이 컴포넌트를
 // 그대로 렌더링한다. 모달/직접 URL 접근(quotes/[id]/page.tsx)도 같은
@@ -46,7 +47,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
         }
         actions={
           <>
-            <Link href={`/quotes/${quote.id}/print`} className="erp-btn">
+            <Link href={`/quotes/${quote.id}/print?back=${buildBackHref(closeHref)}`} className="erp-btn">
               인쇄 / PDF
             </Link>
             {!quote.converted_sales_order_id && (

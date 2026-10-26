@@ -5,7 +5,10 @@ import TaxInvoicePage from "@/app/(dashboard)/sales/[id]/tax-invoice/page";
 // /sales/[id]/tax-invoice 페이지를 그대로 재사용하면서 모달로 띄운다 —
 // 같은 [id] 하위의 상세/수정/인쇄와 동일한 패턴(세금계산서만 빠져있던
 // 걸 맞춘다).
-export default async function InterceptedTaxInvoicePage(props: { params: Promise<{ id: string }> }) {
+export default async function InterceptedTaxInvoicePage(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ back?: string }>;
+}) {
   const { id } = await props.params;
   return (
     <RegistrationModalShell size="xl" closeHref={`/sales/${id}`}>
