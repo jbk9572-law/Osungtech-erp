@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { reorderPaymentRequestReceipts } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { ReceiptDeleteForm } from "@/components/receipt-delete-form";
 
-type Receipt = { id: string; file_url: string };
+type Receipt = { id: string; file_url: string | null };
 
 // 이미 업로드된 영수증 목록(수정 화면 전용). 화살표로 스테이플러 순서를
 // 바꾸고 바로 서버에 저장한다 — 낙관적으로 화면부터 바꾼 뒤 저장한다.
@@ -66,10 +66,10 @@ export function ReceiptReorderList({
           className="flex flex-col items-center gap-1 rounded-sm border p-2"
           style={{ borderColor: "var(--erp-border)", width: 108 }}
         >
-          <a href={receipt.file_url} target="_blank" rel="noopener noreferrer">
+          <a href={receipt.file_url ?? "#"} target="_blank" rel="noopener noreferrer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={receipt.file_url}
+              src={receipt.file_url ?? ""}
               alt={`영수증 ${index + 1}`}
               style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 0 }}
             />

@@ -10,6 +10,11 @@ import { SupportTicketForm } from "@/components/support-ticket-form";
 import { createSupportTicket } from "@/app/(dashboard)/settings/support/actions";
 import { resolveStatusLabel } from "@/lib/status-label";
 
+// TODO_CS_AUTOMATION: 저가형 요금제 특성상 "비밀번호 재설정", "용량이
+// 부족해요" 같은 반복 문의가 늘어날 수 있다. 전부 이 운영자 문의 화면
+// (사람이 직접 답변)으로만 받기보다, FAQ 위주의 인앱 가이드나 챗봇/
+// 카카오 채널 연동형 도움말 센터를 먼저 보여주고 거기서 해결이 안 될
+// 때만 여기로 넘어오게 하는 구조를 검토할 것.
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "muted" }> = {
   open: { label: "답변 대기", tone: "warn" },
   answered: { label: "답변 완료", tone: "ok" },

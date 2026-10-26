@@ -7,12 +7,57 @@ import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { formatNumber } from "@/lib/format-number";
+import { formatMB } from "@/lib/format-bytes";
+import { getTenantQuotaStatus } from "@/lib/quota/tenant-quota";
 
 const PLAN_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   trial: { label: "체험 이용 중", tone: "warn" },
   active: { label: "정상 이용 중", tone: "ok" },
   suspended: { label: "이용 중지", tone: "danger" },
 };
+
+const QUOTA_BADGE_TONE: Record<string, "ok" | "warn" | "danger"> = {
+  ok: "ok",
+  warn: "warn",
+  danger: "danger",
+  grace_over: "danger",
+  blocked: "danger",
+};
+
+// 상단 배너(erp-shell.tsx의 erp-quota-banner)가 "지금 급한지"를 알려주는
+// 역할이라면, 여기 바(bar)는 "80MB 중 얼마나 썼는지" 구체적인 수치를
+// 보여주는 역할이다 — 막대 길이는 100%를 넘겨도(유예 구간) 꺾이지 않고
+// 그대로 넘치게 둬서 "초과했다"는 사실 자체가 시각적으로도 드러난다.
+function QuotaUsageRow({
+  label,
+  pct,
+  bucket,
+  children,
+}: {
+  label: string;
+  pct: number;
+  bucket: string;
+  children: React.ReactNode;
+}) {
+  const tone = QUOTA_BADGE_TONE[bucket] ?? "ok";
+  const barColor =
+    tone === "danger" ? "var(--erp-danger)" : tone === "warn" ? "var(--erp-warning)" : "var(--erp-primary)";
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-bold" style={{ color: "var(--erp-text)" }}>
+          {label}
+        </span>
+        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          {children} ({pct.toFixed(1)}%)
+        </span>
+      </div>
+      <div style={{ height: 6, borderRadius: 3, background: "var(--erp-bg)", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: barColor }} />
+      </div>
+    </div>
+  );
+}
 
 export default async function BillingPage() {
   const supabase = await createClient();
@@ -22,7 +67,7 @@ export default async function BillingPage() {
     return <AccessWall title="환경설정 > 구독/결제" message="이 화면은 관리자만 볼 수 있습니다." backHref="/dashboard" />;
   }
 
-  const [{ data: tenant }, { data: plans }] = await Promise.all([
+  const [{ data: tenant }, { data: plans }, quotaStatus] = await Promise.all([
     supabase.from("tenants").select("name, plan, plan_key, plan_expires_at").maybeSingle(),
     supabase
       .from("platform_plans")
@@ -30,9 +75,18 @@ export default async function BillingPage() {
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .limit(200),
+    getTenantQuotaStatus(supabase),
   ]);
 
   const planInfo = tenant ? (PLAN_LABEL[tenant.plan] ?? { label: tenant.plan, tone: "warn" as const }) : null;
+
+  // TODO_BILLING_AUTOMATION: 지금은 요금제 변경/결제가 전부 운영자 문의
+  // 기반 수동 처리다. 나중에 PG사(토스페이먼츠 등) 연동으로 카드 자동결제 +
+  // DB/파일 저장소 애드온 패키지(+50MB, +1GB)를 고객이 직접 구매하게
+  // 만들 때는, 이 화면에 "애드온 구매" 버튼을 추가하고 tenants.
+  // db_quota_bytes/file_quota_bytes(마이그레이션 186)를 결제 성공 콜백에서
+  // 올려주는 구조로 확장하면 된다 — 지금은 수동 관리 단계라 구조만
+  // 남겨둔다.
 
   return (
     <div>
@@ -63,6 +117,28 @@ export default async function BillingPage() {
                   ? `이용 만료일: ${new Date(tenant.plan_expires_at).toLocaleDateString("ko-KR")}`
                   : "이용 만료일이 설정되어 있지 않습니다(무제한)."}
               </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginBottom: 16 }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">저장 공간 사용량</span>
+        </div>
+        <div className="erp-detail-body">
+          {!quotaStatus ? (
+            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              사용량을 불러올 수 없습니다.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <QuotaUsageRow label="DB 용량(전표/거래처 등)" pct={quotaStatus.dbPct} bucket={quotaStatus.dbBucket}>
+                {formatMB(quotaStatus.dbBytesUsed)}MB / {formatMB(quotaStatus.dbQuotaBytes)}MB
+              </QuotaUsageRow>
+              <QuotaUsageRow label="파일 저장소(첨부/이미지 등)" pct={quotaStatus.filePct} bucket={quotaStatus.fileBucket}>
+                {formatMB(quotaStatus.fileBytesUsed)}MB / {formatMB(quotaStatus.fileQuotaBytes)}MB
+              </QuotaUsageRow>
             </div>
           )}
         </div>

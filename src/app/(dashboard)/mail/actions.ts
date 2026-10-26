@@ -6,6 +6,7 @@ import { decryptSecret } from "@/lib/mail/crypto";
 import type { SendMailAttachment } from "@/lib/mail/smtp-send";
 import type { FormState } from "@/components/form-message";
 import { htmlToPlainText } from "@/lib/document-template";
+import { uploadAttachment } from "@/lib/storage/upload-attachment";
 
 // sendMail/syncInbox는 각각 worker-mailer/imap-client(둘 다
 // cloudflare:sockets 기반)를 불러온다. 이 파일 맨 위에서 정적으로
@@ -155,17 +156,21 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
   if (sentRow) {
     for (const file of files) {
       const path = `${user.id}/${sentRow.id}/${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("mail-attachments")
-        .upload(path, file, { upsert: true, contentType: file.type || "application/octet-stream" });
-      if (uploadError) continue;
+      const uploaded = await uploadAttachment({
+        supabase,
+        bucket: "mail-attachments",
+        path,
+        file,
+        contentType: file.type || "application/octet-stream",
+      });
+      if (!uploaded.ok) continue;
       const { error: attachmentInsertError } = await supabase.from("mail_attachments").insert({
         mail_message_id: sentRow.id,
         user_id: user.id,
         filename: file.name,
         content_type: file.type || null,
         size_bytes: file.size,
-        storage_path: path,
+        storage_path: uploaded.path,
       });
       if (attachmentInsertError) {
         console.error("첨부파일 기록 실패:", attachmentInsertError.message);

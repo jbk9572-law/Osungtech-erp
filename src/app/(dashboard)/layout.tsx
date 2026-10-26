@@ -8,6 +8,7 @@ import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
 import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
 import { BellIcon } from "@/components/erp/groupware-icons";
+import { quotaStatusFromRpcRow, buildQuotaBannerMessage } from "@/lib/quota/tenant-quota";
 import "@/app/erp-theme.css";
 
 export default async function DashboardLayout({
@@ -61,6 +62,7 @@ export default async function DashboardLayout({
     { data: announcements },
     { data: platformSettings },
     { data: departmentPageAccessRows },
+    { data: quotaRow },
   ] = await Promise.all([
       ttlCached(`layout:company_profile:${user.id}`, LAYOUT_CACHE_TTL_MS, () =>
         safeQuery<{ name: string | null; logo_mark_url: string | null }>(
@@ -132,6 +134,12 @@ export default async function DashboardLayout({
           supabase.from("department_page_access").select("page_key, department_id"),
         ),
       ),
+      // DB/파일 저장소 쿼터(80%/95%/100%+유예) 배너용. 다른 조회들과
+      // 같은 이유로 TTL 캐시 + safeQuery로 감싼다 — 실패해도 배너를
+      // 그냥 안 보여주면 그만이지 레이아웃 전체가 죽을 이유는 없다.
+      ttlCached(`layout:quota:${user.id}`, LAYOUT_CACHE_TTL_MS, () =>
+        safeQuery(supabase.rpc("get_tenant_quota_status").maybeSingle()),
+      ),
     ]);
 
   const isDemo = myProfile?.is_demo ?? false;
@@ -158,6 +166,8 @@ export default async function DashboardLayout({
         .map(([pageKey]) => pageKey);
 
   const disabledFeatures = [...(tenant?.disabled_features ?? []), ...deniedPageKeys];
+
+  const quotaBanner = quotaRow ? buildQuotaBannerMessage(quotaStatusFromRpcRow(quotaRow), isAdmin) : null;
 
   if (platformSettings?.maintenance_mode && isPlatformAdmin !== true) {
     return <MaintenanceScreen message={platformSettings.maintenance_message} />;
@@ -194,6 +204,7 @@ export default async function DashboardLayout({
       isManagerOrAdmin={isManagerOrAdmin}
       isPlatformAdmin={isPlatformAdmin === true}
       platformAnnouncements={announcements ?? []}
+      quotaBanner={quotaBanner}
       modal={modal}
     >
       {children}

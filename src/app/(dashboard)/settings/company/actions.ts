@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { combinePhone } from "@/lib/phone";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import { requireAdmin } from "@/lib/require-admin";
+import { uploadAttachment } from "@/lib/storage/upload-attachment";
 import type { FormState } from "@/components/form-message";
 
 export async function updateCompanyProfile(
@@ -112,18 +113,12 @@ export async function uploadBrandingImage(
   }
   const path = isDemo ? `demo/${BRANDING_SLOTS[slot]}.png` : `${BRANDING_SLOTS[slot]}.png`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("branding")
-    .upload(path, file, { upsert: true, contentType: detectedType });
-
-  if (uploadError) {
-    return { error: `이미지 업로드에 실패했습니다: ${uploadError.message}` };
+  const uploaded = await uploadAttachment({ supabase, bucket: "branding", path, file, contentType: detectedType });
+  if (!uploaded.ok) {
+    return { error: `이미지 업로드에 실패했습니다: ${uploaded.error}` };
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("branding").getPublicUrl(path);
-  const url = `${publicUrl}?t=${Date.now()}`;
+  const url = `${uploaded.publicUrl}?t=${Date.now()}`;
 
   const update =
     slot === "logo_wordmark_url"

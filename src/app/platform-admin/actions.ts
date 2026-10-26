@@ -375,6 +375,43 @@ export async function updateTenantPlanPeriod(_prevState: FormState, formData: Fo
   return { success: "이용기간을 저장했습니다." };
 }
 
+// DB/파일 저장소 쿼터 수동 조정. 지금은 "애드온 패키지를 결제로 산다"는
+// 자동화가 없으므로(TODO_BILLING_AUTOMATION, settings/billing/page.tsx
+// 참고) 특정 고객이 용량을 늘려달라고 운영자 문의를 넣으면 플랫폼
+// 운영자가 여기서 직접 숫자를 올려준다. 입력은 MB 단위로 받고(운영자가
+// 바이트 단위로 계산하게 하지 않기 위해) 저장은 바이트로 변환한다.
+export async function updateTenantQuota(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const dbQuotaMb = Number(formData.get("dbQuotaMb") ?? 0);
+  const fileQuotaMb = Number(formData.get("fileQuotaMb") ?? 0);
+
+  if (!tenantId || !Number.isFinite(dbQuotaMb) || dbQuotaMb <= 0 || !Number.isFinite(fileQuotaMb) || fileQuotaMb <= 0) {
+    return { error: "DB/파일 저장소 용량은 0보다 큰 숫자(MB)로 입력해주세요." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin
+    .from("tenants")
+    .update({
+      db_quota_bytes: Math.round(dbQuotaMb * 1024 * 1024),
+      file_quota_bytes: Math.round(fileQuotaMb * 1024 * 1024),
+    })
+    .eq("id", tenantId);
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "저장 공간 쿼터를 저장했습니다." };
+}
+
 // 포인트 지급/차감. 지금은 실제로 포인트를 소모하는 곳이 없다(세금계산서/
 // 계산서 발행이 전부 수기 표시라 — invoice-status-panel.tsx 참고) —
 // 나중에 팝빌/바로빌 같은 실제 발행 API나 알림톡/팩스 기능을 붙일 때

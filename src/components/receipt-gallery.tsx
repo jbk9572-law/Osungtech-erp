@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
-export type GalleryReceipt = { id: string; file_url: string };
+export type GalleryReceipt = { id: string; file_url: string | null };
 
 // 영수증을 옆으로 넘기면서(스와이프/화살표/키보드) 볼 수 있는 전체화면
 // 뷰어. 삭제·추가는 여기서 하지 않는다 — 실수로 지우는 걸 막으려고
@@ -61,7 +61,7 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={receipt.file_url}
+                src={receipt.file_url ?? ""}
                 alt={`영수증 ${index + 1}`}
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -107,7 +107,7 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
             )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={current.file_url}
+              src={current.file_url ?? ""}
               alt={`영수증 ${openIndex! + 1}`}
               className="max-h-[80vh] max-w-full select-none object-contain"
             />

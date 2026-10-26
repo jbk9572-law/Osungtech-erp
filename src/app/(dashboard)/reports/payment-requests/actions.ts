@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import { requireMutatedRow, wasRowMutated } from "@/lib/require-mutated-row";
+import { uploadAttachment, deleteAttachment, deleteAttachments } from "@/lib/storage/upload-attachment";
 import type { FormState } from "@/components/form-message";
 import { notifyApprovalDocumentEvent } from "@/lib/push-notify";
 
@@ -50,23 +51,24 @@ async function uploadReceipt(
   if (!detectedType) return `이미지 파일만 첨부할 수 있습니다(${file.name}).`;
 
   const path = `${paymentRequestId}/${Date.now()}-${crypto.randomUUID()}.jpg`;
-  const { error: uploadError } = await supabase.storage
-    .from("payment-receipts")
-    .upload(path, file, { contentType: detectedType });
-  if (uploadError) return `영수증 업로드에 실패했습니다: ${uploadError.message}`;
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("payment-receipts").getPublicUrl(path);
+  const uploaded = await uploadAttachment({
+    supabase,
+    bucket: "payment-receipts",
+    path,
+    file,
+    contentType: detectedType,
+  });
+  if (!uploaded.ok) return `영수증 업로드에 실패했습니다: ${uploaded.error}`;
 
   const { error: insertError } = await supabase.rpc("insert_payment_request_receipt", {
     p_payment_request_id: paymentRequestId,
-    p_file_path: path,
-    p_file_url: publicUrl,
+    p_file_path: uploaded.path,
+    p_file_url: uploaded.publicUrl,
     p_created_by: userId,
+    p_size_bytes: file.size,
   });
   if (insertError) {
-    await supabase.storage.from("payment-receipts").remove([path]);
+    await deleteAttachment({ supabase, bucket: "payment-receipts", path: uploaded.path, sizeBytes: file.size });
     return `영수증 저장에 실패했습니다: ${insertError.message}`;
   }
 
@@ -318,7 +320,7 @@ export async function deletePaymentRequestReceipt(
   const supabase = await createClient();
   const { data: receipt } = await supabase
     .from("payment_request_receipts")
-    .select("file_path")
+    .select("file_path, size_bytes")
     .eq("id", id)
     .maybeSingle();
   if (!receipt) return { error: "이미 삭제된 영수증입니다." };
@@ -337,7 +339,7 @@ export async function deletePaymentRequestReceipt(
   );
   if (deleteError) return deleteError;
 
-  await supabase.storage.from("payment-receipts").remove([receipt.file_path]);
+  await deleteAttachment({ supabase, bucket: "payment-receipts", path: receipt.file_path, sizeBytes: receipt.size_bytes });
 
   if (paymentRequestId) {
     revalidatePath(`/reports/payment-requests/${paymentRequestId}`);
@@ -424,7 +426,7 @@ export async function deletePaymentRequest(
   // cascade로 같이 사라지므로 file_path는 미리 읽어둔다.
   const { data: receipts } = await supabase
     .from("payment_request_receipts")
-    .select("file_path")
+    .select("file_path, size_bytes")
     .eq("payment_request_id", id);
 
   const result = await supabase.from("payment_requests").delete().eq("id", id).select("id");
@@ -435,7 +437,11 @@ export async function deletePaymentRequest(
   if (deleteError) return deleteError;
 
   if (receipts && receipts.length > 0) {
-    await supabase.storage.from("payment-receipts").remove(receipts.map((r) => r.file_path));
+    await deleteAttachments(
+      supabase,
+      "payment-receipts",
+      receipts.map((r) => ({ path: r.file_path, sizeBytes: r.size_bytes })),
+    );
   }
 
   revalidatePath("/reports/payment-requests");
@@ -489,7 +495,7 @@ export async function bulkDeletePaymentRequests(
   // — deletePaymentRequest(단건)의 wasRowMutated 판정과 같은 기준이다.
   const { data: receipts } = await supabase
     .from("payment_request_receipts")
-    .select("payment_request_id, file_path")
+    .select("payment_request_id, file_path, size_bytes")
     .in("payment_request_id", idsToDelete);
 
   const { data: deleted, error: deleteError } = await supabase
@@ -503,11 +509,13 @@ export async function bulkDeletePaymentRequests(
   }
 
   const deletedIds = new Set((deleted ?? []).map((r) => r.id));
-  const filePaths = (receipts ?? [])
-    .filter((r) => deletedIds.has(r.payment_request_id))
-    .map((r) => r.file_path);
-  if (filePaths.length > 0) {
-    await supabase.storage.from("payment-receipts").remove(filePaths);
+  const deletedReceipts = (receipts ?? []).filter((r) => deletedIds.has(r.payment_request_id));
+  if (deletedReceipts.length > 0) {
+    await deleteAttachments(
+      supabase,
+      "payment-receipts",
+      deletedReceipts.map((r) => ({ path: r.file_path, sizeBytes: r.size_bytes })),
+    );
   }
 
   const failCount = ids.length - deletedIds.size;

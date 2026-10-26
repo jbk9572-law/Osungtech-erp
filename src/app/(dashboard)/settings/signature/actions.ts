@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { detectRasterImageType } from "@/lib/upload-safety";
+import { uploadAttachment } from "@/lib/storage/upload-attachment";
 import type { FormState } from "@/components/form-message";
 
 // 서명 이미지는 회사 로고/도장과 같은 storage 버킷('branding')의
@@ -29,17 +30,12 @@ export async function uploadSignatureImage(_prevState: FormState, formData: Form
   }
   const path = isDemo ? `signatures/demo/${user.id}.png` : `signatures/${user.id}.png`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("branding")
-    .upload(path, file, { upsert: true, contentType: detectedType });
-  if (uploadError) {
-    return { error: `이미지 업로드에 실패했습니다: ${uploadError.message}` };
+  const uploaded = await uploadAttachment({ supabase, bucket: "branding", path, file, contentType: detectedType });
+  if (!uploaded.ok) {
+    return { error: `이미지 업로드에 실패했습니다: ${uploaded.error}` };
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("branding").getPublicUrl(path);
-  const url = `${publicUrl}?t=${Date.now()}`;
+  const url = `${uploaded.publicUrl}?t=${Date.now()}`;
 
   const { error } = await supabase.rpc("update_own_signature", { p_url: url });
   if (error) return { error: `저장에 실패했습니다: ${error.message}` };

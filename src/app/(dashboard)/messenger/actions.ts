@@ -3,6 +3,7 @@
 import { createClient, getUser } from "@/lib/supabase/server";
 import { sanitizeUploadContentType } from "@/lib/upload-safety";
 import { notify } from "@/lib/notify";
+import { uploadAttachment, deleteAttachment } from "@/lib/storage/upload-attachment";
 import type { MessengerMessage } from "@/lib/messenger-types";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -52,20 +53,21 @@ export async function sendMessage(
     // 브라우저가 그대로 실행/렌더링할 수 있는 타입(HTML/SVG/JS)만은 URL을
     // 직접 열었을 때 저장된 XSS로 이어질 수 있어 안전한 범용 타입으로
     // 바꿔서 저장한다 — 그 외 정상적인 업무 파일 형식은 그대로 유지된다.
-    const { error: uploadError } = await supabase.storage
-      .from("messenger-attachments")
-      .upload(path, file, { contentType: sanitizeUploadContentType(file.type) });
+    const uploaded = await uploadAttachment({
+      supabase,
+      bucket: "messenger-attachments",
+      path,
+      file,
+      contentType: sanitizeUploadContentType(file.type),
+    });
 
-    if (uploadError) {
-      console.error("messenger file upload failed:", uploadError);
-      return { error: `파일 업로드에 실패했습니다. (${uploadError.message})` };
+    if (!uploaded.ok) {
+      console.error("messenger file upload failed:", uploaded.error);
+      return { error: `파일 업로드에 실패했습니다. (${uploaded.error})` };
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("messenger-attachments").getPublicUrl(path);
-    fileUrl = publicUrl;
-    filePath = path;
+    fileUrl = uploaded.publicUrl;
+    filePath = uploaded.path;
     fileName = file.name;
     fileSize = file.size;
   }
@@ -145,7 +147,7 @@ export async function deleteMessage(formData: FormData): Promise<{ error?: strin
 
   const { data: message } = await supabase
     .from("messenger_messages")
-    .select("sender_id, file_path")
+    .select("sender_id, file_path, file_size")
     .eq("id", id)
     .maybeSingle();
   if (!message || (message.sender_id !== user.id && !isAdmin)) {
@@ -153,7 +155,12 @@ export async function deleteMessage(formData: FormData): Promise<{ error?: strin
   }
 
   if (message.file_path) {
-    await supabase.storage.from("messenger-attachments").remove([message.file_path]);
+    await deleteAttachment({
+      supabase,
+      bucket: "messenger-attachments",
+      path: message.file_path,
+      sizeBytes: message.file_size,
+    });
   }
   const { error } = await supabase.from("messenger_messages").delete().eq("id", id);
   if (error) return { error: `삭제에 실패했습니다: ${error.message}` };

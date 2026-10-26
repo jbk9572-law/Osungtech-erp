@@ -1201,6 +1201,10 @@ export type Database = {
           plan_expires_at: string | null;
           points_balance: number;
           contact_email: string | null;
+          db_quota_bytes: number;
+          file_quota_bytes: number;
+          monthly_tax_invoice_quota: number;
+          monthly_fax_quota: number;
         };
         Insert: {
           id?: string;
@@ -1215,6 +1219,10 @@ export type Database = {
           plan_expires_at?: string | null;
           points_balance?: number;
           contact_email?: string | null;
+          db_quota_bytes?: number;
+          file_quota_bytes?: number;
+          monthly_tax_invoice_quota?: number;
+          monthly_fax_quota?: number;
         };
         Update: {
           id?: string;
@@ -1229,6 +1237,31 @@ export type Database = {
           plan_expires_at?: string | null;
           points_balance?: number;
           contact_email?: string | null;
+          db_quota_bytes?: number;
+          file_quota_bytes?: number;
+          monthly_tax_invoice_quota?: number;
+          monthly_fax_quota?: number;
+        };
+        Relationships: [];
+      };
+      tenant_usage: {
+        Row: {
+          tenant_id: string;
+          db_bytes_used: number;
+          file_bytes_used: number;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          db_bytes_used?: number;
+          file_bytes_used?: number;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          db_bytes_used?: number;
+          file_bytes_used?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -4601,28 +4634,31 @@ export type Database = {
           id: string;
           payment_request_id: string;
           file_path: string;
-          file_url: string;
+          file_url: string | null;
           sort_order: number;
           created_by: string | null;
           created_at: string;
+          size_bytes: number | null;
         };
         Insert: {
           id?: string;
           payment_request_id: string;
           file_path: string;
-          file_url: string;
+          file_url?: string | null;
           sort_order?: number;
           created_by?: string | null;
           created_at?: string;
+          size_bytes?: number | null;
         };
         Update: {
           id?: string;
           payment_request_id?: string;
           file_path?: string;
-          file_url?: string;
+          file_url?: string | null;
           sort_order?: number;
           created_by?: string | null;
           created_at?: string;
+          size_bytes?: number | null;
         };
         Relationships: [
           {
@@ -5877,10 +5913,27 @@ export type Database = {
         Args: {
           p_payment_request_id: string;
           p_file_path: string;
-          p_file_url: string;
+          p_file_url: string | null;
           p_created_by: string | null;
+          p_size_bytes?: number | null;
         };
         Returns: string;
+      };
+      get_tenant_quota_status: {
+        Args: Record<string, never>;
+        Returns: {
+          tenant_id: string;
+          db_bytes_used: number;
+          db_quota_bytes: number;
+          db_pct: number;
+          file_bytes_used: number;
+          file_quota_bytes: number;
+          file_pct: number;
+        }[];
+      };
+      increment_tenant_file_usage: {
+        Args: { p_delta_bytes: number };
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

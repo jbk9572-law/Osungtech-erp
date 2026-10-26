@@ -1,16 +1,12 @@
 import type { VpsDiskUsage } from "@/lib/vps-usage";
 import type { NetlifyUsageResult } from "@/lib/netlify-usage";
 import { FREE_TIER_DB_LIMIT_BYTES, FREE_TIER_STORAGE_LIMIT_BYTES } from "@/lib/db-usage";
+import { formatMB } from "@/lib/format-bytes";
 
 // 트리메뉴 사이드바 아래에 붙는 DB/스토리지/서버 사용량 표시 — 서버
 // 컴포넌트(usage-widget-panel.tsx)에서 데이터를 가져와 렌더링만 여기서
 // 한다. 순수 표시 로직이라 "use client" 없이 서버/클라이언트 어느
 // 트리에서 렌더링해도 그대로 동작한다.
-function formatMB(bytes: number) {
-  return (bytes / (1024 * 1024)).toLocaleString(undefined, {
-    maximumFractionDigits: 1,
-  });
-}
 
 type UsageRow =
   | { kind: "bar"; label: string; usedBytes: number; limitBytes: number; note: string }
