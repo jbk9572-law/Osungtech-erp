@@ -2351,9 +2351,9 @@ a.erp-detail-tab:hover:not(.active) {
 
 /* ── 7-1. List + detail split view (거래처/제품 등 기준정보 화면) ──
    왼쪽엔 좁은 목록, 오른쪽엔 선택한 항목의 상세를 나란히 보여준다.
-   메신저 2단 레이아웃(.erp-messenger-layout)과 같은 구조/반응형
-   기준(768px)을 그대로 따른다 — 넓은 화면에선 항상 둘 다 보이고,
-   좁은 화면에선 목록 또는 상세 중 하나만 보이게 전환한다. */
+   메신저(사원목록+채팅방목록+대화창 3단)도 이 split3-shell을 그대로
+   쓴다 — 넓은 화면에선 항상 둘(셋) 다 보이고, 좁은 화면(768px)에선
+   한 번에 한 패널만 보이게 전환한다. */
 /* height를 안 주고 max-height만 자식들에 줬더니(아래 .erp-split-list 등),
    grid 행 자체의 높이가 "가장 짧은 칸의 내용"에 맞춰 자동으로 줄어드는
    문제가 있었다 — 예: 메일함에서 보낸편지함처럼 목록이 비어 있고
@@ -3844,24 +3844,12 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 /* ── 사내메신저(그룹웨어 > 메신저 페이지) ───────────────────── */
-/* 예전엔 우측 하단에 항상 떠 있는 팝업 위젯이었는데, 메뉴로 찾아
-   들어오는 일반 페이지로 바꿨다 — 그래서 position:fixed 대신 다른
-   목록/상세 화면들처럼 .erp-page 안에서 자연스러운 카드 높이로 앉힌다. */
-/* 메신저는 게시판/메일함과 같은 "커뮤니케이션 서피스"라 바깥 틀도
-   다른 화면(각진 .erp-border-strong 박스)과 달리 둥근 모서리를 쓴다
-   — 안의 말풍선만 둥글고 바깥 틀은 각지면 서로 안 어울려 보인다. */
-.erp-messenger-page {
-  display: flex;
-  flex-direction: column;
-  height: min(78vh, 760px);
-  min-height: 420px;
-  background: var(--erp-panel);
-  border: 1px solid var(--erp-comm-border);
-  border-radius: var(--erp-comm-radius);
-  box-shadow: var(--erp-comm-shadow);
-  overflow: hidden;
-}
-
+/* 예전엔 78vh로 높이가 캡된 독립 "떠있는 카드"(둥근 모서리+그림자)였는데,
+   메일함/게시판과 디자인·크기가 다르다는 지적을 받았다 — 메일함이
+   쓰는 것과 똑같은 .erp-comm-shell > .erp-split3-shell(각진 박스,
+   페이지 높이를 꽉 채움) 틀로 갈아끼운다. 왼쪽부터 사원목록(카테고리
+   사이드바 역할) → 채팅방목록(목록) → 대화창(상세) 3단이 split3-shell의
+   3개 그리드 칸에 그대로 대응된다. */
 .erp-messenger-unread-dot {
   position: absolute;
   top: 2px;
@@ -3873,66 +3861,42 @@ a.erp-detail-tab:hover:not(.active) {
   border: 2px solid var(--erp-on-primary);
 }
 
-
-/* 대화 탭 — 3단 메신저 레이아웃(사용자 요청: "젤 왼쪽에 친구목록
-   사원목록, 가운데 채팅방목록, 젤우측에 채팅창 본문"). 예전엔 "직원
-   검색"이 대화창 자리를 밀어내는 임시 화면(newDm view)이었는데,
-   항상 보이는 전용 패널로 승격했다 — 카카오톡/슬랙처럼 사원 찾기와
-   대화방 전환이 동시에 눈에 들어와야 한다는 취지.
-   넓은 화면에서는 사원목록+채팅방목록+본문 셋 다 항상 보이고, 768px
-   아래(트리메뉴가 오버레이로 바뀌는 것과 같은 기준)에서는 한 번에
-   한 패널만 보이게 전환한다(messenger-page.tsx의 data-view: "roster"|
-   "rooms"|"chat"|"newGroup" 참고). */
-.erp-messenger-layout {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-}
-
-/* 사원목록 + 채팅방목록을 한 묶음으로 — 모바일에서 이 둘 중 하나만
-   보이게 전환하고(안은 data-view로 각자 토글), "본문 전체화면" 상태일
-   때는 묶음째로 숨긴다. */
-.erp-messenger-lists {
-  display: flex;
-  min-height: 0;
-}
-
 .erp-messenger-mobile-tabs {
   display: none;
 }
 
-.erp-messenger-roster {
-  flex: 0 0 200px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border-right: 1px solid var(--erp-comm-border);
-  background: var(--erp-bg-subtle);
+/* 사원목록(.erp-cat-sidebar) — 다른 화면의 카테고리 사이드바와 같은
+   박스지만, 안에 검색창까지 들어가는 messenger 전용 구성이라 기본
+   padding/overflow는 끄고 머리글+검색+목록을 직접 쌓는다. */
+.erp-cat-sidebar.erp-messenger-roster {
+  padding: 0;
+  overflow: hidden;
 }
 
 .erp-messenger-roster-head {
   flex: 0 0 auto;
-  padding: 10px 12px 6px;
-  font-size: var(--erp-font-sm);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: var(--erp-font-base);
   font-weight: 700;
-  color: var(--erp-text-muted);
-  letter-spacing: 0.02em;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border);
 }
 
-.erp-messenger-sidebar {
-  flex: 0 0 240px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border-right: 1px solid var(--erp-comm-border);
-}
+/* 채팅방목록(.erp-split-list)은 머리글/본문을 공용 .erp-split-list-head
+   /.erp-split-list-body로 그대로 쓴다 — 추가 오버라이드가 필요 없다. */
 
-.erp-messenger-main {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+/* 대화창(.erp-split-detail) — 다른 split3-shell 화면(메일 본문 등)은
+   패널 전체가 스크롤되지만, 메신저는 채팅 앱처럼 작성칸이 항상 하단에
+   고정돼야 한다. 기본 padding/overflow를 끄고 내부에서 헤더/검색/
+   본문(.erp-messenger-body만 스크롤)/작성칸을 flex column으로 쌓는다
+   (.erp-comm-shell으로 한 단 더 감싸 특이도를 높여, 모바일 전용
+   split3-shell 오버라이드보다 항상 이 규칙이 이긴다). */
+.erp-comm-shell .erp-split-detail.erp-messenger-main {
+  padding: 0;
+  overflow: hidden;
 }
 
 .erp-messenger-empty-state {
@@ -3955,41 +3919,10 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 @media (max-width: 768px) {
-  /* 좁은 화면에서는 78vh로 높이가 제한된 떠있는 카드(테두리 있음)로
-     보이던 걸, 최신 메신저 앱(카카오톡 등)처럼 대화목록/대화창 각각이
-     화면 대부분을 차지하는 전용 화면처럼 보이게 한다(사용자 요청 —
-     "모바일환경 ui 레이아웃은 현대 sns를 따라가야할것 같은데"). 예전엔
-     분할뷰가 쓰던 것과 똑같은 calc(100vh - 140px) 매직넘버로 높이를
-     고정했는데, 그 공식 자체가 이미 "위쪽 chrome 높이를 어림짐작한
-     숫자라 실제와 어긋나면 하단에 빈 여백까지 스크롤된다"고 밝혀진
-     공식이다(헌법검사 — 거래처관리에서 재현·확인됨) — 메신저는 분할뷰와
-     다른 클래스(.erp-messenger-page)라 그 수정에 포함되지 않고 남아
-     있었다. 분할뷰와 같은 방식(flex:1)으로 고친다 — 부모 체인도
-     같이(아래 .erp-page:has(...) 규칙). */
-  .erp-messenger-page {
-    flex: 1;
-    min-height: 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .erp-page:has(> div > .erp-messenger-page) {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .erp-page:has(> div > .erp-messenger-page) > div {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-  }
-
   /* 3단이 한 화면에 다 못 들어가므로, data-view가 가리키는 패널
-     하나만 전체 폭으로 보여준다. */
+     하나만 전체 폭으로 보여준다 — split3-shell 공용 모바일 규칙이
+     이미 "detail"일 때 cat-sidebar+split-list를 함께 숨겨주므로,
+     메신저만 더 필요한 "roster"/"rooms" 중간 상태 2개만 추가한다. */
   .erp-messenger-mobile-tabs {
     display: flex;
     flex: 0 0 auto;
@@ -4016,34 +3949,18 @@ a.erp-detail-tab:hover:not(.active) {
     border-color: var(--erp-primary);
   }
 
-  .erp-messenger-lists {
-    flex-direction: column;
-    flex: 1 1 auto;
-    width: 100%;
-  }
-
-  .erp-messenger-layout[data-view="chat"] .erp-messenger-lists,
-  .erp-messenger-layout[data-view="newGroup"] .erp-messenger-lists {
+  .erp-messenger-split3[data-mobile-view="rooms"] .erp-cat-sidebar {
     display: none;
   }
-  .erp-messenger-layout:not([data-view="chat"]):not([data-view="newGroup"]) .erp-messenger-main {
+  .erp-messenger-split3[data-mobile-view="roster"] .erp-split-list {
     display: none;
   }
-
-  .erp-messenger-layout[data-view="roster"] .erp-messenger-sidebar {
+  /* 공용 규칙은 "detail"일 때만 대화창을 보여주는데(나머지는 전부
+     숨김), 메신저가 추가한 "roster"/"rooms" 상태에서도 대화창은 계속
+     숨어 있어야 한다 — 안 그러면 사원목록/채팅방목록 패널 아래로
+     대화창까지 같이 세로로 쌓여 보인다. */
+  .erp-messenger-split3:not([data-mobile-view="detail"]) .erp-split-detail {
     display: none;
-  }
-  .erp-messenger-layout[data-view="rooms"] .erp-messenger-roster {
-    display: none;
-  }
-  /* 패널 하나만 보이는 모바일 상태에서도 데스크톱 고정폭(200px/240px)에
-     묶여 있어 화면 오른쪽이 빈 채로 잘려 보이던 버그 — 나머지가
-     숨겨지면 남은 패널이 폭을 전부 채우게 한다. */
-  .erp-messenger-layout[data-view="roster"] .erp-messenger-roster,
-  .erp-messenger-layout[data-view="rooms"] .erp-messenger-sidebar {
-    flex: 1 1 auto;
-    width: 100%;
-    border-right: none;
   }
 
   /* 말풍선 아래 "삭제"/"취소" 버튼은 글자 크기(10.5px) + 상하 2px
