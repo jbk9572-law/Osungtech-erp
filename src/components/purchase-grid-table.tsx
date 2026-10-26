@@ -21,7 +21,7 @@ import {
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
-import { nextMonthLabel } from "@/lib/carryover";
+import { nextMonthLabel, formatCarryoverDate } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
 import { buildBackHref, resolveListHref } from "@/lib/list-return";
@@ -91,12 +91,23 @@ export function PurchaseGridTable({
   totalSupply,
   totalTax,
   backParam,
+  carryoverRows,
+  carryoverQuantity,
+  carryoverSupply,
+  carryoverTax,
 }: {
   rows: PurchaseRow[];
   totalQuantity: number;
   totalSupply: number;
   totalTax: number;
   backParam: string;
+  // 전월 이월분(작업일은 전월이지만 이번 달 실적으로 잡히는 건) —
+  // sales-grid-table.tsx와 같은 이유로 목록에도 별도 구간·별도 소계로
+  // 보여준다(아래 "매입 합계"와 합산되지 않음).
+  carryoverRows?: PurchaseRow[];
+  carryoverQuantity?: number;
+  carryoverSupply?: number;
+  carryoverTax?: number;
 }) {
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
     useSortableRows<PurchaseRow, SortKey>(rows);
@@ -192,6 +203,16 @@ export function PurchaseGridTable({
   const tdSticky2 = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
   });
+  // 전월 이월분 행 전용 톤 — sales-grid-table.tsx와 같은 이유(스티키 칸은
+  // 자기 배경색을 따로 가져서 <tr style>만으로는 색이 안 먹는다).
+  const tdSticky1Carryover = stickyCellStyle(0, GRID_CHECKBOX_WIDTH, {
+    background: "var(--erp-info-bg)",
+    borderLeft: "3px solid var(--erp-warning)",
+  });
+  const tdSticky2Carryover = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
+    borderRight: "1px solid var(--erp-border)",
+    background: "var(--erp-info-bg)",
+  });
 
   const activeRow = sortedRows.find((row) => row.key === activeKey) ?? null;
   const activeSelection: OrderDetailSelection | null = activeRow
@@ -219,6 +240,155 @@ export function PurchaseGridTable({
             : []),
       }
     : null;
+
+  // sales-grid-table.tsx와 같은 이유로 행 렌더링을 함수로 뺀다 — 일반 행과
+  // 전월 이월분 행이 완전히 같은 칸 구조로 그려지되, 전월 이월분 행은
+  // compactDate(연도 생략 "MM.DD" + 짧은 "이월" 배지)만 다르게 쓴다.
+  function renderRow(row: PurchaseRow, opts: { selectable: boolean; compactDate?: boolean }) {
+    const isRowSelected = opts.selectable && !!row.orderId && selected.has(row.orderId);
+    const isPayment = row.kind === "payment";
+    const detailHref = row.orderId
+      ? `/purchases/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
+      : row.supplierId
+        ? // 공급처 상세를 닫으면 공급처 목록이 아니라 지금 이
+          // 매입 화면(필터까지 포함)으로 돌아와야 한다(사용자
+          // 지적 — "상세보기 끄면 엉뚱한 메뉴로 이동해버린다").
+          `/suppliers/${row.supplierId}?back=${buildBackHref(resolveListHref("/purchases", backParam))}`
+        : null;
+    const isActive = opts.selectable && row.key === activeKey;
+    return (
+      <tr
+        key={row.key}
+        className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}`}
+        onClick={() => setManualActiveKey(row.key)}
+      >
+        <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
+          {opts.selectable && row.orderId && (
+            <RowCheckbox
+              checked={isRowSelected}
+              onChange={() => toggleRow(row.orderId!)}
+              label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.supplierName ?? ""} 선택`}
+            />
+          )}
+        </td>
+        <td style={opts.compactDate ? tdSticky2Carryover : tdSticky2}>
+          {row.date
+            ? opts.compactDate
+              ? formatCarryoverDate(row.date)
+              : new Date(row.date).toLocaleDateString("ko-KR")
+            : "-"}
+          {row.isCarryover && row.date && (
+            <GridBadge tone="warn" style={{ marginLeft: 4 }}>
+              {opts.compactDate ? "이월" : `이월(${nextMonthLabel(row.date)})`}
+            </GridBadge>
+          )}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.docNo ?? "-"}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.supplierCode ?? "-"}
+        </td>
+        <td>
+          <GridBadge tone={isPayment ? "muted" : "info"}>
+            {isPayment ? "지급" : "매입"}
+          </GridBadge>
+        </td>
+        <td>
+          {row.taxType ? (
+            <GridBadge
+              tone={
+                row.taxType === "과세"
+                  ? "info"
+                  : row.taxType === "영세"
+                    ? "warn"
+                    : "muted"
+              }
+            >
+              {row.taxType}
+            </GridBadge>
+          ) : (
+            "-"
+          )}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.evidenceType ?? "-"}
+        </td>
+        <td>{row.supplierName}</td>
+        <td>
+          {row.deliveryMethod ? (
+            <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
+          ) : (
+            <span style={{ color: "var(--erp-text-muted)" }}>
+              -
+            </span>
+          )}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.authorName ?? "-"}
+        </td>
+        <td
+          style={
+            isPayment
+              ? { color: "var(--erp-text-muted)" }
+              : undefined
+          }
+        >
+          {row.productLabel}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.spec}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.lotNumber || "-"}
+        </td>
+        <td className="num">
+          {isPayment
+            ? "-"
+            : `${formatNumber(row.quantity)} ${row.unit ?? ""}`}
+        </td>
+        <td
+          className="num"
+          style={{ color: "var(--erp-text-muted)" }}
+        >
+          {isPayment ? "-" : formatNumOrDash(row.unitCost)}
+        </td>
+        <td className="num">{formatNumber(row.supplyAmount)}</td>
+        <td
+          className="num"
+          style={{ color: "var(--erp-text-muted)" }}
+        >
+          {isPayment ? "-" : formatNumber(row.taxAmount)}
+        </td>
+        <td>
+          {isPayment ? (
+            "-"
+          ) : row.invoiceReceived ? (
+            <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 수취</span>
+          ) : (
+            <span style={{ color: "var(--erp-text-muted)" }}>미수취</span>
+          )}
+        </td>
+        <td style={{ color: "var(--erp-text-muted)" }}>
+          {row.remark || "-"}
+        </td>
+        <td className="num" onClick={(e) => e.stopPropagation()}>
+          {detailHref && (
+            <Link
+              href={detailHref}
+              title="상세 보기"
+              aria-label="상세 보기"
+              className="erp-icon-link"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
+        </td>
+      </tr>
+    );
+  }
 
   return (
     <>
@@ -268,150 +438,43 @@ export function PurchaseGridTable({
               <th />
             </tr>
           </thead>
-          <tbody>
-            {sortedRows.map((row) => {
-              const isRowSelected = !!row.orderId && selected.has(row.orderId);
-              const isPayment = row.kind === "payment";
-              const detailHref = row.orderId
-                ? `/purchases/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
-                : row.supplierId
-                  ? // 공급처 상세를 닫으면 공급처 목록이 아니라 지금 이
-                    // 매입 화면(필터까지 포함)으로 돌아와야 한다(사용자
-                    // 지적 — "상세보기 끄면 엉뚱한 메뉴로 이동해버린다").
-                    `/suppliers/${row.supplierId}?back=${buildBackHref(resolveListHref("/purchases", backParam))}`
-                  : null;
-              const isActive = row.key === activeKey;
-              return (
-                <tr
-                  key={row.key}
-                  className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}`}
-                  onClick={() => setManualActiveKey(row.key)}
+          {carryoverRows && carryoverRows.length > 0 && (
+            <tbody>
+              <tr>
+                <td
+                  colSpan={20}
+                  style={{ background: "var(--erp-bg)", fontWeight: 700, color: "var(--erp-text-muted)", padding: "6px 8px" }}
                 >
-                  <td style={tdSticky1}>
-                    {row.orderId && (
-                      <RowCheckbox
-                        checked={isRowSelected}
-                        onChange={() => toggleRow(row.orderId!)}
-                        label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.supplierName ?? ""} 선택`}
-                      />
-                    )}
-                  </td>
-                  <td style={tdSticky2}>
-                    {row.date
-                      ? new Date(row.date).toLocaleDateString("ko-KR")
-                      : "-"}
-                    {row.isCarryover && row.date && (
-                      <GridBadge tone="warn" style={{ marginLeft: 4 }}>
-                        이월({nextMonthLabel(row.date)})
-                      </GridBadge>
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.docNo ?? "-"}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.supplierCode ?? "-"}
-                  </td>
-                  <td>
-                    <GridBadge tone={isPayment ? "muted" : "info"}>
-                      {isPayment ? "지급" : "매입"}
-                    </GridBadge>
-                  </td>
-                  <td>
-                    {row.taxType ? (
-                      <GridBadge
-                        tone={
-                          row.taxType === "과세"
-                            ? "info"
-                            : row.taxType === "영세"
-                              ? "warn"
-                              : "muted"
-                        }
-                      >
-                        {row.taxType}
-                      </GridBadge>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.evidenceType ?? "-"}
-                  </td>
-                  <td>{row.supplierName}</td>
-                  <td>
-                    {row.deliveryMethod ? (
-                      <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
-                    ) : (
-                      <span style={{ color: "var(--erp-text-muted)" }}>
-                        -
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.authorName ?? "-"}
-                  </td>
-                  <td
-                    style={
-                      isPayment
-                        ? { color: "var(--erp-text-muted)" }
-                        : undefined
-                    }
-                  >
-                    {row.productLabel}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.spec}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.lotNumber || "-"}
-                  </td>
-                  <td className="num">
-                    {isPayment
-                      ? "-"
-                      : `${formatNumber(row.quantity)} ${row.unit ?? ""}`}
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {isPayment ? "-" : formatNumOrDash(row.unitCost)}
-                  </td>
-                  <td className="num">{formatNumber(row.supplyAmount)}</td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {isPayment ? "-" : formatNumber(row.taxAmount)}
-                  </td>
-                  <td>
-                    {isPayment ? (
-                      "-"
-                    ) : row.invoiceReceived ? (
-                      <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 수취</span>
-                    ) : (
-                      <span style={{ color: "var(--erp-text-muted)" }}>미수취</span>
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.remark || "-"}
-                  </td>
-                  <td className="num" onClick={(e) => e.stopPropagation()}>
-                    {detailHref && (
-                      <Link
-                        href={detailHref}
-                        title="상세 보기"
-                        aria-label="상세 보기"
-                        className="erp-icon-link"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+                  전월 이월분 · 이번달 실적으로 반영됨
+                </td>
+              </tr>
+              {carryoverRows.map((row) => renderRow(row, { selectable: false, compactDate: true }))}
+              <tr>
+                <td colSpan={2} style={stickyFooterStyle(0)} />
+                <td
+                  colSpan={11}
+                  style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)", padding: "4px 8px" }}
+                >
+                  전월 이월 소계 ({carryoverRows.length}건)
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                  {formatNumber(carryoverQuantity ?? 0)}
+                </td>
+                <td />
+                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                  {formatNumber(carryoverSupply ?? 0)}
+                </td>
+                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                  {formatNumber(carryoverTax ?? 0)}
+                </td>
+                <td />
+                <td />
+                <td />
+              </tr>
+            </tbody>
+          )}
+          <tbody>
+            {sortedRows.map((row) => renderRow(row, { selectable: true }))}
             {!sortedRows.length && (
               <tr>
                 <td colSpan={20} className="erp-grid-empty">

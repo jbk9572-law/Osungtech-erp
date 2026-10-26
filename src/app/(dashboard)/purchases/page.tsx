@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { monthRangeOf } from "@/lib/carryover";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -45,11 +46,21 @@ export default async function PurchasesPage({
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
   const supabase = await createClient();
 
+  // 전월 이월분 구간에서도 똑같은 모양의 행을 그릴 수 있게, select 문자열을
+  // 상수로 빼서 두 쿼리가 같은 타입으로 추론되게 한다(아래
+  // carryoverQuery 참고).
+  const PURCHASE_ITEM_SELECT =
+    "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, doc_no, tax_type, evidence_type, suppliers(id, name, supplier_code), profiles!created_by(full_name)), products(sku, name, spec, unit)";
+
+  // 지금 보는 조회기간이 "정확히 한 달 전체"일 때만 "전월 이월분" 구간을
+  // 추가로 보여준다 — sales/page.tsx와 같은 이유(임의 기간엔 "전월"이란
+  // 개념이 없다).
+  const viewedMonth = monthRangeOf(effectiveFrom, effectiveTo);
+  const carryoverRange = viewedMonth ? getMonthRange(shiftMonth(viewedMonth, -1)) : null;
+
   let query = supabase
     .from("purchase_order_items")
-    .select(
-      "*, purchase_orders!inner(id, purchase_date, memo, delivery_method, is_carryover, doc_no, tax_type, evidence_type, suppliers(id, name, supplier_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
-    )
+    .select(PURCHASE_ITEM_SELECT)
     // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
     // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
     // 실제로 적용되지 않는 postgrest-js의 알려진 제약이라, PostgREST의
@@ -71,6 +82,19 @@ export default async function PurchasesPage({
     .limit(limit);
   paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
 
+  let carryoverQuery = carryoverRange
+    ? supabase
+        .from("purchase_order_items")
+        .select(PURCHASE_ITEM_SELECT)
+        .eq("purchase_orders.is_carryover", true)
+        .order("purchase_orders(purchase_date)", { ascending: false })
+        .gte("purchase_orders.purchase_date", carryoverRange.from)
+        .limit(limit)
+    : null;
+  if (carryoverQuery && carryoverRange) {
+    carryoverQuery = carryoverQuery.lte("purchase_orders.purchase_date", carryoverRange.to);
+  }
+
   const receivedInvoiceRows = await fetchAllRows<{ purchase_order_id: string }>((from, to) =>
     supabase
       .from("purchase_received_invoices")
@@ -80,10 +104,12 @@ export default async function PurchasesPage({
   );
   const receivedPurchaseOrderIds = new Set(receivedInvoiceRows.map((r) => r.purchase_order_id));
 
-  const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
+  const [{ data: rawItems }, { data: rawPayments }, carryoverResult] = await Promise.all([
     query,
     paymentQuery,
+    carryoverQuery ?? Promise.resolve(null),
   ]);
+  const rawCarryoverItems = carryoverResult?.data ?? [];
   // 조회기간 안에 상한(limit)만큼 꽉 채워 왔다면 그 이상 더 있을 수 있다는
   // 뜻이므로 "더보기"를 보여준다.
   const hasMore =
@@ -222,6 +248,80 @@ export default async function PurchasesPage({
         ? `${row.productLabel} 외 ${row.itemCount - 1}건`
         : row.productLabel,
   }));
+
+  // 전월 이월분 — 작업일(매입일자)은 전월이지만 다음 달(지금 보고 있는 달)
+  // 실적으로 잡히는 건. sales/page.tsx와 같은 이유로 목록에도 보여준다.
+  // 모조지 재단 상세(paperCalcSizeLines)까지는 채우지 않는다 — 참고용
+  // 구간이고, 필요하면 상세 화면에서 그대로 볼 수 있다.
+  const carryoverKeywordItems = keyword
+    ? (rawCarryoverItems ?? []).filter((item) =>
+        matchesSearch(
+          keyword,
+          item.purchase_orders?.suppliers?.name,
+          item.products?.name,
+          item.custom_name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.purchase_orders?.memo,
+          item.purchase_orders?.delivery_method,
+        ),
+      )
+    : (rawCarryoverItems ?? []);
+  const carryoverItemRows = carryoverKeywordItems.map((item) => {
+    const supplyAmount = item.quantity * Number(item.unit_cost);
+    const taxAmount = item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    return { ...item, supplyAmount, taxAmount };
+  });
+  const carryoverRows: DisplayRow[] = Object.values(
+    carryoverItemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
+      const orderId = item.purchase_orders?.id ?? item.id;
+      if (!acc[orderId]) {
+        acc[orderId] = {
+          key: orderId,
+          kind: "purchase",
+          orderId,
+          supplierId: item.purchase_orders?.suppliers?.id,
+          docNo: item.purchase_orders?.doc_no,
+          supplierCode: item.purchase_orders?.suppliers?.supplier_code,
+          taxType: item.purchase_orders?.tax_type,
+          evidenceType: item.purchase_orders?.evidence_type,
+          invoiceReceived: receivedPurchaseOrderIds.has(orderId),
+          date: item.purchase_orders?.purchase_date,
+          supplierName: item.purchase_orders?.suppliers?.name,
+          authorName: item.purchase_orders?.profiles?.full_name,
+          productLabel: item.products?.name ?? item.custom_name ?? "-",
+          spec: item.spec || item.products?.spec || "-",
+          lotNumber: item.lot_number,
+          remark: item.remark,
+          quantity: 0,
+          unit: item.products?.unit,
+          unitCost: Number(item.unit_cost),
+          supplyAmount: 0,
+          taxAmount: 0,
+          deliveryMethod: item.purchase_orders?.delivery_method,
+          isCarryover: true,
+          itemCount: 0,
+        };
+      } else {
+        acc[orderId].unitCost = null;
+        acc[orderId].lotNumber = null;
+        acc[orderId].remark = null;
+      }
+      acc[orderId].itemCount += 1;
+      acc[orderId].quantity += item.quantity;
+      acc[orderId].supplyAmount += item.supplyAmount;
+      acc[orderId].taxAmount += item.taxAmount;
+      return acc;
+    }, {}),
+  ).map((row) => ({
+    ...row,
+    productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+  }));
+  const carryoverQuantityTotal = carryoverRows.reduce((sum, r) => sum + r.quantity, 0);
+  const carryoverSupplyTotal = carryoverRows.reduce((sum, r) => sum + r.supplyAmount, 0);
+  const carryoverTaxTotal = carryoverRows.reduce((sum, r) => sum + r.taxAmount, 0);
 
   const payments = keyword
     ? rawPayments?.filter((p) => matchesSearch(keyword, p.suppliers?.name, p.memo))
@@ -404,12 +504,24 @@ export default async function PurchasesPage({
         </Link>
       </div>
 
+      {carryoverRows.length > 0 && (
+        <PageGuide tone="info" className="mb-2">
+          이번 달 매입 실적(리포트 기준) = 신규 {formatNumber(totalSupply)}원 + 전월 이월{" "}
+          {formatNumber(carryoverSupplyTotal)}원 = <strong>{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
+          — 전월 이월분은 아래 목록 합계(날짜 기준)에는 포함되지 않고, 별도 구간으로만 표시됩니다.
+        </PageGuide>
+      )}
+
       <PurchaseGridTable
         rows={rows}
         totalQuantity={totalQuantity}
         totalSupply={totalSupply}
         totalTax={totalTax}
         backParam={backParam ?? ""}
+        carryoverRows={carryoverRows}
+        carryoverQuantity={carryoverQuantityTotal}
+        carryoverSupply={carryoverSupplyTotal}
+        carryoverTax={carryoverTaxTotal}
       />
 
       {hasMore && (

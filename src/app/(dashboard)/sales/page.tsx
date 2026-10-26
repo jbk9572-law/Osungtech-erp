@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
+import { monthRangeOf } from "@/lib/carryover";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -45,11 +46,23 @@ export default async function SalesPage({
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
   const supabase = await createClient();
 
+  // 전월 이월분 구간에서도 똑같은 모양의 행을 그릴 수 있게, select 문자열을
+  // 상수로 빼서 두 쿼리가 같은 타입으로 추론되게 한다(아래
+  // carryoverItemsQuery 참고).
+  const SALE_ITEM_SELECT =
+    "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, is_carryover, is_sample, doc_no, tax_type, evidence_type, invoice_status, customers(id, name, customer_code), profiles!created_by(full_name)), products(sku, name, spec, unit)";
+
+  // 지금 보는 조회기간이 "정확히 한 달 전체"일 때만 "전월 이월분" 구간을
+  // 추가로 보여준다 — 지난주/직접 지정한 임의 기간에는 "전월"이라는 개념
+  // 자체가 없다(사용자 지적: 이월 건은 다음 달 실적 합계에는 잡히지만
+  // 목록(업무 화면)에는 전혀 안 보여서, 담당자가 이번 달에 세금계산서를
+  // 발행해야 할 이월 건을 놓치기 쉬웠다).
+  const viewedMonth = monthRangeOf(effectiveFrom, effectiveTo);
+  const carryoverRange = viewedMonth ? getMonthRange(shiftMonth(viewedMonth, -1)) : null;
+
   let query = supabase
     .from("sales_order_items")
-    .select(
-      "*, sales_orders!inner(id, order_date, memo, delivery_method, is_return, is_carryover, is_sample, doc_no, tax_type, evidence_type, invoice_status, customers(id, name, customer_code), profiles!created_by(full_name)), products(sku, name, spec, unit)",
-    )
+    .select(SALE_ITEM_SELECT)
     // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
     // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
     // 지웠다가 다시 넣는 방식이라 오래된 거래를 수정만 해도 최상단으로
@@ -75,10 +88,25 @@ export default async function SalesPage({
     .limit(limit);
   paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
 
-  const [{ data: rawItems }, { data: rawPayments }] = await Promise.all([
+  let carryoverQuery = carryoverRange
+    ? supabase
+        .from("sales_order_items")
+        .select(SALE_ITEM_SELECT)
+        .eq("sales_orders.is_carryover", true)
+        .order("sales_orders(order_date)", { ascending: false })
+        .gte("sales_orders.order_date", carryoverRange.from)
+        .limit(limit)
+    : null;
+  if (carryoverQuery && carryoverRange) {
+    carryoverQuery = carryoverQuery.lte("sales_orders.order_date", carryoverRange.to);
+  }
+
+  const [{ data: rawItems }, { data: rawPayments }, carryoverResult] = await Promise.all([
     query,
     paymentQuery,
+    carryoverQuery ?? Promise.resolve(null),
   ]);
+  const rawCarryoverItems = carryoverResult?.data ?? [];
   // 조회기간 안에 상한(limit)만큼 꽉 채워 왔다면 그 이상 더 있을 수 있다는
   // 뜻이므로 "더보기"를 보여준다.
   const hasMore =
@@ -219,6 +247,89 @@ export default async function SalesPage({
         ? `${row.productLabel} 외 ${row.itemCount - 1}건`
         : row.productLabel,
   }));
+
+  // 전월 이월분 — 작업일(거래일자)은 전월이지만 다음 달(지금 보고 있는 달)
+  // 실적으로 잡히는 건. 목록(업무 화면)에서도 보여야 담당자가 이번 달에
+  // 세금계산서를 발행해야 할 건을 놓치지 않는다(사용자 지적). 메인
+  // saleRows와 달리 모조지 재단 상세(paperCalcSizeLines)까지는 채우지
+  // 않는다 — 참고용 구간이고, 필요하면 상세 화면에서 그대로 볼 수 있다.
+  const carryoverKeywordItems = keyword
+    ? (rawCarryoverItems ?? []).filter((item) =>
+        matchesSearch(
+          keyword,
+          item.sales_orders?.customers?.name,
+          item.products?.name,
+          item.custom_name,
+          item.products?.sku,
+          item.spec || item.products?.spec,
+          item.lot_number,
+          item.remark,
+          item.sales_orders?.memo,
+          item.sales_orders?.delivery_method,
+        ),
+      )
+    : (rawCarryoverItems ?? []);
+  const carryoverItemRows = carryoverKeywordItems.map((item) => {
+    const supplyAmount = item.quantity * Number(item.unit_price);
+    const taxAmount = item.sales_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    return { ...item, supplyAmount, taxAmount };
+  });
+  const carryoverRows: DisplayRow[] = Object.values(
+    carryoverItemRows.reduce<Record<string, DisplayRow & { itemCount: number }>>((acc, item) => {
+      const orderId = item.sales_orders?.id ?? item.id;
+      if (!acc[orderId]) {
+        acc[orderId] = {
+          key: orderId,
+          kind: "sale",
+          orderId,
+          customerId: item.sales_orders?.customers?.id,
+          docNo: item.sales_orders?.doc_no,
+          customerCode: item.sales_orders?.customers?.customer_code,
+          taxType: item.sales_orders?.tax_type,
+          evidenceType: item.sales_orders?.evidence_type,
+          invoiceStatus: item.sales_orders?.invoice_status,
+          date: item.sales_orders?.order_date,
+          customerName: item.sales_orders?.customers?.name,
+          authorName: item.sales_orders?.profiles?.full_name,
+          productLabel: item.products?.name ?? item.custom_name ?? "-",
+          spec: item.spec || item.products?.spec || "-",
+          lotNumber: item.lot_number,
+          remark: item.remark,
+          quantity: 0,
+          unit: item.products?.unit,
+          unitPrice: Number(item.unit_price),
+          supplyAmount: 0,
+          taxAmount: 0,
+          deliveryMethod: item.sales_orders?.delivery_method,
+          isReturn: item.sales_orders?.is_return ?? false,
+          isSample: item.sales_orders?.is_sample ?? false,
+          isCarryover: true,
+          itemCount: 0,
+        };
+      } else {
+        acc[orderId].unitPrice = null;
+        acc[orderId].lotNumber = null;
+        acc[orderId].remark = null;
+      }
+      acc[orderId].itemCount += 1;
+      acc[orderId].quantity += item.quantity;
+      acc[orderId].supplyAmount += item.supplyAmount;
+      acc[orderId].taxAmount += item.taxAmount;
+      return acc;
+    }, {}),
+  ).map((row) => ({
+    ...row,
+    productLabel: row.itemCount > 1 ? `${row.productLabel} 외 ${row.itemCount - 1}건` : row.productLabel,
+  }));
+  const carryoverQuantityTotal = carryoverRows.reduce((sum, r) => sum + r.quantity, 0);
+  const carryoverSupplyTotal = carryoverRows.reduce(
+    (sum, r) => sum + (r.isReturn ? -r.supplyAmount : r.supplyAmount),
+    0,
+  );
+  const carryoverTaxTotal = carryoverRows.reduce(
+    (sum, r) => sum + (r.isReturn ? -r.taxAmount : r.taxAmount),
+    0,
+  );
 
   const payments = keyword
     ? rawPayments?.filter((p) => matchesSearch(keyword, p.customers?.name, p.memo))
@@ -410,12 +521,24 @@ export default async function SalesPage({
         </Link>
       </div>
 
+      {carryoverRows.length > 0 && (
+        <PageGuide tone="info" className="mb-2">
+          이번 달 매출 실적(리포트 기준) = 신규 {formatNumber(totalSupply)}원 + 전월 이월{" "}
+          {formatNumber(carryoverSupplyTotal)}원 = <strong>{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
+          — 전월 이월분은 아래 목록 합계(날짜 기준)에는 포함되지 않고, 별도 구간으로만 표시됩니다.
+        </PageGuide>
+      )}
+
       <SalesGridTable
         rows={rows}
         totalQuantity={totalQuantity}
         totalSupply={totalSupply}
         totalTax={totalTax}
         backParam={backParam ?? ""}
+        carryoverRows={carryoverRows}
+        carryoverQuantity={carryoverQuantityTotal}
+        carryoverSupply={carryoverSupplyTotal}
+        carryoverTax={carryoverTaxTotal}
       />
 
       {hasMore && (

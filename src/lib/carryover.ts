@@ -30,3 +30,28 @@ export function effectiveMonth(dateStr: string, isCarryover: boolean): string {
   if (!next) return dateStr.slice(0, 7);
   return `${next.year}-${String(next.month).padStart(2, "0")}`;
 }
+
+// from/to가 정확히 "그 달 1일~말일" 전체 범위일 때만 그 "YYYY-MM"을
+// 돌려주고, 아니면 null — 매출/매입 목록은 이번달뿐 아니라 임의 기간
+// (지난주, 직접 입력한 날짜 범위 등)도 조회할 수 있는데, "전월 이월분"은
+// 정확히 "한 달 전체"를 보고 있을 때만 의미가 있다(임의 기간엔 "전월"이란
+// 개념 자체가 없다). 목록 화면이 "전월 이월분" 구간을 추가로 보여줄지
+// 판단하는 데 쓴다.
+export function monthRangeOf(from: string, to: string): string | null {
+  const match = /^(\d{4})-(\d{2})-01$/.exec(from);
+  if (!match) return null;
+  const [, yearStr, monthStr] = match;
+  const lastDay = new Date(Number(yearStr), Number(monthStr), 0).getDate();
+  const expectedTo = `${yearStr}-${monthStr}-${String(lastDay).padStart(2, "0")}`;
+  return to === expectedTo ? `${yearStr}-${monthStr}` : null;
+}
+
+// 이월 건 전용 축약 날짜("MM.DD", 연도 생략) — "전월 이월분" 구간은 구간
+// 제목에 이미 "전월(10월)"이라고 적혀 있어 각 행마다 연도까지 반복하면
+// 중복이고, 옆에 "이월" 배지까지 붙으면 일반 행보다 칸이 넓어져 표가
+// 들쭉날쭉해 보인다(사용자 지적). 일반 행의 날짜 표기(toLocaleDateString)는
+// 그대로 둔다 — 이월 전용 구간에서만 쓴다.
+export function formatCarryoverDate(dateStr: string): string {
+  const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(dateStr);
+  return match ? `${match[1]}.${match[2]}` : dateStr;
+}
