@@ -781,7 +781,6 @@ export function MessengerPage({
                           그룹 나가기
                         </button>
                       )}
-                      <span style={{ flex: 1 }} />
                       <button
                         type="submit"
                         disabled={sending}

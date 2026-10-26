@@ -3893,8 +3893,17 @@ a.erp-detail-tab:hover:not(.active) {
    고정돼야 한다. 기본 padding/overflow를 끄고 내부에서 헤더/검색/
    본문(.erp-messenger-body만 스크롤)/작성칸을 flex column으로 쌓는다
    (.erp-comm-shell으로 한 단 더 감싸 특이도를 높여, 모바일 전용
-   split3-shell 오버라이드보다 항상 이 규칙이 이긴다). */
+   split3-shell 오버라이드보다 항상 이 규칙이 이긴다). 예전엔
+   .erp-messenger-main 단독 클래스가 이 flex column 자체(display:flex
+   등)를 정의했는데, split-detail과 합치면서 옮겨적다 그 선언을
+   통째로 빠뜨렸다 — 그 바람에 패널이 그냥 block 요소가 되어 본문이
+   flex:1로 늘어나지 못하고, 작성칸이 내용 높이만큼만 차지한 채 패널
+   중간에 붕 뜨고 그 아래로 빈 여백이 생겼었다(실사용 중 발견). */
 .erp-comm-shell .erp-split-detail.erp-messenger-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   overflow: hidden;
 }
@@ -4177,12 +4186,16 @@ a.erp-detail-tab:hover:not(.active) {
   cursor: default;
 }
 
+/* 입력창과 첨부/전송 버튼이 한 줄에 나란히 — 예전엔 column 배치라
+   버튼 줄이 입력칸 아래로 줄바꿈됐는데(사용자 지적: 카톡/슬랙처럼
+   같은 줄에 있어야 함), row + 아래쪽 정렬로 바꿔 입력칸이 길어져도
+   버튼이 항상 입력칸 하단과 나란히 붙는다. */
 .erp-messenger-composer {
   flex: 0 0 auto;
   border-top: 1px solid var(--erp-border);
   padding: 8px;
   display: flex;
-  flex-direction: column;
+  align-items: flex-end;
   gap: 6px;
 }
 
