@@ -27,6 +27,7 @@ import { LEAVE_UNIT_LABEL, type LeaveUnit } from "@/lib/leave-unit";
 import { getWeekRange, sumWorkedHours, weeklyHoursTone, WEEKLY_HOURS_WARNING } from "@/lib/weekly-hours";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" }> = {
   pending: { label: "대기", tone: "warn" },
@@ -367,7 +368,7 @@ export default async function AttendancePage() {
                 </thead>
                 <tbody>
                   {(myLeaves ?? []).map((l) => {
-                    const status = STATUS_LABEL[l.status] ?? { label: l.status, tone: "muted" as const };
+                    const status = resolveStatusLabel(STATUS_LABEL, l.status);
                     return (
                       <tr key={l.id}>
                         <td>
@@ -436,7 +437,7 @@ export default async function AttendancePage() {
                 </thead>
                 <tbody>
                   {(myCorrections ?? []).map((c) => {
-                    const status = STATUS_LABEL[c.status] ?? { label: c.status, tone: "muted" as const };
+                    const status = resolveStatusLabel(STATUS_LABEL, c.status);
                     return (
                       <tr key={c.id}>
                         <td>{c.work_date.replaceAll("-", ".")}</td>

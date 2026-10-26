@@ -12,6 +12,7 @@ import { formatNumber } from "@/lib/format-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { todayKstStr } from "@/lib/kst-date";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -155,7 +156,7 @@ export default async function PurchaseRequestsPage({
                 (sum, i) => sum + Number(i.quantity) * Number(i.estimated_unit_price),
                 0,
               );
-              const status = STATUS_LABEL[r.status] ?? { label: r.status, tone: "muted" as const };
+              const status = resolveStatusLabel(STATUS_LABEL, r.status);
               return (
                 <Link
                   key={r.id}

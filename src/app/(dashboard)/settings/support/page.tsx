@@ -8,6 +8,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { AccessWall } from "@/components/erp/access-wall";
 import { SupportTicketForm } from "@/components/support-ticket-form";
 import { createSupportTicket } from "@/app/(dashboard)/settings/support/actions";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "muted" }> = {
   open: { label: "답변 대기", tone: "warn" },
@@ -62,7 +63,7 @@ export default async function SupportPage() {
           ) : (
             <div className="flex flex-col gap-3">
               {(tickets ?? []).map((t) => {
-                const status = STATUS_LABEL[t.status] ?? { label: t.status, tone: "muted" as const };
+                const status = resolveStatusLabel(STATUS_LABEL, t.status);
                 return (
                   <div key={t.id} className="rounded border p-3" style={{ borderColor: "var(--erp-border)" }}>
                     <div className="mb-1 flex items-center justify-between gap-2">

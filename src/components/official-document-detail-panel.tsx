@@ -13,6 +13,7 @@ import { SendOfficialDocumentButton } from "@/components/send-official-document-
 import { RecipientManualDeliverButton } from "@/components/recipient-manual-deliver-button";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
+import { resolveStatusLabel } from "@/lib/status-label";
 import {
   deleteOfficialDocument,
   submitOfficialDocumentForApproval,
@@ -91,7 +92,7 @@ export async function OfficialDocumentDetailPanel({
   );
 
   const allowManage = canManage(doc.created_by, userId, isAdmin);
-  const status = STATUS_LABEL[doc.status] ?? { label: doc.status, tone: "muted" as const };
+  const status = resolveStatusLabel(STATUS_LABEL, doc.status);
 
   let orgTree: ReturnType<typeof buildOrgTree> = [];
   if (allowManage && doc.status === "draft") {
@@ -207,7 +208,7 @@ export async function OfficialDocumentDetailPanel({
                 </thead>
                 <tbody>
                   {recipients.map((r) => {
-                    const rStatus = RECIPIENT_STATUS_LABEL[r.status] ?? { label: r.status, tone: "muted" as const };
+                    const rStatus = resolveStatusLabel(RECIPIENT_STATUS_LABEL, r.status);
                     return (
                       <tr key={r.id}>
                         <td>{r.kind === "external" ? "외부" : "사내"}</td>

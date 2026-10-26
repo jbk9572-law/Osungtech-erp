@@ -11,6 +11,7 @@ import { ApprovalDecisionForm } from "@/components/approval-decision-form";
 import { getCurrentActor } from "@/lib/current-actor";
 import { buildBackHref } from "@/lib/list-return";
 import { todayKstStr } from "@/lib/kst-date";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 // 작성자 본인이 삭제할 수 있는 상태 — DB 정책(migration 181,
 // approval_documents_delete_own)과 정확히 같은 기준이어야 한다. 이미
@@ -117,8 +118,8 @@ export async function ApprovalDetailPanel({
         meta={
           <>
             {doc.profiles?.full_name ?? "기안자 미상"} · {new Date(doc.created_at).toLocaleString("ko-KR")} ·{" "}
-            <GridBadge tone={(STATUS_LABEL[doc.status] ?? { tone: "muted" as const }).tone}>
-              {STATUS_LABEL[doc.status]?.label ?? doc.status}
+            <GridBadge tone={resolveStatusLabel(STATUS_LABEL, doc.status).tone}>
+              {resolveStatusLabel(STATUS_LABEL, doc.status).label}
             </GridBadge>
           </>
         }

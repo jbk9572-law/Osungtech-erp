@@ -11,6 +11,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" | "info" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -138,7 +139,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
           </div>
           <div className="erp-split-list-body">
             {rows.map((row) => {
-              const status = STATUS_LABEL[row.status] ?? { label: row.status, tone: "muted" as const };
+              const status = resolveStatusLabel(STATUS_LABEL, row.status);
               return (
                 <Link
                   key={row.id}

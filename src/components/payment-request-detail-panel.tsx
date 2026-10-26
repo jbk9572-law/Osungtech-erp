@@ -18,6 +18,7 @@ import {
 } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { resolveStatusLabel } from "@/lib/status-label";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { formatNumber } from "@/lib/format-number";
@@ -110,8 +111,8 @@ export async function PaymentRequestDetailPanel({
       />
       <h1 className="mb-3 erp-h1">
         보고서 &gt; 지급결의양식 &gt; 본문{" "}
-        <GridBadge tone={(STATUS_LABEL[row.status] ?? { tone: "muted" as const }).tone}>
-          {STATUS_LABEL[row.status]?.label ?? row.status}
+        <GridBadge tone={resolveStatusLabel(STATUS_LABEL, row.status).tone}>
+          {resolveStatusLabel(STATUS_LABEL, row.status).label}
         </GridBadge>
       </h1>
 

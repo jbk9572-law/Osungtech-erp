@@ -18,6 +18,7 @@ import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { formatNumber } from "@/lib/format-number";
+import { resolveStatusLabel } from "@/lib/status-label";
 import { buildBackHref } from "@/lib/list-return";
 
 const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
@@ -82,7 +83,7 @@ export async function PurchaseRequestDetailPanel({
   const presets = presetsRaw.map((p) => ({ id: p.id, name: p.name, approverIds: p.approver_ids, referenceIds: p.reference_ids }));
 
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.quantity) * Number(i.estimated_unit_price), 0);
-  const status = STATUS_LABEL[row.status] ?? { label: row.status, tone: "muted" as const };
+  const status = resolveStatusLabel(STATUS_LABEL, row.status);
 
   return (
     <>

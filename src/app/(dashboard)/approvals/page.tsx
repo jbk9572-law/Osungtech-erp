@@ -18,6 +18,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   pending: { label: "결재중", tone: "warn" },
@@ -295,7 +296,7 @@ export default async function ApprovalsPage({
           </div>
           <div className="erp-split-list-body">
             {rows.map((d) => {
-              const status = STATUS_LABEL[d.status] ?? { label: d.status, tone: "muted" as const };
+              const status = resolveStatusLabel(STATUS_LABEL, d.status);
               return (
                 <Link
                   key={d.id}

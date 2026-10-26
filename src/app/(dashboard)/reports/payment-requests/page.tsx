@@ -13,6 +13,7 @@ import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "danger" | "muted" }> = {
   draft: { label: "작성중", tone: "muted" },
@@ -115,7 +116,7 @@ export default async function PaymentRequestsPage({
             <SplitListBulkSelect
               rows={rows.map((row): SplitListBulkRow => {
                 const total = (row.payment_request_line_items ?? []).reduce((sum, item) => sum + Number(item.amount), 0);
-                const status = STATUS_LABEL[row.status] ?? { label: row.status, tone: "muted" as const };
+                const status = resolveStatusLabel(STATUS_LABEL, row.status);
                 const label = row.department || row.title || paymentRequestDocTitle(row.card_type);
                 return {
                   id: row.id,

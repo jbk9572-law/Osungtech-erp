@@ -4,6 +4,7 @@ import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
 import { SupportTicketReplyForm } from "@/components/support-ticket-reply-form";
 import { replySupportTicket } from "@/app/platform-admin/support/actions";
+import { resolveStatusLabel } from "@/lib/status-label";
 
 const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "muted" }> = {
   open: { label: "답변 대기", tone: "warn" },
@@ -40,7 +41,7 @@ export default async function PlatformSupportPage() {
       ) : (
         <div className="erp-card-feed">
           {(tickets ?? []).map((t) => {
-            const status = STATUS_LABEL[t.status] ?? { label: t.status, tone: "muted" as const };
+            const status = resolveStatusLabel(STATUS_LABEL, t.status);
             const tenantName = (t.tenants as { name: string } | null)?.name ?? "-";
             return (
               <div
