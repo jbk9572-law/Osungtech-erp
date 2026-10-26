@@ -48,12 +48,18 @@ export async function createTemplate(_prevState: FormState, formData: FormData):
 
   const supabase = await createClient();
   const user = await getUser();
-  const { error } = await supabase.from("document_templates").insert({ name, body, category, created_by: user?.id ?? null });
+  const { data, error } = await supabase
+    .from("document_templates")
+    .insert({ name, body, category, created_by: user?.id ?? null })
+    .select("id")
+    .single();
 
-  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+  if (error || !data) return { error: `저장에 실패했습니다${error ? `: ${error.message}` : ""}` };
 
   revalidatePath("/hr/documents/templates");
-  return { success: "양식을 등록했습니다." };
+  // 공지사항(announcements/actions.ts의 createAnnouncement)과 같은 방식 —
+  // 등록 직후 방금 만든 항목을 목록에서 선택한 상태로 돌아간다.
+  return { redirectTo: `/hr/documents/templates?id=${data.id}` };
 }
 
 export async function updateTemplate(_prevState: FormState, formData: FormData): Promise<FormState> {

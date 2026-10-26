@@ -3,13 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { AccessWall } from "@/components/erp/access-wall";
-import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
-import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { GridBadge } from "@/components/grid/badge";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { DocumentTemplateListBody } from "@/components/document-template-list-body";
-import { deleteTemplate } from "@/app/(dashboard)/hr/documents/actions";
+import { DocumentTemplateForm } from "@/components/document-template-form";
+import { createTemplate, deleteTemplate } from "@/app/(dashboard)/hr/documents/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { isUuid } from "@/lib/is-uuid";
 
@@ -59,7 +59,7 @@ export default async function DocumentTemplatesPage({
     <div className="erp-comm-shell">
       <KeyboardShortcuts
         shortcuts={{
-          F2: { href: "/hr/documents/templates/new" },
+          F2: { href: listHref },
           Escape: { href: selectedId ? listHref : "/hr/documents" },
         }}
       />
@@ -67,7 +67,7 @@ export default async function DocumentTemplatesPage({
         title="그룹웨어 > 문서 양식 관리"
         actions={
           <>
-            <Link href="/hr/documents/templates/new" className="erp-btn erp-btn-primary">
+            <Link href={listHref} className="erp-btn erp-btn-primary">
               F2 새 양식
             </Link>
             <Link href="/hr/documents" className="erp-btn erp-btn-dark">
@@ -130,11 +130,15 @@ export default async function DocumentTemplatesPage({
               </div>
             </>
           ) : (
-            <SplitDetailEmpty
-              icon={<DocumentIcon />}
-              title="양식을 선택해주세요"
-              hint="왼쪽 목록에서 문서 양식을 누르면 여기에 내용이 표시됩니다."
-            />
+            // 공지사항(announcements/page.tsx)과 같은 방식 — 이 화면
+            // 전체가 이미 관리자 전용으로 막혀 있으므로, 아무것도
+            // 선택하지 않은 기본 상태엔 "선택해주세요" 안내 대신
+            // 바로 새 양식 작성 폼을 보여준다. "새 양식" 모달이 메일함/
+            // 게시판과 디자인 언어가 다르다는 지적을 반영 — 이제 메일
+            // 작성과 똑같이 우측 상세 패널 자리에서 바로 작성한다.
+            <FormSection tabLabel="양식 등록">
+              <DocumentTemplateForm action={createTemplate} submitLabel="등록" />
+            </FormSection>
           )}
         </div>
       </div>

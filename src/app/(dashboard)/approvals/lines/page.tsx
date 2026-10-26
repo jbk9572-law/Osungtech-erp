@@ -2,17 +2,18 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, SplitDetailEmpty } from "@/components/erp/page-header";
+import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { CloseButton } from "@/components/erp/close-button";
-import { CheckCircleIcon } from "@/components/erp/groupware-icons";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ApprovalMatrixRuleSelect } from "@/components/approval-matrix-rule-select";
-import { deleteApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/actions";
+import { ApprovalLinePresetForm } from "@/components/approval-line-preset-form";
+import { createApprovalLinePreset, deleteApprovalLinePreset } from "@/app/(dashboard)/approvals/lines/actions";
 import { setApprovalMatrixRule } from "@/app/(dashboard)/approvals/matrix/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { isUuid } from "@/lib/is-uuid";
+import { buildOrgTree } from "@/lib/org-chart";
 
 // 공유 결재선(누가 결재하는지)과 결재매트릭스(어느 양식이 어느 결재선을
 // 자동으로 쓰는지)가 전에는 별도 화면이었는데, 둘 다 소규모 설정
@@ -69,7 +70,7 @@ export default async function ApprovalLinesPage({
       actions={
         <>
           {activeTab === "lines" && (
-            <Link href="/approvals/lines/new" className="erp-btn erp-btn-primary">
+            <Link href="/approvals/lines" className="erp-btn erp-btn-primary">
               F2 새 결재선
             </Link>
           )}
@@ -160,7 +161,7 @@ export default async function ApprovalLinesPage({
     );
   }
 
-  const [presets, profiles] = await Promise.all([
+  const [presets, profiles, departments] = await Promise.all([
     fetchAllRows<{
       id: string;
       name: string;
@@ -174,13 +175,25 @@ export default async function ApprovalLinesPage({
         .order("name")
         .range(from, to),
     ),
-    fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
-      supabase.from("profiles").select("id, full_name").range(from, to),
+    // full_name만으로 충분했던 전엔 이 한 줄이었는데, "새 결재선" 작성이
+    // 상세패널 안으로 들어오면서(아래 참고) 조직도 선택기(buildOrgTree)에
+    // 필요한 position_title/department_id도 같이 담아 같은 조회를
+    // 재사용한다 — 별도 쿼리를 또 만들지 않는다.
+    fetchAllRows<{ id: string; full_name: string | null; position_title: string | null; department_id: string | null }>(
+      (from, to) => supabase.from("profiles").select("id, full_name, position_title, department_id").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string; parent_department_id: string | null; sort_order: number }>((from, to) =>
+      supabase.from("departments").select("id, name, parent_department_id, sort_order").order("sort_order").range(from, to),
     ),
   ]);
 
   const nameById: Record<string, string> = {};
   for (const p of profiles) nameById[p.id] = p.full_name || "구성원";
+
+  const orgTree = buildOrgTree(
+    departments.map((d) => ({ id: d.id, name: d.name, parentDepartmentId: d.parent_department_id, sortOrder: d.sort_order })),
+    profiles.map((p) => ({ id: p.id, fullName: p.full_name, positionTitle: p.position_title, departmentId: p.department_id })),
+  );
 
   const selected = selectedId ? presets.find((p) => p.id === selectedId) : undefined;
   const listHref = "/approvals/lines";
@@ -189,7 +202,7 @@ export default async function ApprovalLinesPage({
     <div className="erp-comm-shell">
       <KeyboardShortcuts
         shortcuts={{
-          F2: { href: "/approvals/lines/new" },
+          F2: { href: listHref },
           Escape: { href: selectedId ? listHref : "/approvals" },
         }}
       />
@@ -286,11 +299,16 @@ export default async function ApprovalLinesPage({
               </div>
             </>
           ) : (
-            <SplitDetailEmpty
-              icon={<CheckCircleIcon />}
-              title="결재선을 선택해주세요"
-              hint="왼쪽 목록에서 결재선을 누르면 결재자 순서가 여기에 표시됩니다."
-            />
+            // 문서양식관리/공지사항과 같은 방식 — 결재선 작성은 역할
+            // 제한이 없어(createApprovalLinePreset 참고) 아무것도 선택
+            // 안 한 기본 상태에 바로 작성 폼을 보여준다. "새 결재선"이
+            // 분할뷰 밖 별도 화면으로 떠서 디자인 언어가 깨진다는 지적
+            // ("왜 새창으로 넘어가는지 이해를못하겠어 이렇게 통일이
+            // 안되냐고")을 반영 — 메일쓰기와 똑같이 우측 상세 패널
+            // 자리에서 바로 작성한다.
+            <FormSection tabLabel="결재선 등록">
+              <ApprovalLinePresetForm action={createApprovalLinePreset} orgTree={orgTree} submitLabel="추가" />
+            </FormSection>
           )}
         </div>
       </div>

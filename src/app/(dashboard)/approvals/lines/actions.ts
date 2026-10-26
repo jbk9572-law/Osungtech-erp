@@ -15,14 +15,21 @@ export async function createApprovalLinePreset(_prevState: FormState, formData: 
   if (approverIds.length === 0) return { error: "결재자를 1명 이상 지정해주세요." };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("approval_line_presets")
-    .insert({ name, approver_ids: approverIds, reference_ids: referenceIds });
+    .insert({ name, approver_ids: approverIds, reference_ids: referenceIds })
+    .select("id")
+    .single();
 
-  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+  if (error || !data) return { error: `저장에 실패했습니다${error ? `: ${error.message}` : ""}` };
 
   revalidatePath("/approvals/lines");
-  redirect("/approvals/lines");
+  // 공지사항/문서양식관리와 같은 방식 — 등록 직후 방금 만든 결재선을
+  // 목록에서 선택한 상태로 돌아간다(예전엔 redirect()로 선택 없는
+  // 목록에 떨궜다 — "새 결재선"이 분할뷰 밖 별도 화면으로 떠서
+  // 디자인 언어가 깨진다는 지적을 반영해 작성 자체를 상세패널 안으로
+  // 옮기며 같이 맞췄다).
+  return { redirectTo: `/approvals/lines?id=${data.id}` };
 }
 
 export async function updateApprovalLinePreset(_prevState: FormState, formData: FormData): Promise<FormState> {

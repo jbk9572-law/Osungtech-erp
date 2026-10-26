@@ -5,6 +5,7 @@ import { FormMessage, type FormState } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
 import type { OrgDepartmentNode } from "@/lib/org-chart";
+import { useFormRedirect } from "@/lib/use-form-redirect";
 
 export function ApprovalLinePresetForm({
   action,
@@ -18,6 +19,7 @@ export function ApprovalLinePresetForm({
   initial?: { id: string; name: string; approvers: PickedPerson[]; references: PickedPerson[] };
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  useFormRedirect(state);
   const [name, setName] = useState(initial?.name ?? "");
   const [approvers, setApprovers] = useState<PickedPerson[]>(initial?.approvers ?? []);
   const [references, setReferences] = useState<PickedPerson[]>(initial?.references ?? []);
