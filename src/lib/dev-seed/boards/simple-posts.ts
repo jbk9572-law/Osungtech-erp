@@ -1,4 +1,4 @@
-import type { ActingSession, BoardSeedResult, SeedContext } from "../types";
+import type { ActingSession, BoardSeedResult, Db, SeedContext } from "../types";
 import { ANNOUNCEMENT_TITLES, TODO_TITLES, pick } from "../korean-data";
 
 function todayStr(): string {
@@ -28,7 +28,15 @@ export async function seedTodos(ctx: SeedContext, actors: ActingSession[], count
   return { board: "할일관리(todos)", created, error: lastError };
 }
 
+// 공지사항은 관리자/매니저만 작성할 수 있도록 RLS로 막혀있는데(기존
+// 기능), 더미 직원은 전부 role: "staff"로만 만들어진다(employees.ts) —
+// 그래서 actor.client(더미 직원 로그인 세션)로 쓰면 매번 RLS 위반으로
+// 0건 실패한다. 메일함의 플랫폼관리자 더미(mail.ts)와 같은 방식 —
+// 서비스 롤(admin)로 RLS를 우회해서 직접 insert하고, created_by만
+// 더미 직원 중 한 명으로 다양하게 채운다(실제 작성자 role과 무관하게
+// 그냥 "누가 썼는지" 표시용).
 export async function seedAnnouncements(
+  admin: Db,
   _ctx: SeedContext,
   actors: ActingSession[],
   count: number,
@@ -37,7 +45,7 @@ export async function seedAnnouncements(
   let lastError: string | undefined;
   for (let i = 0; i < count; i++) {
     const actor = pick(actors);
-    const { error } = await actor.client.from("announcements").insert({
+    const { error } = await admin.from("announcements").insert({
       title: `${pick(ANNOUNCEMENT_TITLES)} (테스트)`,
       content: "테스트용 더미 공지사항 본문입니다. 실제 공지가 아닙니다.",
       pinned: Math.random() < 0.15,

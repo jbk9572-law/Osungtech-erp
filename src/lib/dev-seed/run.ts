@@ -151,7 +151,7 @@ export async function runDevSeed(options: DevSeedOptions): Promise<DevSeedResult
     () => seedPurchaseQuoteRequests(ctx, actors, postsPerBoard),
     () => seedPaymentRequests(ctx, actors, postsPerBoard),
     () => seedTodos(ctx, actors, postsPerBoard),
-    () => seedAnnouncements(ctx, actors, postsPerBoard),
+    () => seedAnnouncements(admin, ctx, actors, postsPerBoard),
     () => seedOfficialDocuments(ctx, actors, postsPerBoard),
     () => seedApprovals(employees, actors, platformAdmins, postsPerBoard),
     () => seedHrDocuments(employees, actors, postsPerBoard),
