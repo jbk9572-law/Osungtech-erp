@@ -4729,26 +4729,27 @@ a.erp-detail-tab:hover:not(.active) {
   align-items: flex-start;
 }
 
-/* .erp-cat-sidebar를 그대로 재사용하되(각 항목의 hover/active 필 모양은
-   그대로 가져감), 그 클래스가 기본으로 주는 "흰 카드 테두리+그림자" 박스
-   모양은 여기서 벗긴다 — 목록 화면의 "분류 필터"는 옆의 흰 목록 패널과
-   짝을 이루는 카드라 박스가 자연스럽지만, 전역 메뉴는 페이지 배경 위에
-   콘텐츠와 나란히 있을 뿐이라 박스를 씌우면 콘텐츠와 따로 노는 느낌이
-   든다는 지적을 받았다 — 테두리/배경/그림자를 없애고 메뉴 항목만(각자
-   .erp-cat-item의 hover/active 필 배경) 페이지 배경 위에 바로 놓는다. */
 .erp-platform-admin-sidenav {
   display: flex;
   flex: 0 0 176px;
 }
 
-/* .erp-comm-shell .erp-cat-sidebar가 border-radius/border-color/box-shadow를
-   주는 것보다 이 선택자의 명시도가 같거나 높아야 실제로 벗겨진다(둘 다
-   클래스 2개, 같은 명시도라 이 블록이 파일에서 더 뒤에 있어 이긴다). */
-.erp-platform-admin-sidenav.erp-cat-sidebar {
-  border: none;
-  background: transparent;
+/* 처음엔 .erp-cat-sidebar의 흰 카드 박스(테두리+그림자)가 콘텐츠와 따로
+   노는 느낌이라며 박스를 아예 벗겼었는데, 디자인 시안(캔버스 최종본)을
+   다시 보니 그쪽도 전역 메뉴를 흰 카드로 유지하고 있었다 — 문제는
+   "박스 자체"가 아니라 옆 콘텐츠(KPI 카드/분할뷰)는 전부 같은 흰
+   카드+둥근 모서리+그림자인데 메뉴만 그 스타일을 안 썼던 "박스 모양이
+   서로 다름"이었다. 그래서 박스를 없애는 대신, 시안대로 다른 카드들과
+   완전히 같은 .erp-comm-shell 카드 스타일(.erp-cat-sidebar가 이미 그
+   스타일)을 그대로 유지하고, 활성 항목만 시안처럼 옅은 선택색 대신
+   브랜드 남색 필 배경으로 더 또렷하게 강조한다(전역 메뉴는 "지금 이
+   메뉴에 있다"를 "분류 필터"의 옅은 강조보다 확실히 보여줘야 해서,
+   같은 .erp-cat-item을 쓰되 활성 색만 전역 메뉴 전용으로 구분). */
+.erp-platform-admin-sidenav .erp-cat-item.active {
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
   box-shadow: none;
-  padding: 2px 0 0;
+  border: none;
 }
 
 .erp-platform-admin-content {
