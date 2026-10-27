@@ -108,7 +108,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
               <RichTextView
                 html={row.content}
                 className="erp-richtext-content"
-                style={{ padding: 0, fontSize: 13.5, color: "var(--erp-text)" }}
+                style={{ padding: "10px 0", fontSize: 13.5, color: "var(--erp-text)" }}
               />
             ) : (
               <p style={{ margin: 0, color: "var(--erp-text)" }}>-</p>

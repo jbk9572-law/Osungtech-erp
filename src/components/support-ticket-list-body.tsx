@@ -128,10 +128,13 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
             <p className="mb-4 text-xs" style={{ color: "var(--erp-text-muted)" }}>
               {selected.tenantName} · {new Date(selected.created_at).toLocaleString("ko-KR")}
             </p>
+            {/* 좌우 패딩은 0으로 둬 위 제목(h2)과 왼쪽 끝이 맞게 하되,
+                위아래까지 0이면 글이 바로 위/아래 요소에 딱 붙어 보인다는
+                지적(스크린샷) — 세로 여백만 살려준다. */}
             <RichTextView
               html={selected.message}
               className="erp-richtext-content mb-4 text-xs"
-              style={{ padding: 0, color: "var(--erp-text-muted)" }}
+              style={{ padding: "10px 0", color: "var(--erp-text-muted)" }}
             />
             <SupportTicketReplyForm ticketId={selected.id} defaultReply={selected.reply} action={replySupportTicket} />
           </div>

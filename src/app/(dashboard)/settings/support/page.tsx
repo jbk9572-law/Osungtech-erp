@@ -82,12 +82,12 @@ export default async function SupportPage() {
                     <RichTextView
                       html={t.message}
                       className="erp-richtext-content mb-2 text-xs"
-                      style={{ padding: 0, color: "var(--erp-text-muted)" }}
+                      style={{ padding: "10px 0", color: "var(--erp-text-muted)" }}
                     />
                     {t.reply && (
                       <PageGuide className="mb-0">
                         <strong>운영자 답변</strong>
-                        <RichTextView html={t.reply} className="erp-richtext-content mt-1" style={{ padding: 0 }} />
+                        <RichTextView html={t.reply} className="erp-richtext-content mt-1" style={{ padding: "8px 0 0" }} />
                       </PageGuide>
                     )}
                   </div>

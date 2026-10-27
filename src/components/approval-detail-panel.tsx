@@ -171,7 +171,7 @@ export async function ApprovalDetailPanel({
           {/* content는 스마트에디터(리치텍스트)로 작성된 HTML이다 — RichTextView가
               렌더링 전에 서버에서 한 번 더 걸러낸다(sanitize-rich-text.ts). */}
           {doc.content ? (
-            <RichTextView html={doc.content} className="erp-richtext-content" style={{ padding: 0 }} />
+            <RichTextView html={doc.content} className="erp-richtext-content" style={{ padding: "10px 0" }} />
           ) : (
             <p>(내용 없음)</p>
           )}

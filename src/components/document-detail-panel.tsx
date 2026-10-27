@@ -64,7 +64,7 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
               renderTemplate이 이스케이프해서 넣지만, 양식 본문(템플릿)
               쪽은 에디터를 거치지 않고 직접 저장될 수 있으므로
               RichTextView가 렌더링 전 한 번 더 걸러낸다. */}
-          <RichTextView html={doc.rendered_body} className="erp-richtext-content" style={{ padding: 0, fontSize: 13.5 }} />
+          <RichTextView html={doc.rendered_body} className="erp-richtext-content" style={{ padding: "10px 0", fontSize: 13.5 }} />
         </div>
       </div>
     </>

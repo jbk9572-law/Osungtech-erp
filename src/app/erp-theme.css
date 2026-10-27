@@ -1951,12 +1951,33 @@ form.erp-field-grid {
    문서양식관리(양식 등록)와 공문 작성 본문에 쓰는 스마트에디터. 테두리/
    포커스 톤은 .erp-input과 맞추고, 안쪽 타이포는 인쇄되는 실제 문서에
    가깝게 살짝 크게 잡는다. */
+/* .erp-input/.erp-select는 이미 3px("완전 각짐은 아니다")를 쓰는데
+   .erp-richtext만 border-radius가 아예 없어 100% 직각이었다 — 같은
+   입력칸 가족인데 혼자만 각져 보인다는 지적(고객지원 답변창 스크린샷).
+   같은 3px을 기본값으로 맞추고, comm-shell 화면에서는 기존처럼 더 둥근
+   톤(.erp-comm-shell .erp-richtext, 아래)으로 올라간다. 툴바/본문이
+   각자 꽉 채운 배경이라 부모를 둥글려도 자식 모서리가 그대로 가려지는
+   문제(.erp-detail-tabs와 같은 버그 패턴)가 있는데, 이 에디터는 툴바
+   안에 absolute 팝오버(링크/색상 선택 등)가 있어 overflow: hidden을
+   부모에 주면 팝오버가 잘린다 — 대신 툴바 위쪽/본문 아래쪽 모서리에
+   각각 같은 반경을 직접 줘서 잘림 없이 둥글게 맞춘다. */
 .erp-richtext {
   border: 1px solid var(--erp-border);
+  border-radius: 3px;
   background: var(--erp-panel);
   transition:
     border-color 0.12s ease,
     box-shadow 0.12s ease;
+}
+
+.erp-comm-shell .erp-richtext-toolbar {
+  border-top-left-radius: var(--erp-comm-radius-pill);
+  border-top-right-radius: var(--erp-comm-radius-pill);
+}
+
+.erp-comm-shell .erp-richtext-content {
+  border-bottom-left-radius: var(--erp-comm-radius-pill);
+  border-bottom-right-radius: var(--erp-comm-radius-pill);
 }
 
 .erp-richtext:focus-within {
@@ -1969,7 +1990,9 @@ form.erp-field-grid {
   flex-wrap: wrap;
   align-items: center;
   gap: 2px;
-  padding: 4px;
+  padding: 6px 8px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
   border-bottom: 1px solid var(--erp-divider);
   background: var(--erp-bg-subtle);
 }
@@ -2016,7 +2039,9 @@ form.erp-field-grid {
 }
 
 .erp-richtext-content {
-  padding: 10px 12px;
+  padding: 12px 14px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
   font-size: var(--erp-font-md);
   line-height: 1.7;
   color: var(--erp-text);

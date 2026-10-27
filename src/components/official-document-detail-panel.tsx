@@ -185,7 +185,7 @@ export async function OfficialDocumentDetailPanel({
         <RichTextView
           html={doc.body}
           className="erp-richtext-content mt-2 text-sm"
-          style={{ color: "var(--erp-text)", padding: 0 }}
+          style={{ color: "var(--erp-text)", padding: "10px 0" }}
         />
       </div>
 
