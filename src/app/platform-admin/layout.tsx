@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
-import { PlatformAdminNav } from "@/components/platform-admin-nav";
+import { PlatformAdminNav, PlatformAdminSideNav } from "@/components/platform-admin-nav";
 import "@/app/erp-theme.css";
 
 // 플랫폼 관리자 화면 전체(고객사/환경설정/공지사항/활동로그/요금제/통계)가
@@ -29,8 +29,15 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
             메인 화면으로
           </Link>
         </div>
+        {/* 모바일 전용 가로 탭(PlatformAdminNav)은 세로 메뉴 칸 밖, 전체
+            폭에 둬야 좁은 화면에서 옆으로 밀리지 않는다 — 아래
+            .erp-platform-admin-body(PlatformAdminSideNav)는 데스크톱
+            세로 메뉴만 담당하고 둘 다 CSS 미디어 쿼리로 한쪽만 보인다. */}
         <PlatformAdminNav />
-        {children}
+        <div className="erp-platform-admin-body">
+          <PlatformAdminSideNav />
+          <div className="erp-platform-admin-content">{children}</div>
+        </div>
       </div>
     </div>
   );

@@ -4712,6 +4712,46 @@ a.erp-detail-tab:hover:not(.active) {
   }
 }
 
+/* 플랫폼 관리자 메뉴(고객사/요금제/공지사항/통계/환경설정/활동로그/
+   고객지원) — 와이드 레이아웃으로 넓어진 뒤에는(위 .erp-platform-
+   admin-shell) 가로 탭(.erp-comm-tabs)이 화면 폭에 비해 왜소해 보여,
+   그누보드류 업무용 관리자 페이지처럼 왼쪽 세로 메뉴로 바꿨다. 새 색/
+   모양을 만들지 않고 다른 분할뷰 화면(공지사항 등)이 이미 쓰는
+   .erp-cat-sidebar/.erp-cat-item을 그대로 재사용한다(목록 화면의
+   "분류 필터" 사이드바와 "전역 메뉴" 사이드바가 같은 모양이라 사용자가
+   더 배울 게 없다). 좁은 화면에서는 세로 메뉴가 콘텐츠 폭을 다
+   잡아먹으므로, 태블릿 세로(768px) 밑에서는 기존 가로 스크롤 탭으로
+   되돌아간다 — .erp-platform-admin-shell이 넓어지는 기준과 같은
+   분기점이라 "메뉴만 넓어졌다 좁아졌다" 하는 어긋남이 없다. */
+.erp-platform-admin-body {
+  display: flex;
+  gap: var(--erp-space-5);
+  align-items: flex-start;
+}
+
+.erp-platform-admin-sidenav {
+  display: flex;
+  flex: 0 0 176px;
+}
+
+.erp-platform-admin-content {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.erp-platform-admin-tabs-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .erp-platform-admin-sidenav {
+    display: none;
+  }
+  .erp-platform-admin-tabs-mobile {
+    display: inline-flex;
+  }
+}
+
 .erp-switch input:focus-visible + .erp-switch-track {
   outline: 2px solid var(--erp-primary);
   outline-offset: 2px;
