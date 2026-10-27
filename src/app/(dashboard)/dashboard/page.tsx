@@ -616,6 +616,42 @@ export default async function DashboardPage({
             <p className="erp-home-empty">안전재고 이하 품목이 없습니다.</p>
           )}
         </div>
+
+        <div className="erp-home-panel">
+          <div className="erp-home-panel-title">최근 메모</div>
+          {recentNotes?.length ? (
+            <div className="erp-home-list">
+              {recentNotes.map((note) => (
+                <div className="erp-home-list-item" key={note.id}>
+                  <span style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                    {note.note_date} · {note.profiles?.full_name ?? "익명"}
+                  </span>
+                  <span className="truncate">{note.content}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="erp-home-empty">등록된 메모가 없습니다.</p>
+          )}
+
+          <div className="erp-home-panel-title" style={{ marginTop: 0 }}>
+            빠른 실행
+          </div>
+          <div className="erp-home-list">
+            <Link className="erp-home-list-item" href="/sales/new">
+              새 판매 등록
+            </Link>
+            <Link className="erp-home-list-item" href="/purchases/new">
+              새 입고 등록
+            </Link>
+            <Link className="erp-home-list-item" href="/products">
+              품목 등록
+            </Link>
+            <Link className="erp-home-list-item" href="/inventory">
+              재고 조회
+            </Link>
+          </div>
+        </div>
       </div>
 
       <DashboardCalendar
@@ -632,42 +668,6 @@ export default async function DashboardPage({
         currentUserId={currentUserId}
         isAdmin={isAdmin}
       />
-
-      <div className="erp-home-panel">
-        <div className="erp-home-panel-title">최근 메모</div>
-        {recentNotes?.length ? (
-          <div className="erp-home-list">
-            {recentNotes.map((note) => (
-              <div className="erp-home-list-item" key={note.id}>
-                <span style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
-                  {note.note_date} · {note.profiles?.full_name ?? "익명"}
-                </span>
-                <span className="truncate">{note.content}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="erp-home-empty">등록된 메모가 없습니다.</p>
-        )}
-
-        <div className="erp-home-panel-title" style={{ marginTop: 0 }}>
-          빠른 실행
-        </div>
-        <div className="erp-home-list">
-          <Link className="erp-home-list-item" href="/sales/new">
-            새 판매 등록
-          </Link>
-          <Link className="erp-home-list-item" href="/purchases/new">
-            새 입고 등록
-          </Link>
-          <Link className="erp-home-list-item" href="/products">
-            품목 등록
-          </Link>
-          <Link className="erp-home-list-item" href="/inventory">
-            재고 조회
-          </Link>
-        </div>
-      </div>
       </div>
     </>
   );
