@@ -2686,9 +2686,21 @@ a.erp-detail-tab:hover:not(.active) {
   border: 1px solid var(--erp-border-strong);
 }
 
+/* 상세/작성 패널이 "남은 공간 전부"(min-height:0 + flex:1 체인)로만
+   정해지다 보니, 10인치급 노트북처럼 세로 해상도가 낮은 화면에서는
+   타이틀바/리본/탭바/페이지 제목이 이미 꽤 차지해, 정작 글을 쓰는
+   이 패널에 남는 공간이 너무 좁아져 버렸다(사용자 지적 — "상단때문에
+   하단입력이 너무 좁아, 스크롤만 안쪽에서 돌고있다"). 패널이 무한정
+   눌리지 않도록 최소 높이를 바닥으로 깔아둔다 — 화면이 그만큼 안
+   남으면 이 패널이 자기 min-height를 지키려 하면서 .erp-split-shell/
+   .erp-split3-shell 행 전체가 그만큼 커지고, 결국 그 바깥의 .erp-page
+   (이미 overflow-y: auto)가 페이지 전체를 스크롤한다 — 타이틀바/
+   트리메뉴/탭바는 그대로 고정이고 본문만 스크롤되는, 다른 일반 화면과
+   똑같은 동작으로 자연스럽게 넘어간다. 데스크톱처럼 공간이 충분하면
+   이 최소값은 전혀 영향이 없다(이미 더 크게 늘어나 있으므로). */
 .erp-split-detail {
   min-width: 0;
-  min-height: 0;
+  min-height: 420px;
   overflow-y: auto;
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
