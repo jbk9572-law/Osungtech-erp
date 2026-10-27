@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
+import { SplitListFiller } from "@/components/erp/page-header";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 
 export type DocumentTemplateRow = {
   id: string;
@@ -111,11 +113,12 @@ export function DocumentTemplateListBody({
               <div className="erp-split-list-row-sub">{CATEGORY_LABELS[row.category] ?? row.category}</div>
             </Link>
           ))}
-          {!gridRows.length && (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-              {query.trim() ? "검색 결과가 없습니다." : "등록된 양식이 없습니다."}
-            </p>
-          )}
+          <SplitListFiller
+            icon={<DocumentIcon />}
+            title={!gridRows.length ? (query.trim() ? "검색 결과가 없습니다" : "등록된 양식이 없습니다") : "새 양식을 등록해보세요"}
+            actionHref={basePath}
+            actionLabel="F2 새 양식"
+          />
         </div>
       </section>
     </>

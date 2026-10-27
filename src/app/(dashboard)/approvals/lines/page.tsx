@@ -2,8 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader, FormSection, SplitListFiller } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { GroupIcon } from "@/components/erp/groupware-icons";
 import { CloseButton } from "@/components/erp/close-button";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ApprovalMatrixRuleSelect } from "@/components/approval-matrix-rule-select";
@@ -235,11 +236,13 @@ export default async function ApprovalLinesPage({
                 </div>
               </Link>
             ))}
-            {presets.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                등록된 결재선이 없습니다.
-              </p>
-            )}
+            <SplitListFiller
+              icon={<GroupIcon />}
+              title={presets.length === 0 ? "등록된 결재선이 없습니다" : "새 결재선을 추가해보세요"}
+              hint="자주 쓰는 결재자·참조자 조합을 이름 붙여 저장해두면 기안 쓸 때 바로 불러올 수 있습니다."
+              actionHref={listHref}
+              actionLabel="+ 새 결재선"
+            />
           </div>
         </section>
 
@@ -306,9 +309,11 @@ export default async function ApprovalLinesPage({
             // ("왜 새창으로 넘어가는지 이해를못하겠어 이렇게 통일이
             // 안되냐고")을 반영 — 메일쓰기와 똑같이 우측 상세 패널
             // 자리에서 바로 작성한다.
-            <FormSection tabLabel="결재선 등록">
-              <ApprovalLinePresetForm action={createApprovalLinePreset} orgTree={orgTree} submitLabel="추가" />
-            </FormSection>
+            <div className="erp-split-detail-center">
+              <FormSection tabLabel="결재선 등록">
+                <ApprovalLinePresetForm action={createApprovalLinePreset} orgTree={orgTree} submitLabel="추가" />
+              </FormSection>
+            </div>
           )}
         </div>
       </div>

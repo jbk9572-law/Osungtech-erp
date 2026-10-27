@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, SplitDetailEmpty, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader, SplitDetailEmpty, SplitListFiller, FormSection } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
 import { SyncMailButton } from "@/components/mail/sync-mail-button";
 import { ComposeMailForm } from "@/components/mail/compose-mail";
@@ -176,11 +176,12 @@ export default async function MailPage({
                 <span className="erp-mail-row-time">{formatDate(m.sent_at)}</span>
               </Link>
             ))}
-            {(messages ?? []).length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                메일이 없습니다.
-              </p>
-            )}
+            <SplitListFiller
+              icon={<MailIcon />}
+              title={(messages ?? []).length === 0 ? "메일이 없습니다" : folder === "INBOX" ? "받은 메일이 이게 전부예요" : "보낸 메일이 이게 전부예요"}
+              actionHref={composeHref}
+              actionLabel="F2 메일쓰기"
+            />
           </div>
         </section>
 

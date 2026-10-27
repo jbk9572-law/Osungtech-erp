@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 // 목록+상세 분할뷰(.erp-split-detail)에서 아무것도 선택 안 했을 때 —
 // 메일함/문서양식관리/결재선처럼 "고른 걸 보여주는" 화면(할일관리·
@@ -15,6 +16,40 @@ export function SplitDetailEmpty({ icon, title, hint }: { icon: ReactNode; title
       </span>
       <p className="erp-split-detail-empty-title">{title}</p>
       {hint && <p className="erp-split-detail-empty-hint">{hint}</p>}
+    </div>
+  );
+}
+
+// 목록(.erp-split-list-body)에 실제 항목이 있지만 몇 건 안 돼서(결재선
+// 3건 등) flex:1로 뷰포트를 꽉 채우는 박스 안에 빈 공간만 남는 문제 —
+// SplitDetailEmpty와 같은 이유("너무 휑하다", 사용자 피드백)로, 실제
+// 행들 뒤에 안내+등록 액션을 자연스럽게 채운다. 항목이 많아 이미
+// 스크롤되는 화면에서는 맨 아래에 "+더 등록" 줄로 자연스럽게 붙는다.
+export function SplitListFiller({
+  icon,
+  title,
+  hint,
+  actionHref,
+  actionLabel,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint?: string;
+  actionHref?: string;
+  actionLabel?: string;
+}) {
+  return (
+    <div className="erp-split-list-filler">
+      <span className="erp-split-detail-empty-icon" aria-hidden>
+        {icon}
+      </span>
+      <p className="erp-split-detail-empty-title">{title}</p>
+      {hint && <p className="erp-split-detail-empty-hint">{hint}</p>}
+      {actionHref && actionLabel && (
+        <Link href={actionHref} className="erp-btn erp-btn-primary" style={{ marginTop: 2 }}>
+          {actionLabel}
+        </Link>
+      )}
     </div>
   );
 }

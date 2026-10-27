@@ -2530,6 +2530,8 @@ a.erp-detail-tab:hover:not(.active) {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .erp-split-list-row {
@@ -2770,6 +2772,52 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-text-muted);
   max-width: 220px;
   line-height: 1.5;
+}
+
+/* 목록 쪽(.erp-split-list-body)도 같은 "너무 휑하다" 문제가 있었다 —
+   항목이 몇 건 없으면(결재선 3건 등) flex:1로 뷰포트를 꽉 채우는
+   박스 안에 빈 공간만 덩그러니 남는다(사용자 지적 — "결재선 목록이
+   3칸이야"). .erp-split-detail-empty와 같은 아이콘+문구 톤을 그대로
+   재사용해 실제 행 뒤에 안내+등록 액션을 채운다. 항목이 많아 이미
+   스크롤되는 화면에서는 그냥 맨 아래에 "+더 등록" 줄로 자연스럽게
+   붙는다 — 건수에 따라 보이거나 안 보이게 조건을 거는 대신 항상
+   같은 자리에 둬서 매직넘버 없이 일관되게 동작한다. */
+.erp-split-list-row {
+  flex: 0 0 auto;
+}
+
+.erp-split-list-filler {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 14px;
+  text-align: center;
+}
+
+.erp-split-list-filler .erp-split-detail-empty-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.erp-split-list-filler .erp-split-detail-empty-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 선택 항목 없이 바로 작성폼이 뜨는 화면(결재선 등)에서, 폼이 짧으면
+   (예: 이름 입력 1칸 + 조직도 선택기) 패널이 flex:1로 꽉 차 있어 폼이
+   맨 위에 붕 떠 보인다. 부모가 overflow:auto인 상태에서도 내용이
+   패널보다 길어지면 그냥 원래대로 위에서부터 채워 내려가므로(남는
+   공간이 없으면 justify-content:center가 할 일이 없다), 스크롤 동작은
+   그대로 유지된다. */
+.erp-split-detail-center {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* ── 커뮤니케이션 서피스 공용 래퍼("읽기/작성" 성격의 split-shell

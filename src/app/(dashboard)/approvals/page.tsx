@@ -2,8 +2,9 @@ import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ListPageHeader, FormSection } from "@/components/erp/page-header";
+import { ListPageHeader, FormSection, SplitListFiller } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { CheckCircleIcon } from "@/components/erp/groupware-icons";
 import { GridBadge } from "@/components/grid/badge";
 import { InlineConfirmDelete } from "@/components/inline-confirm-delete";
 import { ApprovalDetailPanel } from "@/components/approval-detail-panel";
@@ -318,11 +319,12 @@ export default async function ApprovalsPage({
                 </Link>
               );
             })}
-            {rows.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                해당하는 문서가 없습니다.
-              </p>
-            )}
+            <SplitListFiller
+              icon={<CheckCircleIcon />}
+              title={rows.length === 0 ? "해당하는 문서가 없습니다" : "새 기안을 작성해보세요"}
+              actionHref={newHref}
+              actionLabel="F2 기안"
+            />
           </div>
         </section>
 

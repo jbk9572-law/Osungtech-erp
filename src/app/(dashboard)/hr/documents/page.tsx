@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { FormSection } from "@/components/erp/page-header";
+import { FormSection, SplitListFiller } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { GridBadge } from "@/components/grid/badge";
 import { GenerateDocumentForm } from "@/components/generate-document-form";
 import { DocumentDetailPanel } from "@/components/document-detail-panel";
@@ -112,11 +113,12 @@ export default async function DocumentsPage({
                 </div>
               </Link>
             ))}
-            {(docs ?? []).length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                생성된 문서가 없습니다.
-              </p>
-            )}
+            <SplitListFiller
+              icon={<DocumentIcon />}
+              title={(docs ?? []).length === 0 ? "생성된 문서가 없습니다" : "새 문서를 만들어보세요"}
+              actionHref={newHref}
+              actionLabel="F2 새 문서"
+            />
           </div>
         </section>
 

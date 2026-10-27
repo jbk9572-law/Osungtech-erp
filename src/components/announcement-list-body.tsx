@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
 import { GridBadge } from "@/components/grid/badge";
+import { SplitListFiller } from "@/components/erp/page-header";
+import { MegaphoneIcon } from "@/components/erp/groupware-icons";
 import { formatNumber } from "@/lib/format-number";
 
 export type AnnouncementRow = {
@@ -46,6 +48,7 @@ export function AnnouncementListBody({
   limit,
   hasMore,
   moreHref,
+  writeHref,
 }: {
   rows: AnnouncementRow[];
   selectedId?: string;
@@ -53,6 +56,10 @@ export function AnnouncementListBody({
   limit: number;
   hasMore: boolean;
   moreHref: string;
+  // 공지 작성은 관리자/매니저만 할 수 있어서, 작성 권한이 없으면 목록
+  // 아래 채움 안내에도 등록 액션 버튼을 보여주지 않는다(undefined면
+  // 버튼 없이 안내 문구만).
+  writeHref?: string;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -164,10 +171,17 @@ export function AnnouncementListBody({
               </div>
             </Link>
           ))}
-          {!gridRows.length && (
+          {!gridRows.length ? (
             <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
               {query.trim() ? "검색 결과가 없습니다." : "등록된 공지사항이 없습니다."}
             </p>
+          ) : (
+            <SplitListFiller
+              icon={<MegaphoneIcon />}
+              title="목록이 이게 전부예요"
+              actionHref={writeHref}
+              actionLabel="F2 글쓰기"
+            />
           )}
         </div>
         {hasMore && (

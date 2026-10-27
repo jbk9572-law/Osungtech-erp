@@ -144,6 +144,7 @@ export default async function AnnouncementsPage({
           limit={limit}
           hasMore={hasMore}
           moreHref={moreHref}
+          writeHref={isManagerOrAdmin ? newHref : undefined}
         />
 
         <div className="erp-split-detail">

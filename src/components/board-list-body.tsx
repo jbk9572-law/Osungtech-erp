@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
+import { SplitListFiller } from "@/components/erp/page-header";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 
 export type BoardCategory = "notice" | "hr_doc" | "official" | "approval";
 
@@ -128,10 +130,12 @@ export function BoardListBody({
               <div className="erp-split-list-row-sub">{new Date(row.date).toLocaleDateString("ko-KR")}</div>
             </Link>
           ))}
-          {!filtered.length && (
+          {!filtered.length ? (
             <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
               {query.trim() ? "검색 결과가 없습니다." : "표시할 항목이 없습니다."}
             </p>
+          ) : (
+            <SplitListFiller icon={<DocumentIcon />} title="위 + 버튼으로 새 글을 작성해보세요" />
           )}
         </div>
       </section>

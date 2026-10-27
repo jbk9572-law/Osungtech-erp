@@ -5,7 +5,8 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { OfficialDocumentDetailPanel } from "@/components/official-document-detail-panel";
 import { OfficialDocumentForm } from "@/components/official-document-form";
-import { FormSection } from "@/components/erp/page-header";
+import { FormSection, SplitListFiller } from "@/components/erp/page-header";
+import { DocumentIcon } from "@/components/erp/groupware-icons";
 import { createOfficialDocument } from "@/app/(dashboard)/official-documents/actions";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -157,11 +158,12 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
                 </Link>
               );
             })}
-            {rows.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                공문이 없습니다.
-              </p>
-            )}
+            <SplitListFiller
+              icon={<DocumentIcon />}
+              title={rows.length === 0 ? "공문이 없습니다" : "새 공문을 작성해보세요"}
+              actionHref={newHref}
+              actionLabel="F2 새 공문"
+            />
           </div>
         </section>
 
