@@ -162,6 +162,12 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
         path,
         file,
         contentType: file.type || "application/octet-stream",
+        // 메일 첨부는 읽는 쪽(이 파일의 syncInbox/getAttachmentDownloadUrl)이
+        // 이미 매번 새로 만드는 짧은 만료 URL(10분)만 쓰고 있어서, R2의
+        // Presigned URL 방식과 전제가 완전히 같다 — 영구 공개 URL을 DB에
+        // 저장해두는 messenger-attachments/payment-receipts와 달리 읽기
+        // 쪽을 따로 손볼 필요가 없어 가장 먼저 안전하게 전환한다.
+        preferR2: true,
       });
       if (!uploaded.ok) continue;
       const { error: attachmentInsertError } = await supabase.from("mail_attachments").insert({

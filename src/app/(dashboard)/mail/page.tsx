@@ -10,6 +10,7 @@ import { MailAttachmentChip } from "@/components/mail/mail-attachment-chip";
 import { PaperclipIcon, MailIcon } from "@/components/erp/groupware-icons";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
+import { getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
 
 type Folder = "INBOX" | "SENT";
 
@@ -96,8 +97,13 @@ export default async function MailPage({
 
   const attachmentLinks = await Promise.all(
     attachments.map(async (att) => {
-      const { data } = await supabase.storage.from("mail-attachments").createSignedUrl(att.storage_path, 600);
-      return { ...att, url: data?.signedUrl ?? null };
+      const url = await getAttachmentDownloadUrl({
+        supabase,
+        bucket: "mail-attachments",
+        path: att.storage_path,
+        expiresInSeconds: 600,
+      });
+      return { ...att, url };
     })
   );
 

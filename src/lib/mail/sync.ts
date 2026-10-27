@@ -5,6 +5,7 @@ import type { Database } from "@/types/database.types";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/mail/crypto";
 import { ImapClient, type ImapRawMessage } from "@/lib/mail/imap-client";
+import { uploadAttachment } from "@/lib/storage/upload-attachment";
 
 const INBOX_FOLDER = "INBOX";
 // 계정을 처음 연동했을 때 한 번에 가져올 최대 통수. 그 이후로는 마지막으로
@@ -127,10 +128,19 @@ export async function syncMailAccount(
         if (!att.filename) continue;
         const path = `${account.user_id}/${inserted_row.id}/${att.filename}`;
         const bytes = toUint8Array(att.content);
-        const { error: uploadError } = await supabase.storage
-          .from("mail-attachments")
-          .upload(path, bytes, { upsert: true, contentType: att.mimeType });
-        if (uploadError) continue;
+        // 받은메일 첨부도 보낸메일(mail/actions.ts)과 같은 버킷·같은 읽기
+        // 방식(매번 새로 만드는 단기 Presigned URL)을 쓰므로 똑같이
+        // preferR2로 전환한다 — 둘 중 하나만 바꾸면 "어떤 메일 첨부는
+        // 쿼터에 집계되고 어떤 건 안 되는" 불일치가 생긴다.
+        const uploaded = await uploadAttachment({
+          supabase,
+          bucket: "mail-attachments",
+          path,
+          file: new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer]),
+          contentType: att.mimeType,
+          preferR2: true,
+        });
+        if (!uploaded.ok) continue;
 
         const { error: attachmentInsertError } = await supabase.from("mail_attachments").insert({
           mail_message_id: inserted_row.id,
@@ -138,7 +148,7 @@ export async function syncMailAccount(
           filename: att.filename,
           content_type: att.mimeType,
           size_bytes: bytes.byteLength,
-          storage_path: path,
+          storage_path: uploaded.path,
         });
         if (attachmentInsertError) {
           console.error("첨부파일 기록 실패:", attachmentInsertError.message);

@@ -8,17 +8,16 @@ import { isR2Configured, uploadObjectToR2, deleteObjectFromR2, getR2DownloadUrl 
 //    자체를 막는다. 기존 4개 업로드 지점(messenger/payment-receipts/mail/
 //    branding,signature)이 각자 따로 체크를 넣으면 한 곳을 빠뜨리기 쉬워
 //    (버그 수정 규칙 2번) 업로드하는 모든 곳이 이 함수 하나만 거치게 한다.
-// 2) R2 전환 준비 — Cloudflare R2 환경변수가 설정되면 그쪽에 저장할 수
-//    있는 경로까지 만들어 두되, 기존 4개 지점은 당장 preferR2 없이(=
-//    false) 계속 Supabase Storage를 쓴다. 그 이유: messenger-attachments/
-//    payment-receipts는 "영구 공개 URL을 DB 컬럼에 저장해두고 그걸
-//    그대로 렌더링"하는 구조라, R2로 옮기면 영구 URL이 없어지고 매번
-//    Presigned URL을 새로 만들어 읽어야 한다 — 그 읽기 쪽 화면
-//    (messenger-page.tsx, 영수증 갤러리 등)까지 같이 바꿔야 안전하게
-//    전환되는데, 지금 이 세션엔 R2 자격증명이 없어 실제로 돌려볼 수
-//    없다. 그래서 읽기 쪽이 준비된 호출부만 preferR2: true로 명시적으로
-//    opt-in하게 했다 — 자격증명만 넣으면 전부 조용히 R2로 바뀌어버려서
-//    "영구 URL이 갑자기 깨지는" 사고를 막기 위함.
+// 2) R2 전환 — Cloudflare R2 환경변수가 설정되면 preferR2: true로 명시
+//    opt-in한 호출부만 R2에 저장한다. 메일 첨부(mail/actions.ts,
+//    mail/sync.ts)는 읽는 쪽이 이미 매번 새로 만드는 단기 Presigned URL
+//    (getAttachmentDownloadUrl, 10분)만 쓰고 있어서 전환했다 — 전제가
+//    R2와 완전히 같다. messenger-attachments/payment-receipts는 "영구
+//    공개 URL을 DB 컬럼에 저장해두고 그대로 렌더링"하는 구조라 R2로
+//    옮기면 영구 URL이 없어지므로, 읽기 쪽 화면(messenger-page.tsx,
+//    영수증 갤러리 등)을 먼저 Presigned 방식으로 바꾸기 전까지는 opt-in
+//    하지 않는다 — 자격증명만 있다고 전부 조용히 R2로 바뀌면 "영구
+//    URL이 갑자기 깨지는" 사고로 이어진다.
 // 쿼터 집계 RPC는 "이미 끝난 업로드/삭제 뒤의 부가 기록"이라 실패해도
 // 방금 끝난 파일 작업 자체를 되돌리지 않는다(이미 성공한 업로드를 실패로
 // 바꾸는 게 더 나쁘다) — 대신 조용히 삼키지 않고 로그를 남겨 사용량이
