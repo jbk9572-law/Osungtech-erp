@@ -8,6 +8,11 @@ import { FeatureToggle } from "@/components/feature-toggle";
 import { toggleDepartmentPageAccess } from "@/app/(dashboard)/settings/page-access/actions";
 import { RESTRICTABLE_PAGES } from "@/lib/department-page-access";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { stickyHeaderStyle, stickyCellStyle } from "@/lib/grid-sticky";
+
+const PAGE_LABEL_WIDTH = 220;
+const thSticky = stickyHeaderStyle(0, PAGE_LABEL_WIDTH, { borderRight: "1px solid var(--erp-border)" });
+const tdSticky = stickyCellStyle(0, PAGE_LABEL_WIDTH, { borderRight: "1px solid var(--erp-border)" });
 
 export default async function PageAccessSettingsPage() {
   const supabase = await createClient();
@@ -50,7 +55,7 @@ export default async function PageAccessSettingsPage() {
           <table className="erp-grid">
             <thead>
               <tr>
-                <th style={{ width: 220 }}>화면</th>
+                <th style={thSticky}>화면</th>
                 {departments.map((d) => (
                   <th key={d.id}>{d.name}</th>
                 ))}
@@ -61,7 +66,7 @@ export default async function PageAccessSettingsPage() {
                 const allowed = allowedDeptIds.get(page.pageKey);
                 return (
                   <tr key={page.pageKey}>
-                    <td>{page.label}</td>
+                    <td style={tdSticky}>{page.label}</td>
                     {departments.map((d) => (
                       <td key={d.id}>
                         <FeatureToggle

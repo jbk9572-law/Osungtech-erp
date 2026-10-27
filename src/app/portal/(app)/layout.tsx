@@ -30,8 +30,13 @@ export default async function PortalAppLayout({ children }: { children: React.Re
         style={{ justifyContent: "space-between" }}
       >
         <div className="erp-titlebar-left">
-          <span style={{ fontWeight: 700 }}>{me.display_name}</span>
-          <span style={{ fontSize: 11, opacity: 0.8 }}>{isSubcontractor ? "업체 포털" : "거래처 포털"}</span>
+          {/* 회사명(me.display_name)은 환경설정에서 자유롭게 입력하는
+              값이라 길이가 정해져 있지 않다 — 내부 ErpShell의 타이틀바와
+              같은 .erp-titlebar-name(말줄임표)을 그대로 써야 좁은 화면에서
+              길어도 오른쪽 로그아웃 버튼이 .erp의 overflow-x:hidden에
+              밀려 잘리지 않는다(154d1ba에서 고친 것과 같은 유형의 버그). */}
+          <span className="erp-titlebar-name" style={{ fontWeight: 700 }}>{me.display_name}</span>
+          <span style={{ fontSize: 11, opacity: 0.8, flexShrink: 0 }}>{isSubcontractor ? "업체 포털" : "거래처 포털"}</span>
         </div>
         <nav className="erp-titlebar-right" style={{ display: "flex", gap: 14, alignItems: "center" }}>
           {isSubcontractor ? (

@@ -37,6 +37,14 @@ export function useSortableRows<Row, K extends keyof Row & string>(rows: Row[]) 
     setSort((prev) => nextSortState(prev, key));
   }
 
+  // 모바일 카드뷰는 헤더 클릭(순환식 오름차순→내림차순→해제) 대신 "정렬:
+  // 최신순/금액순" 같은 드롭다운으로 바로 원하는 정렬을 고른다 — 한 번의
+  // 선택으로 key+dir을 동시에 확정해야 해서 toggleSort의 순환 로직과는
+  // 별도로 직접 지정하는 함수가 필요하다.
+  function applySort(key: K, dir: SortDir) {
+    setSort({ key, dir });
+  }
+
   function sortIndicator(key: K) {
     if (!sort || sort.key !== key) return "";
     return sort.dir === 1 ? " ▲" : " ▼";
@@ -47,5 +55,5 @@ export function useSortableRows<Row, K extends keyof Row & string>(rows: Row[]) 
     return sort.dir === 1 ? "ascending" : "descending";
   }
 
-  return { sortedRows, sort, toggleSort, sortIndicator, ariaSortFor };
+  return { sortedRows, sort, toggleSort, applySort, sortIndicator, ariaSortFor };
 }

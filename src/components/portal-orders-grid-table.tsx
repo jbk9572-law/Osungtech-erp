@@ -67,7 +67,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
                 </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
                 <td className="num" onClick={(e) => e.stopPropagation()}>
-                  <Link href={`${ordersHref}/${row.id}`} className="erp-btn" style={{ height: 24, padding: "1px 10px", fontSize: 11 }}>
+                  <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn">
                     상세보기
                   </Link>
                 </td>

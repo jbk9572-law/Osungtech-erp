@@ -1850,6 +1850,134 @@ form.erp-field-grid {
   background: inherit;
 }
 
+/* ── 모바일 카드형 그리드(매출/매입/재고) ──────────────────────
+   매출 그리드가 19칸(체크박스/거래일자/전표번호/거래처코드/유형/
+   과세구분/증빙유형/출고처/배송방법/작성자/품목명/규격/관리번호/수량/
+   공급가/공급가액/세액/계산서발행/비고) 안팎이라, 첫 2칸만 스티키로
+   고정해도 모바일에서 체감 개선이 거의 없었다(사용자 지적 — "좌우
+   횡스크롤 압박이 너무 심해"). 768px 미만에서는 표 자체(.erp-grid-wrap)
+   를 숨기고, 핵심 정보(날짜·거래처·품목/규격·수량·금액)만 세로로 쌓은
+   카드 목록을 대신 보여준다 — 나머지 칸(전표번호/작성자/세액/비고 등)은
+   카드를 눌러 상세 화면에서 확인한다(사용자 승인 — "나머진 뭐 상세로
+   가도되고"). 자바스크립트로 폭을 감지해 조건부 렌더링하지 않고 순수
+   CSS 미디어쿼리로 보이기/숨기기만 바꾼다 — 서버/클라이언트 렌더 결과가
+   항상 같아 하이드레이션 불일치가 없고, 다른 분할뷰 반응형 전환(768px)과
+   같은 기준을 쓴다. */
+.erp-row-card-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .erp-grid-wrap {
+    display: none;
+  }
+  .erp-row-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.erp-row-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-radius: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-row-card.selected {
+  background: var(--erp-selected);
+  border-color: var(--erp-select-accent);
+}
+
+.erp-row-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.erp-row-card-partner {
+  font-size: var(--erp-font-md);
+  font-weight: 700;
+  color: var(--erp-text);
+  min-width: 0;
+}
+
+.erp-row-card-date {
+  flex: 0 0 auto;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-row-card-item {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-row-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.erp-row-card-qty {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-row-card-amount {
+  font-size: var(--erp-font-md);
+  font-weight: 800;
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-row-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 카드 왼쪽에 겹쳐 그리는 선택용 체크박스 — "선택" 모드를 켰을 때만
+   나타난다(평소엔 카드 전체가 그냥 상세로 가는 링크). 표의 체크박스
+   칸(32px)과 같은 크기 감각을 쓰되 터치 타겟은 더 넉넉하게 24px. */
+.erp-row-card-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.erp-row-card-checkbox input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+/* 카드 목록 위 도구줄 — "선택" 토글 버튼 + 정렬 드롭다운. 표 헤더의
+   체크박스 전체선택/컬럼 클릭 정렬을 모바일에서 대신한다. */
+.erp-row-card-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.erp-row-card-toolbar select {
+  height: 30px;
+}
+
 /* ── 6-1. Document sheet (전표/문서 작성 화면) ─────────────────
    구매요청/구매견적요청/견적서/매출/매입/지급결의처럼 "문서를 작성한다"는
    느낌이 필요한 작성 화면 전용 클래스. 색은 전부 기존 토큰 재사용 —

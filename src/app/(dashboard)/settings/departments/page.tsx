@@ -15,7 +15,13 @@ function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: numbe
   const isReal = !node.id.startsWith("__");
   return (
     <div style={{ marginLeft: depth * 20, marginBottom: 4 }}>
-      <div className="flex items-center gap-2" style={{ padding: "4px 0" }}>
+      {/* 부서명+인원수+수정/삭제 버튼을 flex-wrap 없이 한 줄에 강제
+          배치하고 있었다 — 깊은 depth(marginLeft 누적)와 긴 부서명이
+          겹치는 좁은 화면에서는 이 div가 .erp-grid-wrap 같은 가로스크롤
+          래퍼도 없이 그냥 .erp의 overflow-x:hidden에 잘려 버튼이
+          안 눌리는 버그가 생긴다(모바일 감사에서 발견) — flex-wrap을
+          줘서 공간이 모자라면 버튼이 다음 줄로 자연스럽게 내려가게 한다. */}
+      <div className="flex items-center gap-2" style={{ padding: "4px 0", flexWrap: "wrap" }}>
         <span style={{ fontWeight: depth === 0 ? 700 : 500 }}>
           {"└ ".repeat(depth > 0 ? 1 : 0)}
           {node.name}
@@ -25,14 +31,14 @@ function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: numbe
         </span>
         {isReal && (
           <>
-            <Link href={`/settings/departments/${node.id}/edit`} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
+            <Link href={`/settings/departments/${node.id}/edit`} className="erp-btn" style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}>
               수정
             </Link>
             <InlineConfirmDelete
               action={deleteDepartment}
               hiddenFields={{ id: node.id }}
               warningText="이 부서를 삭제하시겠습니까? 하위 부서/소속 직원은 미배정으로 남습니다."
-              triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
+              triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
             />
           </>
         )}

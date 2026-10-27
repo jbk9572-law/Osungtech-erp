@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type CSSProperties } from "react";
+import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import type { FormState } from "@/components/form-message";
 import { BulkDeleteBar } from "@/components/bulk-delete-bar";
@@ -47,9 +48,13 @@ export function ProductGridTable({
   backParam?: string;
   keyword?: string;
 }) {
-  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } = useSortableRows<ProductGridRow, SortKey>(rows);
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor, applySort } = useSortableRows<ProductGridRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
+  // 모바일 카드 목록에서 "선택" 버튼을 눌렀을 때만 체크박스를 보여준다
+  // (sales/purchase-grid-table.tsx와 같은 패턴). products 모드에서만 의미
+  // 있다(inventory 모드는 애초에 일괄삭제가 없음).
+  const [mobileSelectMode, setMobileSelectMode] = useState(false);
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteProducts, undefined);
 
   // 일괄삭제 성공 시 선택/확인란을 비운다 — 다른 그리드들과 동일한 패턴.
@@ -112,6 +117,75 @@ export function ProductGridTable({
   // products 모드는 체크박스 칸이 하나 더 있고, inventory 모드는 대신
   // 재고수량/상태가 안전재고 한 칸 대신 두 칸이라 결과적으로 항상 12칸이다.
   const colCount = 12;
+
+  // 표의 각 행과 같은 데이터로 모바일 카드 한 장을 그린다 — 상품명/SKU/
+  // 규격/단위와 재고모드의 재고수량·상태(또는 상품모드의 매입가·판매가)만
+  // 보여주고 나머지(카테고리/공급처 등)는 상세 화면으로 넘긴다
+  // (sales/purchase-grid-table.tsx와 같은 패턴).
+  function renderMobileCard(row: ProductGridRow) {
+    const isLow = mode === "inventory" && (row.reorderPoint ?? 0) > 0 && row.quantity <= (row.reorderPoint ?? 0);
+    const href = mode === "products" ? `/products/${row.id}${backParam ? `?back=${backParam}` : ""}` : `/inventory/item/${row.id}`;
+    const isRowSelected = selected.has(row.id);
+
+    const body = (
+      <>
+        <div className="erp-row-card-head">
+          {allowBulkDelete && mobileSelectMode ? (
+            <label className="erp-row-card-checkbox">
+              <input
+                type="checkbox"
+                checked={isRowSelected}
+                onChange={() => toggleRow(row.id)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`${row.name} 선택`}
+              />
+              <span className="erp-row-card-partner">{row.name}</span>
+            </label>
+          ) : (
+            <span className="erp-row-card-partner">{row.name}</span>
+          )}
+          <span className="erp-row-card-date">{row.sku}</span>
+        </div>
+        <div className="erp-row-card-item">
+          {row.spec ?? "규격 미지정"}
+          {row.unit ? ` · ${row.unit}` : ""}
+        </div>
+        <div className="erp-row-card-foot">
+          {mode === "inventory" ? (
+            <>
+              <span className="erp-row-card-qty">
+                <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} />
+              </span>
+              <span className="erp-row-card-amount">{formatNumOrDash(row.price)}원</span>
+            </>
+          ) : (
+            <>
+              <span className="erp-row-card-qty">매입 {formatNumOrDash(row.cost)}</span>
+              <span className="erp-row-card-amount">{formatNumOrDash(row.price)}원</span>
+            </>
+          )}
+        </div>
+        {mode === "inventory" && (
+          <div className="erp-row-card-badges">
+            <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
+          </div>
+        )}
+      </>
+    );
+
+    if (allowBulkDelete && mobileSelectMode) {
+      return (
+        <div key={row.id} className={`erp-row-card${isRowSelected ? " selected" : ""}`}>
+          {body}
+        </div>
+      );
+    }
+    return (
+      <Link key={row.id} href={href} className="erp-row-card">
+        {body}
+      </Link>
+    );
+  }
 
   return (
     <>
@@ -219,6 +293,55 @@ export function ProductGridTable({
           )}
         </tbody>
       </table>
+      </div>
+
+      <div className="erp-row-card-toolbar">
+        {allowBulkDelete ? (
+          <button
+            type="button"
+            className="erp-btn"
+            onClick={() => {
+              setMobileSelectMode((v) => !v);
+              if (mobileSelectMode) setSelected(new Set());
+            }}
+          >
+            {mobileSelectMode ? "선택 취소" : "선택"}
+          </button>
+        ) : (
+          <span />
+        )}
+        <select
+          className="erp-select"
+          aria-label="정렬"
+          defaultValue=""
+          onChange={(e) => {
+            const [key, dir] = e.target.value.split(":") as [SortKey, "1" | "-1"];
+            applySort(key, dir === "1" ? 1 : -1);
+          }}
+        >
+          <option value="" disabled>
+            정렬
+          </option>
+          <option value="name:1">상품명순</option>
+          <option value="sku:1">SKU순</option>
+          {mode === "inventory" ? (
+            <>
+              <option value="quantity:-1">재고 많은순</option>
+              <option value="quantity:1">재고 적은순</option>
+            </>
+          ) : (
+            <>
+              <option value="price:-1">판매가 높은순</option>
+              <option value="price:1">판매가 낮은순</option>
+            </>
+          )}
+        </select>
+      </div>
+      <div className="erp-row-card-list">
+        {sortedRows.map((row) => renderMobileCard(row))}
+        {!sortedRows.length && (
+          <p className="erp-grid-empty">{keyword ? "검색 결과가 없습니다." : "등록된 상품이 없습니다."}</p>
+        )}
       </div>
     </>
   );

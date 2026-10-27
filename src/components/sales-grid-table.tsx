@@ -117,10 +117,14 @@ export function SalesGridTable({
   carryoverSupply?: number;
   carryoverTax?: number;
 }) {
-  const { sortedRows, toggleSort, sortIndicator, ariaSortFor } =
+  const { sortedRows, toggleSort, sortIndicator, ariaSortFor, applySort } =
     useSortableRows<SalesRow, SortKey>(rows);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
+  // 모바일 카드 목록은 평소엔 카드 전체가 상세로 가는 링크라 체크박스가
+  // 없다 — "선택" 버튼을 눌렀을 때만 각 카드에 체크박스가 나타나
+  // 표의 일괄삭제와 같은 selected/toggleRow를 그대로 쓸 수 있게 한다.
+  const [mobileSelectMode, setMobileSelectMode] = useState(false);
   // 마스터-디테일 레이아웃: 지금 아래 품목내역 패널에 표시 중인 명세표.
   // 일괄삭제 체크박스(selected)와는 별개의 상태다. 사용자가 직접 고른 적이
   // 없거나 그 행이 더 이상 목록에 없으면(필터 변경 등) 첫 매출 건으로
@@ -462,6 +466,95 @@ export function SalesGridTable({
     );
   }
 
+  // 표의 renderRow와 같은 데이터로 모바일 카드 한 장을 그린다 — 핵심
+  // 정보(날짜·거래처·품목/규격·수량·금액)만 보여주고 전표번호/작성자/
+  // 세액/비고 등은 상세 화면으로 넘긴다(사용자 승인 — "나머진 뭐 상세로
+  // 가도되고"). 표와 똑같이 compactDate(전월 이월분)와 isReturn/
+  // isSample/isCollection 분기를 그대로 따른다.
+  function renderMobileCard(row: SalesRow, opts: { selectable: boolean; compactDate?: boolean }) {
+    const isCollection = row.kind === "collection";
+    const isRowSelected = opts.selectable && !!row.orderId && selected.has(row.orderId);
+    const detailHref = row.orderId
+      ? `/sales/${row.orderId}${backParam ? `?back=${backParam}` : ""}`
+      : row.customerId
+        ? `/customers/${row.customerId}?back=${buildBackHref(resolveListHref("/sales", backParam))}`
+        : null;
+    const dateLabel = row.date
+      ? opts.compactDate
+        ? formatCarryoverDate(row.date)
+        : new Date(row.date).toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" })
+      : "-";
+
+    const body = (
+      <>
+        <div className="erp-row-card-head">
+          {opts.selectable && mobileSelectMode && row.orderId ? (
+            <label className="erp-row-card-checkbox">
+              <input
+                type="checkbox"
+                checked={isRowSelected}
+                onChange={() => toggleRow(row.orderId!)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={`${row.customerName ?? ""} 선택`}
+              />
+              <span className="erp-row-card-partner">{row.customerName ?? "-"}</span>
+            </label>
+          ) : (
+            <span className="erp-row-card-partner">{row.customerName ?? "-"}</span>
+          )}
+          <span className="erp-row-card-date">
+            {dateLabel}
+            {row.isCarryover && row.date && (
+              <GridBadge tone="warn" style={{ marginLeft: 4 }}>
+                이월
+              </GridBadge>
+            )}
+          </span>
+        </div>
+        <div className="erp-row-card-item">
+          {row.productLabel}
+          {row.spec ? ` · ${row.spec}` : ""}
+        </div>
+        <div className="erp-row-card-foot">
+          <span className="erp-row-card-qty">
+            {isCollection ? "-" : `${row.isReturn ? "+" : ""}${formatNumber(row.quantity)} ${row.unit ?? ""}`}
+          </span>
+          <span
+            className="erp-row-card-amount"
+            style={row.isReturn ? { color: "var(--erp-danger)" } : undefined}
+          >
+            {row.isReturn ? "-" : ""}
+            {formatNumber(row.supplyAmount)}원
+          </span>
+        </div>
+        <div className="erp-row-card-badges">
+          <GridBadge tone={isCollection ? "muted" : row.isReturn ? "danger" : row.isSample ? "warn" : "info"}>
+            {isCollection ? "수금" : row.isReturn ? "반품" : row.isSample ? "샘플" : "매출"}
+          </GridBadge>
+          {!isCollection &&
+            (row.invoiceStatus === "issued" ? (
+              <GridBadge tone="ok">계산서 발행</GridBadge>
+            ) : (
+              <GridBadge tone="muted">계산서 미발행</GridBadge>
+            ))}
+        </div>
+      </>
+    );
+
+    if (!detailHref || (opts.selectable && mobileSelectMode)) {
+      return (
+        <div key={row.key} className={`erp-row-card${isRowSelected ? " selected" : ""}`}>
+          {body}
+        </div>
+      );
+    }
+    return (
+      <Link key={row.key} href={detailHref} className="erp-row-card">
+        {body}
+      </Link>
+    );
+  }
+
   return (
     <>
       {selected.size > 0 && (
@@ -580,6 +673,49 @@ export function SalesGridTable({
             </tfoot>
           )}
         </table>
+      </div>
+
+      <div className="erp-row-card-toolbar">
+        <button
+          type="button"
+          className="erp-btn"
+          onClick={() => {
+            setMobileSelectMode((v) => !v);
+            if (mobileSelectMode) setSelected(new Set());
+          }}
+        >
+          {mobileSelectMode ? "선택 취소" : "선택"}
+        </button>
+        <select
+          className="erp-select"
+          aria-label="정렬"
+          defaultValue=""
+          onChange={(e) => {
+            const [key, dir] = e.target.value.split(":") as [SortKey, "1" | "-1"];
+            applySort(key, dir === "1" ? 1 : -1);
+          }}
+        >
+          <option value="" disabled>
+            정렬
+          </option>
+          <option value="date:-1">최신순</option>
+          <option value="date:1">오래된순</option>
+          <option value="supplyAmount:-1">금액 높은순</option>
+          <option value="supplyAmount:1">금액 낮은순</option>
+          <option value="customerName:1">거래처순</option>
+        </select>
+      </div>
+      <div className="erp-row-card-list">
+        {carryoverRows && carryoverRows.length > 0 && (
+          <>
+            <div style={{ fontSize: "var(--erp-font-xs)", fontWeight: 700, color: "var(--erp-text-muted)" }}>
+              전월 이월분 · 이번달 실적으로 반영됨
+            </div>
+            {carryoverRows.map((row) => renderMobileCard(row, { selectable: false, compactDate: true }))}
+          </>
+        )}
+        {sortedRows.map((row) => renderMobileCard(row, { selectable: true }))}
+        {!sortedRows.length && <p className="erp-grid-empty">조건에 맞는 판매 거래가 없습니다.</p>}
       </div>
 
       <OrderDetailPanel
