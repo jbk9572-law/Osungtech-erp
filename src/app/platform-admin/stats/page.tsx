@@ -90,7 +90,7 @@ export default async function PlatformStatsPage() {
                         style={{
                           flex: 1,
                           background: "var(--erp-bg-subtle)",
-                          borderRadius: 2,
+                          borderRadius: "var(--erp-comm-radius-sm)",
                           overflow: "hidden",
                           height: 16,
                         }}
