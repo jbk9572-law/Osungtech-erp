@@ -1,17 +1,7 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ListPageHeader } from "@/components/erp/page-header";
-import { RichTextView } from "@/components/erp/rich-text-view";
-import { GridBadge } from "@/components/grid/badge";
-import { SupportTicketReplyForm } from "@/components/support-ticket-reply-form";
-import { replySupportTicket } from "@/app/platform-admin/support/actions";
-import { resolveStatusLabel } from "@/lib/status-label";
-
-const STATUS_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "muted" }> = {
-  open: { label: "답변 대기", tone: "warn" },
-  answered: { label: "답변 완료", tone: "ok" },
-  closed: { label: "종료", tone: "muted" },
-};
+import { SupportTicketListBody } from "@/components/support-ticket-list-body";
 
 export default async function PlatformSupportPage() {
   const { supabase } = await requirePlatformAdmin();
@@ -23,57 +13,31 @@ export default async function PlatformSupportPage() {
     .order("created_at", { ascending: false })
     .limit(200);
 
+  const rows = (tickets ?? []).map((t) => ({
+    id: t.id,
+    doc_no: t.doc_no,
+    subject: t.subject,
+    message: t.message,
+    status: t.status,
+    reply: t.reply,
+    created_at: t.created_at,
+    tenantName: (t.tenants as { name: string } | null)?.name ?? "-",
+  }));
+
   return (
     <div>
       <ListPageHeader eyebrow="플랫폼 관리" title="고객지원" />
       <PageGuide>
-        전체 테넌트가 남긴 문의입니다. 답변을 등록하면 해당 회사의 환경설정 &gt; 고객지원 화면에 바로
-        표시됩니다.
+        전체 테넌트가 남긴 문의입니다. 왼쪽에서 회사를 고르면 그 회사 문의만 걸러서 보고, 답변을
+        등록하면 해당 회사의 환경설정 &gt; 고객지원 화면에 바로 표시됩니다.
       </PageGuide>
 
       {error ? (
         <p className="text-sm" style={{ color: "var(--erp-danger)" }}>
           조회에 실패했습니다: {error.message}
         </p>
-      ) : (tickets ?? []).length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
-          등록된 문의가 없습니다.
-        </p>
       ) : (
-        <div className="erp-card-feed">
-          {(tickets ?? []).map((t) => {
-            const status = resolveStatusLabel(STATUS_LABEL, t.status);
-            const tenantName = (t.tenants as { name: string } | null)?.name ?? "-";
-            return (
-              <div
-                key={t.id}
-                style={{
-                  background: "var(--erp-panel)",
-                  border: "1px solid var(--erp-comm-border)",
-                  borderRadius: "var(--erp-comm-radius-row)",
-                  boxShadow: "var(--erp-comm-shadow-row)",
-                  padding: "13px 16px",
-                  flex: "0 0 auto",
-                }}
-              >
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="text-sm font-bold">
-                    [{tenantName}] #{t.doc_no} {t.subject}
-                  </span>
-                  <GridBadge tone={status.tone}>{status.label}</GridBadge>
-                </div>
-                {/* message는 스마트에디터(리치텍스트)로 작성된 HTML이다 — RichTextView가
-                    렌더링 전에 서버에서 한 번 더 걸러낸다. */}
-                <RichTextView
-                  html={t.message}
-                  className="erp-richtext-content mb-2 text-xs"
-                  style={{ padding: 0, color: "var(--erp-text-muted)" }}
-                />
-                <SupportTicketReplyForm ticketId={t.id} defaultReply={t.reply} action={replySupportTicket} />
-              </div>
-            );
-          })}
-        </div>
+        <SupportTicketListBody tickets={rows} />
       )}
     </div>
   );

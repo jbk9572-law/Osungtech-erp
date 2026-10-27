@@ -1,0 +1,97 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+export type ActivityLogRow = {
+  id: string;
+  tenant_name: string | null;
+  action: string;
+  table_name: string;
+  actor_name: string | null;
+  created_at: string;
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  insert: "등록",
+  update: "수정",
+  delete: "삭제",
+};
+
+// 회사 구분 없이 전체를 쭉 훑기 힘들다는 지적 — 공지사항의
+// AnnouncementListBody와 같은 구조(왼쪽 회사 필터 사이드바가 목록의
+// 필터 상태를 그대로 조작)로 맞춘다. 활동 로그는 "선택 시 상세"가
+// 따로 없다(행 자체가 이미 전부 다 보여주는 요약이라 분할뷰 3번째
+// 칸은 불필요) — 그래서 .erp-split3-shell이 아니라 사이드바+카드
+// 피드 2칸으로 충분하다.
+export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
+  const [tenant, setTenant] = useState<string>("all");
+
+  const tenantCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows) {
+      const name = r.tenant_name ?? "미지정";
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [rows]);
+
+  const visibleRows = tenant === "all" ? rows : rows.filter((r) => (r.tenant_name ?? "미지정") === tenant);
+
+  return (
+    <div style={{ display: "flex", gap: "var(--erp-space-4)", alignItems: "flex-start" }}>
+      <div className="erp-cat-sidebar" style={{ flex: "0 0 180px", maxHeight: "calc(100vh - 320px)", overflowY: "auto" }}>
+        <button type="button" onClick={() => setTenant("all")} className={`erp-cat-item${tenant === "all" ? " active" : ""}`}>
+          <span>전체</span>
+          <span className="cnt">{rows.length}</span>
+        </button>
+        {tenantCounts.map(([name, count]) => (
+          <button
+            key={name}
+            type="button"
+            onClick={() => setTenant(name)}
+            className={`erp-cat-item${tenant === name ? " active" : ""}`}
+          >
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+            <span className="cnt">{count}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="erp-card-feed erp-card-feed-compact" style={{ flex: "1 1 0", minWidth: 0 }}>
+        {visibleRows.map((r) => (
+          <div
+            key={r.id}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "var(--erp-space-5)",
+              background: "var(--erp-panel)",
+              border: "1px solid var(--erp-comm-border)",
+              borderRadius: "var(--erp-comm-radius-row)",
+              boxShadow: "var(--erp-comm-shadow-row)",
+              padding: "11px 16px",
+              flex: "0 0 auto",
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: "var(--erp-font-base)", fontWeight: 600, color: "var(--erp-text)" }}>
+                {r.tenant_name ?? "-"}
+                <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                  <span className="erp-badge erp-badge-muted">{ACTION_LABELS[r.action] ?? r.action}</span>
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginTop: 3 }}>
+                {r.table_name} · {r.actor_name ?? "-"}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--erp-text-muted)", flex: "0 0 auto" }}>
+              {new Date(r.created_at).toLocaleString("ko-KR")}
+            </div>
+          </div>
+        ))}
+        {!visibleRows.length && <p className="erp-grid-empty">표시할 활동 로그가 없습니다.</p>}
+      </div>
+    </div>
+  );
+}
