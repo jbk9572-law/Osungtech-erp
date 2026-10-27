@@ -30,40 +30,23 @@ export default async function PlatformPlansPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th style={{ width: 100 }}>키</th>
-              <th style={{ width: 140 }}>이름</th>
-              <th style={{ width: 120 }}>월 가격</th>
-              <th>설명(고객에게 보이는 안내 문구)</th>
-              <th style={{ width: 60 }}>노출</th>
-              <th style={{ width: 140 }}>관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(plans ?? []).map((p) => (
-              <PlatformPlanRow
-                key={p.id}
-                id={p.id}
-                planKey={p.plan_key}
-                name={p.name}
-                monthlyPrice={p.monthly_price}
-                description={p.description}
-                isActive={p.is_active}
-              />
-            ))}
-            {!plans?.length && (
-              <tr>
-                <td colSpan={6} className="erp-grid-empty">
-                  등록된 요금제가 없습니다.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {!plans?.length ? (
+        <p className="erp-grid-empty">등록된 요금제가 없습니다.</p>
+      ) : (
+        <div className="erp-card-feed erp-card-feed-compact">
+          {plans.map((p) => (
+            <PlatformPlanRow
+              key={p.id}
+              id={p.id}
+              planKey={p.plan_key}
+              name={p.name}
+              monthlyPrice={p.monthly_price}
+              description={p.description}
+              isActive={p.is_active}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
