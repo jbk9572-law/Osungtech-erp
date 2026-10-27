@@ -43,7 +43,7 @@ export function PageGuide({
   const hasMarginOverride = /\bm[bty]?-\d/.test(className);
   return (
     <div
-      className={`${hasMarginOverride ? "" : "mb-4"} rounded p-2 text-xs ${className}`}
+      className={`${hasMarginOverride ? "" : "mb-4"} erp-page-guide p-2 text-xs ${className}`}
       style={TONE_STYLE[tone]}
     >
       {children}

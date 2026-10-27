@@ -2829,6 +2829,20 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: var(--erp-comm-shadow);
 }
 
+/* 안내 배너(PageGuide)가 Tailwind의 rounded(4px, 디자인 토큰이 아닌
+   하드코딩 값)를 그대로 써서, 바로 아래 둥근 카드(사이드바/목록/상세,
+   --erp-comm-radius 16px)와 모서리 반경이 눈에 띄게 달랐다("R값 때문에
+   디자인언어가 달라 보인다"는 지적). 전역에서는 --erp-comm-radius-sm
+   (5px, 거의 안 둥근 기본 톤)으로 토큰화하고, comm-shell 화면에서는
+   아래 카드 가족과 맞춰 --erp-comm-radius-row(11px)로 올린다. */
+.erp-page-guide {
+  border-radius: var(--erp-comm-radius-sm);
+}
+
+.erp-comm-shell .erp-page-guide {
+  border-radius: var(--erp-comm-radius-row);
+}
+
 /* border-top-*-radius만 주는 걸로는 실제로 안 둥글어 보였다(사용자
    스크린샷 지적) — 탭 안의 활성 탭(.erp-detail-tab.active)이 각진
    흰 배경으로 꽉 채워서, 부모가 둥글어도 자식이 그 모서리를 그대로
