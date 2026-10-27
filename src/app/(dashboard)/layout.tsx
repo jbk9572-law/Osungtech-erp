@@ -4,7 +4,6 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { safeQuery } from "@/lib/safe-query";
 import { ttlCached } from "@/lib/ttl-cache";
 import { ErpShell } from "@/components/erp/erp-shell";
-import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 import { TenantUsageWidget } from "@/components/erp/tenant-usage-widget";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
 import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
@@ -194,27 +193,19 @@ export default async function DashboardLayout({
           <NotificationBellPanel userId={user.id} />
         </Suspense>
       }
-      usageWidget={
-        <>
-          {/* 고객(테넌트 관리자)이 보는 자기 요금제 사용량 — "무료플랜" 같은
-              플랫폼 내부 인프라 사정은 절대 노출하지 않는다(usage-widget.tsx는
-              플랫폼 운영자 전용). */}
-          {isAdmin && quotaStatus && (
-            <TenantUsageWidget
-              dbBytesUsed={quotaStatus.dbBytesUsed}
-              dbQuotaBytes={quotaStatus.dbQuotaBytes}
-              fileBytesUsed={quotaStatus.fileBytesUsed}
-              fileQuotaBytes={quotaStatus.fileQuotaBytes}
-              planLabel="현재 요금제"
-            />
-          )}
-          {isPlatformAdmin === true && (
-            <Suspense fallback={null}>
-              <UsageWidgetPanel />
-            </Suspense>
-          )}
-        </>
-      }
+      // 고객(테넌트 관리자)이 보는 자기 요금제 사용량만 사이드바에 둔다 —
+      // "무료플랜 소진율" 같은 플랫폼 내부 인프라 현황(예전엔 여기 같이
+      // 떠 있었다)은 일반 업무 화면을 돌아다니는 내내 보일 이유가 없어서
+      // 플랫폼 관리 > 통계 화면으로 옮겼다(platform-admin/stats/page.tsx).
+      usageWidget={isAdmin && quotaStatus ? (
+        <TenantUsageWidget
+          dbBytesUsed={quotaStatus.dbBytesUsed}
+          dbQuotaBytes={quotaStatus.dbQuotaBytes}
+          fileBytesUsed={quotaStatus.fileBytesUsed}
+          fileQuotaBytes={quotaStatus.fileQuotaBytes}
+          planLabel="현재 요금제"
+        />
+      ) : null}
       disabledFeatures={disabledFeatures}
       isAdmin={isAdmin}
       isManagerOrAdmin={isManagerOrAdmin}

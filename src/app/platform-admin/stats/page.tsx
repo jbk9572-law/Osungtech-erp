@@ -1,6 +1,7 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
 import { formatNumber } from "@/lib/format-number";
+import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 
 type PlatformStats = {
   totalTenants: number;
@@ -92,6 +93,17 @@ export default async function PlatformStatsPage() {
           </div>
         </>
       )}
+
+      {/* 예전엔 사이드바(트리메뉴 아래)에 플랫폼 운영자에게만 떠 있던
+          "무료플랜 소진율" 위젯 — 일반 업무 화면을 돌아다니는 내내 계속
+          보이는 게 아니라, 플랫폼 운영 관련 정보답게 이 통계 화면
+          안으로 옮겼다. UsageWidgetPanel 자체가 이미 자기 테두리/배경을
+          가진 완결된 블록이라 추가로 카드 테두리로 또 감싸지 않는다
+          (개발헌법 3번 — 박스 안에 박스 방지). */}
+      <h2 className="mt-5 mb-2" style={{ fontSize: "var(--erp-font-md)", fontWeight: 700, color: "var(--erp-text)" }}>
+        인프라 사용량(Supabase · Netlify · 서버)
+      </h2>
+      <UsageWidgetPanel />
     </div>
   );
 }
