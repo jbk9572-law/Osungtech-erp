@@ -1205,6 +1205,9 @@ export type Database = {
           file_quota_bytes: number;
           monthly_tax_invoice_quota: number;
           monthly_fax_quota: number;
+          vendor_limit: number;
+          monthly_email_quota: number;
+          custom_domain_mail: boolean;
         };
         Insert: {
           id?: string;
@@ -1223,6 +1226,9 @@ export type Database = {
           file_quota_bytes?: number;
           monthly_tax_invoice_quota?: number;
           monthly_fax_quota?: number;
+          vendor_limit?: number;
+          monthly_email_quota?: number;
+          custom_domain_mail?: boolean;
         };
         Update: {
           id?: string;
@@ -1241,6 +1247,33 @@ export type Database = {
           file_quota_bytes?: number;
           monthly_tax_invoice_quota?: number;
           monthly_fax_quota?: number;
+          vendor_limit?: number;
+          monthly_email_quota?: number;
+          custom_domain_mail?: boolean;
+        };
+        Relationships: [];
+      };
+      tenant_monthly_usage: {
+        Row: {
+          tenant_id: string;
+          year_month: string;
+          email_sent_count: number;
+          fax_sent_count: number;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          year_month: string;
+          email_sent_count?: number;
+          fax_sent_count?: number;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          year_month?: string;
+          email_sent_count?: number;
+          fax_sent_count?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -5933,6 +5966,10 @@ export type Database = {
       };
       increment_tenant_file_usage: {
         Args: { p_delta_bytes: number };
+        Returns: number;
+      };
+      increment_tenant_email_usage: {
+        Args: Record<string, never>;
         Returns: number;
       };
     };

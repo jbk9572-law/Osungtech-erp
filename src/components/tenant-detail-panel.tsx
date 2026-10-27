@@ -6,7 +6,9 @@ import { TenantPointsPanel } from "@/components/tenant-points-panel";
 import { ResetTenantUserPasswordForm } from "@/components/reset-tenant-user-password-form";
 import { CreateTenantDemoAccountForm } from "@/components/create-tenant-demo-account-form";
 import { TenantQuotaPanel } from "@/components/tenant-quota-panel";
+import { TenantAddonPanel } from "@/components/tenant-addon-panel";
 import { DetailPageHeader } from "@/components/erp/page-header";
+import { currentKstYearMonth } from "@/lib/kst-date";
 
 const ROLE_LABELS: Record<string, string> = { admin: "관리자", manager: "매니저", staff: "직원" };
 
@@ -27,7 +29,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
     admin
       .from("tenants")
       .select(
-        "id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance, db_quota_bytes, file_quota_bytes",
+        "id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance, db_quota_bytes, file_quota_bytes, vendor_limit, monthly_email_quota, monthly_fax_quota, custom_domain_mail",
       )
       .eq("id", tenantId)
       .maybeSingle(),
@@ -58,11 +60,25 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
 
   // 회사별 사용 현황 — 실제 업무 데이터 내용은 안 보여주고(플랫폼 운영자가
   // 볼 필요 없는 개인정보/영업정보), 활동 규모를 가늠할 개수만 센다.
-  const [{ count: salesCount }, { count: purchasesCount }, { count: customersCount }, { data: usage }] = await Promise.all([
+  const [
+    { count: salesCount },
+    { count: purchasesCount },
+    { count: customersCount },
+    { data: usage },
+    { count: vendorCount },
+    { data: monthlyUsage },
+  ] = await Promise.all([
     admin.from("sales_orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
     admin.from("purchase_orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
     admin.from("customers").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
     admin.from("tenant_usage").select("db_bytes_used, file_bytes_used").eq("tenant_id", tenantId).maybeSingle(),
+    admin.from("subcontractors").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+    admin
+      .from("tenant_monthly_usage")
+      .select("email_sent_count")
+      .eq("tenant_id", tenantId)
+      .eq("year_month", currentKstYearMonth())
+      .maybeSingle(),
   ]);
 
   return (
@@ -146,6 +162,23 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
             fileQuotaBytes={tenant.file_quota_bytes}
             dbBytesUsed={usage?.db_bytes_used ?? 0}
             fileBytesUsed={usage?.file_bytes_used ?? 0}
+          />
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">애드온</span>
+        </div>
+        <div className="erp-detail-body">
+          <TenantAddonPanel
+            tenantId={tenant.id}
+            vendorLimit={tenant.vendor_limit}
+            vendorCount={vendorCount ?? 0}
+            monthlyEmailQuota={tenant.monthly_email_quota}
+            emailSentThisMonth={monthlyUsage?.email_sent_count ?? 0}
+            monthlyFaxQuota={tenant.monthly_fax_quota}
+            customDomainMail={tenant.custom_domain_mail}
           />
         </div>
       </div>

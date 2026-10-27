@@ -33,3 +33,10 @@ export function todayKstStr(now: Date = new Date()): string {
 export function toKstDateStr(date: Date): string {
   return todayKstStr(date);
 }
+
+// tenant_monthly_usage(increment_tenant_email_usage RPC가 쓰는
+// to_char(now() at time zone 'Asia/Seoul', 'YYYY-MM')와 같은 값)를
+// 조회할 때 쓰는 "이번 달" 키 — todayKstStr()의 앞 7자리와 같다.
+export function currentKstYearMonth(now: Date = new Date()): string {
+  return todayKstStr(now).slice(0, 7);
+}

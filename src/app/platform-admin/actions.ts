@@ -158,6 +158,7 @@ export async function createTenantDemoAccount(_prevState: FormState, formData: F
     return { error: `데모 계정 설정에 실패해 계정 생성을 취소했습니다: ${profileError.message}` };
   }
 
+  revalidatePath("/platform-admin");
   revalidatePath(`/platform-admin/${tenantId}`);
   return { success: "데모 계정을 만들었습니다." };
 }
@@ -408,8 +409,62 @@ export async function updateTenantQuota(_prevState: FormState, formData: FormDat
     .eq("id", tenantId);
   if (error) return { error: `저장에 실패했습니다: ${error.message}` };
 
+  revalidatePath("/platform-admin");
   revalidatePath(`/platform-admin/${tenantId}`);
   return { success: "저장 공간 쿼터를 저장했습니다." };
+}
+
+// 외주처(협력사) 연동 수/월간 이메일 발송 건수/자사 도메인 메일 애드온 —
+// 기획서(2026-10-27)의 "확장 애드온" 항목 중 지금 당장 실제로 쓰이는
+// 지점이 있는 것만 다룬다. DB 용량/파일 저장소 쿼터(위 updateTenantQuota)와
+// 같은 이유로 platform_plans(카탈로그)가 아니라 tenants(실제 계약)에 직접
+// 둔다 — 아직 결제 연동 전 수동 관리 단계라(기획서 1번 항목) "구매한
+// 애드온 내역" 테이블로 따로 쪼개지 않고 컬럼 하나로 최종 숫자를 그대로
+// 저장한다(migration 186의 같은 결정과 같은 이유 — PG 결제가 실제로
+// 붙는 시점에 가서야 "애드온 구매 내역" 테이블이 필요해진다).
+export async function updateTenantAddons(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const vendorLimit = Number(formData.get("vendorLimit") ?? 0);
+  const monthlyEmailQuota = Number(formData.get("monthlyEmailQuota") ?? 0);
+  const monthlyFaxQuota = Number(formData.get("monthlyFaxQuota") ?? 0);
+  const customDomainMail = formData.get("customDomainMail") === "1";
+
+  if (
+    !tenantId ||
+    !Number.isInteger(vendorLimit) ||
+    vendorLimit < 0 ||
+    !Number.isInteger(monthlyEmailQuota) ||
+    monthlyEmailQuota < 0 ||
+    !Number.isInteger(monthlyFaxQuota) ||
+    monthlyFaxQuota < 0
+  ) {
+    return { error: "외주처 수/이메일·팩스 발송 건수는 0 이상의 정수로 입력해주세요." };
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { error } = await admin
+    .from("tenants")
+    .update({
+      vendor_limit: vendorLimit,
+      monthly_email_quota: monthlyEmailQuota,
+      monthly_fax_quota: monthlyFaxQuota,
+      custom_domain_mail: customDomainMail,
+    })
+    .eq("id", tenantId);
+  if (error) return { error: `저장에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "애드온 설정을 저장했습니다." };
 }
 
 // 포인트 지급/차감. 지금은 실제로 포인트를 소모하는 곳이 없다(세금계산서/
@@ -448,6 +503,7 @@ export async function adjustTenantPoints(_prevState: FormState, formData: FormDa
   });
   if (error) return { error: `처리에 실패했습니다: ${error.message}` };
 
+  revalidatePath("/platform-admin");
   revalidatePath(`/platform-admin/${tenantId}`);
   return { success: `포인트를 ${delta > 0 ? `${delta}점 지급` : `${Math.abs(delta)}점 차감`}했습니다.` };
 }

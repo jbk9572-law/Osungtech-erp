@@ -114,6 +114,15 @@ export async function sendMailAction(_prevState: FormState, formData: FormData):
     return { error: `발송에 실패했습니다: ${err instanceof Error ? err.message : String(err)}` };
   }
 
+  // 발송이 실제로 성공한 뒤에만 이번 달 이메일 발송 건수에 반영한다
+  // (요금제 월 100건 쿼터 — 기획서 2026-10-27). 집계 실패로 방금 보낸
+  // 메일 자체를 실패 처리하면 안 되므로 로그만 남기고 넘어간다
+  // (upload-attachment.ts의 trackFileUsage와 같은 패턴).
+  const { error: usageError } = await supabase.rpc("increment_tenant_email_usage");
+  if (usageError) {
+    console.error("[mail] failed to track email usage:", usageError);
+  }
+
   // 발송 성공 후 "보낸편지함"에 로컬 기록을 남긴다 — 다음 서버의 실제
   // 보낸편지함을 다시 IMAP으로 읽어오지 않고, 우리가 방금 보낸 내용을
   // 그대로 기록한다(sync.ts 상단 주석 참고).
