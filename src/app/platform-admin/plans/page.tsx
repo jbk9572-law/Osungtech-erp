@@ -35,7 +35,11 @@ export default async function PlatformPlansPage() {
           <thead>
             <tr>
               <th style={{ width: 100 }}>키</th>
-              <th>이름 / 월 가격 / 설명 / 노출</th>
+              <th style={{ width: 140 }}>이름</th>
+              <th style={{ width: 120 }}>월 가격</th>
+              <th>설명(고객에게 보이는 안내 문구)</th>
+              <th style={{ width: 60 }}>노출</th>
+              <th style={{ width: 140 }}>관리</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +56,7 @@ export default async function PlatformPlansPage() {
             ))}
             {!plans?.length && (
               <tr>
-                <td colSpan={2} className="erp-grid-empty">
+                <td colSpan={6} className="erp-grid-empty">
                   등록된 요금제가 없습니다.
                 </td>
               </tr>

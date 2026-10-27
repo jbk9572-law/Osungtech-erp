@@ -16,7 +16,7 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
 
   return (
     <div className="erp erp-comm-shell" style={{ minHeight: "100vh", background: "var(--erp-bg)" }}>
-      <div style={{ maxWidth: 880, margin: "0 auto", padding: "40px 20px" }}>
+      <div className="erp-platform-admin-shell">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
             플랫폼 관리자
