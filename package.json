@@ -34,6 +34,7 @@
     "check:comm-panel-scope": "node scripts/check-comm-panel-scope.mjs",
     "check:font-size-tokens": "node scripts/check-font-size-tokens.mjs",
     "dev:seed": "tsx scripts/dev-seed.ts",
+    "sweep:orphan-r2": "tsx scripts/sweep-orphan-r2-files.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"

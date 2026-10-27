@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerEnv } from "@/lib/server-env";
 
@@ -65,4 +65,26 @@ export async function getR2DownloadUrl(key: string, expiresInSeconds = 600): Pro
   const { client, bucket } = getClient();
   const command = new GetObjectCommand({ Bucket: bucket, Key: key });
   return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+}
+
+export type R2ObjectSummary = { key: string; lastModified: Date | undefined; size: number | undefined };
+
+// 고아 파일 정리 스크립트(src/lib/r2/sweep-orphans.ts)가 "버킷에 실제로
+// 있는 것" 전체 목록을 얻는 용도로만 쓴다 — 버킷 안 객체 수가 많아지면
+// ListObjectsV2가 한 번에 최대 1000개만 돌려주므로 ContinuationToken으로
+// 끝까지 페이지네이션한다.
+export async function listAllR2Objects(): Promise<R2ObjectSummary[]> {
+  const { client, bucket } = getClient();
+  const objects: R2ObjectSummary[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const res = await client.send(
+      new ListObjectsV2Command({ Bucket: bucket, ContinuationToken: continuationToken }),
+    );
+    for (const obj of res.Contents ?? []) {
+      if (obj.Key) objects.push({ key: obj.Key, lastModified: obj.LastModified, size: obj.Size });
+    }
+    continuationToken = res.IsTruncated ? res.NextContinuationToken : undefined;
+  } while (continuationToken);
+  return objects;
 }
