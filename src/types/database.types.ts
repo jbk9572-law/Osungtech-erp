@@ -1207,6 +1207,7 @@ export type Database = {
           monthly_fax_quota: number;
           vendor_limit: number;
           monthly_email_quota: number;
+          monthly_alimtalk_quota: number;
           custom_domain_mail: boolean;
         };
         Insert: {
@@ -1228,6 +1229,7 @@ export type Database = {
           monthly_fax_quota?: number;
           vendor_limit?: number;
           monthly_email_quota?: number;
+          monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
         };
         Update: {
@@ -1249,6 +1251,7 @@ export type Database = {
           monthly_fax_quota?: number;
           vendor_limit?: number;
           monthly_email_quota?: number;
+          monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
         };
         Relationships: [];
@@ -1259,6 +1262,8 @@ export type Database = {
           year_month: string;
           email_sent_count: number;
           fax_sent_count: number;
+          invoice_issued_count: number;
+          alimtalk_sent_count: number;
           updated_at: string;
         };
         Insert: {
@@ -1266,6 +1271,8 @@ export type Database = {
           year_month: string;
           email_sent_count?: number;
           fax_sent_count?: number;
+          invoice_issued_count?: number;
+          alimtalk_sent_count?: number;
           updated_at?: string;
         };
         Update: {
@@ -1273,6 +1280,8 @@ export type Database = {
           year_month?: string;
           email_sent_count?: number;
           fax_sent_count?: number;
+          invoice_issued_count?: number;
+          alimtalk_sent_count?: number;
           updated_at?: string;
         };
         Relationships: [];
@@ -1400,6 +1409,8 @@ export type Database = {
           included_vendor_limit: number | null;
           included_email_quota: number | null;
           included_fax_quota: number | null;
+          included_invoice_quota: number | null;
+          included_alimtalk_quota: number | null;
         };
         Insert: {
           id?: string;
@@ -1415,6 +1426,8 @@ export type Database = {
           included_vendor_limit?: number | null;
           included_email_quota?: number | null;
           included_fax_quota?: number | null;
+          included_invoice_quota?: number | null;
+          included_alimtalk_quota?: number | null;
         };
         Update: {
           id?: string;
@@ -1430,6 +1443,8 @@ export type Database = {
           included_vendor_limit?: number | null;
           included_email_quota?: number | null;
           included_fax_quota?: number | null;
+          included_invoice_quota?: number | null;
+          included_alimtalk_quota?: number | null;
         };
         Relationships: [];
       };
@@ -5990,6 +6005,21 @@ export type Database = {
       get_platform_r2_usage: {
         Args: Record<string, never>;
         Returns: number;
+      };
+      increment_tenant_invoice_usage: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      get_platform_monthly_usage_breakdown: {
+        Args: Record<string, never>;
+        Returns: {
+          tenant_id: string;
+          tenant_name: string;
+          email_sent_count: number;
+          fax_sent_count: number;
+          invoice_issued_count: number;
+          alimtalk_sent_count: number;
+        }[];
       };
     };
     Enums: Record<string, never>;

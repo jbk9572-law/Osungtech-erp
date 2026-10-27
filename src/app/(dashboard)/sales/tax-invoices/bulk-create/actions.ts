@@ -165,6 +165,9 @@ export async function bulkCreateTaxInvoices(
       .eq("id", orderId);
     if (syncError) console.error("sales_orders.invoice_status 동기화 실패:", syncError);
 
+    const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
+    if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+
     created++;
   }
 

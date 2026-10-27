@@ -331,7 +331,9 @@ export async function applyPlanDefaultsToTenant(_prevState: FormState, formData:
 
   const { data: plan, error: planError } = await admin
     .from("platform_plans")
-    .select("included_db_mb, included_file_gb, included_vendor_limit, included_email_quota, included_fax_quota")
+    .select(
+      "included_db_mb, included_file_gb, included_vendor_limit, included_email_quota, included_fax_quota, included_invoice_quota, included_alimtalk_quota",
+    )
     .eq("plan_key", tenant.plan_key)
     .maybeSingle();
   if (planError) return { error: `요금제 조회에 실패했습니다: ${planError.message}` };
@@ -346,12 +348,16 @@ export async function applyPlanDefaultsToTenant(_prevState: FormState, formData:
     vendor_limit?: number;
     monthly_email_quota?: number;
     monthly_fax_quota?: number;
+    monthly_tax_invoice_quota?: number;
+    monthly_alimtalk_quota?: number;
   } = {};
   if (plan.included_db_mb != null) update.db_quota_bytes = Math.round(plan.included_db_mb * 1024 * 1024);
   if (plan.included_file_gb != null) update.file_quota_bytes = Math.round(plan.included_file_gb * 1024 * 1024 * 1024);
   if (plan.included_vendor_limit != null) update.vendor_limit = plan.included_vendor_limit;
   if (plan.included_email_quota != null) update.monthly_email_quota = plan.included_email_quota;
   if (plan.included_fax_quota != null) update.monthly_fax_quota = plan.included_fax_quota;
+  if (plan.included_invoice_quota != null) update.monthly_tax_invoice_quota = plan.included_invoice_quota;
+  if (plan.included_alimtalk_quota != null) update.monthly_alimtalk_quota = plan.included_alimtalk_quota;
 
   if (Object.keys(update).length === 0) {
     return { error: "이 요금제에는 적용할 기본값이 설정돼 있지 않습니다(요금제 관리에서 먼저 숫자를 입력해주세요)." };
@@ -497,18 +503,13 @@ export async function updateTenantAddons(_prevState: FormState, formData: FormDa
   const vendorLimit = Number(formData.get("vendorLimit") ?? 0);
   const monthlyEmailQuota = Number(formData.get("monthlyEmailQuota") ?? 0);
   const monthlyFaxQuota = Number(formData.get("monthlyFaxQuota") ?? 0);
+  const monthlyInvoiceQuota = Number(formData.get("monthlyInvoiceQuota") ?? 0);
+  const monthlyAlimtalkQuota = Number(formData.get("monthlyAlimtalkQuota") ?? 0);
   const customDomainMail = formData.get("customDomainMail") === "1";
 
-  if (
-    !tenantId ||
-    !Number.isInteger(vendorLimit) ||
-    vendorLimit < 0 ||
-    !Number.isInteger(monthlyEmailQuota) ||
-    monthlyEmailQuota < 0 ||
-    !Number.isInteger(monthlyFaxQuota) ||
-    monthlyFaxQuota < 0
-  ) {
-    return { error: "외주처 수/이메일·팩스 발송 건수는 0 이상의 정수로 입력해주세요." };
+  const quotaFields = [vendorLimit, monthlyEmailQuota, monthlyFaxQuota, monthlyInvoiceQuota, monthlyAlimtalkQuota];
+  if (!tenantId || quotaFields.some((n) => !Number.isInteger(n) || n < 0)) {
+    return { error: "외주처 수/이메일·팩스·계산서·알림톡 발송 건수는 0 이상의 정수로 입력해주세요." };
   }
 
   let admin;
@@ -524,6 +525,8 @@ export async function updateTenantAddons(_prevState: FormState, formData: FormDa
       vendor_limit: vendorLimit,
       monthly_email_quota: monthlyEmailQuota,
       monthly_fax_quota: monthlyFaxQuota,
+      monthly_tax_invoice_quota: monthlyInvoiceQuota,
+      monthly_alimtalk_quota: monthlyAlimtalkQuota,
       custom_domain_mail: customDomainMail,
     })
     .eq("id", tenantId);

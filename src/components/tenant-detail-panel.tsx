@@ -29,7 +29,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
     admin
       .from("tenants")
       .select(
-        "id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance, db_quota_bytes, file_quota_bytes, vendor_limit, monthly_email_quota, monthly_fax_quota, custom_domain_mail",
+        "id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance, db_quota_bytes, file_quota_bytes, vendor_limit, monthly_email_quota, monthly_fax_quota, monthly_tax_invoice_quota, monthly_alimtalk_quota, custom_domain_mail",
       )
       .eq("id", tenantId)
       .maybeSingle(),
@@ -75,7 +75,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
     admin.from("subcontractors").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
     admin
       .from("tenant_monthly_usage")
-      .select("email_sent_count")
+      .select("email_sent_count, fax_sent_count, invoice_issued_count, alimtalk_sent_count")
       .eq("tenant_id", tenantId)
       .eq("year_month", currentKstYearMonth())
       .maybeSingle(),
@@ -178,6 +178,11 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
             monthlyEmailQuota={tenant.monthly_email_quota}
             emailSentThisMonth={monthlyUsage?.email_sent_count ?? 0}
             monthlyFaxQuota={tenant.monthly_fax_quota}
+            faxSentThisMonth={monthlyUsage?.fax_sent_count ?? 0}
+            monthlyInvoiceQuota={tenant.monthly_tax_invoice_quota}
+            invoiceIssuedThisMonth={monthlyUsage?.invoice_issued_count ?? 0}
+            monthlyAlimtalkQuota={tenant.monthly_alimtalk_quota}
+            alimtalkSentThisMonth={monthlyUsage?.alimtalk_sent_count ?? 0}
             customDomainMail={tenant.custom_domain_mail}
           />
         </div>

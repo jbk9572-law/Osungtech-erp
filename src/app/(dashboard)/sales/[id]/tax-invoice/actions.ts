@@ -167,6 +167,12 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
     return { error: `품목 저장에 실패했습니다: ${itemsError.message}` };
   }
 
+  // 요금제 "월 계산서 발행 쿼터" 집계 — increment_tenant_email_usage와
+  // 같은 패턴(발행 자체가 끝난 뒤의 부가 기록이라 실패해도 이미 끝난
+  // 발행을 되돌리지 않는다).
+  const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
+  if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+
   // 목록 화면(sales/page.tsx)이 여전히 sales_orders.invoice_status만
   // 보고 "계산서 발행완료" 배지를 그리므로, 상세 데이터와 어긋나지 않게
   // 같이 갱신한다. 세금계산서 자체는 이미 저장됐으니, 이 갱신만 실패해도
@@ -325,6 +331,9 @@ export async function createTaxInvoiceCorrection(_prevState: FormState, formData
     }
     return { error: `품목 저장에 실패했습니다: ${itemsError.message}` };
   }
+
+  const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
+  if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
 
   revalidatePath(`/sales/${salesOrderId}`);
   revalidatePath(`/sales/${salesOrderId}/tax-invoice`);

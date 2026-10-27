@@ -17,6 +17,11 @@ export function TenantAddonPanel({
   monthlyEmailQuota,
   emailSentThisMonth,
   monthlyFaxQuota,
+  faxSentThisMonth,
+  monthlyInvoiceQuota,
+  invoiceIssuedThisMonth,
+  monthlyAlimtalkQuota,
+  alimtalkSentThisMonth,
   customDomainMail,
 }: {
   tenantId: string;
@@ -25,6 +30,11 @@ export function TenantAddonPanel({
   monthlyEmailQuota: number;
   emailSentThisMonth: number;
   monthlyFaxQuota: number;
+  faxSentThisMonth: number;
+  monthlyInvoiceQuota: number;
+  invoiceIssuedThisMonth: number;
+  monthlyAlimtalkQuota: number;
+  alimtalkSentThisMonth: number;
   customDomainMail: boolean;
 }) {
   const [state, formAction, pending] = useActionState(updateTenantAddons, undefined);
@@ -32,13 +42,16 @@ export function TenantAddonPanel({
   return (
     <div style={{ maxWidth: 420 }}>
       <PageGuide>
-        Standard 요금제 기본값은 외주처 1개사 / 월 이메일·팩스 각 100건입니다(매월 1일 자동
-        리셋). 추가 애드온을 요청받으면 여기서 직접 늘려주세요(추후 결제 연동 전까지는 수동
-        관리).
+        Standard 요금제 기본값은 외주처 1개사 / 월 이메일·팩스·계산서 각 100건입니다(매월 1일
+        자동 리셋). 알림톡(카카오)·문자는 아직 실제 발송 기능이 없어 쿼터만 미리 마련해뒀습니다
+        (기본 0건). 추가 애드온을 요청받으면 여기서 직접 늘려주세요(추후 결제 연동 전까지는
+        수동 관리).
       </PageGuide>
 
       <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
-        현재: 외주처 {vendorCount}개사 사용 중 · 이번 달 이메일 발송 {emailSentThisMonth}건
+        이번 달 사용량 — 외주처 {vendorCount}개사 · 이메일 {emailSentThisMonth}건 · 팩스{" "}
+        {faxSentThisMonth}건 · 계산서 {invoiceIssuedThisMonth}건 · 알림톡/문자{" "}
+        {alimtalkSentThisMonth}건
       </p>
 
       <form action={formAction} className="flex flex-col gap-2">
@@ -77,6 +90,32 @@ export function TenantAddonPanel({
             name="monthlyFaxQuota"
             min={0}
             defaultValue={monthlyFaxQuota}
+            className="erp-input"
+            style={{ width: 140 }}
+            required
+          />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="ta-invoice">월 계산서 발행 쿼터(건)</label>
+          <input
+            id="ta-invoice"
+            type="number"
+            name="monthlyInvoiceQuota"
+            min={0}
+            defaultValue={monthlyInvoiceQuota}
+            className="erp-input"
+            style={{ width: 140 }}
+            required
+          />
+        </div>
+        <div className="erp-field">
+          <label htmlFor="ta-alimtalk">월 알림톡/문자 발송 쿼터(건)</label>
+          <input
+            id="ta-alimtalk"
+            type="number"
+            name="monthlyAlimtalkQuota"
+            min={0}
+            defaultValue={monthlyAlimtalkQuota}
             className="erp-input"
             style={{ width: 140 }}
             required

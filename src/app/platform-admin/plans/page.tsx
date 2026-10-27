@@ -10,7 +10,7 @@ export default async function PlatformPlansPage() {
   const { data: plans } = await supabase
     .from("platform_plans")
     .select(
-      "id, plan_key, name, monthly_price, description, is_active, sort_order, included_db_mb, included_file_gb, included_vendor_limit, included_email_quota, included_fax_quota",
+      "id, plan_key, name, monthly_price, description, is_active, sort_order, included_db_mb, included_file_gb, included_vendor_limit, included_email_quota, included_fax_quota, included_invoice_quota, included_alimtalk_quota",
     )
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true })
@@ -51,6 +51,8 @@ export default async function PlatformPlansPage() {
               includedVendorLimit={p.included_vendor_limit}
               includedEmailQuota={p.included_email_quota}
               includedFaxQuota={p.included_fax_quota}
+              includedInvoiceQuota={p.included_invoice_quota}
+              includedAlimtalkQuota={p.included_alimtalk_quota}
             />
           ))}
         </div>

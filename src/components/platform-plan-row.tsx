@@ -31,6 +31,8 @@ export function PlatformPlanRow({
   includedVendorLimit,
   includedEmailQuota,
   includedFaxQuota,
+  includedInvoiceQuota,
+  includedAlimtalkQuota,
 }: {
   id: string;
   planKey: string;
@@ -43,6 +45,8 @@ export function PlatformPlanRow({
   includedVendorLimit: number | null;
   includedEmailQuota: number | null;
   includedFaxQuota: number | null;
+  includedInvoiceQuota: number | null;
+  includedAlimtalkQuota: number | null;
 }) {
   const [state, formAction, pending] = useActionState(updatePlatformPlan, undefined);
   const formId = `plan-form-${id}`;
@@ -188,6 +192,30 @@ export function PlatformPlanRow({
             name="included_fax_quota"
             form={formId}
             defaultValue={includedFaxQuota ?? ""}
+            min={0}
+            className="erp-input w-full"
+          />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-invoice`}>월 계산서 발행(건)</label>
+          <input
+            id={`${formId}-invoice`}
+            type="number"
+            name="included_invoice_quota"
+            form={formId}
+            defaultValue={includedInvoiceQuota ?? ""}
+            min={0}
+            className="erp-input w-full"
+          />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-alimtalk`}>월 알림톡/문자 발송(건)</label>
+          <input
+            id={`${formId}-alimtalk`}
+            type="number"
+            name="included_alimtalk_quota"
+            form={formId}
+            defaultValue={includedAlimtalkQuota ?? ""}
             min={0}
             className="erp-input w-full"
           />

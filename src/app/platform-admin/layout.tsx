@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PlatformAdminNav, PlatformAdminSideNav } from "@/components/platform-admin-nav";
+import { RouteProgressBar } from "@/components/erp/route-progress-bar";
 import "@/app/erp-theme.css";
 
 // 플랫폼 관리자 화면 전체(고객사/환경설정/공지사항/활동로그/요금제/통계)가
@@ -16,6 +17,12 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
 
   return (
     <div className="erp erp-comm-shell" style={{ minHeight: "100vh", background: "var(--erp-bg)" }}>
+      {/* (dashboard)/portal 레이아웃은 ErpShell 안에서 이 컴포넌트를 공용으로
+          쓰는데, platform-admin은 ErpShell 없이 직접 래퍼를 그리다 보니
+          이동 시 아무 피드백도 없었다 — 클릭/제출을 전역으로 감지해 200ms
+          넘게 걸리면 "이동 중..." 오버레이를 띄우는 동작은 완전히 같아야
+          하므로 새로 만들지 않고 그대로 재사용한다. */}
+      <RouteProgressBar />
       <div className="erp-platform-admin-shell">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>

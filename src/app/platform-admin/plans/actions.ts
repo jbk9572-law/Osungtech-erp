@@ -10,6 +10,8 @@ const INCLUDED_FIELDS = [
   ["included_vendor_limit", "외주처 연동 수"],
   ["included_email_quota", "월 이메일 발송 건수"],
   ["included_fax_quota", "월 팩스 발송 건수"],
+  ["included_invoice_quota", "월 계산서 발행 건수"],
+  ["included_alimtalk_quota", "월 알림톡/문자 발송 건수"],
 ] as const;
 
 // 요금제 설명 문구에 "DB 50MB" 같은 숫자를 적어놔도 실제로 그 숫자를

@@ -79,6 +79,14 @@ export function CreatePlatformPlanForm() {
           <label htmlFor="pp-fax">월 팩스 발송(건)</label>
           <input id="pp-fax" name="included_fax_quota" type="number" min={0} className="erp-input" placeholder="예: 100" />
         </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-invoice">월 계산서 발행(건)</label>
+          <input id="pp-invoice" name="included_invoice_quota" type="number" min={0} className="erp-input" placeholder="예: 100" />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-alimtalk">월 알림톡/문자 발송(건)</label>
+          <input id="pp-alimtalk" name="included_alimtalk_quota" type="number" min={0} className="erp-input" placeholder="예: 0" />
+        </div>
       </div>
 
       <div>
