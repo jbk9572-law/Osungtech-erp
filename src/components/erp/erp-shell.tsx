@@ -51,7 +51,7 @@ export function ErpShell({
   // 플랫폼 운영자가 platform-admin > 공지사항에서 등록해 켜둔 전체
   // 테넌트 공지 — 회사 구분 없이 로그인한 모든 사용자에게 보인다.
   platformAnnouncements?: { id: string; title: string }[];
-  // DB 50MB/파일 저장소 300MB 쿼터가 80%를 넘으면 뜨는 안내 배너 —
+  // DB 50MB/파일 저장소 1GB 쿼터가 80%를 넘으면 뜨는 안내 배너 —
   // (dashboard)/layout.tsx의 buildQuotaBannerMessage()가 이미 톤/문구를
   // 전부 정해서 내려준다(여기서는 그대로 그리기만 한다).
   quotaBanner?: { tone: "warn" | "danger"; message: string } | null;

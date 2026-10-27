@@ -24,7 +24,7 @@ export function TenantQuotaPanel({
   return (
     <div style={{ maxWidth: 420 }}>
       <PageGuide>
-        Standard 요금제 기본값은 DB 50MB / 파일 저장소 300MB입니다. 고객이 운영자 문의로 용량 추가를
+        Standard 요금제 기본값은 DB 50MB / 파일 저장소 1GB입니다. 고객이 운영자 문의로 용량 추가를
         요청하면 여기서 직접 늘려주세요(추후 결제 연동 전까지는 수동 관리).
       </PageGuide>
 

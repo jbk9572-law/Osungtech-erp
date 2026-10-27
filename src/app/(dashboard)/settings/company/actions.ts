@@ -119,7 +119,7 @@ export async function uploadBrandingImage(
   // 만드는" 화면에만 preferR2를 켰다 — upload-attachment.ts 상단 주석
   // 참고). 로고를 R2로 옮기려면 R2 퍼블릭 버킷(영구 공개 URL)을 별도로
   // 켜야 해서 범위 밖으로 남겨뒀다 — 로고/서명 이미지는 용량도 작아
-  // (전체 몇 MB) 300MB 쿼터에 미치는 영향이 거의 없다.
+  // (전체 몇 MB) 1GB 쿼터에 미치는 영향이 거의 없다.
   const uploaded = await uploadAttachment({ supabase, bucket: "branding", path, file, contentType: detectedType });
   if (!uploaded.ok) {
     return { error: `이미지 업로드에 실패했습니다: ${uploaded.error}` };

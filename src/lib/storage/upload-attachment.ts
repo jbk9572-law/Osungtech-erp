@@ -4,7 +4,7 @@ import { assertFileUploadAllowed } from "@/lib/quota/tenant-quota";
 import { isR2Configured, uploadObjectToR2, deleteObjectFromR2, getR2DownloadUrl } from "@/lib/r2/client";
 
 // 모든 첨부파일 업로드가 거쳐가는 공용 관문. 두 가지를 한 곳에서 보장한다:
-// 1) 쿼터 체크 — 파일 저장소 300MB 쿼터를 넘기면(유예 110%까지) 업로드
+// 1) 쿼터 체크 — 파일 저장소 쿼터(기본 1GB)를 넘기면(유예 110%까지) 업로드
 //    자체를 막는다. 기존 4개 업로드 지점(messenger/payment-receipts/mail/
 //    branding,signature)이 각자 따로 체크를 넣으면 한 곳을 빠뜨리기 쉬워
 //    (버그 수정 규칙 2번) 업로드하는 모든 곳이 이 함수 하나만 거치게 한다.
