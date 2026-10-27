@@ -30,6 +30,9 @@ export async function uploadSignatureImage(_prevState: FormState, formData: Form
   }
   const path = isDemo ? `signatures/demo/${user.id}.png` : `signatures/${user.id}.png`;
 
+  // 회사 로고(settings/company/actions.ts)와 같은 이유로 의도적으로
+  // preferR2를 안 쓴다 — 서명 이미지도 전자결재 문서 등에 영구 URL로
+  // 계속 쓰이는 구조라, R2의 단기 서명 URL 전제와 안 맞는다.
   const uploaded = await uploadAttachment({ supabase, bucket: "branding", path, file, contentType: detectedType });
   if (!uploaded.ok) {
     return { error: `이미지 업로드에 실패했습니다: ${uploaded.error}` };
