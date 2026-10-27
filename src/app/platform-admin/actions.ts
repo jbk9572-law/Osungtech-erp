@@ -298,6 +298,73 @@ export async function updateTenantPlanKey(_prevState: FormState, formData: FormD
   return { success: "요금제 상품을 저장했습니다." };
 }
 
+// "요금제 설명에 DB 50MB라고 적어놔도 실제로 그 숫자를 넣을 데가 없다"는
+// 지적 — platform_plans에 구조화된 기본값(included_*, migration 191)을
+// 추가했지만, 그 숫자가 tenants의 실제 쿼터 컬럼에 자동으로 동기화되진
+// 않는다(플랜만 바꿔도 매번 조용히 덮어쓰면, 운영자가 개별 고객사에
+// 수동으로 얹어준 여유 용량이 의도치 않게 날아간다 — migration 186의
+// "수동 override 가능해야 함" 전제와 충돌). 그래서 자동 적용 대신, 지금
+// 배정된 요금제의 기본값을 "지금 이 순간" 명시적으로 복사해 넣는 버튼
+// 하나로 둔다 — 누른 뒤에도 평소처럼 TenantQuotaPanel/TenantAddonPanel에서
+// 또 수동 조정할 수 있다.
+export async function applyPlanDefaultsToTenant(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 적용할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  if (!tenantId) return { error: "잘못된 요청입니다." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { data: tenant, error: tenantError } = await admin
+    .from("tenants")
+    .select("plan_key")
+    .eq("id", tenantId)
+    .maybeSingle();
+  if (tenantError) return { error: `조회에 실패했습니다: ${tenantError.message}` };
+  if (!tenant?.plan_key) return { error: "이 고객사에 배정된 요금제 상품이 없습니다. 먼저 요금제 상품을 선택해주세요." };
+
+  const { data: plan, error: planError } = await admin
+    .from("platform_plans")
+    .select("included_db_mb, included_file_gb, included_vendor_limit, included_email_quota, included_fax_quota")
+    .eq("plan_key", tenant.plan_key)
+    .maybeSingle();
+  if (planError) return { error: `요금제 조회에 실패했습니다: ${planError.message}` };
+  if (!plan) return { error: "배정된 요금제를 찾을 수 없습니다." };
+
+  // 값이 지정 안 된(null) 항목은 손대지 않는다 — "이 요금제는 이
+  // 항목에 대해 기본값을 정해두지 않았다"는 뜻이라, 비워서 덮어쓰면
+  // 오히려 기존에 운영자가 넣어둔 값을 지우게 된다.
+  const update: {
+    db_quota_bytes?: number;
+    file_quota_bytes?: number;
+    vendor_limit?: number;
+    monthly_email_quota?: number;
+    monthly_fax_quota?: number;
+  } = {};
+  if (plan.included_db_mb != null) update.db_quota_bytes = Math.round(plan.included_db_mb * 1024 * 1024);
+  if (plan.included_file_gb != null) update.file_quota_bytes = Math.round(plan.included_file_gb * 1024 * 1024 * 1024);
+  if (plan.included_vendor_limit != null) update.vendor_limit = plan.included_vendor_limit;
+  if (plan.included_email_quota != null) update.monthly_email_quota = plan.included_email_quota;
+  if (plan.included_fax_quota != null) update.monthly_fax_quota = plan.included_fax_quota;
+
+  if (Object.keys(update).length === 0) {
+    return { error: "이 요금제에는 적용할 기본값이 설정돼 있지 않습니다(요금제 관리에서 먼저 숫자를 입력해주세요)." };
+  }
+
+  const { error } = await admin.from("tenants").update(update).eq("id", tenantId);
+  if (error) return { error: `적용에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "요금제 기본값을 적용했습니다." };
+}
+
 // 특정 회사 소속 사용자의 비밀번호를 강제로 재설정한다. 그 회사 관리자가
 // 비밀번호를 잊어버려 본인 계정으로도, 같은 회사 다른 관리자 계정으로도
 // 로그인할 수 없을 때 쓰는 최후 수단이라 플랫폼 운영자 권한으로만 연다.

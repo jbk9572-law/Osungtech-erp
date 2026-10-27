@@ -1,7 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { toggleTenantActive, updateTenantPlan, updateTenantPlanKey, updateTenantPlanPeriod } from "@/app/platform-admin/actions";
+import {
+  toggleTenantActive,
+  updateTenantPlan,
+  updateTenantPlanKey,
+  updateTenantPlanPeriod,
+  applyPlanDefaultsToTenant,
+} from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { isPlanExpired } from "@/lib/tenant-plan";
 
@@ -38,6 +44,7 @@ export function TenantStatusControls({
   const [planState, planAction, planPending] = useActionState(updateTenantPlan, undefined);
   const [planKeyState, planKeyAction, planKeyPending] = useActionState(updateTenantPlanKey, undefined);
   const [periodState, periodAction, periodPending] = useActionState(updateTenantPlanPeriod, undefined);
+  const [applyState, applyAction, applyPending] = useActionState(applyPlanDefaultsToTenant, undefined);
 
   const isExpired = isPlanExpired(planExpiresAt);
 
@@ -86,6 +93,19 @@ export function TenantStatusControls({
           {planKeyPending && <span className="erp-spinner" aria-hidden />}
         </form>
         <FormMessage state={planKeyState} />
+        {/* "요금제 설명에 숫자를 적어놔도 실제로 세팅하는 방법이 없다"는
+            지적 — 요금제 관리 화면에서 입력한 기본값(DB/파일/외주처/
+            이메일·팩스)을 이 고객사에 한 번에 복사한다. 자동으로는 안
+            하고(위 select onChange로 요금제만 바뀌어도 매번 조용히
+            덮어쓰면 수동으로 얹어준 여유 용량이 날아갈 수 있어서)
+            명시적으로 눌러야만 적용된다. */}
+        <form action={applyAction} className="mt-1">
+          <input type="hidden" name="tenantId" value={tenantId} />
+          <button type="submit" disabled={applyPending || !planKey} className="erp-btn" style={{ minWidth: 0 }}>
+            {applyPending ? "적용 중..." : "이 요금제 기본값 적용"}
+          </button>
+        </form>
+        <FormMessage state={applyState} />
       </div>
 
       <div className="erp-field">

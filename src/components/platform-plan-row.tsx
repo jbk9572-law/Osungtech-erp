@@ -26,6 +26,11 @@ export function PlatformPlanRow({
   monthlyPrice,
   description,
   isActive,
+  includedDbMb,
+  includedFileGb,
+  includedVendorLimit,
+  includedEmailQuota,
+  includedFaxQuota,
 }: {
   id: string;
   planKey: string;
@@ -33,6 +38,11 @@ export function PlatformPlanRow({
   monthlyPrice: number;
   description: string | null;
   isActive: boolean;
+  includedDbMb: number | null;
+  includedFileGb: number | null;
+  includedVendorLimit: number | null;
+  includedEmailQuota: number | null;
+  includedFaxQuota: number | null;
 }) {
   const [state, formAction, pending] = useActionState(updatePlatformPlan, undefined);
   const formId = `plan-form-${id}`;
@@ -113,6 +123,73 @@ export function PlatformPlanRow({
             form={formId}
             defaultChecked={isActive}
             style={{ marginTop: 6 }}
+          />
+        </div>
+      </div>
+
+      {/* 설명 문구와 별개로, 이 요금제를 고객사에 배정할 때 "이 요금제
+          기본값 적용" 버튼이 그대로 복사해 넣을 실제 숫자 — 텍스트
+          설명만 있고 세팅할 데가 없다는 지적 반영. 비워두면 그 항목은
+          기본값을 안 정하는 것으로 저장된다. */}
+      <div className="erp-field-grid" style={{ marginTop: "var(--erp-space-3)" }}>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-db`}>DB 용량(MB)</label>
+          <input
+            id={`${formId}-db`}
+            type="number"
+            name="included_db_mb"
+            form={formId}
+            defaultValue={includedDbMb ?? ""}
+            min={0}
+            className="erp-input w-full"
+          />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-file`}>파일 저장소(GB)</label>
+          <input
+            id={`${formId}-file`}
+            type="number"
+            name="included_file_gb"
+            form={formId}
+            defaultValue={includedFileGb ?? ""}
+            min={0}
+            className="erp-input w-full"
+          />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-vendor`}>외주처 연동 수</label>
+          <input
+            id={`${formId}-vendor`}
+            type="number"
+            name="included_vendor_limit"
+            form={formId}
+            defaultValue={includedVendorLimit ?? ""}
+            min={0}
+            className="erp-input w-full"
+          />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-email`}>월 이메일 발송(건)</label>
+          <input
+            id={`${formId}-email`}
+            type="number"
+            name="included_email_quota"
+            form={formId}
+            defaultValue={includedEmailQuota ?? ""}
+            min={0}
+            className="erp-input w-full"
+          />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor={`${formId}-fax`}>월 팩스 발송(건)</label>
+          <input
+            id={`${formId}-fax`}
+            type="number"
+            name="included_fax_quota"
+            form={formId}
+            defaultValue={includedFaxQuota ?? ""}
+            min={0}
+            className="erp-input w-full"
           />
         </div>
       </div>

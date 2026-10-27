@@ -9,7 +9,9 @@ export default async function PlatformPlansPage() {
 
   const { data: plans } = await supabase
     .from("platform_plans")
-    .select("id, plan_key, name, monthly_price, description, is_active, sort_order")
+    .select(
+      "id, plan_key, name, monthly_price, description, is_active, sort_order, included_db_mb, included_file_gb, included_vendor_limit, included_email_quota, included_fax_quota",
+    )
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true })
     .limit(200);
@@ -44,6 +46,11 @@ export default async function PlatformPlansPage() {
               monthlyPrice={p.monthly_price}
               description={p.description}
               isActive={p.is_active}
+              includedDbMb={p.included_db_mb}
+              includedFileGb={p.included_file_gb}
+              includedVendorLimit={p.included_vendor_limit}
+              includedEmailQuota={p.included_email_quota}
+              includedFaxQuota={p.included_fax_quota}
             />
           ))}
         </div>

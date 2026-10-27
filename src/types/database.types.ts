@@ -1395,6 +1395,11 @@ export type Database = {
           is_active: boolean;
           sort_order: number;
           created_at: string;
+          included_db_mb: number | null;
+          included_file_gb: number | null;
+          included_vendor_limit: number | null;
+          included_email_quota: number | null;
+          included_fax_quota: number | null;
         };
         Insert: {
           id?: string;
@@ -1405,6 +1410,11 @@ export type Database = {
           is_active?: boolean;
           sort_order?: number;
           created_at?: string;
+          included_db_mb?: number | null;
+          included_file_gb?: number | null;
+          included_vendor_limit?: number | null;
+          included_email_quota?: number | null;
+          included_fax_quota?: number | null;
         };
         Update: {
           id?: string;
@@ -1415,6 +1425,11 @@ export type Database = {
           is_active?: boolean;
           sort_order?: number;
           created_at?: string;
+          included_db_mb?: number | null;
+          included_file_gb?: number | null;
+          included_vendor_limit?: number | null;
+          included_email_quota?: number | null;
+          included_fax_quota?: number | null;
         };
         Relationships: [];
       };

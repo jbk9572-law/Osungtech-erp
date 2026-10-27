@@ -53,6 +53,34 @@ export function CreatePlatformPlanForm() {
         />
       </div>
 
+      {/* 위 설명은 사람이 읽는 안내 문구일 뿐이라, 실제로 고객사에
+          적용할 숫자는 여기 따로 입력한다 — "텍스트 설명만 있고 세팅할
+          방법이 없다"는 지적 반영. 빈 칸으로 두면 그 항목은 기본값을
+          안 정하는 것으로 저장된다(고객사 상세 > 이용 상태의 "이 요금제
+          기본값 적용" 버튼이 이 값을 그대로 복사한다). */}
+      <div className="erp-field-grid">
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-db">DB 용량(MB)</label>
+          <input id="pp-db" name="included_db_mb" type="number" min={0} className="erp-input" placeholder="예: 50" />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-file">파일 저장소(GB)</label>
+          <input id="pp-file" name="included_file_gb" type="number" min={0} className="erp-input" placeholder="예: 1" />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-vendor">외주처 연동 수</label>
+          <input id="pp-vendor" name="included_vendor_limit" type="number" min={0} className="erp-input" placeholder="예: 1" />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-email">월 이메일 발송(건)</label>
+          <input id="pp-email" name="included_email_quota" type="number" min={0} className="erp-input" placeholder="예: 100" />
+        </div>
+        <div className="erp-field erp-span-3">
+          <label htmlFor="pp-fax">월 팩스 발송(건)</label>
+          <input id="pp-fax" name="included_fax_quota" type="number" min={0} className="erp-input" placeholder="예: 100" />
+        </div>
+      </div>
+
       <div>
         <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? "등록 중..." : "등록"}
