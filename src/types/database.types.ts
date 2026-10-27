@@ -5972,6 +5972,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: number;
       };
+      get_platform_r2_usage: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -951,45 +951,27 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 정률(%) 사용량 한도가 있는 항목(DB/파일저장/서버 디스크/대역폭)만
-   원형 게이지로 보여준다 — 실제 시계열 데이터가 없는 걸 "추세 그래프"
-   처럼 흉내내면 없는 데이터를 있는 것처럼 보여주는 셈이라 넣지 않았다. */
-.erp-tree-usage-row-donut {
+/* 정률(%) 사용량 한도가 있는 항목(DB/파일저장/서버 디스크/대역폭)을
+   가로 막대로 보여준다 — 예전엔 원형 게이지(도넛)였는데, "막대"로
+   바로 눈에 들어오게 해달라는 요청으로 바꿨다. 실제 시계열 데이터가
+   없는 걸 "추세 그래프"처럼 흉내내진 않는다(지금 값 하나만 표시). */
+.erp-tree-usage-row-bar {
   display: flex;
-  align-items: center;
-  gap: 9px;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.erp-usage-donut {
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.erp-usage-donut::before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
+.erp-usage-bar-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
   background: var(--erp-bg-subtle);
+  overflow: hidden;
 }
 
-.erp-usage-donut-pct {
-  position: relative;
-  z-index: 1;
-  font-size: var(--erp-font-2xs);
-  font-weight: 800;
-  color: var(--erp-text);
-}
-
-.erp-tree-usage-donut-text {
-  min-width: 0;
-  flex: 1;
+.erp-usage-bar-fill {
+  height: 100%;
+  border-radius: 3px;
 }
 
 .erp-tree-toggle {

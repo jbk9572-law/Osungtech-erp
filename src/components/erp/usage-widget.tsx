@@ -1,7 +1,15 @@
 import type { VpsDiskUsage } from "@/lib/vps-usage";
 import type { NetlifyUsageResult } from "@/lib/netlify-usage";
-import { FREE_TIER_DB_LIMIT_BYTES, FREE_TIER_STORAGE_LIMIT_BYTES } from "@/lib/db-usage";
+import {
+  FREE_TIER_DB_LIMIT_BYTES,
+  FREE_TIER_STORAGE_LIMIT_BYTES,
+  FREE_TIER_R2_STORAGE_LIMIT_BYTES,
+  R2_STORAGE_OVERAGE_USD_PER_GB,
+  R2_FREE_CLASS_A_OPS_PER_MONTH,
+  R2_FREE_CLASS_B_OPS_PER_MONTH,
+} from "@/lib/db-usage";
 import { formatMB } from "@/lib/format-bytes";
+import { formatNumber } from "@/lib/format-number";
 
 // 트리메뉴 사이드바 아래에 붙는 DB/스토리지/서버 사용량 표시 — 서버
 // 컴포넌트(usage-widget-panel.tsx)에서 데이터를 가져와 렌더링만 여기서
@@ -41,20 +49,16 @@ export function UsageBar(row: UsageRow) {
         : "var(--erp-success)";
 
   return (
-    <div className="erp-tree-usage-row erp-tree-usage-row-donut">
-      <div
-        className="erp-usage-donut"
-        style={{ background: `conic-gradient(${barColor} ${percent}%, var(--erp-border) 0)` }}
-      >
-        <span className="erp-usage-donut-pct">{percent}%</span>
+    <div className="erp-tree-usage-row erp-tree-usage-row-bar">
+      <div className="erp-tree-usage-label">
+        <span>{label}</span>
+        <span style={{ fontVariantNumeric: "tabular-nums" }}>{percent}%</span>
       </div>
-      <div className="erp-tree-usage-donut-text">
-        <div className="erp-tree-usage-label">
-          <span>{label}</span>
-        </div>
-        <div className="erp-tree-usage-sub">
-          {formatMB(usedBytes)}MB / {formatMB(limitBytes)}MB ({note})
-        </div>
+      <div className="erp-usage-bar-track">
+        <div className="erp-usage-bar-fill" style={{ width: `${percent}%`, background: barColor }} />
+      </div>
+      <div className="erp-tree-usage-sub">
+        {formatMB(usedBytes)}MB / {formatMB(limitBytes)}MB ({note})
       </div>
     </div>
   );
@@ -65,11 +69,15 @@ export function UsageWidget({
   storageSizeBytes,
   vpsDisk,
   netlifyUsage,
+  r2TotalBytes,
 }: {
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
   vpsDisk: VpsDiskUsage | null;
   netlifyUsage: NetlifyUsageResult;
+  // R2가 연결 안 된 배포(이 값을 아예 안 넘기는 호출부 포함)에서는 행
+  // 자체를 숨긴다 — TenantUsageWidget(고객용) 쪽은 이 prop을 아예 안 쓴다.
+  r2TotalBytes?: number | null;
 }) {
   const rows: UsageRow[] = [];
   if (dbSizeBytes != null) {
@@ -88,6 +96,15 @@ export function UsageWidget({
       usedBytes: storageSizeBytes,
       limitBytes: FREE_TIER_STORAGE_LIMIT_BYTES,
       note: "무료플랜",
+    });
+  }
+  if (r2TotalBytes != null) {
+    rows.push({
+      kind: "bar",
+      label: "R2 파일 저장소",
+      usedBytes: r2TotalBytes,
+      limitBytes: FREE_TIER_R2_STORAGE_LIMIT_BYTES,
+      note: `10GB 초과 시 GB당 $${R2_STORAGE_OVERAGE_USD_PER_GB}`,
     });
   }
   if (vpsDisk != null) {
@@ -143,6 +160,16 @@ export function UsageWidget({
           style={{ color: "var(--erp-danger)" }}
         >
           넷리파이 사용량 조회 실패: {netlifyUsage.error}
+        </div>
+      )}
+      {r2TotalBytes != null && (
+        // 쓰기(Class A)/읽기(Class B) 호출 횟수는 R2 호출 지점에 카운터를
+        // 따로 안 붙여놔서 지금은 실제 사용량을 집계할 수 없다 — 막대로
+        // 보여주면 "0%"처럼 실제 쓰지도 않은 값을 보여주는 셈이라, 무료
+        // 한도만 참고용 텍스트로 보여준다(숫자를 지어내지 않음).
+        <div className="erp-tree-usage-sub">
+          R2 무료 한도(참고): 쓰기(Class A) 월 {formatNumber(R2_FREE_CLASS_A_OPS_PER_MONTH)}회 · 읽기(Class B) 월{" "}
+          {formatNumber(R2_FREE_CLASS_B_OPS_PER_MONTH)}회 — 실제 호출 횟수는 아직 집계하지 않습니다.
         </div>
       )}
     </div>
