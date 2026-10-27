@@ -41,9 +41,11 @@ export async function getStorageSizeBytes(
 
 // Cloudflare R2 무료 한도(2026-10 기준 공식 가격표) — 저장 10GB, 쓰기(Class
 // A) 월 100만회, 읽기(Class B) 월 1000만회. 저장 용량은 tenant_usage 합산으로
-// 실제 추적 중이라 바로 보여줄 수 있지만, 쓰기/읽기 횟수는 R2 호출 지점
-// (src/lib/r2/client.ts)에 카운터를 따로 안 붙여놔서 지금은 집계할 데이터가
-// 없다 — 숫자를 지어내지 않고 한도만 참고용으로 보여준다(UsageWidget 참고).
+// 실제 추적 중이고, 쓰기(Class A) 호출횟수도 migration 193부터 실제로
+// 집계한다(src/lib/storage/upload-attachment.ts, src/lib/r2/
+// sweep-orphans.ts). 읽기(Class B)는 Presigned URL로 브라우저가 R2에
+// 직접 접속해 받는 구조라 이 서버를 거치지 않아 집계할 방법이 없다 —
+// 숫자를 지어내지 않고 한도만 참고용으로 계속 보여준다(UsageWidget 참고).
 export const FREE_TIER_R2_STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024;
 export const R2_STORAGE_OVERAGE_USD_PER_GB = 0.015;
 export const R2_FREE_CLASS_A_OPS_PER_MONTH = 1_000_000;
@@ -55,6 +57,20 @@ export async function getR2TotalFileBytes(
   return ttlCached("r2-total-file-bytes", 5 * 60 * 1000, async () => {
     try {
       const { data, error } = await supabase.rpc("get_platform_r2_usage");
+      if (error || data == null) return null;
+      return Number(data);
+    } catch {
+      return null;
+    }
+  });
+}
+
+export async function getR2ClassAOpsThisMonth(
+  supabase: SupabaseClient<Database>,
+): Promise<number | null> {
+  return ttlCached("r2-class-a-ops", 5 * 60 * 1000, async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_platform_r2_ops_usage");
       if (error || data == null) return null;
       return Number(data);
     } catch {

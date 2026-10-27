@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getDatabaseSizeBytes, getStorageSizeBytes, getR2TotalFileBytes } from "@/lib/db-usage";
+import { getDatabaseSizeBytes, getStorageSizeBytes, getR2TotalFileBytes, getR2ClassAOpsThisMonth } from "@/lib/db-usage";
 import { getVpsDiskUsage } from "@/lib/vps-usage";
 import { getNetlifyUsage } from "@/lib/netlify-usage";
 import { UsageWidget } from "@/components/erp/usage-widget";
@@ -15,13 +15,14 @@ import { isR2Configured } from "@/lib/r2/client";
 // 나머지 화면(제목표시줄/트리메뉴/본문)에는 영향을 주지 않는다.
 export async function UsageWidgetPanel() {
   const supabase = await createClient();
-  const [dbSizeBytes, storageSizeBytes, netlifyUsage, r2TotalBytes] = await Promise.all([
+  const [dbSizeBytes, storageSizeBytes, netlifyUsage, r2TotalBytes, r2ClassAOps] = await Promise.all([
     getDatabaseSizeBytes(supabase),
     getStorageSizeBytes(supabase),
     getNetlifyUsage(),
     // R2가 아직 연결 안 된 배포에서는 쿼리할 필요도 없다 — 설정 안 된
     // 환경에서 null을 반환해 UsageWidget이 그 행을 그냥 숨기게 한다.
     isR2Configured() ? getR2TotalFileBytes(supabase) : Promise.resolve(null),
+    isR2Configured() ? getR2ClassAOpsThisMonth(supabase) : Promise.resolve(null),
   ]);
   const vpsDisk = getVpsDiskUsage();
 
@@ -32,6 +33,7 @@ export async function UsageWidgetPanel() {
       vpsDisk={vpsDisk}
       netlifyUsage={netlifyUsage}
       r2TotalBytes={r2TotalBytes}
+      r2ClassAOps={r2ClassAOps}
     />
   );
 }

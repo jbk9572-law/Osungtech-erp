@@ -27,6 +27,15 @@ async function trackFileUsage(supabase: SupabaseClient<Database>, deltaBytes: nu
   if (error) console.error("파일 쿼터 사용량 갱신 실패:", error.message);
 }
 
+// R2 "쓰기(Class A)" 호출횟수 집계 — PutObjectCommand 성공 직후 1건
+// 증가시킨다. 읽기(Class B)는 Presigned URL로 브라우저가 R2에 직접
+// 접속해 받는 구조라 이 서버를 거치지 않아 집계할 수 없다(migration
+// 193 주석 참고) — 쓰기만이라도 정확히 세서 통계 화면에 보여준다.
+async function trackR2Op(supabase: SupabaseClient<Database>): Promise<void> {
+  const { error } = await supabase.rpc("increment_platform_r2_class_a_ops", { p_count: 1 });
+  if (error) console.error("R2 호출횟수 집계 실패:", error.message);
+}
+
 export type AttachmentUploadResult =
   | { ok: true; path: string; backend: "r2" | "supabase"; publicUrl: string | null }
   | { ok: false; error: string };
@@ -54,6 +63,7 @@ export async function uploadAttachment(opts: {
       return { ok: false, error: e instanceof Error ? e.message : "R2 업로드에 실패했습니다." };
     }
     await trackFileUsage(opts.supabase, size);
+    await trackR2Op(opts.supabase);
     return { ok: true, path: key, backend: "r2", publicUrl: null };
   }
 

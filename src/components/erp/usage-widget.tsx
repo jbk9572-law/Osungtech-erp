@@ -21,7 +21,13 @@ import { formatNumber } from "@/lib/format-number";
 // 공용화(개발헌법 3번).
 export type UsageRow =
   | { kind: "bar"; label: string; usedBytes: number; limitBytes: number; note: string }
+  | { kind: "count-bar"; label: string; usedCount: number; limitCount: number; note: string }
   | { kind: "simple"; label: string; usedBytes: number; note: string };
+
+function barLevelColor(percent: number) {
+  const level = percent >= 90 ? "danger" : percent >= 70 ? "warning" : "success";
+  return level === "danger" ? "var(--erp-danger)" : level === "warning" ? "var(--erp-warning)" : "var(--erp-success)";
+}
 
 export function UsageBar(row: UsageRow) {
   if (row.kind === "simple") {
@@ -37,16 +43,30 @@ export function UsageBar(row: UsageRow) {
     );
   }
 
+  // 바이트 단위(DB/파일/R2 저장소)와 횟수 단위(R2 쓰기 호출)가 막대
+  // 그리기 로직은 완전히 같고 숫자 포맷(MB vs 회)만 다르다 — 복붙하는
+  // 대신 포맷 함수만 분기한다.
+  if (row.kind === "count-bar") {
+    const { label, usedCount, limitCount, note } = row;
+    const percent = Math.min(100, Math.round((usedCount / limitCount) * 100));
+    return (
+      <div className="erp-tree-usage-row erp-tree-usage-row-bar">
+        <div className="erp-tree-usage-label">
+          <span>{label}</span>
+          <span style={{ fontVariantNumeric: "tabular-nums" }}>{percent}%</span>
+        </div>
+        <div className="erp-usage-bar-track">
+          <div className="erp-usage-bar-fill" style={{ width: `${percent}%`, background: barLevelColor(percent) }} />
+        </div>
+        <div className="erp-tree-usage-sub">
+          {formatNumber(usedCount)}회 / {formatNumber(limitCount)}회 ({note})
+        </div>
+      </div>
+    );
+  }
+
   const { label, usedBytes, limitBytes, note } = row;
   const percent = Math.min(100, Math.round((usedBytes / limitBytes) * 100));
-  const level =
-    percent >= 90 ? "danger" : percent >= 70 ? "warning" : "success";
-  const barColor =
-    level === "danger"
-      ? "var(--erp-danger)"
-      : level === "warning"
-        ? "var(--erp-warning)"
-        : "var(--erp-success)";
 
   return (
     <div className="erp-tree-usage-row erp-tree-usage-row-bar">
@@ -55,7 +75,7 @@ export function UsageBar(row: UsageRow) {
         <span style={{ fontVariantNumeric: "tabular-nums" }}>{percent}%</span>
       </div>
       <div className="erp-usage-bar-track">
-        <div className="erp-usage-bar-fill" style={{ width: `${percent}%`, background: barColor }} />
+        <div className="erp-usage-bar-fill" style={{ width: `${percent}%`, background: barLevelColor(percent) }} />
       </div>
       <div className="erp-tree-usage-sub">
         {formatMB(usedBytes)}MB / {formatMB(limitBytes)}MB ({note})
@@ -70,6 +90,7 @@ export function UsageWidget({
   vpsDisk,
   netlifyUsage,
   r2TotalBytes,
+  r2ClassAOps,
 }: {
   dbSizeBytes: number | null;
   storageSizeBytes: number | null;
@@ -78,6 +99,11 @@ export function UsageWidget({
   // R2가 연결 안 된 배포(이 값을 아예 안 넘기는 호출부 포함)에서는 행
   // 자체를 숨긴다 — TenantUsageWidget(고객용) 쪽은 이 prop을 아예 안 쓴다.
   r2TotalBytes?: number | null;
+  // 쓰기(Class A) 호출횟수 — 업로드/리스트 지점에서 실제로 집계한 이번
+  // 달 값(migration 193). 읽기(Class B)는 Presigned URL로 브라우저가
+  // R2에 직접 접속해 받아 이 서버를 거치지 않으므로 집계 불가 — 아래
+  // 참고 텍스트로만 안내한다.
+  r2ClassAOps?: number | null;
 }) {
   const rows: UsageRow[] = [];
   if (dbSizeBytes != null) {
@@ -105,6 +131,15 @@ export function UsageWidget({
       usedBytes: r2TotalBytes,
       limitBytes: FREE_TIER_R2_STORAGE_LIMIT_BYTES,
       note: `10GB 초과 시 GB당 $${R2_STORAGE_OVERAGE_USD_PER_GB}`,
+    });
+  }
+  if (r2ClassAOps != null) {
+    rows.push({
+      kind: "count-bar",
+      label: "R2 쓰기 호출(Class A)",
+      usedCount: r2ClassAOps,
+      limitCount: R2_FREE_CLASS_A_OPS_PER_MONTH,
+      note: "무료 한도 · 이번 달",
     });
   }
   if (vpsDisk != null) {
@@ -163,13 +198,15 @@ export function UsageWidget({
         </div>
       )}
       {r2TotalBytes != null && (
-        // 쓰기(Class A)/읽기(Class B) 호출 횟수는 R2 호출 지점에 카운터를
-        // 따로 안 붙여놔서 지금은 실제 사용량을 집계할 수 없다 — 막대로
+        // 읽기(Class B)는 Presigned URL로 브라우저가 R2에 직접 접속해
+        // 받는 구조라(src/lib/r2/client.ts의 getR2DownloadUrl) 이 서버를
+        // 거치지 않아 실제 호출 횟수를 집계할 방법이 없다 — 막대로
         // 보여주면 "0%"처럼 실제 쓰지도 않은 값을 보여주는 셈이라, 무료
-        // 한도만 참고용 텍스트로 보여준다(숫자를 지어내지 않음).
+        // 한도만 참고용 텍스트로 보여준다(숫자를 지어내지 않음). 쓰기
+        // (Class A)는 위에 실제 집계된 막대로 따로 보여준다.
         <div className="erp-tree-usage-sub">
-          R2 무료 한도(참고): 쓰기(Class A) 월 {formatNumber(R2_FREE_CLASS_A_OPS_PER_MONTH)}회 · 읽기(Class B) 월{" "}
-          {formatNumber(R2_FREE_CLASS_B_OPS_PER_MONTH)}회 — 실제 호출 횟수는 아직 집계하지 않습니다.
+          R2 읽기(Class B) 무료 한도(참고): 월 {formatNumber(R2_FREE_CLASS_B_OPS_PER_MONTH)}회 — 서명된 URL로 R2에 직접
+          접속해 받는 구조라 실제 호출 횟수는 집계할 수 없습니다.
         </div>
       )}
     </div>

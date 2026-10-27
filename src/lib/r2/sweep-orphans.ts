@@ -55,10 +55,20 @@ export async function sweepOrphanR2Files(opts: {
   }
 
   const graceMs = opts.graceMs ?? 24 * 60 * 60 * 1000;
-  const listObjects = opts.listObjects ?? listAllR2Objects;
   const deleteObject = opts.deleteObject ?? deleteObjectFromR2;
 
+  // ListObjectsV2도 R2 쓰기(Class A) 과금 대상이라, 테스트가 주입하는
+  // listObjects가 아니라 실제 R2를 호출하는 기본 경로를 쓸 때만 페이지
+  // 수만큼 호출횟수를 집계한다(DeleteObject는 R2에서 무료라 집계 안 함).
+  let listApiCalls = 0;
+  const listObjects =
+    opts.listObjects ?? (() => listAllR2Objects({ onApiCall: () => { listApiCalls++; } }));
+
   const objects = await listObjects();
+  if (listApiCalls > 0) {
+    const { error } = await opts.supabase.rpc("increment_platform_r2_class_a_ops", { p_count: listApiCalls });
+    if (error) console.error("R2 호출횟수 집계 실패:", error.message);
+  }
 
   const referenced = new Set<string>();
   for (const column of KNOWN_R2_REFERENCE_COLUMNS) {

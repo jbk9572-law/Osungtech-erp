@@ -1307,6 +1307,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      platform_r2_ops_usage: {
+        Row: {
+          year_month: string;
+          class_a_count: number;
+          updated_at: string;
+        };
+        Insert: {
+          year_month: string;
+          class_a_count?: number;
+          updated_at?: string;
+        };
+        Update: {
+          year_month?: string;
+          class_a_count?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       signup_attempts: {
         Row: {
           id: number;
@@ -6020,6 +6038,14 @@ export type Database = {
           invoice_issued_count: number;
           alimtalk_sent_count: number;
         }[];
+      };
+      increment_platform_r2_class_a_ops: {
+        Args: { p_count?: number };
+        Returns: number;
+      };
+      get_platform_r2_ops_usage: {
+        Args: Record<string, never>;
+        Returns: number;
       };
     };
     Enums: Record<string, never>;

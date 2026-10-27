@@ -72,12 +72,15 @@ export type R2ObjectSummary = { key: string; lastModified: Date | undefined; siz
 // 고아 파일 정리 스크립트(src/lib/r2/sweep-orphans.ts)가 "버킷에 실제로
 // 있는 것" 전체 목록을 얻는 용도로만 쓴다 — 버킷 안 객체 수가 많아지면
 // ListObjectsV2가 한 번에 최대 1000개만 돌려주므로 ContinuationToken으로
-// 끝까지 페이지네이션한다.
-export async function listAllR2Objects(): Promise<R2ObjectSummary[]> {
+// 끝까지 페이지네이션한다. onApiCall은 R2 쓰기(Class A) 호출횟수 집계용
+// (src/lib/r2/sweep-orphans.ts) — ListObjectsV2도 Class A 과금 대상이라
+// 페이지를 넘길 때마다 실제로 몇 번 호출했는지 호출부에 그대로 알려준다.
+export async function listAllR2Objects(opts?: { onApiCall?: () => void }): Promise<R2ObjectSummary[]> {
   const { client, bucket } = getClient();
   const objects: R2ObjectSummary[] = [];
   let continuationToken: string | undefined;
   do {
+    opts?.onApiCall?.();
     const res = await client.send(
       new ListObjectsV2Command({ Bucket: bucket, ContinuationToken: continuationToken }),
     );
