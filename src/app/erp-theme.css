@@ -4729,9 +4729,26 @@ a.erp-detail-tab:hover:not(.active) {
   align-items: flex-start;
 }
 
+/* .erp-cat-sidebar를 그대로 재사용하되(각 항목의 hover/active 필 모양은
+   그대로 가져감), 그 클래스가 기본으로 주는 "흰 카드 테두리+그림자" 박스
+   모양은 여기서 벗긴다 — 목록 화면의 "분류 필터"는 옆의 흰 목록 패널과
+   짝을 이루는 카드라 박스가 자연스럽지만, 전역 메뉴는 페이지 배경 위에
+   콘텐츠와 나란히 있을 뿐이라 박스를 씌우면 콘텐츠와 따로 노는 느낌이
+   든다는 지적을 받았다 — 테두리/배경/그림자를 없애고 메뉴 항목만(각자
+   .erp-cat-item의 hover/active 필 배경) 페이지 배경 위에 바로 놓는다. */
 .erp-platform-admin-sidenav {
   display: flex;
   flex: 0 0 176px;
+}
+
+/* .erp-comm-shell .erp-cat-sidebar가 border-radius/border-color/box-shadow를
+   주는 것보다 이 선택자의 명시도가 같거나 높아야 실제로 벗겨진다(둘 다
+   클래스 2개, 같은 명시도라 이 블록이 파일에서 더 뒤에 있어 이긴다). */
+.erp-platform-admin-sidenav.erp-cat-sidebar {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 2px 0 0;
 }
 
 .erp-platform-admin-content {

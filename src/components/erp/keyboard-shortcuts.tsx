@@ -38,8 +38,15 @@ function isEditableTarget(target: EventTarget | null): boolean {
 // 이 조그만 클라이언트 컴포넌트만 끼워 넣는다.
 export function KeyboardShortcuts({
   shortcuts,
+  hideHintBar,
 }: {
   shortcuts: Partial<Record<string, ShortcutAction>>;
+  // 플랫폼 관리자 고객사 화면처럼, 힌트바를 본문 맨 위에 독립된 박스로
+  // 띄우는 대신 제목 줄 안에 같이 녹여 넣고 싶은 화면을 위한 탈출구 —
+  // 키 입력 처리/힌트 라벨 계산 로직(아래)은 그대로 쓰고, 기본
+  // KeyboardHintBar 렌더링만 끈다. 호출하는 쪽이 같은 shortcuts로 직접
+  // 힌트를 그린다(예: platform-admin/page.tsx의 제목 줄).
+  hideHintBar?: boolean;
 }) {
   const router = useRouter();
   // 모달 안에서 물리 Escape 키가 눌리면 registration-modal-shell.tsx가
@@ -104,6 +111,6 @@ export function KeyboardShortcuts({
     key: key === "Escape" ? "Esc" : key,
     label: HINT_LABELS[key],
   }));
-  if (items.length === 0) return null;
+  if (hideHintBar || items.length === 0) return null;
   return <KeyboardHintBar items={items} />;
 }

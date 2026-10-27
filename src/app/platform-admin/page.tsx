@@ -97,15 +97,31 @@ export default async function PlatformAdminPage({
     <div>
       {/* 다른 분할뷰 화면(공지사항/견적서 등)은 전부 F2(신규)+Esc(닫기)
           한 쌍으로 등록돼 있어서 힌트바가 "F2 신규 · Esc 닫기" 두 칸으로
-          뜬다 — 여기만 Esc 하나만 등록했더니 힌트바가 항목 1개짜리로
-          혼자 떠서 위치가 이상해 보인다는 지적을 받았다. 같은 패턴으로
-          맞춘다(F2는 이미 기본값인 목록+새 회사 추가 화면으로, 이미 거기
-          있을 땐 사실상 변화 없음 — 다른 화면의 F2도 이미 그 화면이면
-          마찬가지). */}
+          뜬다 — F2 없이 Esc만 등록했더니 힌트바가 항목 1개짜리로 혼자 떠
+          보였던 걸 맞췄다(F2는 이미 기본값인 목록+새 회사 추가 화면으로,
+          이미 거기 있을 땐 사실상 변화 없음 — 다른 화면의 F2도 이미 그
+          화면이면 마찬가지). 거기에 더해, 힌트바 자체가 본문 맨 위에
+          독립된 박스로 붕 떠서 제목과 안 어울린다는 지적을 받아
+          hideHintBar로 기본 박스 렌더링은 끄고, 제목 줄 안에 같이 녹여
+          넣는다(아래 h1 옆). */}
       <KeyboardShortcuts
         shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
+        hideHintBar
       />
-      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 고객사</h1>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <h1 className="erp-h1">플랫폼 관리 &gt; 고객사</h1>
+        <div
+          className="flex items-center gap-3"
+          style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", fontWeight: 600 }}
+        >
+          <span className="erp-key-hint">
+            <kbd>F2</kbd>신규
+          </span>
+          <span className="erp-key-hint">
+            <kbd>Esc</kbd>닫기
+          </span>
+        </div>
+      </div>
 
       <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-4)" }}>
         <div className="erp-home-panel erp-kpi-card">
