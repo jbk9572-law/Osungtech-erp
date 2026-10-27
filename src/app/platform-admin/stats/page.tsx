@@ -3,6 +3,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { formatNumber } from "@/lib/format-number";
 import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
+import { isR2Configured } from "@/lib/r2/client";
 
 type TenantUsageRow = {
   tenant_id: string;
@@ -198,6 +199,26 @@ export default async function PlatformStatsPage() {
       <h2 className="mt-5 mb-2" style={{ fontSize: "var(--erp-font-md)", fontWeight: 700, color: "var(--erp-text)" }}>
         인프라 사용량(Supabase · Netlify · 서버)
       </h2>
+      {/* R2 저장소/쓰기호출 행은 isR2Configured()가 false면 UsageWidget이
+          그냥 행 자체를 숨긴다(테넌트 사이드바 쪽은 이게 맞는 동작 — 일반
+          사용자에게 인프라 설정 여부를 알릴 필요가 없다). 하지만 이
+          화면은 플랫폼 운영자 전용이라 "왜 안 보이는지"를 직접 알아야
+          하는 사람이 보는 화면인데, 아무 설명 없이 행만 사라지면 매번
+          "왜 안 나오냐"고 다시 물어야 한다(실제로 반복됨) — 그래서 여기
+          에서만 설정 여부를 명시적으로 보여준다. */}
+      {!isR2Configured() && (
+        <PageGuide tone="warning" className="mb-3">
+          <strong>R2 파일 저장소/쓰기호출 행이 안 보이는 이유:</strong> 이 배포(Cloudflare
+          Workers)에 R2 연동 환경변수(<code>R2_ACCOUNT_ID</code>, <code>R2_ACCESS_KEY_ID</code>,{" "}
+          <code>R2_SECRET_ACCESS_KEY</code>, <code>R2_BUCKET_NAME</code>) 4개가 전부 설정되지
+          않았습니다 — 코드 버그가 아니라 아직 연동을 안 한 상태라 위젯이 의도적으로
+          숨겨집니다. Cloudflare 대시보드 &gt; Workers &amp; Pages &gt; 이 Worker &gt; Settings &gt;
+          Variables and Secrets에서 네 값을 전부 <strong>Secret</strong> 타입으로 추가하세요(일반
+          Variable 타입은 wrangler.jsonc에 따로 선언하지 않으면 이 Worker에 실제로 안
+          묶입니다 — SUPABASE_SERVICE_ROLE_KEY와 같은 방식으로 Secret으로 넣어야 합니다).
+          추가 후에는 재배포 없이 다음 요청부터 바로 반영됩니다.
+        </PageGuide>
+      )}
       <UsageWidgetPanel />
     </div>
   );
