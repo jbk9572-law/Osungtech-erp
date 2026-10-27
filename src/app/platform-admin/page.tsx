@@ -95,7 +95,16 @@ export default async function PlatformAdminPage({
 
   return (
     <div>
-      <KeyboardShortcuts shortcuts={{ Escape: { href: selectedId ? newHref : "/dashboard" } }} />
+      {/* 다른 분할뷰 화면(공지사항/견적서 등)은 전부 F2(신규)+Esc(닫기)
+          한 쌍으로 등록돼 있어서 힌트바가 "F2 신규 · Esc 닫기" 두 칸으로
+          뜬다 — 여기만 Esc 하나만 등록했더니 힌트바가 항목 1개짜리로
+          혼자 떠서 위치가 이상해 보인다는 지적을 받았다. 같은 패턴으로
+          맞춘다(F2는 이미 기본값인 목록+새 회사 추가 화면으로, 이미 거기
+          있을 땐 사실상 변화 없음 — 다른 화면의 F2도 이미 그 화면이면
+          마찬가지). */}
+      <KeyboardShortcuts
+        shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
+      />
       <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 고객사</h1>
 
       <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-4)" }}>
