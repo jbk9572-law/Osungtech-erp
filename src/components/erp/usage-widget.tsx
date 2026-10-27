@@ -8,11 +8,14 @@ import { formatMB } from "@/lib/format-bytes";
 // 한다. 순수 표시 로직이라 "use client" 없이 서버/클라이언트 어느
 // 트리에서 렌더링해도 그대로 동작한다.
 
-type UsageRow =
+// tenant-usage-widget.tsx(테넌트 자신의 쿼터 위젯)가 같은 도넛/막대
+// 그리기 로직을 재사용할 수 있게 export한다 — 마크업을 복붙하는 대신
+// 공용화(개발헌법 3번).
+export type UsageRow =
   | { kind: "bar"; label: string; usedBytes: number; limitBytes: number; note: string }
   | { kind: "simple"; label: string; usedBytes: number; note: string };
 
-function UsageBar(row: UsageRow) {
+export function UsageBar(row: UsageRow) {
   if (row.kind === "simple") {
     return (
       <div className="erp-tree-usage-row">

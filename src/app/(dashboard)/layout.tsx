@@ -5,6 +5,7 @@ import { safeQuery } from "@/lib/safe-query";
 import { ttlCached } from "@/lib/ttl-cache";
 import { ErpShell } from "@/components/erp/erp-shell";
 import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
+import { TenantUsageWidget } from "@/components/erp/tenant-usage-widget";
 import { NotificationBellPanel } from "@/components/erp/notification-bell-panel";
 import { MaintenanceScreen } from "@/components/erp/maintenance-screen";
 import { BellIcon } from "@/components/erp/groupware-icons";
@@ -167,7 +168,8 @@ export default async function DashboardLayout({
 
   const disabledFeatures = [...(tenant?.disabled_features ?? []), ...deniedPageKeys];
 
-  const quotaBanner = quotaRow ? buildQuotaBannerMessage(quotaStatusFromRpcRow(quotaRow), isAdmin) : null;
+  const quotaStatus = quotaRow ? quotaStatusFromRpcRow(quotaRow) : null;
+  const quotaBanner = quotaStatus ? buildQuotaBannerMessage(quotaStatus, isAdmin) : null;
 
   if (platformSettings?.maintenance_mode && isPlatformAdmin !== true) {
     return <MaintenanceScreen message={platformSettings.maintenance_message} />;
@@ -193,11 +195,25 @@ export default async function DashboardLayout({
         </Suspense>
       }
       usageWidget={
-        isPlatformAdmin === true ? (
-          <Suspense fallback={null}>
-            <UsageWidgetPanel />
-          </Suspense>
-        ) : null
+        <>
+          {/* 고객(테넌트 관리자)이 보는 자기 요금제 사용량 — "무료플랜" 같은
+              플랫폼 내부 인프라 사정은 절대 노출하지 않는다(usage-widget.tsx는
+              플랫폼 운영자 전용). */}
+          {isAdmin && quotaStatus && (
+            <TenantUsageWidget
+              dbBytesUsed={quotaStatus.dbBytesUsed}
+              dbQuotaBytes={quotaStatus.dbQuotaBytes}
+              fileBytesUsed={quotaStatus.fileBytesUsed}
+              fileQuotaBytes={quotaStatus.fileQuotaBytes}
+              planLabel="현재 요금제"
+            />
+          )}
+          {isPlatformAdmin === true && (
+            <Suspense fallback={null}>
+              <UsageWidgetPanel />
+            </Suspense>
+          )}
+        </>
       }
       disabledFeatures={disabledFeatures}
       isAdmin={isAdmin}
