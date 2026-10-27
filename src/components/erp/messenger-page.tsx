@@ -9,6 +9,7 @@ import {
   startDirectMessage,
   createGroup,
   leaveGroup,
+  resolveMessengerAttachmentUrl,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel } from "@/lib/messenger-types";
 import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
@@ -117,6 +118,88 @@ function ChannelAvatar({
 // 보이는 사원목록 패널로 승격되며 사라졌다 — 거기서 사람을 누르면 바로
 // DM이 열린다.
 type View = "chat" | "rooms" | "roster" | "newGroup";
+
+// R2로 전환된 첨부(messenger/actions.ts의 preferR2)는 file_url이 비어
+// 있고 file_path만 있다 — Supabase Storage 영구 URL과 달리 R2는 서버에서
+// 그때그때 짧게 서명해야 하므로, 렌더링 시점에 resolveMessengerAttachmentUrl
+// 서버 액션으로 한 번 받아와서 쓴다. 기존처럼 file_url이 이미 있으면
+// (예전 Supabase 첨부) 그대로 쓰고 추가 요청을 하지 않는다.
+function useAttachmentUrl(fileUrl: string | null, filePath: string | null): string | null {
+  const [fetched, setFetched] = useState<string | null>(null);
+  useEffect(() => {
+    if (fileUrl || !filePath) return;
+    let cancelled = false;
+    resolveMessengerAttachmentUrl(filePath).then((url) => {
+      if (!cancelled) setFetched(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fileUrl, filePath]);
+  // 메시지 하나당 이 훅이 한 번만 쓰이고(컴포넌트가 message.id로 keyed됨)
+  // fileUrl/filePath가 생성 이후 바뀌지 않으므로, fetched가 다른 메시지의
+  // 값과 섞일 일은 없다.
+  return fileUrl ?? fetched;
+}
+
+function MessengerAttachmentBlock({
+  fileUrl,
+  filePath,
+  fileName,
+  fileSize,
+  isImg,
+  query,
+}: {
+  fileUrl: string | null;
+  filePath: string | null;
+  fileName: string;
+  fileSize: number | null;
+  isImg: boolean;
+  query: string;
+}) {
+  const url = useAttachmentUrl(fileUrl, filePath);
+
+  if (!url) {
+    return (
+      <div className="erp-messenger-bubble-attachment">
+        <div className="erp-attachment-row" style={{ opacity: 0.6 }}>
+          <span className="erp-attachment-info">
+            <span className="erp-attachment-name">{fileName}</span>
+            <span className="erp-attachment-meta">불러오는 중...</span>
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="erp-messenger-bubble-attachment">
+      {isImg ? (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="erp-attachment-image-link">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt={fileName} className="erp-attachment-image" />
+        </a>
+      ) : (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="erp-attachment-row">
+          <span className="erp-attachment-icon" aria-hidden>
+            <span className="erp-icon" style={{ width: 16, height: 16, color: "var(--erp-primary)" }}>
+              <FileKindIcon kind={fileKind(fileName)} />
+            </span>
+          </span>
+          <span className="erp-attachment-info">
+            <span className="erp-attachment-name">{highlightText(fileName, query)}</span>
+            <span className="erp-attachment-meta">{fileSize ? formatFileSize(fileSize) : ""}</span>
+          </span>
+          <span className="erp-attachment-download" aria-hidden>
+            <span className="erp-icon" style={{ width: 13, height: 13 }}>
+              <DownloadIcon />
+            </span>
+          </span>
+        </a>
+      )}
+    </div>
+  );
+}
 
 // 우측하단에 항상 떠 있던 팝업 위젯을 없애고, 다른 화면들처럼 좌측 메뉴
 // (그룹웨어 > 메신저)로 들어오는 일반 페이지로 바꿨다 — 팝업이 화면을
@@ -674,44 +757,15 @@ export function MessengerPage({
                                   <div className="erp-messenger-bubble">{highlightText(m.content, query)}</div>
                                 )}
 
-                                {m.file_url && m.file_name && (
-                                  <div className="erp-messenger-bubble-attachment">
-                                    {isImg ? (
-                                      <a
-                                        href={m.file_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="erp-attachment-image-link"
-                                      >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={m.file_url} alt={m.file_name} className="erp-attachment-image" />
-                                      </a>
-                                    ) : (
-                                      <a
-                                        href={m.file_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="erp-attachment-row"
-                                      >
-                                        <span className="erp-attachment-icon" aria-hidden>
-                                          <span className="erp-icon" style={{ width: 16, height: 16, color: "var(--erp-primary)" }}>
-                                            <FileKindIcon kind={fileKind(m.file_name)} />
-                                          </span>
-                                        </span>
-                                        <span className="erp-attachment-info">
-                                          <span className="erp-attachment-name">{highlightText(m.file_name, query)}</span>
-                                          <span className="erp-attachment-meta">
-                                            {m.file_size ? formatFileSize(m.file_size) : ""}
-                                          </span>
-                                        </span>
-                                        <span className="erp-attachment-download" aria-hidden>
-                                          <span className="erp-icon" style={{ width: 13, height: 13 }}>
-                                            <DownloadIcon />
-                                          </span>
-                                        </span>
-                                      </a>
-                                    )}
-                                  </div>
+                                {(m.file_url || m.file_path) && m.file_name && (
+                                  <MessengerAttachmentBlock
+                                    fileUrl={m.file_url}
+                                    filePath={m.file_path}
+                                    fileName={m.file_name}
+                                    fileSize={m.file_size}
+                                    isImg={isImg}
+                                    query={query}
+                                  />
                                 )}
 
                                 {(mine || isAdmin) && (

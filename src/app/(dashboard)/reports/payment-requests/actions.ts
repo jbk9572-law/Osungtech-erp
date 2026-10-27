@@ -57,6 +57,10 @@ async function uploadReceipt(
     path,
     file,
     contentType: detectedType,
+    // 읽는 쪽(payment-request-detail-panel.tsx, edit/page.tsx)을 이미
+    // 매번 getAttachmentDownloadUrl()로 새로 서명하도록 바꿔뒀으므로
+    // (메일 첨부와 같은 패턴) 안전하게 전환할 수 있다.
+    preferR2: true,
   });
   if (!uploaded.ok) return `영수증 업로드에 실패했습니다: ${uploaded.error}`;
 

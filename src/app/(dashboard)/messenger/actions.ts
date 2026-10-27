@@ -3,7 +3,7 @@
 import { createClient, getUser } from "@/lib/supabase/server";
 import { sanitizeUploadContentType } from "@/lib/upload-safety";
 import { notify } from "@/lib/notify";
-import { uploadAttachment, deleteAttachment } from "@/lib/storage/upload-attachment";
+import { uploadAttachment, deleteAttachment, getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
 import type { MessengerMessage } from "@/lib/messenger-types";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
@@ -59,6 +59,13 @@ export async function sendMessage(
       path,
       file,
       contentType: sanitizeUploadContentType(file.type),
+      // messenger_messages.file_url은 원래 영구 공개 URL을 저장해두는
+      // 컬럼이었는데, R2는 영구 URL이 없다(publicUrl: null로 돌아옴) —
+      // 그래서 화면(messenger-page.tsx)에서 file_url이 비어있으면
+      // resolveMessengerAttachmentUrl() 서버 액션으로 그때그때 단기
+      // Presigned URL을 새로 받아오도록 같이 바꿔뒀다. 기존에 이미
+      // Supabase에 저장된 첨부는 file_url이 그대로 있으니 영향 없다.
+      preferR2: true,
     });
 
     if (!uploaded.ok) {
@@ -196,6 +203,19 @@ export async function createGroup(
   });
   if (error || !data) return { error: `그룹을 만들지 못했습니다.${error ? ` (${error.message})` : ""}` };
   return { channelId: data };
+}
+
+// R2로 저장된 첨부(file_url이 비어있고 file_path만 있는 경우)를 화면에서
+// 그때그때 열람용 단기 URL로 바꿔주는 서버 액션 — R2 접속 키는 서버에만
+// 있으므로 클라이언트 컴포넌트(messenger-page.tsx)가 직접 서명할 수 없다.
+// 메시지 목록 조회(messenger_messages_select_authenticated)와 똑같이
+// "로그인한 사용자면 누구나"까지만 확인한다 — 기존 file_url 노출 수준과
+// 동일하다.
+export async function resolveMessengerAttachmentUrl(filePath: string): Promise<string | null> {
+  const supabase = await createClient();
+  const user = await getUser();
+  if (!user || !filePath) return null;
+  return getAttachmentDownloadUrl({ supabase, bucket: "messenger-attachments", path: filePath });
 }
 
 export async function leaveGroup(channelId: string): Promise<{ error?: string }> {

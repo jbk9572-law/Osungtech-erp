@@ -18,6 +18,7 @@ import {
 } from "@/app/(dashboard)/reports/payment-requests/actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
 import { resolveStatusLabel } from "@/lib/status-label";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
@@ -72,7 +73,7 @@ export async function PaymentRequestDetailPanel({
         .order("sort_order", { ascending: true }),
       supabase
         .from("payment_request_receipts")
-        .select("id, file_url, sort_order")
+        .select("id, file_url, file_path, sort_order")
         .eq("payment_request_id", id)
         .order("sort_order", { ascending: true }),
       getCurrentActor(supabase),
@@ -90,6 +91,18 @@ export async function PaymentRequestDetailPanel({
   if (!row) {
     notFound();
   }
+
+  // mail/page.tsx와 같은 이유로 매 렌더링마다 새로 URL을 만든다 — R2로
+  // 전환된 영수증(file_path가 "r2/"로 시작)은 영구 공개 URL이 없으므로
+  // 매번 단기 Presigned URL을 새로 발급해야 하고, 기존 Supabase Storage
+  // 영수증도 같은 함수로 통일해서 분기를 컴포넌트 밖으로 뺀다.
+  const receiptsWithUrl = await Promise.all(
+    (receipts ?? []).map(async (r) => ({
+      id: r.id,
+      sort_order: r.sort_order,
+      file_url: await getAttachmentDownloadUrl({ supabase, bucket: "payment-receipts", path: r.file_path }),
+    })),
+  );
 
   const allowManage = canManage(row.requested_by, actor.userId, actor.isAdmin);
   const orgTree = buildOrgTree(
@@ -213,10 +226,10 @@ export async function PaymentRequestDetailPanel({
 
       <div className="erp-detail" style={{ marginBottom: 12 }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active">영수증 ({receipts?.length ?? 0}장)</span>
+          <span className="erp-detail-tab active">영수증 ({receiptsWithUrl.length}장)</span>
         </div>
         <div className="erp-detail-body">
-          <ReceiptGallery receipts={receipts ?? []} />
+          <ReceiptGallery receipts={receiptsWithUrl} />
           <PageGuide className="mt-3">영수증 추가·삭제는 F4 수정 화면에서 할 수 있습니다.</PageGuide>
         </div>
       </div>

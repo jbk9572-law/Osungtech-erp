@@ -9,6 +9,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
 
 export default async function EditPaymentRequestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,7 +27,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
       .order("sort_order", { ascending: true }),
     supabase
       .from("payment_request_receipts")
-      .select("id, file_url, sort_order")
+      .select("id, file_path, sort_order")
       .eq("payment_request_id", id)
       .order("sort_order", { ascending: true }),
     getCurrentActor(supabase),
@@ -35,6 +36,16 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
   if (!row) {
     notFound();
   }
+
+  // payment-request-detail-panel.tsx와 같은 이유 — 매 렌더링마다 새로
+  // URL을 만들어 R2/Supabase 어느 쪽에 저장됐든 동일하게 처리한다.
+  const receiptsWithUrl = await Promise.all(
+    (receipts ?? []).map(async (r) => ({
+      id: r.id,
+      sort_order: r.sort_order,
+      file_url: await getAttachmentDownloadUrl({ supabase, bucket: "payment-receipts", path: r.file_path }),
+    })),
+  );
 
   const today = todayKstStr();
 
@@ -100,7 +111,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
           <span className="erp-detail-tab active">영수증 ({receipts?.length ?? 0}장)</span>
         </div>
         <div className="erp-detail-body">
-          <ReceiptReorderList paymentRequestId={row.id} receipts={receipts ?? []} />
+          <ReceiptReorderList paymentRequestId={row.id} receipts={receiptsWithUrl} />
           <AddReceiptsForm paymentRequestId={row.id} />
         </div>
       </div>
