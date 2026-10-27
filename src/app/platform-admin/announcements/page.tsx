@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { CreatePlatformAnnouncementForm } from "@/components/create-platform-announcement-form";
 import { PlatformAnnouncementActiveCheckbox } from "@/components/platform-announcement-active-checkbox";
 import { DeleteButton } from "@/components/delete-button";
@@ -16,7 +17,7 @@ export default async function PlatformAnnouncementsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 공지사항</h1>
+      <ListPageHeader eyebrow="플랫폼 관리" title="공지사항" />
       <PageGuide>
         여기 등록한 공지는 개별 회사의 자체 공지사항과 별개로, 노출 중(사용)으로 켜둔 항목이 모든
         회사의 모든 사용자 대시보드 상단에 배너로 보입니다.

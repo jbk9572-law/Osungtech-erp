@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { formatNumber } from "@/lib/format-number";
 import { UsageWidgetPanel } from "@/components/erp/usage-widget-panel";
 
@@ -20,7 +21,7 @@ export default async function PlatformStatsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 통계</h1>
+      <ListPageHeader eyebrow="플랫폼 관리" title="통계" />
       <PageGuide>플랫폼 전체 테넌트/사용자 현황과 최근 12개월 신규 가입 추이입니다.</PageGuide>
 
       {error && (

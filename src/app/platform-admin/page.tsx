@@ -108,8 +108,16 @@ export default async function PlatformAdminPage({
         shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }}
         hideHintBar
       />
+      {/* "플랫폼 관리 > 고객사"를 제목 문자열에 그대로 꿰매 넣던 걸
+          (7개 화면이 전부 똑같은 패턴으로 복붙하고 있었다) ListPageHeader가
+          이미 갖고 있던 eyebrow(.erp-eyebrow — 어디서도 안 쓰이고 있던
+          기존 디자인 토큰)로 바꿨다. 이 화면만 F2/Esc 힌트가 제목 옆에
+          나란히 와야 해서(위 주석) ListPageHeader를 그대로 쓰지 않고
+          eyebrow 라벨만 떼어와 같은 모양을 손으로 맞춘다 — 다른 6개
+          플랫폼 관리자 화면은 ListPageHeader를 그대로 쓴다. */}
+      <span className="erp-eyebrow">플랫폼 관리</span>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="erp-h1">플랫폼 관리 &gt; 고객사</h1>
+        <h1 className="erp-h1">고객사</h1>
         <div
           className="flex items-center gap-3"
           style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", fontWeight: 600 }}

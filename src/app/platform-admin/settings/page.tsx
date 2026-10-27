@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
 import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
@@ -18,7 +19,7 @@ export default async function PlatformSettingsPage() {
 
   return (
     <div>
-      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 환경설정</h1>
+      <ListPageHeader eyebrow="플랫폼 관리" title="환경설정" />
       <PageGuide>
         여기서 정한 값은 새로 만들어지는 테넌트(고객사)에만 기본값으로 적용됩니다. 이미 만들어진
         회사의 설정은 각 회사의 환경설정 &gt; 기능 관리 화면에서 따로 바꿀 수 있습니다.

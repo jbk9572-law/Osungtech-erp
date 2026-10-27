@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { CreatePlatformPlanForm } from "@/components/create-platform-plan-form";
 import { PlatformPlanRow } from "@/components/platform-plan-row";
 
@@ -15,7 +16,7 @@ export default async function PlatformPlansPage() {
 
   return (
     <div>
-      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 요금제</h1>
+      <ListPageHeader eyebrow="플랫폼 관리" title="요금제" />
       <PageGuide>
         영업/안내용 요금제 카탈로그입니다. 실제 결제 연동은 아직 없고, 회사별 이용 상태(체험/정상
         이용/이용 중지)는 고객사 상세 화면에서 별도로 관리합니다.

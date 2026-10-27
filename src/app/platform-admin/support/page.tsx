@@ -1,5 +1,6 @@
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ListPageHeader } from "@/components/erp/page-header";
 import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
 import { SupportTicketReplyForm } from "@/components/support-ticket-reply-form";
@@ -24,7 +25,7 @@ export default async function PlatformSupportPage() {
 
   return (
     <div>
-      <h1 className="mb-1 erp-h1">플랫폼 관리 &gt; 고객지원</h1>
+      <ListPageHeader eyebrow="플랫폼 관리" title="고객지원" />
       <PageGuide>
         전체 테넌트가 남긴 문의입니다. 답변을 등록하면 해당 회사의 환경설정 &gt; 고객지원 화면에 바로
         표시됩니다.
