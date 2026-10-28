@@ -1502,6 +1502,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      tenant_addon_subscriptions: {
+        Row: {
+          tenant_id: string;
+          add_on_product_id: string;
+          quantity: number;
+          attached_at: string;
+        };
+        Insert: {
+          tenant_id: string;
+          add_on_product_id: string;
+          quantity?: number;
+          attached_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          add_on_product_id?: string;
+          quantity?: number;
+          attached_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tenant_addon_subscriptions_add_on_product_id_fkey";
+            columns: ["add_on_product_id"];
+            isOneToOne: false;
+            referencedRelation: "add_on_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tenant_addon_subscriptions_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       point_transactions: {
         Row: {
           id: string;

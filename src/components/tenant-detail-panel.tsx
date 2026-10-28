@@ -48,6 +48,22 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
     admin.from("tenant_members").select("user_id").eq("tenant_id", tenantId).limit(1000),
   ]);
 
+  // 애드온 카탈로그(부착 가능한 상품 목록)와 이 테넌트가 이미 부착한
+  // 애드온 목록 — TenantAddonPanel의 "카탈로그에서 부착" 섹션에 넘긴다.
+  const [{ data: addonCatalog }, { data: addonSubscriptions }] = await Promise.all([
+    admin
+      .from("add_on_products")
+      .select("id, key, name, kind, capacity, monthly_price")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .limit(200),
+    admin
+      .from("tenant_addon_subscriptions")
+      .select("add_on_product_id, quantity, add_on_products(key, name, kind, capacity, monthly_price)")
+      .eq("tenant_id", tenantId)
+      .limit(200),
+  ]);
+
   if (!tenant) {
     return <p className="erp-grid-empty">회사를 찾을 수 없습니다.</p>;
   }
@@ -184,6 +200,18 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
             monthlyAlimtalkQuota={tenant.monthly_alimtalk_quota}
             alimtalkSentThisMonth={monthlyUsage?.alimtalk_sent_count ?? 0}
             customDomainMail={tenant.custom_domain_mail}
+            addonCatalog={addonCatalog ?? []}
+            addonSubscriptions={(addonSubscriptions ?? [])
+              .filter((s) => s.add_on_products)
+              .map((s) => ({
+                addOnProductId: s.add_on_product_id,
+                quantity: s.quantity,
+                key: s.add_on_products!.key,
+                name: s.add_on_products!.name,
+                kind: s.add_on_products!.kind,
+                capacity: s.add_on_products!.capacity,
+                monthlyPrice: s.add_on_products!.monthly_price,
+              }))}
           />
         </div>
       </div>

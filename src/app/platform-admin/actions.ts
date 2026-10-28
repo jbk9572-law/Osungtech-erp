@@ -537,6 +537,163 @@ export async function updateTenantAddons(_prevState: FormState, formData: FormDa
   return { success: "애드온 설정을 저장했습니다." };
 }
 
+// add_on_products.kind별로 어느 tenants 컬럼을 조정할지 — migration
+// 194의 체크 제약과 반드시 같은 5종류. storage만 단위가 달라(GB→byte)
+// 따로 환산한다. kind 하나를 늘리려면 여기도 같이 고쳐야 한다(같은
+// 이유가 add_on_products.kind 체크 제약 주석에도 적혀 있다).
+const BYTES_PER_GB = 1024 * 1024 * 1024;
+
+async function applyAddonQuotaDelta(
+  admin: ReturnType<typeof createAdminClient>,
+  tenantId: string,
+  kind: string,
+  deltaUnits: number,
+): Promise<string | null> {
+  if (deltaUnits === 0) return null;
+
+  const { data: tenant, error: readError } = await admin
+    .from("tenants")
+    .select("monthly_fax_quota, monthly_tax_invoice_quota, monthly_alimtalk_quota, vendor_limit, file_quota_bytes")
+    .eq("id", tenantId)
+    .maybeSingle();
+  if (readError) return `테넌트 조회에 실패했습니다: ${readError.message}`;
+  if (!tenant) return "테넌트를 찾을 수 없습니다.";
+
+  // 해제(delta < 0) 시 다른 경로로 이미 줄어든 값보다 더 깎이지 않게
+  // 0 밑으로는 안 내려간다 — updateTenantAddons(수동 조정)와 이 부착/
+  // 해제 경로가 서로 다른 시점에 같은 컬럼을 건드릴 수 있어서다.
+  if (kind === "fax") {
+    const next = Math.max(0, tenant.monthly_fax_quota + deltaUnits);
+    const { error } = await admin.from("tenants").update({ monthly_fax_quota: next }).eq("id", tenantId);
+    return error ? error.message : null;
+  }
+  if (kind === "invoice") {
+    const next = Math.max(0, tenant.monthly_tax_invoice_quota + deltaUnits);
+    const { error } = await admin.from("tenants").update({ monthly_tax_invoice_quota: next }).eq("id", tenantId);
+    return error ? error.message : null;
+  }
+  if (kind === "alimtalk") {
+    const next = Math.max(0, tenant.monthly_alimtalk_quota + deltaUnits);
+    const { error } = await admin.from("tenants").update({ monthly_alimtalk_quota: next }).eq("id", tenantId);
+    return error ? error.message : null;
+  }
+  if (kind === "vendor") {
+    const next = Math.max(0, tenant.vendor_limit + deltaUnits);
+    const { error } = await admin.from("tenants").update({ vendor_limit: next }).eq("id", tenantId);
+    return error ? error.message : null;
+  }
+  if (kind === "storage") {
+    const next = Math.max(0, tenant.file_quota_bytes + deltaUnits * BYTES_PER_GB);
+    const { error } = await admin.from("tenants").update({ file_quota_bytes: next }).eq("id", tenantId);
+    return error ? error.message : null;
+  }
+  return `알 수 없는 애드온 유형입니다: ${kind}`;
+}
+
+// 카탈로그(add_on_products)에서 고른 상품을 테넌트에 부착한다 — 이미
+// 부착돼 있으면(같은 상품을 다시 고르면) 수량만 바꾸고, 그 차이(델타)
+// 만큼만 쿼터에 반영한다(예: 2개→3개로 바꾸면 capacity 1개분만 추가).
+// 결제(PG) 연동 없이, tenant-addon-panel.tsx의 기존 수동 조정과 같은
+// 수준으로 관리자가 직접 눌러서 적용하는 내부 기능이다.
+export async function attachTenantAddon(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 애드온을 부착할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const addOnProductId = String(formData.get("addOnProductId") ?? "");
+  const quantity = Number(formData.get("quantity") ?? 1);
+
+  if (!tenantId || !addOnProductId) return { error: "잘못된 요청입니다." };
+  if (!Number.isInteger(quantity) || quantity <= 0) return { error: "수량은 1 이상의 정수여야 합니다." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { data: product, error: productError } = await admin
+    .from("add_on_products")
+    .select("kind, capacity")
+    .eq("id", addOnProductId)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (productError) return { error: `애드온 조회에 실패했습니다: ${productError.message}` };
+  if (!product) return { error: "존재하지 않거나 비활성화된 애드온입니다." };
+
+  const { data: existing, error: existingError } = await admin
+    .from("tenant_addon_subscriptions")
+    .select("quantity")
+    .eq("tenant_id", tenantId)
+    .eq("add_on_product_id", addOnProductId)
+    .maybeSingle();
+  if (existingError) return { error: `부착 현황 조회에 실패했습니다: ${existingError.message}` };
+
+  const oldQuantity = existing?.quantity ?? 0;
+  const deltaUnits = (quantity - oldQuantity) * product.capacity;
+
+  const { error: upsertError } = await admin
+    .from("tenant_addon_subscriptions")
+    .upsert(
+      { tenant_id: tenantId, add_on_product_id: addOnProductId, quantity, attached_at: new Date().toISOString() },
+      { onConflict: "tenant_id,add_on_product_id" },
+    );
+  if (upsertError) return { error: `부착에 실패했습니다: ${upsertError.message}` };
+
+  const quotaError = await applyAddonQuotaDelta(admin, tenantId, product.kind, deltaUnits);
+  if (quotaError) return { error: quotaError };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: existing ? "애드온 수량을 변경했습니다." : "애드온을 부착했습니다." };
+}
+
+// 부착 해제 — 쿼터에서 그만큼(수량 × capacity)을 그대로 빼고 부착
+// 기록을 지운다.
+export async function detachTenantAddon(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 애드온을 해제할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const addOnProductId = String(formData.get("addOnProductId") ?? "");
+  if (!tenantId || !addOnProductId) return { error: "잘못된 요청입니다." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "관리자 클라이언트 초기화에 실패했습니다." };
+  }
+
+  const { data: existing, error: existingError } = await admin
+    .from("tenant_addon_subscriptions")
+    .select("quantity, add_on_products(kind, capacity)")
+    .eq("tenant_id", tenantId)
+    .eq("add_on_product_id", addOnProductId)
+    .maybeSingle();
+  if (existingError) return { error: `부착 현황 조회에 실패했습니다: ${existingError.message}` };
+  if (!existing || !existing.add_on_products) {
+    revalidatePath(`/platform-admin/${tenantId}`);
+    return { success: "이미 해제된 애드온입니다." };
+  }
+
+  const { error: deleteError } = await admin
+    .from("tenant_addon_subscriptions")
+    .delete()
+    .eq("tenant_id", tenantId)
+    .eq("add_on_product_id", addOnProductId);
+  if (deleteError) return { error: `해제에 실패했습니다: ${deleteError.message}` };
+
+  const deltaUnits = -(existing.quantity * existing.add_on_products.capacity);
+  const quotaError = await applyAddonQuotaDelta(admin, tenantId, existing.add_on_products.kind, deltaUnits);
+  if (quotaError) return { error: quotaError };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: "애드온을 해제했습니다." };
+}
+
 // 포인트 지급/차감. 지금은 실제로 포인트를 소모하는 곳이 없다(세금계산서/
 // 계산서 발행이 전부 수기 표시라 — invoice-status-panel.tsx 참고) —
 // 나중에 팝빌/바로빌 같은 실제 발행 API나 알림톡/팩스 기능을 붙일 때

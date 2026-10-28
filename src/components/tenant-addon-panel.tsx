@@ -1,9 +1,30 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateTenantAddons } from "@/app/platform-admin/actions";
+import { updateTenantAddons, attachTenantAddon, detachTenantAddon } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
+import { addonKindLabel, addonKindUnit } from "@/lib/addon-kind";
+import { formatNumber } from "@/lib/format-number";
+
+type AddonCatalogItem = {
+  id: string;
+  key: string;
+  name: string;
+  kind: string;
+  capacity: number;
+  monthly_price: number;
+};
+
+type AddonSubscription = {
+  addOnProductId: string;
+  quantity: number;
+  key: string;
+  name: string;
+  kind: string;
+  capacity: number;
+  monthlyPrice: number;
+};
 
 // 기획서(2026-10-27)의 "확장 애드온" 항목 — DB/파일 저장소 쿼터(이미
 // 있는 TenantQuotaPanel)와 같은 선상에서, 외주처 연동 수/월간 이메일
@@ -11,19 +32,12 @@ import { PageGuide } from "@/components/erp/page-guide";
 // 조정한다(결제 연동 전 단계라 updateTenantAddons가 tenants 컬럼에
 // 최종 숫자를 그대로 저장 — actions.ts 주석 참고).
 //
-// TODO(다음 단계 — 2026-10-28 기획서 "동적 애드온" 3번 항목, 외부 API
-// 불필요한 순수 내부 작업): 지금은 관리자가 이 숫자들을 손으로 직접
-// 타이핑하지만, platform-admin/addons에 이미 만들어둔 add_on_products
-// 카탈로그에서 상품을 "골라서 부착"하는 방식으로 바꿀 것 —
-// 1) tenant_addon_subscriptions(tenant_id, add_on_product_id, quantity)
-//    테이블 신설(add_on_products를 FK로 참조),
-// 2) 이 패널에 "카탈로그에서 추가" UI를 더해 부착/해제하면
-//    tenants.monthly_*_quota를 base_plan 포함량 + Σ(부착된 애드온
-//    capacity × quantity)로 재계산해 저장,
-// 3) "매월 1일 자동 리셋"은 기존 tenant_monthly_usage처럼 (tenant_id,
-//    year_month) 복합키로 달마다 새 행을 만드는 방식이면 배치 작업 없이
-//    자연히 해결됨(migration 189와 같은 패턴).
-// 실제 결제(PG) 연동은 이것과 별개로, 그 다음 단계에서나 필요하다.
+// 2026-10-28 기획서 "동적 애드온" 3번 항목 — 위 수동 조정과는 별도로,
+// platform-admin/addons의 add_on_products 카탈로그에서 상품을 "골라서
+// 부착"하는 섹션을 아래에 더했다. 부착/해제하면 attachTenantAddon/
+// detachTenantAddon이 해당 kind의 tenants 쿼터 컬럼을 capacity×quantity
+// 만큼 증감한다(actions.ts 참고) — 결제(PG) 연동 없이 바로 동작하는
+// 내부 기능이다.
 export function TenantAddonPanel({
   tenantId,
   vendorLimit,
@@ -37,6 +51,8 @@ export function TenantAddonPanel({
   monthlyAlimtalkQuota,
   alimtalkSentThisMonth,
   customDomainMail,
+  addonCatalog,
+  addonSubscriptions,
 }: {
   tenantId: string;
   vendorLimit: number;
@@ -50,6 +66,8 @@ export function TenantAddonPanel({
   monthlyAlimtalkQuota: number;
   alimtalkSentThisMonth: number;
   customDomainMail: boolean;
+  addonCatalog: AddonCatalogItem[];
+  addonSubscriptions: AddonSubscription[];
 }) {
   const [state, formAction, pending] = useActionState(updateTenantAddons, undefined);
 
@@ -58,8 +76,8 @@ export function TenantAddonPanel({
       <PageGuide>
         Standard 요금제 기본값은 외주처 1개사 / 월 이메일·팩스·계산서 각 100건입니다(매월 1일
         자동 리셋). 알림톡(카카오)·문자는 아직 실제 발송 기능이 없어 쿼터만 미리 마련해뒀습니다
-        (기본 0건). 추가 애드온을 요청받으면 여기서 직접 늘려주세요(추후 결제 연동 전까지는
-        수동 관리).
+        (기본 0건). 아래 숫자를 직접 조정하거나, 카탈로그에서 애드온을 부착해 늘릴 수 있습니다
+        (결제 연동 전까지는 둘 다 수동 적용).
       </PageGuide>
 
       <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
@@ -146,6 +164,125 @@ export function TenantAddonPanel({
         </div>
         <FormMessage state={state} />
       </form>
+
+      <div
+        style={{
+          marginTop: "var(--erp-space-5)",
+          paddingTop: "var(--erp-space-4)",
+          borderTop: "1px solid var(--erp-divider)",
+        }}
+      >
+        <p className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+          부착된 애드온
+        </p>
+        {addonSubscriptions.length === 0 ? (
+          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            부착된 애드온이 없습니다.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2" style={{ marginBottom: "var(--erp-space-3)" }}>
+            {addonSubscriptions.map((s) => (
+              <AddonSubscriptionRow key={s.addOnProductId} tenantId={tenantId} subscription={s} />
+            ))}
+          </div>
+        )}
+
+        <p className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+          카탈로그에서 부착
+        </p>
+        <AttachAddonForm tenantId={tenantId} catalog={addonCatalog} />
+      </div>
     </div>
+  );
+}
+
+// 이미 부착된 애드온 한 줄 — 수량 수정(델타만큼 쿼터 재조정)과 해제
+// (쿼터에서 전량 차감)가 서로 다른 액션이라 각자 useActionState를
+// 따로 갖는다(둘 다 동시에 pending일 일은 없다).
+function AddonSubscriptionRow({ tenantId, subscription }: { tenantId: string; subscription: AddonSubscription }) {
+  const [attachState, attachAction, attachPending] = useActionState(attachTenantAddon, undefined);
+  const [detachState, detachAction, detachPending] = useActionState(detachTenantAddon, undefined);
+  const unit = addonKindUnit(subscription.kind);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: 8,
+        border: "1px solid var(--erp-border)",
+        padding: "8px 10px",
+      }}
+    >
+      <div style={{ flex: "1 1 160px", minWidth: 0 }}>
+        <div style={{ fontSize: "var(--erp-font-sm)", fontWeight: 600, color: "var(--erp-text)" }}>{subscription.name}</div>
+        <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)" }}>
+          {addonKindLabel(subscription.kind)} · {formatNumber(subscription.capacity)}
+          {unit} × {subscription.quantity}개 = {formatNumber(subscription.capacity * subscription.quantity)}
+          {unit} · 월 {formatNumber(subscription.monthlyPrice * subscription.quantity)}원
+        </div>
+      </div>
+      <form action={attachAction} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <input type="hidden" name="tenantId" value={tenantId} />
+        <input type="hidden" name="addOnProductId" value={subscription.addOnProductId} />
+        <input
+          type="number"
+          name="quantity"
+          min={1}
+          defaultValue={subscription.quantity}
+          className="erp-input"
+          style={{ width: 60 }}
+          aria-label={`${subscription.name} 수량`}
+        />
+        <button type="submit" disabled={attachPending} className="erp-btn" style={{ minWidth: 0 }}>
+          {attachPending ? "저장 중..." : "수정"}
+        </button>
+      </form>
+      <form action={detachAction}>
+        <input type="hidden" name="tenantId" value={tenantId} />
+        <input type="hidden" name="addOnProductId" value={subscription.addOnProductId} />
+        <button type="submit" disabled={detachPending} className="erp-btn" style={{ minWidth: 0 }}>
+          {detachPending ? "해제 중..." : "해제"}
+        </button>
+      </form>
+      <FormMessage state={attachState ?? detachState} />
+    </div>
+  );
+}
+
+// 카탈로그(add_on_products)에서 상품을 골라 수량과 함께 부착한다 — 이미
+// 부착된 상품을 다시 골라도 attachTenantAddon이 수량 차이만큼만 쿼터를
+// 재조정하므로(actions.ts 참고) 수량 변경 용도로 또 써도 안전하다.
+function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: AddonCatalogItem[] }) {
+  const [state, formAction, pending] = useActionState(attachTenantAddon, undefined);
+
+  if (catalog.length === 0) {
+    return <PageGuide className="mb-0">등록된 애드온이 없습니다. 플랫폼 관리 &gt; 애드온 메뉴에서 먼저 등록해주세요.</PageGuide>;
+  }
+
+  return (
+    <form action={formAction} style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 8 }}>
+      <input type="hidden" name="tenantId" value={tenantId} />
+      <div className="erp-field">
+        <label htmlFor="attach-product">애드온</label>
+        <select id="attach-product" name="addOnProductId" required className="erp-select" style={{ width: 220 }}>
+          {catalog.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} ({formatNumber(c.capacity)}
+              {addonKindUnit(c.kind)}, 월 {formatNumber(c.monthly_price)}원)
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="erp-field">
+        <label htmlFor="attach-qty">수량</label>
+        <input id="attach-qty" type="number" name="quantity" min={1} defaultValue={1} className="erp-input" style={{ width: 70 }} />
+      </div>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+        {pending ? "부착 중..." : "부착"}
+      </button>
+      <FormMessage state={state} />
+    </form>
   );
 }
