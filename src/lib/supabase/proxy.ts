@@ -27,6 +27,22 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/terms", "/privacy", "/portal"];
 
 export async function updateSession(request: NextRequest) {
+  // 공개 경로(/login 등)는 로그인 안 된 사람을 /login으로 보내는
+  // 아래 리다이렉트 분기 자체가 적용될 이유가 없다(이미 공개 화면이니
+  // 막을 게 없다) — 그런데도 예전엔 이 판단을 하기도 전에
+  // supabase.auth.getUser()부터 먼저 불러서, 결과를 안 쓸 요청에도 매번
+  // Supabase Auth 서버 왕복(로컬 쿠키 디코딩이 아니라 실제 네트워크
+  // 검증)을 하고 있었다 — 로그인 화면으로 이동하는 것조차 느리다는
+  // 지적이 바로 이 낭비 때문이었다. pathname부터 먼저 확인해서, 공개
+  // 경로면 Supabase 클라이언트를 만들거나 getUser()를 부르지도 않고
+  // 바로 통과시킨다.
+  const pathname = request.nextUrl.pathname;
+  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
+
+  if (isPublicPath) {
+    return NextResponse.next({ request });
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -70,10 +86,7 @@ export async function updateSession(request: NextRequest) {
     user = null;
   }
 
-  const pathname = request.nextUrl.pathname;
-  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
-
-  if (!user && !isPublicPath) {
+  if (!user) {
     // 위치 QR처럼 로그인 안 된 상태에서 특정 화면 링크로 바로 들어오는
     // 경우, 로그인 후 무조건 /dashboard로 보내면 원래 보려던 화면을
     // 다시 찾아가야 한다 — 원래 경로를 next로 넘겨 로그인 액션이 그
