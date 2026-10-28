@@ -2,8 +2,11 @@ import { createClient, getUser } from "@/lib/supabase/server";
 
 // 플랫폼(엘보닉스) 운영자 전용 권한 체크. profiles.role의 "admin"은
 // 테넌트 안에서만 의미 있는 값이라(RLS로 테넌트별로 격리됨) 여러 회사를
-// 넘나드는 이 화면의 권한 체크로는 쓸 수 없다 — 그래서 테넌트에 속하지
-// 않는 별도의 platform_admins 테이블/is_platform_admin() 함수를 쓴다.
+// 넘나드는 이 화면의 권한 체크로 그대로 쓸 수 없다 — 그래서 is_platform_admin()
+// RPC로 판정한다. 이 함수는 (1) platform_admins 테이블에 등록돼 있거나
+// (2) 엘보닉스(테넌트 #1) 소속이면서 profiles.role='admin'이면 true를
+// 반환한다(migration 196) — 즉 엘보닉스 테넌트의 관리자는 별도 등록 없이
+// 자동으로 플랫폼 관리자가 된다.
 export async function requirePlatformAdmin() {
   const supabase = await createClient();
   const user = await getUser();
