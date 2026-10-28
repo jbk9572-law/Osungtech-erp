@@ -21,11 +21,14 @@
 export default function DashboardLoading() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* 회사명(실제 데이터)이 아직 없는 상태라 "ERP"처럼 어중간한
+          텍스트를 채우면, 평소엔 "OOO ERP"로 보이다가 이동 중에만 잠깐
+          "ERP"로 바뀌는 게 오히려 더 튀어 보인다(사용자 지적) — 로고만
+          남기고 글자는 아예 빼서, 어떤 값이 와도 안 어긋나게 한다. */}
       <div className="erp-titlebar" aria-hidden>
         <div className="erp-titlebar-left">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/branding/logo-mark.png" alt="" className="erp-titlebar-logo" />
-          <span className="erp-titlebar-name">ERP</span>
         </div>
       </div>
       <div className="erp-loading-panel erp-loading-panel-under-titlebar" style={{ flex: 1 }}>
