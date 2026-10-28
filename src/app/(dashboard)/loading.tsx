@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+
 // (dashboard)/layout.tsx가 서버에서 회사정보/프로필/테넌트 등을 비동기로
 // 조회하는 동안(약 1~2초, 느리면 더 길게) Next.js가 이 화면을 먼저
 // 보여준다 — 그동안 ErpShell의 .erp-titlebar(sticky, navy)가 아직
@@ -9,15 +11,23 @@
 // "채워지는" 것처럼 보인다.
 //
 // 처음엔 진짜 타이틀바를 통째로 흉내 냈는데(로고까지 넣어서), "이동
-// 중에 뜬금없이 로고만 보이는 게 오히려 더 어색하다"는 지적을 받았다 —
-// 가짜 헤더를 흉내 내는 대신, 아예 최대한 티 안 나는 얇은 로딩 바
-// 하나로 바꿨다(.erp-notch-guard) — 노치 조건(불투명·고정·3px+)만
-// 만족하는 최소 크기라 "헤더처럼 보이려다 어긋나는" 문제 자체가 생기지
-// 않는다.
-export default function DashboardLoading() {
+// 중에 뜬금없이 로고만 보이는 게 오히려 더 어색하다"는 지적을 받아
+// 얇은 바(.erp-notch-guard)로 단순화했다. 근데 이 트릭 자체가 아이폰
+// 사파리(노치/다이나믹 아일랜드)에서만 의미가 있고, 크롬·안드로이드
+// 등 다른 브라우저는 이 동작 자체가 없어서 이 바가 그냥 아무 효과 없이
+// 화면에 보이기만 하는 군더더기였다 — User-Agent로 사파리인지 판별해서
+// 사파리일 때만 그린다.
+function isSafari(userAgent: string) {
+  return /safari/i.test(userAgent) && !/chrome|chromium|crios|android|firefox|fxios|edg/i.test(userAgent);
+}
+
+export default async function DashboardLoading() {
+  const headersList = await headers();
+  const showNotchGuard = isSafari(headersList.get("user-agent") ?? "");
+
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <div className="erp-notch-guard" aria-hidden />
+      {showNotchGuard && <div className="erp-notch-guard" aria-hidden />}
       <div className="erp-loading-panel" style={{ flex: 1 }}>
         <div className="erp-loading-gauge" aria-hidden />
         조회 중...

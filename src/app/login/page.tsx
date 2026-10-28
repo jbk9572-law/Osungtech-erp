@@ -4,6 +4,7 @@ import { Suspense, useActionState, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login } from "./actions";
+import { useRotatingMessages } from "@/lib/use-rotating-messages";
 
 export default function LoginPage() {
   return (
@@ -15,12 +16,23 @@ export default function LoginPage() {
 
 const REMEMBER_KEY = "nest-erp-remember-login";
 
+// 느릴 때(특히 무료 DB가 막 깨어난 직후) 응답까지 몇 초~몇십 초 걸릴 수
+// 있는데, 같은 "로그인 중..." 문구가 안 움직이면 멈춘 것처럼 보인다는
+// 제보를 받아 번갈아 보여줄 안내 문구를 둔다.
+const LOGIN_PENDING_MESSAGES = [
+  "서버 무결성 검사중입니다",
+  "보안검사중입니다",
+  "파일체크중입니다",
+  "안전하게 백업된 파일을 불러오는중입니다",
+];
+
 function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
   const signupCompanyCode = searchParams.get("signupCompanyCode");
   const signupUsername = searchParams.get("signupUsername");
   const [state, formAction, pending] = useActionState(login, undefined);
+  const pendingMessage = useRotatingMessages(LOGIN_PENDING_MESSAGES, pending);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberLogin, setRememberLogin] = useState(false);
   const [savedCompanyCode, setSavedCompanyCode] = useState(signupCompanyCode ?? "");
@@ -157,7 +169,7 @@ function LoginForm() {
             >
               {pending ? (
                 <>
-                  <span className="erp-spinner" aria-hidden /> 로그인 중...
+                  <span className="erp-spinner" aria-hidden /> {pendingMessage}
                 </>
               ) : (
                 "로그인"
