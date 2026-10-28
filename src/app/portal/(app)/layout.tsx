@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { portalLogout } from "@/app/portal/login/actions";
 import { portalHref } from "@/lib/portal-path";
+import { LogoutButton } from "@/components/erp/logout-button";
 
 // 내부 대시보드의 ErpShell(타이틀바+트리메뉴)과는 완전히 다른, 훨씬 가벼운
 // 포털 전용 셸이다 — 메뉴가 "발주하기"/"주문내역" 둘뿐이라 트리메뉴가
@@ -54,9 +55,7 @@ export default async function PortalAppLayout({ children }: { children: React.Re
             </>
           )}
           <form action={portalLogout}>
-            <button type="submit" style={{ color: "var(--erp-on-primary)" }}>
-              로그아웃
-            </button>
+            <LogoutButton style={{ color: "var(--erp-on-primary)" }} />
           </form>
         </nav>
       </header>

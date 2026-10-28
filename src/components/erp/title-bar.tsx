@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/app/login/actions";
+import { LogoutButton } from "@/components/erp/logout-button";
 import { MENU_ITEMS } from "@/lib/erp-menu";
 import { findByLongestPrefix } from "@/lib/route-match";
 
@@ -84,7 +85,7 @@ export function TitleBar({
           비밀번호 변경
         </Link>
         <form action={signOut}>
-          <button type="submit">로그아웃</button>
+          <LogoutButton />
         </form>
       </div>
     </header>
