@@ -6030,6 +6030,18 @@ export type Database = {
         Args: Record<string, never>;
         Returns: Json;
       };
+      get_platform_tenant_list: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          name: string;
+          slug: string;
+          created_at: string;
+          disabled_at: string | null;
+          plan: string;
+          plan_expires_at: string | null;
+        }[];
+      };
       get_login_block_reason: {
         Args: { p_slug: string; p_username: string };
         Returns: string | null;

@@ -49,12 +49,17 @@ export default async function PlatformAdminPage({
 
   // 플랫폼 전체 고객사 수는 당분간 1000곳을 넘을 일이 없다(직접 영업
   // 기반 B2B ERP) — 넘어설 정도로 커지면 그때 fetchAllRows()로 바꾼다.
+  //
+  // 테넌트 목록은 평범한 .from("tenants").select(...)(RLS 경유) 대신
+  // get_platform_tenant_list() RPC(SECURITY DEFINER, migration 199)로
+  // 가져온다 — tenants_select_platform_admin RLS 정책이 permissive
+  // OR로 전체를 보여줘야 하는데 실제로는 플랫폼 운영자 계정에도 자기
+  // 테넌트 1개만 보이는 문제가 있었다. 바로 아래 KPI(get_platform_stats)도
+  // 이미 같은 SECURITY DEFINER 방식이라, 이 화면 전체가 RLS 경로에
+  // 의존하지 않도록 통일한다 — 어차피 requirePlatformAdmin()으로 이미
+  // 한 번 막혀 있어 이중으로 안전하다.
   const [{ data: tenants }, { data: statsData }] = await Promise.all([
-    supabase
-      .from("tenants")
-      .select("id, name, slug, created_at, disabled_at, plan, plan_expires_at")
-      .order("created_at", { ascending: true })
-      .limit(1000),
+    supabase.rpc("get_platform_tenant_list"),
     supabase.rpc("get_platform_stats"),
   ]);
   const stats = statsData as PlatformStats | null;

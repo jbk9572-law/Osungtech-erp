@@ -3766,6 +3766,16 @@ a.erp-detail-tab:hover:not(.active) {
   animation: erp-nav-overlay-out 0.2s ease-in forwards;
 }
 
+/* 로그아웃은 .erp-nav-overlay(본문 영역만 덮음)와 달리 타이틀바를
+   포함해 화면 전체를 덮어야 한다 — 로그아웃 처리 중에는 그 어떤 조작도
+   의미가 없기 때문이다(제자리 absolute가 아니라 fixed). 세션이 느려도
+   "멈춘 것처럼" 보이지 않게, 눌렀다는 게 확실히 보이는 전체 화면
+   오버레이를 로그아웃 버튼(logout-button.tsx)에서 포털로 띄운다. */
+.erp-logout-overlay {
+  position: fixed;
+  z-index: 1000;
+}
+
 .erp-nav-card {
   display: flex;
   flex-direction: column;
