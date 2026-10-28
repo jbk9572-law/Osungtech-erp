@@ -3841,6 +3841,15 @@ a.erp-detail-tab:hover:not(.active) {
   font-size: var(--erp-font-base);
 }
 
+/* 전체 페이지 로딩((dashboard)/loading.tsx)처럼 앞에 위조 타이틀바가
+   붙는 경우, 화면 중앙에 그대로 두면 타이틀바와 로딩 표시 사이에 빈
+   흰 화면이 크게 남아 고장난 것처럼 보인다 — 타이틀바 바로 아래에
+   붙여서 "지금 로딩 중"이라는 게 한눈에 이어져 보이게 한다. */
+.erp-loading-panel-under-titlebar {
+  justify-content: flex-start;
+  padding-top: var(--erp-space-6);
+}
+
 @keyframes erp-loading-gauge-fill {
   0% {
     width: 0%;

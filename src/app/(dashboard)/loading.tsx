@@ -8,13 +8,27 @@
 // 한 번 고친 전례가 있다) — 그 요소가 아직 없으면 기본(흰색)으로
 // 남아있다가, 조회가 끝나고 진짜 타이틀바가 마운트되는 순간에야 색이
 // "채워지는" 것처럼 보인다(사용자 지적). 실제 타이틀바와 똑같은
-// .erp-titlebar 클래스를 내용 없이 먼저 그려서, 로딩 중에도 Safari가
-// 즉시 같은 자리에서 같은 색을 찾게 한다.
+// .erp-titlebar 클래스를 먼저 그려서, 로딩 중에도 Safari가 즉시 같은
+// 자리에서 같은 색을 찾게 한다.
+//
+// 처음엔 이 타이틀바를 내용 없이(빈 네이비 박스) 그렸는데, 그러면
+// 로고/글자 하나 없는 색 블록이 화면 위에 덩그러니 떠 있다가 그 아래
+// 빈 흰 화면 한가운데 "조회 중..."만 보이는 모양이라 사용자가 "이거
+// 고장난 것처럼 보인다"고 지적했다 — 그래서 로고(정적 파일이라 조회
+// 없이 바로 그릴 수 있음)와 "ERP" 글자를 넣어 실제 타이틀바의 축약된
+// 로딩 상태처럼 보이게 하고, 로딩 표시도 화면 한가운데가 아니라
+// 타이틀바 바로 아래로 붙였다(erp-loading-panel-under-titlebar).
 export default function DashboardLoading() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <div className="erp-titlebar" aria-hidden />
-      <div className="erp-loading-panel" style={{ flex: 1 }}>
+      <div className="erp-titlebar" aria-hidden>
+        <div className="erp-titlebar-left">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/branding/logo-mark.png" alt="" className="erp-titlebar-logo" />
+          <span className="erp-titlebar-name">ERP</span>
+        </div>
+      </div>
+      <div className="erp-loading-panel erp-loading-panel-under-titlebar" style={{ flex: 1 }}>
         <div className="erp-loading-gauge" aria-hidden />
         조회 중...
       </div>
