@@ -5,12 +5,15 @@ name: Supabase keep-alive
 # "사용 중"으로 인식하게 만든다 — 유료 전환 없이 무료 플랜을 계속
 # 쓰기 위한 방편이다.
 #
-# Netlify로 이전하면서 Vultr 서버의 crontab이 없어지므로, 이 핑을
-# 다시 GitHub Actions로 되돌린다.
-#
-# 사용 전 준비: 이 저장소의 Settings > Secrets and variables > Actions에
-# SUPABASE_URL, SUPABASE_ANON_KEY 두 개를 등록해야 한다
-# (Supabase 대시보드 > Project Settings > API 값 그대로).
+# 2026-10-28까지는 SUPABASE_URL/SUPABASE_ANON_KEY 시크릿 하나만 핑
+# 했는데, 이 시크릿은 dev/운영 DB를 분리(migrate-db 잡, wrangler.jsonc
+# env 블록)하기 전부터 있던 값이라 둘 중 하나(실제로는 dev DB)만
+# 가리키고 있었다 — 그 결과 운영 DB(bqetemkilbtjjbgywmbp)는 핑을
+# 한 번도 못 받고 계속 잠들어 있었을 가능성이 높고, 실제로 운영
+# 사이트에서만 "30초 이상 걸리고 버튼이 안 먹힌다"는 증상이 보고됐다.
+# 이제 두 프로젝트를 각각 명시적으로 핑 한다 — URL/anon key는 둘 다
+# 클라이언트 번들에 그대로 노출되는 공개 값이라(wrangler.jsonc에도
+# 이미 평문으로 커밋돼 있음) 시크릿으로 따로 등록할 필요가 없다.
 on:
   schedule:
     - cron: "17 3 */3 * *"
@@ -19,10 +22,19 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: dev
+            url: https://ubfarxeqaiuzizqkszcy.supabase.co
+            anon_key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZmFyeGVxYWl1eml6cWtzemN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5Mzc4NjQsImV4cCI6MjEwNTUxMzg2NH0.lfDuWUDY8A5R_Yx3HWDVY7sey-_vLrZsxSV3gcG2D8c
+          - name: production
+            url: https://bqetemkilbtjjbgywmbp.supabase.co
+            anon_key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0
     steps:
-      - name: Ping Supabase Auth health endpoint
+      - name: Ping Supabase Auth health endpoint (${{ matrix.name }})
         run: |
           curl -sS -f \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+            -H "apikey: ${{ matrix.anon_key }}" \
+            "${{ matrix.url }}/auth/v1/health" \
             -o /dev/null
