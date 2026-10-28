@@ -97,3 +97,53 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  # dev(claude/**)에 푸시하면 작업실 DB(elvonix-erp-dev)에, main에
+  # 병합하면 운영 DB(elvonix-erp)에 새 마이그레이션만 자동으로 적용한다.
+  # 지금까지는 마이그레이션 SQL을 사람이 Supabase SQL Editor에 직접
+  # 복붙해왔는데, "어디까지 적용했는지" 기록이 전혀 안 남다 보니 운영
+  # DB가 dev보다 69개(약 2개월치)나 뒤처진 걸 뒤늦게 발견한 사고가
+  # 있었다 — supabase CLI의 적용 이력 테이블(supabase_migrations.
+  # schema_migrations)에 맡기면 "새로 생긴 것만" 알아서 골라 적용되므로
+  # 같은 사고가 구조적으로 반복되지 않는다.
+  #
+  # 사용 전 준비 (1회, 로컬에서):
+  #   1. 이미 수동으로 적용해둔 두 DB(elvonix-erp-dev, elvonix-erp)는
+  #      CLI 입장에선 "한 번도 기록 안 된" 상태라, 이 워크플로우가 처음
+  #      돌면 195개를 전부 새로 적용하려다 "이미 있음" 에러로 실패한다.
+  #      그래서 먼저 각 DB에 대해 "여기까지는 이미 적용된 걸로 쳐줘"를
+  #      한 번씩 기록해야 한다(로컬 터미널, 이 저장소 폴더에서):
+  #        npx supabase login
+  #        npx supabase link --project-ref ubfarxeqaiuzizqkszcy   # dev
+  #        npx supabase migration repair --status applied $(ls supabase/migrations | sed -E 's/_.*//')
+  #        npx supabase link --project-ref bqetemkilbtjjbgywmbp   # production
+  #        npx supabase migration repair --status applied $(ls supabase/migrations | sed -E 's/_.*//')
+  #   2. 이 저장소 Settings > Secrets and variables > Actions에서
+  #      SUPABASE_DB_URL_DEV / SUPABASE_DB_URL_PROD 두 개를 등록한다 —
+  #      둘 다 각 Supabase 프로젝트의 Database > Connection string >
+  #      "Session pooler" URI(db-backup.yml과 같은 이유로 Transaction
+  #      pooler 금지, 비밀번호는 실제 값으로 치환). 절대 코드/채팅에
+  #      직접 붙여넣지 않는다 — GitHub Secrets에만 등록한다.
+  migrate-db:
+    name: Push new DB migrations
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push migrations
+        env:
+          DB_URL: ${{ github.ref == 'refs/heads/main' && secrets.SUPABASE_DB_URL_PROD || secrets.SUPABASE_DB_URL_DEV }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DB_URL" ]; then
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo "::error::SUPABASE_DB_URL_PROD 시크릿이 설정되어 있지 않습니다. 워크플로우 파일 상단 안내를 참고해 등록해주세요."
+            else
+              echo "::error::SUPABASE_DB_URL_DEV 시크릿이 설정되어 있지 않습니다. 워크플로우 파일 상단 안내를 참고해 등록해주세요."
+            fi
+            exit 1
+          fi
+          npx supabase db push --db-url "$DB_URL"
