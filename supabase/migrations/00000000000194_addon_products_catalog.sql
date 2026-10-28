@@ -12,9 +12,15 @@
 -- 카탈로그)와 완전히 같은 선상의 "또 다른 카탈로그"일 뿐이라 migration
 -- 129의 platform_plans 패턴(테이블+RLS)을 그대로 따른다.
 --
--- 테넌트에 실제로 애드온을 붙이는 기능(구독/구매 내역, 쿼터 자동 합산,
--- 월 1일 리셋)은 이 테이블을 FK로 참조할 "tenant_addon_subscriptions"
--- 테이블이 필요한 다음 단계 작업이다 — 지금은 안 만든다.
+-- TODO(다음 단계, 외부 API 불필요한 순수 내부 작업 — src/components/
+-- tenant-addon-panel.tsx의 TODO와 동일 건): 테넌트에 실제로 애드온을
+-- 붙여 쿼터에 자동 합산하는 기능은 이 테이블을 FK로 참조할
+-- "tenant_addon_subscriptions"(tenant_id, add_on_product_id, quantity)
+-- 테이블이 필요한 다음 단계 작업이다 — 지금은 안 만든다. 이건 결제(PG)
+-- 연동과는 별개다: 관리자가 수동으로 부착/해제만 해도(지금
+-- tenant-addon-panel.tsx에서 숫자를 손으로 조정하는 것과 똑같은
+-- 수준으로) 바로 가능한 내부 기능이고, 실제 돈을 받는 결제 연동은 또
+-- 그 다음 단계다.
 create table public.add_on_products (
   id uuid primary key default gen_random_uuid(),
   -- 영문 ID(기획서 예시: addon_fax_100) — platform_plans.plan_key와 같은

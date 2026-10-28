@@ -10,6 +10,20 @@ import { PageGuide } from "@/components/erp/page-guide";
 // 발송 건수/팩스 발송 건수/자사 도메인 메일을 플랫폼 운영자가 수동
 // 조정한다(결제 연동 전 단계라 updateTenantAddons가 tenants 컬럼에
 // 최종 숫자를 그대로 저장 — actions.ts 주석 참고).
+//
+// TODO(다음 단계 — 2026-10-28 기획서 "동적 애드온" 3번 항목, 외부 API
+// 불필요한 순수 내부 작업): 지금은 관리자가 이 숫자들을 손으로 직접
+// 타이핑하지만, platform-admin/addons에 이미 만들어둔 add_on_products
+// 카탈로그에서 상품을 "골라서 부착"하는 방식으로 바꿀 것 —
+// 1) tenant_addon_subscriptions(tenant_id, add_on_product_id, quantity)
+//    테이블 신설(add_on_products를 FK로 참조),
+// 2) 이 패널에 "카탈로그에서 추가" UI를 더해 부착/해제하면
+//    tenants.monthly_*_quota를 base_plan 포함량 + Σ(부착된 애드온
+//    capacity × quantity)로 재계산해 저장,
+// 3) "매월 1일 자동 리셋"은 기존 tenant_monthly_usage처럼 (tenant_id,
+//    year_month) 복합키로 달마다 새 행을 만드는 방식이면 배치 작업 없이
+//    자연히 해결됨(migration 189와 같은 패턴).
+// 실제 결제(PG) 연동은 이것과 별개로, 그 다음 단계에서나 필요하다.
 export function TenantAddonPanel({
   tenantId,
   vendorLimit,
