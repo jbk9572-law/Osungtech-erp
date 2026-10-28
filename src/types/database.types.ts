@@ -1466,6 +1466,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      add_on_products: {
+        Row: {
+          id: string;
+          key: string;
+          name: string;
+          kind: string;
+          capacity: number;
+          monthly_price: number;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          name: string;
+          kind: string;
+          capacity: number;
+          monthly_price?: number;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          key?: string;
+          name?: string;
+          kind?: string;
+          capacity?: number;
+          monthly_price?: number;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       point_transactions: {
         Row: {
           id: string;

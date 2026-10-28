@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/platform-admin", label: "고객사" },
   { href: "/platform-admin/plans", label: "요금제" },
+  { href: "/platform-admin/addons", label: "애드온" },
   { href: "/platform-admin/announcements", label: "공지사항" },
   { href: "/platform-admin/stats", label: "통계" },
   { href: "/platform-admin/settings", label: "환경설정" },
