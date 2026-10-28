@@ -6026,6 +6026,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: Json;
       };
+      get_dashboard_layout_bootstrap: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
       get_login_block_reason: {
         Args: { p_slug: string; p_username: string };
         Returns: string | null;
