@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
 import { formatNumber } from "@/lib/format-number";
 import { GridBadge } from "@/components/grid/badge";
@@ -163,7 +164,7 @@ export function BalanceGridTable({
         </div>
       )}
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -209,6 +210,42 @@ export function BalanceGridTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {sortedRows.map((b) => {
+          const { tone, label } = agingBadge(b.daysOverdue);
+          return (
+            <Link key={b.id} href={rowHref(b.id)} className="erp-row-card">
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">{b.name}</span>
+                {showAging && <GridBadge tone={tone}>{label}</GridBadge>}
+              </div>
+              <dl className="erp-order-item-fields">
+                <div>
+                  <dt>{totalLabel}</dt>
+                  <dd>{formatNumber(b.total)}</dd>
+                </div>
+                <div>
+                  <dt>{paidLabel}</dt>
+                  <dd>{formatNumber(b.paid)}</dd>
+                </div>
+              </dl>
+              <div className="erp-row-card-foot">
+                <span style={{ color: "var(--erp-text-muted)" }}>잔액</span>
+                <span
+                  className="erp-row-card-amount"
+                  style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)" }}
+                >
+                  {formatNumber(b.balance)}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+        {!sortedRows.length && (
+          <p className="erp-grid-empty">{query.trim() ? "검색 결과가 없습니다." : emptyLabel}</p>
+        )}
       </div>
     </>
   );
