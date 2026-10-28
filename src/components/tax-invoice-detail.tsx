@@ -110,7 +110,7 @@ export function TaxInvoiceDetail({
         </p>
       )}
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -151,6 +151,59 @@ export function TaxInvoiceDetail({
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {items.length === 0 ? (
+          <p className="erp-grid-empty">등록된 품목이 없습니다.</p>
+        ) : (
+          <>
+            {items.map((item) => (
+              <div className="erp-row-card" key={item.id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{item.item_name}</span>
+                  <span className="erp-row-card-date" style={{ fontWeight: 400 }}>
+                    {item.line_date ? new Date(item.line_date).toLocaleDateString("ko-KR") : "-"}
+                  </span>
+                </div>
+                <dl className="erp-order-item-fields">
+                  <div>
+                    <dt>규격</dt>
+                    <dd>{item.spec || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>수량</dt>
+                    <dd>{item.quantity != null ? formatNumber(item.quantity) : "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>단가</dt>
+                    <dd>{item.unit_price != null ? formatNumber(item.unit_price) : "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>공급가액</dt>
+                    <dd style={{ fontWeight: 700 }}>{formatNumber(item.supply_amount)}</dd>
+                  </div>
+                  <div>
+                    <dt>세액</dt>
+                    <dd>{formatNumber(item.tax_amount)}</dd>
+                  </div>
+                  {item.remark && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <dt>비고</dt>
+                      <dd>{item.remark}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            ))}
+            <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <span>합계</span>
+              <span className="erp-row-card-amount">
+                공급가액 {formatNumber(invoice.supply_amount)} · 세액 {formatNumber(invoice.tax_amount)}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="erp-detail" style={{ marginTop: 0 }}>

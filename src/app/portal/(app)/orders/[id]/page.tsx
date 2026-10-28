@@ -210,7 +210,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
           <span className="erp-detail-tab active">주문 품목</span>
         </div>
         <div className="erp-detail-body">
-          <div className="erp-grid-wrap">
+          <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -245,6 +245,42 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          <div className="erp-row-card-list">
+            {(items ?? []).map((i) => (
+              <div className="erp-row-card" key={i.product_id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{i.name}</span>
+                </div>
+                <dl className="erp-order-item-fields">
+                  <div>
+                    <dt>규격</dt>
+                    <dd>{i.spec ?? "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>수량</dt>
+                    <dd>
+                      {formatNumber(i.quantity)} {i.unit}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>단가</dt>
+                    <dd>{formatNumber(i.unit_price)}</dd>
+                  </div>
+                  <div>
+                    <dt>금액</dt>
+                    <dd style={{ fontWeight: 700 }}>{formatNumber(i.quantity * i.unit_price)}</dd>
+                  </div>
+                </dl>
+              </div>
+            ))}
+            {(items ?? []).length > 0 && (
+              <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+                <span>합계</span>
+                <span className="erp-row-card-amount">{formatNumber(total)}원</span>
+              </div>
+            )}
           </div>
           {order.memo && (
             <p style={{ marginTop: 10, fontSize: 12, color: "var(--erp-text-muted)" }}>요청사항: {order.memo}</p>

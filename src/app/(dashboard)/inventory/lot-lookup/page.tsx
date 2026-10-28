@@ -189,7 +189,7 @@ export default async function LotLookupPage({
               </span>
             </div>
             <div className="erp-detail-body">
-              <div className="erp-grid-wrap">
+              <div className="erp-grid-wrap has-card-view">
                 <table className="erp-grid">
                   <thead>
                     <tr>
@@ -240,6 +240,42 @@ export default async function LotLookupPage({
                   )}
                 </table>
               </div>
+              <div className="erp-row-card-list">
+                {purchaseHits.map((h) => {
+                  const card = (
+                    <>
+                      <div className="erp-row-card-head">
+                        <span className="erp-row-card-partner">{h.purchase_orders?.suppliers?.name ?? "-"}</span>
+                        <span className="erp-row-card-date">
+                          {h.purchase_orders ? new Date(h.purchase_orders.purchase_date).toLocaleDateString("ko-KR") : "-"}
+                        </span>
+                      </div>
+                      <div className="erp-row-card-foot">
+                        <span className="erp-row-card-item">{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</span>
+                        <span className="erp-row-card-amount" style={{ color: "var(--erp-success)" }}>
+                          {formatNumber(Number(h.quantity))}
+                        </span>
+                      </div>
+                    </>
+                  );
+                  return h.purchase_orders ? (
+                    <Link key={h.id} href={`/purchases/${h.purchase_orders.id}`} className="erp-row-card">
+                      {card}
+                    </Link>
+                  ) : (
+                    <div key={h.id} className="erp-row-card">
+                      {card}
+                    </div>
+                  );
+                })}
+                {purchaseHits.length === 0 && <p className="erp-grid-empty">매입 이력 없음</p>}
+                {purchaseHits.length > 0 && (
+                  <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+                    <span>합계 입고</span>
+                    <span className="erp-row-card-amount">{formatNumber(totalIn)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -250,7 +286,7 @@ export default async function LotLookupPage({
               </span>
             </div>
             <div className="erp-detail-body">
-              <div className="erp-grid-wrap">
+              <div className="erp-grid-wrap has-card-view">
                 <table className="erp-grid">
                   <thead>
                     <tr>
@@ -301,6 +337,42 @@ export default async function LotLookupPage({
                   )}
                 </table>
               </div>
+              <div className="erp-row-card-list">
+                {saleHits.map((h) => {
+                  const card = (
+                    <>
+                      <div className="erp-row-card-head">
+                        <span className="erp-row-card-partner">{h.sales_orders?.customers?.name ?? "-"}</span>
+                        <span className="erp-row-card-date">
+                          {h.sales_orders ? new Date(h.sales_orders.order_date).toLocaleDateString("ko-KR") : "-"}
+                        </span>
+                      </div>
+                      <div className="erp-row-card-foot">
+                        <span className="erp-row-card-item">{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</span>
+                        <span className="erp-row-card-amount" style={{ color: "var(--erp-danger)" }}>
+                          {formatNumber(Number(h.quantity))}
+                        </span>
+                      </div>
+                    </>
+                  );
+                  return h.sales_orders ? (
+                    <Link key={h.id} href={`/sales/${h.sales_orders.id}`} className="erp-row-card">
+                      {card}
+                    </Link>
+                  ) : (
+                    <div key={h.id} className="erp-row-card">
+                      {card}
+                    </div>
+                  );
+                })}
+                {saleHits.length === 0 && <p className="erp-grid-empty">매출 이력 없음</p>}
+                {saleHits.length > 0 && (
+                  <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+                    <span>합계 출고</span>
+                    <span className="erp-row-card-amount">{formatNumber(totalOut)}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -313,7 +385,7 @@ export default async function LotLookupPage({
               </span>
             </div>
             <div className="erp-detail-body">
-              <div className="erp-grid-wrap">
+              <div className="erp-grid-wrap has-card-view">
                 <table className="erp-grid">
                   <thead>
                     <tr>
@@ -353,6 +425,35 @@ export default async function LotLookupPage({
                     )}
                   </tbody>
                 </table>
+              </div>
+              <div className="erp-row-card-list">
+                {workOrderHits.map((w) => (
+                  <Link key={w.id} href={`/production/${w.id}?back=${selfBack}`} className="erp-row-card">
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">LOT {w.doc_no}</span>
+                      <GridBadge tone={WORK_ORDER_STATUS_LABEL[w.status].tone}>
+                        {WORK_ORDER_STATUS_LABEL[w.status].label}
+                      </GridBadge>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>날짜</dt>
+                        <dd>{new Date(w.order_date).toLocaleDateString("ko-KR")}</dd>
+                      </div>
+                      <div>
+                        <dt>완제품</dt>
+                        <dd>{w.products ? `${w.products.sku} · ${w.products.name}` : "-"}</dd>
+                      </div>
+                      <div>
+                        <dt>수량</dt>
+                        <dd>
+                          {formatNumber(Number(w.quantity))} {w.products?.unit ?? ""}
+                        </dd>
+                      </div>
+                    </dl>
+                  </Link>
+                ))}
+                {workOrderHits.length === 0 && <p className="erp-grid-empty">생산지시 내역 없음</p>}
               </div>
             </div>
           </div>

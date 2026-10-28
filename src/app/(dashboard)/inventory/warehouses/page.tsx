@@ -73,7 +73,7 @@ export default async function WarehousesPage({
 
       <div style={{ marginTop: 14 }}>
         <FormSection tabLabel={`창고 목록 (${warehouses.length})`}>
-          <div className="erp-grid-wrap">
+          <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -106,6 +106,25 @@ export default async function WarehousesPage({
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="erp-row-card-list">
+            {warehouses.map((w) => (
+              <div className="erp-row-card" key={w.id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{w.name}</span>
+                  <InlineConfirmDelete
+                    action={deleteWarehouse}
+                    hiddenFields={{ id: w.id }}
+                    warningText="이 창고를 삭제하시겠습니까? 재고/전표에서 쓰이고 있으면 삭제가 거부됩니다."
+                    triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
+                  />
+                </div>
+                <p style={{ margin: 0, fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)" }}>
+                  {w.location || "-"}
+                </p>
+              </div>
+            ))}
+            {warehouses.length === 0 && <p className="erp-grid-empty">등록된 창고가 없습니다.</p>}
           </div>
         </FormSection>
       </div>
@@ -140,7 +159,7 @@ export default async function WarehousesPage({
             </button>
           </form>
 
-          <div className="erp-grid-wrap">
+          <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -178,6 +197,43 @@ export default async function WarehousesPage({
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="erp-row-card-list">
+            {transfers.map((t) => {
+              const items = t.stock_transfer_items ?? [];
+              const totalQty = items.reduce((sum, i) => sum + Number(i.quantity), 0);
+              return (
+                <Link key={t.id} href={`/inventory/transfers/${t.id}?back=${selfBack}`} className="erp-row-card">
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">
+                      {t.from_warehouse?.name ?? "-"} → {t.to_warehouse?.name ?? "-"}
+                    </span>
+                    <span className="erp-row-card-date">{t.transfer_date.replaceAll("-", ".")}</span>
+                  </div>
+                  <dl className="erp-order-item-fields">
+                    <div>
+                      <dt>품목 수</dt>
+                      <dd>{items.length}</dd>
+                    </div>
+                    <div>
+                      <dt>총 이동수량</dt>
+                      <dd>{formatNumber(totalQty)}</dd>
+                    </div>
+                    <div>
+                      <dt>처리자</dt>
+                      <dd>{t.profiles?.full_name ?? "-"}</dd>
+                    </div>
+                    {t.memo && (
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <dt>메모</dt>
+                        <dd>{t.memo}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </Link>
+              );
+            })}
+            {transfers.length === 0 && <p className="erp-grid-empty">이 기간에 등록된 창고 이동이 없습니다.</p>}
           </div>
         </FormSection>
       </div>

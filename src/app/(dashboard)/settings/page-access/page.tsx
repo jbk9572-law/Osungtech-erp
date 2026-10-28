@@ -51,7 +51,7 @@ export default async function PageAccessSettingsPage() {
           먼저 환경설정 &gt; 조직도 관리에서 부서를 등록하세요.
         </p>
       ) : (
-        <div className="erp-grid-wrap">
+        <div className="erp-grid-wrap has-card-view">
           <table className="erp-grid">
             <thead>
               <tr>
@@ -82,6 +82,34 @@ export default async function PageAccessSettingsPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {departments?.length > 0 && (
+        <div className="erp-row-card-list">
+          {RESTRICTABLE_PAGES.map((page) => {
+            const allowed = allowedDeptIds.get(page.pageKey);
+            return (
+              <div className="erp-row-card" key={page.pageKey}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{page.label}</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {departments.map((d) => (
+                    <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)" }}>{d.name}</span>
+                      <FeatureToggle
+                        featureKey={`${page.pageKey}::${d.id}`}
+                        label={`${page.label} - ${d.name}`}
+                        enabled={allowed?.has(d.id) ?? false}
+                        action={toggleDepartmentPageAccess}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

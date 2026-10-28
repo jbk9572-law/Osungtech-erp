@@ -60,7 +60,7 @@ export default async function PlatformSettingsPage() {
             )}
           </div>
           <div className="erp-detail-body">
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -90,6 +90,27 @@ export default async function PlatformSettingsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="erp-row-card-list">
+              {group.items.map((item) => (
+                <div className="erp-row-card" key={item.href} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <span className="erp-row-card-partner">{item.label}</span>
+                  {MENU_TOGGLE_LOCKED_HREFS.has(item.href) ? (
+                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                      항상 사용
+                    </span>
+                  ) : (
+                    <FeatureToggle
+                      featureKey={item.href}
+                      label={item.label}
+                      enabled={!defaultDisabledFeatures.includes(item.href)}
+                      action={setPlatformDefaultFeatureEnabled}
+                    />
+                  )}
+                </div>
+              ))}
+              {!group.items.length && <p className="erp-grid-empty">세부 메뉴가 없습니다.</p>}
             </div>
           </div>
         </div>

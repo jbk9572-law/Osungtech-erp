@@ -98,39 +98,68 @@ export async function ProductDetailPanel({ id }: { id: string }) {
           </PageGuide>
 
           {bomRows.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginBottom: 12 }}>
-              <table className="erp-grid">
-                <thead>
-                  <tr>
-                    <th>SKU</th>
-                    <th>구성품명</th>
-                    <th className="num" style={{ width: 140 }}>
-                      1{product.unit}당 소요량
-                    </th>
-                    <th style={{ width: 70 }} />
-                  </tr>
-                </thead>
-                <tbody>
-                  {bomRows.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.component?.sku ?? "(삭제된 품목)"}</td>
-                      <td>{row.component?.name ?? "-"}</td>
-                      <td className="num">
-                        {formatNumber(row.quantityPerUnit)} {row.component?.unit ?? ""}
-                      </td>
-                      <td>
-                        <InlineConfirmDelete
-                          action={deleteBomItem}
-                          hiddenFields={{ id: row.id, parent_product_id: product.id }}
-                          warningText="이 구성품을 BOM에서 삭제하시겠습니까?"
-                          triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
-                        />
-                      </td>
+            <>
+              <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 12 }}>
+                <table className="erp-grid">
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>구성품명</th>
+                      <th className="num" style={{ width: 140 }}>
+                        1{product.unit}당 소요량
+                      </th>
+                      <th style={{ width: 70 }} />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {bomRows.map((row) => (
+                      <tr key={row.id}>
+                        <td>{row.component?.sku ?? "(삭제된 품목)"}</td>
+                        <td>{row.component?.name ?? "-"}</td>
+                        <td className="num">
+                          {formatNumber(row.quantityPerUnit)} {row.component?.unit ?? ""}
+                        </td>
+                        <td>
+                          <InlineConfirmDelete
+                            action={deleteBomItem}
+                            hiddenFields={{ id: row.id, parent_product_id: product.id }}
+                            warningText="이 구성품을 BOM에서 삭제하시겠습니까?"
+                            triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="erp-row-card-list" style={{ marginBottom: 12 }}>
+                {bomRows.map((row) => (
+                  <div className="erp-row-card" key={row.id}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{row.component?.name ?? "-"}</span>
+                      <span className="erp-row-card-date">{row.component?.sku ?? "(삭제된 품목)"}</span>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>1{product.unit}당 소요량</dt>
+                        <dd>
+                          {formatNumber(row.quantityPerUnit)} {row.component?.unit ?? ""}
+                        </dd>
+                      </div>
+                    </dl>
+                    <div style={{ marginTop: 4 }}>
+                      <InlineConfirmDelete
+                        action={deleteBomItem}
+                        hiddenFields={{ id: row.id, parent_product_id: product.id }}
+                        warningText="이 구성품을 BOM에서 삭제하시겠습니까?"
+                        triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           <BomItemForm

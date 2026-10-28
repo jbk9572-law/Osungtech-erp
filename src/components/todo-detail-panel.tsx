@@ -136,47 +136,82 @@ export async function TodoDetailPanel({ id }: { id: string }) {
         </div>
 
         {paperCalcSizeLines.length > 0 && (
-          <div className="erp-grid-wrap mb-4">
-            <table className="erp-grid">
-              <thead>
-                <tr>
-                  <th>
-                    모조지 계산 <GridBadge tone="muted">연결됨</GridBadge>
-                  </th>
-                  <th style={{ width: 140 }}>규격</th>
-                  <th className="num" style={{ width: 100 }}>
-                    수량
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paperCalcSizeLines.map((line, i) => {
-                  const [spec, qty] = line.split(" : ");
-                  return (
-                    <tr key={i}>
-                      <td style={{ color: "var(--erp-text-muted)" }}>ㄴ 모조지</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{spec}</td>
-                      <td className="num">{qty}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={2} style={{ fontWeight: 700 }}>
-                    합계 {formatNumber(paperCalcTotalSheet)}연
-                  </td>
-                  <td className="num">
-                    {latestCalcId && (
-                      <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)", fontWeight: 700 }}>
-                        도면 보기 →
-                      </PaperCalcNavLink>
-                    )}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          <>
+            <div className="erp-grid-wrap has-card-view mb-4">
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th>
+                      모조지 계산 <GridBadge tone="muted">연결됨</GridBadge>
+                    </th>
+                    <th style={{ width: 140 }}>규격</th>
+                    <th className="num" style={{ width: 100 }}>
+                      수량
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paperCalcSizeLines.map((line, i) => {
+                    const [spec, qty] = line.split(" : ");
+                    return (
+                      <tr key={i}>
+                        <td style={{ color: "var(--erp-text-muted)" }}>ㄴ 모조지</td>
+                        <td style={{ color: "var(--erp-text-muted)" }}>{spec}</td>
+                        <td className="num">{qty}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={2} style={{ fontWeight: 700 }}>
+                      합계 {formatNumber(paperCalcTotalSheet)}연
+                    </td>
+                    <td className="num">
+                      {latestCalcId && (
+                        <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)", fontWeight: 700 }}>
+                          도면 보기 →
+                        </PaperCalcNavLink>
+                      )}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div className="erp-row-card-list mb-4">
+              {paperCalcSizeLines.map((line, i) => {
+                const [spec, qty] = line.split(" : ");
+                return (
+                  <div className="erp-row-card" key={i}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">
+                        모조지 <GridBadge tone="muted">연결됨</GridBadge>
+                      </span>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>규격</dt>
+                        <dd>{spec}</dd>
+                      </div>
+                      <div>
+                        <dt>수량</dt>
+                        <dd>{qty}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                );
+              })}
+              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+                <span>합계 {formatNumber(paperCalcTotalSheet)}연</span>
+                {latestCalcId && (
+                  <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)" }}>
+                    도면 보기 →
+                  </PaperCalcNavLink>
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {allowManage ? (
@@ -219,35 +254,68 @@ export async function TodoDetailPanel({ id }: { id: string }) {
               </p>
             )}
             {items.length > 0 && (
-              <div className="erp-grid-wrap">
-                <table className="erp-grid">
-                  <thead>
-                    <tr>
-                      <th>품목</th>
-                      <th style={{ width: 160 }}>규격</th>
-                      <th style={{ width: 120 }}>관리번호</th>
-                      <th className="num" style={{ width: 110 }}>
-                        수량
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item, i) => {
-                      const product = (products ?? []).find((p) => p.id === item.productId);
-                      return (
-                        <tr key={i}>
-                          <td>{product ? `${product.sku} · ${product.name}` : "-"}</td>
-                          <td style={{ color: "var(--erp-text-muted)" }}>{item.spec || product?.spec || "-"}</td>
-                          <td style={{ color: "var(--erp-text-muted)" }}>{item.lotNumber || "-"}</td>
-                          <td className="num">
-                            {formatNumber(item.quantity)} {product?.unit ?? ""}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                <div className="erp-grid-wrap has-card-view">
+                  <table className="erp-grid">
+                    <thead>
+                      <tr>
+                        <th>품목</th>
+                        <th style={{ width: 160 }}>규격</th>
+                        <th style={{ width: 120 }}>관리번호</th>
+                        <th className="num" style={{ width: 110 }}>
+                          수량
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item, i) => {
+                        const product = (products ?? []).find((p) => p.id === item.productId);
+                        return (
+                          <tr key={i}>
+                            <td>{product ? `${product.sku} · ${product.name}` : "-"}</td>
+                            <td style={{ color: "var(--erp-text-muted)" }}>{item.spec || product?.spec || "-"}</td>
+                            <td style={{ color: "var(--erp-text-muted)" }}>{item.lotNumber || "-"}</td>
+                            <td className="num">
+                              {formatNumber(item.quantity)} {product?.unit ?? ""}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="erp-row-card-list">
+                  {items.map((item, i) => {
+                    const product = (products ?? []).find((p) => p.id === item.productId);
+                    return (
+                      <div className="erp-row-card" key={i}>
+                        <div className="erp-row-card-head">
+                          <span className="erp-row-card-partner">
+                            {product ? `${product.sku} · ${product.name}` : "-"}
+                          </span>
+                        </div>
+                        <dl className="erp-order-item-fields">
+                          <div>
+                            <dt>규격</dt>
+                            <dd>{item.spec || product?.spec || "-"}</dd>
+                          </div>
+                          <div>
+                            <dt>관리번호</dt>
+                            <dd>{item.lotNumber || "-"}</dd>
+                          </div>
+                          <div>
+                            <dt>수량</dt>
+                            <dd>
+                              {formatNumber(item.quantity)} {product?.unit ?? ""}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
             <p className="mt-4 text-xs" style={{ color: "var(--erp-text-muted)" }}>
               본인이 등록한 할 일만 수정할 수 있습니다. (완료 체크는 누구나 할 수 있습니다.)

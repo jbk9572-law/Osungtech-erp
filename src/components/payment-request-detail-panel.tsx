@@ -171,7 +171,7 @@ export async function PaymentRequestDetailPanel({
             <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
 
-          <div className="erp-grid-wrap" style={{ border: "1px solid var(--erp-border)" }}>
+          <div className="erp-grid-wrap has-card-view" style={{ border: "1px solid var(--erp-border)" }}>
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -214,6 +214,44 @@ export async function PaymentRequestDetailPanel({
                 </tr>
               </tfoot>
             </table>
+          </div>
+
+          <div className="erp-row-card-list">
+            {(items ?? []).map((item) => (
+              <div
+                className="erp-row-card"
+                key={item.id}
+                style={item.is_highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}
+              >
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{item.vendor}</span>
+                  <span className="erp-row-card-date">{item.used_at.replaceAll("-", ".")}</span>
+                </div>
+                <dl className="erp-order-item-fields">
+                  <div>
+                    <dt>용도</dt>
+                    <dd>{item.purpose || "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>금액</dt>
+                    <dd style={{ fontWeight: 700 }}>{formatNumber(Number(item.amount))}</dd>
+                  </div>
+                  {item.remark && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <dt>비고</dt>
+                      <dd>{item.remark}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            ))}
+            {!items?.length && <p className="erp-grid-empty">등록된 사용 내역이 없습니다.</p>}
+            {!!items?.length && (
+              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+                <span>합계</span>
+                <span className="erp-row-card-amount">{formatNumber(total)}원</span>
+              </div>
+            )}
           </div>
 
           {row.content && (

@@ -130,7 +130,7 @@ export default async function ProductionPage({
         )}
       </form>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
               <tr>
@@ -204,6 +204,72 @@ export default async function ProductionPage({
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="erp-row-card-list">
+          {rows.map((row) => {
+            const progress = stepProgressByOrder.get(row.id);
+            return (
+              <div className="erp-row-card" key={row.id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">
+                    <Link href={`/production/${row.id}`}>{row.doc_no}</Link>
+                  </span>
+                  <span className="erp-row-card-date">{row.order_date.replaceAll("-", ".")}</span>
+                </div>
+                <div className="erp-row-card-item">
+                  {row.products?.sku} · {row.products?.name}{" "}
+                  <Link
+                    href={`/inventory/lot-lookup?q=${encodeURIComponent(`LOT${row.doc_no}`)}`}
+                    className="erp-badge erp-badge-muted"
+                    style={{ textDecoration: "none" }}
+                  >
+                    LOT{row.doc_no} 조회
+                  </Link>
+                </div>
+                <dl className="erp-order-item-fields">
+                  <div>
+                    <dt>수량</dt>
+                    <dd>
+                      {formatNumber(Number(row.quantity))} {row.products?.unit}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>창고</dt>
+                    <dd>{row.warehouses?.name ?? "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>공정</dt>
+                    <dd>{progress ? `${progress.done}/${progress.total}` : "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>등록자</dt>
+                    <dd>{row.profiles?.full_name ?? "-"}</dd>
+                  </div>
+                  {row.memo && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <dt>메모</dt>
+                      <dd>{row.memo}</dd>
+                    </div>
+                  )}
+                </dl>
+                <div className="erp-row-card-foot">
+                  <WorkOrderStatusActions
+                    id={row.id}
+                    status={row.status}
+                    firstStepIsSubcontractor={firstStepIsSubcontractorByOrder.get(row.id) ?? false}
+                  />
+                  <InlineConfirmDelete
+                    action={deleteWorkOrder}
+                    hiddenFields={{ id: row.id }}
+                    warningText="이 생산지시를 삭제하시겠습니까? 지금까지 진행된 만큼 구성품/완제품 재고가 되돌려집니다."
+                    triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {!rows.length && <p className="erp-grid-empty">조건에 맞는 생산지시가 없습니다.</p>}
         </div>
     </div>
   );

@@ -93,7 +93,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
         </p>
       )}
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -129,6 +129,52 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {(items ?? []).length === 0 ? (
+          <p className="erp-grid-empty">등록된 품목이 없습니다.</p>
+        ) : (
+          <>
+            {(items ?? []).map((item) => (
+              <div className="erp-row-card" key={item.id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{item.products?.name ?? "-"}</span>
+                </div>
+                <dl className="erp-order-item-fields">
+                  <div>
+                    <dt>규격</dt>
+                    <dd>{item.spec ?? "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>수량</dt>
+                    <dd>{formatNumber(Number(item.quantity))}</dd>
+                  </div>
+                  <div>
+                    <dt>단가</dt>
+                    <dd>{formatNumber(Number(item.unit_price))}</dd>
+                  </div>
+                  <div>
+                    <dt>금액</dt>
+                    <dd style={{ fontWeight: 700 }}>
+                      {formatNumber(Number(item.quantity) * Number(item.unit_price))}
+                    </dd>
+                  </div>
+                  {item.remark && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <dt>비고</dt>
+                      <dd>{item.remark}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            ))}
+            <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <span>합계</span>
+              <span className="erp-row-card-amount">{formatNumber(total)}</span>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

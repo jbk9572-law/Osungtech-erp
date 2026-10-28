@@ -195,7 +195,7 @@ export async function OfficialDocumentDetailPanel({
             <span className="erp-detail-tab active">수신처 ({recipients.length})</span>
           </div>
           <div className="erp-detail-body">
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -245,6 +245,46 @@ export async function OfficialDocumentDetailPanel({
                   )}
                 </tbody>
               </table>
+            </div>
+
+            <div className="erp-row-card-list">
+              {recipients.map((r) => {
+                const rStatus = resolveStatusLabel(RECIPIENT_STATUS_LABEL, r.status);
+                return (
+                  <div className="erp-row-card" key={r.id}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{r.name}</span>
+                      <GridBadge tone={rStatus.tone}>{rStatus.label}</GridBadge>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>구분</dt>
+                        <dd>{r.kind === "external" ? "외부" : "사내"}</dd>
+                      </div>
+                      <div>
+                        <dt>이메일</dt>
+                        <dd>{r.email ?? "-"}</dd>
+                      </div>
+                      {r.bounce_reason && (
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <dt>발송실패 사유</dt>
+                          <dd style={{ color: "var(--erp-danger)" }}>{r.bounce_reason}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    {allowManage && doc.status === "sent" && (r.status === "pending" || r.status === "bounced") && (
+                      <div style={{ marginTop: 4 }}>
+                        <RecipientManualDeliverButton
+                          recipientId={r.id}
+                          officialDocumentId={doc.id}
+                          action={markRecipientDeliveredManually}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {recipients.length === 0 && <p className="erp-grid-empty">수신처가 없습니다.</p>}
             </div>
           </div>
         </div>

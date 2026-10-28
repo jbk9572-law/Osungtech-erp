@@ -87,7 +87,7 @@ export default async function LeaveBalancesPage() {
         줄 수 있습니다.
       </PageGuide>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -129,6 +129,45 @@ export default async function LeaveBalancesPage() {
           </tbody>
         </table>
       </div>
+      <div className="erp-row-card-list">
+        {rows.map(({ profile: p, totalDays, usedDays, remaining, suggestedDays }) => (
+          <div className="erp-row-card" key={p.id}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">{p.full_name || "구성원"}</span>
+            </div>
+            <dl className="erp-order-item-fields">
+              <div>
+                <dt>사용</dt>
+                <dd>{usedDays}</dd>
+              </div>
+              <div>
+                <dt>잔여</dt>
+                <dd>{remaining}</dd>
+              </div>
+            </dl>
+            <div style={{ marginTop: 4 }}>
+              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>입사일</div>
+              <HireDateForm action={setHireDate} userId={p.id} hireDate={p.hire_date} />
+            </div>
+            <div style={{ marginTop: 4 }}>
+              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                {year}년 연차 총일수
+              </div>
+              <LeaveBalanceForm
+                action={setLeaveBalance}
+                userId={p.id}
+                year={year}
+                totalDays={totalDays}
+                suggestedDays={suggestedDays}
+              />
+            </div>
+            <div style={{ marginTop: 4 }}>
+              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>추가 부여</div>
+              <LeaveGrantForm action={grantExtraLeave} userId={p.id} year={year} />
+            </div>
+          </div>
+        ))}
+      </div>
 
       <h2 className="mb-2 mt-6 text-sm font-bold text-[var(--erp-text)]">연차 사용촉진 대상</h2>
       <PageGuide>
@@ -140,7 +179,7 @@ export default async function LeaveBalancesPage() {
       {promotionTargets.length === 0 ? (
         <p className="erp-grid-empty">지금 시점에 촉진 통지가 필요한 구성원이 없습니다.</p>
       ) : (
-        <div className="erp-grid-wrap">
+        <div className="erp-grid-wrap has-card-view">
           <table className="erp-grid">
             <thead>
               <tr>
@@ -189,6 +228,58 @@ export default async function LeaveBalancesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {promotionTargets.length > 0 && (
+        <div className="erp-row-card-list">
+          {promotionTargets.map(({ profile: p, remaining, window }) => (
+            <div className="erp-row-card" key={p.id}>
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">{p.full_name || "구성원"}</span>
+                <span className="erp-row-card-date">잔여 {remaining}일</span>
+              </div>
+              <dl className="erp-order-item-fields">
+                <div>
+                  <dt>사용기한</dt>
+                  <dd>{window!.expiryDate}</dd>
+                </div>
+              </dl>
+              <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                    1차 (기한 6개월 전)
+                  </div>
+                  <LeavePromotionButton
+                    action={sendLeavePromotionNotice}
+                    userId={p.id}
+                    year={year}
+                    stage={1}
+                    remainingDays={remaining}
+                    sentAt={noticeByUserStage.get(`${p.id}:1`) ?? null}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                    2차 (기한 2개월 전)
+                  </div>
+                  {window!.secondNoticeDate <= today ? (
+                    <LeavePromotionButton
+                      action={sendLeavePromotionNotice}
+                      userId={p.id}
+                      year={year}
+                      stage={2}
+                      remainingDays={remaining}
+                      sentAt={noticeByUserStage.get(`${p.id}:2`) ?? null}
+                    />
+                  ) : (
+                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                      {window!.secondNoticeDate}부터
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

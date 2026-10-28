@@ -101,7 +101,7 @@ export default async function CustomerOrdersPage({
                 </span>
               </div>
 
-              <div className="erp-grid-wrap" style={{ marginBottom: 8 }}>
+              <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 8 }}>
                 <table className="erp-grid">
                 <thead>
                   <tr>
@@ -169,6 +169,75 @@ export default async function CustomerOrdersPage({
                   })}
                 </tbody>
                 </table>
+              </div>
+
+              <div className="erp-row-card-list" style={{ marginBottom: 8 }}>
+                {items.map((item) => {
+                  const manufactured = manufacturedProductIds.has(item.product_id);
+                  const itemConverted = Boolean(item.work_order_id || item.sales_order_id);
+                  return (
+                    <div className="erp-row-card" key={item.id}>
+                      <div className="erp-row-card-head">
+                        <span className="erp-row-card-partner">
+                          {item.products?.sku} · {item.products?.name}
+                        </span>
+                      </div>
+                      <div className="erp-row-card-badges">
+                        {activeTab === "approved" && (
+                          <span className={`erp-badge ${manufactured ? "erp-badge-info" : "erp-badge-muted"}`}>
+                            {manufactured ? "제조품" : "사입품"}
+                          </span>
+                        )}
+                        {itemConverted && (
+                          <span className="erp-badge erp-badge-success">
+                            {item.work_order_id
+                              ? `생산지시 연결됨(${item.work_orders?.status === "completed" ? "생산완료" : item.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`
+                              : "판매로 연결됨"}
+                          </span>
+                        )}
+                      </div>
+                      <dl className="erp-order-item-fields">
+                        <div>
+                          <dt>규격</dt>
+                          <dd>{item.products?.spec ?? "-"}</dd>
+                        </div>
+                        <div>
+                          <dt>수량</dt>
+                          <dd>
+                            {formatNumber(Number(item.quantity))} {item.products?.unit}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>단가</dt>
+                          <dd>{formatNumber(Number(item.unit_price))}</dd>
+                        </div>
+                      </dl>
+                      {activeTab === "approved" && !allConverted && !itemConverted && (
+                        <div className="erp-row-card-foot">
+                          {manufactured ? (
+                            <ConvertToWorkOrderForm
+                              itemId={item.id}
+                              productId={item.product_id}
+                              quantity={Number(item.quantity)}
+                              warehouses={warehouses ?? []}
+                              today={todayKstStr()}
+                            />
+                          ) : (
+                            <ConvertToSaleForm
+                              itemId={item.id}
+                              customerId={o.customer_id}
+                              productId={item.product_id}
+                              quantity={Number(item.quantity)}
+                              unitPrice={Number(item.unit_price)}
+                              warehouses={warehouses ?? []}
+                              today={todayKstStr()}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {o.memo && (

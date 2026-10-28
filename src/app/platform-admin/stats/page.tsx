@@ -153,7 +153,7 @@ export default async function PlatformStatsPage() {
           {tenantUsage.length === 0 ? (
             <p className="erp-grid-empty">표시할 테넌트가 없습니다.</p>
           ) : (
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -185,6 +185,43 @@ export default async function PlatformStatsPage() {
                   </tr>
                 </tfoot>
               </table>
+            </div>
+          )}
+
+          {tenantUsage.length > 0 && (
+            <div className="erp-row-card-list">
+              {tenantUsage.map((row) => (
+                <div className="erp-row-card" key={row.tenant_id}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">{row.tenant_name}</span>
+                  </div>
+                  <dl className="erp-order-item-fields">
+                    <div>
+                      <dt>메일</dt>
+                      <dd>{formatNumber(row.email_sent_count)}</dd>
+                    </div>
+                    <div>
+                      <dt>팩스</dt>
+                      <dd>{formatNumber(row.fax_sent_count)}</dd>
+                    </div>
+                    <div>
+                      <dt>계산서</dt>
+                      <dd>{formatNumber(row.invoice_issued_count)}</dd>
+                    </div>
+                    <div>
+                      <dt>알림톡/문자</dt>
+                      <dd>{formatNumber(row.alimtalk_sent_count)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+                <span>합계</span>
+                <span className="erp-row-card-amount" style={{ fontSize: "var(--erp-font-sm)" }}>
+                  메일 {formatNumber(usageTotals.email)} · 팩스 {formatNumber(usageTotals.fax)} · 계산서{" "}
+                  {formatNumber(usageTotals.invoice)} · 알림톡/문자 {formatNumber(usageTotals.alimtalk)}
+                </span>
+              </div>
             </div>
           )}
         </div>

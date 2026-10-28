@@ -125,7 +125,7 @@ export async function PurchaseRequestDetailPanel({
         </p>
       )}
 
-      <div className="erp-grid-wrap" style={{ marginBottom: 16 }}>
+      <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 16 }}>
         <table className="erp-grid">
           <thead>
             <tr>
@@ -161,6 +161,52 @@ export async function PurchaseRequestDetailPanel({
             </tr>
           </tfoot>
         </table>
+      </div>
+
+      <div className="erp-row-card-list" style={{ marginBottom: 16 }}>
+        {(items ?? []).length === 0 ? (
+          <p className="erp-grid-empty">등록된 품목이 없습니다.</p>
+        ) : (
+          <>
+            {(items ?? []).map((item) => (
+              <div className="erp-row-card" key={item.id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{item.products?.name ?? "-"}</span>
+                </div>
+                <dl className="erp-order-item-fields">
+                  <div>
+                    <dt>규격</dt>
+                    <dd>{item.spec ?? "-"}</dd>
+                  </div>
+                  <div>
+                    <dt>수량</dt>
+                    <dd>{formatNumber(Number(item.quantity))}</dd>
+                  </div>
+                  <div>
+                    <dt>예상단가</dt>
+                    <dd>{formatNumber(Number(item.estimated_unit_price))}</dd>
+                  </div>
+                  <div>
+                    <dt>예상금액</dt>
+                    <dd style={{ fontWeight: 700 }}>
+                      {formatNumber(Number(item.quantity) * Number(item.estimated_unit_price))}
+                    </dd>
+                  </div>
+                  {item.remark && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <dt>비고</dt>
+                      <dd>{item.remark}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+            ))}
+            <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <span>합계</span>
+              <span className="erp-row-card-amount">{formatNumber(total)}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {allowManage && row.status === "draft" && (

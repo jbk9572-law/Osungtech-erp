@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
 import { CreateUserForm } from "@/components/create-user-form";
@@ -59,7 +60,7 @@ export default async function UsersSettingsPage() {
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -97,6 +98,31 @@ export default async function UsersSettingsPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {(profiles ?? []).map((row) => (
+          <Link key={row.id} href={`/settings/users/${row.id}`} className="erp-row-card">
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">{row.full_name ?? "-"}</span>
+              <span className="erp-row-card-date">{new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
+            </div>
+            <dl className="erp-order-item-fields">
+              <div>
+                <dt>아이디</dt>
+                <dd>{row.username ?? "-"}</dd>
+              </div>
+              <div>
+                <dt>이메일</dt>
+                <dd>{row.email ?? "-"}</dd>
+              </div>
+            </dl>
+            <div>
+              <UserRoleSelect userId={row.id} role={row.role} disabled={row.id === userId} />
+            </div>
+          </Link>
+        ))}
+        {!profiles?.length && <p className="erp-grid-empty">등록된 계정이 없습니다.</p>}
       </div>
       <PageGuide className="mt-2">
         {Object.entries(ROLE_LABELS)

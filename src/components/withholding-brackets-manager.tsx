@@ -37,7 +37,7 @@ export function WithholdingBracketsManager({
         {totalCount > brackets.length && "아래 검색으로 원하는 구간을 찾을 수 있습니다."}
       </p>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -89,6 +89,42 @@ export function WithholdingBracketsManager({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {brackets.map((b) => (
+          <div className="erp-row-card" key={b.id}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">
+                {formatNumber(b.salary_from)} ~ {b.salary_to === null ? "이상 전부" : formatNumber(b.salary_to)}
+              </span>
+            </div>
+            <dl className="erp-order-item-fields">
+              {Array.from({ length: 11 }, (_, i) => i + 1).map((n) => (
+                <div key={n}>
+                  <dt>부양가족 {n}명</dt>
+                  <dd>{formatNumber(b[`dependents_${n}` as keyof WithholdingBracketValues] as number)}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="erp-row-card-foot">
+              <button
+                type="button"
+                onClick={() => setEditingId(b.id ?? null)}
+                className="erp-btn"
+                style={{ minWidth: 0, height: 28, padding: "0 10px" }}
+              >
+                수정
+              </button>
+              <DeleteButton action={deleteAction} id={b.id ?? ""} confirmMessage="이 구간을 삭제하시겠습니까?" />
+            </div>
+          </div>
+        ))}
+        {brackets.length === 0 && (
+          <p className="erp-grid-empty">
+            등록된 간이세액표 구간이 없습니다. 위 CSV 업로드나 구간 추가로 먼저 등록해주세요.
+          </p>
+        )}
       </div>
     </div>
   );

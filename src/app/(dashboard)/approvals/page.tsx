@@ -124,42 +124,72 @@ export default async function ApprovalsPage({
         {!drafts || drafts.length === 0 ? (
           <p className="erp-grid-empty">임시저장된 문서가 없습니다.</p>
         ) : (
-          <div className="erp-grid-wrap">
-            <table className="erp-grid">
-              <thead>
-                <tr>
-                  <th style={{ width: 130 }}>마지막 저장</th>
-                  <th>제목</th>
-                  <th style={{ width: 190 }} />
-                </tr>
-              </thead>
-              <tbody>
-                {drafts.map((d) => (
-                  <tr key={d.id}>
-                    <td>{new Date(d.created_at).toLocaleString("ko-KR")}</td>
-                    <td>{d.title || "(제목 없음)"}</td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <Link
-                          href={`/approvals/new?draft=${d.id}`}
-                          className="erp-btn erp-btn-primary"
-                          style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
-                        >
-                          이어 쓰기
-                        </Link>
-                        <InlineConfirmDelete
-                          action={deleteApprovalDraft}
-                          hiddenFields={{ id: d.id }}
-                          warningText="이 임시저장 문서를 삭제하시겠습니까?"
-                          triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
-                        />
-                      </div>
-                    </td>
+          <>
+            <div className="erp-grid-wrap has-card-view">
+              <table className="erp-grid">
+                <thead>
+                  <tr>
+                    <th style={{ width: 130 }}>마지막 저장</th>
+                    <th>제목</th>
+                    <th style={{ width: 190 }} />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {drafts.map((d) => (
+                    <tr key={d.id}>
+                      <td>{new Date(d.created_at).toLocaleString("ko-KR")}</td>
+                      <td>{d.title || "(제목 없음)"}</td>
+                      <td>
+                        <div className="flex items-center gap-1">
+                          <Link
+                            href={`/approvals/new?draft=${d.id}`}
+                            className="erp-btn erp-btn-primary"
+                            style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
+                          >
+                            이어 쓰기
+                          </Link>
+                          <InlineConfirmDelete
+                            action={deleteApprovalDraft}
+                            hiddenFields={{ id: d.id }}
+                            warningText="이 임시저장 문서를 삭제하시겠습니까?"
+                            triggerStyle={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11 }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="erp-row-card-list">
+              {drafts.map((d) => (
+                <div className="erp-row-card" key={d.id}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">{d.title || "(제목 없음)"}</span>
+                  </div>
+                  <div className="erp-row-card-item">
+                    마지막 저장 {new Date(d.created_at).toLocaleString("ko-KR")}
+                  </div>
+                  <div className="erp-row-card-foot">
+                    <Link
+                      href={`/approvals/new?draft=${d.id}`}
+                      className="erp-btn erp-btn-primary"
+                      style={{ minWidth: 0, height: 28, padding: "0 10px" }}
+                    >
+                      이어 쓰기
+                    </Link>
+                    <InlineConfirmDelete
+                      action={deleteApprovalDraft}
+                      hiddenFields={{ id: d.id }}
+                      warningText="이 임시저장 문서를 삭제하시겠습니까?"
+                      triggerStyle={{ minWidth: 0, height: 28, padding: "0 10px" }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     );

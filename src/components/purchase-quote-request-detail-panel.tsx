@@ -79,7 +79,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
         </p>
       )}
 
-      <div className="erp-grid-wrap" style={{ marginBottom: 16 }}>
+      <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 16 }}>
         <table className="erp-grid">
           <thead>
             <tr>
@@ -120,6 +120,45 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list" style={{ marginBottom: 16 }}>
+        {!items?.length ? (
+          <p className="erp-grid-empty">견적 요청 품목이 없습니다.</p>
+        ) : (
+          (items ?? []).map((item) => (
+            <div className="erp-row-card" key={item.id}>
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">{item.products?.name ?? "-"}</span>
+              </div>
+              <dl className="erp-order-item-fields">
+                <div>
+                  <dt>규격</dt>
+                  <dd>{item.spec ?? "-"}</dd>
+                </div>
+                <div>
+                  <dt>수량</dt>
+                  <dd>{formatNumber(Number(item.quantity))}</dd>
+                </div>
+                {targetSuppliers.map((s) => {
+                  const price = priceByItemAndSupplier.get(`${item.id}:${s.id}`);
+                  return (
+                    <div key={s.id}>
+                      <dt>{s.name}</dt>
+                      <dd>{price !== undefined ? formatNumber(price) : "-"}</dd>
+                    </div>
+                  );
+                })}
+                {item.remark && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <dt>비고</dt>
+                    <dd>{item.remark}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          ))
+        )}
       </div>
 
       {request.status === "closed" ? (

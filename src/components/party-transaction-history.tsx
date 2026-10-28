@@ -125,7 +125,7 @@ export function PartyTransactionHistory({
             />
           </div>
         )}
-        <div className="erp-grid-wrap">
+        <div className="erp-grid-wrap has-card-view">
           <table className="erp-grid">
             <thead>
               <tr>
@@ -165,6 +165,33 @@ export function PartyTransactionHistory({
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="erp-row-card-list">
+          {rows.map((r) => (
+            <div className="erp-row-card" key={r.id}>
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <GridBadge tone={r.kind === positiveKind ? "info" : "muted"}>
+                    {kindLabels[r.kind] ?? r.kind}
+                  </GridBadge>
+                </span>
+                <span className="erp-row-card-date">{r.date.replaceAll("-", ".")}</span>
+              </div>
+              <div className="erp-row-card-item">{r.label}</div>
+              <dl className="erp-order-item-fields">
+                <div>
+                  <dt>합계</dt>
+                  <dd style={{ fontWeight: 700 }}>{formatNumber(r.total)}</dd>
+                </div>
+                <div>
+                  <dt>잔액</dt>
+                  <dd>{formatNumber(r.balance)}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+          {!loading && rows.length === 0 && <p className="erp-grid-empty">조회된 내역이 없습니다.</p>}
         </div>
         <PageGuide className="mt-2">조회용입니다 — 실제 정산은 오래된 미결제 전표부터 자동으로 상계됩니다.</PageGuide>
       </div>

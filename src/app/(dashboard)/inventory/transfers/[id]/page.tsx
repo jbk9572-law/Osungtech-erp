@@ -67,7 +67,7 @@ export default async function StockTransferDetailPage({
         </p>
       )}
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -97,6 +97,35 @@ export default async function StockTransferDetailPage({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {(items ?? []).map((item) => (
+          <div className="erp-row-card" key={item.id}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">{item.products?.name ?? "-"}</span>
+            </div>
+            <dl className="erp-order-item-fields">
+              <div>
+                <dt>규격</dt>
+                <dd>{item.products?.spec ?? "-"}</dd>
+              </div>
+              <div>
+                <dt>수량</dt>
+                <dd>
+                  {formatNumber(Number(item.quantity))} {item.products?.unit ?? ""}
+                </dd>
+              </div>
+              {item.remark && (
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <dt>비고</dt>
+                  <dd>{item.remark}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        ))}
+        {!items?.length && <p className="erp-grid-empty">이동 품목이 없습니다.</p>}
       </div>
     </div>
   );

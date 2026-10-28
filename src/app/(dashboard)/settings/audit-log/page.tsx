@@ -434,7 +434,7 @@ export default async function AuditLogPage({
         최근 {formatNumber(limit)}건까지 표시 중{hasMore ? " — 더 있을 수 있습니다." : "."}
       </PageGuide>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -478,6 +478,36 @@ export default async function AuditLogPage({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {viewRows.map((row) => (
+          <div className="erp-row-card" key={row.id}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">{row.target}</span>
+              <GridBadge tone={row.actionTone}>{row.actionLabel}</GridBadge>
+            </div>
+            <dl className="erp-order-item-fields">
+              <div>
+                <dt>일시</dt>
+                <dd>{new Date(row.createdAt).toLocaleString("ko-KR")}</dd>
+              </div>
+              <div>
+                <dt>구분</dt>
+                <dd>{row.tableLabel}</dd>
+              </div>
+              <div>
+                <dt>작성자</dt>
+                <dd>{row.author}</dd>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <dt>변경 내용</dt>
+                <dd style={{ wordBreak: "break-all" }}>{row.summary}</dd>
+              </div>
+            </dl>
+          </div>
+        ))}
+        {!viewRows.length && <p className="erp-grid-empty">변경 이력이 없습니다.</p>}
       </div>
 
       {hasMore && (

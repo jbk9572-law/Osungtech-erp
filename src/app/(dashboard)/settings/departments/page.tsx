@@ -106,7 +106,7 @@ export default async function DepartmentsPage() {
 
       <div style={{ marginTop: 14 }}>
         <FormSection tabLabel="구성원 배치">
-          <div className="erp-grid-wrap">
+          <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -131,6 +131,24 @@ export default async function DepartmentsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="erp-row-card-list">
+            {employees.map((e) => (
+              <div className="erp-row-card" key={e.id}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{e.full_name || "구성원"}</span>
+                </div>
+                <EmployeeDepartmentForm
+                  action={setEmployeeDepartment}
+                  userId={e.id}
+                  departmentId={e.department_id}
+                  positionTitle={e.position_title}
+                  departments={departments}
+                />
+              </div>
+            ))}
+            {!employees.length && <p className="erp-grid-empty">구성원이 없습니다.</p>}
           </div>
         </FormSection>
       </div>

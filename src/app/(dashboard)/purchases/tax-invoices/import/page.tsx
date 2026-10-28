@@ -48,7 +48,7 @@ export default async function PurchaseTaxInvoiceImportPage() {
         </p>
       )}
 
-      <div className="erp-grid-wrap" style={{ marginTop: 14 }}>
+      <div className="erp-grid-wrap has-card-view" style={{ marginTop: 14 }}>
         <table className="erp-grid">
           <thead>
             <tr>
@@ -86,6 +86,37 @@ export default async function PurchaseTaxInvoiceImportPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list" style={{ marginTop: 14 }}>
+        {rows.map((r) => (
+          <div className="erp-row-card" key={r.id}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">{r.supplier_name}</span>
+              <span className="erp-row-card-date">{new Date(r.issue_date).toLocaleDateString("ko-KR")}</span>
+            </div>
+            <dl className="erp-order-item-fields">
+              <div>
+                <dt>승인번호</dt>
+                <dd>{r.hometax_approval_number}</dd>
+              </div>
+              <div>
+                <dt>합계금액</dt>
+                <dd>{formatNumber(r.total_amount)}</dd>
+              </div>
+            </dl>
+            <div className="erp-row-card-foot">
+              {r.purchase_order_id ? (
+                <Link href={`/purchases/${r.purchase_order_id}`} style={{ color: "inherit" }}>
+                  <GridBadge tone="ok">✓ 매칭됨</GridBadge>
+                </Link>
+              ) : (
+                <GridBadge tone="danger">미매칭</GridBadge>
+              )}
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 && <p className="erp-grid-empty">가져온 매입세금계산서가 없습니다.</p>}
       </div>
     </div>
   );

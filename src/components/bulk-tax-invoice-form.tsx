@@ -76,7 +76,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
         </div>
       )}
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -129,6 +129,42 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
             </tfoot>
           )}
         </table>
+      </div>
+
+      <div className="erp-row-card-toolbar">
+        <label className="erp-row-card-checkbox">
+          <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="전체 선택" />
+          <span>전체 선택</span>
+        </label>
+      </div>
+      <div className="erp-row-card-list">
+        {orders.map((o) => (
+          <label className="erp-row-card" key={o.id} style={{ cursor: "pointer" }}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-checkbox">
+                <input
+                  type="checkbox"
+                  checked={selected.has(o.id)}
+                  onChange={() => toggleOne(o.id)}
+                  aria-label={`${o.docNo ?? o.id} 선택`}
+                />
+                <span className="erp-row-card-partner">{o.customerName ?? "-"}</span>
+              </span>
+              <span className="erp-row-card-date">{new Date(o.date).toLocaleDateString("ko-KR")}</span>
+            </div>
+            <div className="erp-row-card-foot">
+              <span style={{ color: "var(--erp-text-muted)" }}>전표번호 {o.docNo ?? "-"}</span>
+              <span className="erp-row-card-amount">{formatNumber(o.supplyAmount)}</span>
+            </div>
+          </label>
+        ))}
+        {orders.length === 0 && <p className="erp-grid-empty">세금계산서 발행 대상인 매출 건이 없습니다.</p>}
+        {orders.length > 0 && (
+          <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+            <span>선택 {selected.size}건 합계</span>
+            <span className="erp-row-card-amount">{formatNumber(selectedTotal)}</span>
+          </div>
+        )}
       </div>
     </form>
   );

@@ -464,7 +464,7 @@ export function InventoryQrScanner({
             총 {totalScanned}건 스캔 · 불일치 {scanState.mismatches.length}건
           </p>
           {scanState.mismatches.length > 0 && (
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -498,6 +498,39 @@ export function InventoryQrScanner({
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {scanState.mismatches.length > 0 && (
+            <div className="erp-row-card-list">
+              {scanState.mismatches.map((m) => {
+                const product = products.find((p) => p.productId === m.productId);
+                const diff = m.countedQuantity - m.systemQuantity;
+                return (
+                  <div className="erp-row-card" key={m.productId}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{product?.name ?? m.productId}</span>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>전산</dt>
+                        <dd>{formatNumber(m.systemQuantity)}</dd>
+                      </div>
+                      <div>
+                        <dt>실사</dt>
+                        <dd>{formatNumber(m.countedQuantity)}</dd>
+                      </div>
+                      <div>
+                        <dt>차이</dt>
+                        <dd style={{ fontWeight: 700, color: diff > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}>
+                          {diff > 0 ? "+" : ""}
+                          {formatNumber(diff)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                );
+              })}
             </div>
           )}
 

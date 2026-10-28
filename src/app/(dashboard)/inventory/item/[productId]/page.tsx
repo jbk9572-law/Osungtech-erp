@@ -220,7 +220,7 @@ export default async function InventoryProductHistoryPage({
             )}
           </div>
           <div className="erp-detail-body">
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -249,6 +249,25 @@ export default async function InventoryProductHistoryPage({
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="erp-row-card-list">
+              {countAdjustments.map((t) => (
+                <div className="erp-row-card" key={t.id}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">{new Date(t.date).toLocaleDateString("ko-KR")}</span>
+                    <span
+                      className="erp-row-card-amount"
+                      style={{ color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
+                    >
+                      {t.signedQty > 0 ? "+" : ""}
+                      {formatNumber(t.signedQty)}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)" }}>
+                    {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -299,7 +318,7 @@ export default async function InventoryProductHistoryPage({
         재고 잔량은 조회기간 시작 시점의 누적 재고(이월)부터 정확히 반영됩니다.
       </PageGuide>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -370,6 +389,64 @@ export default async function InventoryProductHistoryPage({
             )}
           </tbody>
         </table>
+      </div>
+      <div className="erp-row-card-list">
+        {rows.map((row) => {
+          const isIn = row.signedQty > 0;
+          const note = row.correctionNote ?? row.note;
+          const body = (
+            <>
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">{row.partnerName ?? "-"}</span>
+                <span className="erp-row-card-date">{new Date(row.date).toLocaleDateString("ko-KR")}</span>
+              </div>
+              <dl className="erp-order-item-fields">
+                <div>
+                  <dt>{isIn ? "입고" : "출고"}</dt>
+                  <dd style={{ fontWeight: 700, color: isIn ? "var(--erp-success)" : "var(--erp-danger)" }}>
+                    {formatNumber(Math.abs(row.signedQty))}
+                  </dd>
+                </div>
+                <div>
+                  <dt>재고 잔량</dt>
+                  <dd>
+                    <QtyWithBoxes quantity={row.balance} basePackageQty={product.base_package_qty} />
+                  </dd>
+                </div>
+                <div>
+                  <dt>관리번호</dt>
+                  <dd>
+                    {row.lotNumber ? (
+                      <span className="erp-badge erp-badge-muted">{row.lotNumber}</span>
+                    ) : (
+                      "-"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>작성자</dt>
+                  <dd>{row.authorName ?? "-"}</dd>
+                </div>
+                {note && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <dt>비고</dt>
+                    <dd>{note}</dd>
+                  </div>
+                )}
+              </dl>
+            </>
+          );
+          return row.href ? (
+            <Link key={row.id} href={row.href} className="erp-row-card">
+              {body}
+            </Link>
+          ) : (
+            <div key={row.id} className="erp-row-card">
+              {body}
+            </div>
+          );
+        })}
+        {!rows.length && <p className="erp-grid-empty">조건에 맞는 입출고 내역이 없습니다.</p>}
       </div>
     </div>
   );

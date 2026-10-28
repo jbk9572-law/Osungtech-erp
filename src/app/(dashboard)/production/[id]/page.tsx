@@ -193,7 +193,7 @@ export default async function WorkOrderDetailPage({
         </div>
         <div className="erp-detail-body">
           {steps && steps.length > 0 ? (
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -272,7 +272,89 @@ export default async function WorkOrderDetailPage({
                 </tbody>
               </table>
             </div>
-          ) : (
+          ) : null}
+          {steps && steps.length > 0 && (
+            <div className="erp-row-card-list">
+              {steps.map((s, idx) => {
+                const prev = idx > 0 ? steps[idx - 1] : null;
+                const prevLabel = prev
+                  ? prev.assignee_kind === "subcontractor"
+                    ? (prev.subcontractors?.name ?? "업체")
+                    : "사내"
+                  : null;
+                return (
+                  <div className="erp-row-card" key={s.id}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">
+                        {s.sort_order}. {s.process_name}
+                      </span>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>이전 담당</dt>
+                        <dd>{prevLabel ?? "-"}</dd>
+                      </div>
+                      <div>
+                        <dt>불량/반품</dt>
+                        <dd style={{ color: Number(s.defect_quantity) > 0 || Number(s.returned_quantity) > 0 ? "var(--erp-danger)" : undefined }}>
+                          {Number(s.defect_quantity) > 0 && <div>불량 {formatNumber(Number(s.defect_quantity))}</div>}
+                          {Number(s.returned_quantity) > 0 && <div>반품 {formatNumber(Number(s.returned_quantity))}</div>}
+                          {!(Number(s.defect_quantity) > 0) && !(Number(s.returned_quantity) > 0) && "-"}
+                        </dd>
+                      </div>
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <dt>담당</dt>
+                        <dd>
+                          <WorkOrderProcessStepAssignCell
+                            id={s.id}
+                            workOrderId={workOrder.id}
+                            status={s.status}
+                            subcontractorId={s.subcontractor_id}
+                            hasPortalAccount={s.subcontractor_id ? subcontractorsWithAccount.has(s.subcontractor_id) : true}
+                            subcontractors={subcontractors ?? []}
+                          />
+                        </dd>
+                      </div>
+                      {s.assignee_kind === "subcontractor" && (
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <dt>단가</dt>
+                          <dd>
+                            <WorkOrderStepUnitCostForm
+                              id={s.id}
+                              workOrderId={workOrder.id}
+                              unitCost={s.unit_cost != null ? Number(s.unit_cost) : null}
+                            />
+                          </dd>
+                        </div>
+                      )}
+                    </dl>
+                    <div className="erp-row-card-foot" style={{ flexWrap: "wrap" }}>
+                      {s.defect_hold ? (
+                        <>
+                          <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
+                          <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
+                          <WorkOrderStepDefectRejectButton id={s.id} workOrderId={workOrder.id} />
+                        </>
+                      ) : (
+                        <>
+                          <WorkOrderProcessStepActions
+                            id={s.id}
+                            workOrderId={workOrder.id}
+                            status={s.status}
+                            defectHold={s.defect_hold}
+                          />
+                          {s.assignee_kind === "subcontractor" && ["done", "shipped"].includes(s.status) && (
+                            <WorkOrderStepReturnForm id={s.id} workOrderId={workOrder.id} />
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {!(steps && steps.length > 0) && (
             <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
               이 완제품에 등록된 공정 라우팅이 없어 체크리스트가 없습니다.
               (품목관리에서 공정 라우팅을 등록하면 다음 생산지시부터

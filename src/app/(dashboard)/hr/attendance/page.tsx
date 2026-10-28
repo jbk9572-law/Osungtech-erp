@@ -264,7 +264,7 @@ export default async function AttendancePage() {
               넘긴 사람은 즉시, 48시간 이상인 사람은 이번 주가 끝나기 전에
               확인해주세요.
             </PageGuide>
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -293,6 +293,25 @@ export default async function AttendancePage() {
                 </tbody>
               </table>
             </div>
+            <div className="erp-row-card-list">
+              {teamWarnings.map(({ userId, hours }) => {
+                const tone = weeklyHoursTone(hours);
+                return (
+                  <div className="erp-row-card" key={userId}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{profileNameById[userId] ?? "구성원"}</span>
+                      <GridBadge tone={tone === "danger" ? "danger" : "warn"}>
+                        {tone === "danger" ? "52시간 초과" : "초과 주의"}
+                      </GridBadge>
+                    </div>
+                    <div className="erp-row-card-foot">
+                      <span style={{ color: "var(--erp-text-muted)" }}>이번주 근무시간</span>
+                      <span className="erp-row-card-amount">{formatNumber(hours)}시간</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -303,7 +322,7 @@ export default async function AttendancePage() {
             <span className="erp-detail-tab active">결재 대기 휴가 신청 (레거시 · 결재선 없음)</span>
           </div>
           <div className="erp-detail-body">
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -338,6 +357,38 @@ export default async function AttendancePage() {
                 </tbody>
               </table>
             </div>
+            <div className="erp-row-card-list">
+              {(pendingLeaves ?? []).map((l) => (
+                <div className="erp-row-card" key={l.id}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">{l.profiles?.full_name ?? "-"}</span>
+                    <span className="erp-row-card-date">{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</span>
+                  </div>
+                  <dl className="erp-order-item-fields">
+                    <div>
+                      <dt>기간</dt>
+                      <dd>
+                        {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>일수</dt>
+                      <dd>{formatNumber(Number(l.days))}</dd>
+                    </div>
+                    {l.reason && (
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <dt>사유</dt>
+                        <dd>{l.reason}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <div className="flex gap-1" style={{ marginTop: 4 }}>
+                    <LeaveDecisionButton id={l.id} decision="approved" action={decideLeaveRequest} />
+                    <LeaveDecisionButton id={l.id} decision="rejected" action={decideLeaveRequest} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -352,7 +403,8 @@ export default async function AttendancePage() {
               신청 내역이 없습니다.
             </p>
           ) : (
-            <div className="erp-grid-wrap">
+            <>
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -409,6 +461,61 @@ export default async function AttendancePage() {
                 </tbody>
               </table>
             </div>
+            <div className="erp-row-card-list">
+              {(myLeaves ?? []).map((l) => {
+                const status = resolveStatusLabel(STATUS_LABEL, l.status);
+                return (
+                  <div className="erp-row-card" key={l.id}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">
+                        {l.start_date.replaceAll("-", ".")} ~ {l.end_date.replaceAll("-", ".")}
+                      </span>
+                      <GridBadge tone={status.tone}>{status.label}</GridBadge>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>구분</dt>
+                        <dd>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</dd>
+                      </div>
+                      <div>
+                        <dt>일수</dt>
+                        <dd>{formatNumber(Number(l.days))}</dd>
+                      </div>
+                      {l.reason && (
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <dt>사유</dt>
+                          <dd>{l.reason}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    {(l.approval_document_id || l.status === "pending") && (
+                      <div className="flex items-center gap-1" style={{ marginTop: 4 }}>
+                        {l.approval_document_id && (
+                          <Link
+                            href={`/approvals/${l.approval_document_id}`}
+                            className="erp-btn"
+                            style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                          >
+                            결재 문서
+                          </Link>
+                        )}
+                        {l.status === "pending" && (
+                          <InlineConfirmDelete
+                            action={cancelLeaveRequest}
+                            hiddenFields={{ id: l.id }}
+                            warningText="이 휴가 신청을 취소하시겠습니까? 결재선이 연결된 신청이면 기안 문서도 함께 회수됩니다."
+                            triggerLabel="취소"
+                            triggerClassName="erp-btn"
+                            triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
         </div>
       </div>
@@ -423,7 +530,8 @@ export default async function AttendancePage() {
               신청 내역이 없습니다.
             </p>
           ) : (
-            <div className="erp-grid-wrap">
+            <>
+            <div className="erp-grid-wrap has-card-view">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -476,6 +584,57 @@ export default async function AttendancePage() {
                 </tbody>
               </table>
             </div>
+            <div className="erp-row-card-list">
+              {(myCorrections ?? []).map((c) => {
+                const status = resolveStatusLabel(STATUS_LABEL, c.status);
+                return (
+                  <div className="erp-row-card" key={c.id}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{c.work_date.replaceAll("-", ".")}</span>
+                      <GridBadge tone={status.tone}>{status.label}</GridBadge>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>정정 출근</dt>
+                        <dd>{fmtTime(c.requested_clock_in_at) ?? "-"}</dd>
+                      </div>
+                      <div>
+                        <dt>정정 퇴근</dt>
+                        <dd>{fmtTime(c.requested_clock_out_at) ?? "-"}</dd>
+                      </div>
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <dt>사유</dt>
+                        <dd>{c.reason}</dd>
+                      </div>
+                    </dl>
+                    {(c.approval_document_id || c.status === "pending") && (
+                      <div className="flex items-center gap-1" style={{ marginTop: 4 }}>
+                        {c.approval_document_id && (
+                          <Link
+                            href={`/approvals/${c.approval_document_id}`}
+                            className="erp-btn"
+                            style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                          >
+                            결재 문서
+                          </Link>
+                        )}
+                        {c.status === "pending" && (
+                          <InlineConfirmDelete
+                            action={cancelAttendanceCorrection}
+                            hiddenFields={{ id: c.id }}
+                            warningText="이 근태 정정 신청을 취소하시겠습니까? 연결된 기안 문서도 함께 회수됩니다."
+                            triggerLabel="취소"
+                            triggerClassName="erp-btn"
+                            triggerStyle={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
         </div>
       </div>

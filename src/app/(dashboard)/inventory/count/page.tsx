@@ -359,7 +359,7 @@ export default async function InventoryCountPage({
                 ⚠ 아래 품목은 화면의 전산 재고와 실제 거래이력 합계가 다릅니다 — 소프트웨어
                 계산/캐시 문제일 가능성이 있으니 실사보다 먼저 이 목록부터 확인하세요.
               </p>
-              <div className="erp-grid-wrap">
+              <div className="erp-grid-wrap has-card-view">
                 <table className="erp-grid">
                   <thead>
                     <tr>
@@ -392,6 +392,36 @@ export default async function InventoryCountPage({
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="erp-row-card-list">
+                {cacheMismatches.map((m) => (
+                  <div className="erp-row-card" key={m.sku}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{m.name}</span>
+                      <span className="erp-row-card-date">{m.sku}</span>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>규격</dt>
+                        <dd>{m.spec || "-"}</dd>
+                      </div>
+                      <div>
+                        <dt>화면 전산 재고</dt>
+                        <dd>{formatNumber(m.cached)}</dd>
+                      </div>
+                      <div>
+                        <dt>이력 합계(정답)</dt>
+                        <dd>{formatNumber(m.computed)}</dd>
+                      </div>
+                      <div>
+                        <dt>차이</dt>
+                        <dd style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
+                          {(m.cached - m.computed > 0 ? "+" : "") + formatNumber(m.cached - m.computed)}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                ))}
               </div>
             </>
           )}
@@ -435,51 +465,88 @@ export default async function InventoryCountPage({
                 </div>
 
                 {isSelected && (
-                  <div className="erp-grid-wrap" style={{ marginTop: 10 }}>
-                    <table className="erp-grid">
-                      <thead>
-                        <tr>
-                          <th>SKU</th>
-                          <th>품목명</th>
-                          <th>규격</th>
-                          <th className="num" style={{ width: 110 }}>
-                            이전 수량
-                          </th>
-                          <th className="num" style={{ width: 110 }}>
-                            조정 후
-                          </th>
-                          <th className="num" style={{ width: 90 }}>
-                            차이
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detailRows.map((row) => (
-                          <tr key={row.productId}>
-                            <td>{row.sku}</td>
-                            <td>{row.name}</td>
-                            <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
-                            <td className="num">
-                              {formatNumber(row.before)} {row.unit}
-                            </td>
-                            <td className="num">
-                              {formatNumber(row.after)} {row.unit}
-                            </td>
-                            <td
-                              className="num"
-                              style={{
-                                fontWeight: 700,
-                                color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)",
-                              }}
-                            >
-                              {row.delta > 0 ? "+" : ""}
-                              {formatNumber(row.delta)}
-                            </td>
+                  <>
+                    <div className="erp-grid-wrap has-card-view" style={{ marginTop: 10 }}>
+                      <table className="erp-grid">
+                        <thead>
+                          <tr>
+                            <th>SKU</th>
+                            <th>품목명</th>
+                            <th>규격</th>
+                            <th className="num" style={{ width: 110 }}>
+                              이전 수량
+                            </th>
+                            <th className="num" style={{ width: 110 }}>
+                              조정 후
+                            </th>
+                            <th className="num" style={{ width: 90 }}>
+                              차이
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {detailRows.map((row) => (
+                            <tr key={row.productId}>
+                              <td>{row.sku}</td>
+                              <td>{row.name}</td>
+                              <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
+                              <td className="num">
+                                {formatNumber(row.before)} {row.unit}
+                              </td>
+                              <td className="num">
+                                {formatNumber(row.after)} {row.unit}
+                              </td>
+                              <td
+                                className="num"
+                                style={{
+                                  fontWeight: 700,
+                                  color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)",
+                                }}
+                              >
+                                {row.delta > 0 ? "+" : ""}
+                                {formatNumber(row.delta)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="erp-row-card-list" style={{ marginTop: 10 }}>
+                      {detailRows.map((row) => (
+                        <div className="erp-row-card" key={row.productId}>
+                          <div className="erp-row-card-head">
+                            <span className="erp-row-card-partner">{row.name}</span>
+                            <span className="erp-row-card-date">{row.sku}</span>
+                          </div>
+                          <dl className="erp-order-item-fields">
+                            <div>
+                              <dt>규격</dt>
+                              <dd>{row.spec || "-"}</dd>
+                            </div>
+                            <div>
+                              <dt>이전 수량</dt>
+                              <dd>
+                                {formatNumber(row.before)} {row.unit}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>조정 후</dt>
+                              <dd>
+                                {formatNumber(row.after)} {row.unit}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>차이</dt>
+                              <dd style={{ fontWeight: 700, color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}>
+                                {row.delta > 0 ? "+" : ""}
+                                {formatNumber(row.delta)}
+                              </dd>
+                            </div>
+                          </dl>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
               <div className="text-[11px]" style={{ color: "var(--erp-text-muted)", flexShrink: 0 }}>

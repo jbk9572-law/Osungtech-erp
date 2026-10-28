@@ -80,7 +80,7 @@ export function TenantPointsPanel({
         <FormMessage state={state} />
       </form>
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -108,6 +108,24 @@ export function TenantPointsPanel({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {transactions.map((t) => (
+          <div className="erp-row-card" key={t.id}>
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">{new Date(t.created_at).toLocaleString("ko-KR")}</span>
+              <span
+                className="erp-row-card-amount"
+                style={{ color: t.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
+              >
+                {t.delta > 0 ? `+${t.delta}` : t.delta}
+              </span>
+            </div>
+            {t.reason && <div className="erp-row-card-item">{t.reason}</div>}
+          </div>
+        ))}
+        {!transactions.length && <p className="erp-grid-empty">지급/차감 내역이 없습니다.</p>}
       </div>
     </div>
   );

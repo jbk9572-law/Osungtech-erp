@@ -57,7 +57,7 @@ export function PortalAssignmentsGridTable({
 
   return (
     <>
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -101,6 +101,40 @@ export function PortalAssignmentsGridTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            className={`erp-row-card${row.id === activeKey ? " selected" : ""}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => setManualActiveKey(row.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setManualActiveKey(row.id);
+            }}
+          >
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">LOT {row.docNo}</span>
+              <span className="erp-row-card-date">{row.orderDate.replaceAll("-", ".")}</span>
+            </div>
+            <div className="erp-row-card-item">
+              {row.productName}
+              {row.productSpec ? ` · ${row.productSpec}` : ""}
+            </div>
+            <div className="erp-row-card-foot">
+              <span className="erp-row-card-qty">{formatNumber(row.quantity)}</span>
+              <span className="erp-badge erp-badge-muted">{WORK_ORDER_STATUS_LABEL[row.status] ?? row.status}</span>
+            </div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Link href={`${assignmentsHref}/${row.id}`} className="erp-btn erp-portal-action-btn" style={{ width: "100%", marginTop: 4 }}>
+                상세보기
+              </Link>
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 && <p className="erp-grid-empty">조회 기간에 배정된 공정이 없습니다.</p>}
       </div>
 
       <div className="erp-detail">

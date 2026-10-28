@@ -142,7 +142,7 @@ export default async function ReorderSuggestionsPage() {
                 </PageGuide>
               )}
             </div>
-            <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
+            <div className="erp-grid-wrap has-card-view" style={{ border: "none", borderRadius: 0 }}>
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -191,6 +191,48 @@ export default async function ReorderSuggestionsPage() {
                   </tr>
                 </tfoot>
               </table>
+            </div>
+            <div className="erp-row-card-list">
+              {group.rows.map((row) => (
+                <div className="erp-row-card" key={row.productId}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">{row.name}</span>
+                    <span className="erp-row-card-date">{row.sku}</span>
+                  </div>
+                  <dl className="erp-order-item-fields">
+                    <div>
+                      <dt>규격</dt>
+                      <dd>{row.spec || "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>현재재고</dt>
+                      <dd style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
+                        {formatNumber(row.quantity)} {row.unit ?? ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>안전재고</dt>
+                      <dd>
+                        {formatNumber(row.reorderPoint)} {row.unit ?? ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>제안수량</dt>
+                      <dd style={{ fontWeight: 700 }}>
+                        {formatNumber(row.suggestedQty)} {row.unit ?? ""}
+                      </dd>
+                    </div>
+                  </dl>
+                  <div className="erp-row-card-foot">
+                    <span style={{ color: "var(--erp-text-muted)" }}>예상 매입금액</span>
+                    <span className="erp-row-card-amount">{formatNumber(Math.round(row.suggestedQty * row.cost))}원</span>
+                  </div>
+                </div>
+              ))}
+              <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+                <span>예상 매입금액 합계</span>
+                <span className="erp-row-card-amount">{formatNumber(Math.round(totalEstimate))}원</span>
+              </div>
             </div>
           </div>
         );

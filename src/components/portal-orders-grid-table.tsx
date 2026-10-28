@@ -36,7 +36,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
 
   return (
     <>
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -82,6 +82,41 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="erp-row-card-list">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            className={`erp-row-card${row.id === activeKey ? " selected" : ""}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => setManualActiveKey(row.id)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setManualActiveKey(row.id);
+            }}
+          >
+            <div className="erp-row-card-head">
+              <span className="erp-row-card-partner">주문 {row.docNo}</span>
+              <span className="erp-row-card-date">{new Date(row.createdAt).toLocaleDateString("ko-KR")}</span>
+            </div>
+            <div className="erp-row-card-item">
+              품목 {row.itemCount}건{row.memo ? ` · ${row.memo}` : ""}
+            </div>
+            <div className="erp-row-card-foot">
+              <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
+                {row.progressLabel}
+              </span>
+              <span className="erp-row-card-amount">{formatNumber(row.totalAmount)}원</span>
+            </div>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn" style={{ width: "100%", marginTop: 4 }}>
+                상세보기
+              </Link>
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 && <p className="erp-grid-empty">조회 기간에 주문 내역이 없습니다.</p>}
       </div>
 
       <OrderDetailPanel

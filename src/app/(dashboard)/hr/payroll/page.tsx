@@ -162,7 +162,7 @@ export default async function PayrollPage({
               기본급으로 4대보험을, 부양가족 수로 간이세액표를 조회해 소득세를
               계산합니다(연장/야간수당은 포함되지 않습니다).
             </PageGuide>
-            <div className="erp-grid-wrap">
+            <div className="erp-grid-wrap has-card-view">
               <table
                 className="erp-grid"
                 style={{ tableLayout: "fixed", width: "100%", minWidth: PAY_SETTING_GRID_TOTAL_WIDTH }}
@@ -189,6 +189,21 @@ export default async function PayrollPage({
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="erp-row-card-list">
+              {profiles.map((p) => (
+                <div className="erp-row-card" key={p.id}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">{p.full_name || "구성원"}</span>
+                  </div>
+                  <EmployeePayForm
+                    action={setEmployeePaySetting}
+                    userId={p.id}
+                    monthlyBasePay={payByUser.get(p.id) ?? 0}
+                    dependentsCount={dependentsByUser.get(p.id) ?? 1}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -267,7 +282,8 @@ export default async function PayrollPage({
                 {payMonth} 급여명세가 없습니다. 위에서 생성해주세요.
               </p>
             ) : (
-              <div className="erp-grid-wrap">
+              <>
+              <div className="erp-grid-wrap has-card-view">
                 <table
                   className="erp-grid"
                   style={{ tableLayout: "fixed", width: "100%", minWidth: PAYSLIP_GRID_TOTAL_WIDTH }}
@@ -343,6 +359,65 @@ export default async function PayrollPage({
                   </tbody>
                 </table>
               </div>
+              <div className="erp-row-card-list">
+                {(payslips ?? []).map((p) => (
+                  <div className="erp-row-card" key={p.id}>
+                    <div className="erp-row-card-head">
+                      <span className="erp-row-card-partner">{p.profiles?.full_name ?? "-"}</span>
+                      <GridBadge tone={p.status === "confirmed" ? "ok" : "warn"}>
+                        {p.status === "confirmed" ? "확정" : "초안"}
+                      </GridBadge>
+                    </div>
+                    <dl className="erp-order-item-fields">
+                      <div>
+                        <dt>기본급</dt>
+                        <dd>{formatNumber(Number(p.base_pay))}</dd>
+                      </div>
+                      <div>
+                        <dt>소득세/지방세</dt>
+                        <dd>{formatNumber(Number(p.income_tax_deduction) + Number(p.local_income_tax_deduction))}</dd>
+                      </div>
+                      <div>
+                        <dt>공제합계</dt>
+                        <dd style={{ color: "var(--erp-danger)" }}>-{formatNumber(Number(p.total_deduction))}</dd>
+                      </div>
+                      <div>
+                        <dt>실지급액</dt>
+                        <dd style={{ fontWeight: 700 }}>{formatNumber(Number(p.net_pay))}</dd>
+                      </div>
+                    </dl>
+                    <div style={{ marginTop: 4 }}>
+                      <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                        성과금 / 특별상여금
+                      </div>
+                      {p.status === "draft" ? (
+                        <PayslipBonusForm
+                          id={p.id}
+                          action={setPayslipBonus}
+                          bonusPerformance={Number(p.bonus_performance)}
+                          bonusSpecial={Number(p.bonus_special)}
+                        />
+                      ) : (
+                        <span style={{ color: "var(--erp-text-muted)" }}>
+                          {formatNumber(Number(p.bonus_performance))} / {formatNumber(Number(p.bonus_special))}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1" style={{ marginTop: 4 }}>
+                      {p.status === "draft" && <ConfirmPayslipButton id={p.id} action={confirmPayslip} />}
+                      <Link
+                        href={`/hr/payroll/${p.id}/print`}
+                        className="erp-btn"
+                        style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                      >
+                        미리보기/인쇄
+                      </Link>
+                      <SendPayslipButton id={p.id} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
         </div>
