@@ -6,7 +6,6 @@ import { DeleteButton } from "@/components/delete-button";
 import { deleteSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
-import { formatPackageQty } from "@/lib/package-qty";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
@@ -20,13 +19,12 @@ import {
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
-import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { GridBadge } from "@/components/grid/badge";
 import { calcVat } from "@/lib/tax";
-import { formatNumber } from "@/lib/format-number";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { PageGuide } from "@/components/erp/page-guide";
 import { DetailPageHeader, DetailInfoRow } from "@/components/erp/page-header";
+import { OrderItemsTable, type OrderItemRow } from "@/components/grid/order-items-table";
 
 export default async function SaleDetailPage({
   params,
@@ -93,6 +91,21 @@ export default async function SaleDetailPage({
   });
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
   const totalTax = rows.reduce((sum, row) => sum + row.taxAmount, 0);
+  const itemRows: OrderItemRow[] = rows.map((row) => ({
+    id: row.id,
+    sku: row.products?.sku,
+    productLabel: row.products?.name ?? row.custom_name ?? "-",
+    spec: row.spec || row.products?.spec || null,
+    lotNumber: row.lot_number,
+    unit: row.products?.unit,
+    basePackageQty: row.products?.base_package_qty,
+    quantity: row.quantity,
+    unitPrice: row.unit_price,
+    supplyAmount: row.supplyAmount,
+    taxAmount: row.taxAmount,
+    remark: row.remark,
+    showPaperCalcSizeLines: row.products?.sku === PAPER_STOCK_SKU,
+  }));
 
   // 이 주문에 모조지 계산이 여러 건 저장돼 있을 수 있다(계산을 나눠서
   // 여러 번 저장했거나, 할일/입고에서 여러 계산을 한 번에 복사해온 경우) —
@@ -222,147 +235,13 @@ export default async function SaleDetailPage({
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>품목명</th>
-              <th>규격</th>
-              <th>관리번호</th>
-              <th>단위</th>
-              <th className="num">포장수량</th>
-              <th className="num">수량</th>
-              <th className="num">공급가</th>
-              <th className="num">공급가액</th>
-              <th className="num">세액</th>
-              <th>비고</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.flatMap((row) => {
-              const mainRow = (
-                <tr key={row.id}>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.products?.sku}
-                  </td>
-                  <td>{row.products?.name ?? row.custom_name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.spec || row.products?.spec || "-"}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.lot_number ? (
-                      <Link
-                        href={`/inventory/lot-lookup?q=${encodeURIComponent(row.lot_number)}`}
-                        className="erp-badge erp-badge-muted"
-                        style={{ textDecoration: "none" }}
-                      >
-                        {row.lot_number}
-                      </Link>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.products?.unit}
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: row.products?.base_package_qty ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
-                  >
-                    {formatPackageQty(
-                      row.products?.base_package_qty,
-                      row.quantity,
-                    )}
-                  </td>
-                  <td className="num">{formatNumber(row.quantity)}</td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {formatNumOrDash(row.unit_price)}
-                  </td>
-                  <td className="num">{formatNumber(row.supplyAmount)}</td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    {formatNumber(row.taxAmount)}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
-                    {row.remark || "-"}
-                  </td>
-                </tr>
-              );
-
-              if (
-                row.products?.sku !== PAPER_STOCK_SKU ||
-                paperCalcSizeLines.length === 0
-              ) {
-                return [mainRow];
-              }
-
-              const sizeRows = paperCalcSizeLines.map((line, i) => (
-                <tr
-                  key={`${row.id}-size-${i}`}
-                  style={{ background: "var(--erp-bg-subtle)" }}
-                >
-                  <td />
-                  <td
-                    colSpan={3}
-                    style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}
-                  >
-                    ㄴ {line}
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
-                  >
-                    -
-                  </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                </tr>
-              ));
-              return [mainRow, ...sizeRows];
-            })}
-          </tbody>
-          <tfoot>
-            <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
-              <td colSpan={8} className="num">
-                합계
-              </td>
-              <td className="num">{formatNumber(totalSupply)}</td>
-              <td className="num">{formatNumber(totalTax)}</td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+      <OrderItemsTable
+        rows={itemRows}
+        priceLabel="공급가"
+        paperCalcSizeLines={paperCalcSizeLines}
+        totalSupply={totalSupply}
+        totalTax={totalTax}
+      />
     </div>
   );
 }

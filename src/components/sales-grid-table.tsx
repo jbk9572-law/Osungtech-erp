@@ -570,7 +570,7 @@ export function SalesGridTable({
         />
       )}
 
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
             <tr>

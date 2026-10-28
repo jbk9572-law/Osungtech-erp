@@ -50,7 +50,7 @@ export function OrderDetailPanel({
         </div>
       </div>
       <div className="erp-detail-body" style={{ padding: 0 }}>
-        <div className="erp-grid-wrap">
+        <div className="erp-grid-wrap has-card-view">
           <table className="erp-grid">
             <thead>
               <tr>
@@ -142,6 +142,94 @@ export function OrderDetailPanel({
               </tfoot>
             )}
           </table>
+        </div>
+
+        <div className="erp-row-card-list" style={{ padding: selection && selection.items.length > 0 ? 10 : 0 }}>
+          {!selection || selection.items.length === 0 ? (
+            <p className="erp-grid-empty">{emptyMessage}</p>
+          ) : (
+            <>
+              {selection.items.map((item, i) => (
+                <div className="erp-row-card" key={i}>
+                  <div className="erp-row-card-head">
+                    <span className="erp-row-card-partner">
+                      {item.productLabel}
+                      {!!item.paperCalcSizeLines?.length && (
+                        <GridBadge tone="info" style={{ marginLeft: 6 }}>
+                          계산 연결됨
+                        </GridBadge>
+                      )}
+                    </span>
+                  </div>
+                  <dl className="erp-order-item-fields">
+                    <div>
+                      <dt>규격</dt>
+                      <dd>{item.spec || "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>관리번호</dt>
+                      <dd>{item.lotNumber || "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>수량</dt>
+                      <dd style={selection.isReturn ? { color: "var(--erp-danger)" } : undefined}>
+                        {sign}
+                        {formatNumber(item.quantity)} {item.unit ?? ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{priceLabel}</dt>
+                      <dd>{formatNumOrDash(item.unitPrice)}</dd>
+                    </div>
+                    <div>
+                      <dt>공급가액</dt>
+                      <dd
+                        style={{
+                          fontWeight: 700,
+                          color: selection.isReturn ? "var(--erp-danger)" : undefined,
+                        }}
+                      >
+                        {amountSign}
+                        {formatNumber(item.supplyAmount)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>세액</dt>
+                      <dd style={{ color: selection.isReturn ? "var(--erp-danger)" : undefined }}>
+                        {amountSign}
+                        {formatNumber(item.taxAmount)}
+                      </dd>
+                    </div>
+                    {item.remark && (
+                      <div style={{ gridColumn: "1 / -1" }}>
+                        <dt>비고</dt>
+                        <dd>{item.remark}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  {!!item.paperCalcSizeLines?.length && (
+                    <div
+                      style={{
+                        marginTop: 2,
+                        fontSize: "var(--erp-font-xs)",
+                        color: "var(--erp-text-muted)",
+                      }}
+                    >
+                      {item.paperCalcSizeLines.map((line, lineIndex) => (
+                        <div key={lineIndex}>ㄴ {line}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+                <span>합계 ({selection.items.length}건) · {formatNumber(totalQuantity)}개</span>
+                <span className="erp-row-card-amount">
+                  {formatNumber(totalSupply)}원
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

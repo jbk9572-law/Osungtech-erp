@@ -1850,25 +1850,31 @@ form.erp-field-grid {
   background: inherit;
 }
 
-/* ── 모바일 카드형 그리드(매출/매입/재고) ──────────────────────
+/* ── 모바일 카드형 그리드(매출/매입/재고 목록, 품목내역 표) ──────
    매출 그리드가 19칸(체크박스/거래일자/전표번호/거래처코드/유형/
    과세구분/증빙유형/출고처/배송방법/작성자/품목명/규격/관리번호/수량/
    공급가/공급가액/세액/계산서발행/비고) 안팎이라, 첫 2칸만 스티키로
    고정해도 모바일에서 체감 개선이 거의 없었다(사용자 지적 — "좌우
    횡스크롤 압박이 너무 심해"). 768px 미만에서는 표 자체(.erp-grid-wrap)
-   를 숨기고, 핵심 정보(날짜·거래처·품목/규격·수량·금액)만 세로로 쌓은
-   카드 목록을 대신 보여준다 — 나머지 칸(전표번호/작성자/세액/비고 등)은
-   카드를 눌러 상세 화면에서 확인한다(사용자 승인 — "나머진 뭐 상세로
-   가도되고"). 자바스크립트로 폭을 감지해 조건부 렌더링하지 않고 순수
-   CSS 미디어쿼리로 보이기/숨기기만 바꾼다 — 서버/클라이언트 렌더 결과가
-   항상 같아 하이드레이션 불일치가 없고, 다른 분할뷰 반응형 전환(768px)과
-   같은 기준을 쓴다. */
+   를 숨기고, 세로로 쌓은 카드 목록을 대신 보여준다.
+
+   반드시 .has-card-view modifier가 붙은 .erp-grid-wrap에만 적용한다 —
+   처음엔 .erp-grid-wrap 전체를 숨기는 전역 규칙이었는데, 이 클래스를
+   쓰는 화면이 70곳 넘게 있고 그중 카드 대체를 만든 곳은 매출/매입/재고
+   목록 3곳뿐이었다. 그 결과 승인함·근태·급여·생산관리·보고서·설정이나
+   매출/매입 상세 품목내역처럼 카드 대체가 없는 나머지 화면은 모바일에서
+   표가 통째로 안 보이는 회귀가 생겼다(예전엔 최소 가로스크롤로라도
+   보였는데 더 나빠짐) — 카드뷰를 만들 때마다 이 클래스를 빠뜨리지 않고
+   같이 붙여야 한다. 자바스크립트로 폭을 감지해 조건부 렌더링하지 않고
+   순수 CSS 미디어쿼리로 보이기/숨기기만 바꾼다 — 서버/클라이언트 렌더
+   결과가 항상 같아 하이드레이션 불일치가 없고, 다른 분할뷰 반응형
+   전환(768px)과 같은 기준을 쓴다. */
 .erp-row-card-list {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .erp-grid-wrap {
+  .erp-grid-wrap.has-card-view {
     display: none;
   }
   .erp-row-card-list {
@@ -1976,6 +1982,31 @@ form.erp-field-grid {
 
 .erp-row-card-toolbar select {
   height: 30px;
+}
+
+/* 매출/매입 상세·분할뷰 품목내역의 모바일 카드 안에서 쓰는 라벨:값
+   2열 그리드(규격/관리번호/단위/포장수량/수량/단가/공급가액/세액/비고).
+   상세 화면은 "나머진 상세에서 봐라"로 미룰 다음 화면이 없어서, 목록
+   카드(erp-row-card-item 등)처럼 일부만 추리지 않고 표에 있는 필드를
+   전부 보여줘야 해서 별도 클래스로 뺐다 — order-items-table.tsx와
+   order-detail-panel.tsx가 공용으로 쓴다. */
+.erp-order-item-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+  margin: 2px 0 0;
+}
+
+.erp-order-item-fields dt {
+  font-size: var(--erp-font-xs);
+  color: var(--erp-text-muted);
+}
+
+.erp-order-item-fields dd {
+  margin: 0;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── 6-1. Document sheet (전표/문서 작성 화면) ─────────────────

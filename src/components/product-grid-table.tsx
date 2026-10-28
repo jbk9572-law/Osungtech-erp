@@ -201,7 +201,7 @@ export function ProductGridTable({
           onConfirmTextChange={setConfirmText}
         />
       )}
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
         <thead>
           <tr>
