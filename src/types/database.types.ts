@@ -5375,6 +5375,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      ui_grid_column_visibility: {
+        Row: {
+          id: string;
+          grid_key: string;
+          user_id: string;
+          hidden_columns: string[];
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          grid_key: string;
+          user_id: string;
+          hidden_columns?: string[];
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          grid_key?: string;
+          user_id?: string;
+          hidden_columns?: string[];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

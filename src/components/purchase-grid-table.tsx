@@ -25,6 +25,26 @@ import { formatCarryoverDate } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
 import { buildBackHref, resolveListHref } from "@/lib/list-return";
+import { useColumnVisibility } from "@/lib/use-column-visibility";
+import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
+
+// 매출(sales-grid-table.tsx)과 같은 이유로 계정별로 끌 수 있는 칸만
+// 여기 올린다 — 날짜/공급처/품목명/수량/금액 같은 핵심 칸은 빼서 못
+// 끄게 한다.
+const PURCHASE_HIDEABLE_COLUMNS: ColumnVisibilityOption[] = [
+  { key: "docNo", label: "전표번호" },
+  { key: "supplierCode", label: "공급처코드" },
+  { key: "kind", label: "유형" },
+  { key: "taxType", label: "과세구분" },
+  { key: "evidenceType", label: "증빙유형" },
+  { key: "deliveryMethod", label: "입고방법" },
+  { key: "authorName", label: "작성자" },
+  { key: "spec", label: "규격" },
+  { key: "lotNumber", label: "관리번호" },
+  { key: "unitCost", label: "매입가" },
+  { key: "invoiceReceived", label: "세금계산서 수취" },
+  { key: "remark", label: "비고" },
+];
 
 export type PurchaseRowItem = {
   productLabel: string;
@@ -111,6 +131,11 @@ export function PurchaseGridTable({
 }) {
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor, applySort } =
     useSortableRows<PurchaseRow, SortKey>(rows);
+  const { isHidden, toggleColumn } = useColumnVisibility("purchase-list");
+  const colStyle = (key: string, extra?: CSSProperties): CSSProperties => ({
+    ...extra,
+    ...(isHidden(key) ? { display: "none" } : undefined),
+  });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   // 모바일 카드 목록에서 "선택" 버튼을 눌렀을 때만 체크박스를 보여준다
@@ -286,18 +311,18 @@ export function PurchaseGridTable({
             </GridBadge>
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("docNo", { color: "var(--erp-text-muted)" })}>
           {row.docNo ?? "-"}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("supplierCode", { color: "var(--erp-text-muted)" })}>
           {row.supplierCode ?? "-"}
         </td>
-        <td>
+        <td style={colStyle("kind")}>
           <GridBadge tone={isPayment ? "muted" : "info"}>
             {isPayment ? "지급" : "매입"}
           </GridBadge>
         </td>
-        <td>
+        <td style={colStyle("taxType")}>
           {row.taxType ? (
             <GridBadge
               tone={
@@ -314,11 +339,11 @@ export function PurchaseGridTable({
             "-"
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("evidenceType", { color: "var(--erp-text-muted)" })}>
           {row.evidenceType ?? "-"}
         </td>
         <td>{row.supplierName}</td>
-        <td>
+        <td style={colStyle("deliveryMethod")}>
           {row.deliveryMethod ? (
             <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
           ) : (
@@ -327,7 +352,7 @@ export function PurchaseGridTable({
             </span>
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("authorName", { color: "var(--erp-text-muted)" })}>
           {row.authorName ?? "-"}
         </td>
         <td
@@ -339,10 +364,10 @@ export function PurchaseGridTable({
         >
           {row.productLabel}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("spec", { color: "var(--erp-text-muted)" })}>
           {row.spec}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("lotNumber", { color: "var(--erp-text-muted)" })}>
           {row.lotNumber || "-"}
         </td>
         <td className="num">
@@ -352,7 +377,7 @@ export function PurchaseGridTable({
         </td>
         <td
           className="num"
-          style={{ color: "var(--erp-text-muted)" }}
+          style={colStyle("unitCost", { color: "var(--erp-text-muted)" })}
         >
           {isPayment ? "-" : formatNumOrDash(row.unitCost)}
         </td>
@@ -363,7 +388,7 @@ export function PurchaseGridTable({
         >
           {isPayment ? "-" : formatNumber(row.taxAmount)}
         </td>
-        <td>
+        <td style={colStyle("invoiceReceived")}>
           {isPayment ? (
             "-"
           ) : row.invoiceReceived ? (
@@ -372,7 +397,7 @@ export function PurchaseGridTable({
             <span style={{ color: "var(--erp-text-muted)" }}>미수취</span>
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("remark", { color: "var(--erp-text-muted)" })}>
           {row.remark || "-"}
         </td>
         <td className="num" onClick={(e) => e.stopPropagation()}>
@@ -488,6 +513,10 @@ export function PurchaseGridTable({
         />
       )}
 
+      <div className="erp-grid-toolbar">
+        <ColumnVisibilityMenu options={PURCHASE_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
+      </div>
+
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -501,23 +530,23 @@ export function PurchaseGridTable({
                 />
               </th>
               {sortableHeader("매입일자", "date", thSticky2)}
-              <th style={{ width: 90 }}>전표번호</th>
-              <th style={{ width: 76 }}>공급처코드</th>
-              <th style={{ width: 64 }}>유형</th>
-              <th style={{ width: 60 }}>과세구분</th>
-              <th style={{ width: 90 }}>증빙유형</th>
+              <th style={colStyle("docNo", { width: 90 })}>전표번호</th>
+              <th style={colStyle("supplierCode", { width: 76 })}>공급처코드</th>
+              <th style={colStyle("kind", { width: 64 })}>유형</th>
+              <th style={colStyle("taxType", { width: 60 })}>과세구분</th>
+              <th style={colStyle("evidenceType", { width: 90 })}>증빙유형</th>
               {sortableHeader("공급처", "supplierName")}
-              <th style={{ width: 76 }}>입고방법</th>
-              {sortableHeader("작성자", "authorName")}
+              <th style={colStyle("deliveryMethod", { width: 76 })}>입고방법</th>
+              {sortableHeader("작성자", "authorName", colStyle("authorName"))}
               <th>품목명 / 적요</th>
-              <th>규격</th>
-              <th>관리번호</th>
+              <th style={colStyle("spec")}>규격</th>
+              <th style={colStyle("lotNumber")}>관리번호</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
-              <th className="num">매입가</th>
+              <th className="num" style={colStyle("unitCost")}>매입가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
-              <th style={{ width: 86 }}>세금계산서 수취</th>
-              <th>비고</th>
+              <th style={colStyle("invoiceReceived", { width: 86 })}>세금계산서 수취</th>
+              <th style={colStyle("remark")}>비고</th>
               <th />
             </tr>
           </thead>

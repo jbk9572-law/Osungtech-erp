@@ -26,6 +26,25 @@ import { formatCarryoverDate } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { buildBackHref, resolveListHref } from "@/lib/list-return";
+import { useColumnVisibility } from "@/lib/use-column-visibility";
+import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
+
+// 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
+// 없게 여기 안 넣는다 — 나머지만 "컬럼 설정"에서 계정별로 켜고 끈다.
+const SALES_HIDEABLE_COLUMNS: ColumnVisibilityOption[] = [
+  { key: "docNo", label: "전표번호" },
+  { key: "customerCode", label: "거래처코드" },
+  { key: "kind", label: "유형" },
+  { key: "taxType", label: "과세구분" },
+  { key: "evidenceType", label: "증빙유형" },
+  { key: "deliveryMethod", label: "배송방법" },
+  { key: "authorName", label: "작성자" },
+  { key: "spec", label: "규격" },
+  { key: "lotNumber", label: "관리번호" },
+  { key: "unitPrice", label: "공급가" },
+  { key: "invoiceStatus", label: "계산서발행" },
+  { key: "remark", label: "비고" },
+];
 
 export type SalesRowItem = {
   productLabel: string;
@@ -119,6 +138,11 @@ export function SalesGridTable({
 }) {
   const { sortedRows, toggleSort, sortIndicator, ariaSortFor, applySort } =
     useSortableRows<SalesRow, SortKey>(rows);
+  const { isHidden, toggleColumn } = useColumnVisibility("sales-list");
+  const colStyle = (key: string, extra?: CSSProperties): CSSProperties => ({
+    ...extra,
+    ...(isHidden(key) ? { display: "none" } : undefined),
+  });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmText, setConfirmText] = useState("");
   // 모바일 카드 목록은 평소엔 카드 전체가 상세로 가는 링크라 체크박스가
@@ -318,13 +342,13 @@ export function SalesGridTable({
             </GridBadge>
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("docNo", { color: "var(--erp-text-muted)" })}>
           {row.docNo ?? "-"}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("customerCode", { color: "var(--erp-text-muted)" })}>
           {row.customerCode ?? "-"}
         </td>
-        <td>
+        <td style={colStyle("kind")}>
           {/* 평범한 매출 건까지 danger(빨강) 톤으로 떨어지던 버그 —
               danger는 반품(실제로 주의가 필요한 상태)에만 쓰고,
               매출은 info(파랑, 중립적 정보)로 바꾼다. */}
@@ -332,7 +356,7 @@ export function SalesGridTable({
             {isCollection ? "수금" : row.isReturn ? "반품" : row.isSample ? "샘플" : "매출"}
           </GridBadge>
         </td>
-        <td>
+        <td style={colStyle("taxType")}>
           {row.taxType ? (
             <GridBadge
               tone={
@@ -349,11 +373,11 @@ export function SalesGridTable({
             "-"
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("evidenceType", { color: "var(--erp-text-muted)" })}>
           {row.evidenceType ?? "-"}
         </td>
         <td>{row.customerName}</td>
-        <td>
+        <td style={colStyle("deliveryMethod")}>
           {row.deliveryMethod ? (
             <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
           ) : (
@@ -362,7 +386,7 @@ export function SalesGridTable({
             </span>
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("authorName", { color: "var(--erp-text-muted)" })}>
           {row.authorName ?? "-"}
         </td>
         <td
@@ -374,10 +398,10 @@ export function SalesGridTable({
         >
           {row.productLabel}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("spec", { color: "var(--erp-text-muted)" })}>
           {row.spec}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("lotNumber", { color: "var(--erp-text-muted)" })}>
           {row.lotNumber || "-"}
         </td>
         <td
@@ -390,7 +414,7 @@ export function SalesGridTable({
         </td>
         <td
           className="num"
-          style={{ color: "var(--erp-text-muted)" }}
+          style={colStyle("unitPrice", { color: "var(--erp-text-muted)" })}
         >
           {isCollection ? "-" : formatNumOrDash(row.unitPrice)}
         </td>
@@ -407,7 +431,7 @@ export function SalesGridTable({
         >
           {isCollection ? "-" : `${row.isReturn ? "-" : ""}${formatNumber(row.taxAmount)}`}
         </td>
-        <td onClick={(e) => canQuickIssue && e.stopPropagation()}>
+        <td style={colStyle("invoiceStatus")} onClick={(e) => canQuickIssue && e.stopPropagation()}>
           {isCollection ? (
             "-"
           ) : row.invoiceStatus === "issued" ? (
@@ -429,7 +453,7 @@ export function SalesGridTable({
             <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
           )}
         </td>
-        <td style={{ color: "var(--erp-text-muted)" }}>
+        <td style={colStyle("remark", { color: "var(--erp-text-muted)" })}>
           {row.remark || "-"}
         </td>
         <td className="num" onClick={(e) => e.stopPropagation()}>
@@ -570,6 +594,10 @@ export function SalesGridTable({
         />
       )}
 
+      <div className="erp-grid-toolbar">
+        <ColumnVisibilityMenu options={SALES_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
+      </div>
+
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
           <thead>
@@ -583,23 +611,23 @@ export function SalesGridTable({
                 />
               </th>
               {sortableHeader("거래일자", "date", thSticky2)}
-              <th style={{ width: 90 }}>전표번호</th>
-              <th style={{ width: 76 }}>거래처코드</th>
-              <th style={{ width: 64 }}>유형</th>
-              <th style={{ width: 60 }}>과세구분</th>
-              <th style={{ width: 90 }}>증빙유형</th>
+              <th style={colStyle("docNo", { width: 90 })}>전표번호</th>
+              <th style={colStyle("customerCode", { width: 76 })}>거래처코드</th>
+              <th style={colStyle("kind", { width: 64 })}>유형</th>
+              <th style={colStyle("taxType", { width: 60 })}>과세구분</th>
+              <th style={colStyle("evidenceType", { width: 90 })}>증빙유형</th>
               {sortableHeader("출고처", "customerName")}
-              <th style={{ width: 76 }}>배송방법</th>
-              {sortableHeader("작성자", "authorName")}
+              <th style={colStyle("deliveryMethod", { width: 76 })}>배송방법</th>
+              {sortableHeader("작성자", "authorName", colStyle("authorName"))}
               <th>품목명 / 적요</th>
-              <th>규격</th>
-              <th>관리번호</th>
+              <th style={colStyle("spec")}>규격</th>
+              <th style={colStyle("lotNumber")}>관리번호</th>
               {sortableHeader("수량", "quantity", undefined, "num")}
-              <th className="num">공급가</th>
+              <th className="num" style={colStyle("unitPrice")}>공급가</th>
               {sortableHeader("공급가액", "supplyAmount", undefined, "num")}
               {sortableHeader("세액", "taxAmount", undefined, "num")}
-              <th style={{ width: 76 }}>계산서발행</th>
-              <th>비고</th>
+              <th style={colStyle("invoiceStatus", { width: 76 })}>계산서발행</th>
+              <th style={colStyle("remark")}>비고</th>
               <th />
             </tr>
           </thead>
