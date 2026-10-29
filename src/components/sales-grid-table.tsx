@@ -22,7 +22,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
-import { nextMonthLabel, formatCarryoverDate } from "@/lib/carryover";
+import { formatCarryoverDate } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { buildBackHref, resolveListHref } from "@/lib/list-return";
@@ -314,7 +314,7 @@ export function SalesGridTable({
             : "-"}
           {row.isCarryover && row.date && (
             <GridBadge tone="warn" style={{ marginLeft: 4 }}>
-              {opts.compactDate ? "이월" : `이월(${nextMonthLabel(row.date)})`}
+              이월
             </GridBadge>
           )}
         </td>
