@@ -5320,6 +5320,9 @@ export type Database = {
           old_data: Json | null;
           new_data: Json | null;
           created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+          tx_id: number | null;
         };
         Insert: {
           id?: string;
@@ -5330,6 +5333,9 @@ export type Database = {
           old_data?: Json | null;
           new_data?: Json | null;
           created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+          tx_id?: number | null;
         };
         Update: {
           id?: string;
@@ -5340,6 +5346,9 @@ export type Database = {
           old_data?: Json | null;
           new_data?: Json | null;
           created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+          tx_id?: number | null;
         };
         Relationships: [
           {

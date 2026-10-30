@@ -248,6 +248,12 @@ export default async function AuditLogPage({
     target: string;
     author: string;
     summary: string;
+    // 같은 업무처리(DB 트랜잭션) 안에서 함께 바뀐 다른 변경 건수 — 지금
+    // 불러온 페이지 범위 안에서만 센다(매출 전표 삭제 시 재고도 같이
+    // 되돌아가는 것처럼, 한 DB 함수 호출로 여러 테이블이 원자적으로
+    // 바뀐 경우를 보여주기 위함). undefined면 트랜잭션 묶음 집계 대상이
+    // 아닌 화면(재고 탭)이라는 뜻.
+    groupCount?: number;
   };
 
   let viewRows: ViewRow[] = [];
@@ -339,11 +345,12 @@ export default async function AuditLogPage({
           old_data: unknown;
           new_data: unknown;
           created_at: string;
+          tx_id: number | null;
           profiles: { full_name: string | null } | null;
         }>((from, to) => {
           let query = supabase
             .from("audit_logs")
-            .select("id, table_name, record_id, action, old_data, new_data, created_at, profiles!actor(full_name)")
+            .select("id, table_name, record_id, action, old_data, new_data, created_at, tx_id, profiles!actor(full_name)")
             .order("created_at", { ascending: false })
             .range(from, to);
           if (tableParam) query = query.eq("table_name", tableParam);
@@ -372,6 +379,16 @@ export default async function AuditLogPage({
     const rows = fetchedRows;
     hasMore = auditHasMore;
 
+    // 같은 tx_id를 가진 행이 몇 개인지 미리 센다 — 지금 불러온 페이지
+    // 범위 안에서만 집계한다(매출 전표 삭제 시 재고도 같이 되돌아가는
+    // 것처럼, 한 DB 함수 호출로 여러 테이블이 원자적으로 바뀐 걸
+    // 보여주기 위함). tx_id가 없는(과거 데이터) 행은 집계하지 않는다.
+    const txCounts = new Map<number, number>();
+    for (const row of rows) {
+      if (row.tx_id == null) continue;
+      txCounts.set(row.tx_id, (txCounts.get(row.tx_id) ?? 0) + 1);
+    }
+
     viewRows = rows.map((row) => {
       const oldData = row.old_data as Record<string, unknown> | null;
       const newData = row.new_data as Record<string, unknown> | null;
@@ -381,6 +398,7 @@ export default async function AuditLogPage({
           : row.action === "delete"
             ? `삭제됨: ${identitySummary(row.table_name, oldData)}`
             : diffSummary(row.table_name, oldData, newData, lookups);
+      const groupCount = row.tx_id != null ? txCounts.get(row.tx_id) : undefined;
       return {
         id: row.id,
         createdAt: row.created_at,
@@ -390,6 +408,7 @@ export default async function AuditLogPage({
         target: identitySummary(row.table_name, newData ?? oldData),
         author: row.profiles?.full_name ?? "-",
         summary,
+        groupCount: groupCount && groupCount > 1 ? groupCount : undefined,
       };
     });
   }
@@ -456,7 +475,23 @@ export default async function AuditLogPage({
                 <td>
                   <GridBadge tone={row.actionTone}>{row.actionLabel}</GridBadge>
                 </td>
-                <td>{row.target}</td>
+                <td>
+                  {row.target}
+                  {row.groupCount && (
+                    <span
+                      title="같은 업무처리로 함께 바뀐 항목이 있습니다"
+                      style={{
+                        marginLeft: 6,
+                        fontSize: "var(--erp-font-xs)",
+                        color: "var(--erp-text-muted)",
+                        border: "1px solid var(--erp-border)",
+                        padding: "0 5px",
+                      }}
+                    >
+                      +{row.groupCount - 1}건 같이 변경됨
+                    </span>
+                  )}
+                </td>
                 <td style={{ color: "var(--erp-text-muted)" }}>{row.author}</td>
                 <td
                   style={{
@@ -487,6 +522,11 @@ export default async function AuditLogPage({
               <span className="erp-row-card-partner">{row.target}</span>
               <GridBadge tone={row.actionTone}>{row.actionLabel}</GridBadge>
             </div>
+            {row.groupCount && (
+              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)" }}>
+                +{row.groupCount - 1}건 같이 변경됨
+              </div>
+            )}
             <dl className="erp-order-item-fields">
               <div>
                 <dt>일시</dt>
