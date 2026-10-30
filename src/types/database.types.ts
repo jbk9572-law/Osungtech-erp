@@ -6059,6 +6059,10 @@ export type Database = {
         Args: Record<string, never>;
         Returns: Json;
       };
+      get_table_growth_stats: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
       get_dashboard_layout_bootstrap: {
         Args: Record<string, never>;
         Returns: Json;

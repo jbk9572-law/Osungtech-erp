@@ -21,6 +21,8 @@ type PlatformStats = {
   monthlySignups: { month: string; count: number }[];
 };
 
+type TableGrowthRow = { key: string; label: string; totalRows: number; last30d: number };
+
 export default async function PlatformStatsPage() {
   const { supabase } = await requirePlatformAdmin();
 
@@ -28,6 +30,9 @@ export default async function PlatformStatsPage() {
   const stats = data as PlatformStats | null;
   const monthlySignups = stats?.monthlySignups ?? [];
   const maxCount = Math.max(1, ...monthlySignups.map((m) => m.count));
+
+  const { data: growthData } = await supabase.rpc("get_table_growth_stats");
+  const growthRows = ((growthData as { tables: TableGrowthRow[] } | null)?.tables ?? []);
 
   const { data: usageRows } = await supabase.rpc("get_platform_monthly_usage_breakdown");
   const tenantUsage = (usageRows ?? []) as TenantUsageRow[];
@@ -257,6 +262,30 @@ export default async function PlatformStatsPage() {
         </PageGuide>
       )}
       <UsageWidgetPanel />
+
+      {/* 50개+ 테넌트로 늘어나는 걸 대비한 데이터 증가 모니터링(사용자
+          요청) — 쌓이기만 하는 로그성 테이블(변경이력/재고입출고/
+          메신저 등)의 전체 행 수와 최근 30일 증가량을 보여준다. 실제로
+          오래된 데이터를 지우거나 아카이빙하는 건 보관 기간 정책을
+          먼저 정해야 하는 별도 단계라 여기서는 "보여주기"까지만 한다. */}
+      <h2 className="mt-5 mb-2" style={{ fontSize: "var(--erp-font-md)", fontWeight: 700, color: "var(--erp-text)" }}>
+        데이터 증가 추이 (로그성 테이블)
+      </h2>
+      <PageGuide>
+        매출/매입 전표처럼 보관 의무가 있는 핵심 데이터는 포함하지 않습니다. 이 표의 테이블이
+        너무 커지면 오래된 데이터를 아카이빙/정리하는 다음 단계를 검토할 수 있습니다.
+      </PageGuide>
+      <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-5)" }}>
+        {growthRows.map((row) => (
+          <div className="erp-home-panel erp-kpi-card" key={row.key}>
+            <div className="erp-kpi-label">{row.label}</div>
+            <div className="erp-kpi-value">{formatNumber(row.totalRows)}행</div>
+            <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)" }}>
+              최근 30일 +{formatNumber(row.last30d)}행
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

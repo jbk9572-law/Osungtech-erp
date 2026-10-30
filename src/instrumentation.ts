@@ -1,3 +1,5 @@
+import { reportServerError } from "@/lib/error-tracking";
+
 // Next.js는 프로덕션 빌드에서 서버 렌더링 중 예외가 나면 클라이언트로
 // 내려주는 digest뿐 아니라 서버 자체 로그(Cloudflare Workers Logs 포함)
 // 에서도 실제 에러 메시지를 지운다 — 보안상 의도된 동작이다. 그 결과
@@ -8,6 +10,13 @@
 // onRequestError는 Next.js가 그 메시지를 지우기 전에 호출해주는 공식
 // 훅이다 — 여기서 console.error로 찍은 내용은 마스킹되지 않은 진짜
 // 에러 메시지를 포함해서 Cloudflare Workers Logs에 그대로 남는다.
+//
+// Cloudflare Workers Logs는 보존 기간이 짧고 검색/알림이 번거롭다 —
+// 50개+ 테넌트로 늘어나면 "어느 테넌트에서 무슨 에러가 몇 번
+// 났는지"를 로그를 뒤져서 찾기 어려워진다. SENTRY_DSN이 설정돼 있으면
+// 같은 에러를 Sentry로도 보낸다(lib/error-tracking.ts — 가벼운 fetch
+// 기반 연동, SDK 빌드 설정 변경 없음). 설정 안 돼 있으면 아무 일도
+// 안 하므로 기존 동작에 영향 없다.
 export async function onRequestError(
   error: unknown,
   request: { path: string; method: string; headers: Record<string, string> },
@@ -24,4 +33,10 @@ export async function onRequestError(
       stack: error instanceof Error ? error.stack : undefined,
     })
   );
+
+  await reportServerError(error, {
+    path: request.path,
+    routePath: context.routePath,
+    routeType: context.routeType,
+  });
 }
