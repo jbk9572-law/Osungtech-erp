@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
 import { PriceScheduleForm } from "@/components/price-schedule-form";
 import { PriceScheduleRow } from "@/components/price-schedule-row";
+import { PriceHistoryPopover } from "@/components/price-history-popover";
 import { PartnerForm } from "@/components/partner-form";
 import { PartyPaymentForm } from "@/components/party-payment-form";
 import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
@@ -352,6 +353,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>
                       {new Date(price.updated_at).toLocaleDateString("ko-KR")}
+                      <PriceHistoryPopover tableName="customer_product_prices" recordId={price.id} />
                     </td>
                   </tr>
                 ))}

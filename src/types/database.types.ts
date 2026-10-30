@@ -6066,6 +6066,17 @@ export type Database = {
           plan_expires_at: string | null;
         }[];
       };
+      get_price_change_history: {
+        Args: { p_table_name: string; p_record_id: string };
+        Returns: {
+          id: string;
+          action: string;
+          old_unit: number | null;
+          new_unit: number | null;
+          actor_name: string | null;
+          created_at: string;
+        }[];
+      };
       get_login_block_reason: {
         Args: { p_slug: string; p_username: string };
         Returns: string | null;

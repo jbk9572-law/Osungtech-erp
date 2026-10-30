@@ -5,6 +5,7 @@ import { PartnerForm } from "@/components/partner-form";
 import { SupplierPriceForm } from "@/components/supplier-price-form";
 import { PriceScheduleForm } from "@/components/price-schedule-form";
 import { PriceScheduleRow } from "@/components/price-schedule-row";
+import { PriceHistoryPopover } from "@/components/price-history-popover";
 import { PartyPaymentForm } from "@/components/party-payment-form";
 import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { ClickableRow } from "@/components/clickable-row";
@@ -285,6 +286,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
                     </td>
                     <td style={{ color: "var(--erp-text-muted)" }}>
                       {new Date(price.updated_at).toLocaleDateString("ko-KR")}
+                      <PriceHistoryPopover tableName="supplier_product_prices" recordId={price.id} />
                     </td>
                   </tr>
                 ))}
