@@ -152,8 +152,26 @@ export async function submitStockCount(
   }
 
   const sessionRef = `stock_count:${new Date().toISOString()}`;
-  const { error } = await supabase.from("inventory_transactions").insert(
-    [...changedPlain, ...changedLocation].map((r) => ({
+  // counted_absolute_quantity: 이 실사 시점에 확정한 "절대" 수량을 같이
+  // 남긴다 — 잔량 계산(get_product_ledger_rows 등)이 이 값이 있는 행을
+  // 만나면 그 이전 누적(과거에 섞여 있었을 수 있는 오차)을 버리고 이
+  // 값을 새 기준점으로 삼는다. changedPlain은 창고 전체 기준 실사라
+  // countedQuantity 그대로가 절대값이고, changedLocation(위치별 실사)은
+  // 그 위치만의 수량이라 창고 전체의 절대값이 아니므로 앵커로 쓰지
+  // 않는다(위치별 실사는 위치 재고만 바뀌고 창고 합계 잔량 기준의
+  // "리셋 지점"이 될 수 없다 — 델타만 반영).
+  const { error } = await supabase.from("inventory_transactions").insert([
+    ...changedPlain.map((r) => ({
+      product_id: r.productId,
+      warehouse_id: warehouseId,
+      type: "adjustment" as const,
+      quantity: r.delta,
+      counted_absolute_quantity: r.delta + (liveQuantityByProduct.get(r.productId) ?? 0),
+      reference: sessionRef,
+      note: userNote ? `재고실사: ${userNote}` : "재고실사",
+      created_by: user?.id ?? null,
+    })),
+    ...changedLocation.map((r) => ({
       product_id: r.productId,
       warehouse_id: warehouseId,
       type: "adjustment" as const,
@@ -161,8 +179,8 @@ export async function submitStockCount(
       reference: sessionRef,
       note: userNote ? `재고실사: ${userNote}` : "재고실사",
       created_by: user?.id ?? null,
-    }))
-  );
+    })),
+  ]);
 
   if (error) {
     return { error: `재고 실사 저장에 실패했습니다: ${error.message}` };
@@ -191,4 +209,17 @@ export async function submitStockCount(
   revalidatePath("/dashboard");
   const changedCount = changedPlain.length + changedLocation.length;
   return { success: `${changedCount}건의 재고 실사 조정이 저장되었습니다.` };
+}
+
+// /inventory/count의 "재고 캐시 정합성 검증" 패널 — 불일치를 보여주기만
+// 하던 것에서, 실제로 전산 재고(inventory.quantity 캐시)를 이력 합계
+// (거래일자 오름차순 + 재고실사 리셋 기준 정답)에 맞춰 고치는 자가치유
+// 액션으로 확장한다(recalculate_inventory_cache RPC, migration 205 참고).
+export async function recalculateInventoryCache(): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("recalculate_inventory_cache");
+  if (error) console.error("재고 캐시 자가치유 실패:", error.message);
+  revalidatePath("/inventory/count");
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
 }

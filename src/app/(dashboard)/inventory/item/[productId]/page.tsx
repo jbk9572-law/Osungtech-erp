@@ -38,19 +38,16 @@ export default async function InventoryProductHistoryPage({
 
   // 날짜를 직접 안 걸었으면 매출/매입 목록과 같은 기본값(이번달)을 쓴다
   // — 예전엔 기본이 "전체 이력"이라, 거래가 많이 쌓인 인기 품목일수록
-  // 상세 화면을 열 때마다 처음부터 끝까지 풀스캔해서 느려졌다(수불부
-  // 화면이 먼저 겪은 문제와 같은 종류 — get_ledger_opening_balance RPC
-  // 주석 참고). "이번달" 이전 잔량은 전체 이력을 다시 더하는 대신 그
-  // RPC로 DB 안에서 한 번에 집계한다(창고 구분 없이 합산 — 이 화면
-  // 자체가 전체 창고 합산 기준이라 p_warehouse_id는 비워둔다).
+  // 상세 화면을 열 때마다 처음부터 끝까지 풀스캔해서 느려졌다. 잔량은
+  // get_product_ledger_rows RPC가 DB 안에서 거래일자(transaction_date)
+  // 오름차순 + 창고별 재고실사 리셋을 반영해 정확히 계산해 돌려준다(이
+  // 화면 자체가 전체 창고 합산 기준이라 p_warehouse_id는 비워둔다) —
+  // created_at(시스템 입력시각) 순서로 계산하면 전표를 늦게/일찍 입력했을
+  // 때 중간 잔량이 틀어지는 버그가 있었다(자세한 설명은 그 RPC의
+  // 마이그레이션 주석 참고).
   const { from, to } = defaultListRange(fromParam, toParam);
-  // inventory_transactions.created_at은 timestamptz라, 문자열 비교만 하면
-  // 월 경계 근처(자정 전후) 거래가 잘못된 쪽으로 샐 수 있다 — 한국시간
-  // 기준 자정을 명시적으로 못박는다(reports/ledger/page.tsx와 동일).
-  const fromIso = `${from}T00:00:00+09:00`;
-  const toIso = `${to}T23:59:59.999+09:00`;
 
-  const [{ data: product }, { data: openingBalanceRaw }, txRaw] = await Promise.all([
+  const [{ data: product }, { data: ledgerRowsRaw }] = await Promise.all([
     supabase
       .from("products")
       .select(
@@ -58,47 +55,30 @@ export default async function InventoryProductHistoryPage({
       )
       .eq("id", productId)
       .maybeSingle(),
-    supabase.rpc("get_ledger_opening_balance", {
+    supabase.rpc("get_product_ledger_rows", {
       p_product_id: productId,
-      p_before: fromIso,
+      p_from: from,
+      p_to: to,
     }),
-    fetchAllRows<{
-      id: string;
-      type: string;
-      quantity: number;
-      note: string | null;
-      reference: string | null;
-      created_at: string;
-      sales_order_id: string | null;
-      purchase_order_id: string | null;
-      sales_orders: { order_date: string; customers: { name: string | null } | null } | null;
-      purchase_orders: { purchase_date: string; suppliers: { name: string | null } | null } | null;
-      profiles: { full_name: string | null } | null;
-    }>((f, t) =>
-      supabase
-        .from("inventory_transactions")
-        .select(
-          "id, type, quantity, note, reference, created_at, sales_order_id, purchase_order_id, sales_orders(order_date, customers(name)), purchase_orders(purchase_date, suppliers(name)), profiles!created_by(full_name)",
-        )
-        .eq("product_id", productId)
-        .gte("created_at", fromIso)
-        .lte("created_at", toIso)
-        .order("created_at", { ascending: true })
-        .range(f, t),
-    ),
   ]);
 
   if (!product) {
     notFound();
   }
 
-  // 관리번호는 inventory_transactions에 직접 없고 그 전표의 품목 줄
-  // (sales_order_items/purchase_order_items)에 있다 — 이번달(선택한
-  // 기간) 조회분에 실제로 등장하는 전표ID만 추려서 그만큼만 찾는다
-  // (품목 전체 역사의 전표를 다 긁어올 필요 없음).
-  const saleOrderIds = Array.from(new Set(txRaw.map((t) => t.sales_order_id).filter((id): id is string => !!id)));
-  const purchaseOrderIds = Array.from(new Set(txRaw.map((t) => t.purchase_order_id).filter((id): id is string => !!id)));
-  const [saleLotRows, purchaseLotRows] = await Promise.all([
+  const ledgerRows = ledgerRowsRaw ?? [];
+
+  // 관리번호(lot)와 거래처명은 inventory_transactions/RPC 결과에 직접
+  // 없고 각각 전표 품목줄(sales_order_items/purchase_order_items)과
+  // 전표 헤더(sales_orders.customers/purchase_orders.suppliers)에 있다 —
+  // 이번달(선택한 기간) 조회분에 실제로 등장하는 전표ID만 추려서 그만큼만
+  // 찾는다(품목 전체 역사의 전표를 다 긁어올 필요 없음).
+  const saleOrderIds = Array.from(new Set(ledgerRows.map((t) => t.sales_order_id).filter((id): id is string => !!id)));
+  const purchaseOrderIds = Array.from(
+    new Set(ledgerRows.map((t) => t.purchase_order_id).filter((id): id is string => !!id)),
+  );
+  const authorIds = Array.from(new Set(ledgerRows.map((t) => t.created_by).filter((id): id is string => !!id)));
+  const [saleLotRows, purchaseLotRows, saleOrderRows, purchaseOrderRows, authorRows] = await Promise.all([
     saleOrderIds.length
       ? fetchAllRows<{ sales_order_id: string; lot_number: string | null }>((f, t) =>
           supabase
@@ -119,57 +99,61 @@ export default async function InventoryProductHistoryPage({
             .range(f, t),
         )
       : Promise.resolve([]),
+    saleOrderIds.length
+      ? fetchAllRows<{ id: string; customers: { name: string | null } | null }>((f, t) =>
+          supabase.from("sales_orders").select("id, customers(name)").in("id", saleOrderIds).range(f, t),
+        )
+      : Promise.resolve([]),
+    purchaseOrderIds.length
+      ? fetchAllRows<{ id: string; suppliers: { name: string | null } | null }>((f, t) =>
+          supabase.from("purchase_orders").select("id, suppliers(name)").in("id", purchaseOrderIds).range(f, t),
+        )
+      : Promise.resolve([]),
+    authorIds.length
+      ? fetchAllRows<{ id: string; full_name: string | null }>((f, t) =>
+          supabase.from("profiles").select("id, full_name").in("id", authorIds).range(f, t),
+        )
+      : Promise.resolve([]),
   ]);
 
   const lotBySalesOrderId = new Map(saleLotRows.map((r) => [r.sales_order_id, r.lot_number]));
   const lotByPurchaseOrderId = new Map(purchaseLotRows.map((r) => [r.purchase_order_id, r.lot_number]));
+  const customerNameBySalesOrderId = new Map(saleOrderRows.map((r) => [r.id, r.customers?.name ?? null]));
+  const supplierNameByPurchaseOrderId = new Map(purchaseOrderRows.map((r) => [r.id, r.suppliers?.name ?? null]));
+  const authorNameById = new Map(authorRows.map((r) => [r.id, r.full_name]));
 
-  const openingBalance = Number(openingBalanceRaw ?? 0);
-  const allTx = txRaw.reduce<InventoryHistoryRow[]>((acc, t) => {
-    const date =
-      t.sales_orders?.order_date ??
-      t.purchase_orders?.purchase_date ??
-      t.created_at.slice(0, 10);
-    const signedQty = t.type === "out" ? -Math.abs(t.quantity) : t.quantity;
-    const balance = (acc.at(-1)?.balance ?? openingBalance) + signedQty;
-    acc.push({
-      id: t.id,
-      date,
-      type: t.type,
-      signedQty,
-      partnerName:
-        t.sales_orders?.customers?.name ??
-        t.purchase_orders?.suppliers?.name ??
-        null,
-      note: t.note,
-      reference: t.reference,
-      href: t.sales_order_id
-        ? `/sales/${t.sales_order_id}`
-        : t.purchase_order_id
-          ? `/purchases/${t.purchase_order_id}`
-          : null,
-      balance,
-      authorName: t.profiles?.full_name ?? null,
-      lotNumber: t.sales_order_id
-        ? (lotBySalesOrderId.get(t.sales_order_id) ?? null)
-        : t.purchase_order_id
-          ? (lotByPurchaseOrderId.get(t.purchase_order_id) ?? null)
-          : null,
-    });
-    return acc;
-  }, []);
+  const allTx: InventoryHistoryRow[] = ledgerRows.map((t) => ({
+    id: t.id,
+    date: t.transaction_date,
+    type: t.type,
+    signedQty: t.type === "out" ? -Math.abs(t.quantity) : t.quantity,
+    partnerName:
+      (t.sales_order_id ? customerNameBySalesOrderId.get(t.sales_order_id) : null) ??
+      (t.purchase_order_id ? supplierNameByPurchaseOrderId.get(t.purchase_order_id) : null) ??
+      null,
+    note: t.note,
+    reference: t.reference,
+    href: t.sales_order_id
+      ? `/sales/${t.sales_order_id}`
+      : t.purchase_order_id
+        ? `/purchases/${t.purchase_order_id}`
+        : null,
+    balance: t.balance_after,
+    authorName: (t.created_by ? authorNameById.get(t.created_by) : null) ?? null,
+    lotNumber: t.sales_order_id
+      ? (lotBySalesOrderId.get(t.sales_order_id) ?? null)
+      : t.purchase_order_id
+        ? (lotByPurchaseOrderId.get(t.purchase_order_id) ?? null)
+        : null,
+  }));
 
   // 전표 수정으로 생긴 되돌림/재반영 여러 줄을, 정확히 같은 전표 ID일
   // 때만(추측 없이) 최신 줄 하나로 합친다 — inventory-history-grouping.ts 참고.
   const groupedTx = groupOrderCorrections(allTx);
 
-  // created_at 기준으로 조회했지만 화면 표시/정렬은 전표상 거래일자
-  // 기준이라(당일 입고분을 다음날 등록하는 등 날짜가 어긋날 수 있음),
-  // 혹시 거래일자가 조회기간을 살짝 벗어난 줄이 섞여 있으면 한 번 더
-  // 걸러낸다.
-  const rows = groupedTx
-    .filter((t) => (!from || t.date >= from) && (!to || t.date <= to))
-    .reverse();
+  // get_product_ledger_rows가 이미 거래일자(transaction_date) 기준으로
+  // [from, to] 안의 행만 돌려준다 — 화면 표시는 최신이 위로 오게 뒤집는다.
+  const rows = groupedTx.slice().reverse();
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
   // 창고가 여러 개면 [0]은 임의의 창고 하나만 가리켜, 아래 표에 보이는

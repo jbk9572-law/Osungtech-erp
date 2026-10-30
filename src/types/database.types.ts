@@ -2730,6 +2730,8 @@ export type Database = {
           sales_order_id: string | null;
           purchase_order_id: string | null;
           created_at: string;
+          transaction_date: string;
+          counted_absolute_quantity: number | null;
         };
         Insert: {
           id?: string;
@@ -2743,6 +2745,8 @@ export type Database = {
           sales_order_id?: string | null;
           purchase_order_id?: string | null;
           created_at?: string;
+          transaction_date?: string;
+          counted_absolute_quantity?: number | null;
         };
         Update: {
           id?: string;
@@ -2756,6 +2760,8 @@ export type Database = {
           sales_order_id?: string | null;
           purchase_order_id?: string | null;
           created_at?: string;
+          transaction_date?: string;
+          counted_absolute_quantity?: number | null;
         };
         Relationships: [
           {
@@ -6017,11 +6023,46 @@ export type Database = {
         Args: Record<string, never>;
         Returns: {
           product_id: string;
+          warehouse_id: string;
           sku: string;
           name: string;
           spec: string | null;
           cached: number;
           computed: number;
+        }[];
+      };
+      recalculate_inventory_cache: {
+        Args: Record<string, never>;
+        Returns: {
+          product_id: string;
+          warehouse_id: string;
+          sku: string;
+          name: string;
+          spec: string | null;
+          before_quantity: number;
+          after_quantity: number;
+        }[];
+      };
+      get_product_ledger_rows: {
+        Args: {
+          p_product_id: string;
+          p_warehouse_id?: string | null;
+          p_from?: string | null;
+          p_to?: string | null;
+        };
+        Returns: {
+          id: string;
+          warehouse_id: string;
+          type: "in" | "out" | "adjustment";
+          quantity: number;
+          transaction_date: string;
+          created_at: string;
+          reference: string | null;
+          note: string | null;
+          sales_order_id: string | null;
+          purchase_order_id: string | null;
+          created_by: string | null;
+          balance_after: number;
         }[];
       };
       is_admin: {

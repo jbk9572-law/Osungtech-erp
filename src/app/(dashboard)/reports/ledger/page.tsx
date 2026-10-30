@@ -18,12 +18,6 @@ export default async function InventoryLedgerPage({
   const { product_id: productId, warehouse_id: warehouseId, month: monthParam } = await searchParams;
   const month = monthParam || currentMonth();
   const { from, to } = getMonthRange(month);
-  // inventory_transactions.created_at은 timestamptz라, 그냥 "YYYY-MM-DD"
-  // 문자열로 비교하면 서버가 어느 시간대로 파싱하느냐에 따라 월 경계
-  // 근처(자정 전후) 거래가 잘못된 달로 새어 들어갈 수 있다 — 한국시간
-  // 기준 자정을 명시적으로 못박는다.
-  const fromIso = `${from}T00:00:00+09:00`;
-  const toIso = `${to}T23:59:59.999+09:00`;
   const suffix = `${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`;
   const monthNavSuffix = `${productId ? `&product_id=${productId}` : ""}${suffix}`;
 
@@ -37,63 +31,39 @@ export default async function InventoryLedgerPage({
 
   const selectedProduct = productId ? products.find((p) => p.id === productId) : null;
 
-  let openingBalance = 0;
-  let rows: {
-    id: string;
-    type: string;
-    quantity: number;
-    reference: string | null;
-    note: string | null;
-    created_at: string;
-  }[] = [];
+  // get_product_ledger_rows가 거래일자(transaction_date) 오름차순 +
+  // 창고별 재고실사 리셋을 반영해 각 행의 "그 시점 잔량"(balance_after)까지
+  // DB 안에서 계산해 돌려준다 — 그대로 쓴다(JS에서 다시 누적하지 않는다).
+  // created_at(시스템 입력시각) 기준으로 계산하면 전표를 늦게/일찍
+  // 입력했을 때 중간 잔량이 틀어지는 버그가 있었다.
+  const rawLedgerRows = selectedProduct
+    ? (
+        await supabase.rpc("get_product_ledger_rows", {
+          p_product_id: selectedProduct.id,
+          p_warehouse_id: warehouseId || null,
+          p_from: from,
+          p_to: to,
+        })
+      ).data ?? []
+    : [];
 
-  if (selectedProduct) {
-    // QR 자동실사 등으로 한 품목이 한 달에 1000건 넘는 재고 트랜잭션을
-    // 만들 수 있어, .range() 없이 조회하면 입고/출고 합계·마감재고가
-    // 조용히 틀어진다 — fetchAllRows로 끝까지 받는다.
-    const [{ data: opening }, periodRows] = await Promise.all([
-      supabase.rpc("get_ledger_opening_balance", {
-        p_product_id: selectedProduct.id,
-        p_warehouse_id: warehouseId || null,
-        p_before: fromIso,
-      }),
-      fetchAllRows((f, t) => {
-        let q = supabase
-          .from("inventory_transactions")
-          .select("id, type, quantity, reference, note, created_at")
-          .eq("product_id", selectedProduct.id)
-          .gte("created_at", fromIso)
-          .lte("created_at", toIso)
-          .order("created_at", { ascending: true })
-          .range(f, t);
-        if (warehouseId) q = q.eq("warehouse_id", warehouseId);
-        return q;
-      }),
-    ]);
-    openingBalance = Number(opening ?? 0);
-    rows = periodRows;
-  }
-
-  const ledgerRows = rows.reduce<
-    Array<{
-      id: string;
-      type: string;
-      quantity: number;
-      reference: string | null;
-      note: string | null;
-      created_at: string;
-      delta: number;
-      balance: number;
-    }>
-  >((acc, r) => {
+  const ledgerRows = rawLedgerRows.map((r) => {
     const delta = r.type === "out" ? -Math.abs(Number(r.quantity)) : Number(r.quantity);
-    const prevBalance = acc.length > 0 ? acc[acc.length - 1].balance : openingBalance;
-    acc.push({ ...r, delta, balance: prevBalance + delta });
-    return acc;
-  }, []);
-  const inTotal = rows.filter((r) => r.type !== "out").reduce((sum, r) => sum + Number(r.quantity), 0);
-  const outTotal = rows.filter((r) => r.type === "out").reduce((sum, r) => sum + Math.abs(Number(r.quantity)), 0);
-  const closingBalance = openingBalance + inTotal - outTotal;
+    return {
+      id: r.id,
+      type: r.type,
+      quantity: r.quantity,
+      reference: r.reference,
+      note: r.note,
+      date: r.transaction_date,
+      delta,
+      balance: r.balance_after,
+    };
+  });
+  const openingBalance = ledgerRows.length > 0 ? ledgerRows[0].balance - ledgerRows[0].delta : 0;
+  const inTotal = rawLedgerRows.filter((r) => r.type !== "out").reduce((sum, r) => sum + Number(r.quantity), 0);
+  const outTotal = rawLedgerRows.filter((r) => r.type === "out").reduce((sum, r) => sum + Math.abs(Number(r.quantity)), 0);
+  const closingBalance = ledgerRows.length > 0 ? ledgerRows[ledgerRows.length - 1].balance : openingBalance;
 
   return (
     <div>
@@ -189,7 +159,7 @@ export default async function InventoryLedgerPage({
               <table className="erp-grid">
                 <thead>
                   <tr>
-                    <th style={{ width: 140 }}>일시</th>
+                    <th style={{ width: 140 }}>거래일자</th>
                     <th style={{ width: 70 }}>구분</th>
                     <th className="num" style={{ width: 110 }}>
                       수량
@@ -204,7 +174,7 @@ export default async function InventoryLedgerPage({
                 <tbody>
                   {ledgerRows.map((r) => (
                     <tr key={r.id}>
-                      <td>{new Date(r.created_at).toLocaleString("ko-KR")}</td>
+                      <td>{new Date(r.date).toLocaleDateString("ko-KR")}</td>
                       <td>{TYPE_LABEL[r.type] ?? r.type}</td>
                       <td className="num" style={{ color: r.delta < 0 ? "var(--erp-danger)" : "var(--erp-primary)" }}>
                         {r.delta > 0 ? "+" : ""}

@@ -7,7 +7,6 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
-import { computeBalanceAfterById } from "@/lib/inventory-balance";
 import { ROLE_LABELS } from "@/lib/user-roles";
 import { formatNumber } from "@/lib/format-number";
 
@@ -290,31 +289,20 @@ export default async function AuditLogPage({
     );
     hasMore = adjustmentsHasMore;
 
-    // 각 조정의 "전/후 수량"은 그 조정분(delta)만으로는 알 수 없다 — 화면에
-    // 나온 품목들의 전체 입출고 이력을 처음부터 누적해야 그 시점의 정확한
-    // 잔량이 나온다(/inventory/[productId]와 같은 계산 방식).
+    // 각 조정의 "전/후 수량"은 그 조정분(delta)만으로는 알 수 없다 —
+    // get_product_ledger_rows가 그 품목의 전체 입출고 이력을 거래일자
+    // 오름차순 + 재고실사 리셋까지 반영해 각 행의 정확한 잔량을 계산해
+    // 돌려준다(/inventory/[productId]와 같은 계산을 재사용).
     const productIds = Array.from(new Set(rows.map((r) => r.product_id)));
-    const fullHistory = productIds.length
-      ? await fetchAllRows<{ id: string; product_id: string; type: string; quantity: number }>(
-          (from, to) =>
-            supabase
-              .from("inventory_transactions")
-              .select("id, product_id, type, quantity, created_at")
-              .in("product_id", productIds)
-              .order("created_at", { ascending: true })
-              .range(from, to),
-        )
-      : [];
-    const byProduct = new Map<string, typeof fullHistory>();
-    for (const t of fullHistory) {
-      const arr = byProduct.get(t.product_id) ?? [];
-      arr.push(t);
-      byProduct.set(t.product_id, arr);
-    }
+    const balanceAfterById = new Map<string, number>();
+    await Promise.all(
+      productIds.map(async (pid) => {
+        const { data } = await supabase.rpc("get_product_ledger_rows", { p_product_id: pid });
+        for (const t of data ?? []) balanceAfterById.set(t.id, t.balance_after);
+      }),
+    );
 
     viewRows = rows.map((row) => {
-      const history = byProduct.get(row.product_id) ?? [];
-      const balanceAfterById = computeBalanceAfterById(history);
       const after = balanceAfterById.get(row.id) ?? 0;
       const before = after - row.quantity;
       return {

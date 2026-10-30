@@ -7,7 +7,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { computeBalanceAfterById } from "@/lib/inventory-balance";
+import { recalculateInventoryCache } from "../actions";
 import { formatNumber } from "@/lib/format-number";
 import { findWarehouseQuantity, sumInventoryQuantity } from "@/lib/inventory-quantity";
 
@@ -98,11 +98,13 @@ export default async function InventoryCountPage({
   // 품목 행만 받아온다(migration 155). 그래서 자동 실행 자체를 막을
   // 필요도 없어졌지만, 평소엔 안 쓰는 검증 기능을 매번 계산할 이유는
   // 없어서 버튼을 눌렀을 때(?verify=1)만 호출하는 것은 그대로 둔다.
+  const warehouseNameById = new Map(warehouses.map((w) => [w.id, w.name]));
   const cacheMismatches = verifyRequested
     ? ((await supabase.rpc("get_inventory_cache_mismatches")).data ?? []).map((m) => ({
         sku: m.sku,
         name: m.name,
         spec: m.spec,
+        warehouseName: warehouseNameById.get(m.warehouse_id) ?? "-",
         cached: Number(m.cached),
         computed: Number(m.computed),
       }))
@@ -192,30 +194,18 @@ export default async function InventoryCountPage({
 
   if (selectedSession) {
     const productIds = Array.from(new Set(selectedSession.items.map((i) => i.productId)));
-    const fullHistory = await fetchAllRows<{
-      id: string;
-      product_id: string;
-      type: string;
-      quantity: number;
-    }>((from, to) =>
-      supabase
-        .from("inventory_transactions")
-        .select("id, product_id, type, quantity, created_at")
-        .in("product_id", productIds)
-        .order("created_at", { ascending: true })
-        .range(from, to),
+    // get_product_ledger_rows가 품목별 전체 입출고 이력을 거래일자
+    // 오름차순 + 재고실사 리셋까지 반영해 정확한 잔량으로 계산해 돌려준다
+    // (/inventory/[productId]와 같은 계산을 재사용).
+    const balanceAfterById = new Map<string, number>();
+    await Promise.all(
+      productIds.map(async (pid) => {
+        const { data } = await supabase.rpc("get_product_ledger_rows", { p_product_id: pid });
+        for (const t of data ?? []) balanceAfterById.set(t.id, t.balance_after);
+      }),
     );
 
-    const byProduct = new Map<string, typeof fullHistory>();
-    for (const t of fullHistory) {
-      const arr = byProduct.get(t.product_id) ?? [];
-      arr.push(t);
-      byProduct.set(t.product_id, arr);
-    }
-
     detailRows = selectedSession.items.map((item) => {
-      const history = byProduct.get(item.productId) ?? [];
-      const balanceAfterById = computeBalanceAfterById(history);
       const after = balanceAfterById.get(item.id) ?? 0;
       return {
         productId: item.productId,
@@ -355,10 +345,17 @@ export default async function InventoryCountPage({
             </PageGuide>
           ) : (
             <>
-              <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>
-                ⚠ 아래 품목은 화면의 전산 재고와 실제 거래이력 합계가 다릅니다 — 소프트웨어
-                계산/캐시 문제일 가능성이 있으니 실사보다 먼저 이 목록부터 확인하세요.
-              </p>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs" style={{ color: "var(--erp-danger)" }}>
+                  ⚠ 아래 품목은 화면의 전산 재고와 실제 거래이력 합계가 다릅니다 — 소프트웨어
+                  계산/캐시 문제일 가능성이 있으니 실사보다 먼저 이 목록부터 확인하세요.
+                </p>
+                <form action={recalculateInventoryCache}>
+                  <button type="submit" className="erp-btn erp-btn-primary" style={{ flexShrink: 0 }}>
+                    지금 자동 교정
+                  </button>
+                </form>
+              </div>
               <div className="erp-grid-wrap has-card-view">
                 <table className="erp-grid">
                   <thead>
@@ -366,6 +363,7 @@ export default async function InventoryCountPage({
                       <th>SKU</th>
                       <th>품목명</th>
                       <th>규격</th>
+                      <th>창고</th>
                       <th className="num" style={{ width: 130 }}>
                         화면 전산 재고
                       </th>
@@ -379,10 +377,11 @@ export default async function InventoryCountPage({
                   </thead>
                   <tbody>
                     {cacheMismatches.map((m) => (
-                      <tr key={m.sku}>
+                      <tr key={`${m.sku}:${m.warehouseName}`}>
                         <td>{m.sku}</td>
                         <td>{m.name}</td>
                         <td style={{ color: "var(--erp-text-muted)" }}>{m.spec || "-"}</td>
+                        <td>{m.warehouseName}</td>
                         <td className="num">{formatNumber(m.cached)}</td>
                         <td className="num">{formatNumber(m.computed)}</td>
                         <td className="num" style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
@@ -395,7 +394,7 @@ export default async function InventoryCountPage({
               </div>
               <div className="erp-row-card-list">
                 {cacheMismatches.map((m) => (
-                  <div className="erp-row-card" key={m.sku}>
+                  <div className="erp-row-card" key={`${m.sku}:${m.warehouseName}`}>
                     <div className="erp-row-card-head">
                       <span className="erp-row-card-partner">{m.name}</span>
                       <span className="erp-row-card-date">{m.sku}</span>
@@ -404,6 +403,10 @@ export default async function InventoryCountPage({
                       <div>
                         <dt>규격</dt>
                         <dd>{m.spec || "-"}</dd>
+                      </div>
+                      <div>
+                        <dt>창고</dt>
+                        <dd>{m.warehouseName}</dd>
                       </div>
                       <div>
                         <dt>화면 전산 재고</dt>
