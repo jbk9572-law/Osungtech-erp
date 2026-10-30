@@ -61,19 +61,18 @@ export function RegistrationModalShell({
   // router.back()(이 모달을 어떤 경로로 거쳐 왔는지에 따라 엉뚱한
   // 화면으로 가버릴 수 있다) 대신 항상 올바른 곳으로 닫힌다.
   const closeHrefRef = useRef<string | null>(closeHref ?? null);
-  // 목적지를 알게 되는 즉시 미리 가져와둔다(router.prefetch). 등록/수정
-  // 저장 직후처럼 revalidatePath로 목적지 화면의 캐시가 막 무효화된
-  // 상태면 push 시점에 서버 왕복이 걸려 "닫힘"이 아니라 "이동 중"으로
-  // 보이는 문제가 있었다 — X를 누르기 전에(모달이 열려 있는 동안) 미리
-  // 데워두면 실제 클릭 시점엔 캐시 히트라 즉시 닫히는 것처럼 보인다.
-  const registerCloseHref = useCallback(
-    (href: string) => {
-      if (closeHrefRef.current === href) return;
-      closeHrefRef.current = href;
-      router.prefetch(href);
-    },
-    [router],
-  );
+  // 예전엔 목적지를 알게 되는 즉시 router.prefetch()로 미리 데워뒀는데,
+  // 매출/매입처럼 날짜+검색어로 필터링한 목록 위에서 상세를 열었다가
+  // 닫으면 그 필터가 초기화된 목록으로 돌아가는 버그가 있었다(사용자
+  // 재현 — "1/1~10/30 기간에 SKU110 검색 후 상세 열었다 X로 닫으면
+  // 검색조건이 사라진다"). 모달이 열려 있는 동안 미리 캐시해둔 "닫기
+  // 목적지" 페이로드가 실제 닫는 시점의 최신 검색조건과 어긋날 수 있다는
+  // 뜻이라, 사전 캐시 없이 닫는 시점에 항상 그 URL을 서버에서 새로
+  // 받아오게 한다 — 등록/수정 저장 직후처럼 아주 짧게 로딩이 보일 수
+  // 있지만, 검색 조건이 날아가는 것보다는 훨씬 낫다.
+  const registerCloseHref = useCallback((href: string) => {
+    closeHrefRef.current = href;
+  }, []);
 
   const beginClosing = useCallback(() => {
     setClosing(true);
@@ -87,8 +86,11 @@ export function RegistrationModalShell({
     if (closeHrefRef.current) {
       // 이 페이지가 등록해준 정확한 목적지로 명시 이동한다 — 브라우저
       // 히스토리(router.back())에 기대지 않으므로 이 모달을 어떤 경로로
-      // 거쳐 들어왔든 항상 같은 곳으로 닫힌다.
+      // 거쳐 들어왔든 항상 같은 곳으로 닫힌다. refresh()로 그 목적지의
+      // 클라이언트 캐시를 비워, 모달이 열려 있던 동안 캐시된 적이 있어도
+      // 항상 최신 검색조건 기준 결과를 받아오게 한다.
       router.push(closeHrefRef.current);
+      router.refresh();
     } else {
       // 아직 목적지가 등록되지 않은 극히 짧은 순간(마운트 직후)에 대한
       // 안전장치일 뿐, 정상 상태에서는 위 분기로만 닫힌다.
@@ -112,11 +114,6 @@ export function RegistrationModalShell({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [close]);
-
-  useEffect(() => {
-    if (closeHref) router.prefetch(closeHref);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [closeHref]);
 
   useScrollLock(true);
 
