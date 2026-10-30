@@ -231,7 +231,7 @@ export default async function SalesActivitiesPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <SalesActivityDetailPanel id={selectedId} closeHref={newHref} />
+            <SalesActivityDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : (
             <div className="erp-detail" style={{ marginTop: 0 }}>
               <div className="erp-detail-tabs">

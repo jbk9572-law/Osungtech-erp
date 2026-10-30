@@ -28,7 +28,7 @@ export default async function ProductDetailPage({
           confirmMessage="이 상품을 삭제하시겠습니까? 관련 매입/매출 내역이 있으면 삭제되지 않습니다."
         />
       </div>
-      <ProductDetailPanel id={id} />
+      <ProductDetailPanel key={id} id={id} />
     </div>
   );
 }

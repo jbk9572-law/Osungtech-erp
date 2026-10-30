@@ -124,7 +124,7 @@ export default async function DocumentsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <DocumentDetailPanel id={selectedId} />
+            <DocumentDetailPanel key={selectedId} id={selectedId} />
           ) : (
             <>
               <PageGuide>

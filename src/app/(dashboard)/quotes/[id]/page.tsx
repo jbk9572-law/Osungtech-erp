@@ -19,7 +19,7 @@ export default async function QuoteDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <QuoteDetailPanel id={id} closeHref={closeHref} />
+      <QuoteDetailPanel key={id} id={id} closeHref={closeHref} />
     </div>
   );
 }

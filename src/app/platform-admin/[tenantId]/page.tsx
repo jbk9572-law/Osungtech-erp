@@ -23,7 +23,7 @@ export default async function PlatformAdminTenantDetailPage({
   return (
     <div>
       <PageGuide>이 회사의 정보 수정, 로그인 허용 여부, 요금제 상태, 소속 계정을 관리합니다.</PageGuide>
-      <TenantDetailPanel tenantId={tenantId} closeHref={closeHref} />
+      <TenantDetailPanel key={tenantId} tenantId={tenantId} closeHref={closeHref} />
     </div>
   );
 }

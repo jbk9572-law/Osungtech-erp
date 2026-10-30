@@ -26,7 +26,7 @@ export default async function TodoDetailPage({
         actions={<CloseButton href={closeHref}>ESC 목록으로</CloseButton>}
       />
       <div>
-        <TodoDetailPanel id={id} />
+        <TodoDetailPanel key={id} id={id} />
       </div>
     </div>
   );

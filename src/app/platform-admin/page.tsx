@@ -164,7 +164,7 @@ export default async function PlatformAdminPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <TenantDetailPanel tenantId={selectedId} closeHref={newHref} />
+            <TenantDetailPanel key={selectedId} tenantId={selectedId} closeHref={newHref} />
           ) : (
             <FormSection tabLabel="새 회사 추가">
               <CreateCompanyForm />

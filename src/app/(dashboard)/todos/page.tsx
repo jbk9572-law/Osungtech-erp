@@ -263,7 +263,7 @@ export default async function TodosPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <TodoDetailPanel id={selectedId} />
+            <TodoDetailPanel key={selectedId} id={selectedId} />
           ) : (
             <FormSection tabLabel="할 일 등록">
               <TodoForm

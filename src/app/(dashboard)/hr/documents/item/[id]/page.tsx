@@ -24,7 +24,7 @@ export default async function DocumentDetailPage({
   return (
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ F9: { printHref: `/hr/documents/item/${id}/print` }, Escape: { href: closeHref } }} />
-      <DocumentDetailPanel id={id} />
+      <DocumentDetailPanel key={id} id={id} />
     </div>
   );
 }

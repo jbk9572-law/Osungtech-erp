@@ -21,7 +21,7 @@ export default async function AnnouncementDetailPage({
   return (
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <AnnouncementDetailPanel id={id} closeHref={closeHref} />
+      <AnnouncementDetailPanel key={id} id={id} closeHref={closeHref} />
     </div>
   );
 }

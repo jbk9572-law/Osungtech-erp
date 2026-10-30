@@ -149,7 +149,7 @@ export default async function AnnouncementsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <AnnouncementDetailPanel id={selectedId} closeHref={newHref} />
+            <AnnouncementDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : isManagerOrAdmin ? (
             <FormSection tabLabel="공지사항 작성">
               <AnnouncementForm action={createAnnouncement} submitLabel="등록" />

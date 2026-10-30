@@ -187,7 +187,7 @@ export default async function PurchaseQuoteRequestsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <PurchaseQuoteRequestDetailPanel id={selectedId} closeHref={newHref} />
+            <PurchaseQuoteRequestDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : (
             formData && (
               <NewPurchaseQuoteRequestForm today={todayKstStr()} suppliers={formData.suppliers} products={formData.products} />

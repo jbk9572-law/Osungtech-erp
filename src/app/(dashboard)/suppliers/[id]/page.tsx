@@ -28,7 +28,7 @@ export default async function SupplierDetailPage({
           confirmMessage="이 공급처를 삭제하시겠습니까? 관련 매입/상품 내역이 있으면 삭제되지 않습니다."
         />
       </div>
-      <SupplierDetailPanel id={id} />
+      <SupplierDetailPanel key={id} id={id} />
     </div>
   );
 }

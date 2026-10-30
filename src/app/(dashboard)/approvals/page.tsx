@@ -360,7 +360,7 @@ export default async function ApprovalsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <ApprovalDetailPanel id={selectedId} closeHref={newHref} />
+            <ApprovalDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : (
             formData && (
               <FormSection tabLabel="기안서 작성">

@@ -17,7 +17,7 @@ export default async function ApprovalDocumentDetailPage({
   return (
     <div className="erp-comm-shell">
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <ApprovalDetailPanel id={id} closeHref={closeHref} selfHref={selfHref} />
+      <ApprovalDetailPanel key={id} id={id} closeHref={closeHref} selfHref={selfHref} />
     </div>
   );
 }

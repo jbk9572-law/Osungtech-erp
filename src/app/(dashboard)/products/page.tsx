@@ -195,7 +195,7 @@ export default async function ProductsPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <ProductDetailPanel id={selectedId} />
+            <ProductDetailPanel key={selectedId} id={selectedId} />
           ) : (
             <>
               <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>

@@ -28,7 +28,7 @@ export default async function CustomerDetailPage({
           confirmMessage="이 출고처를 삭제하시겠습니까? 관련 매출 내역이 있으면 삭제되지 않습니다."
         />
       </div>
-      <CustomerDetailPanel id={id} />
+      <CustomerDetailPanel key={id} id={id} />
     </div>
   );
 }

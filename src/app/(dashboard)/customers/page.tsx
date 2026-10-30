@@ -179,7 +179,7 @@ export default async function CustomersPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <CustomerDetailPanel id={selectedId} />
+            <CustomerDetailPanel key={selectedId} id={selectedId} />
           ) : (
             <>
               <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>

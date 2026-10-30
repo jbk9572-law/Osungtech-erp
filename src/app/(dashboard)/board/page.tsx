@@ -219,13 +219,13 @@ export default async function BoardPage({
         />
 
         <div className="erp-split-detail">
-          {selectedId && selectedType === "notice" && <AnnouncementDetailPanel id={selectedId} closeHref={listHref} />}
-          {selectedId && selectedType === "hr_doc" && <DocumentDetailPanel id={selectedId} />}
+          {selectedId && selectedType === "notice" && <AnnouncementDetailPanel key={selectedId} id={selectedId} closeHref={listHref} />}
+          {selectedId && selectedType === "hr_doc" && <DocumentDetailPanel key={selectedId} id={selectedId} />}
           {selectedId && selectedType === "official" && (
-            <OfficialDocumentDetailPanel id={selectedId} closeHref={listHref} selfHref={`${listHref}?id=${selectedId}&type=official`} />
+            <OfficialDocumentDetailPanel key={selectedId} id={selectedId} closeHref={listHref} selfHref={`${listHref}?id=${selectedId}&type=official`} />
           )}
           {selectedId && selectedType === "approval" && (
-            <ApprovalDetailPanel id={selectedId} closeHref={listHref} selfHref={`${listHref}?id=${selectedId}&type=approval`} />
+            <ApprovalDetailPanel key={selectedId} id={selectedId} closeHref={listHref} selfHref={`${listHref}?id=${selectedId}&type=approval`} />
           )}
           {!selectedId && (
             <SplitDetailEmpty

@@ -20,7 +20,7 @@ export default async function PaymentRequestDetailPage({
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
-      <PaymentRequestDetailPanel id={id} closeHref={closeHref} warning={warning} selfHref={selfHref} />
+      <PaymentRequestDetailPanel key={id} id={id} closeHref={closeHref} warning={warning} selfHref={selfHref} />
     </div>
   );
 }

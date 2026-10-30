@@ -181,7 +181,7 @@ export default async function QuotesPage({
 
         <div className="erp-split-detail">
           {selectedId ? (
-            <QuoteDetailPanel id={selectedId} closeHref={newHref} />
+            <QuoteDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : (
             formData && (
               <NewQuoteForm today={todayKstStr()} customers={formData.customers} products={formData.products} />

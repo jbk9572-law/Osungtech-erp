@@ -146,6 +146,7 @@ export default async function PaymentRequestsPage({
         <div className="erp-split-detail">
           {selectedId ? (
             <PaymentRequestDetailPanel
+              key={selectedId}
               id={selectedId}
               closeHref={newHref}
               selfHref={`${newHref}${newHref.includes("?") ? "&" : "?"}id=${selectedId}`}
