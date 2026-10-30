@@ -33,21 +33,33 @@ export default async function SalesActivitiesPage({
   await requireFeatureEnabled(supabase, "crm");
   const today = todayKstStr();
 
-  let query = supabase
-    .from("sales_activities")
-    .select(
-      "id, activity_type, subject, content, activity_date, next_action_date, next_action_memo, next_action_done, customers(id, name)",
-    )
-    .order("activity_date", { ascending: false })
-    .limit(limit);
-  if (from) query = query.gte("activity_date", from);
-  if (to) query = query.lte("activity_date", to);
+  const keyword = q?.trim().toLowerCase();
+
+  const buildQuery = () => {
+    let query = supabase
+      .from("sales_activities")
+      .select(
+        "id, activity_type, subject, content, activity_date, next_action_date, next_action_memo, next_action_done, customers(id, name)",
+      )
+      .order("activity_date", { ascending: false });
+    if (from) query = query.gte("activity_date", from);
+    if (to) query = query.lte("activity_date", to);
+    return query;
+  };
 
   // "팔로우업 예정"은 위 목록의 조회기간 필터와 무관하게 항상 전체에서
   // 아직 처리 안 한 건을 보여준다 — 날짜로 목록을 좁혀도 놓치는 팔로우업이
   // 없어야 하므로 별도 쿼리로 둔다.
-  const [{ data: rawActivities }, { data: upcomingRows }, customers] = await Promise.all([
-    query,
+  //
+  // 검색어(q)가 있으면 화면에 보이는 limit건 안에서만 찾지 않고 조회기간
+  // 전체에서 찾는다 — sales/purchases 목록과 같은 이유로 같은 버그가
+  // 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안 된다").
+  const [rawActivities, { data: upcomingRows }, customers] = await Promise.all([
+    keyword
+      ? fetchAllRows((from, to) => buildQuery().range(from, to))
+      : buildQuery()
+          .limit(limit)
+          .then((r) => r.data ?? []),
     supabase
       .from("sales_activities")
       .select("id, subject, next_action_date, next_action_memo, customers(name)")
@@ -62,11 +74,10 @@ export default async function SalesActivitiesPage({
       : Promise.resolve<{ id: string; name: string }[]>([]),
   ]);
 
-  const hasMore = (rawActivities?.length ?? 0) >= limit;
-  const keyword = q?.trim().toLowerCase();
+  const hasMore = !keyword && rawActivities.length >= limit;
   const activities = keyword
-    ? (rawActivities ?? []).filter((a) => matchesSearch(keyword, a.customers?.name, a.subject, a.content))
-    : rawActivities ?? [];
+    ? rawActivities.filter((a) => matchesSearch(keyword, a.customers?.name, a.subject, a.content))
+    : rawActivities;
 
   const upcoming = upcomingRows ?? [];
 

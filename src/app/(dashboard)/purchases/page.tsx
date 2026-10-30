@@ -58,42 +58,40 @@ export default async function PurchasesPage({
   const viewedMonth = monthRangeOf(effectiveFrom, effectiveTo);
   const carryoverRange = viewedMonth ? getMonthRange(shiftMonth(viewedMonth, -1)) : null;
 
-  let query = supabase
-    .from("purchase_order_items")
-    .select(PURCHASE_ITEM_SELECT)
-    // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. `{ foreignTable }`
-    // 옵션은 상위 테이블을 하위 임베드 테이블 값으로 정렬하는 방향으로는
-    // 실제로 적용되지 않는 postgrest-js의 알려진 제약이라, PostgREST의
-    // `table(column)` 표기를 컬럼명 자리에 직접 써서 우회한다.
-    .order("purchase_orders(purchase_date)", { ascending: false })
-    .order("created_at", { ascending: false })
-    .gte("purchase_orders.purchase_date", effectiveFrom)
-    .limit(limit);
+  const keyword = q?.trim().toLowerCase();
 
-  query = query.lte("purchase_orders.purchase_date", effectiveTo);
+  // 매입일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다.
+  // `{ foreignTable }` 옵션은 상위 테이블을 하위 임베드 테이블 값으로
+  // 정렬하는 방향으로는 실제로 적용되지 않는 postgrest-js의 알려진
+  // 제약이라, PostgREST의 `table(column)` 표기를 컬럼명 자리에 직접
+  // 써서 우회한다.
+  const buildItemQuery = () =>
+    supabase
+      .from("purchase_order_items")
+      .select(PURCHASE_ITEM_SELECT)
+      .order("purchase_orders(purchase_date)", { ascending: false })
+      .order("created_at", { ascending: false })
+      .gte("purchase_orders.purchase_date", effectiveFrom)
+      .lte("purchase_orders.purchase_date", effectiveTo);
 
   // 매입 옆에 지급 내역도 같은 목록에 섞어서 보여준다 — sales/page.tsx와
   // 동일한 방식(표시용으로만 합침, 실제 정산은 lib/ar-ap.ts 그대로).
-  let paymentQuery = supabase
-    .from("supplier_payments")
-    .select("id, paid_at, amount, memo, suppliers(id, name)")
-    .order("paid_at", { ascending: false })
-    .gte("paid_at", effectiveFrom)
-    .limit(limit);
-  paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
+  const buildPaymentQuery = () =>
+    supabase
+      .from("supplier_payments")
+      .select("id, paid_at, amount, memo, suppliers(id, name)")
+      .order("paid_at", { ascending: false })
+      .gte("paid_at", effectiveFrom)
+      .lte("paid_at", effectiveTo);
 
-  let carryoverQuery = carryoverRange
-    ? supabase
-        .from("purchase_order_items")
-        .select(PURCHASE_ITEM_SELECT)
-        .eq("purchase_orders.is_carryover", true)
-        .order("purchase_orders(purchase_date)", { ascending: false })
-        .gte("purchase_orders.purchase_date", carryoverRange.from)
-        .limit(limit)
-    : null;
-  if (carryoverQuery && carryoverRange) {
-    carryoverQuery = carryoverQuery.lte("purchase_orders.purchase_date", carryoverRange.to);
-  }
+  const buildCarryoverQuery = (range: { from: string; to: string }) =>
+    supabase
+      .from("purchase_order_items")
+      .select(PURCHASE_ITEM_SELECT)
+      .eq("purchase_orders.is_carryover", true)
+      .order("purchase_orders(purchase_date)", { ascending: false })
+      .gte("purchase_orders.purchase_date", range.from)
+      .lte("purchase_orders.purchase_date", range.to);
 
   const receivedInvoiceRows = await fetchAllRows<{ purchase_order_id: string }>((from, to) =>
     supabase
@@ -104,20 +102,34 @@ export default async function PurchasesPage({
   );
   const receivedPurchaseOrderIds = new Set(receivedInvoiceRows.map((r) => r.purchase_order_id));
 
-  const [{ data: rawItems }, { data: rawPayments }, carryoverResult] = await Promise.all([
-    query,
-    paymentQuery,
-    carryoverQuery ?? Promise.resolve(null),
+  // 검색어(q)가 있으면 "지금 화면에 보이는 limit건" 안에서만 찾는 게
+  // 아니라 조회기간 전체에서 찾아야 한다 — sales/page.tsx와 같은 이유로
+  // 같은 버그가 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안
+  // 된다"). 검색 중일 때만 fetchAllRows로 조회기간 전체를 받고, 검색이
+  // 없을 때는 기존처럼 DB에서 최근 limit건만 받아 일반 조회 성능을
+  // 그대로 유지한다.
+  const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
+    keyword
+      ? fetchAllRows((from, to) => buildItemQuery().range(from, to))
+      : buildItemQuery()
+          .limit(limit)
+          .then((r) => r.data ?? []),
+    keyword
+      ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to))
+      : buildPaymentQuery()
+          .limit(limit)
+          .then((r) => r.data ?? []),
+    carryoverRange
+      ? keyword
+        ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to))
+        : buildCarryoverQuery(carryoverRange)
+            .limit(limit)
+            .then((r) => r.data ?? [])
+      : Promise.resolve([]),
   ]);
-  const rawCarryoverItems = carryoverResult?.data ?? [];
-  // 조회기간 안에 상한(limit)만큼 꽉 채워 왔다면 그 이상 더 있을 수 있다는
-  // 뜻이므로 "더보기"를 보여준다.
-  const hasMore =
-    (rawItems?.length ?? 0) >= limit || (rawPayments?.length ?? 0) >= limit;
 
-  const keyword = q?.trim().toLowerCase();
   const items = keyword
-    ? rawItems?.filter((item) =>
+    ? rawItems.filter((item) =>
         matchesSearch(
           keyword,
           item.purchase_orders?.suppliers?.name,
@@ -132,6 +144,10 @@ export default async function PurchasesPage({
         ),
       )
     : rawItems;
+  // "더보기"는 검색 중이 아닐 때만 의미가 있다 — sales/page.tsx와 같은
+  // 이유.
+  const hasMore =
+    !keyword && (rawItems.length >= limit || rawPayments.length >= limit);
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);

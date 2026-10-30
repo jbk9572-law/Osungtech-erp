@@ -27,30 +27,40 @@ export default async function PurchaseQuoteRequestsPage({
   const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : DEFAULT_LIST_LIMIT;
   const supabase = await createClient();
 
-  let query = supabase
-    .from("purchase_quote_requests")
-    .select(
-      "id, request_date, status, memo, target_supplier_ids, converted_purchase_request_id, selected_supplier:suppliers!selected_supplier_id(name), purchase_quote_request_items(id)",
-    )
-    .order("request_date", { ascending: false })
-    .limit(limit);
-  if (from) query = query.gte("request_date", from);
-  if (to) query = query.lte("request_date", to);
+  const keyword = q?.trim().toLowerCase();
 
-  const [{ data: rawRequests }, { data: suppliers }] = await Promise.all([
-    query,
+  const buildQuery = () => {
+    let query = supabase
+      .from("purchase_quote_requests")
+      .select(
+        "id, request_date, status, memo, target_supplier_ids, converted_purchase_request_id, selected_supplier:suppliers!selected_supplier_id(name), purchase_quote_request_items(id)",
+      )
+      .order("request_date", { ascending: false });
+    if (from) query = query.gte("request_date", from);
+    if (to) query = query.lte("request_date", to);
+    return query;
+  };
+
+  // 검색어(q)가 있으면 화면에 보이는 limit건 안에서만 찾지 않고 조회기간
+  // 전체에서 찾는다 — sales/purchases 목록과 같은 이유로 같은 버그가
+  // 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안 된다").
+  const [rawRequests, { data: suppliers }] = await Promise.all([
+    keyword
+      ? fetchAllRows((from, to) => buildQuery().range(from, to))
+      : buildQuery()
+          .limit(limit)
+          .then((r) => r.data ?? []),
     supabase.from("suppliers").select("id, name").limit(1000),
   ]);
-  const hasMore = (rawRequests?.length ?? 0) >= limit;
+  const hasMore = !keyword && rawRequests.length >= limit;
 
   const supplierNameById = new Map((suppliers ?? []).map((s) => [s.id, s.name]));
   const supplierNames = (r: { target_supplier_ids: string[] }) =>
     r.target_supplier_ids.map((sid) => supplierNameById.get(sid) ?? "").join(" ");
 
-  const keyword = q?.trim().toLowerCase();
   const rows = keyword
-    ? (rawRequests ?? []).filter((r) => matchesSearch(keyword, supplierNames(r), r.memo))
-    : rawRequests ?? [];
+    ? rawRequests.filter((r) => matchesSearch(keyword, supplierNames(r), r.memo))
+    : rawRequests;
 
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();

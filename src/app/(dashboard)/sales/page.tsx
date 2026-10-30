@@ -60,61 +60,76 @@ export default async function SalesPage({
   const viewedMonth = monthRangeOf(effectiveFrom, effectiveTo);
   const carryoverRange = viewedMonth ? getMonthRange(shiftMonth(viewedMonth, -1)) : null;
 
-  let query = supabase
-    .from("sales_order_items")
-    .select(SALE_ITEM_SELECT)
-    // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
-    // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
-    // 지웠다가 다시 넣는 방식이라 오래된 거래를 수정만 해도 최상단으로
-    // 튀어올라 거래일자와 무관하게 뒤죽박죽으로 보였다.
-    // supabase-js의 `{ foreignTable }` 옵션은 상위(base) 테이블을 하위
-    // 임베드 테이블 값으로 정렬하는 방향으로는 실제로 적용되지 않는
-    // postgrest-js의 알려진 제약이라(order 자체가 조용히 무시됨),
-    // PostgREST의 `table(column)` 표기를 컬럼명 자리에 직접 써서 우회한다.
-    .order("sales_orders(order_date)", { ascending: false })
-    .order("created_at", { ascending: false })
-    .gte("sales_orders.order_date", effectiveFrom)
-    .limit(limit);
-  query = query.lte("sales_orders.order_date", effectiveTo);
+  const keyword = q?.trim().toLowerCase();
+
+  // 거래일자(업무상 날짜) 기준으로 최신이 위로 오게 정렬한다. 이전에는
+  // 품목의 시스템 생성시각(created_at)으로 정렬했는데, 수정 시 품목을
+  // 지웠다가 다시 넣는 방식이라 오래된 거래를 수정만 해도 최상단으로
+  // 튀어올라 거래일자와 무관하게 뒤죽박죽으로 보였다. supabase-js의
+  // `{ foreignTable }` 옵션은 상위(base) 테이블을 하위 임베드 테이블
+  // 값으로 정렬하는 방향으로는 실제로 적용되지 않는 postgrest-js의
+  // 알려진 제약이라(order 자체가 조용히 무시됨), PostgREST의
+  // `table(column)` 표기를 컬럼명 자리에 직접 써서 우회한다.
+  const buildItemQuery = () =>
+    supabase
+      .from("sales_order_items")
+      .select(SALE_ITEM_SELECT)
+      .order("sales_orders(order_date)", { ascending: false })
+      .order("created_at", { ascending: false })
+      .gte("sales_orders.order_date", effectiveFrom)
+      .lte("sales_orders.order_date", effectiveTo);
 
   // 매출 옆에 수금 내역도 같은 목록에 섞어서 보여준다(구 ERP의 "매출"
-  // 메뉴 안에 매출/수금 전표가 같이 쌓이던 방식과 동일). 실제 정산 로직은
-  // lib/ar-ap.ts 그대로 두고, 여기서는 표시용으로만 합친다.
-  let paymentQuery = supabase
-    .from("customer_payments")
-    .select("id, paid_at, amount, memo, customers(id, name)")
-    .order("paid_at", { ascending: false })
-    .gte("paid_at", effectiveFrom)
-    .limit(limit);
-  paymentQuery = paymentQuery.lte("paid_at", effectiveTo);
+  // 메뉴 안에 매출/수금 전표가 같이 쌓이던 방식과 동일). 실제 정산
+  // 로직은 lib/ar-ap.ts 그대로 두고, 여기서는 표시용으로만 합친다.
+  const buildPaymentQuery = () =>
+    supabase
+      .from("customer_payments")
+      .select("id, paid_at, amount, memo, customers(id, name)")
+      .order("paid_at", { ascending: false })
+      .gte("paid_at", effectiveFrom)
+      .lte("paid_at", effectiveTo);
 
-  let carryoverQuery = carryoverRange
-    ? supabase
-        .from("sales_order_items")
-        .select(SALE_ITEM_SELECT)
-        .eq("sales_orders.is_carryover", true)
-        .order("sales_orders(order_date)", { ascending: false })
-        .gte("sales_orders.order_date", carryoverRange.from)
-        .limit(limit)
-    : null;
-  if (carryoverQuery && carryoverRange) {
-    carryoverQuery = carryoverQuery.lte("sales_orders.order_date", carryoverRange.to);
-  }
+  const buildCarryoverQuery = (range: { from: string; to: string }) =>
+    supabase
+      .from("sales_order_items")
+      .select(SALE_ITEM_SELECT)
+      .eq("sales_orders.is_carryover", true)
+      .order("sales_orders(order_date)", { ascending: false })
+      .gte("sales_orders.order_date", range.from)
+      .lte("sales_orders.order_date", range.to);
 
-  const [{ data: rawItems }, { data: rawPayments }, carryoverResult] = await Promise.all([
-    query,
-    paymentQuery,
-    carryoverQuery ?? Promise.resolve(null),
+  // 검색어(q)가 있으면 "지금 화면에 보이는 limit건" 안에서만 찾는 게
+  // 아니라 조회기간 전체에서 찾아야 한다 — 예전엔 DB 단계에서 이미
+  // limit(기본 300)을 걸어버려서, 조회기간 안에 300건보다 더 있으면
+  // limit 밖으로 밀려난 거래는 검색 대상에서 통째로 빠졌다(사용자 지적
+  // — "작성자가 다른 건은 조회가 안 된다": 실제로는 작성자와 무관하게,
+  // 최신순으로 301번째 이후로 밀려난 거래 전부가 검색에서 빠지고 있었고,
+  // 공교롭게 그게 다른 직원이 쓴 거래들이었던 것). 검색 중일 때만
+  // fetchAllRows로 조회기간 전체를 받고, 검색이 없을 때는 기존처럼
+  // DB에서 최근 limit건만 받아 일반 조회 성능을 그대로 유지한다.
+  const [rawItems, rawPayments, rawCarryoverItems] = await Promise.all([
+    keyword
+      ? fetchAllRows((from, to) => buildItemQuery().range(from, to))
+      : buildItemQuery()
+          .limit(limit)
+          .then((r) => r.data ?? []),
+    keyword
+      ? fetchAllRows((from, to) => buildPaymentQuery().range(from, to))
+      : buildPaymentQuery()
+          .limit(limit)
+          .then((r) => r.data ?? []),
+    carryoverRange
+      ? keyword
+        ? fetchAllRows((from, to) => buildCarryoverQuery(carryoverRange).range(from, to))
+        : buildCarryoverQuery(carryoverRange)
+            .limit(limit)
+            .then((r) => r.data ?? [])
+      : Promise.resolve([]),
   ]);
-  const rawCarryoverItems = carryoverResult?.data ?? [];
-  // 조회기간 안에 상한(limit)만큼 꽉 채워 왔다면 그 이상 더 있을 수 있다는
-  // 뜻이므로 "더보기"를 보여준다.
-  const hasMore =
-    (rawItems?.length ?? 0) >= limit || (rawPayments?.length ?? 0) >= limit;
 
-  const keyword = q?.trim().toLowerCase();
   const items = keyword
-    ? rawItems?.filter((item) =>
+    ? rawItems.filter((item) =>
         matchesSearch(
           keyword,
           item.sales_orders?.customers?.name,
@@ -129,6 +144,13 @@ export default async function SalesPage({
         ),
       )
     : rawItems;
+  // "더보기"는 검색 중이 아닐 때만 의미가 있다 — 검색 중에는 이미
+  // fetchAllRows로 조회기간 전체를 다 받아 걸러낸 뒤라 더 가져올 게
+  // 없다(기간을 넓히려면 날짜 필터를 직접 바꿔야 한다). 검색이 없을
+  // 때는 DB에서 받아온 양이 상한(limit)에 꽉 찼으면 더 있을 수 있다는
+  // 뜻이다.
+  const hasMore =
+    !keyword && (rawItems.length >= limit || rawPayments.length >= limit);
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);

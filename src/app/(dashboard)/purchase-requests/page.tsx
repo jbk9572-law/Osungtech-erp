@@ -36,23 +36,33 @@ export default async function PurchaseRequestsPage({
 
   const supabase = await createClient();
 
-  let query = supabase
-    .from("purchase_requests")
-    .select(
-      "id, request_date, status, converted_purchase_order_id, memo, suppliers(name), profiles!requested_by(full_name), purchase_request_items(quantity, estimated_unit_price)",
-    )
-    .order("request_date", { ascending: false })
-    .limit(limit);
-  if (from) query = query.gte("request_date", from);
-  if (to) query = query.lte("request_date", to);
-
-  const { data: rawRequests } = await query;
-  const hasMore = (rawRequests?.length ?? 0) >= limit;
-
   const keyword = q?.trim().toLowerCase();
+
+  const buildQuery = () => {
+    let query = supabase
+      .from("purchase_requests")
+      .select(
+        "id, request_date, status, converted_purchase_order_id, memo, suppliers(name), profiles!requested_by(full_name), purchase_request_items(quantity, estimated_unit_price)",
+      )
+      .order("request_date", { ascending: false });
+    if (from) query = query.gte("request_date", from);
+    if (to) query = query.lte("request_date", to);
+    return query;
+  };
+
+  // 검색어(q)가 있으면 화면에 보이는 limit건 안에서만 찾지 않고 조회기간
+  // 전체에서 찾는다 — sales/purchases 목록과 같은 이유로 같은 버그가
+  // 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안 된다").
+  const rawRequests = keyword
+    ? await fetchAllRows((from, to) => buildQuery().range(from, to))
+    : await buildQuery()
+        .limit(limit)
+        .then((r) => r.data ?? []);
+  const hasMore = !keyword && rawRequests.length >= limit;
+
   const requests = keyword
-    ? (rawRequests ?? []).filter((r) => matchesSearch(keyword, r.suppliers?.name, r.memo, r.profiles?.full_name))
-    : rawRequests ?? [];
+    ? rawRequests.filter((r) => matchesSearch(keyword, r.suppliers?.name, r.memo, r.profiles?.full_name))
+    : rawRequests;
 
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();

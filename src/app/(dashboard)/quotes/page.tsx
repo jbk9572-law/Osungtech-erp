@@ -30,25 +30,35 @@ export default async function QuotesPage({
   const supabase = await createClient();
   await requireFeatureEnabled(supabase, "crm");
 
-  let query = supabase
-    .from("quotes")
-    .select(
-      "id, doc_no, quote_date, valid_until, status, memo, converted_sales_order_id, customers(name), quote_items(quantity, unit_price)",
-    )
-    .order("quote_date", { ascending: false })
-    .limit(limit);
-  if (from) query = query.gte("quote_date", from);
-  if (to) query = query.lte("quote_date", to);
-
-  const { data: rawQuotes } = await query;
-  const hasMore = (rawQuotes?.length ?? 0) >= limit;
-
   const keyword = q?.trim().toLowerCase();
+
+  const buildQuery = () => {
+    let query = supabase
+      .from("quotes")
+      .select(
+        "id, doc_no, quote_date, valid_until, status, memo, converted_sales_order_id, customers(name), quote_items(quantity, unit_price)",
+      )
+      .order("quote_date", { ascending: false });
+    if (from) query = query.gte("quote_date", from);
+    if (to) query = query.lte("quote_date", to);
+    return query;
+  };
+
+  // 검색어(q)가 있으면 화면에 보이는 limit건 안에서만 찾지 않고 조회기간
+  // 전체에서 찾는다 — sales/purchases 목록과 같은 이유로 같은 버그가
+  // 있었다(사용자 지적 — "작성자가 다른 건은 조회가 안 된다").
+  const rawQuotes = keyword
+    ? await fetchAllRows((from, to) => buildQuery().range(from, to))
+    : await buildQuery()
+        .limit(limit)
+        .then((r) => r.data ?? []);
+  const hasMore = !keyword && rawQuotes.length >= limit;
+
   const quotes = keyword
-    ? (rawQuotes ?? []).filter((quote) =>
+    ? rawQuotes.filter((quote) =>
         matchesSearch(keyword, quote.customers?.name, quote.memo, String(quote.doc_no ?? "")),
       )
-    : rawQuotes ?? [];
+    : rawQuotes;
 
   const presets = getQuickDatePresets();
   const monthButtons = getYearMonthButtons();
