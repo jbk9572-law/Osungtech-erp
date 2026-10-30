@@ -293,6 +293,12 @@ grant execute on function public.get_ledger_opening_balance(uuid, uuid, timestam
 -- 그래야 실사로 이미 리셋된 과거 드리프트를 또 불일치로 잘못 보고하지
 -- 않는다. (product_id, warehouse_id)별로 비교한다 — 기존엔 품목 단위로만
 -- 합산 비교했는데, 창고별로 봐야 어느 창고가 틀렸는지 알 수 있다.
+-- 기존 get_inventory_cache_mismatches()는 반환 행 모양이 다르다
+-- (warehouse_id 컬럼이 없었다) — create or replace만으로는 OUT 파라미터
+-- 구성이 다른 함수를 바꿀 수 없으므로(README.md "알아두면 유용한 함정들"
+-- 참고) 먼저 지운다.
+drop function if exists public.get_inventory_cache_mismatches();
+
 create or replace function public.get_inventory_cache_mismatches()
 returns table (
   product_id uuid,
