@@ -149,6 +149,55 @@ function isInsideFetchAllRows(node) {
   return false;
 }
 
+// sales/page.tsx 등에서 쓰는 "쿼리 빌더 함수" 패턴 — matchesSearch 검색이
+// 있을 때는 fetchAllRows로 조회기간 전체를 가져오고, 없을 때는 .limit(limit)
+// 만 적용하려고 `const buildXxxQuery = () => { let query = supabase.from(...)
+// ...; return query; }`처럼 필터만 만들고 상한은 호출부에서 체이닝한다
+// (check-search-before-limit.mjs가 다루는 버그의 수정 패턴). 이 경우 .select()
+// 체인 자체에는 limit/range가 없는 게 정상이라, 그 함수가 build*Query로
+// 명명돼 있고 실제로 호출되는 모든 지점이 .limit(...)/.range(...)를 바로
+// 체이닝하는지 확인해서 안전한지 판단한다.
+function findEnclosingQueryBuilderName(node) {
+  let current = node.parent;
+  while (current) {
+    if (ts.isArrowFunction(current) || ts.isFunctionExpression(current)) {
+      if (
+        current.parent &&
+        ts.isVariableDeclaration(current.parent) &&
+        current.parent.initializer === current &&
+        ts.isIdentifier(current.parent.name) &&
+        /^build[A-Za-z0-9]*Query$/.test(current.parent.name.text)
+      ) {
+        return current.parent.name.text;
+      }
+      return null;
+    }
+    if (ts.isFunctionDeclaration(current)) return null;
+    current = current.parent;
+  }
+  return null;
+}
+
+function builderCallSitesAlwaysBounded(sourceFile, builderName) {
+  let found = false;
+  let allBounded = true;
+  function visit(node) {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === builderName) {
+      found = true;
+      const parent = node.parent;
+      const chained =
+        parent &&
+        ts.isPropertyAccessExpression(parent) &&
+        parent.expression === node &&
+        (parent.name.text === "limit" || parent.name.text === "range");
+      if (!chained) allBounded = false;
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(sourceFile);
+  return found && allBounded;
+}
+
 function isChainSafe(calls, outermost) {
   const names = calls.map((c) => c.name);
   if (names.includes("range")) return true;
@@ -191,10 +240,14 @@ function checkFile(filePath) {
     if (getCallName(node) === "select" && !selectHasHeadTrue(node)) {
       const { table, calls, outermost } = collectChain(node);
       if (table && !SAFE_UNBOUNDED_TABLES.has(table) && !isChainSafe(calls, outermost)) {
-        const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
-        const key = `${relPath}:${line + 1}`;
-        if (!ALLOWLIST.has(key)) {
-          violations.push({ key, table });
+        const builderName = findEnclosingQueryBuilderName(outermost);
+        const builderSafe = builderName && builderCallSitesAlwaysBounded(sourceFile, builderName);
+        if (!builderSafe) {
+          const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
+          const key = `${relPath}:${line + 1}`;
+          if (!ALLOWLIST.has(key)) {
+            violations.push({ key, table });
+          }
         }
       }
     }
