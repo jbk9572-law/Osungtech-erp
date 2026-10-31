@@ -56,6 +56,7 @@ import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT } from "@/lib/item-grid-columns";
 import { useResizableColumns } from "@/lib/use-resizable-columns";
 import { formatNumber } from "@/lib/format-number";
+import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
 
 type Supplier = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -726,6 +727,70 @@ export function NewPurchaseForm({
       .filter((h) => h.supplierId === supplierId && h.productId === productId)
       .sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
   }
+
+  // 모바일 품목 추가 패널(mobile-item-entry-panel.tsx) 전용 — new-sale-
+  // form.tsx의 addMobileItem과 같은 역할. "매출도 같이 등록" 같은 고급
+  // 모드는 이 빠른 추가 경로에서는 다루지 않는다(makeBlankRow와 같은
+  // 기본값으로 꺼둔 채 추가되고, 필요하면 데스크톱 표에서 켤 수 있다).
+  function addMobileItem(productId: string, quantity: number, unitCost: number) {
+    const product = products.find((p) => p.id === productId);
+    addFilledRow(
+      (key) => ({
+        key,
+        productId,
+        customName: "",
+        isCustomEntry: false,
+        spec: product?.spec ?? "",
+        manualSpec: false,
+        lotNumber: getRecentLotNumber(supplierId, productId) ?? "",
+        quantity,
+        unitCost,
+        manualPrice: unitCost !== resolveCost(supplierId, productId),
+        remark: "",
+        saleQuantity: 0,
+        manualSaleQuantity: false,
+        salePrice: 0,
+        manualSalePrice: false,
+      }),
+      isBlankRow,
+    );
+  }
+
+  // 자주 쓰는 품목 퀵칩 — new-sale-form.tsx의 mobileQuickPicks와 같은
+  // 방식, 공급처 기준으로 최근 매입한 품목을 최신순으로 중복 없이
+  // 최대 6개 보여준다.
+  const mobileQuickPicks = useMemo(() => {
+    const seen = new Set<string>();
+    const picks: { productId: string; sku: string; name: string; spec?: string | null }[] = [];
+    const sorted = [...history]
+      .filter((h) => !supplierId || h.supplierId === supplierId)
+      .sort((a, b) => (a.purchaseDate < b.purchaseDate ? 1 : -1));
+    for (const h of sorted) {
+      if (seen.has(h.productId)) continue;
+      const product = products.find((p) => p.id === h.productId);
+      if (!product) continue;
+      seen.add(h.productId);
+      picks.push({ productId: product.id, sku: product.sku, name: product.name, spec: product.spec });
+      if (picks.length >= 6) break;
+    }
+    return picks;
+  }, [history, supplierId, products]);
+
+  const mobileItems = useMemo(
+    () =>
+      rows
+        .filter((r) => !isBlankRow(r))
+        .map((r) => ({
+          key: r.key,
+          name: r.isCustomEntry ? r.customName || "(이름 없음)" : (products.find((p) => p.id === r.productId)?.name ?? r.customName),
+          spec: r.spec,
+          quantity: r.quantity,
+          price: r.unitCost,
+          amount: r.quantity * r.unitCost,
+        })),
+    [rows, products],
+  );
+  const mobileTotalAmount = mobileItems.reduce((sum, item) => sum + item.amount, 0);
 
   // 우리 쪽 품목은 대부분 당일 입고 후 바로 당일 출고돼서, 입고 예정을
   // 잊지 않으려고 미리 적어둔 할일이 사실상 이번 매입 품목 목록과 같다.
@@ -1566,6 +1631,10 @@ export function NewPurchaseForm({
           )}
         </div>
 
+        {/* 가로 칸이 많아 모바일에서 횡스크롤 압박이 심하다는 지적에 따라,
+            768px 미만에서는 이 표 대신 아래 모바일 패널이 보인다(순수
+            CSS 반응형 클래스, new-sale-form.tsx와 같은 방식). */}
+        <div className="hidden md:block">
         <div
           className="erp-grid-wrap"
           style={{ borderRadius: 0, minHeight: "50vh" }}
@@ -2045,6 +2114,23 @@ export function NewPurchaseForm({
               </tr>
             </tfoot>
           </table>
+        </div>
+        </div>
+
+        <div className="md:hidden">
+          <MobileItemEntryPanel
+            products={products}
+            quickPicks={mobileQuickPicks}
+            items={mobileItems}
+            priceLabel="매입단가"
+            totalAmount={mobileTotalAmount}
+            onQuickAdd={(productId) => addMobileItem(productId, 1, resolveCost(supplierId, productId))}
+            onAdd={addMobileItem}
+            onUpdateQuantity={(key, quantity) => updateRow(key, { quantity })}
+            onUpdatePrice={(key, price) => updateRow(key, { unitCost: price, manualPrice: true })}
+            onRemove={removeRow}
+            resolvePrice={(productId) => resolveCost(supplierId, productId)}
+          />
         </div>
 
         <KeyboardHintBar

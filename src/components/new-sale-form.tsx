@@ -62,6 +62,7 @@ import { useResizableColumns } from "@/lib/use-resizable-columns";
 import { findMultiLocationItems, type LocationAllocationChoice, type LocationOption } from "@/lib/location-stock-sync";
 import { LocationAllocationModal, type MultiLocationItem } from "@/components/location-allocation-modal";
 import { formatNumber } from "@/lib/format-number";
+import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
 
 type Customer = { id: string; name: string; notes?: string | null };
 type Product = {
@@ -829,6 +830,71 @@ export function NewSaleForm({
       .filter((h) => h.customerId === customerId && h.productId === productId)
       .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
   }
+
+  // 모바일 품목 추가 패널(mobile-item-entry-panel.tsx) 전용 — 수량/단가를
+  // 이미 다 받은 상태로 줄 하나를 바로 채워 넣는다. quickAddProduct와
+  // 거의 같지만 quantity가 0이 아니라 호출부가 받은 값을 그대로 쓰고,
+  // 단가도 "고른 시점의 기본값"이 아니라 사용자가 시트에서 직접 고친
+  // 값을 그대로 받는다(수동 입력 취급 — manualPrice: true).
+  function addMobileItem(productId: string, quantity: number, unitPrice: number) {
+    const product = products.find((p) => p.id === productId);
+    addFilledRow(
+      (key) => ({
+        key,
+        productId,
+        customName: "",
+        isCustomEntry: false,
+        spec: product?.spec ?? "",
+        manualSpec: false,
+        lotNumber: getRecentLotNumber(customerId, productId) ?? "",
+        quantity,
+        unitPrice,
+        manualPrice: unitPrice !== resolvePrice(customerId, productId),
+        remark: "",
+      }),
+      isBlankRow,
+    );
+  }
+
+  // 자주 쓰는 품목 퀵칩(1탭 추가) — 거래처가 정해져 있으면 이 거래처에
+  // 최근 판매한 품목을, 아니면(신규 거래처 등) 전체 거래처 기준 최근
+  // 판매 품목을 최신순으로 중복 없이 최대 6개 보여준다. 수량은 일단
+  // 1개로 넣고(정확한 "지난번 수량"은 history에 없음) 이후 모바일
+  // 카드에서 바로 고칠 수 있다.
+  const mobileQuickPicks = useMemo(() => {
+    const seen = new Set<string>();
+    const picks: { productId: string; sku: string; name: string; spec?: string | null }[] = [];
+    const sorted = [...history]
+      .filter((h) => !customerId || h.customerId === customerId)
+      .sort((a, b) => (a.orderDate < b.orderDate ? 1 : -1));
+    for (const h of sorted) {
+      if (seen.has(h.productId)) continue;
+      const product = products.find((p) => p.id === h.productId);
+      if (!product) continue;
+      seen.add(h.productId);
+      picks.push({ productId: product.id, sku: product.sku, name: product.name, spec: product.spec });
+      if (picks.length >= 6) break;
+    }
+    return picks;
+  }, [history, customerId, products]);
+
+  // 모바일 패널에 보여줄 "이미 등록된 품목" 목록 — 데스크톱 표와 같은
+  // rows를 그대로 쓰되, 아직 아무것도 안 고른 빈 줄은 제외한다.
+  const mobileItems = useMemo(
+    () =>
+      rows
+        .filter((r) => !isBlankRow(r))
+        .map((r) => ({
+          key: r.key,
+          name: r.isCustomEntry ? r.customName || "(이름 없음)" : (products.find((p) => p.id === r.productId)?.name ?? r.customName),
+          spec: r.spec,
+          quantity: r.quantity,
+          price: r.unitPrice,
+          amount: r.quantity * r.unitPrice,
+        })),
+    [rows, products],
+  );
+  const mobileTotalAmount = mobileItems.reduce((sum, item) => sum + item.amount, 0);
 
   // 화면에 보여주는 합계가 실제 제출되는(itemsJson) 값과 항상 같도록,
   // 제출에서 제외되는 행(품목 미선택, 수량 0 이하)은 합계에서도 뺀다.
@@ -1613,6 +1679,11 @@ export function NewSaleForm({
           )}
         </div>
 
+        {/* 가로 칸이 10개 안팎이라 모바일에서 횡스크롤 압박이 심하다는
+            지적에 따라, 768px 미만에서는 이 표 대신 아래 모바일 패널이
+            보인다(Tailwind 반응형 클래스 — 순수 CSS라 서버/클라이언트
+            렌더가 항상 같다, mobile-item-entry-panel.tsx 주석 참고). */}
+        <div className="hidden md:block">
         <div
           className="erp-grid-wrap"
           style={{ borderRadius: 0, minHeight: "50vh" }}
@@ -2058,6 +2129,23 @@ export function NewSaleForm({
               </tr>
             </tfoot>
           </table>
+        </div>
+        </div>
+
+        <div className="md:hidden">
+          <MobileItemEntryPanel
+            products={products}
+            quickPicks={mobileQuickPicks}
+            items={mobileItems}
+            priceLabel="판매단가"
+            totalAmount={mobileTotalAmount}
+            onQuickAdd={(productId) => addMobileItem(productId, 1, resolvePrice(customerId, productId))}
+            onAdd={addMobileItem}
+            onUpdateQuantity={(key, quantity) => updateRow(key, { quantity })}
+            onUpdatePrice={(key, price) => updateRow(key, { unitPrice: price, manualPrice: true })}
+            onRemove={removeRow}
+            resolvePrice={(productId) => resolvePrice(customerId, productId)}
+          />
         </div>
 
         <KeyboardHintBar

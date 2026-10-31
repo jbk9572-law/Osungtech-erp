@@ -33,8 +33,8 @@ const ALLOWLIST = new Set([
   // 품목 그리드 한 행 안에서 그 거래처별 특이사항을 보여주는 행 단위
   // 인라인 노트(fontSize 11.5, radius:0) — party-search-select.tsx의
   // 특이사항 노트와 같은 성격이라 PageGuide(페이지 레벨 안내) 대상이 아님.
-  "src/components/new-purchase-form.tsx:1786",
-  "src/components/new-sale-form.tsx:1795",
+  "src/components/new-purchase-form.tsx:1855",
+  "src/components/new-sale-form.tsx:1866",
   // 역할 변경을 확인/취소하는 작은 인라인 칩(rounded-sm px-2 py-1,
   // inline-flex + 취소 버튼) — 페이지 안내문이 아니라 행 안의 확인 배지.
   "src/components/user-role-select.tsx:70",
