@@ -101,18 +101,33 @@ export async function submitStockCount(
   const locationCandidates = candidates.filter((r) => r.locationCode && locationIdByCode.has(r.locationCode));
   const plainCandidates = candidates.filter((r) => !r.locationCode || !locationIdByCode.has(r.locationCode));
 
-  const { data: liveInventory, error: fetchError } = await supabase
-    .from("inventory")
-    .select("product_id, quantity")
-    .eq("warehouse_id", warehouseId)
-    .in(
-      "product_id",
-      candidates.map((r) => r.productId),
-    );
-  if (fetchError) {
-    return { error: `현재 재고를 확인하지 못했습니다: ${fetchError.message}` };
-  }
-  const liveQuantityByProduct = new Map((liveInventory ?? []).map((row) => [row.product_id, row.quantity]));
+  // 창고 전체 기준 실사(plainCandidates)의 "차이"는 더 이상 inventory.quantity
+  // 캐시와 비교해 계산하지 않는다 — 전표 입력이 밀려 있으면(예: 두 달 전
+  // 거래를 오늘 입력) 그 순간의 캐시 자체가 이미 틀려 있어서, 캐시 기준
+  // 델타를 실사 확정값(counted_absolute_quantity)으로 그대로 저장해도 화면에
+  // 보이는 "조정 수량(±N개)"이 실제 변동과 달라지는 문제가 있었다(실제
+  // 사례로 확인됨). get_ledger_opening_balance(이번에 거래일자+실사앵커
+  // 기준으로 재작성한 함수, p_before='infinity'로 "지금까지의 정확한
+  // 원장 누적 잔량"을 구함)로 바꿔서, 델타가 항상 "실사 직전까지의 진짜
+  // 잔량"을 기준으로 정확히 계산되게 한다.
+  // "지금까지의 전부"를 포함해야 하므로 p_before는 오늘보다 확실히 뒤인
+  // 시점(내일)으로 둔다 — 오늘 날짜로 등록된 거래까지 전부 포함시키기 위함.
+  const tomorrowIso = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const trueBalanceByProduct = new Map<string, number>();
+  await Promise.all(
+    plainCandidates.map(async (r) => {
+      const { data, error: balanceError } = await supabase.rpc("get_ledger_opening_balance", {
+        p_product_id: r.productId,
+        p_warehouse_id: warehouseId,
+        p_before: tomorrowIso,
+      });
+      if (balanceError) {
+        console.error("원장 잔량 조회 실패:", balanceError.message);
+        return;
+      }
+      trueBalanceByProduct.set(r.productId, Number(data ?? 0));
+    }),
+  );
 
   const locationIds = [...new Set(locationCandidates.map((r) => locationIdByCode.get(r.locationCode!)!))];
   const { data: liveLocationStock } =
@@ -133,7 +148,8 @@ export async function submitStockCount(
   const changedPlain = plainCandidates
     .map((r) => ({
       productId: r.productId,
-      delta: r.countedQuantity - (liveQuantityByProduct.get(r.productId) ?? 0),
+      countedQuantity: r.countedQuantity,
+      delta: r.countedQuantity - (trueBalanceByProduct.get(r.productId) ?? 0),
     }))
     .filter((r) => r.delta !== 0);
   const changedLocation = locationCandidates
@@ -166,7 +182,7 @@ export async function submitStockCount(
       warehouse_id: warehouseId,
       type: "adjustment" as const,
       quantity: r.delta,
-      counted_absolute_quantity: r.delta + (liveQuantityByProduct.get(r.productId) ?? 0),
+      counted_absolute_quantity: r.countedQuantity,
       reference: sessionRef,
       note: userNote ? `재고실사: ${userNote}` : "재고실사",
       created_by: user?.id ?? null,
@@ -185,6 +201,16 @@ export async function submitStockCount(
   if (error) {
     return { error: `재고 실사 저장에 실패했습니다: ${error.message}` };
   }
+
+  // 방금 저장한 delta(quantity)는 이제 캐시가 아니라 원장 잔량 기준으로
+  // 계산돼서, 캐시가 그 사이 밀려 있었다면 apply_inventory_transaction
+  // 트리거가 "캐시 + delta"로 더한 값이 counted_absolute_quantity와
+  // 정확히 일치하지 않을 수 있다 — 바로 이어서 캐시를 원장 기준 정답으로
+  // 다시 맞춘다(recalculate_inventory_cache, migration 205). 이 호출이
+  // 실패해도 실사 자체(원장)는 이미 정확히 저장됐으니 등록을 막지 않고,
+  // /inventory/count의 "지금 자동 교정" 버튼으로 나중에 다시 맞출 수 있다.
+  const { error: recalcError } = await supabase.rpc("recalculate_inventory_cache");
+  if (recalcError) console.error("실사 후 캐시 자가치유 실패:", recalcError.message);
 
   // 위치 기준으로 실사한 품목은 그 위치의 재고(inventory_locations)도
   // 같이 맞춘다 — apply_location_stock_delta가 상대값(delta)만큼 더하고,
