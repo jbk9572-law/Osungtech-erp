@@ -11,6 +11,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
 
 type Row = {
   key: number;
@@ -23,6 +24,10 @@ type Row = {
 
 function blankRow(key: number): Row {
   return { key, productId: "", spec: "", quantity: 0, estimatedUnitPrice: 0, remark: "" };
+}
+
+function isBlankRow(row: Row): boolean {
+  return !row.productId && row.quantity === 0;
 }
 
 // table-layout: auto(기본값)로는 모바일 폭에서 <th style={{width}}>가 그냥
@@ -52,7 +57,7 @@ export function NewPurchaseRequestForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
   const [supplierId, setSupplierId] = useState(prefillSupplierId ?? "");
-  const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>(
+  const { rows, addRow, removeRow, setRows, addFilledRow } = useKeyedRows<Row>(
     prefillItems?.length
       ? prefillItems.map((item, i) => {
           const product = products.find((p) => p.id === item.productId);
@@ -75,8 +80,35 @@ export function NewPurchaseRequestForm({
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
+  function resolveCost(productId: string): number {
+    return productById.get(productId)?.cost ?? 0;
+  }
+
+  function addMobileItem(productId: string, quantity: number, estimatedUnitPrice: number) {
+    const product = productById.get(productId);
+    addFilledRow(
+      (key) => ({ key, productId, spec: product?.spec ?? "", quantity, estimatedUnitPrice, remark: "" }),
+      isBlankRow,
+    );
+  }
+
   const validRows = rows.filter((r) => r.productId && r.quantity > 0);
   const total = validRows.reduce((sum, r) => sum + r.quantity * r.estimatedUnitPrice, 0);
+  const mobileItems = useMemo(
+    () =>
+      rows
+        .filter((r) => !isBlankRow(r))
+        .map((r) => ({
+          key: r.key,
+          name: productById.get(r.productId)?.name ?? "",
+          spec: r.spec,
+          quantity: r.quantity,
+          price: r.estimatedUnitPrice,
+          amount: r.quantity * r.estimatedUnitPrice,
+        })),
+    [rows, productById],
+  );
+  const mobileTotalAmount = mobileItems.reduce((sum, item) => sum + item.amount, 0);
   const itemsJson = JSON.stringify(
     validRows.map((r) => ({
       productId: r.productId,
@@ -116,90 +148,106 @@ export function NewPurchaseRequestForm({
         </div>
       </div>
 
-      <div className="erp-grid-wrap">
-        <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: ITEM_GRID_TOTAL_WIDTH }}>
-          <thead>
-            <tr>
-              <th style={{ width: 320 }}>품목</th>
-              <th style={{ width: 140 }}>규격</th>
-              <th className="num" style={{ width: 90 }}>수량</th>
-              <th className="num" style={{ width: 110 }}>예상단가</th>
-              <th className="num" style={{ width: 110 }}>예상금액</th>
-              <th style={{ width: 200 }}>비고</th>
-              <th style={{ width: 50 }} />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.key}>
-                <td>
-                  <ProductSearchSelect
-                    products={products}
-                    value={row.productId}
-                    onChange={(productId) => {
-                      const product = productById.get(productId);
-                      updateRow(row.key, {
-                        productId,
-                        spec: product?.spec ?? row.spec,
-                        estimatedUnitPrice: row.estimatedUnitPrice || product?.cost || 0,
-                      });
-                    }}
-                  />
-                </td>
-                <td>
-                  <input
-                    value={row.spec}
-                    onChange={(e) => updateRow(row.key, { spec: e.target.value })}
-                    className="erp-input"
-                    style={{ width: "100%" }}
-                    autoComplete="off"
-                  />
-                </td>
-                <td>
-                  <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} className="erp-input" />
-                </td>
-                <td>
-                  <NumberInput
-                    value={row.estimatedUnitPrice}
-                    onChange={(n) => updateRow(row.key, { estimatedUnitPrice: n })}
-                    className="erp-input"
-                  />
-                </td>
-                <td className="num">{formatNumber((row.quantity * row.estimatedUnitPrice))}</td>
-                <td>
-                  <input
-                    value={row.remark}
-                    onChange={(e) => updateRow(row.key, { remark: e.target.value })}
-                    className="erp-input"
-                    style={{ width: "100%" }}
-                    autoComplete="off"
-                  />
-                </td>
-                <td>
-                  <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
-                    삭제
-                  </button>
-                </td>
+      <div className="hidden md:block">
+        <div className="erp-grid-wrap">
+          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: ITEM_GRID_TOTAL_WIDTH }}>
+            <thead>
+              <tr>
+                <th style={{ width: 320 }}>품목</th>
+                <th style={{ width: 140 }}>규격</th>
+                <th className="num" style={{ width: 90 }}>수량</th>
+                <th className="num" style={{ width: 110 }}>예상단가</th>
+                <th className="num" style={{ width: 110 }}>예상금액</th>
+                <th style={{ width: 200 }}>비고</th>
+                <th style={{ width: 50 }} />
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
-                합계
-              </td>
-              <td className="num erp-doc-total">
-                {formatNumber(total)}
-              </td>
-              <td colSpan={3} />
-            </tr>
-          </tfoot>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.key}>
+                  <td>
+                    <ProductSearchSelect
+                      products={products}
+                      value={row.productId}
+                      onChange={(productId) => {
+                        const product = productById.get(productId);
+                        updateRow(row.key, {
+                          productId,
+                          spec: product?.spec ?? row.spec,
+                          estimatedUnitPrice: row.estimatedUnitPrice || product?.cost || 0,
+                        });
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={row.spec}
+                      onChange={(e) => updateRow(row.key, { spec: e.target.value })}
+                      className="erp-input"
+                      style={{ width: "100%" }}
+                      autoComplete="off"
+                    />
+                  </td>
+                  <td>
+                    <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} className="erp-input" />
+                  </td>
+                  <td>
+                    <NumberInput
+                      value={row.estimatedUnitPrice}
+                      onChange={(n) => updateRow(row.key, { estimatedUnitPrice: n })}
+                      className="erp-input"
+                    />
+                  </td>
+                  <td className="num">{formatNumber((row.quantity * row.estimatedUnitPrice))}</td>
+                  <td>
+                    <input
+                      value={row.remark}
+                      onChange={(e) => updateRow(row.key, { remark: e.target.value })}
+                      className="erp-input"
+                      style={{ width: "100%" }}
+                      autoComplete="off"
+                    />
+                  </td>
+                  <td>
+                    <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
+                      삭제
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
+                  합계
+                </td>
+                <td className="num erp-doc-total">
+                  {formatNumber(total)}
+                </td>
+                <td colSpan={3} />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <button type="button" className="erp-btn mt-3" onClick={addRow}>
+          + 품목 추가
+        </button>
       </div>
 
-      <button type="button" className="erp-btn" onClick={addRow} style={{ alignSelf: "flex-start" }}>
-        + 품목 추가
-      </button>
+      <div className="md:hidden">
+        <MobileItemEntryPanel
+          products={products}
+          items={mobileItems}
+          priceLabel="예상단가"
+          totalAmount={mobileTotalAmount}
+          onAdd={addMobileItem}
+          onUpdateQuantity={(key, quantity) => updateRow(key, { quantity })}
+          onUpdatePrice={(key, price) => updateRow(key, { estimatedUnitPrice: price })}
+          onRemove={removeRow}
+          resolvePrice={resolveCost}
+        />
+      </div>
 
       <div className="flex items-center gap-2">
         <button
