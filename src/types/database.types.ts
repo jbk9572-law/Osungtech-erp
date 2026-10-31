@@ -292,6 +292,7 @@ export type Database = {
           updated_at: string;
           tenant_id: string;
           is_demo: boolean;
+          parent_product_id: string | null;
         };
         Insert: {
           id?: string;
@@ -312,6 +313,7 @@ export type Database = {
           updated_at?: string;
           tenant_id?: string;
           is_demo?: boolean;
+          parent_product_id?: string | null;
         };
         Update: {
           id?: string;
@@ -332,6 +334,7 @@ export type Database = {
           updated_at?: string;
           tenant_id?: string;
           is_demo?: boolean;
+          parent_product_id?: string | null;
         };
         Relationships: [
           {
@@ -346,6 +349,13 @@ export type Database = {
             columns: ["supplier_id"];
             isOneToOne: false;
             referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_parent_product_id_fkey";
+            columns: ["parent_product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];
@@ -4175,6 +4185,7 @@ export type Database = {
           remark: string | null;
           lot_number: string | null;
           created_at: string;
+          remaining_quantity: number;
         };
         Insert: {
           id?: string;
@@ -4187,6 +4198,7 @@ export type Database = {
           remark?: string | null;
           lot_number?: string | null;
           created_at?: string;
+          remaining_quantity?: number;
         };
         Update: {
           id?: string;
@@ -4199,6 +4211,7 @@ export type Database = {
           remark?: string | null;
           lot_number?: string | null;
           created_at?: string;
+          remaining_quantity?: number;
         };
         Relationships: [
           {
@@ -4213,6 +4226,83 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fifo_consumptions: {
+        Row: {
+          id: string;
+          purchase_order_item_id: string;
+          consumed_quantity: number;
+          consumed_unit_cost: number;
+          consumed_by_type: string;
+          sales_order_item_id: string | null;
+          loss_product_id: string | null;
+          loss_warehouse_id: string | null;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          purchase_order_item_id: string;
+          consumed_quantity: number;
+          consumed_unit_cost: number;
+          consumed_by_type: string;
+          sales_order_item_id?: string | null;
+          loss_product_id?: string | null;
+          loss_warehouse_id?: string | null;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          purchase_order_item_id?: string;
+          consumed_quantity?: number;
+          consumed_unit_cost?: number;
+          consumed_by_type?: string;
+          sales_order_item_id?: string | null;
+          loss_product_id?: string | null;
+          loss_warehouse_id?: string | null;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fifo_consumptions_purchase_order_item_id_fkey";
+            columns: ["purchase_order_item_id"];
+            isOneToOne: false;
+            referencedRelation: "purchase_order_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fifo_consumptions_sales_order_item_id_fkey";
+            columns: ["sales_order_item_id"];
+            isOneToOne: false;
+            referencedRelation: "sales_order_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fifo_consumptions_loss_product_id_fkey";
+            columns: ["loss_product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fifo_consumptions_loss_warehouse_id_fkey";
+            columns: ["loss_warehouse_id"];
+            isOneToOne: false;
+            referencedRelation: "warehouses";
             referencedColumns: ["id"];
           },
         ];
@@ -5549,6 +5639,32 @@ export type Database = {
           p_before?: string;
         };
         Returns: number;
+      };
+      consume_fifo_layers: {
+        Args: {
+          p_product_id: string;
+          p_quantity: number;
+          p_consumed_by_type: string;
+          p_sales_order_item_id?: string | null;
+          p_loss_product_id?: string | null;
+          p_loss_warehouse_id?: string | null;
+          p_note?: string | null;
+          p_created_by?: string | null;
+        };
+        Returns: number;
+      };
+      release_fifo_consumption: {
+        Args: { p_sales_order_item_id: string };
+        Returns: void;
+      };
+      record_natural_loss: {
+        Args: {
+          p_product_id: string;
+          p_warehouse_id: string;
+          p_quantity: number;
+          p_note?: string | null;
+        };
+        Returns: void;
       };
       create_work_order: {
         Args: {

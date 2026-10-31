@@ -23,6 +23,7 @@ function productFieldsFrom(formData: FormData) {
     cost: numberOrDefault(formData.get("cost"), 0),
     reorder_point: numberOrDefault(formData.get("reorder_point"), 0),
     base_package_qty: numberOrNull(formData.get("base_package_qty")),
+    parent_product_id: String(formData.get("parent_product_id") ?? "") || null,
   };
 }
 

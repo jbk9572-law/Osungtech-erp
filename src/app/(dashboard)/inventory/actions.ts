@@ -23,8 +23,45 @@ export async function adjustInventory(
   const supabase = await createClient();
   const user = await getUser();
 
+  // 자연로스(공정 중 손실/환산단위 오차 등)는 일반 재고조정과 달리 실물
+  // 재고만 줄이는 게 아니라 FIFO 매입 레이어도 실제로 소진해야 한다 —
+  // 그래야 매입-매출 수량 체계(remaining_quantity)가 어긋나지 않는다
+  // (parent_child_sku_fifo_cogs 마이그레이션의 record_natural_loss 참고).
+  // 그래서 이 경우만 일반 insert 대신 그 RPC를 탄다.
+  if (String(formData.get("is_natural_loss") ?? "") === "1") {
+    if (quantity >= 0) {
+      return { error: "자연로스는 차감(음수) 방향으로만 등록할 수 있습니다." };
+    }
+    const { error: lossError } = await supabase.rpc("record_natural_loss", {
+      p_product_id: productId,
+      p_warehouse_id: warehouseId,
+      p_quantity: Math.abs(quantity),
+      p_note: note,
+    });
+    if (lossError) {
+      return { error: `자연로스 등록에 실패했습니다: ${lossError.message}` };
+    }
+    revalidatePath("/inventory");
+    revalidatePath("/dashboard");
+    return { success: "자연로스가 등록되었습니다." };
+  }
+
+  // 파생 SKU(parent_product_id가 있는 품목)는 독립 재고가 없다 — 재고
+  // 원장은 항상 모품목 하나에서만 쌓인다(parent_child_sku_fifo_cogs
+  // 마이그레이션). 자연로스 분기(위)는 record_natural_loss RPC가 내부에서
+  // 이미 모품목으로 해석하지만, 이 일반 조정 경로는 직접 insert하므로
+  // 여기서도 같은 방식으로 먼저 해석해야 한다 — 안 그러면 파생 SKU로
+  // 조정을 등록했을 때 그 파생 SKU 자신에게 재고가 쌓여 실제 재고 흐름과
+  // 어긋난다.
+  const { data: productRow } = await supabase
+    .from("products")
+    .select("parent_product_id")
+    .eq("id", productId)
+    .maybeSingle();
+  const effectiveProductId = productRow?.parent_product_id ?? productId;
+
   const { error } = await supabase.from("inventory_transactions").insert({
-    product_id: productId,
+    product_id: effectiveProductId,
     warehouse_id: warehouseId,
     type: "adjustment",
     quantity,

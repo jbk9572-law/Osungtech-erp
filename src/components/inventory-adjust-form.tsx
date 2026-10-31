@@ -43,9 +43,12 @@ export function InventoryAdjustForm({
   const [amount, setAmount] = useState(0);
   // "용도"를 고르면 사유(note)에 자동으로 꼬리표를 붙인다 — 재고실사의
   // "재고실사: ..." 접두사와 같은 방식으로, 입출고내역에서 이 조정이 왜
-  // 생겼는지 한눈에 구분할 수 있게 한다. "샘플 증정(무상)"을 고르면 재고가
-  // 줄어드는 경우만 말이 되므로 방향을 차감으로 고정한다.
-  const [reason, setReason] = useState<"" | "sample">("");
+  // 생겼는지 한눈에 구분할 수 있게 한다. "샘플 증정(무상)"/"자연로스"를
+  // 고르면 재고가 줄어드는 경우만 말이 되므로 방향을 차감으로 고정한다.
+  // "자연로스(공정손실)"는 일반 조정과 달리 FIFO 매입 레이어도 실제로
+  // 소진해야 해서(actions.ts의 is_natural_loss 분기 참고) 서버에 별도
+  // 플래그로 알려준다.
+  const [reason, setReason] = useState<"" | "sample" | "natural_loss">("");
   const [noteText, setNoteText] = useState("");
 
   // 저장에 성공해도 예전엔 방금 고른 상품/수량이 폼에 그대로 남아있어서,
@@ -63,6 +66,8 @@ export function InventoryAdjustForm({
     }
   }, [state]);
 
+  // 자연로스는 record_natural_loss RPC가 서버에서 "자연로스: " 접두사를
+  // 이미 붙이므로(migration 00000000000206) 여기서는 원문 그대로 보낸다.
   const finalNote = reason === "sample" ? `[샘플증정] ${noteText}`.trim() : noteText;
 
   const currentStock = useMemo(() => {
@@ -81,6 +86,7 @@ export function InventoryAdjustForm({
     <form ref={formRef} action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4 items-start">
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="quantity" value={signedQuantity} />
+      <input type="hidden" name="is_natural_loss" value={reason === "natural_loss" ? "1" : ""} />
       {warehouses.length <= 1 ? (
         <input type="hidden" name="warehouse_id" value={warehouseId} />
       ) : (
@@ -106,7 +112,7 @@ export function InventoryAdjustForm({
         <button
           type="button"
           onClick={() => setDirection("increase")}
-          disabled={reason === "sample"}
+          disabled={reason === "sample" || reason === "natural_loss"}
           className="flex-1 text-xs font-semibold disabled:opacity-50"
           style={{
             padding: "0 10px",
@@ -120,7 +126,7 @@ export function InventoryAdjustForm({
         <button
           type="button"
           onClick={() => setDirection("decrease")}
-          disabled={reason === "sample"}
+          disabled={reason === "sample" || reason === "natural_loss"}
           className="flex-1 text-xs font-semibold disabled:opacity-50"
           style={{
             padding: "0 10px",
@@ -161,15 +167,16 @@ export function InventoryAdjustForm({
       <select
         value={reason}
         onChange={(e) => {
-          const next = e.target.value as "" | "sample";
+          const next = e.target.value as "" | "sample" | "natural_loss";
           setReason(next);
-          if (next === "sample") setDirection("decrease");
+          if (next === "sample" || next === "natural_loss") setDirection("decrease");
         }}
         aria-label="용도"
         className="erp-input"
       >
         <option value="">직접 입력</option>
         <option value="sample">샘플 증정(무상)</option>
+        <option value="natural_loss">자연로스(공정손실/환산단위 오차)</option>
       </select>
       <input
         value={noteText}
@@ -178,7 +185,9 @@ export function InventoryAdjustForm({
         placeholder={
           reason === "sample"
             ? "샘플 제공 사유 (예: OO업체 영업용 샘플 3박스)"
-            : "사유 (예: 기초재고, 실사 조정)"
+            : reason === "natural_loss"
+              ? "손실 사유 (예: 재단 중 파손 3개, 환산단위 오차 2개)"
+              : "사유 (예: 기초재고, 실사 조정)"
         }
         aria-label="사유"
         className="erp-input md:col-span-3"

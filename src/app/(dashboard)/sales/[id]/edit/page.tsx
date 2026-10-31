@@ -7,7 +7,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { inventoryQuantityByWarehouse, sumInventoryQuantity } from "@/lib/inventory-quantity";
+import { inventoryQuantityByWarehouse, resolveEffectiveInventory, sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 
@@ -54,11 +54,12 @@ export default async function EditSalePage({
       unit: string;
       price: number;
       base_package_qty: number | null;
+      parent_product_id: string | null;
       inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity, warehouse_id)")
+        .select("id, sku, name, spec, unit, price, base_package_qty, parent_product_id, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
@@ -130,6 +131,8 @@ export default async function EditSalePage({
       lotNumber: row.lot_number,
     }));
 
+  const effectiveInventory = resolveEffectiveInventory(products ?? []);
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: `/sales/${id}` } }} />
@@ -149,14 +152,12 @@ export default async function EditSalePage({
           ...p,
           // 창고가 1개뿐인 화면(대부분)은 기존처럼 전체 합계를 쓰고,
           // 2개 이상이면 아래 stockByWarehouse가 선택된 창고 기준으로
-          // 다시 계산해준다.
-          stock: sumInventoryQuantity(p.inventory),
+          // 다시 계산해준다. 파생 SKU는 effectiveInventory가 모품목 재고로
+          // 대신 치환해준다(resolveEffectiveInventory 참고).
+          stock: sumInventoryQuantity(effectiveInventory.get(p.id)),
         }))}
         stockByWarehouse={Object.fromEntries(
-          (products ?? []).map((p) => [
-            p.id,
-            inventoryQuantityByWarehouse(p.inventory),
-          ]),
+          (products ?? []).map((p) => [p.id, inventoryQuantityByWarehouse(effectiveInventory.get(p.id))]),
         )}
         warehouseId={warehouses[0]?.id ?? order.warehouse_id}
         warehouses={warehouses}

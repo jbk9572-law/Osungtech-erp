@@ -40,8 +40,9 @@ export async function ProductDetailPanel({ id }: { id: string }) {
       .select("id, component_product_id, quantity_per_unit")
       .eq("parent_product_id", id)
       .order("created_at"),
-    fetchAllRows<{ id: string; sku: string; name: string; unit: string }>((from, to) =>
-      supabase.from("products").select("id, sku, name, unit").order("name").range(from, to),
+    fetchAllRows<{ id: string; sku: string; name: string; unit: string; parent_product_id: string | null }>(
+      (from, to) =>
+        supabase.from("products").select("id, sku, name, unit, parent_product_id").order("name").range(from, to),
     ),
   ]);
 
@@ -60,6 +61,10 @@ export async function ProductDetailPanel({ id }: { id: string }) {
     component: productById.get(row.component_product_id),
   }));
   const bomCandidates = allProducts.filter((p) => p.id !== id);
+  // 모품목 후보 — 자기 자신과, 이미 다른 품목의 파생 품목인 것은 제외한다
+  // (다단계 구조 금지는 DB 트리거로도 다시 막히지만, UI에 애초에 보이지
+  // 않게 해서 사용자가 선택했다가 에러를 보는 상황 자체를 줄인다).
+  const parentCandidates = allProducts.filter((p) => p.id !== id && !p.parent_product_id);
 
   return (
     <>
@@ -82,6 +87,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
               basePackageQty: Number(h.base_package_qty),
               changedAt: new Date(h.changed_at).toLocaleDateString("ko-KR"),
             }))}
+            parentCandidates={parentCandidates}
           />
         </div>
       </div>

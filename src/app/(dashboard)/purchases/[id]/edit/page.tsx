@@ -44,6 +44,8 @@ export default async function EditPurchasePage({
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
       supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
     ),
+    // 파생 SKU는 매입 대상이 아니다 — purchases/new/page.tsx와 같은 이유로
+    // 선택지에서 제외한다.
     fetchAllRows<{
       id: string;
       sku: string;
@@ -56,6 +58,7 @@ export default async function EditPurchasePage({
       supabase
         .from("products")
         .select("id, sku, name, spec, unit, cost, base_package_qty")
+        .is("parent_product_id", null)
         .order("name")
         .range(from, to),
     ),

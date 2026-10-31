@@ -6,7 +6,7 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { inventoryQuantityByWarehouse, sumInventoryQuantity } from "@/lib/inventory-quantity";
+import { inventoryQuantityByWarehouse, resolveEffectiveInventory, sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
 import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
@@ -36,11 +36,12 @@ export default async function NewSalePage({
       unit: string;
       price: number;
       base_package_qty: number | null;
+      parent_product_id: string | null;
       inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, price, base_package_qty, inventory(quantity, warehouse_id)")
+        .select("id, sku, name, spec, unit, price, base_package_qty, parent_product_id, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
@@ -97,6 +98,8 @@ export default async function NewSalePage({
       lotNumber: row.lot_number,
     }));
 
+  const effectiveInventory = resolveEffectiveInventory(products ?? []);
+
   return (
     <div>
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/sales" } }} />
@@ -120,13 +123,10 @@ export default async function NewSalePage({
         customers={customers ?? []}
         products={(products ?? []).map((p) => ({
           ...p,
-          stock: sumInventoryQuantity(p.inventory),
+          stock: sumInventoryQuantity(effectiveInventory.get(p.id)),
         }))}
         stockByWarehouse={Object.fromEntries(
-          (products ?? []).map((p) => [
-            p.id,
-            inventoryQuantityByWarehouse(p.inventory),
-          ]),
+          (products ?? []).map((p) => [p.id, inventoryQuantityByWarehouse(effectiveInventory.get(p.id))]),
         )}
         warehouseId={warehouses[0]?.id ?? ""}
         warehouses={warehouses}

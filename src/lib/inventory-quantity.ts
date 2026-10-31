@@ -26,3 +26,29 @@ export function inventoryQuantityByWarehouse(
 ): Record<string, number> {
   return Object.fromEntries((inventory ?? []).map((inv) => [inv.warehouse_id, Number(inv.quantity)]));
 }
+
+type ProductWithInventory = {
+  id: string;
+  parent_product_id?: string | null;
+  inventory?: InventoryWarehouseRow[] | null;
+};
+
+// 파생 SKU(products.parent_product_id가 있는 품목, 예: C105-1)는 독립
+// 재고를 갖지 않는다 — 실물 재고 원장은 항상 모품목(C105) 하나에서만
+// 쌓인다(parent_child_sku_fifo_cogs 마이그레이션 참고). 그래서 매출 등록
+// 화면에서 파생 SKU를 고르면 그 자신의 inventory는 늘 비어 있어, 위
+// sumInventoryQuantity/inventoryQuantityByWarehouse를 그대로 쓰면 재고가
+// 항상 0으로 보이고 오버셀 경고도 엉뚱하게(또는 전혀 안) 뜬다. 매출 등록
+// 화면(new-sale-form.tsx)에 넘기기 전에 이 함수로 파생 SKU → 모품목의
+// inventory로 먼저 치환해둔다.
+export function resolveEffectiveInventory<T extends ProductWithInventory>(
+  products: T[]
+): Map<string, InventoryWarehouseRow[]> {
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const result = new Map<string, InventoryWarehouseRow[]>();
+  for (const p of products) {
+    const source = p.parent_product_id ? (byId.get(p.parent_product_id) ?? p) : p;
+    result.set(p.id, source.inventory ?? []);
+  }
+  return result;
+}

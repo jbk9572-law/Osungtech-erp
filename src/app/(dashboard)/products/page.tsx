@@ -21,9 +21,10 @@ type ProductQueryRow = {
   sku: string;
   name: string;
   spec: string | null;
+  parent_product_id: string | null;
 };
 
-const PRODUCT_COLUMNS = "id, sku, name, spec";
+const PRODUCT_COLUMNS = "id, sku, name, spec, parent_product_id";
 
 export default async function ProductsPage({
   searchParams,
@@ -64,12 +65,25 @@ export default async function ProductsPage({
     hasMore = result.hasMore;
   }
 
-  const [categories, suppliers] = await Promise.all([
+  const [categories, suppliers, parentCandidates] = await Promise.all([
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("categories").select("id, name").order("name").range(from, to),
     ),
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("suppliers").select("id, name").order("name").range(from, to),
+    ),
+    // 모품목 후보 — 위 allProducts(검색/limit에 따라 달라지는 목록)와 달리
+    // "품목 추가" 폼은 항상 전체 품목 중에서 모품목을 고를 수 있어야 하므로
+    // categories/suppliers와 같은 방식(fetchAllRows)으로 따로, 전부 가져온다.
+    // 이미 다른 품목의 파생 품목인 것은 DB에서부터 제외해 다단계 구조가
+    // UI에 애초에 보이지 않게 한다(해당 제약은 트리거로도 다시 막힌다).
+    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
+      supabase
+        .from("products")
+        .select("id, sku, name, spec")
+        .is("parent_product_id", null)
+        .order("name")
+        .range(from, to),
     ),
   ]);
 
@@ -203,7 +217,11 @@ export default async function ProductsPage({
                   <span className="erp-detail-tab active">품목 추가</span>
                 </div>
                 <div className="erp-detail-body">
-                  <CreateProductForm categories={categories ?? []} suppliers={suppliers ?? []} />
+                  <CreateProductForm
+                    categories={categories ?? []}
+                    suppliers={suppliers ?? []}
+                    parentCandidates={parentCandidates}
+                  />
                 </div>
               </div>
 

@@ -54,6 +54,11 @@ export default async function NewPurchasePage({
       fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
         supabase.from("suppliers").select("id, name, notes").order("name").range(from, to),
       ),
+      // 파생 SKU(parent_product_id가 있는 품목, 예: C105-1)는 매입 대상이
+      // 아니다 — 매입은 항상 모품목 하나로만 수불이 잡히고(parent_child_sku_
+      // fifo_cogs 마이그레이션), 파생 SKU로 잘못 매입을 등록하면 FIFO
+      // 레이어가 엉뚱한 품목 밑에 쌓여 원가 승계 구조 자체가 깨진다. 그래서
+      // 매입 등록 화면의 품목 선택지에서는 아예 보이지 않게 한다.
       fetchAllRows<{
         id: string;
         sku: string;
@@ -67,6 +72,7 @@ export default async function NewPurchasePage({
         supabase
           .from("products")
           .select("id, sku, name, spec, unit, cost, price, base_package_qty")
+          .is("parent_product_id", null)
           .order("name")
           .range(from, to),
       ),

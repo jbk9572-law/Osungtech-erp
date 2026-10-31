@@ -23,6 +23,13 @@
 -- 120의 보안 수정 자체가 조용히 되돌아간다. sales_orders/customer_payments/
 -- customers 세 곳 모두 120과 동일한 필터를 유지한다.
 
+-- oldest_unpaid_date 컬럼이 늘어나 OUT 파라미터 구성이 바뀌므로
+-- create or replace만으로는 안 된다(README.md "알아두면 유용한 함정들"
+-- 참고) — 먼저 지운다. (이미 운영에 적용된 이 마이그레이션 자체는 영향
+-- 없고, 신규 테넌트를 빈 DB부터 전체 이력 재생으로 부트스트랩할 때만
+-- 걸리는 잠재 버그였다 — 로컬 전체 스키마 재생 검증 중 발견.)
+drop function if exists public.get_customer_balances();
+
 create or replace function public.get_customer_balances()
 returns table (id uuid, name text, total numeric, paid numeric, balance numeric, oldest_unpaid_date date)
 language sql
