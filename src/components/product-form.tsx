@@ -12,7 +12,14 @@ import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Category = { id: string; name: string };
 type Supplier = { id: string; name: string };
-type ParentCandidate = { id: string; sku: string; name: string; spec?: string | null };
+type ParentCandidate = {
+  id: string;
+  sku: string;
+  name: string;
+  spec?: string | null;
+  unit?: string | null;
+  category_id?: string | null;
+};
 
 type ProductInitial = {
   sku?: string | null;
@@ -67,6 +74,26 @@ export function ProductForm({
   const [supplierId, setSupplierId] = useState(initial?.supplier_id ?? "");
   const [basePackageQty, setBasePackageQty] = useState(initial?.base_package_qty ?? "");
   const [parentProductId, setParentProductId] = useState(initial?.parent_product_id ?? "");
+  const [spec, setSpec] = useState(initial?.spec ?? "");
+  const [categoryId, setCategoryId] = useState(initial?.category_id ?? "");
+
+  // 모품목을 고르면 어차피 같은 실물이라 규격/단위/카테고리는 모품목
+  // 것을 그대로 가져온다 — 사용자가 직접 입력해야 하는 건 SKU/상품명/
+  // 판매가뿐이다(사용자 확인: "부모껄 다 불러오니 sku랑 가격만 넣음
+  // 되는거아니야?"). 고른 뒤에도 각 칸은 계속 수정 가능한 일반 입력칸
+  // 이라, 모품목과 살짝 다르게(예: 규격 표기만 다르게) 바꿔야 하는
+  // 드문 경우도 막지 않는다.
+  function handleParentChange(newParentId: string) {
+    setParentProductId(newParentId);
+    const parent = parentCandidates.find((p) => p.id === newParentId);
+    if (!parent) return;
+    setSpec(parent.spec ?? "");
+    if (parent.category_id) setCategoryId(parent.category_id);
+    if (parent.unit) {
+      setUnitValue(parent.unit);
+      setUnitMode(UNIT_PRESETS.includes(parent.unit) ? "preset" : "custom");
+    }
+  }
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -93,7 +120,8 @@ export function ProductForm({
         name="category_id"
         aria-label="카테고리"
         required
-        defaultValue={initial?.category_id ?? ""}
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
         className="erp-select"
       >
         <option value="" disabled>
@@ -121,7 +149,8 @@ export function ProductForm({
         autoComplete="off"
         placeholder="규격 (예: wp(150), 150mm)"
         aria-label="규격"
-        defaultValue={initial?.spec ?? ""}
+        value={spec}
+        onChange={(e) => setSpec(e.target.value)}
         className="erp-input"
       />
       <div style={{ display: "flex", gap: 4 }}>
@@ -218,8 +247,8 @@ export function ProductForm({
               <ProductSearchSelect
                 products={parentCandidates}
                 value={parentProductId}
-                onChange={setParentProductId}
-                placeholder="모품목 선택 (이형/삼각거래 출고용 파생 품목인 경우)"
+                onChange={handleParentChange}
+                placeholder="모품목 선택 (이형/삼각거래 출고용 파생 품목인 경우 — 규격/단위/카테고리 자동입력)"
               />
             </div>
             {parentProductId && (

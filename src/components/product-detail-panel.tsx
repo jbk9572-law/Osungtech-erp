@@ -40,9 +40,22 @@ export async function ProductDetailPanel({ id }: { id: string }) {
       .select("id, component_product_id, quantity_per_unit")
       .eq("parent_product_id", id)
       .order("created_at"),
-    fetchAllRows<{ id: string; sku: string; name: string; unit: string; parent_product_id: string | null }>(
-      (from, to) =>
-        supabase.from("products").select("id, sku, name, unit, parent_product_id").order("name").range(from, to),
+    // spec/category_id까지 같이 가져온다 — 모품목을 고르면 ProductForm이
+    // 규격/단위/카테고리를 자동으로 채운다(products/page.tsx와 같은 이유).
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      category_id: string | null;
+      parent_product_id: string | null;
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select("id, sku, name, spec, unit, category_id, parent_product_id")
+        .order("name")
+        .range(from, to),
     ),
   ]);
 

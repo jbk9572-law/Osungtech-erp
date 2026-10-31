@@ -77,10 +77,20 @@ export default async function ProductsPage({
     // categories/suppliers와 같은 방식(fetchAllRows)으로 따로, 전부 가져온다.
     // 이미 다른 품목의 파생 품목인 것은 DB에서부터 제외해 다단계 구조가
     // UI에 애초에 보이지 않게 한다(해당 제약은 트리거로도 다시 막힌다).
-    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
+    // unit/category_id까지 같이 내려줘서, 모품목을 고르면 ProductForm이
+    // 규격/단위/카테고리를 자동으로 채운다(어차피 같은 실물이라 SKU/
+    // 상품명/판매가만 새로 입력하면 되게).
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string | null;
+      category_id: string | null;
+    }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec")
+        .select("id, sku, name, spec, unit, category_id")
         .is("parent_product_id", null)
         .order("name")
         .range(from, to),
