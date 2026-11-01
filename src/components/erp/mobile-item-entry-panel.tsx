@@ -8,7 +8,7 @@ import { formatNumber } from "@/lib/format-number";
 
 type SearchProduct = { id: string; sku: string; name: string; spec?: string | null };
 type QuickPickItem = { productId: string; sku: string; name: string; spec?: string | null };
-type EntryItem = { key: number; name: string; spec?: string | null; quantity: number; price: number; amount: number };
+type EntryItem = { key: number; name: string; spec?: string | null; quantity: number; price?: number; amount?: number };
 
 // 매출/매입 등록 폼의 품목 입력 표는 칸이 10개 안팎이라 모바일에서 가로
 // 스크롤 압박이 심하다는 지적("가로형 횡그리드 모바일환경에서 스크롤압박이
@@ -27,8 +27,9 @@ type EntryItem = { key: number; name: string; spec?: string | null; quantity: nu
 // 일치한다.
 export function MobileItemEntryPanel({
   products,
-  quickPicks,
+  quickPicks = [],
   items,
+  showPrice = true,
   priceLabel = "단가",
   totalLabel = "합계",
   totalAmount,
@@ -37,22 +38,28 @@ export function MobileItemEntryPanel({
   onUpdateQuantity,
   onUpdatePrice,
   onRemove,
-  resolvePrice,
+  resolvePrice = () => 0,
 }: {
   products: SearchProduct[];
-  quickPicks: QuickPickItem[];
+  quickPicks?: QuickPickItem[];
   items: EntryItem[];
+  // 창고이동/견적요청서처럼 단가 개념이 아예 없는 폼은 false로 꺼서
+  // 수량만 입력하게 한다(견적서/구매요청서/매출/매입은 단가가 있으므로
+  // 기본값 true).
+  showPrice?: boolean;
   priceLabel?: string;
   totalLabel?: string;
-  totalAmount: number;
-  onQuickAdd: (productId: string) => void;
+  // showPrice일 때만 쓰인다.
+  totalAmount?: number;
+  onQuickAdd?: (productId: string) => void;
   onAdd: (productId: string, quantity: number, price: number) => void;
   onUpdateQuantity: (key: number, quantity: number) => void;
-  onUpdatePrice: (key: number, price: number) => void;
+  onUpdatePrice?: (key: number, price: number) => void;
   onRemove: (key: number) => void;
   // 품목을 고른 시점의 기본 단가(거래처/공급처별 단가 이력 → 품목
   // 기본가 순으로 호출부가 이미 계산해둔 값)를 시트에 미리 채운다.
-  resolvePrice: (productId: string) => number;
+  // showPrice=false면 호출부가 안 넘겨도 된다.
+  resolvePrice?: (productId: string) => number;
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [draftProductId, setDraftProductId] = useState("");
@@ -96,7 +103,7 @@ export function MobileItemEntryPanel({
               <button
                 key={pick.productId}
                 type="button"
-                onClick={() => onQuickAdd(pick.productId)}
+                onClick={() => onQuickAdd?.(pick.productId)}
                 className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left"
                 style={{
                   minHeight: 44,
@@ -121,9 +128,11 @@ export function MobileItemEntryPanel({
         <span className="text-xs font-bold" style={{ color: "var(--erp-text)" }}>
           등록된 품목 ({items.length})
         </span>
-        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-          {totalLabel} <strong style={{ color: "var(--erp-primary)" }}>{formatNumber(totalAmount)}원</strong>
-        </span>
+        {showPrice ? (
+          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            {totalLabel} <strong style={{ color: "var(--erp-primary)" }}>{formatNumber(totalAmount ?? 0)}원</strong>
+          </span>
+        ) : null}
       </div>
 
       {items.length === 0 ? (
@@ -174,25 +183,29 @@ export function MobileItemEntryPanel({
                   className="erp-input"
                   style={{ flex: 1, minWidth: 0 }}
                 />
-                <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                  ×
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.price}
-                  onChange={(e) => onUpdatePrice(item.key, Number(e.target.value) || 0)}
-                  aria-label={priceLabel}
-                  className="erp-input"
-                  style={{ flex: 1, minWidth: 0 }}
-                />
-                <span
-                  className="flex-shrink-0 text-sm font-bold"
-                  style={{ color: "var(--erp-primary)", minWidth: 72, textAlign: "right" }}
-                >
-                  {formatNumber(item.amount)}원
-                </span>
+                {showPrice && (
+                  <>
+                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                      ×
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.price ?? 0}
+                      onChange={(e) => onUpdatePrice?.(item.key, Number(e.target.value) || 0)}
+                      aria-label={priceLabel}
+                      className="erp-input"
+                      style={{ flex: 1, minWidth: 0 }}
+                    />
+                    <span
+                      className="flex-shrink-0 text-sm font-bold"
+                      style={{ color: "var(--erp-primary)", minWidth: 72, textAlign: "right" }}
+                    >
+                      {formatNumber(item.amount ?? 0)}원
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -240,30 +253,34 @@ export function MobileItemEntryPanel({
                     style={{ width: "100%" }}
                   />
                 </div>
-                <div className="flex-1">
-                  <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
-                    {priceLabel}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={draftPrice}
-                    onChange={(e) => setDraftPrice(Number(e.target.value) || 0)}
-                    aria-label={priceLabel}
-                    className="erp-input"
-                    style={{ width: "100%" }}
-                  />
+                {showPrice && (
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                      {priceLabel}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={draftPrice}
+                      onChange={(e) => setDraftPrice(Number(e.target.value) || 0)}
+                      aria-label={priceLabel}
+                      className="erp-input"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                )}
+              </div>
+              {showPrice && (
+                <div className="flex items-center justify-between rounded-sm px-3 py-2" style={{ background: "var(--erp-info-bg)" }}>
+                  <span className="text-xs font-semibold" style={{ color: "var(--erp-info-text)" }}>
+                    금액
+                  </span>
+                  <span className="text-base font-bold" style={{ color: "var(--erp-primary)" }}>
+                    {formatNumber(draftAmount)}원
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-center justify-between rounded-sm px-3 py-2" style={{ background: "var(--erp-info-bg)" }}>
-                <span className="text-xs font-semibold" style={{ color: "var(--erp-info-text)" }}>
-                  금액
-                </span>
-                <span className="text-base font-bold" style={{ color: "var(--erp-primary)" }}>
-                  {formatNumber(draftAmount)}원
-                </span>
-              </div>
+              )}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setSheetOpen(false)} className="erp-btn" style={{ flex: 1, height: 46 }}>
                   취소

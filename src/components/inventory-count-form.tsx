@@ -340,7 +340,7 @@ export function InventoryCountForm({
           </div>
         </div>
       )}
-      <div className="erp-grid-wrap" style={{ marginTop: 8 }}>
+      <div className="erp-grid-wrap has-card-view" style={{ marginTop: 8 }}>
         <table
           className="erp-grid"
           style={{ tableLayout: "fixed", width: "100%", minWidth: COUNT_GRID_TOTAL_WIDTH }}
@@ -431,6 +431,69 @@ export function InventoryCountForm({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* 246개 품목을 가로로 늘어놓은 표라 모바일에서 스크롤 압박이 가장
+          심했던 화면 — 다른 목록 화면의 기존 카드뷰 전환(sales/purchase/
+          product-grid-table)과 같은 .erp-row-card-list 패턴을 그대로
+          쓴다. 입력칸(QuantityWithBoxInput)과 차이/배지 로직은 표 쪽과
+          완전히 같은 state(counted/baseline)를 공유한다. */}
+      <div className="erp-row-card-list" style={{ marginTop: 8 }}>
+        {visibleRows.map((row) => {
+          const systemQuantity = baseline[row.productId] ?? row.systemQuantity;
+          const value = counted[row.productId] ?? systemQuantity;
+          const diff = value - systemQuantity;
+          const flagged = isLargeDiscrepancy(systemQuantity, diff);
+          return (
+            <div className="erp-row-card" key={row.productId}>
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">{row.name}</span>
+                <span className="erp-row-card-date">{row.sku}</span>
+              </div>
+              {row.spec && <div className="erp-row-card-item">{row.spec}</div>}
+              <div className="erp-row-card-foot" style={{ marginTop: 6 }}>
+                <span className="erp-row-card-qty">
+                  전산 <QtyWithBoxes quantity={systemQuantity} basePackageQty={row.basePackageQty} unit={row.unit ?? ""} />
+                </span>
+                <span
+                  className="erp-row-card-amount"
+                  style={{
+                    color:
+                      diff > 0
+                        ? "var(--erp-success)"
+                        : diff < 0
+                          ? "var(--erp-danger)"
+                          : "var(--erp-text-muted)",
+                  }}
+                >
+                  차이 {diff > 0 ? "+" : ""}
+                  {formatNumber(diff)}
+                </span>
+              </div>
+              <div style={{ marginTop: 4 }}>
+                <QuantityWithBoxInput
+                  quantity={value}
+                  onQuantityChange={(n) => setCounted((prev) => ({ ...prev, [row.productId]: n }))}
+                  basePackageQty={row.basePackageQty}
+                  label="실사 수량"
+                  className="erp-input w-full"
+                />
+              </div>
+              {flagged && (
+                <div style={{ marginTop: 4 }}>
+                  <GridBadge tone="warn" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
+                    ⚠ 확인 필요
+                  </GridBadge>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {!visibleRows.length && (
+          <p className="erp-grid-empty">
+            {trimmedKeyword ? "검색 결과가 없습니다." : onlyDiff ? "차이 있는 품목이 없습니다." : "표시할 품목이 없습니다."}
+          </p>
+        )}
       </div>
       <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>

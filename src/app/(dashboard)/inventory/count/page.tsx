@@ -7,9 +7,10 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { GridBadge } from "@/components/grid/badge";
 import { WarehouseQuerySelect } from "@/components/warehouse-query-select";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { recalculateInventoryCache } from "../actions";
+import { RecalculateCacheButton } from "@/components/recalculate-cache-button";
 import { formatNumber } from "@/lib/format-number";
 import { findWarehouseQuantity, sumInventoryQuantity } from "@/lib/inventory-quantity";
+import { getCurrentActor } from "@/lib/current-actor";
 
 type CountTxRow = {
   id: string;
@@ -46,6 +47,10 @@ export default async function InventoryCountPage({
   const { session: sessionParam, verify: verifyParam, warehouseId: warehouseIdParam } = await searchParams;
   const verifyRequested = verifyParam === "1";
   const supabase = await createClient();
+  // recalculate_inventory_cache()가 DB에서 관리자 전용으로 막힌다
+  // (migration 207) — 누르면 에러만 나는 버튼을 운영자(staff)에게
+  // 보여주지 않는다(adminOnly 메뉴 항목과 같은, 이 앱의 기존 관례).
+  const { isAdmin } = await getCurrentActor(supabase);
 
   const [products, warehouses, countTx] = await Promise.all([
     fetchAllRows<{
@@ -350,11 +355,13 @@ export default async function InventoryCountPage({
                   ⚠ 아래 품목은 화면의 전산 재고와 실제 거래이력 합계가 다릅니다 — 소프트웨어
                   계산/캐시 문제일 가능성이 있으니 실사보다 먼저 이 목록부터 확인하세요.
                 </p>
-                <form action={recalculateInventoryCache}>
-                  <button type="submit" className="erp-btn erp-btn-primary" style={{ flexShrink: 0 }}>
-                    지금 자동 교정
-                  </button>
-                </form>
+                {isAdmin ? (
+                  <RecalculateCacheButton />
+                ) : (
+                  <span className="text-xs" style={{ color: "var(--erp-text-muted)", flexShrink: 0 }}>
+                    자동 교정은 관리자 전용 기능입니다.
+                  </span>
+                )}
               </div>
               <div className="erp-grid-wrap has-card-view">
                 <table className="erp-grid">

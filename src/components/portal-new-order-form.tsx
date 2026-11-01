@@ -47,7 +47,7 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
         name="items"
         value={JSON.stringify(items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })))}
       />
-      <div className="erp-grid-wrap">
+      <div className="erp-grid-wrap has-card-view">
         <table
           className="erp-grid"
           style={{ tableLayout: "fixed", width: "100%", minWidth: ORDER_GRID_TOTAL_WIDTH }}
@@ -91,6 +91,46 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* 가로 스크롤 압박을 없애기 위한 모바일 카드형 — 거래처 주문
+          화면이라 특히 모바일 비중이 높다. 고정 카탈로그를 품목별로
+          훑으며 수량만 입력하는 구조라(품목 추가/삭제가 없음),
+          매출/매입처럼 바텀시트를 여는 MobileItemEntryPanel 대신 다른
+          화면들의 기존 카드뷰 전환과 같은 .erp-row-card-list 패턴을
+          그대로 쓴다. */}
+      <div className="erp-row-card-list">
+        {catalog.map((c) => {
+          const qty = Number(qtyByProduct[c.product_id] ?? 0);
+          return (
+            <div className="erp-row-card" key={c.product_id}>
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">{c.name}</span>
+                <span className="erp-row-card-date">{c.sku}</span>
+              </div>
+              {c.spec && <div className="erp-row-card-item">{c.spec}</div>}
+              <div className="erp-row-card-foot" style={{ marginTop: 6 }}>
+                <span className="erp-row-card-qty">단가 {formatNumber(c.unit_price)}원</span>
+                <span className="erp-row-card-amount">{qty > 0 ? `${formatNumber(qty * c.unit_price)}원` : "-"}</span>
+              </div>
+              <div className="flex items-center gap-2" style={{ marginTop: 4 }}>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  className="erp-input"
+                  style={{ flex: 1 }}
+                  aria-label="수량"
+                  value={qtyByProduct[c.product_id] ?? ""}
+                  onChange={(e) => setQtyByProduct((prev) => ({ ...prev, [c.product_id]: e.target.value }))}
+                />
+                <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  {c.unit}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="erp-field">

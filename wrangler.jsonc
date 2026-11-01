@@ -12,6 +12,17 @@
   "main": "worker.ts",
   "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"],
+  // 기본값(off)은 Worker를 "요청을 보낸 사용자와 가장 가까운 위치"에서
+  // 실행한다 — 이 앱은 매 요청마다 Supabase(Worker가 거의 매번 의존하는
+  // 유일한 백엔드)로 왕복하므로, 사용자 근처가 아니라 Supabase 근처에서
+  // 실행되는 게 더 유리하다. "smart"는 Cloudflare가 트래픽 패턴을 분석해
+  // Worker를 자주 호출하는 백엔드(Supabase) 가까이로 옮겨 실행한다 — 코드
+  // 변경 없이 적용되고, 대시보드의 Settings > General > Placement에서도
+  // 켤 수 있지만 그 메뉴 위치가 Cloudflare UI 개편으로 자꾸 바뀌어서
+  // 여기 설정 파일로 명시해둔다(배포 때마다 같은 설정이 보장됨).
+  "placement": {
+    "mode": "smart"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

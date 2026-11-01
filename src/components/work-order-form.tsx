@@ -148,7 +148,7 @@ export function WorkOrderForm({
           <PageGuide className="mb-1.5">
             구성품 소요량입니다. 현재재고는 위에서 고른 창고 기준입니다.
           </PageGuide>
-          <div className="erp-grid-wrap">
+          <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -188,6 +188,30 @@ export function WorkOrderForm({
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="erp-row-card-list">
+            {requirements.map((r) => (
+              <div className="erp-row-card" key={r.productId}>
+                <div className="erp-row-card-head">
+                  <span className="erp-row-card-partner">{r.name}</span>
+                  <span className="erp-row-card-date">{r.sku}</span>
+                </div>
+                <div className="erp-row-card-foot" style={{ marginTop: 6 }}>
+                  <span className="erp-row-card-qty">
+                    필요 {formatNumber(r.needed)} {r.unit}
+                  </span>
+                  <span className="erp-row-card-amount">
+                    재고 {formatNumber(r.currentStock)} {r.unit}
+                  </span>
+                </div>
+                {r.short && (
+                  <span className="text-xs font-semibold" style={{ color: "var(--erp-danger)" }}>
+                    재고 부족
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
           {hasShortage && (
             <PageGuide tone="warning" className="mt-2 font-medium">
