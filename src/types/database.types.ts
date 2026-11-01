@@ -1204,6 +1204,7 @@ export type Database = {
           slug: string;
           created_at: string;
           disabled_features: string[];
+          closing_date: string | null;
           disabled_at: string | null;
           plan: string;
           plan_key: string | null;
@@ -1226,6 +1227,7 @@ export type Database = {
           slug: string;
           created_at?: string;
           disabled_features?: string[];
+          closing_date?: string | null;
           disabled_at?: string | null;
           plan?: string;
           plan_key?: string | null;
@@ -1248,6 +1250,7 @@ export type Database = {
           slug?: string;
           created_at?: string;
           disabled_features?: string[];
+          closing_date?: string | null;
           disabled_at?: string | null;
           plan?: string;
           plan_key?: string | null;

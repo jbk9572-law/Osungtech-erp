@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
+import { toFriendlyDbErrorMessage } from "@/lib/db-error-message";
 
 export async function adjustInventory(
   _prevState: FormState,
@@ -278,11 +279,18 @@ export async function submitStockCount(
 // 하던 것에서, 실제로 전산 재고(inventory.quantity 캐시)를 이력 합계
 // (거래일자 오름차순 + 재고실사 리셋 기준 정답)에 맞춰 고치는 자가치유
 // 액션으로 확장한다(recalculate_inventory_cache RPC, migration 205 참고).
-export async function recalculateInventoryCache(): Promise<void> {
+// migration 207부터 이 RPC는 관리자 전용이다 — 버튼 자체를 count/page.tsx가
+// 이미 관리자에게만 보여주지만(지금까지는 console.error로만 조용히
+// 실패했었다 — 전체 감사에서 발견한 공백), 직접 재호출하거나 URL을
+// 조작하는 경우까지 대비해 FormState로 바꿔 에러를 화면에 보여준다.
+export async function recalculateInventoryCache(_prevState: FormState, _formData: FormData): Promise<FormState> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("recalculate_inventory_cache");
-  if (error) console.error("재고 캐시 자가치유 실패:", error.message);
+  if (error) {
+    return { error: toFriendlyDbErrorMessage(error) ?? `재고 캐시 자가치유에 실패했습니다: ${error.message}` };
+  }
   revalidatePath("/inventory/count");
   revalidatePath("/inventory");
   revalidatePath("/dashboard");
+  return { success: "재고 캐시를 원장 기준으로 다시 맞췄습니다." };
 }

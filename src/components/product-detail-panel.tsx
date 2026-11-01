@@ -7,12 +7,15 @@ import { updateProduct, addBomItem, deleteBomItem } from "@/app/(dashboard)/prod
 import { PageGuide } from "@/components/erp/page-guide";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
+import { isFeatureEnabled } from "@/lib/require-feature-enabled";
 
 // products/page.tsx의 목록+상세 분할 화면에서, 목록 옆 패널에 이
 // 컴포넌트를 그대로 렌더링한다. 모달/직접 URL 접근(products/[id]/page.tsx)도
 // 같은 컴포넌트를 쓴다.
 export async function ProductDetailPanel({ id }: { id: string }) {
   const supabase = await createClient();
+  // 파생 SKU(모품목 선택) 기능 토글 — products/page.tsx와 같은 이유.
+  const derivedSkuEnabled = await isFeatureEnabled(supabase, "derived_sku");
 
   const [
     { data: product },
@@ -77,7 +80,9 @@ export async function ProductDetailPanel({ id }: { id: string }) {
   // 모품목 후보 — 자기 자신과, 이미 다른 품목의 파생 품목인 것은 제외한다
   // (다단계 구조 금지는 DB 트리거로도 다시 막히지만, UI에 애초에 보이지
   // 않게 해서 사용자가 선택했다가 에러를 보는 상황 자체를 줄인다).
-  const parentCandidates = allProducts.filter((p) => p.id !== id && !p.parent_product_id);
+  const parentCandidates = derivedSkuEnabled
+    ? allProducts.filter((p) => p.id !== id && !p.parent_product_id)
+    : [];
 
   return (
     <>

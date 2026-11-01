@@ -43,6 +43,12 @@ const ALLOWLIST = new Set([
   "src/app/(dashboard)/@modal/error.tsx:53",
   "src/app/(dashboard)/@modal/not-found.tsx:36",
   "src/app/(dashboard)/not-found.tsx:22",
+  // 화면 사용법 안내가 아니라, 관리자 전용 버튼 자리를 대신하는 짧은
+  // 권한 상태 캡션이다(migration 207 — recalculate_inventory_cache가
+  // 관리자 전용으로 바뀌면서 일반 사용자에게는 버튼 대신 이 문구가
+  // 보인다). 버튼 옆 한 줄짜리 상태 표시라 PageGuide 박스로 감싸면
+  // 오히려 버튼과 어색하게 분리됨.
+  "src/app/(dashboard)/inventory/count/page.tsx:361",
 ]);
 
 const MUTED_COLOR = /erp-text-muted/;

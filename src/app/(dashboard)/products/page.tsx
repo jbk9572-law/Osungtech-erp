@@ -12,6 +12,7 @@ import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
 import { formatNumber } from "@/lib/format-number";
+import { isFeatureEnabled } from "@/lib/require-feature-enabled";
 
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
@@ -65,6 +66,15 @@ export default async function ProductsPage({
     hasMore = result.hasMore;
   }
 
+  // 파생 SKU(모품목 선택) 기능은 이형/삼각거래가 있는 업종에서만 쓰는
+  // 개념이라, 범용 SaaS 테넌트 단위로 껐다 켤 수 있다(환경설정 > 기능
+  // 관리 "파생 SKU" 토글, require-feature-enabled.ts와 같은 disabled_
+  // features 저장소 재사용). 꺼져 있으면 모품목 후보 조회 자체를
+  // 건너뛰고 빈 배열을 내려줘 ProductForm이 필드를 숨긴다(필드 자체는
+  // parentCandidates가 비어 있으면 숨기는 기존 동작 그대로 재사용 —
+  // ProductForm을 따로 고칠 필요가 없다).
+  const derivedSkuEnabled = await isFeatureEnabled(supabase, "derived_sku");
+
   const [categories, suppliers, parentCandidates] = await Promise.all([
     fetchAllRows<{ id: string; name: string }>((from, to) =>
       supabase.from("categories").select("id, name").order("name").range(from, to),
@@ -80,21 +90,23 @@ export default async function ProductsPage({
     // unit/category_id까지 같이 내려줘서, 모품목을 고르면 ProductForm이
     // 규격/단위/카테고리를 자동으로 채운다(어차피 같은 실물이라 SKU/
     // 상품명/판매가만 새로 입력하면 되게).
-    fetchAllRows<{
-      id: string;
-      sku: string;
-      name: string;
-      spec: string | null;
-      unit: string | null;
-      category_id: string | null;
-    }>((from, to) =>
-      supabase
-        .from("products")
-        .select("id, sku, name, spec, unit, category_id")
-        .is("parent_product_id", null)
-        .order("name")
-        .range(from, to),
-    ),
+    !derivedSkuEnabled
+      ? Promise.resolve([])
+      : fetchAllRows<{
+          id: string;
+          sku: string;
+          name: string;
+          spec: string | null;
+          unit: string | null;
+          category_id: string | null;
+        }>((from, to) =>
+          supabase
+            .from("products")
+            .select("id, sku, name, spec, unit, category_id")
+            .is("parent_product_id", null)
+            .order("name")
+            .range(from, to),
+        ),
   ]);
 
   const products = keyword

@@ -269,6 +269,25 @@ export function getVisibleMenuGroups(
 // 목록에서 아예 빼서 항상 켜져 있게 한다.
 export const MENU_TOGGLE_LOCKED_HREFS = new Set(["/settings/features", "/dashboard"]);
 
+// MENU_GROUPS의 featureKey/leaf-href 토글은 전부 "메뉴 항목 하나를 통째로
+// 숨긴다"는 공통 형태인데, 어떤 테넌트 설정은 메뉴를 숨기는 게 아니라
+// 기존 화면 안의 특정 필드/동작만 켜고 끈다(예: 품목관리의 "모품목 선택"
+// 필드 — 이형/삼각거래가 있는 업종만 쓰는 개념). 같은 disabled_features
+// 저장소(tenants.disabled_features)와 같은 FeatureToggle/
+// setTenantFeatureEnabled를 그대로 재사용하되, MENU_GROUPS와는 별도
+// 카탈로그로 관리한다 — 범용 SaaS 확장 요청(불특정 다수 업종 지원)에서
+// 처음 추가됨. 새로운 "화면 안 토글"이 생기면 여기에 항목만 추가하면
+// 된다(해당 화면에서 require-feature-enabled.ts의 isFeatureEnabled로
+// 조회).
+export const BEHAVIOR_FEATURE_KEYS: { key: string; label: string; description: string }[] = [
+  {
+    key: "derived_sku",
+    label: "파생 SKU(이형/삼각거래)",
+    description:
+      "품목관리의 \"모품목 선택\" 필드를 켜고 끕니다. 매입은 한 품목으로 받고 매출은 거래처별로 다른 SKU/단가로 나눠 내보내는 이형·삼각거래가 있는 업종에서만 켜면 됩니다. 꺼도 이미 등록된 파생 SKU는 그대로 동작합니다.",
+  },
+];
+
 export type MenuItem = { label: string; href: string };
 
 function flatten(groups: MenuGroup[]): MenuItem[] {
