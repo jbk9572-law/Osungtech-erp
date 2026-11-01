@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
 
 export async function login(_prevState: { error: string } | undefined, formData: FormData) {
   const companyCode = String(formData.get("companyCode") ?? "").trim().toLowerCase();
@@ -45,11 +46,13 @@ export async function login(_prevState: { error: string } | undefined, formData:
         { data: portalEmail, error: portalLookupError },
         { data: resolvedEmail, error: lookupError },
         { data: blockReason, error: blockCheckError },
-      ] = await Promise.all([
-        admin.rpc("get_portal_email_for_username", { p_username: loginId }),
-        admin.rpc("get_email_for_username", { p_slug: companyCode, p_username: loginId }),
-        admin.rpc("get_login_block_reason", { p_slug: companyCode, p_username: loginId }),
-      ]);
+      ] = await logSlowSupabaseCall("login.lookup_email_batch", () =>
+        Promise.all([
+          admin.rpc("get_portal_email_for_username", { p_username: loginId }),
+          admin.rpc("get_email_for_username", { p_slug: companyCode, p_username: loginId }),
+          admin.rpc("get_login_block_reason", { p_slug: companyCode, p_username: loginId }),
+        ])
+      );
 
       if (portalLookupError || lookupError || blockCheckError) {
         return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
@@ -74,9 +77,10 @@ export async function login(_prevState: { error: string } | undefined, formData:
     } else {
       // 회사코드가 없으면 직원 로그인은 애초에 불가능하므로(테넌트를
       // 특정할 수 없음) 거래처 포털 계정 아이디로만 시도한다.
-      const { data: portalEmail, error: portalLookupError } = await admin.rpc("get_portal_email_for_username", {
-        p_username: loginId,
-      });
+      const { data: portalEmail, error: portalLookupError } = await logSlowSupabaseCall(
+        "login.lookup_portal_email",
+        () => admin.rpc("get_portal_email_for_username", { p_username: loginId })
+      );
       if (portalLookupError) {
         return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
       }
@@ -87,7 +91,9 @@ export async function login(_prevState: { error: string } | undefined, formData:
     }
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await logSlowSupabaseCall("login.signInWithPassword", () =>
+    supabase.auth.signInWithPassword({ email, password })
+  );
 
   if (error) {
     return { error: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요." };
@@ -100,7 +106,10 @@ export async function login(_prevState: { error: string } | undefined, formData:
   // /portal/orders, 업체는 /portal/assignments — 실제 분기는 포털
   // 레이아웃이 한다). 로그인 전에는 입력된 아이디만으로 직원/포털 종류를
   // 구분할 방법이 없다(이메일 형식이면 둘 다 가능한 입력이라).
-  const { data: portalIdentity, error: portalIdentityError } = await supabase.rpc("portal_identity");
+  const { data: portalIdentity, error: portalIdentityError } = await logSlowSupabaseCall(
+    "login.portal_identity",
+    () => supabase.rpc("portal_identity")
+  );
   if (portalIdentityError) {
     return { error: "일시적인 오류로 로그인할 수 없습니다. 잠시 후 다시 시도해주세요." };
   }
@@ -123,6 +132,6 @@ export async function login(_prevState: { error: string } | undefined, formData:
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await logSlowSupabaseCall("logout.signOut", () => supabase.auth.signOut());
   redirect("/login");
 }
