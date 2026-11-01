@@ -76,17 +76,31 @@ export async function updateSession(request: NextRequest) {
   // 실패한 건 미들웨어라는 공통 지점이 원인이라는 뜻이다). 실패하면
   // "로그인 안 된 사람"으로 fail-closed 처리한다 — 보호된 화면이면
   // 로그인으로 보내고, 이미 열려있던 요청은 다음 재시도에서 복구된다.
-  let user = null;
+  //
+  // getUser()가 아니라 getClaims()를 쓴다 — 둘 다 "로그인 안 된
+  // 사람"을 걸러내기 위해 매 요청(이 앱의 보호된 경로 전부)마다 호출
+  // 되는데, getUser()는 항상 Supabase Auth 서버로 네트워크 왕복을
+  // 보낸다. getClaims()는 프로젝트가 비대칭(ECC/RSA) JWT 서명을 쓰면
+  // JWKS(서명 검증용 공개키, 자체적으로 엣지 캐싱됨)로 로컬에서
+  // 서명을 검증해 대부분 왕복 없이 끝난다 — getSession()처럼 서명
+  // 검증을 건너뛰고 쿠키를 그냥 믿는 방식이 아니라 실제로 암호학적
+  // 검증을 하므로 getUser() 대비 보안 수준을 낮추지 않는다(대칭 키
+  // 프로젝트거나 WebCrypto가 없으면 자동으로 getUser()와 동일하게
+  // 서버 왕복으로 폴백 — 그래도 지금보다 느려지지는 않는다). 전체
+  // 요청의 첫 관문에서 겪던 네트워크 왕복을 없애는 게 목적이라,
+  // 이미 네트워크 호출인 레이아웃 쪽 getUser()(react cache()로 요청당
+  // 1회로 묶여 있음, src/lib/supabase/server.ts)는 그대로 둔다 —
+  // 그쪽은 user.id/email 등 전체 객체가 실제로 필요해서 바꾸려면 호출부
+  // 전체를 다시 손봐야 하는 별도 작업이다.
+  let hasValidSession = false;
   try {
-    const {
-      data: { user: resolvedUser },
-    } = await supabase.auth.getUser();
-    user = resolvedUser;
+    const { data, error: claimsError } = await supabase.auth.getClaims();
+    hasValidSession = !claimsError && !!data?.claims?.sub;
   } catch {
-    user = null;
+    hasValidSession = false;
   }
 
-  if (!user) {
+  if (!hasValidSession) {
     // 위치 QR처럼 로그인 안 된 상태에서 특정 화면 링크로 바로 들어오는
     // 경우, 로그인 후 무조건 /dashboard로 보내면 원래 보려던 화면을
     // 다시 찾아가야 한다 — 원래 경로를 next로 넘겨 로그인 액션이 그
