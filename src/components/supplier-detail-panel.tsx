@@ -39,7 +39,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
   // 반영한다 (거래처 상세 화면의 applyDuePriceSchedules와 동일한 방식).
   await applyDuePurchasePriceSchedules(supabase, id);
 
-  const [{ data: supplier }, { data: prices }, products, { data: schedules }, balance] =
+  const [{ data: supplier }, { data: prices }, products, { data: schedules }, balance, canViewPayables] =
     await Promise.all([
       supabase.from("suppliers").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -57,16 +57,16 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
         .is("applied_at", null)
         .order("effective_date", { ascending: true }),
       getSupplierBalance(supabase, id),
+      // /payables 화면을 부서별로 막아도 이 상세패널이 똑같은 미지급금
+      // 누계/미결제 전표를 보여주면 제한이 무력화된다 — customer-detail-panel.tsx
+      // 와 동일한 이유로 요약 섹션만 같은 page_key로 게이팅한다. 나머지
+      // 쿼리와 무관해서 전엔 Promise.all 밖에 따로 await 돼 있었다.
+      canViewPage(supabase, "/payables"),
     ]);
 
   if (!supplier) {
     notFound();
   }
-
-  // /payables 화면을 부서별로 막아도 이 상세패널이 똑같은 미지급금
-  // 누계/미결제 전표를 보여주면 제한이 무력화된다 — customer-detail-panel.tsx
-  // 와 동일한 이유로 요약 섹션만 같은 page_key로 게이팅한다.
-  const canViewPayables = await canViewPage(supabase, "/payables");
 
   // 단가 예약 목록에 "기존가 → 변경가 (차액)"을 보여주려면 상품별 현재
   // 매입단가가 필요하다. supplier_product_prices는 공급처+상품당 최신 단가
