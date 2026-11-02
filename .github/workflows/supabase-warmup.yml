@@ -43,14 +43,16 @@ jobs:
         # -o /dev/null로 본문을 버리면 실패해도 원인을 알 수 없다
         # (실제로 500 에러가 나는데 본문이 안 보여서 원인 파악이 막힌 적
         # 있음) — 응답 본문을 받아서 실패 시에만 출력한다.
+        # -L: 첫 홉이 308(프로토콜 업그레이드 등)로 리다이렉트되는 걸
+        # 실제로 확인했다 — 따라가지 않으면 본문 없는 308만 받고 끝난다.
         run: |
           http_code=$(curl -sS -L --max-redirs 5 -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -D /tmp/warmup-headers.txt \
             "${{ secrets.SITE_URL }}/api/cron/warmup" \
-            -o /tmp/warmup-response.json -w "%{http_code} (최종 URL: %{url_effective})")
+            -o /tmp/warmup-response.json -w "%{http_code}")
           echo "HTTP $http_code"
-          echo "응답 헤더(전체 리다이렉트 체인):"
-          cat /tmp/warmup-headers.txt
-          echo "응답 본문:"
-          cat /tmp/warmup-response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "응답 본문:"
+            cat /tmp/warmup-response.json
+            exit 1
+          fi

@@ -18,8 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger messenger alert sync
+        # -L 없이는 308(프로토콜 업그레이드 등 첫 홉 리다이렉트) 응답을
+        # 그대로 "성공"으로 오해하고 넘어갈 수 있다(curl -f는 3xx를
+        # 에러로 안 침) — supabase-warmup.yml에서 실제로 겪은 문제라
+        # 같은 패턴 전부 같이 고친다.
         run: |
-          curl -sS -f -X POST \
+          curl -sS -f -L --max-redirs 5 -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.SITE_URL }}/api/cron/messenger-alerts" \
             -o /dev/null
