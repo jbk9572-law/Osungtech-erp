@@ -13,13 +13,17 @@ import { getServerEnv } from "@/lib/server-env";
 // worker.ts의 scheduled()에서 직접 Supabase를 찔렀는데 전혀 효과가
 // 없었다 — 알고 보니 이 배포 방식(OpenNext/Cloudflare)은 Cloudflare
 // Cron Trigger가 실제 사용자 요청과 다른("유휴 장비") 위치에서 돌아서,
-// 그쪽에서 데운 연결은 실제 트래픽이 지나가는 경로와 무관했다(이미
-// mail-sync/messenger-alerts 크론이 같은 이유로 GitHub Actions 방식을
-// 쓰고 있었다 — mail-sync.yml 주석 참고). 그래서 똑같이 바깥(GitHub
-// Actions)에서 이 주소를 실제 HTTPS 요청으로 호출하는 방식으로 바꿨다
-// — 이러면 진짜 사용자 요청과 똑같이 Cloudflare 엣지 라우팅(Smart
-// Placement 포함)을 타고 들어와서, 실제 트래픽이 쓰는 그 경로 자체를
-// 데워둔다.
+// 그쪽에서 데운 연결은 실제 트래픽이 지나가는 경로와 무관했다. 그래서
+// 바깥에서 이 주소를 실제 HTTPS 요청으로 호출하는 방식(mail-sync/
+// messenger-alerts와 동일)으로 바꿨는데, GitHub Actions의 schedule
+// 트리거가 이 저장소에서 "5분마다"조차 못 지키고 실제로는 몇 시간에
+// 한 번씩만 돌고 있던 것으로 확인됐다 — 분 단위로 데워야 하는 용도엔
+// 안 맞았다. 지금은 분 단위 정확도가 보장되는 외부 서비스
+// (cron-job.org)가 이 주소를 1분마다 호출한다 — GitHub Actions 쪽
+// (.github/workflows/supabase-warmup.yml)은 schedule을 빼고
+// workflow_dispatch(수동 디버깅용)만 남겼다. 어느 쪽이 호출하든
+// 진짜 사용자 요청과 똑같이 Cloudflare 엣지 라우팅(Smart Placement
+// 포함)을 타고 들어와서, 실제 트래픽이 쓰는 그 경로 자체를 데워둔다.
 //
 // .github/workflows/supabase-keepalive.yml(3일 간격)과는 막는 문제가
 // 다르다 — 그건 Supabase 프로젝트 자체가 일시정지되는 걸 막는 용도고,
