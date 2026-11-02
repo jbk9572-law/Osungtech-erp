@@ -46,9 +46,12 @@ jobs:
         run: |
           http_code=$(curl -sS -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -D /tmp/warmup-headers.txt \
             "${{ secrets.SITE_URL }}/api/cron/warmup" \
             -o /tmp/warmup-response.json -w "%{http_code}")
           echo "HTTP $http_code"
+          echo "응답 헤더:"
+          cat /tmp/warmup-headers.txt
           if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
             echo "응답 본문:"
             cat /tmp/warmup-response.json
