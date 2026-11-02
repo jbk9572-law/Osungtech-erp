@@ -209,6 +209,7 @@ export function TreeMenu({
                         <Link
                           key={item.label}
                           href={item.href}
+                          prefetch={false}
                           className={`erp-tree-item${active ? " active" : ""}`}
                         >
                           {item.label}

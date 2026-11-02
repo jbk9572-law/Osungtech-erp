@@ -49,9 +49,11 @@
     "dev": {
       "name": "elvonix-erp-dev",
       // 더미(테스트용) 직원/게시글을 매일 자동으로 채워주는 크론은
-      // dev 전용 — 한국시간 새벽 6시(UTC 21:00, 전날 기준).
+      // dev 전용 — 한국시간 새벽 6시(UTC 21:00, 전날 기준). "* * * * *"는
+      // Supabase 연결을 계속 데워두는 1분 간격 핑(아래 production과 동일
+      // 이유, worker.ts의 keepSupabaseWarm 참고).
       "triggers": {
-        "crons": ["0 21 * * *"]
+        "crons": ["0 21 * * *", "* * * * *"]
       },
       "vars": {
         // 2026-10-28 작업실(dev) 전용 DB로 분리 — elvonix-erp-dev
@@ -78,9 +80,19 @@
     },
     "production": {
       "name": "elvonix-erp",
-      // 운영에는 더미데이터 크론 자체를 안 둔다(triggers 생략) — 코드
-      // 상으로도 DEV_SEED_TENANT_SLUG를 안 넣어서 혹시 크론이 돌아도
-      // worker.ts가 조용히 건너뛰게 이중으로 막혀 있다.
+      // 더미데이터 크론은 여전히 운영에 안 둔다(worker.ts가
+      // DEV_SEED_TENANT_SLUG 없으면 조용히 건너뛰게 이중으로도 막혀
+      // 있음). 이 크론은 그거랑 무관하게 Supabase 연결을 1분마다
+      // 찔러서 계속 데워두는 용도다 — Cloudflare Workers는 한동안
+      // 요청이 없으면 Supabase로 가는 연결을 닫는데, 다음 요청이
+      // 올 때 처음부터 다시 TCP/TLS 연결을 맺어야 해서 그게 그대로
+      // 체감 지연(로그인/저장 등 단발성 요청에서 16-20초)이 됐다 —
+      // 실제로 같은 요청을 연달아 두 번 보내면 두 번째는 바로 뜨는
+      // 것으로 확인(연결이 데워져 있으면 빠름). worker.ts의
+      // keepSupabaseWarm 참고.
+      "triggers": {
+        "crons": ["* * * * *"]
+      },
       "vars": {
         "NEXT_PUBLIC_SUPABASE_URL": "https://bqetemkilbtjjbgywmbp.supabase.co",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZXRlbWtpbGJ0ampiZ3l3bWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMDkzNzgsImV4cCI6MjA5ODc4NTM3OH0.nUasjmfaisANmU9z_zSoQuVIryOQaZrcrT80a5vwcf0",

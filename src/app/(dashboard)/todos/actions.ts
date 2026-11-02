@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
+import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
 import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/paper-calc-sync";
 import { parseTodoType } from "@/lib/todo-flow";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
@@ -54,16 +55,22 @@ function parseItems(itemsRaw: string): TodoItemInput[] {
 // 그리고 그 방향을 이미 등록했으면(purchase_done_at 등) 다시 안 나온다.
 export async function getOpenTodos(side: "purchase" | "sale"): Promise<OpenTodoSummary[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("todos")
-    .select(
-      "id, title, due_date, items, todo_type, ship_date, purchase_done_at, sale_done_at, supplier_id, customer_id, suppliers(name), customers(name)"
-    )
-    .eq("done", false)
-    .in("todo_type", side === "purchase" ? ["purchase", "both"] : ["sale", "both"])
-    .is(side === "purchase" ? "purchase_done_at" : "sale_done_at", null)
-    .order("due_date", { ascending: true, nullsFirst: false })
-    .limit(50);
+  // 쿼리 하나뿐인 단순한 서버 액션인데도 20초 가까이 걸린다는 제보가
+  // 있었다 — 화면 로직이 아니라 Cloudflare Workers에서 Supabase로
+  // 나가는 요청 자체의 지연일 가능성을 확인하기 위해 측정한다
+  // (log-slow-supabase-call.ts, 3초 이상일 때만 Sentry/Workers Logs에 기록).
+  const { data } = await logSlowSupabaseCall("todos.getOpenTodos", () =>
+    supabase
+      .from("todos")
+      .select(
+        "id, title, due_date, items, todo_type, ship_date, purchase_done_at, sale_done_at, supplier_id, customer_id, suppliers(name), customers(name)"
+      )
+      .eq("done", false)
+      .in("todo_type", side === "purchase" ? ["purchase", "both"] : ["sale", "both"])
+      .is(side === "purchase" ? "purchase_done_at" : "sale_done_at", null)
+      .order("due_date", { ascending: true, nullsFirst: false })
+      .limit(50)
+  );
 
   return (data ?? []).map((row) => ({
     id: row.id,
