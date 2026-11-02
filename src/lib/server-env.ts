@@ -1,19 +1,8 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-
 // 서버 전용 시크릿(NEXT_PUBLIC_ 접두사가 없는 값)을 읽는 공용 함수.
-// 넷리파이/자체호스팅에서는 process.env에 항상 채워져 있어 그걸로 충분하지만,
-// 클라우드플레어(Workers) 배포에서는 NEXT_PUBLIC_* 값과 달리(빌드 시점에
-// 코드에 그대로 박혀서 항상 됨) 서버 전용 값이 요청 시점의 process.env에
-// 안 채워지는 경우가 있다 — 그때는 Workers 바인딩(getCloudflareContext().env)
-// 에서 대신 읽는다. 클라우드플레어가 아닌 환경에서는 그 호출 자체가 실패하니
-// 그냥 무시하고 undefined로 취급한다.
+// 상시 가동 Node 서버(Docker, .env.production)에서는 process.env에
+// 항상 채워져 있어 이걸로 충분하다. (예전 Cloudflare Workers 배포
+// 시절엔 요청 시점 바인딩에서 따로 읽어야 하는 경우가 있어 폴백
+// 경로가 있었는데, 지금은 필요 없어 제거했다.)
 export function getServerEnv(name: string): string | undefined {
-  const fromProcess = process.env[name];
-  if (fromProcess) return fromProcess;
-  try {
-    const { env } = getCloudflareContext();
-    return (env as Record<string, string | undefined>)[name];
-  } catch {
-    return undefined;
-  }
+  return process.env[name];
 }

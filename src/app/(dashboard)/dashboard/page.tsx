@@ -118,7 +118,7 @@ export default async function DashboardPage({
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+          "id, quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
         )
         .gte("sales_orders.order_date", monthStart)
         .lte("sales_orders.order_date", monthEnd)
@@ -128,7 +128,7 @@ export default async function DashboardPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+          "id, quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
         )
         .gte("purchase_orders.purchase_date", monthStart)
         .lte("purchase_orders.purchase_date", monthEnd)
@@ -142,7 +142,7 @@ export default async function DashboardPage({
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
+          "id, quantity, unit_price, spec, remark, custom_name, sales_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), sales_orders!inner(order_date, is_return, is_carryover, created_at, customers(name))"
         )
         .eq("sales_orders.is_carryover", true)
         .gte("sales_orders.created_at", workDateRange.start)
@@ -153,7 +153,7 @@ export default async function DashboardPage({
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
+          "id, quantity, unit_cost, spec, remark, custom_name, purchase_order_id, products(sku, name, unit, spec, base_package_qty, categories(name)), purchase_orders!inner(purchase_date, is_carryover, created_at, suppliers(name))"
         )
         .eq("purchase_orders.is_carryover", true)
         .gte("purchase_orders.created_at", workDateRange.start)
@@ -252,9 +252,21 @@ export default async function DashboardPage({
     basePackageQty: number | null;
     amount: number;
     orderId: string;
+    // 이 줄의 원본 sales_order_items/purchase_order_items 행 id —
+    // fifo_consumptions 매칭 계산에만 쓰고 화면에는 표시하지 않는다.
+    itemId: string;
     remark: string | null;
     isCarryover: boolean;
     isReturn: boolean;
+    // 아래 두 필드는 품목/규격/수량만 보고 "아마 같은 거래"로 짐작하던
+    // 예전 추정 매칭을 걷어내고, fifo_consumptions(실제 소진 이력)로 채운
+    // 진짜 데이터다 — 이 파일 맨 아래에서 한꺼번에 계산해 채운다.
+    // 매입 품목: 오늘 이 매입분이 실제로 어느 거래처로(fifo 소진 기준)
+    // 나갔는지. 매출 품목에서는 항상 빈 배열.
+    realDestinations: { partnerName: string; quantity: number }[];
+    // 매출 품목: 이 판매 수량 중 "오늘 들어온 매입"이 아니라 재고(과거
+    // 매입분)에서 실제로 소진된 수량. 매입 품목에서는 항상 0.
+    stockConsumedQuantity: number;
   };
 
   type PaperCalcPartnerEntry = { sizes: PaperCalcSizeRow[]; totalSheet: number; amount: number };
@@ -344,6 +356,14 @@ export default async function DashboardPage({
   type SalesItemRow = NonNullable<typeof salesItems>[number];
   type PurchaseItemRow = NonNullable<typeof purchaseItems>[number];
 
+  // 품목 행 id -> 실제로 버킷에 담긴 날짜(workDate). fifo_consumptions로
+  // "오늘 매입 -> 오늘 출고"를 판정할 때, 매입/매출 양쪽 다 전표날짜가
+  // 아니라 이 workDate로 "같은 날"을 비교한다 — 이월 건은 전표날짜와
+  // workDate가 다를 수 있어서, 전표날짜끼리 비교하면 이월 건이 엉뚱하게
+  // 안 맞아떨어진다.
+  const purchaseItemWorkDateById = new Map<string, string>();
+  const salesItemWorkDateById = new Map<string, string>();
+
   // 매출 한 줄을 실제로 잡을 날짜(workDate) 기준 버킷에 채운다 — 일반
   // 건은 전표날짜(order_date)가 곧 작업일이라 그대로 넘기고, 이월 건은
   // 호출부(아래 두 루프)에서 각자 맞는 날짜를 넘긴다. includeInTotal이
@@ -355,6 +375,7 @@ export default async function DashboardPage({
     // 하므로, 이 라인의 금액 자체를 음수로 뒤집어서 담는다.
     const amount = item.quantity * Number(item.unit_price) * (isReturn ? -1 : 1);
     const bucket = ensure(workDate);
+    salesItemWorkDateById.set(item.id, workDate);
     bucket.salesCount += 1;
     if (includeInTotal) bucket.salesTotal += amount;
     // 모조지(TG0) 라인은 계산에서 자동 반영된 것이라 규격이 없다.
@@ -378,15 +399,19 @@ export default async function DashboardPage({
       basePackageQty: item.products?.base_package_qty ?? null,
       amount,
       orderId: item.sales_order_id,
+      itemId: item.id,
       remark: item.remark,
       isCarryover: item.sales_orders.is_carryover,
       isReturn,
+      realDestinations: [],
+      stockConsumedQuantity: 0,
     });
   }
 
   function addPurchaseItem(item: PurchaseItemRow, workDate: string, includeInTotal: boolean) {
     const amount = item.quantity * Number(item.unit_cost);
     const bucket = ensure(workDate);
+    purchaseItemWorkDateById.set(item.id, workDate);
     bucket.purchaseCount += 1;
     if (includeInTotal) bucket.purchaseTotal += amount;
     if (item.products?.sku === PAPER_STOCK_SKU) {
@@ -407,9 +432,12 @@ export default async function DashboardPage({
       basePackageQty: item.products?.base_package_qty ?? null,
       amount,
       orderId: item.purchase_order_id,
+      itemId: item.id,
       remark: item.remark,
       isCarryover: item.purchase_orders.is_carryover,
       isReturn: false,
+      realDestinations: [],
+      stockConsumedQuantity: 0,
     });
   }
 
@@ -449,6 +477,91 @@ export default async function DashboardPage({
   for (const item of carryoverWorkPurchases ?? []) {
     const workDate = toKstDateStr(new Date(item.purchase_orders.created_at));
     addPurchaseItem(item, workDate, false);
+  }
+
+  // "오늘의 업무" 패널의 매입/매출 목적지 표시는 예전엔 품목+규격+수량이
+  // 맞아떨어지면 "아마 같은 거래"로 짐작하는 추정 매칭이었다 — 수량이
+  // 우연히 맞아떨어지면 실제로는 재고에서 나간 매출을 오늘 매입으로
+  // 잘못 엮어 보여주는 문제가 있었다(예: "나영식테크 532kg"이 재고분
+  // 출고였는데 오늘 매입으로 표시됨). FIFO 소진 이력(fifo_consumptions)이
+  // 실제 매입-매출 연결을 정확히 갖고 있으니, 그걸로 교체한다.
+  const purchaseIds = [...purchaseItemWorkDateById.keys()];
+  const salesIds = [...salesItemWorkDateById.keys()];
+
+  const [purchaseConsumptionRows, salesConsumptionRows] = await Promise.all([
+    purchaseIds.length
+      ? fetchAllRows((from, to) =>
+          supabase
+            .from("fifo_consumptions")
+            .select(
+              "purchase_order_item_id, sales_order_item_id, consumed_quantity, sales_order_items!inner(sales_orders!inner(customers(name)))"
+            )
+            .eq("consumed_by_type", "sale")
+            .in("purchase_order_item_id", purchaseIds)
+            .range(from, to),
+        )
+      : Promise.resolve(
+          [] as {
+            purchase_order_item_id: string;
+            sales_order_item_id: string;
+            consumed_quantity: number;
+            sales_order_items: { sales_orders: { customers: { name: string } | null } };
+          }[]
+        ),
+    salesIds.length
+      ? fetchAllRows((from, to) =>
+          supabase
+            .from("fifo_consumptions")
+            .select("purchase_order_item_id, sales_order_item_id, consumed_quantity")
+            .eq("consumed_by_type", "sale")
+            .in("sales_order_item_id", salesIds)
+            .range(from, to),
+        )
+      : Promise.resolve(
+          [] as { purchase_order_item_id: string; sales_order_item_id: string; consumed_quantity: number }[]
+        ),
+  ]);
+
+  // 매입 품목 id -> 오늘(같은 workDate) 그 매입분을 실제로 소진한 매출의
+  // 거래처별 수량. "같은 날"인지는 양쪽의 workDate(전표날짜가 아니라 실제
+  // 작업일 — 이월 건 고려)가 같은지로 판정한다.
+  const purchaseDestinationsById = new Map<string, { partnerName: string; quantity: number }[]>();
+  for (const row of purchaseConsumptionRows) {
+    // consumed_by_type='sale'로 걸러서 실제로는 항상 채워져 있지만, 컬럼
+    // 자체는(로스 소진 건도 같은 테이블을 쓰느라) nullable이라 타입상
+    // 널 체크가 필요하다.
+    if (!row.sales_order_item_id) continue;
+    const purchaseWorkDate = purchaseItemWorkDateById.get(row.purchase_order_item_id);
+    const saleWorkDate = salesItemWorkDateById.get(row.sales_order_item_id);
+    if (!purchaseWorkDate || saleWorkDate !== purchaseWorkDate) continue;
+    const partnerName = row.sales_order_items.sales_orders.customers?.name ?? "출고처 미상";
+    const list = purchaseDestinationsById.get(row.purchase_order_item_id) ?? [];
+    list.push({ partnerName, quantity: row.consumed_quantity });
+    purchaseDestinationsById.set(row.purchase_order_item_id, list);
+  }
+
+  // 매출 품목 id -> 오늘(같은 workDate) 들어온 매입분에서 실제로 소진된 수량.
+  // (전체 수량 - 이 값) = 재고(과거 매입분)에서 나간 수량 = "재고분 출고".
+  const salesTodayPurchaseQtyById = new Map<string, number>();
+  for (const row of salesConsumptionRows) {
+    if (!row.sales_order_item_id) continue;
+    const saleWorkDate = salesItemWorkDateById.get(row.sales_order_item_id);
+    const purchaseWorkDate = purchaseItemWorkDateById.get(row.purchase_order_item_id);
+    if (!saleWorkDate || purchaseWorkDate !== saleWorkDate) continue;
+    salesTodayPurchaseQtyById.set(
+      row.sales_order_item_id,
+      (salesTodayPurchaseQtyById.get(row.sales_order_item_id) ?? 0) + row.consumed_quantity,
+    );
+  }
+
+  for (const day of Object.values(dataByDate)) {
+    for (const item of day.purchaseItems) {
+      item.realDestinations = purchaseDestinationsById.get(item.itemId) ?? [];
+    }
+    for (const item of day.salesItems) {
+      const todayPurchaseQty = salesTodayPurchaseQtyById.get(item.itemId) ?? 0;
+      item.stockConsumedQuantity = Math.max(item.quantity - todayPurchaseQty, 0);
+    }
   }
 
   for (const calc of salesPaperCalcs ?? []) {

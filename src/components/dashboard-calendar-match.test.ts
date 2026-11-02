@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildDestinationPool,
   groupProductItemsByLabel,
   sortSpecsByTrailingNumber,
   stripFilterUnitsForCopy,
@@ -23,9 +22,12 @@ function row(overrides: Partial<ItemRow> = {}): ItemRow {
     basePackageQty: null,
     amount: 100000,
     orderId: `order-${seq}`,
+    itemId: `item-${seq}`,
     remark: null,
     isCarryover: false,
     isReturn: false,
+    realDestinations: [],
+    stockConsumedQuantity: 0,
     ...overrides,
   };
 }
@@ -36,27 +38,35 @@ function group(items: ItemRow[]): ProductGroup {
 
 describe("groupProductItemsByLabel — 카테고리 게이트", () => {
   it("Filter 카테고리면 매입 쪽 목적지 매칭을 하지 않고 한 그룹으로 합친다", () => {
-    const purchased = [row({ categoryName: "Filter", quantity: 100, partnerName: "분필타셈유한산업" })];
-    const soldToday = buildDestinationPool([
-      row({ categoryName: "Filter", partnerName: "명진화학", quantity: 60 }),
-    ]);
-    const groups = groupProductItemsByLabel(group(purchased), soldToday, undefined);
+    const purchased = [
+      row({
+        categoryName: "Filter",
+        quantity: 100,
+        partnerName: "분필타셈유한산업",
+        realDestinations: [{ partnerName: "명진화학", quantity: 60 }],
+      }),
+    ];
+    const groups = groupProductItemsByLabel(group(purchased), "purchase");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
   });
 
   it("Filter 카테고리면 매출 쪽 재고분 체크도 하지 않는다", () => {
-    const sold = [row({ categoryName: "Filter", quantity: 100 })];
-    const purchasedToday = buildDestinationPool([row({ categoryName: "Filter", quantity: 0 })]);
-    const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
+    const sold = [row({ categoryName: "Filter", quantity: 100, stockConsumedQuantity: 100 })];
+    const groups = groupProductItemsByLabel(group(sold), "sale");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
   });
 
   it("카테고리가 아예 없으면(null) 안전하게 미추적으로 취급한다", () => {
-    const purchased = [row({ categoryName: null, quantity: 100 })];
-    const soldToday = buildDestinationPool([row({ categoryName: null, partnerName: "명진화학", quantity: 60 })]);
-    const groups = groupProductItemsByLabel(group(purchased), soldToday, undefined);
+    const purchased = [
+      row({
+        categoryName: null,
+        quantity: 100,
+        realDestinations: [{ partnerName: "명진화학", quantity: 60 }],
+      }),
+    ];
+    const groups = groupProductItemsByLabel(group(purchased), "purchase");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
   });
@@ -64,49 +74,66 @@ describe("groupProductItemsByLabel — 카테고리 게이트", () => {
   it.each(["Paper", "Material", "Tray", "Bobbin", "Etc"])(
     "%s 카테고리는 Filter가 아니므로 추적 대상이다",
     (categoryName) => {
-      const purchased = [row({ categoryName, quantity: 100 })];
-      const soldToday = buildDestinationPool([row({ categoryName, partnerName: "명진화학", quantity: 100 })]);
-      const groups = groupProductItemsByLabel(group(purchased), soldToday, undefined);
+      const purchased = [
+        row({
+          categoryName,
+          quantity: 100,
+          realDestinations: [{ partnerName: "명진화학", quantity: 100 }],
+        }),
+      ];
+      const groups = groupProductItemsByLabel(group(purchased), "purchase");
       expect(groups[0].label).toBe("명진화학");
     },
   );
 });
 
-describe("groupProductItemsByLabel — 매입(원재료), 목적지 추적", () => {
+describe("groupProductItemsByLabel — 매입(원재료), fifo_consumptions 기준 목적지 추적", () => {
   it("전량 한 거래처로 나갔으면 그 거래처명이 라벨이 된다", () => {
-    const purchased = [row({ quantity: 100 })];
-    const soldToday = buildDestinationPool([row({ partnerName: "명진화학", quantity: 100 })]);
-    const groups = groupProductItemsByLabel(group(purchased), soldToday, undefined);
+    const purchased = [
+      row({
+        quantity: 100,
+        realDestinations: [{ partnerName: "명진화학", quantity: 100 }],
+      }),
+    ];
+    const groups = groupProductItemsByLabel(group(purchased), "purchase");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBe("명진화학");
   });
 
   it("일부만 나가고 나머지는 재고면(실제 거래처가 하나뿐이라) 그 한 줄에 남은재고 메모만 붙는다", () => {
-    // destinationsIncludingStock이 실제 거래처를 하나라도 찾으면, 그 남는
-    // 몫은 별도 그룹이 아니라 마지막 실제 거래처 줄의 note로만 표시된다
+    // realDestinations가 전체 수량보다 적게 소진됐으면, 그 남는 몫은 별도
+    // 그룹이 아니라 마지막 실제 거래처 줄의 note로만 표시된다
     // (groupProductItemsByLabel 주석 참고) — 여러 거래처로 쪼개질 때만
-    // "재고용 매입" 그룹이 별도로 생긴다(destinations 중 real이 0개일 때).
-    const purchased = [row({ quantity: 100 })];
-    const soldToday = buildDestinationPool([row({ partnerName: "명진화학", quantity: 30 })]);
-    const groups = groupProductItemsByLabel(group(purchased), soldToday, undefined);
+    // "재고용 매입" 그룹이 별도로 생긴다(real destinations가 2개 이상일 때).
+    const purchased = [
+      row({
+        quantity: 100,
+        realDestinations: [{ partnerName: "명진화학", quantity: 30 }],
+      }),
+    ];
+    const groups = groupProductItemsByLabel(group(purchased), "purchase");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBe("명진화학");
     expect(groups[0].items[0].note).toBe("70매는 출고 후 남은재고");
   });
+
+  it("실제 소진 기록이 없으면(fifo 미소진) 당일 실적이 없는 거라 목록에서 아예 빠진다", () => {
+    const purchased = [row({ quantity: 100, realDestinations: [] })];
+    const groups = groupProductItemsByLabel(group(purchased), "purchase");
+    expect(groups).toHaveLength(0);
+  });
 });
 
-describe("groupProductItemsByLabel — 매출(원재료), 매입처 추적", () => {
-  it("오늘 산 게 없으면 재고분출고로 표시된다", () => {
-    const sold = [row({ quantity: 50 })];
-    const groups = groupProductItemsByLabel(group(sold), undefined, buildDestinationPool([]));
-    expect(groups).toHaveLength(1);
-    expect(groups[0].label).toBe("재고분 출고");
+describe("groupProductItemsByLabel — 매출(원재료), fifo_consumptions 기준 매입처 추적", () => {
+  it("오늘 산 게 없으면(전량 재고에서 나감) 당일 실적이 없는 거라 목록에서 아예 빠진다", () => {
+    const sold = [row({ quantity: 50, stockConsumedQuantity: 50 })];
+    const groups = groupProductItemsByLabel(group(sold), "sale");
+    expect(groups).toHaveLength(0);
   });
 
   it("당일 매입 한 곳에서 전량 커버되면 라벨 없이(출고처는 상단에 이미 있음) 한 그룹이 된다", () => {
-    const sold = [row({ partnerName: "명진화학", quantity: 50 })];
-    const purchasedToday = buildDestinationPool([row({ partnerName: "분필타셈유한산업", quantity: 100 })]);
-    const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
+    const sold = [row({ partnerName: "명진화학", quantity: 50, stockConsumedQuantity: 0 })];
+    const groups = groupProductItemsByLabel(group(sold), "sale");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
   });
@@ -115,32 +142,25 @@ describe("groupProductItemsByLabel — 매출(원재료), 매입처 추적", () 
     // 예전엔 어느 공급처에서 얼마씩 샀는지 라벨로 쪼개 보여줬는데, 매입
     // 쪽 화면/복사에 이미 나오는 정보라 매출 쪽에서 또 밝히는 게
     // 중복이라는 지적으로 없앴다 — 매칭된 몫은 공급처 구분 없이 합친다.
-    const sold = [row({ partnerName: "명진화학", quantity: 100 })];
-    const purchasedToday = buildDestinationPool([
-      row({ partnerName: "A공급처", quantity: 80 }),
-      row({ partnerName: "B공급처", quantity: 30 }),
-    ]);
-    const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
+    // (fifo_consumptions는 공급처를 안 가리고 매출쪽 소진량만 알려준다.)
+    const sold = [row({ partnerName: "명진화학", quantity: 100, stockConsumedQuantity: 0 })];
+    const groups = groupProductItemsByLabel(group(sold), "sale");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
     expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(100);
   });
 
-  it("일부는 당일 매입, 나머지는 재고면 라벨 없는 매입분 + 재고분출고가 같이 나온다", () => {
-    const sold = [row({ partnerName: "명진화학", quantity: 100 })];
-    const purchasedToday = buildDestinationPool([row({ partnerName: "분필타셈유한산업", quantity: 40 })]);
-    const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
-    expect(groups).toHaveLength(2);
+  it("일부는 당일 매입, 나머지는 재고에서 나갔으면 매입분만 라벨 없이 나오고 재고분은 빠진다", () => {
+    const sold = [row({ partnerName: "명진화학", quantity: 100, stockConsumedQuantity: 60 })];
+    const groups = groupProductItemsByLabel(group(sold), "sale");
+    expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
     expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(40);
-    expect(groups[1].label).toBe("재고분 출고");
-    expect(groups[1].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(60);
   });
 
   it("반품 건은 매입처 매칭 대상에서 제외된다", () => {
-    const sold = [row({ quantity: 20, isReturn: true })];
-    const purchasedToday = buildDestinationPool([row({ quantity: 100 })]);
-    const groups = groupProductItemsByLabel(group(sold), undefined, purchasedToday);
+    const sold = [row({ quantity: 20, isReturn: true, stockConsumedQuantity: 0 })];
+    const groups = groupProductItemsByLabel(group(sold), "sale");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
   });

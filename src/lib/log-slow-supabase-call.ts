@@ -1,4 +1,3 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { reportServerError } from "@/lib/error-tracking";
 
 // 로그인/로그아웃처럼 Supabase로 나가는 요청이 코드상 단 하나(또는
@@ -18,23 +17,12 @@ export async function logSlowSupabaseCall<T>(label: string, fn: () => PromiseLik
     if (durationMs >= SLOW_THRESHOLD_MS) {
       console.error(JSON.stringify({ tag: "slowSupabaseCall", label, durationMs }));
 
-      const report = () =>
-        reportServerError(Object.assign(new Error(`${label} took ${durationMs}ms`), { name: "SlowSupabaseCallWarning" }), {
-          label,
-          durationMs,
-        });
-
-      // 응답을 돌려준 직후 Workers 요청 컨텍스트가 곧바로 끝날 수 있어서
-      // (onRequestError처럼 "이미 실패해 더 기다려도 되는" 상황이 아니라,
-      // 느리더라도 성공한 요청이라 응답을 추가로 지연시키면 안 된다),
-      // Sentry 전송은 ctx.waitUntil로 응답 이후에도 끝까지 나가게 한다.
-      // 클라우드플레어가 아닌 환경(로컬 dev 등)에서는 getCloudflareContext()
-      // 가 실패하므로 그냥 기다렸다 보낸다.
-      try {
-        getCloudflareContext().ctx.waitUntil(report());
-      } catch {
-        await report();
-      }
+      // 상시 가동 Node 서버라 요청이 끝나도 프로세스가 계속 떠 있으므로
+      // (Workers의 ctx.waitUntil 같은 별도 장치 없이도) 그냥 보내면 된다.
+      await reportServerError(
+        Object.assign(new Error(`${label} took ${durationMs}ms`), { name: "SlowSupabaseCallWarning" }),
+        { label, durationMs },
+      );
     }
   }
 }

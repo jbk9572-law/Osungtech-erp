@@ -1,13 +1,13 @@
-import { connect } from "cloudflare:sockets";
+import { connect } from "./node-imap-socket";
 import { decodeImapUtf7, encodeImapUtf7 } from "./utf7";
 
 // 아웃룩/다음 웹메일과 똑같은 "IMAP 클라이언트" 역할을 이 앱이 직접
-// 대신하기 위한 최소 구현. Cloudflare Workers는 Node의 net/tls 모듈을
-// 못 쓰고 대신 cloudflare:sockets의 connect()로 TCP 소켓을 직접 다뤄야
-// 해서(공식 IMAP 라이브러리들이 대부분 Node 전용이라 그대로 못 씀),
-// LOGIN/LIST/SELECT/UID FETCH 네 가지 명령만 필요한 만큼 직접 구현했다.
-// 메시지 본문 파싱(MIME)은 postal-mime에 맡기고, 여기서는 원본 RFC822
-// 바이트를 그대로 가져오는 역할까지만 한다.
+// 대신하기 위한 최소 구현. 원래 Cloudflare Workers 전용 cloudflare:sockets
+// 기반으로 짰던 걸(공식 IMAP 라이브러리들이 대부분 Node 전용이라 Workers
+// 에선 그대로 못 써서 직접 구현했었다) node-imap-socket.ts의 Node TLS
+// 소켓 어댑터로 교체했다 — 프로토콜 로직(LOGIN/LIST/SELECT/UID FETCH 네
+// 명령 파싱)은 그대로다. 메시지 본문 파싱(MIME)은 postal-mime에 맡기고,
+// 여기서는 원본 RFC822 바이트를 그대로 가져오는 역할까지만 한다.
 
 type PendingImapSocket = ReturnType<typeof connect>;
 
@@ -80,7 +80,7 @@ export class ImapClient {
   }
 
   static async connect(host: string, port: number): Promise<ImapClient> {
-    const socket = connect({ hostname: host, port }, { secureTransport: "on" });
+    const socket = connect({ hostname: host, port });
     const client = new ImapClient(socket);
     // 서버 인사말(* OK ...) 한 줄을 소비한다.
     await client.reader.readLine();
