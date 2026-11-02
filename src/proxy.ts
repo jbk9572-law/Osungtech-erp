@@ -14,9 +14,16 @@ import { updateSession } from "@/lib/supabase/proxy";
 // 지정한 적이 없다, src/lib/supabase/server.ts/proxy.ts 참고), 포털을
 // 아예 다른 호스트명으로 분리하면 추가 코드 없이 세션이 자연히
 // 갈린다.
-const PORTAL_HOSTNAME = process.env.PORTAL_HOSTNAME;
-
+//
+// 이 값은 함수 밖(모듈 최상단)이 아니라 proxy() 안에서 매 요청마다
+// 새로 읽는다 — Cloudflare Workers(OpenNext)에서는 process.env가 요청이
+// 들어올 때마다 채워지는데(populateProcessEnv), 모듈 최상단 코드는 그보다
+// 먼저 딱 한 번(콜드스타트 때) 실행된다. 예전엔 여기서 상수로 고정해둬서
+// PORTAL_HOSTNAME을 Cloudflare에 아무리 설정해도 항상 undefined로 읽혀
+// 포털 서브도메인 분기가 평생 안 켜지는 버그가 있었다("런타임 환경 변수
+// 정합성 점검" 요청으로 발견).
 export async function proxy(request: NextRequest) {
+  const PORTAL_HOSTNAME = process.env.PORTAL_HOSTNAME;
   const hostname = request.headers.get("host") ?? request.nextUrl.hostname;
 
   if (PORTAL_HOSTNAME && hostname === PORTAL_HOSTNAME) {

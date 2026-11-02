@@ -14,8 +14,6 @@ import { isFeatureEnabled } from "@/lib/require-feature-enabled";
 // 같은 컴포넌트를 쓴다.
 export async function ProductDetailPanel({ id }: { id: string }) {
   const supabase = await createClient();
-  // 파생 SKU(모품목 선택) 기능 토글 — products/page.tsx와 같은 이유.
-  const derivedSkuEnabled = await isFeatureEnabled(supabase, "derived_sku");
 
   const [
     { data: product },
@@ -24,6 +22,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
     { data: packageQtyHistory },
     { data: bomItems },
     allProducts,
+    derivedSkuEnabled,
   ] = await Promise.all([
     supabase.from("products").select("*").eq("id", id).maybeSingle(),
     fetchAllRows<{ id: string; name: string }>((from, to) =>
@@ -60,6 +59,10 @@ export async function ProductDetailPanel({ id }: { id: string }) {
         .order("name")
         .range(from, to),
     ),
+    // 파생 SKU(모품목 선택) 기능 토글 — products/page.tsx와 같은 이유.
+    // allProducts(모품목 후보 필터링)에만 쓰이고 나머지 쿼리와는 무관해서
+    // Promise.all 밖에 따로 await 돼 있었다 — 순서상 지연 이유가 없어 안으로 옮김.
+    isFeatureEnabled(supabase, "derived_sku"),
   ]);
 
   if (!product) {

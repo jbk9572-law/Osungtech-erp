@@ -44,7 +44,16 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
   // (별도 크론 없이 "그 날짜가 된 뒤 누군가 화면을 열면 그때 적용"되는 방식).
   await applyDuePriceSchedules(supabase, id);
 
-  const [{ data: customer }, { data: prices }, products, { data: schedules }, balance, { data: activities }, { data: portalAccounts }] =
+  const [
+    { data: customer },
+    { data: prices },
+    products,
+    { data: schedules },
+    balance,
+    { data: activities },
+    { data: portalAccounts },
+    canViewReceivables,
+  ] =
     await Promise.all([
       supabase.from("customers").select("*").eq("id", id).maybeSingle(),
       supabase
@@ -72,17 +81,17 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
         .select("id, username, disabled, created_at")
         .eq("customer_id", id)
         .order("created_at", { ascending: false }),
+      // /receivables 화면을 부서별로 막아도, 이 상세패널에서 똑같은 거래처별
+      // 미수금 누계/미결제 전표를 그대로 보여주면 그 제한이 무력화된다 —
+      // 같은 page_key로 요약 섹션만 따로 게이팅한다(전체 패널을 막으면
+      // 출고처 정보 수정 등 무관한 기능까지 같이 막혀버려서, 섹션 단위로만).
+      // 나머지 쿼리와 무관해서 전엔 Promise.all 밖에 따로 await 돼 있었다.
+      canViewPage(supabase, "/receivables"),
     ]);
 
   if (!customer) {
     notFound();
   }
-
-  // /receivables 화면을 부서별로 막아도, 이 상세패널에서 똑같은 거래처별
-  // 미수금 누계/미결제 전표를 그대로 보여주면 그 제한이 무력화된다 —
-  // 같은 page_key로 요약 섹션만 따로 게이팅한다(전체 패널을 막으면
-  // 출고처 정보 수정 등 무관한 기능까지 같이 막혀버려서, 섹션 단위로만).
-  const canViewReceivables = await canViewPage(supabase, "/receivables");
 
   // 단가 예약 목록에 "기존가 → 변경가 (차액)"을 보여주려면 상품별 현재
   // 판매단가가 필요하다. customer_product_prices는 거래처+상품당 최신
