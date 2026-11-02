@@ -271,7 +271,6 @@ function buildPartnerBlocks(
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 const STOCK_PURCHASE_LABEL = "재고용 매입";
-const STOCK_SALE_LABEL = "재고분 출고";
 
 // 카테고리는 Paper/Material/Tray/Bobbin/Filter/Etc 여섯 가지이고, 이 중
 // Filter만 매입-매출 매칭(입고처/출고처/재고분출고 추적) 대상에서 뺀다 —
@@ -403,7 +402,11 @@ export function groupProductItemsByLabel(
       const stock = destinations.find((d) => d.partnerName === STOCK_PURCHASE_LABEL) ?? null;
 
       if (!real.length) {
-        push(stock?.partnerName ?? null, true, specGroup.items);
+        // 오늘 들어온 매입분 전체가 당일 출고 없이 재고로만 남았으면,
+        // "오늘의 업무"는 당일 실적을 보여주는 패널이라는 취지에 맞게
+        // 이 품목 자체를 목록에서 뺀다(이번달 매입 합계 등 집계에는
+        // dashboard/page.tsx의 purchaseTotal이 그대로 반영되니 회계상
+        // 누락되는 건 아니다).
         continue;
       }
 
@@ -420,8 +423,8 @@ export function groupProductItemsByLabel(
       // 출고처(고객명)는 이 파트너 블록 맨 위(- {거래처명})에 이미 나와
       // 있고, 그 매입 내역 자체도 매입 복사/화면 쪽에 이미 나오므로
       // 매출 쪽에서 또 밝히는 게 중복이라는 지적으로 없앴다. 당일 매입과
-      // 매칭되는 만큼은 라벨 없이, 매칭 안 되고 재고에서 나간 만큼만
-      // "재고분 출고"로 구분해서 보여준다(이 구분 자체는 그대로 유지).
+      // 매칭되는 만큼은 라벨 없이 보여주고, 매칭 안 되고 재고에서 나간
+      // 만큼은(위 매입 쪽과 같은 이유로) 아예 목록에서 뺀다.
       // purchasedQuantity(오늘 들어온 매입에서 실제로 소진된 양)는
       // fifo_consumptions 기준 stockConsumedQuantity의 나머지다.
       const purchasedQuantity = specGroup.items.reduce(
@@ -430,21 +433,31 @@ export function groupProductItemsByLabel(
       );
 
       if (purchasedQuantity <= 0) {
-        push(STOCK_SALE_LABEL, true, specGroup.items);
         continue;
       }
 
-      const { taken, rest } = takeItems(specGroup.items, purchasedQuantity);
+      const { taken } = takeItems(specGroup.items, purchasedQuantity);
       push(null, false, taken);
-      if (rest.length) {
-        push(STOCK_SALE_LABEL, true, rest);
-      }
     } else {
       push(null, false, specGroup.items);
     }
   }
 
   return groups;
+}
+
+// groupProductItemsByLabel이 재고용 매입/재고분 출고 몫은 아예 그룹을
+// 안 만들고 건너뛰므로, 품목 전부가 재고 몫뿐이었던 거래처는 화면/카톡
+// 복사 양쪽 다 "- 거래처명"만 덩그러니 남고 그 밑에 아무것도 없는 빈
+// 블록이 된다 — buildPartnerBlocks 결과를 쓰는 화면 렌더링 두 곳과
+// appendItemLines(카톡 복사) 전부 이 함수로 거래처 블록을 먼저 걸러야
+// 한다(버그 수정 규칙: 같은 패턴 전체 적용).
+function visiblePartnerBlocks(blocks: PartnerBlock[], direction: "purchase" | "sale"): PartnerBlock[] {
+  return blocks.filter(
+    (partner) =>
+      partner.paperCalcBlocks.length > 0 ||
+      partner.products.some((product) => groupProductItemsByLabel(product, direction).length > 0),
+  );
 }
 
 // 라벨별로 묶인 항목들을, 카톡복사 텍스트로 쓸 수 있게 규격:수량 줄로
@@ -594,10 +607,13 @@ function buildProductLineGroups(product: ProductGroup, direction: "purchase" | "
 // 카카오톡 등에 그대로 붙여넣을 수 있게, 화면에 보이는 품목 내역을 사람이
 // 읽기 편한 일반 텍스트로 옮긴다. 외부에 금액이 노출되지 않도록 수량까지만
 // 담고, 단위(EA/KG 등)는 화면에만 보이고 복사 텍스트에는 숫자만 남긴다.
-// direction이 "purchase"면 품목이 어느 거래처로 나갔는지(또는 재고용
-// 매입인지)를 품목명 옆 괄호로 묶어서 보여주고, "sale"이면 반대로 당일
-// 매입과 매칭 안 되는 만큼을 "재고분 출고"로 묶어서 보여준다 — 둘 다
-// 각 품목이 이미 들고 있는 fifo_consumptions 기준 실제 데이터를 쓴다.
+// direction이 "purchase"면 품목이 어느 거래처로 나갔는지를 품목명 옆
+// 괄호로 묶어서 보여주고, "sale"이면 반대로 당일 매입과 매칭되는 만큼만
+// 보여준다 — 둘 다 각 품목이 이미 들고 있는 fifo_consumptions 기준 실제
+// 데이터를 쓴다. 당일 출고/매입 없이 재고로만 남은 몫은 "오늘의 업무"
+// 취지에 안 맞아 아예 뺀다(groupProductItemsByLabel 참고) — 그래서 그
+// 몫만 있던 거래처는 visiblePartnerBlocks로 먼저 걸러야 빈 "- 거래처명"
+// 줄이 안 남는다.
 function appendItemLines(
   items: ItemRow[],
   paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
@@ -606,7 +622,10 @@ function appendItemLines(
   direction: "purchase" | "sale",
   otherSidePaperCalcByPartner?: Record<string, PaperCalcPartnerEntry>,
 ) {
-  const blocks = buildPartnerBlocks(items, paperCalcByPartner, otherSidePaperCalcByPartner);
+  const blocks = visiblePartnerBlocks(
+    buildPartnerBlocks(items, paperCalcByPartner, otherSidePaperCalcByPartner),
+    direction,
+  );
   blocks.forEach((partner, i) => {
     if (i > 0) lines.push("");
     lines.push(`- ${partner.partnerName}`);
@@ -1061,10 +1080,13 @@ export function DashboardCalendar({
                 Object.keys(selectedData.purchasePaperCalcByPartner).length >
                   0) && (
                 <div className="space-y-2 text-xs font-medium text-[var(--erp-primary)]">
-                  {buildPartnerBlocks(
-                    selectedData.purchaseItems,
-                    selectedData.purchasePaperCalcByPartner,
-                    selectedData.salesPaperCalcByPartner,
+                  {visiblePartnerBlocks(
+                    buildPartnerBlocks(
+                      selectedData.purchaseItems,
+                      selectedData.purchasePaperCalcByPartner,
+                      selectedData.salesPaperCalcByPartner,
+                    ),
+                    "purchase",
                   ).map((partner, pi) => (
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
@@ -1247,9 +1269,9 @@ export function DashboardCalendar({
                 Object.keys(selectedData.salesPaperCalcByPartner).length >
                   0) && (
                 <div className="space-y-2 text-xs font-medium text-[var(--erp-success)]">
-                  {buildPartnerBlocks(
-                    selectedData.salesItems,
-                    selectedData.salesPaperCalcByPartner,
+                  {visiblePartnerBlocks(
+                    buildPartnerBlocks(selectedData.salesItems, selectedData.salesPaperCalcByPartner),
+                    "sale",
                   ).map((partner, pi) => (
                     <div key={pi}>
                       <p className="font-bold">- {partner.partnerName}</p>
