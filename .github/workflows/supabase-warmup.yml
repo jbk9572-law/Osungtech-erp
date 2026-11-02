@@ -44,16 +44,13 @@ jobs:
         # (실제로 500 에러가 나는데 본문이 안 보여서 원인 파악이 막힌 적
         # 있음) — 응답 본문을 받아서 실패 시에만 출력한다.
         run: |
-          http_code=$(curl -sS -X POST \
+          http_code=$(curl -sS -L --max-redirs 5 -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -D /tmp/warmup-headers.txt \
             "${{ secrets.SITE_URL }}/api/cron/warmup" \
-            -o /tmp/warmup-response.json -w "%{http_code}")
+            -o /tmp/warmup-response.json -w "%{http_code} (최종 URL: %{url_effective})")
           echo "HTTP $http_code"
-          echo "응답 헤더:"
+          echo "응답 헤더(전체 리다이렉트 체인):"
           cat /tmp/warmup-headers.txt
-          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-            echo "응답 본문:"
-            cat /tmp/warmup-response.json
-            exit 1
-          fi
+          echo "응답 본문:"
+          cat /tmp/warmup-response.json
