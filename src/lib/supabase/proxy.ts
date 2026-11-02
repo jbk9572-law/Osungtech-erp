@@ -11,6 +11,15 @@ import { NextResponse, type NextRequest } from "next/server";
 // URL에 담긴 개인별 비밀 토큰만으로 주기적으로 요청하는 ICS 구독 피드라,
 // 이 경로 자체는 통과시켜야 한다 — 인증은 그 라우트 핸들러 안에서 토큰으로
 // 직접 확인한다(src/app/api/calendar/feed/route.ts).
+// "/api/cron"은 GitHub Actions 스케줄이 로그인 세션 없이 Authorization:
+// Bearer 헤더(CRON_SECRET)만으로 주기적으로 부르는 엔드포인트들
+// (mail-sync, messenger-alerts, warmup)이다 — 여기 없으면 세션 없는
+// 요청이 /login으로 리다이렉트되고 라우트 핸들러(CRON_SECRET 검증 포함)
+// 자체가 전혀 실행되지 않는다. GitHub Actions의 curl은 -L(리다이렉트
+// 따라가기) 없이 호출해서 307을 "성공"으로 잘못 보고하고 넘어가므로,
+// 아무도 모르게 크론이 계속 아무 일도 안 하고 있었을 수 있다 — 발견
+// 즉시 수정. 인증은 각 라우트 핸들러 안에서 CRON_SECRET으로 직접
+// 확인한다(/api/calendar/feed와 동일한 패턴).
 // "/signup"은 공개 회원가입 화면이라 로그인 전 상태에서 접근 가능해야 한다.
 // "/terms"/"/privacy"는 로그인 화면 자체(비로그인 상태)에서 링크로 노출되는
 // 약관/개인정보처리방침 화면인데 여기 빠져 있어서 클릭하면 /login으로
@@ -24,7 +33,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // (user가 없고 PUBLIC_PATHS에도 없어서) 엉뚱하게 직원용 /login으로
 // 튕겨나가는 버그가 난다 — 이 세션 안에서는 계속 직원으로 로그인된 채
 // 테스트해서 못 보고 지나갔던 경로다.
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/terms", "/privacy", "/portal"];
+const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/terms", "/privacy", "/portal"];
 
 export async function updateSession(request: NextRequest) {
   // 공개 경로(/login 등)는 로그인 안 된 사람을 /login으로 보내는
