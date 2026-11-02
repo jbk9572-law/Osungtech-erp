@@ -1,0 +1,28 @@
+name: Deploy to production server
+
+# main에 push될 때마다 AWS 라이트세일 서버(서울 리전, docs/self-hosting-aws.md
+# 참고)에 SSH로 접속해 최신 코드를 받고 다시 빌드한다 — 매번 사람이 직접
+# 터미널 열어서 git pull + docker compose up -d --build를 돌릴 필요가
+# 없게 한다. 서버 주소/계정은 비밀값이 아니라 그대로 적어두고, SSH 개인키
+# (DEPLOY_SSH_KEY)만 저장소 Secrets에 등록한다.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH로 서버에서 git pull + 재빌드
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: 54.180.194.235
+          username: ubuntu
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/Osungtech-erp
+            git pull
+            export $(cat .env.production | xargs)
+            docker compose up -d --build
