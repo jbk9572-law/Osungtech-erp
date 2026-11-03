@@ -40,8 +40,15 @@ jobs:
           script: grep -E '^NEXT_PUBLIC_SUPABASE_(URL|ANON_KEY)=' ~/Osungtech-erp/.env.production
           capture_stdout: true
 
+      # steps.envs.outputs.stdout에는 grep 결과 말고도 drone-ssh가 덧붙이는
+      # 배너 줄("✅ Successfully executed..." 등)이 같이 들어있다 — 그걸
+      # 그대로 $GITHUB_ENV에 쓰면 "KEY=value" 형식이 아닌 줄 때문에 GitHub
+      # Actions의 env 파일 커맨드 자체가 깨진다(실제 실행에서 확인 — "Unable
+      # to process file command 'env' successfully"). KEY=value 형식인
+      # 줄만 다시 걸러서 쓴다.
       - name: 읽어온 값을 이후 스텝의 환경변수로
-        run: echo "${{ steps.envs.outputs.stdout }}" >> "$GITHUB_ENV"
+        run: |
+          echo "${{ steps.envs.outputs.stdout }}" | grep -E '^NEXT_PUBLIC_SUPABASE_(URL|ANON_KEY)=' >> "$GITHUB_ENV"
 
       - name: Docker Buildx 설정
         uses: docker/setup-buildx-action@v3
