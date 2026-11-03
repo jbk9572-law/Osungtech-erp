@@ -1,5 +1,13 @@
 services:
   app:
+    # 평소엔 GitHub Actions 쪽에서 미리 빌드해 docker load로 올려둔
+    # 이 태그의 이미지를 그대로 쓴다(서버는 더 이상 빌드하지 않는다 —
+    # .github/workflows/deploy.yml 참고, 라이트세일 1GB RAM에서 Next.js
+    # 프로덕션 빌드가 스왑 스래싱으로 멈추던 문제 때문). build: 블록은
+    # 서버에 직접 SSH로 들어가 비상시 수동으로 `docker compose up -d
+    # --build`를 돌릴 수 있게 남겨둔 탈출구다 — 평소 자동배포 경로에서는
+    # 쓰이지 않는다.
+    image: osungtech-erp-app:latest
     build:
       context: .
       args:
