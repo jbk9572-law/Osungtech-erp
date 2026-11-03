@@ -72,20 +72,22 @@ jobs:
       - name: 이미지를 파일로 저장 + 압축
         run: docker save osungtech-erp-app:latest | gzip > app.tar.gz
 
-      - name: 서버로 이미지 전송
+      # 전에는 이 다음 단계에서 서버가 직접 git pull로 docker-compose.yml/
+      # Caddyfile 같은 코드 아닌 구성 파일 변경을 받아왔는데, 저장소를
+      # Private으로 바꾸고 나서 그 익명 HTTPS pull이 "could not read
+      # Username for 'https://github.com'"로 깨졌다(실제 배포 3회차에서
+      # 재현·확인 — Private 전환의 직접적인 부작용). 서버에 별도 Git 인증을
+      # 심는 대신, 이미 체크아웃된 이 러너에서 그 두 파일을 이미지와 함께
+      # 그냥 같이 보내버린다 — 서버는 이제 git을 전혀 쓰지 않는다.
+      - name: 서버로 이미지 + 구성 파일 전송
         uses: appleboy/scp-action@v1
         with:
           host: 54.180.194.235
           username: ubuntu
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: app.tar.gz
-          target: ~/
+          source: app.tar.gz,docker-compose.yml,Caddyfile
+          target: ~/Osungtech-erp/
 
-      # 서버는 이제 이미지를 올리기(docker load)만 하고, 빌드는 전혀 하지
-      # 않는다 — docker-compose.yml의 app 서비스에 image: osungtech-erp-app:
-      # latest를 명시해뒀으므로, docker compose up -d(--build 없이)가 방금
-      # 올린 이 이미지를 그대로 쓴다. git pull은 docker-compose.yml/Caddyfile
-      # 등 코드가 아닌 구성 파일 변경을 반영하기 위해 계속 필요하다.
       - name: 서버에서 이미지 적재 + 재기동
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -95,9 +97,8 @@ jobs:
           command_timeout: 10m
           script: |
             set -e
-            docker load < ~/app.tar.gz
-            rm -f ~/app.tar.gz
             cd ~/Osungtech-erp
-            git pull
+            docker load < app.tar.gz
+            rm -f app.tar.gz
             export $(cat .env.production | xargs)
             docker compose up -d
