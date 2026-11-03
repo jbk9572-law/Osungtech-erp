@@ -1,3 +1,7 @@
 {$SITE_DOMAIN} {
+	# 브라우저가 이후 이 도메인은 항상 HTTPS로만 접속하게 강제한다(평문
+	# HTTP로 가로채 가짜 페이지를 보여주는 중간자 공격 방지) — 헌법검사
+	# 보안 점검에서 어디에도 설정돼 있지 않은 걸 발견해 추가.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	reverse_proxy app:3000
 }

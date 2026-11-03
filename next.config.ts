@@ -24,6 +24,30 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "20mb",
     },
   },
+  // 기본 보안 헤더 — 전엔 Next.js/Caddy 어느 쪽에도 설정돼 있지 않았다
+  // (헌법검사 보안 점검으로 발견). CSP는 이 앱의 인라인 스타일/스크립트
+  // 사용 범위를 더 조사해야 안전하게 넣을 수 있어 일단 보류하고, 깨질
+  // 위험 없이 바로 넣을 수 있는 항목만 우선 추가한다.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // 다른 사이트가 이 앱을 <iframe>에 몰래 넣어 클릭재킹하는 걸 막는다.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // 브라우저가 응답의 Content-Type을 무시하고 "추측"해서 실행하는
+          // MIME 스니핑을 막는다(예: 업로드된 파일을 스크립트로 오인 실행).
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // 다른 도메인으로 이동할 때 이 사이트의 전체 URL(쿼리스트링 등)이
+          // 그대로 Referer로 새 나가지 않게 한다.
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // 이 앱이 쓰지 않는 민감한 브라우저 기능(카메라/마이크/위치)을
+          // 명시적으로 꺼서, 그 기능을 쓰는 악성 삽입 코드가 있어도 막는다.
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
