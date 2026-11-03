@@ -296,6 +296,15 @@ export function NewPurchaseForm({
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.cost) : 0;
   }
+  // resolveCost가 0을 주면(공급처별 단가도, 품목 기본원가도 등록된 게
+  // 없다는 뜻 — 시세가 매번 바뀌는 원지류 등) 보호할 "알려진 단가"가
+  // 없으므로 직접입력 잠금을 자동으로 풀어준다. 그러지 않으면 단가칸이
+  // 계속 비활성 상태로 남아서, 사용자가 "직접입력" 체크박스를 직접 찾아
+  // 켜지 않는 한 단가를 입력할 방법이 없다(실사용 지적: "매입은 단가가
+  // 거의 입력이 안되어있어").
+  function unlockWhenUnknown(resolvedCost: number) {
+    return resolvedCost === 0;
+  }
   const supplierNoteMap = useMemo(
     () => buildPartyProductNoteMap(supplierPrices, (p) => p.supplier_id, (p) => p.product_id, (p) => p.notes),
     [supplierPrices],
@@ -353,7 +362,7 @@ export function NewPurchaseForm({
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitCost: item.unitCost,
-          manualPrice: !item.productId && !!item.customName,
+          manualPrice: (!item.productId && !!item.customName) || item.unitCost === 0,
           remark: item.remark ?? "",
           saleQuantity: item.quantity,
           manualSaleQuantity: false,
@@ -363,6 +372,7 @@ export function NewPurchaseForm({
       : prefillItems?.length
         ? prefillItems.map((item, i) => {
             const product = products.find((p) => p.id === item.productId);
+            const unitCost = resolveCost(prefillSupplierId ?? "", item.productId);
             return {
               key: i,
               productId: item.productId,
@@ -372,8 +382,8 @@ export function NewPurchaseForm({
               manualSpec: false,
               lotNumber: "",
               quantity: item.quantity,
-              unitCost: resolveCost(prefillSupplierId ?? "", item.productId),
-              manualPrice: false,
+              unitCost,
+              manualPrice: unlockWhenUnknown(unitCost),
               remark: "재고 부족 자동 발주 제안",
               saleQuantity: 0,
               manualSaleQuantity: false,
@@ -644,10 +654,12 @@ export function NewPurchaseForm({
     const product = products.find((p) => p.id === productId);
     const currentRow = rows.find((r) => r.key === key);
     const recentLotNumber = getRecentLotNumber(supplierId, productId);
+    const unitCost = resolveCost(supplierId, productId);
     updateRow(key, {
       productId,
       spec: product?.spec ?? "",
-      unitCost: resolveCost(supplierId, productId),
+      unitCost,
+      manualPrice: unlockWhenUnknown(unitCost),
       salePrice: resolveSalePrice(saleCustomerId, productId),
       ...(recentLotNumber && !currentRow?.lotNumber
         ? { lotNumber: recentLotNumber }
@@ -682,11 +694,12 @@ export function NewPurchaseForm({
           newSupplierId,
           row.productId,
         );
+        const unitCost = resolveCost(newSupplierId, row.productId);
         return {
           ...row,
           ...(row.manualPrice
             ? {}
-            : { unitCost: resolveCost(newSupplierId, row.productId) }),
+            : { unitCost, manualPrice: unlockWhenUnknown(unitCost) }),
           ...(recentLotNumber && !row.lotNumber
             ? { lotNumber: recentLotNumber }
             : {}),
@@ -700,6 +713,7 @@ export function NewPurchaseForm({
   // 바로 채워진 새 줄을 만든다.
   function quickAddProduct(productId: string) {
     const product = products.find((p) => p.id === productId);
+    const unitCost = resolveCost(supplierId, productId);
     addFilledRow(
       (key) => ({
         key,
@@ -710,8 +724,8 @@ export function NewPurchaseForm({
         manualSpec: false,
         lotNumber: getRecentLotNumber(supplierId, productId) ?? "",
         quantity: 0,
-        unitCost: resolveCost(supplierId, productId),
-        manualPrice: false,
+        unitCost,
+        manualPrice: unlockWhenUnknown(unitCost),
         remark: "",
         saleQuantity: 0,
         manualSaleQuantity: false,
@@ -863,6 +877,7 @@ export function NewPurchaseForm({
         (startKey) =>
           todo.items.map((item, i) => {
             const product = products.find((p) => p.id === item.productId);
+            const unitCost = resolveCost(effectiveSupplierId, item.productId);
             return {
               key: startKey + i,
               productId: item.productId,
@@ -872,8 +887,8 @@ export function NewPurchaseForm({
               manualSpec: Boolean(item.spec),
               lotNumber: item.lotNumber ?? "",
               quantity: item.quantity,
-              unitCost: resolveCost(effectiveSupplierId, item.productId),
-              manualPrice: false,
+              unitCost,
+              manualPrice: unlockWhenUnknown(unitCost),
               remark: "",
               saleQuantity: item.quantity,
               manualSaleQuantity: false,

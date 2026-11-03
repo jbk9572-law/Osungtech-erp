@@ -301,7 +301,7 @@ export function NewSaleForm({
           lotNumber: item.lotNumber ?? "",
           quantity: item.quantity,
           unitPrice: item.unitPrice,
-          manualPrice: !item.productId && !!item.customName,
+          manualPrice: (!item.productId && !!item.customName) || item.unitPrice === 0,
           remark: item.remark ?? "",
         }))
       : [makeBlankRow(0)],
@@ -515,7 +515,7 @@ export function NewSaleForm({
         lotNumber: item.lotNumber,
         quantity: item.quantity,
         unitPrice: resolvePrice(customerId, item.productId),
-        manualPrice: false,
+        manualPrice: unlockWhenUnknown(resolvePrice(customerId, item.productId)),
         remark: "",
       }),
       isBlankRow,
@@ -584,7 +584,7 @@ export function NewSaleForm({
               unitPrice: product
                 ? resolvePrice(effectiveCustomerId, product.id)
                 : 0,
-              manualPrice: false,
+              manualPrice: unlockWhenUnknown(product ? resolvePrice(effectiveCustomerId, product.id) : 0),
               remark: "",
             };
           }),
@@ -660,6 +660,14 @@ export function NewSaleForm({
     if (fromCustomer !== undefined) return fromCustomer;
     const product = products.find((p) => p.id === productId);
     return product ? Number(product.price) : 0;
+  }
+  // resolvePrice가 0을 주면(거래처별 단가도, 품목 기본가도 없다는 뜻)
+  // 보호할 "알려진 단가"가 없으므로 직접입력 잠금을 자동으로 풀어준다.
+  // 매입 등록 폼(new-purchase-form.tsx)과 같은 이유의 같은 수정 — 샘플
+  // (무상증정) 건은 이 함수와 무관하게 disabled={isSample || ...}가
+  // 따로 막아주므로 여기서 또 구분할 필요가 없다.
+  function unlockWhenUnknown(resolvedPrice: number) {
+    return resolvedPrice === 0;
   }
 
   // 샘플 체크를 켜는 순간, 그 전에 이미 입력해둔 줄들의 단가도 한 번에
@@ -769,10 +777,12 @@ export function NewSaleForm({
     const product = products.find((p) => p.id === productId);
     const currentRow = rows.find((r) => r.key === key);
     const recentLotNumber = getRecentLotNumber(customerId, productId);
+    const unitPrice = resolvePrice(customerId, productId);
     updateRow(key, {
       productId,
       spec: product?.spec ?? "",
-      unitPrice: resolvePrice(customerId, productId),
+      unitPrice,
+      manualPrice: unlockWhenUnknown(unitPrice),
       ...(recentLotNumber && !currentRow?.lotNumber
         ? { lotNumber: recentLotNumber }
         : {}),
@@ -788,11 +798,12 @@ export function NewSaleForm({
           newCustomerId,
           row.productId,
         );
+        const unitPrice = resolvePrice(newCustomerId, row.productId);
         return {
           ...row,
           ...(row.manualPrice
             ? {}
-            : { unitPrice: resolvePrice(newCustomerId, row.productId) }),
+            : { unitPrice, manualPrice: unlockWhenUnknown(unitPrice) }),
           ...(recentLotNumber && !row.lotNumber
             ? { lotNumber: recentLotNumber }
             : {}),
@@ -807,6 +818,7 @@ export function NewSaleForm({
   // 방식으로, 아직 아무것도 안 고른 첫 빈 줄이면 그 줄을 그대로 채운다).
   function quickAddProduct(productId: string) {
     const product = products.find((p) => p.id === productId);
+    const unitPrice = resolvePrice(customerId, productId);
     addFilledRow(
       (key) => ({
         key,
@@ -817,8 +829,8 @@ export function NewSaleForm({
         manualSpec: false,
         lotNumber: getRecentLotNumber(customerId, productId) ?? "",
         quantity: 0,
-        unitPrice: resolvePrice(customerId, productId),
-        manualPrice: false,
+        unitPrice,
+        manualPrice: unlockWhenUnknown(unitPrice),
         remark: "",
       }),
       isBlankRow,
