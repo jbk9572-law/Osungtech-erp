@@ -60,7 +60,17 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // manifest.webmanifest/sw.js는 로그인 여부와 무관하게 항상 같은 내용을
+  // 내려줘야 하는 정적 메타데이터/서비스워커 스크립트다 — 여기 빠져 있으면
+  // 비로그인 상태(또는 세션이 막 갱신되는 순간, 예: 브라우저 재시작
+  // 직후)에 이 요청들도 /login으로 302/307 리다이렉트돼 HTML을 돌려받고,
+  // 브라우저가 그 HTML을 manifest/스크립트로 파싱하려다 콘솔에 "Manifest:
+  // Line 1, column 1. Syntax error"를 반복해서 찍는 버그가 있었다(사용자
+  // 재현 — 크롬 재시작 직후 콘솔에 6번 반복 출력). 위 updateSession의
+  // 주석은 이미 "미들웨어는 정적 파일(manifest.webmanifest 등)을 뺀
+  // 거의 모든 요청을 지나가므로"라고 전제하고 있었는데, 실제 matcher에는
+  // 그 제외가 빠져 있었다 — 아래로 그 전제를 실제로 맞춘다.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
