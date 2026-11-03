@@ -1252,7 +1252,17 @@
   .erp-nav-overlay,
   .erp-toast-stack,
   .erp-demo-banner,
-  .erp-platform-announcement-banner {
+  .erp-platform-announcement-banner,
+  /* 모달의 X 닫기 버튼 — Tailwind의 print:hidden 유틸이 여기 안
+     먹힌다. 이 파일(erp-theme.css)은 Tailwind의 @layer 밖에 있는
+     "레이어 없는" 스타일이라 CSS 캐스케이드 레이어 규칙상 레이어
+     안(utilities)에 있는 print:hidden보다 항상 우선해버려서,
+     .erp-modal-window-close { display: inline-flex }가 같은 요소의
+     print:hidden { display: none }을 인쇄 중에도 계속 이긴다(사용자
+     지적 — "전표 인쇄할때 우측끝에 X가 나온다"). registration-modal-
+     shell.tsx·mail-attachment-chip.tsx 둘 다 이 클래스를 쓰므로,
+     여기 한 곳만 고치면 두 군데 다 같이 고쳐진다. */
+  .erp-modal-window-close {
     display: none !important;
   }
 
