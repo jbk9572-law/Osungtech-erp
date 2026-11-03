@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ProductSearchSelect } from "@/components/product-search-select";
+import { NumberInput } from "@/components/number-input";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { formatNumber } from "@/lib/format-number";
@@ -173,16 +174,15 @@ export function MobileItemEntryPanel({
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.quantity}
-                  onChange={(e) => onUpdateQuantity(item.key, Number(e.target.value) || 0)}
-                  aria-label="수량"
-                  className="erp-input"
-                  style={{ flex: 1, minWidth: 0 }}
-                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <NumberInput
+                    value={item.quantity}
+                    onChange={(n) => onUpdateQuantity(item.key, n)}
+                    allowFormula
+                    placeholder="수량"
+                    className="erp-input"
+                  />
+                </div>
                 {showPrice && (
                   <>
                     <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
@@ -242,15 +242,12 @@ export function MobileItemEntryPanel({
                   <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
                     수량
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
+                  <NumberInput
                     value={draftQuantity}
-                    onChange={(e) => setDraftQuantity(Number(e.target.value) || 0)}
-                    aria-label="수량"
+                    onChange={setDraftQuantity}
+                    allowFormula
+                    placeholder="수량"
                     className="erp-input"
-                    style={{ width: "100%" }}
                   />
                 </div>
                 {showPrice && (

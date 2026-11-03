@@ -5643,6 +5643,10 @@ export type Database = {
         };
         Returns: number;
       };
+      backfill_fifo_consumption_for_purchase: {
+        Args: { p_purchase_order_item_id: string };
+        Returns: void;
+      };
       consume_fifo_layers: {
         Args: {
           p_product_id: string;
