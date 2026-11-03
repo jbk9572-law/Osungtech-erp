@@ -1744,6 +1744,7 @@ export function NewSaleForm({
                     <NumberInput
                       value={pendingCalcQuantity}
                       onChange={setTg0OverrideQuantity}
+                      allowFormula
                       className="erp-input w-full"
                     />
                   </td>

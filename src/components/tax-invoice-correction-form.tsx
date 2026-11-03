@@ -207,7 +207,7 @@ export function TaxInvoiceCorrectionForm({
                     />
                   </td>
                   <td>
-                    <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} className="erp-input" allowNegative />
+                    <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} className="erp-input" allowNegative allowFormula />
                   </td>
                   <td>
                     <NumberInput value={row.unitPrice} onChange={(n) => updateRow(row.key, { unitPrice: n })} className="erp-input" allowNegative />

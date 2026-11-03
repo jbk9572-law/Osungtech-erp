@@ -1701,6 +1701,7 @@ export function NewPurchaseForm({
                     <NumberInput
                       value={pendingCalcQuantity}
                       onChange={setTg0OverrideQuantity}
+                      allowFormula
                       className="erp-input w-full"
                     />
                   </td>
@@ -1977,6 +1978,7 @@ export function NewPurchaseForm({
                           }
                           basePackageQty={product?.base_package_qty}
                           label="출고수량"
+                          allowFormula
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
