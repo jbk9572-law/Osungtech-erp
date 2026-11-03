@@ -20,6 +20,14 @@ jobs:
           host: 54.180.194.235
           username: ubuntu
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # ssh-action의 command_timeout 기본값(10m)보다 서버의 빌드가 더
+          # 오래 걸려서, 빌드가 "Creating an optimized production build..."
+          # 도중에 통째로 강제 종료되고 액션은 "Run Command Timeout"으로
+          # 실패 처리됐다(2번째 실제 배포 시도에서 재현 — 빌드 자체는
+          # 코드 에러가 아니라 단순히 시간 초과였다). 라이트세일 1GB RAM
+          # 인스턴스에 2GB 스왑을 얹어 쓰는 구성이라(docs/self-hosting-
+          # aws.md) 빌드가 느릴 수밖에 없으므로 넉넉히 늘린다.
+          command_timeout: 25m
           script: |
             set -e
             cd ~/Osungtech-erp
