@@ -17,6 +17,7 @@ import {
   stickyCellStyle,
   stickyFooterStyle,
   GRID_CHECKBOX_WIDTH,
+  GRID_ACTION_COL_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
@@ -628,7 +629,7 @@ export function SalesGridTable({
               {sortableHeader("세액", "taxAmount", undefined, "num")}
               <th style={colStyle("invoiceStatus", { width: 76 })}>계산서발행</th>
               <th style={colStyle("remark")}>비고</th>
-              <th />
+              <th style={{ width: GRID_ACTION_COL_WIDTH }} />
             </tr>
           </thead>
           {carryoverRows && carryoverRows.length > 0 && (

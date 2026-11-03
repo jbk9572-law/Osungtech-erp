@@ -7,6 +7,15 @@ import type { CSSProperties } from "react";
 // 스티키 자체가 없었다.
 export const GRID_CHECKBOX_WIDTH = 32;
 
+// 표 맨 끝 "상세보기/명세표" 아이콘 칸 — 너비를 안 주면 table-layout:
+// auto 특성상 남는 공간이 전부 이 빈 칸(<th />)으로 몰려서, 컬럼 설정에서
+// 칸을 하나 꺼 숨길 때마다 그만큼의 여백이 표 맨 오른쪽에 빈 블록으로
+// 나타나는 버그가 있었다(매출/매입 그리드 둘 다 같은 구조라 같은 증상 —
+// 사용자 지적: "저게뭐야 우측끝에"). 아이콘 2개(26px+2px gap+26px) +
+// 좌우 패딩(10px×2)을 담을 만큼만 고정폭을 줘서 더 이상 여유 공간을
+// 흡수하지 않게 한다.
+export const GRID_ACTION_COL_WIDTH = 74;
+
 const stickyBase: CSSProperties = { position: "sticky", zIndex: 1 };
 
 export function stickyHeaderStyle(left: number, width: number, extra?: CSSProperties): CSSProperties {
