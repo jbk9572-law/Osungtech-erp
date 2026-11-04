@@ -99,6 +99,15 @@ export async function login(_prevState: { error: string } | undefined, formData:
     return { error: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요." };
   }
 
+  // 중복 로그인 방지: 같은 계정으로 다른 곳에서 이미 로그인돼 있어도
+  // Supabase Auth는 기본적으로 여러 세션을 동시에 허용한다 — scope:
+  // "others"로 방금 만든 이 세션만 남기고 그 계정의 다른 모든 세션을
+  // 강제 종료한다("최신 로그인만 유지" 정책, 사용자 확인). 실패해도 이
+  // 로그인 자체를 막을 이유는 없어 에러는 무시한다.
+  await logSlowSupabaseCall("login.signOutOtherSessions", () =>
+    supabase.auth.signOut({ scope: "others" })
+  );
+
   // 로그인 주소를 하나로 통일한다 — 직원이든 거래처/업체(하청) 포털
   // 계정이든 같은 /login에서 이메일(또는 회사코드+아이디)+비밀번호로
   // 로그인하고, 로그인에 성공한 뒤에야 "이 계정이 포털 계정인가, 어느
