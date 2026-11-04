@@ -559,32 +559,31 @@ export default async function DashboardPage({
         ),
   ]);
 
-  // 매입 품목 id -> 오늘(같은 workDate) 그 매입분을 실제로 소진한 매출의
-  // 거래처별 수량. "같은 날"인지는 양쪽의 workDate(전표날짜가 아니라 실제
-  // 작업일 — 이월 건 고려)가 같은지로 판정한다.
+  // 매입 품목 id -> 그 매입분을 실제로 소진한 매출의 거래처별 수량.
+  // 예전엔 양쪽 workDate(전표날짜가 아니라 실제 작업일)가 같아야만 인정했는데,
+  // 그러면 드랍십(매출 전표를 먼저 끊고 매입을 나중에 입력하는 경우)처럼
+  // fifo_consumptions가 실제로는 정확히 연결돼 있어도 두 작업일이 다르다는
+  // 이유만으로 "재고용 매입"/"재고분 출고"로 잘못 갈라져 보이는 문제가 있었다.
+  // fifo_consumptions 자체가 이미 "진짜 연결"이므로, 날짜 일치 여부와 무관하게
+  // 있는 그대로 믿는다 — 날짜가 다르다고 버릴 이유가 없다.
   const purchaseDestinationsById = new Map<string, { partnerName: string; quantity: number }[]>();
   for (const row of purchaseConsumptionRows) {
     // consumed_by_type='sale'로 걸러서 실제로는 항상 채워져 있지만, 컬럼
     // 자체는(로스 소진 건도 같은 테이블을 쓰느라) nullable이라 타입상
     // 널 체크가 필요하다.
     if (!row.sales_order_item_id) continue;
-    const purchaseWorkDate = purchaseItemWorkDateById.get(row.purchase_order_item_id);
-    const saleWorkDate = salesItemWorkDateById.get(row.sales_order_item_id);
-    if (!purchaseWorkDate || saleWorkDate !== purchaseWorkDate) continue;
     const partnerName = row.sales_order_items.sales_orders.customers?.name ?? "출고처 미상";
     const list = purchaseDestinationsById.get(row.purchase_order_item_id) ?? [];
     list.push({ partnerName, quantity: row.consumed_quantity });
     purchaseDestinationsById.set(row.purchase_order_item_id, list);
   }
 
-  // 매출 품목 id -> 오늘(같은 workDate) 들어온 매입분에서 실제로 소진된 수량.
-  // (전체 수량 - 이 값) = 재고(과거 매입분)에서 나간 수량 = "재고분 출고".
+  // 매출 품목 id -> 실제로 소진에 쓰인 매입분 수량(날짜 무관, 위와 같은 이유).
+  // (전체 수량 - 이 값) = 어느 매입으로도 안 엮인(또는 아직 매입이 입력 안 된)
+  // 몫 = 재고(과거 매입분)에서 나간 수량 = "재고분 출고".
   const salesTodayPurchaseQtyById = new Map<string, number>();
   for (const row of salesConsumptionRows) {
     if (!row.sales_order_item_id) continue;
-    const saleWorkDate = salesItemWorkDateById.get(row.sales_order_item_id);
-    const purchaseWorkDate = purchaseItemWorkDateById.get(row.purchase_order_item_id);
-    if (!saleWorkDate || purchaseWorkDate !== saleWorkDate) continue;
     salesTodayPurchaseQtyById.set(
       row.sales_order_item_id,
       (salesTodayPurchaseQtyById.get(row.sales_order_item_id) ?? 0) + row.consumed_quantity,
