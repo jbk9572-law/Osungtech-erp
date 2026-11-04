@@ -31,6 +31,10 @@ export async function portalLogin(
     return { error: "포털 계정이 아니거나 비활성화된 계정입니다. 담당 직원에게 문의해주세요." };
   }
 
+  // 중복 로그인 방지: /login과 동일하게, 방금 만든 이 세션만 남기고 그
+  // 계정의 다른 모든 세션을 강제 종료한다("최신 로그인만 유지" 정책).
+  await supabase.auth.signOut({ scope: "others" });
+
   redirect(await portalHref(""));
 }
 
