@@ -146,4 +146,4 @@ jobs:
             fi
             exit 1
           fi
-          npx supabase db push --db-url "$DB_URL"
+          npx supabase db push --db-url "$DB_URL" --yes
