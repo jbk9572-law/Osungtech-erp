@@ -4,6 +4,7 @@ import {
   sortSpecsByTrailingNumber,
   stripFilterUnitsForCopy,
   shouldStripBoxCountForCopy,
+  shouldShowBoxCountOnDashboard,
   type ItemRow,
   type ProductGroup,
 } from "./dashboard-calendar";
@@ -256,5 +257,26 @@ describe("shouldStripBoxCountForCopy", () => {
 
   it("다른 거래처는 항상 그대로 둔다", () => {
     expect(shouldStripBoxCountForCopy("명진화학", "ST1", "Bobbin")).toBe(false);
+  });
+});
+
+describe("shouldShowBoxCountOnDashboard", () => {
+  it("품목명에 크라프트지/모조지/아트지/무진지/내층간지가 들어가면 뺀다", () => {
+    expect(shouldShowBoxCountOnDashboard("크라프트지 98", "Paper")).toBe(false);
+    expect(shouldShowBoxCountOnDashboard("모조지 100", "Paper")).toBe(false);
+    expect(shouldShowBoxCountOnDashboard("아트지", "Paper")).toBe(false);
+    expect(shouldShowBoxCountOnDashboard("무진지", "Paper")).toBe(false);
+    expect(shouldShowBoxCountOnDashboard("내층 무진지", "Paper")).toBe(false);
+    expect(shouldShowBoxCountOnDashboard("내층간지", "Paper")).toBe(false);
+  });
+
+  it("카테고리가 Material이면 품목명과 무관하게 뺀다(대소문자 무관)", () => {
+    expect(shouldShowBoxCountOnDashboard("Micro Filter", "Material")).toBe(false);
+    expect(shouldShowBoxCountOnDashboard("Micro Filter", "MATERIAL")).toBe(false);
+  });
+
+  it("그 외 품목/카테고리는 그대로 보여준다", () => {
+    expect(shouldShowBoxCountOnDashboard("Cover tape", "Tray")).toBe(true);
+    expect(shouldShowBoxCountOnDashboard("KD240BI", null)).toBe(true);
   });
 });

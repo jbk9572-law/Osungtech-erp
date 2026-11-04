@@ -142,6 +142,7 @@ export function InventoryAdjustForm({
         quantity={amount}
         onQuantityChange={setAmount}
         basePackageQty={selectedProduct?.base_package_qty}
+        allowFormula
         className="erp-input"
       />
       {currentStock !== null && (

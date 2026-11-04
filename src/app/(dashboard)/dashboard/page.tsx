@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
+import { QuickStockLookup, type StockLookupProduct } from "@/components/quick-stock-lookup";
+import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getNotificationSummary } from "@/lib/notifications";
 import { buildBackHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -108,6 +110,7 @@ export default async function DashboardPage({
     carryoverInPurchases,
     { data: myProfile },
     notifications,
+    stockLookupProductRows,
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
     // 매출/매입 라인아이템은 거래량이 많은 테넌트에서 한 달에 PostgREST
@@ -221,7 +224,41 @@ export default async function DashboardPage({
     user
       ? getNotificationSummary(supabase, user.id)
       : Promise.resolve({ announcements: [], todos: [], lowStock: [] }),
+    // 대시보드 "퀵 재고조회" 패널용 — 재고관리 > 재고현황과 같은 products+
+    // inventory 조인(sumInventoryQuantity 기준)을 그대로 써서, 재고현황
+    // 화면과 항상 같은 수치를 보여준다.
+    fetchAllRows<{
+      id: string;
+      sku: string;
+      name: string;
+      spec: string | null;
+      unit: string;
+      base_package_qty: number | null;
+      reorder_point: number | null;
+      categories: { name: string } | null;
+      inventory: { quantity: number; warehouse_id: string }[];
+    }>((from, to) =>
+      supabase
+        .from("products")
+        .select(
+          "id, sku, name, spec, unit, base_package_qty, reorder_point, categories(name), inventory(quantity, warehouse_id)"
+        )
+        .order("name")
+        .range(from, to),
+    ),
   ]);
+
+  const stockLookupProducts: StockLookupProduct[] = stockLookupProductRows.map((p) => ({
+    id: p.id,
+    sku: p.sku,
+    name: p.name,
+    spec: p.spec,
+    unit: p.unit,
+    categoryName: p.categories?.name ?? null,
+    basePackageQty: p.base_package_qty,
+    reorderPoint: p.reorder_point,
+    quantity: sumInventoryQuantity(p.inventory),
+  }));
 
   const unreadAnnouncements = notifications.announcements;
   const dueSoonTodos = notifications.todos;
@@ -698,6 +735,7 @@ export default async function DashboardPage({
       </div>
       <div className="erp-home">
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <QuickStockLookup products={stockLookupProducts} />
         <div className="erp-home-panel" id="stock-risk">
           <div className="erp-home-panel-title">
             <span>재고위험</span>

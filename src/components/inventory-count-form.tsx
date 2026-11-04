@@ -390,6 +390,7 @@ export function InventoryCountForm({
                       }
                       basePackageQty={row.basePackageQty}
                       label="실사 수량"
+                      allowFormula
                       className="erp-input w-full"
                     />
                   </td>
@@ -476,6 +477,7 @@ export function InventoryCountForm({
                   onQuantityChange={(n) => setCounted((prev) => ({ ...prev, [row.productId]: n }))}
                   basePackageQty={row.basePackageQty}
                   label="실사 수량"
+                  allowFormula
                   className="erp-input w-full"
                 />
               </div>

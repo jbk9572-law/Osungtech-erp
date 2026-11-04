@@ -24,7 +24,7 @@ import {
   formatPaperCalcSizeLines,
   type PaperCalcSizeRow,
 } from "@/lib/paper-calc-summary";
-import { formatQuantityWithBoxes } from "@/lib/package-qty";
+import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
@@ -510,7 +510,28 @@ const STRIP_BOX_COUNT_ALWAYS = new Set([
 
 // 원지류(낱장/연 단위로 세는 종이)는 거래처와 무관하게 박스 수 표기 자체가
 // 의미가 없어서 품목명 기준으로 뺀다.
-const STRIP_BOX_COUNT_PRODUCT_KEYWORDS = ["크라프트지", "모조지", "아트지", "무진지"];
+const STRIP_BOX_COUNT_PRODUCT_KEYWORDS = ["크라프트지", "모조지", "아트지", "무진지", "내층간지"];
+
+// 대시보드 "오늘의 업무" 패널은(카톡복사 텍스트와 달리) 원래 박스 수를 전혀
+// 안 보여줬는데, 수량/단위 뒤에 포장수량("500 EA (10박스)")을 새로 붙여달라는
+// 요청 — 단, 원지류(위 키워드)와 MATERIAL 카테고리 품목은 낱장/연/kg 단위로
+// 세고 '박스'라는 포장단위 자체가 의미가 없어서 그대로 뺀다. 카톡복사 쪽
+// shouldStripBoxCountForCopy의 거래처별/SKU별 예외(STRIP_BOX_COUNT_ALWAYS,
+// 나영식테크)는 이 화면 표기 요구사항엔 포함되지 않아 여기선 쓰지 않는다.
+export function shouldShowBoxCountOnDashboard(productName: string, categoryName: string | null): boolean {
+  if (categoryName?.toLowerCase() === "material") return false;
+  if (STRIP_BOX_COUNT_PRODUCT_KEYWORDS.some((kw) => productName.includes(kw))) return false;
+  return true;
+}
+
+// 위 shouldShowBoxCountOnDashboard 판단과 formatBoxCount 호출을 한 곳으로
+// 묶어, 매입/매출 패널의 단일 품목 줄·복수 품목 줄 네 군데가 각자 다시
+// 조립하지 않게 한다.
+function BoxCountSuffix({ item, productName }: { item: ItemRow; productName: string }) {
+  if (!shouldShowBoxCountOnDashboard(productName, item.categoryName)) return null;
+  const boxCount = formatBoxCount(item.quantity, item.basePackageQty);
+  return boxCount ? <span> ({boxCount})</span> : null;
+}
 
 // 거래처별로 카톡복사 텍스트에서 박스 수 표기("(N박스)")를 빼달라는 요청 —
 // 화면 표시는 그대로 두고 복사 텍스트에서만 적용한다(stripFilterUnitsForCopy와
@@ -1107,6 +1128,7 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {formatNumber(item.quantity)}
                                               {item.unit}
+                                              <BoxCountSuffix item={item} productName={product.productName} />
                                               {note && (
                                                 <span className="text-[10px]">
                                                   {" "}
@@ -1141,6 +1163,7 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {formatNumber(item.quantity)}
                                               {item.unit}
+                                              <BoxCountSuffix item={item} productName={product.productName} />
                                               {note && (
                                                 <span className="text-[10px]">
                                                   {" "}
@@ -1292,6 +1315,7 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {formatNumber(item.quantity)}
                                               {item.unit}
+                                              <BoxCountSuffix item={item} productName={product.productName} />
                                               {note && (
                                                 <span className="text-[10px]">
                                                   {" "}
@@ -1327,6 +1351,7 @@ export function DashboardCalendar({
                                               {item.spec || "규격 미지정"} :{" "}
                                               {formatNumber(item.quantity)}
                                               {item.unit}
+                                              <BoxCountSuffix item={item} productName={product.productName} />
                                               {note && (
                                                 <span className="text-[10px]">
                                                   {" "}

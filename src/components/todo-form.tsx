@@ -407,6 +407,7 @@ export function TodoForm({
                         quantity={row.quantity}
                         onQuantityChange={(n) => updateRow(row.key, { quantity: n })}
                         basePackageQty={product?.base_package_qty}
+                        allowFormula
                         className="erp-input w-full"
                       />
                     </td>
