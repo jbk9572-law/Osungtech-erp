@@ -101,6 +101,17 @@ export async function updateSession(request: NextRequest) {
   // 1회로 묶여 있음, src/lib/supabase/server.ts)는 그대로 둔다 —
   // 그쪽은 user.id/email 등 전체 객체가 실제로 필요해서 바꾸려면 호출부
   // 전체를 다시 손봐야 하는 별도 작업이다.
+  // 중복 로그인 방지(login.ts의 signOut({scope:"others"}))로 이 세션이
+  // 강제 종료됐을 수도 있다 — 요청에 Supabase Auth 쿠키가 이미 있었는데도
+  // (한 번도 로그인한 적 없는 사람이 아니라) 세션이 무효가 됐다면, 그냥
+  // "로그인 해주세요"가 아니라 "다른 곳에서 로그인됐을 수 있다"는 이유를
+  // 알려줘야 사용자가 당황하지 않는다. 쿠키가 아예 없었다면(처음 방문/
+  // 수동 로그아웃 직후 등) 평범한 미로그인 상태이므로 이 안내를 붙이지
+  // 않는다.
+  const hadAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+
   let hasValidSession = false;
   try {
     const { data, error: claimsError } = await supabase.auth.getClaims();
@@ -119,6 +130,7 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/login";
     url.search = "";
     url.searchParams.set("next", originalPath);
+    if (hadAuthCookie) url.searchParams.set("notice", "other_session");
     return NextResponse.redirect(url);
   }
 
