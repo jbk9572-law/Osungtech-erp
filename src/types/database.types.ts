@@ -1220,6 +1220,7 @@ export type Database = {
           monthly_email_quota: number;
           monthly_alimtalk_quota: number;
           custom_domain_mail: boolean;
+          is_platform_operator: boolean;
         };
         Insert: {
           id?: string;
@@ -1243,6 +1244,7 @@ export type Database = {
           monthly_email_quota?: number;
           monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
+          is_platform_operator?: boolean;
         };
         Update: {
           id?: string;
@@ -1266,6 +1268,7 @@ export type Database = {
           monthly_email_quota?: number;
           monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
+          is_platform_operator?: boolean;
         };
         Relationships: [];
       };
@@ -6263,6 +6266,10 @@ export type Database = {
       is_platform_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      delete_tenant_hard: {
+        Args: { p_tenant_id: string };
+        Returns: void;
       };
       reply_support_ticket: {
         Args: { p_id: string; p_reply: string; p_status?: string };
