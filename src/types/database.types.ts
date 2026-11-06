@@ -4310,6 +4310,66 @@ export type Database = {
           },
         ];
       };
+      failure_logs: {
+        Row: {
+          id: string;
+          code: string;
+          message_ko: string;
+          action: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          detail: string | null;
+          context: Json | null;
+          actor: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          message_ko: string;
+          action: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          detail?: string | null;
+          context?: Json | null;
+          actor?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          message_ko?: string;
+          action?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          detail?: string | null;
+          context?: Json | null;
+          actor?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "failure_logs_actor_fkey";
+            columns: ["actor"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "failure_logs_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       purchase_received_invoices: {
         Row: {
           id: string;
@@ -6215,6 +6275,20 @@ export type Database = {
           tenant_name: string | null;
           table_name: string;
           action: string;
+          actor_name: string | null;
+          created_at: string;
+        }[];
+      };
+      get_cross_tenant_failure_log: {
+        Args: { p_limit?: number };
+        Returns: {
+          id: string;
+          tenant_name: string | null;
+          code: string;
+          message_ko: string;
+          action: string;
+          entity_type: string | null;
+          detail: string | null;
           actor_name: string | null;
           created_at: string;
         }[];
