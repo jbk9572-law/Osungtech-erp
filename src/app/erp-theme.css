@@ -5076,30 +5076,34 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   "Modern" 테마 — 플랫폼관리자 콘솔 전용
+   "Modern" 테마
    ════════════════════════════════════════════════════════════════
-   사용자가 올린 목업(관제탑 톤 어두운 헤더 + 인디고 포인트 + 큰
-   라운드 코너의 SaaS풍 화면)을 재현한다. 처음엔 이 전체를 다크 테마로
-   잘못 만들었었다 — 목업을 다시 확인해보니 <body>는 전부
-   bg-[#F1F5F9]/bg-[#F8FAFC](밝은 슬레이트)이고, 어두운 건 맨 위
-   타이틀바 하나(slate-900→indigo-950 그라디언트)뿐이다("다크모드가
-   아니라 모던테마야, 내가준 html파일 어디도 다크모드로 안되어있다"는
-   사용자 피드백으로 수정). 그래서 색 토큰은 라이트로 다시 잡고,
-   타이틀바 그라디언트/큰 라운드 코너만 목업 그대로 가져간다.
+   사용자가 올린 목업 12개(메신저/게시판/대시보드/매입/매출/결재선
+   설정/문서양식관리 등 — 전부 테넌트 ERP 화면이다) 그대로의 관제탑
+   톤 어두운 헤더 + 인디고 포인트 + 큰 라운드 코너를 재현한다. 처음엔
+   이 전체를 다크 테마로 잘못 만들었었다 — 목업을 다시 확인해보니
+   <body>는 전부 bg-[#F1F5F9]/bg-[#F8FAFC](밝은 슬레이트)이고, 어두운
+   건 맨 위 타이틀바 하나(slate-900→indigo-950 그라디언트)뿐이다
+   ("다크모드가 아니라 모던테마야, 내가준 html파일 어디도 다크모드로
+   안되어있다"는 사용자 피드백으로 수정). 그래서 색 토큰은 라이트로
+   다시 잡고, 타이틀바 그라디언트/큰 라운드 코너만 목업 그대로
+   가져간다.
 
-   또한 이 테마는 플랫폼관리자 콘솔에만 적용된다("다크모드를 저
-   메뉴가아니라 플랫폼 전체관리자페이지에 넣어주라는거고" — 일반
-   테넌트 사용자의 ERP 화면은 전혀 안 건드림). 전역 :root/<html>
-   속성이 아니라 platform-admin 레이아웃의 최상위 래퍼에만 걸리는
-   클래스(.pa-theme-modern, platform-admin-theme-shell.tsx 참고)로
-   스코프한다 — CSS 변수가 그 클래스 아래로만 상속되므로 같은 브라우저로
-   /dashboard를 보는 경우에도 전혀 영향이 없다. 목업의 각 화면마다
-   제각각이던 그리드 비율(3:7, 2:3:7, 2:2.5:5.5 등)은 그대로 베끼지
-   않는다 — 이 앱은 이미 .erp-split-shell/.erp-split3-shell로 화면
-   전체가 통일된 분할 비율을 쓰고 있고(개발헌법 3번), 화면마다 다른
-   비율을 쓰는 건 그 자체가 이 디자인 시스템이 막으려는 문제이기
-   때문이다. */
-.pa-theme-modern {
+   <html data-theme="modern">일 때 전역으로 켜진다(src/app/layout.tsx의
+   인라인 스크립트 + platform-admin-theme-switcher.tsx 참고) — 거의
+   모든 색이 이미 --erp-*(:root) 토큰 하나로 몰려 있어서, 여기서 그
+   토큰들만 다시 정의하면 기존 컴포넌트 구조를 전혀 안 바꿔도 메신저/
+   매입/매출 등 앱 전체 화면이 자동으로 이 테마로 바뀐다. 다만 켜고
+   끄는 스위치 자체는 플랫폼관리자 > 환경설정에만 둔다("다크모드를
+   저 메뉴가아니라 플랫폼 전체관리자페이지에 넣어주라는거고" — 일반
+   테넌트 설정(환경설정 > 화면 테마) 메뉴에는 없음, 적용 범위와는
+   별개의 얘기였다). 로그인/인쇄 라우트는 이 파일 자체를 안 불러오니
+   원래부터 영향 없다. 목업의 각 화면마다 제각각이던 그리드 비율(3:7,
+   2:3:7, 2:2.5:5.5 등)은 그대로 베끼지 않는다 — 이 앱은 이미
+   .erp-split-shell/.erp-split3-shell로 화면 전체가 통일된 분할
+   비율을 쓰고 있고(개발헌법 3번), 화면마다 다른 비율을 쓰는 건 그
+   자체가 이 디자인 시스템이 막으려는 문제이기 때문이다. */
+:root[data-theme="modern"] {
   --erp-primary: #4f46e5;
   --erp-primary-dark: #4338ca;
   --erp-on-primary: #ffffff;
@@ -5152,7 +5156,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 /* 타이틀바 — 목업의 관제탑 그라디언트(slate-900 → indigo-950 →
    slate-900)를 그대로 재현한다. 목업에서 유일하게 어두운 요소다. */
-.pa-theme-modern .erp-titlebar {
+[data-theme="modern"] .erp-titlebar {
   background: linear-gradient(to right, #0f172a, #1e1b4b, #0f172a);
 }
 
@@ -5161,21 +5165,21 @@ a.erp-detail-tab:hover:not(.active) {
    화면마다 Tailwind 유틸리티 클래스(rounded-sm 등)로 직접 쓰고 있어서,
    그 클래스 자체를 이 테마 스코프 안에서 덮어쓴다(컴포넌트 JSX는
    하나도 안 건드림 — 선택자 특이도만으로 기존 규칙을 이긴다). */
-.pa-theme-modern .rounded-sm {
+[data-theme="modern"] .rounded-sm {
   border-radius: 10px;
 }
-.pa-theme-modern .erp-detail,
-.pa-theme-modern .erp-btn,
-.pa-theme-modern .erp-input,
-.pa-theme-modern .erp-select,
-.pa-theme-modern .erp-textarea,
-.pa-theme-modern .erp-card,
-.pa-theme-modern .erp-modal-panel {
+[data-theme="modern"] .erp-detail,
+[data-theme="modern"] .erp-btn,
+[data-theme="modern"] .erp-input,
+[data-theme="modern"] .erp-select,
+[data-theme="modern"] .erp-textarea,
+[data-theme="modern"] .erp-card,
+[data-theme="modern"] .erp-modal-panel {
   border-radius: 12px;
 }
 /* 좌측 트리메뉴/카테고리 사이드바 — 목업처럼 패널과 살짝 다른 톤으로
    분리되게. */
-.pa-theme-modern .erp-tree,
-.pa-theme-modern .erp-cat-sidebar {
+[data-theme="modern"] .erp-tree,
+[data-theme="modern"] .erp-cat-sidebar {
   background: var(--erp-panel);
 }

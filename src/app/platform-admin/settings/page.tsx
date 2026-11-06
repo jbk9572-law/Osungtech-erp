@@ -53,9 +53,8 @@ export default async function PlatformSettingsPage() {
         </div>
         <div className="erp-detail-body">
           <PageGuide className="mb-2">
-            이 플랫폼관리자 콘솔(지금 보고 있는 화면들)에만 적용됩니다 — 각 회사(테넌트) 직원이 쓰는 ERP
-            화면 테마는 건드리지 않습니다. 이 브라우저에만 저장되므로 다른 기기/브라우저에서는 다시
-            선택해야 합니다.
+            지금 로그인한 이 브라우저에서 보는 화면 전체(대시보드/매입/매출/메신저/게시판 등)에 적용됩니다.
+            이 브라우저에만 저장되므로 다른 기기/브라우저에서는 다시 선택해야 합니다.
           </PageGuide>
           <PlatformAdminThemeSwitcher />
         </div>

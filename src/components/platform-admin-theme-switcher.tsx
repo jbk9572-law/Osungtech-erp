@@ -1,24 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PLATFORM_ADMIN_THEME_CHANGE_EVENT, PLATFORM_ADMIN_THEME_KEY } from "@/components/platform-admin-theme-shell";
 
+const THEME_KEY = "erp-theme";
 const THEMES = [
   { value: "classic-light", label: "Classic Light (기본)" },
   { value: "modern", label: "Modern" },
 ] as const;
 type ThemeValue = (typeof THEMES)[number]["value"];
 
-// platform-admin-theme-shell.tsx가 마운트 시/이벤트 수신 시 localStorage를
-// 다시 읽어 .pa-theme-modern 클래스를 켜고 끈다 — 이 드롭다운은 그
-// localStorage 값을 쓰고, 같은 탭 안에서 바로 반영되도록 커스텀 이벤트를
-// 쏜다(storage 이벤트는 다른 탭에서만 발생해 같은 탭엔 안 옴).
+function applyTheme(value: ThemeValue) {
+  if (value === "modern") {
+    document.documentElement.setAttribute("data-theme", value);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+}
+
+// 스위치 자체는 플랫폼관리자 > 환경설정에만 있지만("다크모드를 저
+// 메뉴가아니라 플랫폼 전체관리자페이지에 넣어주라는거고"), 적용 범위는
+// 이 브라우저로 보는 앱 전체다(메신저/매입/매출 등 — 사용자가 올린 목업
+// 12개가 전부 테넌트 ERP 화면이었다: "내가준 html파일 어디도 다크모드로
+// 안되어있을건데?"). layout.tsx의 인라인 스크립트가 첫 페인트 전에
+// data-theme을 미리 붙여주지만, 이 드롭다운 자체는 "지금 뭐가 선택돼
+// 있는지"를 보여줘야 해서 localStorage를 다시 읽는다 — 서버 렌더링
+// 시점엔 이 값을 알 수 없으므로(브라우저별로 다름) mount 이후에만 채운다.
 export function PlatformAdminThemeSwitcher() {
   const [value, setValue] = useState<ThemeValue>("classic-light");
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(PLATFORM_ADMIN_THEME_KEY);
+      const stored = localStorage.getItem(THEME_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
       if (stored === "modern") setValue(stored);
     } catch {
@@ -28,13 +40,13 @@ export function PlatformAdminThemeSwitcher() {
 
   function handleChange(next: ThemeValue) {
     setValue(next);
+    applyTheme(next);
     try {
-      localStorage.setItem(PLATFORM_ADMIN_THEME_KEY, next);
+      localStorage.setItem(THEME_KEY, next);
     } catch {
-      // 저장이 안 돼도(프라이빗 모드 등) 지금 탭에는 이벤트로 바로 반영된다 —
+      // 저장이 안 돼도(프라이빗 모드 등) 지금 화면에는 바로 반영된다 —
       // 다음에 새로 열 때만 다시 기본값으로 돌아간다.
     }
-    window.dispatchEvent(new Event(PLATFORM_ADMIN_THEME_CHANGE_EVENT));
   }
 
   return (
