@@ -4,6 +4,7 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
 import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
+import { PlatformAdminThemeSwitcher } from "@/components/platform-admin-theme-switcher";
 import { setPlatformDefaultFeatureEnabled } from "@/app/platform-admin/settings/actions";
 import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS } from "@/lib/erp-menu";
 
@@ -43,6 +44,20 @@ export default async function PlatformSettingsPage() {
         </div>
         <div className="erp-detail-body">
           <PlatformDefaultPlanSelect plan={settings?.default_plan ?? "trial"} />
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginBottom: "var(--erp-space-5)" }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">화면 테마</span>
+        </div>
+        <div className="erp-detail-body">
+          <PageGuide className="mb-2">
+            이 플랫폼관리자 콘솔(지금 보고 있는 화면들)에만 적용됩니다 — 각 회사(테넌트) 직원이 쓰는 ERP
+            화면 테마는 건드리지 않습니다. 이 브라우저에만 저장되므로 다른 기기/브라우저에서는 다시
+            선택해야 합니다.
+          </PageGuide>
+          <PlatformAdminThemeSwitcher />
         </div>
       </div>
 
