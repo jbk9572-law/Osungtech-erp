@@ -16,8 +16,8 @@ export function SandboxTools() {
       <div className="erp-field">
         <label>더미 데이터 생성</label>
         <PageGuide className="mb-2">
-          창고/거래처/품목을 만들고, 매입으로 입고한 뒤 일부만 매출로 출고합니다 — 재고현황/FIFO 원가가 바로
-          의미 있게 채워집니다.
+          창고 1곳, 매입처 5곳, 거래처 8곳, 품목 15개를 만들고, 최근 45일에 걸쳐 매입 15건·매출 30건을 랜덤하게
+          생성합니다 — 재고현황/FIFO 원가/매출·매입 목록이 실제 업무 화면처럼 채워집니다.
         </PageGuide>
         <form action={seedAction}>
           <button type="submit" disabled={seedPending} className="erp-btn erp-btn-primary">
