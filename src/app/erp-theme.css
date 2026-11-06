@@ -5074,3 +5074,103 @@ a.erp-detail-tab:hover:not(.active) {
   outline: 2px solid var(--erp-primary);
   outline-offset: 2px;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   다크 테마 — "Modern Dark Command Center"
+   ════════════════════════════════════════════════════════════════
+   사용자가 올린 목업(관제탑 톤 어두운 헤더 + 인디고 포인트 + 큰
+   라운드 코너의 SaaS풍 화면)을 데스크톱 디자인 시스템 전용 테마로
+   추가한다. 목업의 각 화면마다 제각각이던 그리드 비율(3:7, 2:3:7,
+   2:2.5:5.5 등)은 그대로 베끼지 않는다 — 이 앱은 이미
+   .erp-split-shell/.erp-split3-shell로 화면 전체가 통일된 분할
+   비율을 쓰고 있고(개발헌법 3번), 화면마다 다른 비율을 쓰는 건 그
+   자체가 이 디자인 시스템이 막으려는 문제이기 때문이다. 대신 색/
+   형태 언어만 목업 그대로 재현한다 — 거의 모든 색이 이미
+   --erp-*(:root) 토큰 하나로 몰려 있어서(위 :root 블록 주석들 참고),
+   여기서 그 토큰들만 다시 정의하면 기존 컴포넌트 구조를 전혀 안
+   바꿔도 화면 전체가 자동으로 다크 테마로 바뀐다.
+
+   적용 방식: <html data-theme="dark-command">일 때만 아래가 켜진다
+   (src/app/layout.tsx의 인라인 스크립트 + theme-switcher.tsx 참고).
+   로그인/인쇄 라우트는 이 파일 자체를 안 불러오니 원래부터 영향 없다. */
+:root[data-theme="dark-command"] {
+  --erp-primary: #4f46e5;
+  --erp-primary-dark: #4338ca;
+  --erp-on-primary: #ffffff;
+  --erp-border: #334155;
+  --erp-border-strong: #1e293b;
+  --erp-hover: #1e2941;
+  --erp-selected: #312e81;
+  --erp-select-accent: #818cf8;
+  --erp-success: #34d399;
+  --erp-warning: #fbbf24;
+  --erp-danger: #f87171;
+  --erp-success-bg: rgba(16, 185, 129, 0.14);
+  --erp-success-border: rgba(16, 185, 129, 0.35);
+  --erp-warning-bg: rgba(245, 158, 11, 0.14);
+  --erp-warning-border: rgba(245, 158, 11, 0.35);
+  --erp-led-bg: #7f1d1d;
+  --erp-led-text: #fde047;
+  --erp-danger-bg: rgba(248, 113, 113, 0.14);
+  --erp-danger-border: rgba(248, 113, 113, 0.35);
+  --erp-info-bg: rgba(99, 102, 241, 0.16);
+  --erp-info-border: rgba(99, 102, 241, 0.35);
+  --erp-info-text: #c7d2fe;
+  --erp-highlight-bg: rgba(250, 204, 21, 0.22);
+  --erp-text: #e2e8f0;
+  --erp-text-muted: #94a3b8;
+  --erp-text-disabled: #475569;
+  --erp-icon-muted: #64748b;
+  --erp-glyph-muted: #475569;
+  --erp-tree-badge-border: #334155;
+  --erp-tabbar-bg: #1e293b;
+  --erp-tab-bg: #273449;
+  --erp-search-hit-bg: rgba(250, 204, 21, 0.32);
+  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.12);
+  --erp-dialog-overlay-bg: rgba(2, 6, 23, 0.7);
+  --erp-bg: #0f172a;
+  --erp-panel: #1e293b;
+  --erp-bg-subtle: #16213a;
+  --erp-divider: #273449;
+  --erp-grid-line: #334155;
+  --erp-grid-header-bg: #24324a;
+  --erp-bg-disabled: #1a2436;
+  --erp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px -3px rgba(0, 0, 0, 0.4);
+  --erp-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35), 0 12px 28px -10px rgba(0, 0, 0, 0.5);
+  --erp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45), 0 16px 40px -12px rgba(0, 0, 0, 0.55);
+  --erp-comm-border: rgba(148, 163, 184, 0.14);
+  --erp-comm-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 10px 24px -16px rgba(0, 0, 0, 0.5);
+  --erp-comm-shadow-row: 0 1px 1px rgba(0, 0, 0, 0.2), 0 6px 16px -10px rgba(0, 0, 0, 0.5);
+  --erp-comm-shadow-btn: 0 2px 8px -3px rgba(79, 70, 229, 0.5);
+}
+
+/* 타이틀바 — 목업의 관제탑 그라디언트(slate-900 → indigo-950 →
+   slate-900)를 그대로 재현한다. flat color 토큰(--erp-primary) 하나로는
+   이 그라디언트가 안 나와서 여기만 별도로 얹는다. */
+[data-theme="dark-command"] .erp-titlebar {
+  background: linear-gradient(to right, #0f172a, #1e1b4b, #0f172a);
+}
+
+/* 목업은 전체적으로 큰 라운드 코너(카드 rounded-2xl, 버튼/입력
+   rounded-xl)를 쓴다 — 이 디자인 시스템은 모서리 반경을 토큰이 아니라
+   화면마다 Tailwind 유틸리티 클래스(rounded-sm 등)로 직접 쓰고 있어서,
+   그 클래스 자체를 다크 테마 스코프 안에서 덮어쓴다(컴포넌트 JSX는
+   하나도 안 건드림 — 선택자 특이도만으로 기존 규칙을 이긴다). */
+[data-theme="dark-command"] .rounded-sm {
+  border-radius: 10px;
+}
+[data-theme="dark-command"] .erp-detail,
+[data-theme="dark-command"] .erp-btn,
+[data-theme="dark-command"] .erp-input,
+[data-theme="dark-command"] .erp-select,
+[data-theme="dark-command"] .erp-textarea,
+[data-theme="dark-command"] .erp-card,
+[data-theme="dark-command"] .erp-modal-panel {
+  border-radius: 12px;
+}
+/* 좌측 트리메뉴/카테고리 사이드바 — 목업처럼 패널과 살짝 다른 톤으로
+   분리되게. */
+[data-theme="dark-command"] .erp-tree,
+[data-theme="dark-command"] .erp-cat-sidebar {
+  background: var(--erp-panel);
+}

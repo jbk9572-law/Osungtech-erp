@@ -1220,6 +1220,8 @@ export type Database = {
           monthly_email_quota: number;
           monthly_alimtalk_quota: number;
           custom_domain_mail: boolean;
+          is_platform_operator: boolean;
+          is_sandbox: boolean;
         };
         Insert: {
           id?: string;
@@ -1243,6 +1245,8 @@ export type Database = {
           monthly_email_quota?: number;
           monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
+          is_platform_operator?: boolean;
+          is_sandbox?: boolean;
         };
         Update: {
           id?: string;
@@ -1266,6 +1270,8 @@ export type Database = {
           monthly_email_quota?: number;
           monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
+          is_platform_operator?: boolean;
+          is_sandbox?: boolean;
         };
         Relationships: [];
       };
@@ -4310,6 +4316,66 @@ export type Database = {
           },
         ];
       };
+      failure_logs: {
+        Row: {
+          id: string;
+          code: string;
+          message_ko: string;
+          action: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          detail: string | null;
+          context: Json | null;
+          actor: string | null;
+          created_at: string;
+          is_demo: boolean;
+          tenant_id: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          message_ko: string;
+          action: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          detail?: string | null;
+          context?: Json | null;
+          actor?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          message_ko?: string;
+          action?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          detail?: string | null;
+          context?: Json | null;
+          actor?: string | null;
+          created_at?: string;
+          is_demo?: boolean;
+          tenant_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "failure_logs_actor_fkey";
+            columns: ["actor"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "failure_logs_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       purchase_received_invoices: {
         Row: {
           id: string;
@@ -6204,6 +6270,26 @@ export type Database = {
         Args: Record<string, never>;
         Returns: boolean;
       };
+      delete_tenant_hard: {
+        Args: { p_tenant_id: string };
+        Returns: void;
+      };
+      is_sandbox_tenant: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      set_tenant_sandbox: {
+        Args: { p_tenant_id: string; p_is_sandbox: boolean };
+        Returns: void;
+      };
+      sandbox_reset: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
+      sandbox_seed: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
       reply_support_ticket: {
         Args: { p_id: string; p_reply: string; p_status?: string };
         Returns: undefined;
@@ -6215,6 +6301,20 @@ export type Database = {
           tenant_name: string | null;
           table_name: string;
           action: string;
+          actor_name: string | null;
+          created_at: string;
+        }[];
+      };
+      get_cross_tenant_failure_log: {
+        Args: { p_limit?: number };
+        Returns: {
+          id: string;
+          tenant_name: string | null;
+          code: string;
+          message_ko: string;
+          action: string;
+          entity_type: string | null;
+          detail: string | null;
           actor_name: string | null;
           created_at: string;
         }[];

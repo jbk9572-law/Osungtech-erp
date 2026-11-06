@@ -27,6 +27,10 @@ const SRC_ROOT = path.join(__dirname, "..", "src");
 const FILE_ALLOWLIST = new Set([
   "src/components/erp/rich-text-view.tsx",
   "src/components/qr-label-card.tsx",
+  // 테마(라이트/다크) 선택을 첫 페인트 전에 반영하는 인라인 스크립트 —
+  // 고정 문자열이고 사용자 입력/저장된 서버 데이터가 전혀 들어가지
+  // 않는다(theme-switcher.tsx 참고).
+  "src/app/layout.tsx",
 ]);
 
 function walkDir(dir, out = []) {

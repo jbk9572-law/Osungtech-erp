@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { portalLogout } from "@/app/portal/login/actions";
@@ -13,7 +14,13 @@ export default async function PortalAppLayout({ children }: { children: React.Re
   const supabase = await createClient();
   const { data: userRes } = await supabase.auth.getUser();
   if (!userRes.user) {
-    redirect(await portalHref("/login"));
+    // 중복 로그인 방지(portalLogin의 signOut({scope:"others"}))로 이
+    // 세션이 강제 종료됐을 수 있다 — 이 요청에 인증 쿠키가 있었는데도
+    // (즉 한 번은 로그인한 적이 있는데도) 세션이 무효면, 그냥 미로그인이
+    // 아니라 "다른 곳에서 로그인됐을 수 있다"는 이유를 알려준다.
+    const cookieStore = await cookies();
+    const hadAuthCookie = cookieStore.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+    redirect(await portalHref(hadAuthCookie ? "/login?notice=other_session" : "/login"));
   }
 
   const { data: identity, error: identityError } = await supabase.rpc("portal_identity");

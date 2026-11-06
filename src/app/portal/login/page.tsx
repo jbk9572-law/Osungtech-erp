@@ -1,11 +1,21 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { portalLogin } from "./actions";
 import { PageGuide } from "@/components/erp/page-guide";
 
 export default function PortalLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <PortalLoginForm />
+    </Suspense>
+  );
+}
+
+function PortalLoginForm() {
   const [state, formAction, pending] = useActionState(portalLogin, undefined);
+  const otherSessionNotice = useSearchParams().get("notice") === "other_session";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--erp-bg)] px-4">
@@ -25,6 +35,11 @@ export default function PortalLoginPage() {
             <label htmlFor="portal-password">비밀번호</label>
             <input id="portal-password" name="password" type="password" autoComplete="current-password" required className="erp-input" style={{ width: "100%" }} />
           </div>
+          {otherSessionNotice && (
+            <p className="rounded-sm bg-[var(--erp-info-bg)] px-3 py-2 text-xs font-medium text-[var(--erp-info-text)]">
+              다른 곳에서 로그인되어 자동으로 로그아웃되었습니다. 본인이 아니라면 비밀번호를 변경해주세요.
+            </p>
+          )}
           {state?.error && (
             <p className="rounded-sm bg-[var(--erp-danger-bg)] px-3 py-2 text-xs font-medium text-[var(--erp-danger)]">
               {state.error}

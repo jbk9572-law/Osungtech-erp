@@ -31,6 +31,7 @@ function LoginForm() {
   const next = searchParams.get("next");
   const signupCompanyCode = searchParams.get("signupCompanyCode");
   const signupUsername = searchParams.get("signupUsername");
+  const otherSessionNotice = searchParams.get("notice") === "other_session";
   const [state, formAction, pending] = useActionState(login, undefined);
   const pendingMessage = useRotatingMessages(LOGIN_PENDING_MESSAGES, pending);
   const [showPassword, setShowPassword] = useState(false);
@@ -97,6 +98,11 @@ function LoginForm() {
             {(signupCompanyCode || signupUsername) && (
               <p className="rounded-sm bg-[var(--erp-success-bg)] px-3 py-2 text-xs font-medium text-[var(--erp-success)]">
                 가입이 완료되었습니다. 아래 정보로 로그인해주세요.
+              </p>
+            )}
+            {otherSessionNotice && (
+              <p className="rounded-sm bg-[var(--erp-info-bg)] px-3 py-2 text-xs font-medium text-[var(--erp-info-text)]">
+                다른 곳에서 로그인되어 자동으로 로그아웃되었습니다. 본인이 아니라면 비밀번호를 변경해주세요.
               </p>
             )}
             <div>

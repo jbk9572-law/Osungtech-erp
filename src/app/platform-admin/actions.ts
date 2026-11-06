@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
@@ -234,6 +235,43 @@ export async function toggleTenantActive(_prevState: FormState, formData: FormDa
   revalidatePath("/platform-admin");
   revalidatePath(`/platform-admin/${tenantId}`);
   return { success: nextDisabled ? "비활성화했습니다." : "다시 활성화했습니다." };
+}
+
+// 회사(테넌트)를 영구 삭제한다 — 되돌릴 수 없음. 실제 안전장치(플랫폼
+// 운영 주체/본인 소속 테넌트 차단 등)는 delete_tenant_hard() RPC
+// 안에서 전부 처리한다(migration 211 참고) — 여기서는 로그인 여부만
+// 확인하고 그대로 넘긴다.
+export async function deleteTenant(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin, supabase } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 삭제할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  if (!tenantId) return { error: "잘못된 요청입니다." };
+
+  const { error } = await supabase.rpc("delete_tenant_hard", { p_tenant_id: tenantId });
+  if (error) return { error: `삭제에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  redirect("/platform-admin");
+}
+
+// 테스트 샌드박스로 지정/해제한다 — 실제 안전장치(리셋/시드가 이
+// 플래그를 보고 샌드박스 테넌트에서만 동작)는 is_sandbox_tenant()/
+// sandbox_reset()/sandbox_seed() RPC 안에서 처리한다(migration 212).
+export async function setTenantSandbox(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin, supabase } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const nextIsSandbox = formData.get("isSandbox") === "true";
+  if (!tenantId) return { error: "잘못된 요청입니다." };
+
+  const { error } = await supabase.rpc("set_tenant_sandbox", { p_tenant_id: tenantId, p_is_sandbox: nextIsSandbox });
+  if (error) return { error: `변경에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: nextIsSandbox ? "샌드박스로 지정했습니다." : "샌드박스 지정을 해제했습니다." };
 }
 
 const PLANS = ["trial", "active", "suspended"] as const;

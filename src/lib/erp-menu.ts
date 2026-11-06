@@ -217,6 +217,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "조직도 관리", href: "/settings/departments", adminOnly: true },
       { label: "전결권 관리", href: "/settings/delegations" },
       { label: "전자서명 등록", href: "/settings/signature" },
+      { label: "화면 테마", href: "/settings/theme" },
       { label: "메일 계정 연동", href: "/settings/mail" },
       { label: "기능 관리", href: "/settings/features", adminOnly: true },
       { label: "화면별 부서 접근 권한", href: "/settings/page-access", adminOnly: true },
@@ -226,6 +227,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "권한관리", href: "/settings/users", adminOnly: true },
       { label: "백업/복원", href: "/settings/backup", adminOnly: true },
       { label: "변경 이력", href: "/settings/audit-log", adminOnly: true },
+      { label: "샌드박스 도구", href: "/settings/sandbox", adminOnly: true },
     ],
   },
 ];

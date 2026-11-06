@@ -16,6 +16,8 @@ import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { applyOrderLocationStock, reverseOrderLocationStock, parseAllocationChoices } from "@/lib/location-stock-sync";
+import { logOperationFailure } from "@/lib/log-operation-failure";
+import { classifyOrderDeleteError } from "@/lib/classify-order-delete-error";
 
 type SaleItemInput = {
   productId: string;
@@ -356,6 +358,14 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
   });
 
   if (error) {
+    await logOperationFailure(supabase, {
+      code: classifyOrderDeleteError("sale", error.message),
+      messageKo: error.message,
+      action: "sale_delete",
+      entityType: "sales_order",
+      entityId: id,
+      detail: error.message,
+    });
     return { error: `삭제에 실패했습니다: ${error.message}` };
   }
 
@@ -393,6 +403,22 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
     ids.map((id) => supabase.rpc("delete_sale_with_items", { p_id: id, p_deleted_by: user?.id ?? null }))
   );
   const failCount = results.filter((r) => r.error).length;
+
+  await Promise.all(
+    results
+      .map((r, i) => ({ r, id: ids[i] }))
+      .filter(({ r }) => r.error)
+      .map(({ r, id }) =>
+        logOperationFailure(supabase, {
+          code: classifyOrderDeleteError("sale", r.error!.message),
+          messageKo: r.error!.message,
+          action: "sale_delete_bulk",
+          entityType: "sales_order",
+          entityId: id,
+          detail: r.error!.message,
+        }),
+      ),
+  );
 
   await Promise.all(
     ids
