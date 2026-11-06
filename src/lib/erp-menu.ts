@@ -227,6 +227,7 @@ export const MENU_GROUPS: MenuGroup[] = [
       { label: "권한관리", href: "/settings/users", adminOnly: true },
       { label: "백업/복원", href: "/settings/backup", adminOnly: true },
       { label: "변경 이력", href: "/settings/audit-log", adminOnly: true },
+      { label: "샌드박스 도구", href: "/settings/sandbox", adminOnly: true },
     ],
   },
 ];

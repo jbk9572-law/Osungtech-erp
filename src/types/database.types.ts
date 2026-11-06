@@ -1221,6 +1221,7 @@ export type Database = {
           monthly_alimtalk_quota: number;
           custom_domain_mail: boolean;
           is_platform_operator: boolean;
+          is_sandbox: boolean;
         };
         Insert: {
           id?: string;
@@ -1245,6 +1246,7 @@ export type Database = {
           monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
           is_platform_operator?: boolean;
+          is_sandbox?: boolean;
         };
         Update: {
           id?: string;
@@ -1269,6 +1271,7 @@ export type Database = {
           monthly_alimtalk_quota?: number;
           custom_domain_mail?: boolean;
           is_platform_operator?: boolean;
+          is_sandbox?: boolean;
         };
         Relationships: [];
       };
@@ -6269,6 +6272,22 @@ export type Database = {
       };
       delete_tenant_hard: {
         Args: { p_tenant_id: string };
+        Returns: void;
+      };
+      is_sandbox_tenant: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      set_tenant_sandbox: {
+        Args: { p_tenant_id: string; p_is_sandbox: boolean };
+        Returns: void;
+      };
+      sandbox_reset: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
+      sandbox_seed: {
+        Args: Record<string, never>;
         Returns: void;
       };
       reply_support_ticket: {

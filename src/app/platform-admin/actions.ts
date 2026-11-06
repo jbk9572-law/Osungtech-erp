@@ -255,6 +255,25 @@ export async function deleteTenant(_prevState: FormState, formData: FormData): P
   redirect("/platform-admin");
 }
 
+// 테스트 샌드박스로 지정/해제한다 — 실제 안전장치(리셋/시드가 이
+// 플래그를 보고 샌드박스 테넌트에서만 동작)는 is_sandbox_tenant()/
+// sandbox_reset()/sandbox_seed() RPC 안에서 처리한다(migration 212).
+export async function setTenantSandbox(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin, supabase } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const nextIsSandbox = formData.get("isSandbox") === "true";
+  if (!tenantId) return { error: "잘못된 요청입니다." };
+
+  const { error } = await supabase.rpc("set_tenant_sandbox", { p_tenant_id: tenantId, p_is_sandbox: nextIsSandbox });
+  if (error) return { error: `변경에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin");
+  revalidatePath(`/platform-admin/${tenantId}`);
+  return { success: nextIsSandbox ? "샌드박스로 지정했습니다." : "샌드박스 지정을 해제했습니다." };
+}
+
 const PLANS = ["trial", "active", "suspended"] as const;
 
 // 요금제 상태 변경. 실제 결제 연동은 없고, 지금은 운영자가 수동으로

@@ -30,7 +30,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
     admin
       .from("tenants")
       .select(
-        "id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance, db_quota_bytes, file_quota_bytes, vendor_limit, monthly_email_quota, monthly_fax_quota, monthly_tax_invoice_quota, monthly_alimtalk_quota, custom_domain_mail, is_platform_operator",
+        "id, name, slug, created_at, disabled_at, plan, plan_key, plan_started_at, plan_expires_at, points_balance, db_quota_bytes, file_quota_bytes, vendor_limit, monthly_email_quota, monthly_fax_quota, monthly_tax_invoice_quota, monthly_alimtalk_quota, custom_domain_mail, is_platform_operator, is_sandbox",
       )
       .eq("id", tenantId)
       .maybeSingle(),
@@ -155,6 +155,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
             plans={plans ?? []}
             planStartedAt={tenant.plan_started_at}
             planExpiresAt={tenant.plan_expires_at}
+            isSandbox={tenant.is_sandbox}
           />
         </div>
       </div>

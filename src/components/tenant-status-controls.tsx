@@ -7,9 +7,11 @@ import {
   updateTenantPlanKey,
   updateTenantPlanPeriod,
   applyPlanDefaultsToTenant,
+  setTenantSandbox,
 } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { isPlanExpired } from "@/lib/tenant-plan";
+import { PageGuide } from "@/components/erp/page-guide";
 
 const PLAN_LABELS: Record<string, string> = {
   trial: "체험",
@@ -31,6 +33,7 @@ export function TenantStatusControls({
   plans,
   planStartedAt,
   planExpiresAt,
+  isSandbox,
 }: {
   tenantId: string;
   disabled: boolean;
@@ -39,12 +42,14 @@ export function TenantStatusControls({
   plans: { plan_key: string; name: string }[];
   planStartedAt: string | null;
   planExpiresAt: string | null;
+  isSandbox: boolean;
 }) {
   const [toggleState, toggleAction, togglePending] = useActionState(toggleTenantActive, undefined);
   const [planState, planAction, planPending] = useActionState(updateTenantPlan, undefined);
   const [planKeyState, planKeyAction, planKeyPending] = useActionState(updateTenantPlanKey, undefined);
   const [periodState, periodAction, periodPending] = useActionState(updateTenantPlanPeriod, undefined);
   const [applyState, applyAction, applyPending] = useActionState(applyPlanDefaultsToTenant, undefined);
+  const [sandboxState, sandboxAction, sandboxPending] = useActionState(setTenantSandbox, undefined);
 
   const isExpired = isPlanExpired(planExpiresAt);
 
@@ -158,6 +163,25 @@ export function TenantStatusControls({
           </span>
         </form>
         <FormMessage state={toggleState} />
+      </div>
+
+      <div className="erp-field">
+        <label>테스트 샌드박스</label>
+        <form action={sandboxAction} className="flex items-center gap-2">
+          <input type="hidden" name="tenantId" value={tenantId} />
+          <input type="hidden" name="isSandbox" value={isSandbox ? "false" : "true"} />
+          <button type="submit" disabled={sandboxPending} className="erp-btn">
+            {sandboxPending ? "처리 중..." : isSandbox ? "샌드박스 지정 해제" : "샌드박스로 지정"}
+          </button>
+          <span className={`erp-badge ${isSandbox ? "erp-badge-info" : "erp-badge-muted"}`}>
+            {isSandbox ? "샌드박스" : "일반"}
+          </span>
+        </form>
+        <PageGuide className="mt-1 mb-0">
+          샌드박스로 지정하면 그 테넌트에 로그인한 관리자가 환경설정 &gt; 샌드박스 도구에서 데이터를 원클릭
+          초기화/더미 생성할 수 있습니다.
+        </PageGuide>
+        <FormMessage state={sandboxState} />
       </div>
     </div>
   );

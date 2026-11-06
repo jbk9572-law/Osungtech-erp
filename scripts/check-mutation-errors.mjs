@@ -48,6 +48,11 @@ const ALLOWLIST = new Set([
   // 자체라, 이 insert가 또 실패해도(이미 try/catch로 감싸 조용히
   // 무시) 원래 하던 작업(에러 메시지 반환)을 막으면 안 된다.
   "src/lib/log-operation-failure.ts:23",
+  // is_sandbox_tenant() 읽기 전용 조회 — 실패하면 data가 그냥
+  // undefined/null이 되어 "샌드박스 아님"(위험한 도구 숨김) 쪽으로
+  // fail-closed된다. 에러를 따로 확인 안 해도 안전한 방향으로만
+  // 빗나간다.
+  "src/app/(dashboard)/settings/sandbox/page.tsx:17",
 ]);
 
 function walkDir(dir, out = []) {
