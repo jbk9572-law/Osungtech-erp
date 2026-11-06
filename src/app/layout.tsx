@@ -60,19 +60,6 @@ export default function RootLayout({
       lang="ko"
       className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        {/* 테마(라이트/다크 관제탑) 선택을 localStorage에 저장해두고
-            (theme-switcher.tsx) 첫 페인트 전에 <html>에 data-theme으로
-            반영한다 — CSS 파일이 로드된 뒤 React가 켜져서 속성을 붙이면
-            그 짧은 사이에 라이트 화면이 먼저 번쩍이고(FOUC) 다크로
-            바뀌는게 보인다. 저장된 값이 없거나 읽기 자체가 실패해도
-            (프라이빗 모드 등) 조용히 기본값(라이트)로 남는다. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem("erp-theme");if(t==="dark-command")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col">
         <PwaRegister />
         <ChunkErrorReload />
