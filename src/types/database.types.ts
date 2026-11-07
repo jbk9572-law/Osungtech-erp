@@ -3017,6 +3017,7 @@ export type Database = {
           business_item: string | null;
           created_at: string;
           tenant_id: string;
+          is_demo: boolean;
         };
         Insert: {
           id?: string;
@@ -3036,6 +3037,7 @@ export type Database = {
           business_item?: string | null;
           created_at?: string;
           tenant_id?: string;
+          is_demo?: boolean;
         };
         Update: {
           id?: string;
@@ -3055,6 +3057,7 @@ export type Database = {
           business_item?: string | null;
           created_at?: string;
           tenant_id?: string;
+          is_demo?: boolean;
         };
         Relationships: [];
       };
@@ -5275,7 +5278,7 @@ export type Database = {
           id: string;
           tenant_id: string;
           is_demo: boolean;
-          alert_type: "low_stock" | "todo_due";
+          alert_type: "low_stock" | "todo_due" | "receivable_overdue";
           source_id: string;
           created_at: string;
         };
@@ -5283,7 +5286,7 @@ export type Database = {
           id?: string;
           tenant_id: string;
           is_demo: boolean;
-          alert_type: "low_stock" | "todo_due";
+          alert_type: "low_stock" | "todo_due" | "receivable_overdue";
           source_id: string;
           created_at?: string;
         };
@@ -5291,7 +5294,7 @@ export type Database = {
           id?: string;
           tenant_id?: string;
           is_demo?: boolean;
-          alert_type?: "low_stock" | "todo_due";
+          alert_type?: "low_stock" | "todo_due" | "receivable_overdue";
           source_id?: string;
           created_at?: string;
         };

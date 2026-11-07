@@ -35,7 +35,7 @@ type PartyPaymentRow = { id: string; paid_at: string; amount: string | number; m
 // 외주비처럼 반품 개념이 없는 쪽은 음수 전표가 없어 그대로 지금까지의
 // 동작과 동일하다. consumeOldestFirst처럼 제네릭으로 둬서, 외주비정산의
 // processName/workOrderId 같은 호출부별 추가 필드가 그대로 보존된다.
-function computePartyBalance<T extends { total: number; date: string }>(
+export function computePartyBalance<T extends { total: number; date: string }>(
   creditOrders: T[],
   payments: PartyPaymentRow[],
 ) {
