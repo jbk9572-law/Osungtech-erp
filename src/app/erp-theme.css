@@ -5214,3 +5214,10 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .erp-grid-wrap {
   border-radius: 14px;
 }
+
+/* 조회기간 빠른 필터 칩(오늘/어제/이번주/월별 — 매출/매입/재고이동 등
+   여러 화면이 공유하는 DateRangeQuickFilters)도 목업의 rounded-lg 필터
+   버튼처럼 둥글게. */
+[data-theme="modern"] .erp-date-preset-btn {
+  border-radius: 8px;
+}
