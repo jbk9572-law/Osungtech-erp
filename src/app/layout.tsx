@@ -60,22 +60,6 @@ export default function RootLayout({
       lang="ko"
       className={`${pretendard.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        {/* 테마(라이트/모던) 선택을 localStorage에 저장해두고(스위치 자체는
-            플랫폼관리자 > 환경설정에만 있다 — platform-admin-theme-switcher.tsx)
-            첫 페인트 전에 <html>에 data-theme으로 반영한다 — CSS 파일이
-            로드된 뒤 React가 켜져서 속성을 붙이면 그 짧은 사이에 기본
-            화면이 먼저 번쩍이고(FOUC) 모던으로 바뀌는 게 보인다. 저장된
-            값이 없거나 읽기 자체가 실패해도(프라이빗 모드 등) 조용히
-            기본값(라이트)로 남는다. 메신저/매입/매출 등 erp-theme.css를
-            불러오는 모든 화면에 공통으로 적용된다(dashboard/platform-admin/
-            portal 레이아웃이 각자 그 CSS를 불러옴). */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem("erp-theme");if(t==="modern")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col">
         <PwaRegister />
         <ChunkErrorReload />

@@ -1222,6 +1222,7 @@ export type Database = {
           custom_domain_mail: boolean;
           is_platform_operator: boolean;
           is_sandbox: boolean;
+          theme: string;
         };
         Insert: {
           id?: string;
@@ -1247,6 +1248,7 @@ export type Database = {
           custom_domain_mail?: boolean;
           is_platform_operator?: boolean;
           is_sandbox?: boolean;
+          theme?: string;
         };
         Update: {
           id?: string;
@@ -1272,6 +1274,7 @@ export type Database = {
           custom_domain_mail?: boolean;
           is_platform_operator?: boolean;
           is_sandbox?: boolean;
+          theme?: string;
         };
         Relationships: [];
       };
@@ -6341,7 +6344,12 @@ export type Database = {
           disabled_at: string | null;
           plan: string;
           plan_expires_at: string | null;
+          theme: string;
         }[];
+      };
+      set_tenant_theme: {
+        Args: { p_tenant_id: string; p_theme: string };
+        Returns: void;
       };
       get_price_change_history: {
         Args: { p_table_name: string; p_record_id: string };

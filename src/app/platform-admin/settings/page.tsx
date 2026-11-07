@@ -4,7 +4,7 @@ import { ListPageHeader } from "@/components/erp/page-header";
 import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
 import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
-import { PlatformAdminThemeSwitcher } from "@/components/platform-admin-theme-switcher";
+import { TenantThemeForm } from "@/components/tenant-theme-form";
 import { setPlatformDefaultFeatureEnabled } from "@/app/platform-admin/settings/actions";
 import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS } from "@/lib/erp-menu";
 
@@ -17,6 +17,11 @@ export default async function PlatformSettingsPage() {
     .eq("id", true)
     .maybeSingle();
   const defaultDisabledFeatures = settings?.default_disabled_features ?? [];
+
+  const { data: tenantRows } = await supabase.rpc("get_platform_tenant_list");
+  const tenants = (tenantRows ?? [])
+    .map((t) => ({ id: t.id, name: t.name, theme: t.theme }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
   return (
     <div>
@@ -53,10 +58,10 @@ export default async function PlatformSettingsPage() {
         </div>
         <div className="erp-detail-body">
           <PageGuide className="mb-2">
-            지금 로그인한 이 브라우저에서 보는 화면 전체(대시보드/매입/매출/메신저/게시판 등)에 적용됩니다.
-            이 브라우저에만 저장되므로 다른 기기/브라우저에서는 다시 선택해야 합니다.
+            회사(테넌트)를 고르고 테마를 선택한 뒤 적용을 누르면, 그 회사 직원이 보는 화면 전체(대시보드/
+            매입/매출/메신저/게시판 등)에 바로 반영됩니다 — 회사마다 다른 테마를 줄 수 있습니다.
           </PageGuide>
-          <PlatformAdminThemeSwitcher />
+          <TenantThemeForm tenants={tenants} />
         </div>
       </div>
 
