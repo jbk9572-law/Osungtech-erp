@@ -5270,3 +5270,16 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .erp-cat-item {
   border-radius: 8px;
 }
+
+/* 등록/수정 모달(.erp-modal — 전체 화면 생성 폼용 모달 수십 개가 공유)도
+   목업의 둥근 흰 박스 느낌으로. 위쪽 브랜드색 포인트 라인(border-top)은
+   .erp-doc-paper와 같은 이유로 그대로 두되(여러 모달이 "하나의 통일된
+   틀"처럼 보이게 하는 장치), 모서리만 둥글린다. .erp-modal-window-close
+   (닫기 버튼)가 모달 모서리 바깥으로 살짝 걸치게 음수 offset(top/right:
+   -14px)으로 배치돼 있어서, .erp-doc-header처럼 overflow: hidden을
+   같이 주면 그 닫기 버튼이 잘려 보인다 — 그래서 여기서는 radius만
+   준다. 이미 덮여 있는 .erp-modal-panel(작은 확인창)과는 다른 클래스라
+   별도로 추가. */
+[data-theme="modern"] .erp-modal {
+  border-radius: 16px;
+}
