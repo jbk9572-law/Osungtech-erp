@@ -5205,3 +5205,12 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .erp-hero-card {
   border-left-color: transparent;
 }
+
+/* 모바일 카드뷰 행(.erp-row-card — 표가 좁은 화면에서 카드로 바뀔 때
+   쓰는 공용 행, 거의 모든 목록 화면이 재사용)과 표 바깥 테두리
+   (.erp-grid-wrap)도 같은 둥근 카드 언어로 맞춘다. 목업의 "품목
+   테이블" 영역도 rounded-xl 흰 박스 안에 들어 있다. */
+[data-theme="modern"] .erp-row-card,
+[data-theme="modern"] .erp-grid-wrap {
+  border-radius: 14px;
+}
