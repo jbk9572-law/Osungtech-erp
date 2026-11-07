@@ -5235,3 +5235,19 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .erp-split-list-row.active {
   box-shadow: none;
 }
+
+/* 매출/매입/견적서/세금계산서/지급결의서 등 8개 화면이 공유하는
+   "전표 용지" 문서형 폼(.erp-doc-sheet 계열)도 목업의 둥근 흰 박스
+   느낌으로 맞춘다. 윗줄 두꺼운 포인트 라인(border-top)은 그대로
+   두되(한국 사무서식의 "결재란 윗줄" 관례라 완전히 없애지 않음),
+   모서리만 둥글리고 그림자를 더 부드럽게 — 문서 안의 라벨/값 2열
+   표(.erp-doc-header)도 같이 둥글린다. 라벨 칸 글자색은 이미
+   --erp-primary(인디고)를 상속해 자동으로 맞는다. */
+[data-theme="modern"] .erp-doc-paper {
+  border-radius: 16px;
+  box-shadow: var(--erp-shadow-sm);
+}
+[data-theme="modern"] .erp-doc-header {
+  border-radius: 10px;
+  overflow: hidden;
+}
