@@ -5164,6 +5164,7 @@ export type Database = {
           file_path: string | null;
           file_name: string | null;
           file_size: number | null;
+          erp_ref: Json | null;
           created_at: string;
         };
         Insert: {
@@ -5175,6 +5176,7 @@ export type Database = {
           file_path?: string | null;
           file_name?: string | null;
           file_size?: number | null;
+          erp_ref?: Json | null;
           created_at?: string;
         };
         Update: {
@@ -5186,6 +5188,7 @@ export type Database = {
           file_path?: string | null;
           file_name?: string | null;
           file_size?: number | null;
+          erp_ref?: Json | null;
           created_at?: string;
         };
         Relationships: [

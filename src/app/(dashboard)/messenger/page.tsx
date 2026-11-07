@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { safeQuery } from "@/lib/safe-query";
 import { isFeatureEnabled } from "@/lib/require-feature-enabled";
 import { MessengerPage } from "@/components/erp/messenger-page";
-import type { MessengerChannel } from "@/lib/messenger-types";
+import type { MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
+import type { Json } from "@/types/database.types";
 
 // 예전엔 우측하단에 항상 떠 있는 팝업 위젯이었는데(모든 화면 전역),
 // 이제 그룹웨어 > 메신저로 찾아 들어오는 일반 페이지다 — 다른
@@ -52,12 +53,13 @@ export default async function MessengerPageRoute() {
             file_path: string | null;
             file_name: string | null;
             file_size: number | null;
+            erp_ref: Json | null;
             created_at: string;
           }[]
         >(
           supabase
             .from("messenger_messages")
-            .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
+            .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, erp_ref, created_at")
             .eq("channel_id", allChannelId)
             // 최신 100건을 가져온 뒤(내림차순), 화면에는 예전 메시지가 위로
             // 오는 순서로 보여줘야 하므로 다시 뒤집는다.
@@ -85,7 +87,10 @@ export default async function MessengerPageRoute() {
     <MessengerPage
       channels={channels}
       activeChannelId={allChannelId ?? channels[0]?.id ?? null}
-      initialMessages={(messages ?? []).slice().reverse()}
+      initialMessages={(messages ?? [])
+        .slice()
+        .reverse()
+        .map((m) => ({ ...m, erp_ref: m.erp_ref as MessengerErpRef | null }))}
       profileNames={profileNames}
       currentUserId={user.id}
       isAdmin={isAdmin}

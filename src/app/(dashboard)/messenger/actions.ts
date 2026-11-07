@@ -4,9 +4,157 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import { sanitizeUploadContentType } from "@/lib/upload-safety";
 import { notify } from "@/lib/notify";
 import { uploadAttachment, deleteAttachment, getAttachmentDownloadUrl } from "@/lib/storage/upload-attachment";
-import type { MessengerMessage } from "@/lib/messenger-types";
+import type { MessengerMessage, MessengerErpRef } from "@/lib/messenger-types";
+import { formatNumber } from "@/lib/format-number";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
+type Supa = Awaited<ReturnType<typeof createClient>>;
+
+// "ERP 연동 메시지" — /매출전표, /재고조회, /게시판공지, /일정마감으로
+// 시작하는 메시지를 보내면, 그 명령어가 가리키는 실제 전표/재고/공지/
+// 영업활동 데이터를 조회해서 메시지 안에 카드로 박아 넣는다(사용자가
+// 올린 메신저 목업 — "[ERP 연동 전표] 매출 출고 확정 건" 카드 참고).
+// 전부 로그인한 사용자의 일반 Supabase 클라이언트로만 조회하므로(관리자
+// 클라이언트 아님) 테넌트 격리(RLS)가 평소 화면 조회와 똑같이 적용된다
+// — 메신저로 남의 테넌트 전표를 엿볼 수 없다.
+//
+// 못 찾으면(전표번호 오타, 없는 품목명 등) 에러로 막지 않고 조용히
+// erp_ref 없이 평범한 텍스트 메시지로 보낸다 — 채팅은 끊김 없이 되는
+// 게 우선이고, 카드가 안 뜨는 것 자체가 "그런 건 못 찾았다"는 신호다.
+const ERP_COMMANDS = ["/매출전표", "/재고조회", "/게시판공지", "/일정마감"] as const;
+
+async function buildErpRef(supabase: Supa, content: string): Promise<MessengerErpRef | null> {
+  const trimmed = content.trim();
+  const command = ERP_COMMANDS.find((c) => trimmed === c || trimmed.startsWith(`${c} `));
+  if (!command) return null;
+  const arg = trimmed.slice(command.length).trim();
+
+  switch (command) {
+    case "/매출전표":
+      return buildSaleRef(supabase, arg);
+    case "/재고조회":
+      return buildInventoryRef(supabase, arg);
+    case "/게시판공지":
+      return buildAnnouncementRef(supabase, arg);
+    case "/일정마감":
+      return buildFollowupRef(supabase, arg);
+  }
+}
+
+async function buildSaleRef(supabase: Supa, arg: string): Promise<MessengerErpRef | null> {
+  const docNo = Number(arg);
+  if (!arg || !Number.isFinite(docNo)) return null;
+
+  const { data: sale } = await supabase
+    .from("sales_orders")
+    .select("id, doc_no, customers(name)")
+    .eq("doc_no", docNo)
+    .maybeSingle();
+  if (!sale) return null;
+
+  const { data: items } = await supabase
+    .from("sales_order_items")
+    .select("quantity, unit_price, custom_name, products(name)")
+    .eq("sales_order_id", sale.id);
+  const rows = items ?? [];
+  const total = rows.reduce((sum, it) => sum + it.quantity * it.unit_price, 0);
+  const firstName = rows[0]?.products?.name ?? rows[0]?.custom_name ?? "품목";
+  const itemSummary = rows.length > 1 ? `${firstName} 외 ${rows.length - 1}건` : firstName;
+
+  return {
+    kind: "sale",
+    title: `매출전표 #${sale.doc_no}`,
+    badge: `#${sale.doc_no}`,
+    lines: [
+      { label: "거래처", value: sale.customers?.name ?? "-" },
+      { label: "품목", value: rows.length ? itemSummary : "-" },
+      { label: "공급가액", value: `${formatNumber(total)}원` },
+    ],
+    href: `/sales/${sale.id}`,
+  };
+}
+
+async function buildInventoryRef(supabase: Supa, arg: string): Promise<MessengerErpRef | null> {
+  if (!arg) return null;
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("id, name, sku, unit, reorder_point")
+    .ilike("name", `%${arg}%`)
+    .limit(1)
+    .maybeSingle();
+  if (!product) return null;
+
+  const { data: invRows } = await supabase.from("inventory").select("quantity").eq("product_id", product.id);
+  const totalQty = (invRows ?? []).reduce((sum, r) => sum + r.quantity, 0);
+  const low = totalQty <= product.reorder_point;
+
+  return {
+    kind: "inventory",
+    title: `재고조회 - ${product.name}`,
+    badge: product.sku,
+    lines: [
+      { label: "현재고", value: `${formatNumber(totalQty)} ${product.unit}` },
+      { label: "안전재고", value: `${formatNumber(product.reorder_point)} ${product.unit}` },
+      { label: "상태", value: low ? "재고위험" : "정상" },
+    ],
+    href: `/inventory?q=${encodeURIComponent(product.name)}`,
+  };
+}
+
+async function buildAnnouncementRef(supabase: Supa, arg: string): Promise<MessengerErpRef | null> {
+  let query = supabase
+    .from("announcements")
+    .select("id, title, created_at, pinned")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (arg) query = query.ilike("title", `%${arg}%`);
+  const { data: ann } = await query.maybeSingle();
+  if (!ann) return null;
+
+  return {
+    kind: "announcement",
+    title: "공지사항",
+    badge: ann.pinned ? "고정" : undefined,
+    lines: [
+      { label: "제목", value: ann.title },
+      { label: "등록일", value: new Date(ann.created_at).toLocaleDateString("ko-KR") },
+    ],
+    href: `/announcements/${ann.id}`,
+  };
+}
+
+async function buildFollowupRef(supabase: Supa, arg: string): Promise<MessengerErpRef | null> {
+  let customerId: string | null = null;
+  if (arg) {
+    const { data: customer } = await supabase.from("customers").select("id").ilike("name", `%${arg}%`).limit(1).maybeSingle();
+    if (!customer) return null;
+    customerId = customer.id;
+  }
+
+  let query = supabase
+    .from("sales_activities")
+    .select("next_action_date, next_action_memo, customers(name)")
+    .eq("next_action_done", false)
+    .not("next_action_date", "is", null)
+    .order("next_action_date", { ascending: true })
+    .limit(1);
+  if (customerId) query = query.eq("customer_id", customerId);
+  const { data: activity } = await query.maybeSingle();
+  if (!activity || !activity.next_action_date) return null;
+
+  return {
+    kind: "followup",
+    title: "팔로우업 일정",
+    lines: [
+      { label: "거래처", value: activity.customers?.name ?? "-" },
+      { label: "예정일", value: new Date(activity.next_action_date).toLocaleDateString("ko-KR") },
+      { label: "메모", value: activity.next_action_memo ?? "-" },
+    ],
+    href: "/sales-activities",
+  };
+}
 
 export type SendMessageState =
   | { error?: string; success?: string; message?: MessengerMessage }
@@ -79,18 +227,26 @@ export async function sendMessage(
     fileSize = file.size;
   }
 
+  // 슬래시 명령어(/매출전표 등)면 실제 ERP 데이터를 카드로 조회해서
+  // erp_ref에 채우고, 그 경우 평문 content는 비워서(카드만 보이게)
+  // 보낸다 — 못 찾았으면(null) 원래 타이핑한 텍스트를 그대로 평범한
+  // 메시지로 보낸다.
+  const erpRef = await buildErpRef(supabase, content);
+  const storedContent = erpRef ? "" : content;
+
   const { data: inserted, error } = await supabase
     .from("messenger_messages")
     .insert({
       channel_id: channelId,
       sender_id: user.id,
-      content,
+      content: storedContent,
       file_url: fileUrl,
       file_path: filePath,
       file_name: fileName,
       file_size: fileSize,
+      erp_ref: erpRef,
     })
-    .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at")
+    .select("id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, erp_ref, created_at")
     .single();
 
   if (error || !inserted) {
@@ -98,9 +254,9 @@ export async function sendMessage(
     return { error: `전송에 실패했습니다.${error ? ` (${error.message})` : ""}` };
   }
 
-  await notifyChannelMembers(supabase, user.id, channelId, content, hasFile);
+  await notifyChannelMembers(supabase, user.id, channelId, erpRef ? erpRef.title : content, hasFile);
 
-  return { success: "전송했습니다.", message: inserted };
+  return { success: "전송했습니다.", message: inserted as unknown as MessengerMessage };
 }
 
 // DM/그룹방에만 알림을 보낸다 — "전체" 채널은 테넌트 전원이 참여자라
