@@ -83,8 +83,12 @@ $$;
 -- 뭔지"를 같이 보여주고 고를 수 있어야 하는데, tenants RLS 경로가
 -- 플랫폼 운영자에게도 전체를 안 보여주는 기존 결함(migration 199 주석
 -- 참고) 때문에 평범한 .from("tenants") 대신 이미 검증된 이 RPC를
--- 그대로 확장해서 쓴다.
-create or replace function public.get_platform_tenant_list()
+-- 그대로 확장해서 쓴다. Postgres는 CREATE OR REPLACE로 RETURNS TABLE의
+-- 컬럼 구성 자체를 바꾸는 건 허용하지 않아서(ERROR: cannot change
+-- return type of existing function — 실제 CI에서 이 에러로 막혔다),
+-- 새 컬럼을 추가하려면 먼저 DROP FUNCTION이 필요하다.
+drop function if exists public.get_platform_tenant_list();
+create function public.get_platform_tenant_list()
 returns table (
   id uuid,
   name text,
