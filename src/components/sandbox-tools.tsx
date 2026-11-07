@@ -16,8 +16,9 @@ export function SandboxTools() {
       <div className="erp-field">
         <label>더미 데이터 생성</label>
         <PageGuide className="mb-2">
-          창고 1곳, 매입처 5곳, 거래처 8곳, 품목 15개를 만들고, 최근 45일에 걸쳐 매입 15건·매출 30건을 랜덤하게
-          생성합니다 — 재고현황/FIFO 원가/매출·매입 목록이 실제 업무 화면처럼 채워집니다.
+          창고/부서/매입처/거래처/품목을 만들고, 매입 15건·매출 30건(+반품 3건)·수금 6건·공지사항 4건·사내메신저
+          대화·사원 계정 4명까지 한 번에 채웁니다 — 메뉴 대부분이 실제 업무 화면처럼 보입니다. 메일함은 실제
+          외부 이메일 계정 연동이 필요해 더미로 채울 수 없어 제외됩니다.
         </PageGuide>
         <form action={seedAction}>
           <button type="submit" disabled={seedPending} className="erp-btn erp-btn-primary">
