@@ -5221,3 +5221,17 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .erp-date-preset-btn {
   border-radius: 8px;
 }
+
+/* 분할뷰 목록 행(.erp-split-list-row — 결재선/게시판/견적서/거래처 등
+   20개 화면이 공유하는 좌측 목록 패턴)도 목업의 사이드바 메뉴 항목처럼
+   "줄마다 각진 구분선" 대신 "행마다 둥근 배경 칩"으로 바꾼다. 기존
+   active 표시(위아래 inset box-shadow 줄)는 목업에 없는 스타일이라
+   투명하게 끄고, 대신 은은한 배경색(--erp-selected)만 남긴다. */
+[data-theme="modern"] .erp-split-list-row {
+  margin: 2px 6px;
+  border-radius: 10px;
+  border-bottom-color: transparent;
+}
+[data-theme="modern"] .erp-split-list-row.active {
+  box-shadow: none;
+}
