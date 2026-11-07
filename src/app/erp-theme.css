@@ -5251,3 +5251,10 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 10px;
   overflow: hidden;
 }
+
+/* 열린 탭 바(.erp-tab — 거의 모든 화면 상단에 뜸)도 목업처럼 위쪽
+   모서리만 둥글린다(종이 탭 관례는 그대로 유지, border-top 포인트
+   색상도 이미 토큰으로 맞음). */
+[data-theme="modern"] .erp-tab {
+  border-radius: 8px 8px 0 0;
+}
