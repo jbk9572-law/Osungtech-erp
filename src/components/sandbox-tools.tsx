@@ -16,8 +16,11 @@ export function SandboxTools() {
       <div className="erp-field">
         <label>더미 데이터 생성</label>
         <PageGuide className="mb-2">
-          창고 1곳, 매입처 5곳, 거래처 8곳, 품목 15개를 만들고, 최근 45일에 걸쳐 매입 15건·매출 30건을 랜덤하게
-          생성합니다 — 재고현황/FIFO 원가/매출·매입 목록이 실제 업무 화면처럼 채워집니다.
+          창고 2곳/부서 4곳/매입처 15곳/거래처 20곳/품목 24개를 만들고, 매입 300건·매출 600건(+반품 60건,
+          이월·샘플·면세 등 포함)·수금 120건·공지사항 8건·사내메신저 대화·할일 5건·사원 계정 6명까지 한 번에
+          채웁니다. 재고위험/마이너스재고/선수금/대형 단일 거래 같은 엣지 케이스도 몇 건씩 섞어 넣어서 화면
+          구석구석을 바로 확인할 수 있습니다. 메일함은 실제 외부 이메일 계정 연동이 필요해 더미로 채울 수 없어
+          제외됩니다. 거래 건수가 많아 생성에 몇 초 정도 걸릴 수 있습니다.
         </PageGuide>
         <form action={seedAction}>
           <button type="submit" disabled={seedPending} className="erp-btn erp-btn-primary">

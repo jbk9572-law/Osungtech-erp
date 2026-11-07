@@ -11,7 +11,7 @@ import {
   leaveGroup,
   resolveMessengerAttachmentUrl,
 } from "@/app/(dashboard)/messenger/actions";
-import type { MessengerMessage, MessengerChannel } from "@/lib/messenger-types";
+import type { MessengerMessage, MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
 import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
@@ -21,7 +21,18 @@ import { PaperclipIcon, ChatIcon, GroupIcon, DownloadIcon, FileKindIcon, SendIco
 
 export type { MessengerMessage };
 
-const MESSAGE_COLUMNS = "id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, created_at";
+const MESSAGE_COLUMNS = "id, channel_id, sender_id, content, file_url, file_path, file_name, file_size, erp_ref, created_at";
+
+// 메신저 목업의 하단 빠른명령 바(/매출전표 /재고조회 /게시판공지
+// /일정마감) — 누르면 입력창에 명령어만 채워주고, 뒤에 전표번호/
+// 품목명 등을 마저 타이핑해서 보내면 actions.ts의 sendMessage가
+// 실제 데이터를 조회해 카드로 바꿔준다.
+const ERP_COMMANDS = [
+  { prefix: "/매출전표", label: "매출전표", icon: "📊" },
+  { prefix: "/재고조회", label: "재고조회", icon: "📦" },
+  { prefix: "/게시판공지", label: "게시판공지", icon: "📌" },
+  { prefix: "/일정마감", label: "일정마감", icon: "⏰" },
+] as const;
 
 function dateKey(iso: string): string {
   return new Date(iso).toLocaleDateString("sv-SE");
@@ -201,6 +212,37 @@ function MessengerAttachmentBlock({
   );
 }
 
+const ERP_REF_ICON: Record<MessengerErpRef["kind"], string> = {
+  sale: "📊",
+  inventory: "📦",
+  announcement: "📌",
+  followup: "⏰",
+};
+
+// /매출전표 등 명령어로 보낸 메시지가 품은 "ERP 연동 카드" — 종류별로
+// 아이콘만 바뀌고 나머지(제목/뱃지/라벨-값 줄/링크)는 전부 공통 렌더링
+// 이다. 새 명령어가 actions.ts에 추가돼도 kind를 ERP_REF_ICON에 한 줄만
+// 추가하면 이 컴포넌트는 그대로 재사용된다.
+function ErpRefCard({ erpRef }: { erpRef: MessengerErpRef }) {
+  return (
+    <a href={erpRef.href} className="erp-messenger-erp-card">
+      <div className="erp-messenger-erp-card-head">
+        <span aria-hidden>{ERP_REF_ICON[erpRef.kind]}</span>
+        <span className="erp-messenger-erp-card-title">{erpRef.title}</span>
+        {erpRef.badge && <span className="erp-messenger-erp-card-badge">{erpRef.badge}</span>}
+      </div>
+      <div className="erp-messenger-erp-card-lines">
+        {erpRef.lines.map((line) => (
+          <div key={line.label} className="erp-messenger-erp-card-line">
+            <span className="erp-messenger-erp-card-label">{line.label}</span>
+            <span>{line.value}</span>
+          </div>
+        ))}
+      </div>
+    </a>
+  );
+}
+
 // 우측하단에 항상 떠 있던 팝업 위젯을 없애고, 다른 화면들처럼 좌측 메뉴
 // (그룹웨어 > 메신저)로 들어오는 일반 페이지로 바꿨다 — 팝업이 화면을
 // 가리고, 숨기기/위치이동까지 신경 써야 했던 것에 비해 메뉴 하나로
@@ -256,6 +298,7 @@ export function MessengerPage({
   const [, startDeleteTransition] = useTransition();
   const [creatingChannel, startChannelTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
   const activeChannelIdRef = useRef(activeChannelId);
 
@@ -294,7 +337,10 @@ export function MessengerPage({
         .eq("channel_id", channelId)
         .order("created_at", { ascending: false })
         .limit(100);
-      setMessagesByChannel((prev) => ({ ...prev, [channelId]: (data ?? []).slice().reverse() }));
+      setMessagesByChannel((prev) => ({
+        ...prev,
+        [channelId]: (data ?? []).slice().reverse() as unknown as MessengerMessage[],
+      }));
       setLoadingChannel(false);
     }
   }
@@ -449,6 +495,14 @@ export function MessengerPage({
         formRef.current?.requestSubmit();
       }
     }
+  }
+
+  function insertCommand(prefix: string) {
+    const el = composerRef.current;
+    if (!el) return;
+    el.value = el.value.trim() ? `${el.value.trim()} ${prefix} ` : `${prefix} `;
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
   }
 
   function handleStartDm(otherUserId: string) {
@@ -707,6 +761,7 @@ export function MessengerPage({
                     <span className="erp-messenger-chat-header-name">
                       {channelLabel(activeChannel, profileNames, currentUserId)}
                     </span>
+                    <span className="erp-messenger-erp-badge">ERP 연동 활성화됨</span>
                   </div>
 
                   <div className="erp-messenger-search">
@@ -752,6 +807,8 @@ export function MessengerPage({
                                 <div className="erp-messenger-bubble-meta">
                                   {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleTimeString("ko-KR")}
                                 </div>
+
+                                {m.erp_ref && <ErpRefCard erpRef={m.erp_ref} />}
 
                                 {m.content && (
                                   <div className="erp-messenger-bubble">{highlightText(m.content, query)}</div>
@@ -803,10 +860,25 @@ export function MessengerPage({
                     )}
                   </div>
 
+                  <div className="erp-messenger-command-bar">
+                    {ERP_COMMANDS.map((cmd) => (
+                      <button
+                        key={cmd.prefix}
+                        type="button"
+                        className="erp-messenger-command-btn"
+                        onClick={() => insertCommand(cmd.prefix)}
+                      >
+                        <span aria-hidden>{cmd.icon}</span>
+                        {cmd.prefix}
+                      </button>
+                    ))}
+                  </div>
+
                   <form ref={formRef} action={handleSend} className="erp-messenger-composer">
                     <textarea
+                      ref={composerRef}
                       name="content"
-                      placeholder="메시지를 입력하세요 (Enter: 전송 / Shift+Enter: 줄바꿈)"
+                      placeholder="메시지 입력 또는 명령어(/) 입력 (Enter: 전송)"
                       rows={2}
                       className="erp-input"
                       style={{ flex: 1, resize: "none", fontSize: 12.5 }}

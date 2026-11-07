@@ -118,16 +118,18 @@ export function BoardListBody({
               href={`${basePath}?id=${row.id}&type=${row.category}`}
               className={`erp-split-list-row${row.id === selectedId && row.category === selectedType ? " active" : ""}`}
             >
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--erp-text-muted)", marginRight: 6 }}>
-                {CATEGORY_LABEL[row.category]}
-              </span>
-              {row.title}
-              {row.status && (
-                <span style={{ marginLeft: 6 }}>
-                  <GridBadge tone={row.status.tone}>{row.status.label}</GridBadge>
-                </span>
-              )}
-              <div className="erp-split-list-row-sub">{new Date(row.date).toLocaleDateString("ko-KR")}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 6, fontSize: 10, fontWeight: 700, color: "var(--erp-text-muted)" }}>
+                <span>{CATEGORY_LABEL[row.category]}</span>
+                <span>{new Date(row.date).toLocaleDateString("ko-KR")}</span>
+              </div>
+              <div style={{ marginTop: 2 }}>
+                {row.title}
+                {row.status && (
+                  <span style={{ marginLeft: 6 }}>
+                    <GridBadge tone={row.status.tone}>{row.status.label}</GridBadge>
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
           {!filtered.length ? (

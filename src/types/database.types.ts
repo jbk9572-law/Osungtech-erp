@@ -3017,6 +3017,7 @@ export type Database = {
           business_item: string | null;
           created_at: string;
           tenant_id: string;
+          is_demo: boolean;
         };
         Insert: {
           id?: string;
@@ -3036,6 +3037,7 @@ export type Database = {
           business_item?: string | null;
           created_at?: string;
           tenant_id?: string;
+          is_demo?: boolean;
         };
         Update: {
           id?: string;
@@ -3055,6 +3057,7 @@ export type Database = {
           business_item?: string | null;
           created_at?: string;
           tenant_id?: string;
+          is_demo?: boolean;
         };
         Relationships: [];
       };
@@ -5164,6 +5167,7 @@ export type Database = {
           file_path: string | null;
           file_name: string | null;
           file_size: number | null;
+          erp_ref: Json | null;
           created_at: string;
         };
         Insert: {
@@ -5175,6 +5179,7 @@ export type Database = {
           file_path?: string | null;
           file_name?: string | null;
           file_size?: number | null;
+          erp_ref?: Json | null;
           created_at?: string;
         };
         Update: {
@@ -5186,6 +5191,7 @@ export type Database = {
           file_path?: string | null;
           file_name?: string | null;
           file_size?: number | null;
+          erp_ref?: Json | null;
           created_at?: string;
         };
         Relationships: [
@@ -5272,7 +5278,7 @@ export type Database = {
           id: string;
           tenant_id: string;
           is_demo: boolean;
-          alert_type: "low_stock" | "todo_due";
+          alert_type: "low_stock" | "todo_due" | "receivable_overdue";
           source_id: string;
           created_at: string;
         };
@@ -5280,7 +5286,7 @@ export type Database = {
           id?: string;
           tenant_id: string;
           is_demo: boolean;
-          alert_type: "low_stock" | "todo_due";
+          alert_type: "low_stock" | "todo_due" | "receivable_overdue";
           source_id: string;
           created_at?: string;
         };
@@ -5288,7 +5294,7 @@ export type Database = {
           id?: string;
           tenant_id?: string;
           is_demo?: boolean;
-          alert_type?: "low_stock" | "todo_due";
+          alert_type?: "low_stock" | "todo_due" | "receivable_overdue";
           source_id?: string;
           created_at?: string;
         };

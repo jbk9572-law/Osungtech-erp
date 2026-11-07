@@ -23,6 +23,8 @@ import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
+import { UnifiedSaleModalTrigger } from "@/components/unified-sale-modal";
+import { todayKstStr } from "@/lib/kst-date";
 
 type DisplayRow = SalesRow;
 
@@ -45,6 +47,21 @@ export default async function SalesPage({
   // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
   const supabase = await createClient();
+
+  // "⚡ 빠른등록" 모달(통합 판매 거래 등록 — 매출/수금/반품 3탭)에 쓸
+  // 거래처/품목/창고 선택지. 이 목록 화면 자체가 보여주는 매출 데이터와는
+  // 무관하고, 모달을 열 때만 쓰인다.
+  const [quickCustomers, quickProducts, quickWarehouses] = await Promise.all([
+    fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
+      supabase.from("customers").select("id, name, notes").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null }>((from, to) =>
+      supabase.from("products").select("id, sku, name, spec").order("name").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string }>((from, to) =>
+      supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
+    ),
+  ]);
 
   // 전월 이월분 구간에서도 똑같은 모양의 행을 그릴 수 있게, select 문자열을
   // 상수로 빼서 두 쿼리가 같은 타입으로 추론되게 한다(아래
@@ -531,6 +548,12 @@ export default async function SalesPage({
         <Link href="/sales/new" className="erp-btn erp-btn-primary">
           F2 신규
         </Link>
+        <UnifiedSaleModalTrigger
+          customers={quickCustomers}
+          products={quickProducts}
+          warehouses={quickWarehouses}
+          today={todayKstStr()}
+        />
         <ExcelDownloadLink
           href={exportHref}
           title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}

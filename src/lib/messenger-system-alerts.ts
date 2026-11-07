@@ -1,8 +1,20 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { toKstDateStr } from "@/lib/kst-date";
+import { computePartyBalance } from "@/lib/ar-ap";
+import { formatNumber } from "@/lib/format-number";
+
+// 미수금 연체 알림 기준 — 거의 모든 거래처가 평소에도 며칠 정도의
+// "가장 오래된 미결제 전표"를 들고 있는 게 정상(월말 정산 등 보통
+// 결제주기)이라, 연체일수가 조금만 있어도 알리면 매번 스팸이 된다.
+// /receivables 화면 자체는 기준 없이 전부 보여주지만(담당자가 필요할
+// 때 직접 들어가 확인), 이 알림은 "진짜 오래 밀린 것만" 콕 집어줘야
+// 하므로 30일(한 달 이상 연체)을 기준으로 삼는다.
+const RECEIVABLE_OVERDUE_DAYS = 30;
 
 export type AlertSyncResult = { posted: number; cleared: number };
+
+type AlertType = "low_stock" | "todo_due" | "receivable_overdue";
 
 type TenantKey = string; // `${tenant_id}:${is_demo}`
 function tenantKey(tenantId: string, isDemo: boolean): TenantKey {
@@ -55,10 +67,12 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
         .lte("due_date", soonStr)
         .range(from, to),
     ),
-    fetchAllRows<{ tenant_id: string; is_demo: boolean; alert_type: "low_stock" | "todo_due"; source_id: string }>(
+    fetchAllRows<{ tenant_id: string; is_demo: boolean; alert_type: AlertType; source_id: string }>(
       (from, to) => admin.from("messenger_system_alert_state").select("tenant_id, is_demo, alert_type, source_id").range(from, to),
     ),
   ]);
+
+  const overdueCustomers = await findOverdueCustomers(admin);
 
   const lowStockProducts = products.filter(
     (p) => (p.inventory ?? []).reduce((sum, inv) => sum + Number(inv.quantity), 0) <= p.reorder_point,
@@ -66,6 +80,7 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
 
   const currentLowStockIds = new Set(lowStockProducts.map((p) => p.id));
   const currentDueTodoIds = new Set(dueTodos.map((t) => t.id));
+  const currentOverdueCustomerIds = new Set(overdueCustomers.map((c) => c.id));
 
   const alreadyAlerted = new Set(
     existingAlerts.map((a) => `${tenantKey(a.tenant_id, a.is_demo)}:${a.alert_type}:${a.source_id}`),
@@ -73,8 +88,8 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
 
   type PendingMessage = { tenantId: string; isDemo: boolean; content: string };
   const toPost: PendingMessage[] = [];
-  const toInsertState: { tenant_id: string; is_demo: boolean; alert_type: "low_stock" | "todo_due"; source_id: string }[] = [];
-  const toDeleteState: { tenant_id: string; is_demo: boolean; alert_type: "low_stock" | "todo_due"; source_id: string }[] = [];
+  const toInsertState: { tenant_id: string; is_demo: boolean; alert_type: AlertType; source_id: string }[] = [];
+  const toDeleteState: { tenant_id: string; is_demo: boolean; alert_type: AlertType; source_id: string }[] = [];
 
   for (const p of lowStockProducts) {
     const key = `${tenantKey(p.tenant_id, p.is_demo)}:low_stock:${p.id}`;
@@ -101,11 +116,27 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
     toInsertState.push({ tenant_id: t.tenant_id, is_demo: t.is_demo, alert_type: "todo_due", source_id: t.id });
   }
 
-  // 조건이 풀린 건(재입고됐거나, 할일이 완료/마감일 연장됐거나 삭제된 것)은
-  // 추적 행을 지워 다음에 다시 조건이 생기면 다시 알릴 수 있게 한다.
+  for (const c of overdueCustomers) {
+    const key = `${tenantKey(c.tenant_id, c.is_demo)}:receivable_overdue:${c.id}`;
+    if (alreadyAlerted.has(key)) continue;
+    toPost.push({
+      tenantId: c.tenant_id,
+      isDemo: c.is_demo,
+      content: `💰 [미수금 연체] ${c.name} · ${c.daysOverdue}일 연체 · 미수금 ${formatNumber(c.balance)}원 — 미수금현황에서 확인해주세요.`,
+    });
+    toInsertState.push({ tenant_id: c.tenant_id, is_demo: c.is_demo, alert_type: "receivable_overdue", source_id: c.id });
+  }
+
+  // 조건이 풀린 건(재입고됐거나, 할일이 완료/마감일 연장됐거나 삭제된 것,
+  // 미수금이 다 갚이거나 연체 기준 밑으로 내려간 것)은 추적 행을 지워
+  // 다음에 다시 조건이 생기면 다시 알릴 수 있게 한다.
   for (const a of existingAlerts) {
     const stillPending =
-      a.alert_type === "low_stock" ? currentLowStockIds.has(a.source_id) : currentDueTodoIds.has(a.source_id);
+      a.alert_type === "low_stock"
+        ? currentLowStockIds.has(a.source_id)
+        : a.alert_type === "todo_due"
+          ? currentDueTodoIds.has(a.source_id)
+          : currentOverdueCustomerIds.has(a.source_id);
     if (!stillPending) {
       toDeleteState.push(a);
     }
@@ -174,4 +205,68 @@ export async function syncMessengerSystemAlerts(): Promise<AlertSyncResult> {
   }
 
   return { posted, cleared };
+}
+
+type OverdueCustomer = { id: string; name: string; tenant_id: string; is_demo: boolean; balance: number; daysOverdue: number };
+
+// get_customer_balances() RPC(lib/ar-ap.ts의 getAllCustomerBalances가 씀)는
+// current_tenant_id()/is_demo_actor()로 "호출한 세션의 테넌트"만 본다 —
+// 세션 없는 크론(admin 클라이언트)에서는 그 값이 없어 쓸 수 없다. 그래서
+// 이 함수는 모든 테넌트의 원본 테이블을 직접 훑어서(이미 위 low_stock/
+// todo_due와 같은 패턴), 고객 상세 화면이 이미 쓰는 순수 계산 함수
+// (computePartyBalance/consumeOldestFirst, lib/ar-ap.ts)를 그대로
+// 재사용한다 — "가장 오래된 미결제 전표부터 선입선출로 상계"라는 같은
+// 규칙을 여기서 또 다르게 구현하지 않기 위해서다.
+export async function findOverdueCustomers(admin: ReturnType<typeof createAdminClient>): Promise<OverdueCustomer[]> {
+  const [orders, payments, customers] = await Promise.all([
+    fetchAllRows<{
+      customer_id: string;
+      order_date: string;
+      is_return: boolean;
+      sales_order_items: { quantity: number; unit_price: string | number }[];
+    }>((from, to) =>
+      admin
+        .from("sales_orders")
+        .select("customer_id, order_date, is_return, sales_order_items(quantity, unit_price)")
+        .is("payment_method", null)
+        .range(from, to),
+    ),
+    fetchAllRows<{ customer_id: string; paid_at: string; amount: string | number }>((from, to) =>
+      admin.from("customer_payments").select("customer_id, paid_at, amount").range(from, to),
+    ),
+    fetchAllRows<{ id: string; name: string; tenant_id: string; is_demo: boolean }>((from, to) =>
+      admin.from("customers").select("id, name, tenant_id, is_demo").range(from, to),
+    ),
+  ]);
+
+  const ordersByCustomer = new Map<string, { total: number; date: string }[]>();
+  for (const o of orders) {
+    const total =
+      (o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0) *
+      (o.is_return ? -1 : 1);
+    const list = ordersByCustomer.get(o.customer_id) ?? [];
+    list.push({ total, date: o.order_date });
+    ordersByCustomer.set(o.customer_id, list);
+  }
+  for (const list of ordersByCustomer.values()) list.sort((a, b) => a.date.localeCompare(b.date));
+
+  const paymentsByCustomer = new Map<string, { id: string; paid_at: string; amount: string | number; method: null; memo: null }[]>();
+  for (const p of payments) {
+    const list = paymentsByCustomer.get(p.customer_id) ?? [];
+    list.push({ id: "", paid_at: p.paid_at, amount: p.amount, method: null, memo: null });
+    paymentsByCustomer.set(p.customer_id, list);
+  }
+
+  const overdue: OverdueCustomer[] = [];
+  for (const c of customers) {
+    const creditOrders = ordersByCustomer.get(c.id);
+    if (!creditOrders?.length) continue;
+    const { balance, unpaidOrders } = computePartyBalance(creditOrders, paymentsByCustomer.get(c.id) ?? []);
+    if (balance <= 0 || !unpaidOrders.length) continue;
+    const daysOverdue = unpaidOrders[0].daysOverdue;
+    if (daysOverdue >= RECEIVABLE_OVERDUE_DAYS) {
+      overdue.push({ id: c.id, name: c.name, tenant_id: c.tenant_id, is_demo: c.is_demo, balance, daysOverdue });
+    }
+  }
+  return overdue;
 }

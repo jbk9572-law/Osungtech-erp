@@ -4542,6 +4542,117 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: var(--erp-comm-shadow-btn);
 }
 
+/* ── ERP 연동 메신저(사용자가 올린 메신저 목업 — "/매출전표"로 보내면
+   전표 카드가 그대로 말풍선에 박히는 화면) ───────────────────── */
+.erp-messenger-erp-badge {
+  margin-left: auto;
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  color: var(--erp-primary);
+  background: var(--erp-selected);
+  padding: 3px 9px;
+  border-radius: var(--erp-comm-radius-pill);
+}
+
+/* 빠른명령 버튼 줄 — 입력창 바로 위, 메시지 목록과는 구분선으로 분리.
+   말풍선 영역(erp-messenger-body)과 같은 가로폭 안에서 가로 스크롤만
+   허용해 버튼이 많아져도 줄바꿈으로 입력창을 밀어내지 않는다. */
+.erp-messenger-command-bar {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  padding: 8px 8px 0;
+  overflow-x: auto;
+}
+
+.erp-messenger-command-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 1px solid var(--erp-comm-border);
+  border-radius: var(--erp-comm-radius-pill);
+  background: var(--erp-bg-subtle);
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.erp-messenger-command-btn:hover {
+  background: var(--erp-hover);
+  color: var(--erp-text);
+}
+
+/* 명령어 메시지가 데이터를 찾으면 평문 말풍선 대신(또는 위에) 이
+   카드가 뜬다 — 말풍선과 같은 --erp-comm-* 톤이되, 왼쪽에 포인트색
+   세로줄을 둬서 "그냥 텍스트가 아니라 실제 데이터와 연결된 메시지"임을
+   구분한다(목업의 파란 좌측 강조선 카드 참고). */
+.erp-messenger-erp-card {
+  align-self: flex-start;
+  display: block;
+  width: min(280px, 100%);
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-comm-border);
+  border-left: 3px solid var(--erp-primary);
+  box-shadow: var(--erp-comm-shadow-row);
+  border-radius: var(--erp-comm-radius-bubble);
+  padding: 10px 12px;
+  color: inherit;
+  text-decoration: none;
+}
+.erp-messenger-bubble-group[data-mine="1"] .erp-messenger-erp-card {
+  align-self: flex-end;
+}
+
+.erp-messenger-erp-card:hover {
+  border-color: var(--erp-primary);
+}
+
+.erp-messenger-erp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.erp-messenger-erp-card-title {
+  font-weight: 700;
+  font-size: var(--erp-font-base);
+  color: var(--erp-text);
+  flex: 1;
+}
+
+.erp-messenger-erp-card-badge {
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  color: var(--erp-primary);
+  background: var(--erp-selected);
+  padding: 1px 7px;
+  border-radius: var(--erp-comm-radius-pill);
+}
+
+.erp-messenger-erp-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.erp-messenger-erp-card-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text);
+}
+
+.erp-messenger-erp-card-label {
+  color: var(--erp-text-muted);
+  flex: 0 0 auto;
+}
+
 /* ── 첨부파일 카드(메신저 수신 메시지) ───────────────────── */
 .erp-attachment-row {
   display: flex;
@@ -5075,6 +5186,95 @@ a.erp-detail-tab:hover:not(.active) {
   outline-offset: 2px;
 }
 
+/* ── "통합 판매 거래 등록" 빠른등록 모달(매출/수금/반품 3탭) ──────── */
+.erp-unified-sale-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.erp-unified-sale-tab {
+  padding: 5px 14px;
+  border: none;
+  border-radius: var(--erp-comm-radius-pill);
+  background: var(--erp-bg-subtle);
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.erp-unified-sale-tab.active {
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+}
+
+.erp-unified-sale-tab.active.danger {
+  background: var(--erp-danger);
+}
+
+.erp-unified-sale-items {
+  margin-top: 12px;
+  border: 1px solid var(--erp-border);
+  padding: 10px;
+}
+
+.erp-unified-sale-items-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+}
+
+.erp-unified-sale-item-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+/* 품목 검색칸(ProductSearchSelect)만 너비가 유동적이고 나머지(수량/단가/
+   소계/삭제)는 고정폭이라, 좁은 화면에서는 검색칸이 줄어드는 대신 먼저
+   자기 줄로 넘어가게 한다(flex-basis: 100% — 아래 미디어쿼리). */
+.erp-unified-sale-item-row > :first-child {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.erp-unified-sale-item-subtotal {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 70px;
+  flex: 1 1 auto;
+}
+
+.erp-unified-sale-items-total {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--erp-divider);
+  font-size: var(--erp-font-base);
+}
+
+@media (max-width: 640px) {
+  .erp-unified-sale-item-row > :first-child {
+    flex-basis: 100%;
+  }
+  /* 좁은 화면에서는 수량+단가+삭제만 한 줄에 남기고, 줄별 소계는
+     생략한다(맨 아래 전표 합계로 충분) — 안 그러면 네 요소가 한 줄에
+     다 안 들어가 또 줄바꿈되면서 레이아웃이 계단식으로 깨진다. */
+  .erp-unified-sale-item-subtotal {
+    display: none;
+  }
+}
+
 /* ════════════════════════════════════════════════════════════════
    "Modern" 테마
    ════════════════════════════════════════════════════════════════
@@ -5188,4 +5388,194 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .erp-tree,
 [data-theme="modern"] .erp-cat-sidebar {
   background: var(--erp-panel);
+}
+
+/* 대시보드류 공용 카드(.erp-hero-card/.erp-home-panel — 14개 화면
+   이상이 재사용하는 요약 패널)와 알림 배너도 목업의 흰 rounded-2xl +
+   옅은 그림자 카드 느낌으로 맞춘다. 화면마다 따로 JSX를 손대지 않고
+   이 공용 클래스 3개만 덮어써서, Modern 테마를 쓰는 모든 화면이
+   한 번에 같이 바뀐다(메인 대시보드 전용이 아님). 왼쪽 강조선
+   (border-left)도 목업엔 없어서 투명 처리. */
+[data-theme="modern"] .erp-hero-card,
+[data-theme="modern"] .erp-home-panel,
+[data-theme="modern"] .erp-alert-item {
+  border-radius: 16px;
+  box-shadow: var(--erp-shadow-sm);
+}
+[data-theme="modern"] .erp-hero-card {
+  border-left-color: transparent;
+}
+
+/* 모바일 카드뷰 행(.erp-row-card — 표가 좁은 화면에서 카드로 바뀔 때
+   쓰는 공용 행, 거의 모든 목록 화면이 재사용)과 표 바깥 테두리
+   (.erp-grid-wrap)도 같은 둥근 카드 언어로 맞춘다. 목업의 "품목
+   테이블" 영역도 rounded-xl 흰 박스 안에 들어 있다. */
+[data-theme="modern"] .erp-row-card,
+[data-theme="modern"] .erp-grid-wrap {
+  border-radius: 14px;
+}
+
+/* 조회기간 빠른 필터 칩(오늘/어제/이번주/월별 — 매출/매입/재고이동 등
+   여러 화면이 공유하는 DateRangeQuickFilters)도 목업의 rounded-lg 필터
+   버튼처럼 둥글게. */
+[data-theme="modern"] .erp-date-preset-btn {
+  border-radius: 8px;
+}
+
+/* 분할뷰 목록 행(.erp-split-list-row — 결재선/게시판/견적서/거래처 등
+   20개 화면이 공유하는 좌측 목록 패턴)도 목업의 사이드바 메뉴 항목처럼
+   "줄마다 각진 구분선" 대신 "행마다 둥근 배경 칩"으로 바꾼다. 기존
+   active 표시(위아래 inset box-shadow 줄)는 목업에 없는 스타일이라
+   투명하게 끄고, 대신 은은한 배경색(--erp-selected)만 남긴다. */
+[data-theme="modern"] .erp-split-list-row {
+  margin: 2px 6px;
+  border-radius: 10px;
+  border-bottom-color: transparent;
+}
+[data-theme="modern"] .erp-split-list-row.active {
+  box-shadow: none;
+}
+
+/* 매출/매입/견적서/세금계산서/지급결의서 등 8개 화면이 공유하는
+   "전표 용지" 문서형 폼(.erp-doc-sheet 계열)도 목업의 둥근 흰 박스
+   느낌으로 맞춘다. 윗줄 두꺼운 포인트 라인(border-top)은 그대로
+   두되(한국 사무서식의 "결재란 윗줄" 관례라 완전히 없애지 않음),
+   모서리만 둥글리고 그림자를 더 부드럽게 — 문서 안의 라벨/값 2열
+   표(.erp-doc-header)도 같이 둥글린다. 라벨 칸 글자색은 이미
+   --erp-primary(인디고)를 상속해 자동으로 맞는다. */
+[data-theme="modern"] .erp-doc-paper {
+  border-radius: 16px;
+  box-shadow: var(--erp-shadow-sm);
+}
+[data-theme="modern"] .erp-doc-header {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* 열린 탭 바(.erp-tab — 거의 모든 화면 상단에 뜸)도 목업처럼 위쪽
+   모서리만 둥글린다(종이 탭 관례는 그대로 유지, border-top 포인트
+   색상도 이미 토큰으로 맞음). */
+[data-theme="modern"] .erp-tab {
+  border-radius: 8px 8px 0 0;
+}
+
+/* 왼쪽 트리메뉴 항목(.erp-tree-item)과 카테고리 사이드바 항목
+   (.erp-cat-item — 플랫폼관리자 메뉴 등)도 목업의 사이드바 메뉴처럼
+   줄마다 둥근 배경으로. 참고: .erp-tree-item 자체의 코드 주석은 원래
+   "둥근 알약 배경"을 의도했다고 적혀 있는데 실제 규칙은
+   border-radius: 0으로 남아 있었다(기존 전 테마 공통 버그로 보이지만,
+   이번 범위는 Modern 테마라 거기까지는 안 건드리고 여기서만
+   바로잡는다). */
+[data-theme="modern"] .erp-tree-item,
+[data-theme="modern"] .erp-cat-item {
+  border-radius: 8px;
+}
+
+/* 등록/수정 모달(.erp-modal — 전체 화면 생성 폼용 모달 수십 개가 공유)도
+   목업의 둥근 흰 박스 느낌으로. 위쪽 브랜드색 포인트 라인(border-top)은
+   .erp-doc-paper와 같은 이유로 그대로 두되(여러 모달이 "하나의 통일된
+   틀"처럼 보이게 하는 장치), 모서리만 둥글린다. .erp-modal-window-close
+   (닫기 버튼)가 모달 모서리 바깥으로 살짝 걸치게 음수 offset(top/right:
+   -14px)으로 배치돼 있어서, .erp-doc-header처럼 overflow: hidden을
+   같이 주면 그 닫기 버튼이 잘려 보인다 — 그래서 여기서는 radius만
+   준다. 이미 덮여 있는 .erp-modal-panel(작은 확인창)과는 다른 클래스라
+   별도로 추가. */
+[data-theme="modern"] .erp-modal {
+  border-radius: 16px;
+}
+/* .erp-modal-title는 모달과 별개 박스라(자체 배경이 꽉 채워 덮음),
+   모달 쪽만 radius를 줘도 제목바가 각진 모서리로 덮어버려 위쪽은 그대로
+   각지게 보인다 — 제목바 위쪽 모서리도 같이 둥글려야 한 덩어리로
+   보인다(스크린샷으로 확인한 실제 버그, .erp-doc-paper/.erp-doc-header
+   쌍과 같은 이유). */
+[data-theme="modern"] .erp-modal-title {
+  border-radius: 16px 16px 0 0;
+}
+/* 모달 모서리에 살짝 걸쳐 뜨는 닫기 버튼(.erp-modal-window-close)도
+   각진 배지 대신 둥근 원형 버튼으로. */
+[data-theme="modern"] .erp-modal-window-close {
+  border-radius: 50%;
+}
+
+/* 우하단 토스트 알림(.erp-toast)도 둥글게. 긴급 토스트
+   (.erp-toast-urgent)의 왼쪽 강조선(border-left)은 "위험" 신호라 그대로
+   유지 — radius만 맞추면 각진 틀이 깨지지 않는다. */
+[data-theme="modern"] .erp-toast {
+  border-radius: 12px;
+}
+
+/* 게시판 상세(.erp-post-header 위+.erp-post-body 아래가 이어 붙어
+   하나의 박스처럼 보이는 구조)도 둥글게 — 맞닿는 가운데 모서리는 각지게
+   두고 바깥쪽 모서리만 둥글려야 "하나로 이어진 박스" 느낌이 유지된다. */
+[data-theme="modern"] .erp-post-header {
+  border-radius: 16px 16px 0 0;
+}
+[data-theme="modern"] .erp-post-body {
+  border-radius: 0 0 16px 16px;
+}
+
+/* 조회조건 검색바(.erp-search)와 세그먼트 토글(.erp-seg — 탭처럼 붙어
+   있는 2~3개 버튼 그룹)도 같은 둥근 언어로. */
+[data-theme="modern"] .erp-search {
+  border-radius: 12px;
+}
+[data-theme="modern"] .erp-seg {
+  border-radius: 8px;
+}
+
+/* 메일함/메신저 등 아이템 카드형 목록 행(.erp-item-card), 대시보드
+   "최근 항목"류 리스트 행(.erp-home-list-item), 재고위험 경고 행
+   (.erp-home-stock-row), 로그인 후 선택 화면 등의 큰 진입 카드
+   (.erp-nav-card)도 같은 둥근 카드 언어로 맞춘다. */
+[data-theme="modern"] .erp-item-card,
+[data-theme="modern"] .erp-home-list-item,
+[data-theme="modern"] .erp-home-stock-row {
+  border-radius: 10px;
+}
+[data-theme="modern"] .erp-nav-card {
+  border-radius: 20px;
+}
+
+/* 상단 타이틀바/리본의 아이콘형 버튼들(.erp-titlebar-home,
+   .erp-titlebar-right button, .erp-titlebar-menu-toggle,
+   .erp-ribbon-btn, .erp-icon-link, 탭 닫기 .erp-tab-close)도 목업의
+   "둥근 아이콘 버튼" 느낌으로. */
+[data-theme="modern"] .erp-titlebar-home,
+[data-theme="modern"] .erp-titlebar-right button,
+[data-theme="modern"] .erp-titlebar-menu-toggle,
+[data-theme="modern"] .erp-ribbon-btn,
+[data-theme="modern"] .erp-icon-link,
+[data-theme="modern"] .erp-tab-close {
+  border-radius: 8px;
+}
+
+/* 즐겨찾기/최근메뉴/알림 드롭다운(.erp-ribbon-dropdown — 이미
+   overflow-y: auto라 자식이 모서리 밖으로 안 튀어나와 안전)도 둥글게. */
+[data-theme="modern"] .erp-ribbon-dropdown {
+  border-radius: 12px;
+}
+
+/* 본문 검색 하이라이트(.erp-messenger-search-hit/
+   .erp-richtext-content mark)도 각진 형광펜 대신 둥근 칩 느낌으로. */
+[data-theme="modern"] .erp-messenger-search-hit,
+[data-theme="modern"] .erp-richtext-content mark {
+  border-radius: 3px;
+}
+
+/* 새 글쓰기 등 점선 CTA 박스(.erp-new-count-cta), 라벨/값 정보 칸
+   (.erp-info-cell), 첨부파일 행/아이콘/이미지 미리보기
+   (.erp-attachment-row/-icon/-image-link), 파일 선택 버튼/파일명 칩
+   (.erp-file-picker-btn/-name)도 같은 둥근 카드 언어로 맞춘다. */
+[data-theme="modern"] .erp-new-count-cta,
+[data-theme="modern"] .erp-info-cell,
+[data-theme="modern"] .erp-attachment-row,
+[data-theme="modern"] .erp-file-picker-btn,
+[data-theme="modern"] .erp-file-picker-name {
+  border-radius: 10px;
+}
+[data-theme="modern"] .erp-attachment-icon {
+  border-radius: 8px;
+}
+[data-theme="modern"] .erp-attachment-image-link {
+  border-radius: 10px;
 }
