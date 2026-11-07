@@ -3,7 +3,6 @@ import Link from "next/link";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PlatformAdminNav, PlatformAdminSideNav } from "@/components/platform-admin-nav";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
-import { PlatformAdminThemeShell } from "@/components/platform-admin-theme-shell";
 import "@/app/erp-theme.css";
 
 // 플랫폼 관리자 화면 전체(고객사/환경설정/공지사항/활동로그/요금제/통계)가
@@ -17,7 +16,7 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
   }
 
   return (
-    <PlatformAdminThemeShell className="erp erp-comm-shell" style={{ minHeight: "100vh", background: "var(--erp-bg)" }}>
+    <div className="erp erp-comm-shell" style={{ minHeight: "100vh", background: "var(--erp-bg)" }}>
       {/* (dashboard)/portal 레이아웃은 ErpShell 안에서 이 컴포넌트를 공용으로
           쓰는데, platform-admin은 ErpShell 없이 직접 래퍼를 그리다 보니
           이동 시 아무 피드백도 없었다 — 클릭/제출을 전역으로 감지해 200ms
@@ -47,6 +46,6 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
           <div className="erp-platform-admin-content">{children}</div>
         </div>
       </div>
-    </PlatformAdminThemeShell>
+    </div>
   );
 }

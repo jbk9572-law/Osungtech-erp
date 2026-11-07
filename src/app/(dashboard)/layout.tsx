@@ -17,7 +17,7 @@ import "@/app/erp-theme.css";
 type LayoutBootstrap = {
   company: { name: string | null; logo_mark_url: string | null } | null;
   profile: { is_demo: boolean; role: string; department_id: string | null } | null;
-  tenant: { disabled_features: string[] } | null;
+  tenant: { disabled_features: string[]; theme: string | null } | null;
   is_platform_admin: boolean;
   announcements: { id: string; title: string }[];
   platform_settings: { maintenance_mode: boolean; maintenance_message: string | null } | null;
@@ -153,6 +153,7 @@ export default async function DashboardLayout({
       isPlatformAdmin={isPlatformAdmin === true}
       platformAnnouncements={announcements ?? []}
       quotaBanner={quotaBanner}
+      theme={tenant?.theme}
       modal={modal}
     >
       {children}

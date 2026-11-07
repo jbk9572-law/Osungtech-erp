@@ -274,6 +274,30 @@ export async function setTenantSandbox(_prevState: FormState, formData: FormData
   return { success: nextIsSandbox ? "샌드박스로 지정했습니다." : "샌드박스 지정을 해제했습니다." };
 }
 
+const TENANT_THEMES = ["classic-light", "modern"] as const;
+
+// 회사(테넌트)별 화면 테마 지정 — 브라우저(localStorage)가 아니라
+// tenants.theme(migration 215)에 저장해 서버에서 바로 적용한다(사용자
+// 요청: "관리자페이지에서 모던으로 바꾸면 전체 변경되는건데 그걸
+// 업체별로 변경할 수 있게 해줘").
+export async function setTenantTheme(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin, supabase } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 변경할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const theme = String(formData.get("theme") ?? "");
+  if (!tenantId) return { error: "회사를 먼저 선택해주세요." };
+  if (!TENANT_THEMES.includes(theme as (typeof TENANT_THEMES)[number])) {
+    return { error: "알 수 없는 테마입니다." };
+  }
+
+  const { error } = await supabase.rpc("set_tenant_theme", { p_tenant_id: tenantId, p_theme: theme });
+  if (error) return { error: `변경에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin/settings");
+  return { success: "테마를 적용했습니다." };
+}
+
 const PLANS = ["trial", "active", "suspended"] as const;
 
 // 요금제 상태 변경. 실제 결제 연동은 없고, 지금은 운영자가 수동으로
