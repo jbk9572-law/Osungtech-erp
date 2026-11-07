@@ -17,16 +17,19 @@ export async function resetSandbox(_prevState: FormState, _formData: FormData): 
   return { success: "초기화했습니다." };
 }
 
-// 더미 사원 4명 — profiles.id가 auth.users를 참조해야 해서 SQL 함수
+// 더미 사원 6명 — profiles.id가 auth.users를 참조해야 해서 SQL 함수
 // (sandbox_seed) 혼자서는 못 만든다(settings/users/actions.ts의
 // createUserAccount와 같은 이유로 service_role 클라이언트 필요). 반복
 // 클릭 시 끝없이 쌓이지 않도록, 본인 말고 다른 직원이 이미 있으면
-// 새로 안 만들고 건너뛴다.
+// 새로 안 만들고 건너뛴다. 부서는 sandbox_seed()(migration 217)가 만드는
+// 4개(영업부/구매부/경영지원부/생산부)와 이름을 맞춘다.
 const SANDBOX_EMPLOYEES = [
   { username: "sandbox.sales1", fullName: "김민준", role: "manager" as const, dept: "영업부", title: "영업팀장" },
   { username: "sandbox.sales2", fullName: "이서연", role: "staff" as const, dept: "영업부", title: "영업사원" },
   { username: "sandbox.purchase1", fullName: "박지훈", role: "staff" as const, dept: "구매부", title: "구매담당" },
+  { username: "sandbox.purchase2", fullName: "정수아", role: "staff" as const, dept: "구매부", title: "구매사원" },
   { username: "sandbox.admin1", fullName: "최유진", role: "staff" as const, dept: "경영지원부", title: "총무" },
+  { username: "sandbox.production1", fullName: "강도윤", role: "staff" as const, dept: "생산부", title: "생산담당" },
 ];
 
 async function seedSandboxEmployees(): Promise<string | null> {
@@ -86,6 +89,9 @@ async function seedSandboxEmployees(): Promise<string | null> {
       "입고 확인했습니다, 감사합니다!",
       "구매 견적요청 올려둔 건 검토 부탁드려요.",
       "네 확인하고 바로 답변드릴게요.",
+      "생산 쪽 자재 수급 일정 공유드립니다.",
+      "오늘 수금 건 입금 확인했습니다.",
+      "다음 주 재고실사 참석 가능합니다!",
     ];
     const { error: messageError } = await admin.from("messenger_messages").insert(
       extraLines.map((content, i) => ({
