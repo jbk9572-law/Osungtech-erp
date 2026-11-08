@@ -100,14 +100,14 @@ function ChannelAvatar({
 }) {
   if (channel.type === "all") {
     return (
-      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-primary)" }} aria-hidden>
+      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-text)" }} aria-hidden>
         <ChatIcon />
       </span>
     );
   }
   if (channel.type === "group") {
     return (
-      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-primary)" }} aria-hidden>
+      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-text)" }} aria-hidden>
         <GroupIcon />
       </span>
     );
@@ -193,7 +193,7 @@ function MessengerAttachmentBlock({
       ) : (
         <a href={url} target="_blank" rel="noopener noreferrer" className="erp-attachment-row">
           <span className="erp-attachment-icon" aria-hidden>
-            <span className="erp-icon" style={{ width: 16, height: 16, color: "var(--erp-primary)" }}>
+            <span className="erp-icon" style={{ width: 16, height: 16, color: "var(--erp-text)" }}>
               <FileKindIcon kind={fileKind(fileName)} />
             </span>
           </span>

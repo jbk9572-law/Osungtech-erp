@@ -75,7 +75,12 @@
      인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
   --erp-info-bg: #eef2ff;
   --erp-info-border: #c7d2fe;
-  --erp-info-text: #3730a3;
+  /* 보라/인디고 톤 글자색이 정보 배너뿐 아니라 여기저기서 가독성을
+     해친다는 지적(사용자: "보라색글씨 다 검정색으로 바꿔 글씨 가독성도
+     마찬가지고") — 배경/테두리는 그대로 인디고 톤으로 "정보"라는 걸
+     구분해 보여주되, 실제로 읽는 글자색은 본문과 같은 색(--erp-text)으로
+     통일한다. */
+  --erp-info-text: var(--erp-text);
   /* 지급결의양식 품목행에 사용자가 직접 표시하는 형광펜 하이라이트 —
      작성 화면과 인쇄/열람 화면 두 군데서 같은 값을 각자 하드코딩하고
      있었다. 상태색(success/warning/danger)과는 역할이 달라 별도 변수로 뺐다. */
@@ -1017,7 +1022,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   opacity: 0.85;
 }
 
@@ -1076,7 +1081,7 @@
    둥근 알약(pill) 배경으로 바꿔서 더 가벼운 느낌을 준다. */
 .erp-tree-item.active {
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 700;
 }
 
@@ -1143,7 +1148,7 @@
    흔들리게 한다. */
 .erp-tab.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 600;
   border-top-color: var(--erp-primary);
 }
@@ -1362,7 +1367,7 @@
 
 .erp-date-preset-btn.active {
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   border-color: var(--erp-primary);
   font-weight: 600;
 }
@@ -1403,7 +1408,7 @@
   height: 13px;
   border-radius: 50%;
   background: var(--erp-info-bg);
-  color: var(--erp-info-text);
+  color: var(--erp-text);
   border: 1px solid var(--erp-info-border);
   font-size: var(--erp-font-2xs);
   font-weight: 800;
@@ -1653,7 +1658,7 @@ form.erp-field-grid {
 .erp-btn-primary {
   background: var(--erp-panel);
   border-color: var(--erp-primary);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-btn-primary:hover {
@@ -2076,7 +2081,7 @@ form.erp-field-grid {
 .erp-doc-total {
   font-size: 19px;
   font-weight: 800;
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* 구매요청/구매견적요청/견적서처럼 필드가 단순한 화면은 문서 정보를
@@ -2116,7 +2121,7 @@ form.erp-field-grid {
   padding: 0 10px;
   font-size: var(--erp-font-base);
   font-weight: 700;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   display: flex;
   align-items: center;
 }
@@ -2198,7 +2203,7 @@ form.erp-field-grid {
 .erp-richtext-toolbar-btn[data-active="1"] {
   background: var(--erp-selected);
   border-color: var(--erp-primary);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* 버튼 하나하나가 아니라 묶음(실행취소/제목/글자서식/정렬 등) 단위로
@@ -2338,7 +2343,7 @@ form.erp-field-grid {
 }
 
 .erp-richtext-content a {
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-decoration: underline;
 }
 
@@ -2438,7 +2443,7 @@ form.erp-field-grid {
 
 .erp-badge-info {
   background: var(--erp-info-bg);
-  color: var(--erp-info-text);
+  color: var(--erp-text);
 }
 
 /* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로
@@ -2451,7 +2456,7 @@ form.erp-field-grid {
   width: 26px;
   height: 26px;
   border-radius: 0;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   transition: background 0.12s ease;
 }
 
@@ -2523,7 +2528,7 @@ form.erp-field-grid {
 
 .erp-detail-tab.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 600;
 }
 
@@ -2641,7 +2646,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-cat-item.active {
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 700;
 }
 
@@ -2652,7 +2657,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-cat-item.active .cnt {
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* F2/F5/F8 같은 실제 키보드 단축키를 화면 하단에 작게 보여주는 힌트
@@ -2936,7 +2941,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-comm-shell .erp-split-detail-empty-icon {
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-split-detail-empty-icon svg {
@@ -3188,7 +3193,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-comm-tab.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   box-shadow: var(--erp-comm-shadow-row);
 }
 
@@ -3595,7 +3600,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 30px;
   border-radius: 50%;
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-size: var(--erp-font-base);
   font-weight: 800;
   flex-shrink: 0;
@@ -3761,7 +3766,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-home-stock-footer a {
   font-size: var(--erp-font-sm);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-decoration: none;
   font-weight: 600;
 }
@@ -3963,7 +3968,7 @@ a.erp-detail-tab:hover:not(.active) {
   text-align: center;
   padding: 8px 6px;
   font-size: var(--erp-font-base);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-decoration: none;
 }
 
@@ -3989,7 +3994,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: none;
   padding: 4px 0;
   font-size: var(--erp-font-base);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-align: left;
   cursor: pointer;
 }
@@ -4152,7 +4157,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-toast-item:hover {
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* ── 사내메신저(그룹웨어 > 메신저 페이지) ───────────────────── */
@@ -4233,7 +4238,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-messenger-channel-row.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 700;
   border: 1px solid var(--erp-comm-border);
   box-shadow: var(--erp-comm-shadow-row);
@@ -4548,7 +4553,7 @@ a.erp-detail-tab:hover:not(.active) {
   margin-left: auto;
   font-size: var(--erp-font-xs);
   font-weight: 700;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   background: var(--erp-selected);
   padding: 3px 9px;
   border-radius: var(--erp-comm-radius-pill);
@@ -4628,7 +4633,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-messenger-erp-card-badge {
   font-size: var(--erp-font-xs);
   font-weight: 700;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   background: var(--erp-selected);
   padding: 1px 7px;
   border-radius: var(--erp-comm-radius-pill);
@@ -4711,7 +4716,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-attachment-download {
   flex: 0 0 auto;
   font-size: var(--erp-font-md);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-attachment-image-link {
@@ -4777,7 +4782,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-file-picker-btn:hover,
 .erp-file-picker-btn:focus-visible {
   border-color: var(--erp-primary);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-file-picker-name {
@@ -5331,7 +5336,7 @@ a.erp-detail-tab:hover:not(.active) {
   --erp-danger-border: #fecdd3;
   --erp-info-bg: #eef2ff;
   --erp-info-border: #c7d2fe;
-  --erp-info-text: #4338ca;
+  --erp-info-text: var(--erp-text);
   --erp-highlight-bg: #fef08a;
   --erp-text: #0f172a;
   --erp-text-muted: #64748b;

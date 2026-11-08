@@ -109,7 +109,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
             <Link
               href={`/reports/monthly/company?company=${encodeURIComponent(`s:${supplier.id}`)}`}
               className="text-xs underline"
-              style={{ color: "var(--erp-primary)" }}
+              style={{ color: "var(--erp-text)" }}
             >
               전체거래내역 보기 →
             </Link>

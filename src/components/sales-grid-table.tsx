@@ -445,7 +445,7 @@ export function SalesGridTable({
               <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
               <Link
                 href={`/sales/${row.orderId}/tax-invoice`}
-                style={{ color: "var(--erp-primary)", fontWeight: 700, textDecoration: "underline" }}
+                style={{ color: "var(--erp-text)", fontWeight: 700, textDecoration: "underline" }}
               >
                 세금계산서 작성
               </Link>

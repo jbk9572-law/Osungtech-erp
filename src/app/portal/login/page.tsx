@@ -20,7 +20,7 @@ function PortalLoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--erp-bg)] px-4">
       <div className="w-full max-w-[380px] rounded-sm border border-[var(--erp-border)] bg-white p-6 shadow-sm">
-        <div style={{ fontSize: 18, fontWeight: 700, color: "var(--erp-primary)", marginBottom: 4 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "var(--erp-text)", marginBottom: 4 }}>
           거래처 포털
         </div>
         <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>

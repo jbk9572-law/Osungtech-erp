@@ -50,7 +50,7 @@ export function PackageQtyHistoryHint({
                   setExpanded(false);
                 }}
                 className="hover:underline"
-                style={{ color: "var(--erp-primary)", fontWeight: 600 }}
+                style={{ color: "var(--erp-text)", fontWeight: 600 }}
               >
                 {formatNumber(entry.basePackageQty)}로 덮어쓰기
               </button>

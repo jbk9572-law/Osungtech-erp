@@ -1545,7 +1545,7 @@ function NoteForm({
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
                 style={{
                   background: "var(--erp-selected)",
-                  color: "var(--erp-primary)",
+                  color: "var(--erp-text)",
                 }}
               >
                 {note.authorName.slice(0, 1)}

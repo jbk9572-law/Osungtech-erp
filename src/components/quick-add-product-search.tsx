@@ -74,7 +74,7 @@ export function QuickAddProductSearch({
           left: 9,
           transform: "translateY(-50%)",
           fontSize: 12.5,
-          color: "var(--erp-primary)",
+          color: "var(--erp-text)",
           pointerEvents: "none",
         }}
       >
