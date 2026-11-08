@@ -14,7 +14,7 @@
 // 안 쓰고 radius 선언 자체를 깜빡할 수 있으니, 그 실수를 자동으로
 // 잡는다.
 //
-// 검사 방법: erp-theme.css의 모든 규칙을 훑어서, "테두리와 배경이 둘 다
+// 검사 방법: erp-theme.css + globals.css의 모든 규칙을 훑어서, "테두리와 배경이 둘 다
 // 있는(=화면에 박스처럼 보이는)" 규칙인데 border-radius류 선언이 아예
 // 없는 경우를 위반으로 잡는다. border: none/transparent나
 // background: none/transparent만 있는 경우는 박스가 아니므로 제외한다.
@@ -33,7 +33,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FILE = path.join(__dirname, "..", "src", "app", "erp-theme.css");
+// erp-theme.css가 메인 디자인 시스템이지만, .erp-spinner처럼 .erp 테마
+// 래퍼 밖(로그인/회원가입 등)에서도 쓰는 극소수 클래스는 globals.css에
+// 따로 있다 — 거기도 박스형 클래스가 생길 수 있으니 같이 본다.
+const FILES = [
+  path.join(__dirname, "..", "src", "app", "erp-theme.css"),
+  path.join(__dirname, "..", "src", "app", "globals.css"),
+];
 
 const EXEMPT_SELECTORS = new Set([
   ".erp-demo-banner", // 화면 맨 위 가장자리에 변까지 붙는 전체 폭 배너
@@ -54,9 +60,11 @@ const EXEMPT_SELECTORS = new Set([
   ".erp-cat-sidebar", // 좌측 카테고리 사이드바 — .erp-tree와 같은 "내비게이션 레일" 취급으로 의도적으로 각짐
 ]);
 
-const text = readFileSync(FILE, "utf8");
 // 주석 제거 — 주석 안의 설명 문장이 셀렉터/선언으로 잘못 파싱되는 걸 막는다.
-const stripped = text.replace(/\/\*[\s\S]*?\*\//g, "");
+const sources = FILES.map((file) => ({
+  file,
+  stripped: readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""),
+}));
 
 /**
  * 중괄호 깊이를 추적하며 "리프 규칙"(더 이상 중첩 블록이 없는 선언
@@ -122,7 +130,12 @@ function hasRadius(body) {
   return /radius\s*:/.test(body);
 }
 
-const rules = collectLeafRules(stripped);
+// 파일 전체(erp-theme.css + globals.css)를 한 묶음으로 보고 교차
+// 참조한다 — 두 파일에 걸쳐 같은 클래스가 나뉘어 선언되는 경우는 없지만
+// 안전하게 합쳐서 본다.
+const rules = sources.flatMap(({ file, stripped }) =>
+  collectLeafRules(stripped).map((r) => ({ ...r, file })),
+);
 
 // 클래스 이름 → 그 클래스가 (다른 선택자에서라도) radius를 받는지.
 // ".foo.active { ... }"처럼 상태 변형 선택자는 기본 ".foo" 규칙에서
@@ -137,7 +150,7 @@ for (const { selector, body } of rules) {
 }
 
 const violations = [];
-for (const { selector, body } of rules) {
+for (const { selector, body, file } of rules) {
   if (!hasBorder(body) || !hasBackground(body)) continue;
   if (hasRadius(body)) continue;
   const classes = [...selector.matchAll(/\.([a-zA-Z0-9_-]+)/g)].map((m) => m[1]);
@@ -145,7 +158,7 @@ for (const { selector, body } of rules) {
   // 쉼표로 묶인 여러 선택자 중 하나라도 예외 목록에 있으면 전체를 건너뛴다.
   const parts = selector.split(",").map((s) => s.trim());
   if (parts.some((p) => EXEMPT_SELECTORS.has(p))) continue;
-  violations.push(selector.replace(/\s+/g, " "));
+  violations.push(`${path.basename(file)}: ${selector.replace(/\s+/g, " ")}`);
 }
 
 if (violations.length > 0) {
