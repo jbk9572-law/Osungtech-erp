@@ -2105,6 +2105,7 @@ form.erp-field-grid {
   background: var(--erp-bg-subtle);
   display: inline-block;
   padding: 1px 6px;
+  border-radius: var(--erp-radius-sm, 0);
 }
 
 .erp-doc-total {
