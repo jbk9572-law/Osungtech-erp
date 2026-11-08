@@ -1448,8 +1448,13 @@
   height: 30px;
   border: 1px solid var(--erp-border);
   /* 0 → 3px: 표/그리드는 각진 모서리를 유지하지만, 입력칸/버튼까지
-     전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만. */
-  border-radius: 3px;
+     전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만.
+     모던 테마에서는 --erp-radius-xl(12px)로 더 둥글게(다른 박스형
+     컴포넌트와 같은 톤) — 이 토큰화 작업 때 정작 이 기본 규칙 자체를
+     빠뜨려서, 모던 테마인 회사에서도 입력칸/셀렉트만 계속 3px(사실상
+     거의 안 보이는 각짐)로 남아있던 실제 버그였다(사용자 스크린샷으로
+     확인 — 공급처/입고방법/과세구분 입력칸이 전부 각져 보임). */
+  border-radius: var(--erp-radius-xl, 3px);
   padding: 0 8px;
   font-size: var(--erp-font-base);
   background: var(--erp-panel);
