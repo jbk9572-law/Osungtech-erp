@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { focusNextCellInRow } from "@/lib/grid-enter-nav";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { useDropdownReposition } from "@/lib/use-dropdown-reposition";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -37,6 +38,14 @@ export function ProductSearchSelect({
   const itemRefs = useHighlightScroll(highlight, open);
   useEscapeToClose(open, () => setOpen(false));
 
+  const updateDropdownRect = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+  }, []);
+  useDropdownReposition(open, updateDropdownRect);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products.slice(0, 20);
@@ -67,9 +76,8 @@ export function ProductSearchSelect({
         placeholder={placeholder}
         aria-label={placeholder}
         autoComplete="off"
-        onFocus={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        onFocus={() => {
+          updateDropdownRect();
           setQuery("");
           setOpen(true);
           setHighlight(0);

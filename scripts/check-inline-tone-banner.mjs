@@ -26,7 +26,7 @@ const ALLOWLIST = new Set([
   // 거래처 선택 후 "특이사항"을 보여주는 레코드별 인라인 노트다 — 화면
   // 사용법을 설명하는 PageGuide 성격이 아니고, radius:0 네모 처리가
   // 의도적(다른 PageGuide 박스는 둥근 모서리)이라 그대로 둔다.
-  "src/components/party-search-select.tsx:101",
+  "src/components/party-search-select.tsx:109",
   // 매입처 미지정 품목을 표시하는 작은 칩(margin:4, radius:0)이다 —
   // 페이지 안내문이 아니라 목록 행 안의 상태 배지라 PageGuide 대상이 아님.
   "src/app/(dashboard)/inventory/reorder-suggestions/page.tsx:141",

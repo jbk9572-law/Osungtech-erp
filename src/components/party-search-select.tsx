@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
+import { useDropdownReposition } from "@/lib/use-dropdown-reposition";
 
 type Party = { id: string; name: string; notes?: string | null };
 
@@ -43,6 +44,14 @@ export function PartySearchSelect({
   // 가로챈다.
   useEscapeToClose(open, () => setOpen(false));
 
+  const updateDropdownRect = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+  }, []);
+  useDropdownReposition(open, updateDropdownRect);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return parties.slice(0, 20);
@@ -67,9 +76,8 @@ export function PartySearchSelect({
         placeholder={placeholder}
         aria-label={placeholder}
         autoComplete="off"
-        onFocus={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          setDropdownRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+        onFocus={() => {
+          updateDropdownRect();
           setQuery("");
           setOpen(true);
           setHighlight(0);

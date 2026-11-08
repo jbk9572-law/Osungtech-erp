@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { clampDropdownLeft } from "@/lib/dropdown-position";
+import { useDropdownReposition } from "@/lib/use-dropdown-reposition";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -32,6 +33,15 @@ export function QuickAddProductSearch({
   );
   const itemRefs = useHighlightScroll(highlight, open);
   useEscapeToClose(open, () => setOpen(false));
+
+  const updateDropdownRect = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const width = Math.max(rect.width, 280);
+    setDropdownRect({ top: rect.bottom + 4, left: clampDropdownLeft(rect.left, width), width });
+  }, []);
+  useDropdownReposition(open, updateDropdownRect);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -87,10 +97,8 @@ export function QuickAddProductSearch({
         placeholder={placeholder}
         aria-label={placeholder}
         autoComplete="off"
-        onFocus={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const width = Math.max(rect.width, 280);
-          setDropdownRect({ top: rect.bottom + 4, left: clampDropdownLeft(rect.left, width), width });
+        onFocus={() => {
+          updateDropdownRect();
           setOpen(true);
         }}
         onChange={(e) => {
@@ -133,7 +141,7 @@ export function QuickAddProductSearch({
             alignItems: "center",
             gap: 2,
             padding: "2px 6px",
-            borderRadius: 0,
+            borderRadius: 999,
             fontSize: 10.5,
             fontWeight: 700,
             background: "var(--erp-info-bg)",
