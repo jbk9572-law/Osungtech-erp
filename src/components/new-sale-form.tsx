@@ -1980,7 +1980,6 @@ export function NewSaleForm({
                         }
                         allowFormula
                         basePackageQty={product?.base_package_qty}
-                        className="erp-input w-full"
                       />
                     </td>
                     <td className="num">

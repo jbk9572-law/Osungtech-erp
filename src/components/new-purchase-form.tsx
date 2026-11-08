@@ -1979,7 +1979,6 @@ export function NewPurchaseForm({
                         }
                         allowFormula
                         basePackageQty={product?.base_package_qty}
-                        className="erp-input w-full"
                       />
                     </td>
                     {alsoCreateSale && (
