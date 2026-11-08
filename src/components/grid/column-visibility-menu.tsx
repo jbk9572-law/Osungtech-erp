@@ -54,7 +54,7 @@ export function ColumnVisibilityMenu({
             overflowY: "auto",
             background: "var(--erp-panel)",
             border: "1px solid var(--erp-border)",
-            borderRadius: 0,
+            borderRadius: "var(--erp-radius-xl, 0)",
             boxShadow: "var(--erp-shadow-lg)",
             padding: "var(--erp-space-2)",
           }}

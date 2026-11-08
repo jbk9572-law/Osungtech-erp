@@ -131,7 +131,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                           style={{
                             width: 26,
                             height: 26,
-                            borderRadius: 0,
+                            borderRadius: "50%",
                             boxSizing: "border-box",
                             background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)",
                             border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`,
