@@ -200,7 +200,7 @@ export default async function AttendancePage() {
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">사용(승인 기준)</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-primary)" }}>
+          <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
             {formatNumber(usedThisYear)}일
           </div>
         </div>

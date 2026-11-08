@@ -185,7 +185,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
             <Link
               href={`/reports/monthly/company?company=${encodeURIComponent(`c:${customer.id}`)}`}
               className="text-xs underline"
-              style={{ color: "var(--erp-primary)" }}
+              style={{ color: "var(--erp-text)" }}
             >
               전체거래내역 보기 →
             </Link>

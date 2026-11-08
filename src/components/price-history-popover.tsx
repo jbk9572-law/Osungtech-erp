@@ -55,7 +55,7 @@ export function PriceHistoryPopover({
         title="단가변경 이력 보기"
         style={{
           fontSize: "var(--erp-font-xs)",
-          color: "var(--erp-primary)",
+          color: "var(--erp-text)",
           textDecoration: "underline",
           background: "none",
           border: "none",

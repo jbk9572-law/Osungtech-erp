@@ -75,7 +75,12 @@
      인디고 톤 — 여러 컴포넌트에 같은 값이 흩어져 있던 것을 변수로 묶었다. */
   --erp-info-bg: #eef2ff;
   --erp-info-border: #c7d2fe;
-  --erp-info-text: #3730a3;
+  /* 보라/인디고 톤 글자색이 정보 배너뿐 아니라 여기저기서 가독성을
+     해친다는 지적(사용자: "보라색글씨 다 검정색으로 바꿔 글씨 가독성도
+     마찬가지고") — 배경/테두리는 그대로 인디고 톤으로 "정보"라는 걸
+     구분해 보여주되, 실제로 읽는 글자색은 본문과 같은 색(--erp-text)으로
+     통일한다. */
+  --erp-info-text: var(--erp-text);
   /* 지급결의양식 품목행에 사용자가 직접 표시하는 형광펜 하이라이트 —
      작성 화면과 인쇄/열람 화면 두 군데서 같은 값을 각자 하드코딩하고
      있었다. 상태색(success/warning/danger)과는 역할이 달라 별도 변수로 뺐다. */
@@ -156,6 +161,33 @@
   --erp-comm-shadow-row:
     0 1px 1px rgba(32, 28, 43, 0.02), 0 6px 16px -10px rgba(32, 28, 43, 0.14);
   --erp-comm-shadow-btn: 0 2px 8px -3px rgba(19, 41, 68, 0.3);
+
+  /* 모서리 반경(r값) 스케일 — 클래식 테마는 전부 0(각진 디자인
+     언어)이고, 모던 테마([data-theme="modern"] 블록)에서만 실제 값으로
+     바뀐다. 전에는 이 반대 방향("클래식은 그냥 두고, 모던에서만 클래스
+     이름을 하나씩 나열해서 radius를 덮어쓰는" 허용목록 방식)으로 돼
+     있었는데, 그러면 새 박스형 컴포넌트가 생기거나 기존 박스에 flush
+     머리글 같은 자식이 추가될 때마다 그 목록에 수동으로 추가하는 걸
+     잊기 쉽고, 실제로 세 번 연속(.erp-split-list 등 → .erp-home-panel-
+     title/.erp-richtext 등) 빠뜨린 전례가 있었다(사용자 지적 —
+     "자꾸 빵꾸나거나 언밸런스한 부분들이 많아"). 그래서 각 컴포넌트의
+     기본 규칙 자체가 이 토큰을 쓰도록 바꿔서, 테마 전환이 "목록에 추가"가
+     아니라 "토큰 값 하나만 가진 변수 치환"이 되게 한다 — 새 박스형
+     클래스를 만들 때 아래 중 맞는 토큰을 쓰면 그 자체로 두 테마 모두
+     자동으로 맞는다. 모서리가 완전히 둥근(50%) 원형/알약(pill) 모양은
+     크기 스케일과 역할이 달라 별도 토큰으로 뺐다. scripts/check-radius-
+     token.mjs가 "테두리+배경이 있는 박스형 규칙인데 이 토큰을 안 쓰고
+     숫자를 직접 쓰거나 radius 선언 자체가 없는" 경우를 자동으로 잡는다. */
+  --erp-radius-xs: 0; /* 칩/하이라이트(검색 하이라이트, 형광펜 마크) */
+  --erp-radius-sm: 0; /* 초소형 토글 버튼(리치텍스트 서식 버튼) */
+  --erp-radius-md: 0; /* 아이콘 버튼/탭/세그먼트/프리셋칩/트리·카테고리 항목 */
+  --erp-radius-lg: 0; /* 목록 행/모바일 카드행/문서 헤더/첨부/CTA */
+  --erp-radius-xl: 0; /* 표준 패널·박스(입력/버튼/카드/모달 내부/분할뷰 등) */
+  --erp-radius-2xl: 0; /* 행 카드, 표 바깥 테두리 */
+  --erp-radius-3xl: 0; /* 큰 카드(히어로/요약패널/모달/전표/토스트/게시판) */
+  --erp-radius-4xl: 0; /* 가장 큰 진입 카드(nav-card) */
+  --erp-radius-circle: 0; /* 원형(모달 닫기 버튼, 스위치 손잡이) */
+  --erp-radius-pill: 0; /* 알약형(토글 스위치 트랙) */
 
   /* 폰트 크기 스케일 — 새 값을 지어내지 않고, 지금 코드 전체에서
      실제로 반복돼 쓰이던 값들을 그대로 토큰 이름만 붙였다(정합성
@@ -472,7 +504,7 @@
   gap: 10px;
   padding: 4px 6px;
   margin: -4px -6px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   text-decoration: none;
   color: inherit;
   /* 회사명(회사정보에서 설정하는 값이라 길이가 정해져 있지 않음)이
@@ -534,7 +566,7 @@
   color: inherit;
   font-size: var(--erp-font-base);
   padding: 4px 6px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
 }
 
 .erp-titlebar-right button:hover {
@@ -563,7 +595,7 @@
   padding: 0 10px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   font-size: var(--erp-font-base);
   color: var(--erp-text);
   flex-shrink: 0;
@@ -591,7 +623,7 @@
   overflow-y: auto;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-xl, 0);
   box-shadow: var(--erp-shadow-md);
 }
 
@@ -679,7 +711,7 @@
   display: flex;
   flex-direction: column;
   background: var(--erp-panel);
-  border-radius: 0;
+  border-radius: var(--erp-radius-3xl, 0);
   /* 등록모달(md/lg/xl)은 그동안 헤더바 없이 그냥 흰 박스라, 위쪽에
      제목바(.erp-modal-title)가 붙는 단순 모달과 같은 화면에서 "같은
      모달"처럼 안 보인다는 지적 — 위쪽에 브랜드 색 테두리를 둘러 모든
@@ -751,7 +783,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-circle, 0);
   background: var(--erp-text);
   color: var(--erp-on-primary);
   font-size: var(--erp-font-lg);
@@ -799,7 +831,7 @@
   font-weight: 700;
   background: var(--erp-primary);
   color: var(--erp-on-primary);
-  border-radius: 0;
+  border-radius: var(--erp-radius-3xl, 0) var(--erp-radius-3xl, 0) 0 0;
 }
 
 .erp-modal-close {
@@ -1017,7 +1049,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   opacity: 0.85;
 }
 
@@ -1052,7 +1084,7 @@
   height: 30px;
   margin: 1px 8px;
   padding: 0 10px 0 22px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   font-size: var(--erp-font-base);
   font-weight: 500;
   color: var(--erp-text-muted);
@@ -1076,7 +1108,7 @@
    둥근 알약(pill) 배경으로 바꿔서 더 가벼운 느낌을 준다. */
 .erp-tree-item.active {
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 700;
 }
 
@@ -1128,7 +1160,7 @@
   background: var(--erp-tab-bg);
   color: var(--erp-text-muted);
   font-size: var(--erp-font-base);
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0) var(--erp-radius-md, 0) 0 0;
   border-top: 2px solid transparent;
   text-decoration: none;
   white-space: nowrap;
@@ -1143,7 +1175,7 @@
    흔들리게 한다. */
 .erp-tab.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 600;
   border-top-color: var(--erp-primary);
 }
@@ -1155,7 +1187,7 @@
   width: 16px;
   height: 16px;
   border: none;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   background: transparent;
   font: inherit;
   font-size: var(--erp-font-base);
@@ -1327,7 +1359,7 @@
   padding: 14px;
   background: var(--erp-bg-subtle);
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-xl, 0);
   margin-bottom: 12px;
 }
 
@@ -1347,7 +1379,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 9px;
-  border-radius: 3px;
+  border-radius: var(--erp-radius-md, 3px);
   border: 1px solid var(--erp-border);
   background: var(--erp-panel);
   color: var(--erp-text-muted);
@@ -1362,7 +1394,7 @@
 
 .erp-date-preset-btn.active {
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   border-color: var(--erp-primary);
   font-weight: 600;
 }
@@ -1403,7 +1435,7 @@
   height: 13px;
   border-radius: 50%;
   background: var(--erp-info-bg);
-  color: var(--erp-info-text);
+  color: var(--erp-text);
   border: 1px solid var(--erp-info-border);
   font-size: var(--erp-font-2xs);
   font-weight: 800;
@@ -1565,6 +1597,7 @@ form.erp-field-grid {
   border-bottom-width: 2px;
   margin-bottom: 12px;
   padding: 10px 14px;
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 /* 상세 화면 제목 줄(제목/배지 + 툴바 버튼들)이 화면마다 "flex items-center
@@ -1590,7 +1623,7 @@ form.erp-field-grid {
   height: 32px;
   min-width: 90px;
   padding: 0 12px;
-  border-radius: 3px;
+  border-radius: var(--erp-radius-xl, 3px);
   border: 1px solid var(--erp-border);
   background: var(--erp-panel);
   color: var(--erp-text);
@@ -1653,7 +1686,7 @@ form.erp-field-grid {
 .erp-btn-primary {
   background: var(--erp-panel);
   border-color: var(--erp-primary);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-btn-primary:hover {
@@ -1695,7 +1728,7 @@ form.erp-field-grid {
 .erp-seg {
   display: inline-flex;
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   overflow: hidden;
 }
 
@@ -1721,7 +1754,7 @@ form.erp-field-grid {
 /* ── 6. Data grid ──────────────────────────────────────────── */
 .erp-grid-wrap {
   border: 1px solid var(--erp-border-strong);
-  border-radius: 0;
+  border-radius: var(--erp-radius-2xl, 0);
   overflow: auto;
 }
 
@@ -1915,7 +1948,7 @@ form.erp-field-grid {
   padding: 12px 14px;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  border-radius: 0;
+  border-radius: var(--erp-radius-2xl, 0);
   color: inherit;
   text-decoration: none;
 }
@@ -2050,6 +2083,7 @@ form.erp-field-grid {
   border-top: 3px solid var(--erp-primary);
   box-shadow: var(--erp-shadow-md);
   padding: 24px;
+  border-radius: var(--erp-radius-3xl, 0);
 }
 
 .erp-doc-title {
@@ -2076,7 +2110,7 @@ form.erp-field-grid {
 .erp-doc-total {
   font-size: 19px;
   font-weight: 800;
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* 구매요청/구매견적요청/견적서처럼 필드가 단순한 화면은 문서 정보를
@@ -2086,6 +2120,7 @@ form.erp-field-grid {
   grid-template-columns: 1fr 1fr;
   border: 1px solid var(--erp-border-strong);
   margin-bottom: 16px;
+  border-radius: var(--erp-radius-lg, 0);
 }
 
 .erp-doc-header-row {
@@ -2116,7 +2151,7 @@ form.erp-field-grid {
   padding: 0 10px;
   font-size: var(--erp-font-base);
   font-weight: 700;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   display: flex;
   align-items: center;
 }
@@ -2128,6 +2163,22 @@ form.erp-field-grid {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* 매출/매입/견적서/세금계산서/지급결의서/구매요청서 등 6개 화면이
+   공유하는 라벨/값 2열 표가, 좁은 화면에서는 한 줄(1fr 1fr)에 "라벨
+   84px + 값"이 두 번 들어가야 해서 값 칸이 너무 좁아진다(사용자 지적
+   — 구매요청서의 "공급처" 선택칸이 쓸 공간이 거의 없고, "요청일"
+   날짜도 "2026.1"처럼 잘려 보임). 좁은 화면에서는 2열을 포기하고
+   한 줄에 한 칸씩 세로로 쌓아서 각 값 칸이 전체 폭을 쓰게 한다. */
+@media (max-width: 640px) {
+  .erp-doc-header {
+    grid-template-columns: 1fr;
+  }
+
+  .erp-doc-header-row:nth-child(odd) {
+    border-right: none;
+  }
 }
 
 /* ── 6-2. Rich text editor (문서 양식/공문 본문) ─────────────────
@@ -2146,7 +2197,7 @@ form.erp-field-grid {
    각각 같은 반경을 직접 줘서 잘림 없이 둥글게 맞춘다. */
 .erp-richtext {
   border: 1px solid var(--erp-border);
-  border-radius: 3px;
+  border-radius: var(--erp-radius-xl, 3px);
   background: var(--erp-panel);
   transition:
     border-color 0.12s ease,
@@ -2188,6 +2239,7 @@ form.erp-field-grid {
   color: var(--erp-text-muted);
   background: transparent;
   border: 1px solid transparent;
+  border-radius: var(--erp-radius-sm, 0);
 }
 
 .erp-richtext-toolbar-btn:hover {
@@ -2198,7 +2250,7 @@ form.erp-field-grid {
 .erp-richtext-toolbar-btn[data-active="1"] {
   background: var(--erp-selected);
   border-color: var(--erp-primary);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* 버튼 하나하나가 아니라 묶음(실행취소/제목/글자서식/정렬 등) 단위로
@@ -2291,6 +2343,7 @@ form.erp-field-grid {
   border: 1px solid var(--erp-border);
   box-shadow: var(--erp-shadow-md);
   padding: 4px;
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 .erp-richtext-popover-input {
@@ -2338,7 +2391,7 @@ form.erp-field-grid {
 }
 
 .erp-richtext-content a {
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-decoration: underline;
 }
 
@@ -2356,6 +2409,7 @@ form.erp-field-grid {
   border: 1px solid var(--erp-border);
   overflow-x: auto;
   font-size: var(--erp-font-base);
+  border-radius: var(--erp-radius-lg, 0);
 }
 
 .erp-richtext-content pre code {
@@ -2371,7 +2425,7 @@ form.erp-field-grid {
 
 .erp-richtext-content mark {
   padding: 0 0.1em;
-  border-radius: 0;
+  border-radius: var(--erp-radius-xs, 0);
 }
 
 .erp-richtext-content table {
@@ -2438,7 +2492,7 @@ form.erp-field-grid {
 
 .erp-badge-info {
   background: var(--erp-info-bg);
-  color: var(--erp-info-text);
+  color: var(--erp-text);
 }
 
 /* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로
@@ -2450,8 +2504,8 @@ form.erp-field-grid {
   justify-content: center;
   width: 26px;
   height: 26px;
-  border-radius: 0;
-  color: var(--erp-primary);
+  border-radius: var(--erp-radius-md, 0);
+  color: var(--erp-text);
   transition: background 0.12s ease;
 }
 
@@ -2477,7 +2531,7 @@ form.erp-field-grid {
      또렷한 흰 카드로 보이게 한다. */
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  border-radius: 0;
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 /* overflow: hidden은 일부러 안 준다 — 상세박스 안에 "입고 불러오기" 같은
@@ -2523,7 +2577,7 @@ form.erp-field-grid {
 
 .erp-detail-tab.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 600;
 }
 
@@ -2623,7 +2677,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 30px;
   padding: 0 10px;
   border: none;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   background: none;
   font-size: var(--erp-font-base);
   font-weight: 500;
@@ -2641,7 +2695,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-cat-item.active {
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 700;
 }
 
@@ -2652,7 +2706,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-cat-item.active .cnt {
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* F2/F5/F8 같은 실제 키보드 단축키를 화면 하단에 작게 보여주는 힌트
@@ -2670,6 +2724,7 @@ a.erp-detail-tab:hover:not(.active) {
   font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   font-weight: 600;
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 .erp-key-hint {
@@ -2694,6 +2749,7 @@ a.erp-detail-tab:hover:not(.active) {
   min-height: 0;
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 .erp-split-list-head {
@@ -2724,6 +2780,7 @@ a.erp-detail-tab:hover:not(.active) {
   color: inherit;
   text-decoration: none;
   border-bottom: 1px solid var(--erp-divider);
+  border-radius: var(--erp-radius-lg, 0);
 }
 
 .erp-split-list-row:hover {
@@ -2890,6 +2947,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
   padding: 14px;
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 /* 분할뷰 상세 패널에서 아무것도 선택 안 했을 때의 빈 상태 — 메일함/
@@ -2936,7 +2994,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-comm-shell .erp-split-detail-empty-icon {
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-split-detail-empty-icon svg {
@@ -3188,7 +3246,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-comm-tab.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   box-shadow: var(--erp-comm-shadow-row);
 }
 
@@ -3359,7 +3417,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
   border-left: 3px solid var(--erp-primary);
-  border-radius: 0;
+  border-radius: var(--erp-radius-3xl, 0);
   padding: 16px 18px;
 }
 
@@ -3402,7 +3460,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-home-panel {
   border: 1px solid var(--erp-border-strong);
-  border-radius: 0;
+  border-radius: var(--erp-radius-3xl, 0);
   background: var(--erp-panel);
   overflow: hidden;
 }
@@ -3417,6 +3475,7 @@ a.erp-detail-tab:hover:not(.active) {
   font-weight: 700;
   background: var(--erp-bg);
   border-bottom: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-3xl, 0) var(--erp-radius-3xl, 0) 0 0;
 }
 
 /* erp-kpi-row 안에 흩어져 있던 "라벨 작게 + 숫자 크게"가 화면마다(대시보드,
@@ -3452,7 +3511,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 12px 14px;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border-strong);
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   color: inherit;
   text-decoration: none;
 }
@@ -3487,6 +3546,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-bg-subtle);
   border: 1px solid var(--erp-border-strong);
   padding: 12px;
+  border-radius: var(--erp-radius-xl, 0);
 }
 
 /* 플랫폼 관리자 > 고객사 상세의 "소속 계정"처럼, 몇 건 안 되는 게
@@ -3581,7 +3641,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 12px;
   background: var(--erp-panel);
   border: 1px dashed var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   padding: 14px 16px;
 }
 
@@ -3595,7 +3655,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 30px;
   border-radius: 50%;
   background: var(--erp-selected);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-size: var(--erp-font-base);
   font-weight: 800;
   flex-shrink: 0;
@@ -3628,7 +3688,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-post-header {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-3xl, 0) var(--erp-radius-3xl, 0) 0 0;
   padding: 16px 18px 12px;
   box-shadow: var(--erp-shadow-sm);
 }
@@ -3652,7 +3712,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);
   border-top: none;
-  border-radius: 0;
+  border-radius: 0 0 var(--erp-radius-3xl, 0) var(--erp-radius-3xl, 0);
   padding: 18px;
 }
 
@@ -3668,7 +3728,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-info-cell {
   background: var(--erp-bg-subtle);
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   padding: 8px 12px;
 }
 
@@ -3697,7 +3757,7 @@ a.erp-detail-tab:hover:not(.active) {
   flex-direction: column;
   gap: 2px;
   padding: 7px 10px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   font-size: var(--erp-font-base);
   text-decoration: none;
   color: var(--erp-text);
@@ -3731,7 +3791,7 @@ a.erp-detail-tab:hover:not(.active) {
   justify-content: space-between;
   gap: 8px;
   padding: 7px 10px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   border: 1px solid var(--erp-danger-border);
   background: var(--erp-danger-bg);
   font-size: var(--erp-font-base);
@@ -3761,7 +3821,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-home-stock-footer a {
   font-size: var(--erp-font-sm);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-decoration: none;
   font-weight: 600;
 }
@@ -3807,7 +3867,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 10px;
   padding: 18px 28px;
   background: var(--erp-panel);
-  border-radius: 0;
+  border-radius: var(--erp-radius-4xl, 0);
   box-shadow: var(--erp-shadow-lg);
 }
 
@@ -3963,7 +4023,7 @@ a.erp-detail-tab:hover:not(.active) {
   text-align: center;
   padding: 8px 6px;
   font-size: var(--erp-font-base);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-decoration: none;
 }
 
@@ -3989,7 +4049,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: none;
   padding: 4px 0;
   font-size: var(--erp-font-base);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   text-align: left;
   cursor: pointer;
 }
@@ -4030,7 +4090,7 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 6px;
   padding: 5px 10px 5px 6px;
   border: 1px solid var(--erp-warning-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-3xl, 0);
   background: var(--erp-panel);
   color: var(--erp-warning);
   font-size: var(--erp-font-base);
@@ -4084,7 +4144,7 @@ a.erp-detail-tab:hover:not(.active) {
   width: 280px;
   padding: 12px 14px;
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-xl, 0);
   background: var(--erp-panel);
   box-shadow: var(--erp-shadow-lg);
   animation: erp-toast-in 0.25s ease-out;
@@ -4152,7 +4212,7 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-toast-item:hover {
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 /* ── 사내메신저(그룹웨어 > 메신저 페이지) ───────────────────── */
@@ -4233,7 +4293,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-messenger-channel-row.active {
   background: var(--erp-panel);
-  color: var(--erp-primary);
+  color: var(--erp-text);
   font-weight: 700;
   border: 1px solid var(--erp-comm-border);
   box-shadow: var(--erp-comm-shadow-row);
@@ -4351,7 +4411,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-messenger-search-hit {
   background: var(--erp-search-hit-bg);
   color: inherit;
-  border-radius: 0;
+  border-radius: var(--erp-radius-xs, 0);
   padding: 0 1px;
 }
 
@@ -4548,7 +4608,7 @@ a.erp-detail-tab:hover:not(.active) {
   margin-left: auto;
   font-size: var(--erp-font-xs);
   font-weight: 700;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   background: var(--erp-selected);
   padding: 3px 9px;
   border-radius: var(--erp-comm-radius-pill);
@@ -4628,7 +4688,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-messenger-erp-card-badge {
   font-size: var(--erp-font-xs);
   font-weight: 700;
-  color: var(--erp-primary);
+  color: var(--erp-text);
   background: var(--erp-selected);
   padding: 1px 7px;
   border-radius: var(--erp-comm-radius-pill);
@@ -4662,7 +4722,7 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 7px 10px;
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   text-decoration: none;
   transition:
     background 0.15s ease,
@@ -4678,7 +4738,7 @@ a.erp-detail-tab:hover:not(.active) {
   flex: 0 0 auto;
   width: 28px;
   height: 28px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   background: var(--erp-selected);
   display: flex;
   align-items: center;
@@ -4711,13 +4771,13 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-attachment-download {
   flex: 0 0 auto;
   font-size: var(--erp-font-md);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-attachment-image-link {
   display: block;
   max-width: 200px;
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   overflow: hidden;
   border: 1px solid var(--erp-border);
 }
@@ -4759,7 +4819,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 32px;
   padding: 0 12px;
   border: 1px solid var(--erp-border);
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   background: var(--erp-panel);
   box-shadow: var(--erp-shadow-sm);
   font-size: var(--erp-font-base);
@@ -4777,7 +4837,7 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-file-picker-btn:hover,
 .erp-file-picker-btn:focus-visible {
   border-color: var(--erp-primary);
-  color: var(--erp-primary);
+  color: var(--erp-text);
 }
 
 .erp-file-picker-name {
@@ -4787,7 +4847,7 @@ a.erp-detail-tab:hover:not(.active) {
   max-width: 160px;
   padding: 4px 8px;
   background: var(--erp-hover);
-  border-radius: 0;
+  border-radius: var(--erp-radius-lg, 0);
   font-size: var(--erp-font-sm);
   color: var(--erp-text-muted);
   white-space: nowrap;
@@ -4835,7 +4895,7 @@ a.erp-detail-tab:hover:not(.active) {
   border: none;
   color: inherit;
   font-size: var(--erp-font-xl);
-  border-radius: 0;
+  border-radius: var(--erp-radius-md, 0);
   flex: 0 0 auto;
 }
 
@@ -5067,6 +5127,7 @@ a.erp-detail-tab:hover:not(.active) {
   background: var(--erp-panel);
   border: 1px solid var(--erp-border);
   transition: background 0.12s ease, border-color 0.12s ease;
+  border-radius: var(--erp-radius-pill, 0);
 }
 .erp-switch input:checked + .erp-switch-track {
   background: var(--erp-primary);
@@ -5080,6 +5141,7 @@ a.erp-detail-tab:hover:not(.active) {
   height: 14px;
   background: var(--erp-text-muted);
   transition: transform 0.12s ease, background 0.12s ease;
+  border-radius: var(--erp-radius-circle, 0);
 }
 .erp-switch input:checked ~ .erp-switch-knob {
   transform: translateX(18px);
@@ -5331,7 +5393,7 @@ a.erp-detail-tab:hover:not(.active) {
   --erp-danger-border: #fecdd3;
   --erp-info-bg: #eef2ff;
   --erp-info-border: #c7d2fe;
-  --erp-info-text: #4338ca;
+  --erp-info-text: var(--erp-text);
   --erp-highlight-bg: #fef08a;
   --erp-text: #0f172a;
   --erp-text-muted: #64748b;
@@ -5358,6 +5420,19 @@ a.erp-detail-tab:hover:not(.active) {
   --erp-comm-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 24px -16px rgba(15, 23, 42, 0.14);
   --erp-comm-shadow-row: 0 1px 1px rgba(15, 23, 42, 0.03), 0 6px 16px -10px rgba(15, 23, 42, 0.16);
   --erp-comm-shadow-btn: 0 2px 8px -3px rgba(79, 70, 229, 0.4);
+  /* 위 :root의 r값 스케일 — 모던 테마에서만 실제 둥근 값으로. 기존에
+     화면 곳곳(아래 각 컴포넌트 기본 규칙)에서 쓰던 값을 그대로 옮겨왔다
+     (새 크기를 지어내지 않음). */
+  --erp-radius-xs: 3px;
+  --erp-radius-sm: 6px;
+  --erp-radius-md: 8px;
+  --erp-radius-lg: 10px;
+  --erp-radius-xl: 12px;
+  --erp-radius-2xl: 14px;
+  --erp-radius-3xl: 16px;
+  --erp-radius-4xl: 20px;
+  --erp-radius-circle: 50%;
+  --erp-radius-pill: 999px;
 }
 
 /* 타이틀바 — 목업의 관제탑 그라디언트(slate-900 → indigo-950 →
@@ -5367,215 +5442,48 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 /* 목업은 전체적으로 큰 라운드 코너(카드 rounded-2xl, 버튼/입력
-   rounded-xl)를 쓴다 — 이 디자인 시스템은 모서리 반경을 토큰이 아니라
-   화면마다 Tailwind 유틸리티 클래스(rounded-sm 등)로 직접 쓰고 있어서,
-   그 클래스 자체를 이 테마 스코프 안에서 덮어쓴다(컴포넌트 JSX는
-   하나도 안 건드림 — 선택자 특이도만으로 기존 규칙을 이긴다). */
+   rounded-xl)를 쓴다 — 이 중 .rounded-sm은 우리 토큰이 아니라
+   Tailwind 자체 유틸리티 클래스라(화면 JSX에 직접 쓰임), 토큰 전환
+   대상이 아니고 그대로 이 테마 스코프 안에서 덮어쓴다(선택자 특이도로
+   기존 규칙을 이김). */
 [data-theme="modern"] .rounded-sm {
   border-radius: 10px;
 }
-[data-theme="modern"] .erp-detail,
-[data-theme="modern"] .erp-btn,
-[data-theme="modern"] .erp-input,
-[data-theme="modern"] .erp-select,
-[data-theme="modern"] .erp-textarea,
-[data-theme="modern"] .erp-card,
-[data-theme="modern"] .erp-modal-panel {
-  border-radius: 12px;
-}
-/* 좌측 트리메뉴/카테고리 사이드바 — 목업처럼 패널과 살짝 다른 톤으로
-   분리되게. */
+
+/* 아래부터는 전부 r값(border-radius) 자체가 아니라 "모던 테마에서만
+   다른" 부가 효과(그림자/오버플로/마진/강조선 숨김 등)만 모아둔다 —
+   r값 자체는 더 이상 여기 나열하지 않는다. 각 컴포넌트의 기본 규칙이
+   이미 border-radius: var(--erp-radius-*) 토큰을 쓰고 있어서, 위
+   [data-theme="modern"] { --erp-radius-*: ...; } 토큰 값만 바뀌면
+   클래식(0)과 모던(실제 값) 둘 다 자동으로 맞는다 — 이 블록에 새
+   클래스를 추가할 필요가 없다. 새 박스형 컴포넌트를 만들 때는 역할에
+   맞는 --erp-radius-* 토큰을 기본 규칙에 바로 쓰면 되고(위 :root
+   주석의 역할 설명 참고), 혹시 빠뜨리면 scripts/check-radius-
+   token.mjs가 lint에서 잡아준다. */
 [data-theme="modern"] .erp-tree,
 [data-theme="modern"] .erp-cat-sidebar {
   background: var(--erp-panel);
 }
-
-/* 대시보드류 공용 카드(.erp-hero-card/.erp-home-panel — 14개 화면
-   이상이 재사용하는 요약 패널)와 알림 배너도 목업의 흰 rounded-2xl +
-   옅은 그림자 카드 느낌으로 맞춘다. 화면마다 따로 JSX를 손대지 않고
-   이 공용 클래스 3개만 덮어써서, Modern 테마를 쓰는 모든 화면이
-   한 번에 같이 바뀐다(메인 대시보드 전용이 아님). 왼쪽 강조선
-   (border-left)도 목업엔 없어서 투명 처리. */
 [data-theme="modern"] .erp-hero-card,
 [data-theme="modern"] .erp-home-panel,
 [data-theme="modern"] .erp-alert-item {
-  border-radius: 16px;
   box-shadow: var(--erp-shadow-sm);
 }
 [data-theme="modern"] .erp-hero-card {
   border-left-color: transparent;
 }
-
-/* 모바일 카드뷰 행(.erp-row-card — 표가 좁은 화면에서 카드로 바뀔 때
-   쓰는 공용 행, 거의 모든 목록 화면이 재사용)과 표 바깥 테두리
-   (.erp-grid-wrap)도 같은 둥근 카드 언어로 맞춘다. 목업의 "품목
-   테이블" 영역도 rounded-xl 흰 박스 안에 들어 있다. */
-[data-theme="modern"] .erp-row-card,
-[data-theme="modern"] .erp-grid-wrap {
-  border-radius: 14px;
-}
-
-/* 조회기간 빠른 필터 칩(오늘/어제/이번주/월별 — 매출/매입/재고이동 등
-   여러 화면이 공유하는 DateRangeQuickFilters)도 목업의 rounded-lg 필터
-   버튼처럼 둥글게. */
-[data-theme="modern"] .erp-date-preset-btn {
-  border-radius: 8px;
-}
-
-/* 분할뷰 목록 행(.erp-split-list-row — 결재선/게시판/견적서/거래처 등
-   20개 화면이 공유하는 좌측 목록 패턴)도 목업의 사이드바 메뉴 항목처럼
-   "줄마다 각진 구분선" 대신 "행마다 둥근 배경 칩"으로 바꾼다. 기존
-   active 표시(위아래 inset box-shadow 줄)는 목업에 없는 스타일이라
-   투명하게 끄고, 대신 은은한 배경색(--erp-selected)만 남긴다. */
 [data-theme="modern"] .erp-split-list-row {
   margin: 2px 6px;
-  border-radius: 10px;
   border-bottom-color: transparent;
 }
 [data-theme="modern"] .erp-split-list-row.active {
   box-shadow: none;
 }
-
-/* 매출/매입/견적서/세금계산서/지급결의서 등 8개 화면이 공유하는
-   "전표 용지" 문서형 폼(.erp-doc-sheet 계열)도 목업의 둥근 흰 박스
-   느낌으로 맞춘다. 윗줄 두꺼운 포인트 라인(border-top)은 그대로
-   두되(한국 사무서식의 "결재란 윗줄" 관례라 완전히 없애지 않음),
-   모서리만 둥글리고 그림자를 더 부드럽게 — 문서 안의 라벨/값 2열
-   표(.erp-doc-header)도 같이 둥글린다. 라벨 칸 글자색은 이미
-   --erp-primary(인디고)를 상속해 자동으로 맞는다. */
-[data-theme="modern"] .erp-doc-paper {
-  border-radius: 16px;
-  box-shadow: var(--erp-shadow-sm);
-}
+[data-theme="modern"] .erp-split-list,
+[data-theme="modern"] .erp-richtext,
 [data-theme="modern"] .erp-doc-header {
-  border-radius: 10px;
   overflow: hidden;
 }
-
-/* 열린 탭 바(.erp-tab — 거의 모든 화면 상단에 뜸)도 목업처럼 위쪽
-   모서리만 둥글린다(종이 탭 관례는 그대로 유지, border-top 포인트
-   색상도 이미 토큰으로 맞음). */
-[data-theme="modern"] .erp-tab {
-  border-radius: 8px 8px 0 0;
-}
-
-/* 왼쪽 트리메뉴 항목(.erp-tree-item)과 카테고리 사이드바 항목
-   (.erp-cat-item — 플랫폼관리자 메뉴 등)도 목업의 사이드바 메뉴처럼
-   줄마다 둥근 배경으로. 참고: .erp-tree-item 자체의 코드 주석은 원래
-   "둥근 알약 배경"을 의도했다고 적혀 있는데 실제 규칙은
-   border-radius: 0으로 남아 있었다(기존 전 테마 공통 버그로 보이지만,
-   이번 범위는 Modern 테마라 거기까지는 안 건드리고 여기서만
-   바로잡는다). */
-[data-theme="modern"] .erp-tree-item,
-[data-theme="modern"] .erp-cat-item {
-  border-radius: 8px;
-}
-
-/* 등록/수정 모달(.erp-modal — 전체 화면 생성 폼용 모달 수십 개가 공유)도
-   목업의 둥근 흰 박스 느낌으로. 위쪽 브랜드색 포인트 라인(border-top)은
-   .erp-doc-paper와 같은 이유로 그대로 두되(여러 모달이 "하나의 통일된
-   틀"처럼 보이게 하는 장치), 모서리만 둥글린다. .erp-modal-window-close
-   (닫기 버튼)가 모달 모서리 바깥으로 살짝 걸치게 음수 offset(top/right:
-   -14px)으로 배치돼 있어서, .erp-doc-header처럼 overflow: hidden을
-   같이 주면 그 닫기 버튼이 잘려 보인다 — 그래서 여기서는 radius만
-   준다. 이미 덮여 있는 .erp-modal-panel(작은 확인창)과는 다른 클래스라
-   별도로 추가. */
-[data-theme="modern"] .erp-modal {
-  border-radius: 16px;
-}
-/* .erp-modal-title는 모달과 별개 박스라(자체 배경이 꽉 채워 덮음),
-   모달 쪽만 radius를 줘도 제목바가 각진 모서리로 덮어버려 위쪽은 그대로
-   각지게 보인다 — 제목바 위쪽 모서리도 같이 둥글려야 한 덩어리로
-   보인다(스크린샷으로 확인한 실제 버그, .erp-doc-paper/.erp-doc-header
-   쌍과 같은 이유). */
-[data-theme="modern"] .erp-modal-title {
-  border-radius: 16px 16px 0 0;
-}
-/* 모달 모서리에 살짝 걸쳐 뜨는 닫기 버튼(.erp-modal-window-close)도
-   각진 배지 대신 둥근 원형 버튼으로. */
-[data-theme="modern"] .erp-modal-window-close {
-  border-radius: 50%;
-}
-
-/* 우하단 토스트 알림(.erp-toast)도 둥글게. 긴급 토스트
-   (.erp-toast-urgent)의 왼쪽 강조선(border-left)은 "위험" 신호라 그대로
-   유지 — radius만 맞추면 각진 틀이 깨지지 않는다. */
-[data-theme="modern"] .erp-toast {
-  border-radius: 12px;
-}
-
-/* 게시판 상세(.erp-post-header 위+.erp-post-body 아래가 이어 붙어
-   하나의 박스처럼 보이는 구조)도 둥글게 — 맞닿는 가운데 모서리는 각지게
-   두고 바깥쪽 모서리만 둥글려야 "하나로 이어진 박스" 느낌이 유지된다. */
-[data-theme="modern"] .erp-post-header {
-  border-radius: 16px 16px 0 0;
-}
-[data-theme="modern"] .erp-post-body {
-  border-radius: 0 0 16px 16px;
-}
-
-/* 조회조건 검색바(.erp-search)와 세그먼트 토글(.erp-seg — 탭처럼 붙어
-   있는 2~3개 버튼 그룹)도 같은 둥근 언어로. */
-[data-theme="modern"] .erp-search {
-  border-radius: 12px;
-}
-[data-theme="modern"] .erp-seg {
-  border-radius: 8px;
-}
-
-/* 메일함/메신저 등 아이템 카드형 목록 행(.erp-item-card), 대시보드
-   "최근 항목"류 리스트 행(.erp-home-list-item), 재고위험 경고 행
-   (.erp-home-stock-row), 로그인 후 선택 화면 등의 큰 진입 카드
-   (.erp-nav-card)도 같은 둥근 카드 언어로 맞춘다. */
-[data-theme="modern"] .erp-item-card,
-[data-theme="modern"] .erp-home-list-item,
-[data-theme="modern"] .erp-home-stock-row {
-  border-radius: 10px;
-}
-[data-theme="modern"] .erp-nav-card {
-  border-radius: 20px;
-}
-
-/* 상단 타이틀바/리본의 아이콘형 버튼들(.erp-titlebar-home,
-   .erp-titlebar-right button, .erp-titlebar-menu-toggle,
-   .erp-ribbon-btn, .erp-icon-link, 탭 닫기 .erp-tab-close)도 목업의
-   "둥근 아이콘 버튼" 느낌으로. */
-[data-theme="modern"] .erp-titlebar-home,
-[data-theme="modern"] .erp-titlebar-right button,
-[data-theme="modern"] .erp-titlebar-menu-toggle,
-[data-theme="modern"] .erp-ribbon-btn,
-[data-theme="modern"] .erp-icon-link,
-[data-theme="modern"] .erp-tab-close {
-  border-radius: 8px;
-}
-
-/* 즐겨찾기/최근메뉴/알림 드롭다운(.erp-ribbon-dropdown — 이미
-   overflow-y: auto라 자식이 모서리 밖으로 안 튀어나와 안전)도 둥글게. */
-[data-theme="modern"] .erp-ribbon-dropdown {
-  border-radius: 12px;
-}
-
-/* 본문 검색 하이라이트(.erp-messenger-search-hit/
-   .erp-richtext-content mark)도 각진 형광펜 대신 둥근 칩 느낌으로. */
-[data-theme="modern"] .erp-messenger-search-hit,
-[data-theme="modern"] .erp-richtext-content mark {
-  border-radius: 3px;
-}
-
-/* 새 글쓰기 등 점선 CTA 박스(.erp-new-count-cta), 라벨/값 정보 칸
-   (.erp-info-cell), 첨부파일 행/아이콘/이미지 미리보기
-   (.erp-attachment-row/-icon/-image-link), 파일 선택 버튼/파일명 칩
-   (.erp-file-picker-btn/-name)도 같은 둥근 카드 언어로 맞춘다. */
-[data-theme="modern"] .erp-new-count-cta,
-[data-theme="modern"] .erp-info-cell,
-[data-theme="modern"] .erp-attachment-row,
-[data-theme="modern"] .erp-file-picker-btn,
-[data-theme="modern"] .erp-file-picker-name {
-  border-radius: 10px;
-}
-[data-theme="modern"] .erp-attachment-icon {
-  border-radius: 8px;
-}
-[data-theme="modern"] .erp-attachment-image-link {
-  border-radius: 10px;
+[data-theme="modern"] .erp-doc-paper {
+  box-shadow: var(--erp-shadow-sm);
 }

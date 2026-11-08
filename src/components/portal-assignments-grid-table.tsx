@@ -160,7 +160,7 @@ export function PortalAssignmentsGridTable({
                     {(STEP_STATUS_LABEL[step.status] ?? STEP_STATUS_LABEL.pending).label}
                   </GridBadge>
                   {step.processName}
-                  {step.isMine && <span style={{ marginLeft: 4, color: "var(--erp-primary)" }}>(우리 업체)</span>}
+                  {step.isMine && <span style={{ marginLeft: 4, color: "var(--erp-text)" }}>(우리 업체)</span>}
                 </span>
               ))}
             </div>

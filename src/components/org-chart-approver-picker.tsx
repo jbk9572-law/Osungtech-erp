@@ -74,7 +74,7 @@ export function OrgChartApproverPicker({
                     {e.fullName}
                     {e.positionTitle ? ` (${e.positionTitle})` : ""}
                   </span>
-                  {selected && <span style={{ color: "var(--erp-primary)" }}>✓</span>}
+                  {selected && <span style={{ color: "var(--erp-text)" }}>✓</span>}
                 </button>
               );
             })}

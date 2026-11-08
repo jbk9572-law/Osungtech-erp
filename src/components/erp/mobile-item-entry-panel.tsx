@@ -111,7 +111,7 @@ export function MobileItemEntryPanel({
                   minWidth: 112,
                   border: "1px solid var(--erp-border)",
                   background: "var(--erp-selected)",
-                  color: "var(--erp-primary)",
+                  color: "var(--erp-text)",
                 }}
               >
                 <span className="text-xs font-bold">{pick.name}</span>
@@ -131,7 +131,7 @@ export function MobileItemEntryPanel({
         </span>
         {showPrice ? (
           <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-            {totalLabel} <strong style={{ color: "var(--erp-primary)" }}>{formatNumber(totalAmount ?? 0)}원</strong>
+            {totalLabel} <strong style={{ color: "var(--erp-text)" }}>{formatNumber(totalAmount ?? 0)}원</strong>
           </span>
         ) : null}
       </div>
@@ -200,7 +200,7 @@ export function MobileItemEntryPanel({
                     />
                     <span
                       className="flex-shrink-0 text-sm font-bold"
-                      style={{ color: "var(--erp-primary)", minWidth: 72, textAlign: "right" }}
+                      style={{ color: "var(--erp-text)", minWidth: 72, textAlign: "right" }}
                     >
                       {formatNumber(item.amount ?? 0)}원
                     </span>
@@ -273,7 +273,7 @@ export function MobileItemEntryPanel({
                   <span className="text-xs font-semibold" style={{ color: "var(--erp-info-text)" }}>
                     금액
                   </span>
-                  <span className="text-base font-bold" style={{ color: "var(--erp-primary)" }}>
+                  <span className="text-base font-bold" style={{ color: "var(--erp-text)" }}>
                     {formatNumber(draftAmount)}원
                   </span>
                 </div>

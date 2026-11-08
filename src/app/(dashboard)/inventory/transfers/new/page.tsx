@@ -31,7 +31,7 @@ export default async function NewStockTransferPage() {
       {warehouses.length < 2 ? (
         <div className="erp-grid-empty" style={{ marginTop: 24 }}>
           창고가 2개 이상 있어야 이동을 등록할 수 있습니다.{" "}
-          <Link href="/inventory/warehouses" style={{ color: "var(--erp-primary)", textDecoration: "underline" }}>
+          <Link href="/inventory/warehouses" style={{ color: "var(--erp-text)", textDecoration: "underline" }}>
             창고 목록에서 창고를 추가하세요
           </Link>
           .

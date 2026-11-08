@@ -169,7 +169,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                     </td>
                     <td className="num">
                       {latestCalcId && (
-                        <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)", fontWeight: 700 }}>
+                        <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-text)", fontWeight: 700 }}>
                           도면 보기 →
                         </PaperCalcNavLink>
                       )}
@@ -205,7 +205,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
               <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
                 <span>합계 {formatNumber(paperCalcTotalSheet)}연</span>
                 {latestCalcId && (
-                  <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-primary)" }}>
+                  <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-text)" }}>
                     도면 보기 →
                   </PaperCalcNavLink>
                 )}

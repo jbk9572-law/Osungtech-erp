@@ -132,7 +132,7 @@ export default async function InventoryLedgerPage({
             </div>
             <div className="erp-home-panel erp-kpi-card">
               <div className="erp-kpi-label">이번달 입고</div>
-              <div className="erp-kpi-value" style={{ color: "var(--erp-primary)" }}>
+              <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
                 {formatNumber(inTotal)} {selectedProduct.unit}
               </div>
             </div>

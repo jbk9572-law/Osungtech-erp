@@ -168,7 +168,7 @@ export default async function BillingPage() {
                         {p.name}
                         {isCurrent && <GridBadge tone="ok">현재 이용중</GridBadge>}
                       </span>
-                      <span className="text-sm font-bold" style={{ color: "var(--erp-primary)" }}>
+                      <span className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
                         {p.monthly_price > 0 ? `월 ${formatNumber(p.monthly_price)}원` : "무료"}
                       </span>
                     </div>
@@ -184,7 +184,7 @@ export default async function BillingPage() {
           )}
           <PageGuide className="mt-3 mb-0">
             요금제 변경, 결제 수단 등록은{" "}
-            <Link href="/settings/support" className="underline" style={{ color: "var(--erp-primary)" }}>
+            <Link href="/settings/support" className="underline" style={{ color: "var(--erp-text)" }}>
               운영자 문의
             </Link>
             로 남겨주세요.

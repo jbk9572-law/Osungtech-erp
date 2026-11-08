@@ -452,7 +452,7 @@ export default async function MonthlyReportPage({
                     : rank === 2
                       ? {
                           background: "var(--erp-selected)",
-                          color: "var(--erp-primary)",
+                          color: "var(--erp-text)",
                         }
                       : {
                           background: "var(--erp-divider)",
@@ -529,7 +529,7 @@ export default async function MonthlyReportPage({
                             style={{
                               fontSize: 11,
                               fontWeight: 700,
-                              color: "var(--erp-primary)",
+                              color: "var(--erp-text)",
                               minWidth: 34,
                               textAlign: "right",
                             }}
@@ -560,7 +560,7 @@ export default async function MonthlyReportPage({
                       </td>
                       <td
                         className="num"
-                        style={{ fontWeight: 700, color: "var(--erp-primary)" }}
+                        style={{ fontWeight: 700, color: "var(--erp-text)" }}
                       >
                         {share.toFixed(1)}%
                       </td>
