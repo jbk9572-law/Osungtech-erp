@@ -5468,6 +5468,54 @@ a.erp-detail-tab:hover:not(.active) {
   border-radius: 12px;
 }
 
+/* 요약 패널(.erp-home-panel — 14개 화면 공유)도 위와 같은 "박스는
+   둥근데 안 flush 머리글은 각진 채로 남는" 버그가 있었다(.erp-modal-
+   title과 같은 이유). 바깥 박스만 border-radius: 16px를 받고
+   .erp-home-panel-title은 못 받아서, 그 각진 머리글이 둥근 위쪽
+   모서리를 가리고 있었다. */
+[data-theme="modern"] .erp-home-panel-title {
+  border-radius: 16px 16px 0 0;
+}
+
+/* 리치텍스트 에디터 박스(.erp-richtext — 공지사항/결재/전자문서 등
+   8개 화면이 공유하는 rich-text-editor.tsx) 자체가 모던 테마에서
+   한 번도 둥글어진 적이 없었다. overflow: hidden을 같이 줘서 안의
+   툴바(.erp-richtext-toolbar)가 자체 고정 radius(3px)로 모서리를
+   가리는 문제 없이 바깥 박스 모양을 그대로 따라가게 한다. */
+[data-theme="modern"] .erp-richtext {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 리치텍스트 툴바의 서식 버튼(굵게/기울임/정렬 등)도 타이틀바/리본의
+   둥근 아이콘 버튼과 같은 언어로. */
+[data-theme="modern"] .erp-richtext-toolbar-btn {
+  border-radius: 6px;
+}
+
+/* 링크/이미지 URL 입력, 글자색 팔레트 팝오버(.erp-richtext-popover) —
+   같은 톤의 즐겨찾기 드롭다운(.erp-ribbon-dropdown)은 이미 둥글게
+   고쳤는데 이 팝오버만 빠져 있었다. */
+[data-theme="modern"] .erp-richtext-popover {
+  border-radius: 12px;
+}
+
+/* F2/F5/F8 단축키 힌트 바(.erp-key-hint-bar)도 같은 "박스형인데
+   radius 선언이 아예 없던" 케이스. */
+[data-theme="modern"] .erp-key-hint-bar {
+  border-radius: 12px;
+}
+
+/* 토글 스위치 — 각진 디자인을 따르는 클래식 테마는 의도적으로 그대로
+   두고(위 .erp-switch 주석 참고), 나머지를 전부 둥글게 만든 모던
+   테마에서만 흔한 알약(pill) 모양으로 맞춘다. */
+[data-theme="modern"] .erp-switch-track {
+  border-radius: 999px;
+}
+[data-theme="modern"] .erp-switch-knob {
+  border-radius: 50%;
+}
+
 /* 매출/매입/견적서/세금계산서/지급결의서 등 8개 화면이 공유하는
    "전표 용지" 문서형 폼(.erp-doc-sheet 계열)도 목업의 둥근 흰 박스
    느낌으로 맞춘다. 윗줄 두꺼운 포인트 라인(border-top)은 그대로
