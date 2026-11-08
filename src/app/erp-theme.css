@@ -4357,6 +4357,41 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-messenger-bubble-action-btn {
     padding: 8px 6px;
   }
+
+  /* 모바일에서 대화 내용이 짧으면 작성칸 아래로 빈 여백이 생겼다
+     (사용자 지적 — "스크롤 내려서 벗어나는건 어떻게해"). 원인: 위
+     공용 규칙(.erp-page:has(...split3-shell) 등)이 "목록+상세를
+     세로로 쌓고 내용 높이만큼 자연스럽게 자란 뒤 페이지 전체가
+     스크롤되는" 다른 split3-shell 화면(메일함/공지사항)에 맞춰 이
+     체인 전체를 block으로 풀어버리는데, 메신저는 채팅 앱처럼 항상
+     "패널이 화면 나머지를 꽉 채우고 그 안의 .erp-messenger-body만
+     스크롤"되어야 한다(데스크톱용 .erp-comm-shell
+     .erp-split-detail.erp-messenger-main 규칙 참고) — 대화가 짧으면
+     채워야 할 높이가 모자라 .erp-page 자신의 배경만 보이는 빈 공간이
+     아래로 생겼다. 메신저만 선택자를 더 좁혀(.erp-messenger-split3)
+     같은 자리에서 체인을 다시 flex로 되돌린다 — 공용 규칙보다 선택자가
+     더 구체적이라 다른 13개 split3-shell 화면에는 영향이 없다. */
+  .erp-page:has(> div > .erp-messenger-split3),
+  .erp-page:has(> div > .erp-messenger-split3) > div {
+    display: flex;
+    flex-direction: column;
+  }
+  .erp-page:has(> div > .erp-messenger-split3) > div {
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+  }
+  .erp-messenger-split3 {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .erp-messenger-split3 > .erp-cat-sidebar,
+  .erp-messenger-split3 > .erp-split-list,
+  .erp-messenger-split3 > .erp-split-detail {
+    flex: 1;
+    min-height: 0;
+  }
 }
 
 /* 대화창 상단에 지금 누구와 대화 중인지 아바타+이름으로 보여준다 —
