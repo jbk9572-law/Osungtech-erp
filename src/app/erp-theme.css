@@ -5436,6 +5436,33 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: none;
 }
 
+/* 위에서 행(.erp-split-list-row) 안쪽만 둥글리고 정작 그 행을 담는
+   바깥 박스(.erp-split-list/.erp-split-detail — 같은 20개 화면이 공유)는
+   그대로 각진 채로 남겨뒀다(사용자 지적 — "출고처관리/영업활동관리/
+   견적서관리/공급처관리 등 R값 통일 안 된 부분이 많다"). 바깥 박스도
+   같은 둥근 패널 톤(.erp-detail과 같은 12px)으로 맞춘다.
+   .erp-split-list는 머리글(.erp-split-list-head)이 꽉 채운 첫 자식이라
+   overflow: hidden 없이는 둥근 모서리가 그 머리글 각진 배경에 가려지는
+   같은 버그가 난다(.erp-comm-shell .erp-split-list에 이미 적용한 것과
+   동일한 이유) — .erp-split-detail은 자체 padding(14px)이 있어 내용이
+   모서리에 안 붙으므로 이 문제가 없다. */
+[data-theme="modern"] .erp-split-list,
+[data-theme="modern"] .erp-split-detail {
+  border-radius: 12px;
+}
+[data-theme="modern"] .erp-split-list {
+  overflow: hidden;
+}
+
+/* F2/F5/Esc 단축키 안내 툴바(.erp-page-toolbar — 15개 화면이 공유)도
+   같은 이유로 그동안 빠져 있었다(border-radius를 아예 선언한 적이
+   없는 클래스라 border-radius: 0인 것들만 찾던 이전 스캔에서 안 걸림 —
+   이번에 "박스처럼 보이는데 radius가 아예 없는" 클래스로 다시 훑어서
+   찾음). */
+[data-theme="modern"] .erp-page-toolbar {
+  border-radius: 12px;
+}
+
 /* 매출/매입/견적서/세금계산서/지급결의서 등 8개 화면이 공유하는
    "전표 용지" 문서형 폼(.erp-doc-sheet 계열)도 목업의 둥근 흰 박스
    느낌으로 맞춘다. 윗줄 두꺼운 포인트 라인(border-top)은 그대로
