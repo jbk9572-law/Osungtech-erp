@@ -5449,6 +5449,13 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="modern"] .rounded-sm {
   border-radius: 10px;
 }
+/* 지급결의서 영수증 첨부(receipt-picker.tsx)의 썸네일 카드/추가 버튼도
+   같은 이유로 Tailwind .rounded-md를 직접 쓰고 있어서(globals.css가
+   전체 rounded-* 스케일을 0으로 낮춰놔서 모던에서도 그대로 각짐), 같은
+   방식으로 이 스코프 안에서만 덮어쓴다. */
+[data-theme="modern"] .rounded-md {
+  border-radius: 10px;
+}
 
 /* 아래부터는 전부 r값(border-radius) 자체가 아니라 "모던 테마에서만
    다른" 부가 효과(그림자/오버플로/마진/강조선 숨김 등)만 모아둔다 —
