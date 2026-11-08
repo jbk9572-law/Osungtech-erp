@@ -1206,7 +1206,7 @@ export function BatchCard({
               style={{
                 width: 10,
                 height: 10,
-                borderRadius: 0,
+                borderRadius: "50%",
                 background: color,
                 display: "inline-block",
               }}

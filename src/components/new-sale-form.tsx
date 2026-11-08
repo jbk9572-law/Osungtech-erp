@@ -1249,7 +1249,7 @@ export function NewSaleForm({
                 gap: 8,
                 height: 34,
                 padding: "0 14px",
-                borderRadius: 0,
+                borderRadius: "var(--erp-radius-lg, 0)",
                 background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
                 border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
                 cursor: "pointer",
@@ -1280,7 +1280,7 @@ export function NewSaleForm({
                 gap: 8,
                 height: 34,
                 padding: "0 14px",
-                borderRadius: 0,
+                borderRadius: "var(--erp-radius-lg, 0)",
                 background: isSample ? "var(--erp-info-bg)" : "transparent",
                 border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`,
                 cursor: "pointer",
@@ -1497,7 +1497,7 @@ export function NewSaleForm({
                 overflowY: "auto",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
-                borderRadius: 0,
+                borderRadius: "var(--erp-radius-xl, 0)",
                 boxShadow: "var(--erp-shadow-md)",
               }}
             >
@@ -1592,7 +1592,7 @@ export function NewSaleForm({
                 overflowY: "auto",
                 background: "var(--erp-panel)",
                 border: "1px solid var(--erp-border)",
-                borderRadius: 0,
+                borderRadius: "var(--erp-radius-xl, 0)",
                 boxShadow: "var(--erp-shadow-md)",
               }}
             >
@@ -1698,7 +1698,7 @@ export function NewSaleForm({
         <div className="hidden md:block">
         <div
           className="erp-grid-wrap"
-          style={{ borderRadius: 0, minHeight: "50vh" }}
+          style={{ minHeight: "50vh" }}
         >
           <table
             className="erp-grid"
