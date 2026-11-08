@@ -77,7 +77,7 @@ export function NewStockTransferForm({
       <input type="hidden" name="to_warehouse_id" value={toWarehouseId} />
       <input type="hidden" name="items" value={itemsJson} />
 
-      <div className="grid grid-cols-3 gap-3" style={{ maxWidth: 620 }}>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3" style={{ maxWidth: 620 }}>
         <div className="erp-field">
           <label htmlFor="st-from">출발 창고</label>
           <select id="st-from" className="erp-input" value={fromWarehouseId} onChange={(e) => setFromWarehouseId(e.target.value)}>
