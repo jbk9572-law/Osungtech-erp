@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function ApprovalDelegationForm({
   action,
@@ -15,6 +16,8 @@ export function ApprovalDelegationForm({
   profiles: { id: string; full_name: string | null }[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [delegatorId, setDelegatorId] = useState("");
+  const [delegateId, setDelegateId] = useState("");
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
@@ -23,16 +26,15 @@ export function ApprovalDelegationForm({
       {isAdmin ? (
         <div className="erp-field">
           <label htmlFor="dg-delegator">위임자 (자리를 비우는 사람)</label>
-          <select id="dg-delegator" name="delegator_id" className="erp-input w-full" required defaultValue="">
-            <option value="" disabled>
-              선택
-            </option>
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.full_name || "구성원"}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="dg-delegator"
+            name="delegator_id"
+            required
+            placeholder="선택"
+            value={delegatorId}
+            onChange={setDelegatorId}
+            options={profiles.map((p) => ({ value: p.id, label: p.full_name || "구성원" }))}
+          />
         </div>
       ) : (
         <div className="erp-field">
@@ -42,16 +44,15 @@ export function ApprovalDelegationForm({
       )}
       <div className="erp-field">
         <label htmlFor="dg-delegate">대리 결재자</label>
-        <select id="dg-delegate" name="delegate_id" className="erp-input w-full" required defaultValue="">
-          <option value="" disabled>
-            선택
-          </option>
-          {profiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.full_name || "구성원"}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="dg-delegate"
+          name="delegate_id"
+          required
+          placeholder="선택"
+          value={delegateId}
+          onChange={setDelegateId}
+          options={profiles.map((p) => ({ value: p.id, label: p.full_name || "구성원" }))}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="dg-start">시작일</label>

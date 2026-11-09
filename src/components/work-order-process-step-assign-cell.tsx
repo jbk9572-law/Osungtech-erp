@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { assignWorkOrderProcessStep, createAndAssignSubcontractor } from "@/app/(dashboard)/production/actions";
 import { PortalAccountForm } from "@/components/portal-account-form";
 import { FormMessage } from "@/components/form-message";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 const NEW_OPTION = "__new__";
 
@@ -31,6 +32,7 @@ export function WorkOrderProcessStepAssignCell({
   subcontractors: { id: string; name: string }[];
 }) {
   const [mode, setMode] = useState<"select" | "new" | "issue">("select");
+  const [assignValue, setAssignValue] = useState(subcontractorId ?? "");
   const [assignState, assignAction, assignPending] = useActionState(assignWorkOrderProcessStep, undefined);
   const [createState, createAction, createPending] = useActionState(createAndAssignSubcontractor, undefined);
   const assignFormRef = useRef<HTMLFormElement>(null);
@@ -119,29 +121,26 @@ export function WorkOrderProcessStepAssignCell({
       <form ref={assignFormRef} action={assignAction} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
-        <select
+        <ErpSelect
           name="subcontractor_id"
-          defaultValue={subcontractorId ?? ""}
-          className="erp-select"
+          value={assignValue}
           style={{ height: 22, fontSize: 11, padding: "0 4px" }}
-          onChange={(e) => {
-            if (e.target.value === NEW_OPTION) {
+          onChange={(v) => {
+            setAssignValue(v);
+            if (v === NEW_OPTION) {
               setMode("new");
               return;
             }
             assignFormRef.current?.requestSubmit();
           }}
           disabled={assignPending}
-          aria-label="담당 배정"
-        >
-          <option value="">사내 공정</option>
-          {subcontractors.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-          <option value={NEW_OPTION}>+ 새 업체 등록...</option>
-        </select>
+          ariaLabel="담당 배정"
+          options={[
+            { value: "", label: "사내 공정" },
+            ...subcontractors.map((s) => ({ value: s.id, label: s.name })),
+            { value: NEW_OPTION, label: "+ 새 업체 등록..." },
+          ]}
+        />
       </form>
       <FormMessage state={assignState} />
       {subcontractorId && !hasPortalAccount && (

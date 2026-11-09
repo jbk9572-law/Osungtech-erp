@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateUserRole } from "@/app/(dashboard)/settings/users/actions";
 import { ROLE_LABELS, ROLE_OPTIONS } from "@/lib/user-roles";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 권한 변경은 삭제만큼 되돌리기 까다로운 동작이라(관리자 권한을 실수로
 // 뺏기면 본인이 다시 못 돌려놓을 수 있다), 클릭 한 번으로 바로 적용되지
@@ -51,21 +52,14 @@ export function UserRoleSelect({
   }
 
   return (
-    <span className="inline-flex items-center gap-2">
-      <select
-        className="erp-select"
+    <span className="inline-flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <ErpSelect
         style={{ height: 26, fontSize: 12.5 }}
         value={pendingRole ?? value}
         disabled={disabled || pending}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => setPendingRole(e.target.value)}
-      >
-        {ROLE_OPTIONS.map(([optionValue, label]) => (
-          <option key={optionValue} value={optionValue}>
-            {label}
-          </option>
-        ))}
-      </select>
+        onChange={setPendingRole}
+        options={ROLE_OPTIONS.map(([optionValue, label]) => ({ value: optionValue, label }))}
+      />
       {pendingRole && pendingRole !== value && (
         <span
           className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-1 text-xs"

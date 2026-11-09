@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ROLE_LABELS, ROLE_OPTIONS } from "@/lib/user-roles";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function EditUserForm({
   userId,
@@ -20,6 +21,7 @@ export function EditUserForm({
   isSelf: boolean;
 }) {
   const [state, formAction, pending] = useActionState(updateUserAccount, undefined);
+  const [roleValue, setRoleValue] = useState(role);
 
   return (
     <form action={formAction} className="flex flex-col gap-3" style={{ maxWidth: 420 }}>
@@ -59,13 +61,13 @@ export function EditUserForm({
             <PageGuide className="mt-1">본인 계정의 역할은 변경할 수 없습니다.</PageGuide>
           </>
         ) : (
-          <select id="eu-role" name="role" defaultValue={role} className="erp-select">
-            {ROLE_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="eu-role"
+            name="role"
+            value={roleValue}
+            onChange={setRoleValue}
+            options={ROLE_OPTIONS.map(([value, label]) => ({ value, label }))}
+          />
         )}
       </div>
       <FormMessage state={state} />

@@ -32,7 +32,7 @@ const ALLOWLIST = new Set([
   "src/app/(dashboard)/inventory/reorder-suggestions/page.tsx:141",
   // 역할 변경을 확인/취소하는 작은 인라인 칩(rounded-sm px-2 py-1,
   // inline-flex + 취소 버튼) — 페이지 안내문이 아니라 행 안의 확인 배지.
-  "src/components/user-role-select.tsx:70",
+  "src/components/user-role-select.tsx:64",
 ]);
 
 const TONE_BG = {
