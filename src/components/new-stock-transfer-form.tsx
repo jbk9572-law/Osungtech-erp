@@ -10,6 +10,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type Row = { key: number; productId: string; quantity: number; remark: string };
 
@@ -80,23 +81,21 @@ export function NewStockTransferForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3" style={{ maxWidth: 620 }}>
         <div className="erp-field">
           <label htmlFor="st-from">출발 창고</label>
-          <select id="st-from" className="erp-input" value={fromWarehouseId} onChange={(e) => setFromWarehouseId(e.target.value)}>
-            {warehouses.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="st-from"
+            value={fromWarehouseId}
+            onChange={setFromWarehouseId}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="st-to">도착 창고</label>
-          <select id="st-to" className="erp-input" value={toWarehouseId} onChange={(e) => setToWarehouseId(e.target.value)}>
-            {warehouses.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="st-to"
+            value={toWarehouseId}
+            onChange={setToWarehouseId}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="st-date">이동일</label>

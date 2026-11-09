@@ -21,6 +21,7 @@ export function ErpSelect({
   placeholder = "선택",
   name,
   id,
+  form,
   required,
   disabled,
   ariaLabel,
@@ -32,6 +33,11 @@ export function ErpSelect({
   placeholder?: string;
   name?: string;
   id?: string;
+  // 숨긴 <form>을 따로 두고 나머지 입력칸은 form="id"로 연결하는
+  // 카드형 목록 패턴(addon-product-row.tsx 등)에서, 이 select가 그
+  // 바깥 폼으로 값을 제출하려면 숨김 input에도 같은 form 연결이
+  // 필요하다(네이티브 select의 form 속성과 동일한 역할).
+  form?: string;
   required?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
@@ -71,7 +77,7 @@ export function ErpSelect({
 
   return (
     <div className="relative">
-      {name && <input type="hidden" name={name} value={value} required={required} />}
+      {name && <input type="hidden" name={name} value={value} required={required} form={form} />}
       <button
         ref={buttonRef}
         type="button"

@@ -5,6 +5,7 @@ import { updateAddOnProduct, deleteAddOnProduct } from "@/app/platform-admin/add
 import { FormMessage } from "@/components/form-message";
 import { DeleteButton } from "@/components/delete-button";
 import { ADDON_KIND_OPTIONS, addonKindUnit } from "@/lib/addon-kind";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // platform-plan-row.tsx와 완전히 같은 패턴(카드 안에 숨긴 <form>을 두고
 // 나머지 입력칸은 form="id" 속성으로 연결) — 요금제 카탈로그와 애드온
@@ -74,21 +75,15 @@ export function AddOnProductRow({
         </div>
         <div className="erp-field" style={{ flex: "0 0 140px" }}>
           <label htmlFor={`${formId}-kind`}>적용 유형</label>
-          <select
+          <ErpSelect
             id={`${formId}-kind`}
             name="kind"
             form={formId}
             required
-            className="erp-select w-full"
             value={selectedKind}
-            onChange={(e) => setSelectedKind(e.target.value)}
-          >
-            {ADDON_KIND_OPTIONS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
-              </option>
-            ))}
-          </select>
+            onChange={setSelectedKind}
+            options={ADDON_KIND_OPTIONS.map((k) => ({ value: k.value, label: k.label }))}
+          />
         </div>
         <div className="erp-field" style={{ flex: "0 0 130px" }}>
           <label htmlFor={`${formId}-capacity`}>제공 용량/건수({addonKindUnit(selectedKind)})</label>

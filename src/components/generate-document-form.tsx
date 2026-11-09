@@ -7,6 +7,7 @@ import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } fr
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type TemplateOption = { id: string; name: string; body: string };
 type EmployeeOption = {
@@ -86,45 +87,30 @@ export function GenerateDocumentForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="erp-field">
           <label htmlFor="gd-template">양식</label>
-          <select
+          <ErpSelect
             id="gd-template"
-            className="erp-input w-full"
             value={templateId}
-            onChange={(e) => {
-              setTemplateId(e.target.value);
-              const t = templates.find((x) => x.id === e.target.value);
+            onChange={(v) => {
+              setTemplateId(v);
+              const t = templates.find((x) => x.id === v);
               applyAutoFill(subjectUserId, t ? extractTemplateFields(t.body).filter((f) => !isServerAutoField(f)) : []);
             }}
             required
-          >
-            <option value="" disabled>
-              선택
-            </option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+            placeholder="선택"
+            options={templates.map((t) => ({ value: t.id, label: t.name }))}
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="gd-subject">대상 직원 (선택)</label>
-          <select
+          <ErpSelect
             id="gd-subject"
-            className="erp-input w-full"
             value={subjectUserId}
-            onChange={(e) => {
-              setSubjectUserId(e.target.value);
-              applyAutoFill(e.target.value, fields);
+            onChange={(v) => {
+              setSubjectUserId(v);
+              applyAutoFill(v, fields);
             }}
-          >
-            <option value="">해당 없음</option>
-            {employees.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.full_name || "구성원"}
-              </option>
-            ))}
-          </select>
+            options={[{ value: "", label: "해당 없음" }, ...employees.map((e) => ({ value: e.id, label: e.full_name || "구성원" }))]}
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="gd-title">제목</label>

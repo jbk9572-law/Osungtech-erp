@@ -7,6 +7,7 @@ import { PhoneInputGroup } from "@/components/phone-input-group";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { FieldHint } from "@/components/field-hint";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export type PartnerFormInitial = {
   name?: string | null;
@@ -42,6 +43,7 @@ export function PartnerForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
   const [documentType, setDocumentType] = useState(initial?.document_type ?? "명세표");
+  const [deliveryNoteVariant, setDeliveryNoteVariant] = useState(initial?.delivery_note_variant ?? "");
 
   return (
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -123,16 +125,16 @@ export function PartnerForm({
       {showDocumentType && (
         <div className="erp-field">
           <label htmlFor="document_type">발행 문서</label>
-          <select
+          <ErpSelect
             id="document_type"
             name="document_type"
             value={documentType}
-            onChange={(e) => setDocumentType(e.target.value as "출고증" | "명세표")}
-            className="erp-select"
-          >
-            <option value="명세표">명세표 (단가 포함)</option>
-            <option value="출고증">출고증 (단가 없음)</option>
-          </select>
+            onChange={(v) => setDocumentType(v as "출고증" | "명세표")}
+            options={[
+              { value: "명세표", label: "명세표 (단가 포함)" },
+              { value: "출고증", label: "출고증 (단가 없음)" },
+            ]}
+          />
         </div>
       )}
       {showDocumentType && documentType === "출고증" && (
@@ -141,17 +143,18 @@ export function PartnerForm({
             출고증 서식
             <FieldHint text="특정 출고처가 자기 회사 양식으로 출고증을 받길 원할 때만 골라주세요. 대부분은 공용 서식 그대로 두면 됩니다." />
           </label>
-          <select
+          <ErpSelect
             id="delivery_note_variant"
             name="delivery_note_variant"
-            defaultValue={initial?.delivery_note_variant ?? ""}
-            className="erp-select"
-          >
-            <option value="">공용 서식 (기본)</option>
-            <option value="sns_filtech">에스엔에스필텍 전용 서식</option>
-            <option value="zenith_tech">제니스테크 전용 서식</option>
-            <option value="ket_solution">케이이티솔루션 전용 서식</option>
-          </select>
+            value={deliveryNoteVariant}
+            onChange={setDeliveryNoteVariant}
+            options={[
+              { value: "", label: "공용 서식 (기본)" },
+              { value: "sns_filtech", label: "에스엔에스필텍 전용 서식" },
+              { value: "zenith_tech", label: "제니스테크 전용 서식" },
+              { value: "ket_solution", label: "케이이티솔루션 전용 서식" },
+            ]}
+          />
         </div>
       )}
       <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-3">
