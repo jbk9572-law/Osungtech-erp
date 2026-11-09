@@ -9,6 +9,7 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartyPaymentForm } from "@/components/party-payment-form";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import { addCustomerPayment } from "@/app/(dashboard)/customers/actions";
 import { RETURN_REASONS } from "@/lib/return-reason";
@@ -191,6 +192,7 @@ function SaleQuickForm({
   const [customerId, setCustomerId] = useState("");
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id ?? "");
   const [returnReason, setReturnReason] = useState<string>(RETURN_REASONS[0]);
+  const [taxType, setTaxType] = useState<string>("과세");
   const [rows, setRows] = useState<ItemRow[]>([emptyRow(0)]);
   const [nextKey, setNextKey] = useState(1);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -245,18 +247,12 @@ function SaleQuickForm({
         </div>
         <div className="erp-field erp-span-3">
           <label htmlFor="unified-sale-warehouse">창고 *</label>
-          <select
+          <ErpSelect
             id="unified-sale-warehouse"
-            className="erp-select"
             value={warehouseId}
-            onChange={(e) => setWarehouseId(e.target.value)}
-          >
-            {warehouses.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+            onChange={setWarehouseId}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
         </div>
         <div className="erp-field erp-span-3">
           <label htmlFor="unified-sale-date">거래일자 *</label>
@@ -267,30 +263,25 @@ function SaleQuickForm({
       {isReturn && (
         <div className="erp-field" style={{ marginTop: 8 }}>
           <label htmlFor="unified-sale-return-reason">반품 사유</label>
-          <select
+          <ErpSelect
             id="unified-sale-return-reason"
-            className="erp-select"
             value={returnReason}
-            onChange={(e) => setReturnReason(e.target.value)}
-          >
-            {RETURN_REASONS.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            onChange={setReturnReason}
+            options={RETURN_REASONS.map((r) => ({ value: r, label: r }))}
+          />
         </div>
       )}
 
       <div className="erp-field" style={{ marginTop: 8 }}>
         <label htmlFor="unified-sale-tax-type">과세구분</label>
-        <select id="unified-sale-tax-type" name="tax_type" className="erp-select" defaultValue="과세" style={{ maxWidth: 160 }}>
-          {TAX_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="unified-sale-tax-type"
+          name="tax_type"
+          value={taxType}
+          onChange={setTaxType}
+          style={{ maxWidth: 160 }}
+          options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
+        />
       </div>
 
       <div className="erp-unified-sale-items">

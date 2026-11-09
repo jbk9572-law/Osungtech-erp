@@ -114,7 +114,7 @@ export function PartySearchSelect({
             color: "var(--erp-info-text)",
             background: "var(--erp-info-bg)",
             border: "1px solid var(--erp-info-border)",
-            borderRadius: 0,
+            borderRadius: "var(--erp-radius-sm, 0)",
           }}
         >
           특이사항: {selected.notes}
