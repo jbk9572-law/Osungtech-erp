@@ -11,6 +11,7 @@ import type { FormState } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type Initial = {
   id: string;
@@ -67,20 +68,14 @@ export function PaymentRequestForm({
         <div className="erp-doc-header-row">
           <label htmlFor="pr-card-type" className="erp-doc-header-label">사용카드</label>
           <span className="erp-doc-header-value">
-            <select
+            <ErpSelect
               id="pr-card-type"
               name="card_type"
               value={cardType}
-              onChange={(e) => setCardType(e.target.value as PaymentRequestCardType)}
-              className="erp-select w-full"
-              style={{ border: "none" }}
-            >
-              {PAYMENT_REQUEST_CARD_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setCardType(v as PaymentRequestCardType)}
+              style={{ border: "none", width: "100%" }}
+              options={PAYMENT_REQUEST_CARD_TYPES.map((type) => ({ value: type, label: type }))}
+            />
           </span>
         </div>
         <div className="erp-doc-header-row">

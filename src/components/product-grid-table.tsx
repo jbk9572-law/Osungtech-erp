@@ -14,6 +14,7 @@ import { stickyHeaderStyle, stickyCellStyle, GRID_CHECKBOX_WIDTH } from "@/lib/g
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { formatNumber } from "@/lib/format-number";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export type ProductGridRow = {
   id: string;
@@ -55,6 +56,10 @@ export function ProductGridTable({
   // (sales/purchase-grid-table.tsx와 같은 패턴). products 모드에서만 의미
   // 있다(inventory 모드는 애초에 일괄삭제가 없음).
   const [mobileSelectMode, setMobileSelectMode] = useState(false);
+  // 모바일 카드 목록의 정렬 드롭다운 — 값을 고르면 그 즉시 정렬만 적용하고
+  // "정렬"이라는 placeholder로 되돌아가는 명령형 select라(현재 정렬
+  // 상태를 보여주는 select가 아님), 선택 후 항상 빈 문자열로 리셋한다.
+  const [mobileSortCmd, setMobileSortCmd] = useState("");
   const [state, formAction, pending] = useActionState<FormState, FormData>(bulkDeleteProducts, undefined);
 
   // 일괄삭제 성공 시 선택/확인란을 비운다 — 다른 그리드들과 동일한 패턴.
@@ -310,32 +315,29 @@ export function ProductGridTable({
         ) : (
           <span />
         )}
-        <select
-          className="erp-select"
-          aria-label="정렬"
-          defaultValue=""
-          onChange={(e) => {
-            const [key, dir] = e.target.value.split(":") as [SortKey, "1" | "-1"];
+        <ErpSelect
+          ariaLabel="정렬"
+          placeholder="정렬"
+          value={mobileSortCmd}
+          onChange={(v) => {
+            const [key, dir] = v.split(":") as [SortKey, "1" | "-1"];
             applySort(key, dir === "1" ? 1 : -1);
+            setMobileSortCmd("");
           }}
-        >
-          <option value="" disabled>
-            정렬
-          </option>
-          <option value="name:1">상품명순</option>
-          <option value="sku:1">SKU순</option>
-          {mode === "inventory" ? (
-            <>
-              <option value="quantity:-1">재고 많은순</option>
-              <option value="quantity:1">재고 적은순</option>
-            </>
-          ) : (
-            <>
-              <option value="price:-1">판매가 높은순</option>
-              <option value="price:1">판매가 낮은순</option>
-            </>
-          )}
-        </select>
+          options={[
+            { value: "name:1", label: "상품명순" },
+            { value: "sku:1", label: "SKU순" },
+            ...(mode === "inventory"
+              ? [
+                  { value: "quantity:-1", label: "재고 많은순" },
+                  { value: "quantity:1", label: "재고 적은순" },
+                ]
+              : [
+                  { value: "price:-1", label: "판매가 높은순" },
+                  { value: "price:1", label: "판매가 낮은순" },
+                ]),
+          ]}
+        />
       </div>
       <div className="erp-row-card-list">
         {sortedRows.map((row) => renderMobileCard(row))}

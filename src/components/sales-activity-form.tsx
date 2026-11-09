@@ -6,6 +6,7 @@ import { PartySearchSelect } from "@/components/party-search-select";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 const ACTIVITY_TYPES = ["전화", "방문", "이메일", "기타"] as const;
 
@@ -45,6 +46,7 @@ export function SalesActivityForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
   const [customerId, setCustomerId] = useState(initial?.customer_id ?? "");
+  const [activityType, setActivityType] = useState(initial?.activity_type ?? "방문");
 
   // 저장 성공 시 폼을 비운다(신규 등록 모드만) — party-payment-form.tsx와
   // 동일한 패턴으로, useEffect 대신 렌더 중 state 객체 자체가 바뀌었는지
@@ -80,13 +82,13 @@ export function SalesActivityForm({
         )}
         <div className={`erp-field ${fixedCustomerId ? "erp-span-6" : "erp-span-4"}`}>
           <label htmlFor="sa-type">활동 유형</label>
-          <select id="sa-type" name="activity_type" defaultValue={initial?.activity_type ?? "방문"} className="erp-input">
-            {ACTIVITY_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="sa-type"
+            name="activity_type"
+            value={activityType}
+            onChange={setActivityType}
+            options={ACTIVITY_TYPES.map((t) => ({ value: t, label: t }))}
+          />
         </div>
         <div className={`erp-field ${fixedCustomerId ? "erp-span-6" : "erp-span-4"}`}>
           <label htmlFor="sa-date">활동일</label>
