@@ -255,21 +255,15 @@ export function OfficialDocumentForm({
                       />
                     </>
                   ) : (
-                    <select
+                    <ErpSelect
                       value={r.userId ?? ""}
-                      onChange={(e) => {
-                        const p = profiles.find((x) => x.id === e.target.value);
+                      onChange={(v) => {
+                        const p = profiles.find((x) => x.id === v);
                         updateRecipient(r.key, { userId: p?.id ?? null, name: p?.name ?? "" });
                       }}
-                      className="erp-input"
                       style={{ width: 200 }}
-                    >
-                      {profiles.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={profiles.map((p) => ({ value: p.id, label: p.name }))}
+                    />
                   )}
                   <button type="button" onClick={() => removeRecipient(r.key)} className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }}>
                     삭제
