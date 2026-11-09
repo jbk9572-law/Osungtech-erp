@@ -8,6 +8,7 @@ import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-char
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function AttendanceCorrectionForm({
   action,
@@ -73,14 +74,12 @@ export function AttendanceCorrectionForm({
       {presets.length > 0 && (
         <div className="erp-field" style={{ maxWidth: 320 }}>
           <label htmlFor="ac-preset">저장된 결재선 불러오기</label>
-          <select id="ac-preset" className="erp-input w-full" value={presetId} onChange={(e) => applyPreset(e.target.value)}>
-            <option value="">선택 안 함</option>
-            {presets.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="ac-preset"
+            value={presetId}
+            onChange={applyPreset}
+            options={[{ value: "", label: "선택 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
+          />
         </div>
       )}
 

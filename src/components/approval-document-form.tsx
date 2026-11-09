@@ -10,6 +10,7 @@ import type { OrgDepartmentNode } from "@/lib/org-chart";
 import { extractTemplateFields, renderTemplate } from "@/lib/document-template";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type TemplateOption = { id: string; name: string; body: string };
 export type ApprovalLinePresetOption = { id: string; name: string; approverIds: string[]; referenceIds: string[] };
@@ -95,34 +96,25 @@ export function ApprovalDocumentForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="erp-field">
           <label htmlFor="ad-template">양식 (선택)</label>
-          <select
+          <ErpSelect
             id="ad-template"
-            className="erp-input w-full"
             value={templateId}
-            onChange={(e) => {
-              setTemplateId(e.target.value);
-              applyTemplate(templates.find((t) => t.id === e.target.value));
+            onChange={(v) => {
+              setTemplateId(v);
+              applyTemplate(templates.find((t) => t.id === v));
             }}
-          >
-            <option value="">자유양식</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+            options={[{ value: "", label: "자유양식" }, ...templates.map((t) => ({ value: t.id, label: t.name }))]}
+          />
         </div>
         {presets.length > 0 && (
           <div className="erp-field">
             <label htmlFor="ad-preset">저장된 결재선 불러오기</label>
-            <select id="ad-preset" className="erp-input w-full" value={presetId} onChange={(e) => applyPreset(e.target.value)}>
-              <option value="">선택 안 함</option>
-              {presets.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            <ErpSelect
+              id="ad-preset"
+              value={presetId}
+              onChange={applyPreset}
+              options={[{ value: "", label: "선택 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
+            />
           </div>
         )}
         <div className="erp-field">
