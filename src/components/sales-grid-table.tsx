@@ -447,16 +447,16 @@ export function SalesGridTable({
             // 지적 — 글자로 바로 보여준다. 상태 그대로("미발행")
             // 두고 바로 옆에 실제 동작을 적은 링크를 붙인다.
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+              <GridBadge tone="warn">미발행</GridBadge>
               <Link
                 href={`/sales/${row.orderId}/tax-invoice`}
-                style={{ color: "var(--erp-text)", fontWeight: 700, textDecoration: "underline" }}
+                style={{ color: "var(--erp-primary)", fontWeight: 700, textDecoration: "underline" }}
               >
                 세금계산서 작성
               </Link>
             </span>
           ) : (
-            <span style={{ color: "var(--erp-text-muted)" }}>미발행</span>
+            <GridBadge tone="warn">미발행</GridBadge>
           )}
         </td>
         <td style={colStyle("remark", { color: "var(--erp-text-muted)" })}>
