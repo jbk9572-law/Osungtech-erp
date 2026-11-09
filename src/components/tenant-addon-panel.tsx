@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateTenantAddons, attachTenantAddon, detachTenantAddon } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { addonKindLabel, addonKindUnit } from "@/lib/addon-kind";
 import { formatNumber } from "@/lib/format-number";
 
@@ -256,6 +257,7 @@ function AddonSubscriptionRow({ tenantId, subscription }: { tenantId: string; su
 // 재조정하므로(actions.ts 참고) 수량 변경 용도로 또 써도 안전하다.
 function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: AddonCatalogItem[] }) {
   const [state, formAction, pending] = useActionState(attachTenantAddon, undefined);
+  const [addOnProductId, setAddOnProductId] = useState(catalog[0]?.id ?? "");
 
   if (catalog.length === 0) {
     return <PageGuide className="mb-0">등록된 애드온이 없습니다. 플랫폼 관리 &gt; 애드온 메뉴에서 먼저 등록해주세요.</PageGuide>;
@@ -266,14 +268,18 @@ function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: Add
       <input type="hidden" name="tenantId" value={tenantId} />
       <div className="erp-field">
         <label htmlFor="attach-product">애드온</label>
-        <select id="attach-product" name="addOnProductId" required className="erp-select" style={{ width: 220 }}>
-          {catalog.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} ({formatNumber(c.capacity)}
-              {addonKindUnit(c.kind)}, 월 {formatNumber(c.monthly_price)}원)
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="attach-product"
+          name="addOnProductId"
+          required
+          style={{ width: 220 }}
+          value={addOnProductId}
+          onChange={setAddOnProductId}
+          options={catalog.map((c) => ({
+            value: c.id,
+            label: `${c.name} (${formatNumber(c.capacity)}${addonKindUnit(c.kind)}, 월 ${formatNumber(c.monthly_price)}원)`,
+          }))}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="attach-qty">수량</label>
