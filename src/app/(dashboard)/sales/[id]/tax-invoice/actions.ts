@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { canManageOrder } from "@/lib/can-manage-order";
+import { calcVat } from "@/lib/tax";
+import { issueMockTaxInvoice } from "@/lib/mock-providers/mock-send";
 import type { FormState } from "@/components/form-message";
 
 type ItemInput = {
@@ -185,6 +187,118 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
   if (syncError) {
     console.error("sales_orders.invoice_status 동기화 실패:", syncError);
   }
+
+  revalidatePath(`/sales/${salesOrderId}`);
+  revalidatePath("/sales");
+  redirect(`/sales/${salesOrderId}`);
+}
+
+// 국세청 전자세금계산서 발행(테스트용 가상 API) — 수기입력 폼 없이,
+// 이 매출 건의 품목을 그대로 불러와 한 번에 발행한다. 실제 홈택스 API
+// 연동이 아직 없어(addon-kind.ts의 "계산서" 애드온은 지금 결제 대상
+// 존재로만 쓰임) mock-send.ts의 가짜 응답(승인번호)만 받는다 — 실제
+// 연동으로 교체할 때는 issueMockTaxInvoice 호출부만 실제 API 호출로
+// 바꾸면 된다. createTaxInvoice와 같은 "원본은 1장" 제약을 그대로
+// 따른다.
+export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const salesOrderId = String(formData.get("sales_order_id") ?? "");
+  if (!salesOrderId) return { error: "잘못된 요청입니다." };
+
+  const supabase = await createClient();
+  if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
+    return { error: "본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." };
+  }
+
+  const { data: order } = await supabase
+    .from("sales_orders")
+    .select("customer_id, customers(name)")
+    .eq("id", salesOrderId)
+    .maybeSingle();
+  if (!order) return { error: "매출 건을 찾을 수 없습니다." };
+
+  const { data: items } = await supabase
+    .from("sales_order_items")
+    .select("quantity, unit_price, spec, custom_name, products(name)")
+    .eq("sales_order_id", salesOrderId)
+    .order("created_at");
+  if (!items || items.length === 0) return { error: "발행할 품목이 없습니다." };
+
+  const { data: existingOriginal } = await supabase
+    .from("tax_invoices")
+    .select("id")
+    .eq("sales_order_id", salesOrderId)
+    .is("original_invoice_id", null)
+    .maybeSingle();
+  if (existingOriginal) return { error: "이미 발행된 세금계산서가 있습니다." };
+
+  const mockResult = await issueMockTaxInvoice({
+    customerName: order.customers?.name ?? "거래처",
+    totalAmount: items.reduce((sum, item) => sum + item.quantity * Number(item.unit_price), 0),
+  });
+  if (!mockResult.success) return { error: mockResult.error };
+
+  const taxInvoiceItems = items.map((item) => {
+    const supplyAmount = item.quantity * Number(item.unit_price);
+    return {
+      lineDate: null as string | null,
+      itemName: item.products?.name ?? item.custom_name ?? "품목",
+      spec: item.spec,
+      quantity: item.quantity,
+      unitPrice: Number(item.unit_price),
+      supplyAmount,
+      taxAmount: calcVat(supplyAmount),
+    };
+  });
+  const totalSupply = taxInvoiceItems.reduce((sum, item) => sum + item.supplyAmount, 0);
+  const totalTax = taxInvoiceItems.reduce((sum, item) => sum + item.taxAmount, 0);
+
+  const user = await getUser();
+  const { data: invoice, error: insertError } = await supabase
+    .from("tax_invoices")
+    .insert({
+      sales_order_id: salesOrderId,
+      customer_id: order.customer_id,
+      invoice_type: "general",
+      issue_date: new Date().toISOString().slice(0, 10),
+      supply_amount: totalSupply,
+      tax_amount: totalTax,
+      total_amount: totalSupply + totalTax,
+      claim_type: "claim",
+      remark: `국세청 전자발행(테스트) — 승인번호 ${mockResult.ntsConfirmNumber}`,
+      created_by: user?.id ?? null,
+    })
+    .select("id")
+    .single();
+  if (insertError || !invoice) return { error: `발행에 실패했습니다${insertError ? `: ${insertError.message}` : ""}` };
+
+  const { error: itemsError } = await supabase.from("tax_invoice_items").insert(
+    taxInvoiceItems.map((item, i) => ({
+      tax_invoice_id: invoice.id,
+      line_date: item.lineDate,
+      item_name: item.itemName,
+      spec: item.spec,
+      quantity: item.quantity,
+      unit_price: item.unitPrice,
+      supply_amount: item.supplyAmount,
+      tax_amount: item.taxAmount,
+      remark: null,
+      sort_order: i,
+    })),
+  );
+  if (itemsError) {
+    const { error: rollbackError } = await supabase.from("tax_invoices").delete().eq("id", invoice.id);
+    if (rollbackError) console.error("세금계산서 헤더 롤백 실패:", rollbackError);
+    return { error: `품목 저장에 실패했습니다: ${itemsError.message}` };
+  }
+
+  const { error: invoiceUsageError } = await supabase.rpc("increment_tenant_invoice_usage");
+  if (invoiceUsageError) console.error("계산서 쿼터 사용량 갱신 실패:", invoiceUsageError.message);
+
+  const { error: syncError } = await supabase
+    .from("sales_orders")
+    .update({ invoice_status: "issued", invoice_issued_at: new Date().toISOString().slice(0, 10), invoice_provider: "mock_api" })
+    .eq("id", salesOrderId);
+  if (syncError) console.error("sales_orders.invoice_status 동기화 실패:", syncError);
 
   revalidatePath(`/sales/${salesOrderId}`);
   revalidatePath("/sales");

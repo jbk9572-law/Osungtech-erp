@@ -8,7 +8,8 @@ import { CloseButton } from "@/components/erp/close-button";
 import { AccessWall } from "@/components/erp/access-wall";
 import { TaxInvoiceForm } from "@/components/tax-invoice-form";
 import { TaxInvoiceDetail } from "@/components/tax-invoice-detail";
-import { cancelTaxInvoice } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
+import { IssueTaxInvoiceMockButton } from "@/components/issue-tax-invoice-mock-button";
+import { cancelTaxInvoice, issueTaxInvoiceViaMockApi } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { todayKstStr } from "@/lib/kst-date";
 import { canIssueTaxInvoice, isTaxExempt, defaultInvoiceTypeFromTaxType } from "@/lib/tax-evidence-type";
 import { resolveListHref } from "@/lib/list-return";
@@ -120,6 +121,8 @@ export default async function TaxInvoicePage({
       {existing ? (
         <TaxInvoiceDetail invoice={existing} corrections={corrections ?? []} salesOrderId={id} cancelAction={cancelTaxInvoice} />
       ) : (
+        <>
+        <IssueTaxInvoiceMockButton salesOrderId={id} action={issueTaxInvoiceViaMockApi} />
         <TaxInvoiceForm
           salesOrderId={id}
           today={todayKstStr()}
@@ -149,6 +152,7 @@ export default async function TaxInvoicePage({
             unitPrice: Number(item.unit_price),
           }))}
         />
+        </>
       )}
     </div>
   );

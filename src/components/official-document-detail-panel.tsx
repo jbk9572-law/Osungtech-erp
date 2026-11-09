@@ -20,6 +20,8 @@ import {
   closeOfficialDocument,
   cancelOfficialDocument,
   markRecipientDeliveredManually,
+  sendOfficialDocumentRecipientByMockFax,
+  sendOfficialDocumentRecipientByMockAlimtalk,
 } from "@/app/(dashboard)/official-documents/actions";
 import { buildBackHref } from "@/lib/list-return";
 
@@ -229,6 +231,9 @@ export async function OfficialDocumentDetailPanel({
                                 recipientId={r.id}
                                 officialDocumentId={doc.id}
                                 action={markRecipientDeliveredManually}
+                                kind={r.kind}
+                                mockFaxAction={sendOfficialDocumentRecipientByMockFax}
+                                mockAlimtalkAction={sendOfficialDocumentRecipientByMockAlimtalk}
                               />
                             ) : null}
                           </td>
@@ -278,6 +283,9 @@ export async function OfficialDocumentDetailPanel({
                           recipientId={r.id}
                           officialDocumentId={doc.id}
                           action={markRecipientDeliveredManually}
+                          kind={r.kind}
+                          mockFaxAction={sendOfficialDocumentRecipientByMockFax}
+                          mockAlimtalkAction={sendOfficialDocumentRecipientByMockAlimtalk}
                         />
                       </div>
                     )}

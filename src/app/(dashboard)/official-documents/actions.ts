@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
+import { sendMockFax, sendMockAlimtalk } from "@/lib/mock-providers/mock-send";
 import type { FormState } from "@/components/form-message";
 
 // sendOfficialDocument는 이 파일이 아니라 send-action.ts에 따로 있다 —
@@ -158,6 +159,70 @@ export async function markRecipientDeliveredManually(_prevState: FormState, form
 
   revalidatePath(`/official-documents/${officialDocumentId}`);
   return { success: "직접 발송 처리했습니다." };
+}
+
+// 팩스/알림톡·문자 애드온을 켠 테넌트가 실제 발송 버튼이 어떻게
+// 동작할지 미리 확인해볼 수 있도록 만든 테스트용 가짜 발송(가상 API) —
+// 실제 팩스기/문자 서비스로 나가지 않는다(mock-send.ts 상단 설명 참고).
+// 승인/상태 검사는 markRecipientDeliveredManually와 동일하게 맞춘다.
+async function sendRecipientViaMock(
+  recipientId: string,
+  officialDocumentId: string,
+  channelLabel: string,
+  send: (toName: string) => Promise<{ success: boolean; error?: string; trackingId?: string }>,
+): Promise<FormState> {
+  const supabase = await createClient();
+  const { data: doc } = await supabase
+    .from("official_documents")
+    .select("id, status, created_by")
+    .eq("id", officialDocumentId)
+    .maybeSingle();
+  const user = await getUser();
+  const { isAdmin } = await getCurrentActor(supabase);
+  if (!doc || !canManage(doc.created_by, user?.id ?? null, isAdmin)) {
+    return { error: "본인이 작성했거나 관리자만 처리할 수 있습니다." };
+  }
+  if (doc.status !== "sent") return { error: "발송 처리 후에만 처리할 수 있습니다." };
+
+  const { data: recipient } = await supabase
+    .from("official_document_recipients")
+    .select("id, name")
+    .eq("id", recipientId)
+    .maybeSingle();
+  if (!recipient) return { error: "수신처를 찾을 수 없습니다." };
+
+  const result = await send(recipient.name);
+  if (!result.success) return { error: result.error ?? `${channelLabel} 발송에 실패했습니다.` };
+
+  const admin = createAdminClient();
+  const updateResult = await admin
+    .from("official_document_recipients")
+    .update({ status: "delivered_manual", sent_at: new Date().toISOString() })
+    .eq("id", recipientId)
+    .select("id");
+  const mutationError = requireMutatedRow(updateResult, "처리에 실패했습니다");
+  if (mutationError) return mutationError;
+
+  revalidatePath(`/official-documents/${officialDocumentId}`);
+  return { success: `${channelLabel}로 발송했습니다(테스트 — 추적번호 ${result.trackingId}).` };
+}
+
+export async function sendOfficialDocumentRecipientByMockFax(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const recipientId = String(formData.get("recipient_id") ?? "");
+  const officialDocumentId = String(formData.get("official_document_id") ?? "");
+  if (!recipientId || !officialDocumentId) return { error: "잘못된 요청입니다." };
+  return sendRecipientViaMock(recipientId, officialDocumentId, "팩스", (toName) =>
+    sendMockFax({ toName, title: "공문 발송" }),
+  );
+}
+
+export async function sendOfficialDocumentRecipientByMockAlimtalk(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const recipientId = String(formData.get("recipient_id") ?? "");
+  const officialDocumentId = String(formData.get("official_document_id") ?? "");
+  if (!recipientId || !officialDocumentId) return { error: "잘못된 요청입니다." };
+  return sendRecipientViaMock(recipientId, officialDocumentId, "알림톡", (toName) =>
+    sendMockAlimtalk({ toName, message: "공문이 발송되었습니다." }),
+  );
 }
 
 async function requireOwnedDocument(id: string, expectedStatuses: string[]) {
