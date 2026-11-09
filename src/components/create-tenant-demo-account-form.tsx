@@ -5,6 +5,7 @@ import { createTenantDemoAccount } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ROLE_OPTIONS } from "@/lib/user-roles";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 이 회사(테넌트) 소속으로 데모(테스트) 계정을 만든다 — 플랫폼 운영자
 // 전용. 예전엔 테넌트 관리자 스스로 settings/users 화면에서 체크박스로
@@ -15,10 +16,20 @@ export function CreateTenantDemoAccountForm({ tenantId }: { tenantId: string }) 
   const [state, formAction, pending] = useActionState(createTenantDemoAccount, undefined);
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
+  const [role, setRole] = useState("staff");
 
   useEffect(() => {
     if (state?.success) formRef.current?.reset();
   }, [state]);
+
+  // role select는 네이티브 폼 필드가 아니라 React state라 위 reset()으로는
+  // 안 지워진다 — "prop(state)이 바뀌면 state 조정"은 렌더 중 비교로
+  // 처리한다(이펙트에서 setState를 또 부르면 리렌더가 한 번 더 생긴다).
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    if (state?.success) setRole("staff");
+  }
 
   if (!open) {
     return (
@@ -45,13 +56,13 @@ export function CreateTenantDemoAccountForm({ tenantId }: { tenantId: string }) 
       </div>
       <div className="erp-field">
         <label htmlFor="ctd-role">역할</label>
-        <select id="ctd-role" name="role" defaultValue="staff" className="erp-select">
-          {ROLE_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="ctd-role"
+          name="role"
+          value={role}
+          onChange={setRole}
+          options={ROLE_OPTIONS.map(([value, label]) => ({ value, label }))}
+        />
       </div>
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
         {pending ? "생성 중..." : "데모 계정 생성"}

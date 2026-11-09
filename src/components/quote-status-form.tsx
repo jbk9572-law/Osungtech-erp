@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { updateQuoteStatus } from "@/app/(dashboard)/quotes/actions";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "초안" },
@@ -20,31 +21,22 @@ export function QuoteStatusForm({ id, currentStatus }: { id: string; currentStat
   if (currentStatus === "accepted") return null;
 
   return (
-    <select
+    <ErpSelect
       value={currentStatus}
       disabled={pending}
-      onChange={(e) => {
+      onChange={(v) => {
         const formData = new FormData();
         formData.set("id", id);
-        formData.set("status", e.target.value);
+        formData.set("status", v);
         startTransition(() => {
           updateQuoteStatus(formData);
         });
       }}
-      className="erp-input"
-      style={{ width: "auto" }}
-      aria-label="견적 상태 변경"
-    >
-      {currentStatus === "sent" && (
-        <option value="sent" disabled>
-          발송됨
-        </option>
-      )}
-      {STATUS_OPTIONS.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+      ariaLabel="견적 상태 변경"
+      options={[
+        ...(currentStatus === "sent" ? [{ value: "sent", label: "발송됨" }] : []),
+        ...STATUS_OPTIONS,
+      ]}
+    />
   );
 }

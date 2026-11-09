@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 
 // 거래처(출고처)의 수금, 공급처/외주업체의 지급 등록 폼 — 필드 구성이
@@ -24,6 +25,7 @@ export function PartyPaymentForm({
   label: string;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [method, setMethod] = useState("");
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
@@ -51,14 +53,13 @@ export function PartyPaymentForm({
       </div>
       <div className="erp-field">
         <label htmlFor="pp-method">방법</label>
-        <select id="pp-method" name="method" className="erp-input w-full" defaultValue="">
-          <option value="">-</option>
-          {METHODS.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="pp-method"
+          name="method"
+          value={method}
+          onChange={setMethod}
+          options={[{ value: "", label: "-" }, ...METHODS.map((m) => ({ value: m, label: m }))]}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="pp-memo">적요 (선택)</label>

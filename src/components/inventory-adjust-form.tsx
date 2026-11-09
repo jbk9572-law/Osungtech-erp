@@ -9,6 +9,7 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type Product = {
   id: string;
@@ -90,20 +91,14 @@ export function InventoryAdjustForm({
       {warehouses.length <= 1 ? (
         <input type="hidden" name="warehouse_id" value={warehouseId} />
       ) : (
-        <select
-          aria-label="창고"
+        <ErpSelect
+          ariaLabel="창고"
           name="warehouse_id"
           value={warehouseId}
-          onChange={(e) => setWarehouseId(e.target.value)}
-          className="erp-input"
+          onChange={setWarehouseId}
           required
-        >
-          {warehouses.map((w) => (
-            <option key={w.id} value={w.id}>
-              {w.name}
-            </option>
-          ))}
-        </select>
+          options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+        />
       )}
       <div className="md:col-span-2">
         <ProductSearchSelect products={products} value={productId} onChange={setProductId} />
@@ -165,20 +160,20 @@ export function InventoryAdjustForm({
         </>
       )}
       <input type="hidden" name="note" value={finalNote} />
-      <select
+      <ErpSelect
         value={reason}
-        onChange={(e) => {
-          const next = e.target.value as "" | "sample" | "natural_loss";
+        onChange={(v) => {
+          const next = v as "" | "sample" | "natural_loss";
           setReason(next);
           if (next === "sample" || next === "natural_loss") setDirection("decrease");
         }}
-        aria-label="용도"
-        className="erp-input"
-      >
-        <option value="">직접 입력</option>
-        <option value="sample">샘플 증정(무상)</option>
-        <option value="natural_loss">자연로스(공정손실/환산단위 오차)</option>
-      </select>
+        ariaLabel="용도"
+        options={[
+          { value: "", label: "직접 입력" },
+          { value: "sample", label: "샘플 증정(무상)" },
+          { value: "natural_loss", label: "자연로스(공정손실/환산단위 오차)" },
+        ]}
+      />
       <input
         value={noteText}
         onChange={(e) => setNoteText(e.target.value)}

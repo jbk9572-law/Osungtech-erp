@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 재고실사/QR자동실사처럼 서버 컴포넌트가 창고별로 다른 무거운 조회를
 // 다시 계산해야 하는 화면에서 쓴다 — 클라이언트 상태로 재계산하는 대신
@@ -17,18 +18,11 @@ export function WarehouseQuerySelect({
   const pathname = usePathname();
 
   return (
-    <select
-      aria-label="창고"
+    <ErpSelect
+      ariaLabel="창고"
       value={value}
-      onChange={(e) => router.push(`${pathname}?warehouseId=${e.target.value}`)}
-      className="erp-input"
-      style={{ width: "auto" }}
-    >
-      {warehouses.map((w) => (
-        <option key={w.id} value={w.id}>
-          {w.name}
-        </option>
-      ))}
-    </select>
+      onChange={(v) => router.push(`${pathname}?warehouseId=${v}`)}
+      options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+    />
   );
 }

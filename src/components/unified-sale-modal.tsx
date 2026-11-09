@@ -9,16 +9,21 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartyPaymentForm } from "@/components/party-payment-form";
 import { FormMessage } from "@/components/form-message";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
+import { PriceHistoryHint } from "@/components/price-history-hint";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import { addCustomerPayment } from "@/app/(dashboard)/customers/actions";
 import { RETURN_REASONS } from "@/lib/return-reason";
 import { TAX_TYPES } from "@/lib/tax-evidence-type";
 import { formatNumber } from "@/lib/format-number";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { buildPartyProductMap, lookupPartyProductValue } from "@/lib/party-price-lookup";
 
 type Customer = { id: string; name: string; notes?: string | null };
-type Product = { id: string; sku: string; name: string; spec?: string | null };
+type Product = { id: string; sku: string; name: string; spec?: string | null; price: number };
 type Warehouse = { id: string; name: string };
+type PriceRow = { customer_id: string; product_id: string; unit_price: number };
+type HistoryRow = { customerId: string; productId: string; unitPrice: number; orderDate: string };
 type Tab = "sale" | "payment" | "return";
 
 const TABS: { key: Tab; label: string }[] = [
@@ -39,11 +44,15 @@ export function UnifiedSaleModalTrigger({
   customers,
   products,
   warehouses,
+  prices,
+  history,
   today,
 }: {
   customers: Customer[];
   products: Product[];
   warehouses: Warehouse[];
+  prices: PriceRow[];
+  history: HistoryRow[];
   today: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -59,6 +68,8 @@ export function UnifiedSaleModalTrigger({
           customers={customers}
           products={products}
           warehouses={warehouses}
+          prices={prices}
+          history={history}
           today={today}
           onClose={() => setOpen(false)}
         />
@@ -71,12 +82,16 @@ function UnifiedSaleModal({
   customers,
   products,
   warehouses,
+  prices,
+  history,
   today,
   onClose,
 }: {
   customers: Customer[];
   products: Product[];
   warehouses: Warehouse[];
+  prices: PriceRow[];
+  history: HistoryRow[];
   today: string;
   onClose: () => void;
 }) {
@@ -112,6 +127,8 @@ function UnifiedSaleModal({
               customers={customers}
               products={products}
               warehouses={warehouses}
+              prices={prices}
+              history={history}
               today={today}
               onDone={onClose}
             />
@@ -123,6 +140,8 @@ function UnifiedSaleModal({
               customers={customers}
               products={products}
               warehouses={warehouses}
+              prices={prices}
+              history={history}
               today={today}
               onDone={onClose}
             />
@@ -161,21 +180,25 @@ function UnifiedSaleModal({
   );
 }
 
-type ItemRow = { key: number; productId: string; quantity: string; unitPrice: string };
+type ItemRow = { key: number; productId: string; quantity: string; unitPrice: string; manualPrice: boolean };
 
 function emptyRow(key: number): ItemRow {
-  return { key, productId: "", quantity: "1", unitPrice: "" };
+  return { key, productId: "", quantity: "1", unitPrice: "", manualPrice: false };
 }
 
 // 매출/반품 두 탭이 "is_return 플래그와 사유 입력칸 유무"만 다르고 나머지
 // 필드는 완전히 같아서 하나로 합쳤다 — new-sale-form.tsx의 풀 버전처럼
-// 모조지 계산/임시저장/위치별재고 같은 건 없고, 거래처+품목 몇 줄만
-// 빠르게 넣는 용도다.
+// 모조지 계산/위치별재고 같은 건 없고, 거래처+품목 몇 줄만 빠르게 넣는
+// 용도다. 다만 단가 자동입력/이력만큼은 똑같이 중요하다(사용자 지적 —
+// 이것 없이는 매번 다른 화면에서 단가를 찾아와야 해서 "빠른등록"의 의미가
+// 없다) — new-sale-form.tsx와 같은 resolvePrice 로직을 그대로 쓴다.
 function SaleQuickForm({
   isReturn,
   customers,
   products,
   warehouses,
+  prices,
+  history,
   today,
   onDone,
 }: {
@@ -183,6 +206,8 @@ function SaleQuickForm({
   customers: Customer[];
   products: Product[];
   warehouses: Warehouse[];
+  prices: PriceRow[];
+  history: HistoryRow[];
   today: string;
   onDone: () => void;
 }) {
@@ -191,6 +216,7 @@ function SaleQuickForm({
   const [customerId, setCustomerId] = useState("");
   const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id ?? "");
   const [returnReason, setReturnReason] = useState<string>(RETURN_REASONS[0]);
+  const [taxType, setTaxType] = useState<string>("과세");
   const [rows, setRows] = useState<ItemRow[]>([emptyRow(0)]);
   const [nextKey, setNextKey] = useState(1);
   const submitRef = useRef<HTMLButtonElement>(null);
@@ -207,8 +233,45 @@ function SaleQuickForm({
     }
   }, [state, router, onDone]);
 
+  const priceMap = buildPartyProductMap(prices, (r) => r.customer_id, (r) => r.product_id, (r) => r.unit_price);
+
+  // 거래처별 단가(priceMap)가 없으면 품목 기본가, 그것도 0이면 "모르는
+  // 단가"로 보고 직접입력 잠금을 풀어준다(new-sale-form.tsx의 resolvePrice/
+  // unlockWhenUnknown과 동일한 기준).
+  function resolvePrice(forCustomerId: string, productId: string) {
+    const fromCustomer = lookupPartyProductValue(priceMap, forCustomerId, productId);
+    if (fromCustomer !== undefined) return fromCustomer;
+    const product = products.find((p) => p.id === productId);
+    return product ? Number(product.price) : 0;
+  }
+
+  function getHistoryFor(productId: string) {
+    if (!customerId) return [];
+    return history
+      .filter((h) => h.customerId === customerId && h.productId === productId)
+      .sort((a, b) => b.orderDate.localeCompare(a.orderDate));
+  }
+
   function updateRow(key: number, patch: Partial<ItemRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  }
+  function handleProductChange(key: number, productId: string) {
+    const unitPrice = resolvePrice(customerId, productId);
+    updateRow(key, {
+      productId,
+      unitPrice: unitPrice ? String(unitPrice) : "",
+      manualPrice: unitPrice === 0,
+    });
+  }
+  function handleCustomerChange(newCustomerId: string) {
+    setCustomerId(newCustomerId);
+    setRows((prev) =>
+      prev.map((row) => {
+        if (!row.productId || row.manualPrice) return row;
+        const unitPrice = resolvePrice(newCustomerId, row.productId);
+        return { ...row, unitPrice: unitPrice ? String(unitPrice) : "", manualPrice: unitPrice === 0 };
+      }),
+    );
   }
   function addRow() {
     setRows((prev) => [...prev, emptyRow(nextKey)]);
@@ -241,22 +304,16 @@ function SaleQuickForm({
       <div className="erp-field-grid">
         <div className="erp-field erp-span-6">
           <label htmlFor="unified-sale-customer">출고처 *</label>
-          <PartySearchSelect id="unified-sale-customer" parties={customers} value={customerId} onChange={setCustomerId} />
+          <PartySearchSelect id="unified-sale-customer" parties={customers} value={customerId} onChange={handleCustomerChange} />
         </div>
         <div className="erp-field erp-span-3">
           <label htmlFor="unified-sale-warehouse">창고 *</label>
-          <select
+          <ErpSelect
             id="unified-sale-warehouse"
-            className="erp-select"
             value={warehouseId}
-            onChange={(e) => setWarehouseId(e.target.value)}
-          >
-            {warehouses.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+            onChange={setWarehouseId}
+            options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+          />
         </div>
         <div className="erp-field erp-span-3">
           <label htmlFor="unified-sale-date">거래일자 *</label>
@@ -267,30 +324,25 @@ function SaleQuickForm({
       {isReturn && (
         <div className="erp-field" style={{ marginTop: 8 }}>
           <label htmlFor="unified-sale-return-reason">반품 사유</label>
-          <select
+          <ErpSelect
             id="unified-sale-return-reason"
-            className="erp-select"
             value={returnReason}
-            onChange={(e) => setReturnReason(e.target.value)}
-          >
-            {RETURN_REASONS.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            onChange={setReturnReason}
+            options={RETURN_REASONS.map((r) => ({ value: r, label: r }))}
+          />
         </div>
       )}
 
       <div className="erp-field" style={{ marginTop: 8 }}>
         <label htmlFor="unified-sale-tax-type">과세구분</label>
-        <select id="unified-sale-tax-type" name="tax_type" className="erp-select" defaultValue="과세" style={{ maxWidth: 160 }}>
-          {TAX_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="unified-sale-tax-type"
+          name="tax_type"
+          value={taxType}
+          onChange={setTaxType}
+          style={{ maxWidth: 160 }}
+          options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
+        />
       </div>
 
       <div className="erp-unified-sale-items">
@@ -301,46 +353,53 @@ function SaleQuickForm({
           </button>
         </div>
         {rows.map((row) => (
-          <div key={row.key} className="erp-unified-sale-item-row">
-            <ProductSearchSelect
-              products={products}
-              value={row.productId}
-              onChange={(productId) => updateRow(row.key, { productId })}
-              placeholder="품목 검색"
-            />
-            <input
-              type="number"
-              min="1"
-              step="1"
-              className="erp-input"
-              style={{ width: 70 }}
-              value={row.quantity}
-              onChange={(e) => updateRow(row.key, { quantity: e.target.value })}
-              aria-label="수량"
-            />
-            <input
-              type="number"
-              min="0"
-              step="1"
-              className="erp-input"
-              style={{ width: 100 }}
-              placeholder="단가"
-              value={row.unitPrice}
-              onChange={(e) => updateRow(row.key, { unitPrice: e.target.value })}
-              aria-label="단가"
-            />
-            <span className="erp-unified-sale-item-subtotal">
-              {formatNumber(Number(row.quantity || 0) * Number(row.unitPrice || 0))}원
-            </span>
-            <button
-              type="button"
-              className="erp-icon-link"
-              onClick={() => removeRow(row.key)}
-              disabled={rows.length <= 1}
-              aria-label="품목 줄 삭제"
-            >
-              ✕
-            </button>
+          <div key={row.key}>
+            <div className="erp-unified-sale-item-row">
+              <ProductSearchSelect
+                products={products}
+                value={row.productId}
+                onChange={(productId) => handleProductChange(row.key, productId)}
+                placeholder="품목 검색"
+              />
+              <input
+                type="number"
+                min="1"
+                step="1"
+                className="erp-input"
+                style={{ width: 70 }}
+                value={row.quantity}
+                onChange={(e) => updateRow(row.key, { quantity: e.target.value })}
+                aria-label="수량"
+              />
+              <input
+                type="number"
+                min="0"
+                step="1"
+                className="erp-input"
+                style={{ width: 100 }}
+                placeholder="단가"
+                value={row.unitPrice}
+                onChange={(e) => updateRow(row.key, { unitPrice: e.target.value, manualPrice: true })}
+                aria-label="단가"
+              />
+              <span className="erp-unified-sale-item-subtotal">
+                {formatNumber(Number(row.quantity || 0) * Number(row.unitPrice || 0))}원
+              </span>
+              <button
+                type="button"
+                className="erp-icon-link"
+                onClick={() => removeRow(row.key)}
+                disabled={rows.length <= 1}
+                aria-label="품목 줄 삭제"
+              >
+                ✕
+              </button>
+            </div>
+            {row.productId && customerId && (
+              <div style={{ marginTop: 2, marginBottom: 4 }}>
+                <PriceHistoryHint history={getHistoryFor(row.productId)} />
+              </div>
+            )}
           </div>
         ))}
         <div className="erp-unified-sale-items-total">

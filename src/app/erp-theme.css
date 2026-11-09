@@ -1490,6 +1490,70 @@
   }
 }
 
+/* ErpSelect(erp-select.tsx) — 네이티브 <select>는 펼친 옵션 목록이
+   OS/브라우저가 직접 그리는 팝업이라 CSS로 모서리를 둥글게 할 수
+   없다(플랫폼 전체의 한계) — 닫힌 칸은 둥근데 펼치면 각져 보이는
+   불일치가 생긴다(사용자 지적). 버튼 + 포털 드롭다운으로 직접 그려서
+   .erp-select 토큰을 열림/닫힘 둘 다에 똑같이 적용한다. */
+.erp-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.erp-select-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.erp-select-placeholder {
+  color: var(--erp-text-muted);
+}
+
+.erp-select-caret {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--erp-text-muted);
+}
+
+.erp-select-popup {
+  z-index: 1000;
+  max-height: 224px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-lg, 0);
+  box-shadow: var(--erp-shadow-md, 0 4px 16px rgba(0, 0, 0, 0.12));
+}
+
+.erp-select-option {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: var(--erp-radius-sm, 0);
+  background: none;
+  color: var(--erp-text);
+  font-size: var(--erp-font-base);
+  text-align: left;
+  cursor: pointer;
+}
+
+.erp-select-option[data-highlight="1"] {
+  background: var(--erp-selected);
+}
+
+.erp-select-option[data-selected="1"] {
+  font-weight: 700;
+}
+
 /* 캘린더 일정 설명, 창고이동/구매요청류 메모칸처럼 2~3줄짜리 짧은
    메모용 — 문서형 화면(공지사항/전자결재/고객지원)의 스마트에디터와
    달리 서식 지정이 필요 없는 칸이라 그냥 <textarea>를 쓰되, 높이를

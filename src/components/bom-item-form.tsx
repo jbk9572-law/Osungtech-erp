@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type ProductOption = { id: string; sku: string; name: string; unit: string };
 
@@ -27,6 +28,7 @@ export function BomItemForm({
 
   const [lastState, setLastState] = useState(state);
   const [formKey, setFormKey] = useState(0);
+  const [componentId, setComponentId] = useState("");
   if (state !== lastState) {
     setLastState(state);
     if (state?.success) setFormKey((k) => k + 1);
@@ -37,16 +39,15 @@ export function BomItemForm({
       <input type="hidden" name="parent_product_id" value={parentProductId} />
       <div className="erp-field md:col-span-2">
         <label htmlFor="bom-component">구성품</label>
-        <select id="bom-component" name="component_product_id" className="erp-input w-full" required defaultValue="">
-          <option value="" disabled>
-            선택
-          </option>
-          {candidates.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.sku} · {p.name}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="bom-component"
+          name="component_product_id"
+          required
+          placeholder="선택"
+          value={componentId}
+          onChange={setComponentId}
+          options={candidates.map((p) => ({ value: p.id, label: `${p.sku} · ${p.name}` }))}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="bom-qty">완제품 1{parentUnit}당 소요량</label>

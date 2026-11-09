@@ -7,6 +7,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { SplitListFiller } from "@/components/erp/page-header";
 import { MegaphoneIcon } from "@/components/erp/groupware-icons";
 import { formatNumber } from "@/lib/format-number";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export type AnnouncementRow = {
   id: string;
@@ -115,17 +116,17 @@ export function AnnouncementListBody({
         <div className="erp-field-grid" style={{ margin: 8, padding: 8, gap: 6 }}>
           <div className="erp-field erp-span-3" style={{ minWidth: 90 }}>
             <label htmlFor="ann-sort">정렬</label>
-            <select
+            <ErpSelect
               id="ann-sort"
               value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="erp-select"
+              onChange={(v) => setSort(v as SortKey)}
               style={{ width: "100%" }}
-            >
-              <option value="createdAt">최신순</option>
-              <option value="title">제목순</option>
-              <option value="authorName">작성자순</option>
-            </select>
+              options={[
+                { value: "createdAt", label: "최신순" },
+                { value: "title", label: "제목순" },
+                { value: "authorName", label: "작성자순" },
+              ]}
+            />
           </div>
           <div className="erp-field erp-span-12">
             <label htmlFor="ann-search-q">제목 검색</label>

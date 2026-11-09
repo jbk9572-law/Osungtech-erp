@@ -7,6 +7,7 @@ import { PAYMENT_REQUEST_CARD_TYPES, type PaymentRequestCardType } from "@/lib/p
 import { ReceiptPicker } from "@/components/receipt-picker";
 import { FieldHint } from "@/components/field-hint";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 월말에 몰아 쓰지 않고 그날그날 한 줄씩 빠르게 기록하는 입력창. 문서를
 // 고르지 않아도 서버 액션이 "부서+카드종류+이번 달" 문서를 찾거나 새로
@@ -26,6 +27,7 @@ export function QuickPaymentRequestForm({
   const [lastState, setLastState] = useState(state);
   const [formKey, setFormKey] = useState(0);
   const [highlighted, setHighlighted] = useState(false);
+  const [cardType, setCardType] = useState<PaymentRequestCardType>(PAYMENT_REQUEST_CARD_TYPES[0]);
   if (state !== lastState) {
     setLastState(state);
     if (state?.success) {
@@ -61,13 +63,13 @@ export function QuickPaymentRequestForm({
           카드
           <FieldHint text="같은 부서·카드·달에 등록한 내역끼리 자동으로 한 지급결의 문서로 묶입니다. 개인카드는 작성자별로 따로 묶입니다." />
         </label>
-        <select id="qpr-card-type" name="card_type" defaultValue={PAYMENT_REQUEST_CARD_TYPES[0]} className="erp-input w-full">
-          {PAYMENT_REQUEST_CARD_TYPES.map((type: PaymentRequestCardType) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+        <ErpSelect
+          id="qpr-card-type"
+          name="card_type"
+          value={cardType}
+          onChange={(v) => setCardType(v as PaymentRequestCardType)}
+          options={PAYMENT_REQUEST_CARD_TYPES.map((type: PaymentRequestCardType) => ({ value: type, label: type }))}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-vendor">사용처</label>

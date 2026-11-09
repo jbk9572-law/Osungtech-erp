@@ -9,6 +9,7 @@ import { ProductSearchSelect } from "@/components/product-search-select";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type Category = { id: string; name: string };
 type Supplier = { id: string; name: string };
@@ -116,27 +117,18 @@ export function ProductForm({
         defaultValue={initial?.name ?? ""}
         className="erp-input"
       />
-      <select
+      <ErpSelect
         name="category_id"
-        aria-label="카테고리"
+        ariaLabel="카테고리"
         required
+        placeholder="카테고리 선택"
         value={categoryId}
-        onChange={(e) => setCategoryId(e.target.value)}
-        className="erp-select"
-      >
-        <option value="" disabled>
-          카테고리 선택
-        </option>
-        {PRODUCT_CATEGORIES.map((name) => {
+        onChange={setCategoryId}
+        options={PRODUCT_CATEGORIES.flatMap((name) => {
           const category = categories.find((c) => c.name === name);
-          if (!category) return null;
-          return (
-            <option key={category.id} value={category.id}>
-              {name}
-            </option>
-          );
+          return category ? [{ value: category.id, label: name }] : [];
         })}
-      </select>
+      />
       <PartySearchSelect
         name="supplier_id"
         parties={suppliers}
@@ -155,20 +147,14 @@ export function ProductForm({
       />
       <div style={{ display: "flex", gap: 4 }}>
         {unitMode === "preset" ? (
-          <select
+          <ErpSelect
             name="unit"
-            aria-label="단위"
+            ariaLabel="단위"
             value={UNIT_PRESETS.includes(unitValue) ? unitValue : "EA"}
-            onChange={(e) => setUnitValue(e.target.value)}
-            className="erp-select"
+            onChange={setUnitValue}
             style={{ flex: 1 }}
-          >
-            {UNIT_PRESETS.map((u) => (
-              <option key={u} value={u}>
-                {u}
-              </option>
-            ))}
-          </select>
+            options={UNIT_PRESETS.map((u) => ({ value: u, label: u }))}
+          />
         ) : (
           <input
             name="unit"

@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function DepartmentForm({
   action,
@@ -17,6 +18,7 @@ export function DepartmentForm({
   initial?: { id?: string; name?: string; parentDepartmentId?: string | null };
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [parentDepartmentId, setParentDepartmentId] = useState(initial?.parentDepartmentId ?? "");
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
@@ -29,16 +31,16 @@ export function DepartmentForm({
       </div>
       <div className="erp-field">
         <label htmlFor="dept-parent">상위 부서 (선택)</label>
-        <select id="dept-parent" name="parent_department_id" className="erp-input w-full" defaultValue={initial?.parentDepartmentId ?? ""}>
-          <option value="">없음(최상위)</option>
-          {candidates
-            .filter((c) => c.id !== initial?.id)
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-        </select>
+        <ErpSelect
+          id="dept-parent"
+          name="parent_department_id"
+          value={parentDepartmentId}
+          onChange={setParentDepartmentId}
+          options={[
+            { value: "", label: "없음(최상위)" },
+            ...candidates.filter((c) => c.id !== initial?.id).map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
       </div>
       <div className="erp-field">
         <label aria-hidden="true">&nbsp;</label>

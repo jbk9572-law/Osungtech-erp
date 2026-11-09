@@ -7,6 +7,7 @@ import { currentMonth, getMonthRange } from "@/lib/date-presets";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
+import { LedgerFilterSelects } from "@/components/ledger-filter-selects";
 
 const TYPE_LABEL: Record<string, string> = { in: "입고", out: "출고", adjustment: "조정" };
 
@@ -77,30 +78,12 @@ export default async function InventoryLedgerPage({
       </PageGuide>
 
       <form method="get" className="erp-field-grid">
-        <div className="erp-field erp-span-4">
-          <label htmlFor="ledger-product">품목</label>
-          <select id="ledger-product" name="product_id" className="erp-input w-full" defaultValue={productId ?? ""} required>
-            <option value="" disabled>
-              선택
-            </option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.sku} · {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="erp-field erp-span-3">
-          <label htmlFor="ledger-warehouse">창고</label>
-          <select id="ledger-warehouse" name="warehouse_id" className="erp-input w-full" defaultValue={warehouseId ?? ""}>
-            <option value="">전체 창고</option>
-            {(warehouses.data ?? []).map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <LedgerFilterSelects
+          products={products}
+          warehouses={warehouses.data ?? []}
+          defaultProductId={productId ?? ""}
+          defaultWarehouseId={warehouseId ?? ""}
+        />
         <input type="hidden" name="month" value={month} />
         <button type="submit" className="erp-btn erp-btn-primary">
           조회

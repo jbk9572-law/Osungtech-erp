@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { bulkCreateTaxInvoices, type BulkTaxInvoiceState } from "@/app/(dashboard)/sales/tax-invoices/bulk-create/actions";
 import { FormMessage } from "@/components/form-message";
 import { formatNumber } from "@/lib/format-number";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export type BulkEligibleOrder = {
   id: string;
@@ -16,6 +17,7 @@ export type BulkEligibleOrder = {
 export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrder[]; today: string }) {
   const [state, formAction, pending] = useActionState<BulkTaxInvoiceState, FormData>(bulkCreateTaxInvoices, undefined);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [claimType, setClaimType] = useState("claim");
 
   const allSelected = orders.length > 0 && selected.size === orders.length;
   function toggleAll() {
@@ -45,10 +47,16 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
         </div>
         <div className="erp-field erp-span-2" style={{ minWidth: 120 }}>
           <label htmlFor="bulk-ti-claim">청구/영수</label>
-          <select id="bulk-ti-claim" name="claim_type" defaultValue="claim" className="erp-select">
-            <option value="claim">청구</option>
-            <option value="receipt">영수</option>
-          </select>
+          <ErpSelect
+            id="bulk-ti-claim"
+            name="claim_type"
+            value={claimType}
+            onChange={setClaimType}
+            options={[
+              { value: "claim", label: "청구" },
+              { value: "receipt", label: "영수" },
+            ]}
+          />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || selected.size === 0}>
           {pending ? "발행 중..." : `F7 선택 ${selected.size}건 일괄 발행`}

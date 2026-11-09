@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createPurchase } from "@/app/(dashboard)/purchases/actions";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
@@ -1246,20 +1247,14 @@ export function NewPurchaseForm({
           {warehouses.length > 1 && (
             <div className="erp-field erp-span-2">
               <label htmlFor="purchase-warehouse">입고창고</label>
-              <select
+              <ErpSelect
                 id="purchase-warehouse"
                 name="warehouse_id"
                 value={warehouseId}
-                onChange={(e) => setWarehouseId(e.target.value)}
-                className="erp-select"
+                onChange={setWarehouseId}
                 required
-              >
-                {warehouses.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
+                options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+              />
             </div>
           )}
           {!alsoCreateSale && (
@@ -1297,50 +1292,30 @@ export function NewPurchaseForm({
           )}
           <div className="erp-field erp-span-2">
             <label htmlFor="purchase-delivery-method">입고방법</label>
-            <select
+            <ErpSelect
               id="purchase-delivery-method"
               value={deliveryMethod}
-              onChange={(e) => setDeliveryMethod(e.target.value)}
-              className="erp-select"
-            >
-              <option value="">-</option>
-              {DELIVERY_METHODS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              onChange={setDeliveryMethod}
+              options={[{ value: "", label: "-" }, ...DELIVERY_METHODS.map((m) => ({ value: m, label: m }))]}
+            />
           </div>
           <div className="erp-field erp-span-2">
             <label htmlFor="purchase-tax-type">과세구분</label>
-            <select
+            <ErpSelect
               id="purchase-tax-type"
               value={taxType}
-              onChange={(e) => setTaxType(e.target.value)}
-              className="erp-select"
-            >
-              {TAX_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              onChange={setTaxType}
+              options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
+            />
           </div>
           <div className="erp-field erp-span-2">
             <label htmlFor="purchase-evidence-type">증빙유형</label>
-            <select
+            <ErpSelect
               id="purchase-evidence-type"
               value={evidenceType}
-              onChange={(e) => setEvidenceType(e.target.value)}
-              className="erp-select"
-            >
-              <option value="">(미정)</option>
-              {EVIDENCE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              onChange={setEvidenceType}
+              options={[{ value: "", label: "(미정)" }, ...EVIDENCE_TYPES.map((t) => ({ value: t, label: t }))]}
+            />
           </div>
           <div className="erp-field erp-span-6">
             <label htmlFor="purchase-memo">적요 (선택)</label>
@@ -1377,22 +1352,14 @@ export function NewPurchaseForm({
           {!alwaysCredit && (
             <div className="erp-field erp-span-3">
               <label aria-hidden="true">&nbsp;</label>
-              <select
-                aria-label="결제방법"
+              <ErpSelect
+                ariaLabel="결제방법"
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="erp-select"
+                onChange={setPaymentMethod}
+                placeholder="결제방법 선택"
                 required
-              >
-                <option value="" disabled>
-                  결제방법 선택
-                </option>
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+                options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
+              />
             </div>
           )}
           {!initial?.id && customers.length > 0 && (
@@ -1464,19 +1431,12 @@ export function NewPurchaseForm({
                   </div>
                   <div className="erp-field erp-span-2">
                     <label htmlFor="purchase-sale-delivery-method">납품방법</label>
-                    <select
+                    <ErpSelect
                       id="purchase-sale-delivery-method"
                       value={saleDeliveryMethod}
-                      onChange={(e) => setSaleDeliveryMethod(e.target.value)}
-                      className="erp-select"
-                    >
-                      <option value="">-</option>
-                      {DELIVERY_METHODS.map((m) => (
-                        <option key={m} value={m}>
-                          {m}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setSaleDeliveryMethod}
+                      options={[{ value: "", label: "-" }, ...DELIVERY_METHODS.map((m) => ({ value: m, label: m }))]}
+                    />
                   </div>
                 </>
               )}
@@ -1868,21 +1828,9 @@ export function NewPurchaseForm({
                           />
                           {row.productId &&
                             resolveSupplierNote(supplierId, row.productId) && (
-                              <div
-                                className="mt-1"
-                                style={{
-                                  padding: "4px 8px",
-                                  fontSize: 11.5,
-                                  color: "var(--erp-info-text)",
-                                  background: "var(--erp-info-bg)",
-                                  border: "1px solid var(--erp-info-border)",
-                                  borderRadius: 0,
-                                  whiteSpace: "normal",
-                                  wordBreak: "break-word",
-                                }}
-                              >
+                              <PageGuide className="mt-1 whitespace-normal break-words">
                                 품목 특이사항: {resolveSupplierNote(supplierId, row.productId)}
-                              </div>
+                              </PageGuide>
                             )}
                         </>
                       )}

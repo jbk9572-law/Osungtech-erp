@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { FormState } from "@/components/form-message";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 결재매트릭스 화면의 "결재양식 → 결재선" 연결 셀렉트. 설정 > 기능 관리의
 // FeatureToggle과 같은 낙관적 업데이트 패턴(바꾸자마자 화면에 반영하고,
@@ -30,13 +31,11 @@ export function ApprovalMatrixRuleSelect({
 
   return (
     <div className="flex items-center gap-2">
-      <select
-        className="erp-input"
+      <ErpSelect
         style={{ height: 28, fontSize: 12 }}
         value={presetId}
         disabled={pending}
-        onChange={(e) => {
-          const next = e.target.value;
+        onChange={(next) => {
           const previous = presetId;
           setPresetId(next);
           setError(null);
@@ -51,14 +50,8 @@ export function ApprovalMatrixRuleSelect({
             }
           });
         }}
-      >
-        <option value="">연결 안 함</option>
-        {presets.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
+        options={[{ value: "", label: "연결 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
+      />
       {error && (
         <span className="text-xs" style={{ color: "var(--erp-danger)" }}>
           {error}

@@ -7,6 +7,7 @@ import { PartyTransactionHistory } from "@/components/party-transaction-history"
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 
 // 매입 등록 화면의 "유형: 지급" 모드 — new-collection-form.tsx(수금)과
@@ -19,6 +20,7 @@ export function NewPaymentForm({
   today: string;
 }) {
   const [supplierId, setSupplierId] = useState("");
+  const [method, setMethod] = useState("");
   const [state, formAction, pending] = useActionState(addSupplierPayment, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
@@ -62,14 +64,13 @@ export function NewPaymentForm({
             </div>
             <div className="erp-field erp-span-2">
               <label htmlFor="np-method">방법</label>
-              <select id="np-method" name="method" className="erp-input" defaultValue="">
-                <option value="">-</option>
-                {METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <ErpSelect
+                id="np-method"
+                name="method"
+                value={method}
+                onChange={setMethod}
+                options={[{ value: "", label: "-" }, ...METHODS.map((m) => ({ value: m, label: m }))]}
+              />
             </div>
             <div className="erp-field erp-span-3">
               <label htmlFor="np-memo">적요 (선택)</label>

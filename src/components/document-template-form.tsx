@@ -7,6 +7,7 @@ import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } fr
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import type { RichTextEditorHandle } from "@/components/rich-text-editor";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hr_contract: "인사 · 계약서",
@@ -33,6 +34,7 @@ export function DocumentTemplateForm({
   // 실시간으로 보여준다 — 오타로 필드가 하나 덜 인식되는 걸 저장 전에
   // 바로 알 수 있게.
   const [body, setBody] = useState(initial?.body ?? "");
+  const [category, setCategory] = useState(initial?.category ?? "general");
   const fields = useMemo(() => extractTemplateFields(body), [body]);
   const editorRef = useRef<RichTextEditorHandle>(null);
 
@@ -54,13 +56,13 @@ export function DocumentTemplateForm({
         </div>
         <div className="erp-field">
           <label htmlFor="dt-category">분류</label>
-          <select id="dt-category" name="category" className="erp-input w-full" defaultValue={initial?.category ?? "general"}>
-            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="dt-category"
+            name="category"
+            value={category}
+            onChange={setCategory}
+            options={Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label }))}
+          />
         </div>
       </div>
       <div className="erp-field">

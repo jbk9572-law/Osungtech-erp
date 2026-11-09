@@ -8,6 +8,7 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 매출 등록 화면의 "유형: 수금" 모드 — 품목 그리드 없이 출고처의 미수금에
 // 바로 반영되는 수금 내역을 등록한다. addCustomerPayment를 그대로 쓰므로
@@ -20,6 +21,7 @@ export function NewCollectionForm({
   today: string;
 }) {
   const [customerId, setCustomerId] = useState("");
+  const [method, setMethod] = useState("");
   const [state, formAction, pending] = useActionState(addCustomerPayment, undefined);
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
@@ -63,14 +65,13 @@ export function NewCollectionForm({
             </div>
             <div className="erp-field erp-span-2">
               <label htmlFor="nc-method">방법</label>
-              <select id="nc-method" name="method" className="erp-input" defaultValue="">
-                <option value="">-</option>
-                {METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+              <ErpSelect
+                id="nc-method"
+                name="method"
+                value={method}
+                onChange={setMethod}
+                options={[{ value: "", label: "-" }, ...METHODS.map((m) => ({ value: m, label: m }))]}
+              />
             </div>
             <div className="erp-field erp-span-3">
               <label htmlFor="nc-memo">적요 (선택)</label>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import {
   toggleTenantActive,
   updateTenantPlan,
@@ -12,6 +12,7 @@ import {
 import { FormMessage } from "@/components/form-message";
 import { isPlanExpired } from "@/lib/tenant-plan";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 const PLAN_LABELS: Record<string, string> = {
   trial: "체험",
@@ -52,26 +53,27 @@ export function TenantStatusControls({
   const [sandboxState, sandboxAction, sandboxPending] = useActionState(setTenantSandbox, undefined);
 
   const isExpired = isPlanExpired(planExpiresAt);
+  const [planValue, setPlanValue] = useState(plan);
+  const planFormRef = useRef<HTMLFormElement>(null);
+  const [planKeyValue, setPlanKeyValue] = useState(planKey ?? "");
+  const planKeyFormRef = useRef<HTMLFormElement>(null);
 
   return (
     <div className="flex flex-col gap-3" style={{ maxWidth: 420 }}>
       <div className="erp-field">
         <label htmlFor="ts-plan">요금제 상태</label>
-        <form action={planAction} className="flex items-center gap-2">
+        <form ref={planFormRef} action={planAction} className="flex items-center gap-2">
           <input type="hidden" name="tenantId" value={tenantId} />
-          <select
+          <ErpSelect
             id="ts-plan"
             name="plan"
-            defaultValue={plan}
-            className="erp-select"
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
-          >
-            {Object.entries(PLAN_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            value={planValue}
+            onChange={(v) => {
+              setPlanValue(v);
+              planFormRef.current?.requestSubmit();
+            }}
+            options={Object.entries(PLAN_LABELS).map(([value, label]) => ({ value, label }))}
+          />
           {planPending && <span className="erp-spinner" aria-hidden />}
         </form>
         <FormMessage state={planState} />
@@ -79,22 +81,18 @@ export function TenantStatusControls({
 
       <div className="erp-field">
         <label htmlFor="ts-plan-key">요금제 상품(구독)</label>
-        <form action={planKeyAction} className="flex items-center gap-2">
+        <form ref={planKeyFormRef} action={planKeyAction} className="flex items-center gap-2">
           <input type="hidden" name="tenantId" value={tenantId} />
-          <select
+          <ErpSelect
             id="ts-plan-key"
             name="planKey"
-            defaultValue={planKey ?? ""}
-            className="erp-select"
-            onChange={(e) => e.currentTarget.form?.requestSubmit()}
-          >
-            <option value="">미지정</option>
-            {plans.map((p) => (
-              <option key={p.plan_key} value={p.plan_key}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            value={planKeyValue}
+            onChange={(v) => {
+              setPlanKeyValue(v);
+              planKeyFormRef.current?.requestSubmit();
+            }}
+            options={[{ value: "", label: "미지정" }, ...plans.map((p) => ({ value: p.plan_key, label: p.name }))]}
+          />
           {planKeyPending && <span className="erp-spinner" aria-hidden />}
         </form>
         <FormMessage state={planKeyState} />

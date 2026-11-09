@@ -5,6 +5,7 @@ import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PageGuide } from "@/components/erp/page-guide";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { formatNumber } from "@/lib/format-number";
 
 type ComponentInfo = {
@@ -83,40 +84,26 @@ export function WorkOrderForm({
     <form action={formAction} className="grid grid-cols-1 gap-3 md:grid-cols-4">
       <div className="erp-field md:col-span-2">
         <label htmlFor="wo-product">완제품</label>
-        <select
+        <ErpSelect
           id="wo-product"
           name="product_id"
-          className="erp-input w-full"
           value={productId}
-          onChange={(e) => setProductId(e.target.value)}
+          onChange={setProductId}
           required
-        >
-          {producibleProducts.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.sku} · {p.name}
-            </option>
-          ))}
-        </select>
+          options={producibleProducts.map((p) => ({ value: p.id, label: `${p.sku} · ${p.name}` }))}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="wo-warehouse">창고</label>
-        <select
+        <ErpSelect
           id="wo-warehouse"
           name="warehouse_id"
-          className="erp-input w-full"
           required
+          placeholder="선택"
           value={warehouseId}
-          onChange={(e) => setWarehouseId(e.target.value)}
-        >
-          <option value="" disabled>
-            선택
-          </option>
-          {warehouses.map((w) => (
-            <option key={w.id} value={w.id}>
-              {w.name}
-            </option>
-          ))}
-        </select>
+          onChange={setWarehouseId}
+          options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+        />
       </div>
       <div className="erp-field">
         <label htmlFor="wo-quantity">

@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function EmployeeDepartmentForm({
   action,
@@ -17,18 +18,18 @@ export function EmployeeDepartmentForm({
   departments: { id: string; name: string }[];
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState(departmentId ?? "");
 
   return (
     <form action={formAction} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="user_id" value={userId} />
-      <select name="department_id" className="erp-input" style={{ width: 160 }} defaultValue={departmentId ?? ""}>
-        <option value="">미배정</option>
-        {departments.map((d) => (
-          <option key={d.id} value={d.id}>
-            {d.name}
-          </option>
-        ))}
-      </select>
+      <ErpSelect
+        name="department_id"
+        style={{ width: 160 }}
+        value={selectedDepartmentId}
+        onChange={setSelectedDepartmentId}
+        options={[{ value: "", label: "미배정" }, ...departments.map((d) => ({ value: d.id, label: d.name }))]}
+      />
       <input
         type="text"
         name="position_title"

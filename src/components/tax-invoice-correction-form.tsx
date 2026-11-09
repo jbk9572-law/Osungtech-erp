@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useRef } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { createTaxInvoiceCorrection } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
@@ -9,6 +9,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
 
@@ -57,6 +58,7 @@ export function TaxInvoiceCorrectionForm({
   originalItems: { itemName: string; spec: string; quantity: number; unitPrice: number }[];
 }) {
   const [state, formAction, pending] = useActionState(createTaxInvoiceCorrection, undefined);
+  const [modificationReason, setModificationReason] = useState("error_correction");
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
 
@@ -132,13 +134,13 @@ export function TaxInvoiceCorrectionForm({
           <div className="erp-doc-header-row">
             <label htmlFor="ti-mod-reason" className="erp-doc-header-label">수정사유</label>
             <span className="erp-doc-header-value">
-              <select id="ti-mod-reason" name="modification_reason" defaultValue="error_correction" className="erp-select">
-                {MODIFICATION_REASON_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <ErpSelect
+                id="ti-mod-reason"
+                name="modification_reason"
+                value={modificationReason}
+                onChange={setModificationReason}
+                options={MODIFICATION_REASON_OPTIONS}
+              />
             </span>
           </div>
           <div className="erp-doc-header-row">

@@ -18,6 +18,7 @@ import { NumberInput } from "@/components/number-input";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { GridBadge } from "@/components/grid/badge";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
@@ -1108,18 +1109,12 @@ export function NewSaleForm({
             }}
           >
             반품 사유
-            <select
+            <ErpSelect
               value={returnReason}
-              onChange={(e) => setReturnReason(e.target.value)}
-              className="erp-select"
+              onChange={setReturnReason}
               style={{ height: 26, fontSize: 12.5 }}
-            >
-              {RETURN_REASONS.map((reason) => (
-                <option key={reason} value={reason}>
-                  {reason}
-                </option>
-              ))}
-            </select>
+              options={RETURN_REASONS.map((reason) => ({ value: reason, label: reason }))}
+            />
           </label>
         </PageGuide>
       )}
@@ -1224,20 +1219,14 @@ export function NewSaleForm({
           {warehouses.length > 1 && (
             <div className="erp-field erp-span-2">
               <label htmlFor="sale-warehouse">출고창고</label>
-              <select
+              <ErpSelect
                 id="sale-warehouse"
                 name="warehouse_id"
                 value={warehouseId}
-                onChange={(e) => setWarehouseId(e.target.value)}
-                className="erp-select"
+                onChange={setWarehouseId}
                 required
-              >
-                {warehouses.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))}
-              </select>
+                options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+              />
             </div>
           )}
           <div className="erp-field erp-span-3">
@@ -1304,50 +1293,30 @@ export function NewSaleForm({
           </div>
           <div className="erp-field erp-span-2">
             <label htmlFor="sale-delivery-method">배송방법</label>
-            <select
+            <ErpSelect
               id="sale-delivery-method"
               value={deliveryMethod}
-              onChange={(e) => setDeliveryMethod(e.target.value)}
-              className="erp-select"
-            >
-              <option value="">-</option>
-              {DELIVERY_METHODS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              onChange={setDeliveryMethod}
+              options={[{ value: "", label: "-" }, ...DELIVERY_METHODS.map((m) => ({ value: m, label: m }))]}
+            />
           </div>
           <div className="erp-field erp-span-2">
             <label htmlFor="sale-tax-type">과세구분</label>
-            <select
+            <ErpSelect
               id="sale-tax-type"
               value={taxType}
-              onChange={(e) => setTaxType(e.target.value)}
-              className="erp-select"
-            >
-              {TAX_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              onChange={setTaxType}
+              options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
+            />
           </div>
           <div className="erp-field erp-span-2">
             <label htmlFor="sale-evidence-type">증빙유형</label>
-            <select
+            <ErpSelect
               id="sale-evidence-type"
               value={evidenceType}
-              onChange={(e) => setEvidenceType(e.target.value)}
-              className="erp-select"
-            >
-              <option value="">(미정)</option>
-              {EVIDENCE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              onChange={setEvidenceType}
+              options={[{ value: "", label: "(미정)" }, ...EVIDENCE_TYPES.map((t) => ({ value: t, label: t }))]}
+            />
           </div>
           <div className="erp-field erp-span-6">
             <label htmlFor="sale-memo">적요 (선택)</label>
@@ -1384,22 +1353,14 @@ export function NewSaleForm({
           {!alwaysCredit && (
             <div className="erp-field erp-span-3">
               <label aria-hidden="true">&nbsp;</label>
-              <select
-                aria-label="결제방법"
+              <ErpSelect
+                ariaLabel="결제방법"
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="erp-select"
+                onChange={setPaymentMethod}
+                placeholder="결제방법 선택"
                 required
-              >
-                <option value="" disabled>
-                  결제방법 선택
-                </option>
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
+                options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
+              />
             </div>
           )}
         </div>
@@ -1876,21 +1837,9 @@ export function NewSaleForm({
                           />
                           {row.productId &&
                             resolveNote(customerId, row.productId) && (
-                              <div
-                                className="mt-1"
-                                style={{
-                                  padding: "4px 8px",
-                                  fontSize: 11.5,
-                                  color: "var(--erp-info-text)",
-                                  background: "var(--erp-info-bg)",
-                                  border: "1px solid var(--erp-info-border)",
-                                  borderRadius: 0,
-                                  whiteSpace: "normal",
-                                  wordBreak: "break-word",
-                                }}
-                              >
+                              <PageGuide className="mt-1 whitespace-normal break-words">
                                 품목 특이사항: {resolveNote(customerId, row.productId)}
-                              </div>
+                              </PageGuide>
                             )}
                         </>
                       )}

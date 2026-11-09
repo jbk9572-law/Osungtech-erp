@@ -12,6 +12,7 @@ import { BulkDeleteBar } from "@/components/bulk-delete-bar";
 import { bulkDeletePurchases } from "@/app/(dashboard)/purchases/actions";
 import { useSortableRows } from "@/lib/grid-sort";
 import { SortableTh } from "@/components/grid/sortable-th";
+import { ErpSelect } from "@/components/erp/erp-select";
 import {
   stickyHeaderStyle,
   stickyCellStyle,
@@ -142,6 +143,10 @@ export function PurchaseGridTable({
   // 모바일 카드 목록에서 "선택" 버튼을 눌렀을 때만 체크박스를 보여준다
   // (sales-grid-table.tsx와 같은 패턴).
   const [mobileSelectMode, setMobileSelectMode] = useState(false);
+  // 모바일 카드 목록의 정렬 드롭다운 — 값을 고르면 그 즉시 정렬만 적용하고
+  // "정렬"이라는 placeholder로 되돌아가는 명령형 select라(현재 정렬
+  // 상태를 보여주는 select가 아님), 선택 후 항상 빈 문자열로 리셋한다.
+  const [mobileSortCmd, setMobileSortCmd] = useState("");
   // 마스터-디테일 레이아웃: 지금 아래 품목내역 패널에 표시 중인 명세표.
   // 일괄삭제 체크박스(selected)와는 별개의 상태다. 사용자가 직접 고른 적이
   // 없거나 그 행이 더 이상 목록에 없으면(필터 변경 등) 첫 매입 건으로
@@ -633,24 +638,23 @@ export function PurchaseGridTable({
         >
           {mobileSelectMode ? "선택 취소" : "선택"}
         </button>
-        <select
-          className="erp-select"
-          aria-label="정렬"
-          defaultValue=""
-          onChange={(e) => {
-            const [key, dir] = e.target.value.split(":") as [SortKey, "1" | "-1"];
+        <ErpSelect
+          ariaLabel="정렬"
+          placeholder="정렬"
+          value={mobileSortCmd}
+          onChange={(v) => {
+            const [key, dir] = v.split(":") as [SortKey, "1" | "-1"];
             applySort(key, dir === "1" ? 1 : -1);
+            setMobileSortCmd("");
           }}
-        >
-          <option value="" disabled>
-            정렬
-          </option>
-          <option value="date:-1">최신순</option>
-          <option value="date:1">오래된순</option>
-          <option value="supplyAmount:-1">금액 높은순</option>
-          <option value="supplyAmount:1">금액 낮은순</option>
-          <option value="supplierName:1">공급처순</option>
-        </select>
+          options={[
+            { value: "date:-1", label: "최신순" },
+            { value: "date:1", label: "오래된순" },
+            { value: "supplyAmount:-1", label: "금액 높은순" },
+            { value: "supplyAmount:1", label: "금액 낮은순" },
+            { value: "supplierName:1", label: "공급처순" },
+          ]}
+        />
       </div>
       <div className="erp-row-card-list">
         {carryoverRows && carryoverRows.length > 0 && (

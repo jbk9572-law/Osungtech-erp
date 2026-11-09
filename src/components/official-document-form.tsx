@@ -7,6 +7,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { extractTemplateFields, isServerAutoField, renderTemplate, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { PageGuide } from "@/components/erp/page-guide";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type TemplateOption = { id: string; name: string; body: string };
 type ProfileOption = { id: string; name: string };
@@ -46,6 +47,9 @@ export function OfficialDocumentForm({
   const [templateValues, setTemplateValues] = useState<Record<string, string>>({});
   const [body, setBody] = useState("");
   const [internalOnly, setInternalOnly] = useState(false);
+  const [disclosure, setDisclosure] = useState("public");
+  const [retention, setRetention] = useState("5");
+  const [visibilityScope, setVisibilityScope] = useState("related");
   const [recipients, setRecipients] = useState<RecipientRow[]>([]);
   const [nextKey, setNextKey] = useState(0);
 
@@ -95,22 +99,15 @@ export function OfficialDocumentForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="erp-field">
           <label htmlFor="od-template">양식 (선택)</label>
-          <select
+          <ErpSelect
             id="od-template"
-            className="erp-input w-full"
             value={templateId}
-            onChange={(e) => {
-              setTemplateId(e.target.value);
-              applyTemplate(templates.find((t) => t.id === e.target.value));
+            onChange={(v) => {
+              setTemplateId(v);
+              applyTemplate(templates.find((t) => t.id === v));
             }}
-          >
-            <option value="">자유양식</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+            options={[{ value: "", label: "자유양식" }, ...templates.map((t) => ({ value: t.id, label: t.name }))]}
+          />
           <input type="hidden" name="template_id" value={templateId} />
         </div>
         <div className="erp-field">
@@ -169,30 +166,36 @@ export function OfficialDocumentForm({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
         <div className="erp-field">
           <label htmlFor="od-disclosure">공개구분</label>
-          <select id="od-disclosure" name="disclosure" className="erp-input w-full" defaultValue="public">
-            {Object.entries(DISCLOSURE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="od-disclosure"
+            name="disclosure"
+            value={disclosure}
+            onChange={setDisclosure}
+            options={Object.entries(DISCLOSURE_LABELS).map(([value, label]) => ({ value, label }))}
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="od-retention">보존연한</label>
-          <select id="od-retention" name="retention" className="erp-input w-full" defaultValue="5">
-            {Object.entries(RETENTION_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="od-retention"
+            name="retention"
+            value={retention}
+            onChange={setRetention}
+            options={Object.entries(RETENTION_LABELS).map(([value, label]) => ({ value, label }))}
+          />
         </div>
         <div className="erp-field">
           <label htmlFor="od-visibility">사내 열람범위</label>
-          <select id="od-visibility" name="visibility_scope" className="erp-input w-full" defaultValue="related">
-            <option value="related">관련자만(작성자·결재선·수신처)</option>
-            <option value="all">전체 직원(발송·종결 후 공개)</option>
-          </select>
+          <ErpSelect
+            id="od-visibility"
+            name="visibility_scope"
+            value={visibilityScope}
+            onChange={setVisibilityScope}
+            options={[
+              { value: "related", label: "관련자만(작성자·결재선·수신처)" },
+              { value: "all", label: "전체 직원(발송·종결 후 공개)" },
+            ]}
+          />
         </div>
         <label className="flex items-center gap-2 self-end pb-2 text-sm">
           <input
@@ -252,21 +255,15 @@ export function OfficialDocumentForm({
                       />
                     </>
                   ) : (
-                    <select
+                    <ErpSelect
                       value={r.userId ?? ""}
-                      onChange={(e) => {
-                        const p = profiles.find((x) => x.id === e.target.value);
+                      onChange={(v) => {
+                        const p = profiles.find((x) => x.id === v);
                         updateRecipient(r.key, { userId: p?.id ?? null, name: p?.name ?? "" });
                       }}
-                      className="erp-input"
                       style={{ width: 200 }}
-                    >
-                      {profiles.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
+                      options={profiles.map((p) => ({ value: p.id, label: p.name }))}
+                    />
                   )}
                   <button type="button" onClick={() => removeRecipient(r.key)} className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }}>
                     삭제

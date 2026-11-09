@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { setTenantTheme } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 type TenantOption = { id: string; name: string; theme: string };
 
@@ -37,33 +38,21 @@ export function TenantThemeForm({ tenants }: { tenants: TenantOption[] }) {
     <div className="erp-field" style={{ maxWidth: 520 }}>
       <label htmlFor="tenant-theme-company">회사(테넌트)</label>
       <form action={action} className="flex flex-wrap items-end gap-2">
-        <select
+        <ErpSelect
           id="tenant-theme-company"
           name="tenantId"
-          className="erp-select"
           value={tenantId}
-          onChange={(e) => handleTenantChange(e.target.value)}
-        >
-          {tenants.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-        <select
+          onChange={handleTenantChange}
+          options={tenants.map((t) => ({ value: t.id, label: t.name }))}
+        />
+        <ErpSelect
           id="tenant-theme-select"
           name="theme"
-          className="erp-select"
           value={theme}
-          onChange={(e) => setTheme(e.target.value)}
-          aria-label="테마"
-        >
-          {Object.entries(THEME_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          onChange={setTheme}
+          ariaLabel="테마"
+          options={Object.entries(THEME_LABELS).map(([value, label]) => ({ value, label }))}
+        />
         <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
           {pending ? "적용 중..." : "적용"}
         </button>

@@ -9,6 +9,7 @@ import {
   updateCustomerOrderShipping,
 } from "@/app/(dashboard)/customer-orders/actions";
 import { FormMessage } from "@/components/form-message";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function CustomerOrderApproveForm({ id }: { id: string }) {
   const [state, formAction, pending] = useActionState(approveCustomerOrder, undefined);
@@ -61,19 +62,21 @@ export function ConvertToWorkOrderForm({
   today: string;
 }) {
   const [state, formAction, pending] = useActionState(convertCustomerOrderItemToWorkOrder, undefined);
+  const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id ?? "");
   return (
     <form action={formAction} style={{ display: "flex", alignItems: "center", gap: 4 }}>
       <input type="hidden" name="item_id" value={itemId} />
       <input type="hidden" name="product_id" value={productId} />
       <input type="hidden" name="quantity" value={quantity} />
       <input type="hidden" name="order_date" value={today} />
-      <select name="warehouse_id" className="erp-select" style={{ width: 90 }} defaultValue={warehouses[0]?.id ?? ""} required>
-        {warehouses.map((w) => (
-          <option key={w.id} value={w.id}>
-            {w.name}
-          </option>
-        ))}
-      </select>
+      <ErpSelect
+        name="warehouse_id"
+        style={{ width: 90 }}
+        value={warehouseId}
+        onChange={setWarehouseId}
+        required
+        options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+      />
       <button type="submit" className="erp-btn" style={{ height: 24, padding: "1px 8px", fontSize: 11 }} disabled={pending || warehouses.length === 0}>
         {pending ? "전환 중..." : "생산지시 생성"}
       </button>
@@ -100,6 +103,7 @@ export function ConvertToSaleForm({
   today: string;
 }) {
   const [state, formAction, pending] = useActionState(convertCustomerOrderItemToSale, undefined);
+  const [warehouseId, setWarehouseId] = useState(warehouses[0]?.id ?? "");
   return (
     <form action={formAction} style={{ display: "flex", alignItems: "center", gap: 4 }}>
       <input type="hidden" name="item_id" value={itemId} />
@@ -108,13 +112,14 @@ export function ConvertToSaleForm({
       <input type="hidden" name="quantity" value={quantity} />
       <input type="hidden" name="unit_price" value={unitPrice} />
       <input type="hidden" name="order_date" value={today} />
-      <select name="warehouse_id" className="erp-select" style={{ width: 90 }} defaultValue={warehouses[0]?.id ?? ""} required>
-        {warehouses.map((w) => (
-          <option key={w.id} value={w.id}>
-            {w.name}
-          </option>
-        ))}
-      </select>
+      <ErpSelect
+        name="warehouse_id"
+        style={{ width: 90 }}
+        value={warehouseId}
+        onChange={setWarehouseId}
+        required
+        options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
+      />
       <button type="submit" className="erp-btn" style={{ height: 24, padding: "1px 8px", fontSize: 11 }} disabled={pending || warehouses.length === 0}>
         {pending ? "전환 중..." : "판매 등록"}
       </button>
