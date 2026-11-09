@@ -8,7 +8,8 @@ import { CloseButton } from "@/components/erp/close-button";
 import { AccessWall } from "@/components/erp/access-wall";
 import { TaxInvoiceForm } from "@/components/tax-invoice-form";
 import { TaxInvoiceDetail } from "@/components/tax-invoice-detail";
-import { cancelTaxInvoice } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
+import { IssueTaxInvoiceMockButton } from "@/components/issue-tax-invoice-mock-button";
+import { cancelTaxInvoice, issueTaxInvoiceViaMockApi } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { todayKstStr } from "@/lib/kst-date";
 import { canIssueTaxInvoice, isTaxExempt, defaultInvoiceTypeFromTaxType } from "@/lib/tax-evidence-type";
 import { resolveListHref } from "@/lib/list-return";
@@ -25,7 +26,7 @@ export default async function TaxInvoicePage({
   const { back } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: order }, { data: company }, { data: existing }, actor] = await Promise.all([
+  const [{ data: order }, { data: company }, { data: existing }, actor, { data: isSandbox }] = await Promise.all([
     supabase
       .from("sales_orders")
       .select("id, created_by, tax_type, evidence_type, customers(*)")
@@ -46,6 +47,10 @@ export default async function TaxInvoicePage({
       .is("original_invoice_id", null)
       .maybeSingle(),
     getCurrentActor(supabase),
+    // 국세청 전자발행(테스트) 버튼은 아직 실제 외부 연동이 없는 가짜
+    // 발송이라, 샌드박스 테넌트에서만 보이게 한다(사용자 요청 — 전부
+    // 샌드박스에서 먼저 검증 후 나머지 테넌트로 넓힐 계획).
+    supabase.rpc("is_sandbox_tenant"),
   ]);
 
   if (!order) notFound();
@@ -120,6 +125,8 @@ export default async function TaxInvoicePage({
       {existing ? (
         <TaxInvoiceDetail invoice={existing} corrections={corrections ?? []} salesOrderId={id} cancelAction={cancelTaxInvoice} />
       ) : (
+        <>
+        {isSandbox && <IssueTaxInvoiceMockButton salesOrderId={id} action={issueTaxInvoiceViaMockApi} />}
         <TaxInvoiceForm
           salesOrderId={id}
           today={todayKstStr()}
@@ -149,6 +156,7 @@ export default async function TaxInvoicePage({
             unitPrice: Number(item.unit_price),
           }))}
         />
+        </>
       )}
     </div>
   );

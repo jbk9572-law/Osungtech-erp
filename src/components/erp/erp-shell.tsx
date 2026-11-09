@@ -57,9 +57,10 @@ export function ErpShell({
   // 전부 정해서 내려준다(여기서는 그대로 그리기만 한다).
   quotaBanner?: { tone: "warn" | "danger"; message: string } | null;
   // 이 테넌트(회사)에 플랫폼관리자가 지정한 화면 테마(tenants.theme,
-  // migration 215) — "classic-light"(기본) 또는 "modern". 서버에서 받은
-  // 값을 루트 .erp div에 data-theme으로 그대로 얹는다(erp-theme.css의
-  // [data-theme="modern"] 블록 참고).
+  // migration 215, 223) — "classic-light"(기본)/"modern"/"classic-b".
+  // 서버에서 받은 값을 루트 .erp div에 data-theme으로 그대로 얹는다
+  // (erp-theme.css의 [data-theme="modern"]/[data-theme="classic-b"]
+  // 블록 참고). classic-light는 기본값이라 속성 자체를 안 둔다.
   theme?: string | null;
   children: React.ReactNode;
   modal?: React.ReactNode;
@@ -107,7 +108,7 @@ export function ErpShell({
   }
 
   return (
-    <div className="erp" data-theme={theme === "modern" ? "modern" : undefined}>
+    <div className="erp" data-theme={theme === "modern" || theme === "classic-b" ? theme : undefined}>
       <a href="#erp-main-content" className="erp-skip-link">
         본문으로 바로가기
       </a>
