@@ -66,6 +66,13 @@ export async function OfficialDocumentDetailPanel({
 }) {
   const supabase = await createClient();
   const { userId, isAdmin } = await getCurrentActor(supabase);
+  // 팩스/알림톡 가짜 발송 버튼은 아직 실제 외부 연동이 없는 테스트
+  // 기능이라, 샌드박스로 지정된 테넌트에서만 보이게 한다(사용자 요청
+  // — 전부 샌드박스에서 먼저 검증하고 이상 없으면 나머지 테넌트로
+  // 넓힐 계획). 서버 액션 쪽(official-documents/actions.ts)에서도
+  // 같은 RPC로 한 번 더 확인한다 — 버튼을 숨겨도 주소를 직접 조작해
+  // 호출하는 경로까지 막아야 한다.
+  const { data: isSandbox } = await supabase.rpc("is_sandbox_tenant");
 
   const { data: doc } = await supabase
     .from("official_documents")
@@ -232,8 +239,8 @@ export async function OfficialDocumentDetailPanel({
                                 officialDocumentId={doc.id}
                                 action={markRecipientDeliveredManually}
                                 kind={r.kind}
-                                mockFaxAction={sendOfficialDocumentRecipientByMockFax}
-                                mockAlimtalkAction={sendOfficialDocumentRecipientByMockAlimtalk}
+                                mockFaxAction={isSandbox ? sendOfficialDocumentRecipientByMockFax : undefined}
+                                mockAlimtalkAction={isSandbox ? sendOfficialDocumentRecipientByMockAlimtalk : undefined}
                               />
                             ) : null}
                           </td>
@@ -284,8 +291,8 @@ export async function OfficialDocumentDetailPanel({
                           officialDocumentId={doc.id}
                           action={markRecipientDeliveredManually}
                           kind={r.kind}
-                          mockFaxAction={sendOfficialDocumentRecipientByMockFax}
-                          mockAlimtalkAction={sendOfficialDocumentRecipientByMockAlimtalk}
+                          mockFaxAction={isSandbox ? sendOfficialDocumentRecipientByMockFax : undefined}
+                          mockAlimtalkAction={isSandbox ? sendOfficialDocumentRecipientByMockAlimtalk : undefined}
                         />
                       </div>
                     )}

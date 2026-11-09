@@ -205,6 +205,13 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
   if (!salesOrderId) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+  // 버튼은 샌드박스 테넌트에서만 보이지만(tax-invoice/page.tsx), 주소를
+  // 직접 조작해 호출하는 경로까지 막기 위해 서버 액션에서도 한 번 더
+  // 확인한다 — sandbox-tools.tsx의 초기화/더미 데이터 생성 버튼과 같은
+  // 이중 확인 원칙.
+  const { data: isSandbox } = await supabase.rpc("is_sandbox_tenant");
+  if (!isSandbox) return { error: "이 기능은 샌드박스 테넌트에서만 사용할 수 있습니다." };
+
   if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 세금계산서를 발행할 수 있습니다." };
   }
