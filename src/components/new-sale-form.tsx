@@ -1109,18 +1109,12 @@ export function NewSaleForm({
             }}
           >
             반품 사유
-            <select
+            <ErpSelect
               value={returnReason}
-              onChange={(e) => setReturnReason(e.target.value)}
-              className="erp-select"
+              onChange={setReturnReason}
               style={{ height: 26, fontSize: 12.5 }}
-            >
-              {RETURN_REASONS.map((reason) => (
-                <option key={reason} value={reason}>
-                  {reason}
-                </option>
-              ))}
-            </select>
+              options={RETURN_REASONS.map((reason) => ({ value: reason, label: reason }))}
+            />
           </label>
         </PageGuide>
       )}

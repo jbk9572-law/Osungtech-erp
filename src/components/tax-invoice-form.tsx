@@ -9,6 +9,7 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PageGuide } from "@/components/erp/page-guide";
+import { ErpSelect } from "@/components/erp/erp-select";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
 
@@ -71,6 +72,7 @@ export function TaxInvoiceForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
   const [invoiceType, setInvoiceType] = useState<"general" | "zero_rate" | "consignment" | "consignment_zero_rate">(defaultInvoiceType);
+  const [claimType, setClaimType] = useState("claim");
   const isConsignment = invoiceType === "consignment" || invoiceType === "consignment_zero_rate";
 
   const seeded = useMemo<Row[]>(() => {
@@ -176,27 +178,33 @@ export function TaxInvoiceForm({
           <div className="erp-doc-header-row">
             <label htmlFor="ti-type" className="erp-doc-header-label">종류</label>
             <span className="erp-doc-header-value">
-              <select
+              <ErpSelect
                 id="ti-type"
                 name="invoice_type"
                 value={invoiceType}
-                onChange={(e) => setInvoiceType(e.target.value as typeof invoiceType)}
-                className="erp-select"
-              >
-                <option value="general">일반</option>
-                <option value="zero_rate">영세율</option>
-                <option value="consignment">위수탁</option>
-                <option value="consignment_zero_rate">위수탁영세</option>
-              </select>
+                onChange={(v) => setInvoiceType(v as typeof invoiceType)}
+                options={[
+                  { value: "general", label: "일반" },
+                  { value: "zero_rate", label: "영세율" },
+                  { value: "consignment", label: "위수탁" },
+                  { value: "consignment_zero_rate", label: "위수탁영세" },
+                ]}
+              />
             </span>
           </div>
           <div className="erp-doc-header-row">
             <label htmlFor="ti-claim" className="erp-doc-header-label">청구/영수</label>
             <span className="erp-doc-header-value">
-              <select id="ti-claim" name="claim_type" defaultValue="claim" className="erp-select">
-                <option value="claim">청구</option>
-                <option value="receipt">영수</option>
-              </select>
+              <ErpSelect
+                id="ti-claim"
+                name="claim_type"
+                value={claimType}
+                onChange={setClaimType}
+                options={[
+                  { value: "claim", label: "청구" },
+                  { value: "receipt", label: "영수" },
+                ]}
+              />
             </span>
           </div>
           {isConsignment && (

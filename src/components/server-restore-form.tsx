@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { restoreFromServerSnapshot } from "@/app/(dashboard)/settings/backup/actions";
 import { FormMessage } from "@/components/form-message";
 import { useConfirmCode } from "@/lib/use-confirm-code";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 // 위 "복원하기"(안전한 병합 복원)와 달리 이건 DB를 통째로 지우고 백업
 // 시점 그대로 되돌리는 파괴적 작업이라, 같은 확인 코드 방식이라도 시점을
@@ -24,26 +25,18 @@ export function ServerRestoreForm({ snapshots }: { snapshots: string[] }) {
     >
       <div className="erp-field">
         <label htmlFor="restore-snapshot">복원할 시점</label>
-        <select
+        <ErpSelect
           id="restore-snapshot"
           name="snapshot"
           required
           value={snapshot}
-          onChange={(e) => {
-            const v = e.target.value;
+          onChange={(v) => {
             setSnapshot(v);
             if (v) regenerate();
             else reset();
           }}
-          className="erp-input"
-        >
-          <option value="">시점 선택...</option>
-          {snapshots.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          options={[{ value: "", label: "시점 선택..." }, ...snapshots.map((s) => ({ value: s, label: s }))]}
+        />
       </div>
 
       {snapshot && code && (

@@ -9,6 +9,7 @@ import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
 import { LEAVE_UNIT_DAYS, LEAVE_UNIT_LABEL, LEAVE_UNIT_OPTIONS, type LeaveUnit } from "@/lib/leave-unit";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
+import { ErpSelect } from "@/components/erp/erp-select";
 
 export function LeaveRequestForm({
   action,
@@ -75,18 +76,12 @@ export function LeaveRequestForm({
 
       <div className="erp-field" style={{ maxWidth: 480 }}>
         <label htmlFor="lv-unit">휴가 단위</label>
-        <select
+        <ErpSelect
           id="lv-unit"
-          className="erp-input w-full"
           value={leaveUnit}
-          onChange={(e) => applyLeaveUnit(e.target.value as LeaveUnit)}
-        >
-          {LEAVE_UNIT_OPTIONS.map((unit) => (
-            <option key={unit} value={unit}>
-              {LEAVE_UNIT_LABEL[unit]}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => applyLeaveUnit(v as LeaveUnit)}
+          options={LEAVE_UNIT_OPTIONS.map((unit) => ({ value: unit, label: LEAVE_UNIT_LABEL[unit] }))}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
@@ -139,14 +134,12 @@ export function LeaveRequestForm({
       {presets.length > 0 && (
         <div className="erp-field" style={{ maxWidth: 320 }}>
           <label htmlFor="lv-preset">저장된 결재선 불러오기</label>
-          <select id="lv-preset" className="erp-input w-full" value={presetId} onChange={(e) => applyPreset(e.target.value)}>
-            <option value="">선택 안 함</option>
-            {presets.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+          <ErpSelect
+            id="lv-preset"
+            value={presetId}
+            onChange={applyPreset}
+            options={[{ value: "", label: "선택 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
+          />
         </div>
       )}
 
