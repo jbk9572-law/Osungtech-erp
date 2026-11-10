@@ -11,6 +11,7 @@ const THEME_LABELS: Record<string, string> = {
   "classic-light": "Classic Light (기본)",
   modern: "Modern",
   "classic-b": "Classic B (각진 인디고)",
+  "classic-c": "Classic C (슬레이트 장부형)",
 };
 
 // 회사(테넌트)별로 다른 테마를 줄 수 있어야 해서("관리자페이지에서
