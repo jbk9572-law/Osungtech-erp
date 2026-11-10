@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useActionState,
   useMemo,
   useState,
@@ -23,6 +24,7 @@ import {
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatCarryoverDate } from "@/lib/carryover";
 import { formatNumber } from "@/lib/format-number";
@@ -155,15 +157,27 @@ export function SalesGridTable({
   // "정렬"이라는 placeholder로 되돌아가는 명령형 select라(현재 정렬
   // 상태를 보여주는 select가 아님), 선택 후 항상 빈 문자열로 리셋한다.
   const [mobileSortCmd, setMobileSortCmd] = useState("");
-  // 마스터-디테일 레이아웃: 지금 아래 품목내역 패널에 표시 중인 명세표.
-  // 일괄삭제 체크박스(selected)와는 별개의 상태다. 사용자가 직접 고른 적이
-  // 없거나 그 행이 더 이상 목록에 없으면(필터 변경 등) 첫 매출 건으로
-  // 자동 대체한다 — effect 없이 렌더 중 계산해서 캐스케이드 렌더를 피한다.
+  // 행 클릭 시 그 행 바로 아래에 품목내역을 아코디언으로 펼친다 —
+  // 전에는 첫 매출 건을 자동으로 펼쳐서 패널을 항상 보여줬는데, 그러면
+  // "펼침 상태"가 아니라 "고정 패널"이라 아코디언이라 부를 수 없었다
+  // (사용자 요청 — 제자리 펼침, 싱글 아코디언). 지금은 아무것도 안
+  // 고른 기본값(null)에서 시작하고, 필터가 바뀌어 그 행이 목록에서
+  // 사라지면 같이 접는다.
   const [manualActiveKey, setManualActiveKey] = useState<string | null>(null);
   const activeKey =
     manualActiveKey && sortedRows.some((row) => row.key === manualActiveKey)
       ? manualActiveKey
-      : (sortedRows.find((row) => row.orderId)?.key ?? null);
+      : null;
+  // 같은 행을 다시 클릭하면 접히고(토글), 다른 행을 클릭하면 그 행만
+  // 펼쳐진다(싱글 아코디언 — activeKey가 값 하나뿐이라 구조적으로
+  // 둘 이상 동시에 펼쳐질 수 없다).
+  function toggleAccordion(key: string) {
+    setManualActiveKey((prev) => (prev === key ? null : key));
+  }
+  // 펼쳐진 상태에서 Esc를 누르면 접는다 — 캡처 단계에서 먼저 가로채
+  // stopPropagation하므로, 화면 전역 Esc 단축키(KeyboardShortcuts,
+  // 목록 화면 나가기 등)까지는 안 번진다.
+  useEscapeToClose(activeKey !== null, () => setManualActiveKey(null));
 
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     bulkDeleteSales,
@@ -325,7 +339,7 @@ export function SalesGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}`}
-        onClick={() => setManualActiveKey(row.key)}
+        onClick={() => opts.selectable && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
           {opts.selectable && row.orderId && (
@@ -677,7 +691,26 @@ export function SalesGridTable({
             </tbody>
           )}
           <tbody>
-            {sortedRows.map((row) => renderRow(row, { selectable: true }))}
+            {sortedRows.map((row) => (
+              <Fragment key={row.key}>
+                {renderRow(row, { selectable: true })}
+                {row.key === activeKey && (
+                  <tr className="erp-grid-accordion-row">
+                    {/* 20 = 표 전체 칸 수(위 carryover 구분줄의 colSpan과 동일) —
+                        품목내역 패널을 그 행 바로 아래에 가로로 꽉 채워 펼친다.
+                        높이 제한/내부 스크롤 없이 OrderDetailPanel 전체를 그대로
+                        보여준다(사용자 요청 — 제자리 펼침, 스크롤 없이 한눈에). */}
+                    <td colSpan={20} style={{ padding: 0, background: "var(--erp-bg)" }}>
+                      <OrderDetailPanel
+                        selection={activeSelection}
+                        priceLabel="공급가"
+                        emptyMessage="품목내역이 없습니다."
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
             {!sortedRows.length && (
               <tr>
                 <td colSpan={21} className="erp-grid-empty">
@@ -754,12 +787,6 @@ export function SalesGridTable({
         {sortedRows.map((row) => renderMobileCard(row, { selectable: true }))}
         {!sortedRows.length && <p className="erp-grid-empty">조건에 맞는 판매 거래가 없습니다.</p>}
       </div>
-
-      <OrderDetailPanel
-        selection={activeSelection}
-        priceLabel="공급가"
-        emptyMessage="위 목록에서 명세표를 선택하면 품목내역이 여기에 표시됩니다."
-      />
     </>
   );
 }
