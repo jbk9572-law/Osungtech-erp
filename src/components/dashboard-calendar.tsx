@@ -380,7 +380,13 @@ export function groupProductItemsByLabel(
     return groups[idx];
   }
 
+  // isStock(재고용 매입/재고분 출고로 분류된 몫)은 화면/복사 텍스트
+  // 어디에도 안 보이게 통째로 뺀다(사용자 요청 — "오늘의 업무 복사하는
+  // 부분에서 재고용 자체를 빼버려"). "(NNN는 출고 후 남은재고)" 메모만
+  // 붙이는 경우(note가 있는 일반 push)는 isStock=false라 영향 없다 —
+  // 재고 몫이 아예 자기 그룹으로 통째로 떨어지는 경우만 막는다.
   function push(label: string | null, isStock: boolean, items: ItemRow[], note: string | null = null) {
+    if (isStock) return;
     bucket(label, isStock).items.push(...items.map((item) => ({ item, note })));
   }
 
