@@ -5,6 +5,7 @@ import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
 import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
 import { TenantThemeForm } from "@/components/tenant-theme-form";
+import { TenantIndustryForm } from "@/components/tenant-industry-form";
 import { setPlatformDefaultFeatureEnabled } from "@/app/platform-admin/settings/actions";
 import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS } from "@/lib/erp-menu";
 
@@ -20,7 +21,7 @@ export default async function PlatformSettingsPage() {
 
   const { data: tenantRows } = await supabase.rpc("get_platform_tenant_list");
   const tenants = (tenantRows ?? [])
-    .map((t) => ({ id: t.id, name: t.name, theme: t.theme }))
+    .map((t) => ({ id: t.id, name: t.name, theme: t.theme, industry: t.industry }))
     .sort((a, b) => a.name.localeCompare(b.name, "ko"));
 
   return (
@@ -62,6 +63,21 @@ export default async function PlatformSettingsPage() {
             매입/매출/메신저/게시판 등)에 바로 반영됩니다 — 회사마다 다른 테마를 줄 수 있습니다.
           </PageGuide>
           <TenantThemeForm tenants={tenants} />
+        </div>
+      </div>
+
+      <div className="erp-detail" style={{ marginBottom: "var(--erp-space-5)" }}>
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">업종 템플릿</span>
+        </div>
+        <div className="erp-detail-body">
+          <PageGuide className="mb-2">
+            회사(테넌트)를 고르고 업종을 선택한 뒤 적용을 누르면, 그 업종에 보통 안 쓰는 메뉴들을
+            한 번에 꺼줍니다 — 신규 고객사를 받을 때 아래 메뉴 토글을 하나하나 손으로 끌 필요가
+            없어집니다. 적용은 시작값을 한 번 세팅해주는 것뿐이라, 그 뒤로 그 회사 관리자는
+            환경설정 &gt; 기능 관리에서 개별 메뉴를 지금처럼 자유롭게 다시 켜고 끌 수 있습니다.
+          </PageGuide>
+          <TenantIndustryForm tenants={tenants} />
         </div>
       </div>
 

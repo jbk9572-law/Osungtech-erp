@@ -7,7 +7,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { FeatureToggle } from "@/components/feature-toggle";
 import { ClosingDateForm } from "@/components/closing-date-form";
 import { setTenantFeatureEnabled } from "@/app/(dashboard)/settings/features/actions";
-import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS, BEHAVIOR_FEATURE_KEYS } from "@/lib/erp-menu";
+import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS, BEHAVIOR_FEATURE_KEYS, INDUSTRY_PRESETS } from "@/lib/erp-menu";
 
 // 대메뉴 통폐합(20개 → 13개)으로 예전엔 자기 그룹을 가졌던 모듈(영업관리
 // crm, 전자결재 approvals, 공문관리 official_documents)이 이제 다른
@@ -28,8 +28,16 @@ export default async function FeatureSettingsPage() {
   }
 
   // tenants_select_own RLS가 이미 "내 테넌트 한 행"으로만 걸러준다.
-  const { data: tenant } = await supabase.from("tenants").select("disabled_features, closing_date").maybeSingle();
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select("disabled_features, closing_date, industry")
+    .maybeSingle();
   const disabledFeatures = tenant?.disabled_features ?? [];
+  // 업종 템플릿은 플랫폼 관리자만 바꿀 수 있다(헌법에 따라 테넌트
+  // 관리자의 자유도는 아래 개별 토글에만 있고, 업종 자체는 여기서
+  // 바꾸는 게 아니라 "왜 기본값이 이렇게 돼 있는지" 참고용으로만
+  // 보여준다 — platform-admin/settings의 TenantIndustryForm 참고).
+  const industryLabel = INDUSTRY_PRESETS.find((p) => p.key === tenant?.industry)?.label;
 
   return (
     <div>
@@ -39,6 +47,13 @@ export default async function FeatureSettingsPage() {
       <PageGuide>
         모든 회사가 모든 기능을 쓰지는 않으므로, 안 쓰는 메뉴는 그룹 전체 또는 세부 항목 단위로 꺼서
         왼쪽 메뉴에서 숨길 수 있습니다. 꺼도 데이터는 지워지지 않고, 언제든 다시 켤 수 있습니다.
+        {industryLabel && (
+          <>
+            {" "}
+            현재 업종 설정: <strong>{industryLabel}</strong>(플랫폼 관리자가 지정한 시작값입니다 — 아래
+            토글은 이 설정과 상관없이 자유롭게 바꿀 수 있습니다).
+          </>
+        )}
       </PageGuide>
 
       {/* 메뉴 전체를 숨기는 위 토글과 달리, 기존 화면 안의 특정 필드/동작만

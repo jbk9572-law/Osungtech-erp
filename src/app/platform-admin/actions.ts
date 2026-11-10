@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { ROLE_LABELS } from "@/lib/user-roles";
+import { INDUSTRY_PRESETS } from "@/lib/erp-menu";
 import type { FormState } from "@/components/form-message";
 
 type Role = "admin" | "manager" | "staff";
@@ -296,6 +297,33 @@ export async function setTenantTheme(_prevState: FormState, formData: FormData):
 
   revalidatePath("/platform-admin/settings");
   return { success: "테마를 적용했습니다." };
+}
+
+// 업종 템플릿 일괄 적용 — INDUSTRY_PRESETS(erp-menu.ts)에 정의된
+// disable/enable 목록을 그대로 RPC에 넘긴다. 적용은 "시작값 세팅"일
+// 뿐이라 그 뒤로 테넌트 관리자는 환경설정 > 기능 관리에서 개별 항목을
+// 똑같이 자유롭게 다시 켜고 끌 수 있다.
+export async function applyTenantIndustryPreset(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin, supabase } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 적용할 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  const industryKey = String(formData.get("industry") ?? "");
+  if (!tenantId) return { error: "회사를 먼저 선택해주세요." };
+
+  const preset = INDUSTRY_PRESETS.find((p) => p.key === industryKey);
+  if (!preset) return { error: "알 수 없는 업종입니다." };
+
+  const { error } = await supabase.rpc("apply_tenant_feature_preset", {
+    p_tenant_id: tenantId,
+    p_industry: preset.key,
+    p_disable: preset.disable,
+    p_enable: preset.enable,
+  });
+  if (error) return { error: `적용에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/platform-admin/settings");
+  return { success: `${preset.label} 템플릿을 적용했습니다.` };
 }
 
 const PLANS = ["trial", "active", "suspended"] as const;

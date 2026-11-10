@@ -289,6 +289,36 @@ export const BEHAVIOR_FEATURE_KEYS: { key: string; label: string; description: s
   },
 ];
 
+// 플랫폼 관리자 > 환경설정의 "업종 템플릿" 버튼이 쓰는 일괄 적용표 —
+// 신규 고객사를 받을 때마다 생산관리/확장모듈 토글을 손으로 하나하나
+// 꺼주던 걸, 업종 하나만 골라 한 번에 적용하게 해 달라는 요청으로
+// 추가됨. set_tenant_theme()처럼 플랫폼 관리자 전용이고, 적용은
+// disabled_features 배열을 한 번 세팅해주는 "시작값"일 뿐이라 그 뒤로
+// 테넌트 관리자는 환경설정 > 기능 관리에서 개별 항목을 똑같이 자유롭게
+// 다시 켜고 끌 수 있다 — 이 표는 그 자유도를 제한하지 않는다.
+export const INDUSTRY_PRESETS: {
+  key: string;
+  label: string;
+  description: string;
+  disable: string[];
+  enable: string[];
+}[] = [
+  {
+    key: "distribution",
+    label: "유통/도소매업",
+    description: "매출·매입·재고 위주로 구성합니다. 생산관리와 제조 특화 확장모듈(모조지 계산, 재단 배치 시뮬레이터)은 끕니다.",
+    disable: ["production", "paper_calc"],
+    enable: [],
+  },
+  {
+    key: "manufacturing",
+    label: "제조/가공업",
+    description: "생산관리와 제조 특화 확장모듈(모조지 계산, 재단 배치 시뮬레이터)을 켭니다.",
+    disable: [],
+    enable: ["production", "paper_calc"],
+  },
+];
+
 export type MenuItem = { label: string; href: string };
 
 function flatten(groups: MenuGroup[]): MenuItem[] {
