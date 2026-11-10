@@ -396,6 +396,38 @@
   border-bottom: 1px solid var(--erp-danger-border);
 }
 
+/* 플랫폼 관리자가 "이 회사로 들어가기"로 다른 테넌트 화면을 대신 보고
+   있을 때 맨 위에 항상 뜨는 배너(migration 225) — 쓰기까지 가능한
+   상태라 실수로 "내 회사 화면인 줄 알고" 등록/수정하는 사고를 막는
+   게 핵심이라, 데모/쿼터 배너보다 눈에 더 띄는 danger 톤을 쓰고 글자
+   가운데 정렬 대신 나가기 버튼과 한 줄에 둔다. */
+.erp-impersonation-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--erp-danger-bg);
+  color: var(--erp-danger);
+  border-bottom: 1px solid var(--erp-danger-border);
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
+.erp-impersonation-banner button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: var(--erp-danger);
+  color: var(--erp-on-primary);
+  border: none;
+  border-radius: var(--erp-radius-sm);
+  padding: 2px 10px;
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 /* 플랫폼 운영자가 platform-admin > 공지사항에서 등록한, 전체 테넌트
    방송 공지 — erp-demo-banner와 같은 자리(맨 위 한 줄)에, 여러 개면
    그대로 쌓인다. "LED 전광판처럼 눈에 띄게" 요청으로 빨간 바탕 +
@@ -1284,6 +1316,7 @@
   .erp-nav-overlay,
   .erp-toast-stack,
   .erp-demo-banner,
+  .erp-impersonation-banner,
   .erp-platform-announcement-banner,
   /* 모달의 X 닫기 버튼 — Tailwind의 print:hidden 유틸이 여기 안
      먹힌다. 이 파일(erp-theme.css)은 Tailwind의 @layer 밖에 있는

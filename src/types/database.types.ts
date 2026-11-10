@@ -6366,6 +6366,14 @@ export type Database = {
         Args: { p_tenant_id: string; p_industry: string; p_disable: string[]; p_enable: string[] };
         Returns: void;
       };
+      start_tenant_impersonation: {
+        Args: { p_tenant_id: string };
+        Returns: void;
+      };
+      stop_tenant_impersonation: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
       get_price_change_history: {
         Args: { p_table_name: string; p_record_id: string };
         Returns: {

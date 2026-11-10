@@ -8,6 +8,7 @@ import { CreateTenantDemoAccountForm } from "@/components/create-tenant-demo-acc
 import { TenantQuotaPanel } from "@/components/tenant-quota-panel";
 import { TenantAddonPanel } from "@/components/tenant-addon-panel";
 import { DeleteTenantForm } from "@/components/delete-tenant-form";
+import { EnterTenantButton } from "@/components/enter-tenant-button";
 import { DetailPageHeader } from "@/components/erp/page-header";
 import { currentKstYearMonth } from "@/lib/kst-date";
 
@@ -103,11 +104,14 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
       <DetailPageHeader
         title={tenant.name}
         actions={
-          closeHref && (
-            <Link href={closeHref} className="erp-btn">
-              목록으로
-            </Link>
-          )
+          <>
+            <EnterTenantButton tenantId={tenant.id} />
+            {closeHref && (
+              <Link href={closeHref} className="erp-btn">
+                목록으로
+              </Link>
+            )}
+          </>
         }
       />
 

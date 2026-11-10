@@ -824,3 +824,31 @@ export async function adjustTenantPoints(_prevState: FormState, formData: FormDa
   revalidatePath(`/platform-admin/${tenantId}`);
   return { success: `포인트를 ${delta > 0 ? `${delta}점 지급` : `${Math.abs(delta)}점 차감`}했습니다.` };
 }
+
+// "이 회사로 들어가기" — 실제 안전장치(플랫폼 운영자 여부, 회사 존재
+// 확인)는 start_tenant_impersonation() RPC 안에서 처리한다(migration
+// 225). 성공하면 그 회사 화면(대시보드)으로 바로 보낸다 — deleteTenant와
+// 같은 패턴으로 FormState 대신 redirect를 쓴다.
+export async function startTenantImpersonation(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const { isPlatformAdmin, supabase } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 들어갈 수 있습니다." };
+
+  const tenantId = String(formData.get("tenantId") ?? "");
+  if (!tenantId) return { error: "회사를 먼저 선택해주세요." };
+
+  const { error } = await supabase.rpc("start_tenant_impersonation", { p_tenant_id: tenantId });
+  if (error) return { error: `들어가는 데 실패했습니다: ${error.message}` };
+
+  redirect("/dashboard");
+}
+
+// ribbon.tsx의 "회사 전환" 검색 목록처럼 useActionState 없이 평범한
+// <form action={...}>로 바로 거는 자리를 위한 얇은 래퍼 — startTenant
+// Impersonation은 useActionState(prevState, formData) 2개 인자 시그니처라
+// 그대로는 못 쓴다. 실패해도 보여줄 자리가 없는 자리라 에러 메시지는
+// 버리고 redirect만 그대로 전달한다(실패 시 start_tenant_impersonation이
+// FormState.error를 돌려주고 redirect를 안 타므로, 그 회사로 안 들어간
+// 채 모달이 닫히는 정도로 끝난다 — 치명적이지 않음).
+export async function enterTenant(formData: FormData) {
+  await startTenantImpersonation(undefined, formData);
+}

@@ -13,6 +13,8 @@ import { startRouteProgress } from "@/lib/route-progress";
 import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { clampDropdownLeft } from "@/lib/dropdown-position";
+import { enterTenant } from "@/app/platform-admin/actions";
+import { PageGuide } from "@/components/erp/page-guide";
 
 const SHORTCUTS: { key: string; label: string }[] = [
   { key: "F2", label: "신규" },
@@ -37,19 +39,28 @@ export function Ribbon({
   disabledFeatures,
   isAdmin,
   isManagerOrAdmin,
+  isPlatformAdmin,
+  platformAdminTenants,
 }: {
   disabledFeatures: string[];
   isAdmin: boolean;
   isManagerOrAdmin: boolean;
+  // "회사 전환" 리본 버튼/모달은 플랫폼 운영자에게만 보인다(일반
+  // 테넌트 관리자는 자기 회사 밖을 볼 이유가 없음).
+  isPlatformAdmin?: boolean;
+  platformAdminTenants?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [openPanel, setOpenPanel] = useState<"favorites" | "recent" | null>(
     null,
   );
-  const [modal, setModal] = useState<"search" | "help" | null>(null);
+  const [modal, setModal] = useState<"search" | "help" | "tenants" | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [recents, setRecents] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+  // 빠른 검색(query)과 섞이면 모달을 바꿔가며 열 때 직전 검색어가
+  // 남아있는 혼란이 생긴다 — 회사 검색어는 따로 갖는다.
+  const [tenantQuery, setTenantQuery] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
   // 모바일에서 리본이 가로 스크롤(overflow-x: auto)되게 하다 보니, 드롭다운을
   // 예전처럼 버튼 기준 position:absolute로 두면 리본 바깥으로 나가는 부분이
@@ -125,6 +136,9 @@ export function Ribbon({
   const visibleMenuItems = getVisibleMenuItems(disabledFeatures, isAdmin, isManagerOrAdmin);
   const filteredMenus = visibleMenuItems.filter((m) =>
     m.label.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+  const filteredTenants = (platformAdminTenants ?? []).filter((t) =>
+    t.name.toLowerCase().includes(tenantQuery.trim().toLowerCase()),
   );
 
   return (
@@ -222,6 +236,19 @@ export function Ribbon({
         <span style={{ opacity: 0.55, fontSize: 10.5 }}>Ctrl+K</span>
       </button>
 
+      {isPlatformAdmin && (
+        <button
+          type="button"
+          className="erp-ribbon-btn"
+          onClick={() => {
+            setTenantQuery("");
+            setModal("tenants");
+          }}
+        >
+          🏢 회사 전환
+        </button>
+      )}
+
       <button
         type="button"
         className="erp-ribbon-btn"
@@ -271,6 +298,55 @@ export function Ribbon({
                   </button>
                 ))}
                 {!filteredMenus.length && (
+                  <p className="erp-ribbon-dropdown-empty">
+                    검색 결과가 없습니다.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "tenants" && (
+        <div className="erp-modal-overlay" onClick={() => setModal(null)}>
+          <div className="erp-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="erp-modal-title">
+              회사 전환
+              <button
+                type="button"
+                className="erp-modal-close"
+                onClick={() => setModal(null)}
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="erp-modal-body">
+              <PageGuide tone="warning" className="mb-2">
+                고른 회사의 화면으로 바로 들어갑니다(등록/수정 포함). 나갈 땐 화면 상단의 안내 줄에서
+                &quot;나가기&quot;를 누르면 됩니다.
+              </PageGuide>
+              <input
+                autoFocus
+                type="text"
+                autoComplete="off"
+                value={tenantQuery}
+                onChange={(e) => setTenantQuery(e.target.value)}
+                placeholder="회사 이름으로 검색..."
+                className="erp-input"
+                style={{ width: "100%", marginBottom: 8 }}
+              />
+              <div className="erp-ribbon-searchlist">
+                {filteredTenants.map((t) => (
+                  <form key={t.id} action={enterTenant}>
+                    <input type="hidden" name="tenantId" value={t.id} />
+                    <button type="submit" className="erp-ribbon-searchitem">
+                      {t.name}
+                    </button>
+                  </form>
+                ))}
+                {!filteredTenants.length && (
                   <p className="erp-ribbon-dropdown-empty">
                     검색 결과가 없습니다.
                   </p>
