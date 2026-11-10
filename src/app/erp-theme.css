@@ -5925,3 +5925,85 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-primary);
   font-weight: 700;
 }
+
+/* ── classic-c 테마 ───────────────────────────────────────────
+   migration 226 — 사용자가 전달한 목업(매출관리 > 출고관리, 슬레이트
+   회색 + 블루 액센트 + 앰버 경고색, 그누보드류 넓고 촘촘한 장부
+   느낌)을 네 번째 테마 후보로 재현한다. classic-b와 같은 패턴 —
+   색 토큰만 건드려서 켜는 순간 그 회사 화면 전체가 자동으로 이
+   배색을 따르지만, 실제로 화면 하나하나 눈으로 맞춰본 건 이번
+   요청 범위인 매출관리 > 출고관리(그리드+인라인 아코디언)뿐이다.
+   r값(모서리)은 목업도 거의 각진 느낌이라 :root 기본값(전부 0)을
+   그대로 상속해 따로 안 건드린다. */
+[data-theme="classic-c"] {
+  --erp-primary: #2563eb;
+  --erp-primary-dark: #1d4ed8;
+  --erp-on-primary: #ffffff;
+  --erp-border: #cbd5e1;
+  --erp-border-strong: #94a3b8;
+  --erp-hover: #f8fafc;
+  --erp-selected: #eff6ff;
+  --erp-select-accent: #2563eb;
+  --erp-success: #047857;
+  --erp-warning: #f59e0b;
+  --erp-danger: #dc2626;
+  --erp-success-bg: #ecfdf5;
+  --erp-success-border: #a7f3d0;
+  --erp-warning-bg: #fffbeb;
+  --erp-warning-border: #fde68a;
+  --erp-led-bg: #dc2626;
+  --erp-led-text: #ffffff;
+  --erp-danger-bg: #fef2f2;
+  --erp-danger-border: #fecaca;
+  --erp-info-bg: #eff6ff;
+  --erp-info-border: #bfdbfe;
+  --erp-info-text: var(--erp-text);
+  --erp-highlight-bg: #fef08a;
+  --erp-text: #0f172a;
+  --erp-text-muted: #64748b;
+  --erp-text-disabled: #cbd5e1;
+  --erp-icon-muted: #94a3b8;
+  --erp-glyph-muted: #cbd5e1;
+  --erp-tree-badge-border: #e2e8f0;
+  --erp-tabbar-bg: #ffffff;
+  --erp-tab-bg: #f1f5f9;
+  --erp-search-hit-bg: #fef08a;
+  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.15);
+  --erp-dialog-overlay-bg: rgba(15, 20, 30, 0.55);
+  --erp-bg: #f1f5f9;
+  --erp-panel: #ffffff;
+  --erp-bg-subtle: #f8fafc;
+  --erp-divider: #f1f5f9;
+  --erp-grid-line: #e2e8f0;
+  --erp-grid-header-bg: #f1f5f9;
+  --erp-bg-disabled: #f1f5f9;
+  --erp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 8px -3px rgba(15, 23, 42, 0.1);
+  --erp-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 12px 28px -10px rgba(15, 23, 42, 0.16);
+  --erp-shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.14), 0 16px 40px -12px rgba(15, 23, 42, 0.2);
+  --erp-comm-border: rgba(15, 23, 42, 0.08);
+  --erp-comm-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 24px -16px rgba(15, 23, 42, 0.14);
+  --erp-comm-shadow-row: 0 1px 1px rgba(15, 23, 42, 0.03), 0 6px 16px -10px rgba(15, 23, 42, 0.16);
+  --erp-comm-shadow-btn: 0 2px 8px -3px rgba(37, 99, 235, 0.4);
+}
+
+/* 목업 그리드는 py-1.5 px-2.5(≈6px/10px)로 기본(헤더 32px/바디 30px
+   고정 높이)보다 더 촘촘하다 — "장부 밀도감" 요청에 맞춰 칸 높이를
+   내용에 맡기고(height: auto) 패딩만 좁힌다. */
+[data-theme="classic-c"] .erp-grid thead th {
+  height: auto;
+  padding: 6px 10px;
+}
+[data-theme="classic-c"] .erp-grid tbody td,
+[data-theme="classic-c"] .erp-grid tfoot td {
+  height: auto;
+  padding: 6px 10px;
+}
+
+/* 이월 배지가 목업에서 옅은 배경+글자색 알약이 아니라 꽉 찬 앰버
+   배경+흰 글자인 사각 태그(bg-amber-500 text-white)다 — warn 톤만
+   이 테마에서 반전시킨다(success/danger는 목업에 등장하지 않아 기본
+   옅은 배경 방식 그대로 둔다). */
+[data-theme="classic-c"] .erp-badge-warning {
+  background: var(--erp-warning);
+  color: var(--erp-on-primary);
+}
