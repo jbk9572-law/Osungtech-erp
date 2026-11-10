@@ -126,8 +126,11 @@
      "칸이 뚜렷하게 나뉘어 보이는" 느낌을 표 위쪽에서부터 시작한다.
      한 차례 더 진하게(#e2e8f0 → #d1d5db) 올렸다 — 목록+상세 분할
      화면뿐 아니라 매출/매입처럼 컬럼이 많은 넓은 표에서도 헤더 행이
-     스크롤해도 눈에 띄게. */
-  --erp-grid-header-bg: #d1d5db;
+     스크롤해도 눈에 띄게. "그리드가 밍밍하다"는 지적으로 한 단계 더
+     진하게(#d1d5db → #c7cdd6) 올리고, 아래 .erp-grid에 세로선도
+     추가했다(지금까진 가로줄만 있었음) — 더존/이카운트류처럼 칸이
+     사방으로 또렷이 나뉘어 보이게. */
+  --erp-grid-header-bg: #c7cdd6;
   /* 비활성(disabled) 입력·버튼 배경 — .erp-btn:disabled와 여러 폼의
      disabled 인풋이 각자 같은 값을 하드코딩하고 있었다. */
   --erp-bg-disabled: #f5f6f8;
@@ -1901,10 +1904,19 @@ form.erp-field-grid {
   text-align: left;
   padding: 0 10px;
   border-bottom: 1px solid var(--erp-border-strong);
+  border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+/* .erp-grid-wrap이 이미 오른쪽 테두리를 그리고 있어서, 맨 끝 칸까지
+   세로선을 또 그리면 두 선이 겹쳐 그 자리만 두 배로 진해 보인다. */
+.erp-grid thead th:last-child,
+.erp-grid tbody td:last-child,
+.erp-grid tfoot td:last-child {
+  border-right: none;
 }
 
 /* 표 칸 너비를 마우스로 드래그해서 직접 조절하는 손잡이
@@ -1935,6 +1947,7 @@ form.erp-field-grid {
   height: 30px;
   padding: 4px 10px;
   border-bottom: 1px solid var(--erp-grid-line);
+  border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: top;
@@ -1944,6 +1957,7 @@ form.erp-field-grid {
   height: 30px;
   padding: 4px 10px;
   border-top: 2px solid var(--erp-border);
+  border-right: 1px solid var(--erp-grid-line);
   white-space: nowrap;
   color: var(--erp-text);
   vertical-align: middle;

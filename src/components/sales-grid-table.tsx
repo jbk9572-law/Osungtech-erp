@@ -445,14 +445,18 @@ export function SalesGridTable({
           ) : canQuickIssue ? (
             // 아이콘(₩ 표시)으로는 "세금계산서"라는 걸 못 알아보겠다는
             // 지적 — 글자로 바로 보여준다. 상태 그대로("미발행")
-            // 두고 바로 옆에 실제 동작을 적은 링크를 붙인다.
+            // 두고 바로 옆에 실제 동작을 적은 링크를 붙인다. 이 칸(폭
+            // 76px, 헤더 "계산서발행")은 좁아서 "세금계산서 작성"이
+            // 끼이던 걸, 컬럼 헤더가 이미 맥락을 주므로 "작성" 두 글자로
+            // 줄였다 — 폭 제약 없는 매출 상세 페이지의 같은 문구는
+            // 그대로 "세금계산서 작성" 유지(다른 자리, 다른 판단).
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <GridBadge tone="warn">미발행</GridBadge>
               <Link
                 href={`/sales/${row.orderId}/tax-invoice`}
                 style={{ color: "var(--erp-primary)", fontWeight: 700, textDecoration: "underline" }}
               >
-                세금계산서 작성
+                작성
               </Link>
             </span>
           ) : (
