@@ -8,7 +8,10 @@ import { RegistrationModalShell } from "@/components/erp/registration-modal-shel
 export default function ModalLoading() {
   return (
     <RegistrationModalShell size="xl">
+      {/* data-erp-route-loading: route-progress-bar.tsx가 이 마커로
+          "주소는 바뀌었지만 아직 이 자리엔 로딩 화면뿐"임을 구분한다. */}
       <div
+        data-erp-route-loading
         style={{
           display: "flex",
           flexDirection: "column",
