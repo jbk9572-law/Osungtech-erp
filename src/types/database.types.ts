@@ -1223,6 +1223,7 @@ export type Database = {
           is_platform_operator: boolean;
           is_sandbox: boolean;
           theme: string;
+          industry: string | null;
         };
         Insert: {
           id?: string;
@@ -1249,6 +1250,7 @@ export type Database = {
           is_platform_operator?: boolean;
           is_sandbox?: boolean;
           theme?: string;
+          industry?: string | null;
         };
         Update: {
           id?: string;
@@ -1275,6 +1277,7 @@ export type Database = {
           is_platform_operator?: boolean;
           is_sandbox?: boolean;
           theme?: string;
+          industry?: string | null;
         };
         Relationships: [];
       };
@@ -6351,10 +6354,16 @@ export type Database = {
           plan: string;
           plan_expires_at: string | null;
           theme: string;
+          industry: string | null;
+          disabled_features: string[];
         }[];
       };
       set_tenant_theme: {
         Args: { p_tenant_id: string; p_theme: string };
+        Returns: void;
+      };
+      apply_tenant_feature_preset: {
+        Args: { p_tenant_id: string; p_industry: string; p_disable: string[]; p_enable: string[] };
         Returns: void;
       };
       get_price_change_history: {

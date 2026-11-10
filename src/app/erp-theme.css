@@ -5739,3 +5739,84 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 0 10px;
   font-size: 11px;
 }
+
+/* ── 사용자 재지적: 매출관리 콘텐츠만이 아니라 공용 셸(타이틀바/
+   유틸리티바/좌측 메뉴트리/탭바)까지 목업 그대로 — "행 넓이 높이까지
+   모든 걸" 전부 포함. 이 넷은 sales/page.tsx가 아니라 title-bar.tsx/
+   ribbon.tsx/tree-menu.tsx/tab-bar.tsx가 그리는 공용 컴포넌트라, 켜는
+   순간 앱 전체(매입/메신저/대시보드 등)에 자동 적용된다. */
+
+/* 타이틀바 글자색 — 목업은 단일 색이 아니라 요소별로 다르다: 회사명
+   indigo-400, 가운데 경로 slate-400, 오른쪽 날짜/이메일 slate-300,
+   링크(백업·비번변경 등) indigo-300, 로그아웃만 rose-400. 로그아웃
+   버튼은 title-bar.tsx가 className 없이 LogoutButton을 렌더링해서
+   클래스 선택자가 없어, 감싸는 <form>으로 범위를 좁힌다. */
+[data-theme="classic-b"] .erp-titlebar-name {
+  color: #818cf8;
+}
+[data-theme="classic-b"] .erp-titlebar-menu {
+  color: #94a3b8;
+}
+[data-theme="classic-b"] .erp-titlebar-right {
+  color: #cbd5e1;
+}
+[data-theme="classic-b"] .erp-titlebar-right a {
+  color: #a5b4fc;
+}
+[data-theme="classic-b"] .erp-titlebar-right form button {
+  color: #fb7185;
+}
+
+/* 유틸리티 아이콘바(Ribbon) — 목업은 h-8(32px)인데 기본 규칙은 40px. */
+[data-theme="classic-b"] .erp-ribbon {
+  height: 32px;
+  flex-basis: 32px;
+}
+[data-theme="classic-b"] .erp-ribbon-btn {
+  height: 24px;
+  font-size: 11px;
+}
+[data-theme="classic-b"] .erp-ribbon-btn:hover {
+  color: var(--erp-primary);
+}
+
+/* 좌측 메뉴 트리 — 목업은 w-56(224px, 기본 240px보다 좁음). 활성
+   그룹(펼친 상태의 현재 섹션)은 인디고 글자+연한 인디고 배경+왼쪽
+   굵은 선, 그 안의 활성 리프 항목(지금 보고 있는 화면)은 꽉 찬 인디고
+   배경+흰 글자로 — 기본 .erp-tree-item.active는 연한 선택 배경(pill)
+   뿐이라 목업과 다르다. */
+[data-theme="classic-b"] .erp-tree {
+  flex-basis: 224px;
+  width: 224px;
+}
+[data-theme="classic-b"] .erp-tree.collapsed {
+  flex-basis: 60px;
+  width: 60px;
+}
+[data-theme="classic-b"] .erp-tree-group:has(.erp-tree-item.active) .erp-tree-group-label {
+  color: var(--erp-primary);
+  background: var(--erp-selected);
+  border-left: 2px solid var(--erp-primary);
+}
+[data-theme="classic-b"] .erp-tree-item.active {
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+  font-weight: 700;
+}
+
+/* 탭바 — 활성 탭 글자색이 기본은 어두운 본문색인데 목업은 인디고
+   볼드, 탭 자체도 더 조밀하다(목업 py-1 ≈ 24px 안팎). 상단 2px
+   인디고 테두리는 기존 .erp-tab.active가 이미 토큰(--erp-primary)
+   기반이라 색은 자동으로 맞는다. */
+[data-theme="classic-b"] .erp-tabbar {
+  height: 30px;
+  flex-basis: 30px;
+}
+[data-theme="classic-b"] .erp-tab {
+  height: 24px;
+  font-size: 11px;
+}
+[data-theme="classic-b"] .erp-tab.active {
+  color: var(--erp-primary);
+  font-weight: 700;
+}

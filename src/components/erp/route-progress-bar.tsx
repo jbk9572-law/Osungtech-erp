@@ -42,29 +42,76 @@ type Phase = "idle" | "visible" | "done";
 // 뜨기도 전에 이동이 끝나 아무 것도 보여주지 않는다.
 const SHOW_DELAY_MS = 200;
 
+// 인터셉트 라우트(@modal)처럼 목적지에 route-level loading.tsx가 먼저
+// 끼어드는 화면들의 로딩 화면 루트에 이 마커를 심어둔다(@modal/loading.tsx,
+// (dashboard)/loading.tsx, platform-admin/loading.tsx). usePathname()은
+// 그 로딩 화면이 뜨는 시점에 이미 새 주소로 바뀌어버리기 때문에, "주소가
+// 바뀜 = 이동 끝남"으로만 보면 실제 내용(느린 조회)이 하나도 안 온
+// 시점에 오버레이가 너무 일찍 꺼진다 — 이 마커가 DOM에 있는 동안은 아직
+// 로딩 화면만 떠 있는 것으로 보고 오버레이를 계속 띄워둔다.
+const ROUTE_LOADING_MARKER_SELECTOR = "[data-erp-route-loading]";
+
 function ProgressWatcher() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>("idle");
+  const phaseRef = useRef<Phase>("idle");
   const routeKeyRef = useRef(`${pathname}?${searchParams.toString()}`);
   const showTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const safetyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doneTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingObserverRef = useRef<MutationObserver | null>(null);
+
+  function setPhaseTracked(next: Phase) {
+    phaseRef.current = next;
+    setPhase(next);
+  }
+
+  function finish() {
+    if (loadingObserverRef.current) {
+      loadingObserverRef.current.disconnect();
+      loadingObserverRef.current = null;
+    }
+    if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+    // 오버레이가 이미 떠 있던 상태에서 이동이 끝났다 — 짧게 페이드
+    // 아웃한 뒤 완전히 지운다.
+    doneTimeoutRef.current = setTimeout(() => setPhaseTracked("idle"), 220);
+    setPhaseTracked("done");
+  }
 
   useEffect(() => {
     const key = `${pathname}?${searchParams.toString()}`;
-    if (routeKeyRef.current !== key) {
-      routeKeyRef.current = key;
-      if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current);
-      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
-      setPhase((prev) => {
-        if (prev !== "visible") return "idle";
-        // 오버레이가 이미 떠 있던 상태에서 이동이 끝났다 — 짧게 페이드
-        // 아웃한 뒤 완전히 지운다.
-        doneTimeoutRef.current = setTimeout(() => setPhase("idle"), 220);
-        return "done";
-      });
+    if (routeKeyRef.current === key) return;
+    routeKeyRef.current = key;
+    if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current);
+    if (loadingObserverRef.current) {
+      loadingObserverRef.current.disconnect();
+      loadingObserverRef.current = null;
     }
+    setPhase((prev) => {
+      phaseRef.current = prev;
+      if (prev !== "visible") {
+        phaseRef.current = "idle";
+        return "idle";
+      }
+      if (!document.querySelector(ROUTE_LOADING_MARKER_SELECTOR)) {
+        if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+        doneTimeoutRef.current = setTimeout(() => setPhaseTracked("idle"), 220);
+        phaseRef.current = "done";
+        return "done";
+      }
+      // 아직 로딩 화면만 떠 있다 — 그 마커가 실제로 사라지는 순간(또는
+      // 위 safetyTimeoutRef 15초 안전장치)까지 "visible"을 유지한다.
+      const observer = new MutationObserver(() => {
+        if (!document.querySelector(ROUTE_LOADING_MARKER_SELECTOR)) finish();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      loadingObserverRef.current = observer;
+      return prev;
+    });
+    // finish는 렌더마다 새로 만들어지는 클로저라 deps에 넣으면 매 렌더
+    // 재실행된다 — ref로만 상태를 주고받으므로 넣지 않아도 안전하다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, searchParams]);
 
   useEffect(() => {
@@ -72,11 +119,16 @@ function ProgressWatcher() {
       if (doneTimeoutRef.current) clearTimeout(doneTimeoutRef.current);
       if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current);
       if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
+      if (loadingObserverRef.current) {
+        loadingObserverRef.current.disconnect();
+        loadingObserverRef.current = null;
+      }
       showTimeoutRef.current = setTimeout(() => {
-        setPhase("visible");
+        setPhaseTracked("visible");
         // 같은 경로에 머무는 저장/제출처럼 URL이 안 바뀌는 경우나 배포
-        // 환경이 아주 느린 경우를 대비한 안전장치.
-        safetyTimeoutRef.current = setTimeout(() => setPhase("idle"), 15000);
+        // 환경이 아주 느린 경우, 또는 위 로딩 마커가 끝까지 안 사라지는
+        // 경우를 대비한 안전장치.
+        safetyTimeoutRef.current = setTimeout(() => setPhaseTracked("idle"), 15000);
       }, SHOW_DELAY_MS);
     }
     function onClick(e: MouseEvent) {
@@ -106,6 +158,7 @@ function ProgressWatcher() {
       if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current);
       if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);
       if (doneTimeoutRef.current) clearTimeout(doneTimeoutRef.current);
+      if (loadingObserverRef.current) loadingObserverRef.current.disconnect();
     };
   }, []);
 
