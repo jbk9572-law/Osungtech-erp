@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 // ErpShell의 "이 회사를 대신 보는 중" 배너(migration 225)에 있는 나가기
@@ -13,5 +14,9 @@ export async function stopTenantImpersonation() {
   // 배너엔 에러 메시지를 보여줄 자리가 없다 — 실패해도 일단 플랫폼
   // 관리자 화면으로는 보내고(멈춰 있지 않게), 원인은 서버 로그로 남긴다.
   if (error) console.error("stop_tenant_impersonation 실패:", error.message);
+  // 나간 뒤 다시 /dashboard로 돌아갈 때(로고 클릭 등) 라우터 캐시가
+  // 방금 보고 있던(대신 보던 회사) 레이아웃을 재사용하지 않게, startTenant
+  // Impersonation과 같은 이유로 먼저 무효화한다.
+  revalidatePath("/", "layout");
   redirect("/platform-admin");
 }

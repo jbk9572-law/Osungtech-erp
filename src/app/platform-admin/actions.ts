@@ -839,6 +839,12 @@ export async function startTenantImpersonation(_prevState: FormState, formData: 
   const { error } = await supabase.rpc("start_tenant_impersonation", { p_tenant_id: tenantId });
   if (error) return { error: `들어가는 데 실패했습니다: ${error.message}` };
 
+  // setTenantFeatureEnabled와 같은 이유 — revalidatePath 없이 redirect만
+  // 하면 /dashboard를 이미 보고 있던 상태에서는(리본의 "회사 전환"은
+  // 어디서든 열 수 있다) Next.js 라우터 캐시가 직전(이전 회사) 레이아웃을
+  // 그대로 재사용해버려서, 타이틀바 회사명 등이 안 바뀐 것처럼 보이는
+  // 버그가 있었다(사용자 지적 — "회사상호명이 리프레쉬안되는 버그").
+  revalidatePath("/", "layout");
   redirect("/dashboard");
 }
 
