@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useActionState,
   useMemo,
   useState,
@@ -23,6 +24,7 @@ import {
 import { GridBadge } from "@/components/grid/badge";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatCarryoverDate } from "@/lib/carryover";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
@@ -147,15 +149,21 @@ export function PurchaseGridTable({
   // "정렬"이라는 placeholder로 되돌아가는 명령형 select라(현재 정렬
   // 상태를 보여주는 select가 아님), 선택 후 항상 빈 문자열로 리셋한다.
   const [mobileSortCmd, setMobileSortCmd] = useState("");
-  // 마스터-디테일 레이아웃: 지금 아래 품목내역 패널에 표시 중인 명세표.
-  // 일괄삭제 체크박스(selected)와는 별개의 상태다. 사용자가 직접 고른 적이
-  // 없거나 그 행이 더 이상 목록에 없으면(필터 변경 등) 첫 매입 건으로
-  // 자동 대체한다 — effect 없이 렌더 중 계산해서 캐스케이드 렌더를 피한다.
+  // 행 클릭 시 그 행 바로 아래에 품목내역을 아코디언으로 펼친다(매출
+  // 목록과 같은 패턴 — sales-grid-table.tsx 참고). 아무것도 안 고른
+  // 기본값(null)에서 시작하고, 필터가 바뀌어 그 행이 목록에서 사라지면
+  // 같이 접는다.
   const [manualActiveKey, setManualActiveKey] = useState<string | null>(null);
   const activeKey =
     manualActiveKey && sortedRows.some((row) => row.key === manualActiveKey)
       ? manualActiveKey
-      : (sortedRows.find((row) => row.orderId)?.key ?? null);
+      : null;
+  // 같은 행을 다시 클릭하면 접히고(토글), 다른 행을 클릭하면 그 행만
+  // 펼쳐진다(싱글 아코디언).
+  function toggleAccordion(key: string) {
+    setManualActiveKey((prev) => (prev === key ? null : key));
+  }
+  useEscapeToClose(activeKey !== null, () => setManualActiveKey(null));
 
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     bulkDeletePurchases,
@@ -294,7 +302,7 @@ export function PurchaseGridTable({
       <tr
         key={row.key}
         className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}`}
-        onClick={() => setManualActiveKey(row.key)}
+        onClick={() => opts.selectable && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
           {opts.selectable && row.orderId && (
@@ -592,7 +600,22 @@ export function PurchaseGridTable({
             </tbody>
           )}
           <tbody>
-            {sortedRows.map((row) => renderRow(row, { selectable: true }))}
+            {sortedRows.map((row) => (
+              <Fragment key={row.key}>
+                {renderRow(row, { selectable: true })}
+                {row.key === activeKey && (
+                  <tr className="erp-grid-accordion-row">
+                    <td colSpan={20}>
+                      <OrderDetailPanel
+                        selection={activeSelection}
+                        priceLabel="매입가"
+                        emptyMessage="품목내역이 없습니다."
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
             {!sortedRows.length && (
               <tr>
                 <td colSpan={20} className="erp-grid-empty">
@@ -668,12 +691,6 @@ export function PurchaseGridTable({
         {sortedRows.map((row) => renderMobileCard(row, { selectable: true }))}
         {!sortedRows.length && <p className="erp-grid-empty">조건에 맞는 매입 거래가 없습니다.</p>}
       </div>
-
-      <OrderDetailPanel
-        selection={activeSelection}
-        priceLabel="매입가"
-        emptyMessage="위 목록에서 명세표를 선택하면 품목내역이 여기에 표시됩니다."
-      />
     </>
   );
 }

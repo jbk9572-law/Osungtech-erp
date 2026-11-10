@@ -2010,16 +2010,40 @@ form.erp-field-grid {
   background: var(--erp-bg);
 }
 
-/* 안에 들어가는 OrderDetailPanel은 평소 독립된 카드(.erp-detail, 자체
-   테두리)로 쓰이지만, 이미 바깥 표(.erp-grid-wrap)가 테두리를 두르고
-   있는 이 자리에선 그 테두리를 또 두르면 "박스 안에 박스"가 된다(개발
-   헌법에 반면교사로 남긴 바로 그 문제) — 이 자리에서만 테두리/배경/
-   위쪽 여백을 지운다. */
+/* 안에 들어가는 OrderDetailPanel이 바깥 표(.erp-grid-wrap)와 똑같은
+   흰 배경/굵은 헤더를 그대로 쓰면 "표 안에 표가 대충 얹힌" 것처럼
+   보인다는 지적(사용자) — 그렇다고 예전처럼 테두리/배경을 통째로
+   지우면 경계가 아예 없어져 반대로 안 보인다. 한 톤 더 진한 표면
+   (--erp-bg, 페이지 배경과 같은 톤이라 흰 패널과 확실히 구분됨)에
+   옅은 테두리를 두른 "카드"로 보이게 하고, 좌우로 패딩을 줘서 "윗
+   전표에 속한 하위 내용"이라는 들여쓰기 느낌을 준다. 바깥 표의 굵은
+   테두리(--erp-border-strong)와는 다른, 더 옅은 선(--erp-divider)을
+   써서 같은 무게의 테두리가 두 번 겹치는 느낌은 피한다. */
+.erp-grid-accordion-row > td {
+  padding: 10px 20px;
+}
 .erp-grid-accordion-row > td > .erp-detail {
   margin-top: 0;
-  border: none;
-  border-radius: 0;
+  background: var(--erp-bg);
+  border: 1px solid var(--erp-divider);
+  border-radius: var(--erp-radius-lg, 0);
+}
+
+/* 안쪽 품목내역 표의 헤더는 바깥 표 헤더와 똑같이 무겁게 가져가면
+   헤더 두 개가 겹쳐 보여 시각적으로 시끄럽다 — 배경을 거의 없애고
+   글자를 작게 줄여서 "하위 정보"라는 위계가 느껴지게 슬림화한다.
+   합계(tfoot) 줄은 OrderDetailPanel 자체에 이미 굵은 글씨+진한
+   윗테두리가 있어 그대로 둔다(따로 손 안 댐). */
+.erp-grid-accordion-row .erp-grid thead th {
+  height: 26px;
+  /* 카드 배경(--erp-bg)과 같은 색(투명)으로 둬서 헤더가 별도 색 블록
+     으로 안 떠 보이고 카드 표면과 한 몸처럼 흐르게 한다 — 구분은
+     글자 크기/굵기/색으로만 준다. */
   background: transparent;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-xs);
+  font-weight: 700;
+  border-bottom: 1px solid var(--erp-divider);
 }
 
 .erp-grid .num {

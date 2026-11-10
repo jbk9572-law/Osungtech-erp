@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import { formatNumber } from "@/lib/format-number";
 import { OrderDetailPanel, type OrderDetailItem, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
+import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 export type PortalOrderRow = {
   id: string;
@@ -23,8 +24,11 @@ export type PortalOrderRow = {
 // 화면에서만 가능한 진행상태 트래커/공정 체크리스트는 여전히 "상세보기"
 // 링크로 들어가야 볼 수 있다 — 이 패널은 품목내역 미리보기 전용이다.
 export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderRow[]; ordersHref: string }) {
+  // 행을 클릭하면 그 행 바로 아래에 품목내역을 아코디언으로 펼친다
+  // (매출관리와 같은 패턴 — sales-grid-table.tsx 참고). 아무것도 안
+  // 고른 기본값(null)에서 시작한다.
   const [manualActiveKey, setManualActiveKey] = useState<string | null>(null);
-  const activeKey = manualActiveKey && rows.some((r) => r.id === manualActiveKey) ? manualActiveKey : (rows[0]?.id ?? null);
+  const activeKey = manualActiveKey && rows.some((r) => r.id === manualActiveKey) ? manualActiveKey : null;
   const active = rows.find((r) => r.id === activeKey) ?? null;
   const selection: OrderDetailSelection | null = active
     ? {
@@ -33,6 +37,10 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
         items: active.items,
       }
     : null;
+  function toggleAccordion(id: string) {
+    setManualActiveKey((prev) => (prev === id ? null : id));
+  }
+  useEscapeToClose(activeKey !== null, () => setManualActiveKey(null));
 
   return (
     <>
@@ -50,29 +58,44 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.id}
-                className={`cursor-pointer${row.id === activeKey ? " master-active" : ""}`}
-                onClick={() => setManualActiveKey(row.id)}
-              >
-                <td style={{ fontWeight: 600 }}>{row.docNo}</td>
-                <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
-                <td className="num">{row.itemCount}</td>
-                <td className="num">{formatNumber(row.totalAmount)}</td>
-                <td>
-                  <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
-                    {row.progressLabel}
-                  </span>
-                </td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
-                <td className="num" onClick={(e) => e.stopPropagation()}>
-                  <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn">
-                    상세보기
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const rowSelection: OrderDetailSelection = {
+                label: `주문 ${row.docNo}`,
+                dateLabel: new Date(row.createdAt).toLocaleDateString("ko-KR"),
+                items: row.items,
+              };
+              return (
+                <Fragment key={row.id}>
+                  <tr
+                    className={`cursor-pointer${row.id === activeKey ? " master-active" : ""}`}
+                    onClick={() => toggleAccordion(row.id)}
+                  >
+                    <td style={{ fontWeight: 600 }}>{row.docNo}</td>
+                    <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
+                    <td className="num">{row.itemCount}</td>
+                    <td className="num">{formatNumber(row.totalAmount)}</td>
+                    <td>
+                      <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
+                        {row.progressLabel}
+                      </span>
+                    </td>
+                    <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
+                    <td className="num" onClick={(e) => e.stopPropagation()}>
+                      <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn">
+                        상세보기
+                      </Link>
+                    </td>
+                  </tr>
+                  {row.id === activeKey && (
+                    <tr className="erp-grid-accordion-row">
+                      <td colSpan={7}>
+                        <OrderDetailPanel selection={rowSelection} priceLabel="단가" emptyMessage="품목내역이 없습니다." />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
             {rows.length === 0 && (
               <tr>
                 <td colSpan={7} className="erp-grid-empty">
@@ -86,44 +109,42 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
 
       <div className="erp-row-card-list">
         {rows.map((row) => (
-          <div
-            key={row.id}
-            className={`erp-row-card${row.id === activeKey ? " selected" : ""}`}
-            role="button"
-            tabIndex={0}
-            onClick={() => setManualActiveKey(row.id)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setManualActiveKey(row.id);
-            }}
-          >
-            <div className="erp-row-card-head">
-              <span className="erp-row-card-partner">주문 {row.docNo}</span>
-              <span className="erp-row-card-date">{new Date(row.createdAt).toLocaleDateString("ko-KR")}</span>
+          <Fragment key={row.id}>
+            <div
+              className={`erp-row-card${row.id === activeKey ? " selected" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleAccordion(row.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") toggleAccordion(row.id);
+              }}
+            >
+              <div className="erp-row-card-head">
+                <span className="erp-row-card-partner">주문 {row.docNo}</span>
+                <span className="erp-row-card-date">{new Date(row.createdAt).toLocaleDateString("ko-KR")}</span>
+              </div>
+              <div className="erp-row-card-item">
+                품목 {row.itemCount}건{row.memo ? ` · ${row.memo}` : ""}
+              </div>
+              <div className="erp-row-card-foot">
+                <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
+                  {row.progressLabel}
+                </span>
+                <span className="erp-row-card-amount">{formatNumber(row.totalAmount)}원</span>
+              </div>
+              <div onClick={(e) => e.stopPropagation()}>
+                <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn" style={{ width: "100%", marginTop: 4 }}>
+                  상세보기
+                </Link>
+              </div>
             </div>
-            <div className="erp-row-card-item">
-              품목 {row.itemCount}건{row.memo ? ` · ${row.memo}` : ""}
-            </div>
-            <div className="erp-row-card-foot">
-              <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
-                {row.progressLabel}
-              </span>
-              <span className="erp-row-card-amount">{formatNumber(row.totalAmount)}원</span>
-            </div>
-            <div onClick={(e) => e.stopPropagation()}>
-              <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn" style={{ width: "100%", marginTop: 4 }}>
-                상세보기
-              </Link>
-            </div>
-          </div>
+            {row.id === activeKey && (
+              <OrderDetailPanel selection={selection} priceLabel="단가" emptyMessage="품목내역이 없습니다." />
+            )}
+          </Fragment>
         ))}
         {rows.length === 0 && <p className="erp-grid-empty">조회 기간에 주문 내역이 없습니다.</p>}
       </div>
-
-      <OrderDetailPanel
-        selection={selection}
-        priceLabel="단가"
-        emptyMessage="위 목록에서 주문을 선택하면 품목내역이 여기에 표시됩니다."
-      />
     </>
   );
 }

@@ -699,8 +699,10 @@ export function SalesGridTable({
                     {/* 20 = 표 전체 칸 수(위 carryover 구분줄의 colSpan과 동일) —
                         품목내역 패널을 그 행 바로 아래에 가로로 꽉 채워 펼친다.
                         높이 제한/내부 스크롤 없이 OrderDetailPanel 전체를 그대로
-                        보여준다(사용자 요청 — 제자리 펼침, 스크롤 없이 한눈에). */}
-                    <td colSpan={20} style={{ padding: 0, background: "var(--erp-bg)" }}>
+                        보여준다(사용자 요청 — 제자리 펼침, 스크롤 없이 한눈에).
+                        패딩/배경/카드 테두리는 .erp-grid-accordion-row CSS가 맡는다
+                        (인셋 카드 스타일 — erp-theme.css 참고). */}
+                    <td colSpan={20}>
                       <OrderDetailPanel
                         selection={activeSelection}
                         priceLabel="공급가"
