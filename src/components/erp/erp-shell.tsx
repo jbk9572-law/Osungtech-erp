@@ -12,6 +12,7 @@ import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
 import { findMenuItem } from "@/lib/erp-menu";
 import { pushRecentMenu } from "@/lib/erp-menu-history";
+import { stopTenantImpersonation } from "@/app/(dashboard)/impersonation-actions";
 
 function RecentMenuTracker() {
   const pathname = usePathname();
@@ -33,8 +34,10 @@ export function ErpShell({
   isAdmin,
   isManagerOrAdmin,
   isPlatformAdmin,
+  platformAdminTenants,
   platformAnnouncements,
   quotaBanner,
+  impersonatingTenantName,
   theme,
   children,
   modal,
@@ -49,6 +52,9 @@ export function ErpShell({
   isAdmin: boolean;
   isManagerOrAdmin: boolean;
   isPlatformAdmin?: boolean;
+  // 리본의 "회사 전환"(migration 225) 검색 목록 — isPlatformAdmin일
+  // 때만 layout.tsx가 실제 데이터를 채워서 내려준다.
+  platformAdminTenants?: { id: string; name: string }[];
   // 플랫폼 운영자가 platform-admin > 공지사항에서 등록해 켜둔 전체
   // 테넌트 공지 — 회사 구분 없이 로그인한 모든 사용자에게 보인다.
   platformAnnouncements?: { id: string; title: string }[];
@@ -56,6 +62,10 @@ export function ErpShell({
   // (dashboard)/layout.tsx의 buildQuotaBannerMessage()가 이미 톤/문구를
   // 전부 정해서 내려준다(여기서는 그대로 그리기만 한다).
   quotaBanner?: { tone: "warn" | "danger"; message: string } | null;
+  // 플랫폼 관리자가 "이 회사로 들어가기"(migration 225)로 이 회사
+  // 화면을 대신 보고 있을 때만 값이 있다 — 있으면 배너 + 나가기
+  // 버튼을 띄운다.
+  impersonatingTenantName?: string | null;
   // 이 테넌트(회사)에 플랫폼관리자가 지정한 화면 테마(tenants.theme,
   // migration 215, 223) — "classic-light"(기본)/"modern"/"classic-b".
   // 서버에서 받은 값을 루트 .erp div에 data-theme으로 그대로 얹는다
@@ -117,6 +127,14 @@ export function ErpShell({
           데모 모드 — 실제 데이터가 아니며, 여기서 등록/수정/삭제해도 실제 운영 데이터에는 영향을 주지 않습니다.
         </div>
       )}
+      {impersonatingTenantName && (
+        <div className="erp-impersonation-banner">
+          <span>플랫폼 관리자가 &quot;{impersonatingTenantName}&quot; 회사를 대신 보는 중 — 여기서 등록/수정하면 그 회사의 실제 데이터가 바뀝니다.</span>
+          <form action={stopTenantImpersonation}>
+            <button type="submit">나가기</button>
+          </form>
+        </div>
+      )}
       {quotaBanner && <div className={`erp-quota-banner erp-quota-banner-${quotaBanner.tone}`}>{quotaBanner.message}</div>}
       {(platformAnnouncements ?? []).map((a) => (
         <div className="erp-platform-announcement-banner" key={a.id}>
@@ -138,7 +156,13 @@ export function ErpShell({
         onToggleMenu={() => setCollapsed((c) => !c)}
         isPlatformAdmin={isPlatformAdmin}
       />
-      <Ribbon disabledFeatures={disabledFeatures} isAdmin={isAdmin} isManagerOrAdmin={isManagerOrAdmin} />
+      <Ribbon
+        disabledFeatures={disabledFeatures}
+        isAdmin={isAdmin}
+        isManagerOrAdmin={isManagerOrAdmin}
+        isPlatformAdmin={isPlatformAdmin}
+        platformAdminTenants={platformAdminTenants}
+      />
       <div className="erp-body">
         <TreeMenu
           usageWidget={usageWidget}

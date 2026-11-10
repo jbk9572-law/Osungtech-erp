@@ -19,6 +19,7 @@ type LayoutBootstrap = {
   profile: { is_demo: boolean; role: string; department_id: string | null } | null;
   tenant: { disabled_features: string[]; theme: string | null } | null;
   is_platform_admin: boolean;
+  impersonation: { tenant_name: string } | null;
   announcements: { id: string; title: string }[];
   platform_settings: { maintenance_mode: boolean; maintenance_message: string | null } | null;
   department_page_access: { page_key: string; department_id: string }[];
@@ -78,6 +79,20 @@ export default async function DashboardLayout({
   const myProfile = bootstrap?.profile ?? null;
   const tenant = bootstrap?.tenant ?? null;
   const isPlatformAdmin = bootstrap?.is_platform_admin ?? false;
+  const impersonatingTenantName = bootstrap?.impersonation?.tenant_name ?? null;
+
+  // 리본의 "회사 전환"(migration 225)이 쓸 전체 회사 목록 — 플랫폼
+  // 관리자가 아니면 볼 이유가 없는 조회라 isPlatformAdmin이 확정된
+  // 뒤에만 따로 부른다(일반 테넌트 사용자의 메뉴 이동마다 불필요한
+  // 왕복이 추가되지 않게). bootstrap과 같은 TTL 캐시를 재사용한다.
+  const { data: impersonationTenantsRaw } = isPlatformAdmin
+    ? await ttlCached(`layout:impersonation-tenants:${user.id}`, LAYOUT_CACHE_TTL_MS, () =>
+        safeQuery(supabase.rpc("get_platform_tenant_list")),
+      )
+    : { data: null };
+  const platformAdminTenants = ((impersonationTenantsRaw ?? []) as { id: string; name: string }[])
+    .map((t) => ({ id: t.id, name: t.name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "ko"));
   const announcements = bootstrap?.announcements ?? [];
   const platformSettings = bootstrap?.platform_settings ?? null;
   const departmentPageAccessRows = bootstrap?.department_page_access ?? [];
@@ -151,8 +166,10 @@ export default async function DashboardLayout({
       isAdmin={isAdmin}
       isManagerOrAdmin={isManagerOrAdmin}
       isPlatformAdmin={isPlatformAdmin === true}
+      platformAdminTenants={platformAdminTenants}
       platformAnnouncements={announcements ?? []}
       quotaBanner={quotaBanner}
+      impersonatingTenantName={impersonatingTenantName}
       theme={tenant?.theme}
       modal={modal}
     >
