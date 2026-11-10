@@ -409,8 +409,8 @@ export default async function AuditLogPage({
         fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
           supabase.from("profiles").select("id, full_name").range(from, to),
         ),
-        fetchAllRows<{ id: string; name: string }>((from, to) =>
-          supabase.from("products").select("id, name").range(from, to),
+        fetchAllRows<{ id: string; name: string; spec: string | null }>((from, to) =>
+          supabase.from("products").select("id, name, spec").range(from, to),
         ),
       ]);
     const lookups: Lookups = {
@@ -418,7 +418,12 @@ export default async function AuditLogPage({
       suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
       categories: new Map(categories.map((c) => [c.id, c.name])),
       profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
-      products: new Map(products.map((p) => [p.id, p.name])),
+      // customer-price-form.tsx/customer-detail-panel.tsx와 같은 "이름
+      // (규격)" 표기 — 같은 이름인데 규격만 다른 품목이 많아서 이름만으론
+      // 거래처 단가가 어느 규격 건지 구분이 안 된다.
+      products: new Map(
+        products.map((p) => [p.id, p.spec ? `${p.name} (${p.spec})` : p.name]),
+      ),
     };
 
     const rows = fetchedRows;
