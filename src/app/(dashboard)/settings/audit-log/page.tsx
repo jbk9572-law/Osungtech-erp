@@ -26,6 +26,8 @@ const TABLE_LABELS: Record<string, string> = {
   profiles: "계정",
   customer_payments: "수금",
   supplier_payments: "지급",
+  customer_product_prices: "거래처 단가",
+  supplier_product_prices: "공급처 단가",
 };
 
 const IDENTITY_FIELD: Record<string, string> = {
@@ -61,6 +63,9 @@ const FIELD_LABELS: Record<string, Record<string, string>> = {
     is_return: "반품 여부",
     return_reason: "반품 사유",
     is_carryover: "이월 여부",
+    invoice_status: "계산서 발행상태",
+    invoice_provider: "계산서 발행경로",
+    invoice_issued_at: "계산서 발행일",
   },
   purchase_orders: {
     supplier_id: "매입처",
@@ -133,11 +138,33 @@ const FIELD_LABELS: Record<string, Record<string, string>> = {
     memo: "메모",
     created_by: "작성자",
   },
+  customer_product_prices: {
+    customer_id: "거래처",
+    product_id: "품목",
+    unit_price: "단가",
+    notes: "비고",
+  },
+  supplier_product_prices: {
+    supplier_id: "공급처",
+    product_id: "품목",
+    unit_cost: "단가",
+    notes: "비고",
+  },
 };
 
 const PRICE_BASIS_LABELS: Record<string, string> = {
   box: "박스 단위",
   quantity: "낱개 단위",
+};
+
+const INVOICE_STATUS_LABELS: Record<string, string> = {
+  not_issued: "미발행",
+  issued: "발행완료",
+};
+
+const INVOICE_PROVIDER_LABELS: Record<string, string> = {
+  manual: "수기입력",
+  mock_api: "가상 API(테스트)",
 };
 
 // customer_id/supplier_id/category_id/created_by는 화면에 그대로 보이면
@@ -148,6 +175,7 @@ const FOREIGN_KEY_LOOKUP: Record<string, keyof Lookups> = {
   supplier_id: "suppliers",
   category_id: "categories",
   created_by: "profiles",
+  product_id: "products",
 };
 
 // 화면에서 굳이 알 필요 없는(항상 바뀌는/식별용이거나, 창고가 하나뿐이라
@@ -159,6 +187,7 @@ type Lookups = {
   suppliers: Map<string, string>;
   categories: Map<string, string>;
   profiles: Map<string, string>;
+  products: Map<string, string>;
 };
 
 function formatValue(tableName: string, key: string, v: unknown, lookups: Lookups): string {
@@ -170,14 +199,23 @@ function formatValue(tableName: string, key: string, v: unknown, lookups: Lookup
   }
   if (key === "role") return ROLE_LABELS[String(v)] ?? String(v);
   if (key === "purchase_price_basis") return PRICE_BASIS_LABELS[String(v)] ?? String(v);
+  if (key === "invoice_status") return INVOICE_STATUS_LABELS[String(v)] ?? String(v);
+  if (key === "invoice_provider") return INVOICE_PROVIDER_LABELS[String(v)] ?? String(v);
   if (typeof v === "boolean") return v ? "예" : "아니오";
   if (
     (tableName === "products" && (key === "price" || key === "cost")) ||
-    ((tableName === "customer_payments" || tableName === "supplier_payments") && key === "amount")
+    ((tableName === "customer_payments" || tableName === "supplier_payments") && key === "amount") ||
+    ((tableName === "customer_product_prices" || tableName === "supplier_product_prices") &&
+      (key === "unit_price" || key === "unit_cost"))
   ) {
     return `₩${formatNumber(Number(v))}`;
   }
-  if (key === "order_date" || key === "purchase_date" || key === "paid_at") {
+  if (
+    key === "order_date" ||
+    key === "purchase_date" ||
+    key === "paid_at" ||
+    key === "invoice_issued_at"
+  ) {
     return new Date(String(v)).toLocaleDateString("ko-KR");
   }
   if (typeof v === "object") return JSON.stringify(v);
@@ -209,8 +247,23 @@ function diffSummary(
   return changed.join(" · ") || "(내용 변경 없음)";
 }
 
-function identitySummary(tableName: string, data: Record<string, unknown> | null): string {
+function identitySummary(
+  tableName: string,
+  data: Record<string, unknown> | null,
+  lookups: Lookups,
+): string {
   if (!data) return "-";
+
+  // 거래처 단가/공급처 단가는 단일 식별 필드가 없다 — "거래처(공급처)명 —
+  // 품목명"으로 조합해야 사람이 "누구 단가인지" 바로 알 수 있다.
+  if (tableName === "customer_product_prices" || tableName === "supplier_product_prices") {
+    const partyKey = tableName === "customer_product_prices" ? "customer_id" : "supplier_id";
+    const partyLookup = tableName === "customer_product_prices" ? lookups.customers : lookups.suppliers;
+    const partyName = partyLookup.get(String(data[partyKey])) ?? "(알 수 없음)";
+    const productName = lookups.products.get(String(data.product_id)) ?? "(알 수 없음)";
+    return `${partyName} — ${productName}`;
+  }
+
   const field = IDENTITY_FIELD[tableName];
   const value = field ? data[field] : undefined;
   if (value == null || value === "") return "-";
@@ -323,7 +376,7 @@ export default async function AuditLogPage({
     // 실제 이름으로 바꿔 보여주기 위해, 관련 마스터 테이블을 통째로 미리
     // 불러와 조회맵을 만든다 — 이력 건수만큼 매번 개별 조회하는 대신 한
     // 번씩만 불러온다.
-    const [{ rows: fetchedRows, hasMore: auditHasMore }, customers, suppliers, categories, profiles] =
+    const [{ rows: fetchedRows, hasMore: auditHasMore }, customers, suppliers, categories, profiles, products] =
       await Promise.all([
         fetchLimitedRows<{
           id: string;
@@ -356,12 +409,16 @@ export default async function AuditLogPage({
         fetchAllRows<{ id: string; full_name: string | null }>((from, to) =>
           supabase.from("profiles").select("id, full_name").range(from, to),
         ),
+        fetchAllRows<{ id: string; name: string }>((from, to) =>
+          supabase.from("products").select("id, name").range(from, to),
+        ),
       ]);
     const lookups: Lookups = {
       customers: new Map(customers.map((c) => [c.id, c.name])),
       suppliers: new Map(suppliers.map((s) => [s.id, s.name])),
       categories: new Map(categories.map((c) => [c.id, c.name])),
       profiles: new Map(profiles.map((p) => [p.id, p.full_name ?? "(이름 없음)"])),
+      products: new Map(products.map((p) => [p.id, p.name])),
     };
 
     const rows = fetchedRows;
@@ -382,9 +439,9 @@ export default async function AuditLogPage({
       const newData = row.new_data as Record<string, unknown> | null;
       const summary =
         row.action === "insert"
-          ? `등록됨: ${identitySummary(row.table_name, newData)}`
+          ? `등록됨: ${identitySummary(row.table_name, newData, lookups)}`
           : row.action === "delete"
-            ? `삭제됨: ${identitySummary(row.table_name, oldData)}`
+            ? `삭제됨: ${identitySummary(row.table_name, oldData, lookups)}`
             : diffSummary(row.table_name, oldData, newData, lookups);
       const groupCount = row.tx_id != null ? txCounts.get(row.tx_id) : undefined;
       return {
@@ -393,7 +450,7 @@ export default async function AuditLogPage({
         tableLabel: TABLE_LABELS[row.table_name] ?? row.table_name,
         actionLabel: ACTION_LABELS[row.action] ?? row.action,
         actionTone: row.action === "insert" ? "ok" : row.action === "delete" ? "danger" : "info",
-        target: identitySummary(row.table_name, newData ?? oldData),
+        target: identitySummary(row.table_name, newData ?? oldData, lookups),
         author: row.profiles?.full_name ?? "-",
         summary,
         groupCount: groupCount && groupCount > 1 ? groupCount : undefined,
