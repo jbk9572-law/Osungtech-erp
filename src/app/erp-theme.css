@@ -5936,8 +5936,14 @@ a.erp-detail-tab:hover:not(.active) {
    r값(모서리)은 목업도 거의 각진 느낌이라 :root 기본값(전부 0)을
    그대로 상속해 따로 안 건드린다. */
 [data-theme="classic-c"] {
-  --erp-primary: #2563eb;
-  --erp-primary-dark: #1d4ed8;
+  /* 처음엔 blue-600(#2563eb)을 썼는데, 타이틀바(.erp-titlebar)와
+     달력 "선택된 날짜" 칸(dashboard-calendar.tsx)이 둘 다 --erp-primary를
+     그대로 꽉 찬 배경으로 쓰는 자리라 너무 쨍하고 가벼워 보였다(사용자
+     지적 — "장난하나"). 기본/모던/classic-b 전부 --erp-primary가
+     어둡고 차분한 톤(#132944/#4f46e5)이라 이 테마도 한 단계 더
+     진하게(blue-700) 맞춘다. */
+  --erp-primary: #1d4ed8;
+  --erp-primary-dark: #1e40af;
   --erp-on-primary: #ffffff;
   --erp-border: #cbd5e1;
   --erp-border-strong: #94a3b8;
@@ -5984,6 +5990,16 @@ a.erp-detail-tab:hover:not(.active) {
   --erp-comm-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 24px -16px rgba(15, 23, 42, 0.14);
   --erp-comm-shadow-row: 0 1px 1px rgba(15, 23, 42, 0.03), 0 6px 16px -10px rgba(15, 23, 42, 0.16);
   --erp-comm-shadow-btn: 0 2px 8px -3px rgba(37, 99, 235, 0.4);
+}
+
+/* 타이틀바는 모던/classic-b와 같은 이유로 --erp-primary를 그대로
+   안 쓴다 — .erp-titlebar 기본 규칙이 --erp-primary를 꽉 찬 배경으로
+   칠하는데, 파란 계열을 화면 맨 위 전체 폭에 그대로 바르면 톤을
+   낮춰도 여전히 가볍게 보인다. 이 테마는 슬레이트 계열이니 어두운
+   슬레이트(classic-b와 같은 #1e293b)로 — "쨍한 파랑 띠" 대신 차분한
+   짙은 회색 타이틀바로 맞춘다. */
+[data-theme="classic-c"] .erp-titlebar {
+  background: #1e293b;
 }
 
 /* 목업 그리드는 py-1.5 px-2.5(≈6px/10px)로 기본(헤더 32px/바디 30px
