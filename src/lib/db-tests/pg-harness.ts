@@ -133,7 +133,7 @@ create table public.fifo_consumptions (
 );
 create table public.inventory_transactions (
   id uuid primary key default gen_random_uuid(),
-  product_id uuid, warehouse_id uuid, type text, quantity numeric, reference text,
+  product_id uuid not null, warehouse_id uuid, type text, quantity numeric, reference text,
   sales_order_id uuid, purchase_order_id uuid, created_by uuid,
   created_at timestamptz not null default now(),
   tenant_id uuid default public.current_tenant_id()
