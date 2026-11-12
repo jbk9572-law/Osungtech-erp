@@ -30,7 +30,7 @@ export default function ModalNotFound() {
           ✕
         </button>
         <div className="erp-modal-body erp-u-text-center" style={{ padding: "32px 20px" }}>
-          <p className="erp-u-bold erp-u-text" style={{ fontSize: 14, marginBottom: 8 }}>
+          <p className="erp-u-bold erp-u-text" style={{ fontSize: "var(--erp-font-lg)", marginBottom: 8 }}>
             이 항목을 찾을 수 없습니다.
           </p>
           <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>

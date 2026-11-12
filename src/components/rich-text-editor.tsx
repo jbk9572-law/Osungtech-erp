@@ -73,7 +73,7 @@ const UnderlineIcon = () => (
 );
 const Heading1Icon = () => <LetterIcon style={{ fontWeight: 800 }}>H1</LetterIcon>;
 const Heading2Icon = () => <LetterIcon style={{ fontWeight: 800 }}>H2</LetterIcon>;
-const Heading3Icon = () => <LetterIcon style={{ fontWeight: 800, fontSize: 13 }}>H3</LetterIcon>;
+const Heading3Icon = () => <LetterIcon style={{ fontWeight: 800, fontSize: "var(--erp-font-md)" }}>H3</LetterIcon>;
 const SubscriptIcon = () => (
   <svg viewBox="0 0 24 24">
     <text x="9" y="15" fontSize="14" fill="currentColor" stroke="none">X</text>
@@ -707,7 +707,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
                 className="erp-input erp-u-h-26"
                 style={{ fontSize: 12 }}
               />
-              <button type="button" className="erp-btn erp-btn-primary erp-u-h-26" onClick={applyLink} style={{ fontSize: 11.5 }}>
+              <button type="button" className="erp-btn erp-btn-primary erp-btn-sm" onClick={applyLink} style={{ fontSize: 11.5 }}>
                 적용
               </button>
             </div>
@@ -739,7 +739,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
                 className="erp-input erp-u-h-26"
                 style={{ fontSize: 12 }}
               />
-              <button type="button" className="erp-btn erp-btn-primary erp-u-h-26" onClick={applyImage} style={{ fontSize: 11.5 }}>
+              <button type="button" className="erp-btn erp-btn-primary erp-btn-sm" onClick={applyImage} style={{ fontSize: 11.5 }}>
                 삽입
               </button>
             </div>

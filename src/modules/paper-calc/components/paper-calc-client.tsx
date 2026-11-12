@@ -350,7 +350,7 @@ export function PaperCalcClient({
               <div className="ml-auto flex items-center pr-2">
                 <button
                   type="button"
-                  className="erp-btn erp-btn-primary erp-u-h-26"
+                  className="erp-btn erp-btn-primary erp-btn-sm"
                   style={{ minWidth: 0, padding: "0 10px" }}
                   onClick={() => setShowNewCalcForm(true)}
                 >
@@ -454,7 +454,7 @@ export function PaperCalcClient({
                         <td>
                           <button
                             type="button"
-                            className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                            className="erp-btn erp-btn-danger erp-btn-sm"
                             style={{ minWidth: 0 }}
                             onClick={() => removeRow(row.key)}
                             disabled={rows.length <= 1}
@@ -729,7 +729,7 @@ export function PaperCalcClient({
                   <div className="ml-auto flex items-center gap-1 pr-2">
                     <button
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      className="erp-btn erp-btn-sm"
                       style={{ minWidth: 0 }}
                       onClick={() => setPage(0)}
                       disabled={currentPage === 0}
@@ -738,7 +738,7 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      className="erp-btn erp-btn-sm"
                       style={{ minWidth: 0 }}
                       onClick={() => setPage((p) => p - 1)}
                       disabled={currentPage === 0}
@@ -747,7 +747,7 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      className="erp-btn erp-btn-sm"
                       style={{ minWidth: 0 }}
                       onClick={() => setPage((p) => p + 1)}
                       disabled={currentPage + 1 >= totalPages}
@@ -756,7 +756,7 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      className="erp-btn erp-btn-sm"
                       style={{ minWidth: 0 }}
                       onClick={() => setPage(totalPages - 1)}
                       disabled={currentPage + 1 >= totalPages}
@@ -894,7 +894,7 @@ function SavedCalcRow({
             )}
             <button
               type="submit"
-              className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+              className="erp-btn erp-btn-danger erp-btn-sm"
               style={{ minWidth: 0 }}
               disabled={pending}
               onBlur={confirmDelete.reset}

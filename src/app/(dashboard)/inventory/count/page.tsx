@@ -460,7 +460,7 @@ export default async function InventoryCountPage({
               <div className="erp-avatar">{(session.authorName ?? "-").slice(0, 1)}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold" style={{ fontSize: 13 }}>
+                  <span className="font-bold" style={{ fontSize: "var(--erp-font-md)" }}>
                     {new Date(session.createdAt).toLocaleString("ko-KR")}
                   </span>
                   <GridBadge tone="info">{session.items.length}건 조정</GridBadge>

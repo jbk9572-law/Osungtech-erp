@@ -61,7 +61,7 @@ export function QrLabelCard({
           background: "#000",
           color: "#fff",
           fontWeight: 800,
-          fontSize: 14,
+          fontSize: "var(--erp-font-lg)",
           letterSpacing: 1,
           padding: "4px 0",
         }}
@@ -85,7 +85,7 @@ export function QrLabelCard({
           <button
             type="button"
             onClick={() => choose("up")}
-            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+            className="erp-btn erp-btn-xs"
             style={{ minWidth: 0, fontSize: 11, ...(dir === "up" ? { background: "var(--erp-selected)" } : {}) }}
           >
             ▲ 위
@@ -93,7 +93,7 @@ export function QrLabelCard({
           <button
             type="button"
             onClick={() => choose("down")}
-            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+            className="erp-btn erp-btn-xs"
             style={{ minWidth: 0, fontSize: 11, ...(dir === "down" ? { background: "var(--erp-selected)" } : {}) }}
           >
             ▼ 아래

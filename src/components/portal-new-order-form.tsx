@@ -147,7 +147,7 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
       </div>
 
       <div className="erp-u-flex erp-u-justify-between erp-u-items-center">
-        <span className="erp-u-bold" style={{ fontSize: 13 }}>
+        <span className="erp-u-bold" style={{ fontSize: "var(--erp-font-md)" }}>
           합계: {formatNumber(total)}원 ({items.length}개 품목)
         </span>
         <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || items.length === 0}>

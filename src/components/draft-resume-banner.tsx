@@ -17,7 +17,7 @@ export function DraftResumeBanner({
       <div className="flex gap-2">
         <button
           type="button"
-          className="erp-btn erp-btn-primary erp-u-h-26"
+          className="erp-btn erp-btn-primary erp-btn-sm"
           style={{ minWidth: 0, padding: "2px 10px", fontSize: 11 }}
           onClick={onResume}
         >
@@ -25,7 +25,7 @@ export function DraftResumeBanner({
         </button>
         <button
           type="button"
-          className="erp-btn erp-u-h-26"
+          className="erp-btn erp-btn-sm"
           style={{ minWidth: 0, padding: "2px 10px", fontSize: 11 }}
           onClick={onDiscard}
         >

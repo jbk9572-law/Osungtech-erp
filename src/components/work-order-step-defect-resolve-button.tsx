@@ -13,7 +13,7 @@ export function WorkOrderStepDefectResolveButton({ id, workOrderId }: { id: stri
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <button
         type="submit"
-        className="erp-btn erp-btn-primary erp-u-h-22"
+        className="erp-btn erp-btn-primary erp-btn-xs"
         style={{ padding: "1px 8px", fontSize: 11 }}
         disabled={pending}
       >

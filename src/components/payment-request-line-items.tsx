@@ -148,7 +148,7 @@ export function PaymentRequestLineItems({
                     type="button"
                     onClick={() => removeRow(row.key)}
                     disabled={rows.length === 1}
-                    className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                    className="erp-btn erp-btn-danger erp-btn-sm"
                     style={{ minWidth: 0 }}
                   >
                     ×

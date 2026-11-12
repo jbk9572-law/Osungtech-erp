@@ -30,7 +30,7 @@ function spaceOut(text: string) {
 const cellStyle: React.CSSProperties = {
   border: "1px solid #000",
   padding: "6px 8px",
-  fontSize: 13,
+  fontSize: "var(--erp-font-md)",
 };
 
 // 명세표(일자~비고) 본문 행에 쓰는 스타일. 빈 줄(허전해 보이지 않게 채우는

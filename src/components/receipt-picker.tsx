@@ -158,7 +158,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
                 type="button"
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
-                className="erp-btn erp-u-h-22"
+                className="erp-btn erp-btn-xs"
                 style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
               >
                 ▲
@@ -167,7 +167,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
                 type="button"
                 onClick={() => move(index, 1)}
                 disabled={index === items.length - 1}
-                className="erp-btn erp-u-h-22"
+                className="erp-btn erp-btn-xs"
                 style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
               >
                 ▼

@@ -77,7 +77,7 @@ export function ConvertToWorkOrderForm({
         required
         options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
       />
-      <button type="submit" className="erp-btn erp-u-h-24" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending || warehouses.length === 0}>
+      <button type="submit" className="erp-btn erp-btn-xs" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending || warehouses.length === 0}>
         {pending ? "전환 중..." : "생산지시 생성"}
       </button>
       <FormMessage state={state} />
@@ -120,7 +120,7 @@ export function ConvertToSaleForm({
         required
         options={warehouses.map((w) => ({ value: w.id, label: w.name }))}
       />
-      <button type="submit" className="erp-btn erp-u-h-24" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending || warehouses.length === 0}>
+      <button type="submit" className="erp-btn erp-btn-xs" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending || warehouses.length === 0}>
         {pending ? "전환 중..." : "판매 등록"}
       </button>
       <FormMessage state={state} />

@@ -52,7 +52,7 @@ export function PaperStockOverridePanel({
           </span>
           <button
             type="button"
-            className="erp-btn erp-btn-danger erp-u-h-24 erp-u-pad-0-8"
+            className="erp-btn erp-btn-danger erp-btn-xs"
             style={{ minWidth: 0, fontSize: 11.5 }}
             disabled={revertPending}
             onBlur={confirmRevert.reset}

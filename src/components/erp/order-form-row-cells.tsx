@@ -98,7 +98,7 @@ export function RemarkActionCells({
       <td className="num" style={{ whiteSpace: "nowrap" }}>
         <button
           type="button"
-          className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+          className="erp-btn erp-btn-sm"
           style={{ minWidth: 0, marginRight: 4 }}
           onClick={onInsert}
           title="이 줄 아래에 빈 줄 삽입"
@@ -107,7 +107,7 @@ export function RemarkActionCells({
         </button>
         <button
           type="button"
-          className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+          className="erp-btn erp-btn-danger erp-btn-sm"
           style={{ minWidth: 0 }}
           onClick={onRemove}
           disabled={!canRemove}

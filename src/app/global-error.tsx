@@ -15,16 +15,16 @@ export default function GlobalError({
       <body className="erp-u-flex erp-u-items-center erp-u-text-center"
         style={{ minHeight: "100vh", margin: 0, flexDirection: "column", justifyContent: "center", padding: 24, fontFamily: "-apple-system, sans-serif" }}
       >
-        <p className="erp-u-bold" style={{ fontSize: 16, color: "#182338", marginBottom: 8 }}>
+        <p className="erp-u-bold" style={{ fontSize: "var(--erp-font-xl)", color: "#182338", marginBottom: 8 }}>
           문제가 발생해 페이지를 표시할 수 없습니다.
         </p>
-        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 20, maxWidth: 420 }}>
+        <p style={{ fontSize: "var(--erp-font-md)", color: "#6b7280", marginBottom: 20, maxWidth: 420 }}>
           잠시 후 다시 시도해주세요.
         </p>
         <button className="erp-u-semibold"
           type="button"
           onClick={() => reset()}
-          style={{ height: 36, padding: "0 16px", borderRadius: 4, background: "#132944", color: "#fff", fontSize: 13, border: "none" }}
+          style={{ height: 36, padding: "0 16px", borderRadius: 4, background: "#132944", color: "#fff", fontSize: "var(--erp-font-md)", border: "none" }}
         >
           다시 시도
         </button>

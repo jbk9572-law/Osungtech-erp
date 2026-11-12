@@ -70,7 +70,7 @@ export function WithholdingBracketsManager({
                     <button
                       type="button"
                       onClick={() => setEditingId(b.id ?? null)}
-                      className="erp-btn erp-u-h-24"
+                      className="erp-btn erp-btn-xs"
                       style={{ minWidth: 0, padding: "1px 8px", fontSize: 11 }}
                     >
                       수정

@@ -38,7 +38,7 @@ export function PartyProductNoteForm({
         className="erp-input erp-u-h-26"
         style={{ fontSize: 11.5, minWidth: 200 }}
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-sm" style={{ minWidth: 0 }}>
         저장
       </button>
       {state?.error && (

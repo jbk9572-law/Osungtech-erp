@@ -618,7 +618,7 @@ export function ManualLayoutClient({
                     <td>
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                        className="erp-btn erp-btn-danger erp-btn-sm"
                         style={{ minWidth: 0 }}
                         onClick={() => removeRow(row.key)}
                         disabled={rows.length <= 1}
@@ -701,7 +701,7 @@ export function ManualLayoutClient({
             ))}
             <button
               type="button"
-              className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+              className="erp-btn erp-btn-sm"
               style={{ minWidth: 0 }}
               onClick={addSheet}
             >
@@ -709,7 +709,7 @@ export function ManualLayoutClient({
             </button>
             <button
               type="button"
-              className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+              className="erp-btn erp-btn-danger erp-btn-sm"
               style={{ minWidth: 0 }}
               onClick={() => removeSheet(sheetIndex)}
               onBlur={confirmRemoveSheet.reset}
@@ -733,7 +733,7 @@ export function ManualLayoutClient({
             </span>
             <button
               type="button"
-              className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+              className="erp-btn erp-btn-sm"
               style={{ minWidth: 0 }}
               onClick={clearCurrentSheet}
               onBlur={confirmClearSheet.reset}
@@ -902,12 +902,12 @@ export function ManualLayoutClient({
               <span>
                 선택됨: {selectedPlacement.name} ({selectedPlacement.w}×{selectedPlacement.h})
               </span>
-              <button type="button" className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0 }} onClick={rotateSelected}>
+              <button type="button" className="erp-btn erp-btn-sm" style={{ minWidth: 0 }} onClick={rotateSelected}>
                 회전
               </button>
               <button
                 type="button"
-                className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                className="erp-btn erp-btn-danger erp-btn-sm"
                 style={{ minWidth: 0 }}
                 onClick={deleteSelected}
               >

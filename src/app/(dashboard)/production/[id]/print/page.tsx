@@ -166,7 +166,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
               </div>
             )}
 
-            <div className="erp-u-bold" style={{ fontSize: 13, marginTop: 14 }}>
+            <div className="erp-u-bold" style={{ fontSize: "var(--erp-font-md)", marginTop: 14 }}>
               공정 진행 체크리스트{!isFirst && " (이어서)"} — 공정마다 받을 때(인수)·끝낼 때(완료) 서명
             </div>
 

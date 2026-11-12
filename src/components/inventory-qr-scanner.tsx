@@ -219,7 +219,7 @@ export function InventoryQrScanner({
 
             {cameraError && (
               <div className="erp-u-flex erp-u-items-center erp-u-text-center"
-                style={{ position: "absolute", inset: 0, justifyContent: "center", padding: 16, color: "#fff", background: "rgba(0,0,0,0.7)", fontSize: 13 }}
+                style={{ position: "absolute", inset: 0, justifyContent: "center", padding: 16, color: "#fff", background: "rgba(0,0,0,0.7)", fontSize: "var(--erp-font-md)" }}
               >
                 {cameraError}
               </div>
@@ -296,7 +296,7 @@ export function InventoryQrScanner({
                 <div style={{ width: 36, height: 4, borderRadius: 0, background: "var(--erp-border)", margin: "8px auto 2px" }} />
                 <div style={{ padding: "6px 14px 12px" }}>
                   <div className="erp-u-muted" style={{ fontSize: 11, marginBottom: 1 }}>{scanState.active.sku}</div>
-                  <div style={{ fontSize: 16, fontWeight: 800 }}>{scanState.active.name}</div>
+                  <div style={{ fontSize: "var(--erp-font-xl)", fontWeight: 800 }}>{scanState.active.name}</div>
                   <div className="erp-u-muted" style={{ fontSize: 12.5, marginBottom: 10 }}>
                     {scanState.active.spec ?? "-"} · 전산 재고{" "}
                     <strong className="erp-u-text">

@@ -60,12 +60,12 @@ export function WorkOrderProcessStepAssignCell({
             className="erp-input erp-u-h-22"
             style={{ fontSize: 11, padding: "0 6px", width: 100 }}
           />
-          <button type="submit" className="erp-btn erp-u-h-22" style={{ padding: "1px 6px", fontSize: 11 }} disabled={createPending}>
+          <button type="submit" className="erp-btn erp-btn-xs" style={{ padding: "1px 6px", fontSize: 11 }} disabled={createPending}>
             {createPending ? "..." : "등록·배정"}
           </button>
           <button
             type="button"
-            className="erp-btn erp-u-h-22"
+            className="erp-btn erp-btn-xs"
             style={{ padding: "1px 6px", fontSize: 11 }}
             onClick={() => setMode("select")}
           >
@@ -83,7 +83,7 @@ export function WorkOrderProcessStepAssignCell({
         <PortalAccountForm targetId={subcontractorId} kind="subcontractor" />
         <button
           type="button"
-          className="erp-btn erp-u-h-22"
+          className="erp-btn erp-btn-xs"
           style={{ padding: "1px 6px", fontSize: 11, alignSelf: "flex-start" }}
           onClick={() => setMode("select")}
         >

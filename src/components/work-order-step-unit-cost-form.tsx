@@ -30,7 +30,7 @@ export function WorkOrderStepUnitCostForm({
         className="erp-input erp-u-h-22"
         style={{ fontSize: 11, padding: "0 6px", width: 80 }}
       />
-      <button type="submit" className="erp-btn erp-u-h-22" style={{ padding: "1px 6px", fontSize: 11 }} disabled={pending}>
+      <button type="submit" className="erp-btn erp-btn-xs" style={{ padding: "1px 6px", fontSize: 11 }} disabled={pending}>
         {pending ? "..." : "저장"}
       </button>
       <FormMessage state={state} />

@@ -1092,7 +1092,7 @@ export function NewSaleForm({
           <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
             <label className="erp-u-flex erp-u-items-center erp-u-gap-8"
-              style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: 13 }}
+              style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: "var(--erp-font-md)" }}
             >
               <input
                 type="checkbox"
@@ -1227,7 +1227,7 @@ export function NewSaleForm({
                 <button
                   type="button"
                   onClick={() => setPurchaseCandidates(null)}
-                  className="erp-btn erp-btn-dark erp-u-h-22 erp-u-pad-0-8"
+                  className="erp-btn erp-btn-dark erp-btn-xs"
                   style={{ minWidth: 0 }}
                 >
                   닫기
@@ -1261,7 +1261,7 @@ export function NewSaleForm({
                       <button
                         type="button"
                         onClick={() => addPurchaseItem(item)}
-                        className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+                        className="erp-btn erp-btn-xs"
                         style={{ minWidth: 0, flexShrink: 0 }}
                         disabled={added || isAdding}
                       >

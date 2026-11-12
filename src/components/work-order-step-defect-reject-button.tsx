@@ -13,7 +13,7 @@ export function WorkOrderStepDefectRejectButton({ id, workOrderId }: { id: strin
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <button
         type="submit"
-        className="erp-btn erp-btn-danger erp-u-h-22"
+        className="erp-btn erp-btn-danger erp-btn-xs"
         style={{ padding: "1px 8px", fontSize: 11 }}
         disabled={pending}
       >

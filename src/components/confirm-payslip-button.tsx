@@ -18,7 +18,7 @@ export function ConfirmPayslipButton({
       <button
         type="submit"
         disabled={pending}
-        className="erp-btn erp-btn-primary erp-u-h-24"
+        className="erp-btn erp-btn-primary erp-btn-xs"
         style={{ minWidth: 0, padding: "1px 8px", fontSize: 11 }}
       >
         {pending ? "처리 중..." : "확정"}

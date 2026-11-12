@@ -370,7 +370,7 @@ export function TodoForm({
                     <td className="num">
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                        className="erp-btn erp-btn-danger erp-btn-sm"
                         style={{ minWidth: 0 }}
                         onClick={() => removeRow(row.key)}
                       >

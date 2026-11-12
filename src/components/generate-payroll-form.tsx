@@ -18,7 +18,7 @@ export function GeneratePayrollForm({
         <label htmlFor="pg-month">급여월</label>
         <input id="pg-month" type="month" name="pay_month" defaultValue={currentMonth} className="erp-input" required />
       </div>
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ height: 30 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
         {pending ? "생성 중..." : "급여명세 생성(초안)"}
       </button>
       <FormMessage state={state} />

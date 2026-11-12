@@ -20,7 +20,7 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
     return (
       <button
         type="button"
-        className="erp-btn erp-u-h-22"
+        className="erp-btn erp-btn-xs"
         style={{ padding: "1px 8px", fontSize: 11 }}
         onClick={() => setOpen(true)}
       >
@@ -55,13 +55,13 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
       <div className="erp-u-flex erp-u-gap-6">
         <button
           type="submit"
-          className="erp-btn erp-btn-danger erp-u-h-22"
+          className="erp-btn erp-btn-danger erp-btn-xs"
           style={{ padding: "1px 8px", fontSize: 11 }}
           disabled={pending}
         >
           {pending ? "..." : "반품 저장"}
         </button>
-        <button type="button" className="erp-btn erp-u-h-22" style={{ padding: "1px 8px", fontSize: 11 }} onClick={() => setOpen(false)}>
+        <button type="button" className="erp-btn erp-btn-xs" style={{ padding: "1px 8px", fontSize: 11 }} onClick={() => setOpen(false)}>
           취소
         </button>
       </div>

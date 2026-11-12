@@ -171,7 +171,7 @@ export function InventoryCountForm({
         <button
           type="button"
           onClick={() => setStarted(false)}
-          className="erp-btn erp-u-h-26"
+          className="erp-btn erp-btn-sm"
           style={{ minWidth: 0, padding: "0 10px" }}
         >
           접기

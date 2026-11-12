@@ -29,7 +29,7 @@ export function LeaveGrantForm({
     return (
       <button
         type="button"
-        className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+        className="erp-btn erp-btn-xs"
         style={{ minWidth: 0, fontSize: 11 }}
         onClick={() => setOpen(true)}
       >
@@ -56,14 +56,14 @@ export function LeaveGrantForm({
         <button
           type="submit"
           disabled={pending}
-          className="erp-btn erp-btn-primary erp-u-h-24"
+          className="erp-btn erp-btn-primary erp-btn-xs"
           style={{ minWidth: 0, padding: "0 10px", fontSize: 11 }}
         >
           {pending ? "저장 중..." : "부여"}
         </button>
         <button
           type="button"
-          className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+          className="erp-btn erp-btn-xs"
           style={{ minWidth: 0, fontSize: 11 }}
           onClick={() => setOpen(false)}
         >

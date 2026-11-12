@@ -92,7 +92,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
         <div className="erp-detail-body">
           {order.status === "rejected" || order.status === "cancelled" ? (
             <>
-              <span className="erp-badge erp-badge-danger" style={{ fontSize: 13, padding: "4px 12px" }}>
+              <span className="erp-badge erp-badge-danger" style={{ fontSize: "var(--erp-font-md)", padding: "4px 12px" }}>
                 {describeProgress(order)}
               </span>
               {order.status === "rejected" && order.reject_reason && (

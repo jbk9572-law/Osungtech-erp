@@ -65,7 +65,7 @@ export function MailAttachmentChip({
             </button>
             <div className="erp-modal-title">
               <span>{filename}</span>
-              <a href={url} download={filename} className="erp-btn erp-u-h-24" style={{ padding: "1px 10px", fontSize: 11 }}>
+              <a href={url} download={filename} className="erp-btn erp-btn-xs" style={{ padding: "1px 10px", fontSize: 11 }}>
                 다운로드
               </a>
             </div>

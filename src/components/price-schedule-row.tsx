@@ -85,7 +85,7 @@ export function PriceScheduleRow({
           <button
             type="submit"
             disabled={updatePending}
-            className="erp-btn erp-btn-primary erp-u-h-24 erp-u-pad-0-8"
+            className="erp-btn erp-btn-primary erp-btn-xs"
             style={{ minWidth: 0, fontSize: 11.5 }}
           >
             {updatePending ? "저장 중..." : "저장"}
@@ -93,7 +93,7 @@ export function PriceScheduleRow({
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+            className="erp-btn erp-btn-xs"
             style={{ minWidth: 0, fontSize: 11.5 }}
           >
             닫기
@@ -128,7 +128,7 @@ export function PriceScheduleRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+          className="erp-btn erp-btn-xs"
           style={{ minWidth: 0, fontSize: 11.5 }}
         >
           수정
@@ -138,7 +138,7 @@ export function PriceScheduleRow({
           disabled={cancelPending}
           onClick={handleCancel}
           onBlur={confirmCancel.reset}
-          className="erp-btn erp-btn-danger erp-u-h-24 erp-u-pad-0-8"
+          className="erp-btn erp-btn-danger erp-btn-xs"
           style={{ minWidth: 0, fontSize: 11.5 }}
         >
           {confirmCancel.isArmed("cancel") ? "한 번 더 누르면 취소" : "취소"}

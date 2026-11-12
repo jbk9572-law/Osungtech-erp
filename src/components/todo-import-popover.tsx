@@ -44,7 +44,7 @@ export function TodoImportPopover({
         <button
           type="button"
           onClick={() => onClose()}
-          className="erp-btn erp-btn-dark erp-u-h-22 erp-u-pad-0-8"
+          className="erp-btn erp-btn-dark erp-btn-xs"
           style={{ minWidth: 0 }}
         >
           닫기
@@ -95,7 +95,7 @@ export function TodoImportPopover({
               <button
                 type="button"
                 onClick={() => onImport(todo)}
-                className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+                className="erp-btn erp-btn-xs"
                 style={{ minWidth: 0, flexShrink: 0 }}
                 disabled={isImporting}
               >

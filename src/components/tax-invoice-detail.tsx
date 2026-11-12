@@ -96,7 +96,7 @@ export function TaxInvoiceDetail({
         {!hasCorrections && (
           <form action={cancelFormAction}>
             <input type="hidden" name="sales_order_id" value={salesOrderId} />
-            <button type="submit" disabled={cancelPending} className="erp-btn erp-u-h-24" style={{ minWidth: 0, padding: "0 10px", fontSize: 11.5 }}>
+            <button type="submit" disabled={cancelPending} className="erp-btn erp-btn-xs" style={{ minWidth: 0, padding: "0 10px", fontSize: 11.5 }}>
               {cancelPending ? "처리 중..." : "미발행으로 되돌리기"}
             </button>
           </form>

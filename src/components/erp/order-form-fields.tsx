@@ -71,7 +71,7 @@ export function CarryoverToggle({
     <div className="erp-field erp-span-3">
       <label aria-hidden="true">&nbsp;</label>
       <label className="erp-u-flex erp-u-items-center erp-u-gap-8"
-        style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isCarryover ? "var(--erp-warning-bg)" : "transparent", border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: 13 }}
+        style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isCarryover ? "var(--erp-warning-bg)" : "transparent", border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: "var(--erp-font-md)" }}
       >
         <input
           type="checkbox"

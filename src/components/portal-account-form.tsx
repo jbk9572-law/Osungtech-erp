@@ -40,7 +40,7 @@ export function PortalAccountDisableForm({ id, kind = "customer" }: { id: string
     <form action={formAction} style={{ display: "inline" }}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="kind" value={kind} />
-      <button type="submit" className="erp-btn erp-btn-danger erp-u-h-22" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending}>
+      <button type="submit" className="erp-btn erp-btn-danger erp-btn-xs" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending}>
         {pending ? "처리 중..." : "비활성화"}
       </button>
       <FormMessage state={state} />

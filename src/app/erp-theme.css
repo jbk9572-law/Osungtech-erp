@@ -30,9 +30,11 @@
 .erp-u-mb-12 { margin-bottom: 12px !important; }
 .erp-u-gap-6 { gap: 6px !important; }
 .erp-u-gap-8 { gap: 8px !important; }
-.erp-u-h-22 { height: 22px !important; }
-.erp-u-h-24 { height: 24px !important; }
-.erp-u-h-26 { height: 26px !important; }
+/* 컨트롤 높이는 토큰 3단계(md 32 / sm 28 / xs 24)로만 쓴다 — 22/24/26이 제각각이던 것을 합쳤다
+   (기존 클래스 이름은 호출부가 많아 유지하고 값만 토큰으로 맞춤: 22·24 → xs, 26 → sm). */
+.erp-u-h-22 { height: var(--erp-control-h-xs) !important; }
+.erp-u-h-24 { height: var(--erp-control-h-xs) !important; }
+.erp-u-h-26 { height: var(--erp-control-h-sm) !important; }
 .erp-u-pad-0-8 { padding: 0 8px !important; }
 
 :root {
@@ -246,6 +248,11 @@
   --erp-space-4: 12px;
   --erp-space-5: 16px;
   --erp-space-6: 24px;
+  /* 컨트롤(버튼·입력칸·셀렉트) 높이 3단계. md=기본, sm=툴바/표 안 보조, xs=표 안 소형, cell=표 셀 안 입력칸. */
+  --erp-control-h-md: 32px;
+  --erp-control-h-sm: 28px;
+  --erp-control-h-xs: 24px;
+  --erp-control-h-cell: 30px;
 }
 
 .erp {
@@ -1555,7 +1562,7 @@
 
 .erp-input,
 .erp-select {
-  height: 30px;
+  height: var(--erp-control-h-md);
   border: 1px solid var(--erp-border);
   /* 0 → 3px: 표/그리드는 각진 모서리를 유지하지만, 입력칸/버튼까지
      전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만.
@@ -1576,6 +1583,12 @@
     border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 표(.erp-grid) 셀 안 입력칸은 행 높이를 지키려고 기존 30px을 유지한다. */
+.erp-grid .erp-input,
+.erp-grid .erp-select {
+  height: var(--erp-control-h-cell);
 }
 
 .erp-input:focus,
@@ -1799,8 +1812,8 @@ form.erp-field-grid {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 32px;
-  min-width: 90px;
+  height: var(--erp-control-h-md);
+  min-width: 64px;
   padding: 0 12px;
   border-radius: var(--erp-radius-xl, 3px);
   border: 1px solid var(--erp-border);
@@ -1840,6 +1853,26 @@ form.erp-field-grid {
   .erp-btn:hover,
   .erp-btn:active {
     transform: none;
+  }
+}
+
+/* 크기 변형: sm(28)=툴바/보조, xs(24)=표 안 소형. 최소 폭은 해제한다. */
+.erp-btn-sm {
+  height: var(--erp-control-h-sm);
+  min-width: 0;
+  padding: 0 var(--erp-space-3);
+}
+.erp-btn-xs {
+  height: var(--erp-control-h-xs);
+  min-width: 0;
+  padding: 0 var(--erp-space-3);
+  font-size: var(--erp-font-sm);
+}
+
+/* 터치 기기: 표 밖의 버튼·입력칸은 누르기 쉽게 40px 이상. 표 안은 행 높이를 지키려고 그대로 둔다. */
+@media (pointer: coarse) {
+  :is(.erp-btn, .erp-input, .erp-select):not(.erp-grid *) {
+    min-height: 40px;
   }
 }
 

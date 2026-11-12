@@ -216,10 +216,10 @@ export function OfficialDocumentForm({
               수신처
             </p>
             <div className="flex gap-1">
-              <button type="button" onClick={addExternalRecipient} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0, fontSize: 11.5 }}>
+              <button type="button" onClick={addExternalRecipient} className="erp-btn erp-btn-sm" style={{ minWidth: 0, fontSize: 11.5 }}>
                 + 외부 수신처
               </button>
-              <button type="button" onClick={addInternalRecipient} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0, fontSize: 11.5 }} disabled={profiles.length === 0}>
+              <button type="button" onClick={addInternalRecipient} className="erp-btn erp-btn-sm" style={{ minWidth: 0, fontSize: 11.5 }} disabled={profiles.length === 0}>
                 + 사내 수신처
               </button>
             </div>
@@ -265,7 +265,7 @@ export function OfficialDocumentForm({
                       options={profiles.map((p) => ({ value: p.id, label: p.name }))}
                     />
                   )}
-                  <button type="button" onClick={() => removeRecipient(r.key)} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0 }}>
+                  <button type="button" onClick={() => removeRecipient(r.key)} className="erp-btn erp-btn-sm" style={{ minWidth: 0 }}>
                     삭제
                   </button>
                 </div>
