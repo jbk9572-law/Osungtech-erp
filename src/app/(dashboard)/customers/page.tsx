@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateCustomerForm } from "@/components/create-customer-form";
@@ -18,7 +19,7 @@ type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
 
-export default async function CustomersPage({
+async function CustomersPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; limit?: string; id?: string }>;
@@ -210,3 +211,5 @@ export default async function CustomersPage({
     </div>
   );
 }
+
+export default withPageTiming("customers", CustomersPage);

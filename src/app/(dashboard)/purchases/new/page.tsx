@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewPurchaseTypeSwitcher } from "@/components/new-purchase-type-switcher";
@@ -15,7 +16,7 @@ import type { LocationOption } from "@/lib/location-stock-sync";
 import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { PageGuide } from "@/components/erp/page-guide";
 
-export default async function NewPurchasePage({
+async function NewPurchasePage({
   searchParams,
 }: {
   searchParams: Promise<{ supplier_id?: string; reorder_items?: string; saved?: string }>;
@@ -172,3 +173,5 @@ export default async function NewPurchasePage({
     </div>
   );
 }
+
+export default withPageTiming("purchases/new", NewPurchasePage);
