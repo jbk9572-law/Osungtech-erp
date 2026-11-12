@@ -111,7 +111,7 @@ export function OrderItemsTable({
               }
 
               const sizeRows = paperCalcSizeLines.map((line, i) => (
-                <tr key={`${row.id}-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
+                <tr className="erp-u-bg-bg-subtle" key={`${row.id}-size-${i}`}>
                   <td />
                   <td className="erp-u-muted" colSpan={3} style={{ paddingLeft: 24 }}>
                     ㄴ {line}

@@ -58,9 +58,9 @@ export function PriceHistoryPopover({
         이력
       </button>
       {open && (
-        <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
+        <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
           role="menu"
-          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 240, maxHeight: 280, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
+          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 240, maxHeight: 280, overflowY: "auto", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
         >
           {loading && (
             <div className="erp-u-muted erp-u-text-xs erp-u-pad-4-6">
@@ -74,9 +74,9 @@ export function PriceHistoryPopover({
           )}
           {!loading &&
             rows?.map((row) => (
-              <div className="erp-u-text-xs"
+              <div className="erp-u-text-xs erp-u-bb-border"
                 key={row.id}
-                style={{ padding: "6px", borderBottom: "1px solid var(--erp-border)" }}
+                style={{ padding: "6px" }}
               >
                 <div className="erp-u-muted">
                   {new Date(row.createdAt).toLocaleString("ko-KR")} · {row.actorName ?? "-"} ·{" "}

@@ -105,8 +105,8 @@ export function MobileItemEntryPanel({
                 key={pick.productId}
                 type="button"
                 onClick={() => onQuickAdd?.(pick.productId)}
-                className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left erp-u-text erp-u-border"
-                style={{ minHeight: 44, minWidth: 112, background: "var(--erp-selected)" }}
+                className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left erp-u-text erp-u-border erp-u-bg-selected"
+                style={{ minHeight: 44, minWidth: 112 }}
               >
                 <span className="text-xs font-bold">{pick.name}</span>
                 <span className="text-[10px] erp-u-muted">
@@ -154,8 +154,8 @@ export function MobileItemEntryPanel({
                   type="button"
                   onClick={() => onRemove(item.key)}
                   aria-label="품목 삭제"
-                  className="flex-shrink-0 rounded-sm text-xs erp-u-danger erp-u-bg-panel"
-                  style={{ width: 32, height: 32, border: "1px solid var(--erp-danger)" }}
+                  className="flex-shrink-0 rounded-sm text-xs erp-u-danger erp-u-bg-panel erp-u-border-danger"
+                  style={{ width: 32, height: 32 }}
                 >
                   ✕
                 </button>
@@ -254,8 +254,8 @@ export function MobileItemEntryPanel({
                 )}
               </div>
               {showPrice && (
-                <div className="flex items-center justify-between rounded-sm px-3 py-2" style={{ background: "var(--erp-info-bg)" }}>
-                  <span className="text-xs font-semibold" style={{ color: "var(--erp-info-text)" }}>
+                <div className="flex items-center justify-between rounded-sm px-3 py-2 erp-u-bg-info-bg">
+                  <span className="text-xs font-semibold erp-u-color-info-text">
                     금액
                   </span>
                   <span className="text-base font-bold erp-u-text">

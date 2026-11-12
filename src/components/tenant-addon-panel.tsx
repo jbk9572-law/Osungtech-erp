@@ -166,8 +166,8 @@ export function TenantAddonPanel({
         <FormMessage state={state} />
       </form>
 
-      <div className="erp-u-mt-s5"
-        style={{ paddingTop: "var(--erp-space-4)", borderTop: "1px solid var(--erp-divider)" }}
+      <div className="erp-u-mt-s5 erp-u-bt-divider"
+        style={{ paddingTop: "var(--erp-space-4)" }}
       >
         <p className="mb-2 text-xs font-bold erp-u-muted">
           부착된 애드온

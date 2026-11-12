@@ -644,7 +644,7 @@ export function ManualLayoutClient({
               가로/세로/수량을 입력하면 아래에 배치용 품목이 나타납니다.
             </p>
           ) : (
-            <div className="flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
+            <div className="flex flex-wrap items-center gap-2 border-t pt-3 erp-u-bc-border">
               {items.map((item) => {
                 const placedCount = placedCountForItem(sheets, item.name);
                 const maxCount = maxCountForItem(item);

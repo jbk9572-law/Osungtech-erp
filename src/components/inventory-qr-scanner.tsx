@@ -191,8 +191,8 @@ export function InventoryQrScanner({
           </span>
         </div>
         <div className="erp-detail-body">
-          <div className="erp-u-relative erp-u-w-full"
-            style={{ aspectRatio: "3 / 4", background: "var(--erp-bg-subtle)", borderRadius: 0, border: "2px solid var(--erp-primary)", overflow: "hidden" }}
+          <div className="erp-u-relative erp-u-w-full erp-u-bg-bg-subtle"
+            style={{ aspectRatio: "3 / 4", borderRadius: 0, border: "2px solid var(--erp-primary)", overflow: "hidden" }}
           >
             <video className="erp-u-w-full"
               ref={videoRef}
@@ -267,7 +267,7 @@ export function InventoryQrScanner({
               <div className="erp-u-flex erp-u-text erp-u-absolute erp-u-col"
                 style={{ left: 10, right: 10, bottom: 10, background: "rgba(255, 255, 255, 0.97)", borderRadius: 0, borderTop: "4px solid var(--erp-primary)", boxShadow: "var(--erp-shadow-lg)", overflow: "hidden", animation: "erp-sheet-in 220ms ease-out" }}
               >
-                <div style={{ width: 36, height: 4, borderRadius: 0, background: "var(--erp-border)", margin: "8px auto 2px" }} />
+                <div className="erp-u-bg-border" style={{ width: 36, height: 4, borderRadius: 0, margin: "8px auto 2px" }} />
                 <div style={{ padding: "6px 14px 12px" }}>
                   <div className="erp-u-muted erp-u-text-caption" style={{ marginBottom: 1 }}>{scanState.active.sku}</div>
                   <div className="erp-u-text-xl" style={{ fontWeight: 800 }}>{scanState.active.name}</div>

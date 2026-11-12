@@ -60,9 +60,9 @@ export default async function ApprovalDelegationsPage() {
             {delegations.map((d) => {
               const active = d.start_date <= today && today <= d.end_date;
               return (
-                <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none"
+                <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
                   key={d.id}
-                  style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px" }}
+                  style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px" }}
                 >
                   <div className="erp-u-minw-0">
                     <div className="erp-u-semibold erp-u-text erp-u-text-md">

@@ -105,8 +105,7 @@ export function PartySearchSelect({
         className="erp-input erp-u-w-full"
       />
       {!open && selected?.notes && (
-        <p className="erp-u-mt-4 erp-u-pad-4-8 erp-u-text-sm"
-          style={{ color: "var(--erp-info-text)", background: "var(--erp-info-bg)", border: "1px solid var(--erp-info-border)", borderRadius: "var(--erp-radius-sm, 0)" }}
+        <p className="erp-u-mt-4 erp-u-pad-4-8 erp-u-text-sm erp-u-color-info-text erp-u-bg-info-bg erp-u-border-info-border erp-u-radius-sm"
         >
           특이사항: {selected.notes}
         </p>

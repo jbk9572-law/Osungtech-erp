@@ -42,9 +42,9 @@ export function ColumnVisibilityMenu({
         컬럼 설정
       </button>
       {open && (
-        <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
+        <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
           role="menu"
-          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 160, maxHeight: 320, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
+          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 160, maxHeight: 320, overflowY: "auto", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
         >
           {options.map((opt) => (
             <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-pad-4-6 erp-u-text-sm erp-u-pointer"

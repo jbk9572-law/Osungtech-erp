@@ -52,8 +52,8 @@ export function PlatformPlanRow({
   const formId = `plan-form-${id}`;
 
   return (
-    <div className="erp-u-bg-panel erp-u-flex-none"
-      style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "14px 18px" }}
+    <div className="erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
+      style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "14px 18px" }}
     >
       <form id={formId} action={formAction}>
         <input type="hidden" name="id" value={id} />
@@ -210,8 +210,8 @@ export function PlatformPlanRow({
       </div>
 
       <div
-        className="flex items-center justify-between erp-u-mt-s3"
-        style={{ paddingTop: "var(--erp-space-2)", borderTop: "1px solid var(--erp-divider)" }}
+        className="flex items-center justify-between erp-u-mt-s3 erp-u-bt-divider"
+        style={{ paddingTop: "var(--erp-space-2)" }}
       >
         <FormMessage state={state} />
         <div className="flex items-center gap-1">

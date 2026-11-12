@@ -92,16 +92,11 @@ export default async function PlatformStatsPage() {
                   {monthlySignups.map((m) => (
                     <div key={m.month} className="flex items-center gap-2 erp-u-text-compact">
                       <span className="erp-u-muted" style={{ width: 56, flexShrink: 0 }}>{m.month}</span>
-                      <div className="erp-u-flex-1"
-                        style={{ background: "var(--erp-bg-subtle)", borderRadius: "var(--erp-comm-radius-sm)", overflow: "hidden", height: 16 }}
+                      <div className="erp-u-flex-1 erp-u-bg-bg-subtle"
+                        style={{ borderRadius: "var(--erp-comm-radius-sm)", overflow: "hidden", height: 16 }}
                       >
-                        <div
-                          style={{
-                            width: `${(m.count / maxCount) * 100}%`,
-                            background: "var(--erp-primary)",
-                            height: "100%",
-                            minWidth: m.count > 0 ? 4 : 0,
-                          }}
+                        <div className="erp-u-bg-primary"
+                          style={{ width: `${(m.count / maxCount) * 100}%`, height: "100%", minWidth: m.count > 0 ? 4 : 0 }}
                         />
                       </div>
                       <span className="erp-u-text-right" style={{ width: 32, flexShrink: 0 }}>{m.count}</span>

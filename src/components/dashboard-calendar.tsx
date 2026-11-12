@@ -828,11 +828,7 @@ function formatMonthDay(dateStr: string): string {
 function CarryoverBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
-      style={{
-        background: "var(--erp-warning-bg)",
-        color: "var(--erp-warning)",
-      }}
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold erp-u-bg-warning-bg erp-u-color-warning"
     >
       이월
     </span>
@@ -842,8 +838,7 @@ function CarryoverBadge() {
 function ReturnBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold erp-u-danger"
-      style={{ background: "var(--erp-danger-bg)" }}
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold erp-u-danger erp-u-bg-danger-bg"
     >
       반품
     </span>
@@ -1169,12 +1164,8 @@ export function DashboardCalendar({
             {(selectedData.carryoverInSales.length > 0 ||
               selectedData.carryoverInPurchases.length > 0) && (
               <div
-                className="mb-3 border-l-[3px] p-2 text-xs font-medium"
-                style={{
-                  borderLeftColor: "var(--erp-warning)",
-                  background: "var(--erp-warning-bg)",
-                  color: "var(--erp-warning)",
-                }}
+                className="mb-3 border-l-[3px] p-2 text-xs font-medium erp-u-bg-warning-bg erp-u-color-warning"
+                style={{ borderLeftColor: "var(--erp-warning)" }}
               >
                 {selectedData.carryoverInSales.map((e, i) => (
                   <p key={`s-${i}`} className="m-0">
@@ -1335,8 +1326,7 @@ export function DashboardCalendar({
                             blocks.push(
                               <div
                                 key={`${di}-grand`}
-                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)]"
-                                style={{ borderColor: "var(--erp-border)" }}
+                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)] erp-u-bc-border"
                               >
                                 <span className="min-w-0">
                                   입고합계 - {formatNumber(grand.quantity)}
@@ -1524,8 +1514,7 @@ export function DashboardCalendar({
                             blocks.push(
                               <div
                                 key={`${di}-grand`}
-                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)]"
-                                style={{ borderColor: "var(--erp-border)" }}
+                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)] erp-u-bc-border"
                               >
                                 <span className="min-w-0">
                                   출고합계 - {formatNumber(grand.quantity)}
@@ -1585,14 +1574,11 @@ export function DashboardCalendar({
                   {selectedData.calendarItems.map((item) => (
                     <li
                       key={item.id}
-                      className="border-l-[3px] p-1.5 text-xs"
-                      style={{
-                        borderLeftColor:
+                      className="border-l-[3px] p-1.5 text-xs erp-u-bg-bg-subtle"
+                      style={{ borderLeftColor:
                           item.source === "meeting"
                             ? "var(--erp-info-text)"
-                            : "var(--erp-warning)",
-                        background: "var(--erp-bg-subtle)",
-                      }}
+                            : "var(--erp-warning)" }}
                     >
                       <span className="font-semibold text-[var(--erp-text)]">
                         {item.title}
@@ -1666,8 +1652,7 @@ function NoteForm({
           {notes.map((note) => (
             <li key={note.id} className="flex items-start gap-2">
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold erp-u-text"
-                style={{ background: "var(--erp-selected)" }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold erp-u-text erp-u-bg-selected"
               >
                 {note.authorName.slice(0, 1)}
               </span>

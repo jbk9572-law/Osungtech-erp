@@ -33,8 +33,8 @@ export function OnboardingBanner() {
     <PageGuide className="mb-3 flex flex-wrap items-center gap-2">
       <span className="erp-u-bold">처음이신가요?</span>
       <span>
-        <kbd className="erp-u-bg-panel"
-          style={{ fontFamily: "inherit", border: "1px solid var(--erp-info-border)", borderRadius: 0, padding: "1px 5px" }}
+        <kbd className="erp-u-bg-panel erp-u-border-info-border"
+          style={{ fontFamily: "inherit", borderRadius: 0, padding: "1px 5px" }}
         >
           Ctrl+K
         </kbd>{" "}
@@ -44,8 +44,8 @@ export function OnboardingBanner() {
       <button
         type="button"
         onClick={dismiss}
-        className="ml-auto erp-u-bold"
-        style={{ color: "var(--erp-info-text)", opacity: 0.7 }}
+        className="ml-auto erp-u-bold erp-u-color-info-text"
+        style={{ opacity: 0.7 }}
         aria-label="안내 닫기"
       >
         ✕

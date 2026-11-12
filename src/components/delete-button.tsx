@@ -47,8 +47,7 @@ export function DeleteButton({
   return (
     <form
       action={formAction}
-      className="flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
-      style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
+      className="flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm erp-u-bc-border erp-u-bg-selected"
     >
       <input type="hidden" name="id" value={id} />
       <span className="erp-u-danger">{confirmMessage}</span>

@@ -104,10 +104,10 @@ export function LocationAllocationModal({
   }
 
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-justify-center erp-u-p-16"
+    <div className="erp-u-flex erp-u-items-center erp-u-justify-center erp-u-p-16 erp-u-bg-dialog-overlay-bg"
       role="alertdialog"
       aria-modal="true"
-      style={{ position: "fixed", inset: 0, background: "var(--erp-dialog-overlay-bg)", zIndex: 2000 }}
+      style={{ position: "fixed", inset: 0, zIndex: 2000 }}
     >
       <div className="erp-detail erp-u-mt-0 erp-u-flex erp-u-w-full erp-u-col" style={{ maxWidth: 520, maxHeight: "88vh" }}>
         <div className="erp-detail-tabs">
@@ -125,9 +125,8 @@ export function LocationAllocationModal({
             const sum = Object.values(values[item.groupKey] ?? {}).reduce((a, b) => a + b, 0);
             const ok = sum === item.quantity;
             return (
-              <div className="erp-u-mb-14 erp-u-p-10 erp-u-border"
+              <div className="erp-u-mb-14 erp-u-p-10 erp-u-border erp-u-radius-lg"
                 key={item.groupKey}
-                style={{ borderRadius: "var(--erp-radius-lg, 0)" }}
               >
                 <div className="erp-u-flex erp-u-justify-between erp-u-gap-8 erp-u-mb-6" style={{ alignItems: "baseline" }}>
                   <div className="erp-u-bold erp-u-flex erp-u-items-center erp-u-gap-6" style={{ fontSize: 13.5 }}>
@@ -176,7 +175,7 @@ export function LocationAllocationModal({
             );
           })}
         </div>
-        <div className="erp-u-flex erp-u-gap-8 erp-u-pad-10-14" style={{ borderTop: "1px solid var(--erp-border)" }}>
+        <div className="erp-u-flex erp-u-gap-8 erp-u-pad-10-14 erp-u-bt-border">
           <button type="button" className="erp-btn erp-u-flex-1" onClick={onCancel}>
             취소
           </button>

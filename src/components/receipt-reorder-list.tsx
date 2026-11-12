@@ -63,15 +63,15 @@ export function ReceiptReorderList({
       {order.map((receipt, index) => (
         <li
           key={receipt.id}
-          className="flex flex-col items-center gap-1 rounded-sm border p-2"
-          style={{ borderColor: "var(--erp-border)", width: 108 }}
+          className="flex flex-col items-center gap-1 rounded-sm border p-2 erp-u-bc-border"
+          style={{ width: 108 }}
         >
           <a href={receipt.file_url ?? "#"} target="_blank" rel="noopener noreferrer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <img className="erp-u-radius-lg"
               src={receipt.file_url ?? ""}
               alt={`영수증 ${index + 1}`}
-              style={{ width: 88, height: 88, objectFit: "cover", borderRadius: "var(--erp-radius-lg, 0)" }}
+              style={{ width: 88, height: 88, objectFit: "cover" }}
             />
           </a>
           <span className="text-[11px] erp-u-muted">

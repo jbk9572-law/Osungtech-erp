@@ -252,7 +252,7 @@ export default async function TodosPage({
             )}
           </div>
           {!keyword && hasMore && (
-            <div style={{ padding: "var(--erp-space-3)", borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-bt-border" style={{ padding: "var(--erp-space-3)" }}>
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}건)
               </Link>

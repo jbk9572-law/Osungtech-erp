@@ -213,7 +213,7 @@ export default async function LotLookupPage({
                         </td>
                         <td>{h.purchase_orders?.suppliers?.name ?? "-"}</td>
                         <td>{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</td>
-                        <td className="num erp-u-bold" style={{ color: "var(--erp-success)" }}>
+                        <td className="num erp-u-bold erp-u-color-success">
                           {formatNumber(Number(h.quantity))}
                         </td>
                       </tr>
@@ -252,7 +252,7 @@ export default async function LotLookupPage({
                       </div>
                       <div className="erp-row-card-foot">
                         <span className="erp-row-card-item">{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</span>
-                        <span className="erp-row-card-amount" style={{ color: "var(--erp-success)" }}>
+                        <span className="erp-row-card-amount erp-u-color-success">
                           {formatNumber(Number(h.quantity))}
                         </span>
                       </div>

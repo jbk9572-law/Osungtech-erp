@@ -483,8 +483,7 @@ export function PaperCalcClient({
               </div>
 
               <div
-                className="flex flex-wrap items-end gap-4 border-t pt-3"
-                style={{ borderColor: "var(--erp-border)" }}
+                className="flex flex-wrap items-end gap-4 border-t pt-3 erp-u-bc-border"
               >
                 <div className="erp-field">
                   <label htmlFor="pc-paper-w">
@@ -1005,11 +1004,8 @@ export function BatchCard({
 
   return (
     <div
-      className="rounded border p-3"
-      style={{
-        borderColor: "var(--erp-border)",
-        background: DIAGRAM_COLORS.cardBg,
-      }}
+      className="rounded border p-3 erp-u-bc-border"
+      style={{ background: DIAGRAM_COLORS.cardBg }}
     >
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
       <div

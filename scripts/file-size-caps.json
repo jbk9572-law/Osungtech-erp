@@ -2,11 +2,11 @@
   "app/(dashboard)/dashboard/page.tsx": 867,
   "app/(dashboard)/hr/actions.ts": 906,
   "app/platform-admin/actions.ts": 862,
-  "components/dashboard-calendar.tsx": 1766,
+  "components/dashboard-calendar.tsx": 1751,
   "components/erp/messenger-page.tsx": 940,
   "components/new-purchase-form.tsx": 1599,
-  "components/new-sale-form.tsx": 1575,
+  "components/new-sale-form.tsx": 1573,
   "modules/paper-calc/components/manual-layout-client.tsx": 970,
-  "modules/paper-calc/components/paper-calc-client.tsx": 1254,
+  "modules/paper-calc/components/paper-calc-client.tsx": 1250,
   "modules/paper-calc/lib/paper-nest-engine.ts": 1280
 }

@@ -208,7 +208,7 @@ export async function ApprovalDetailPanel({
                     </span>
                   )}
                   {pendingDelegation && (
-                    <span className="text-xs" style={{ color: "var(--erp-info-text)" }}>
+                    <span className="text-xs erp-u-color-info-text">
                       (지금 {pendingDelegation.profiles?.full_name ?? "대리인"}이 대리 결재 중)
                     </span>
                   )}

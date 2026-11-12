@@ -36,8 +36,7 @@ export function BulkDeleteBar({
   return (
     <form
       action={formAction}
-      className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
-      style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
+      className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm erp-u-bc-border erp-u-bg-selected"
     >
       <input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
       <span className="erp-u-semibold">{selectedIds.length}건 선택됨</span>

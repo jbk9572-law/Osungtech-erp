@@ -112,13 +112,13 @@ export function QuickAddProductSearch({
             pick(results[highlight].id);
           }
         }}
-        className="erp-input erp-u-w-full"
-        style={{ paddingLeft: 26, paddingRight: showEnterBadge ? 56 : undefined, borderColor: "var(--erp-primary)", background: "var(--erp-info-bg)" }}
+        className="erp-input erp-u-w-full erp-u-bc-primary erp-u-bg-info-bg"
+        style={{ paddingLeft: 26, paddingRight: showEnterBadge ? 56 : undefined }}
       />
       {showEnterBadge && (
-        <span className="erp-u-items-center erp-u-bold erp-u-absolute erp-u-inline-flex erp-u-gap-2 erp-u-pad-2-6 erp-u-text-xs"
+        <span className="erp-u-items-center erp-u-bold erp-u-absolute erp-u-inline-flex erp-u-gap-2 erp-u-pad-2-6 erp-u-text-xs erp-u-bg-info-bg erp-u-color-info-text"
           aria-hidden
-          style={{ top: "50%", right: 6, transform: "translateY(-50%)", borderRadius: 999, background: "var(--erp-info-bg)", color: "var(--erp-info-text)", pointerEvents: "none" }}
+          style={{ top: "50%", right: 6, transform: "translateY(-50%)", borderRadius: 999, pointerEvents: "none" }}
         >
           ⏎ 추가
         </span>

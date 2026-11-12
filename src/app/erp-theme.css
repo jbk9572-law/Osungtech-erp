@@ -36,6 +36,40 @@
 .erp-u-h-24 { height: var(--erp-control-h-xs) !important; }
 .erp-u-h-26 { height: var(--erp-control-h-sm) !important; }
 .erp-u-pad-0-8 { padding: 0 8px !important; }
+.erp-u-bb-border { border-bottom: 1px solid var(--erp-border) !important; }
+.erp-u-bb-divider { border-bottom: 1px solid var(--erp-divider) !important; }
+.erp-u-bc-border { border-color: var(--erp-border) !important; }
+.erp-u-bc-primary { border-color: var(--erp-primary) !important; }
+.erp-u-bg-bg-subtle { background: var(--erp-bg-subtle) !important; }
+.erp-u-bg-border { background: var(--erp-border) !important; }
+.erp-u-bg-border-strong { background: var(--erp-border-strong) !important; }
+.erp-u-bg-danger { background: var(--erp-danger) !important; }
+.erp-u-bg-danger-bg { background: var(--erp-danger-bg) !important; }
+.erp-u-bg-dialog-overlay-bg { background: var(--erp-dialog-overlay-bg) !important; }
+.erp-u-bg-divider { background: var(--erp-divider) !important; }
+.erp-u-bg-hover { background: var(--erp-hover) !important; }
+.erp-u-bg-info-bg { background: var(--erp-info-bg) !important; }
+.erp-u-bg-info-border { background: var(--erp-info-border) !important; }
+.erp-u-bg-lightbox-btn-bg { background: var(--erp-lightbox-btn-bg) !important; }
+.erp-u-bg-primary { background: var(--erp-primary) !important; }
+.erp-u-bg-selected { background: var(--erp-selected) !important; }
+.erp-u-bg-success-bg { background: var(--erp-success-bg) !important; }
+.erp-u-bg-warning-bg { background: var(--erp-warning-bg) !important; }
+.erp-u-border-comm-border { border: 1px solid var(--erp-comm-border) !important; }
+.erp-u-border-danger { border: 1px solid var(--erp-danger) !important; }
+.erp-u-border-danger-border { border: 1px solid var(--erp-danger-border) !important; }
+.erp-u-border-divider { border: 1px solid var(--erp-divider) !important; }
+.erp-u-border-info-border { border: 1px solid var(--erp-info-border) !important; }
+.erp-u-border-success-border { border: 1px solid var(--erp-success-border) !important; }
+.erp-u-bt-border { border-top: 1px solid var(--erp-border) !important; }
+.erp-u-bt-divider { border-top: 1px solid var(--erp-divider) !important; }
+.erp-u-color-info-text { color: var(--erp-info-text) !important; }
+.erp-u-color-primary { color: var(--erp-primary) !important; }
+.erp-u-color-success { color: var(--erp-success) !important; }
+.erp-u-color-warning { color: var(--erp-warning) !important; }
+.erp-u-radius-lg { border-radius: var(--erp-radius-lg, 0) !important; }
+.erp-u-radius-sm { border-radius: var(--erp-radius-sm, 0) !important; }
+.erp-u-radius-xl { border-radius: var(--erp-radius-xl, 0) !important; }
 .erp-u-absolute { position: absolute !important; }
 .erp-u-bg-page { background: var(--erp-bg) !important; }
 .erp-u-bg-panel { background: var(--erp-panel) !important; }

@@ -39,8 +39,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
   return (
     <form
       action={formAction}
-      className="erp-detail-body grid grid-cols-1 gap-4 md:grid-cols-2 erp-u-border"
-      style={{ borderRadius: "var(--erp-radius-xl, 0)" }}
+      className="erp-detail-body grid grid-cols-1 gap-4 md:grid-cols-2 erp-u-border erp-u-radius-xl"
     >
       <div>
         <label htmlFor="cp-name" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">상호명</label>
@@ -148,7 +147,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           className="erp-input erp-u-w-full"
         />
       </div>
-      <div className="md:col-span-2 erp-u-mt-4" style={{ borderTop: "1px solid var(--erp-border)", paddingTop: 12 }}>
+      <div className="md:col-span-2 erp-u-mt-4 erp-u-bt-border" style={{ paddingTop: 12 }}>
         <span className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">
           사무실 위치 (근태 GPS 확인 기준)
         </span>

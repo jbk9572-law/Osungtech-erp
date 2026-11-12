@@ -53,9 +53,9 @@ export function FailureLogListBody({ rows }: { rows: FailureLogRow[] }) {
 
       <div className="erp-card-feed erp-u-minw-0">
         {visibleRows.map((r) => (
-          <div className="erp-u-flex erp-u-col erp-u-gap-4 erp-u-bg-panel erp-u-flex-none"
+          <div className="erp-u-flex erp-u-col erp-u-gap-4 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
             key={r.id}
-            style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px" }}
+            style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px" }}
           >
             <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5">
               <div className="erp-u-flex erp-u-items-center erp-u-minw-0 erp-u-gap-s2">

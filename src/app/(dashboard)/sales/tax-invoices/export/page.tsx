@@ -108,7 +108,7 @@ export default async function TaxInvoiceExportPage({
           </div>
           <div className="erp-detail-body erp-u-flex erp-u-gap-6 erp-u-text-base erp-u-col">
             {formatIssues.map(({ invoice, errors }) => (
-              <div key={invoice.salesOrderId} style={{ borderBottom: "1px solid var(--erp-border)", paddingBottom: 6 }}>
+              <div className="erp-u-bb-border" key={invoice.salesOrderId} style={{ paddingBottom: 6 }}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="erp-u-muted">{invoice.issueDate}</span>
                   <span>{invoice.customerName}</span>

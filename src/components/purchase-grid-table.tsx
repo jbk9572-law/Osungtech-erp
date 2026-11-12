@@ -375,7 +375,7 @@ export function PurchaseGridTable({
           {isPayment ? (
             "-"
           ) : row.invoiceReceived ? (
-            <span className="erp-u-bold" style={{ color: "var(--erp-success)" }}>✓ 수취</span>
+            <span className="erp-u-bold erp-u-color-success">✓ 수취</span>
           ) : (
             <span className="erp-u-muted">미수취</span>
           )}

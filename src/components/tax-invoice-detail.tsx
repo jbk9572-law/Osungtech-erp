@@ -232,7 +232,7 @@ export function TaxInvoiceDetail({
           </div>
           <div className="erp-detail-body erp-u-flex erp-u-text-base erp-u-col erp-u-gap-10">
             {corrections.map((c) => (
-              <div key={c.id} style={{ borderBottom: "1px solid var(--erp-border)", paddingBottom: 8 }}>
+              <div className="erp-u-bb-border" key={c.id} style={{ paddingBottom: 8 }}>
                 <div className="flex flex-wrap items-center gap-2">
                   <GridBadge tone="info">
                     {c.modification_reason ? MODIFICATION_REASON_LABEL[c.modification_reason] ?? c.modification_reason : "-"}

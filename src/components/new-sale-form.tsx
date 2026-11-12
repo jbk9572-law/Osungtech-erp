@@ -1089,8 +1089,8 @@ export function NewSaleForm({
           <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
           <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
-            <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md"
-              style={{ height: 34, borderRadius: "var(--erp-radius-lg, 0)", background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}` }}
+            <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg"
+              style={{ height: 34, background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}` }}
             >
               <input
                 type="checkbox"
@@ -1198,11 +1198,10 @@ export function NewSaleForm({
           </div>
 
           {purchaseCandidates !== null && (
-            <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
-              style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-md)" }}
+            <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
+              style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", boxShadow: "var(--erp-shadow-md)" }}
             >
-              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact"
-                style={{ borderBottom: "1px solid var(--erp-border)" }}
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact erp-u-bb-border"
               >
                 <span>{purchaseLookupDate} 입고 품목</span>
                 <button
@@ -1222,9 +1221,8 @@ export function NewSaleForm({
                   const added = addedPurchaseItemIds.has(item.id);
                   const isAdding = addingItemId === item.id;
                   return (
-                    <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact"
+                    <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact erp-u-bb-divider"
                       key={item.id}
-                      style={{ borderBottom: "1px solid var(--erp-divider)" }}
                     >
                       <div className="erp-u-minw-0">
                         <div className="erp-u-semibold">

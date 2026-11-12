@@ -21,11 +21,10 @@ export function TodoImportPopover({
   onClose: () => void;
 }) {
   return (
-    <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
-      style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-md)" }}
+    <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
+      style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", boxShadow: "var(--erp-shadow-md)" }}
     >
-      <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact"
-        style={{ borderBottom: "1px solid var(--erp-border)" }}
+      <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact erp-u-bb-border"
       >
         <span>완료 안 한 할 일</span>
         <button
@@ -46,9 +45,8 @@ export function TodoImportPopover({
           const isImporting = importingId === todo.id;
       const counterpartName = side === "sale" ? todo.customer_name : todo.supplier_name;
           return (
-            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact"
+            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact erp-u-bb-divider"
               key={todo.id}
-              style={{ borderBottom: "1px solid var(--erp-divider)" }}
             >
               <div className="erp-u-minw-0">
                 <div className="erp-u-semibold">

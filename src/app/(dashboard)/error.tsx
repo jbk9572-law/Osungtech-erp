@@ -44,8 +44,8 @@ export default function DashboardError({
           아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 아래 내용과 함께 운영자에게 알려주세요.
         </p>
         {(error.message || error.digest) && (
-          <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20"
-            style={{ fontFamily: "monospace", background: "var(--erp-bg-subtle)", borderRadius: 0, wordBreak: "break-word", textAlign: "left" }}
+          <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle"
+            style={{ fontFamily: "monospace", borderRadius: 0, wordBreak: "break-word", textAlign: "left" }}
           >
             {error.message || "(메시지 없음)"}
             {error.digest && (

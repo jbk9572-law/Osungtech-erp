@@ -70,7 +70,7 @@ export default async function SupportPage() {
               {(tickets ?? []).map((t) => {
                 const status = resolveStatusLabel(STATUS_LABEL, t.status);
                 return (
-                  <div key={t.id} className="rounded border p-3" style={{ borderColor: "var(--erp-border)" }}>
+                  <div key={t.id} className="rounded border p-3 erp-u-bc-border">
                     <div className="mb-1 flex items-center justify-between gap-2">
                       <span className="text-sm font-bold">
                         #{t.doc_no} {t.subject}

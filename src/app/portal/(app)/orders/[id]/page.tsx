@@ -104,11 +104,11 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               const { steps: trackSteps } = buildTrackStages(order);
               return (
                 <div className="erp-u-relative" style={{ padding: "6px 4px 2px" }}>
-                  <div className="erp-u-absolute"
-                    style={{ top: 17, left: `calc(100% / ${trackSteps.length} / 2)`, right: `calc(100% / ${trackSteps.length} / 2)`, height: 2, background: "var(--erp-border-strong)" }}
+                  <div className="erp-u-absolute erp-u-bg-border-strong"
+                    style={{ top: 17, left: `calc(100% / ${trackSteps.length} / 2)`, right: `calc(100% / ${trackSteps.length} / 2)`, height: 2 }}
                   />
-                  <div className="erp-u-absolute"
-                    style={{ top: 17, left: `calc(100% / ${trackSteps.length} / 2)`, height: 2, background: "var(--erp-primary)", width: `calc(100% / ${trackSteps.length} * ${Math.max(0, trackSteps.filter((s) => s.filled).length - 1)})` }}
+                  <div className="erp-u-absolute erp-u-bg-primary"
+                    style={{ top: 17, left: `calc(100% / ${trackSteps.length} / 2)`, height: 2, width: `calc(100% / ${trackSteps.length} * ${Math.max(0, trackSteps.filter((s) => s.filled).length - 1)})` }}
                   />
                   <div className="erp-u-relative erp-u-flex">
                     {trackSteps.map((s) => (

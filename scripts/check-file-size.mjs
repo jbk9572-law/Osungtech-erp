@@ -42,7 +42,7 @@ if (problems.length) {
   process.exit(1);
 }
 if (shrunk.length) {
-  console.error("줄었습니다. 상한을 낮추세요(node scripts/check-file-size.mjs --write):\n" + shrunk.map((p) => "  - " + p).join("\n"));
-  process.exit(1);
+  // 줄어든 것은 실패가 아니라 안내만 한다(상한을 낮춰 두면 다시 커지는 것을 막을 수 있다).
+  console.log("줄었습니다 — 상한을 낮춰 고정하려면 node scripts/check-file-size.mjs --write:\n" + shrunk.map((p) => "  - " + p).join("\n"));
 }
 console.log(`파일 크기 검사 통과 (${MAX_LINES}줄 초과 파일 ${Object.keys(sizes).length}개, 모두 상한 이내)`);

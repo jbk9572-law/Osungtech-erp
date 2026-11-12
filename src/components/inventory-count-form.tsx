@@ -163,7 +163,7 @@ export function InventoryCountForm({
   }
 
   return (
-    <div className="erp-detail erp-u-mt-0" style={{ borderColor: "var(--erp-primary)" }}>
+    <div className="erp-detail erp-u-mt-0 erp-u-bc-primary">
       <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 6 }}>
         <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
           진행 중인 실사
@@ -243,7 +243,7 @@ export function InventoryCountForm({
         </div>
       </div>
       {hasUnexplainedLargeDiff && (
-        <p className="mt-1 text-[11px]" style={{ color: "var(--erp-warning)" }}>
+        <p className="mt-1 text-[11px] erp-u-color-warning">
           ⚠ 확인 필요로 표시된 품목이 있는데 사유를 안 적었습니다. 저장 버튼을 한 번 더 누르면 그대로
           저장됩니다.
         </p>
@@ -272,11 +272,10 @@ export function InventoryCountForm({
       <FormMessage state={state} />
       {savedSummary && savedSummary.length > 0 && (
         <div
-          className="rounded p-2 text-xs erp-u-mt-8"
-          style={{ background: "var(--erp-success-bg)", border: "1px solid var(--erp-success-border)" }}
+          className="rounded p-2 text-xs erp-u-mt-8 erp-u-bg-success-bg erp-u-border-success-border"
         >
           <div className="mb-2 flex items-center justify-between">
-            <strong style={{ color: "var(--erp-success)" }}>
+            <strong className="erp-u-color-success">
               이번 실사에서 {savedSummary.length}개 품목이 조정되었습니다.
             </strong>
             <button

@@ -188,7 +188,7 @@ export default async function MonthlyReportCompanyPage({
               const first = group.items[0];
               return (
                 <Fragment key={group.key}>
-                  <tr style={{ background: "var(--erp-bg-subtle)" }}>
+                  <tr className="erp-u-bg-bg-subtle">
                     <td className="erp-u-bold" colSpan={4}>
                       {first.productName}
                       {first.spec !== "-" && (

@@ -425,7 +425,7 @@ export function SalesGridTable({
           {isCollection ? (
             "-"
           ) : row.invoiceStatus === "issued" ? (
-            <span className="erp-u-bold" style={{ color: "var(--erp-success)" }}>✓ 발행</span>
+            <span className="erp-u-bold erp-u-color-success">✓ 발행</span>
           ) : canQuickIssue ? (
             // 아이콘(₩ 표시)으로는 "세금계산서"라는 걸 못 알아보겠다는
             // 지적 — 글자로 바로 보여준다. 상태 그대로("미발행")

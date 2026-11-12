@@ -152,7 +152,7 @@ export default async function PlatformAdminPage({
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">이번 달 가입</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-success)" }}>
+          <div className="erp-kpi-value erp-u-color-success">
             {formatNumber(stats?.monthlySignups.at(-1)?.count ?? 0)}개
           </div>
         </div>

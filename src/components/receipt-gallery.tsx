@@ -56,8 +56,8 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
             <button
               type="button"
               onClick={() => setOpenIndex(index)}
-              className="block overflow-hidden rounded-sm border p-0"
-              style={{ borderColor: "var(--erp-border)", width: 88, height: 88 }}
+              className="block overflow-hidden rounded-sm border p-0 erp-u-bc-border"
+              style={{ width: 88, height: 88 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="erp-u-w-full"
@@ -99,8 +99,7 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
                 type="button"
                 onClick={() => go(-1)}
                 aria-label="이전 영수증"
-                className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white"
-                style={{ background: "var(--erp-lightbox-btn-bg)" }}
+                className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white erp-u-bg-lightbox-btn-bg"
               >
                 ‹
               </button>
@@ -116,8 +115,7 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
                 type="button"
                 onClick={() => go(1)}
                 aria-label="다음 영수증"
-                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white"
-                style={{ background: "var(--erp-lightbox-btn-bg)" }}
+                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-white erp-u-bg-lightbox-btn-bg"
               >
                 ›
               </button>

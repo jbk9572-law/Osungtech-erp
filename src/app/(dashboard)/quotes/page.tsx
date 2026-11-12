@@ -180,7 +180,7 @@ export default async function QuotesPage({
             )}
           </div>
           {hasMore && (
-            <div className="erp-u-p-8" style={{ borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-p-8 erp-u-bt-border">
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
               </Link>

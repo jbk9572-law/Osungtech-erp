@@ -184,7 +184,7 @@ export function CalendarMonthView({
           ) : (
             <ul className="flex flex-col gap-2">
               {selectedItems.map((item) => (
-                <li key={item.id} className="border-l-[3px] p-2 text-xs" style={{ borderLeftColor: item.source === "meeting" ? "var(--erp-primary)" : "var(--erp-warning)", background: "var(--erp-bg-subtle)" }}>
+                <li key={item.id} className="border-l-[3px] p-2 text-xs erp-u-bg-bg-subtle" style={{ borderLeftColor: item.source === "meeting" ? "var(--erp-primary)" : "var(--erp-warning)" }}>
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-semibold text-[var(--erp-text)]">{item.title}</span>
                     {canEdit(item) && (

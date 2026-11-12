@@ -594,7 +594,7 @@ async function SalesPage({
         <PageGuide tone="info" className="mb-2">
           이번 달 매출 실적(리포트 기준) = 신규 {formatNumber(totalSupply)}원 + 전월 이월{" "}
           {formatNumber(carryoverSupplyTotal)}원 ={" "}
-          <strong style={{ color: "var(--erp-primary)" }}>{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
+          <strong className="erp-u-color-primary">{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
           — 전월 이월분은 아래 목록 합계(날짜 기준)에는 포함되지 않고, 별도 구간으로만 표시됩니다.
         </PageGuide>
       )}
