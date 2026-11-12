@@ -1,3 +1,5 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 // 품목 그리드 칸 헤더 — 칸 오른쪽 경계에 드래그 손잡이를 같이 넣어서 마우스로 끌어
