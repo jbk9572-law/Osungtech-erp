@@ -1999,6 +1999,44 @@ form.erp-field-grid {
   box-shadow: inset 3px 0 0 var(--erp-primary);
 }
 
+/* 전월 이월건 행 — 호박(앰버) 계열로 통째로 칠해서 오늘(초록)/선택(파랑)과
+   색 자체가 겹치지 않게 한다. 스티키 칸은 인라인 background라 !important. */
+.erp-grid tbody tr.row-carryover:not(.selected):not(.master-active) > td {
+  background: var(--erp-warning-bg) !important;
+}
+
+/* 목록 그리드의 "오늘"/"예약(미래 날짜)" 행 구분 — src/lib/row-day.ts.
+   오늘은 초록 계열 배경+왼쪽 띠, 예약(미래 날짜)은 회색 배경+띠 + "MM.DD 예약"(이월과 같은 방식). 글자 뱃지는
+   날짜 칸이 늘어나 보기 싫다는 지적으로 쓰지 않는다(띠가 색 외의 단서). 선택(.selected)/
+   아코디언 열림(.master-active)이 항상 우선한다. 스티키 칸(td)은 인라인
+   background를 갖고 있어 !important로만 덮을 수 있다. */
+.erp-grid tbody tr.day-today:not(.selected):not(.master-active) > td {
+  background: var(--erp-success-bg) !important;
+}
+.erp-grid tbody tr.day-today:not(.selected):not(.master-active) > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-success);
+}
+.erp-grid tbody tr.day-future:not(.selected):not(.master-active) > td {
+  background: var(--erp-bg) !important;
+}
+.erp-grid tbody tr.day-future:not(.selected):not(.master-active) > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-border-strong);
+}
+.erp-row-card.row-carryover:not(.selected) {
+  background: var(--erp-warning-bg);
+  border-color: var(--erp-warning-border, var(--erp-border-strong));
+  box-shadow: inset 4px 0 0 var(--erp-warning);
+}
+.erp-row-card.day-today:not(.selected) {
+  background: var(--erp-success-bg);
+  border-color: var(--erp-success-border);
+  box-shadow: inset 4px 0 0 var(--erp-success);
+}
+.erp-row-card.day-future:not(.selected) {
+  background: var(--erp-bg);
+  box-shadow: inset 4px 0 0 var(--erp-border-strong);
+}
+
 /* 아코디언으로 펼쳐진 품목내역을 담는 행(.erp-grid-accordion-row) —
    일반 데이터 행이 아니라 그 안에 패널을 담는 그릇일 뿐이라, 클릭 가능한
    행처럼 보이는 포인터 커서/줄무늬/호버 배경을 전부 뺀다. */
