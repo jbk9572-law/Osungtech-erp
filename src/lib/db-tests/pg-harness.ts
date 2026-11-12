@@ -140,6 +140,43 @@ create table public.inventory_transactions (
 );
 `;
 
+// 회사별 데이터 분리(RLS) 검증용 — 운영 마이그레이션 099가 만드는 "restrictive"
+// 격리 정책의 정의를 파일에서 그대로 읽어와(복사본이 아니라) 핵심 테이블에 걸고,
+// 일반 사용자 역할(authenticated)로 전환해서 실행한다. 테이블 소유자/슈퍼유저는
+// RLS를 우회하므로 반드시 역할을 바꿔야 한다.
+const RLS_TABLES = [
+  "customers", "suppliers", "products", "sales_orders", "sales_order_items",
+  "purchase_orders", "purchase_order_items", "inventory_transactions", "fifo_consumptions",
+];
+
+function isolationPolicyClause(): string {
+  const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, "00000000000099_multi_tenant_isolation.sql"), "utf8");
+  const m = sql.match(/as restrictive for all using \((tenant_id = public\.current_tenant_id\(\))\) with check \((tenant_id = public\.current_tenant_id\(\))\)/);
+  if (!m) throw new Error("마이그레이션 099에서 격리 정책 정의를 찾지 못했습니다.");
+  return `as restrictive for all using (${m[1]}) with check (${m[2]})`;
+}
+
+export async function enableRowLevelSecurity(db: PGlite): Promise<void> {
+  // customers/suppliers에는 tenant_id가 없어서 추가한다(운영은 099가 추가).
+  await db.exec(`
+    alter table public.customers add column tenant_id uuid default public.current_tenant_id();
+    alter table public.suppliers add column tenant_id uuid default public.current_tenant_id();
+    alter table public.products add column tenant_id uuid default public.current_tenant_id();
+    create role authenticated;
+    grant usage on schema public, auth to authenticated;
+    grant all on all tables in schema public to authenticated;
+    grant all on all sequences in schema public to authenticated;
+  `);
+  const clause = isolationPolicyClause();
+  for (const t of RLS_TABLES) {
+    await db.exec(`
+      alter table public.${t} enable row level security;
+      create policy ${t}_allow_authenticated on public.${t} for all using (true) with check (true);
+      create policy ${t}_tenant_isolation on public.${t} ${clause};
+    `);
+  }
+}
+
 export type Harness = {
   db: PGlite;
   /** 테스트 사용자(관리자/일반)로 로그인한 상태로 쿼리를 실행한다. */
