@@ -14,8 +14,11 @@ import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
-import { formatNumber } from "@/lib/format-number";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
+import { formatNumber } from "@/lib/format-number";
+import { canViewPage } from "@/lib/department-page-access";
+import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
+import type { ReportMoney } from "@/components/daily-report-box";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -96,7 +99,6 @@ async function DashboardPage({
   ]);
 
   const [
-    { count: productCount },
     salesItems,
     purchaseItems,
     carryoverWorkSales,
@@ -113,7 +115,6 @@ async function DashboardPage({
     notifications,
     stockLookupProductRows,
   ] = await Promise.all([
-    supabase.from("products").select("*", { count: "exact", head: true }),
     // 매출/매입 라인아이템은 거래량이 많은 테넌트에서 한 달에 PostgREST
     // 기본 max_rows(1000)를 쉽게 넘을 수 있어, 메인 대시보드 집계가
     // 조용히 과소 집계되는 걸 막으려고 fetchAllRows로 끝까지 받는다
@@ -659,6 +660,45 @@ async function DashboardPage({
 
   const weeks = buildWeeks(year, month);
 
+  // "오늘 리포트" 박스의 수금·지급·잔액. 부서별 화면 접근 권한(미수금현황/미지급금현황)을
+  // 그대로 따른다 — 권한 없는 쪽은 null로 내려 박스가 그 칸을 그리지 않는다.
+  const [canSeeReceivables, canSeePayables] = await Promise.all([
+    canViewPage(supabase, "/receivables"),
+    canViewPage(supabase, "/payables"),
+  ]);
+  const sumPaymentsByDate = (rows: { paid_at: string; amount: string | number }[]) => {
+    const byDate: Record<string, number> = {};
+    for (const row of rows) byDate[row.paid_at] = (byDate[row.paid_at] ?? 0) + Number(row.amount);
+    return byDate;
+  };
+  const [collectedRows, paidRows, customerBalances, supplierBalances] = await Promise.all([
+    canSeeReceivables
+      ? fetchAllRows<{ paid_at: string; amount: string | number }>((from, to) =>
+          supabase.from("customer_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to),
+        )
+      : Promise.resolve(null),
+    canSeePayables
+      ? fetchAllRows<{ paid_at: string; amount: string | number }>((from, to) =>
+          supabase.from("supplier_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to),
+        )
+      : Promise.resolve(null),
+    canSeeReceivables ? getAllCustomerBalances(supabase) : Promise.resolve(null),
+    canSeePayables ? getAllSupplierBalances(supabase) : Promise.resolve(null),
+  ]);
+  const reportMoney: ReportMoney | null =
+    canSeeReceivables || canSeePayables
+      ? {
+          collectedByDate: collectedRows ? sumPaymentsByDate(collectedRows) : null,
+          paidByDate: paidRows ? sumPaymentsByDate(paidRows) : null,
+          receivable: customerBalances
+            ? { amount: sumOutstandingBalance(customerBalances), parties: customerBalances.filter((b) => b.balance > 0).length }
+            : null,
+          payable: supplierBalances
+            ? { amount: sumOutstandingBalance(supplierBalances), parties: supplierBalances.filter((b) => b.balance > 0).length }
+            : null,
+        }
+      : null;
+
   // 오늘 매출/매입, 재고위험 건수는 전부 바로 아래 달력 옆 "오늘의 업무"
   // 패널과 "재고위험" 패널에 이미 자세히 나오는 정보라, 요약 카드에는
   // 그 두 패널에는 없는(달력은 하루치만 보여줌) 이번달 누계만 둔다.
@@ -723,24 +763,6 @@ async function DashboardPage({
           )}
         </div>
       )}
-      <div className="erp-hero-row">
-        <div className="erp-hero-card" style={{ borderLeftColor: "var(--erp-success)" }}>
-          <div className="erp-hero-label">이번달 매출</div>
-          <div className="erp-hero-value">
-            {monthSalesCount}건 · {formatNumber(monthSalesTotal)}원
-          </div>
-        </div>
-        <div className="erp-hero-card">
-          <div className="erp-hero-label">이번달 매입</div>
-          <div className="erp-hero-value">
-            {monthPurchaseCount}건 · {formatNumber(monthPurchaseTotal)}원
-          </div>
-        </div>
-        <div className="erp-hero-card">
-          <div className="erp-hero-label">전체 품목 수</div>
-          <div className="erp-hero-value">{formatNumber((productCount ?? 0))}개</div>
-        </div>
-      </div>
       <div className="erp-home">
       <div className="erp-u-flex" style={{ flexDirection: "column", gap: 16 }}>
         <QuickStockLookup products={stockLookupProducts} />
@@ -826,6 +848,14 @@ async function DashboardPage({
         paperStockProductName={paperStockProduct?.name ?? "모조지"}
         currentUserId={currentUserId}
         isAdmin={isAdmin}
+        reportMoney={reportMoney}
+        monthTotals={{
+          salesCount: monthSalesCount,
+          salesTotal: monthSalesTotal,
+          purchaseCount: monthPurchaseCount,
+          purchaseTotal: monthPurchaseTotal,
+        }}
+        lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
       />
       </div>
     </>
