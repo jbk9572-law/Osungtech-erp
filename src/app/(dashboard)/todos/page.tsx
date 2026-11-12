@@ -9,7 +9,7 @@ import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows, fetchLimitedRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { isUuid } from "@/lib/is-uuid";
-import { isPaperCalcEnabled } from "@/modules/paper-calc/lib/paper-calc-sync";
+import { isPaperCalcEnabled } from "@/modules/paper-calc/public";
 import { createTodo } from "@/app/(dashboard)/todos/actions";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";

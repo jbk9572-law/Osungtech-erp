@@ -5,8 +5,8 @@ import { PrintButton } from "@/components/print-button";
 import { CloseButton } from "@/components/erp/close-button";
 import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
 import type { InvoiceItem } from "@/components/invoice/types";
-import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/lib/paper-calc-summary";
-import { PAPER_STOCK_SKU } from "@/modules/paper-calc/lib/paper-calc-sync";
+import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
+import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { calcVat } from "@/lib/tax";
 

@@ -5,7 +5,7 @@
 // 다시 허물어지지 않는다(예전에는 매출/매입 폼이 모조지 계산 코드를 직접
 // 100곳 가까이 알고 있었다).
 //
-// 지금은 분리 작업 도중이라, 이미 모듈을 직접 부르고 있는 핵심 파일은
+// 공개 입구(ENTRIES) 밖의 내부 파일을 직접 부르는 핵심 파일은 분리 작업 도중이라
 // ALLOWLIST에 "파일: 허용 import 개수 상한"으로 적어둔다. 분리가 진행돼
 // 연결점이 줄면 숫자를 낮추고, 0이 되면 항목을 지운다. 목록에 없는 파일이
 // 새로 모듈을 import하거나 상한을 넘기면 실패한다.
@@ -15,6 +15,8 @@ import { fileURLToPath } from "node:url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "src");
 const MODULES = ["paper-calc"];
+// 핵심 코드가 써도 되는 모듈 공개 입구(모듈 안의 파일명, 확장자 제외).
+const ENTRIES = ["order-form", "order-actions", "actions", "public", "ui"];
 // 모듈 자신의 화면 경로(라우트)는 모듈의 일부로 본다.
 const OWN_ROUTE_PREFIXES = { "paper-calc": ["app/(dashboard)/paper-calc/", "app/(dashboard)/@modal/(.)paper-calc/"] };
 
@@ -36,7 +38,9 @@ for (const file of walk(root)) {
   for (const mod of MODULES) {
     if (rel.startsWith(`modules/${mod}/`)) continue;
     if ((OWN_ROUTE_PREFIXES[mod] ?? []).some((p) => rel.startsWith(p))) continue;
-    const n = (src.match(new RegExp(`["']@/modules/${mod}/`, "g")) ?? []).length;
+    const all = src.match(new RegExp(`["']@/modules/${mod}/[^"']*`, "g")) ?? [];
+    // 공개 입구(ENTRIES)를 통한 import는 허용하고, 내부 파일 직접 import만 센다.
+    const n = all.filter((m) => !ENTRIES.some((e) => m.slice(1) === `@/modules/${mod}/${e}`)).length;
     if (n > 0) counts.set(`${mod}|${rel}`, n);
   }
 }
@@ -54,4 +58,4 @@ if (problems.length) {
   console.error("모듈 경계 검사 실패:\n" + problems.map((p) => "  - " + p).join("\n"));
   process.exit(1);
 }
-console.log(`모듈 경계 검사 통과 (핵심 파일 ${counts.size}개가 모듈을 직접 참조 — 허용 목록과 일치)`);
+console.log(`모듈 경계 검사 통과 (핵심 파일 ${counts.size}개가 모듈 내부 파일을 직접 import(허용 목록과 일치) — 나머지는 공개 입구만 사용)`);

@@ -30,7 +30,7 @@ import { copyText } from "@/lib/clipboard";
 import {
   formatPaperCalcSizeLines,
   type PaperCalcSizeRow,
-} from "@/modules/paper-calc/lib/paper-calc-summary";
+} from "@/modules/paper-calc/public";
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";

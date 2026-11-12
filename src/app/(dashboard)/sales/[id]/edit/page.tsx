@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleForm } from "@/components/new-sale-form";
-import { PaperCalcNavLink } from "@/modules/paper-calc/components/paper-calc-nav-link";
+import { PaperCalcNavLink } from "@/modules/paper-calc/ui";
 import { updateSale } from "@/app/(dashboard)/sales/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { getCurrentActor } from "@/lib/current-actor";

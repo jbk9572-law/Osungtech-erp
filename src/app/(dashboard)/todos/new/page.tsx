@@ -5,7 +5,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { CloseButton } from "@/components/erp/close-button";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
-import { isPaperCalcEnabled } from "@/modules/paper-calc/lib/paper-calc-sync";
+import { isPaperCalcEnabled } from "@/modules/paper-calc/public";
 
 export default async function NewTodoPage() {
   const supabase = await createClient();

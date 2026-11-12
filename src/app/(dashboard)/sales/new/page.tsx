@@ -10,7 +10,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { inventoryQuantityByWarehouse, resolveEffectiveInventory, sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import type { LocationOption } from "@/lib/location-stock-sync";
-import { isPaperCalcEnabled } from "@/modules/paper-calc/lib/paper-calc-sync";
+import { isPaperCalcEnabled } from "@/modules/paper-calc/public";
 import { PageGuide } from "@/components/erp/page-guide";
 import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
 
