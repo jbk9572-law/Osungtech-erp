@@ -140,7 +140,11 @@ export async function syncMailAccount(
           contentType: att.mimeType,
           preferR2: true,
         });
-        if (!uploaded.ok) continue;
+        if (!uploaded.ok) {
+          // 실행/스크립트 파일 등 업로드 보안 검사에 걸린 첨부는 저장하지 않고 건너뛴다.
+          console.warn(JSON.stringify({ tag: "mailAttachmentSkipped", filename: att.filename, reason: uploaded.error }));
+          continue;
+        }
 
         const { error: attachmentInsertError } = await supabase.from("mail_attachments").insert({
           mail_message_id: inserted_row.id,

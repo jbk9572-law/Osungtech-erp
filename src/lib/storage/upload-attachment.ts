@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import { assertFileUploadAllowed } from "@/lib/quota/tenant-quota";
+import { checkUploadAllowed } from "@/lib/storage/upload-guard";
 import { isR2Configured, uploadObjectToR2, deleteObjectFromR2, getR2DownloadUrl } from "@/lib/r2/client";
 
 // 모든 첨부파일 업로드가 거쳐가는 공용 관문. 두 가지를 한 곳에서 보장한다:
@@ -49,6 +50,9 @@ export async function uploadAttachment(opts: {
   preferR2?: boolean;
 }): Promise<AttachmentUploadResult> {
   const size = opts.file.size;
+
+  const guard = checkUploadAllowed({ path: opts.path, contentType: opts.contentType, size });
+  if (!guard.ok) return { ok: false, error: guard.error };
 
   const quota = await assertFileUploadAllowed(opts.supabase, size);
   if (!quota.allowed) return { ok: false, error: quota.message };

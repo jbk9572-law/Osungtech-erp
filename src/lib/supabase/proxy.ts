@@ -33,7 +33,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // (user가 없고 PUBLIC_PATHS에도 없어서) 엉뚱하게 직원용 /login으로
 // 튕겨나가는 버그가 난다 — 이 세션 안에서는 계속 직원으로 로그인된 채
 // 테스트해서 못 보고 지나갔던 경로다.
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/terms", "/privacy", "/portal"];
+const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/api/csp-report", "/terms", "/privacy", "/portal"];
 
 export async function updateSession(request: NextRequest) {
   // 공개 경로(/login 등)는 로그인 안 된 사람을 /login으로 보내는

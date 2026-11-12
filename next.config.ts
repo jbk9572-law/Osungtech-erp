@@ -1,5 +1,23 @@
 import type { NextConfig } from "next";
 
+// CSP(감시 전용). 인라인 스타일/스크립트가 많아 'unsafe-inline'은 일단 허용한다.
+// 강제 모드로 올릴 때 nonce 기반으로 더 조이는 것을 검토한다.
+const SUPABASE_ORIGIN = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  `connect-src 'self' ${SUPABASE_ORIGIN} https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com`,
+  "frame-src 'self' blob: https://challenges.cloudflare.com",
+  "frame-ancestors 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "report-uri /api/csp-report",
+].join("; ");
+
 const nextConfig: NextConfig = {
   // 오라클 클라우드 무료 서버(Docker)로 셀프호스팅할 때 필요한 최소
   // 실행 번들만 만든다. Vercel 배포에는 영향 없음(무시되는 옵션).
@@ -27,7 +45,10 @@ const nextConfig: NextConfig = {
   // 기본 보안 헤더 — 전엔 Next.js/Caddy 어느 쪽에도 설정돼 있지 않았다
   // (헌법검사 보안 점검으로 발견). CSP는 이 앱의 인라인 스타일/스크립트
   // 사용 범위를 더 조사해야 안전하게 넣을 수 있어 일단 보류하고, 깨질
-  // 위험 없이 바로 넣을 수 있는 항목만 우선 추가한다.
+  // 위험 없이 바로 넣을 수 있는 항목만 우선 추가한다. CSP는 "감시 전용
+  // (Report-Only)"으로만 켠다 — 위반이 있어도 화면은 그대로 동작하고
+  // /api/csp-report로 보고만 온다. 서버 로그(cspViolation)를 며칠 보고 허용할
+  // 출처를 확정한 뒤 Content-Security-Policy(강제)로 올린다.
   async headers() {
     return [
       {
@@ -44,6 +65,8 @@ const nextConfig: NextConfig = {
           // 이 앱이 쓰지 않는 민감한 브라우저 기능(카메라/마이크/위치)을
           // 명시적으로 꺼서, 그 기능을 쓰는 악성 삽입 코드가 있어도 막는다.
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // 스크립트 삽입(XSS) 공격을 한 겹 더 막기 위한 정책 — 지금은 감시만 한다.
+          { key: "Content-Security-Policy-Report-Only", value: CSP_REPORT_ONLY },
         ],
       },
     ];
