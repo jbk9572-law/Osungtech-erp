@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { SpecLotUnitCells } from "./order-form-row-cells";
 
-const base = {
+type Props = Parameters<typeof SpecLotUnitCells>[0];
+const base: Props = {
   spec: "1 * 500",
   manualSpec: false,
   hasProduct: true,
@@ -12,7 +13,7 @@ const base = {
   unit: "EA",
   onPatch: () => {},
 };
-const render = (props: Partial<typeof base>) =>
+const render = (props: Partial<Props>) =>
   renderToStaticMarkup(createElement("table", null, createElement("tbody", null, createElement("tr", null, createElement(SpecLotUnitCells, { ...base, ...props })))));
 
 describe("SpecLotUnitCells", () => {
