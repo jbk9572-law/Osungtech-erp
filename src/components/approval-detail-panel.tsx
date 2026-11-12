@@ -151,7 +151,7 @@ export async function ApprovalDetailPanel({
         }
       />
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기안 내용</span>
         </div>
@@ -190,20 +190,20 @@ export async function ApprovalDetailPanel({
               const pendingDelegation = s.status === "pending" ? activeDelegationFor(s.approver_id) : null;
               return (
                 <div key={s.id} className="erp-approver-chip flex items-center gap-2 text-sm">
-                  <span style={{ color: "var(--erp-text-muted)" }}>{s.step_order}.</span>
+                  <span className="erp-u-muted">{s.step_order}.</span>
                   <span>{s.profiles?.full_name ?? "구성원"}</span>
                   {s.status === "approved" && s.decider?.signature_image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element -- 사용자가 직접 올린 임의 크기 서명 이미지라 next/image 최적화 대상이 아니다
-                    <img
+                    <img className="erp-u-h-22"
                       src={s.decider.signature_image_url}
                       alt={`${s.decider.full_name ?? "결재자"} 서명`}
-                      style={{ height: 22, width: "auto" }}
+                      style={{ width: "auto" }}
                     />
                   ) : (
                     <GridBadge tone={tone}>{s.status === "approved" ? "승인" : s.status === "rejected" ? "반려" : "대기"}</GridBadge>
                   )}
                   {decidedByDelegate && (
-                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                    <span className="text-xs erp-u-muted">
                       (대결: {s.decider?.full_name ?? "대리인"})
                     </span>
                   )}
@@ -213,7 +213,7 @@ export async function ApprovalDetailPanel({
                     </span>
                   )}
                   {s.comment && (
-                    <span style={{ color: "var(--erp-text-muted)", fontSize: 12 }}>&quot;{s.comment}&quot;</span>
+                    <span className="erp-u-muted" style={{ fontSize: 12 }}>&quot;{s.comment}&quot;</span>
                   )}
                 </div>
               );
@@ -222,7 +222,7 @@ export async function ApprovalDetailPanel({
 
           {referenceSteps.length > 0 && (
             <div className="flex flex-wrap items-center gap-2" style={{ marginBottom: myTurn ? 16 : 0 }}>
-              <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <span className="text-xs erp-u-muted">
                 참조:
               </span>
               {referenceSteps.map((s) => (

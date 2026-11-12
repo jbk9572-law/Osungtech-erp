@@ -33,7 +33,7 @@ export function AnnouncementForm({
         defaultValue={initial?.title}
         className="erp-input md:col-span-3"
       />
-      <label className="md:col-span-3 flex items-center gap-2 text-sm" style={{ color: "var(--erp-text)" }}>
+      <label className="md:col-span-3 flex items-center gap-2 text-sm erp-u-text">
         <input type="checkbox" name="pinned" defaultChecked={initial?.pinned} />
         상단 고정
       </label>

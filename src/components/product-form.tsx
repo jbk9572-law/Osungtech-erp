@@ -145,7 +145,7 @@ export function ProductForm({
         onChange={(e) => setSpec(e.target.value)}
         className="erp-input"
       />
-      <div style={{ display: "flex", gap: 4 }}>
+      <div className="erp-u-flex" style={{ gap: 4 }}>
         {unitMode === "preset" ? (
           <ErpSelect
             name="unit"
@@ -169,8 +169,8 @@ export function ProductForm({
         )}
         <button
           type="button"
-          className="erp-btn"
-          style={{ minWidth: 0, padding: "0 8px" }}
+          className="erp-btn erp-u-pad-0-8"
+          style={{ minWidth: 0 }}
           onClick={() => setUnitMode((m) => (m === "preset" ? "custom" : "preset"))}
         >
           {unitMode === "preset" ? "직접입력" : "목록"}
@@ -228,7 +228,7 @@ export function ProductForm({
       {parentCandidates.length > 0 && (
         <div className="md:col-span-2">
           <input type="hidden" name="parent_product_id" value={parentProductId} />
-          <div style={{ display: "flex", gap: 4 }}>
+          <div className="erp-u-flex" style={{ gap: 4 }}>
             <div style={{ flex: 1 }}>
               <ProductSearchSelect
                 products={parentCandidates}
@@ -240,8 +240,8 @@ export function ProductForm({
             {parentProductId && (
               <button
                 type="button"
-                className="erp-btn"
-                style={{ minWidth: 0, padding: "0 8px" }}
+                className="erp-btn erp-u-pad-0-8"
+                style={{ minWidth: 0 }}
                 onClick={() => setParentProductId("")}
               >
                 해제

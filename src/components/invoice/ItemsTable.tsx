@@ -28,18 +28,18 @@ export function ItemsTable({
           월일
         </Cell>
         <Cell as="th" colSpan={ITEM_COLS[1]}>
-          <span style={{ position: "relative", left: TABLE.productHeaderOffsetX }}>
+          <span className="erp-u-relative" style={{ left: TABLE.productHeaderOffsetX }}>
             품{" "} 명 /{" "} 규{" "} 격
           </span>
         </Cell>
         <Cell as="th" colSpan={ITEM_COLS[2]}>
-          <span style={{ position: "relative", left: TABLE.unitHeaderOffsetX }}>단위</span>
+          <span className="erp-u-relative" style={{ left: TABLE.unitHeaderOffsetX }}>단위</span>
         </Cell>
         <Cell as="th" colSpan={ITEM_COLS[3]}>
-          <span style={{ position: "relative", left: TABLE.qtyHeaderOffsetX }}>수량</span>
+          <span className="erp-u-relative" style={{ left: TABLE.qtyHeaderOffsetX }}>수량</span>
         </Cell>
         <Cell as="th" colSpan={ITEM_COLS[4]}>
-          <span style={{ position: "relative", left: TABLE.priceHeaderOffsetX }}>단 가</span>
+          <span className="erp-u-relative" style={{ left: TABLE.priceHeaderOffsetX }}>단 가</span>
         </Cell>
         <Cell as="th" colSpan={ITEM_COLS[5]}>
           공급가액
@@ -62,18 +62,18 @@ export function ItemsTable({
             {item.monthDay}
           </Cell>
           <Cell colSpan={ITEM_COLS[1]} hideBorder={["t", "b"]}>
-            <span style={{ position: "relative", left: TABLE.productDataOffsetX }}>{item.productLabel}</span>
+            <span className="erp-u-relative" style={{ left: TABLE.productDataOffsetX }}>{item.productLabel}</span>
           </Cell>
           <Cell colSpan={ITEM_COLS[2]} align="center" hideBorder={["t", "b"]}>
             {item.isReference ? "-" : item.unit}
           </Cell>
           <Cell colSpan={ITEM_COLS[3]} align="right" hideBorder={["t", "b"]}>
-            <span style={{ position: "relative", left: TABLE.qtyDataOffsetX }}>
+            <span className="erp-u-relative" style={{ left: TABLE.qtyDataOffsetX }}>
               {item.isReference ? "-" : formatNumber(item.quantity)}
             </span>
           </Cell>
           <Cell colSpan={ITEM_COLS[4]} align="right" hideBorder={["t", "b"]}>
-            <span style={{ position: "relative", left: TABLE.priceDataOffsetX }}>
+            <span className="erp-u-relative" style={{ left: TABLE.priceDataOffsetX }}>
               {item.isReference ? "-" : formatNumber(item.unitPrice)}
             </span>
           </Cell>
@@ -81,7 +81,7 @@ export function ItemsTable({
             {item.isReference ? "-" : formatNumber(item.supplyAmount)}
           </Cell>
           <Cell colSpan={ITEM_COLS[6]} align="right" hideBorder={["t", "b"]}>
-            <span style={{ position: "relative", left: TABLE.taxDataOffsetX }}>
+            <span className="erp-u-relative" style={{ left: TABLE.taxDataOffsetX }}>
               {item.isReference ? "-" : formatNumber(item.taxAmount)}
             </span>
           </Cell>

@@ -613,7 +613,7 @@ async function SalesPage({
       />
 
       {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+        <div className="erp-u-flex" style={{ justifyContent: "center", marginTop: 12 }}>
           <Link href={moreHref} className="erp-btn">
             더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>

@@ -40,7 +40,7 @@ export function NewCollectionForm({
     <div>
       <form action={formAction} key={formKey}>
         <input type="hidden" name="customer_id" value={customerId} />
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">기본정보</span>
           </div>

@@ -78,10 +78,10 @@ export default async function FeatureSettingsPage() {
                 style={{ border: "1px solid var(--erp-border)" }}
               >
                 <div style={{ maxWidth: 640 }}>
-                  <div className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                  <div className="text-sm font-bold erp-u-text">
                     {f.label}
                   </div>
-                  <div className="mt-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  <div className="mt-1 text-xs erp-u-muted">
                     {f.description}
                   </div>
                 </div>
@@ -126,9 +126,9 @@ export default async function FeatureSettingsPage() {
         );
         return (
         <div className="erp-detail" key={group.label}>
-          <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12, flexWrap: "wrap", rowGap: 6 }}>
+          <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 12, flexWrap: "wrap", rowGap: 6 }}>
             <span className="erp-detail-tab active">{group.label}</span>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div className="erp-u-flex" style={{ gap: 12, flexWrap: "wrap" }}>
               {group.featureKey && (
                 <FeatureToggle
                   featureKey={group.featureKey}
@@ -163,7 +163,7 @@ export default async function FeatureSettingsPage() {
                       <td>{item.label}</td>
                       <td>
                         {MENU_TOGGLE_LOCKED_HREFS.has(item.href) ? (
-                          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                          <span className="text-xs erp-u-muted">
                             항상 사용
                           </span>
                         ) : (
@@ -183,10 +183,10 @@ export default async function FeatureSettingsPage() {
 
             <div className="erp-row-card-list">
               {group.items.map((item) => (
-                <div className="erp-row-card" key={item.href} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <div className="erp-row-card erp-u-items-center erp-u-justify-between" key={item.href} style={{ flexDirection: "row" }}>
                   <span className="erp-row-card-partner">{item.label}</span>
                   {MENU_TOGGLE_LOCKED_HREFS.has(item.href) ? (
-                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                    <span className="text-xs erp-u-muted">
                       항상 사용
                     </span>
                   ) : (

@@ -53,15 +53,8 @@ export function QrLabelCard({
   }
 
   return (
-    <div
-      style={{
-        border: "1px solid #000",
-        borderRadius: 0,
-        overflow: "hidden",
-        textAlign: "center",
-        breakInside: "avoid",
-        color: "#000",
-      }}
+    <div className="erp-u-text-center"
+      style={{ border: "1px solid #000", borderRadius: 0, overflow: "hidden", breakInside: "avoid", color: "#000" }}
     >
       <div
         style={{
@@ -82,38 +75,26 @@ export function QrLabelCard({
           style={{ width: 110, height: 110, margin: "0 auto" }}
           dangerouslySetInnerHTML={qrSvg ? { __html: qrSvg } : undefined}
         />
-        <div style={{ fontSize: 12, fontWeight: 700, marginTop: 4 }}>{sku}</div>
+        <div className="erp-u-bold" style={{ fontSize: 12, marginTop: 4 }}>{sku}</div>
         <div style={{ fontSize: 11, lineHeight: 1.3 }}>{name}</div>
         {spec && <div style={{ fontSize: 10, color: "#444" }}>{spec}</div>}
         <div
-          className="print:hidden"
-          style={{ display: "flex", gap: 4, justifyContent: "center", marginTop: 6 }}
+          className="print:hidden erp-u-flex"
+          style={{ gap: 4, justifyContent: "center", marginTop: 6 }}
         >
           <button
             type="button"
             onClick={() => choose("up")}
-            className="erp-btn"
-            style={{
-              minWidth: 0,
-              height: 24,
-              padding: "0 8px",
-              fontSize: 11,
-              ...(dir === "up" ? { background: "var(--erp-selected)" } : {}),
-            }}
+            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11, ...(dir === "up" ? { background: "var(--erp-selected)" } : {}) }}
           >
             ▲ 위
           </button>
           <button
             type="button"
             onClick={() => choose("down")}
-            className="erp-btn"
-            style={{
-              minWidth: 0,
-              height: 24,
-              padding: "0 8px",
-              fontSize: 11,
-              ...(dir === "down" ? { background: "var(--erp-selected)" } : {}),
-            }}
+            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11, ...(dir === "down" ? { background: "var(--erp-selected)" } : {}) }}
           >
             ▼ 아래
           </button>

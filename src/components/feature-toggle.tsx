@@ -59,10 +59,10 @@ export function FeatureToggle({
         <span className="erp-switch-track" />
         <span className="erp-switch-knob" />
       </label>
-      <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <span className="text-xs erp-u-muted">
         {enabled ? "사용" : "미사용"}
       </span>
-      {error && <span className="text-xs" style={{ color: "var(--erp-danger)" }}>{error}</span>}
+      {error && <span className="text-xs erp-u-danger">{error}</span>}
     </div>
   );
 }

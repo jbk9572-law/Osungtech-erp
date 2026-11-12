@@ -148,7 +148,7 @@ function UnifiedSaleModal({
           )}
 
           {tab === "payment" && (
-            <div className="erp-field" style={{ marginBottom: 12 }}>
+            <div className="erp-field erp-u-mb-12">
               <label htmlFor="unified-payment-customer">거래처 *</label>
               <PartySearchSelect
                 id="unified-payment-customer"
@@ -412,7 +412,7 @@ function SaleQuickForm({
         <input id="unified-sale-memo" type="text" name="memo" autoComplete="off" className="erp-input" style={{ width: "100%" }} />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+      <div className="erp-u-flex erp-u-items-center" style={{ gap: 10, marginTop: 12 }}>
         <button
           ref={submitRef}
           type="submit"

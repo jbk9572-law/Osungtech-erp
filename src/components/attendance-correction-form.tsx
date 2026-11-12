@@ -84,7 +84,7 @@ export function AttendanceCorrectionForm({
       )}
 
       <div>
-        <p className="mb-1.5 text-xs font-semibold" style={{ color: "var(--erp-text)" }}>
+        <p className="mb-1.5 text-xs font-semibold erp-u-text">
           결재선 · 참조자 선택
         </p>
         <OrgChartApproverPicker

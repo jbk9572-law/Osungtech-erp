@@ -31,7 +31,7 @@ export function OnboardingBanner() {
 
   return (
     <PageGuide className="mb-3 flex flex-wrap items-center gap-2">
-      <span style={{ fontWeight: 700 }}>처음이신가요?</span>
+      <span className="erp-u-bold">처음이신가요?</span>
       <span>
         <kbd
           style={{
@@ -45,13 +45,13 @@ export function OnboardingBanner() {
           Ctrl+K
         </kbd>{" "}
         로 어디서든 메뉴를 검색할 수 있고, 상단 리본의{" "}
-        <span style={{ fontWeight: 700 }}>? 도움말</span>을 누르면 화면 구조와 F키 단축키를 한눈에 볼 수 있어요.
+        <span className="erp-u-bold">? 도움말</span>을 누르면 화면 구조와 F키 단축키를 한눈에 볼 수 있어요.
       </span>
       <button
         type="button"
         onClick={dismiss}
-        className="ml-auto"
-        style={{ color: "var(--erp-info-text)", fontWeight: 700, opacity: 0.7 }}
+        className="ml-auto erp-u-bold"
+        style={{ color: "var(--erp-info-text)", opacity: 0.7 }}
         aria-label="안내 닫기"
       >
         ✕

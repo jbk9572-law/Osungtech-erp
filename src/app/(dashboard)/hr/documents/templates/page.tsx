@@ -94,26 +94,16 @@ export default async function DocumentTemplatesPage({
         <div className="erp-split-detail">
           {selected ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-                <h2 className="text-base font-bold" style={{ color: "var(--erp-text)" }}>{selected.name}</h2>
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between" style={{ gap: 10, marginBottom: 4 }}>
+                <h2 className="text-base font-bold erp-u-text">{selected.name}</h2>
                 <GridBadge tone={selected.is_active ? "ok" : "muted"}>{selected.is_active ? "사용중" : "미사용"}</GridBadge>
               </div>
-              <p className="mb-4 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="mb-4 text-xs erp-u-muted">
                 {CATEGORY_LABELS[selected.category] ?? selected.category}
               </p>
 
-              <div
-                style={{
-                  background: "var(--erp-bg)",
-                  border: "1px solid var(--erp-divider)",
-                  borderRadius: "var(--erp-comm-radius-row)",
-                  padding: "18px 20px",
-                  fontSize: "var(--erp-font-base)",
-                  lineHeight: 1.8,
-                  color: "var(--erp-text)",
-                  whiteSpace: "pre-line",
-                  marginBottom: 18,
-                }}
+              <div className="erp-u-text"
+                style={{ background: "var(--erp-bg)", border: "1px solid var(--erp-divider)", borderRadius: "var(--erp-comm-radius-row)", padding: "18px 20px", fontSize: "var(--erp-font-base)", lineHeight: 1.8, whiteSpace: "pre-line", marginBottom: 18 }}
               >
                 {selected.body}
               </div>

@@ -153,7 +153,7 @@ export default async function VatReportPage({
         <ExcelDownloadLink href={`/api/reports/vat/export?from=${from}&to=${to}`} pushRight />
       </form>
 
-      <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <p className="mb-3 text-xs erp-u-muted">
         조회기간: {from.replaceAll("-", ".")} ~ {to.replaceAll("-", ".")}
       </p>
 
@@ -170,26 +170,26 @@ export default async function VatReportPage({
           </thead>
           <tbody>
             <tr>
-              <td style={{ fontWeight: 700 }}>매출</td>
+              <td className="erp-u-bold">매출</td>
               <td className="num">{formatNumber(salesSupply.과세)}</td>
               <td className="num">{formatNumber(salesSupply.영세)}</td>
               <td className="num">{formatNumber(salesSupply.면세)}</td>
-              <td className="num" style={{ fontWeight: 700 }}>{formatNumber(salesTax)}</td>
+              <td className="num erp-u-bold">{formatNumber(salesTax)}</td>
             </tr>
             <tr>
-              <td style={{ fontWeight: 700 }}>매입</td>
+              <td className="erp-u-bold">매입</td>
               <td className="num">{formatNumber(purchaseSupply.과세)}</td>
               <td className="num">{formatNumber(purchaseSupply.영세)}</td>
               <td className="num">{formatNumber(purchaseSupply.면세)}</td>
-              <td className="num" style={{ fontWeight: 700 }}>{formatNumber(purchaseTax)}</td>
+              <td className="num erp-u-bold">{formatNumber(purchaseTax)}</td>
             </tr>
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="num" style={{ fontWeight: 700 }}>
+              <td colSpan={4} className="num erp-u-bold">
                 {payable >= 0 ? "납부(예상) 세액" : "환급(예상) 세액"}
               </td>
-              <td className="num" style={{ fontWeight: 700, color: payable >= 0 ? "var(--erp-danger)" : "var(--erp-success)" }}>
+              <td className="num erp-u-bold" style={{ color: payable >= 0 ? "var(--erp-danger)" : "var(--erp-success)" }}>
                 {formatNumber(Math.abs(payable))}
               </td>
             </tr>

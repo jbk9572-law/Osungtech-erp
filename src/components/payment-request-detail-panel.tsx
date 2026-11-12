@@ -158,12 +158,12 @@ export async function PaymentRequestDetailPanel({
         </PageGuide>
       )}
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">{paymentRequestDocTitle(row.card_type)}</span>
         </div>
         <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+          <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 text-sm erp-u-muted">
             <span>부서명: {row.department ?? "-"}</span>
             <span>기간: {formatPeriod(row.period_from, row.period_to)}</span>
             <span>사용카드: {row.card_type}</span>
@@ -191,7 +191,7 @@ export async function PaymentRequestDetailPanel({
                     <td>{item.vendor}</td>
                     <td>{item.purpose || "-"}</td>
                     <td className="num">{formatNumber(Number(item.amount))}</td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
+                    <td className="erp-u-muted">{item.remark || "-"}</td>
                   </tr>
                 ))}
                 {!items?.length && (
@@ -204,10 +204,10 @@ export async function PaymentRequestDetailPanel({
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
+                  <td colSpan={3} className="num erp-u-bold">
                     합계
                   </td>
-                  <td className="num" style={{ fontWeight: 700 }}>
+                  <td className="num erp-u-bold">
                     {formatNumber(total)}원
                   </td>
                   <td />
@@ -234,7 +234,7 @@ export async function PaymentRequestDetailPanel({
                   </div>
                   <div>
                     <dt>금액</dt>
-                    <dd style={{ fontWeight: 700 }}>{formatNumber(Number(item.amount))}</dd>
+                    <dd className="erp-u-bold">{formatNumber(Number(item.amount))}</dd>
                   </div>
                   {item.remark && (
                     <div style={{ gridColumn: "1 / -1" }}>
@@ -247,7 +247,7 @@ export async function PaymentRequestDetailPanel({
             ))}
             {!items?.length && <p className="erp-grid-empty">등록된 사용 내역이 없습니다.</p>}
             {!!items?.length && (
-              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <div className="erp-row-card-foot erp-u-bold">
                 <span>합계</span>
                 <span className="erp-row-card-amount">{formatNumber(total)}원</span>
               </div>
@@ -262,7 +262,7 @@ export async function PaymentRequestDetailPanel({
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">영수증 ({receiptsWithUrl.length}장)</span>
         </div>
@@ -273,7 +273,7 @@ export async function PaymentRequestDetailPanel({
       </div>
 
       {allowManage && row.status === "draft" && (
-        <div className="erp-detail" style={{ marginBottom: 12 }}>
+        <div className="erp-detail erp-u-mb-12">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">제출(마감)</span>
           </div>
@@ -294,7 +294,7 @@ export async function PaymentRequestDetailPanel({
       )}
 
       {row.approval_document_id && (
-        <div className="erp-detail" style={{ marginBottom: 12 }}>
+        <div className="erp-detail erp-u-mb-12">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">결재</span>
           </div>

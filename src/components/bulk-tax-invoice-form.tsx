@@ -66,7 +66,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
       <FormMessage state={state} />
 
       {state?.skipped && state.skipped.length > 0 && (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active" style={{ cursor: "default" }}>
               제외된 건 {state.skipped.length}건
@@ -75,7 +75,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
           <div className="erp-detail-body" style={{ fontSize: 12.5 }}>
             <ul style={{ paddingLeft: 16 }}>
               {state.skipped.map((s, i) => (
-                <li key={i} style={{ color: "var(--erp-text-muted)" }}>
+                <li className="erp-u-muted" key={i}>
                   {s.docNo ?? "-"} · {s.customerName ?? "-"} — {s.reason}
                 </li>
               ))}
@@ -127,10 +127,10 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
           {orders.length > 0 && (
             <tfoot>
               <tr>
-                <td colSpan={4} style={{ fontWeight: 700 }}>
+                <td className="erp-u-bold" colSpan={4}>
                   선택 {selected.size}건 합계
                 </td>
-                <td className="num" style={{ fontWeight: 700 }}>
+                <td className="num erp-u-bold">
                   {formatNumber(selectedTotal)}
                 </td>
               </tr>
@@ -161,14 +161,14 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
               <span className="erp-row-card-date">{new Date(o.date).toLocaleDateString("ko-KR")}</span>
             </div>
             <div className="erp-row-card-foot">
-              <span style={{ color: "var(--erp-text-muted)" }}>전표번호 {o.docNo ?? "-"}</span>
+              <span className="erp-u-muted">전표번호 {o.docNo ?? "-"}</span>
               <span className="erp-row-card-amount">{formatNumber(o.supplyAmount)}</span>
             </div>
           </label>
         ))}
         {orders.length === 0 && <p className="erp-grid-empty">세금계산서 발행 대상인 매출 건이 없습니다.</p>}
         {orders.length > 0 && (
-          <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+          <div className="erp-row-card-foot erp-u-bold">
             <span>선택 {selected.size}건 합계</span>
             <span className="erp-row-card-amount">{formatNumber(selectedTotal)}</span>
           </div>

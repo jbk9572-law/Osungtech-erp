@@ -36,13 +36,13 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+      <div className="erp-u-flex erp-u-justify-between erp-u-items-center" style={{ marginBottom: 4 }}>
         <h1 className="erp-portal-h1">지시 {workOrder.doc_no}</h1>
         <Link href={await portalHref("/assignments")} className="erp-btn">
           목록
         </Link>
       </div>
-      <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 16 }}>
+      <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 16 }}>
         {workOrder.product_name}
         {workOrder.product_spec && ` (${workOrder.product_spec})`} · {formatNumber(Number(workOrder.quantity))} ·{" "}
         {STATUS_LABEL[workOrder.status] ?? workOrder.status}
@@ -50,7 +50,7 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
         LOT {workOrder.doc_no} · 제조일 {workOrder.order_date.replaceAll("-", ".")}
       </p>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">전체 공정 흐름</span>
         </div>
@@ -70,23 +70,16 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
               return (
               <div
                 key={s.id}
-                className="erp-home-panel"
-                style={{
-                  padding: 10,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 10,
-                  border: s.is_mine ? "1px solid var(--erp-primary)" : undefined,
-                }}
+                className="erp-home-panel erp-u-flex erp-u-justify-between erp-u-items-center"
+                style={{ padding: 10, gap: 10, border: s.is_mine ? "1px solid var(--erp-primary)" : undefined }}
               >
                 <div>
                   <span style={{ fontWeight: s.is_mine ? 700 : 500 }}>{s.process_name}</span>
-                  <span style={{ marginLeft: 8, fontSize: 11.5, color: "var(--erp-text-muted)" }}>
+                  <span className="erp-u-muted" style={{ marginLeft: 8, fontSize: 11.5 }}>
                     {s.assignee_kind === "subcontractor" ? (s.subcontractor_name ?? "업체") : "사내"}
                   </span>
                   {prevLabel && (
-                    <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginTop: 2 }}>
+                    <div className="erp-u-muted" style={{ fontSize: 11, marginTop: 2 }}>
                       이전 작업: {prev!.process_name} ({prevLabel})
                     </div>
                   )}
@@ -112,7 +105,7 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
               );
             })}
             {!steps?.length && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="p-3 text-xs erp-u-muted">
                 공정 정보가 없습니다.
               </p>
             )}

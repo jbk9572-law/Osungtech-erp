@@ -76,17 +76,9 @@ export function QuickAddProductSearch({
   // 구분되는 "여기서 바로 추가" 전용 입력칸으로 보이게 한다.
   return (
     <div className="relative" style={{ minWidth: 240, flex: "1 1 240px" }}>
-      <span
+      <span className="erp-u-text"
         aria-hidden
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: 9,
-          transform: "translateY(-50%)",
-          fontSize: 12.5,
-          color: "var(--erp-text)",
-          pointerEvents: "none",
-        }}
+        style={{ position: "absolute", top: "50%", left: 9, transform: "translateY(-50%)", fontSize: 12.5, pointerEvents: "none" }}
       >
         🔍
       </span>
@@ -130,24 +122,9 @@ export function QuickAddProductSearch({
         }}
       />
       {showEnterBadge && (
-        <span
+        <span className="erp-u-items-center erp-u-bold"
           aria-hidden
-          style={{
-            position: "absolute",
-            top: "50%",
-            right: 6,
-            transform: "translateY(-50%)",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 2,
-            padding: "2px 6px",
-            borderRadius: 999,
-            fontSize: 10.5,
-            fontWeight: 700,
-            background: "var(--erp-info-bg)",
-            color: "var(--erp-info-text)",
-            pointerEvents: "none",
-          }}
+          style={{ position: "absolute", top: "50%", right: 6, transform: "translateY(-50%)", display: "inline-flex", gap: 2, padding: "2px 6px", borderRadius: 999, fontSize: 10.5, background: "var(--erp-info-bg)", color: "var(--erp-info-text)", pointerEvents: "none" }}
         >
           ⏎ 추가
         </span>

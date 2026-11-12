@@ -74,7 +74,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
           </Link>
         </PageGuide>
       ) : (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">매출로 전환</span>
           </div>
@@ -88,7 +88,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
       )}
 
       {quote.memo && (
-        <p className="mb-3 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-3 text-sm erp-u-muted">
           메모: {quote.memo}
         </p>
       )}
@@ -119,10 +119,10 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="num" style={{ fontWeight: 700 }}>
+              <td colSpan={4} className="num erp-u-bold">
                 합계
               </td>
-              <td className="num" style={{ fontWeight: 700 }}>
+              <td className="num erp-u-bold">
                 {formatNumber(total)}
               </td>
               <td />
@@ -156,7 +156,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
                   </div>
                   <div>
                     <dt>금액</dt>
-                    <dd style={{ fontWeight: 700 }}>
+                    <dd className="erp-u-bold">
                       {formatNumber(Number(item.quantity) * Number(item.unit_price))}
                     </dd>
                   </div>
@@ -169,7 +169,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
                 </dl>
               </div>
             ))}
-            <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+            <div className="erp-row-card-foot erp-u-bold">
               <span>합계</span>
               <span className="erp-row-card-amount">{formatNumber(total)}</span>
             </div>

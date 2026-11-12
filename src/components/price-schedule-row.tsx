@@ -71,30 +71,30 @@ export function PriceScheduleRow({
             min="0"
             defaultValue={newUnitPrice}
             required
-            className="erp-input"
-            style={{ height: 24, width: 100, fontSize: 11.5 }}
+            className="erp-input erp-u-h-24"
+            style={{ width: 100, fontSize: 11.5 }}
           />
           <input
             name="effective_date"
             type="date"
             defaultValue={effectiveDate}
             required
-            className="erp-input"
-            style={{ height: 24, fontSize: 11.5 }}
+            className="erp-input erp-u-h-24"
+            style={{ fontSize: 11.5 }}
           />
           <button
             type="submit"
             disabled={updatePending}
-            className="erp-btn erp-btn-primary"
-            style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
+            className="erp-btn erp-btn-primary erp-u-h-24 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11.5 }}
           >
             {updatePending ? "저장 중..." : "저장"}
           </button>
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="erp-btn"
-            style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
+            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11.5 }}
           >
             닫기
           </button>
@@ -122,14 +122,14 @@ export function PriceScheduleRow({
         {effectiveDate}부터 {productLabel}:{" "}
         {currentUnitPrice != null && <>{formatNumber(currentUnitPrice)}원 → </>}
         <strong>{formatNumber(newUnitPrice)}원</strong>{" "}
-        <span style={{ color: "var(--erp-text-muted)" }}>({diffLabel})</span>
+        <span className="erp-u-muted">({diffLabel})</span>
       </span>
       <div className="flex shrink-0 gap-1">
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="erp-btn"
-          style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
+          className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+          style={{ minWidth: 0, fontSize: 11.5 }}
         >
           수정
         </button>
@@ -138,8 +138,8 @@ export function PriceScheduleRow({
           disabled={cancelPending}
           onClick={handleCancel}
           onBlur={confirmCancel.reset}
-          className="erp-btn erp-btn-danger"
-          style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
+          className="erp-btn erp-btn-danger erp-u-h-24 erp-u-pad-0-8"
+          style={{ minWidth: 0, fontSize: 11.5 }}
         >
           {confirmCancel.isArmed("cancel") ? "한 번 더 누르면 취소" : "취소"}
         </button>

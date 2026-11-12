@@ -90,7 +90,7 @@ export default async function DocumentsPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>문서 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+            <span className="erp-u-muted erp-u-normal">
               총 {formatNumber((docs ?? []).length)}건
             </span>
           </div>
@@ -133,7 +133,7 @@ export default async function DocumentsPage({
                 채워집니다(수정 가능).
               </PageGuide>
               {templates.length === 0 ? (
-                <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+                <p className="text-sm erp-u-muted">
                   사용 가능한 양식이 없습니다. 문서 양식 관리에서 먼저 등록해주세요.
                 </p>
               ) : (

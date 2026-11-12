@@ -136,7 +136,7 @@ export function GenerateDocumentForm({
       {fields.length === 0 ? (
         selectedTemplate &&
         autoFields.length === 0 && (
-          <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <p className="text-xs erp-u-muted">
             이 양식에는 채울 필드가 없습니다.
           </p>
         )

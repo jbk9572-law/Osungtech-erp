@@ -2,11 +2,18 @@
 
 import {
   useActionState,
+  useCallback,
   useEffect,
   useRef,
   useState,
   useTransition,
 } from "react";
+import {
+  DailyReportBox,
+  type ReportLowStock,
+  type ReportMonthTotals,
+  type ReportMoney,
+} from "@/components/daily-report-box";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -681,6 +688,123 @@ function buildPurchaseCopyText(
   return lines.join("\n");
 }
 
+// ── 메인 화면 "오늘 리포트" 박스용 가공 ───────────────────────────────
+// 박스 UI(daily-report-box.tsx)는 이 파일을 import하지 않고, 여기서 만든 순수
+// 데이터(ReportDay)만 받는다 — 순환 import 없이 같은 dataByDate를 재사용해서
+// 서버→클라이언트 전달 데이터가 두 번 직렬화되지 않는다. 거래처 연결 표시
+// (": 거래처")는 리포트에 쓰지 않는다(사용자 결정) — realDestinations를 비우고
+// 모조지 계산도 상대편과 대조하지 않는다.
+export type ReportRow = { spec: string; quantity: string; boxes: string | null; isReturn: boolean };
+export type ReportProduct = { name: string; rows: ReportRow[]; total: string | null };
+export type ReportPartner = { name: string; amount: number; products: ReportProduct[] };
+export type ReportDay = {
+  salesCount: number;
+  salesTotal: number;
+  purchaseCount: number;
+  purchaseTotal: number;
+  sales: ReportPartner[];
+  purchases: ReportPartner[];
+  salesKinds: number;
+  purchaseKinds: number;
+  salesLines: string[];
+  purchaseLines: string[];
+};
+
+function buildReportPartners(
+  items: ItemRow[],
+  paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
+  paperStockProductName: string,
+): ReportPartner[] {
+  return buildPartnerBlocks(items, paperCalcByPartner).map((partner) => {
+    let amount = 0;
+    const products: ReportProduct[] = partner.products.map((product) => {
+      const rows: ReportRow[] = groupItemsBySpec(product.items).map((group) => {
+        const first = group.items[0];
+        const quantity = group.items.reduce((sum, item) => sum + item.quantity, 0);
+        const boxes = shouldShowBoxCountOnDashboard(product.productName, first.categoryName)
+          ? formatBoxCount(quantity, first.basePackageQty)
+          : null;
+        return { spec: group.spec, quantity: `${formatNumber(quantity)}${first.unit}`, boxes, isReturn: first.isReturn };
+      });
+      amount += product.items.reduce((sum, item) => sum + item.amount, 0);
+      const totals = productTotals(product.items);
+      return {
+        name: product.productName,
+        rows: sortBySpecTrailingNumber(rows, (row) => row.spec),
+        total: rows.length > 1 ? `${formatNumber(totals.quantity)}${totals.unit}` : null,
+      };
+    });
+    for (const block of partner.paperCalcBlocks) {
+      amount += block.amount;
+      products.push({
+        name: paperStockProductName,
+        rows: formatPaperCalcSizeLines(block.sizes).map((line) => ({
+          spec: line,
+          quantity: "",
+          boxes: null,
+          isReturn: false,
+        })),
+        total: `${formatNumber(block.totalSheet)}연`,
+      });
+    }
+    return { name: partner.partnerName, amount, products };
+  });
+}
+
+function countReportKinds(partners: ReportPartner[]): number {
+  const names = new Set<string>();
+  for (const partner of partners) for (const product of partner.products) names.add(product.name);
+  return names.size;
+}
+
+function reportItemLines(
+  items: ItemRow[],
+  paperCalcByPartner: Record<string, PaperCalcPartnerEntry>,
+  paperStockProductName: string,
+  direction: "purchase" | "sale",
+): string[] {
+  const lines: string[] = [];
+  appendItemLines(
+    items.map((item) => ({ ...item, realDestinations: [] })),
+    paperCalcByPartner,
+    paperStockProductName,
+    lines,
+    direction,
+  );
+  return lines;
+}
+
+export const EMPTY_REPORT_DAY: ReportDay = {
+  salesCount: 0,
+  salesTotal: 0,
+  purchaseCount: 0,
+  purchaseTotal: 0,
+  sales: [],
+  purchases: [],
+  salesKinds: 0,
+  purchaseKinds: 0,
+  salesLines: [],
+  purchaseLines: [],
+};
+
+export function buildReportDay(data: DayData | undefined, paperStockProductName: string): ReportDay {
+  if (!data) return EMPTY_REPORT_DAY;
+  const sales = buildReportPartners(data.salesItems, data.salesPaperCalcByPartner, paperStockProductName);
+  const purchases = buildReportPartners(data.purchaseItems, data.purchasePaperCalcByPartner, paperStockProductName);
+  return {
+    salesCount: data.salesCount,
+    salesTotal: data.salesTotal,
+    purchaseCount: data.purchaseCount,
+    purchaseTotal: data.purchaseTotal,
+    sales,
+    purchases,
+    salesKinds: countReportKinds(sales),
+    purchaseKinds: countReportKinds(purchases),
+    salesLines: reportItemLines(data.salesItems, data.salesPaperCalcByPartner, paperStockProductName, "sale"),
+    purchaseLines: reportItemLines(data.purchaseItems, data.purchasePaperCalcByPartner, paperStockProductName, "purchase"),
+  };
+}
+
 // 메모 로그를 카톡 등에 붙여넣을 수 있는 텍스트로 옮긴다. 화면에는
 // 작성자·시각이 같이 보이지만, 복사 텍스트에는 시각까지는 필요 없다는
 // 피드백에 따라 "작성자: 내용"만 담는다.
@@ -718,11 +842,8 @@ function CarryoverBadge() {
 function ReturnBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
-      style={{
-        background: "var(--erp-danger-bg)",
-        color: "var(--erp-danger)",
-      }}
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold erp-u-danger"
+      style={{ background: "var(--erp-danger-bg)" }}
     >
       반품
     </span>
@@ -742,7 +863,13 @@ export function DashboardCalendar({
   paperStockProductName,
   currentUserId,
   isAdmin,
+  reportMoney,
+  lowStock,
+  monthTotals,
 }: {
+  monthTotals?: ReportMonthTotals;
+  reportMoney?: ReportMoney | null;
+  lowStock?: ReportLowStock[];
   year: number;
   month: number;
   weeks: Cell[][];
@@ -757,6 +884,10 @@ export function DashboardCalendar({
   isAdmin: boolean;
 }) {
   const router = useRouter();
+  const getReportDay = useCallback(
+    (dateStr: string) => buildReportDay(dataByDate[dateStr], paperStockProductName),
+    [dataByDate, paperStockProductName],
+  );
   const defaultSelected =
     dataByDate[todayStr] !== undefined ||
     weeks.some((w) => w.some((c) => c?.dateStr === todayStr))
@@ -809,6 +940,19 @@ export function DashboardCalendar({
   }
 
   return (
+    <>
+    {/* 오늘 리포트 박스 — .erp-home 격자의 맨 위 한 줄(CSS: .erp-home > .erp-daily-report).
+        같은 dataByDate를 재사용하므로 데이터가 두 번 직렬화되지 않는다. */}
+    <DailyReportBox
+      key={`${year}-${month}`}
+      year={year}
+      month={month}
+      todayStr={todayStr}
+      getDay={getReportDay}
+      money={reportMoney ?? null}
+      lowStock={lowStock ?? []}
+      monthTotals={monthTotals ?? null}
+    />
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_300px]">
       <div className="relative overflow-hidden rounded-sm border border-[var(--erp-border)] bg-white p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1478,6 +1622,7 @@ export function DashboardCalendar({
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -1512,8 +1657,7 @@ function NoteForm({
   return (
     <div className="space-y-2">
       <label
-        className="block text-xs font-medium"
-        style={{ color: "var(--erp-text-muted)" }}
+        className="block text-xs font-medium erp-u-muted"
       >
         메모
       </label>
@@ -1522,11 +1666,8 @@ function NoteForm({
           {notes.map((note) => (
             <li key={note.id} className="flex items-start gap-2">
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
-                style={{
-                  background: "var(--erp-selected)",
-                  color: "var(--erp-text)",
-                }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold erp-u-text"
+                style={{ background: "var(--erp-selected)" }}
               >
                 {note.authorName.slice(0, 1)}
               </span>
@@ -1536,8 +1677,7 @@ function NoteForm({
                     {note.authorName}
                   </span>
                   <span
-                    className="text-[10.5px]"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="text-[10.5px] erp-u-muted"
                   >
                     {new Date(note.createdAt).toLocaleTimeString("ko-KR", {
                       hour: "2-digit",

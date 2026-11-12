@@ -13,7 +13,7 @@ export function NewPurchaseTypeSwitcher({ today, ...purchaseProps }: PurchaseFor
 
   return (
     <div>
-      <div className="erp-seg" style={{ marginBottom: 12 }}>
+      <div className="erp-seg erp-u-mb-12">
         <button
           type="button"
           className={`erp-seg-btn${type === "purchase" ? " active" : ""}`}

@@ -162,7 +162,7 @@ export default async function MonthlyReportCompanyPage({
 
       <MonthNavigator baseHref="/reports/monthly/company" month={month} suffix={companySuffix} />
 
-      <div className="erp-toolbar" style={{ marginBottom: 12 }}>
+      <div className="erp-toolbar erp-u-mb-12">
         <CloseButton href={`/reports/monthly?month=${month}`}>ESC 목록으로</CloseButton>
         <ExcelDownloadLink href={`/api/reports/monthly/company/export?month=${month}${companySuffix}`} pushRight />
       </div>
@@ -189,34 +189,25 @@ export default async function MonthlyReportCompanyPage({
               return (
                 <Fragment key={group.key}>
                   <tr style={{ background: "var(--erp-bg-subtle)" }}>
-                    <td colSpan={4} style={{ fontWeight: 700 }}>
+                    <td className="erp-u-bold" colSpan={4}>
                       {first.productName}
                       {first.spec !== "-" && (
-                        <span
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            fontWeight: 400,
-                          }}
+                        <span className="erp-u-muted erp-u-normal"
                         >
                           {" "}
                           · {first.spec}
                         </span>
                       )}
-                      <span
-                        style={{
-                          marginLeft: 8,
-                          fontWeight: 400,
-                          fontSize: 11,
-                          color: "var(--erp-text-muted)",
-                        }}
+                      <span className="erp-u-normal erp-u-muted"
+                        style={{ marginLeft: 8, fontSize: 11 }}
                       >
                         {group.items.length}건
                       </span>
                     </td>
-                    <td className="num" style={{ fontWeight: 700 }}>
+                    <td className="num erp-u-bold">
                       {formatNumber(group.totalQuantity)} {first.unit}
                     </td>
-                    <td className="num" style={{ fontWeight: 700 }}>
+                    <td className="num erp-u-bold">
                       {formatNumber(group.totalAmount)}
                     </td>
                   </tr>
@@ -236,7 +227,7 @@ export default async function MonthlyReportCompanyPage({
                         </GridBadge>
                       </td>
                       <td>{t.productName}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>
+                      <td className="erp-u-muted">
                         {t.spec !== "-" ? t.spec : "-"}
                       </td>
                       <td className="num">
@@ -258,7 +249,7 @@ export default async function MonthlyReportCompanyPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                 <td colSpan={4} className="erp-grid-sticky-label">
                   합계 ({rows.length}건)
                 </td>

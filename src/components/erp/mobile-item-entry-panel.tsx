@@ -93,9 +93,9 @@ export function MobileItemEntryPanel({
     <div className="flex flex-col gap-3">
       {quickPicks.length > 0 && (
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-bold" style={{ color: "var(--erp-text)" }}>
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold erp-u-text">
             자주 쓰는 품목
-            <span className="font-normal" style={{ color: "var(--erp-text-muted)" }}>
+            <span className="font-normal erp-u-muted">
               탭하면 바로 한 줄 추가
             </span>
           </div>
@@ -105,17 +105,11 @@ export function MobileItemEntryPanel({
                 key={pick.productId}
                 type="button"
                 onClick={() => onQuickAdd?.(pick.productId)}
-                className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left"
-                style={{
-                  minHeight: 44,
-                  minWidth: 112,
-                  border: "1px solid var(--erp-border)",
-                  background: "var(--erp-selected)",
-                  color: "var(--erp-text)",
-                }}
+                className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left erp-u-text"
+                style={{ minHeight: 44, minWidth: 112, border: "1px solid var(--erp-border)", background: "var(--erp-selected)" }}
               >
                 <span className="text-xs font-bold">{pick.name}</span>
-                <span className="text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
+                <span className="text-[10px] erp-u-muted">
                   {pick.sku}
                   {pick.spec ? ` · ${pick.spec}` : ""}
                 </span>
@@ -126,12 +120,12 @@ export function MobileItemEntryPanel({
       )}
 
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-bold" style={{ color: "var(--erp-text)" }}>
+        <span className="text-xs font-bold erp-u-text">
           등록된 품목 ({items.length})
         </span>
         {showPrice ? (
-          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
-            {totalLabel} <strong style={{ color: "var(--erp-text)" }}>{formatNumber(totalAmount ?? 0)}원</strong>
+          <span className="text-xs erp-u-muted">
+            {totalLabel} <strong className="erp-u-text">{formatNumber(totalAmount ?? 0)}원</strong>
           </span>
         ) : null}
       </div>
@@ -148,11 +142,11 @@ export function MobileItemEntryPanel({
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                  <div className="truncate text-sm font-bold erp-u-text">
                     {item.name}
                   </div>
                   {item.spec && (
-                    <div className="truncate text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+                    <div className="truncate text-[11px] erp-u-muted">
                       {item.spec}
                     </div>
                   )}
@@ -161,14 +155,8 @@ export function MobileItemEntryPanel({
                   type="button"
                   onClick={() => onRemove(item.key)}
                   aria-label="품목 삭제"
-                  className="flex-shrink-0 rounded-sm text-xs"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    border: "1px solid var(--erp-danger)",
-                    color: "var(--erp-danger)",
-                    background: "var(--erp-panel)",
-                  }}
+                  className="flex-shrink-0 rounded-sm text-xs erp-u-danger"
+                  style={{ width: 32, height: 32, border: "1px solid var(--erp-danger)", background: "var(--erp-panel)" }}
                 >
                   ✕
                 </button>
@@ -185,7 +173,7 @@ export function MobileItemEntryPanel({
                 </div>
                 {showPrice && (
                   <>
-                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                    <span className="text-xs erp-u-muted">
                       ×
                     </span>
                     <input
@@ -199,8 +187,8 @@ export function MobileItemEntryPanel({
                       style={{ flex: 1, minWidth: 0 }}
                     />
                     <span
-                      className="flex-shrink-0 text-sm font-bold"
-                      style={{ color: "var(--erp-text)", minWidth: 72, textAlign: "right" }}
+                      className="flex-shrink-0 text-sm font-bold erp-u-text"
+                      style={{ minWidth: 72, textAlign: "right" }}
                     >
                       {formatNumber(item.amount ?? 0)}원
                     </span>
@@ -232,14 +220,14 @@ export function MobileItemEntryPanel({
             </div>
             <div className="erp-modal-body flex flex-col gap-3">
               <div>
-                <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                <label className="mb-1 block text-xs erp-u-muted">
                   품목 검색 (SKU · 상품명 · 규격)
                 </label>
                 <ProductSearchSelect products={products} value={draftProductId} onChange={handleDraftProductChange} />
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  <label className="mb-1 block text-xs erp-u-muted">
                     수량
                   </label>
                   <NumberInput
@@ -252,7 +240,7 @@ export function MobileItemEntryPanel({
                 </div>
                 {showPrice && (
                   <div className="flex-1">
-                    <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                    <label className="mb-1 block text-xs erp-u-muted">
                       {priceLabel}
                     </label>
                     <input
@@ -273,7 +261,7 @@ export function MobileItemEntryPanel({
                   <span className="text-xs font-semibold" style={{ color: "var(--erp-info-text)" }}>
                     금액
                   </span>
-                  <span className="text-base font-bold" style={{ color: "var(--erp-text)" }}>
+                  <span className="text-base font-bold erp-u-text">
                     {formatNumber(draftAmount)}원
                   </span>
                 </div>

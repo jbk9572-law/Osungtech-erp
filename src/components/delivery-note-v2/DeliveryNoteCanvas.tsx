@@ -90,7 +90,7 @@ export function SnsFiltechCanvas({
   const totalEa = items.reduce((sum, it) => sum + it.quantity, 0);
 
   return (
-    <div style={{ position: "relative", width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
+    <div className="erp-u-relative" style={{ width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
       {SNS_FILLS.map((f, i) => (
         <Fill key={i} {...f} />
       ))}
@@ -255,7 +255,7 @@ export function ZenithTechCanvas({
   const totalEa = items.reduce((sum, it) => sum + it.quantity, 0);
 
   return (
-    <div style={{ position: "relative", width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
+    <div className="erp-u-relative" style={{ width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
       {ZENITH_FILLS.map((f, i) => (
         <Fill key={i} {...f} />
       ))}
@@ -435,7 +435,7 @@ export function KtSolutionCanvas({
   }, 0);
 
   return (
-    <div style={{ position: "relative", width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
+    <div className="erp-u-relative" style={{ width: pt(PAGE_W), height: pt(PAGE_H), fontFamily: FONT }}>
       {KT_FILLS.map((f, i) => (
         <Fill key={i} {...f} />
       ))}

@@ -46,27 +46,16 @@ export default function ModalError({
         >
           ✕
         </button>
-        <div className="erp-modal-body" style={{ padding: "32px 20px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: "var(--erp-text)", marginBottom: 8 }}>
+        <div className="erp-modal-body erp-u-text-center" style={{ padding: "32px 20px" }}>
+          <p className="erp-u-bold erp-u-text" style={{ fontSize: 14, marginBottom: 8 }}>
             이 항목을 불러오지 못했습니다.
           </p>
-          <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>
+          <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
             일시적인 오류일 수 있습니다. 목록 화면은 그대로 있으니, 닫고 다시 열어보세요.
           </p>
           {(error.message || error.digest) && (
-            <p
-              style={{
-                fontSize: 11,
-                fontFamily: "monospace",
-                color: "var(--erp-text-muted)",
-                background: "var(--erp-bg-subtle)",
-                border: "1px solid var(--erp-border)",
-                borderRadius: 0,
-                padding: "8px 12px",
-                marginBottom: 20,
-                wordBreak: "break-word",
-                textAlign: "left",
-              }}
+            <p className="erp-u-muted"
+              style={{ fontSize: 11, fontFamily: "monospace", background: "var(--erp-bg-subtle)", border: "1px solid var(--erp-border)", borderRadius: 0, padding: "8px 12px", marginBottom: 20, wordBreak: "break-word", textAlign: "left" }}
             >
               {error.message || "(메시지 없음)"}
               {error.digest && (
@@ -77,7 +66,7 @@ export default function ModalError({
               )}
             </p>
           )}
-          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <div className="erp-u-flex erp-u-gap-8" style={{ justifyContent: "center" }}>
             <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
               다시 시도
             </button>

@@ -172,15 +172,15 @@ async function ProductsPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>품목 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+            <span className="erp-u-muted erp-u-normal">
               총 {formatNumber(products.length)}건
             </span>
           </div>
           <form
             id="products-search-form"
             method="get"
-            className="erp-field-grid"
-            style={{ margin: 8, padding: 8, gap: 6 }}
+            className="erp-field-grid erp-u-gap-6"
+            style={{ margin: 8, padding: 8 }}
           >
             <div className="erp-field erp-span-6">
               <input
@@ -235,7 +235,7 @@ async function ProductsPage({
             <ProductDetailPanel key={selectedId} id={selectedId} />
           ) : (
             <>
-              <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+              <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
                 <div className="erp-detail-tabs">
                   <span className="erp-detail-tab active">품목 추가</span>
                 </div>

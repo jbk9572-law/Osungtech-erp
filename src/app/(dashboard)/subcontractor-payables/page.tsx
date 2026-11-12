@@ -45,12 +45,12 @@ export default async function SubcontractorPayablesPage() {
         클릭하면 상세에서 지급 등록/내역을 확인할 수 있습니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">전체 미정산 합계</span>
         </div>
         <div className="erp-detail-body">
-          <span className="text-sm font-bold" style={{ color: "var(--erp-danger)" }}>
+          <span className="text-sm font-bold erp-u-danger">
             {formatNumber(totalBalance)}원
           </span>
         </div>

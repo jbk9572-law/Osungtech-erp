@@ -108,7 +108,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
         {customer.business_number ?? "사업자번호 미등록"} · {customer.contact_name ?? "담당자 미등록"}
       </p>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">출고처 정보 수정</span>
         </div>
@@ -150,7 +150,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                       <td>
                         {a.subject}
                         {a.content && (
-                          <span className="block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                          <span className="block text-xs erp-u-muted">
                             {a.content}
                           </span>
                         )}
@@ -174,11 +174,11 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           <span className="erp-detail-tab active">미수금 현황</span>
         </div>
         <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 text-sm erp-u-muted">
             <div className="flex flex-wrap gap-x-6 gap-y-1">
               <span>매출 누계: {formatNumber(balance.totalSales)}원</span>
               <span>수금 누계: {formatNumber(balance.totalPaid)}원</span>
-              <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
+              <span className="erp-u-bold" style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)" }}>
                 잔액: {formatNumber(balance.balance)}원
               </span>
             </div>
@@ -192,8 +192,8 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           </div>
 
           {balance.unpaidOrders.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <p className="mb-1.5 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <div className="erp-u-mb-12">
+              <p className="mb-1.5 text-xs erp-u-muted">
                 미결제 전표 (오래된 순, 수금은 오래된 전표부터 상계 처리)
               </p>
               <div className="erp-grid-wrap">
@@ -217,7 +217,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                       <td>{o.date.replaceAll("-", ".")}</td>
                       <td>{o.docNo}</td>
                       <td className="num">{formatNumber(o.total)}</td>
-                      <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
+                      <td className="num erp-u-danger erp-u-bold">
                         {formatNumber(o.outstanding)}
                       </td>
                       <td>
@@ -259,7 +259,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                       <td>{p.paid_at.replaceAll("-", ".")}</td>
                       <td className="num">{formatNumber(Number(p.amount))}</td>
                       <td>{p.method ?? "-"}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{p.memo ?? "-"}</td>
+                      <td className="erp-u-muted">{p.memo ?? "-"}</td>
                       <td>
                         <PartyPaymentDeleteForm
                           action={deleteCustomerPayment}
@@ -293,7 +293,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           <span className="erp-detail-tab active">단가 예약 (미래 적용)</span>
         </div>
         <div className="erp-detail-body">
-          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <p className="mb-3 text-xs erp-u-muted">
             지정한 날짜가 되면 자동으로 위 판매단가에 반영됩니다(그 전까지는 기존 단가 그대로 적용).
           </p>
           <PriceScheduleForm
@@ -360,7 +360,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                         initialNotes={price.notes}
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
+                    <td className="erp-u-muted">
                       {new Date(price.updated_at).toLocaleDateString("ko-KR")}
                       <PriceHistoryPopover tableName="customer_product_prices" recordId={price.id} />
                     </td>

@@ -35,7 +35,7 @@ export default async function UsersSettingsPage() {
         바꾸도록 안내해주세요.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">새 계정 생성</span>
         </div>
@@ -44,7 +44,7 @@ export default async function UsersSettingsPage() {
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">엑셀 일괄등록</span>
         </div>
@@ -76,7 +76,7 @@ export default async function UsersSettingsPage() {
               <ClickableRow key={row.id} href={`/settings/users/${row.id}`}>
                 <td>{row.username ?? "-"}</td>
                 <td>{row.full_name ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>
+                <td className="erp-u-muted">
                   {row.email ?? "-"}
                 </td>
                 <td>

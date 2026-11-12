@@ -74,7 +74,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
       />
 
       {request.memo && (
-        <p className="mb-3 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-3 text-sm erp-u-muted">
           메모: {request.memo}
         </p>
       )}
@@ -100,7 +100,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
                 <td>{item.products?.name ?? "-"}</td>
                 <td>{item.spec ?? "-"}</td>
                 <td className="num">{formatNumber(Number(item.quantity))}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{item.remark ?? "-"}</td>
+                <td className="erp-u-muted">{item.remark ?? "-"}</td>
                 {targetSuppliers.map((s) => {
                   const price = priceByItemAndSupplier.get(`${item.id}:${s.id}`);
                   return (
@@ -173,7 +173,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
       ) : (
         <>
           {targetSuppliers.map((s) => (
-            <div className="erp-detail" key={s.id} style={{ marginBottom: 12 }}>
+            <div className="erp-detail erp-u-mb-12" key={s.id}>
               <div className="erp-detail-tabs">
                 <span className="erp-detail-tab active">{s.name} 견적 입력</span>
               </div>
@@ -190,7 +190,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
             </div>
           ))}
 
-          <div className="erp-detail" style={{ marginTop: 0 }}>
+          <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">공급처 확정</span>
             </div>

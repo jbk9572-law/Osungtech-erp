@@ -68,15 +68,15 @@ export function WorkOrderStatusActions({
     : [];
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap" }}>
       <GridBadge tone={STATUS_LABEL[status].tone}>{STATUS_LABEL[status].label}</GridBadge>
       {status === "pending" && firstStepIsSubcontractor && (
         <form action={issueToSubAction}>
           <input type="hidden" name="id" value={id} />
           <button
             type="submit"
-            className="erp-btn"
-            style={{ height: 22, padding: "1px 8px", fontSize: 11 }}
+            className="erp-btn erp-u-h-22"
+            style={{ padding: "1px 8px", fontSize: 11 }}
             disabled={issueToSubPending}
             title="1차 공정 업체에게 자재를 보내고 보유재고로 기록합니다"
           >
@@ -87,7 +87,7 @@ export function WorkOrderStatusActions({
       {status === "pending" && !firstStepIsSubcontractor && (
         <form action={issueAction}>
           <input type="hidden" name="id" value={id} />
-          <button type="submit" className="erp-btn" style={{ height: 22, padding: "1px 8px", fontSize: 11 }} disabled={issuePending}>
+          <button type="submit" className="erp-btn erp-u-h-22" style={{ padding: "1px 8px", fontSize: 11 }} disabled={issuePending}>
             {issuePending ? "처리 중..." : "자재투입"}
           </button>
         </form>
@@ -98,8 +98,8 @@ export function WorkOrderStatusActions({
           <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
           <button
             type={completeLocationContext ? "button" : "submit"}
-            className="erp-btn erp-btn-primary"
-            style={{ height: 22, padding: "1px 8px", fontSize: 11 }}
+            className="erp-btn erp-btn-primary erp-u-h-22"
+            style={{ padding: "1px 8px", fontSize: 11 }}
             disabled={completePending}
             onClick={completeLocationContext ? () => setShowLocationModal(true) : undefined}
           >

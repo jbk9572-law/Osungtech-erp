@@ -50,3 +50,10 @@ next-env.d.ts
 # 모던테마 목업 HTML을 오프라인으로 Tailwind 컴파일/스크린샷 검증하는
 # 세션 작업용 스크래치 폴더(개발 세션 전용, 커밋 대상 아님)
 /.mockup-tmp/
+
+# e2e
+/e2e/.auth/
+/playwright-report/
+/test-results/
+/e2e-visual/.auth/
+/playwright-report-visual/

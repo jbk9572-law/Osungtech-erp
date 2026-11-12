@@ -20,8 +20,9 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
-import { GridBadge } from "@/components/grid/badge";
-import { PAYMENT_METHODS } from "@/lib/payment-methods";
+import { TodoImportPopover } from "@/components/todo-import-popover";
+import { CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
+import { ResizableTh } from "@/components/grid/resizable-th";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   focusSameColumnNextRow,
@@ -41,7 +42,6 @@ import {
   getPaperCalculationsForTodo,
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
-import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { TAX_TYPES, EVIDENCE_TYPES } from "@/lib/tax-evidence-type";
 import { RETURN_REASONS } from "@/lib/return-reason";
@@ -973,13 +973,14 @@ export function NewSaleForm({
     className?: string,
   ) {
     return (
-      <th className={className} style={{ width: colWidths[col] }}>
+      <ResizableTh
+        className={className}
+        width={colWidths[col]}
+        resizing={resizingCol === col}
+        onResizeStart={startResize(col)}
+      >
         {label}
-        <span
-          className={`erp-col-resize-handle${resizingCol === col ? " resizing" : ""}`}
-          onMouseDown={startResize(col)}
-        />
-      </th>
+      </ResizableTh>
     );
   }
 
@@ -1100,13 +1101,8 @@ export function NewSaleForm({
           <div style={{ marginBottom: 8 }}>
             반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
           </div>
-          <label
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontWeight: 700,
-            }}
+          <label className="erp-u-items-center erp-u-gap-6 erp-u-bold"
+            style={{ display: "inline-flex" }}
           >
             반품 사유
             <ErpSelect
@@ -1140,38 +1136,7 @@ export function NewSaleForm({
       <div>
         <div className="erp-form-section-head">
           <span className="erp-eyebrow" style={{ margin: 0 }}>기본정보</span>
-          <div style={{ display: "flex", gap: 6 }}>
-            {/* 수정 화면(initial.id 있음)에는 "다음 건"이라는 개념이 없어서
-                신규 등록일 때만 보여준다 — 하루에 여러 건을 연달아 입력할
-                때마다 매번 목록/메뉴를 다시 타지 않아도 되게 한다. */}
-            {!initial?.id && (
-              <button
-                type="submit"
-                name="continue_new"
-                value="1"
-                disabled={pending}
-                className="erp-btn"
-                style={{ minWidth: 0, margin: 4 }}
-              >
-                저장 후 계속 등록
-              </button>
-            )}
-            <button
-              ref={submitRef}
-              type="submit"
-              disabled={pending}
-              className="erp-btn erp-btn-primary"
-              style={{ minWidth: 0, margin: 4 }}
-            >
-              {pending ? (
-                <>
-                  <span className="erp-spinner" aria-hidden /> 저장 중...
-                </>
-              ) : (
-                `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
-              )}
-            </button>
-          </div>
+          <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />
         </div>
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
@@ -1229,63 +1194,19 @@ export function NewSaleForm({
               />
             </div>
           )}
+          <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
           <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                height: 34,
-                padding: "0 14px",
-                borderRadius: "var(--erp-radius-lg, 0)",
-                background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
-                border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
-                cursor: "pointer",
-                fontSize: 13,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={isCarryover}
-                onChange={(e) => setIsCarryover(e.target.checked)}
-              />
-              <span
-                style={{
-                  fontWeight: 700,
-                  color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)",
-                }}
-              >
-                {nextMonthLabel(orderDate)} 실적으로 이월
-              </span>
-            </label>
-          </div>
-          <div className="erp-field erp-span-3">
-            <label aria-hidden="true">&nbsp;</label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                height: 34,
-                padding: "0 14px",
-                borderRadius: "var(--erp-radius-lg, 0)",
-                background: isSample ? "var(--erp-info-bg)" : "transparent",
-                border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`,
-                cursor: "pointer",
-                fontSize: 13,
-              }}
+            <label className="erp-u-flex erp-u-items-center erp-u-gap-8"
+              style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: 13 }}
             >
               <input
                 type="checkbox"
                 checked={isSample}
                 onChange={(e) => handleSampleChange(e.target.checked)}
               />
-              <span
-                style={{
-                  fontWeight: 700,
-                  color: isSample ? "var(--erp-info-text)" : "var(--erp-text-muted)",
-                }}
+              <span className="erp-u-bold"
+                style={{ color: isSample ? "var(--erp-info-text)" : "var(--erp-text-muted)" }}
               >
                 샘플(무상증정)
               </span>
@@ -1330,56 +1251,17 @@ export function NewSaleForm({
               style={{ width: "100%" }}
             />
           </div>
-          <div className="erp-field erp-span-3">
-            <label>결제방법</label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                height: 30,
-                fontSize: 12.5,
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={alwaysCredit}
-                onChange={(e) => setAlwaysCredit(e.target.checked)}
-              />
-              항상 외상
-            </label>
-          </div>
-          {!alwaysCredit && (
-            <div className="erp-field erp-span-3">
-              <label aria-hidden="true">&nbsp;</label>
-              <ErpSelect
-                ariaLabel="결제방법"
-                value={paymentMethod}
-                onChange={setPaymentMethod}
-                placeholder="결제방법 선택"
-                required
-                options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
-              />
-            </div>
-          )}
+          <PaymentMethodFields alwaysCredit={alwaysCredit} onAlwaysCreditChange={setAlwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
         </div>
       </div>
 
       <div>
         <div
-          className="erp-form-section-head"
-          style={{ position: "relative" }}
+          className="erp-form-section-head erp-u-relative"
         >
           <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              margin: 4,
-              flexWrap: "wrap",
-            }}
+          <div className="erp-u-flex erp-u-items-center"
+            style={{ gap: 4, margin: 4, flexWrap: "wrap" }}
           >
             <QuickAddProductSearch
               products={products}
@@ -1462,23 +1344,15 @@ export function NewSaleForm({
                 boxShadow: "var(--erp-shadow-md)",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "6px 10px",
-                  borderBottom: "1px solid var(--erp-border)",
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold"
+                style={{ padding: "6px 10px", borderBottom: "1px solid var(--erp-border)", fontSize: 12 }}
               >
                 <span>{purchaseLookupDate} 입고 품목</span>
                 <button
                   type="button"
                   onClick={() => setPurchaseCandidates(null)}
-                  className="erp-btn erp-btn-dark"
-                  style={{ minWidth: 0, height: 22, padding: "0 8px" }}
+                  className="erp-btn erp-btn-dark erp-u-h-22 erp-u-pad-0-8"
+                  style={{ minWidth: 0 }}
                 >
                   닫기
                 </button>
@@ -1492,27 +1366,16 @@ export function NewSaleForm({
                   const added = addedPurchaseItemIds.has(item.id);
                   const isAdding = addingItemId === item.id;
                   return (
-                    <div
+                    <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8"
                       key={item.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        padding: "6px 10px",
-                        borderBottom: "1px solid var(--erp-divider)",
-                        fontSize: 12,
-                      }}
+                      style={{ padding: "6px 10px", borderBottom: "1px solid var(--erp-divider)", fontSize: 12 }}
                     >
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600 }}>
+                        <div className="erp-u-semibold">
                           {item.productName}
                         </div>
-                        <div
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            fontSize: 11,
-                          }}
+                        <div className="erp-u-muted"
+                          style={{ fontSize: 11 }}
                         >
                           {item.supplierName} · {item.spec || "규격 미지정"} :{" "}
                           {formatNumber(item.quantity)}
@@ -1522,13 +1385,8 @@ export function NewSaleForm({
                       <button
                         type="button"
                         onClick={() => addPurchaseItem(item)}
-                        className="erp-btn"
-                        style={{
-                          minWidth: 0,
-                          height: 24,
-                          padding: "0 8px",
-                          flexShrink: 0,
-                        }}
+                        className="erp-btn erp-u-h-24 erp-u-pad-0-8"
+                        style={{ minWidth: 0, flexShrink: 0 }}
                         disabled={added || isAdding}
                       >
                         {added ? "추가됨" : isAdding ? "추가 중..." : "추가"}
@@ -1541,114 +1399,13 @@ export function NewSaleForm({
           )}
 
           {openTodos !== null && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                right: 4,
-                zIndex: 20,
-                width: 420,
-                maxWidth: "90vw",
-                maxHeight: 320,
-                overflowY: "auto",
-                background: "var(--erp-panel)",
-                border: "1px solid var(--erp-border)",
-                borderRadius: "var(--erp-radius-xl, 0)",
-                boxShadow: "var(--erp-shadow-md)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "6px 10px",
-                  borderBottom: "1px solid var(--erp-border)",
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                <span>완료 안 한 할 일</span>
-                <button
-                  type="button"
-                  onClick={() => setOpenTodos(null)}
-                  className="erp-btn erp-btn-dark"
-                  style={{ minWidth: 0, height: 22, padding: "0 8px" }}
-                >
-                  닫기
-                </button>
-              </div>
-              {openTodos.length === 0 ? (
-                <p className="erp-home-empty" style={{ padding: 10 }}>
-                  완료 안 한 할 일이 없습니다.
-                </p>
-              ) : (
-                openTodos.map((todo) => {
-                  const itemCount = todo.items.length;
-                  const isImporting = importingTodoId === todo.id;
-                  return (
-                    <div
-                      key={todo.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        padding: "6px 10px",
-                        borderBottom: "1px solid var(--erp-divider)",
-                        fontSize: 12,
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600 }}>
-                          {todo.title}
-                          <GridBadge tone="muted" style={{ marginLeft: 6 }}>
-                            {todoTypeLabel(
-                              todo.todo_type,
-                              todo.ship_date,
-                              todo.due_date,
-                            )}
-                          </GridBadge>
-                          {todo.todo_type === "both" && (
-                            <GridBadge
-                              tone={todo.purchase_done_at ? "ok" : "warn"}
-                              style={{ marginLeft: 4 }}
-                            >
-                              {todo.purchase_done_at ? "매입완료" : "매입 전"}
-                            </GridBadge>
-                          )}
-                        </div>
-                        <div
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            fontSize: 11,
-                          }}
-                        >
-                          {todo.customer_name ? `${todo.customer_name} · ` : ""}
-                          {todo.due_date
-                            ? `마감 ${todo.due_date} · `
-                            : ""}품목 {itemCount}건
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => importTodoItems(todo)}
-                        className="erp-btn"
-                        style={{
-                          minWidth: 0,
-                          height: 24,
-                          padding: "0 8px",
-                          flexShrink: 0,
-                        }}
-                        disabled={isImporting}
-                      >
-                        {isImporting ? "가져오는 중..." : "가져오기"}
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <TodoImportPopover
+              side="sale"
+              todos={openTodos}
+              importingId={importingTodoId}
+              onImport={importTodoItems}
+              onClose={() => setOpenTodos(null)}
+            />
           )}
         </div>
 
@@ -1703,14 +1460,14 @@ export function NewSaleForm({
                         </span>
                       </>
                     ) : (
-                      <span style={{ color: "var(--erp-danger)" }}>
+                      <span className="erp-u-danger">
                         SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
                       </span>
                     )}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">-</td>
+                  <td className="erp-u-muted">-</td>
+                  <td className="erp-u-muted">
                     {tg0Product?.unit ?? "-"}
                   </td>
                   <td className="num">
@@ -1728,8 +1485,7 @@ export function NewSaleForm({
                     {formatNumber(pendingCalcAmount)}원
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     {formatNumber(calcVat(pendingCalcAmount))}원
                   </td>
@@ -1739,7 +1495,7 @@ export function NewSaleForm({
                     ))}
                     원
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">
                     {tg0IsOverridden
                       ? `자동값 ${formatNumber(pendingCalcSummary.totalSheet)} → 수동 입력`
                       : "모조지 계산 자동 반영"}
@@ -1747,8 +1503,8 @@ export function NewSaleForm({
                   <td className="num">
                     <button
                       type="button"
-                      className="erp-btn erp-btn-danger"
-                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                      style={{ minWidth: 0 }}
                       onClick={() => {
                         localStorage.removeItem(PENDING_PAPER_CALC_KEY);
                         setPendingPaperCalc(null);
@@ -1766,44 +1522,39 @@ export function NewSaleForm({
                   key={`paper-calc-size-${i}`}
                   style={{ background: "var(--erp-bg-subtle)" }}
                 >
-                  <td
+                  <td className="erp-u-muted"
                     colSpan={3}
-                    style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}
+                    style={{ paddingLeft: 24 }}
                   >
                     ㄴ {line}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="erp-u-muted">-</td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="erp-u-muted">-</td>
                   <td />
                 </tr>
               ))}
@@ -1844,8 +1595,7 @@ export function NewSaleForm({
                         </>
                       )}
                       <label
-                        className="mt-1 flex items-center gap-1 text-[10.5px]"
-                        style={{ color: "var(--erp-text-muted)" }}
+                        className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
                       >
                         <input
                           type="checkbox"
@@ -1886,8 +1636,7 @@ export function NewSaleForm({
                       />
                       {row.productId && (
                         <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px]"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
                         >
                           <input
                             type="checkbox"
@@ -1918,7 +1667,7 @@ export function NewSaleForm({
                         className="erp-input w-full"
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
+                    <td className="erp-u-muted">
                       {product?.unit ?? "-"}
                     </td>
                     <td className="num">
@@ -1941,8 +1690,7 @@ export function NewSaleForm({
                       />
                       {row.productId && customerId && !isSample && (
                         <label
-                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px]"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px] erp-u-muted"
                         >
                           <input
                             type="checkbox"
@@ -1976,8 +1724,7 @@ export function NewSaleForm({
                             const afterReturn = availableStock + row.quantity;
                             return (
                               <p
-                                className="text-[10.5px]"
-                                style={{ color: "var(--erp-danger)" }}
+                                className="text-[10.5px] erp-u-danger"
                               >
                                 재고 {formatNumber(availableStock)}
                                 {unit} + 반품 {formatNumber(row.quantity)}
@@ -2020,13 +1767,12 @@ export function NewSaleForm({
                         })()}
                     </td>
                     <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      className="num erp-u-muted"
                     >
                       {formatNumber(calcVat(row.quantity * row.unitPrice))}
                       원
                     </td>
-                    <td className="num" style={{ fontWeight: 600 }}>
+                    <td className="num erp-u-semibold">
                       {formatNumber((
                         row.quantity * row.unitPrice +
                         calcVat(row.quantity * row.unitPrice)
@@ -2048,13 +1794,8 @@ export function NewSaleForm({
                     <td className="num" style={{ whiteSpace: "nowrap" }}>
                       <button
                         type="button"
-                        className="erp-btn"
-                        style={{
-                          minWidth: 0,
-                          height: 26,
-                          padding: "0 8px",
-                          marginRight: 4,
-                        }}
+                        className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                        style={{ minWidth: 0, marginRight: 4 }}
                         onClick={() => insertRowAfter(row.key)}
                         title="이 줄 아래에 빈 줄 삽입"
                       >
@@ -2062,8 +1803,8 @@ export function NewSaleForm({
                       </button>
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger"
-                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                        style={{ minWidth: 0 }}
                         onClick={() => removeRow(row.key)}
                         disabled={rows.length <= 1}
                       >
@@ -2076,11 +1817,11 @@ export function NewSaleForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "var(--erp-bg)" }}>
-                <td colSpan={6} style={{ fontWeight: 700 }}>
+                <td className="erp-u-bold" colSpan={6}>
                   합계
                 </td>
                 <td className="num" colSpan={5}>
-                  <div style={{ color: "var(--erp-text-muted)" }}>
+                  <div className="erp-u-muted">
                     공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
                     {formatNumber(taxAmount)}원
                   </div>
@@ -2134,13 +1875,13 @@ export function NewSaleForm({
                     key={r.key}
                     className="mb-1 flex items-center gap-2 text-xs"
                   >
-                    <span style={{ color: "var(--erp-text-muted)" }}>
+                    <span className="erp-u-muted">
                       {product?.name}
                       {product?.spec && ` (${product.spec})`}:
                     </span>
                     <PriceHistoryHint history={hist} />
                     {hist[0]?.lotNumber && (
-                      <span style={{ color: "var(--erp-text-muted)" }}>
+                      <span className="erp-u-muted">
                         · 최근 관리번호 {hist[0].lotNumber}
                       </span>
                     )}

@@ -93,7 +93,7 @@ export default async function PaymentRequestsPage({
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">오늘 지출 빠르게 기록</span>
         </div>
@@ -110,7 +110,7 @@ export default async function PaymentRequestsPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>지급결의서 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(rows.length)}건</span>
+            <span className="erp-u-muted erp-u-normal">총 {formatNumber(rows.length)}건</span>
           </div>
           <div className="erp-split-list-body">
             <SplitListBulkSelect

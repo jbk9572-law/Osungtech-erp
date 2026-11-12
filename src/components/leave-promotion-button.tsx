@@ -26,7 +26,7 @@ export function LeavePromotionButton({
 
   if (sentAt) {
     return (
-      <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <span className="text-xs erp-u-muted">
         {stage}차 발송됨 ({new Date(sentAt).toLocaleDateString("ko-KR")})
       </span>
     );
@@ -38,7 +38,7 @@ export function LeavePromotionButton({
       <input type="hidden" name="year" value={year} />
       <input type="hidden" name="stage" value={stage} />
       <input type="hidden" name="remaining_days" value={remainingDays} />
-      <button type="submit" disabled={pending} className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px", fontSize: 11.5 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0, fontSize: 11.5 }}>
         {pending ? "처리 중..." : `${stage}차 통지 발송`}
       </button>
       <FormMessage state={state} />

@@ -212,27 +212,27 @@ export function OfficialDocumentForm({
       {!internalOnly && (
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <p className="text-xs font-semibold" style={{ color: "var(--erp-text)" }}>
+            <p className="text-xs font-semibold erp-u-text">
               수신처
             </p>
             <div className="flex gap-1">
-              <button type="button" onClick={addExternalRecipient} className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px", fontSize: 11.5 }}>
+              <button type="button" onClick={addExternalRecipient} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0, fontSize: 11.5 }}>
                 + 외부 수신처
               </button>
-              <button type="button" onClick={addInternalRecipient} className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px", fontSize: 11.5 }} disabled={profiles.length === 0}>
+              <button type="button" onClick={addInternalRecipient} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0, fontSize: 11.5 }} disabled={profiles.length === 0}>
                 + 사내 수신처
               </button>
             </div>
           </div>
           {recipients.length === 0 ? (
-            <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-xs erp-u-muted">
               수신처를 1곳 이상 추가해주세요.
             </p>
           ) : (
             <div className="flex flex-col gap-1.5">
               {recipients.map((r) => (
                 <div key={r.key} className="flex items-center gap-2">
-                  <span className="text-[10.5px]" style={{ color: "var(--erp-text-muted)", width: 40 }}>
+                  <span className="text-[10.5px] erp-u-muted" style={{ width: 40 }}>
                     {r.kind === "external" ? "외부" : "사내"}
                   </span>
                   {r.kind === "external" ? (
@@ -265,7 +265,7 @@ export function OfficialDocumentForm({
                       options={profiles.map((p) => ({ value: p.id, label: p.name }))}
                     />
                   )}
-                  <button type="button" onClick={() => removeRecipient(r.key)} className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }}>
+                  <button type="button" onClick={() => removeRecipient(r.key)} className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0 }}>
                     삭제
                   </button>
                 </div>

@@ -233,7 +233,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           </button>
         </div>
         {locateError && (
-          <p className="mt-1 text-[11px]" style={{ color: "var(--erp-danger)" }}>
+          <p className="mt-1 text-[11px] erp-u-danger">
             {locateError}
           </p>
         )}

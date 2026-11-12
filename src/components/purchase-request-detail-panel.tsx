@@ -120,7 +120,7 @@ export async function PurchaseRequestDetailPanel({
       </div>
 
       {row.memo && (
-        <p className="mb-3 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-3 text-sm erp-u-muted">
           메모: {row.memo}
         </p>
       )}
@@ -151,10 +151,10 @@ export async function PurchaseRequestDetailPanel({
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} className="num" style={{ fontWeight: 700 }}>
+              <td colSpan={4} className="num erp-u-bold">
                 합계
               </td>
-              <td className="num" style={{ fontWeight: 700 }}>
+              <td className="num erp-u-bold">
                 {formatNumber(total)}
               </td>
               <td />
@@ -188,7 +188,7 @@ export async function PurchaseRequestDetailPanel({
                   </div>
                   <div>
                     <dt>예상금액</dt>
-                    <dd style={{ fontWeight: 700 }}>
+                    <dd className="erp-u-bold">
                       {formatNumber(Number(item.quantity) * Number(item.estimated_unit_price))}
                     </dd>
                   </div>
@@ -201,7 +201,7 @@ export async function PurchaseRequestDetailPanel({
                 </dl>
               </div>
             ))}
-            <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+            <div className="erp-row-card-foot erp-u-bold">
               <span>합계</span>
               <span className="erp-row-card-amount">{formatNumber(total)}</span>
             </div>
@@ -210,7 +210,7 @@ export async function PurchaseRequestDetailPanel({
       </div>
 
       {allowManage && row.status === "draft" && (
-        <div className="erp-detail" style={{ marginBottom: 12 }}>
+        <div className="erp-detail erp-u-mb-12">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">제출(결재 요청)</span>
           </div>
@@ -231,7 +231,7 @@ export async function PurchaseRequestDetailPanel({
       )}
 
       {row.approval_document_id && (
-        <div className="erp-detail" style={{ marginBottom: 12 }}>
+        <div className="erp-detail erp-u-mb-12">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">결재</span>
           </div>
@@ -255,7 +255,7 @@ export async function PurchaseRequestDetailPanel({
             </Link>
           </PageGuide>
         ) : (
-          <div className="erp-detail" style={{ marginBottom: 12 }}>
+          <div className="erp-detail erp-u-mb-12">
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">구매발주로 전환</span>
             </div>

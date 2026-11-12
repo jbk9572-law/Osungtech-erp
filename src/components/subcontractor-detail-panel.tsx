@@ -50,7 +50,7 @@ export async function SubcontractorDetailPanel({
     ]);
 
   if (!subcontractor) {
-    return <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>업체를 찾을 수 없습니다.</p>;
+    return <p className="p-3 text-xs erp-u-muted">업체를 찾을 수 없습니다.</p>;
   }
 
   return (
@@ -60,7 +60,7 @@ export async function SubcontractorDetailPanel({
         {subcontractor.contact_name ?? "담당자 미등록"} · {subcontractor.phone ?? "연락처 미등록"}
       </p>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">업체 정보</span>
         </div>
@@ -199,7 +199,7 @@ export async function SubcontractorDetailPanel({
               </table>
             </div>
           ) : (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="p-3 text-xs erp-u-muted">
               보유 중인 자재가 없습니다.
             </p>
           )}
@@ -211,17 +211,17 @@ export async function SubcontractorDetailPanel({
           <span className="erp-detail-tab active">외주비 정산</span>
         </div>
         <div className="erp-detail-body">
-          <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+          <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm erp-u-muted">
             <span>가공비 누계: {formatNumber(balance.totalFees)}원</span>
             <span>지급 누계: {formatNumber(balance.totalPaid)}원</span>
-            <span style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}>
+            <span className="erp-u-bold" style={{ color: balance.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)" }}>
               잔액: {formatNumber(balance.balance)}원
             </span>
           </div>
 
           {balance.unpaidSteps.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <p className="mb-1.5 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <div className="erp-u-mb-12">
+              <p className="mb-1.5 text-xs erp-u-muted">
                 미정산 공정 (오래된 순, 지급은 오래된 것부터 상계 처리)
               </p>
               <div className="erp-grid-wrap">

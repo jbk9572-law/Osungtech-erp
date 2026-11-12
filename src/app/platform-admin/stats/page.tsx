@@ -66,7 +66,7 @@ export default async function PlatformStatsPage() {
             </div>
             <div className="erp-home-panel erp-kpi-card">
               <div className="erp-kpi-label">활성 테넌트</div>
-              <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
+              <div className="erp-kpi-value erp-u-text">
                 {formatNumber(stats.activeTenants)}개
               </div>
             </div>
@@ -82,7 +82,7 @@ export default async function PlatformStatsPage() {
             </div>
           </div>
 
-          <div className="erp-detail" style={{ marginTop: 0 }}>
+          <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">최근 12개월 신규 테넌트 가입</span>
             </div>
@@ -91,7 +91,7 @@ export default async function PlatformStatsPage() {
                 <div className="flex flex-col gap-2">
                   {monthlySignups.map((m) => (
                     <div key={m.month} className="flex items-center gap-2" style={{ fontSize: 12 }}>
-                      <span style={{ width: 56, color: "var(--erp-text-muted)", flexShrink: 0 }}>{m.month}</span>
+                      <span className="erp-u-muted" style={{ width: 56, flexShrink: 0 }}>{m.month}</span>
                       <div
                         style={{
                           flex: 1,
@@ -128,7 +128,7 @@ export default async function PlatformStatsPage() {
           아직 실제 발송 API가 없어(migration 189/192 주석) 지금은 항상
           0건으로 보이지만, 나중에 그 기능이 붙으면 이 화면이 자동으로
           채워진다 — 화면을 또 고칠 필요가 없다. */}
-      <h2 className="mt-5 mb-2" style={{ fontSize: "var(--erp-font-md)", fontWeight: 700, color: "var(--erp-text)" }}>
+      <h2 className="mt-5 mb-2 erp-u-bold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>
         이번 달 테넌트별 발송량
       </h2>
       <div className="erp-kpi-row">
@@ -182,11 +182,11 @@ export default async function PlatformStatsPage() {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td style={{ fontWeight: 700 }}>합계</td>
-                    <td style={{ textAlign: "right", fontWeight: 700 }}>{formatNumber(usageTotals.email)}</td>
-                    <td style={{ textAlign: "right", fontWeight: 700 }}>{formatNumber(usageTotals.fax)}</td>
-                    <td style={{ textAlign: "right", fontWeight: 700 }}>{formatNumber(usageTotals.invoice)}</td>
-                    <td style={{ textAlign: "right", fontWeight: 700 }}>{formatNumber(usageTotals.alimtalk)}</td>
+                    <td className="erp-u-bold">합계</td>
+                    <td className="erp-u-bold" style={{ textAlign: "right" }}>{formatNumber(usageTotals.email)}</td>
+                    <td className="erp-u-bold" style={{ textAlign: "right" }}>{formatNumber(usageTotals.fax)}</td>
+                    <td className="erp-u-bold" style={{ textAlign: "right" }}>{formatNumber(usageTotals.invoice)}</td>
+                    <td className="erp-u-bold" style={{ textAlign: "right" }}>{formatNumber(usageTotals.alimtalk)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -220,7 +220,7 @@ export default async function PlatformStatsPage() {
                   </dl>
                 </div>
               ))}
-              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <div className="erp-row-card-foot erp-u-bold">
                 <span>합계</span>
                 <span className="erp-row-card-amount" style={{ fontSize: "var(--erp-font-sm)" }}>
                   메일 {formatNumber(usageTotals.email)} · 팩스 {formatNumber(usageTotals.fax)} · 계산서{" "}
@@ -238,7 +238,7 @@ export default async function PlatformStatsPage() {
           안으로 옮겼다. UsageWidgetPanel 자체가 이미 자기 테두리/배경을
           가진 완결된 블록이라 추가로 카드 테두리로 또 감싸지 않는다
           (개발헌법 3번 — 박스 안에 박스 방지). */}
-      <h2 className="mt-5 mb-2" style={{ fontSize: "var(--erp-font-md)", fontWeight: 700, color: "var(--erp-text)" }}>
+      <h2 className="mt-5 mb-2 erp-u-bold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>
         인프라 사용량(Supabase · Netlify · 서버)
       </h2>
       {/* R2 저장소/쓰기호출 행은 isR2Configured()가 false면 UsageWidget이
@@ -268,7 +268,7 @@ export default async function PlatformStatsPage() {
           메신저 등)의 전체 행 수와 최근 30일 증가량을 보여준다. 실제로
           오래된 데이터를 지우거나 아카이빙하는 건 보관 기간 정책을
           먼저 정해야 하는 별도 단계라 여기서는 "보여주기"까지만 한다. */}
-      <h2 className="mt-5 mb-2" style={{ fontSize: "var(--erp-font-md)", fontWeight: 700, color: "var(--erp-text)" }}>
+      <h2 className="mt-5 mb-2 erp-u-bold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>
         데이터 증가 추이 (로그성 테이블)
       </h2>
       <PageGuide>
@@ -280,7 +280,7 @@ export default async function PlatformStatsPage() {
           <div className="erp-home-panel erp-kpi-card" key={row.key}>
             <div className="erp-kpi-label">{row.label}</div>
             <div className="erp-kpi-value">{formatNumber(row.totalRows)}행</div>
-            <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)" }}>
+            <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
               최근 30일 +{formatNumber(row.last30d)}행
             </div>
           </div>

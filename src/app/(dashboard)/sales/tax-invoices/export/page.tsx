@@ -102,21 +102,21 @@ export default async function TaxInvoiceExportPage({
       )}
 
       {formatIssues.length > 0 && (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">⚠ 양식 형식 오류 — 다운로드 전 확인 필요 ({formatIssues.length}건)</span>
           </div>
-          <div className="erp-detail-body" style={{ fontSize: 12.5, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="erp-detail-body erp-u-flex erp-u-gap-6" style={{ fontSize: 12.5, flexDirection: "column" }}>
             {formatIssues.map(({ invoice, errors }) => (
               <div key={invoice.salesOrderId} style={{ borderBottom: "1px solid var(--erp-border)", paddingBottom: 6 }}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span style={{ color: "var(--erp-text-muted)" }}>{invoice.issueDate}</span>
+                  <span className="erp-u-muted">{invoice.issueDate}</span>
                   <span>{invoice.customerName}</span>
                   <Link href={`/sales/${invoice.salesOrderId}/tax-invoice`} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
                     매출 건 보기
                   </Link>
                 </div>
-                <ul style={{ marginTop: 4, paddingLeft: 16, color: "var(--erp-danger)" }}>
+                <ul className="erp-u-danger" style={{ marginTop: 4, paddingLeft: 16 }}>
                   {errors.map((e, i) => (
                     <li key={i}>{e}</li>
                   ))}
@@ -128,18 +128,18 @@ export default async function TaxInvoiceExportPage({
       )}
 
       {(excluded.length > 0 || ineligibleByType.length > 0) && (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">
               일괄발급 제외 — 직접 처리 필요 ({excluded.length + ineligibleByType.length}건)
             </span>
           </div>
-          <div className="erp-detail-body" style={{ fontSize: 12.5, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="erp-detail-body erp-u-flex erp-u-gap-6" style={{ fontSize: 12.5, flexDirection: "column" }}>
             {excluded.map((inv) => (
               <div key={inv.salesOrderId} className="flex flex-wrap items-center gap-2">
-                <span style={{ color: "var(--erp-text-muted)" }}>{inv.issueDate}</span>
+                <span className="erp-u-muted">{inv.issueDate}</span>
                 <span>{inv.customerName}</span>
-                <span style={{ color: "var(--erp-danger)" }}>품목 {inv.items.length}개 (4개 초과, 자동 요약 꺼짐)</span>
+                <span className="erp-u-danger">품목 {inv.items.length}개 (4개 초과, 자동 요약 꺼짐)</span>
                 <Link href={`/sales/${inv.salesOrderId}/tax-invoice`} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
                   매출 건 보기
                 </Link>
@@ -147,9 +147,9 @@ export default async function TaxInvoiceExportPage({
             ))}
             {ineligibleByType.map((inv) => (
               <div key={inv.salesOrderId} className="flex flex-wrap items-center gap-2">
-                <span style={{ color: "var(--erp-text-muted)" }}>{inv.issueDate}</span>
+                <span className="erp-u-muted">{inv.issueDate}</span>
                 <span>{inv.customerName}</span>
-                <span style={{ color: "var(--erp-danger)" }}>
+                <span className="erp-u-danger">
                   {INVOICE_TYPE_LABEL[inv.invoiceType] ?? inv.invoiceType} — 이 양식에 없는 종류, 홈택스 건별입력 필요
                 </span>
                 <Link href={`/sales/${inv.salesOrderId}/tax-invoice`} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
@@ -161,7 +161,7 @@ export default async function TaxInvoiceExportPage({
         </div>
       )}
 
-      <p className="text-xs" style={{ color: "var(--erp-text-muted)", marginTop: 14 }}>
+      <p className="text-xs erp-u-muted" style={{ marginTop: 14 }}>
         기간 내 발행된 세금계산서 총 {formatNumber(eligible.length + ineligibleByType.length)}건 — 일괄발급 대상{" "}
         {formatNumber(eligible.length)}건 중 품목 4개 초과 {formatNumber(overCapCount)}건
         {summarize ? "(자동 요약 적용됨)" : "(제외됨)"}, 위수탁 계열 {formatNumber(ineligibleByType.length)}건 제외.

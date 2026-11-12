@@ -46,8 +46,8 @@ export function OrgChartApproverPicker({
         <button
           type="button"
           onClick={() => setExpanded((prev) => ({ ...prev, [node.id]: !isOpen }))}
-          className="flex items-center gap-1 text-xs font-semibold"
-          style={{ padding: "3px 0", background: "none", border: "none", cursor: "pointer", color: "var(--erp-text)" }}
+          className="flex items-center gap-1 text-xs font-semibold erp-u-text"
+          style={{ padding: "3px 0", background: "none", border: "none", cursor: "pointer" }}
         >
           {isOpen ? "▾" : "▸"} {node.name}
         </button>
@@ -74,7 +74,7 @@ export function OrgChartApproverPicker({
                     {e.fullName}
                     {e.positionTitle ? ` (${e.positionTitle})` : ""}
                   </span>
-                  {selected && <span style={{ color: "var(--erp-text)" }}>✓</span>}
+                  {selected && <span className="erp-u-text">✓</span>}
                 </button>
               );
             })}
@@ -118,7 +118,7 @@ export function OrgChartApproverPicker({
         <div>
           <p className="mb-1 text-xs font-semibold">결재자 · 순서대로 결재({approvers.length}명)</p>
           {approvers.length === 0 ? (
-            <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-xs erp-u-muted">
               아직 선택한 대상이 없습니다.
             </p>
           ) : (
@@ -144,7 +144,7 @@ export function OrgChartApproverPicker({
         <div>
           <p className="mb-1 text-xs font-semibold">참조자 · 열람만({references.length}명)</p>
           {references.length === 0 ? (
-            <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-xs erp-u-muted">
               아직 선택한 대상이 없습니다.
             </p>
           ) : (

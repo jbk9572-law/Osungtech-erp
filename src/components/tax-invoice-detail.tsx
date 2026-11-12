@@ -82,7 +82,7 @@ export function TaxInvoiceDetail({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <GridBadge tone="ok">계산서 발행완료</GridBadge>
-        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <span className="text-xs erp-u-muted">
           {new Date(invoice.issue_date).toLocaleDateString("ko-KR")} · {INVOICE_TYPE_LABEL[invoice.invoice_type] ?? invoice.invoice_type} ·{" "}
           {CLAIM_TYPE_LABEL[invoice.claim_type] ?? invoice.claim_type}
         </span>
@@ -96,7 +96,7 @@ export function TaxInvoiceDetail({
         {!hasCorrections && (
           <form action={cancelFormAction}>
             <input type="hidden" name="sales_order_id" value={salesOrderId} />
-            <button type="submit" disabled={cancelPending} className="erp-btn" style={{ minWidth: 0, height: 24, padding: "0 10px", fontSize: 11.5 }}>
+            <button type="submit" disabled={cancelPending} className="erp-btn erp-u-h-24" style={{ minWidth: 0, padding: "0 10px", fontSize: 11.5 }}>
               {cancelPending ? "처리 중..." : "미발행으로 되돌리기"}
             </button>
           </form>
@@ -105,7 +105,7 @@ export function TaxInvoiceDetail({
       <FormMessage state={cancelState} />
 
       {isConsignment && (
-        <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="text-xs erp-u-muted">
           수탁자: {invoice.consignee_name ?? "-"} ({invoice.consignee_business_number ?? "-"}) · {invoice.consignee_representative_name ?? "-"}
         </p>
       )}
@@ -127,22 +127,22 @@ export function TaxInvoiceDetail({
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
-                <td style={{ color: "var(--erp-text-muted)" }}>
+                <td className="erp-u-muted">
                   {item.line_date ? new Date(item.line_date).toLocaleDateString("ko-KR") : "-"}
                 </td>
                 <td>{item.item_name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{item.spec || "-"}</td>
+                <td className="erp-u-muted">{item.spec || "-"}</td>
                 <td className="num">{item.quantity != null ? formatNumber(item.quantity) : "-"}</td>
                 <td className="num">{item.unit_price != null ? formatNumber(item.unit_price) : "-"}</td>
                 <td className="num">{formatNumber(item.supply_amount)}</td>
                 <td className="num">{formatNumber(item.tax_amount)}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
+                <td className="erp-u-muted">{item.remark || "-"}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={5} className="num" style={{ fontWeight: 700 }}>
+              <td colSpan={5} className="num erp-u-bold">
                 합계
               </td>
               <td className="num erp-doc-total">{formatNumber(invoice.supply_amount)}</td>
@@ -162,7 +162,7 @@ export function TaxInvoiceDetail({
               <div className="erp-row-card" key={item.id}>
                 <div className="erp-row-card-head">
                   <span className="erp-row-card-partner">{item.item_name}</span>
-                  <span className="erp-row-card-date" style={{ fontWeight: 400 }}>
+                  <span className="erp-row-card-date erp-u-normal">
                     {item.line_date ? new Date(item.line_date).toLocaleDateString("ko-KR") : "-"}
                   </span>
                 </div>
@@ -181,7 +181,7 @@ export function TaxInvoiceDetail({
                   </div>
                   <div>
                     <dt>공급가액</dt>
-                    <dd style={{ fontWeight: 700 }}>{formatNumber(item.supply_amount)}</dd>
+                    <dd className="erp-u-bold">{formatNumber(item.supply_amount)}</dd>
                   </div>
                   <div>
                     <dt>세액</dt>
@@ -196,7 +196,7 @@ export function TaxInvoiceDetail({
                 </dl>
               </div>
             ))}
-            <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+            <div className="erp-row-card-foot erp-u-bold">
               <span>합계</span>
               <span className="erp-row-card-amount">
                 공급가액 {formatNumber(invoice.supply_amount)} · 세액 {formatNumber(invoice.tax_amount)}
@@ -206,11 +206,11 @@ export function TaxInvoiceDetail({
         )}
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">결제 수단</span>
         </div>
-        <div className="erp-detail-body" style={{ fontSize: 12.5, display: "flex", flexWrap: "wrap", gap: 20 }}>
+        <div className="erp-detail-body erp-u-flex" style={{ fontSize: 12.5, flexWrap: "wrap", gap: 20 }}>
           <AmountField label="합계금액" value={invoice.total_amount} bold />
           <AmountField label="현금" value={invoice.cash_amount} />
           <AmountField label="수표" value={invoice.check_amount} />
@@ -220,27 +220,27 @@ export function TaxInvoiceDetail({
       </div>
 
       {invoice.remark && (
-        <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="text-xs erp-u-muted">
           비고: {invoice.remark}
         </p>
       )}
 
       {hasCorrections && (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">수정 이력 ({corrections.length}건)</span>
           </div>
-          <div className="erp-detail-body" style={{ fontSize: 12.5, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="erp-detail-body erp-u-flex" style={{ fontSize: 12.5, flexDirection: "column", gap: 10 }}>
             {corrections.map((c) => (
               <div key={c.id} style={{ borderBottom: "1px solid var(--erp-border)", paddingBottom: 8 }}>
                 <div className="flex flex-wrap items-center gap-2">
                   <GridBadge tone="info">
                     {c.modification_reason ? MODIFICATION_REASON_LABEL[c.modification_reason] ?? c.modification_reason : "-"}
                   </GridBadge>
-                  <span style={{ color: "var(--erp-text-muted)" }}>{new Date(c.issue_date).toLocaleDateString("ko-KR")}</span>
-                  <span style={{ fontWeight: 700 }}>{formatNumber(c.total_amount)}원</span>
+                  <span className="erp-u-muted">{new Date(c.issue_date).toLocaleDateString("ko-KR")}</span>
+                  <span className="erp-u-bold">{formatNumber(c.total_amount)}원</span>
                 </div>
-                <ul style={{ marginTop: 4, paddingLeft: 16, color: "var(--erp-text-muted)" }}>
+                <ul className="erp-u-muted" style={{ marginTop: 4, paddingLeft: 16 }}>
                   {[...c.tax_invoice_items]
                     .sort((a, b) => a.sort_order - b.sort_order)
                     .map((item) => (
@@ -250,7 +250,7 @@ export function TaxInvoiceDetail({
                       </li>
                     ))}
                 </ul>
-                {c.remark && <p style={{ marginTop: 4, color: "var(--erp-text-muted)" }}>비고: {c.remark}</p>}
+                {c.remark && <p className="erp-u-muted" style={{ marginTop: 4 }}>비고: {c.remark}</p>}
               </div>
             ))}
           </div>
@@ -262,8 +262,8 @@ export function TaxInvoiceDetail({
 
 function AmountField({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>{label}</span>
+    <div className="erp-u-flex" style={{ flexDirection: "column", gap: 2 }}>
+      <span className="erp-u-muted" style={{ fontSize: 11 }}>{label}</span>
       <span style={{ fontWeight: bold ? 700 : 400 }}>{formatNumber(value)}원</span>
     </div>
   );

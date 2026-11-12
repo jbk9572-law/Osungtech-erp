@@ -72,7 +72,7 @@ export default async function InventoryCountPrintPage({
       </div>
 
       <div className="mb-3 flex items-end justify-between" style={{ color: "#000" }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700 }}>재고 실사 목록{selectedWarehouseName ? ` — ${selectedWarehouseName}` : ""}</h1>
+        <h1 className="erp-u-bold" style={{ fontSize: 18 }}>재고 실사 목록{selectedWarehouseName ? ` — ${selectedWarehouseName}` : ""}</h1>
         <div style={{ fontSize: 12 }}>
           기준일 {todayKstStr()} · {formatNumber(rows.length)}개 품목
           {onlyNonZero === "1" && " (전산 재고 0 제외)"}
@@ -112,13 +112,13 @@ export default async function InventoryCountPrintPage({
               <td style={{ ...cellStyle, textAlign: "right" }}>
                 {formatNumber(row.systemQuantity)} {row.unit ?? ""}
               </td>
-              <td style={{ ...cellStyle, height: 26 }} />
-              <td style={{ ...cellStyle, height: 26 }} />
+              <td className="erp-u-h-26" style={{ ...cellStyle }} />
+              <td className="erp-u-h-26" style={{ ...cellStyle }} />
             </tr>
           ))}
           {!rows.length && (
             <tr>
-              <td colSpan={7} style={{ ...cellStyle, textAlign: "center" }}>
+              <td className="erp-u-text-center" colSpan={7} style={{ ...cellStyle }}>
                 조건에 맞는 품목이 없습니다.
               </td>
             </tr>

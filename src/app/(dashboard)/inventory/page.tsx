@@ -68,7 +68,7 @@ async function InventoryPage({
         때는 우측 상단 &quot;재고 실사&quot;를 사용하세요.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">재고 조정 (기초재고 등록 등)</span>
         </div>

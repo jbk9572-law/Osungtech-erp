@@ -317,7 +317,7 @@ export function PaperCalcClient({
 
       {canSwitchPendingFor && (
         <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <span className="text-xs erp-u-muted">
             연결할 등록 유형
           </span>
           <div className="erp-seg">
@@ -350,8 +350,8 @@ export function PaperCalcClient({
               <div className="ml-auto flex items-center pr-2">
                 <button
                   type="button"
-                  className="erp-btn erp-btn-primary"
-                  style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+                  className="erp-btn erp-btn-primary erp-u-h-26"
+                  style={{ minWidth: 0, padding: "0 10px" }}
                   onClick={() => setShowNewCalcForm(true)}
                 >
                   + 새로 계산하기
@@ -361,7 +361,7 @@ export function PaperCalcClient({
           </div>
           <div className="erp-detail-body">
             {savedCalculations.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="text-sm erp-u-muted">
                 저장된 계산이 없습니다. 계산 후 &apos;이{" "}
                 {salesOrderId ? "출고" : "매입"} 건에 저장&apos;을 눌러주세요.
               </p>
@@ -454,12 +454,8 @@ export function PaperCalcClient({
                         <td>
                           <button
                             type="button"
-                            className="erp-btn erp-btn-danger"
-                            style={{
-                              minWidth: 0,
-                              height: 26,
-                              padding: "0 8px",
-                            }}
+                            className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                            style={{ minWidth: 0 }}
                             onClick={() => removeRow(row.key)}
                             disabled={rows.length <= 1}
                           >
@@ -474,8 +470,7 @@ export function PaperCalcClient({
 
               <div className="flex items-center justify-between">
                 <span
-                  className="text-xs"
-                  style={{ color: "var(--erp-text-muted)" }}
+                  className="text-xs erp-u-muted"
                 >
                   현재 입력 {rows.length} / {MAX_ROWS}
                 </span>
@@ -518,8 +513,7 @@ export function PaperCalcClient({
                   가로·세로 전환
                 </button>
                 <span
-                  className="text-xs"
-                  style={{ color: "var(--erp-text-muted)" }}
+                  className="text-xs erp-u-muted"
                 >
                   포장단위: {formatNumber(SHEET_PER_REAM)}장 / 연
                 </span>
@@ -709,8 +703,7 @@ export function PaperCalcClient({
             <div className="erp-detail">
               <div className="erp-detail-body">
                 <p
-                  className="text-sm"
-                  style={{ color: "var(--erp-text-muted)" }}
+                  className="text-sm erp-u-muted"
                 >
                   발주 품목(가로/세로/수량)을 입력하고 &apos;계산 시작&apos;을
                   눌러주세요.
@@ -736,8 +729,8 @@ export function PaperCalcClient({
                   <div className="ml-auto flex items-center gap-1 pr-2">
                     <button
                       type="button"
-                      className="erp-btn"
-                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      style={{ minWidth: 0 }}
                       onClick={() => setPage(0)}
                       disabled={currentPage === 0}
                     >
@@ -745,8 +738,8 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn"
-                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      style={{ minWidth: 0 }}
                       onClick={() => setPage((p) => p - 1)}
                       disabled={currentPage === 0}
                     >
@@ -754,8 +747,8 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn"
-                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      style={{ minWidth: 0 }}
                       onClick={() => setPage((p) => p + 1)}
                       disabled={currentPage + 1 >= totalPages}
                     >
@@ -763,8 +756,8 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn"
-                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                      style={{ minWidth: 0 }}
                       onClick={() => setPage(totalPages - 1)}
                       disabled={currentPage + 1 >= totalPages}
                     >
@@ -795,8 +788,7 @@ export function PaperCalcClient({
                   <div className="erp-detail-body flex flex-col gap-3">
                     {visibleLayouts.length === 0 ? (
                       <p
-                        className="text-sm"
-                        style={{ color: "var(--erp-text-muted)" }}
+                        className="text-sm erp-u-muted"
                       >
                         표시할 배치가 없습니다.
                       </p>
@@ -807,8 +799,7 @@ export function PaperCalcClient({
                             배치 {pageStart + i + 1}
                           </div>
                           <ul
-                            className="space-y-0.5"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="space-y-0.5 erp-u-muted"
                           >
                             <li>사용률: {layout.margin.usage}%</li>
                             <li>우측 여백: {layout.margin.right} mm</li>
@@ -903,8 +894,8 @@ function SavedCalcRow({
             )}
             <button
               type="submit"
-              className="erp-btn erp-btn-danger"
-              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+              style={{ minWidth: 0 }}
               disabled={pending}
               onBlur={confirmDelete.reset}
             >
@@ -968,7 +959,7 @@ export function DashboardCards({
             border: "1px solid var(--erp-border)",
           }}
         >
-          <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <div className="text-xs erp-u-muted">
             {card.label}
           </div>
           <div
@@ -979,8 +970,7 @@ export function DashboardCards({
           </div>
           {card.sub && (
             <div
-              className="text-xs font-semibold"
-              style={{ color: "var(--erp-text-muted)" }}
+              className="text-xs font-semibold erp-u-muted"
             >
               {card.sub}
             </div>
@@ -1033,8 +1023,7 @@ export function BatchCard({
     >
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
       <div
-        className="mb-1.5 text-center text-xs"
-        style={{ color: "var(--erp-text-muted)" }}
+        className="mb-1.5 text-center text-xs erp-u-muted"
       >
         {layout.paperW} × {layout.paperH} mm
       </div>
@@ -1193,8 +1182,7 @@ export function BatchCard({
           ))}
       </svg>
       <div
-        className="mt-1.5 text-center text-xs"
-        style={{ color: "var(--erp-text-muted)" }}
+        className="mt-1.5 text-center text-xs erp-u-muted"
       >
         {formatNumber(layout.sheetCount)}장 (약 {layout.batchReams}연) ·
         사용률 {layout.margin.usage}%

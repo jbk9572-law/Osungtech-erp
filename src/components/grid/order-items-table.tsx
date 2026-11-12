@@ -81,13 +81,13 @@ export function OrderItemsTable({
             {rows.flatMap((row) => {
               const mainRow = (
                 <tr key={row.id}>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.sku}</td>
+                  <td className="erp-u-muted">{row.sku}</td>
                   <td>{row.productLabel}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">{row.spec || "-"}</td>
+                  <td className="erp-u-muted">
                     <LotBadge lotNumber={row.lotNumber} />
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.unit}</td>
+                  <td className="erp-u-muted">{row.unit}</td>
                   <td
                     className="num"
                     style={{ color: row.basePackageQty ? "var(--erp-danger)" : "var(--erp-text-muted)" }}
@@ -95,14 +95,14 @@ export function OrderItemsTable({
                     {formatPackageQty(row.basePackageQty, row.quantity)}
                   </td>
                   <td className="num">{formatNumber(row.quantity)}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num erp-u-muted">
                     {formatNumOrDash(row.unitPrice)}
                   </td>
                   <td className="num">{formatNumber(row.supplyAmount)}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num erp-u-muted">
                     {formatNumber(row.taxAmount)}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.remark || "-"}</td>
+                  <td className="erp-u-muted">{row.remark || "-"}</td>
                 </tr>
               );
 
@@ -113,23 +113,23 @@ export function OrderItemsTable({
               const sizeRows = paperCalcSizeLines.map((line, i) => (
                 <tr key={`${row.id}-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
                   <td />
-                  <td colSpan={3} style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}>
+                  <td className="erp-u-muted" colSpan={3} style={{ paddingLeft: 24 }}>
                     ㄴ {line}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="erp-u-muted">-</td>
+                  <td className="num erp-u-muted">-</td>
+                  <td className="num erp-u-muted">-</td>
+                  <td className="num erp-u-muted">-</td>
+                  <td className="num erp-u-muted">-</td>
+                  <td className="num erp-u-muted">-</td>
+                  <td className="erp-u-muted">-</td>
                 </tr>
               ));
               return [mainRow, ...sizeRows];
             })}
           </tbody>
           <tfoot>
-            <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+            <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
               <td colSpan={8} className="num">
                 합계
               </td>
@@ -148,7 +148,7 @@ export function OrderItemsTable({
               <div className="erp-row-card-head">
                 <span className="erp-row-card-partner">{row.productLabel}</span>
                 {row.sku && (
-                  <span className="erp-row-card-date" style={{ fontWeight: 400 }}>
+                  <span className="erp-row-card-date erp-u-normal">
                     {row.sku}
                   </span>
                 )}
@@ -184,7 +184,7 @@ export function OrderItemsTable({
                 </div>
                 <div>
                   <dt>공급가액</dt>
-                  <dd style={{ fontWeight: 700 }}>{formatNumber(row.supplyAmount)}</dd>
+                  <dd className="erp-u-bold">{formatNumber(row.supplyAmount)}</dd>
                 </div>
                 <div>
                   <dt>세액</dt>
@@ -206,14 +206,9 @@ export function OrderItemsTable({
 
           return [
             card,
-            <div
+            <div className="erp-u-muted"
               key={`${row.id}-sizes`}
-              style={{
-                marginTop: -4,
-                paddingLeft: 14,
-                fontSize: "var(--erp-font-xs)",
-                color: "var(--erp-text-muted)",
-              }}
+              style={{ marginTop: -4, paddingLeft: 14, fontSize: "var(--erp-font-xs)" }}
             >
               {paperCalcSizeLines.map((line, i) => (
                 <div key={i}>ㄴ {line}</div>
@@ -222,7 +217,7 @@ export function OrderItemsTable({
           ];
         })}
         {rows.length > 0 && (
-          <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+          <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
             <span>합계</span>
             <span className="erp-row-card-amount">
               공급가액 {formatNumber(totalSupply)}원 · 세액 {formatNumber(totalTax)}원

@@ -131,13 +131,13 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">계정 수 / 가입일</div>
           <div className="erp-kpi-value">{userIds.length}명</div>
-          <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginTop: 2 }}>
+          <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginTop: 2 }}>
             {new Date(tenant.created_at).toLocaleDateString("ko-KR")}
           </div>
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">회사 정보</span>
         </div>
@@ -146,7 +146,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">이용 상태</span>
         </div>
@@ -164,7 +164,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">포인트</span>
         </div>
@@ -173,7 +173,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">저장 공간 쿼터</span>
         </div>
@@ -188,7 +188,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">애드온</span>
         </div>
@@ -222,7 +222,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">소속 계정 ({(users ?? []).length})</span>
         </div>
@@ -235,23 +235,12 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
           ) : (
             <div className="erp-card-feed erp-card-feed-compact">
               {users.map((u) => (
-                <div
+                <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
                   key={u.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "var(--erp-space-5)",
-                    background: "var(--erp-panel)",
-                    border: "1px solid var(--erp-comm-border)",
-                    borderRadius: "var(--erp-comm-radius-row)",
-                    boxShadow: "var(--erp-comm-shadow-row)",
-                    padding: "11px 16px",
-                    flex: "0 0 auto",
-                  }}
+                  style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px", flex: "0 0 auto" }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>
+                    <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>
                       {u.full_name}
                       {u.is_demo && (
                         <span style={{ marginLeft: "var(--erp-space-2)" }}>
@@ -262,7 +251,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
                         <span className="erp-badge erp-badge-muted">{ROLE_LABELS[u.role] ?? u.role}</span>
                       </span>
                     </div>
-                    <div style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", marginTop: 3 }}>{u.username}</div>
+                    <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-sm)", marginTop: 3 }}>{u.username}</div>
                   </div>
                   <ResetTenantUserPasswordForm tenantId={tenant.id} userId={u.id} />
                 </div>
@@ -273,7 +262,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
       </div>
 
       {!tenant.is_platform_operator && (
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">위험 구역</span>
           </div>

@@ -6,6 +6,35 @@
    .erp의 DOM 하위가 아니라 형제 노드가 되어 변수를 상속받지 못하고
    (예: 방향키/마우스로 항목을 짚어도 배경색이 하나도 안 바뀌는 문제)
    조용히 깨진다. */
+
+/* ── 공용 유틸 클래스(erp-u-*) ─────────────────────────────────
+   예전엔 화면마다 style={{ color: "var(--erp-text-muted)" }}처럼 같은 값을
+   직접 박았다. 이제 한 곳(여기)에서 정의하고 className으로 쓴다.
+   - inline style은 클래스보다 우선하므로, 같은 효과를 내려고 !important를 붙였다.
+   - 파일 맨 위에 둔 이유: 아래쪽에 이미 있는 `display:none !important` 같은
+     규칙이 같은 우선순위일 때 순서상 나중이라 이기도록(= 예전 동작 그대로).
+   - 표 폭(width/minWidth)은 lint(check-fixed-table-columns 등)가 style에서
+     읽으므로 일부러 유틸로 옮기지 않는다. */
+.erp-u-muted { color: var(--erp-text-muted) !important; }
+.erp-u-text { color: var(--erp-text) !important; }
+.erp-u-danger { color: var(--erp-danger) !important; }
+.erp-u-bold { font-weight: 700 !important; }
+.erp-u-semibold { font-weight: 600 !important; }
+.erp-u-normal { font-weight: 400 !important; }
+.erp-u-flex { display: flex !important; }
+.erp-u-items-center { align-items: center !important; }
+.erp-u-justify-between { justify-content: space-between !important; }
+.erp-u-relative { position: relative !important; }
+.erp-u-text-center { text-align: center !important; }
+.erp-u-mt-0 { margin-top: 0 !important; }
+.erp-u-mb-12 { margin-bottom: 12px !important; }
+.erp-u-gap-6 { gap: 6px !important; }
+.erp-u-gap-8 { gap: 8px !important; }
+.erp-u-h-22 { height: 22px !important; }
+.erp-u-h-24 { height: 24px !important; }
+.erp-u-h-26 { height: 26px !important; }
+.erp-u-pad-0-8 { padding: 0 8px !important; }
+
 :root {
   /* 브랜드 로고(엘보닉스) "E" 마크 본체의 짙은 남색에 맞춰 조정 —
      로고 안쪽의 밝은 포인트 블루가 아니라 마크 몸통 색이 기준이다.
@@ -6108,4 +6137,413 @@ a.erp-detail-tab:hover:not(.active) {
 [data-theme="classic-c"] .erp-badge-warning {
   background: var(--erp-warning);
   color: var(--erp-on-primary);
+}
+
+/* ── 메인 화면 "오늘 리포트" 박스 (daily-report-box.tsx) ─────────────────
+   하루치 매출·매입·수금지급·재고를 한 박스로 보여준다. 색/간격/글자 크기는 전부
+   --erp-* 토큰만 쓴다. 헤더는 앱 맨 위 남색 타이틀바와 겹쳐 보이지 않게 옅은
+   바탕(--erp-bg-subtle)에 남색 글자로 둔다. .erp-home 격자 안에서는 항상
+   맨 위 한 줄 전체를 차지한다(대시보드 달력이 이 격자의 자식이라서). */
+.erp-home > .erp-daily-report {
+  grid-column: 1 / -1;
+  order: -1;
+}
+
+.erp-daily-report {
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-3xl, 0);
+  background: var(--erp-panel);
+  overflow: hidden;
+}
+
+.erp-daily-report-head {
+  border-radius: var(--erp-radius-xl, 0);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 8px 14px;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border-strong);
+}
+
+.erp-daily-report-title {
+  font-size: var(--erp-font-lg);
+  font-weight: 700;
+  color: var(--erp-primary);
+}
+
+.erp-daily-report-spacer {
+  flex: 1;
+}
+
+.erp-daily-report-nav {
+  display: inline-flex;
+}
+
+.erp-daily-report-nav .erp-btn {
+  min-width: 0;
+  margin-left: -1px;
+}
+
+.erp-daily-report-nav .erp-btn:first-child {
+  margin-left: 0;
+}
+
+.erp-daily-report-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.erp-daily-report-sec {
+  padding: 14px 16px;
+  border-right: 1px solid var(--erp-divider);
+  min-width: 0;
+}
+
+.erp-daily-report-sec:last-child {
+  border-right: 0;
+}
+
+.erp-daily-report-sec-title {
+  margin-bottom: 10px;
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+
+.erp-daily-report-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: var(--erp-font-base);
+}
+
+.erp-daily-report-line + .erp-daily-report-line {
+  border-top: 1px solid var(--erp-divider);
+}
+
+.erp-daily-report-line .label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.erp-daily-report-amount {
+  font-size: var(--erp-font-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-daily-report-meta {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-daily-report-bar {
+  display: flex;
+  height: 8px;
+  margin: 10px 0;
+  background: var(--erp-divider);
+}
+
+.erp-daily-report-bar > .sales {
+  background: var(--erp-success);
+}
+
+.erp-daily-report-bar > .purchase {
+  background: var(--erp-primary);
+}
+
+.erp-daily-report-month {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--erp-border-strong);
+}
+
+.erp-daily-report-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.erp-daily-report-tile {
+  padding: 9px 12px;
+  border: 1px solid var(--erp-divider);
+}
+
+.erp-daily-report-tile .label {
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+}
+
+.erp-daily-report-tile.is-in {
+  background: var(--erp-success-bg);
+  border-color: var(--erp-success-border);
+}
+
+.erp-daily-report-tile.is-in .label {
+  color: var(--erp-success);
+}
+
+.erp-daily-report-tile.is-out {
+  background: var(--erp-warning-bg);
+  border-color: var(--erp-warning-border);
+}
+
+.erp-daily-report-tile.is-out .label {
+  color: var(--erp-warning);
+}
+
+.erp-daily-report-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: var(--erp-font-base);
+}
+
+.erp-daily-report-item + .erp-daily-report-item {
+  border-top: 1px solid var(--erp-divider);
+}
+
+.erp-daily-report-item .partner {
+  flex: none;
+  max-width: 55%;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erp-daily-report-item .summary {
+  margin-left: auto;
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erp-daily-report-empty {
+  padding: 6px 0;
+  font-size: var(--erp-font-base);
+  color: var(--erp-text-muted);
+}
+
+.erp-daily-report-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--erp-primary);
+  font-size: var(--erp-font-base);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.erp-daily-report-more:hover {
+  text-decoration: underline;
+}
+
+.erp-daily-report-stock-bar {
+  height: 6px;
+  margin-top: 4px;
+  background: var(--erp-divider);
+}
+
+.erp-daily-report-stock-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--erp-danger);
+}
+
+/* 전체 보기 / 텍스트 복사 모달 */
+.erp-daily-report-modal {
+  width: 1040px;
+  max-width: calc(100vw - 32px);
+  max-height: 90vh;
+}
+
+.erp-daily-report-modal-head {
+  border-radius: var(--erp-radius-xl, 0);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border-strong);
+}
+
+.erp-daily-report-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 16px;
+  background: var(--erp-bg-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.erp-daily-report-modal-foot {
+  border-radius: var(--erp-radius-xl, 0);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--erp-border-strong);
+  background: var(--erp-panel);
+}
+
+.erp-daily-report-tabs {
+  display: inline-flex;
+}
+
+.erp-daily-report-tabs .erp-btn {
+  min-width: 0;
+  margin-left: -1px;
+}
+
+.erp-daily-report-tabs .erp-btn:first-child {
+  margin-left: 0;
+}
+
+.erp-daily-report-tabs .erp-btn.active {
+  background: var(--erp-primary);
+  border-color: var(--erp-primary);
+  color: var(--erp-on-primary);
+}
+
+.erp-daily-report-partner {
+  border-radius: var(--erp-radius-xl, 0);
+  border: 1px solid var(--erp-border-strong);
+  background: var(--erp-panel);
+}
+
+.erp-daily-report-partner-head {
+  border-radius: var(--erp-radius-xl, 0);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--erp-bg-subtle);
+  border-bottom: 1px solid var(--erp-border-strong);
+}
+
+.erp-daily-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--erp-font-base);
+}
+
+.erp-daily-report-table td {
+  padding: 6px 12px;
+  border-top: 1px solid var(--erp-divider);
+  vertical-align: top;
+}
+
+.erp-daily-report-table tr:first-child td {
+  border-top: 0;
+}
+
+.erp-daily-report-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.erp-daily-report-table .product {
+  font-weight: 600;
+}
+
+.erp-daily-report-table .spec {
+  color: var(--erp-text-muted);
+}
+
+.erp-daily-report-table .sum td {
+  color: var(--erp-text-muted);
+  font-weight: 600;
+  background: var(--erp-bg-subtle);
+}
+
+.erp-daily-report-preview {
+  border-radius: var(--erp-radius-xl, 0);
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--erp-bg-subtle);
+  border: 1px solid var(--erp-border-strong);
+  font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
+  font-size: var(--erp-font-base);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--erp-text);
+  max-height: 46vh;
+  overflow: auto;
+}
+
+.erp-daily-report-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  font-size: var(--erp-font-base);
+}
+
+.erp-daily-report-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+@media (max-width: 1100px) {
+  .erp-daily-report-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .erp-daily-report-sec {
+    border-right: 0;
+    border-bottom: 1px solid var(--erp-divider);
+  }
+}
+
+@media (max-width: 640px) {
+  .erp-daily-report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 모바일: 날짜 이동·복사 버튼을 터치하기 편한 크기로 */
+  .erp-daily-report-head .erp-btn,
+  .erp-daily-report-modal-foot .erp-btn {
+    height: 44px;
+  }
+
+  .erp-daily-report-more {
+    min-height: 44px;
+  }
+}
+
+.erp-daily-report-partner-amount {
+  font-size: var(--erp-font-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-daily-report-table td.product {
+  width: 30%;
+}
+
+.erp-daily-report-stock-item {
+  margin-top: 8px;
+}
+
+.erp-daily-report-line.flush {
+  padding: 0;
 }

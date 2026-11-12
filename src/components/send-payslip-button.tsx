@@ -18,8 +18,8 @@ export function SendPayslipButton({ id }: { id: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="erp-btn"
-          style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+          className="erp-btn erp-u-h-24"
+          style={{ minWidth: 0, padding: "1px 8px", fontSize: 11 }}
         >
           {pending ? "발송 중..." : "이메일 발송"}
         </button>

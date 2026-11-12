@@ -365,7 +365,7 @@ export function PurchaseGridTable({
           {row.deliveryMethod ? (
             <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
           ) : (
-            <span style={{ color: "var(--erp-text-muted)" }}>
+            <span className="erp-u-muted">
               -
             </span>
           )}
@@ -401,8 +401,7 @@ export function PurchaseGridTable({
         </td>
         <td className="num">{formatNumber(row.supplyAmount)}</td>
         <td
-          className="num"
-          style={{ color: "var(--erp-text-muted)" }}
+          className="num erp-u-muted"
         >
           {isPayment ? "-" : formatNumber(row.taxAmount)}
         </td>
@@ -410,9 +409,9 @@ export function PurchaseGridTable({
           {isPayment ? (
             "-"
           ) : row.invoiceReceived ? (
-            <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 수취</span>
+            <span className="erp-u-bold" style={{ color: "var(--erp-success)" }}>✓ 수취</span>
           ) : (
-            <span style={{ color: "var(--erp-text-muted)" }}>미수취</span>
+            <span className="erp-u-muted">미수취</span>
           )}
         </td>
         <td style={colStyle("remark", { color: "var(--erp-text-muted)" })}>
@@ -576,9 +575,9 @@ export function PurchaseGridTable({
           {carryoverRows && carryoverRows.length > 0 && (
             <tbody>
               <tr>
-                <td
+                <td className="erp-u-bold erp-u-muted"
                   colSpan={20}
-                  style={{ background: "var(--erp-bg)", fontWeight: 700, color: "var(--erp-text-muted)", padding: "6px 8px" }}
+                  style={{ background: "var(--erp-bg)", padding: "6px 8px" }}
                 >
                   전월 이월분 · 이번달 실적으로 반영됨
                 </td>
@@ -586,20 +585,20 @@ export function PurchaseGridTable({
               {carryoverRows.map((row) => renderRow(row, { selectable: false, compactDate: true }))}
               <tr>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
-                <td
+                <td className="erp-u-muted"
                   colSpan={11}
-                  style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)", padding: "4px 8px" }}
+                  style={{ fontSize: "var(--erp-font-xs)", padding: "4px 8px" }}
                 >
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                   {formatNumber(carryoverQuantity ?? 0)}
                 </td>
                 <td />
-                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                   {formatNumber(carryoverSupply ?? 0)}
                 </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                   {formatNumber(carryoverTax ?? 0)}
                 </td>
                 <td />
@@ -635,7 +634,7 @@ export function PurchaseGridTable({
           </tbody>
           {sortedRows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
                   colSpan={11}
@@ -691,7 +690,7 @@ export function PurchaseGridTable({
       <div className="erp-row-card-list">
         {carryoverRows && carryoverRows.length > 0 && (
           <>
-            <div style={{ fontSize: "var(--erp-font-xs)", fontWeight: 700, color: "var(--erp-text-muted)" }}>
+            <div className="erp-u-bold erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
               전월 이월분 · 이번달 실적으로 반영됨
             </div>
             {carryoverRows.map((row) => renderMobileCard(row, { selectable: false, compactDate: true }))}

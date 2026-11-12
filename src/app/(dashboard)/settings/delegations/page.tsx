@@ -60,23 +60,12 @@ export default async function ApprovalDelegationsPage() {
             {delegations.map((d) => {
               const active = d.start_date <= today && today <= d.end_date;
               return (
-                <div
+                <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
                   key={d.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "var(--erp-space-5)",
-                    background: "var(--erp-panel)",
-                    border: "1px solid var(--erp-comm-border)",
-                    borderRadius: "var(--erp-comm-radius-row)",
-                    boxShadow: "var(--erp-comm-shadow-row)",
-                    padding: "13px 18px",
-                    flex: "0 0 auto",
-                  }}
+                  style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px", flex: "0 0 auto" }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>
+                    <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>
                       {d.delegator?.full_name ?? "-"} → {d.delegate?.full_name ?? "-"}
                       {active && (
                         <span className="erp-badge erp-badge-success" style={{ marginLeft: "var(--erp-space-2)" }}>
@@ -84,7 +73,7 @@ export default async function ApprovalDelegationsPage() {
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", marginTop: 3 }}>
+                    <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-sm)", marginTop: 3 }}>
                       {d.start_date} ~ {d.end_date}
                       {d.reason ? ` · ${d.reason}` : ""}
                     </div>

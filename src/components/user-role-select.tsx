@@ -62,18 +62,14 @@ export function UserRoleSelect({
       />
       {pendingRole && pendingRole !== value && (
         <span
-          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-1 text-xs"
-          style={{
-            background: "var(--erp-danger-bg)",
-            color: "var(--erp-danger)",
-            border: "1px solid var(--erp-danger-border)",
-          }}
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-1 text-xs erp-u-danger"
+          style={{ background: "var(--erp-danger-bg)", border: "1px solid var(--erp-danger-border)" }}
         >
           {ROLE_LABELS[value] ?? value} → {ROLE_LABELS[pendingRole] ?? pendingRole}로 변경?
           <button
             type="button"
-            className="erp-btn erp-btn-danger"
-            style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11.5 }}
+            className="erp-btn erp-btn-danger erp-u-h-22 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11.5 }}
             onClick={(e) => {
               e.stopPropagation();
               commit(pendingRole);
@@ -83,8 +79,8 @@ export function UserRoleSelect({
           </button>
           <button
             type="button"
-            className="erp-btn"
-            style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11.5 }}
+            className="erp-btn erp-u-h-22 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11.5 }}
             onClick={(e) => {
               e.stopPropagation();
               setPendingRole(null);

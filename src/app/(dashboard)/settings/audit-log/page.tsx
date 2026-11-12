@@ -518,7 +518,7 @@ export default async function AuditLogPage({
           <tbody>
             {viewRows.map((row) => (
               <tr key={row.id}>
-                <td style={{ color: "var(--erp-text-muted)" }}>
+                <td className="erp-u-muted">
                   {new Date(row.createdAt).toLocaleString("ko-KR")}
                 </td>
                 <td>{row.tableLabel}</td>
@@ -528,27 +528,17 @@ export default async function AuditLogPage({
                 <td>
                   {row.target}
                   {row.groupCount && (
-                    <span
+                    <span className="erp-u-muted"
                       title="같은 업무처리로 함께 바뀐 항목이 있습니다"
-                      style={{
-                        marginLeft: 6,
-                        fontSize: "var(--erp-font-xs)",
-                        color: "var(--erp-text-muted)",
-                        border: "1px solid var(--erp-border)",
-                        padding: "0 5px",
-                      }}
+                      style={{ marginLeft: 6, fontSize: "var(--erp-font-xs)", border: "1px solid var(--erp-border)", padding: "0 5px" }}
                     >
                       +{row.groupCount - 1}건 같이 변경됨
                     </span>
                   )}
                 </td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.author}</td>
-                <td
-                  style={{
-                    color: "var(--erp-text-muted)",
-                    fontSize: 11.5,
-                    wordBreak: "break-all",
-                  }}
+                <td className="erp-u-muted">{row.author}</td>
+                <td className="erp-u-muted"
+                  style={{ fontSize: 11.5, wordBreak: "break-all" }}
                 >
                   {row.summary}
                 </td>
@@ -573,7 +563,7 @@ export default async function AuditLogPage({
               <GridBadge tone={row.actionTone}>{row.actionLabel}</GridBadge>
             </div>
             {row.groupCount && (
-              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)" }}>
+              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                 +{row.groupCount - 1}건 같이 변경됨
               </div>
             )}

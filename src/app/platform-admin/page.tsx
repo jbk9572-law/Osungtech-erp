@@ -124,8 +124,8 @@ export default async function PlatformAdminPage({
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <h1 className="erp-h1">고객사</h1>
         <div
-          className="flex items-center gap-3"
-          style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)", fontWeight: 600 }}
+          className="flex items-center gap-3 erp-u-muted erp-u-semibold"
+          style={{ fontSize: "var(--erp-font-sm)" }}
         >
           <span className="erp-key-hint">
             <kbd>F2</kbd>신규
@@ -143,7 +143,7 @@ export default async function PlatformAdminPage({
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">활성 테넌트</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
+          <div className="erp-kpi-value erp-u-text">
             {formatNumber(stats?.activeTenants ?? rows.filter((r) => r.statusTone === "ok").length)}개
           </div>
         </div>

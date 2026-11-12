@@ -31,13 +31,8 @@ export function CustomerSection({ customerName }: { customerName: string }) {
         style={{ paddingTop: CUSTOMER.boxTopPadding }}
       >
         <div
-          className="text-left text-black"
-          style={{
-            paddingLeft: CUSTOMER.namePaddingLeft,
-            fontSize: CUSTOMER.nameFontSize,
-            position: "relative",
-            left: CUSTOMER.nameOffsetX,
-          }}
+          className="text-left text-black erp-u-relative"
+          style={{ paddingLeft: CUSTOMER.namePaddingLeft, fontSize: CUSTOMER.nameFontSize, left: CUSTOMER.nameOffsetX }}
         >
           {customerName}
         </div>

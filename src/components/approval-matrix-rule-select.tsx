@@ -53,7 +53,7 @@ export function ApprovalMatrixRuleSelect({
         options={[{ value: "", label: "연결 안 함" }, ...presets.map((p) => ({ value: p.id, label: p.name }))]}
       />
       {error && (
-        <span className="text-xs" style={{ color: "var(--erp-danger)" }}>
+        <span className="text-xs erp-u-danger">
           {error}
         </span>
       )}

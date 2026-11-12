@@ -81,7 +81,7 @@ export function TenantAddonPanel({
         (결제 연동 전까지는 둘 다 수동 적용).
       </PageGuide>
 
-      <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <p className="mb-3 text-xs erp-u-muted">
         이번 달 사용량 — 외주처 {vendorCount}개사 · 이메일 {emailSentThisMonth}건 · 팩스{" "}
         {faxSentThisMonth}건 · 계산서 {invoiceIssuedThisMonth}건 · 알림톡/문자{" "}
         {alimtalkSentThisMonth}건
@@ -154,7 +154,7 @@ export function TenantAddonPanel({
             required
           />
         </div>
-        <label className="flex items-center gap-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <label className="flex items-center gap-2 text-xs erp-u-muted">
           <input type="checkbox" name="customDomainMail" value="1" defaultChecked={customDomainMail} />
           자사 도메인 메일 애드온(프리미엄) 사용
         </label>
@@ -173,11 +173,11 @@ export function TenantAddonPanel({
           borderTop: "1px solid var(--erp-divider)",
         }}
       >
-        <p className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-2 text-xs font-bold erp-u-muted">
           부착된 애드온
         </p>
         {addonSubscriptions.length === 0 ? (
-          <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <p className="mb-3 text-xs erp-u-muted">
             부착된 애드온이 없습니다.
           </p>
         ) : (
@@ -188,7 +188,7 @@ export function TenantAddonPanel({
           </div>
         )}
 
-        <p className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-2 text-xs font-bold erp-u-muted">
           카탈로그에서 부착
         </p>
         <AttachAddonForm tenantId={tenantId} catalog={addonCatalog} />
@@ -206,25 +206,18 @@ function AddonSubscriptionRow({ tenantId, subscription }: { tenantId: string; su
   const unit = addonKindUnit(subscription.kind);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        gap: 8,
-        border: "1px solid var(--erp-border)",
-        padding: "8px 10px",
-      }}
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-8"
+      style={{ flexWrap: "wrap", border: "1px solid var(--erp-border)", padding: "8px 10px" }}
     >
       <div style={{ flex: "1 1 160px", minWidth: 0 }}>
-        <div style={{ fontSize: "var(--erp-font-sm)", fontWeight: 600, color: "var(--erp-text)" }}>{subscription.name}</div>
-        <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)" }}>
+        <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-sm)" }}>{subscription.name}</div>
+        <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
           {addonKindLabel(subscription.kind)} · {formatNumber(subscription.capacity)}
           {unit} × {subscription.quantity}개 = {formatNumber(subscription.capacity * subscription.quantity)}
           {unit} · 월 {formatNumber(subscription.monthlyPrice * subscription.quantity)}원
         </div>
       </div>
-      <form action={attachAction} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <form className="erp-u-flex erp-u-items-center" action={attachAction} style={{ gap: 4 }}>
         <input type="hidden" name="tenantId" value={tenantId} />
         <input type="hidden" name="addOnProductId" value={subscription.addOnProductId} />
         <input
@@ -264,7 +257,7 @@ function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: Add
   }
 
   return (
-    <form action={formAction} style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 8 }}>
+    <form className="erp-u-flex erp-u-gap-8" action={formAction} style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
       <input type="hidden" name="tenantId" value={tenantId} />
       <div className="erp-field">
         <label htmlFor="attach-product">애드온</label>

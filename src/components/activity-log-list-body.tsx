@@ -68,33 +68,22 @@ export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
 
       <div className="erp-card-feed" style={{ minWidth: 0 }}>
         {visibleRows.map((r) => (
-          <div
+          <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
             key={r.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "var(--erp-space-5)",
-              background: "var(--erp-panel)",
-              border: "1px solid var(--erp-comm-border)",
-              borderRadius: "var(--erp-comm-radius-row)",
-              boxShadow: "var(--erp-comm-shadow-row)",
-              padding: "11px 16px",
-              flex: "0 0 auto",
-            }}
+            style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px", flex: "0 0 auto" }}
           >
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: "var(--erp-font-base)", fontWeight: 600, color: "var(--erp-text)" }}>
+              <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-base)" }}>
                 {r.tenant_name ?? "-"}
                 <span style={{ marginLeft: "var(--erp-space-2)" }}>
                   <span className="erp-badge erp-badge-muted">{ACTION_LABELS[r.action] ?? r.action}</span>
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: "var(--erp-text-muted)", marginTop: 3 }}>
+              <div className="erp-u-muted" style={{ fontSize: 11, marginTop: 3 }}>
                 {r.table_name} · {r.actor_name ?? "-"}
               </div>
             </div>
-            <div style={{ fontSize: 11, color: "var(--erp-text-muted)", flex: "0 0 auto" }}>
+            <div className="erp-u-muted" style={{ fontSize: 11, flex: "0 0 auto" }}>
               {new Date(r.created_at).toLocaleString("ko-KR")}
             </div>
           </div>

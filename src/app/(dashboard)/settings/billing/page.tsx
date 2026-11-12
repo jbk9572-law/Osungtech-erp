@@ -45,10 +45,10 @@ function QuotaUsageRow({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold" style={{ color: "var(--erp-text)" }}>
+        <span className="text-xs font-bold erp-u-text">
           {label}
         </span>
-        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <span className="text-xs erp-u-muted">
           {children} ({pct.toFixed(1)}%)
         </span>
       </div>
@@ -97,13 +97,13 @@ export default async function BillingPage() {
         문의는 운영자 문의 채널로 남겨주시면 운영자가 직접 처리해드립니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 16 }}>
+      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: 16 }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">현재 이용 현황</span>
         </div>
         <div className="erp-detail-body">
           {!tenant ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               이용 현황을 불러올 수 없습니다.
             </p>
           ) : (
@@ -112,7 +112,7 @@ export default async function BillingPage() {
                 <span className="text-sm font-bold">{tenant.name}</span>
                 {planInfo && <GridBadge tone={planInfo.tone}>{planInfo.label}</GridBadge>}
               </div>
-              <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="text-xs erp-u-muted">
                 {tenant.plan_expires_at
                   ? `이용 만료일: ${new Date(tenant.plan_expires_at).toLocaleDateString("ko-KR")}`
                   : "이용 만료일이 설정되어 있지 않습니다(무제한)."}
@@ -128,7 +128,7 @@ export default async function BillingPage() {
         </div>
         <div className="erp-detail-body">
           {!quotaStatus ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               사용량을 불러올 수 없습니다.
             </p>
           ) : (
@@ -150,7 +150,7 @@ export default async function BillingPage() {
         </div>
         <div className="erp-detail-body">
           {!plans?.length ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               등록된 요금제 안내가 없습니다.
             </p>
           ) : (
@@ -168,12 +168,12 @@ export default async function BillingPage() {
                         {p.name}
                         {isCurrent && <GridBadge tone="ok">현재 이용중</GridBadge>}
                       </span>
-                      <span className="text-sm font-bold" style={{ color: "var(--erp-text)" }}>
+                      <span className="text-sm font-bold erp-u-text">
                         {p.monthly_price > 0 ? `월 ${formatNumber(p.monthly_price)}원` : "무료"}
                       </span>
                     </div>
                     {p.description && (
-                      <p className="whitespace-pre-line text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                      <p className="whitespace-pre-line text-xs erp-u-muted">
                         {p.description}
                       </p>
                     )}

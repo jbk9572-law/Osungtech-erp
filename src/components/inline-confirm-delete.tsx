@@ -88,8 +88,8 @@ export function InlineConfirmDelete({
               {Object.entries(hiddenFields).map(([k, v]) => (
                 <input key={k} type="hidden" name={k} value={v} />
               ))}
-              <p style={{ color: "var(--erp-danger)", marginBottom: 6 }}>{warningText}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <p className="erp-u-danger" style={{ marginBottom: 6 }}>{warningText}</p>
+              <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ marginBottom: 6 }}>
                 <span>
                   확인 코드 <strong>{code}</strong> 입력
                 </span>
@@ -98,13 +98,13 @@ export function InlineConfirmDelete({
                   inputMode="numeric"
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
-                  className="erp-input"
-                  style={{ width: 56, height: 24, padding: "0 6px", fontSize: 11.5 }}
+                  className="erp-input erp-u-h-24"
+                  style={{ width: 56, padding: "0 6px", fontSize: 11.5 }}
                   autoFocus
                   aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
                 />
               </div>
-              <div style={{ display: "flex", gap: 6 }}>
+              <div className="erp-u-flex erp-u-gap-6">
                 <button
                   type="submit"
                   disabled={pending || !confirmMatches}

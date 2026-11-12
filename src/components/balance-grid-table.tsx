@@ -142,7 +142,7 @@ export function BalanceGridTable({
           className="erp-field erp-span-6"
           style={{ alignItems: "flex-end", flexDirection: "row", justifyContent: "flex-end" }}
         >
-          <span style={{ fontSize: 12, color: "var(--erp-text-muted)", height: 30, display: "flex", alignItems: "center" }}>
+          <span className="erp-u-muted erp-u-flex erp-u-items-center" style={{ fontSize: 12, height: 30 }}>
             총 {sortedRows.length}건
             {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
           </span>
@@ -183,8 +183,8 @@ export function BalanceGridTable({
                 <td className="num">{formatNumber(b.total)}</td>
                 <td className="num">{formatNumber(b.paid)}</td>
                 <td
-                  className="num"
-                  style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)", fontWeight: 700 }}
+                  className="num erp-u-bold"
+                  style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)" }}
                 >
                   {formatNumber(b.balance)}
                 </td>
@@ -196,7 +196,7 @@ export function BalanceGridTable({
                     })()}
                   </td>
                 )}
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                <td className="num erp-u-muted">
                   상세 →
                 </td>
               </ClickableRow>
@@ -232,7 +232,7 @@ export function BalanceGridTable({
                 </div>
               </dl>
               <div className="erp-row-card-foot">
-                <span style={{ color: "var(--erp-text-muted)" }}>잔액</span>
+                <span className="erp-u-muted">잔액</span>
                 <span
                   className="erp-row-card-amount"
                   style={{ color: b.balance > 0 ? "var(--erp-danger)" : "var(--erp-text)" }}

@@ -200,7 +200,7 @@ export default async function AttendancePage() {
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">사용(승인 기준)</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
+          <div className="erp-kpi-value erp-u-text">
             {formatNumber(usedThisYear)}일
           </div>
         </div>
@@ -305,7 +305,7 @@ export default async function AttendancePage() {
                       </GridBadge>
                     </div>
                     <div className="erp-row-card-foot">
-                      <span style={{ color: "var(--erp-text-muted)" }}>이번주 근무시간</span>
+                      <span className="erp-u-muted">이번주 근무시간</span>
                       <span className="erp-row-card-amount">{formatNumber(hours)}시간</span>
                     </div>
                   </div>
@@ -345,7 +345,7 @@ export default async function AttendancePage() {
                       </td>
                       <td>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</td>
                       <td className="num">{formatNumber(Number(l.days))}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{l.reason ?? "-"}</td>
+                      <td className="erp-u-muted">{l.reason ?? "-"}</td>
                       <td>
                         <div className="flex gap-1">
                           <LeaveDecisionButton id={l.id} decision="approved" action={decideLeaveRequest} />
@@ -399,7 +399,7 @@ export default async function AttendancePage() {
         </div>
         <div className="erp-detail-body">
           {(myLeaves ?? []).length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               신청 내역이 없습니다.
             </p>
           ) : (
@@ -428,7 +428,7 @@ export default async function AttendancePage() {
                         </td>
                         <td>{LEAVE_UNIT_LABEL[l.leave_unit as LeaveUnit] ?? l.leave_unit}</td>
                         <td className="num">{formatNumber(Number(l.days))}</td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>{l.reason ?? "-"}</td>
+                        <td className="erp-u-muted">{l.reason ?? "-"}</td>
                         <td>
                           <GridBadge tone={status.tone}>{status.label}</GridBadge>
                         </td>
@@ -526,7 +526,7 @@ export default async function AttendancePage() {
         </div>
         <div className="erp-detail-body">
           {(myCorrections ?? []).length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               신청 내역이 없습니다.
             </p>
           ) : (
@@ -551,7 +551,7 @@ export default async function AttendancePage() {
                         <td>{c.work_date.replaceAll("-", ".")}</td>
                         <td>{fmtTime(c.requested_clock_in_at) ?? "-"}</td>
                         <td>{fmtTime(c.requested_clock_out_at) ?? "-"}</td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>{c.reason}</td>
+                        <td className="erp-u-muted">{c.reason}</td>
                         <td>
                           <GridBadge tone={status.tone}>{status.label}</GridBadge>
                         </td>

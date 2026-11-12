@@ -56,7 +56,7 @@ export default async function UserDetailPage({
         }
       />
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">계정 정보 수정</span>
         </div>

@@ -28,7 +28,7 @@ export function TenantQuotaPanel({
         요청하면 여기서 직접 늘려주세요(추후 결제 연동 전까지는 수동 관리).
       </PageGuide>
 
-      <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <p className="mb-3 text-xs erp-u-muted">
         현재 사용량: DB {formatMB(dbBytesUsed)}MB / 파일 저장소 {formatMB(fileBytesUsed)}MB
       </p>
 

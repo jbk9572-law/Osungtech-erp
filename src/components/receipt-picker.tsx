@@ -150,7 +150,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
               alt={`영수증 ${index + 1}`}
               style={{ width: THUMB_SIZE, height: THUMB_SIZE, objectFit: "cover", borderRadius: "var(--erp-radius-lg, 0)" }}
             />
-            <span className="text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
+            <span className="text-[10px] erp-u-muted">
               {formatKb(item.originalSize)} → {formatKb(item.file.size)}
             </span>
             <div className="flex items-center gap-1">
@@ -158,8 +158,8 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
                 type="button"
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
-                className="erp-btn"
-                style={{ minWidth: 0, height: 22, padding: "1px 6px", fontSize: 11 }}
+                className="erp-btn erp-u-h-22"
+                style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
               >
                 ▲
               </button>
@@ -167,8 +167,8 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
                 type="button"
                 onClick={() => move(index, 1)}
                 disabled={index === items.length - 1}
-                className="erp-btn"
-                style={{ minWidth: 0, height: 22, padding: "1px 6px", fontSize: 11 }}
+                className="erp-btn erp-u-h-22"
+                style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
               >
                 ▼
               </button>
@@ -181,14 +181,8 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
             type="button"
             onClick={() => pickerInputRef.current?.click()}
             disabled={compressing}
-            className="flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed transition-colors"
-            style={{
-              width: THUMB_SIZE + 12,
-              height: THUMB_SIZE + 44,
-              borderColor: "var(--erp-border)",
-              color: "var(--erp-text-muted)",
-              background: "var(--erp-hover)",
-            }}
+            className="flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed transition-colors erp-u-muted"
+            style={{ width: THUMB_SIZE + 12, height: THUMB_SIZE + 44, borderColor: "var(--erp-border)", background: "var(--erp-hover)" }}
           >
             {compressing ? (
               <>

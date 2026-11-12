@@ -136,7 +136,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>공문 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(rows.length)}건</span>
+            <span className="erp-u-muted erp-u-normal">총 {formatNumber(rows.length)}건</span>
           </div>
           <div className="erp-split-list-body">
             {rows.map((row) => {

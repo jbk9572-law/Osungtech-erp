@@ -103,12 +103,12 @@ export function ClockInOutPanel({
   const outAccuracyRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
+    <div className="erp-kpi-row erp-u-mb-12">
       <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-        <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+        <div className="erp-u-muted erp-u-semibold" style={{ fontSize: 11, marginBottom: 6 }}>
           출근
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{clockInTime ?? "-"}</div>
+        <div className="erp-u-bold" style={{ fontSize: 17, marginBottom: 6 }}>{clockInTime ?? "-"}</div>
         <form ref={inFormRef} action={inFormAction}>
           <input ref={inLatRef} type="hidden" name="lat" />
           <input ref={inLngRef} type="hidden" name="lng" />
@@ -125,16 +125,16 @@ export function ClockInOutPanel({
             className="erp-btn erp-btn-primary"
           />
         </form>
-        <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "var(--erp-text-muted)" }}>
+        <p className="erp-u-muted" style={{ margin: "6px 0 0", fontSize: 10.5 }}>
           {clockInLocation ? `📍 ${clockInLocation}` : "📍 GPS로 위치를 함께 기록합니다(권한을 거부해도 출근 처리는 계속됩니다)."}
         </p>
         <FormMessage state={inState} />
       </div>
       <div className="erp-home-panel" style={{ padding: "10px 12px" }}>
-        <div style={{ fontSize: 11, color: "var(--erp-text-muted)", fontWeight: 600, marginBottom: 6 }}>
+        <div className="erp-u-muted erp-u-semibold" style={{ fontSize: 11, marginBottom: 6 }}>
           퇴근
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>{clockOutTime ?? "-"}</div>
+        <div className="erp-u-bold" style={{ fontSize: 17, marginBottom: 6 }}>{clockOutTime ?? "-"}</div>
         <form ref={outFormRef} action={outFormAction}>
           <input ref={outLatRef} type="hidden" name="lat" />
           <input ref={outLngRef} type="hidden" name="lng" />
@@ -151,7 +151,7 @@ export function ClockInOutPanel({
             className="erp-btn erp-btn-dark"
           />
         </form>
-        <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "var(--erp-text-muted)" }}>
+        <p className="erp-u-muted" style={{ margin: "6px 0 0", fontSize: 10.5 }}>
           {clockOutLocation ? `📍 ${clockOutLocation}` : "📍 GPS로 위치를 함께 기록합니다(권한을 거부해도 퇴근 처리는 계속됩니다)."}
         </p>
         <FormMessage state={outState} />

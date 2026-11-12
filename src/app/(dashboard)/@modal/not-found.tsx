@@ -29,11 +29,11 @@ export default function ModalNotFound() {
         >
           ✕
         </button>
-        <div className="erp-modal-body" style={{ padding: "32px 20px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: "var(--erp-text)", marginBottom: 8 }}>
+        <div className="erp-modal-body erp-u-text-center" style={{ padding: "32px 20px" }}>
+          <p className="erp-u-bold erp-u-text" style={{ fontSize: 14, marginBottom: 8 }}>
             이 항목을 찾을 수 없습니다.
           </p>
-          <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>
+          <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
             주소가 바뀌었거나 삭제된 항목일 수 있습니다. 목록 화면은 그대로 있습니다.
           </p>
           <button type="button" onClick={() => router.back()} className="erp-btn erp-btn-primary">

@@ -126,7 +126,7 @@ export function TaxInvoiceCorrectionForm({
 
         <h2 className="erp-doc-title">수 정 세 금 계 산 서</h2>
 
-        <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="text-xs erp-u-muted">
           당초 세금계산서 작성일자: {new Date(originalIssueDate).toLocaleDateString("ko-KR")}
         </p>
 
@@ -244,7 +244,7 @@ export function TaxInvoiceCorrectionForm({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={5} className="num" style={{ fontWeight: 700 }}>
+                <td colSpan={5} className="num erp-u-bold">
                   합계
                 </td>
                 <td className="num erp-doc-total">{formatNumber(totalSupply)}</td>
@@ -268,7 +268,7 @@ export function TaxInvoiceCorrectionForm({
         <div className="erp-doc-header">
           <div className="erp-doc-header-row">
             <span className="erp-doc-header-label">합계금액</span>
-            <span className="erp-doc-header-value" style={{ fontWeight: 700 }}>
+            <span className="erp-doc-header-value erp-u-bold">
               {formatNumber(totalAmount)}원
             </span>
           </div>

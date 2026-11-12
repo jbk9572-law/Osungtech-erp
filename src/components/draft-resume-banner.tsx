@@ -17,16 +17,16 @@ export function DraftResumeBanner({
       <div className="flex gap-2">
         <button
           type="button"
-          className="erp-btn erp-btn-primary"
-          style={{ minWidth: 0, height: 26, padding: "2px 10px", fontSize: 11 }}
+          className="erp-btn erp-btn-primary erp-u-h-26"
+          style={{ minWidth: 0, padding: "2px 10px", fontSize: 11 }}
           onClick={onResume}
         >
           이어서 작성
         </button>
         <button
           type="button"
-          className="erp-btn"
-          style={{ minWidth: 0, height: 26, padding: "2px 10px", fontSize: 11 }}
+          className="erp-btn erp-u-h-26"
+          style={{ minWidth: 0, padding: "2px 10px", fontSize: 11 }}
           onClick={onDiscard}
         >
           새로 시작

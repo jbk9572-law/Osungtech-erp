@@ -86,7 +86,7 @@ export default async function WarehousesPage({
                 {warehouses.map((w) => (
                   <tr key={w.id}>
                     <td>{w.name}</td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{w.location || "-"}</td>
+                    <td className="erp-u-muted">{w.location || "-"}</td>
                     <td>
                       <InlineConfirmDelete
                         action={deleteWarehouse}
@@ -119,7 +119,7 @@ export default async function WarehousesPage({
                     triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
                   />
                 </div>
-                <p style={{ margin: 0, fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)" }}>
+                <p className="erp-u-muted" style={{ margin: 0, fontSize: "var(--erp-font-sm)" }}>
                   {w.location || "-"}
                 </p>
               </div>
@@ -131,7 +131,7 @@ export default async function WarehousesPage({
 
       <div style={{ marginTop: 14 }}>
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+          <div className="erp-u-flex" style={{ justifyContent: "flex-end", marginBottom: 10 }}>
             <Link href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
               F2 창고 이동 등록
             </Link>
@@ -184,7 +184,7 @@ export default async function WarehousesPage({
                       <td className="num">{items.length}</td>
                       <td className="num">{formatNumber(totalQty)}</td>
                       <td>{t.profiles?.full_name ?? "-"}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{t.memo ?? "-"}</td>
+                      <td className="erp-u-muted">{t.memo ?? "-"}</td>
                     </ClickableRow>
                   );
                 })}

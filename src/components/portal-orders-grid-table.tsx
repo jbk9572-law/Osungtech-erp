@@ -72,7 +72,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
                     className={`cursor-pointer${row.id === activeKey ? " master-active" : ""}${rowDayClass(rowDay(toKstDateStr(new Date(row.createdAt))))}`}
                     onClick={() => toggleAccordion(row.id)}
                   >
-                    <td style={{ fontWeight: 600 }}>{row.docNo}</td>
+                    <td className="erp-u-semibold">{row.docNo}</td>
                     <td>
                       {new Date(row.createdAt).toLocaleDateString("ko-KR")}
                     </td>
@@ -83,7 +83,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
                         {row.progressLabel}
                       </span>
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
+                    <td className="erp-u-muted">{row.memo ?? "-"}</td>
                     <td className="num" onClick={(e) => e.stopPropagation()}>
                       <Link href={`${ordersHref}/${row.id}`} className="erp-btn erp-portal-action-btn">
                         상세보기

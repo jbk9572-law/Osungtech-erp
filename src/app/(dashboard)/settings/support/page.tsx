@@ -62,7 +62,7 @@ export default async function SupportPage() {
         </div>
         <div className="erp-detail-body">
           {!user ? null : (tickets ?? []).length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               등록한 문의가 없습니다.
             </p>
           ) : (

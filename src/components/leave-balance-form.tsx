@@ -44,8 +44,8 @@ export function LeaveBalanceForm({
           onClick={() => {
             if (inputRef.current) inputRef.current.value = String(suggestedDays);
           }}
-          className="erp-btn"
-          style={{ minWidth: 0, height: 28, padding: "0 8px", fontSize: 11 }}
+          className="erp-btn erp-u-pad-0-8"
+          style={{ minWidth: 0, height: 28, fontSize: 11 }}
           title="입사일 기준 법정 연차 자동계산값을 입력칸에 채웁니다"
         >
           자동계산 {suggestedDays}일 적용

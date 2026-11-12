@@ -76,7 +76,7 @@ export function ListPageHeader({
     <>
       {eyebrow && <span className="erp-eyebrow">{eyebrow}</span>}
       <h1 className="mb-3 erp-h1">{title}</h1>
-      {description && <p className="erp-page-desc" style={{ marginTop: -8, marginBottom: 12 }}>{description}</p>}
+      {description && <p className="erp-page-desc erp-u-mb-12" style={{ marginTop: -8 }}>{description}</p>}
       {actions && <div className="erp-toolbar">{actions}</div>}
     </>
   );
@@ -119,8 +119,8 @@ export function DetailPageHeader({
 // marginBottom:8}}을 복붙하고 있던 패턴(헌법검사에서 발견)을 공용화했다.
 export function DetailInfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 26, marginBottom: 8 }}>
-      <span style={{ width: 72, color: "var(--erp-text-muted)" }}>{label}</span>
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-8" style={{ minHeight: 26, marginBottom: 8 }}>
+      <span className="erp-u-muted" style={{ width: 72 }}>{label}</span>
       <span>{children}</span>
     </div>
   );
@@ -132,7 +132,7 @@ export function DetailInfoRow({ label, children }: { label: string; children: Re
 // 대신 erp-detail을 여러 번 직접 써서 탭 여러 개를 표현한다.
 export function FormSection({ tabLabel, children }: { tabLabel: string; children: ReactNode }) {
   return (
-    <div className="erp-detail" style={{ marginTop: 0 }}>
+    <div className="erp-detail erp-u-mt-0">
       <div className="erp-detail-tabs">
         <span className="erp-detail-tab active">{tabLabel}</span>
       </div>

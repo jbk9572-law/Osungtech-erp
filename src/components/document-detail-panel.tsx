@@ -54,7 +54,7 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
         </div>
       )}
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">문서 내용</span>
         </div>

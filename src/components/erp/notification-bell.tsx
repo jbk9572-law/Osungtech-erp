@@ -48,7 +48,7 @@ function NotificationBellInner({ announcements }: { announcements: AnnouncementI
   }
 
   return (
-    <div style={{ position: "relative" }} ref={wrapRef}>
+    <div className="erp-u-relative" ref={wrapRef}>
       <button
         type="button"
         className="erp-bell-btn"
@@ -71,10 +71,9 @@ function NotificationBellInner({ announcements }: { announcements: AnnouncementI
           {announcements.length ? (
             announcements.map((a) => (
               <div key={a.id} className="erp-ribbon-dropdown-item">
-                <button
+                <button className="erp-u-flex erp-u-items-center erp-u-gap-6"
                   type="button"
                   onClick={() => go(`/announcements/${a.id}`)}
-                  style={{ display: "flex", alignItems: "center", gap: 6 }}
                 >
                   {a.pinned && <GridBadge tone="info">고정</GridBadge>}
                   {a.title}

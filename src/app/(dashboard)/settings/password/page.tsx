@@ -9,7 +9,7 @@ export default function ChangePasswordPage() {
       <ListPageHeader title="환경설정 > 비밀번호 변경" />
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">본인 계정의 비밀번호를 변경합니다.</p>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">비밀번호 변경</span>
         </div>

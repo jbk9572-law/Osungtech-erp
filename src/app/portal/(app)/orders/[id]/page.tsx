@@ -75,17 +75,17 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+      <div className="erp-u-flex erp-u-justify-between erp-u-items-center" style={{ marginBottom: 4 }}>
         <h1 className="erp-portal-h1">주문 {order.doc_no}</h1>
         <Link href={await portalHref("/orders")} className="erp-btn">
           목록
         </Link>
       </div>
-      <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 16 }}>
+      <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 16 }}>
         {new Date(order.created_at).toLocaleString("ko-KR")}
       </p>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">진행 상태</span>
         </div>
@@ -96,14 +96,14 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                 {describeProgress(order)}
               </span>
               {order.status === "rejected" && order.reject_reason && (
-                <p style={{ marginTop: 8, fontSize: 12, color: "var(--erp-danger)" }}>반려 사유: {order.reject_reason}</p>
+                <p className="erp-u-danger" style={{ marginTop: 8, fontSize: 12 }}>반려 사유: {order.reject_reason}</p>
               )}
             </>
           ) : (
             (() => {
               const { steps: trackSteps } = buildTrackStages(order);
               return (
-                <div style={{ position: "relative", padding: "6px 4px 2px" }}>
+                <div className="erp-u-relative" style={{ padding: "6px 4px 2px" }}>
                   <div
                     style={{
                       position: "absolute",
@@ -124,24 +124,11 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                       width: `calc(100% / ${trackSteps.length} * ${Math.max(0, trackSteps.filter((s) => s.filled).length - 1)})`,
                     }}
                   />
-                  <div style={{ position: "relative", display: "flex" }}>
+                  <div className="erp-u-relative erp-u-flex">
                     {trackSteps.map((s) => (
-                      <div key={s.name} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                        <div
-                          style={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: "50%",
-                            boxSizing: "border-box",
-                            background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)",
-                            border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`,
-                            color: s.filled ? "var(--erp-on-primary)" : "var(--erp-text-muted)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 12,
-                            fontWeight: 700,
-                          }}
+                      <div className="erp-u-flex erp-u-items-center erp-u-gap-6" key={s.name} style={{ flex: 1, flexDirection: "column" }}>
+                        <div className="erp-u-h-26 erp-u-flex erp-u-items-center erp-u-bold"
+                          style={{ width: 26, borderRadius: "50%", boxSizing: "border-box", background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)", border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`, color: s.filled ? "var(--erp-on-primary)" : "var(--erp-text-muted)", justifyContent: "center", fontSize: 12 }}
                         >
                           {s.mark}
                         </div>
@@ -164,7 +151,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
 
           {steps && steps.length > 0 && (
             <div style={{ marginTop: 18 }}>
-              <p style={{ fontSize: 11.5, color: "var(--erp-text-muted)", marginBottom: 6 }}>공정별 진행상황</p>
+              <p className="erp-u-muted" style={{ fontSize: 11.5, marginBottom: 6 }}>공정별 진행상황</p>
               {(() => {
                 // 품목이 여러 개면 품목마다 생산지시(공정)가 따로 있을 수 있어
                 // product_name으로 묶어 구분한다. 1개뿐이면 굳이 품목명을
@@ -172,17 +159,17 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                 const itemIds = Array.from(new Set(steps.map((s) => s.item_id)));
                 const showProductLabel = itemIds.length > 1;
                 return (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div className="erp-u-flex erp-u-gap-8" style={{ flexDirection: "column" }}>
                     {itemIds.map((itemId) => {
                       const itemSteps = steps.filter((s) => s.item_id === itemId);
                       return (
                         <div key={itemId}>
                           {showProductLabel && (
-                            <p style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 4 }}>
+                            <p className="erp-u-semibold" style={{ fontSize: 11.5, marginBottom: 4 }}>
                               {itemSteps[0].product_name}
                             </p>
                           )}
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <div className="erp-u-flex erp-u-gap-8" style={{ flexWrap: "wrap" }}>
                             {itemSteps.map((s) => (
                               <span key={`${s.item_id}-${s.process_name}`} className="erp-key-hint" style={{ fontSize: 12 }}>
                                 <span
@@ -236,10 +223,10 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "right", fontWeight: 700 }}>
+                  <td className="erp-u-bold" colSpan={4} style={{ textAlign: "right" }}>
                     합계
                   </td>
-                  <td className="num" style={{ fontWeight: 700 }}>
+                  <td className="num erp-u-bold">
                     {formatNumber(total)}
                   </td>
                 </tr>
@@ -270,20 +257,20 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                   </div>
                   <div>
                     <dt>금액</dt>
-                    <dd style={{ fontWeight: 700 }}>{formatNumber(i.quantity * i.unit_price)}</dd>
+                    <dd className="erp-u-bold">{formatNumber(i.quantity * i.unit_price)}</dd>
                   </div>
                 </dl>
               </div>
             ))}
             {(items ?? []).length > 0 && (
-              <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+              <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
                 <span>합계</span>
                 <span className="erp-row-card-amount">{formatNumber(total)}원</span>
               </div>
             )}
           </div>
           {order.memo && (
-            <p style={{ marginTop: 10, fontSize: 12, color: "var(--erp-text-muted)" }}>요청사항: {order.memo}</p>
+            <p className="erp-u-muted" style={{ marginTop: 10, fontSize: 12 }}>요청사항: {order.memo}</p>
           )}
         </div>
       </div>

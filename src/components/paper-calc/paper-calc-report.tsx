@@ -62,14 +62,14 @@ export function PaperCalcReport({
             className="rounded p-3"
             style={{ background: DIAGRAM_COLORS.cardBg, border: "1px solid var(--erp-border)" }}
           >
-            <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <div className="text-xs erp-u-muted">
               {card.label}
             </div>
-            <div className="text-lg font-bold" style={{ color: "var(--erp-text)" }}>
+            <div className="text-lg font-bold erp-u-text">
               {card.value}
             </div>
             {card.sub && (
-              <div className="text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+              <div className="text-[11px] erp-u-muted">
                 {card.sub}
               </div>
             )}

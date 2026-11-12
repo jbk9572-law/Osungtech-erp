@@ -52,7 +52,7 @@ export function QuantityWithBoxInput({
         className={className}
       />
       {base !== null && base > 0 && quantity !== 0 && (
-        <div className="mt-0.5 text-[10px]" style={{ color: "var(--erp-text-muted)" }}>
+        <div className="mt-0.5 text-[10px] erp-u-muted">
           <QtyWithBoxes quantity={quantity} basePackageQty={base} />
         </div>
       )}

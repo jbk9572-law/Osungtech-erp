@@ -218,7 +218,7 @@ export function NewPurchaseRequestForm({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3} className="num" style={{ fontWeight: 700 }}>
+                <td colSpan={3} className="num erp-u-bold">
                   합계
                 </td>
                 <td className="num erp-doc-total">

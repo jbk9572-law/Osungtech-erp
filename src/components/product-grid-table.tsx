@@ -256,21 +256,21 @@ export function ProductGridTable({
                 )}
                 <td style={tdSticky1}>{row.sku}</td>
                 <td style={tdSticky2}>{row.name}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.spec ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.unit ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>
+                <td className="erp-u-muted">{row.spec ?? "-"}</td>
+                <td className="erp-u-muted">{row.unit ?? "-"}</td>
+                <td className="erp-u-muted">
                   {row.basePackageQty ? `1박스 = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}` : "-"}
                 </td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.categoryName ?? "-"}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.supplierName ?? "-"}</td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                <td className="erp-u-muted">{row.categoryName ?? "-"}</td>
+                <td className="erp-u-muted">{row.supplierName ?? "-"}</td>
+                <td className="num erp-u-muted">
                   {formatNumOrDash(row.cost)}
                 </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                <td className="num erp-u-muted">
                   {formatNumOrDash(row.price)}
                 </td>
                 {mode === "products" ? (
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num erp-u-muted">
                     {formatNumOrDash(row.reorderPoint)}
                   </td>
                 ) : (
@@ -283,7 +283,7 @@ export function ProductGridTable({
                     </td>
                   </>
                 )}
-                <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                <td className="num erp-u-muted">
                   {mode === "products" ? "수정 →" : ""}
                 </td>
               </ClickableRow>

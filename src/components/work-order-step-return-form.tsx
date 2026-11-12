@@ -20,8 +20,8 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
     return (
       <button
         type="button"
-        className="erp-btn"
-        style={{ height: 22, padding: "1px 8px", fontSize: 11 }}
+        className="erp-btn erp-u-h-22"
+        style={{ padding: "1px 8px", fontSize: 11 }}
         onClick={() => setOpen(true)}
       >
         반품
@@ -30,7 +30,7 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
   }
 
   return (
-    <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 160 }}>
+    <form className="erp-u-flex" action={formAction} style={{ flexDirection: "column", gap: 4, minWidth: 160 }}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <input
@@ -41,27 +41,27 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
         required
         autoComplete="off"
         placeholder="반품 수량"
-        className="erp-input"
-        style={{ height: 24, fontSize: 11 }}
+        className="erp-input erp-u-h-24"
+        style={{ fontSize: 11 }}
       />
       <input
         name="note"
         type="text"
         autoComplete="off"
         placeholder="사유(선택)"
-        className="erp-input"
-        style={{ height: 24, fontSize: 11 }}
+        className="erp-input erp-u-h-24"
+        style={{ fontSize: 11 }}
       />
-      <div style={{ display: "flex", gap: 6 }}>
+      <div className="erp-u-flex erp-u-gap-6">
         <button
           type="submit"
-          className="erp-btn erp-btn-danger"
-          style={{ height: 22, padding: "1px 8px", fontSize: 11 }}
+          className="erp-btn erp-btn-danger erp-u-h-22"
+          style={{ padding: "1px 8px", fontSize: 11 }}
           disabled={pending}
         >
           {pending ? "..." : "반품 저장"}
         </button>
-        <button type="button" className="erp-btn" style={{ height: 22, padding: "1px 8px", fontSize: 11 }} onClick={() => setOpen(false)}>
+        <button type="button" className="erp-btn erp-u-h-22" style={{ padding: "1px 8px", fontSize: 11 }} onClick={() => setOpen(false)}>
           취소
         </button>
       </div>

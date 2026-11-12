@@ -26,7 +26,7 @@ function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: numbe
           {"└ ".repeat(depth > 0 ? 1 : 0)}
           {node.name}
         </span>
-        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <span className="text-xs erp-u-muted">
           {node.employees.length}명
         </span>
         {isReal && (
@@ -44,7 +44,7 @@ function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: numbe
         )}
       </div>
       {node.employees.length > 0 && (
-        <div className="text-xs" style={{ marginLeft: 20, color: "var(--erp-text-muted)" }}>
+        <div className="text-xs erp-u-muted" style={{ marginLeft: 20 }}>
           {node.employees.map((e) => e.fullName + (e.positionTitle ? `(${e.positionTitle})` : "")).join(", ")}
         </div>
       )}
@@ -96,7 +96,7 @@ export default async function DepartmentsPage() {
 
       <FormSection tabLabel="조직도">
         {tree.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+          <p className="text-sm erp-u-muted">
             등록된 부서가 없습니다.
           </p>
         ) : (

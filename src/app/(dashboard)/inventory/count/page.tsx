@@ -253,7 +253,7 @@ export default async function InventoryCountPage({
               </div>
             </>
           ) : (
-            <div className="erp-hero-value" style={{ fontSize: 17, color: "var(--erp-text-muted)" }}>
+            <div className="erp-hero-value erp-u-muted" style={{ fontSize: 17 }}>
               -
             </div>
           )}
@@ -272,7 +272,7 @@ export default async function InventoryCountPage({
               </div>
             </>
           ) : (
-            <div className="erp-hero-value" style={{ color: "var(--erp-text-muted)" }}>
+            <div className="erp-hero-value erp-u-muted">
               -
             </div>
           )}
@@ -303,18 +303,14 @@ export default async function InventoryCountPage({
           (allTx 선언부 주석 참고 — 자동 실행이 Cloudflare Workers 리소스
           한도 초과 사고의 원인이었다). */}
       <div
-        className="erp-detail"
-        style={{
-          marginTop: 0,
-          marginBottom: 16,
-          borderColor: verifyRequested
+        className="erp-detail erp-u-mt-0"
+        style={{ marginBottom: 16, borderColor: verifyRequested
             ? cacheMismatches.length > 0
               ? "var(--erp-danger)"
               : "var(--erp-success)"
-            : undefined,
-        }}
+            : undefined }}
       >
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12 }}>
+        <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 12 }}>
           <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
             재고 캐시 정합성 검증
           </span>
@@ -351,14 +347,14 @@ export default async function InventoryCountPage({
           ) : (
             <>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs" style={{ color: "var(--erp-danger)" }}>
+                <p className="text-xs erp-u-danger">
                   ⚠ 아래 품목은 화면의 전산 재고와 실제 거래이력 합계가 다릅니다 — 소프트웨어
                   계산/캐시 문제일 가능성이 있으니 실사보다 먼저 이 목록부터 확인하세요.
                 </p>
                 {isAdmin ? (
                   <RecalculateCacheButton />
                 ) : (
-                  <span className="text-xs" style={{ color: "var(--erp-text-muted)", flexShrink: 0 }}>
+                  <span className="text-xs erp-u-muted" style={{ flexShrink: 0 }}>
                     자동 교정은 관리자 전용 기능입니다.
                   </span>
                 )}
@@ -387,11 +383,11 @@ export default async function InventoryCountPage({
                       <tr key={`${m.sku}:${m.warehouseName}`}>
                         <td>{m.sku}</td>
                         <td>{m.name}</td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>{m.spec || "-"}</td>
+                        <td className="erp-u-muted">{m.spec || "-"}</td>
                         <td>{m.warehouseName}</td>
                         <td className="num">{formatNumber(m.cached)}</td>
                         <td className="num">{formatNumber(m.computed)}</td>
-                        <td className="num" style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
+                        <td className="num erp-u-bold erp-u-danger">
                           {(m.cached - m.computed > 0 ? "+" : "") + formatNumber((m.cached - m.computed))}
                         </td>
                       </tr>
@@ -425,7 +421,7 @@ export default async function InventoryCountPage({
                       </div>
                       <div>
                         <dt>차이</dt>
-                        <dd style={{ fontWeight: 700, color: "var(--erp-danger)" }}>
+                        <dd className="erp-u-bold erp-u-danger">
                           {(m.cached - m.computed > 0 ? "+" : "") + formatNumber(m.cached - m.computed)}
                         </dd>
                       </div>
@@ -441,7 +437,7 @@ export default async function InventoryCountPage({
       <div className="mb-2 mt-6 flex items-baseline justify-between">
         <h2 className="text-sm font-bold text-[var(--erp-text)]">실사 이력</h2>
         {sessions.length > 0 && (
-          <span className="text-[11.5px]" style={{ color: "var(--erp-text-muted)" }}>
+          <span className="text-[11.5px] erp-u-muted">
             회차를 클릭하면 그때 조정된 품목이 펼쳐집니다
           </span>
         )}
@@ -469,7 +465,7 @@ export default async function InventoryCountPage({
                   </span>
                   <GridBadge tone="info">{session.items.length}건 조정</GridBadge>
                 </div>
-                <div className="mt-0.5 text-[11.5px]" style={{ color: "var(--erp-text-muted)" }}>
+                <div className="mt-0.5 text-[11.5px] erp-u-muted">
                   작성자 {session.authorName ?? "-"}
                   {session.note ? ` · 사유: ${session.note}` : " · 사유 기록 없음"}
                 </div>
@@ -499,7 +495,7 @@ export default async function InventoryCountPage({
                             <tr key={row.productId}>
                               <td>{row.sku}</td>
                               <td>{row.name}</td>
-                              <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
+                              <td className="erp-u-muted">{row.spec || "-"}</td>
                               <td className="num">
                                 {formatNumber(row.before)} {row.unit}
                               </td>
@@ -507,11 +503,8 @@ export default async function InventoryCountPage({
                                 {formatNumber(row.after)} {row.unit}
                               </td>
                               <td
-                                className="num"
-                                style={{
-                                  fontWeight: 700,
-                                  color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)",
-                                }}
+                                className="num erp-u-bold"
+                                style={{ color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
                               >
                                 {row.delta > 0 ? "+" : ""}
                                 {formatNumber(row.delta)}
@@ -547,7 +540,7 @@ export default async function InventoryCountPage({
                             </div>
                             <div>
                               <dt>차이</dt>
-                              <dd style={{ fontWeight: 700, color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}>
+                              <dd className="erp-u-bold" style={{ color: row.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}>
                                 {row.delta > 0 ? "+" : ""}
                                 {formatNumber(row.delta)}
                               </dd>
@@ -559,14 +552,14 @@ export default async function InventoryCountPage({
                   </>
                 )}
               </div>
-              <div className="text-[11px]" style={{ color: "var(--erp-text-muted)", flexShrink: 0 }}>
+              <div className="text-[11px] erp-u-muted" style={{ flexShrink: 0 }}>
                 {isSelected ? "▲ 접기" : "▾ 펼치기"}
               </div>
             </Link>
           );
         })}
         {!sessions.length && (
-          <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+          <p className="text-sm erp-u-muted">
             진행한 재고 실사가 없습니다.
           </p>
         )}

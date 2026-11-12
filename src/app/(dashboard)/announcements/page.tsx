@@ -126,7 +126,7 @@ export default async function AnnouncementsPage({
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">고정 공지</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
+          <div className="erp-kpi-value erp-u-text">
             {formatNumber(pinnedCount)}건
           </div>
         </div>

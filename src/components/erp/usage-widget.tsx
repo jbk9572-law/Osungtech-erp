@@ -191,8 +191,7 @@ export function UsageWidget({
       ))}
       {netlifyUsage.error && (
         <div
-          className="erp-tree-usage-sub"
-          style={{ color: "var(--erp-danger)" }}
+          className="erp-tree-usage-sub erp-u-danger"
         >
           넷리파이 사용량 조회 실패: {netlifyUsage.error}
         </div>

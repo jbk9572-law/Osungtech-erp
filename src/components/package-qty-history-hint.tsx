@@ -41,7 +41,7 @@ export function PackageQtyHistoryHint({
           style={{ borderColor: "var(--erp-border)", background: "var(--erp-bg-subtle)" }}
         >
           {history.slice(0, 5).map((entry, index) => (
-            <li key={index} className="flex items-center justify-between gap-4" style={{ color: "var(--erp-text-muted)" }}>
+            <li key={index} className="flex items-center justify-between gap-4 erp-u-muted">
               <span>{entry.changedAt}</span>
               <button
                 type="button"
@@ -49,8 +49,7 @@ export function PackageQtyHistoryHint({
                   onSelect(entry.basePackageQty);
                   setExpanded(false);
                 }}
-                className="hover:underline"
-                style={{ color: "var(--erp-text)", fontWeight: 600 }}
+                className="hover:underline erp-u-text erp-u-semibold"
               >
                 {formatNumber(entry.basePackageQty)}로 덮어쓰기
               </button>

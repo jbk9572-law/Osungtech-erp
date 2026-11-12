@@ -92,7 +92,7 @@ export default async function InventoryLedgerPage({
 
       <MonthNavigator baseHref="/reports/ledger" month={month} suffix={monthNavSuffix} />
       {selectedProduct && (
-        <div className="erp-toolbar" style={{ marginBottom: 12 }}>
+        <div className="erp-toolbar erp-u-mb-12">
           <ExcelDownloadLink
             href={`/api/reports/ledger/export?product_id=${selectedProduct.id}&month=${month}${warehouseId ? `&warehouse_id=${warehouseId}` : ""}`}
             pushRight
@@ -101,12 +101,12 @@ export default async function InventoryLedgerPage({
       )}
 
       {!selectedProduct ? (
-        <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="text-sm erp-u-muted">
           품목을 선택하면 이 달의 수불 내역이 표시됩니다.
         </p>
       ) : (
         <>
-          <div className="erp-kpi-row" style={{ marginBottom: 12 }}>
+          <div className="erp-kpi-row erp-u-mb-12">
             <div className="erp-home-panel erp-kpi-card">
               <div className="erp-kpi-label">이월(전월 이전)</div>
               <div className="erp-kpi-value">
@@ -115,13 +115,13 @@ export default async function InventoryLedgerPage({
             </div>
             <div className="erp-home-panel erp-kpi-card">
               <div className="erp-kpi-label">이번달 입고</div>
-              <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
+              <div className="erp-kpi-value erp-u-text">
                 {formatNumber(inTotal)} {selectedProduct.unit}
               </div>
             </div>
             <div className="erp-home-panel erp-kpi-card">
               <div className="erp-kpi-label">이번달 출고</div>
-              <div className="erp-kpi-value" style={{ color: "var(--erp-danger)" }}>
+              <div className="erp-kpi-value erp-u-danger">
                 {formatNumber(outTotal)} {selectedProduct.unit}
               </div>
             </div>
@@ -134,7 +134,7 @@ export default async function InventoryLedgerPage({
           </div>
 
           {ledgerRows.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               이 달에는 입출고 내역이 없습니다.
             </p>
           ) : (
@@ -164,8 +164,8 @@ export default async function InventoryLedgerPage({
                         {formatNumber(r.delta)}
                       </td>
                       <td className="num">{formatNumber(r.balance)}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{r.reference ?? "-"}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{r.note ?? "-"}</td>
+                      <td className="erp-u-muted">{r.reference ?? "-"}</td>
+                      <td className="erp-u-muted">{r.note ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>

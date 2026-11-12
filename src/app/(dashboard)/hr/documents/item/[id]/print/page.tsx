@@ -23,7 +23,7 @@ export default async function DocumentPrintPage({
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px", fontFamily: "serif" }}>
       <PrintButton />
-      <h1 style={{ textAlign: "center", fontSize: 20, fontWeight: 700, marginBottom: 32, letterSpacing: 4 }}>
+      <h1 className="erp-u-text-center erp-u-bold" style={{ fontSize: 20, marginBottom: 32, letterSpacing: 4 }}>
         {doc.title}
       </h1>
       <RichTextView html={doc.rendered_body} className="erp-richtext-content" style={{ padding: 0, fontSize: 13.5, lineHeight: 1.9 }} />

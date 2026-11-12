@@ -16,7 +16,7 @@ export function PriceHistoryHint({
 
   if (history.length === 0) {
     return (
-      <p className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+      <p className="text-xs erp-u-muted">
         {emptyLabel}
       </p>
     );
@@ -53,7 +53,7 @@ export function PriceHistoryHint({
             const older = history[index + 1];
             const changed = older && older.unitPrice !== entry.unitPrice;
             return (
-              <li key={index} className="flex justify-between gap-4" style={{ color: "var(--erp-text-muted)" }}>
+              <li key={index} className="flex justify-between gap-4 erp-u-muted">
                 <span>{entry.orderDate}</span>
                 <span>
                   {changed

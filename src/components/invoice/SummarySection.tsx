@@ -28,7 +28,7 @@ export function SummarySection({
     <>
       <tr style={{ height: SUMMARY.totalRowHeight, fontSize: SUMMARY.labelFontSize }}>
         <Cell colSpan={2} className="font-semibold">
-          <span style={{ position: "relative", left: SUMMARY.labelOffsetX }}>합계</span>
+          <span className="erp-u-relative" style={{ left: SUMMARY.labelOffsetX }}>합계</span>
         </Cell>
         <Cell
           colSpan={24}
@@ -37,12 +37,12 @@ export function SummarySection({
           style={{ fontSize: DOCUMENT.baseFontSize }}
         >
           <div className="flex items-baseline justify-between">
-            <span className="font-bold" style={{ position: "relative", left: SUMMARY.amountOffsetX }}>
+            <span className="font-bold erp-u-relative" style={{ left: SUMMARY.amountOffsetX }}>
               ￦{formatNumber(grandTotal)}원정
             </span>
             <span
-              className="text-right"
-              style={{ position: "relative", left: SUMMARY.breakdownOffsetX, fontSize: SUMMARY.breakdownFontSize }}
+              className="text-right erp-u-relative"
+              style={{ left: SUMMARY.breakdownOffsetX, fontSize: SUMMARY.breakdownFontSize }}
             >
               (수량 : {formatNumber(totalQuantity)}, 공급가 : {formatNumber(supplyTotal)},
               세액 : {formatNumber(taxTotal)})
@@ -60,14 +60,14 @@ export function SummarySection({
             className="absolute top-0 bottom-0 border-l border-[var(--invoice-line)]"
             style={{ left: SUMMARY.balanceLineOffsetX }}
           />
-          <span style={{ position: "relative", left: SUMMARY.balanceLabelOffsetX }}>
+          <span className="erp-u-relative" style={{ left: SUMMARY.balanceLabelOffsetX }}>
             전잔금{priorBalance !== undefined && ` ${formatNumber(priorBalance)}`}
           </span>
         </Cell>
       </tr>
       <tr style={{ height: SUMMARY.memoRowHeight, fontSize: SUMMARY.labelFontSize }}>
         <Cell colSpan={2}>
-          <span style={{ position: "relative", left: SUMMARY.labelOffsetX }}>메모</span>
+          <span className="erp-u-relative" style={{ left: SUMMARY.labelOffsetX }}>메모</span>
         </Cell>
         <Cell colSpan={24} className="text-black" hideBorder={["r"]} style={{ fontSize: DOCUMENT.baseFontSize }}>
           {memo || ""}
@@ -83,7 +83,7 @@ export function SummarySection({
             className="absolute top-0 bottom-0 border-l border-[var(--invoice-line)]"
             style={{ left: SUMMARY.balanceLineOffsetX }}
           />
-          <span style={{ position: "relative", left: SUMMARY.balanceLabelOffsetX }}>
+          <span className="erp-u-relative" style={{ left: SUMMARY.balanceLabelOffsetX }}>
             총잔금{balance !== undefined && ` ${formatNumber(balance)}`}
           </span>
         </Cell>

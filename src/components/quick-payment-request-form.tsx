@@ -95,8 +95,8 @@ export function QuickPaymentRequestForm({
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-highlighted">강조 표시</label>
-        <label
-          style={{ display: "flex", alignItems: "center", gap: 6, height: 30, fontSize: 12.5, cursor: "pointer" }}
+        <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
+          style={{ height: 30, fontSize: 12.5, cursor: "pointer" }}
         >
           <input
             id="qpr-highlighted"
@@ -110,7 +110,7 @@ export function QuickPaymentRequestForm({
         </label>
       </div>
       <div className="md:col-span-6">
-        <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <label className="mb-1 block text-xs erp-u-muted">
           영수증 사진 (선택)
         </label>
         <ReceiptPicker clearOn={state} />

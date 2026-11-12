@@ -74,7 +74,7 @@ export function ReceiptReorderList({
               style={{ width: 88, height: 88, objectFit: "cover", borderRadius: "var(--erp-radius-lg, 0)" }}
             />
           </a>
-          <span className="text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+          <span className="text-[11px] erp-u-muted">
             #{index + 1}
           </span>
           <div className="flex items-center gap-1">
@@ -82,8 +82,8 @@ export function ReceiptReorderList({
               type="button"
               onClick={() => move(index, -1)}
               disabled={index === 0 || isPending}
-              className="erp-btn"
-              style={{ minWidth: 0, height: 22, padding: "1px 6px", fontSize: 11 }}
+              className="erp-btn erp-u-h-22"
+              style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
             >
               ▲
             </button>
@@ -91,8 +91,8 @@ export function ReceiptReorderList({
               type="button"
               onClick={() => move(index, 1)}
               disabled={index === order.length - 1 || isPending}
-              className="erp-btn"
-              style={{ minWidth: 0, height: 22, padding: "1px 6px", fontSize: 11 }}
+              className="erp-btn erp-u-h-22"
+              style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
             >
               ▼
             </button>

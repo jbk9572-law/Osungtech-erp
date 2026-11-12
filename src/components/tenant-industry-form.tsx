@@ -54,7 +54,7 @@ export function TenantIndustryForm({ tenants }: { tenants: TenantOption[] }) {
         </button>
       </form>
       {selectedPreset && (
-        <p className="mt-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mt-1 text-xs erp-u-muted">
           {selectedPreset.description}
         </p>
       )}

@@ -126,22 +126,11 @@ export default async function ApprovalLinesPage({
         ) : (
           <div className="erp-card-feed erp-card-feed-compact">
             {templates.map((t) => (
-              <div
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
                 key={t.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "var(--erp-space-5)",
-                  background: "var(--erp-panel)",
-                  border: "1px solid var(--erp-comm-border)",
-                  borderRadius: "var(--erp-comm-radius-row)",
-                  boxShadow: "var(--erp-comm-shadow-row)",
-                  padding: "13px 18px",
-                  flex: "0 0 auto",
-                }}
+                style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px", flex: "0 0 auto" }}
               >
-                <div style={{ fontSize: "var(--erp-font-md)", fontWeight: 600, color: "var(--erp-text)" }}>{t.name}</div>
+                <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>{t.name}</div>
                 {isAdmin ? (
                   <ApprovalMatrixRuleSelect
                     templateId={t.id}
@@ -150,7 +139,7 @@ export default async function ApprovalLinesPage({
                     action={setApprovalMatrixRule}
                   />
                 ) : (
-                  <span style={{ fontSize: "var(--erp-font-base)", color: "var(--erp-text-muted)" }}>
+                  <span className="erp-u-muted" style={{ fontSize: "var(--erp-font-base)" }}>
                     {presets.find((p) => p.id === presetIdByTemplate[t.id])?.name ?? "연결 안 함"}
                   </span>
                 )}
@@ -221,7 +210,7 @@ export default async function ApprovalLinesPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>결재선 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {presets.length}건</span>
+            <span className="erp-u-muted erp-u-normal">총 {presets.length}건</span>
           </div>
           <div className="erp-split-list-body">
             {presets.map((p) => (
@@ -249,42 +238,42 @@ export default async function ApprovalLinesPage({
         <div className="erp-split-detail">
           {selected ? (
             <>
-              <h2 className="mb-1 text-base font-bold" style={{ color: "var(--erp-text)" }}>
+              <h2 className="mb-1 text-base font-bold erp-u-text">
                 {selected.name}
               </h2>
-              <p className="mb-5 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="mb-5 text-xs erp-u-muted">
                 만든이 {selected.profiles?.full_name ?? "-"}
               </p>
 
-              <div className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+              <div className="mb-2 text-xs font-bold erp-u-muted">
                 결재자 순서
               </div>
               <div className="mb-5 flex flex-wrap items-center gap-1.5">
                 {selected.approver_ids.map((aid, i) => (
-                  <span key={aid} style={{ display: "inline-flex", alignItems: "center", gap: "var(--erp-space-2)" }}>
+                  <span className="erp-u-items-center" key={aid} style={{ display: "inline-flex", gap: "var(--erp-space-2)" }}>
                     <span style={chipStyle}>
                       <span style={chipAvatarStyle("var(--erp-primary)")}>{(nameById[aid] ?? "구성원")[0]}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600 }}>{nameById[aid] ?? "구성원"}</span>
+                      <span className="erp-u-semibold" style={{ fontSize: 12 }}>{nameById[aid] ?? "구성원"}</span>
                     </span>
                     {i < selected.approver_ids.length - 1 && (
-                      <span style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-md)" }}>→</span>
+                      <span className="erp-u-muted" style={{ fontSize: "var(--erp-font-md)" }}>→</span>
                     )}
                   </span>
                 ))}
               </div>
 
-              <div className="mb-2 text-xs font-bold" style={{ color: "var(--erp-text-muted)" }}>
+              <div className="mb-2 text-xs font-bold erp-u-muted">
                 참조자
               </div>
               <div className="mb-5 flex flex-wrap items-center gap-1.5">
                 {selected.reference_ids.map((rid) => (
                   <span key={rid} style={chipStyle}>
                     <span style={chipAvatarStyle("#64748b")}>{(nameById[rid] ?? "구성원")[0]}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{nameById[rid] ?? "구성원"}</span>
+                    <span className="erp-u-semibold" style={{ fontSize: 12 }}>{nameById[rid] ?? "구성원"}</span>
                   </span>
                 ))}
                 {selected.reference_ids.length === 0 && (
-                  <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                  <span className="text-xs erp-u-muted">
                     없음
                   </span>
                 )}

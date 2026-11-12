@@ -20,7 +20,7 @@ export function PhoneInputGroup({
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"
       />
-      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+      <span className="erp-u-muted">-</span>
       <input
         name={`${namePrefix}2`}
         autoComplete="off"
@@ -30,7 +30,7 @@ export function PhoneInputGroup({
         maxLength={4}
         className="erp-input w-full min-w-0 text-center"
       />
-      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+      <span className="erp-u-muted">-</span>
       <input
         name={`${namePrefix}3`}
         autoComplete="off"

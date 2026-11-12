@@ -7,7 +7,7 @@ import Link from "next/link";
 // 만 덩그러니 떴다. error.tsx와 같은 카드 스타일로 통일한다.
 export default function DashboardNotFound() {
   return (
-    <div style={{ maxWidth: 560, margin: "32px auto", textAlign: "center" }}>
+    <div className="erp-u-text-center" style={{ maxWidth: 560, margin: "32px auto" }}>
       <div
         style={{
           border: "1px solid var(--erp-border)",
@@ -16,10 +16,10 @@ export default function DashboardNotFound() {
           padding: "28px 20px",
         }}
       >
-        <p style={{ fontSize: 15, fontWeight: 700, color: "var(--erp-text)", marginBottom: 8 }}>
+        <p className="erp-u-bold erp-u-text" style={{ fontSize: 15, marginBottom: 8 }}>
           페이지를 찾을 수 없습니다.
         </p>
-        <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>
+        <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
           주소가 바뀌었거나 삭제된 항목일 수 있습니다.
         </p>
         <Link href="/dashboard" className="erp-btn erp-btn-primary">

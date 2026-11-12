@@ -182,7 +182,7 @@ export default async function LotLookupPage({
             {formatNumber(totalIn - totalOut)}
           </PageGuide>
 
-          <div className="erp-detail" style={{ marginTop: 0 }}>
+          <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active" style={{ cursor: "default" }}>
                 매입 이력 (입고) {purchaseHits.length}건
@@ -213,7 +213,7 @@ export default async function LotLookupPage({
                         </td>
                         <td>{h.purchase_orders?.suppliers?.name ?? "-"}</td>
                         <td>{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</td>
-                        <td className="num" style={{ color: "var(--erp-success)", fontWeight: 700 }}>
+                        <td className="num erp-u-bold" style={{ color: "var(--erp-success)" }}>
                           {formatNumber(Number(h.quantity))}
                         </td>
                       </tr>
@@ -229,10 +229,10 @@ export default async function LotLookupPage({
                   {purchaseHits.length > 0 && (
                     <tfoot>
                       <tr>
-                        <td colSpan={3} style={{ fontWeight: 700 }}>
+                        <td className="erp-u-bold" colSpan={3}>
                           합계 입고
                         </td>
-                        <td className="num" style={{ fontWeight: 700 }}>
+                        <td className="num erp-u-bold">
                           {formatNumber(totalIn)}
                         </td>
                       </tr>
@@ -270,7 +270,7 @@ export default async function LotLookupPage({
                 })}
                 {purchaseHits.length === 0 && <p className="erp-grid-empty">매입 이력 없음</p>}
                 {purchaseHits.length > 0 && (
-                  <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+                  <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
                     <span>합계 입고</span>
                     <span className="erp-row-card-amount">{formatNumber(totalIn)}</span>
                   </div>
@@ -310,7 +310,7 @@ export default async function LotLookupPage({
                         </td>
                         <td>{h.sales_orders?.customers?.name ?? "-"}</td>
                         <td>{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</td>
-                        <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
+                        <td className="num erp-u-danger erp-u-bold">
                           {formatNumber(Number(h.quantity))}
                         </td>
                       </tr>
@@ -326,10 +326,10 @@ export default async function LotLookupPage({
                   {saleHits.length > 0 && (
                     <tfoot>
                       <tr>
-                        <td colSpan={3} style={{ fontWeight: 700 }}>
+                        <td className="erp-u-bold" colSpan={3}>
                           합계 출고
                         </td>
-                        <td className="num" style={{ fontWeight: 700 }}>
+                        <td className="num erp-u-bold">
                           {formatNumber(totalOut)}
                         </td>
                       </tr>
@@ -349,7 +349,7 @@ export default async function LotLookupPage({
                       </div>
                       <div className="erp-row-card-foot">
                         <span className="erp-row-card-item">{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</span>
-                        <span className="erp-row-card-amount" style={{ color: "var(--erp-danger)" }}>
+                        <span className="erp-row-card-amount erp-u-danger">
                           {formatNumber(Number(h.quantity))}
                         </span>
                       </div>
@@ -367,7 +367,7 @@ export default async function LotLookupPage({
                 })}
                 {saleHits.length === 0 && <p className="erp-grid-empty">매출 이력 없음</p>}
                 {saleHits.length > 0 && (
-                  <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+                  <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
                     <span>합계 출고</span>
                     <span className="erp-row-card-amount">{formatNumber(totalOut)}</span>
                   </div>
