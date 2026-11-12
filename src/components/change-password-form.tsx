@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useEffect, useRef } from "react";
 import { changePassword } from "@/app/(dashboard)/settings/password/actions";
 import { FormMessage } from "@/components/form-message";
@@ -20,11 +21,11 @@ export function ChangePasswordForm() {
       </div>
       <div className="erp-field">
         <label htmlFor="cp-new">새 비밀번호</label>
-        <input id="cp-new" name="newPassword" type="password" required minLength={6} className="erp-input" />
+        <input id="cp-new" name="newPassword" type="password" required minLength={MIN_PASSWORD_LENGTH} className="erp-input" />
       </div>
       <div className="erp-field">
         <label htmlFor="cp-confirm">새 비밀번호 확인</label>
-        <input id="cp-confirm" name="confirmPassword" type="password" required minLength={6} className="erp-input" />
+        <input id="cp-confirm" name="confirmPassword" type="password" required minLength={MIN_PASSWORD_LENGTH} className="erp-input" />
       </div>
       <FormMessage state={state} />
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>

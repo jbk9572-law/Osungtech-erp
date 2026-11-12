@@ -1,5 +1,6 @@
 "use server";
 
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
@@ -45,8 +46,8 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return { error: "아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
   }
-  if (password.length < 6) {
-    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  if (!isPasswordLongEnough(password)) {
+    return { error: PASSWORD_TOO_SHORT_MESSAGE };
   }
   if (!isRole(role)) {
     return { error: "역할 값이 올바르지 않습니다." };
@@ -293,8 +294,8 @@ export async function updateUserAccount(_prevState: FormState, formData: FormDat
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return { error: "아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
   }
-  if (newPassword && newPassword.length < 6) {
-    return { error: "새 비밀번호는 6자 이상이어야 합니다." };
+  if (newPassword && !isPasswordLongEnough(newPassword)) {
+    return { error: `새 비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.` };
   }
   if (!isRole(submittedRole)) {
     return { error: "역할 값이 올바르지 않습니다." };

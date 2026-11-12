@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useState } from "react";
 import Script from "next/script";
 import Link from "next/link";
@@ -84,7 +85,7 @@ export default function SignupPage() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 required
-                minLength={6}
+                minLength={MIN_PASSWORD_LENGTH}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-[30px] w-full rounded-sm border border-[#e2e5eb] px-2.5 text-sm focus:border-[#132944] focus:shadow-[0_0_0_3px_rgba(19,41,68,0.16)] focus:outline-none"

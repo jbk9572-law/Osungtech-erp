@@ -1,5 +1,6 @@
 "use server";
 
+import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getServerEnv } from "@/lib/server-env";
@@ -73,8 +74,8 @@ export async function signupTenant(_prevState: FormState, formData: FormData): P
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return { error: "아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
   }
-  if (password.length < 6) {
-    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  if (!isPasswordLongEnough(password)) {
+    return { error: PASSWORD_TOO_SHORT_MESSAGE };
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
     return { error: "올바른 이메일 형식이 아닙니다." };

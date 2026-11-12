@@ -1,5 +1,6 @@
 "use server";
 
+import { isPasswordLongEnough, MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { headers } from "next/headers";
 import { createClient, getUser } from "@/lib/supabase/server";
 import {
@@ -18,8 +19,8 @@ export async function changePassword(_prevState: FormState, formData: FormData):
   if (!currentPassword || !newPassword || !confirmPassword) {
     return { error: "모든 항목을 입력해주세요." };
   }
-  if (newPassword.length < 6) {
-    return { error: "새 비밀번호는 6자 이상이어야 합니다." };
+  if (!isPasswordLongEnough(newPassword)) {
+    return { error: `새 비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.` };
   }
   if (newPassword !== confirmPassword) {
     return { error: "새 비밀번호가 서로 일치하지 않습니다." };

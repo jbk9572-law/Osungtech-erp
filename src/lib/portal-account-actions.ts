@@ -1,5 +1,6 @@
 "use server";
 
+import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
@@ -46,8 +47,8 @@ export async function createPortalAccount(_prevState: FormState, formData: FormD
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return { error: "아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
   }
-  if (customPassword && customPassword.length < 6) {
-    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  if (customPassword && !isPasswordLongEnough(customPassword)) {
+    return { error: PASSWORD_TOO_SHORT_MESSAGE };
   }
 
   const table = kind === "subcontractor" ? "subcontractors" : "customers";

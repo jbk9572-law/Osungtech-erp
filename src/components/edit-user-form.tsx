@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useState } from "react";
 import { updateUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { FormMessage } from "@/components/form-message";
@@ -50,7 +51,7 @@ export function EditUserForm({
       </div>
       <div className="erp-field">
         <label htmlFor="eu-newpassword">새 비밀번호 (변경할 때만 입력)</label>
-        <input id="eu-newpassword" name="newPassword" type="password" minLength={6} className="erp-input" placeholder="비워두면 유지" />
+        <input id="eu-newpassword" name="newPassword" type="password" minLength={MIN_PASSWORD_LENGTH} className="erp-input" placeholder="비워두면 유지" />
       </div>
       <div className="erp-field">
         <label htmlFor="eu-role">역할</label>
