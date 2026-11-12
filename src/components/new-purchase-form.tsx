@@ -24,7 +24,6 @@ import { ResizableTh } from "@/components/grid/resizable-th";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   getOpenTodos,
-  getPaperCalculationsForTodo,
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
@@ -828,10 +827,7 @@ export function NewPurchaseForm({
 
     setImportingTodoId(todo.id);
     try {
-      const calcs = await getPaperCalculationsForTodo(todo.id);
-      if (calcs.length > 0) {
-        pc.addCopied(calcs);
-      }
+      await pc.copyFromTodo(todo.id);
     } finally {
       setImportingTodoId(null);
     }

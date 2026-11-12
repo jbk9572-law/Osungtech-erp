@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
-import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/modules/paper-calc/lib/paper-calc-sync";
+import { attachPaperCalcToTodo } from "@/modules/paper-calc/order-actions";
 import { parseTodoType } from "@/lib/todo-flow";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { normalizeLotNumber } from "@/lib/lot-number";
@@ -88,31 +88,6 @@ export async function getOpenTodos(side: "purchase" | "sale"): Promise<OpenTodoS
   }));
 }
 
-// "할일 가져오기"에서 모조지(TG0) 계산이 붙어있는 할일을 고르면, 수량만
-// 옮기는 게 아니라 그 할일에 저장돼 있던 모조지 계산(사이즈별 배치 내역)
-// 자체를 가져와 새 매입/매출 건에도 그대로 붙일 수 있게 한다.
-export async function getPaperCalculationsForTodo(todoId: string): Promise<PendingCalc[]> {
-  if (!todoId) return [];
-
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("paper_calculations")
-    .select("paper_w, paper_h, input_items, layouts, total_paper, total_sheet, total_prod, over_prod, fulfilled")
-    .eq("todo_id", todoId);
-
-  return (data ?? []).map((calc) => ({
-    paperW: calc.paper_w,
-    paperH: calc.paper_h,
-    inputItems: calc.input_items,
-    layouts: calc.layouts,
-    totalPaper: calc.total_paper,
-    totalSheet: calc.total_sheet,
-    totalProd: calc.total_prod,
-    overProd: calc.over_prod,
-    fulfilled: calc.fulfilled,
-  }));
-}
-
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 // 제목을 비워두면 거래처와 유형으로 자동 생성한다:
@@ -180,10 +155,7 @@ export async function createTodo(_prevState: FormState, formData: FormData): Pro
     return { error: `등록에 실패했습니다${error ? `: ${error.message}` : ""}` };
   }
 
-  let paperCalcWarning: string | null = null;
-  if (pendingPaperCalc) {
-    paperCalcWarning = await attachPendingPaperCalculationToTodo(supabase, todo.id, pendingPaperCalc);
-  }
+  const paperCalcWarning = await attachPaperCalcToTodo(supabase, todo.id, pendingPaperCalc);
 
   revalidatePath("/todos");
   revalidatePath("/dashboard");

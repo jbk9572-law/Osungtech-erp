@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { getPaperCalculationsForPurchaseOrder, getPaperCalculationsForTodo } from "@/modules/paper-calc/actions";
 import { PageGuide } from "@/components/erp/page-guide";
 import { PaperCalcModalTrigger } from "@/modules/paper-calc/components/paper-calc-modal-trigger";
 import { ManualLayoutModalTrigger } from "@/modules/paper-calc/components/manual-layout-modal-trigger";
@@ -87,7 +88,18 @@ export function useOrderPaperCalc<P extends Tg0Candidate>({
     sizeLines,
     hasAny: !!pending || copied.length > 0,
     apply: (payload: PendingCalcPayload) => setPending(JSON.stringify(payload)),
-    addCopied: (calcs: PendingCalc[]) => setCopied((prev) => [...prev, ...calcs]),
+    // 입고 불러오기/할일 가져오기로 가져온 항목에 모조지 계산이 붙어 있으면 통째로
+    // 복사해 등록 시 같이 붙인다. 복사된 계산이 있으면 true.
+    copyFromPurchaseOrder: async (purchaseOrderId: string) => {
+      const calcs = await getPaperCalculationsForPurchaseOrder(purchaseOrderId);
+      if (calcs.length > 0) setCopied((prev) => [...prev, ...calcs]);
+      return calcs.length > 0;
+    },
+    copyFromTodo: async (todoId: string) => {
+      const calcs = await getPaperCalculationsForTodo(todoId);
+      if (calcs.length > 0) setCopied((prev) => [...prev, ...calcs]);
+      return calcs.length > 0;
+    },
     reloadFromStorage: () => setPending(localStorage.getItem(key)),
     // 제출 시점에 임시 계산을 같이 넘기고 나면 더 이상 필요 없으니 지운다(등록이
     // 실패해도 계산 자체는 다시 하면 되므로 감수할 만한 트레이드오프).

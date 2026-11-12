@@ -3,7 +3,6 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import {
-  getPaperCalculationsForPurchaseOrder,
   getPurchaseItemsForDate,
   type TodayPurchaseItem,
 } from "@/app/(dashboard)/purchases/actions";
@@ -30,7 +29,6 @@ import {
 } from "@/lib/grid-enter-nav";
 import {
   getOpenTodos,
-  getPaperCalculationsForTodo,
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
@@ -473,11 +471,7 @@ export function NewSaleForm({
     if (item.sku === "TG0") {
       setAddingItemId(item.id);
       try {
-        const calcs = await getPaperCalculationsForPurchaseOrder(
-          item.purchaseOrderId,
-        );
-        if (calcs.length > 0) {
-          pc.addCopied(calcs);
+        if (await pc.copyFromPurchaseOrder(item.purchaseOrderId)) {
           setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
           return;
         }
@@ -576,10 +570,7 @@ export function NewSaleForm({
 
     setImportingTodoId(todo.id);
     try {
-      const calcs = await getPaperCalculationsForTodo(todo.id);
-      if (calcs.length > 0) {
-        pc.addCopied(calcs);
-      }
+      await pc.copyFromTodo(todo.id);
     } finally {
       setImportingTodoId(null);
     }

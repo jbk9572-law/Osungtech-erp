@@ -3,16 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
-import {
-  attachCopiedPaperCalculations,
-  attachCopiedPaperCalculationsToPurchase,
-  attachPendingPaperCalculation,
-  attachPendingPaperCalculationToPurchase,
-  overridePurchasePaperStockQuantity,
-  overrideSalesPaperStockQuantity,
-  revertPurchasePaperStockOverride,
-  type PendingCalc,
-} from "@/modules/paper-calc/lib/paper-calc-sync";
+import { attachPaperCalcToPurchase, attachPaperCalcToSale, readPaperCalcFields } from "@/modules/paper-calc/order-actions";
 import { markTodoSideDone } from "@/lib/todo-flow";
 import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
@@ -125,33 +116,6 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
   }));
 }
 
-// 입고 불러오기에서 모조지(TG0) 품목을 고르면, 수량만 옮기는 게 아니라 그
-// 매입 건에 저장돼 있던 모조지 계산(사이즈별 배치 내역) 자체를 가져와
-// 새 매출 건/할일에도 그대로 붙일 수 있게 한다.
-export async function getPaperCalculationsForPurchaseOrder(
-  purchaseOrderId: string
-): Promise<PendingCalc[]> {
-  if (!purchaseOrderId) return [];
-
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("paper_calculations")
-    .select("paper_w, paper_h, input_items, layouts, total_paper, total_sheet, total_prod, over_prod, fulfilled")
-    .eq("purchase_order_id", purchaseOrderId);
-
-  return (data ?? []).map((calc) => ({
-    paperW: calc.paper_w,
-    paperH: calc.paper_h,
-    inputItems: calc.input_items,
-    layouts: calc.layouts,
-    totalPaper: calc.total_paper,
-    totalSheet: calc.total_sheet,
-    totalProd: calc.total_prod,
-    overProd: calc.over_prod,
-    fulfilled: calc.fulfilled,
-  }));
-}
-
 export async function createPurchase(
   _prevState: FormState,
   formData: FormData
@@ -173,15 +137,10 @@ export async function createPurchase(
   const taxType = String(formData.get("tax_type") ?? "") || "과세";
   const evidenceType = String(formData.get("evidence_type") ?? "") || null;
   const items = parseItems(String(formData.get("items") ?? "[]"));
-  const pendingPaperCalc = String(formData.get("pendingPaperCalc") ?? "") || null;
-  // 할일 가져오기로 가져온 모조지 계산(사이즈별 배치 내역, 여러 건일 수 있음).
-  const copiedPaperCalcs = String(formData.get("copiedPaperCalcs") ?? "") || null;
+  const paperCalc = readPaperCalcFields(formData);
   // 할일 가져오기로 채운 할일 id들 — 등록이 실제로 성공하면 해당 할일의
   // 매입 방향을 완료 처리한다(유형에 따라 할일 자체가 완료될 수도 있음).
   const importedTodoIdsRaw = String(formData.get("importedTodoIds") ?? "");
-  // 등록 화면에서 TG0 자동 반영 수량을 직접 고친 경우(거래처 협의 등)에만
-  // 값이 들어온다 — 있으면 주문 생성 직후 오버라이드 이력을 남긴다.
-  const tg0OverrideRaw = String(formData.get("tg0OverrideQuantity") ?? "");
   // 당일 입고 후 바로 출고되는 건을 위해, 매입 등록과 동시에 매출 전표까지
   // 한 번에 만든다. 출고 수량은 매입 수량과 별도로 받는다 — 매입한 수량
   // 전부가 아니라 일부만 당일 출고되고 나머지는 재고로 남는 경우가 있기
@@ -207,7 +166,7 @@ export async function createPurchase(
   }
   // 모조지 계산을 미리 연결해둔 경우, 그 계산이 만들 TG0 품목 한 줄로도
   // 충분하므로 여기서는 수동 품목이 0개여도 등록을 막지 않는다.
-  if (items.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
+  if (items.length === 0 && !paperCalc.hasAny) {
     return { error: "품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
   if (alsoCreateSale && !saleCustomerId) {
@@ -221,7 +180,7 @@ export async function createPurchase(
   if (alsoCreateSale && !saleItems) {
     return { error: "출고 품목 정보를 처리하지 못했습니다." };
   }
-  if (alsoCreateSale && saleItems && saleItems.length === 0 && !pendingPaperCalc && !copiedPaperCalcs) {
+  if (alsoCreateSale && saleItems && saleItems.length === 0 && !paperCalc.hasAny) {
     return { error: "출고할 품목을 1개 이상 선택하고 수량을 입력해주세요." };
   }
   // 출고 수량이 매입 수량보다 많은 품목이 있으면 실제로 없는 재고를 출고
@@ -404,39 +363,17 @@ export async function createPurchase(
 
   // 이 단계가 실패해도 매입 등록 자체는 이미 성공했으니 등록을 막지 않되,
   // 조용히 묻히지 않도록 상세 화면으로 경고 메시지를 실어 보낸다.
-  let paperCalcWarning: string | null = purchaseLocationWarning ?? saleLocationWarning;
-  if (pendingPaperCalc) {
-    paperCalcWarning = await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, pendingPaperCalc);
-  }
-
-  // 할일 가져오기로 가져온 모조지 계산(들)이 있으면 같은 방식으로 붙인다.
-  if (copiedPaperCalcs) {
-    paperCalcWarning ??= await attachCopiedPaperCalculationsToPurchase(
-      supabase,
-      purchaseOrderId,
-      copiedPaperCalcs
-    );
-  }
-
-  // TG0 자동 반영 줄이 위에서 이미 만들어진 뒤에만 오버라이드를 적용할 수
-  // 있으므로 반드시 attachPendingPaperCalculationToPurchase 다음에 호출한다.
-  const tg0OverrideQuantity = Number(tg0OverrideRaw);
-  if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
-    await overridePurchasePaperStockQuantity(supabase, purchaseOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
-  }
+  let paperCalcWarning = await attachPaperCalcToPurchase(
+    supabase,
+    purchaseOrderId,
+    paperCalc,
+    purchaseLocationWarning ?? saleLocationWarning,
+  );
 
   // 매출도 같이 만들어졌으면(원자적으로 이미 성공한 상태) 모조지 계산도
   // 매출 쪽에 똑같이 복사해서 TG0 자동 반영/도면까지 그대로 이어준다.
   if (salesOrderId) {
-    if (pendingPaperCalc) {
-      paperCalcWarning ??= await attachPendingPaperCalculation(supabase, salesOrderId, pendingPaperCalc);
-    }
-    if (copiedPaperCalcs) {
-      paperCalcWarning ??= await attachCopiedPaperCalculations(supabase, salesOrderId, copiedPaperCalcs);
-    }
-    if (tg0OverrideRaw && Number.isFinite(tg0OverrideQuantity) && tg0OverrideQuantity > 0) {
-      await overrideSalesPaperStockQuantity(supabase, salesOrderId, tg0OverrideQuantity, "등록 시 직접 입력");
-    }
+    paperCalcWarning = await attachPaperCalcToSale(supabase, salesOrderId, paperCalc, paperCalcWarning);
     revalidatePath("/sales");
     // createSale과 동일하게, 이 매출도 거래처 미수금 잔액과 모조지 계산
     // 목록에 영향을 주므로 그쪽 화면도 같이 갱신한다.
@@ -691,64 +628,4 @@ export async function deletePurchase(
   revalidatePath("/payables");
   if (order?.supplier_id) revalidatePath(`/suppliers/${order.supplier_id}`);
   redirect("/purchases");
-}
-
-// 자동계산된 TG0(모조지) 수량을 거래처 협의 등의 이유로 수동값으로 고정한다.
-// 기본 동작(자동 계산값 반영)은 그대로 두고, 이 값이 적용 중인 동안만
-// 재계산이 건너뛰어진다 (paper-calc-sync.ts의 syncPaperStockPurchaseItem 참고).
-export async function overridePurchasePaperStock(
-  _prevState: FormState,
-  formData: FormData
-): Promise<FormState> {
-  const purchaseOrderId = String(formData.get("purchase_order_id") ?? "");
-  const overrideQuantity = Number(formData.get("override_quantity") ?? NaN);
-  const note = String(formData.get("note") ?? "").trim() || null;
-
-  if (!purchaseOrderId || !Number.isFinite(overrideQuantity) || overrideQuantity <= 0) {
-    return { error: "적용할 수량을 올바르게 입력해주세요." };
-  }
-
-  const supabase = await createClient();
-
-  if (!(await canManageOrder(supabase, "purchase_orders", purchaseOrderId))) {
-    return { error: "본인이 등록한 매입 건에만 모조지 수량을 조정할 수 있습니다." };
-  }
-
-  const errorMessage = await overridePurchasePaperStockQuantity(
-    supabase,
-    purchaseOrderId,
-    overrideQuantity,
-    note
-  );
-  if (errorMessage) return { error: errorMessage };
-
-  revalidatePath(`/purchases/${purchaseOrderId}`);
-  // overridePurchasePaperStockQuantity가 inventory_transactions를 insert해서
-  // 실제 재고 수량을 바꾼다 — 다른 재고 변경 액션들과 마찬가지로 재고
-  // 현황·대시보드도 갱신해야 한다.
-  revalidatePath("/inventory");
-  revalidatePath("/dashboard");
-  return { success: "모조지 수량을 수동값으로 변경했습니다." };
-}
-
-export async function revertPurchasePaperStock(
-  _prevState: FormState,
-  formData: FormData
-): Promise<FormState> {
-  const purchaseOrderId = String(formData.get("purchase_order_id") ?? "");
-  if (!purchaseOrderId) return { error: "잘못된 요청입니다." };
-
-  const supabase = await createClient();
-
-  if (!(await canManageOrder(supabase, "purchase_orders", purchaseOrderId))) {
-    return { error: "본인이 등록한 매입 건에만 모조지 수량을 조정할 수 있습니다." };
-  }
-
-  const errorMessage = await revertPurchasePaperStockOverride(supabase, purchaseOrderId);
-  if (errorMessage) return { error: errorMessage };
-
-  revalidatePath(`/purchases/${purchaseOrderId}`);
-  revalidatePath("/inventory");
-  revalidatePath("/dashboard");
-  return { success: "자동 계산값으로 되돌렸습니다." };
 }

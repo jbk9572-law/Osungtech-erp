@@ -12,10 +12,7 @@ import {
 } from "@/modules/paper-calc/lib/paper-calc-summary";
 import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/modules/paper-calc/lib/paper-calc-sync";
 import { PaperStockOverridePanel } from "@/modules/paper-calc/components/paper-stock-override-panel";
-import {
-  overrideSalesPaperStock,
-  revertSalesPaperStock,
-} from "@/app/(dashboard)/sales/actions";
+import { overrideSalesPaperStock, revertSalesPaperStock } from "@/modules/paper-calc/actions";
 import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
