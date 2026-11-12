@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { canManageOrder } from "@/lib/can-manage-order";
 import type { FormState } from "@/components/form-message";
 import {
+  isPaperCalcEnabled,
   overridePurchasePaperStockQuantity,
   overrideSalesPaperStockQuantity,
   revertPurchasePaperStockOverride,
@@ -79,6 +80,10 @@ export async function overrideSalesPaperStock(
 
   const supabase = await createClient();
 
+  if (!(await isPaperCalcEnabled(supabase))) {
+    return { error: "모조지 계산 기능이 꺼져 있어 사용할 수 없습니다." };
+  }
+
   if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 모조지 수량을 조정할 수 있습니다." };
   }
@@ -108,6 +113,10 @@ export async function revertSalesPaperStock(
   if (!salesOrderId) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+
+  if (!(await isPaperCalcEnabled(supabase))) {
+    return { error: "모조지 계산 기능이 꺼져 있어 사용할 수 없습니다." };
+  }
 
   if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
     return { error: "본인이 등록한 매출 건에만 모조지 수량을 조정할 수 있습니다." };
@@ -139,6 +148,10 @@ export async function overridePurchasePaperStock(
 
   const supabase = await createClient();
 
+  if (!(await isPaperCalcEnabled(supabase))) {
+    return { error: "모조지 계산 기능이 꺼져 있어 사용할 수 없습니다." };
+  }
+
   if (!(await canManageOrder(supabase, "purchase_orders", purchaseOrderId))) {
     return { error: "본인이 등록한 매입 건에만 모조지 수량을 조정할 수 있습니다." };
   }
@@ -168,6 +181,10 @@ export async function revertPurchasePaperStock(
   if (!purchaseOrderId) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+
+  if (!(await isPaperCalcEnabled(supabase))) {
+    return { error: "모조지 계산 기능이 꺼져 있어 사용할 수 없습니다." };
+  }
 
   if (!(await canManageOrder(supabase, "purchase_orders", purchaseOrderId))) {
     return { error: "본인이 등록한 매입 건에만 모조지 수량을 조정할 수 있습니다." };

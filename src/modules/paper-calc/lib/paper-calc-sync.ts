@@ -538,11 +538,12 @@ async function attachCopiedPaperCalculationsCore(
   orderId: string,
   copiedRaw: string
 ): Promise<string | null> {
+  if (copiedRaw.length > MAX_PENDING_RAW_LENGTH) return null;
   let candidates: unknown[];
   try {
     const parsed = JSON.parse(copiedRaw);
     if (!Array.isArray(parsed)) return null;
-    candidates = parsed;
+    candidates = parsed.slice(0, MAX_COPIED_CALCS);
   } catch {
     return null;
   }
@@ -597,18 +598,39 @@ export type PendingCalc = {
   fulfilled: boolean;
 };
 
-function isPendingCalc(value: unknown): value is PendingCalc {
+// 폼(브라우저)이 보낸 값은 신뢰할 수 없다 — 이 값의 totalSheet 등이 TG0 품목 수량(재고)
+// 계산에 쓰이므로, 숫자 형식/범위와 크기를 서버에서 확인한다. 정상 계산 결과는 모두
+// 아래 한도 안에 들어온다(모조지 계산 화면이 만드는 값 기준으로 넉넉하게 잡음).
+export const MAX_PENDING_RAW_LENGTH = 1_000_000; // JSON 문자열 길이 상한(약 1MB)
+export const MAX_COPIED_CALCS = 50;
+const MAX_INPUT_ITEMS = 1000;
+const MAX_LAYOUTS = 5000;
+const MAX_DIMENSION = 100_000; // mm 단위 용지 크기 상한
+const MAX_TOTAL = 100_000_000; // 장수/연수/생산량 합계 상한
+
+function isBoundedNumber(value: unknown, min: number, max: number): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
+}
+
+export function isPendingCalc(value: unknown): value is PendingCalc {
   const pending = value as Partial<PendingCalc> | null;
   return Boolean(
     pending &&
-      pending.paperW &&
-      pending.paperH &&
+      isBoundedNumber(pending.paperW, 1e-9, MAX_DIMENSION) &&
+      isBoundedNumber(pending.paperH, 1e-9, MAX_DIMENSION) &&
       Array.isArray(pending.inputItems) &&
-      pending.inputItems.length > 0
+      pending.inputItems.length > 0 &&
+      pending.inputItems.length <= MAX_INPUT_ITEMS &&
+      (pending.layouts === undefined || (Array.isArray(pending.layouts) && pending.layouts.length <= MAX_LAYOUTS)) &&
+      isBoundedNumber(pending.totalPaper, 0, MAX_TOTAL) &&
+      isBoundedNumber(pending.totalSheet, 0, MAX_TOTAL) &&
+      isBoundedNumber(pending.totalProd, 0, MAX_TOTAL) &&
+      isBoundedNumber(pending.overProd, -MAX_TOTAL, MAX_TOTAL)
   );
 }
 
-function parsePendingCalc(pendingRaw: string): PendingCalc | null {
+export function parsePendingCalc(pendingRaw: string): PendingCalc | null {
+  if (pendingRaw.length > MAX_PENDING_RAW_LENGTH) return null;
   let pending: unknown;
   try {
     pending = JSON.parse(pendingRaw);
@@ -628,7 +650,7 @@ function pendingToRow(pending: PendingCalc) {
     total_sheet: pending.totalSheet,
     total_prod: pending.totalProd,
     over_prod: pending.overProd,
-    fulfilled: pending.fulfilled,
+    fulfilled: pending.fulfilled === true,
   };
 }
 

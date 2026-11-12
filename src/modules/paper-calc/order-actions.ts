@@ -1,4 +1,5 @@
 import {
+  isPaperCalcEnabled,
   attachCopiedPaperCalculations,
   attachCopiedPaperCalculationsToPurchase,
   attachPendingPaperCalculation,
@@ -9,6 +10,13 @@ import {
 } from "@/modules/paper-calc/lib/paper-calc-sync";
 
 type Supabase = Parameters<typeof attachPendingPaperCalculation>[0];
+
+// 모듈을 꺼둔 회사에서는 화면에 버튼이 없지만, 브라우저가 숨은 값을 직접 보내도 서버가 모조지
+// 계산을 저장하지 않도록 한다(모듈 끔 = 화면만 숨김이 아니라 서버에서도 동작 안 함).
+async function shouldSkip(supabase: Supabase, fields: PaperCalcFormFields): Promise<boolean> {
+  if (!fields.pending && !fields.copied && !fields.tg0OverrideRaw) return true;
+  return !(await isPaperCalcEnabled(supabase));
+}
 
 // 매출/매입/할일 등록 서버 액션이 모조지에 대해 아는 것은 이 파일의 세 가지뿐이다:
 // 폼에서 넘어온 모조지 값 읽기, 주문 생성 직후 계산 붙이기, TG0 수량 직접 입력 반영.
@@ -42,6 +50,7 @@ export async function attachPaperCalcToSale(
   fields: PaperCalcFormFields,
   warning: string | null,
 ): Promise<string | null> {
+  if (await shouldSkip(supabase, fields)) return warning;
   let result = warning;
   if (fields.pending) {
     result ??= await attachPendingPaperCalculation(supabase, salesOrderId, fields.pending);
@@ -64,6 +73,7 @@ export async function attachPaperCalcToPurchase(
   fields: PaperCalcFormFields,
   warning: string | null,
 ): Promise<string | null> {
+  if (await shouldSkip(supabase, fields)) return warning;
   let result = warning;
   if (fields.pending) {
     result = await attachPendingPaperCalculationToPurchase(supabase, purchaseOrderId, fields.pending);
@@ -83,5 +93,6 @@ export async function attachPaperCalcToTodo(
   todoId: string,
   pending: string | null,
 ): Promise<string | null> {
-  return pending ? attachPendingPaperCalculationToTodo(supabase, todoId, pending) : null;
+  if (!pending || !(await isPaperCalcEnabled(supabase))) return null;
+  return attachPendingPaperCalculationToTodo(supabase, todoId, pending);
 }
