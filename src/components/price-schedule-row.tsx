@@ -71,30 +71,27 @@ export function PriceScheduleRow({
             min="0"
             defaultValue={newUnitPrice}
             required
-            className="erp-input erp-u-h-24"
-            style={{ width: 100, fontSize: 11.5 }}
+            className="erp-input erp-u-h-24 erp-u-text-sm"
+            style={{ width: 100 }}
           />
           <input
             name="effective_date"
             type="date"
             defaultValue={effectiveDate}
             required
-            className="erp-input erp-u-h-24"
-            style={{ fontSize: 11.5 }}
+            className="erp-input erp-u-h-24 erp-u-text-sm"
           />
           <button
             type="submit"
             disabled={updatePending}
-            className="erp-btn erp-btn-primary erp-btn-xs"
-            style={{ minWidth: 0, fontSize: 11.5 }}
+            className="erp-btn erp-btn-primary erp-btn-xs erp-u-minw-0 erp-u-text-sm"
           >
             {updatePending ? "저장 중..." : "저장"}
           </button>
           <button
             type="button"
             onClick={() => setEditing(false)}
-            className="erp-btn erp-btn-xs"
-            style={{ minWidth: 0, fontSize: 11.5 }}
+            className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-sm"
           >
             닫기
           </button>
@@ -128,8 +125,7 @@ export function PriceScheduleRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="erp-btn erp-btn-xs"
-          style={{ minWidth: 0, fontSize: 11.5 }}
+          className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-sm"
         >
           수정
         </button>
@@ -138,8 +134,7 @@ export function PriceScheduleRow({
           disabled={cancelPending}
           onClick={handleCancel}
           onBlur={confirmCancel.reset}
-          className="erp-btn erp-btn-danger erp-btn-xs"
-          style={{ minWidth: 0, fontSize: 11.5 }}
+          className="erp-btn erp-btn-danger erp-btn-xs erp-u-minw-0 erp-u-text-sm"
         >
           {confirmCancel.isArmed("cancel") ? "한 번 더 누르면 취소" : "취소"}
         </button>

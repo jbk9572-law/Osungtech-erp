@@ -1086,8 +1086,7 @@ export function NewPurchaseForm({
               placeholder="자동"
               value={docNo}
               onChange={(e) => setDocNo(e.target.value.replace(/[^0-9]/g, ""))}
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
@@ -1165,8 +1164,7 @@ export function NewPurchaseForm({
               autoComplete="off"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
             />
           </div>
           <PaymentMethodFields alwaysCredit={alwaysCredit} onAlwaysCreditChange={setAlwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
@@ -1174,8 +1172,8 @@ export function NewPurchaseForm({
             <>
               <div className="erp-field erp-span-3">
                 <label>매출 동시 등록</label>
-                <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
-                  style={{ height: 30, fontSize: 12.5, cursor: "pointer" }}
+                <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer"
+                  style={{ height: 30 }}
                 >
                   <input
                     type="checkbox"
@@ -1251,8 +1249,8 @@ export function NewPurchaseForm({
           className="erp-form-section-head erp-u-relative"
         >
           <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
-          <div className="erp-u-flex erp-u-items-center"
-            style={{ gap: 4, margin: 4, flexWrap: "wrap" }}
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap"
+            style={{ margin: 4 }}
           >
             <QuickAddProductSearch
               products={products}
@@ -1261,8 +1259,7 @@ export function NewPurchaseForm({
             <button
               type="button"
               onClick={loadOpenTodos}
-              className="erp-btn"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-u-minw-0"
               disabled={loadingTodos}
             >
               {loadingTodos ? "불러오는 중..." : "할일 가져오기"}
@@ -1270,8 +1267,7 @@ export function NewPurchaseForm({
             <button
               type="button"
               onClick={addRow}
-              className="erp-btn"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-u-minw-0"
             >
               + 품목 추가
             </button>
@@ -1433,8 +1429,7 @@ export function NewPurchaseForm({
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
-                          <div className="erp-u-danger"
-                            style={{ fontSize: 10.5 }}
+                          <div className="erp-u-danger erp-u-text-xs"
                           >
                             매입수량 초과
                           </div>
@@ -1513,7 +1508,7 @@ export function NewPurchaseForm({
               })}
             </tbody>
             <tfoot>
-              <tr style={{ background: "var(--erp-bg)" }}>
+              <tr className="erp-u-bg-page">
                 <td className="erp-u-bold"
                   colSpan={alsoCreateSale ? 8 : 6}
                 >

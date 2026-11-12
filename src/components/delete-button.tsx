@@ -52,15 +52,15 @@ export function DeleteButton({
     >
       <input type="hidden" name="id" value={id} />
       <span className="erp-u-danger">{confirmMessage}</span>
-      <label className="erp-u-items-center erp-u-gap-6" style={{ display: "inline-flex" }}>
+      <label className="erp-u-items-center erp-u-gap-6 erp-u-inline-flex">
         확인 코드 <strong>{code}</strong> 입력
         <input
           type="text"
           inputMode="numeric"
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
-          className="erp-input erp-u-h-24"
-          style={{ width: 56, padding: "0 6px", fontSize: 11.5 }}
+          className="erp-input erp-u-h-24 erp-u-pad-0-6 erp-u-text-sm"
+          style={{ width: 56 }}
           aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
           autoFocus
         />
@@ -68,8 +68,7 @@ export function DeleteButton({
       <button
         type="submit"
         disabled={pending || !confirmMatches}
-        className="erp-btn erp-btn-danger"
-        style={{ minWidth: 0 }}
+        className="erp-btn erp-btn-danger erp-u-minw-0"
       >
         {pending ? (
           <>
@@ -85,8 +84,7 @@ export function DeleteButton({
           setConfirming(false);
           reset();
         }}
-        className="erp-btn"
-        style={{ minWidth: 0 }}
+        className="erp-btn erp-u-minw-0"
       >
         취소
       </button>

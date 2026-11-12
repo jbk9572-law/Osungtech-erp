@@ -28,7 +28,7 @@ export function HireDateForm({
         style={{ width: 130 }}
         aria-label="입사일"
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-u-pad-0-8" style={{ minWidth: 0, height: 28 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-u-pad-0-8 erp-u-minw-0" style={{ height: 28 }}>
         {pending ? "저장 중..." : "저장"}
       </button>
       <FormMessage state={state} />

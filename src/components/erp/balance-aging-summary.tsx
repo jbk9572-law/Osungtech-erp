@@ -19,7 +19,7 @@ export function BalanceAgingSummary({
 
   return (
     <>
-      <div className="erp-kpi-row" style={{ marginBottom: 16 }}>
+      <div className="erp-kpi-row erp-u-mb-16">
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">{totalLabel}</div>
           <div className="erp-kpi-value erp-u-danger">

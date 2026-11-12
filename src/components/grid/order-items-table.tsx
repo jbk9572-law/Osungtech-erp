@@ -129,7 +129,7 @@ export function OrderItemsTable({
             })}
           </tbody>
           <tfoot>
-            <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+            <tr className="erp-u-bold erp-u-bg-page">
               <td colSpan={8} className="num">
                 합계
               </td>
@@ -191,7 +191,7 @@ export function OrderItemsTable({
                   <dd>{formatNumber(row.taxAmount)}</dd>
                 </div>
                 {row.remark && (
-                  <div style={{ gridColumn: "1 / -1" }}>
+                  <div className="erp-u-col-all">
                     <dt>비고</dt>
                     <dd>{row.remark}</dd>
                   </div>
@@ -206,9 +206,9 @@ export function OrderItemsTable({
 
           return [
             card,
-            <div className="erp-u-muted"
+            <div className="erp-u-muted erp-u-text-xs"
               key={`${row.id}-sizes`}
-              style={{ marginTop: -4, paddingLeft: 14, fontSize: "var(--erp-font-xs)" }}
+              style={{ marginTop: -4, paddingLeft: 14 }}
             >
               {paperCalcSizeLines.map((line, i) => (
                 <div key={i}>ㄴ {line}</div>
@@ -217,7 +217,7 @@ export function OrderItemsTable({
           ];
         })}
         {rows.length > 0 && (
-          <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
+          <div className="erp-row-card-foot erp-u-bold erp-u-pad-4-2">
             <span>합계</span>
             <span className="erp-row-card-amount">
               공급가액 {formatNumber(totalSupply)}원 · 세액 {formatNumber(totalTax)}원

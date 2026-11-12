@@ -171,7 +171,7 @@ export async function PaymentRequestDetailPanel({
             <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
           </div>
 
-          <div className="erp-grid-wrap has-card-view" style={{ border: "1px solid var(--erp-border)" }}>
+          <div className="erp-grid-wrap has-card-view erp-u-border">
             <table className="erp-grid">
               <thead>
                 <tr>
@@ -237,7 +237,7 @@ export async function PaymentRequestDetailPanel({
                     <dd className="erp-u-bold">{formatNumber(Number(item.amount))}</dd>
                   </div>
                   {item.remark && (
-                    <div style={{ gridColumn: "1 / -1" }}>
+                    <div className="erp-u-col-all">
                       <dt>비고</dt>
                       <dd>{item.remark}</dd>
                     </div>

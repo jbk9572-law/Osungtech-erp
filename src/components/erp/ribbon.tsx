@@ -233,7 +233,7 @@ export function Ribbon({
         }}
       >
         🔍 빠른 검색{" "}
-        <span style={{ opacity: 0.55, fontSize: 10.5 }}>Ctrl+K</span>
+        <span className="erp-u-text-xs" style={{ opacity: 0.55 }}>Ctrl+K</span>
       </button>
 
       {isPlatformAdmin && (
@@ -279,8 +279,7 @@ export function Ribbon({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="메뉴 이름으로 검색..."
-                className="erp-input"
-                style={{ width: "100%", marginBottom: 8 }}
+                className="erp-input erp-u-w-full erp-u-mb-8"
               />
               <div className="erp-ribbon-searchlist">
                 {filteredMenus.map((m) => (
@@ -334,8 +333,7 @@ export function Ribbon({
                 value={tenantQuery}
                 onChange={(e) => setTenantQuery(e.target.value)}
                 placeholder="회사 이름으로 검색..."
-                className="erp-input"
-                style={{ width: "100%", marginBottom: 8 }}
+                className="erp-input erp-u-w-full erp-u-mb-8"
               />
               <div className="erp-ribbon-searchlist erp-tile-list">
                 {filteredTenants.map((t) => (
@@ -372,13 +370,13 @@ export function Ribbon({
               </button>
             </div>
             <div className="erp-modal-body">
-              <p className="erp-u-bold erp-u-muted"
-                style={{ fontSize: 11.5, margin: "0 0 6px" }}
+              <p className="erp-u-bold erp-u-muted erp-u-text-sm"
+                style={{ margin: "0 0 6px" }}
               >
                 화면 구조
               </p>
-              <ul className="erp-u-text erp-u-flex"
-                style={{ fontSize: 12, margin: "0 0 16px", paddingLeft: 16, flexDirection: "column", gap: 4 }}
+              <ul className="erp-u-text erp-u-flex erp-u-text-compact erp-u-col erp-u-gap-4"
+                style={{ margin: "0 0 16px", paddingLeft: 16 }}
               >
                 <li>
                   왼쪽 트리메뉴에서 업무 화면을 고릅니다. Ctrl+K로 검색해 바로
@@ -397,8 +395,8 @@ export function Ribbon({
                   나옵니다.
                 </li>
               </ul>
-              <p className="erp-u-bold erp-u-muted"
-                style={{ fontSize: 11.5, margin: "0 0 6px" }}
+              <p className="erp-u-bold erp-u-muted erp-u-text-sm"
+                style={{ margin: "0 0 6px" }}
               >
                 단축키
               </p>

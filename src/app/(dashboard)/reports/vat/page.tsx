@@ -133,7 +133,7 @@ export default async function VatReportPage({
         실제 신고는 담당 세무사/홈택스를 통해 별도로 진행해주세요 — 이 화면은 신고 전 참고 자료입니다.
       </PageGuide>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+      <div className="erp-date-presets erp-u-mb-8">
         {quarterLinks.map((q) => (
           <Link
             key={q.label}

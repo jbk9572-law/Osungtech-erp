@@ -106,7 +106,7 @@ export default async function TaxInvoiceExportPage({
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">⚠ 양식 형식 오류 — 다운로드 전 확인 필요 ({formatIssues.length}건)</span>
           </div>
-          <div className="erp-detail-body erp-u-flex erp-u-gap-6" style={{ fontSize: 12.5, flexDirection: "column" }}>
+          <div className="erp-detail-body erp-u-flex erp-u-gap-6 erp-u-text-base erp-u-col">
             {formatIssues.map(({ invoice, errors }) => (
               <div key={invoice.salesOrderId} style={{ borderBottom: "1px solid var(--erp-border)", paddingBottom: 6 }}>
                 <div className="flex flex-wrap items-center gap-2">
@@ -116,7 +116,7 @@ export default async function TaxInvoiceExportPage({
                     매출 건 보기
                   </Link>
                 </div>
-                <ul className="erp-u-danger" style={{ marginTop: 4, paddingLeft: 16 }}>
+                <ul className="erp-u-danger erp-u-mt-4" style={{ paddingLeft: 16 }}>
                   {errors.map((e, i) => (
                     <li key={i}>{e}</li>
                   ))}
@@ -134,7 +134,7 @@ export default async function TaxInvoiceExportPage({
               일괄발급 제외 — 직접 처리 필요 ({excluded.length + ineligibleByType.length}건)
             </span>
           </div>
-          <div className="erp-detail-body erp-u-flex erp-u-gap-6" style={{ fontSize: 12.5, flexDirection: "column" }}>
+          <div className="erp-detail-body erp-u-flex erp-u-gap-6 erp-u-text-base erp-u-col">
             {excluded.map((inv) => (
               <div key={inv.salesOrderId} className="flex flex-wrap items-center gap-2">
                 <span className="erp-u-muted">{inv.issueDate}</span>
@@ -161,7 +161,7 @@ export default async function TaxInvoiceExportPage({
         </div>
       )}
 
-      <p className="text-xs erp-u-muted" style={{ marginTop: 14 }}>
+      <p className="text-xs erp-u-muted erp-u-mt-14">
         기간 내 발행된 세금계산서 총 {formatNumber(eligible.length + ineligibleByType.length)}건 — 일괄발급 대상{" "}
         {formatNumber(eligible.length)}건 중 품목 4개 초과 {formatNumber(overCapCount)}건
         {summarize ? "(자동 요약 적용됨)" : "(제외됨)"}, 위수탁 계열 {formatNumber(ineligibleByType.length)}건 제외.

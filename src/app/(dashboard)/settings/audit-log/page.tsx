@@ -475,7 +475,7 @@ export default async function AuditLogPage({
         있습니다.
       </PageGuide>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+      <div className="erp-date-presets erp-u-mb-8">
         <Link
           href="/settings/audit-log"
           className={`erp-date-preset-btn${!tableParam ? " active" : ""}`}
@@ -528,17 +528,16 @@ export default async function AuditLogPage({
                 <td>
                   {row.target}
                   {row.groupCount && (
-                    <span className="erp-u-muted"
+                    <span className="erp-u-muted erp-u-ml-6 erp-u-text-xs erp-u-border erp-u-pad-0-5"
                       title="같은 업무처리로 함께 바뀐 항목이 있습니다"
-                      style={{ marginLeft: 6, fontSize: "var(--erp-font-xs)", border: "1px solid var(--erp-border)", padding: "0 5px" }}
                     >
                       +{row.groupCount - 1}건 같이 변경됨
                     </span>
                   )}
                 </td>
                 <td className="erp-u-muted">{row.author}</td>
-                <td className="erp-u-muted"
-                  style={{ fontSize: 11.5, wordBreak: "break-all" }}
+                <td className="erp-u-muted erp-u-text-sm"
+                  style={{ wordBreak: "break-all" }}
                 >
                   {row.summary}
                 </td>
@@ -563,7 +562,7 @@ export default async function AuditLogPage({
               <GridBadge tone={row.actionTone}>{row.actionLabel}</GridBadge>
             </div>
             {row.groupCount && (
-              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
+              <div className="erp-u-muted erp-u-text-xs">
                 +{row.groupCount - 1}건 같이 변경됨
               </div>
             )}
@@ -580,7 +579,7 @@ export default async function AuditLogPage({
                 <dt>작성자</dt>
                 <dd>{row.author}</dd>
               </div>
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div className="erp-u-col-all">
                 <dt>변경 내용</dt>
                 <dd style={{ wordBreak: "break-all" }}>{row.summary}</dd>
               </div>

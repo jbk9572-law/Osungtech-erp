@@ -26,11 +26,11 @@ export default async function DashboardLoading() {
   const showNotchGuard = isSafari(headersList.get("user-agent") ?? "");
 
   return (
-    <div className="erp-u-flex" style={{ minHeight: "100vh", flexDirection: "column" }}>
+    <div className="erp-u-flex erp-u-col" style={{ minHeight: "100vh" }}>
       {showNotchGuard && <div className="erp-notch-guard" aria-hidden />}
       {/* data-erp-route-loading: route-progress-bar.tsx가 이 마커로
           "주소는 바뀌었지만 아직 이 자리엔 로딩 화면뿐"임을 구분한다. */}
-      <div className="erp-loading-panel" data-erp-route-loading style={{ flex: 1 }}>
+      <div className="erp-loading-panel erp-u-flex-1" data-erp-route-loading>
         <div className="erp-loading-gauge" aria-hidden />
         조회 중...
       </div>

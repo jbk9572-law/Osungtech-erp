@@ -31,8 +31,8 @@ export function LotLookupSearchForm({
           autoComplete="off"
           defaultValue={q}
           placeholder="예: LOT1024"
-          className="erp-input"
-          style={{ width: "100%", textTransform: "uppercase" }}
+          className="erp-input erp-u-w-full"
+          style={{ textTransform: "uppercase" }}
         />
       </div>
       <div className="erp-field erp-span-4">

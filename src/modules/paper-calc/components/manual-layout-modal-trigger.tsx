@@ -40,7 +40,7 @@ export function ManualLayoutModalTrigger({
 
   return (
     <>
-      <button type="button" className="erp-btn" onClick={() => setOpen(true)} style={{ minWidth: 0 }}>
+      <button type="button" className="erp-btn erp-u-minw-0" onClick={() => setOpen(true)}>
         재단 배치 시뮬레이터
       </button>
       {open && (

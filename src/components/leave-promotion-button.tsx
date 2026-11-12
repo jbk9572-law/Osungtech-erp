@@ -38,7 +38,7 @@ export function LeavePromotionButton({
       <input type="hidden" name="year" value={year} />
       <input type="hidden" name="stage" value={stage} />
       <input type="hidden" name="remaining_days" value={remainingDays} />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-sm" style={{ minWidth: 0, fontSize: 11.5 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-sm erp-u-minw-0 erp-u-text-sm">
         {pending ? "처리 중..." : `${stage}차 통지 발송`}
       </button>
       <FormMessage state={state} />

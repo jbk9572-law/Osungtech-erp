@@ -163,7 +163,7 @@ export function RegistrationModalShell({
         >
           ✕
         </button>
-        <div className="erp-modal-body" style={{ flex: 1, minHeight: 0 }}>
+        <div className="erp-modal-body erp-u-flex-1" style={{ minHeight: 0 }}>
           <ModalCloseProvider value={close}>
             <ModalCloseHrefProvider value={registerCloseHref}>{children}</ModalCloseHrefProvider>
           </ModalCloseProvider>

@@ -94,12 +94,12 @@ export function PartyTransactionHistory({
   if (!partyId) return null;
 
   return (
-    <div className="erp-detail" style={{ marginTop: 12 }}>
+    <div className="erp-detail erp-u-mt-12">
       <div className="erp-detail-tabs">
         <span className="erp-detail-tab active">{title}</span>
       </div>
-      <div className="erp-detail-body" style={{ padding: 12 }}>
-        <div className="erp-date-presets" style={{ marginBottom: 10 }}>
+      <div className="erp-detail-body erp-u-p-12">
+        <div className="erp-date-presets erp-u-mb-10">
           {PRESETS.map((p) => (
             <button
               key={p.key}
@@ -113,15 +113,14 @@ export function PartyTransactionHistory({
           ))}
         </div>
         {preset === "custom" && (
-          <div className="erp-field" style={{ marginBottom: 10, maxWidth: 200 }}>
+          <div className="erp-field erp-u-mb-10" style={{ maxWidth: 200 }}>
             <label htmlFor="pth-custom-from">시작일</label>
             <input
               id="pth-custom-from"
               type="date"
               value={customFrom}
               onChange={(e) => setCustomFrom(e.target.value)}
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
             />
           </div>
         )}

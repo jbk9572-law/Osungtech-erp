@@ -164,7 +164,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
           />
 
           {balance.payments.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+            <div className="erp-grid-wrap erp-u-mt-12">
               <table className="erp-grid">
                 <thead>
                   <tr>

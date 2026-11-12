@@ -95,8 +95,8 @@ export function QuickPaymentRequestForm({
       </div>
       <div className="erp-field">
         <label htmlFor="qpr-highlighted">강조 표시</label>
-        <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
-          style={{ height: 30, fontSize: 12.5, cursor: "pointer" }}
+        <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer"
+          style={{ height: 30 }}
         >
           <input
             id="qpr-highlighted"

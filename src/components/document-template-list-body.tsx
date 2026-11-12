@@ -83,7 +83,7 @@ export function DocumentTemplateListBody({
           <span className="erp-u-muted erp-u-normal">총 {gridRows.length}건</span>
         </div>
 
-        <div className="erp-field-grid erp-u-gap-6" style={{ margin: 8, padding: 8 }}>
+        <div className="erp-field-grid erp-u-gap-6 erp-u-p-8" style={{ margin: 8 }}>
           <div className="erp-field erp-span-12">
             <label htmlFor="tpl-search-q">양식 이름 검색</label>
             <input
@@ -93,8 +93,7 @@ export function DocumentTemplateListBody({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="양식 이름으로 검색"
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
             />
           </div>
         </div>

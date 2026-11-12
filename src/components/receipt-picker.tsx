@@ -126,8 +126,8 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
         {items.map((item, index) => (
           <li
             key={item.id}
-            className="relative flex flex-col items-center gap-1 rounded-md border p-1.5 shadow-sm"
-            style={{ borderColor: "var(--erp-border)", width: THUMB_SIZE + 12, background: "var(--erp-panel)" }}
+            className="relative flex flex-col items-center gap-1 rounded-md border p-1.5 shadow-sm erp-u-bg-panel"
+            style={{ borderColor: "var(--erp-border)", width: THUMB_SIZE + 12 }}
           >
             <span
               className="absolute -left-1.5 -top-1.5 flex items-center justify-center rounded-full text-[10px] font-bold text-white"
@@ -158,8 +158,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
                 type="button"
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
-                className="erp-btn erp-btn-xs"
-                style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+                className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
               >
                 ▲
               </button>
@@ -167,8 +166,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
                 type="button"
                 onClick={() => move(index, 1)}
                 disabled={index === items.length - 1}
-                className="erp-btn erp-btn-xs"
-                style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+                className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
               >
                 ▼
               </button>

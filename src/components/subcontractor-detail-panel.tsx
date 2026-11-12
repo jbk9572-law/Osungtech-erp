@@ -81,7 +81,7 @@ export async function SubcontractorDetailPanel({
           </PageGuide>
           <PortalAccountForm targetId={subcontractor.id} kind="subcontractor" />
           {portalAccounts && portalAccounts.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+            <div className="erp-grid-wrap erp-u-mt-12">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -259,7 +259,7 @@ export async function SubcontractorDetailPanel({
           />
 
           {balance.payments.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+            <div className="erp-grid-wrap erp-u-mt-12">
               <table className="erp-grid">
                 <thead>
                   <tr>

@@ -36,13 +36,13 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
 
   return (
     <div>
-      <div className="erp-u-flex erp-u-justify-between erp-u-items-center" style={{ marginBottom: 4 }}>
+      <div className="erp-u-flex erp-u-justify-between erp-u-items-center erp-u-mb-4">
         <h1 className="erp-portal-h1">지시 {workOrder.doc_no}</h1>
         <Link href={await portalHref("/assignments")} className="erp-btn">
           목록
         </Link>
       </div>
-      <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 16 }}>
+      <p className="erp-u-muted erp-u-text-compact erp-u-mb-16">
         {workOrder.product_name}
         {workOrder.product_spec && ` (${workOrder.product_spec})`} · {formatNumber(Number(workOrder.quantity))} ·{" "}
         {STATUS_LABEL[workOrder.status] ?? workOrder.status}
@@ -70,16 +70,16 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
               return (
               <div
                 key={s.id}
-                className="erp-home-panel erp-u-flex erp-u-justify-between erp-u-items-center"
-                style={{ padding: 10, gap: 10, border: s.is_mine ? "1px solid var(--erp-primary)" : undefined }}
+                className="erp-home-panel erp-u-flex erp-u-justify-between erp-u-items-center erp-u-p-10 erp-u-gap-10"
+                style={{ border: s.is_mine ? "1px solid var(--erp-primary)" : undefined }}
               >
                 <div>
                   <span style={{ fontWeight: s.is_mine ? 700 : 500 }}>{s.process_name}</span>
-                  <span className="erp-u-muted" style={{ marginLeft: 8, fontSize: 11.5 }}>
+                  <span className="erp-u-muted erp-u-ml-8 erp-u-text-sm">
                     {s.assignee_kind === "subcontractor" ? (s.subcontractor_name ?? "업체") : "사내"}
                   </span>
                   {prevLabel && (
-                    <div className="erp-u-muted" style={{ fontSize: 11, marginTop: 2 }}>
+                    <div className="erp-u-muted erp-u-text-caption erp-u-mt-2">
                       이전 작업: {prev!.process_name} ({prevLabel})
                     </div>
                   )}

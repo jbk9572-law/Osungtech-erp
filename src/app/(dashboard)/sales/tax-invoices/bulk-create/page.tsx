@@ -110,12 +110,12 @@ export default async function BulkTaxInvoicePage({
       </form>
 
       {excludedCount > 0 && (
-        <p className="text-xs erp-u-muted" style={{ marginTop: 4 }}>
+        <p className="text-xs erp-u-muted erp-u-mt-4">
           이미 발행됐거나 면세/다른 증빙유형이라 제외된 건 {excludedCount}건 (목록에는 표시하지 않음)
         </p>
       )}
 
-      <div style={{ marginTop: 10 }}>
+      <div className="erp-u-mt-10">
         <BulkTaxInvoiceForm orders={bulkOrders} today={todayKstStr()} />
       </div>
     </div>

@@ -60,10 +60,10 @@ export function ReceiptGallery({ receipts }: { receipts: GalleryReceipt[] }) {
               style={{ borderColor: "var(--erp-border)", width: 88, height: 88 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <img className="erp-u-w-full"
                 src={receipt.file_url ?? ""}
                 alt={`영수증 ${index + 1}`}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{ height: "100%", objectFit: "cover" }}
               />
             </button>
           </li>

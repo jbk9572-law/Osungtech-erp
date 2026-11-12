@@ -126,7 +126,7 @@ export default async function PaymentRequestsPage({
                   content: (
                     <>
                       {label}
-                      <span style={{ marginLeft: 6 }}>
+                      <span className="erp-u-ml-6">
                         <GridBadge tone={status.tone}>{status.label}</GridBadge>
                       </span>
                       <div className="erp-split-list-row-sub">

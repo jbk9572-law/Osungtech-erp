@@ -33,14 +33,8 @@ export function OnboardingBanner() {
     <PageGuide className="mb-3 flex flex-wrap items-center gap-2">
       <span className="erp-u-bold">처음이신가요?</span>
       <span>
-        <kbd
-          style={{
-            fontFamily: "inherit",
-            background: "var(--erp-panel)",
-            border: "1px solid var(--erp-info-border)",
-            borderRadius: 0,
-            padding: "1px 5px",
-          }}
+        <kbd className="erp-u-bg-panel"
+          style={{ fontFamily: "inherit", border: "1px solid var(--erp-info-border)", borderRadius: 0, padding: "1px 5px" }}
         >
           Ctrl+K
         </kbd>{" "}

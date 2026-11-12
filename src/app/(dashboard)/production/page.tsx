@@ -117,8 +117,7 @@ export default async function ProductionPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="상품명, SKU, 창고, 메모"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -248,7 +247,7 @@ export default async function ProductionPage({
                     <dd>{row.profiles?.full_name ?? "-"}</dd>
                   </div>
                   {row.memo && (
-                    <div style={{ gridColumn: "1 / -1" }}>
+                    <div className="erp-u-col-all">
                       <dt>메모</dt>
                       <dd>{row.memo}</dd>
                     </div>

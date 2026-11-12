@@ -26,7 +26,7 @@ export function MonthNavigator({
   const thisMonth = currentMonth();
 
   return (
-    <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+    <div className="erp-date-presets erp-u-mb-8">
       <Link href={`${baseHref}?month=${prevMonth}${suffix}`} prefetch={false} className="erp-date-preset-btn">
         ◀ 이전달
       </Link>

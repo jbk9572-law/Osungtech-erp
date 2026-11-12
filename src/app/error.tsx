@@ -18,20 +18,20 @@ export default function RootError({
   }, [error]);
 
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-text-center"
-      style={{ minHeight: "100vh", flexDirection: "column", justifyContent: "center", padding: 24, fontFamily: "-apple-system, sans-serif" }}
+    <div className="erp-u-flex erp-u-items-center erp-u-text-center erp-u-col erp-u-justify-center erp-u-p-24"
+      style={{ minHeight: "100vh", fontFamily: "-apple-system, sans-serif" }}
     >
-      <p className="erp-u-bold" style={{ fontSize: "var(--erp-font-xl)", color: "#182338", marginBottom: 8 }}>
+      <p className="erp-u-bold erp-u-text-xl erp-u-mb-8" style={{ color: "#182338" }}>
         일시적인 오류가 발생했습니다.
       </p>
-      <p style={{ fontSize: "var(--erp-font-md)", color: "#6b7280", marginBottom: 20, maxWidth: 420 }}>
+      <p className="erp-u-text-md erp-u-mb-20" style={{ color: "#6b7280", maxWidth: 420 }}>
         잠시 후 다시 시도해주세요. 같은 문제가 반복되면 운영자에게 알려주세요.
       </p>
       <div className="erp-u-flex erp-u-gap-8">
-        <button className="erp-u-semibold"
+        <button className="erp-u-semibold erp-u-pad-0-16 erp-u-text-md erp-u-border-none"
           type="button"
           onClick={() => reset()}
-          style={{ height: 36, padding: "0 16px", borderRadius: 4, background: "#132944", color: "#fff", fontSize: "var(--erp-font-md)", border: "none" }}
+          style={{ height: 36, borderRadius: 4, background: "#132944", color: "#fff" }}
         >
           다시 시도
         </button>

@@ -69,11 +69,11 @@ export default async function MonthlyReportPage({
       <ListPageHeader title="확장모듈 > 월별 리포트" />
 
       <MonthNavigator baseHref="/reports/monthly" month={month} suffix={suffix} />
-      <div className="erp-toolbar" style={{ marginBottom: 8 }}>
+      <div className="erp-toolbar erp-u-mb-8">
         <ExcelDownloadLink href={`/api/reports/monthly/export?month=${month}${suffix}`} pushRight />
       </div>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+      <div className="erp-date-presets erp-u-mb-8">
         <Link
           href={`/reports/monthly?month=${month}${qSuffix}`}
           className={`erp-date-preset-btn${view === "product" ? " active" : ""}`}
@@ -115,8 +115,7 @@ export default async function MonthlyReportPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="품목명, SKU, 규격, 카테고리, 거래처명"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -141,8 +140,8 @@ export default async function MonthlyReportPage({
             {formatNumber(totalSalesAmount)}원
           </div>
           {salesDelta && (
-            <div className="erp-u-bold"
-              style={{ marginTop: 5, fontSize: 11, color: salesDelta.isUp
+            <div className="erp-u-bold erp-u-text-caption"
+              style={{ marginTop: 5, color: salesDelta.isUp
                   ? "var(--erp-success)"
                   : "var(--erp-danger)" }}
             >
@@ -163,8 +162,8 @@ export default async function MonthlyReportPage({
             {formatNumber(totalPurchaseAmount)}원
           </div>
           {purchaseDelta && (
-            <div className="erp-u-bold"
-              style={{ marginTop: 5, fontSize: 11, color: purchaseDelta.isUp
+            <div className="erp-u-bold erp-u-text-caption"
+              style={{ marginTop: 5, color: purchaseDelta.isUp
                   ? "var(--erp-success)"
                   : "var(--erp-danger)" }}
             >
@@ -217,7 +216,7 @@ export default async function MonthlyReportPage({
               ))}
             </tbody>
             <tfoot>
-              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+              <tr className="erp-u-bold erp-u-bg-page">
                 <td>합계 (매출에서 차감됨)</td>
                 <td className="num">
                   {formatNumber(returnReasonStats.reduce((sum, r) => sum + r.count, 0))}건
@@ -369,7 +368,7 @@ export default async function MonthlyReportPage({
             </tbody>
             {itemGroups.length > 0 && (
               <tfoot>
-                <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+                <tr className="erp-u-bold erp-u-bg-page">
                   <td colSpan={2} className="erp-grid-sticky-label">
                     합계 ({itemGroups.length}개 품목)
                   </td>
@@ -444,8 +443,8 @@ export default async function MonthlyReportPage({
                       <td className="erp-u-bold" colSpan={2}>
                         <div className="erp-u-flex erp-u-items-center erp-u-gap-8"
                         >
-                          <span className="erp-u-items-center"
-                            style={{ display: "inline-flex", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", fontSize: 11, fontWeight: 800, flexShrink: 0, ...rankStyle }}
+                          <span className="erp-u-items-center erp-u-inline-flex erp-u-justify-center erp-u-text-caption"
+                            style={{ width: 20, height: 20, borderRadius: "50%", fontWeight: 800, flexShrink: 0, ...rankStyle }}
                           >
                             {rank}
                           </span>
@@ -458,17 +457,11 @@ export default async function MonthlyReportPage({
                             {cg.companyName}
                           </Link>
                         </div>
-                        <div className="erp-u-flex erp-u-items-center erp-u-gap-8"
-                          style={{ marginTop: 4, marginLeft: 28, maxWidth: 200 }}
+                        <div className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-mt-4"
+                          style={{ marginLeft: 28, maxWidth: 200 }}
                         >
-                          <div
-                            style={{
-                              flex: 1,
-                              height: 5,
-                              borderRadius: 999,
-                              background: "var(--erp-divider)",
-                              overflow: "hidden",
-                            }}
+                          <div className="erp-u-flex-1"
+                            style={{ height: 5, borderRadius: 999, background: "var(--erp-divider)", overflow: "hidden" }}
                           >
                             <div
                               style={{
@@ -479,8 +472,8 @@ export default async function MonthlyReportPage({
                               }}
                             />
                           </div>
-                          <span className="erp-u-bold erp-u-text"
-                            style={{ fontSize: 11, minWidth: 34, textAlign: "right" }}
+                          <span className="erp-u-bold erp-u-text erp-u-text-caption erp-u-text-right"
+                            style={{ minWidth: 34 }}
                           >
                             {share.toFixed(1)}%
                           </span>
@@ -573,7 +566,7 @@ export default async function MonthlyReportPage({
             </tbody>
             {companyGroups.length > 0 && (
               <tfoot>
-                <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+                <tr className="erp-u-bold erp-u-bg-page">
                   <td colSpan={2} className="erp-grid-sticky-label">
                     합계 ({companyGroups.length}곳)
                   </td>

@@ -131,7 +131,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           <SalesActivityForm today={todayKstStr()} fixedCustomerId={customer.id} />
 
           {activities && activities.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 16 }}>
+            <div className="erp-grid-wrap erp-u-mt-16">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -240,7 +240,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           />
 
           {balance.payments.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+            <div className="erp-grid-wrap erp-u-mt-12">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -392,7 +392,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
           </PageGuide>
           <PortalAccountForm targetId={customer.id} />
           {portalAccounts && portalAccounts.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+            <div className="erp-grid-wrap erp-u-mt-12">
               <table className="erp-grid">
                 <thead>
                   <tr>

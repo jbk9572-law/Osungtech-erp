@@ -161,7 +161,7 @@ export async function QuoteDetailPanel({ id, closeHref }: { id: string; closeHre
                     </dd>
                   </div>
                   {item.remark && (
-                    <div style={{ gridColumn: "1 / -1" }}>
+                    <div className="erp-u-col-all">
                       <dt>비고</dt>
                       <dd>{item.remark}</dd>
                     </div>

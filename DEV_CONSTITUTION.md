@@ -82,6 +82,14 @@
 **기준**: 뭔가를 두 번째로 똑같이 작성하려는 순간이 "지금 공용화해야 하는
 신호"다. 세 번째까지 기다리지 않는다.
 
+**직접 박은 값(style={{...}})은 자동 검사로 늘지 못하게 막는다**: 반복되는 값은 `erp-u-*`
+공용 유틸 클래스(`erp-theme.css` 맨 위)나 `--erp-*` 토큰으로 쓴다. 이미 클래스가 있는 값
+(예: `width: "100%"`, `marginTop: 8`, `fontSize: 11`)을 `style`에 다시 쓰면 lint
+(`check-inline-style-budget`)가 실패하고, 범주별 직접 박은 선언 총량도 기준선
+(`scripts/inline-style-budget.json`)을 넘을 수 없다. 정리해서 줄이면 기준선도 같이 낮춘다
+(`node scripts/check-inline-style-budget.mjs --write`). 컨트롤(버튼·입력칸) 높이는
+`--erp-control-h-md/sm/xs` 3단계만 쓴다(`.erp-btn-sm`/`.erp-btn-xs`).
+
 ## 4. 땜질식(지적받은 한 곳만) 수정을 하지 않는다
 
 버그든 디자인이든 기능이든, 고치기 전에 **같은 패턴이 코드베이스 다른

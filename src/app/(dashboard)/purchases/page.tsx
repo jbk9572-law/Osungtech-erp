@@ -488,8 +488,7 @@ async function PurchasesPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="공급처명, 상품명, SKU, 규격, 관리번호, 배송방법, 메모, 비고"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -540,7 +539,7 @@ async function PurchasesPage({
       />
 
       {hasMore && (
-        <div className="erp-u-flex" style={{ justifyContent: "center", marginTop: 12 }}>
+        <div className="erp-u-flex erp-u-justify-center erp-u-mt-12">
           <Link href={moreHref} className="erp-btn">
             더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>

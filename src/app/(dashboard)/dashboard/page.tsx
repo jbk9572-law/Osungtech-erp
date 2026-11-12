@@ -765,7 +765,7 @@ async function DashboardPage({
         </div>
       )}
       <div className="erp-home">
-      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 16 }}>
+      <div className="erp-u-flex erp-u-col erp-u-gap-16">
         <QuickStockLookup products={stockLookupProducts} />
         <div className="erp-home-panel" id="stock-risk">
           <div className="erp-home-panel-title">
@@ -805,7 +805,7 @@ async function DashboardPage({
             <div className="erp-home-list">
               {recentNotes.map((note) => (
                 <div className="erp-home-list-item" key={note.id}>
-                  <span className="erp-u-muted" style={{ fontSize: 11 }}>
+                  <span className="erp-u-muted erp-u-text-caption">
                     {note.note_date} · {note.profiles?.full_name ?? "익명"}
                   </span>
                   <span className="truncate">{note.content}</span>

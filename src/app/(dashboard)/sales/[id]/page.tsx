@@ -174,8 +174,8 @@ export default async function SaleDetailPage({
           <span className="erp-detail-tab active">기본정보</span>
         </div>
         <div
-          className="erp-detail-body"
-          style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}
+          className="erp-detail-body erp-u-text-base"
+          style={{ paddingTop: 16, paddingBottom: 16 }}
         >
           <DetailInfoRow label="No">{order.doc_no}</DetailInfoRow>
           <DetailInfoRow label="출고처명">{order.customers?.name ?? "-"}</DetailInfoRow>
@@ -183,7 +183,7 @@ export default async function SaleDetailPage({
           <DetailInfoRow label="연락처">{order.customers?.phone ?? "-"}</DetailInfoRow>
           <DetailInfoRow label="작성자">{order.profiles?.full_name ?? "-"}</DetailInfoRow>
           {allowManage && paperCalcEnabled && paperCalcs && paperCalcs.length > 0 && (
-            <div style={{ marginTop: 8 }}>
+            <div className="erp-u-mt-8">
               <PaperStockOverridePanel
                 orderId={id}
                 idFieldName="sales_order_id"
@@ -194,12 +194,12 @@ export default async function SaleDetailPage({
             </div>
           )}
           {order.is_return && order.return_reason && (
-            <p className="erp-u-danger" style={{ marginTop: 12 }}>
+            <p className="erp-u-danger erp-u-mt-12">
               반품 사유: {order.return_reason}
             </p>
           )}
           {order.memo && (
-            <p className="erp-u-muted" style={{ marginTop: 12 }}>
+            <p className="erp-u-muted erp-u-mt-12">
               메모: {order.memo}
             </p>
           )}

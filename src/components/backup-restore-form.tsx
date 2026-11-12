@@ -62,8 +62,7 @@ export function BackupRestoreForm() {
         <button
           type="submit"
           disabled={pending || !confirmMatches}
-          className="erp-btn erp-btn-danger"
-          style={{ minWidth: 0 }}
+          className="erp-btn erp-btn-danger erp-u-minw-0"
         >
           {pending ? (
             <>

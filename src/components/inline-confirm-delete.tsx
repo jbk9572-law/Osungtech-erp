@@ -70,26 +70,15 @@ export function InlineConfirmDelete({
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="text-sm"
-            style={{
-              position: "fixed",
-              top: rect.top,
-              left: rect.left,
-              zIndex: 1000,
-              background: "var(--erp-panel)",
-              border: "1px solid var(--erp-border)",
-              borderRadius: "var(--erp-radius-xl, 0)",
-              padding: 8,
-              width: PANEL_WIDTH,
-              boxShadow: "var(--erp-shadow-md)",
-            }}
+            className="text-sm erp-u-bg-panel erp-u-border erp-u-p-8"
+            style={{ position: "fixed", top: rect.top, left: rect.left, zIndex: 1000, borderRadius: "var(--erp-radius-xl, 0)", width: PANEL_WIDTH, boxShadow: "var(--erp-shadow-md)" }}
           >
             <form action={formAction}>
               {Object.entries(hiddenFields).map(([k, v]) => (
                 <input key={k} type="hidden" name={k} value={v} />
               ))}
-              <p className="erp-u-danger" style={{ marginBottom: 6 }}>{warningText}</p>
-              <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ marginBottom: 6 }}>
+              <p className="erp-u-danger erp-u-mb-6">{warningText}</p>
+              <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-mb-6">
                 <span>
                   확인 코드 <strong>{code}</strong> 입력
                 </span>
@@ -98,8 +87,8 @@ export function InlineConfirmDelete({
                   inputMode="numeric"
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
-                  className="erp-input erp-u-h-24"
-                  style={{ width: 56, padding: "0 6px", fontSize: 11.5 }}
+                  className="erp-input erp-u-h-24 erp-u-pad-0-6 erp-u-text-sm"
+                  style={{ width: 56 }}
                   autoFocus
                   aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
                 />
@@ -108,8 +97,7 @@ export function InlineConfirmDelete({
                 <button
                   type="submit"
                   disabled={pending || !confirmMatches}
-                  className="erp-btn erp-btn-danger"
-                  style={{ minWidth: 0 }}
+                  className="erp-btn erp-btn-danger erp-u-minw-0"
                 >
                   {pending ? "삭제 중..." : "삭제"}
                 </button>
@@ -119,8 +107,7 @@ export function InlineConfirmDelete({
                     setOpen(false);
                     setConfirmText("");
                   }}
-                  className="erp-btn"
-                  style={{ minWidth: 0 }}
+                  className="erp-btn erp-u-minw-0"
                 >
                   취소
                 </button>

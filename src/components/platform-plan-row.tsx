@@ -52,15 +52,8 @@ export function PlatformPlanRow({
   const formId = `plan-form-${id}`;
 
   return (
-    <div
-      style={{
-        background: "var(--erp-panel)",
-        border: "1px solid var(--erp-comm-border)",
-        borderRadius: "var(--erp-comm-radius-row)",
-        boxShadow: "var(--erp-comm-shadow-row)",
-        padding: "14px 18px",
-        flex: "0 0 auto",
-      }}
+    <div className="erp-u-bg-panel erp-u-flex-none"
+      style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "14px 18px" }}
     >
       <form id={formId} action={formAction}>
         <input type="hidden" name="id" value={id} />
@@ -69,8 +62,8 @@ export function PlatformPlanRow({
       <div className="flex flex-wrap items-start gap-4">
         <div className="erp-field" style={{ flex: "0 0 90px" }}>
           <label>키</label>
-          <span className="erp-u-muted"
-            style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", fontSize: "var(--erp-font-base)", paddingTop: 6 }}
+          <span className="erp-u-muted erp-u-text-base"
+            style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", paddingTop: 6 }}
           >
             {planKey}
           </span>
@@ -112,16 +105,15 @@ export function PlatformPlanRow({
             className="erp-input w-full"
           />
         </div>
-        <div className="erp-field" style={{ flex: "0 0 auto" }}>
+        <div className="erp-field erp-u-flex-none">
           <label htmlFor={`${formId}-active`}>노출</label>
-          <input
+          <input className="erp-u-mt-6"
             id={`${formId}-active`}
             type="checkbox"
             name="is_active"
             value="1"
             form={formId}
             defaultChecked={isActive}
-            style={{ marginTop: 6 }}
           />
         </div>
       </div>
@@ -130,7 +122,7 @@ export function PlatformPlanRow({
           기본값 적용" 버튼이 그대로 복사해 넣을 실제 숫자 — 텍스트
           설명만 있고 세팅할 데가 없다는 지적 반영. 비워두면 그 항목은
           기본값을 안 정하는 것으로 저장된다. */}
-      <div className="erp-field-grid" style={{ marginTop: "var(--erp-space-3)" }}>
+      <div className="erp-field-grid erp-u-mt-s3">
         <div className="erp-field erp-span-3">
           <label htmlFor={`${formId}-db`}>DB 용량(MB)</label>
           <input
@@ -218,12 +210,12 @@ export function PlatformPlanRow({
       </div>
 
       <div
-        className="flex items-center justify-between"
-        style={{ marginTop: "var(--erp-space-3)", paddingTop: "var(--erp-space-2)", borderTop: "1px solid var(--erp-divider)" }}
+        className="flex items-center justify-between erp-u-mt-s3"
+        style={{ paddingTop: "var(--erp-space-2)", borderTop: "1px solid var(--erp-divider)" }}
       >
         <FormMessage state={state} />
         <div className="flex items-center gap-1">
-          <button type="submit" form={formId} className="erp-btn" disabled={pending} style={{ minWidth: 0 }}>
+          <button type="submit" form={formId} className="erp-btn erp-u-minw-0" disabled={pending}>
             {pending ? "저장 중..." : "저장"}
           </button>
           <DeleteButton action={deletePlatformPlan} id={id} confirmMessage={`"${name}" 요금제를 삭제하시겠습니까?`} />

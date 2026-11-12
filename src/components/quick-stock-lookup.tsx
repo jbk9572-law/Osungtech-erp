@@ -38,7 +38,7 @@ export function QuickStockLookup({ products }: { products: StockLookupProduct[] 
   return (
     <div className="erp-home-panel">
       <div className="erp-home-panel-title">퀵 재고조회</div>
-      <div style={{ padding: "10px 12px" }}>
+      <div className="erp-u-pad-10-12">
         <ProductSearchSelect
           products={products}
           value={selectedId}
@@ -62,11 +62,11 @@ export function QuickStockLookup({ products }: { products: StockLookupProduct[] 
             textDecoration: "none",
           }}
         >
-          <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span className="erp-u-minw-0" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {selected.sku} · {selected.name}
             {selected.spec ? ` (${selected.spec})` : ""}
           </span>
-          <span className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flex: "0 0 auto" }}>
+          <span className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-flex-none">
             <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
             <span className="erp-u-bold" style={{ fontVariantNumeric: "tabular-nums" }}>
               {formatNumber(selected.quantity)}

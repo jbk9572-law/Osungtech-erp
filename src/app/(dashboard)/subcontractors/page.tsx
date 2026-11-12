@@ -136,8 +136,8 @@ export default async function SubcontractorsPage({
           <form
             id="subcontractors-search-form"
             method="get"
-            className="erp-field-grid erp-u-gap-6"
-            style={{ margin: 8, padding: 8 }}
+            className="erp-field-grid erp-u-gap-6 erp-u-p-8"
+            style={{ margin: 8 }}
           >
             <div className="erp-field erp-span-6">
               <input
@@ -146,11 +146,10 @@ export default async function SubcontractorsPage({
                 autoComplete="off"
                 defaultValue={q ?? ""}
                 placeholder="업체명, 담당자, 연락처 검색"
-                className="erp-input"
-                style={{ width: "100%" }}
+                className="erp-input erp-u-w-full"
               />
             </div>
-            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+            <button type="submit" className="erp-btn erp-btn-primary erp-u-w-full">
               F5 조회
             </button>
           </form>
@@ -176,7 +175,7 @@ export default async function SubcontractorsPage({
             />
           </div>
           {!keyword && hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-p-8" style={{ borderTop: "1px solid var(--erp-border)" }}>
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 ({formatNumber(LIST_LIMIT_STEP)}개 더)
               </Link>

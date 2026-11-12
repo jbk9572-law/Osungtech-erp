@@ -21,37 +21,23 @@ export function TodoImportPopover({
   onClose: () => void;
 }) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: "100%",
-        right: 4,
-        zIndex: 20,
-        width: 420,
-        maxWidth: "90vw",
-        maxHeight: 320,
-        overflowY: "auto",
-        background: "var(--erp-panel)",
-        border: "1px solid var(--erp-border)",
-        borderRadius: "var(--erp-radius-xl, 0)",
-        boxShadow: "var(--erp-shadow-md)",
-      }}
+    <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
+      style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-md)" }}
     >
-      <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold"
-        style={{ padding: "6px 10px", borderBottom: "1px solid var(--erp-border)", fontSize: 12 }}
+      <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact"
+        style={{ borderBottom: "1px solid var(--erp-border)" }}
       >
         <span>완료 안 한 할 일</span>
         <button
           type="button"
           onClick={() => onClose()}
-          className="erp-btn erp-btn-dark erp-btn-xs"
-          style={{ minWidth: 0 }}
+          className="erp-btn erp-btn-dark erp-btn-xs erp-u-minw-0"
         >
           닫기
         </button>
       </div>
       {todos.length === 0 ? (
-        <p className="erp-home-empty" style={{ padding: 10 }}>
+        <p className="erp-home-empty erp-u-p-10">
           완료 안 한 할 일이 없습니다.
         </p>
       ) : (
@@ -60,11 +46,11 @@ export function TodoImportPopover({
           const isImporting = importingId === todo.id;
       const counterpartName = side === "sale" ? todo.customer_name : todo.supplier_name;
           return (
-            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8"
+            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact"
               key={todo.id}
-              style={{ padding: "6px 10px", borderBottom: "1px solid var(--erp-divider)", fontSize: 12 }}
+              style={{ borderBottom: "1px solid var(--erp-divider)" }}
             >
-              <div style={{ minWidth: 0 }}>
+              <div className="erp-u-minw-0">
                 <div className="erp-u-semibold">
                   {todo.title}
                   <GridBadge tone="muted" style={{ marginLeft: 6 }}>
@@ -83,8 +69,7 @@ export function TodoImportPopover({
                     </GridBadge>
                   )}
                 </div>
-                <div className="erp-u-muted"
-                  style={{ fontSize: 11 }}
+                <div className="erp-u-muted erp-u-text-caption"
                 >
                   {counterpartName ? `${counterpartName} · ` : ""}
                   {todo.due_date
@@ -95,8 +80,8 @@ export function TodoImportPopover({
               <button
                 type="button"
                 onClick={() => onImport(todo)}
-                className="erp-btn erp-btn-xs"
-                style={{ minWidth: 0, flexShrink: 0 }}
+                className="erp-btn erp-btn-xs erp-u-minw-0"
+                style={{ flexShrink: 0 }}
                 disabled={isImporting}
               >
                 {isImporting ? "가져오는 중..." : "가져오기"}

@@ -193,7 +193,7 @@ export default async function AttendancePage() {
         clockOutAction={clockOut}
       />
 
-      <div className="erp-kpi-row" style={{ marginBottom: 16 }}>
+      <div className="erp-kpi-row erp-u-mb-16">
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">{year}년 연차 총일수</div>
           <div className="erp-kpi-value">{formatNumber(totalDays)}일</div>
@@ -239,7 +239,7 @@ export default async function AttendancePage() {
         <LeaveRequestForm action={requestLeave} today={today} orgTree={orgTree} presets={presets} profileNameById={profileNameById} />
       </FormSection>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <FormSection tabLabel="근태 정정 신청">
           <AttendanceCorrectionForm
             action={requestAttendanceCorrection}
@@ -252,7 +252,7 @@ export default async function AttendancePage() {
       </div>
 
       {isAdmin && teamWarnings.length > 0 && (
-        <div className="erp-detail" style={{ marginBottom: 14 }}>
+        <div className="erp-detail erp-u-mb-14">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">
               이번주 근무시간 {WEEKLY_HOURS_WARNING}시간 이상 ({teamWarnings.length}명)
@@ -376,13 +376,13 @@ export default async function AttendancePage() {
                       <dd>{formatNumber(Number(l.days))}</dd>
                     </div>
                     {l.reason && (
-                      <div style={{ gridColumn: "1 / -1" }}>
+                      <div className="erp-u-col-all">
                         <dt>사유</dt>
                         <dd>{l.reason}</dd>
                       </div>
                     )}
                   </dl>
-                  <div className="flex gap-1" style={{ marginTop: 4 }}>
+                  <div className="flex gap-1 erp-u-mt-4">
                     <LeaveDecisionButton id={l.id} decision="approved" action={decideLeaveRequest} />
                     <LeaveDecisionButton id={l.id} decision="rejected" action={decideLeaveRequest} />
                   </div>
@@ -482,14 +482,14 @@ export default async function AttendancePage() {
                         <dd>{formatNumber(Number(l.days))}</dd>
                       </div>
                       {l.reason && (
-                        <div style={{ gridColumn: "1 / -1" }}>
+                        <div className="erp-u-col-all">
                           <dt>사유</dt>
                           <dd>{l.reason}</dd>
                         </div>
                       )}
                     </dl>
                     {(l.approval_document_id || l.status === "pending") && (
-                      <div className="flex items-center gap-1" style={{ marginTop: 4 }}>
+                      <div className="flex items-center gap-1 erp-u-mt-4">
                         {l.approval_document_id && (
                           <Link
                             href={`/approvals/${l.approval_document_id}`}
@@ -602,13 +602,13 @@ export default async function AttendancePage() {
                         <dt>정정 퇴근</dt>
                         <dd>{fmtTime(c.requested_clock_out_at) ?? "-"}</dd>
                       </div>
-                      <div style={{ gridColumn: "1 / -1" }}>
+                      <div className="erp-u-col-all">
                         <dt>사유</dt>
                         <dd>{c.reason}</dd>
                       </div>
                     </dl>
                     {(c.approval_document_id || c.status === "pending") && (
-                      <div className="flex items-center gap-1" style={{ marginTop: 4 }}>
+                      <div className="flex items-center gap-1 erp-u-mt-4">
                         {c.approval_document_id && (
                           <Link
                             href={`/approvals/${c.approval_document_id}`}

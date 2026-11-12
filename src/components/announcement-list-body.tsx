@@ -113,7 +113,7 @@ export function AnnouncementListBody({
           </span>
         </div>
 
-        <div className="erp-field-grid erp-u-gap-6" style={{ margin: 8, padding: 8 }}>
+        <div className="erp-field-grid erp-u-gap-6 erp-u-p-8" style={{ margin: 8 }}>
           <div className="erp-field erp-span-3" style={{ minWidth: 90 }}>
             <label htmlFor="ann-sort">정렬</label>
             <ErpSelect
@@ -137,8 +137,7 @@ export function AnnouncementListBody({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="제목으로 검색"
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
             />
           </div>
         </div>
@@ -150,17 +149,17 @@ export function AnnouncementListBody({
               href={`${basePath}${basePath.includes("?") ? "&" : "?"}id=${row.id}`}
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
-              <span className="erp-u-items-center erp-u-gap-6" style={{ display: "inline-flex" }}>
+              <span className="erp-u-items-center erp-u-gap-6 erp-u-inline-flex">
                 <span className="erp-status-dot" data-tone={row.read ? undefined : "info"} aria-hidden />
                 <span style={row.read ? { color: "var(--erp-text-muted)" } : { fontWeight: 700 }}>{row.title}</span>
               </span>
               {!row.read && (
-                <span style={{ marginLeft: 6 }}>
+                <span className="erp-u-ml-6">
                   <GridBadge tone="danger">안읽음</GridBadge>
                 </span>
               )}
               {row.pinned && (
-                <span style={{ marginLeft: 6 }}>
+                <span className="erp-u-ml-6">
                   <GridBadge tone="info">고정</GridBadge>
                 </span>
               )}
@@ -186,7 +185,7 @@ export function AnnouncementListBody({
           )}
         </div>
         {hasMore && (
-          <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+          <div className="erp-u-p-8" style={{ borderTop: "1px solid var(--erp-border)" }}>
             <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
               더보기 (다음 {formatNumber(limit)}건)
             </Link>

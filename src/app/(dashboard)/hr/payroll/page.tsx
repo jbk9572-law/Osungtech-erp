@@ -151,7 +151,7 @@ export default async function PayrollPage({
         </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">직원 급여정보</span>
@@ -209,7 +209,7 @@ export default async function PayrollPage({
         </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">간이세액표</span>
@@ -226,7 +226,7 @@ export default async function PayrollPage({
               action={importWithholdingBracketsExcel}
               templateHref="/templates/withholding-tax-brackets-template.xlsx"
             />
-            <div style={{ marginTop: 12 }}>
+            <div className="erp-u-mt-12">
               <form method="get" className="erp-field-grid">
                 <input type="hidden" name="pay_month" value={payMonth} />
                 <div className="erp-field erp-span-4">
@@ -237,9 +237,8 @@ export default async function PayrollPage({
                     step="1"
                     min="0"
                     defaultValue={wbSalary ?? ""}
-                    className="erp-input"
+                    className="erp-input erp-u-w-full"
                     placeholder="예: 3000000"
-                    style={{ width: "100%" }}
                   />
                 </div>
                 <button type="submit" className="erp-btn erp-btn-primary">
@@ -262,7 +261,7 @@ export default async function PayrollPage({
         </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">급여명세</span>
@@ -386,8 +385,8 @@ export default async function PayrollPage({
                         <dd className="erp-u-bold">{formatNumber(Number(p.net_pay))}</dd>
                       </div>
                     </dl>
-                    <div style={{ marginTop: 4 }}>
-                      <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
+                    <div className="erp-u-mt-4">
+                      <div className="erp-u-muted erp-u-text-xs erp-u-mb-2">
                         성과금 / 특별상여금
                       </div>
                       {p.status === "draft" ? (
@@ -403,7 +402,7 @@ export default async function PayrollPage({
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1" style={{ marginTop: 4 }}>
+                    <div className="flex items-center gap-1 erp-u-mt-4">
                       {p.status === "draft" && <ConfirmPayslipButton id={p.id} action={confirmPayslip} />}
                       <Link
                         href={`/hr/payroll/${p.id}/print`}

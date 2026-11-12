@@ -59,8 +59,8 @@ export function PaperCalcReport({
         ].map((card) => (
           <div
             key={card.label}
-            className="rounded p-3"
-            style={{ background: DIAGRAM_COLORS.cardBg, border: "1px solid var(--erp-border)" }}
+            className="rounded p-3 erp-u-border"
+            style={{ background: DIAGRAM_COLORS.cardBg }}
           >
             <div className="text-xs erp-u-muted">
               {card.label}

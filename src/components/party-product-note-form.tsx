@@ -35,14 +35,14 @@ export function PartyProductNoteForm({
         autoComplete="off"
         defaultValue={initialNotes ?? ""}
         placeholder="이 조합 전용 특이사항 (선택)"
-        className="erp-input erp-u-h-26"
-        style={{ fontSize: 11.5, minWidth: 200 }}
+        className="erp-input erp-u-h-26 erp-u-text-sm"
+        style={{ minWidth: 200 }}
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-sm" style={{ minWidth: 0 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-sm erp-u-minw-0">
         저장
       </button>
       {state?.error && (
-        <span className="erp-u-danger" style={{ fontSize: 11 }}>{state.error}</span>
+        <span className="erp-u-danger erp-u-text-caption">{state.error}</span>
       )}
     </form>
   );

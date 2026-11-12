@@ -29,7 +29,7 @@ export function DateRangeQuickFilters({
   to: string | undefined;
 }) {
   return (
-    <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+    <div className="erp-date-presets erp-u-mb-8">
       {[...presets, ...monthButtons].map((preset) => (
         <Link
           key={preset.label}

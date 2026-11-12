@@ -618,8 +618,7 @@ export function ManualLayoutClient({
                     <td>
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger erp-btn-sm"
-                        style={{ minWidth: 0 }}
+                        className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                         onClick={() => removeRow(row.key)}
                         disabled={rows.length <= 1}
                       >
@@ -654,9 +653,9 @@ export function ManualLayoutClient({
                   <button
                     key={item.name}
                     type="button"
-                    className="erp-btn erp-u-flex erp-u-items-center erp-u-gap-6"
+                    className="erp-btn erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-minw-0 erp-u-pad-0-10"
                     disabled={isDone}
-                    style={{ minWidth: 0, height: 30, padding: "0 10px", outline: selectedItemName === item.name ? "2px solid var(--erp-primary)" : "none", outlineOffset: -1, opacity: isDone ? 0.55 : 1 }}
+                    style={{ height: 30, outline: selectedItemName === item.name ? "2px solid var(--erp-primary)" : "none", outlineOffset: -1, opacity: isDone ? 0.55 : 1 }}
                     onClick={() => setSelectedItemName(item.name)}
                   >
                     <span
@@ -701,16 +700,14 @@ export function ManualLayoutClient({
             ))}
             <button
               type="button"
-              className="erp-btn erp-btn-sm"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-sm erp-u-minw-0"
               onClick={addSheet}
             >
               + 새 배치
             </button>
             <button
               type="button"
-              className="erp-btn erp-btn-danger erp-btn-sm"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
               onClick={() => removeSheet(sheetIndex)}
               onBlur={confirmRemoveSheet.reset}
               disabled={sheets.length <= 1}
@@ -733,8 +730,7 @@ export function ManualLayoutClient({
             </span>
             <button
               type="button"
-              className="erp-btn erp-btn-sm"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-sm erp-u-minw-0"
               onClick={clearCurrentSheet}
               onBlur={confirmClearSheet.reset}
             >
@@ -742,21 +738,10 @@ export function ManualLayoutClient({
             </button>
           </div>
 
-          <svg
+          <svg className="erp-u-w-full"
             ref={svgRef}
             viewBox={`0 0 ${paperW} ${paperH}`}
-            style={{
-              width: "100%",
-              height: 460,
-              background: DIAGRAM_COLORS.canvasBg,
-              cursor: selectedItemName ? "crosshair" : "default",
-              // 캔버스가 화면 가로 폭 전체를 차지하다 보니, 여기를 "none"으로
-              // 막으면 조각이 없는 빈 공간을 스치기만 해도 모바일에서 페이지
-              // 세로 스크롤이 전혀 안 되는 문제가 있었다. 배치된 조각(위
-              // rect)만 개별적으로 touchAction: "none"이라 그 위에서 시작한
-              // 드래그는 그대로 잡히고, 빈 공간에서는 세로 스크롤이 된다.
-              touchAction: "pan-y",
-            }}
+            style={{ height: 460, background: DIAGRAM_COLORS.canvasBg, cursor: selectedItemName ? "crosshair" : "default", touchAction: "pan-y" }}
             onClick={handleCanvasClick}
             onPointerMove={handleSvgPointerMove}
             onPointerLeave={handleSvgPointerLeave}
@@ -902,13 +887,12 @@ export function ManualLayoutClient({
               <span>
                 선택됨: {selectedPlacement.name} ({selectedPlacement.w}×{selectedPlacement.h})
               </span>
-              <button type="button" className="erp-btn erp-btn-sm" style={{ minWidth: 0 }} onClick={rotateSelected}>
+              <button type="button" className="erp-btn erp-btn-sm erp-u-minw-0" onClick={rotateSelected}>
                 회전
               </button>
               <button
                 type="button"
-                className="erp-btn erp-btn-danger erp-btn-sm"
-                style={{ minWidth: 0 }}
+                className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                 onClick={deleteSelected}
               >
                 삭제

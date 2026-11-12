@@ -160,7 +160,7 @@ export default async function TodosPage({
         </PageGuide>
       )}
 
-      <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-4)" }}>
+      <div className="erp-kpi-row erp-u-mb-s4">
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">전체 할일</div>
           <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>
@@ -196,8 +196,8 @@ export default async function TodosPage({
           <form
             id="todos-search-form"
             method="get"
-            className="erp-field-grid"
-            style={{ margin: "var(--erp-space-3)", padding: "var(--erp-space-3)", gap: "var(--erp-space-2)" }}
+            className="erp-field-grid erp-u-gap-s2"
+            style={{ margin: "var(--erp-space-3)", padding: "var(--erp-space-3)" }}
           >
             <div className="erp-field erp-span-12">
               <input
@@ -206,12 +206,11 @@ export default async function TodosPage({
                 autoComplete="off"
                 defaultValue={q ?? ""}
                 placeholder="제목, 메모, 품목명, 거래처 검색"
-                className="erp-input"
-                style={{ width: "100%" }}
+                className="erp-input erp-u-w-full"
               />
             </div>
             <div className="erp-field erp-span-12">
-              <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+              <button type="submit" className="erp-btn erp-btn-primary erp-u-w-full">
                 조회
               </button>
             </div>
@@ -233,7 +232,7 @@ export default async function TodosPage({
                       {row.title}
                     </span>
                     {overdue && (
-                      <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                      <span className="erp-u-ml-s2">
                         <GridBadge tone="danger">기한초과</GridBadge>
                       </span>
                     )}

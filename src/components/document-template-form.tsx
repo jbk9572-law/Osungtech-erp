@@ -78,8 +78,7 @@ export function DocumentTemplateForm({
               key={name}
               type="button"
               onClick={() => insertAutoField(name)}
-              className="erp-btn"
-              style={{ minWidth: 0, padding: "2px 8px", fontSize: 11 }}
+              className="erp-btn erp-u-minw-0 erp-u-pad-2-8 erp-u-text-caption"
             >
               {label}
             </button>

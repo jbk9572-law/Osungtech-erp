@@ -124,7 +124,7 @@ export function BalanceGridTable({
 
   return (
     <>
-      <div className="erp-field-grid" style={{ marginBottom: "var(--erp-space-4)" }}>
+      <div className="erp-field-grid erp-u-mb-s4">
         <div className="erp-field erp-span-6">
           <label htmlFor="balance-search-q">{partyLabel} 검색</label>
           <input
@@ -134,15 +134,14 @@ export function BalanceGridTable({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={`${partyLabel}으로 검색`}
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <div
           className="erp-field erp-span-6"
           style={{ alignItems: "flex-end", flexDirection: "row", justifyContent: "flex-end" }}
         >
-          <span className="erp-u-muted erp-u-flex erp-u-items-center" style={{ fontSize: 12, height: 30 }}>
+          <span className="erp-u-muted erp-u-flex erp-u-items-center erp-u-text-compact" style={{ height: 30 }}>
             총 {sortedRows.length}건
             {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
           </span>
@@ -150,7 +149,7 @@ export function BalanceGridTable({
       </div>
 
       {showAging && (
-        <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+        <div className="erp-date-presets erp-u-mb-8">
           {AGING_FILTER_OPTIONS.map((opt) => (
             <button
               key={opt.key}

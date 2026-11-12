@@ -23,7 +23,7 @@ export default async function PlatformAnnouncementsPage() {
         회사의 모든 사용자 대시보드 상단에 배너로 보입니다.
       </PageGuide>
 
-      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-s5">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">새 공지 등록</span>
         </div>
@@ -37,17 +37,17 @@ export default async function PlatformAnnouncementsPage() {
       ) : (
         <div className="erp-card-feed erp-card-feed-compact">
           {announcements.map((a) => (
-            <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
+            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none"
               key={a.id}
-              style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px", flex: "0 0 auto" }}
+              style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px" }}
             >
-              <div style={{ minWidth: 0 }}>
-                <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>{a.title}</div>
-                <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-sm)", marginTop: 3 }}>
+              <div className="erp-u-minw-0">
+                <div className="erp-u-semibold erp-u-text erp-u-text-md">{a.title}</div>
+                <div className="erp-u-muted erp-u-text-sm erp-u-mt-3">
                   {a.content ?? "-"} · {new Date(a.created_at).toLocaleDateString("ko-KR")}
                 </div>
               </div>
-              <div className="erp-u-flex erp-u-items-center" style={{ gap: 10, flex: "0 0 auto" }}>
+              <div className="erp-u-flex erp-u-items-center erp-u-gap-10 erp-u-flex-none">
                 <PlatformAnnouncementActiveCheckbox id={a.id} isActive={a.is_active} title={a.title} />
                 <DeleteButton action={deletePlatformAnnouncement} id={a.id} confirmMessage="이 공지를 삭제하시겠습니까?" />
               </div>

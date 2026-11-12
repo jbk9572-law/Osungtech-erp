@@ -218,13 +218,13 @@ export function CalendarMonthView({
           {feedUrl ? (
             <>
               <div className="mb-2 flex items-center gap-1">
-                <input readOnly value={feedUrl} className="erp-input w-full" style={{ fontSize: 11 }} onFocus={(e) => e.currentTarget.select()} />
+                <input readOnly value={feedUrl} className="erp-input w-full erp-u-text-caption" onFocus={(e) => e.currentTarget.select()} />
               </div>
               <div className="flex gap-1">
-                <button type="button" onClick={handleCopyFeedUrl} className="erp-btn" style={{ minWidth: 0 }}>
+                <button type="button" onClick={handleCopyFeedUrl} className="erp-btn erp-u-minw-0">
                   {copied ? "복사됨" : "URL 복사"}
                 </button>
-                <button type="button" onClick={handleRegenerate} disabled={regenPending} className="erp-btn" style={{ minWidth: 0 }}>
+                <button type="button" onClick={handleRegenerate} disabled={regenPending} className="erp-btn erp-u-minw-0">
                   {regenPending ? "재발급 중..." : "URL 재발급"}
                 </button>
               </div>

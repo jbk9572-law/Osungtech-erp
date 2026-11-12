@@ -24,7 +24,7 @@ function RecipientActionForm({
     <form action={formAction} className="inline-flex items-center gap-2">
       <input type="hidden" name="recipient_id" value={recipientId} />
       <input type="hidden" name="official_document_id" value={officialDocumentId} />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-xs" style={{ minWidth: 0, fontSize: 11 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-caption">
         {pending ? pendingLabel : label}
       </button>
       <FormMessage state={state} />

@@ -13,7 +13,7 @@ export function GeneratePayrollForm({
   const [state, formAction, pending] = useActionState(action, undefined);
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-2" style={{ marginBottom: 16 }}>
+    <form action={formAction} className="flex flex-wrap items-end gap-2 erp-u-mb-16">
       <div className="erp-field">
         <label htmlFor="pg-month">급여월</label>
         <input id="pg-month" type="month" name="pay_month" defaultValue={currentMonth} className="erp-input" required />

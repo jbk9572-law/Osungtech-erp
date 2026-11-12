@@ -145,22 +145,22 @@ export function PortalAssignmentsGridTable({
         </div>
         <div className="erp-detail-body">
           {!active || active.steps.length === 0 ? (
-            <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+            <p className="erp-grid-empty erp-u-text-compact">
               위 목록에서 LOT을 선택하면 공정별 진행상황이 여기에 표시됩니다.
             </p>
           ) : (
-            <div className="erp-u-flex erp-u-gap-8" style={{ flexWrap: "wrap" }}>
+            <div className="erp-u-flex erp-u-gap-8 erp-u-wrap">
               {active.steps.map((step) => (
                 <span
                   key={`${active.id}-${step.processName}-${step.sortOrder}`}
-                  className="erp-key-hint"
-                  style={{ fontSize: 12, fontWeight: step.isMine ? 700 : 500 }}
+                  className="erp-key-hint erp-u-text-compact"
+                  style={{ fontWeight: step.isMine ? 700 : 500 }}
                 >
                   <GridBadge tone={(STEP_STATUS_LABEL[step.status] ?? STEP_STATUS_LABEL.pending).tone}>
                     {(STEP_STATUS_LABEL[step.status] ?? STEP_STATUS_LABEL.pending).label}
                   </GridBadge>
                   {step.processName}
-                  {step.isMine && <span className="erp-u-text" style={{ marginLeft: 4 }}>(우리 업체)</span>}
+                  {step.isMine && <span className="erp-u-text erp-u-ml-4">(우리 업체)</span>}
                 </span>
               ))}
             </div>

@@ -52,13 +52,13 @@ export default function SignupPage() {
           {/* 허니팟 — 화면에는 안 보이고, 사람은 절대 채우지 않는 입력칸.
               자동가입 봇 중 상당수가 눈에 보이는 필드는 전부 채우려 하므로
               이 값이 채워지면 봇으로 간주한다. */}
-          <input
+          <input className="erp-u-absolute"
             type="text"
             name="website"
             tabIndex={-1}
             autoComplete="off"
             aria-hidden="true"
-            style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+            style={{ left: "-9999px", width: 1, height: 1, opacity: 0 }}
           />
 
           <Field label="회사명" name="companyName" placeholder="예: 오성테크" required autoComplete="organization" />

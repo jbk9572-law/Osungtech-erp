@@ -60,8 +60,7 @@ export function PaymentRequestForm({
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
               placeholder="부서명"
-              className="erp-input w-full"
-              style={{ border: "none" }}
+              className="erp-input w-full erp-u-border-none"
             />
           </span>
         </div>
@@ -86,8 +85,7 @@ export function PaymentRequestForm({
               type="date"
               value={periodFrom}
               onChange={(e) => setPeriodFrom(e.target.value)}
-              className="erp-input w-full"
-              style={{ border: "none" }}
+              className="erp-input w-full erp-u-border-none"
             />
           </span>
         </div>
@@ -99,8 +97,7 @@ export function PaymentRequestForm({
               type="date"
               value={periodTo}
               onChange={(e) => setPeriodTo(e.target.value)}
-              className="erp-input w-full"
-              style={{ border: "none" }}
+              className="erp-input w-full erp-u-border-none"
             />
           </span>
         </div>

@@ -39,8 +39,8 @@ export function CompanyProfileForm({ company }: { company: Company }) {
   return (
     <form
       action={formAction}
-      className="erp-detail-body grid grid-cols-1 gap-4 md:grid-cols-2"
-      style={{ border: "1px solid var(--erp-border)", borderRadius: "var(--erp-radius-xl, 0)" }}
+      className="erp-detail-body grid grid-cols-1 gap-4 md:grid-cols-2 erp-u-border"
+      style={{ borderRadius: "var(--erp-radius-xl, 0)" }}
     >
       <div>
         <label htmlFor="cp-name" className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">상호명</label>
@@ -50,7 +50,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           autoComplete="off"
           defaultValue={company?.name ?? ""}
           required
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div>
@@ -60,7 +60,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="business_number"
           autoComplete="off"
           defaultValue={company?.business_number ?? ""}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div>
@@ -70,7 +70,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="representative_name"
           autoComplete="off"
           defaultValue={company?.representative_name ?? ""}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div>
@@ -89,7 +89,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           autoComplete="off"
           defaultValue={company?.manager_name ?? ""}
           placeholder="예: 강신조 차장님"
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div>
@@ -103,7 +103,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="business_type"
           autoComplete="off"
           defaultValue={company?.business_type ?? ""}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div>
@@ -113,7 +113,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="business_item"
           autoComplete="off"
           defaultValue={company?.business_item ?? ""}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div className="md:col-span-2">
@@ -123,7 +123,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="address"
           autoComplete="off"
           defaultValue={company?.address ?? ""}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div>
@@ -133,7 +133,7 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="email"
           type="email"
           defaultValue={company?.email ?? ""}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <div className="md:col-span-2">
@@ -145,10 +145,10 @@ export function CompanyProfileForm({ company }: { company: Company }) {
           name="greeting_message"
           autoComplete="off"
           defaultValue={company?.greeting_message ?? "오늘 하루도 행복하십시요."}
-          className="erp-input" style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
-      <div className="md:col-span-2" style={{ borderTop: "1px solid var(--erp-border)", paddingTop: 12, marginTop: 4 }}>
+      <div className="md:col-span-2 erp-u-mt-4" style={{ borderTop: "1px solid var(--erp-border)", paddingTop: 12 }}>
         <span className="mb-1 block text-xs font-medium text-[var(--erp-text-muted)]">
           사무실 위치 (근태 GPS 확인 기준)
         </span>

@@ -74,8 +74,7 @@ export default async function FeatureSettingsPage() {
             {BEHAVIOR_FEATURE_KEYS.map((f) => (
               <div
                 key={f.key}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-sm p-3"
-                style={{ border: "1px solid var(--erp-border)" }}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-sm p-3 erp-u-border"
               >
                 <div style={{ maxWidth: 640 }}>
                   <div className="text-sm font-bold erp-u-text">
@@ -126,9 +125,9 @@ export default async function FeatureSettingsPage() {
         );
         return (
         <div className="erp-detail" key={group.label}>
-          <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 12, flexWrap: "wrap", rowGap: 6 }}>
+          <div className="erp-detail-tabs erp-u-justify-between erp-u-wrap" style={{ paddingRight: 12, rowGap: 6 }}>
             <span className="erp-detail-tab active">{group.label}</span>
-            <div className="erp-u-flex" style={{ gap: 12, flexWrap: "wrap" }}>
+            <div className="erp-u-flex erp-u-gap-12 erp-u-wrap">
               {group.featureKey && (
                 <FeatureToggle
                   featureKey={group.featureKey}

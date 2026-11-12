@@ -75,13 +75,13 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
 
   return (
     <div>
-      <div className="erp-u-flex erp-u-justify-between erp-u-items-center" style={{ marginBottom: 4 }}>
+      <div className="erp-u-flex erp-u-justify-between erp-u-items-center erp-u-mb-4">
         <h1 className="erp-portal-h1">주문 {order.doc_no}</h1>
         <Link href={await portalHref("/orders")} className="erp-btn">
           목록
         </Link>
       </div>
-      <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 16 }}>
+      <p className="erp-u-muted erp-u-text-compact erp-u-mb-16">
         {new Date(order.created_at).toLocaleString("ko-KR")}
       </p>
 
@@ -92,11 +92,11 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
         <div className="erp-detail-body">
           {order.status === "rejected" || order.status === "cancelled" ? (
             <>
-              <span className="erp-badge erp-badge-danger" style={{ fontSize: "var(--erp-font-md)", padding: "4px 12px" }}>
+              <span className="erp-badge erp-badge-danger erp-u-text-md erp-u-pad-4-12">
                 {describeProgress(order)}
               </span>
               {order.status === "rejected" && order.reject_reason && (
-                <p className="erp-u-danger" style={{ marginTop: 8, fontSize: 12 }}>반려 사유: {order.reject_reason}</p>
+                <p className="erp-u-danger erp-u-mt-8 erp-u-text-compact">반려 사유: {order.reject_reason}</p>
               )}
             </>
           ) : (
@@ -104,40 +104,22 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               const { steps: trackSteps } = buildTrackStages(order);
               return (
                 <div className="erp-u-relative" style={{ padding: "6px 4px 2px" }}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 17,
-                      left: `calc(100% / ${trackSteps.length} / 2)`,
-                      right: `calc(100% / ${trackSteps.length} / 2)`,
-                      height: 2,
-                      background: "var(--erp-border-strong)",
-                    }}
+                  <div className="erp-u-absolute"
+                    style={{ top: 17, left: `calc(100% / ${trackSteps.length} / 2)`, right: `calc(100% / ${trackSteps.length} / 2)`, height: 2, background: "var(--erp-border-strong)" }}
                   />
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 17,
-                      left: `calc(100% / ${trackSteps.length} / 2)`,
-                      height: 2,
-                      background: "var(--erp-primary)",
-                      width: `calc(100% / ${trackSteps.length} * ${Math.max(0, trackSteps.filter((s) => s.filled).length - 1)})`,
-                    }}
+                  <div className="erp-u-absolute"
+                    style={{ top: 17, left: `calc(100% / ${trackSteps.length} / 2)`, height: 2, background: "var(--erp-primary)", width: `calc(100% / ${trackSteps.length} * ${Math.max(0, trackSteps.filter((s) => s.filled).length - 1)})` }}
                   />
                   <div className="erp-u-relative erp-u-flex">
                     {trackSteps.map((s) => (
-                      <div className="erp-u-flex erp-u-items-center erp-u-gap-6" key={s.name} style={{ flex: 1, flexDirection: "column" }}>
-                        <div className="erp-u-h-26 erp-u-flex erp-u-items-center erp-u-bold"
-                          style={{ width: 26, borderRadius: "50%", boxSizing: "border-box", background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)", border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`, color: s.filled ? "var(--erp-on-primary)" : "var(--erp-text-muted)", justifyContent: "center", fontSize: 12 }}
+                      <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-flex-1 erp-u-col" key={s.name}>
+                        <div className="erp-u-h-26 erp-u-flex erp-u-items-center erp-u-bold erp-u-justify-center erp-u-text-compact"
+                          style={{ width: 26, borderRadius: "50%", boxSizing: "border-box", background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)", border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`, color: s.filled ? "var(--erp-on-primary)" : "var(--erp-text-muted)" }}
                         >
                           {s.mark}
                         </div>
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: s.current ? 700 : 500,
-                            color: s.current ? "var(--erp-primary)" : s.filled ? "var(--erp-text)" : "var(--erp-text-muted)",
-                          }}
+                        <span className="erp-u-text-compact"
+                          style={{ fontWeight: s.current ? 700 : 500, color: s.current ? "var(--erp-primary)" : s.filled ? "var(--erp-text)" : "var(--erp-text-muted)" }}
                         >
                           {s.name}
                         </span>
@@ -151,7 +133,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
 
           {steps && steps.length > 0 && (
             <div style={{ marginTop: 18 }}>
-              <p className="erp-u-muted" style={{ fontSize: 11.5, marginBottom: 6 }}>공정별 진행상황</p>
+              <p className="erp-u-muted erp-u-text-sm erp-u-mb-6">공정별 진행상황</p>
               {(() => {
                 // 품목이 여러 개면 품목마다 생산지시(공정)가 따로 있을 수 있어
                 // product_name으로 묶어 구분한다. 1개뿐이면 굳이 품목명을
@@ -159,19 +141,19 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                 const itemIds = Array.from(new Set(steps.map((s) => s.item_id)));
                 const showProductLabel = itemIds.length > 1;
                 return (
-                  <div className="erp-u-flex erp-u-gap-8" style={{ flexDirection: "column" }}>
+                  <div className="erp-u-flex erp-u-gap-8 erp-u-col">
                     {itemIds.map((itemId) => {
                       const itemSteps = steps.filter((s) => s.item_id === itemId);
                       return (
                         <div key={itemId}>
                           {showProductLabel && (
-                            <p className="erp-u-semibold" style={{ fontSize: 11.5, marginBottom: 4 }}>
+                            <p className="erp-u-semibold erp-u-text-sm erp-u-mb-4">
                               {itemSteps[0].product_name}
                             </p>
                           )}
-                          <div className="erp-u-flex erp-u-gap-8" style={{ flexWrap: "wrap" }}>
+                          <div className="erp-u-flex erp-u-gap-8 erp-u-wrap">
                             {itemSteps.map((s) => (
-                              <span key={`${s.item_id}-${s.process_name}`} className="erp-key-hint" style={{ fontSize: 12 }}>
+                              <span key={`${s.item_id}-${s.process_name}`} className="erp-key-hint erp-u-text-compact">
                                 <span
                                   className="erp-status-dot"
                                   data-tone={s.status === "done" ? "ok" : s.status === "in_progress" ? "warn" : undefined}
@@ -223,7 +205,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               </tbody>
               <tfoot>
                 <tr>
-                  <td className="erp-u-bold" colSpan={4} style={{ textAlign: "right" }}>
+                  <td className="erp-u-bold erp-u-text-right" colSpan={4}>
                     합계
                   </td>
                   <td className="num erp-u-bold">
@@ -263,14 +245,14 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               </div>
             ))}
             {(items ?? []).length > 0 && (
-              <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
+              <div className="erp-row-card-foot erp-u-bold erp-u-pad-4-2">
                 <span>합계</span>
                 <span className="erp-row-card-amount">{formatNumber(total)}원</span>
               </div>
             )}
           </div>
           {order.memo && (
-            <p className="erp-u-muted" style={{ marginTop: 10, fontSize: 12 }}>요청사항: {order.memo}</p>
+            <p className="erp-u-muted erp-u-mt-10 erp-u-text-compact">요청사항: {order.memo}</p>
           )}
         </div>
       </div>

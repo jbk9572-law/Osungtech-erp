@@ -74,7 +74,7 @@ export function NewQuoteForm({
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <label htmlFor="q-memo" className="erp-doc-header-label">메모</label>
           <span className="erp-doc-header-value">
-            <textarea id="q-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full" style={{ border: "none" }} />
+            <textarea id="q-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full erp-u-border-none" />
           </span>
         </div>
       </div>

@@ -134,8 +134,7 @@ export default async function QuotesPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="거래처명, 견적번호, 메모"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -164,7 +163,7 @@ export default async function QuotesPage({
                   className={`erp-split-list-row${quote.id === selectedId ? " active" : ""}`}
                 >
                   {quote.customers?.name ?? "-"}
-                  <span style={{ marginLeft: 6 }}>
+                  <span className="erp-u-ml-6">
                     <QuoteStatusBadge status={quote.status} />
                   </span>
                   <div className="erp-split-list-row-sub">
@@ -181,7 +180,7 @@ export default async function QuotesPage({
             )}
           </div>
           {hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-p-8" style={{ borderTop: "1px solid var(--erp-border)" }}>
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
               </Link>

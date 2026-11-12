@@ -105,8 +105,8 @@ export function MobileItemEntryPanel({
                 key={pick.productId}
                 type="button"
                 onClick={() => onQuickAdd?.(pick.productId)}
-                className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left erp-u-text"
-                style={{ minHeight: 44, minWidth: 112, border: "1px solid var(--erp-border)", background: "var(--erp-selected)" }}
+                className="flex flex-shrink-0 flex-col items-start gap-0.5 rounded-sm px-3 py-2 text-left erp-u-text erp-u-border"
+                style={{ minHeight: 44, minWidth: 112, background: "var(--erp-selected)" }}
               >
                 <span className="text-xs font-bold">{pick.name}</span>
                 <span className="text-[10px] erp-u-muted">
@@ -137,8 +137,7 @@ export function MobileItemEntryPanel({
           {items.map((item) => (
             <div
               key={item.key}
-              className="flex flex-col gap-2 rounded-sm p-3"
-              style={{ border: "1px solid var(--erp-border)", background: "var(--erp-panel)" }}
+              className="flex flex-col gap-2 rounded-sm p-3 erp-u-border erp-u-bg-panel"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
@@ -155,14 +154,14 @@ export function MobileItemEntryPanel({
                   type="button"
                   onClick={() => onRemove(item.key)}
                   aria-label="품목 삭제"
-                  className="flex-shrink-0 rounded-sm text-xs erp-u-danger"
-                  style={{ width: 32, height: 32, border: "1px solid var(--erp-danger)", background: "var(--erp-panel)" }}
+                  className="flex-shrink-0 rounded-sm text-xs erp-u-danger erp-u-bg-panel"
+                  style={{ width: 32, height: 32, border: "1px solid var(--erp-danger)" }}
                 >
                   ✕
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="erp-u-flex-1 erp-u-minw-0">
                   <NumberInput
                     value={item.quantity}
                     onChange={(n) => onUpdateQuantity(item.key, n)}
@@ -183,12 +182,11 @@ export function MobileItemEntryPanel({
                       value={item.price ?? 0}
                       onChange={(e) => onUpdatePrice?.(item.key, Number(e.target.value) || 0)}
                       aria-label={priceLabel}
-                      className="erp-input"
-                      style={{ flex: 1, minWidth: 0 }}
+                      className="erp-input erp-u-flex-1 erp-u-minw-0"
                     />
                     <span
-                      className="flex-shrink-0 text-sm font-bold erp-u-text"
-                      style={{ minWidth: 72, textAlign: "right" }}
+                      className="flex-shrink-0 text-sm font-bold erp-u-text erp-u-text-right"
+                      style={{ minWidth: 72 }}
                     >
                       {formatNumber(item.amount ?? 0)}원
                     </span>
@@ -250,8 +248,7 @@ export function MobileItemEntryPanel({
                       value={draftPrice}
                       onChange={(e) => setDraftPrice(Number(e.target.value) || 0)}
                       aria-label={priceLabel}
-                      className="erp-input"
-                      style={{ width: "100%" }}
+                      className="erp-input erp-u-w-full"
                     />
                   </div>
                 )}
@@ -267,7 +264,7 @@ export function MobileItemEntryPanel({
                 </div>
               )}
               <div className="flex gap-2">
-                <button type="button" onClick={() => setSheetOpen(false)} className="erp-btn" style={{ flex: 1, height: 46 }}>
+                <button type="button" onClick={() => setSheetOpen(false)} className="erp-btn erp-u-flex-1" style={{ height: 46 }}>
                   취소
                 </button>
                 <button

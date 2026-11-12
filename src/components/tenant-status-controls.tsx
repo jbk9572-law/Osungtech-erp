@@ -104,7 +104,7 @@ export function TenantStatusControls({
             명시적으로 눌러야만 적용된다. */}
         <form action={applyAction} className="mt-1">
           <input type="hidden" name="tenantId" value={tenantId} />
-          <button type="submit" disabled={applyPending || !planKey} className="erp-btn" style={{ minWidth: 0 }}>
+          <button type="submit" disabled={applyPending || !planKey} className="erp-btn erp-u-minw-0">
             {applyPending ? "적용 중..." : "이 요금제 기본값 적용"}
           </button>
         </form>
@@ -132,7 +132,7 @@ export function TenantStatusControls({
             style={{ width: 140 }}
             aria-label="이용 만료일"
           />
-          <button type="submit" disabled={periodPending} className="erp-btn" style={{ minWidth: 0 }}>
+          <button type="submit" disabled={periodPending} className="erp-btn erp-u-minw-0">
             {periodPending ? "저장 중..." : "저장"}
           </button>
           {planExpiresAt && (

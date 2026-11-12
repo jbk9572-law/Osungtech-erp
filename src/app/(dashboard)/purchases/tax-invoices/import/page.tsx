@@ -43,12 +43,12 @@ export default async function PurchaseTaxInvoiceImportPage() {
       <ExcelImportForm action={importHometaxReceivedInvoices} />
 
       {unmatchedCount > 0 && (
-        <p className="text-xs erp-u-danger" style={{ marginTop: 10 }}>
+        <p className="text-xs erp-u-danger erp-u-mt-10">
           미매칭 {formatNumber(unmatchedCount)}건 — 매입 건이 등록돼 있는지, 공급처 사업자번호가 맞는지 확인해주세요.
         </p>
       )}
 
-      <div className="erp-grid-wrap has-card-view" style={{ marginTop: 14 }}>
+      <div className="erp-grid-wrap has-card-view erp-u-mt-14">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -88,7 +88,7 @@ export default async function PurchaseTaxInvoiceImportPage() {
         </table>
       </div>
 
-      <div className="erp-row-card-list" style={{ marginTop: 14 }}>
+      <div className="erp-row-card-list erp-u-mt-14">
         {rows.map((r) => (
           <div className="erp-row-card" key={r.id}>
             <div className="erp-row-card-head">

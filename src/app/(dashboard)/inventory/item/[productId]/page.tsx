@@ -187,8 +187,8 @@ export default async function InventoryProductHistoryPage({
 
       {countAdjustments.length > 0 && (
         <div
-          className="erp-detail erp-u-mt-0"
-          style={{ marginBottom: 14, borderColor: isRepeatedMiss ? "var(--erp-warning)" : undefined }}
+          className="erp-detail erp-u-mt-0 erp-u-mb-14"
+          style={{ borderColor: isRepeatedMiss ? "var(--erp-warning)" : undefined }}
         >
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
@@ -247,7 +247,7 @@ export default async function InventoryProductHistoryPage({
                       {formatNumber(t.signedQty)}
                     </span>
                   </div>
-                  <p className="erp-u-muted" style={{ margin: 0, fontSize: "var(--erp-font-sm)" }}>
+                  <p className="erp-u-muted erp-u-text-sm" style={{ margin: 0 }}>
                     {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
                   </p>
                 </div>
@@ -412,7 +412,7 @@ export default async function InventoryProductHistoryPage({
                   <dd>{row.authorName ?? "-"}</dd>
                 </div>
                 {note && (
-                  <div style={{ gridColumn: "1 / -1" }}>
+                  <div className="erp-u-col-all">
                     <dt>비고</dt>
                     <dd>{note}</dd>
                   </div>

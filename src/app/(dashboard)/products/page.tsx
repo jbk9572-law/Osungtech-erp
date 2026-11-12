@@ -179,8 +179,8 @@ async function ProductsPage({
           <form
             id="products-search-form"
             method="get"
-            className="erp-field-grid erp-u-gap-6"
-            style={{ margin: 8, padding: 8 }}
+            className="erp-field-grid erp-u-gap-6 erp-u-p-8"
+            style={{ margin: 8 }}
           >
             <div className="erp-field erp-span-6">
               <input
@@ -189,11 +189,10 @@ async function ProductsPage({
                 autoComplete="off"
                 defaultValue={q ?? ""}
                 placeholder="상품명, SKU, 규격 검색"
-                className="erp-input"
-                style={{ width: "100%" }}
+                className="erp-input erp-u-w-full"
               />
             </div>
-            <button type="submit" className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+            <button type="submit" className="erp-btn erp-btn-primary erp-u-w-full">
               F5 조회
             </button>
           </form>
@@ -222,7 +221,7 @@ async function ProductsPage({
             />
           </div>
           {!keyword && hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-p-8" style={{ borderTop: "1px solid var(--erp-border)" }}>
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}개)
               </Link>

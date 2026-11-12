@@ -55,7 +55,7 @@ export function WorkOrderProcessStepActions({
   const blocked = defectHold && next === "in_progress";
 
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap" }}>
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap">
       <GridBadge tone={defectHold ? "danger" : STATUS_LABEL[status].tone}>
         {defectHold ? "입고 불량 보류" : STATUS_LABEL[status].label}
       </GridBadge>
@@ -64,7 +64,7 @@ export function WorkOrderProcessStepActions({
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="work_order_id" value={workOrderId} />
           <input type="hidden" name="status" value={next} />
-          <button type="submit" className="erp-btn erp-btn-xs" style={{ padding: "1px 8px", fontSize: 11 }} disabled={pending}>
+          <button type="submit" className="erp-btn erp-btn-xs erp-u-pad-1-8 erp-u-text-caption" disabled={pending}>
             {pending ? "처리 중..." : NEXT_ACTION_LABEL[status]}
           </button>
         </form>

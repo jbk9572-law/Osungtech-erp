@@ -34,7 +34,7 @@ export function CreateTenantDemoAccountForm({ tenantId }: { tenantId: string }) 
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="erp-btn" style={{ minWidth: 0 }}>
+      <button type="button" onClick={() => setOpen(true)} className="erp-btn erp-u-minw-0">
         + 데모 계정 추가
       </button>
     );
@@ -68,7 +68,7 @@ export function CreateTenantDemoAccountForm({ tenantId }: { tenantId: string }) 
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
         {pending ? "생성 중..." : "데모 계정 생성"}
       </button>
-      <button type="button" onClick={() => setOpen(false)} className="erp-btn" style={{ minWidth: 0 }}>
+      <button type="button" onClick={() => setOpen(false)} className="erp-btn erp-u-minw-0">
         취소
       </button>
       <div style={{ flexBasis: "100%" }}>

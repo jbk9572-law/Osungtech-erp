@@ -8,18 +8,13 @@ import Link from "next/link";
 export default function DashboardNotFound() {
   return (
     <div className="erp-u-text-center" style={{ maxWidth: 560, margin: "32px auto" }}>
-      <div
-        style={{
-          border: "1px solid var(--erp-border)",
-          borderRadius: 0,
-          background: "var(--erp-panel)",
-          padding: "28px 20px",
-        }}
+      <div className="erp-u-border erp-u-bg-panel"
+        style={{ borderRadius: 0, padding: "28px 20px" }}
       >
-        <p className="erp-u-bold erp-u-text" style={{ fontSize: 15, marginBottom: 8 }}>
+        <p className="erp-u-bold erp-u-text erp-u-mb-8" style={{ fontSize: 15 }}>
           페이지를 찾을 수 없습니다.
         </p>
-        <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
+        <p className="erp-u-muted erp-u-text-compact erp-u-mb-20">
           주소가 바뀌었거나 삭제된 항목일 수 있습니다.
         </p>
         <Link href="/dashboard" className="erp-btn erp-btn-primary">

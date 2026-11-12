@@ -82,8 +82,7 @@ export function ReceiptReorderList({
               type="button"
               onClick={() => move(index, -1)}
               disabled={index === 0 || isPending}
-              className="erp-btn erp-btn-xs"
-              style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+              className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
             >
               ▲
             </button>
@@ -91,8 +90,7 @@ export function ReceiptReorderList({
               type="button"
               onClick={() => move(index, 1)}
               disabled={index === order.length - 1 || isPending}
-              className="erp-btn erp-btn-xs"
-              style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+              className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
             >
               ▼
             </button>

@@ -8,13 +8,12 @@ export function WorkOrderStepDefectResolveButton({ id, workOrderId }: { id: stri
   const [state, formAction, pending] = useActionState(resolveStepDefectHold, undefined);
 
   return (
-    <form className="erp-u-items-center erp-u-gap-6" action={formAction} style={{ display: "inline-flex" }}>
+    <form className="erp-u-items-center erp-u-gap-6 erp-u-inline-flex" action={formAction}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <button
         type="submit"
-        className="erp-btn erp-btn-primary erp-btn-xs"
-        style={{ padding: "1px 8px", fontSize: 11 }}
+        className="erp-btn erp-btn-primary erp-btn-xs erp-u-pad-1-8 erp-u-text-caption"
         disabled={pending}
       >
         {pending ? "처리 중..." : "해결처리"}

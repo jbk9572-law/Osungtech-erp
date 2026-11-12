@@ -49,7 +49,7 @@ export function TenantIndustryForm({ tenants }: { tenants: TenantOption[] }) {
           ariaLabel="업종"
           options={INDUSTRY_PRESETS.map((p) => ({ value: p.key, label: p.label }))}
         />
-        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
           {pending ? "적용 중..." : "적용"}
         </button>
       </form>

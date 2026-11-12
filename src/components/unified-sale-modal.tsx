@@ -158,7 +158,7 @@ function UnifiedSaleModal({
                 placeholder="거래처명 검색"
               />
               {paymentCustomerId ? (
-                <div style={{ marginTop: 10 }}>
+                <div className="erp-u-mt-10">
                   <PartyPaymentForm
                     action={addCustomerPayment}
                     partyIdField="customer_id"
@@ -168,7 +168,7 @@ function UnifiedSaleModal({
                   />
                 </div>
               ) : (
-                <p className="erp-grid-empty" style={{ marginTop: 10 }}>
+                <p className="erp-grid-empty erp-u-mt-10">
                   거래처를 먼저 선택해주세요.
                 </p>
               )}
@@ -322,7 +322,7 @@ function SaleQuickForm({
       </div>
 
       {isReturn && (
-        <div className="erp-field" style={{ marginTop: 8 }}>
+        <div className="erp-field erp-u-mt-8">
           <label htmlFor="unified-sale-return-reason">반품 사유</label>
           <ErpSelect
             id="unified-sale-return-reason"
@@ -333,7 +333,7 @@ function SaleQuickForm({
         </div>
       )}
 
-      <div className="erp-field" style={{ marginTop: 8 }}>
+      <div className="erp-field erp-u-mt-8">
         <label htmlFor="unified-sale-tax-type">과세구분</label>
         <ErpSelect
           id="unified-sale-tax-type"
@@ -348,7 +348,7 @@ function SaleQuickForm({
       <div className="erp-unified-sale-items">
         <div className="erp-unified-sale-items-head">
           <span>{isReturn ? "반품 품목 내역" : "품목 내역"}</span>
-          <button type="button" className="erp-btn" style={{ minWidth: 0, fontSize: 11.5 }} onClick={addRow}>
+          <button type="button" className="erp-btn erp-u-minw-0 erp-u-text-sm" onClick={addRow}>
             + 품목 추가
           </button>
         </div>
@@ -396,7 +396,7 @@ function SaleQuickForm({
               </button>
             </div>
             {row.productId && customerId && (
-              <div style={{ marginTop: 2, marginBottom: 4 }}>
+              <div className="erp-u-mt-2 erp-u-mb-4">
                 <PriceHistoryHint history={getHistoryFor(row.productId)} />
               </div>
             )}
@@ -407,12 +407,12 @@ function SaleQuickForm({
         </div>
       </div>
 
-      <div className="erp-field" style={{ marginTop: 8 }}>
+      <div className="erp-field erp-u-mt-8">
         <label htmlFor="unified-sale-memo">적요 (선택)</label>
-        <input id="unified-sale-memo" type="text" name="memo" autoComplete="off" className="erp-input" style={{ width: "100%" }} />
+        <input id="unified-sale-memo" type="text" name="memo" autoComplete="off" className="erp-input erp-u-w-full" />
       </div>
 
-      <div className="erp-u-flex erp-u-items-center" style={{ gap: 10, marginTop: 12 }}>
+      <div className="erp-u-flex erp-u-items-center erp-u-gap-10 erp-u-mt-12">
         <button
           ref={submitRef}
           type="submit"

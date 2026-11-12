@@ -229,7 +229,7 @@ function NotificationToasterInner() {
             }}
           >
             {toast.title}
-            {toast.meta && <span style={{ marginLeft: 6, opacity: 0.7 }}>{toast.meta}</span>}
+            {toast.meta && <span className="erp-u-ml-6" style={{ opacity: 0.7 }}>{toast.meta}</span>}
           </Link>
         </div>
       ))}

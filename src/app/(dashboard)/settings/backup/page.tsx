@@ -30,7 +30,7 @@ export default async function BackupSettingsPage() {
       <KeyboardShortcuts shortcuts={{ Escape: { href: "/dashboard" } }} />
       <ListPageHeader title="환경설정 > 백업/복원" />
 
-      <div className="erp-detail" style={{ marginTop: 12 }}>
+      <div className="erp-detail erp-u-mt-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">백업하기</span>
         </div>
@@ -61,7 +61,7 @@ export default async function BackupSettingsPage() {
           <p className="mb-3 text-xs erp-u-muted">
             (DB 전체가 완전히 사라진 재해 상황처럼 백업 시점 그대로 통째로 되돌려야 한다면
             이 기능이 아니라{" "}
-            <code style={{ fontSize: 11 }}>docs/db-backup-restore.md</code>의 절차를 씁니다.)
+            <code className="erp-u-text-caption">docs/db-backup-restore.md</code>의 절차를 씁니다.)
           </p>
           <BackupRestoreForm />
         </div>
@@ -90,10 +90,10 @@ export default async function BackupSettingsPage() {
             </PageGuide>
             {!restoreConfigured ? (
               <p className="erp-grid-empty erp-u-mt-0">
-                이 기능을 쓰려면 배포 환경에 <code style={{ fontSize: 11 }}>GITHUB_RESTORE_TOKEN</code>
+                이 기능을 쓰려면 배포 환경에 <code className="erp-u-text-caption">GITHUB_RESTORE_TOKEN</code>
                 환경변수(이 저장소 전용, Actions 쓰기 + Contents 읽기 권한의 GitHub
                 fine-grained PAT)를 등록해야 합니다. 자세한 절차는{" "}
-                <code style={{ fontSize: 11 }}>docs/db-backup-restore.md</code> 참고.
+                <code className="erp-u-text-caption">docs/db-backup-restore.md</code> 참고.
               </p>
             ) : snapshotsError ? (
               <p className="erp-grid-empty erp-u-mt-0">

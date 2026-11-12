@@ -85,7 +85,7 @@ export default async function IncomeStatementPage({
       </PageGuide>
 
       <MonthNavigator baseHref="/reports/income-statement" month={month} />
-      <div className="erp-toolbar" style={{ marginBottom: 8 }}>
+      <div className="erp-toolbar erp-u-mb-8">
         <ExcelDownloadLink href={`/api/reports/income-statement/export?month=${month}`} pushRight />
       </div>
 

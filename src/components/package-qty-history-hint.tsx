@@ -25,7 +25,7 @@ export function PackageQtyHistoryHint({
   const latest = history[0];
 
   return (
-    <div className="text-xs" style={{ marginTop: 4 }}>
+    <div className="text-xs erp-u-mt-4">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

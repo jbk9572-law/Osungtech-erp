@@ -142,13 +142,12 @@ export function NewStockTransferForm({
                     <input
                       value={row.remark}
                       onChange={(e) => updateRow(row.key, { remark: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
+                      className="erp-input erp-u-w-full"
                       autoComplete="off"
                     />
                   </td>
                   <td>
-                    <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
+                    <button type="button" className="erp-btn erp-u-minw-0" onClick={() => removeRow(row.key)}>
                       삭제
                     </button>
                   </td>

@@ -303,8 +303,8 @@ export default async function InventoryCountPage({
           (allTx 선언부 주석 참고 — 자동 실행이 Cloudflare Workers 리소스
           한도 초과 사고의 원인이었다). */}
       <div
-        className="erp-detail erp-u-mt-0"
-        style={{ marginBottom: 16, borderColor: verifyRequested
+        className="erp-detail erp-u-mt-0 erp-u-mb-16"
+        style={{ borderColor: verifyRequested
             ? cacheMismatches.length > 0
               ? "var(--erp-danger)"
               : "var(--erp-success)"
@@ -458,9 +458,9 @@ export default async function InventoryCountPage({
               style={isSelected ? { borderColor: "var(--erp-primary)", boxShadow: "var(--erp-shadow-md)" } : undefined}
             >
               <div className="erp-avatar">{(session.authorName ?? "-").slice(0, 1)}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="erp-u-flex-1 erp-u-minw-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-bold" style={{ fontSize: "var(--erp-font-md)" }}>
+                  <span className="font-bold erp-u-text-md">
                     {new Date(session.createdAt).toLocaleString("ko-KR")}
                   </span>
                   <GridBadge tone="info">{session.items.length}건 조정</GridBadge>
@@ -472,7 +472,7 @@ export default async function InventoryCountPage({
 
                 {isSelected && (
                   <>
-                    <div className="erp-grid-wrap has-card-view" style={{ marginTop: 10 }}>
+                    <div className="erp-grid-wrap has-card-view erp-u-mt-10">
                       <table className="erp-grid">
                         <thead>
                           <tr>
@@ -514,7 +514,7 @@ export default async function InventoryCountPage({
                         </tbody>
                       </table>
                     </div>
-                    <div className="erp-row-card-list" style={{ marginTop: 10 }}>
+                    <div className="erp-row-card-list erp-u-mt-10">
                       {detailRows.map((row) => (
                         <div className="erp-row-card" key={row.productId}>
                           <div className="erp-row-card-head">

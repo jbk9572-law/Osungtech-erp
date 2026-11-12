@@ -102,7 +102,7 @@ export default async function DocumentsPage({
                 className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
               >
                 {d.title}
-                <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                <span className="erp-u-ml-s2">
                   <GridBadge tone={d.status === "issued" ? "ok" : "warn"}>
                     {d.status === "issued" ? "발급완료" : "초안"}
                   </GridBadge>

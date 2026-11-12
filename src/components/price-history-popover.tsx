@@ -47,53 +47,36 @@ export function PriceHistoryPopover({
         if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
       }}
     >
-      <button className="erp-u-text"
+      <button className="erp-u-text erp-u-text-xs erp-u-border-none erp-u-pointer erp-u-ml-6"
         type="button"
         onClick={handleOpen}
         aria-expanded={open}
         aria-haspopup="true"
         title="단가변경 이력 보기"
-        style={{ fontSize: "var(--erp-font-xs)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: 6 }}
+        style={{ textDecoration: "underline", background: "none", padding: 0 }}
       >
         이력
       </button>
       {open && (
-        <div
+        <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
           role="menu"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 4px)",
-            right: 0,
-            zIndex: 30,
-            minWidth: 240,
-            maxHeight: 280,
-            overflowY: "auto",
-            background: "var(--erp-panel)",
-            border: "1px solid var(--erp-border)",
-            borderRadius: "var(--erp-radius-xl, 0)",
-            boxShadow: "var(--erp-shadow-lg)",
-            padding: "var(--erp-space-2)",
-          }}
+          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 240, maxHeight: 280, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
         >
           {loading && (
-            <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", padding: "4px 6px" }}>
+            <div className="erp-u-muted erp-u-text-xs erp-u-pad-4-6">
               불러오는 중...
             </div>
           )}
           {!loading && rows?.length === 0 && (
-            <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", padding: "4px 6px" }}>
+            <div className="erp-u-muted erp-u-text-xs erp-u-pad-4-6">
               변경 이력이 없습니다.
             </div>
           )}
           {!loading &&
             rows?.map((row) => (
-              <div
+              <div className="erp-u-text-xs"
                 key={row.id}
-                style={{
-                  padding: "6px",
-                  fontSize: "var(--erp-font-xs)",
-                  borderBottom: "1px solid var(--erp-border)",
-                }}
+                style={{ padding: "6px", borderBottom: "1px solid var(--erp-border)" }}
               >
                 <div className="erp-u-muted">
                   {new Date(row.createdAt).toLocaleString("ko-KR")} · {row.actorName ?? "-"} ·{" "}

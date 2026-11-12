@@ -57,7 +57,7 @@ export function NewPurchaseQuoteRequestForm({
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <span className="erp-doc-header-label">공급처</span>
           <span className="erp-doc-header-value" style={{ display: "block", padding: 0 }}>
-            <div className="erp-grid-wrap" style={{ maxHeight: 160, overflowY: "auto", border: "none" }}>
+            <div className="erp-grid-wrap erp-u-border-none" style={{ maxHeight: 160, overflowY: "auto" }}>
               <table className="erp-grid">
                 <tbody>
                   {suppliers.map((s) => (
@@ -92,7 +92,7 @@ export function NewPurchaseQuoteRequestForm({
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <label htmlFor="pq-memo" className="erp-doc-header-label">메모</label>
           <span className="erp-doc-header-value">
-            <textarea id="pq-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full" style={{ border: "none" }} />
+            <textarea id="pq-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full erp-u-border-none" />
           </span>
         </div>
       </div>

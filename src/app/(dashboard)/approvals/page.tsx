@@ -85,7 +85,7 @@ export default async function ApprovalsPage({
         />
       </div>
 
-      <div className="erp-date-presets" style={{ marginBottom: "var(--erp-space-4)" }}>
+      <div className="erp-date-presets erp-u-mb-s4">
         {TABS.map((t) => (
           <Link
             key={t.key}
@@ -335,11 +335,11 @@ export default async function ApprovalsPage({
                   className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
                 >
                   {d.title}
-                  <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                  <span className="erp-u-ml-s2">
                     <GridBadge tone={status.tone}>{status.label}</GridBadge>
                   </span>
                   {d.myTurn && (
-                    <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                    <span className="erp-u-ml-s2">
                       <GridBadge tone="warn">내 차례</GridBadge>
                     </span>
                   )}

@@ -647,18 +647,17 @@ export function MessengerPage({
       <div className="erp-split3-shell erp-messenger-split3" data-mobile-view={mobileView}>
         <nav className="erp-cat-sidebar erp-messenger-roster" aria-label="사원목록">
           <div className="erp-messenger-roster-head">사원목록</div>
-          <div style={{ padding: "8px 8px" }}>
+          <div className="erp-u-pad-8-8">
             <input
               type="text"
               autoComplete="off"
               value={rosterQuery}
               onChange={(e) => setRosterQuery(e.target.value)}
               placeholder="🔍 이름 검색"
-              className="erp-input"
-              style={{ width: "100%", fontSize: 12 }}
+              className="erp-input erp-u-w-full erp-u-text-compact"
             />
           </div>
-          <div style={{ overflowY: "auto", flex: 1 }}>
+          <div className="erp-u-flex-1" style={{ overflowY: "auto" }}>
             {filteredRoster.map(([id, name]) => (
               <button
                 key={id}
@@ -674,7 +673,7 @@ export function MessengerPage({
               </button>
             ))}
             {filteredRoster.length === 0 && (
-              <p className="erp-grid-empty" style={{ fontSize: 11.5, padding: "8px 10px" }}>
+              <p className="erp-grid-empty erp-u-text-sm erp-u-pad-8-10">
                 {rosterQueryTrimmed ? "검색 결과가 없습니다." : "대화할 수 있는 다른 구성원이 없습니다."}
               </p>
             )}
@@ -684,12 +683,12 @@ export function MessengerPage({
         <section className="erp-split-list erp-messenger-sidebar">
           <div className="erp-split-list-head">
             <span>채팅방목록</span>
-            <button type="button" className="erp-btn" style={{ minWidth: 0, fontSize: 11.5 }} onClick={() => setView("newGroup")}>
+            <button type="button" className="erp-btn erp-u-minw-0 erp-u-text-sm" onClick={() => setView("newGroup")}>
               + 그룹
             </button>
           </div>
           {channelError && (
-            <p className="erp-u-danger" style={{ padding: "8px 12px 0", fontSize: 11.5 }}>{channelError}</p>
+            <p className="erp-u-danger erp-u-text-sm" style={{ padding: "8px 12px 0" }}>{channelError}</p>
           )}
           <div className="erp-split-list-body">
             {channels.map((c) => (
@@ -700,10 +699,10 @@ export function MessengerPage({
                 className={`erp-messenger-channel-row${view === "chat" && c.id === activeChannelId ? " active" : ""}`}
                 style={{ position: "relative" }}
               >
-                <span style={{ marginRight: 8, display: "inline-flex" }}>
+                <span className="erp-u-mr-8 erp-u-inline-flex">
                   <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
                 </span>
-                <span style={{ flex: 1, textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
+                <span className="erp-u-flex-1" style={{ textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
                 {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
               </button>
             ))}
@@ -716,19 +715,18 @@ export function MessengerPage({
               )}
 
               {view === "newGroup" && (
-                <div className="erp-messenger-body erp-u-flex erp-u-gap-8" style={{ flexDirection: "column" }}>
+                <div className="erp-messenger-body erp-u-flex erp-u-gap-8 erp-u-col">
                   <input
                     type="text"
                     autoComplete="off"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="그룹 이름"
-                    className="erp-input"
-                    style={{ fontSize: 12.5 }}
+                    className="erp-input erp-u-text-base"
                   />
-                  <div className="erp-u-flex" style={{ overflowY: "auto", flex: 1, flexDirection: "column", gap: 4 }}>
+                  <div className="erp-u-flex erp-u-flex-1 erp-u-col erp-u-gap-4" style={{ overflowY: "auto" }}>
                     {otherProfiles.map(([id, name]) => (
-                      <label className="erp-u-flex erp-u-items-center erp-u-gap-8" key={id} style={{ fontSize: 12.5, padding: "4px 2px" }}>
+                      <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-text-base erp-u-pad-4-2" key={id}>
                         <input
                           type="checkbox"
                           checked={pickedMemberIds.includes(id)}
@@ -770,8 +768,7 @@ export function MessengerPage({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="🔍 메시지 검색"
-                      className="erp-input"
-                      style={{ width: "100%", fontSize: 12 }}
+                      className="erp-input erp-u-w-full erp-u-text-compact"
                     />
                     {searchQuery && (
                       <button
@@ -787,7 +784,7 @@ export function MessengerPage({
 
                   <div className="erp-messenger-body">
                     {loadingChannel ? (
-                      <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+                      <p className="erp-grid-empty erp-u-text-compact">
                         불러오는 중...
                       </p>
                     ) : (
@@ -850,7 +847,7 @@ export function MessengerPage({
                           );
                         })}
                         {!displayEntries.length && (
-                          <p className="erp-grid-empty" style={{ fontSize: 12 }}>
+                          <p className="erp-grid-empty erp-u-text-compact">
                             {query ? "검색 결과가 없습니다." : "아직 메시지가 없습니다. 첫 메시지를 남겨보세요."}
                           </p>
                         )}
@@ -879,8 +876,8 @@ export function MessengerPage({
                       name="content"
                       placeholder="메시지 입력 또는 명령어(/) 입력 (Enter: 전송)"
                       rows={2}
-                      className="erp-input"
-                      style={{ flex: 1, resize: "none", fontSize: 12.5 }}
+                      className="erp-input erp-u-flex-1 erp-u-text-base"
+                      style={{ resize: "none" }}
                       onKeyDown={handleComposerKeyDown}
                     />
                     <div className="erp-messenger-composer-actions">
@@ -900,8 +897,7 @@ export function MessengerPage({
                         <button
                           type="button"
                           onClick={() => handleLeaveGroup(activeChannel.id)}
-                          className="erp-btn"
-                          style={{ minWidth: 0, fontSize: 10.5 }}
+                          className="erp-btn erp-u-minw-0 erp-u-text-xs"
                         >
                           그룹 나가기
                         </button>
@@ -923,12 +919,12 @@ export function MessengerPage({
                     </div>
                   </form>
                   {sendError && (
-                    <p className="erp-u-danger" style={{ padding: "0 12px 8px", fontSize: 11.5 }}>
+                    <p className="erp-u-danger erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
                       {sendError}
                     </p>
                   )}
                   {deleteError && (
-                    <p className="erp-u-danger" style={{ padding: "0 12px 8px", fontSize: 11.5 }}>
+                    <p className="erp-u-danger erp-u-text-sm" style={{ padding: "0 12px 8px" }}>
                       삭제 실패: {deleteError}
                     </p>
                   )}

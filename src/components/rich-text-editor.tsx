@@ -704,10 +704,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
                   if (e.key === "Escape") setOpenPopover(null);
                 }}
                 placeholder="https://..."
-                className="erp-input erp-u-h-26"
-                style={{ fontSize: 12 }}
+                className="erp-input erp-u-h-26 erp-u-text-compact"
               />
-              <button type="button" className="erp-btn erp-btn-primary erp-btn-sm" onClick={applyLink} style={{ fontSize: 11.5 }}>
+              <button type="button" className="erp-btn erp-btn-primary erp-btn-sm erp-u-text-sm" onClick={applyLink}>
                 적용
               </button>
             </div>
@@ -736,10 +735,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
                   if (e.key === "Escape") setOpenPopover(null);
                 }}
                 placeholder="이미지 URL"
-                className="erp-input erp-u-h-26"
-                style={{ fontSize: 12 }}
+                className="erp-input erp-u-h-26 erp-u-text-compact"
               />
-              <button type="button" className="erp-btn erp-btn-primary erp-btn-sm" onClick={applyImage} style={{ fontSize: 11.5 }}>
+              <button type="button" className="erp-btn erp-btn-primary erp-btn-sm erp-u-text-sm" onClick={applyImage}>
                 삽입
               </button>
             </div>

@@ -199,7 +199,7 @@ export async function OfficialDocumentDetailPanel({
       </div>
 
       {!doc.internal_only && (
-        <div className="erp-detail" style={{ marginTop: 14 }}>
+        <div className="erp-detail erp-u-mt-14">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">수신처 ({recipients.length})</span>
           </div>
@@ -225,7 +225,7 @@ export async function OfficialDocumentDetailPanel({
                         <td className="erp-u-muted">
                           {r.email ?? "-"}
                           {r.bounce_reason && (
-                            <div className="erp-u-danger" style={{ fontSize: "var(--erp-font-xs)" }}>{r.bounce_reason}</div>
+                            <div className="erp-u-danger erp-u-text-xs">{r.bounce_reason}</div>
                           )}
                         </td>
                         <td>
@@ -278,14 +278,14 @@ export async function OfficialDocumentDetailPanel({
                         <dd>{r.email ?? "-"}</dd>
                       </div>
                       {r.bounce_reason && (
-                        <div style={{ gridColumn: "1 / -1" }}>
+                        <div className="erp-u-col-all">
                           <dt>발송실패 사유</dt>
                           <dd className="erp-u-danger">{r.bounce_reason}</dd>
                         </div>
                       )}
                     </dl>
                     {allowManage && doc.status === "sent" && (r.status === "pending" || r.status === "bounced") && (
-                      <div style={{ marginTop: 4 }}>
+                      <div className="erp-u-mt-4">
                         <RecipientManualDeliverButton
                           recipientId={r.id}
                           officialDocumentId={doc.id}
@@ -306,7 +306,7 @@ export async function OfficialDocumentDetailPanel({
       )}
 
       {allowManage && doc.status === "draft" && (
-        <div className="erp-detail" style={{ marginTop: 14 }}>
+        <div className="erp-detail erp-u-mt-14">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">결재 상신</span>
           </div>
@@ -317,7 +317,7 @@ export async function OfficialDocumentDetailPanel({
       )}
 
       {allowManage && doc.status === "approved" && (
-        <div className="erp-detail" style={{ marginTop: 14 }}>
+        <div className="erp-detail erp-u-mt-14">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">발송</span>
           </div>
@@ -328,7 +328,7 @@ export async function OfficialDocumentDetailPanel({
       )}
 
       {allowManage && doc.status === "sent" && (
-        <div className="erp-detail" style={{ marginTop: 14 }}>
+        <div className="erp-detail erp-u-mt-14">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">종결</span>
           </div>

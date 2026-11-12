@@ -46,13 +46,13 @@ export function OrgChartApproverPicker({
         <button
           type="button"
           onClick={() => setExpanded((prev) => ({ ...prev, [node.id]: !isOpen }))}
-          className="flex items-center gap-1 text-xs font-semibold erp-u-text"
-          style={{ padding: "3px 0", background: "none", border: "none", cursor: "pointer" }}
+          className="flex items-center gap-1 text-xs font-semibold erp-u-text erp-u-border-none erp-u-pointer"
+          style={{ padding: "3px 0", background: "none" }}
         >
           {isOpen ? "▾" : "▸"} {node.name}
         </button>
         {isOpen && (
-          <div style={{ marginLeft: 16 }}>
+          <div className="erp-u-ml-16">
             {node.employees.map((e) => {
               const selected = isSelected(e.id);
               return (
@@ -60,15 +60,8 @@ export function OrgChartApproverPicker({
                   key={e.id}
                   type="button"
                   onClick={() => togglePerson({ id: e.id, name: e.fullName })}
-                  className="org-picker-row flex w-full items-center justify-between text-xs"
-                  style={{
-                    padding: "4px 8px",
-                    border: "1px solid transparent",
-                    background: selected ? "var(--erp-selected)" : "transparent",
-                    borderColor: selected ? "var(--erp-primary)" : "transparent",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
+                  className="org-picker-row flex w-full items-center justify-between text-xs erp-u-pad-4-8 erp-u-pointer"
+                  style={{ border: "1px solid transparent", background: selected ? "var(--erp-selected)" : "transparent", borderColor: selected ? "var(--erp-primary)" : "transparent", textAlign: "left" }}
                 >
                   <span>
                     {e.fullName}
@@ -88,7 +81,7 @@ export function OrgChartApproverPicker({
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       <div>
-        <div className="flex gap-1" style={{ marginBottom: 8 }}>
+        <div className="flex gap-1 erp-u-mb-8">
           <button
             type="button"
             onClick={() => setTarget("approver")}
@@ -106,7 +99,7 @@ export function OrgChartApproverPicker({
             참조자에 추가
           </button>
         </div>
-        <div className="org-picker-tree erp-grid-wrap" style={{ maxHeight: 280, overflowY: "auto", padding: 8 }}>
+        <div className="org-picker-tree erp-grid-wrap erp-u-p-8" style={{ maxHeight: 280, overflowY: "auto" }}>
           {tree.length === 0 ? (
             <PageGuide>등록된 조직도가 없습니다. 환경설정 &gt; 조직도 관리에서 부서를 먼저 만들어주세요.</PageGuide>
           ) : (
@@ -124,15 +117,15 @@ export function OrgChartApproverPicker({
           ) : (
             <ol className="flex flex-col gap-1">
               {approvers.map((a, idx) => (
-                <li key={a.id} className="org-picker-chip flex items-center justify-between text-xs" style={{ padding: "3px 8px", border: "1px solid var(--erp-border)" }}>
+                <li key={a.id} className="org-picker-chip flex items-center justify-between text-xs erp-u-pad-3-8 erp-u-border">
                   <span>
                     {idx + 1}. {a.name}
                   </span>
                   <button
                     type="button"
                     onClick={() => onChangeApprovers(approvers.filter((x) => x.id !== a.id))}
-                    className="erp-btn erp-btn-danger"
-                    style={{ minWidth: 0, height: 20, padding: "0 6px", fontSize: 10.5 }}
+                    className="erp-btn erp-btn-danger erp-u-minw-0 erp-u-pad-0-6 erp-u-text-xs"
+                    style={{ height: 20 }}
                   >
                     삭제
                   </button>
@@ -150,13 +143,13 @@ export function OrgChartApproverPicker({
           ) : (
             <ul className="flex flex-col gap-1">
               {references.map((r) => (
-                <li key={r.id} className="org-picker-chip flex items-center justify-between text-xs" style={{ padding: "3px 8px", border: "1px solid var(--erp-border)" }}>
+                <li key={r.id} className="org-picker-chip flex items-center justify-between text-xs erp-u-pad-3-8 erp-u-border">
                   <span>{r.name}</span>
                   <button
                     type="button"
                     onClick={() => onChangeReferences(references.filter((x) => x.id !== r.id))}
-                    className="erp-btn erp-btn-danger"
-                    style={{ minWidth: 0, height: 20, padding: "0 6px", fontSize: 10.5 }}
+                    className="erp-btn erp-btn-danger erp-u-minw-0 erp-u-pad-0-6 erp-u-text-xs"
+                    style={{ height: 20 }}
                   >
                     삭제
                   </button>

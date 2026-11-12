@@ -52,7 +52,7 @@ export default async function ApprovalDelegationsPage() {
         <ApprovalDelegationForm action={createApprovalDelegation} isAdmin={isAdmin} profiles={profiles} />
       </FormSection>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         {delegations.length === 0 ? (
           <p className="erp-grid-empty">등록된 위임이 없습니다.</p>
         ) : (
@@ -60,20 +60,20 @@ export default async function ApprovalDelegationsPage() {
             {delegations.map((d) => {
               const active = d.start_date <= today && today <= d.end_date;
               return (
-                <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
+                <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none"
                   key={d.id}
-                  style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px", flex: "0 0 auto" }}
+                  style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px" }}
                 >
-                  <div style={{ minWidth: 0 }}>
-                    <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-md)" }}>
+                  <div className="erp-u-minw-0">
+                    <div className="erp-u-semibold erp-u-text erp-u-text-md">
                       {d.delegator?.full_name ?? "-"} → {d.delegate?.full_name ?? "-"}
                       {active && (
-                        <span className="erp-badge erp-badge-success" style={{ marginLeft: "var(--erp-space-2)" }}>
+                        <span className="erp-badge erp-badge-success erp-u-ml-s2">
                           진행중
                         </span>
                       )}
                     </div>
-                    <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-sm)", marginTop: 3 }}>
+                    <div className="erp-u-muted erp-u-text-sm erp-u-mt-3">
                       {d.start_date} ~ {d.end_date}
                       {d.reason ? ` · ${d.reason}` : ""}
                     </div>

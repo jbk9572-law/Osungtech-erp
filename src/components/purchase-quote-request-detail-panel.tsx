@@ -79,7 +79,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
         </p>
       )}
 
-      <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 16 }}>
+      <div className="erp-grid-wrap has-card-view erp-u-mb-16">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -122,7 +122,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
         </table>
       </div>
 
-      <div className="erp-row-card-list" style={{ marginBottom: 16 }}>
+      <div className="erp-row-card-list erp-u-mb-16">
         {!items?.length ? (
           <p className="erp-grid-empty">견적 요청 품목이 없습니다.</p>
         ) : (
@@ -150,7 +150,7 @@ export async function PurchaseQuoteRequestDetailPanel({ id, closeHref }: { id: s
                   );
                 })}
                 {item.remark && (
-                  <div style={{ gridColumn: "1 / -1" }}>
+                  <div className="erp-u-col-all">
                     <dt>비고</dt>
                     <dd>{item.remark}</dd>
                   </div>

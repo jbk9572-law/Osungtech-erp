@@ -52,8 +52,7 @@ export function PaperStockOverridePanel({
           </span>
           <button
             type="button"
-            className="erp-btn erp-btn-danger erp-btn-xs"
-            style={{ minWidth: 0, fontSize: 11.5 }}
+            className="erp-btn erp-btn-danger erp-btn-xs erp-u-minw-0 erp-u-text-sm"
             disabled={revertPending}
             onBlur={confirmRevert.reset}
             onClick={() => {
@@ -95,8 +94,8 @@ export function PaperStockOverridePanel({
           autoComplete="off"
           type="text"
           placeholder="사유 (예: 거래처 협의로 3연 처리)"
-          className="erp-input"
-          style={{ flex: 1, minWidth: 160 }}
+          className="erp-input erp-u-flex-1"
+          style={{ minWidth: 160 }}
         />
         <button type="submit" disabled={pending} className="erp-btn">
           {pending ? (
@@ -111,7 +110,7 @@ export function PaperStockOverridePanel({
       <FormMessage state={state} />
 
       {history.length > 0 && (
-        <div className="mt-2 flex flex-col gap-1 erp-u-muted" style={{ fontSize: 11.5 }}>
+        <div className="mt-2 flex flex-col gap-1 erp-u-muted erp-u-text-sm">
           <div className="erp-u-semibold">배치로그</div>
           {history.map((h) => (
             <div key={h.id}>

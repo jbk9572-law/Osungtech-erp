@@ -101,7 +101,7 @@ export function TaxInvoiceCorrectionForm({
           <div className="erp-doc-header-row erp-doc-header-row-full">
             <label htmlFor="ti-mod-remark" className="erp-doc-header-label">비고</label>
             <span className="erp-doc-header-value">
-              <textarea id="ti-mod-remark" name="remark" rows={2} className="erp-input erp-textarea-compact w-full" style={{ border: "none" }} />
+              <textarea id="ti-mod-remark" name="remark" rows={2} className="erp-input erp-textarea-compact w-full erp-u-border-none" />
             </span>
           </div>
         </div>

@@ -66,24 +66,24 @@ export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
         ))}
       </div>
 
-      <div className="erp-card-feed" style={{ minWidth: 0 }}>
+      <div className="erp-card-feed erp-u-minw-0">
         {visibleRows.map((r) => (
-          <div className="erp-u-flex erp-u-items-center erp-u-justify-between"
+          <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none"
             key={r.id}
-            style={{ gap: "var(--erp-space-5)", background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px", flex: "0 0 auto" }}
+            style={{ border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px" }}
           >
-            <div style={{ minWidth: 0 }}>
-              <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-base)" }}>
+            <div className="erp-u-minw-0">
+              <div className="erp-u-semibold erp-u-text erp-u-text-base">
                 {r.tenant_name ?? "-"}
-                <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                <span className="erp-u-ml-s2">
                   <span className="erp-badge erp-badge-muted">{ACTION_LABELS[r.action] ?? r.action}</span>
                 </span>
               </div>
-              <div className="erp-u-muted" style={{ fontSize: 11, marginTop: 3 }}>
+              <div className="erp-u-muted erp-u-text-caption erp-u-mt-3">
                 {r.table_name} · {r.actor_name ?? "-"}
               </div>
             </div>
-            <div className="erp-u-muted" style={{ fontSize: 11, flex: "0 0 auto" }}>
+            <div className="erp-u-muted erp-u-text-caption erp-u-flex-none">
               {new Date(r.created_at).toLocaleString("ko-KR")}
             </div>
           </div>

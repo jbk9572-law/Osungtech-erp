@@ -8,13 +8,12 @@ export function WorkOrderStepDefectRejectButton({ id, workOrderId }: { id: strin
   const [state, formAction, pending] = useActionState(rejectStepDefectHold, undefined);
 
   return (
-    <form className="erp-u-items-center erp-u-gap-6" action={formAction} style={{ display: "inline-flex" }}>
+    <form className="erp-u-items-center erp-u-gap-6 erp-u-inline-flex" action={formAction}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <button
         type="submit"
-        className="erp-btn erp-btn-danger erp-btn-xs"
-        style={{ padding: "1px 8px", fontSize: 11 }}
+        className="erp-btn erp-btn-danger erp-btn-xs erp-u-pad-1-8 erp-u-text-caption"
         disabled={pending}
       >
         {pending ? "처리 중..." : "반품처리"}

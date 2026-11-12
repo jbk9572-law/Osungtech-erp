@@ -98,7 +98,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
       </div>
 
       <div className="erp-post-header">
-        <div className="erp-u-flex" style={{ gap: "var(--erp-space-2)", marginBottom: "var(--erp-space-3)" }}>
+        <div className="erp-u-flex erp-u-gap-s2 erp-u-mb-s3">
           <GridBadge tone="muted">{todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</GridBadge>
           {overdue && <GridBadge tone="danger">기한초과</GridBadge>}
           {row.done && <GridBadge tone="ok">완료</GridBadge>}

@@ -108,8 +108,7 @@ export function ProductSearchSelect({
             if (el) focusNextCellInRow(el);
           }
         }}
-        className="erp-input"
-        style={{ width: "100%" }}
+        className="erp-input erp-u-w-full"
       />
       {open &&
         dropdownRect &&

@@ -73,7 +73,7 @@ export default async function InventoryCountPrintPage({
 
       <div className="mb-3 flex items-end justify-between" style={{ color: "#000" }}>
         <h1 className="erp-u-bold" style={{ fontSize: 18 }}>재고 실사 목록{selectedWarehouseName ? ` — ${selectedWarehouseName}` : ""}</h1>
-        <div style={{ fontSize: 12 }}>
+        <div className="erp-u-text-compact">
           기준일 {todayKstStr()} · {formatNumber(rows.length)}개 품목
           {onlyNonZero === "1" && " (전산 재고 0 제외)"}
         </div>
@@ -109,7 +109,7 @@ export default async function InventoryCountPrintPage({
               <td style={cellStyle}>
                 {row.basePackageQty ? `${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}/박스` : ""}
               </td>
-              <td style={{ ...cellStyle, textAlign: "right" }}>
+              <td className="erp-u-text-right" style={{ ...cellStyle }}>
                 {formatNumber(row.systemQuantity)} {row.unit ?? ""}
               </td>
               <td className="erp-u-h-26" style={{ ...cellStyle }} />

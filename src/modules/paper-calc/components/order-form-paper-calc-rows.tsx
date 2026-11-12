@@ -72,8 +72,7 @@ export function PendingPaperCalcRow({
       <td className="num">
         <button
           type="button"
-          className="erp-btn erp-btn-danger erp-btn-sm"
-          style={{ minWidth: 0 }}
+          className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
           onClick={onCancel}
         >
           취소

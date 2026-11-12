@@ -992,11 +992,10 @@ export function NewSaleForm({
 
       {isReturn && (
         <PageGuide tone="danger">
-          <div style={{ marginBottom: 8 }}>
+          <div className="erp-u-mb-8">
             반품으로 등록하면 이 품목 수량만큼 재고가 증가하고, 매출 합계·미수금에서는 차감됩니다.
           </div>
-          <label className="erp-u-items-center erp-u-gap-6 erp-u-bold"
-            style={{ display: "inline-flex" }}
+          <label className="erp-u-items-center erp-u-gap-6 erp-u-bold erp-u-inline-flex"
           >
             반품 사유
             <ErpSelect
@@ -1047,8 +1046,7 @@ export function NewSaleForm({
               placeholder="자동"
               value={docNo}
               onChange={(e) => setDocNo(e.target.value.replace(/[^0-9]/g, ""))}
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
@@ -1091,8 +1089,8 @@ export function NewSaleForm({
           <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
           <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
-            <label className="erp-u-flex erp-u-items-center erp-u-gap-8"
-              style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: "var(--erp-font-md)" }}
+            <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md"
+              style={{ height: 34, borderRadius: "var(--erp-radius-lg, 0)", background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}` }}
             >
               <input
                 type="checkbox"
@@ -1141,8 +1139,7 @@ export function NewSaleForm({
               autoComplete="off"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
             />
           </div>
           <PaymentMethodFields alwaysCredit={alwaysCredit} onAlwaysCreditChange={setAlwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
@@ -1154,8 +1151,8 @@ export function NewSaleForm({
           className="erp-form-section-head erp-u-relative"
         >
           <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
-          <div className="erp-u-flex erp-u-items-center"
-            style={{ gap: 4, margin: 4, flexWrap: "wrap" }}
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap"
+            style={{ margin: 4 }}
           >
             <QuickAddProductSearch
               products={products}
@@ -1174,8 +1171,7 @@ export function NewSaleForm({
                 setOpenTodos(null);
                 loadPurchasesForDate();
               }}
-              className="erp-btn"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-u-minw-0"
               disabled={loadingPurchases}
             >
               {loadingPurchases ? "불러오는 중..." : "입고 불러오기"}
@@ -1186,8 +1182,7 @@ export function NewSaleForm({
                 setPurchaseCandidates(null);
                 loadOpenTodos();
               }}
-              className="erp-btn"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-u-minw-0"
               disabled={loadingTodos}
             >
               {loadingTodos ? "불러오는 중..." : "할일 가져오기"}
@@ -1195,8 +1190,7 @@ export function NewSaleForm({
             <button
               type="button"
               onClick={addRow}
-              className="erp-btn"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-u-minw-0"
             >
               + 품목 추가
             </button>
@@ -1204,37 +1198,23 @@ export function NewSaleForm({
           </div>
 
           {purchaseCandidates !== null && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                right: 4,
-                zIndex: 20,
-                width: 420,
-                maxWidth: "90vw",
-                maxHeight: 320,
-                overflowY: "auto",
-                background: "var(--erp-panel)",
-                border: "1px solid var(--erp-border)",
-                borderRadius: "var(--erp-radius-xl, 0)",
-                boxShadow: "var(--erp-shadow-md)",
-              }}
+            <div className="erp-u-absolute erp-u-bg-panel erp-u-border"
+              style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", borderRadius: "var(--erp-radius-xl, 0)", boxShadow: "var(--erp-shadow-md)" }}
             >
-              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold"
-                style={{ padding: "6px 10px", borderBottom: "1px solid var(--erp-border)", fontSize: 12 }}
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact"
+                style={{ borderBottom: "1px solid var(--erp-border)" }}
               >
                 <span>{purchaseLookupDate} 입고 품목</span>
                 <button
                   type="button"
                   onClick={() => setPurchaseCandidates(null)}
-                  className="erp-btn erp-btn-dark erp-btn-xs"
-                  style={{ minWidth: 0 }}
+                  className="erp-btn erp-btn-dark erp-btn-xs erp-u-minw-0"
                 >
                   닫기
                 </button>
               </div>
               {purchaseCandidates.length === 0 ? (
-                <p className="erp-home-empty" style={{ padding: 10 }}>
+                <p className="erp-home-empty erp-u-p-10">
                   해당 날짜에 입고된 품목이 없습니다.
                 </p>
               ) : (
@@ -1242,16 +1222,15 @@ export function NewSaleForm({
                   const added = addedPurchaseItemIds.has(item.id);
                   const isAdding = addingItemId === item.id;
                   return (
-                    <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8"
+                    <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact"
                       key={item.id}
-                      style={{ padding: "6px 10px", borderBottom: "1px solid var(--erp-divider)", fontSize: 12 }}
+                      style={{ borderBottom: "1px solid var(--erp-divider)" }}
                     >
-                      <div style={{ minWidth: 0 }}>
+                      <div className="erp-u-minw-0">
                         <div className="erp-u-semibold">
                           {item.productName}
                         </div>
-                        <div className="erp-u-muted"
-                          style={{ fontSize: 11 }}
+                        <div className="erp-u-muted erp-u-text-caption"
                         >
                           {item.supplierName} · {item.spec || "규격 미지정"} :{" "}
                           {formatNumber(item.quantity)}
@@ -1261,8 +1240,8 @@ export function NewSaleForm({
                       <button
                         type="button"
                         onClick={() => addPurchaseItem(item)}
-                        className="erp-btn erp-btn-xs"
-                        style={{ minWidth: 0, flexShrink: 0 }}
+                        className="erp-btn erp-btn-xs erp-u-minw-0"
+                        style={{ flexShrink: 0 }}
                         disabled={added || isAdding}
                       >
                         {added ? "추가됨" : isAdding ? "추가 중..." : "추가"}
@@ -1514,7 +1493,7 @@ export function NewSaleForm({
               })}
             </tbody>
             <tfoot>
-              <tr style={{ background: "var(--erp-bg)" }}>
+              <tr className="erp-u-bg-page">
                 <td className="erp-u-bold" colSpan={6}>
                   합계
                 </td>

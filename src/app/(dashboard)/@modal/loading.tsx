@@ -10,12 +10,12 @@ export default function ModalLoading() {
     <RegistrationModalShell size="xl">
       {/* data-erp-route-loading: route-progress-bar.tsx가 이 마커로
           "주소는 바뀌었지만 아직 이 자리엔 로딩 화면뿐"임을 구분한다. */}
-      <div className="erp-u-flex erp-u-items-center"
+      <div className="erp-u-flex erp-u-items-center erp-u-col erp-u-justify-center erp-u-gap-10"
         data-erp-route-loading
-        style={{ flexDirection: "column", justifyContent: "center", gap: 10, minHeight: 240 }}
+        style={{ minHeight: 240 }}
       >
         <span className="erp-spinner" aria-hidden style={{ width: 20, height: 20 }} />
-        <span className="erp-u-muted" style={{ fontSize: 12.5 }}>불러오는 중...</span>
+        <span className="erp-u-muted erp-u-text-base">불러오는 중...</span>
       </div>
     </RegistrationModalShell>
   );

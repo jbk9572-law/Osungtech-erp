@@ -72,7 +72,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
               제외된 건 {state.skipped.length}건
             </span>
           </div>
-          <div className="erp-detail-body" style={{ fontSize: 12.5 }}>
+          <div className="erp-detail-body erp-u-text-base">
             <ul style={{ paddingLeft: 16 }}>
               {state.skipped.map((s, i) => (
                 <li className="erp-u-muted" key={i}>
@@ -147,7 +147,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
       </div>
       <div className="erp-row-card-list">
         {orders.map((o) => (
-          <label className="erp-row-card" key={o.id} style={{ cursor: "pointer" }}>
+          <label className="erp-row-card erp-u-pointer" key={o.id}>
             <div className="erp-row-card-head">
               <span className="erp-row-card-checkbox">
                 <input
