@@ -22,6 +22,7 @@ import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
 import { TodoImportPopover } from "@/components/todo-import-popover";
+import { ResizableTh } from "@/components/grid/resizable-th";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
@@ -1024,13 +1025,14 @@ export function NewPurchaseForm({
     className?: string,
   ) {
     return (
-      <th className={className} style={{ width: colWidths[col] }}>
+      <ResizableTh
+        className={className}
+        width={colWidths[col]}
+        resizing={resizingCol === col}
+        onResizeStart={startResize(col)}
+      >
         {label}
-        <span
-          className={`erp-col-resize-handle${resizingCol === col ? " resizing" : ""}`}
-          onMouseDown={startResize(col)}
-        />
-      </th>
+      </ResizableTh>
     );
   }
 
