@@ -21,7 +21,7 @@ import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-
 import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
-import { GridBadge } from "@/components/grid/badge";
+import { TodoImportPopover } from "@/components/todo-import-popover";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
@@ -35,7 +35,6 @@ import {
   getPaperCalculationsForTodo,
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
-import { todoTypeLabel } from "@/lib/todo-flow";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
 import { TAX_TYPES, EVIDENCE_TYPES } from "@/lib/tax-evidence-type";
 import { PriceHistoryHint } from "@/components/price-history-hint";
@@ -1503,106 +1502,13 @@ export function NewPurchaseForm({
           </div>
 
           {openTodos !== null && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                right: 4,
-                zIndex: 20,
-                width: 420,
-                maxWidth: "90vw",
-                maxHeight: 320,
-                overflowY: "auto",
-                background: "var(--erp-panel)",
-                border: "1px solid var(--erp-border)",
-                borderRadius: "var(--erp-radius-xl, 0)",
-                boxShadow: "var(--erp-shadow-md)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "6px 10px",
-                  borderBottom: "1px solid var(--erp-border)",
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                <span>완료 안 한 할 일</span>
-                <button
-                  type="button"
-                  onClick={() => setOpenTodos(null)}
-                  className="erp-btn erp-btn-dark"
-                  style={{ minWidth: 0, height: 22, padding: "0 8px" }}
-                >
-                  닫기
-                </button>
-              </div>
-              {openTodos.length === 0 ? (
-                <p className="erp-home-empty" style={{ padding: 10 }}>
-                  완료 안 한 할 일이 없습니다.
-                </p>
-              ) : (
-                openTodos.map((todo) => {
-                  const itemCount = todo.items.length;
-                  const isImporting = importingTodoId === todo.id;
-                  return (
-                    <div
-                      key={todo.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        padding: "6px 10px",
-                        borderBottom: "1px solid var(--erp-divider)",
-                        fontSize: 12,
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600 }}>
-                          {todo.title}
-                          <GridBadge tone="muted" style={{ marginLeft: 6 }}>
-                            {todoTypeLabel(
-                              todo.todo_type,
-                              todo.ship_date,
-                              todo.due_date,
-                            )}
-                          </GridBadge>
-                        </div>
-                        <div
-                          style={{
-                            color: "var(--erp-text-muted)",
-                            fontSize: 11,
-                          }}
-                        >
-                          {todo.supplier_name ? `${todo.supplier_name} · ` : ""}
-                          {todo.due_date
-                            ? `마감 ${todo.due_date} · `
-                            : ""}품목 {itemCount}건
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => importTodoItems(todo)}
-                        className="erp-btn"
-                        style={{
-                          minWidth: 0,
-                          height: 24,
-                          padding: "0 8px",
-                          flexShrink: 0,
-                        }}
-                        disabled={isImporting}
-                      >
-                        {isImporting ? "가져오는 중..." : "가져오기"}
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <TodoImportPopover
+              side="purchase"
+              todos={openTodos}
+              importingId={importingTodoId}
+              onImport={importTodoItems}
+              onClose={() => setOpenTodos(null)}
+            />
           )}
         </div>
 
