@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { NewSaleTypeSwitcher } from "@/components/new-sale-type-switcher";
@@ -13,7 +14,7 @@ import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
 import { PageGuide } from "@/components/erp/page-guide";
 import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
 
-export default async function NewSalePage({
+async function NewSalePage({
   searchParams,
 }: {
   searchParams: Promise<{ saved?: string }>;
@@ -153,3 +154,5 @@ export default async function NewSalePage({
     </div>
   );
 }
+
+export default withPageTiming("sales/new", NewSalePage);

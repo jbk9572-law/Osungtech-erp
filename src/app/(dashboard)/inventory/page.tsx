@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
@@ -9,7 +10,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { matchesSearch } from "@/lib/search-match";
 import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 
-export default async function InventoryPage({
+async function InventoryPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
@@ -168,3 +169,5 @@ async function InventoryGrid({ q }: { q?: string }) {
 
   return <ProductGridTable rows={stockRows} mode="inventory" keyword={keyword} />;
 }
+
+export default withPageTiming("inventory", InventoryPage);

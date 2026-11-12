@@ -39,9 +39,7 @@
     "check:audit-log-table-labels": "node scripts/check-audit-log-table-labels.mjs",
     "dev:seed": "tsx scripts/dev-seed.ts",
     "sweep:orphan-r2": "tsx scripts/sweep-orphan-r2-files.ts",
-    "test": "vitest run",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1156.0",
@@ -76,7 +74,6 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.2",

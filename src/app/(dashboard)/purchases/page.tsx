@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
@@ -29,7 +30,7 @@ type DisplayRow = PurchaseRow;
 const DEFAULT_LIST_LIMIT = 300;
 const LIST_LIMIT_STEP = 300;
 
-export default async function PurchasesPage({
+async function PurchasesPage({
   searchParams,
 }: {
   searchParams: Promise<{ from?: string; to?: string; q?: string; limit?: string }>;
@@ -550,3 +551,5 @@ export default async function PurchasesPage({
     </div>
   );
 }
+
+export default withPageTiming("purchases", PurchasesPage);

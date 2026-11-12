@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CreateProductForm } from "@/components/create-product-form";
@@ -27,7 +28,7 @@ type ProductQueryRow = {
 
 const PRODUCT_COLUMNS = "id, sku, name, spec, parent_product_id";
 
-export default async function ProductsPage({
+async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; limit?: string; id?: string }>;
@@ -266,3 +267,5 @@ export default async function ProductsPage({
     </div>
   );
 }
+
+export default withPageTiming("products", ProductsPage);

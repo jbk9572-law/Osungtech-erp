@@ -1,3 +1,4 @@
+import { withPageTiming } from "@/lib/page-timing";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
@@ -49,7 +50,7 @@ function buildWeeks(year: number, month: number) {
   return weeks;
 }
 
-export default async function DashboardPage({
+async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ month?: string }>;
@@ -822,3 +823,5 @@ export default async function DashboardPage({
     </>
   );
 }
+
+export default withPageTiming("dashboard", DashboardPage);
