@@ -85,7 +85,11 @@ export function KeyboardShortcuts({
       // 페이지를 나가버려 작성 중이던 내용을 잃을 수 있다 — 예를 들어
       // 메모를 쓰다가 습관적으로 Esc를 누르면 확인 없이 목록으로
       // 튕겨나간다. 저장(F7)·출력은 데이터 손실이 없으니 그대로 둔다.
-      if ("href" in action && isEditableTarget(e.target)) return;
+      // 단, 이 보호는 Escape에만 필요하다 — F2(신규)/F4(수정) 같은 기능키는
+      // 텍스트 입력 중에 우발적으로 눌릴 일이 없고, 검색창에 포커스가 있다고
+      // 신규 등록 단축키가 "씹히면" 안 된다(사용자 보고: 신규 입력창이 자꾸
+      // 반응 없음 — 목록 진입 시 검색창이 자동 포커스되는 화면이 많다).
+      if ("href" in action && e.key === "Escape" && isEditableTarget(e.target)) return;
       if ("href" in action && e.key === "Escape" && closeModal) return;
       e.preventDefault();
       if ("href" in action) {
