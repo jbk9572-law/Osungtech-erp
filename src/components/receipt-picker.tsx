@@ -154,7 +154,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
               {formatKb(item.originalSize)} → {formatKb(item.file.size)}
             </span>
             <div className="flex items-center gap-1">
-              <button
+              <button aria-label="위로 이동"
                 type="button"
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
@@ -162,7 +162,7 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
               >
                 ▲
               </button>
-              <button
+              <button aria-label="아래로 이동"
                 type="button"
                 onClick={() => move(index, 1)}
                 disabled={index === items.length - 1}

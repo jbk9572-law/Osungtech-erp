@@ -156,7 +156,7 @@ export function LocationAllocationModal({
                           {formatNumber(loc.quantity)}
                         </span>
                       </div>
-                      <input
+                      <input aria-label="위치별 배분 수량"
                         type="number"
                         className="erp-input"
                         style={{ width: 90, flexShrink: 0 }}

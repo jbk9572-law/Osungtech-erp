@@ -72,7 +72,7 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
                   <td>{c.spec ?? "-"}</td>
                   <td className="num">{formatNumber(c.unit_price)}</td>
                   <td className="num">
-                    <input
+                    <input aria-label="수량"
                       type="number"
                       min={0}
                       step="any"

@@ -733,7 +733,7 @@ export function PaperCalcClient({
                     >
                       처음
                     </button>
-                    <button
+                    <button aria-label="이전"
                       type="button"
                       className="erp-btn erp-btn-sm erp-u-minw-0"
                       onClick={() => setPage((p) => p - 1)}
@@ -741,7 +741,7 @@ export function PaperCalcClient({
                     >
                       ◀
                     </button>
-                    <button
+                    <button aria-label="다음"
                       type="button"
                       className="erp-btn erp-btn-sm erp-u-minw-0"
                       onClick={() => setPage((p) => p + 1)}

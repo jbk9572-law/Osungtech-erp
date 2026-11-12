@@ -90,7 +90,7 @@ export function PaymentRequestLineItems({
             {rows.map((row) => (
               <tr key={row.key} style={row.highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}>
                 <td>
-                  <input
+                  <input aria-label="사용일"
                     type="date"
                     value={row.usedAt}
                     onChange={(e) => updateRow(row.key, { usedAt: e.target.value })}
@@ -127,7 +127,7 @@ export function PaymentRequestLineItems({
                   />
                 </td>
                 <td>
-                  <input
+                  <input aria-label="비고"
                     type="text"
                     value={row.remark}
                     onChange={(e) => updateRow(row.key, { remark: e.target.value })}
@@ -144,7 +144,7 @@ export function PaymentRequestLineItems({
                   />
                 </td>
                 <td className="num">
-                  <button
+                  <button aria-label="행 삭제"
                     type="button"
                     onClick={() => removeRow(row.key)}
                     disabled={rows.length === 1}

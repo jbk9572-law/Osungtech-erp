@@ -88,7 +88,7 @@ export function ItemEntryBlock<P extends Product>({
                     />
                   </td>
                   <td>
-                    <input
+                    <input aria-label="규격"
                       value={row.spec}
                       onChange={(e) => onUpdate(row.key, { spec: e.target.value })}
                       className="erp-input erp-u-w-full"
@@ -105,7 +105,7 @@ export function ItemEntryBlock<P extends Product>({
                   )}
                   {withPrice && <td className="num">{formatNumber(row.quantity * row.unitPrice)}</td>}
                   <td>
-                    <input
+                    <input aria-label="비고"
                       value={row.remark}
                       onChange={(e) => onUpdate(row.key, { remark: e.target.value })}
                       className="erp-input erp-u-w-full"

@@ -218,7 +218,7 @@ export function CalendarMonthView({
           {feedUrl ? (
             <>
               <div className="mb-2 flex items-center gap-1">
-                <input readOnly value={feedUrl} className="erp-input w-full erp-u-text-caption" onFocus={(e) => e.currentTarget.select()} />
+                <input aria-label="캘린더 구독 주소" readOnly value={feedUrl} className="erp-input w-full erp-u-text-caption" onFocus={(e) => e.currentTarget.select()} />
               </div>
               <div className="flex gap-1">
                 <button type="button" onClick={handleCopyFeedUrl} className="erp-btn erp-u-minw-0">

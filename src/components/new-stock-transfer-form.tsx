@@ -139,7 +139,7 @@ export function NewStockTransferForm({
                     <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} allowFormula className="erp-input" />
                   </td>
                   <td>
-                    <input
+                    <input aria-label="비고"
                       value={row.remark}
                       onChange={(e) => updateRow(row.key, { remark: e.target.value })}
                       className="erp-input erp-u-w-full"

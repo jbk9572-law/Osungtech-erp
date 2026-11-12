@@ -146,9 +146,9 @@ export default async function VatReportPage({
       </div>
 
       <form className="erp-toolbar" style={{ marginTop: -4 }}>
-        <input type="date" name="from" defaultValue={from} className="erp-input" style={{ width: "auto" }} />
+        <input aria-label="조회 시작일" type="date" name="from" defaultValue={from} className="erp-input" style={{ width: "auto" }} />
         <span>~</span>
-        <input type="date" name="to" defaultValue={to} className="erp-input" style={{ width: "auto" }} />
+        <input aria-label="조회 종료일" type="date" name="to" defaultValue={to} className="erp-input" style={{ width: "auto" }} />
         <button type="submit" className="erp-btn">
           조회
         </button>

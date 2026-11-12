@@ -291,7 +291,7 @@ export function InventoryQrScanner({
                     </button>
                   ) : (
                     <div className="erp-u-flex erp-u-gap-6">
-                      <input
+                      <input aria-label="실제 수량"
                         type="number"
                         autoFocus
                         value={mismatchInput}
@@ -331,7 +331,7 @@ export function InventoryQrScanner({
       <div className="erp-field erp-u-mt-10" style={{ maxWidth: 480, margin: "10px auto 0" }}>
         <label>카메라가 안 될 때 — SKU 직접 입력</label>
         <div className="erp-u-flex erp-u-gap-6">
-          <input
+          <input aria-label="품목 코드(SKU) 직접 입력"
             type="text"
             autoComplete="off"
             value={manualSku}

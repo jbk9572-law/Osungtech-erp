@@ -20,11 +20,11 @@ export function PortalAccountForm({ targetId, kind = "customer" }: { targetId: s
       <input type="hidden" name="kind" value={kind} />
       <div className="erp-field" style={{ minWidth: 160 }}>
         <label>아이디</label>
-        <input name="username" type="text" autoComplete="off" required className="erp-input erp-u-w-full" />
+        <input aria-label="아이디" name="username" type="text" autoComplete="off" required className="erp-input erp-u-w-full" />
       </div>
       <div className="erp-field" style={{ minWidth: 160 }}>
         <label>비밀번호 (비워두면 자동 생성)</label>
-        <input name="password" type="text" autoComplete="off" className="erp-input erp-u-w-full" />
+        <input aria-label="비밀번호" name="password" type="text" autoComplete="off" className="erp-input erp-u-w-full" />
       </div>
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
         {pending ? "발급 중..." : "포털 계정 발급"}

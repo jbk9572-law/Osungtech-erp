@@ -78,7 +78,7 @@ export function ReceiptReorderList({
             #{index + 1}
           </span>
           <div className="flex items-center gap-1">
-            <button
+            <button aria-label="위로 이동"
               type="button"
               onClick={() => move(index, -1)}
               disabled={index === 0 || isPending}
@@ -86,7 +86,7 @@ export function ReceiptReorderList({
             >
               ▲
             </button>
-            <button
+            <button aria-label="아래로 이동"
               type="button"
               onClick={() => move(index, 1)}
               disabled={index === order.length - 1 || isPending}

@@ -52,7 +52,7 @@ export default function SignupPage() {
           {/* 허니팟 — 화면에는 안 보이고, 사람은 절대 채우지 않는 입력칸.
               자동가입 봇 중 상당수가 눈에 보이는 필드는 전부 채우려 하므로
               이 값이 채워지면 봇으로 간주한다. */}
-          <input className="erp-u-absolute"
+          <input aria-label="웹사이트(봇 방지용 숨김 입력, 비워두세요)" className="erp-u-absolute"
             type="text"
             name="website"
             tabIndex={-1}

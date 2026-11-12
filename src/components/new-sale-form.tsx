@@ -1158,7 +1158,7 @@ export function NewSaleForm({
               products={products}
               onAdd={quickAddProduct}
             />
-            <input
+            <input aria-label="입고 조회 날짜"
               type="date"
               value={purchaseLookupDate}
               onChange={(e) => setPurchaseLookupDate(e.target.value)}

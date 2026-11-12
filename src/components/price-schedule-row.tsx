@@ -64,7 +64,7 @@ export function PriceScheduleRow({
         <form action={updateAction} className="flex flex-wrap items-center gap-1.5">
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name={partyIdField} value={partyId} />
-          <input
+          <input aria-label="변경 단가"
             name={unitFieldName}
             type="number"
             step="0.01"
@@ -74,7 +74,7 @@ export function PriceScheduleRow({
             className="erp-input erp-u-h-24 erp-u-text-sm"
             style={{ width: 100 }}
           />
-          <input
+          <input aria-label="적용일"
             name="effective_date"
             type="date"
             defaultValue={effectiveDate}

@@ -272,7 +272,7 @@ export default async function InventoryProductHistoryPage({
       <form method="get" className="erp-field-grid">
         <div className="erp-field erp-span-2">
           <label>시작일</label>
-          <input
+          <input aria-label="시작일"
             type="date"
             name="from"
             defaultValue={from ?? ""}
@@ -281,7 +281,7 @@ export default async function InventoryProductHistoryPage({
         </div>
         <div className="erp-field erp-span-2">
           <label>종료일</label>
-          <input
+          <input aria-label="종료일"
             type="date"
             name="to"
             defaultValue={to ?? ""}
