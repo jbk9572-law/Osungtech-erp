@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useState } from "react";
 import { resetTenantUserPassword } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
@@ -34,9 +35,9 @@ export function ResetTenantUserPasswordForm({ tenantId, userId }: { tenantId: st
       <input
         type="password"
         name="newPassword"
-        minLength={6}
+        minLength={MIN_PASSWORD_LENGTH}
         required
-        placeholder="새 비밀번호(6자 이상)"
+        placeholder={`새 비밀번호(${MIN_PASSWORD_LENGTH}자 이상)`}
         className="erp-input"
         style={{ width: 160 }}
         autoFocus

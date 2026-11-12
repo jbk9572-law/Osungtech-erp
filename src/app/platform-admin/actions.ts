@@ -1,5 +1,6 @@
 "use server";
 
+import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,8 +41,8 @@ export async function createCompanyTenant(_prevState: FormState, formData: FormD
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return { error: "관리자 아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
   }
-  if (password.length < 6) {
-    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  if (!isPasswordLongEnough(password)) {
+    return { error: PASSWORD_TOO_SHORT_MESSAGE };
   }
 
   let admin;
@@ -116,8 +117,8 @@ export async function createTenantDemoAccount(_prevState: FormState, formData: F
   if (!/^[a-zA-Z0-9_.-]{2,32}$/.test(username)) {
     return { error: "아이디는 영문/숫자/일부 기호(2~32자)만 사용할 수 있습니다." };
   }
-  if (password.length < 6) {
-    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  if (!isPasswordLongEnough(password)) {
+    return { error: PASSWORD_TOO_SHORT_MESSAGE };
   }
   if (!isRole(role)) {
     return { error: "역할 값이 올바르지 않습니다." };
@@ -472,8 +473,8 @@ export async function resetTenantUserPassword(_prevState: FormState, formData: F
   const userId = String(formData.get("userId") ?? "");
   const newPassword = String(formData.get("newPassword") ?? "");
 
-  if (!tenantId || !userId || newPassword.length < 6) {
-    return { error: "비밀번호는 6자 이상이어야 합니다." };
+  if (!tenantId || !userId || !isPasswordLongEnough(newPassword)) {
+    return { error: PASSWORD_TOO_SHORT_MESSAGE };
   }
 
   let admin;

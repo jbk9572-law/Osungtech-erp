@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useEffect, useRef } from "react";
 import { createCompanyTenant } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
@@ -61,7 +62,7 @@ export function CreateCompanyForm() {
       </div>
       <div className="erp-field">
         <label htmlFor="cc-password">초기 비밀번호</label>
-        <input id="cc-password" name="password" type="password" required minLength={6} className="erp-input" />
+        <input id="cc-password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} className="erp-input" />
       </div>
       <button type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
         {pending ? "생성 중..." : "회사 추가"}

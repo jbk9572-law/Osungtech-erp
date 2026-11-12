@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createTenantDemoAccount } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
@@ -52,7 +53,7 @@ export function CreateTenantDemoAccountForm({ tenantId }: { tenantId: string }) 
       </div>
       <div className="erp-field">
         <label htmlFor="ctd-password">비밀번호</label>
-        <input id="ctd-password" name="password" type="password" required minLength={6} className="erp-input" />
+        <input id="ctd-password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} className="erp-input" />
       </div>
       <div className="erp-field">
         <label htmlFor="ctd-role">역할</label>

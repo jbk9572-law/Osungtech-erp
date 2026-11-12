@@ -1,5 +1,6 @@
 "use client";
 
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createUserAccount } from "@/app/(dashboard)/settings/users/actions";
 import { FormMessage } from "@/components/form-message";
@@ -50,7 +51,7 @@ export function CreateUserForm() {
       </div>
       <div className="erp-field">
         <label htmlFor="cu-password">비밀번호</label>
-        <input id="cu-password" name="password" type="password" required minLength={6} className="erp-input" />
+        <input id="cu-password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} className="erp-input" />
       </div>
       <div className="erp-field">
         <label htmlFor="cu-role">역할</label>

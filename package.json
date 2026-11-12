@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:update-where-clause && npm run check:search-autocomplete && npm run check:multirow-form-enter && npm run check:named-input-autocomplete && npm run check:toolbar-esc-order && npm run check:page-guide && npm run check:inline-tone-banner && npm run check:hardcoded-hex-color && npm run check:nested-boxed-container && npm run check:table-input-width && npm run check:server-component-handlers && npm run check:client-component-function-props && npm run check:server-imports-from-client && npm run check:fixed-table-columns && npm run check:editable-grid-mobile-width && npm run check:admin-menu-visibility && npm run check:locale-number-format && npm run check:inventory-null-safety && npm run check:access-wall-escape && npm run check:portal-error-exposure && npm run check:dangerous-html && npm run check:comm-panel-scope && npm run check:font-size-tokens && npm run check:search-before-limit && npm run check:quantity-formula-input && npm run check:tenant-fk-cascade && npm run check:radius-token && npm run check:audit-log-table-labels",
+    "lint": "eslint && npm run check:pagination && npm run check:mutation-errors && npm run check:update-where-clause && npm run check:search-autocomplete && npm run check:multirow-form-enter && npm run check:named-input-autocomplete && npm run check:toolbar-esc-order && npm run check:page-guide && npm run check:inline-tone-banner && npm run check:hardcoded-hex-color && npm run check:nested-boxed-container && npm run check:table-input-width && npm run check:server-component-handlers && npm run check:client-component-function-props && npm run check:server-imports-from-client && npm run check:fixed-table-columns && npm run check:editable-grid-mobile-width && npm run check:admin-menu-visibility && npm run check:locale-number-format && npm run check:inventory-null-safety && npm run check:access-wall-escape && npm run check:portal-error-exposure && npm run check:dangerous-html && npm run check:comm-panel-scope && npm run check:font-size-tokens && npm run check:search-before-limit && npm run check:quantity-formula-input && npm run check:tenant-fk-cascade && npm run check:radius-token && npm run check:audit-log-table-labels && npm run check:admin-client",
     "check:pagination": "node scripts/check-pagination.mjs",
     "check:mutation-errors": "node scripts/check-mutation-errors.mjs",
     "check:update-where-clause": "node scripts/check-update-where-clause.mjs",
@@ -37,6 +37,7 @@
     "check:tenant-fk-cascade": "node scripts/check-tenant-fk-cascade.mjs",
     "check:radius-token": "node scripts/check-radius-token.mjs",
     "check:audit-log-table-labels": "node scripts/check-audit-log-table-labels.mjs",
+    "check:admin-client": "node scripts/check-admin-client.mjs",
     "dev:seed": "tsx scripts/dev-seed.ts",
     "sweep:orphan-r2": "tsx scripts/sweep-orphan-r2-files.ts",
     "test": "vitest run"
@@ -74,6 +75,7 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.2",

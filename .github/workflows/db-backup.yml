@@ -51,6 +51,8 @@ on:
 # 필요하다.
 permissions:
   contents: write
+  # 백업 실패/복구를 알리는 이슈를 열고 닫기 위해 필요하다(아래 "백업 실패 알림").
+  issues: write
 
 jobs:
   backup:
@@ -139,3 +141,38 @@ jobs:
           fi
           git commit -m "DB backup $(date -u +%F)"
           git push origin db-backups
+
+      # 백업이 조용히 100번 넘게(약 2.5개월) 실패하고도 아무도 몰랐던 사고 이후
+      # 추가한 알림. 실패하면 "백업 실패" 이슈를 하나 연다 — 저장소 소유자는
+      # GitHub 알림 설정에 따라 이 이슈 생성을 이메일로 받는다(새 비밀값/외부
+      # 메일 서비스 없이 GitHub 자체 알림을 쓴다). 이미 열린 이슈가 있으면 새로
+      # 안 만든다(매시간 실패해도 이메일이 쌓이지 않게). 백업이 다시 성공하면
+      # 열려 있던 이슈를 자동으로 닫는다.
+      - name: 백업 실패 알림 (이슈 열기)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label backup-failure --json number --jq 'length')
+          if [ "$open" = "0" ]; then
+            gh label create backup-failure --repo "$GITHUB_REPOSITORY" --color B60205 --description "DB 백업 실패 알림" 2>/dev/null || true
+            gh issue create --repo "$GITHUB_REPOSITORY" --label backup-failure \
+              --title "[긴급] DB 백업이 실패했습니다" \
+              --body "매시간 DB 백업이 실패했습니다. 데이터가 백업되지 않고 있습니다.
+
+          실패한 실행: $RUN_URL
+
+          가장 흔한 원인은 DB 접속 비밀번호 변경입니다(secret SUPABASE_DB_URL_PROD 확인). 다시 성공하면 이 이슈는 자동으로 닫힙니다."
+          fi
+
+      - name: 백업 복구 확인 (열린 실패 이슈 닫기)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for n in $(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label backup-failure --json number --jq '.[].number'); do
+            gh issue close "$n" --repo "$GITHUB_REPOSITORY" --comment "백업이 다시 정상적으로 성공했습니다."
+          done
