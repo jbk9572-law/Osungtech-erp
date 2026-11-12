@@ -17,6 +17,7 @@ import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
 import { PaperCalcSizeLineRows, PendingPaperCalcRow } from "@/components/erp/order-form-paper-calc-rows";
+import { SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
@@ -1492,54 +1493,15 @@ export function NewSaleForm({
                         품목없이 직접입력
                       </label>
                     </td>
-                    <td>
-                      <input
-                        type="text"
-                        placeholder="규격"
-                        aria-label="규격"
-                        value={row.spec}
-                        onChange={(e) =>
-                          updateRow(row.key, { spec: e.target.value })
-                        }
-                        disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
-                      />
-                      {row.productId && (
-                        <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.manualSpec}
-                            onChange={(e) => {
-                              const manualSpec = e.target.checked;
-                              updateRow(row.key, {
-                                manualSpec,
-                                ...(manualSpec
-                                  ? {}
-                                  : { spec: product?.spec ?? "" }),
-                              });
-                            }}
-                          />
-                          직접입력
-                        </label>
-                      )}
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        placeholder="관리번호"
-                        aria-label="관리번호"
-                        value={row.lotNumber}
-                        onChange={(e) =>
-                          updateRow(row.key, { lotNumber: normalizeLotNumber(e.target.value) })
-                        }
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td className="erp-u-muted">
-                      {product?.unit ?? "-"}
-                    </td>
+                    <SpecLotUnitCells
+                      spec={row.spec}
+                      manualSpec={row.manualSpec}
+                      hasProduct={!!row.productId}
+                      productSpec={product?.spec}
+                      lotNumber={row.lotNumber}
+                      unit={product?.unit}
+                      onPatch={(patch) => updateRow(row.key, patch)}
+                    />
                     <td className="num">
                       <QuantityWithBoxInput
                         quantity={row.quantity}
