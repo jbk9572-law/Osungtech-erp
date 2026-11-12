@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { parseOrderItems, type ParsedOrderItem } from "@/lib/order-items-input";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { attachPaperCalcToPurchase, attachPaperCalcToSale, readPaperCalcFields } from "@/modules/paper-calc/order-actions";
 import { markTodoSideDone } from "@/lib/todo-flow";
@@ -39,21 +40,11 @@ type SaleItemInput = {
 };
 
 function parseItems(itemsRaw: string): PurchaseItemInput[] | null {
-  try {
-    const items = JSON.parse(itemsRaw) as PurchaseItemInput[];
-    return items.filter((item) => (item.productId || item.customName) && item.quantity > 0);
-  } catch {
-    return null;
-  }
+  return parseOrderItems<PurchaseItemInput & ParsedOrderItem>(itemsRaw, { allowCustom: true });
 }
 
 function parseSaleItems(itemsRaw: string): SaleItemInput[] | null {
-  try {
-    const items = JSON.parse(itemsRaw) as SaleItemInput[];
-    return items.filter((item) => item.productId && item.quantity > 0);
-  } catch {
-    return null;
-  }
+  return parseOrderItems<SaleItemInput & ParsedOrderItem>(itemsRaw, { allowCustom: false });
 }
 
 // "No"(전표번호) 입력칸을 비워두면 자동 채번(DB 시퀀스 기본값)에 맡기고,

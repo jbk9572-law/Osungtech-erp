@@ -79,6 +79,7 @@ export default async function VatReportPage({
         .select("id, is_return, tax_type, order_date, is_carryover, sales_order_items(quantity, unit_price)")
         .gte("order_date", lookbackFrom)
         .lte("order_date", to)
+        .order("id")
         .range(f, t)
     ),
     fetchAllRows<{
@@ -93,6 +94,7 @@ export default async function VatReportPage({
         .select("id, tax_type, purchase_date, is_carryover, purchase_order_items(quantity, unit_cost)")
         .gte("purchase_date", lookbackFrom)
         .lte("purchase_date", to)
+        .order("id")
         .range(f, t)
     ),
   ]);

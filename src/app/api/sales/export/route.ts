@@ -10,7 +10,7 @@ import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 
 // 매출관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     supabase
       .from("sales_order_items")
       .select(
-        "*, sales_orders!inner(order_date, customer_id, is_return, memo, delivery_method, customers(name)), products(sku, name, spec, unit, base_package_qty)"
+        "*, sales_orders!inner(order_date, customer_id, is_return, tax_type, memo, delivery_method, customers(name)), products(sku, name, spec, unit, base_package_qty)"
       )
       .gte("sales_orders.order_date", from)
       .lte("sales_orders.order_date", to)
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
     const isReturn = item.sales_orders?.is_return ?? false;
     const sign = isReturn ? -1 : 1;
     const supplyAmount = item.quantity * Number(item.unit_price) * sign;
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount = calcVatForTaxType(supplyAmount, item.sales_orders?.tax_type);
     return {
       거래일자: item.sales_orders?.order_date ?? "",
       구분: isReturn ? "반품" : "매출",

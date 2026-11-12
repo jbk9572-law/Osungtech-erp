@@ -17,7 +17,7 @@ import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { PageGuide } from "@/components/erp/page-guide";
 import { DetailPageHeader, DetailInfoRow } from "@/components/erp/page-header";
@@ -83,7 +83,7 @@ export default async function SaleDetailPage({
 
   const rows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount = calcVatForTaxType(supplyAmount, order.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);

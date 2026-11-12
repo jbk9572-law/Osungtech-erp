@@ -20,7 +20,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/modules/paper-calc/public";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -117,6 +117,7 @@ async function SalesPage({
       .select(SALE_ITEM_SELECT)
       .order("sales_orders(order_date)", { ascending: false })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .gte("sales_orders.order_date", effectiveFrom)
       .lte("sales_orders.order_date", effectiveTo);
 
@@ -196,8 +197,7 @@ async function SalesPage({
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
     // 과세구분이 면세/영세면 세액 0 — 지금까지는 전부 과세로 취급했다.
-    const taxAmount =
-      item.sales_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.sales_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -334,7 +334,7 @@ async function SalesPage({
     : (rawCarryoverItems ?? []);
   const carryoverItemRows = carryoverKeywordItems.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = item.sales_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.sales_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const carryoverRows: DisplayRow[] = Object.values(
@@ -476,8 +476,7 @@ async function SalesPage({
     return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
   }, 0);
   const totalTax = filteredTotalsRows.reduce((sum, row) => {
-    if (row.sales_orders?.tax_type !== "과세") return sum;
-    const taxAmount = calcVat(row.quantity * Number(row.unit_price));
+    const taxAmount = calcVatForTaxType(row.quantity * Number(row.unit_price), row.sales_orders?.tax_type);
     return sum + (row.sales_orders?.is_return ? -taxAmount : taxAmount);
   }, 0);
   const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);

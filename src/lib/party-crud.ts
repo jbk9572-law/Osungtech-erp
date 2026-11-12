@@ -142,6 +142,24 @@ export async function addPartyPayment(
   memo: string | null,
   createdBy: string | null,
 ): Promise<ActionResult> {
+  // 새로고침 재전송·두 탭 동시 입력 등으로 같은 수금/지급이 이중 등록되면 미수/미지급이 그만큼 틀어진다 —
+  // 같은 거래처·일자·금액·방법·메모가 최근 15초 안에 이미 있으면 중복으로 보고 막는다(정상적으로 같은 금액을
+  // 연달아 나눠 받는 경우는 메모나 시간 간격이 다르다).
+  const since = new Date(Date.now() - 15_000).toISOString();
+  let duplicateQuery = dynamicTable(supabase, table)
+    .select("id")
+    .eq(partyIdField, partyId)
+    .eq("paid_at", paidAt)
+    .eq("amount", amount)
+    .gte("created_at", since)
+    .limit(1);
+  duplicateQuery = method === null ? duplicateQuery.is("method", null) : duplicateQuery.eq("method", method);
+  duplicateQuery = memo === null ? duplicateQuery.is("memo", null) : duplicateQuery.eq("memo", memo);
+  const { data: duplicate } = await duplicateQuery;
+  if (duplicate && duplicate.length > 0) {
+    return { error: "방금 같은 내용으로 이미 등록되었습니다. 중복 등록을 막기 위해 저장하지 않았습니다." };
+  }
+
   const { error } = await dynamicTable(supabase, table).insert({
     [partyIdField]: partyId,
     paid_at: paidAt,

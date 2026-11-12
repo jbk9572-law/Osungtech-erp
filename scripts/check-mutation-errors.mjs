@@ -58,7 +58,7 @@ const ALLOWLIST = new Set([
   // 실패하면 fail-closed(샌드박스 아님으로 간주해 버튼 숨김/거부)된다.
   "src/components/official-document-detail-panel.tsx:75",
   "src/app/(dashboard)/official-documents/actions.ts:179",
-  "src/app/(dashboard)/sales/[id]/tax-invoice/actions.ts:212",
+  "src/app/(dashboard)/sales/[id]/tax-invoice/actions.ts:259",
 ]);
 
 function walkDir(dir, out = []) {

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { parseOrderItems, type ParsedOrderItem } from "@/lib/order-items-input";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { attachPaperCalcToSale, readPaperCalcFields } from "@/modules/paper-calc/order-actions";
 import { markTodoSideDone } from "@/lib/todo-flow";
@@ -28,12 +29,7 @@ type SaleItemInput = {
 };
 
 function parseItems(itemsRaw: string): SaleItemInput[] | null {
-  try {
-    const items = JSON.parse(itemsRaw) as SaleItemInput[];
-    return items.filter((item) => (item.productId || item.customName) && item.quantity > 0);
-  } catch {
-    return null;
-  }
+  return parseOrderItems<SaleItemInput & ParsedOrderItem>(itemsRaw, { allowCustom: true });
 }
 
 
@@ -195,6 +191,21 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
   };
 }
 
+// 발행된 세금계산서가 있는 매출을 지우면 계산서 기록(홈택스에 보낸 것 포함)이 cascade로 같이 사라지고,
+// 금액을 고치면 계산서는 옛 금액 그대로 남아 어긋난다 — 삭제는 막고 수정은 경고를 띄운다.
+async function countIssuedTaxInvoices(supabase: Awaited<ReturnType<typeof createClient>>, salesOrderIds: string[]): Promise<number> {
+  const { count } = await supabase
+    .from("tax_invoices")
+    .select("id", { count: "exact", head: true })
+    .in("sales_order_id", salesOrderIds);
+  return count ?? 0;
+}
+
+const ISSUED_INVOICE_DELETE_MESSAGE =
+  "세금계산서가 발행된 매출은 삭제할 수 없습니다 — 계산서 기록이 함께 사라지기 때문입니다. 먼저 수정세금계산서(취소)를 발행해주세요.";
+const ISSUED_INVOICE_UPDATE_WARNING =
+  "이 매출에는 발행된 세금계산서가 있습니다. 금액·수량을 바꿨다면 수정세금계산서를 발행해 맞춰주세요.";
+
 export async function updateSale(_prevState: FormState, formData: FormData): Promise<FormState> {
   const id = String(formData.get("id") ?? "");
   const customerId = String(formData.get("customer_id") ?? "");
@@ -307,8 +318,10 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
   if (back) {
     return { redirectTo: resolveListHref("/sales", back) };
   }
+  const updateWarning =
+    locationStockWarning ?? ((await countIssuedTaxInvoices(supabase, [id])) > 0 ? ISSUED_INVOICE_UPDATE_WARNING : null);
   return {
-    redirectTo: locationStockWarning ? `/sales/${id}?warning=${encodeURIComponent(locationStockWarning)}` : `/sales/${id}`,
+    redirectTo: updateWarning ? `/sales/${id}?warning=${encodeURIComponent(updateWarning)}` : `/sales/${id}`,
   };
 }
 
@@ -320,6 +333,10 @@ export async function deleteSale(_prevState: FormState, formData: FormData): Pro
 
   const supabase = await createClient();
   const user = await getUser();
+
+  if ((await countIssuedTaxInvoices(supabase, [id])) > 0) {
+    return { error: ISSUED_INVOICE_DELETE_MESSAGE };
+  }
 
   const { data: order } = await supabase.from("sales_orders").select("customer_id").eq("id", id).maybeSingle();
 
@@ -371,6 +388,10 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
 
   const supabase = await createClient();
   const user = await getUser();
+
+  if ((await countIssuedTaxInvoices(supabase, ids)) > 0) {
+    return { error: `선택한 매출 중 세금계산서가 발행된 건이 있어 삭제할 수 없습니다. 해당 건을 제외하거나 먼저 수정세금계산서(취소)를 발행해주세요.` };
+  }
 
   const { data: orders } = await supabase.from("sales_orders").select("customer_id").in("id", ids);
 

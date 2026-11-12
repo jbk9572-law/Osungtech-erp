@@ -21,7 +21,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/modules/paper-calc/public";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
@@ -153,8 +153,7 @@ async function PurchasesPage({
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount =
-      item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -289,7 +288,7 @@ async function PurchasesPage({
     : (rawCarryoverItems ?? []);
   const carryoverItemRows = carryoverKeywordItems.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const carryoverRows: DisplayRow[] = Object.values(
@@ -420,9 +419,7 @@ async function PurchasesPage({
   );
   const totalTax = filteredTotalsRows.reduce(
     (sum, row) =>
-      row.purchase_orders?.tax_type === "과세"
-        ? sum + calcVat(row.quantity * Number(row.unit_cost))
-        : sum,
+      sum + calcVatForTaxType(row.quantity * Number(row.unit_cost), row.purchase_orders?.tax_type),
     0,
   );
   const presets = getQuickDatePresets();

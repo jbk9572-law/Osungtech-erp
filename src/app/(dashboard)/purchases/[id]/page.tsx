@@ -18,7 +18,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { DetailPageHeader, DetailInfoRow } from "@/components/erp/page-header";
 import { OrderItemsTable, type OrderItemRow } from "@/components/grid/order-items-table";
 
@@ -81,7 +81,7 @@ export default async function PurchaseDetailPage({
 
   const rows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount = calcVatForTaxType(supplyAmount, order.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
