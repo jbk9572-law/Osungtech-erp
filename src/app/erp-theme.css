@@ -946,6 +946,7 @@
 .erp-ribbon-searchitem {
   display: flex;
   align-items: center;
+  width: 100%;
   text-align: left;
   height: 32px;
   padding: 0 10px;
@@ -958,6 +959,40 @@
 
 .erp-ribbon-searchitem:hover {
   background: var(--erp-hover);
+}
+
+/* 회사 전환 목록 — 버튼이 <form> 안에 있어 내용 폭만큼만 줄어들고 왼쪽으로
+   쏠려 잘리던 문제. 칸을 꽉 채우는 타일 격자로 바꾸고(좁으면 1열, 넓으면
+   2~3열), 긴 이름은 한 줄 말줄임(title로 전체 표시). */
+.erp-ribbon-searchlist.erp-tile-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.erp-tile-list > form {
+  display: block;
+  min-width: 0;
+}
+.erp-tile-list .erp-ribbon-searchitem {
+  height: 40px;
+  min-width: 0;
+  border: 1px solid var(--erp-border);
+  background: var(--erp-panel);
+  border-radius: var(--erp-radius-2xl, 0);
+  font-weight: 600;
+}
+.erp-tile-list .erp-ribbon-searchitem > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-tile-list .erp-ribbon-searchitem:hover {
+  border-color: var(--erp-select-accent);
+  background: var(--erp-hover);
+}
+.erp-tile-list > .erp-ribbon-dropdown-empty {
+  grid-column: 1 / -1;
 }
 
 /* ── Body split: tree / workspace ─────────────────────────── */
