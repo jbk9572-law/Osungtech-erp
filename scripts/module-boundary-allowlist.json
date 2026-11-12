@@ -1,0 +1,23 @@
+{
+  "paper-calc|app/(dashboard)/dashboard/page.tsx": 2,
+  "paper-calc|app/(dashboard)/purchases/[id]/edit/page.tsx": 1,
+  "paper-calc|app/(dashboard)/purchases/[id]/page.tsx": 4,
+  "paper-calc|app/(dashboard)/purchases/[id]/print/page.tsx": 2,
+  "paper-calc|app/(dashboard)/purchases/actions.ts": 1,
+  "paper-calc|app/(dashboard)/purchases/new/page.tsx": 1,
+  "paper-calc|app/(dashboard)/purchases/page.tsx": 2,
+  "paper-calc|app/(dashboard)/sales/[id]/edit/page.tsx": 1,
+  "paper-calc|app/(dashboard)/sales/[id]/page.tsx": 4,
+  "paper-calc|app/(dashboard)/sales/[id]/print/page.tsx": 2,
+  "paper-calc|app/(dashboard)/sales/actions.ts": 1,
+  "paper-calc|app/(dashboard)/sales/new/page.tsx": 1,
+  "paper-calc|app/(dashboard)/sales/page.tsx": 2,
+  "paper-calc|app/(dashboard)/todos/actions.ts": 1,
+  "paper-calc|app/(dashboard)/todos/new/page.tsx": 1,
+  "paper-calc|app/(dashboard)/todos/page.tsx": 1,
+  "paper-calc|components/dashboard-calendar.tsx": 1,
+  "paper-calc|components/new-purchase-form.tsx": 7,
+  "paper-calc|components/new-sale-form.tsx": 7,
+  "paper-calc|components/todo-detail-panel.tsx": 2,
+  "paper-calc|components/todo-form.tsx": 3
+}
