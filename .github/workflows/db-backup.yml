@@ -17,6 +17,11 @@ name: Hourly DB backup
 # 있다 — 파일 개수가 아니라 "실제로 데이터가 바뀐 시점의 개수"만큼만
 # 쌓이기 때문이다.
 #
+# [변경] 접속 secret은 별도 SUPABASE_DB_URL이 아니라 배포 때 DB 변경 반영에 쓰는
+# SUPABASE_DB_URL_PROD를 그대로 쓴다 — 별도 값이 오래돼 비밀번호 인증 실패로
+# 백업이 100번 넘게 조용히 실패했던 사고 이후, 운영 DB 접속 값을 한 곳으로 합쳤다
+# (비밀번호를 바꿔도 한 곳만 고치면 백업/배포/복원이 같이 살아난다).
+#
 # 사용 전 준비 (1회):
 #   1. Supabase 대시보드 > Project Settings > Database > Connection string에서
 #      반드시 "Session pooler" URI를 복사한다 (IPv4 호환 — GitHub Actions
@@ -58,14 +63,14 @@ jobs:
 
       - name: Verify secret is configured
         run: |
-          if [ -z "${{ secrets.SUPABASE_DB_URL }}" ]; then
-            echo "::error::SUPABASE_DB_URL secret이 설정되어 있지 않습니다. 워크플로우 파일 상단 안내를 참고해 등록해주세요."
+          if [ -z "${{ secrets.SUPABASE_DB_URL_PROD }}" ]; then
+            echo "::error::SUPABASE_DB_URL_PROD secret이 설정되어 있지 않습니다. 워크플로우 파일 상단 안내를 참고해 등록해주세요."
             exit 1
           fi
 
       - name: Dump database (via postgres:17 client image, custom format)
         env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
         run: |
           set -euo pipefail
           mkdir -p backups

@@ -11,7 +11,7 @@ name: DB restore (manual, destructive)
 # 바로 실패한다 — 앱을 거치지 않고 실수로 실행되는 걸 막기 위한 마지막
 # 안전장치다.
 #
-# 실행 전 준비물: db-backup.yml과 같은 SUPABASE_DB_URL secret
+# 실행 전 준비물: 운영 DB 접속 secret(SUPABASE_DB_URL_PROD) — db-backup.yml과 같은 값
 # (Session pooler URI). 이미 백업용으로 등록돼 있으면 그대로 쓴다.
 
 on:
@@ -43,8 +43,8 @@ jobs:
 
       - name: SUPABASE_DB_URL secret 확인
         run: |
-          if [ -z "${{ secrets.SUPABASE_DB_URL }}" ]; then
-            echo "::error::SUPABASE_DB_URL secret이 설정되어 있지 않습니다. docs/db-backup-restore.md 참고."
+          if [ -z "${{ secrets.SUPABASE_DB_URL_PROD }}" ]; then
+            echo "::error::SUPABASE_DB_URL_PROD secret이 설정되어 있지 않습니다. docs/db-backup-restore.md 참고."
             exit 1
           fi
 
@@ -60,7 +60,7 @@ jobs:
 
       - name: DB 복원 (pg_restore --clean, 요청자 ${{ inputs.requested_by }})
         env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL: ${{ secrets.SUPABASE_DB_URL_PROD }}
         run: |
           set -euo pipefail
           docker run --rm -v /tmp/restore:/restore -e PGCONNECT_TIMEOUT=30 postgres:17 \
