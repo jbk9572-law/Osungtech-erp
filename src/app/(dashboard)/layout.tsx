@@ -170,7 +170,6 @@ export default async function DashboardLayout({
       platformAnnouncements={announcements ?? []}
       quotaBanner={quotaBanner}
       impersonatingTenantName={impersonatingTenantName}
-      theme={tenant?.theme}
       modal={modal}
     >
       {children}

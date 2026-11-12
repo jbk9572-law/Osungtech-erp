@@ -9,7 +9,6 @@ type TenantOption = { id: string; name: string; theme: string };
 
 const THEME_LABELS: Record<string, string> = {
   "classic-light": "Classic Light (기본)",
-  soft: "Soft (청록 면 구분형)",
 };
 
 // 회사(테넌트)별로 다른 테마를 줄 수 있어야 해서("관리자페이지에서

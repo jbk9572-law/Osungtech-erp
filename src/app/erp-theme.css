@@ -326,7 +326,7 @@
   --erp-comm-shadow-btn: 0 2px 8px -3px rgba(19, 41, 68, 0.3);
 
   /* 모서리 반경(r값) 스케일 — 클래식 테마는 전부 0(각진 디자인
-     언어)이고, Soft 테마([data-theme="soft"] 블록)에서만 실제 값으로
+     언어)이고, 다른 테마가 생길 때 그 테마 블록에서만 실제 값으로
      바뀐다. 전에는 이 반대 방향("클래식은 그냥 두고, 모던에서만 클래스
      이름을 하나씩 나열해서 radius를 덮어쓰는" 허용목록 방식)으로 돼
      있었는데, 그러면 새 박스형 컴포넌트가 생기거나 기존 박스에 flush
@@ -1638,16 +1638,6 @@
   font-weight: 600;
 }
 
-/* Soft 테마 목업(매출관리 > 출고관리)은 선택된 월 칩을 옅은 음영이
-   아니라 꽉 찬 인디고 배경 + 흰 글자로 보여준다 — 매출/매입이 같은
-   DateRangeQuickFilters를 쓰므로(컴포넌트 주석 참고) 토큰만 모던
-   스코프에서 덮어써서 두 화면 다 자동으로 맞는다. */
-[data-theme="soft"] .erp-date-preset-btn.active {
-  background: var(--erp-primary);
-  color: var(--erp-on-primary);
-  border-color: var(--erp-primary);
-}
-
 .erp-field {
   display: flex;
   flex-direction: column;
@@ -1698,9 +1688,9 @@
   border: 1px solid var(--erp-border);
   /* 0 → 3px: 표/그리드는 각진 모서리를 유지하지만, 입력칸/버튼까지
      전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만.
-     Soft 테마에서는 --erp-radius-xl(12px)로 더 둥글게(다른 박스형
+     둥근 테마에서는 --erp-radius-xl로 더 둥글게(다른 박스형
      컴포넌트와 같은 톤) — 이 토큰화 작업 때 정작 이 기본 규칙 자체를
-     빠뜨려서, Soft 테마인 회사에서도 입력칸/셀렉트만 계속 3px(사실상
+     빠뜨려서, 둥근 테마인 회사에서도 입력칸/셀렉트만 계속 3px(사실상
      거의 안 보이는 각짐)로 남아있던 실제 버그였다(사용자 스크린샷으로
      확인 — 공급처/입고방법/과세구분 입력칸이 전부 각져 보임). */
   border-radius: var(--erp-radius-xl, 3px);
@@ -5821,159 +5811,6 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-unified-sale-item-subtotal {
     display: none;
   }
-}
-
-/* ════════════════════════════════════════════════════════════════
-   "Soft" 테마 (tenants.theme = 'soft', migration 232)
-   ════════════════════════════════════════════════════════════════
-   예전 Modern/Classic B/Classic C 테마를 없애고 하나로 합친 부드러운
-   업무용 테마다("면 구분 모던형" 시안 C) — 차분한 청록 포인트, 테두리
-   대신 옅은 배경색 차이로 구분, 8~12px 모서리. 클래식(기본)과 달리
-   회사(테넌트) 단위 설정이다: tenants.theme을 서버에서 읽어 ErpShell의
-   루트 .erp div에 data-theme="soft"로 렌더링하고, :root가 아니라 이
-   래퍼 아래로만 변수가 상속되므로 회사마다 다른 테마를 가질 수 있고
-   FOUC도 없다(플랫폼관리자 > 환경설정 > 테마, tenant-theme-form.tsx).
-
-   색·모서리·그림자는 전부 --erp-* 토큰이라 여기서 토큰만 다시 정의하면
-   컴포넌트 구조를 안 바꿔도 그 회사 앱 전체가 이 테마로 바뀐다. 아래
-   부가 규칙은 토큰만으로 안 되는 것(입력칸 면 채움, 타이틀바 색, 행
-   여백 등)만 모았다. 로그인/인쇄 라우트와 플랫폼관리자 콘솔은 이
-   속성을 쓰지 않아 영향 없다. */
-[data-theme="soft"] {
-  --erp-primary: #0f766e;
-  --erp-primary-dark: #0b5e57;
-  --erp-on-primary: #ffffff;
-  --erp-border: #dfe6e4;
-  --erp-border-strong: #cdd8d5;
-  --erp-hover: #f3f7f6;
-  --erp-selected: #e0f2ef;
-  --erp-select-accent: #0f766e;
-  --erp-success: #047857;
-  --erp-warning: #92400e;
-  --erp-danger: #be123c;
-  --erp-success-bg: #e3f5ec;
-  --erp-success-border: #a7f3d0;
-  --erp-warning-bg: #fdf0dc;
-  --erp-warning-border: #fde68a;
-  --erp-led-bg: #e11d48;
-  --erp-led-text: #ffffff;
-  --erp-danger-bg: #fde8e8;
-  --erp-danger-border: #fecdd3;
-  --erp-info-bg: #e8f3f1;
-  --erp-info-border: #bfe0da;
-  --erp-info-text: var(--erp-text);
-  --erp-highlight-bg: #fef08a;
-  --erp-text: #14231f;
-  --erp-text-muted: #62716d;
-  --erp-text-disabled: #c3cdca;
-  --erp-icon-muted: #9aa8a4;
-  --erp-glyph-muted: #cdd8d5;
-  --erp-tree-badge-border: #dfe6e4;
-  --erp-tabbar-bg: #ffffff;
-  --erp-tab-bg: #eef2f1;
-  --erp-search-hit-bg: #fef08a;
-  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.15);
-  --erp-dialog-overlay-bg: rgba(15, 20, 30, 0.55);
-  --erp-bg: #eef2f1;
-  --erp-panel: #ffffff;
-  --erp-bg-subtle: #f6f9f8;
-  --erp-divider: #edf1f0;
-  --erp-grid-line: #e3e9e7;
-  --erp-grid-header-bg: #f1f5f4;
-  --erp-bg-disabled: #eef2f1;
-  --erp-shadow-sm: 0 1px 2px rgba(15, 40, 35, 0.05), 0 2px 8px -3px rgba(15, 40, 35, 0.08);
-  --erp-shadow-md: 0 4px 16px rgba(15, 40, 35, 0.07), 0 12px 28px -10px rgba(15, 40, 35, 0.14);
-  --erp-shadow-lg: 0 8px 24px rgba(15, 40, 35, 0.14), 0 16px 40px -12px rgba(15, 40, 35, 0.2);
-  --erp-comm-border: rgba(15, 40, 35, 0.08);
-  --erp-comm-shadow: 0 1px 1px rgba(15, 40, 35, 0.03), 0 10px 24px -16px rgba(15, 40, 35, 0.14);
-  --erp-comm-shadow-row: 0 1px 1px rgba(15, 40, 35, 0.03), 0 6px 16px -10px rgba(15, 40, 35, 0.16);
-  --erp-comm-shadow-btn: 0 2px 8px -3px rgba(15, 118, 110, 0.4);
-  /* 모서리 반경 스케일 — :root는 전부 0(클래식)이고 여기서만 실제 값. */
-  --erp-radius-xs: 4px;
-  --erp-radius-sm: 6px;
-  --erp-radius-md: 8px;
-  --erp-radius-lg: 8px;
-  --erp-radius-xl: 8px;
-  --erp-radius-2xl: 12px;
-  --erp-radius-3xl: 12px;
-  --erp-radius-4xl: 16px;
-  --erp-radius-circle: 50%;
-  --erp-radius-pill: 999px;
-}
-
-/* 타이틀바 — 짙은 청록 단색(포인트색의 어두운 톤). 안의 글자·메뉴가
-   전부 흰색 전제라 밝은 바탕으로 바꾸려면 자식 규칙까지 따로 손봐야
-   한다(후속 작업 후보). */
-[data-theme="soft"] .erp-titlebar {
-  background: var(--erp-primary-dark);
-}
-
-/* 입력칸·셀렉트 — 테두리 대신 옅은 면 채움으로 구분(시안 C). 포커스·
-   비활성은 기본 규칙(테두리/배경)을 그대로 쓰고, 표 셀 안 칸은 행
-   구분이 흐려지지 않게 테두리 방식을 유지한다. */
-[data-theme="soft"] .erp-input:not(:focus):not(:disabled),
-[data-theme="soft"] .erp-select:not(:focus):not(:disabled) {
-  background: var(--erp-bg);
-  border-color: transparent;
-}
-[data-theme="soft"] .erp-grid .erp-input:not(:focus):not(:disabled),
-[data-theme="soft"] .erp-grid .erp-select:not(:focus):not(:disabled) {
-  background: var(--erp-panel);
-  border-color: var(--erp-border);
-}
-
-/* 목업은 전체적으로 큰 라운드 코너(카드 rounded-2xl, 버튼/입력
-   rounded-xl)를 쓴다 — 이 중 .rounded-sm은 우리 토큰이 아니라
-   Tailwind 자체 유틸리티 클래스라(화면 JSX에 직접 쓰임), 토큰 전환
-   대상이 아니고 그대로 이 테마 스코프 안에서 덮어쓴다(선택자 특이도로
-   기존 규칙을 이김). */
-[data-theme="soft"] .rounded-sm {
-  border-radius: 10px;
-}
-/* 지급결의서 영수증 첨부(receipt-picker.tsx)의 썸네일 카드/추가 버튼도
-   같은 이유로 Tailwind .rounded-md를 직접 쓰고 있어서(globals.css가
-   전체 rounded-* 스케일을 0으로 낮춰놔서 모던에서도 그대로 각짐), 같은
-   방식으로 이 스코프 안에서만 덮어쓴다. */
-[data-theme="soft"] .rounded-md {
-  border-radius: 10px;
-}
-
-/* 아래부터는 전부 r값(border-radius) 자체가 아니라 "Soft 테마에서만
-   다른" 부가 효과(그림자/오버플로/마진/강조선 숨김 등)만 모아둔다 —
-   r값 자체는 더 이상 여기 나열하지 않는다. 각 컴포넌트의 기본 규칙이
-   이미 border-radius: var(--erp-radius-*) 토큰을 쓰고 있어서, 위
-   [data-theme="soft"] { --erp-radius-*: ...; } 토큰 값만 바뀌면
-   클래식(0)과 모던(실제 값) 둘 다 자동으로 맞는다 — 이 블록에 새
-   클래스를 추가할 필요가 없다. 새 박스형 컴포넌트를 만들 때는 역할에
-   맞는 --erp-radius-* 토큰을 기본 규칙에 바로 쓰면 되고(위 :root
-   주석의 역할 설명 참고), 혹시 빠뜨리면 scripts/check-radius-
-   token.mjs가 lint에서 잡아준다. */
-[data-theme="soft"] .erp-tree,
-[data-theme="soft"] .erp-cat-sidebar {
-  background: var(--erp-panel);
-}
-[data-theme="soft"] .erp-hero-card,
-[data-theme="soft"] .erp-home-panel,
-[data-theme="soft"] .erp-alert-item {
-  box-shadow: var(--erp-shadow-sm);
-}
-[data-theme="soft"] .erp-hero-card {
-  border-left-color: transparent;
-}
-[data-theme="soft"] .erp-split-list-row {
-  margin: 2px 6px;
-  border-bottom-color: transparent;
-}
-[data-theme="soft"] .erp-split-list-row.active {
-  box-shadow: none;
-}
-[data-theme="soft"] .erp-split-list,
-[data-theme="soft"] .erp-richtext,
-[data-theme="soft"] .erp-doc-header {
-  overflow: hidden;
-}
-[data-theme="soft"] .erp-doc-paper {
-  box-shadow: var(--erp-shadow-sm);
 }
 
 /* ── 메인 화면 "오늘 리포트" 박스 (daily-report-box.tsx) ─────────────────
