@@ -1,9 +1,21 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
+import {
+  clientIpFromHeaders,
+  recordLoginFailure,
+  recordLoginSuccess,
+  throttleRemainingSeconds,
+} from "@/lib/login-throttle";
+
+// 회사코드/아이디/비밀번호 중 무엇이 틀렸는지 알려주지 않는 단일 문구 —
+// "아이디가 없음"과 "비밀번호 틀림"을 구분해 보여주면 공격자가 존재하는
+// 아이디를 골라낼 수 있다.
+const LOGIN_FAILED_MESSAGE = "로그인에 실패했습니다. 회사코드, 아이디, 비밀번호를 확인해주세요.";
 
 export async function login(_prevState: { error: string } | undefined, formData: FormData) {
   const companyCode = String(formData.get("companyCode") ?? "").trim().toLowerCase();
@@ -13,6 +25,16 @@ export async function login(_prevState: { error: string } | undefined, formData:
   if (!loginId || !password) {
     return { error: "아이디와 비밀번호를 입력해주세요." };
   }
+
+  const ip = clientIpFromHeaders(await headers());
+  const waitSeconds = throttleRemainingSeconds(ip, `${companyCode}/${loginId}`);
+  if (waitSeconds > 0) {
+    return {
+      error: `로그인 시도가 너무 많습니다. ${Math.ceil(waitSeconds / 60)}분 뒤에 다시 시도해주세요.`,
+    };
+  }
+  const throttleId = `${companyCode}/${loginId}`;
+  let blockReason: string | null = null;
 
   const supabase = await createClient();
 
@@ -45,7 +67,7 @@ export async function login(_prevState: { error: string } | undefined, formData:
       const [
         { data: portalEmail, error: portalLookupError },
         { data: resolvedEmail, error: lookupError },
-        { data: blockReason, error: blockCheckError },
+        { data: resolvedBlockReason, error: blockCheckError },
       ] = await logSlowSupabaseCall("login.lookup_email_batch", () =>
         Promise.all([
           admin.rpc("get_portal_email_for_username", { p_username: loginId }),
@@ -64,15 +86,13 @@ export async function login(_prevState: { error: string } | undefined, formData:
         email = resolvedEmail;
         // 플랫폼 관리자가 회사(테넌트)를 비활성화했거나 이용기간이
         // 지났으면, 비밀번호가 맞아도 로그인 자체를 막아야 한다 — 아래
-        // signInWithPassword는 그 상태를 모르므로 여기서 먼저 확인한다.
-        if (blockReason === "disabled") {
-          return { error: "이 회사 계정은 비활성화되었습니다. 관리자에게 문의해주세요." };
-        }
-        if (blockReason === "expired") {
-          return { error: "이용기간이 만료되었습니다. 관리자에게 문의해주세요." };
-        }
+        // signInWithPassword는 그 상태를 모르므로 사유만 기억해 뒀다가, 비밀번호가
+        // 맞는 것이 확인된 뒤에만 안내한다(비밀번호 없이 "이 회사/아이디가 존재하고
+        // 비활성 상태"라는 정보를 알아낼 수 없게).
+        blockReason = typeof resolvedBlockReason === "string" ? resolvedBlockReason : null;
       } else {
-        return { error: "회사코드 또는 아이디가 올바르지 않습니다." };
+        recordLoginFailure(ip, throttleId);
+        return { error: LOGIN_FAILED_MESSAGE };
       }
     } else {
       // 회사코드가 없으면 직원 로그인은 애초에 불가능하므로(테넌트를
@@ -96,7 +116,20 @@ export async function login(_prevState: { error: string } | undefined, formData:
   );
 
   if (error) {
-    return { error: "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요." };
+    recordLoginFailure(ip, throttleId);
+    return { error: LOGIN_FAILED_MESSAGE };
+  }
+  recordLoginSuccess(ip, throttleId);
+
+  // 비밀번호가 맞은 사용자에게만 비활성/만료 사유를 알려준다(위 주석 참고).
+  if (blockReason === "disabled" || blockReason === "expired") {
+    await supabase.auth.signOut();
+    return {
+      error:
+        blockReason === "disabled"
+          ? "이 회사 계정은 비활성화되었습니다. 관리자에게 문의해주세요."
+          : "이용기간이 만료되었습니다. 관리자에게 문의해주세요.",
+    };
   }
 
   // 중복 로그인 방지: 같은 계정으로 다른 곳에서 이미 로그인돼 있어도
