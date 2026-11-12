@@ -98,7 +98,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
       </div>
 
       <div className="erp-post-header">
-        <div style={{ display: "flex", gap: "var(--erp-space-2)", marginBottom: "var(--erp-space-3)" }}>
+        <div className="erp-u-flex" style={{ gap: "var(--erp-space-2)", marginBottom: "var(--erp-space-3)" }}>
           <GridBadge tone="muted">{todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</GridBadge>
           {overdue && <GridBadge tone="danger">기한초과</GridBadge>}
           {row.done && <GridBadge tone="ok">완료</GridBadge>}
@@ -155,8 +155,8 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                     const [spec, qty] = line.split(" : ");
                     return (
                       <tr key={i}>
-                        <td style={{ color: "var(--erp-text-muted)" }}>ㄴ 모조지</td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>{spec}</td>
+                        <td className="erp-u-muted">ㄴ 모조지</td>
+                        <td className="erp-u-muted">{spec}</td>
                         <td className="num">{qty}</td>
                       </tr>
                     );
@@ -164,7 +164,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan={2} style={{ fontWeight: 700 }}>
+                    <td className="erp-u-bold" colSpan={2}>
                       합계 {formatNumber(paperCalcTotalSheet)}연
                     </td>
                     <td className="num">
@@ -202,7 +202,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                   </div>
                 );
               })}
-              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <div className="erp-row-card-foot erp-u-bold">
                 <span>합계 {formatNumber(paperCalcTotalSheet)}연</span>
                 {latestCalcId && (
                   <PaperCalcNavLink href={`/paper-calc/view/${latestCalcId}`} style={{ color: "var(--erp-text)" }}>
@@ -236,19 +236,14 @@ export async function TodoDetailPanel({ id }: { id: string }) {
         ) : (
           <div>
             {row.due_date && (
-              <p className="mb-3 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="mb-3 text-sm erp-u-muted">
                 마감일: {new Date(row.due_date).toLocaleDateString("ko-KR")}
               </p>
             )}
             {row.memo && (
               <p
-                className="mb-4"
-                style={{
-                  whiteSpace: "pre-wrap",
-                  fontSize: 13.5,
-                  lineHeight: 1.7,
-                  color: "var(--erp-text)",
-                }}
+                className="mb-4 erp-u-text"
+                style={{ whiteSpace: "pre-wrap", fontSize: 13.5, lineHeight: 1.7 }}
               >
                 {row.memo}
               </p>
@@ -273,8 +268,8 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                         return (
                           <tr key={i}>
                             <td>{product ? `${product.sku} · ${product.name}` : "-"}</td>
-                            <td style={{ color: "var(--erp-text-muted)" }}>{item.spec || product?.spec || "-"}</td>
-                            <td style={{ color: "var(--erp-text-muted)" }}>{item.lotNumber || "-"}</td>
+                            <td className="erp-u-muted">{item.spec || product?.spec || "-"}</td>
+                            <td className="erp-u-muted">{item.lotNumber || "-"}</td>
                             <td className="num">
                               {formatNumber(item.quantity)} {product?.unit ?? ""}
                             </td>
@@ -317,7 +312,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
                 </div>
               </>
             )}
-            <p className="mt-4 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="mt-4 text-xs erp-u-muted">
               본인이 등록한 할 일만 수정할 수 있습니다. (완료 체크는 누구나 할 수 있습니다.)
             </p>
           </div>

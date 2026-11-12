@@ -89,14 +89,14 @@ export default async function CustomerOrdersPage({
           const allConverted = items.length > 0 && items.every((i) => i.work_order_id || i.sales_order_id);
           return (
             <div id={`order-${o.id}`} key={o.id} className="erp-home-panel" style={{ padding: 14, scrollMarginTop: 60 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div className="erp-u-flex erp-u-justify-between erp-u-items-center" style={{ marginBottom: 8 }}>
                 <div>
-                  <span style={{ fontWeight: 700 }}>{o.customers?.name ?? "-"}</span>
-                  <span style={{ marginLeft: 8, color: "var(--erp-text-muted)", fontSize: 12 }}>
+                  <span className="erp-u-bold">{o.customers?.name ?? "-"}</span>
+                  <span className="erp-u-muted" style={{ marginLeft: 8, fontSize: 12 }}>
                     주문 {o.doc_no} · {new Date(o.created_at).toLocaleString("ko-KR")}
                   </span>
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+                <span className="erp-u-bold" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
                   {formatNumber(total)}원
                 </span>
               </div>
@@ -241,18 +241,18 @@ export default async function CustomerOrdersPage({
               </div>
 
               {o.memo && (
-                <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 8 }}>요청사항: {o.memo}</p>
+                <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 8 }}>요청사항: {o.memo}</p>
               )}
 
               {activeTab === "requested" && (
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div className="erp-u-flex erp-u-gap-8 erp-u-items-center">
                   <CustomerOrderApproveForm id={o.id} />
                   <CustomerOrderRejectForm id={o.id} />
                 </div>
               )}
 
               {activeTab === "approved" && (
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div className="erp-u-flex erp-u-gap-8 erp-u-items-center">
                   {!allConverted && (
                     <span className="erp-badge erp-badge-muted">
                       {items.some((i) => i.work_order_id || i.sales_order_id)
@@ -269,13 +269,13 @@ export default async function CustomerOrdersPage({
               )}
 
               {activeTab === "rejected" && o.reject_reason && (
-                <p style={{ fontSize: 12, color: "var(--erp-danger)" }}>반려 사유: {o.reject_reason}</p>
+                <p className="erp-u-danger" style={{ fontSize: 12 }}>반려 사유: {o.reject_reason}</p>
               )}
             </div>
           );
         })}
         {(!orders || orders.length === 0) && (
-          <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <p className="p-3 text-xs erp-u-muted">
             해당하는 주문이 없습니다.
           </p>
         )}

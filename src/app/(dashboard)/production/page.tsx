@@ -172,7 +172,7 @@ export default async function ProductionPage({
                       {formatNumber(Number(row.quantity))} {row.products?.unit}
                     </td>
                     <td>{row.warehouses?.name ?? "-"}</td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    <td className="num erp-u-muted">
                       {progress ? `${progress.done}/${progress.total}` : "-"}
                     </td>
                     <td>
@@ -182,7 +182,7 @@ export default async function ProductionPage({
                         firstStepIsSubcontractor={firstStepIsSubcontractorByOrder.get(row.id) ?? false}
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{row.memo ?? "-"}</td>
+                    <td className="erp-u-muted">{row.memo ?? "-"}</td>
                     <td>{row.profiles?.full_name ?? "-"}</td>
                     <td>
                       <InlineConfirmDelete

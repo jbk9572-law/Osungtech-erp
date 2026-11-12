@@ -26,7 +26,7 @@ export function MailAttachmentChip({
 
   if (!url) {
     return (
-      <span className="erp-btn" style={{ opacity: 0.5, display: "inline-flex", alignItems: "center", gap: 5 }}>
+      <span className="erp-btn erp-u-items-center" style={{ opacity: 0.5, display: "inline-flex", gap: 5 }}>
         <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
           <PaperclipIcon />
         </span>
@@ -42,8 +42,8 @@ export function MailAttachmentChip({
     <>
       <button
         type="button"
-        className="erp-btn"
-        style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
+        className="erp-btn erp-u-items-center"
+        style={{ display: "inline-flex", gap: 5 }}
         onClick={() => setOpen(true)}
       >
         <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
@@ -65,7 +65,7 @@ export function MailAttachmentChip({
             </button>
             <div className="erp-modal-title">
               <span>{filename}</span>
-              <a href={url} download={filename} className="erp-btn" style={{ height: 24, padding: "1px 10px", fontSize: 11 }}>
+              <a href={url} download={filename} className="erp-btn erp-u-h-24" style={{ padding: "1px 10px", fontSize: 11 }}>
                 다운로드
               </a>
             </div>

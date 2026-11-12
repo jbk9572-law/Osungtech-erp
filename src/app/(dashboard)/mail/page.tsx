@@ -143,7 +143,7 @@ export default async function MailPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>{folder === "INBOX" ? "받은편지함" : "보낸편지함"}</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+            <span className="erp-u-muted erp-u-normal">
               총 {formatNumber((messages ?? []).length)}건
             </span>
           </div>
@@ -163,7 +163,7 @@ export default async function MailPage({
                       {m.subject || "(제목 없음)"}
                     </span>
                     {m.has_attachments && (
-                      <span className="erp-icon" style={{ width: 12, height: 12, color: "var(--erp-text-muted)" }} aria-hidden>
+                      <span className="erp-icon erp-u-muted" style={{ width: 12, height: 12 }} aria-hidden>
                         <PaperclipIcon />
                       </span>
                     )}
@@ -202,11 +202,11 @@ export default async function MailPage({
               <h2 className="mb-2 text-base font-bold text-[var(--erp-text)]">
                 {selected.subject || "(제목 없음)"}
               </h2>
-              <div className="mb-3" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="mb-3 erp-u-flex erp-u-items-center" style={{ gap: 10 }}>
                 <span className="erp-avatar" style={{ width: 32, height: 32 }} aria-hidden>
                   {initial(selected.from_name, selected.from_address)}
                 </span>
-                <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                <div className="text-xs erp-u-muted">
                   <p>
                     보낸사람: {selected.from_name || selected.from_address || "-"}
                     {selected.from_name && selected.from_address ? ` <${selected.from_address}>` : ""}

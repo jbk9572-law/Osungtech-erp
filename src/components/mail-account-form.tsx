@@ -152,14 +152,14 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
       </form>
 
       {account && (
-        <div className="rounded-sm border border-[var(--erp-divider)] p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <div className="rounded-sm border border-[var(--erp-divider)] p-3 text-xs erp-u-muted">
           {account.last_synced_at ? (
             <p>마지막 동기화: {new Date(account.last_synced_at).toLocaleString("ko-KR")}</p>
           ) : (
             <p>아직 동기화한 적이 없습니다. 메일함 화면에서 새로고침해주세요.</p>
           )}
           {account.last_sync_error && (
-            <p className="mt-1" style={{ color: "var(--erp-danger)" }}>
+            <p className="mt-1 erp-u-danger">
               마지막 동기화 오류: {account.last_sync_error}
             </p>
           )}

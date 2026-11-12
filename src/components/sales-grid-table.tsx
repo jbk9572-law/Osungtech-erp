@@ -405,7 +405,7 @@ export function SalesGridTable({
           {row.deliveryMethod ? (
             <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
           ) : (
-            <span style={{ color: "var(--erp-text-muted)" }}>
+            <span className="erp-u-muted">
               -
             </span>
           )}
@@ -459,7 +459,7 @@ export function SalesGridTable({
           {isCollection ? (
             "-"
           ) : row.invoiceStatus === "issued" ? (
-            <span style={{ color: "var(--erp-success)", fontWeight: 700 }}>✓ 발행</span>
+            <span className="erp-u-bold" style={{ color: "var(--erp-success)" }}>✓ 발행</span>
           ) : canQuickIssue ? (
             // 아이콘(₩ 표시)으로는 "세금계산서"라는 걸 못 알아보겠다는
             // 지적 — 글자로 바로 보여준다. 상태 그대로("미발행")
@@ -468,7 +468,7 @@ export function SalesGridTable({
             // 끼이던 걸, 컬럼 헤더가 이미 맥락을 주므로 "작성" 두 글자로
             // 줄였다 — 폭 제약 없는 매출 상세 페이지의 같은 문구는
             // 그대로 "세금계산서 작성" 유지(다른 자리, 다른 판단).
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span className="erp-u-items-center erp-u-gap-6" style={{ display: "inline-flex" }}>
               <GridBadge tone="warn">미발행</GridBadge>
               <Link
                 href={`/sales/${row.orderId}/tax-invoice`}
@@ -485,7 +485,7 @@ export function SalesGridTable({
           {row.remark || "-"}
         </td>
         <td className="num" onClick={(e) => e.stopPropagation()}>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+          <div className="erp-u-flex" style={{ justifyContent: "flex-end", gap: 2 }}>
             {detailHref && (
               <Link
                 href={detailHref}
@@ -667,9 +667,9 @@ export function SalesGridTable({
           {carryoverRows && carryoverRows.length > 0 && (
             <tbody>
               <tr>
-                <td
+                <td className="erp-u-bold erp-u-muted"
                   colSpan={20}
-                  style={{ background: "var(--erp-bg)", fontWeight: 700, color: "var(--erp-text-muted)", padding: "6px 8px" }}
+                  style={{ background: "var(--erp-bg)", padding: "6px 8px" }}
                 >
                   전월 이월분 · 이번달 실적으로 반영됨
                 </td>
@@ -677,20 +677,20 @@ export function SalesGridTable({
               {carryoverRows.map((row) => renderRow(row, { selectable: false, compactDate: true }))}
               <tr>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
-                <td
+                <td className="erp-u-muted"
                   colSpan={11}
-                  style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)", padding: "4px 8px" }}
+                  style={{ fontSize: "var(--erp-font-xs)", padding: "4px 8px" }}
                 >
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                   {formatNumber(carryoverQuantity ?? 0)}
                 </td>
                 <td />
-                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                   {formatNumber(carryoverSupply ?? 0)}
                 </td>
-                <td className="num" style={{ color: "var(--erp-text-muted)", fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
                   {formatNumber(carryoverTax ?? 0)}
                 </td>
                 <td />
@@ -732,7 +732,7 @@ export function SalesGridTable({
           </tbody>
           {sortedRows.length > 0 && (
             <tfoot>
-              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
                   colSpan={11}
@@ -789,7 +789,7 @@ export function SalesGridTable({
       <div className="erp-row-card-list">
         {carryoverRows && carryoverRows.length > 0 && (
           <>
-            <div style={{ fontSize: "var(--erp-font-xs)", fontWeight: 700, color: "var(--erp-text-muted)" }}>
+            <div className="erp-u-bold erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
               전월 이월분 · 이번달 실적으로 반영됨
             </div>
             {carryoverRows.map((row) => renderMobileCard(row, { selectable: false, compactDate: true }))}

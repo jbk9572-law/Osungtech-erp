@@ -23,9 +23,9 @@ export function ColumnVisibilityMenu({
   useEscapeToClose(open, () => setOpen(false));
 
   return (
-    <div
+    <div className="erp-u-relative"
       ref={wrapRef}
-      style={{ position: "relative", display: "inline-block" }}
+      style={{ display: "inline-block" }}
       // 메뉴 바깥 클릭 시 닫히게 — 포커스가 메뉴 밖으로 나가는 순간 닫는다.
       onBlur={(e) => {
         if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
@@ -60,16 +60,9 @@ export function ColumnVisibilityMenu({
           }}
         >
           {options.map((opt) => (
-            <label
+            <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
               key={opt.key}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 6px",
-                fontSize: "var(--erp-font-sm)",
-                cursor: "pointer",
-              }}
+              style={{ padding: "4px 6px", fontSize: "var(--erp-font-sm)", cursor: "pointer" }}
             >
               <input type="checkbox" checked={!isHidden(opt.key)} onChange={() => onToggle(opt.key)} />
               {opt.label}

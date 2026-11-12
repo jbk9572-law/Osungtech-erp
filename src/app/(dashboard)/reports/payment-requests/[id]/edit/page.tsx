@@ -106,7 +106,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
         }}
       />
 
-      <div className="erp-detail" style={{ marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">영수증 ({receipts?.length ?? 0}장)</span>
         </div>

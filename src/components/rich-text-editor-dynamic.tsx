@@ -14,8 +14,8 @@ export const RichTextEditor = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="erp-input"
-        style={{ minHeight: 120, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--erp-text-muted)", fontSize: 12 }}
+        className="erp-input erp-u-flex erp-u-items-center erp-u-muted"
+        style={{ minHeight: 120, justifyContent: "center", fontSize: 12 }}
       >
         에디터 불러오는 중...
       </div>

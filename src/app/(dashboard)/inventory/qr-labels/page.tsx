@@ -85,15 +85,8 @@ export default async function InventoryQrLabelsPage({
         </div>
         <div className="erp-field erp-span-3" style={{ justifyContent: "flex-end" }}>
           <label aria-hidden="true">&nbsp;</label>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              height: 34,
-              fontSize: 12.5,
-              cursor: "pointer",
-            }}
+          <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
+            style={{ height: 34, fontSize: 12.5, cursor: "pointer" }}
           >
             <input type="checkbox" name="hideZero" value="1" defaultChecked={hideZero} />
             0건인 품목은 보지 않기

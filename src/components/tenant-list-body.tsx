@@ -76,10 +76,10 @@ export function TenantListBody({
       <section className="erp-split-list">
         <div className="erp-split-list-head">
           <span>고객사 목록</span>
-          <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>{rows.length}개</span>
+          <span className="erp-u-muted erp-u-normal">{rows.length}개</span>
         </div>
 
-        <div className="erp-field-grid" style={{ margin: 8, padding: 8, gap: 6 }}>
+        <div className="erp-field-grid erp-u-gap-6" style={{ margin: 8, padding: 8 }}>
           <div className="erp-field erp-span-12">
             <label htmlFor="tenant-search-q">회사명 / 슬러그 검색</label>
             <input
@@ -102,11 +102,11 @@ export function TenantListBody({
               href={`${basePath}${basePath.includes("?") ? "&" : "?"}id=${row.id}`}
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
-              <span style={{ fontWeight: 700 }}>{row.name}</span>
+              <span className="erp-u-bold">{row.name}</span>
               <span style={{ marginLeft: 6 }}>
                 <GridBadge tone={row.statusTone}>{row.statusLabel}</GridBadge>
               </span>
-              <div className="erp-split-list-row-sub" style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+              <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">
                 <span>
                   {row.slug} · {row.planLabel}
                 </span>
@@ -115,7 +115,7 @@ export function TenantListBody({
             </Link>
           ))}
           {!visibleRows.length && (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="p-3 text-xs erp-u-muted">
               {query.trim() ? "검색 결과가 없습니다." : "등록된 회사가 없습니다."}
             </p>
           )}

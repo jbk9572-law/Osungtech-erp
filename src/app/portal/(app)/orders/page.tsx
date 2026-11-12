@@ -51,7 +51,7 @@ export default async function PortalOrdersPage({
     supabase.rpc("portal_list_order_items"),
   ]);
   if (error) {
-    return <p style={{ fontSize: 13, color: "var(--erp-danger)" }}>주문 내역을 불러오지 못했습니다.</p>;
+    return <p className="erp-u-danger" style={{ fontSize: 13 }}>주문 내역을 불러오지 못했습니다.</p>;
   }
 
   const itemsByOrderId = new Map<string, OrderDetailItem[]>();
@@ -101,7 +101,7 @@ export default async function PortalOrdersPage({
           F5: { submitFormSelector: "#portal-orders-search-form" },
         }}
       />
-      <h1 className="erp-portal-h1" style={{ marginBottom: 12 }}>주문내역</h1>
+      <h1 className="erp-portal-h1 erp-u-mb-12">주문내역</h1>
 
       <DateRangeQuickFilters
         basePath={ordersHref}

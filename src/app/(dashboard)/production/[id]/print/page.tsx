@@ -70,15 +70,8 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
         const isFirst = pageIndex === 0;
         return (
           <div key={pageIndex} className={pageIndex < pages.length - 1 ? "print-page-break" : undefined}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-end",
-                borderBottom: "3px solid #132944",
-                paddingBottom: 8,
-                marginBottom: 14,
-              }}
+            <div className="erp-u-flex erp-u-justify-between"
+              style={{ alignItems: "flex-end", borderBottom: "3px solid #132944", paddingBottom: 8, marginBottom: 14 }}
             >
               <div>
                 <div style={{ fontSize: 11, color: "#555", letterSpacing: "0.08em" }}>ELVONIX ERP · 생산관리</div>
@@ -150,24 +143,17 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
             )}
 
             {isFirst && (
-              <div style={{ display: "flex", border: "1px solid #333", height: 220, marginTop: 10 }}>
-                <div
-                  style={{
-                    flex: 1,
-                    borderRight: "1px solid #333",
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+              <div className="erp-u-flex" style={{ border: "1px solid #333", height: 220, marginTop: 10 }}>
+                <div className="erp-u-relative erp-u-flex erp-u-items-center"
+                  style={{ flex: 1, borderRight: "1px solid #333", justifyContent: "center" }}
                 >
-                  <span style={{ position: "absolute", top: 6, left: 8, fontSize: 11, fontWeight: 700, color: "#555" }}>
+                  <span className="erp-u-bold" style={{ position: "absolute", top: 6, left: 8, fontSize: 11, color: "#555" }}>
                     도면
                   </span>
                   <span style={{ color: "#aaa", fontSize: 12 }}>[도면 삽입 영역]</span>
                 </div>
-                <div style={{ flex: 1, position: "relative", padding: "24px 10px 10px" }}>
-                  <span style={{ position: "absolute", top: 6, left: 8, fontSize: 11, fontWeight: 700, color: "#555" }}>
+                <div className="erp-u-relative" style={{ flex: 1, padding: "24px 10px 10px" }}>
+                  <span className="erp-u-bold" style={{ position: "absolute", top: 6, left: 8, fontSize: 11, color: "#555" }}>
                     특이사항
                   </span>
                   {workOrder.memo && (
@@ -180,7 +166,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
               </div>
             )}
 
-            <div style={{ fontSize: 13, fontWeight: 700, marginTop: 14 }}>
+            <div className="erp-u-bold" style={{ fontSize: 13, marginTop: 14 }}>
               공정 진행 체크리스트{!isFirst && " (이어서)"} — 공정마다 받을 때(인수)·끝낼 때(완료) 서명
             </div>
 
@@ -197,17 +183,17 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
                 </colgroup>
                 <thead>
                   <tr>
-                    <th style={{ ...thStyle, textAlign: "center" }}>순서</th>
+                    <th className="erp-u-text-center" style={{ ...thStyle }}>순서</th>
                     <th style={thStyle}>공정명</th>
                     <th style={thStyle}>담당(사내/업체)</th>
-                    <th style={{ ...thStyle, textAlign: "center" }}>인수(일자·서명)</th>
-                    <th style={{ ...thStyle, textAlign: "center" }}>완료(일자·서명)</th>
+                    <th className="erp-u-text-center" style={{ ...thStyle }}>인수(일자·서명)</th>
+                    <th className="erp-u-text-center" style={{ ...thStyle }}>완료(일자·서명)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageSteps.map((s) => (
                     <tr key={s.id} style={{ breakInside: "avoid" }}>
-                      <td style={{ ...cellStyle, textAlign: "center", height: 34 }}>{s.sort_order}</td>
+                      <td className="erp-u-text-center" style={{ ...cellStyle, height: 34 }}>{s.sort_order}</td>
                       <td style={{ ...cellStyle, height: 34 }}>{s.process_name}</td>
                       <td style={{ ...cellStyle, height: 34 }}>
                         {s.assignee_kind === "internal" ? "사내" : (s.subcontractors?.name ?? "업체")}
@@ -220,7 +206,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
               </table>
             )}
 
-            <div style={{ fontSize: 10.5, color: "#666", textAlign: "center", marginTop: 14 }}>
+            <div className="erp-u-text-center" style={{ fontSize: 10.5, color: "#666", marginTop: 14 }}>
               이 문서는 생산지시서 원본과 함께 실물에 동봉해 공정마다(사내 ↔ 외부 업체 포함) 전달합니다. 공정이 한
               장에 다 들어가지 않으면 별도 서식이 아니라 이 서식의 뒷면에 이어서 찍힙니다.
             </div>

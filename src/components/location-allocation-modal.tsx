@@ -104,21 +104,12 @@ export function LocationAllocationModal({
   }
 
   return (
-    <div
+    <div className="erp-u-flex erp-u-items-center"
       role="alertdialog"
       aria-modal="true"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "var(--erp-dialog-overlay-bg)",
-        zIndex: 2000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-      }}
+      style={{ position: "fixed", inset: 0, background: "var(--erp-dialog-overlay-bg)", zIndex: 2000, justifyContent: "center", padding: 16 }}
     >
-      <div className="erp-detail" style={{ marginTop: 0, maxWidth: 520, width: "100%", maxHeight: "88vh", display: "flex", flexDirection: "column" }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-flex" style={{ maxWidth: 520, width: "100%", maxHeight: "88vh", flexDirection: "column" }}>
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active" style={{ cursor: "default" }}>
             보관 위치 배분 확인
@@ -138,35 +129,28 @@ export function LocationAllocationModal({
                 key={item.groupKey}
                 style={{ marginBottom: 14, padding: 10, borderRadius: "var(--erp-radius-lg, 0)", border: "1px solid var(--erp-border)" }}
               >
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13.5, display: "flex", alignItems: "center", gap: 6 }}>
+                <div className="erp-u-flex erp-u-justify-between erp-u-gap-8" style={{ alignItems: "baseline", marginBottom: 6 }}>
+                  <div className="erp-u-bold erp-u-flex erp-u-items-center erp-u-gap-6" style={{ fontSize: 13.5 }}>
                     {item.direction && (
-                      <span
-                        style={{
-                          fontSize: 10.5,
-                          fontWeight: 700,
-                          padding: "1px 6px",
-                          borderRadius: 999,
-                          background: item.direction === "출고" ? "var(--erp-danger-bg)" : "var(--erp-success-bg)",
-                          color: item.direction === "출고" ? "var(--erp-danger)" : "var(--erp-success)",
-                        }}
+                      <span className="erp-u-bold"
+                        style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 999, background: item.direction === "출고" ? "var(--erp-danger-bg)" : "var(--erp-success-bg)", color: item.direction === "출고" ? "var(--erp-danger)" : "var(--erp-success)" }}
                       >
                         {item.direction}
                       </span>
                     )}
                     {item.productName}
-                    {item.spec && <span style={{ fontWeight: 400, color: "var(--erp-text-muted)" }}> ({item.spec})</span>}
+                    {item.spec && <span className="erp-u-normal erp-u-muted"> ({item.spec})</span>}
                   </div>
-                  <div style={{ fontSize: 12.5, color: "var(--erp-text-muted)", whiteSpace: "nowrap" }}>
+                  <div className="erp-u-muted" style={{ fontSize: 12.5, whiteSpace: "nowrap" }}>
                     필요 {formatNumber(item.quantity)} {item.unit}
                   </div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div className="erp-u-flex erp-u-gap-6" style={{ flexDirection: "column" }}>
                   {item.locations.map((loc) => (
-                    <div key={loc.locationId} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="erp-u-flex erp-u-items-center erp-u-gap-8" key={loc.locationId}>
                       <div style={{ flex: 1, fontSize: 12.5 }}>
                         {loc.code}
-                        <span style={{ color: "var(--erp-text-muted)" }}>
+                        <span className="erp-u-muted">
                           {" "}
                           ({loc.tier === 2 ? "2단" : "1단"}·{loc.position === 1 ? "좌측" : "우측"}) · 현재{" "}
                           {formatNumber(loc.quantity)}
@@ -182,13 +166,8 @@ export function LocationAllocationModal({
                     </div>
                   ))}
                 </div>
-                <div
-                  style={{
-                    marginTop: 6,
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: ok ? "var(--erp-success)" : "var(--erp-danger)",
-                  }}
+                <div className="erp-u-semibold"
+                  style={{ marginTop: 6, fontSize: 11.5, color: ok ? "var(--erp-success)" : "var(--erp-danger)" }}
                 >
                   배분 합계 {formatNumber(sum)} / 필요 {formatNumber(item.quantity)}
                   {!ok && " — 합계를 필요 수량과 맞춰주세요"}
@@ -197,7 +176,7 @@ export function LocationAllocationModal({
             );
           })}
         </div>
-        <div style={{ display: "flex", gap: 8, padding: "10px 14px", borderTop: "1px solid var(--erp-border)" }}>
+        <div className="erp-u-flex erp-u-gap-8" style={{ padding: "10px 14px", borderTop: "1px solid var(--erp-border)" }}>
           <button type="button" className="erp-btn" style={{ flex: 1 }} onClick={onCancel}>
             취소
           </button>

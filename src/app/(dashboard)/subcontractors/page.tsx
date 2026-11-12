@@ -129,15 +129,15 @@ export default async function SubcontractorsPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>업체 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+            <span className="erp-u-muted erp-u-normal">
               총 {formatNumber(subcontractors.length)}건
             </span>
           </div>
           <form
             id="subcontractors-search-form"
             method="get"
-            className="erp-field-grid"
-            style={{ margin: 8, padding: 8, gap: 6 }}
+            className="erp-field-grid erp-u-gap-6"
+            style={{ margin: 8, padding: 8 }}
           >
             <div className="erp-field erp-span-6">
               <input
@@ -192,7 +192,7 @@ export default async function SubcontractorsPage({
               selfHref={`${newHref}${newHref.includes("?") ? "&" : "?"}id=${selectedId}`}
             />
           ) : (
-            <div className="erp-detail" style={{ marginTop: 0 }}>
+            <div className="erp-detail erp-u-mt-0">
               <div className="erp-detail-tabs">
                 <span className="erp-detail-tab active">업체 추가</span>
               </div>

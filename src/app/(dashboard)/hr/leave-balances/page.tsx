@@ -146,11 +146,11 @@ export default async function LeaveBalancesPage() {
               </div>
             </dl>
             <div style={{ marginTop: 4 }}>
-              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>입사일</div>
+              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>입사일</div>
               <HireDateForm action={setHireDate} userId={p.id} hireDate={p.hire_date} />
             </div>
             <div style={{ marginTop: 4 }}>
-              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
                 {year}년 연차 총일수
               </div>
               <LeaveBalanceForm
@@ -162,7 +162,7 @@ export default async function LeaveBalancesPage() {
               />
             </div>
             <div style={{ marginTop: 4 }}>
-              <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>추가 부여</div>
+              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>추가 부여</div>
               <LeaveGrantForm action={grantExtraLeave} userId={p.id} year={year} />
             </div>
           </div>
@@ -219,7 +219,7 @@ export default async function LeaveBalancesPage() {
                         sentAt={noticeByUserStage.get(`${p.id}:2`) ?? null}
                       />
                     ) : (
-                      <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                      <span className="text-xs erp-u-muted">
                         {window!.secondNoticeDate}부터
                       </span>
                     )}
@@ -244,9 +244,9 @@ export default async function LeaveBalancesPage() {
                   <dd>{window!.expiryDate}</dd>
                 </div>
               </dl>
-              <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+              <div className="erp-u-flex erp-u-gap-8" style={{ marginTop: 4, flexWrap: "wrap" }}>
                 <div>
-                  <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                  <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
                     1차 (기한 6개월 전)
                   </div>
                   <LeavePromotionButton
@@ -259,7 +259,7 @@ export default async function LeaveBalancesPage() {
                   />
                 </div>
                 <div>
-                  <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                  <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
                     2차 (기한 2개월 전)
                   </div>
                   {window!.secondNoticeDate <= today ? (
@@ -272,7 +272,7 @@ export default async function LeaveBalancesPage() {
                       sentAt={noticeByUserStage.get(`${p.id}:2`) ?? null}
                     />
                   ) : (
-                    <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                    <span className="text-xs erp-u-muted">
                       {window!.secondNoticeDate}부터
                     </span>
                   )}

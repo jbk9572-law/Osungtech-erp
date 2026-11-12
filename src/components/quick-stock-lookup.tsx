@@ -66,9 +66,9 @@ export function QuickStockLookup({ products }: { products: StockLookupProduct[] 
             {selected.sku} · {selected.name}
             {selected.spec ? ` (${selected.spec})` : ""}
           </span>
-          <span style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 6 }}>
+          <span className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flex: "0 0 auto" }}>
             <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
-            <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>
+            <span className="erp-u-bold" style={{ fontVariantNumeric: "tabular-nums" }}>
               {formatNumber(selected.quantity)}
               {selected.unit}
               {boxCount ? ` (${boxCount})` : ""}

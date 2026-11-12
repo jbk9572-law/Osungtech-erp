@@ -77,9 +77,9 @@ export function PortalAssignmentsGridTable({
                 className={`cursor-pointer${row.id === activeKey ? " master-active" : ""}`}
                 onClick={() => setManualActiveKey(row.id)}
               >
-                <td style={{ fontWeight: 600 }}>{row.docNo}</td>
+                <td className="erp-u-semibold">{row.docNo}</td>
                 <td>{row.productName}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{row.productSpec ?? "-"}</td>
+                <td className="erp-u-muted">{row.productSpec ?? "-"}</td>
                 <td className="num">{formatNumber(row.quantity)}</td>
                 <td>{row.orderDate.replaceAll("-", ".")}</td>
                 <td>
@@ -149,7 +149,7 @@ export function PortalAssignmentsGridTable({
               위 목록에서 LOT을 선택하면 공정별 진행상황이 여기에 표시됩니다.
             </p>
           ) : (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="erp-u-flex erp-u-gap-8" style={{ flexWrap: "wrap" }}>
               {active.steps.map((step) => (
                 <span
                   key={`${active.id}-${step.processName}-${step.sortOrder}`}
@@ -160,7 +160,7 @@ export function PortalAssignmentsGridTable({
                     {(STEP_STATUS_LABEL[step.status] ?? STEP_STATUS_LABEL.pending).label}
                   </GridBadge>
                   {step.processName}
-                  {step.isMine && <span style={{ marginLeft: 4, color: "var(--erp-text)" }}>(우리 업체)</span>}
+                  {step.isMine && <span className="erp-u-text" style={{ marginLeft: 4 }}>(우리 업체)</span>}
                 </span>
               ))}
             </div>

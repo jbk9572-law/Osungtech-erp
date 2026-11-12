@@ -20,10 +20,10 @@ function PortalLoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--erp-bg)] px-4">
       <div className="w-full max-w-[380px] rounded-sm border border-[var(--erp-border)] bg-white p-6 shadow-sm">
-        <div style={{ fontSize: 18, fontWeight: 700, color: "var(--erp-text)", marginBottom: 4 }}>
+        <div className="erp-u-bold erp-u-text" style={{ fontSize: 18, marginBottom: 4 }}>
           거래처 포털
         </div>
-        <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>
+        <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
           발주 및 주문 진행 상태 조회
         </p>
         <form action={formAction} className="flex flex-col gap-3">

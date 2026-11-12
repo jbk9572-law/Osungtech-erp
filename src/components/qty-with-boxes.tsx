@@ -21,7 +21,7 @@ export function QtyWithBoxes({
   return (
     <>
       {qtyLabel}
-      {boxLabel && <span style={{ color: "var(--erp-danger)" }}> ({boxLabel})</span>}
+      {boxLabel && <span className="erp-u-danger"> ({boxLabel})</span>}
     </>
   );
 }

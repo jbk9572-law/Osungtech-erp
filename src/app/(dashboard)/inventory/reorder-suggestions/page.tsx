@@ -122,8 +122,8 @@ export default async function ReorderSuggestionsPage() {
           : null;
 
         return (
-          <div key={group.supplierId ?? "none"} className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
-            <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
+          <div key={group.supplierId ?? "none"} className="erp-detail erp-u-mt-0 erp-u-mb-12">
+            <div className="erp-detail-tabs erp-u-justify-between">
               <span className="erp-detail-tab active">
                 {group.supplierName} · {group.rows.length}개 품목
               </span>
@@ -168,14 +168,14 @@ export default async function ReorderSuggestionsPage() {
                     <tr key={row.productId}>
                       <td>{row.sku}</td>
                       <td>{row.name}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
-                      <td className="num" style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
+                      <td className="erp-u-muted">{row.spec || "-"}</td>
+                      <td className="num erp-u-danger erp-u-bold">
                         {formatNumber(row.quantity)} {row.unit ?? ""}
                       </td>
-                      <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      <td className="num erp-u-muted">
                         {formatNumber(row.reorderPoint)} {row.unit ?? ""}
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(row.suggestedQty)} {row.unit ?? ""}
                       </td>
                       <td className="num">{formatNumber(Math.round(row.suggestedQty * row.cost))}원</td>
@@ -183,7 +183,7 @@ export default async function ReorderSuggestionsPage() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                  <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                     <td colSpan={6} className="erp-grid-sticky-label">
                       예상 매입금액 합계
                     </td>
@@ -206,7 +206,7 @@ export default async function ReorderSuggestionsPage() {
                     </div>
                     <div>
                       <dt>현재재고</dt>
-                      <dd style={{ color: "var(--erp-danger)", fontWeight: 700 }}>
+                      <dd className="erp-u-danger erp-u-bold">
                         {formatNumber(row.quantity)} {row.unit ?? ""}
                       </dd>
                     </div>
@@ -218,18 +218,18 @@ export default async function ReorderSuggestionsPage() {
                     </div>
                     <div>
                       <dt>제안수량</dt>
-                      <dd style={{ fontWeight: 700 }}>
+                      <dd className="erp-u-bold">
                         {formatNumber(row.suggestedQty)} {row.unit ?? ""}
                       </dd>
                     </div>
                   </dl>
                   <div className="erp-row-card-foot">
-                    <span style={{ color: "var(--erp-text-muted)" }}>예상 매입금액</span>
+                    <span className="erp-u-muted">예상 매입금액</span>
                     <span className="erp-row-card-amount">{formatNumber(Math.round(row.suggestedQty * row.cost))}원</span>
                   </div>
                 </div>
               ))}
-              <div className="erp-row-card-foot" style={{ fontWeight: 700, padding: "4px 2px" }}>
+              <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
                 <span>예상 매입금액 합계</span>
                 <span className="erp-row-card-amount">{formatNumber(Math.round(totalEstimate))}원</span>
               </div>

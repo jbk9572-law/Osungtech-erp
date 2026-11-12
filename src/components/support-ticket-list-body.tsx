@@ -80,7 +80,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
       <section className="erp-split-list">
         <div className="erp-split-list-head">
           <span>문의 목록</span>
-          <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>{visibleTickets.length}건</span>
+          <span className="erp-u-muted erp-u-normal">{visibleTickets.length}건</span>
         </div>
         <div className="erp-split-list-body">
           {visibleTickets.map((t) => {
@@ -93,13 +93,13 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
                 className={`erp-split-list-row${t.id === selectedId ? " active" : ""}`}
                 style={{ width: "100%", textAlign: "left", border: "none", background: "none", cursor: "pointer" }}
               >
-                <span style={{ fontWeight: 700 }}>
+                <span className="erp-u-bold">
                   #{t.doc_no} {t.subject}
                 </span>
                 <span style={{ marginLeft: 6 }}>
                   <GridBadge tone={status.tone}>{status.label}</GridBadge>
                 </span>
-                <div className="erp-split-list-row-sub" style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+                <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">
                   <span>{t.tenantName}</span>
                   <span>{new Date(t.created_at).toLocaleDateString("ko-KR")}</span>
                 </div>
@@ -107,7 +107,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
             );
           })}
           {!visibleTickets.length && (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="p-3 text-xs erp-u-muted">
               등록된 문의가 없습니다.
             </p>
           )}
@@ -125,7 +125,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
                 {resolveStatusLabel(STATUS_LABEL, selected.status).label}
               </GridBadge>
             </div>
-            <p className="mb-4 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="mb-4 text-xs erp-u-muted">
               {selected.tenantName} · {new Date(selected.created_at).toLocaleString("ko-KR")}
             </p>
             {/* 좌우 패딩은 0으로 둬 위 제목(h2)과 왼쪽 끝이 맞게 하되,

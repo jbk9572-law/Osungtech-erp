@@ -158,7 +158,7 @@ export default async function PurchaseQuoteRequestsPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>견적요청 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(rows.length)}건</span>
+            <span className="erp-u-muted erp-u-normal">총 {formatNumber(rows.length)}건</span>
           </div>
           <div className="erp-split-list-body">
             {rows.map((r) => (
@@ -181,7 +181,7 @@ export default async function PurchaseQuoteRequestsPage({
               </Link>
             ))}
             {rows.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="p-3 text-xs erp-u-muted">
                 조건에 맞는 견적요청이 없습니다.
               </p>
             )}

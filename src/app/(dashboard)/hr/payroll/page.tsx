@@ -122,8 +122,8 @@ export default async function PayrollPage({
         갱신되지 않습니다. 연말정산(다음 해 2월 정산)은 이 화면의 범위 밖입니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 12 }}>
+      <div className="erp-detail erp-u-mt-0">
+        <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 12 }}>
           <span className="erp-detail-tab active">{rateYear}년 급여 기준</span>
           <span
             className="text-xs font-medium"
@@ -152,7 +152,7 @@ export default async function PayrollPage({
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">직원 급여정보</span>
           </div>
@@ -210,7 +210,7 @@ export default async function PayrollPage({
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">간이세액표</span>
           </div>
@@ -263,7 +263,7 @@ export default async function PayrollPage({
       </div>
 
       <div style={{ marginTop: 14 }}>
-        <div className="erp-detail" style={{ marginTop: 0 }}>
+        <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">급여명세</span>
           </div>
@@ -278,7 +278,7 @@ export default async function PayrollPage({
             <GeneratePayrollForm action={generatePayroll} currentMonth={payMonth} />
 
             {(payslips ?? []).length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="text-sm erp-u-muted">
                 {payMonth} 급여명세가 없습니다. 위에서 생성해주세요.
               </p>
             ) : (
@@ -322,18 +322,18 @@ export default async function PayrollPage({
                               bonusSpecial={Number(p.bonus_special)}
                             />
                           ) : (
-                            <span className="num" style={{ color: "var(--erp-text-muted)" }}>
+                            <span className="num erp-u-muted">
                               {formatNumber(Number(p.bonus_performance))} / {formatNumber(Number(p.bonus_special))}
                             </span>
                           )}
                         </td>
-                        <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                        <td className="num erp-u-muted">
                           {formatNumber(Number(p.income_tax_deduction) + Number(p.local_income_tax_deduction))}
                         </td>
-                        <td className="num" style={{ color: "var(--erp-danger)" }}>
+                        <td className="num erp-u-danger">
                           -{formatNumber(Number(p.total_deduction))}
                         </td>
-                        <td className="num" style={{ fontWeight: 700 }}>
+                        <td className="num erp-u-bold">
                           {formatNumber(Number(p.net_pay))}
                         </td>
                         <td>
@@ -379,15 +379,15 @@ export default async function PayrollPage({
                       </div>
                       <div>
                         <dt>공제합계</dt>
-                        <dd style={{ color: "var(--erp-danger)" }}>-{formatNumber(Number(p.total_deduction))}</dd>
+                        <dd className="erp-u-danger">-{formatNumber(Number(p.total_deduction))}</dd>
                       </div>
                       <div>
                         <dt>실지급액</dt>
-                        <dd style={{ fontWeight: 700 }}>{formatNumber(Number(p.net_pay))}</dd>
+                        <dd className="erp-u-bold">{formatNumber(Number(p.net_pay))}</dd>
                       </div>
                     </dl>
                     <div style={{ marginTop: 4 }}>
-                      <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", marginBottom: 2 }}>
+                      <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
                         성과금 / 특별상여금
                       </div>
                       {p.status === "draft" ? (
@@ -398,7 +398,7 @@ export default async function PayrollPage({
                           bonusSpecial={Number(p.bonus_special)}
                         />
                       ) : (
-                        <span style={{ color: "var(--erp-text-muted)" }}>
+                        <span className="erp-u-muted">
                           {formatNumber(Number(p.bonus_performance))} / {formatNumber(Number(p.bonus_special))}
                         </span>
                       )}

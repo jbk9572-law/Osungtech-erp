@@ -187,8 +187,8 @@ export default async function InventoryProductHistoryPage({
 
       {countAdjustments.length > 0 && (
         <div
-          className="erp-detail"
-          style={{ marginTop: 0, marginBottom: 14, borderColor: isRepeatedMiss ? "var(--erp-warning)" : undefined }}
+          className="erp-detail erp-u-mt-0"
+          style={{ marginBottom: 14, borderColor: isRepeatedMiss ? "var(--erp-warning)" : undefined }}
         >
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
@@ -220,13 +220,13 @@ export default async function InventoryProductHistoryPage({
                     <tr key={t.id}>
                       <td>{new Date(t.date).toLocaleDateString("ko-KR")}</td>
                       <td
-                        className="num"
-                        style={{ fontWeight: 700, color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
+                        className="num erp-u-bold"
+                        style={{ color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
                       >
                         {t.signedQty > 0 ? "+" : ""}
                         {formatNumber(t.signedQty)}
                       </td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>
+                      <td className="erp-u-muted">
                         {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
                       </td>
                     </tr>
@@ -247,7 +247,7 @@ export default async function InventoryProductHistoryPage({
                       {formatNumber(t.signedQty)}
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)" }}>
+                  <p className="erp-u-muted" style={{ margin: 0, fontSize: "var(--erp-font-sm)" }}>
                     {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
                   </p>
                 </div>
@@ -324,11 +324,11 @@ export default async function InventoryProductHistoryPage({
               const cells = (
                 <>
                   <td>{new Date(row.date).toLocaleDateString("ko-KR")}</td>
-                  <td>{isIn ? (row.partnerName ?? "-") : <span style={{ color: "var(--erp-text-muted)" }}>-</span>}</td>
+                  <td>{isIn ? (row.partnerName ?? "-") : <span className="erp-u-muted">-</span>}</td>
                   <td className="num" style={{ color: isIn ? "var(--erp-success)" : "var(--erp-text-muted)", fontWeight: isIn ? 700 : undefined }}>
                     {isIn ? formatNumber(Math.abs(row.signedQty)) : "-"}
                   </td>
-                  <td>{!isIn ? (row.partnerName ?? "-") : <span style={{ color: "var(--erp-text-muted)" }}>-</span>}</td>
+                  <td>{!isIn ? (row.partnerName ?? "-") : <span className="erp-u-muted">-</span>}</td>
                   <td className="num" style={{ color: !isIn ? "var(--erp-danger)" : "var(--erp-text-muted)", fontWeight: !isIn ? 700 : undefined }}>
                     {!isIn ? formatNumber(Math.abs(row.signedQty)) : "-"}
                   </td>
@@ -342,13 +342,13 @@ export default async function InventoryProductHistoryPage({
                         {row.lotNumber}
                       </Link>
                     ) : (
-                      <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+                      <span className="erp-u-muted">-</span>
                     )}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">
                     {note || "-"}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">
                     {row.authorName ?? "-"}
                   </td>
                   <td className="num">
@@ -387,7 +387,7 @@ export default async function InventoryProductHistoryPage({
               <dl className="erp-order-item-fields">
                 <div>
                   <dt>{isIn ? "입고" : "출고"}</dt>
-                  <dd style={{ fontWeight: 700, color: isIn ? "var(--erp-success)" : "var(--erp-danger)" }}>
+                  <dd className="erp-u-bold" style={{ color: isIn ? "var(--erp-success)" : "var(--erp-danger)" }}>
                     {formatNumber(Math.abs(row.signedQty))}
                   </dd>
                 </div>

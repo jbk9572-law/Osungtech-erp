@@ -43,7 +43,7 @@ export default async function PurchaseTaxInvoiceImportPage() {
       <ExcelImportForm action={importHometaxReceivedInvoices} />
 
       {unmatchedCount > 0 && (
-        <p className="text-xs" style={{ color: "var(--erp-danger)", marginTop: 10 }}>
+        <p className="text-xs erp-u-danger" style={{ marginTop: 10 }}>
           미매칭 {formatNumber(unmatchedCount)}건 — 매입 건이 등록돼 있는지, 공급처 사업자번호가 맞는지 확인해주세요.
         </p>
       )}
@@ -63,7 +63,7 @@ export default async function PurchaseTaxInvoiceImportPage() {
             {rows.map((r) => (
               <tr key={r.id}>
                 <td>{new Date(r.issue_date).toLocaleDateString("ko-KR")}</td>
-                <td style={{ color: "var(--erp-text-muted)" }}>{r.hometax_approval_number}</td>
+                <td className="erp-u-muted">{r.hometax_approval_number}</td>
                 <td>{r.supplier_name}</td>
                 <td className="num">{formatNumber(r.total_amount)}</td>
                 <td>

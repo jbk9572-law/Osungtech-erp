@@ -372,26 +372,13 @@ export function Ribbon({
               </button>
             </div>
             <div className="erp-modal-body">
-              <p
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  color: "var(--erp-text-muted)",
-                  margin: "0 0 6px",
-                }}
+              <p className="erp-u-bold erp-u-muted"
+                style={{ fontSize: 11.5, margin: "0 0 6px" }}
               >
                 화면 구조
               </p>
-              <ul
-                style={{
-                  fontSize: 12,
-                  color: "var(--erp-text)",
-                  margin: "0 0 16px",
-                  paddingLeft: 16,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 4,
-                }}
+              <ul className="erp-u-text erp-u-flex"
+                style={{ fontSize: 12, margin: "0 0 16px", paddingLeft: 16, flexDirection: "column", gap: 4 }}
               >
                 <li>
                   왼쪽 트리메뉴에서 업무 화면을 고릅니다. Ctrl+K로 검색해 바로
@@ -410,13 +397,8 @@ export function Ribbon({
                   나옵니다.
                 </li>
               </ul>
-              <p
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  color: "var(--erp-text-muted)",
-                  margin: "0 0 6px",
-                }}
+              <p className="erp-u-bold erp-u-muted"
+                style={{ fontSize: 11.5, margin: "0 0 6px" }}
               >
                 단축키
               </p>
@@ -425,7 +407,7 @@ export function Ribbon({
                   <tbody>
                     {SHORTCUTS.map((s) => (
                       <tr key={s.key}>
-                        <td style={{ fontWeight: 700, width: 90 }}>{s.key}</td>
+                        <td className="erp-u-bold" style={{ width: 90 }}>{s.key}</td>
                         <td>{s.label}</td>
                       </tr>
                     ))}

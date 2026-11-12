@@ -94,10 +94,10 @@ export default async function PageAccessSettingsPage() {
                 <div className="erp-row-card-head">
                   <span className="erp-row-card-partner">{page.label}</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
                   {departments.map((d) => (
-                    <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: "var(--erp-font-sm)", color: "var(--erp-text-muted)" }}>{d.name}</span>
+                    <div className="erp-u-flex erp-u-items-center erp-u-justify-between" key={d.id}>
+                      <span className="erp-u-muted" style={{ fontSize: "var(--erp-font-sm)" }}>{d.name}</span>
                       <FeatureToggle
                         featureKey={`${page.pageKey}::${d.id}`}
                         label={`${page.label} - ${d.name}`}

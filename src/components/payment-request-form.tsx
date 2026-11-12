@@ -105,7 +105,7 @@ export function PaymentRequestForm({
           </span>
         </div>
       </div>
-      <p className="md:col-span-4 -mt-2 text-[11px]" style={{ color: "var(--erp-text-muted)" }}>
+      <p className="md:col-span-4 -mt-2 text-[11px] erp-u-muted">
         한 문서에는 한 카드로 쓴 내역만 담아주세요 (신한/하나/개인 각각 따로 작성).
       </p>
 
@@ -114,7 +114,7 @@ export function PaymentRequestForm({
       {!initial && (
         <>
           <div className="md:col-span-4">
-            <label className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <label className="mb-1 block text-xs erp-u-muted">
               영수증 사진
             </label>
             <ReceiptPicker />

@@ -718,11 +718,8 @@ function CarryoverBadge() {
 function ReturnBadge() {
   return (
     <span
-      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
-      style={{
-        background: "var(--erp-danger-bg)",
-        color: "var(--erp-danger)",
-      }}
+      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold erp-u-danger"
+      style={{ background: "var(--erp-danger-bg)" }}
     >
       반품
     </span>
@@ -1512,8 +1509,7 @@ function NoteForm({
   return (
     <div className="space-y-2">
       <label
-        className="block text-xs font-medium"
-        style={{ color: "var(--erp-text-muted)" }}
+        className="block text-xs font-medium erp-u-muted"
       >
         메모
       </label>
@@ -1522,11 +1518,8 @@ function NoteForm({
           {notes.map((note) => (
             <li key={note.id} className="flex items-start gap-2">
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
-                style={{
-                  background: "var(--erp-selected)",
-                  color: "var(--erp-text)",
-                }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold erp-u-text"
+                style={{ background: "var(--erp-selected)" }}
               >
                 {note.authorName.slice(0, 1)}
               </span>
@@ -1536,8 +1529,7 @@ function NoteForm({
                     {note.authorName}
                   </span>
                   <span
-                    className="text-[10.5px]"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="text-[10.5px] erp-u-muted"
                   >
                     {new Date(note.createdAt).toLocaleTimeString("ko-KR", {
                       hour: "2-digit",

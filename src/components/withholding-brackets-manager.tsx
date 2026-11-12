@@ -22,7 +22,7 @@ export function WithholdingBracketsManager({
 
   return (
     <div>
-      <div style={{ marginBottom: 12 }}>
+      <div className="erp-u-mb-12">
         <WithholdingBracketForm
           key={editingId ?? "new"}
           action={upsertAction}
@@ -32,7 +32,7 @@ export function WithholdingBracketsManager({
         />
       </div>
 
-      <p className="text-xs" style={{ color: "var(--erp-text-muted)", marginBottom: 6 }}>
+      <p className="text-xs erp-u-muted" style={{ marginBottom: 6 }}>
         전체 {formatNumber(totalCount)}구간 중 {brackets.length}개 표시 (월급여 낮은 순).{" "}
         {totalCount > brackets.length && "아래 검색으로 원하는 구간을 찾을 수 있습니다."}
       </p>
@@ -70,8 +70,8 @@ export function WithholdingBracketsManager({
                     <button
                       type="button"
                       onClick={() => setEditingId(b.id ?? null)}
-                      className="erp-btn"
-                      style={{ minWidth: 0, height: 24, padding: "1px 8px", fontSize: 11 }}
+                      className="erp-btn erp-u-h-24"
+                      style={{ minWidth: 0, padding: "1px 8px", fontSize: 11 }}
                     >
                       수정
                     </button>

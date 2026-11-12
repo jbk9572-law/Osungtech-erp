@@ -106,29 +106,29 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </colgroup>
         <tbody>
           <tr>
-            <td
+            <td className="erp-u-text-center erp-u-bold"
               colSpan={2}
               rowSpan={3}
-              style={{ ...cellStyle, textAlign: "center", fontSize: 20, fontWeight: 700, letterSpacing: 4 }}
+              style={{ ...cellStyle, fontSize: 20, letterSpacing: 4 }}
             >
               {title.big}
               {title.sub && (
-                <div style={{ marginTop: 4, fontSize: 11, fontWeight: 400, letterSpacing: 0 }}>{title.sub}</div>
+                <div className="erp-u-normal" style={{ marginTop: 4, fontSize: 11, letterSpacing: 0 }}>{title.sub}</div>
               )}
             </td>
-            <td style={{ ...cellStyle, textAlign: "center" }} rowSpan={2}>
+            <td className="erp-u-text-center" style={{ ...cellStyle }} rowSpan={2}>
               결제
             </td>
-            <td style={{ ...cellStyle, textAlign: "center" }}>담당</td>
-            <td style={{ ...cellStyle, textAlign: "center" }}>팀장</td>
+            <td className="erp-u-text-center" style={{ ...cellStyle }}>담당</td>
+            <td className="erp-u-text-center" style={{ ...cellStyle }}>팀장</td>
           </tr>
           <tr>
             <td style={{ ...cellStyle, height: 48 }} />
             <td style={{ ...cellStyle, height: 48 }} />
           </tr>
           <tr>
-            <td style={{ ...cellStyle, textAlign: "center" }}>작성자</td>
-            <td style={{ ...cellStyle, textAlign: "center" }} colSpan={2}>
+            <td className="erp-u-text-center" style={{ ...cellStyle }}>작성자</td>
+            <td className="erp-u-text-center" style={{ ...cellStyle }} colSpan={2}>
               {row.profiles?.full_name ? spaceOut(row.profiles.full_name) : "-"}
             </td>
           </tr>
@@ -148,12 +148,12 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </colgroup>
         <tbody>
           <tr>
-            <td style={{ ...cellStyle, textAlign: "center" }}>부서명</td>
-            <td style={{ ...cellStyle, textAlign: "center", wordBreak: "break-word" }}>
+            <td className="erp-u-text-center" style={{ ...cellStyle }}>부서명</td>
+            <td className="erp-u-text-center" style={{ ...cellStyle, wordBreak: "break-word" }}>
               {row.department || "-"}
             </td>
-            <td style={{ ...cellStyle, textAlign: "center" }}>기간</td>
-            <td style={{ ...cellStyle, textAlign: "center", whiteSpace: "nowrap" }} colSpan={2}>
+            <td className="erp-u-text-center" style={{ ...cellStyle }}>기간</td>
+            <td className="erp-u-text-center" style={{ ...cellStyle, whiteSpace: "nowrap" }} colSpan={2}>
               {formatPeriod(row.period_from, row.period_to)}
             </td>
           </tr>
@@ -170,9 +170,9 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </colgroup>
         <thead>
           <tr>
-            <th style={{ ...cellStyle, textAlign: "center" }}>일자</th>
+            <th className="erp-u-text-center" style={{ ...cellStyle }}>일자</th>
             <th style={cellStyle}>사용처</th>
-            <th style={{ ...cellStyle, textAlign: "center" }}>용도</th>
+            <th className="erp-u-text-center" style={{ ...cellStyle }}>용도</th>
             <th style={cellStyle}>금액</th>
             <th style={cellStyle}>비고</th>
           </tr>
@@ -186,19 +186,19 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
               // breakInside: avoid로 한 행 전체가 같은 페이지에 통째로
               // 찍히게 한다.
               <tr key={item.id} style={{ breakInside: "avoid" }}>
-                <td style={{ ...s, textAlign: "center" }}>{item.used_at.replaceAll("-", ".")}</td>
+                <td className="erp-u-text-center" style={{ ...s }}>{item.used_at.replaceAll("-", ".")}</td>
                 <td style={{ ...s, wordBreak: "break-word" }}>{item.vendor}</td>
-                <td style={{ ...s, textAlign: "center" }}>{item.purpose || ""}</td>
+                <td className="erp-u-text-center" style={{ ...s }}>{item.purpose || ""}</td>
                 <td style={{ ...s, textAlign: "right" }}>{formatNumber(Number(item.amount))}</td>
                 <td style={{ ...s, wordBreak: "break-word" }}>{item.remark || ""}</td>
               </tr>
             );
           })}
           <tr>
-            <td style={{ ...itemCellStyle, textAlign: "center", fontWeight: 700 }} colSpan={3}>
+            <td className="erp-u-text-center erp-u-bold" style={{ ...itemCellStyle }} colSpan={3}>
               합 계
             </td>
-            <td style={{ ...itemCellStyle, textAlign: "right", fontWeight: 700 }}>{formatNumber(total)}</td>
+            <td className="erp-u-bold" style={{ ...itemCellStyle, textAlign: "right" }}>{formatNumber(total)}</td>
             <td style={itemCellStyle} />
           </tr>
         </tbody>

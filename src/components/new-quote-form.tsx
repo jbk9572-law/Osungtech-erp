@@ -197,7 +197,7 @@ export function NewQuoteForm({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={4} className="num" style={{ fontWeight: 700 }}>
+                <td colSpan={4} className="num erp-u-bold">
                   합계
                 </td>
                 <td className="num erp-doc-total">

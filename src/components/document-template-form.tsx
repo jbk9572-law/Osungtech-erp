@@ -70,7 +70,7 @@ export function DocumentTemplateForm({
           본문 — <code>{"{{field_name}}"}</code> 형태로 병합필드를 넣으세요(예: {"{{employee_name}}"})
         </label>
         <div className="mb-1 flex flex-wrap items-center gap-1">
-          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <span className="text-xs erp-u-muted">
             자동 필드 삽입:
           </span>
           {Object.entries(SERVER_AUTO_FIELD_LABELS).map(([name, label]) => (
@@ -94,7 +94,7 @@ export function DocumentTemplateForm({
           placeholder="본문을 입력하세요..."
           minHeight={320}
         />
-        <p className="mt-1 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mt-1 text-xs erp-u-muted">
           인식된 병합필드:{" "}
           {fields.length
             ? fields.map((f) => `{{${f}}}${isServerAutoField(f) ? "(자동)" : ""}`).join(", ")

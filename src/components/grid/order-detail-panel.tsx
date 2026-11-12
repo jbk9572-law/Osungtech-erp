@@ -83,8 +83,8 @@ export function OrderDetailPanel({
                           </GridBadge>
                         )}
                       </td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{item.spec}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{item.lotNumber || "-"}</td>
+                      <td className="erp-u-muted">{item.spec}</td>
+                      <td className="erp-u-muted">{item.lotNumber || "-"}</td>
                       <td
                         className="num"
                         style={selection.isReturn ? { color: "var(--erp-danger)" } : undefined}
@@ -92,7 +92,7 @@ export function OrderDetailPanel({
                         {sign}
                         {formatNumber(item.quantity)} {item.unit ?? ""}
                       </td>
-                      <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                      <td className="num erp-u-muted">
                         {formatNumOrDash(item.unitPrice)}
                       </td>
                       <td
@@ -109,17 +109,13 @@ export function OrderDetailPanel({
                         {amountSign}
                         {formatNumber(item.taxAmount)}
                       </td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{item.remark || "-"}</td>
+                      <td className="erp-u-muted">{item.remark || "-"}</td>
                     </tr>
                     {item.paperCalcSizeLines?.map((line, lineIndex) => (
                       <tr key={`size-${lineIndex}`}>
-                        <td
+                        <td className="erp-u-muted"
                           colSpan={8}
-                          style={{
-                            paddingLeft: 26,
-                            color: "var(--erp-text-muted)",
-                            fontSize: 11.5,
-                          }}
+                          style={{ paddingLeft: 26, fontSize: 11.5 }}
                         >
                           ㄴ {line}
                         </td>
@@ -131,7 +127,7 @@ export function OrderDetailPanel({
             </tbody>
             {selection && selection.items.length > 0 && (
               <tfoot>
-                <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                   <td colSpan={3}>합계 ({selection.items.length}건)</td>
                   <td className="num">{formatNumber(totalQuantity)}</td>
                   <td />
@@ -183,11 +179,8 @@ export function OrderDetailPanel({
                     </div>
                     <div>
                       <dt>공급가액</dt>
-                      <dd
-                        style={{
-                          fontWeight: 700,
-                          color: selection.isReturn ? "var(--erp-danger)" : undefined,
-                        }}
+                      <dd className="erp-u-bold"
+                        style={{ color: selection.isReturn ? "var(--erp-danger)" : undefined }}
                       >
                         {amountSign}
                         {formatNumber(item.supplyAmount)}
@@ -208,12 +201,8 @@ export function OrderDetailPanel({
                     )}
                   </dl>
                   {!!item.paperCalcSizeLines?.length && (
-                    <div
-                      style={{
-                        marginTop: 2,
-                        fontSize: "var(--erp-font-xs)",
-                        color: "var(--erp-text-muted)",
-                      }}
+                    <div className="erp-u-muted"
+                      style={{ marginTop: 2, fontSize: "var(--erp-font-xs)" }}
                     >
                       {item.paperCalcSizeLines.map((line, lineIndex) => (
                         <div key={lineIndex}>ㄴ {line}</div>
@@ -222,7 +211,7 @@ export function OrderDetailPanel({
                   )}
                 </div>
               ))}
-              <div className="erp-row-card-foot" style={{ fontWeight: 700 }}>
+              <div className="erp-row-card-foot erp-u-bold">
                 <span>합계 ({selection.items.length}건) · {formatNumber(totalQuantity)}개</span>
                 <span className="erp-row-card-amount">
                   {formatNumber(totalSupply)}원

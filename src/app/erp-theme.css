@@ -6,6 +6,35 @@
    .erp의 DOM 하위가 아니라 형제 노드가 되어 변수를 상속받지 못하고
    (예: 방향키/마우스로 항목을 짚어도 배경색이 하나도 안 바뀌는 문제)
    조용히 깨진다. */
+
+/* ── 공용 유틸 클래스(erp-u-*) ─────────────────────────────────
+   예전엔 화면마다 style={{ color: "var(--erp-text-muted)" }}처럼 같은 값을
+   직접 박았다. 이제 한 곳(여기)에서 정의하고 className으로 쓴다.
+   - inline style은 클래스보다 우선하므로, 같은 효과를 내려고 !important를 붙였다.
+   - 파일 맨 위에 둔 이유: 아래쪽에 이미 있는 `display:none !important` 같은
+     규칙이 같은 우선순위일 때 순서상 나중이라 이기도록(= 예전 동작 그대로).
+   - 표 폭(width/minWidth)은 lint(check-fixed-table-columns 등)가 style에서
+     읽으므로 일부러 유틸로 옮기지 않는다. */
+.erp-u-muted { color: var(--erp-text-muted) !important; }
+.erp-u-text { color: var(--erp-text) !important; }
+.erp-u-danger { color: var(--erp-danger) !important; }
+.erp-u-bold { font-weight: 700 !important; }
+.erp-u-semibold { font-weight: 600 !important; }
+.erp-u-normal { font-weight: 400 !important; }
+.erp-u-flex { display: flex !important; }
+.erp-u-items-center { align-items: center !important; }
+.erp-u-justify-between { justify-content: space-between !important; }
+.erp-u-relative { position: relative !important; }
+.erp-u-text-center { text-align: center !important; }
+.erp-u-mt-0 { margin-top: 0 !important; }
+.erp-u-mb-12 { margin-bottom: 12px !important; }
+.erp-u-gap-6 { gap: 6px !important; }
+.erp-u-gap-8 { gap: 8px !important; }
+.erp-u-h-22 { height: 22px !important; }
+.erp-u-h-24 { height: 24px !important; }
+.erp-u-h-26 { height: 26px !important; }
+.erp-u-pad-0-8 { padding: 0 8px !important; }
+
 :root {
   /* 브랜드 로고(엘보닉스) "E" 마크 본체의 짙은 남색에 맞춰 조정 —
      로고 안쪽의 밝은 포인트 블루가 아니라 마크 몸통 색이 기준이다.

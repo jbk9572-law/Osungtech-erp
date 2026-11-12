@@ -111,7 +111,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
                 style={{ padding: "10px 0", fontSize: 13.5, color: "var(--erp-text)" }}
               />
             ) : (
-              <p style={{ margin: 0, color: "var(--erp-text)" }}>-</p>
+              <p className="erp-u-text" style={{ margin: 0 }}>-</p>
             )}
             <PageGuide className="mt-4">본인이 등록한 공지사항만 수정할 수 있습니다.</PageGuide>
           </div>
@@ -127,12 +127,12 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
           </div>
           <div className="erp-detail-body">
             {unreadMembers.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="text-sm erp-u-muted">
                 전 구성원이 읽었습니다.
               </p>
             ) : (
               <>
-                <p className="mb-2 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                <p className="mb-2 text-xs erp-u-muted">
                   아직 읽지 않음:
                 </p>
                 <div className="flex flex-wrap gap-1">

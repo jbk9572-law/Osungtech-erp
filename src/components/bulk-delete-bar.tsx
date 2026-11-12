@@ -40,18 +40,18 @@ export function BulkDeleteBar({
       style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
     >
       <input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
-      <span style={{ fontWeight: 600 }}>{selectedIds.length}건 선택됨</span>
-      {namePreview && <span style={{ color: "var(--erp-text-muted)" }}>({namePreview})</span>}
-      {warningText && <span style={{ color: "var(--erp-danger)" }}>{warningText}</span>}
-      <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <span className="erp-u-semibold">{selectedIds.length}건 선택됨</span>
+      {namePreview && <span className="erp-u-muted">({namePreview})</span>}
+      {warningText && <span className="erp-u-danger">{warningText}</span>}
+      <label className="erp-u-items-center erp-u-gap-6" style={{ display: "inline-flex" }}>
         확인 코드 <strong>{code}</strong> 입력
         <input
           type="text"
           inputMode="numeric"
           value={confirmText}
           onChange={(e) => onConfirmTextChange(e.target.value)}
-          className="erp-input"
-          style={{ width: 56, height: 24, padding: "0 6px", fontSize: 11.5 }}
+          className="erp-input erp-u-h-24"
+          style={{ width: 56, padding: "0 6px", fontSize: 11.5 }}
           aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
         />
       </label>

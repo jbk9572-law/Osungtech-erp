@@ -33,7 +33,7 @@ export default async function PlatformSupportPage() {
       </PageGuide>
 
       {error ? (
-        <p className="text-sm" style={{ color: "var(--erp-danger)" }}>
+        <p className="text-sm erp-u-danger">
           조회에 실패했습니다: {error.message}
         </p>
       ) : (

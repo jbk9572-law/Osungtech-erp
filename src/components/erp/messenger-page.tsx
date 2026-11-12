@@ -100,14 +100,14 @@ function ChannelAvatar({
 }) {
   if (channel.type === "all") {
     return (
-      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-text)" }} aria-hidden>
+      <span className="erp-icon erp-u-text" style={{ width: size, height: size }} aria-hidden>
         <ChatIcon />
       </span>
     );
   }
   if (channel.type === "group") {
     return (
-      <span className="erp-icon" style={{ width: size, height: size, color: "var(--erp-text)" }} aria-hidden>
+      <span className="erp-icon erp-u-text" style={{ width: size, height: size }} aria-hidden>
         <GroupIcon />
       </span>
     );
@@ -193,7 +193,7 @@ function MessengerAttachmentBlock({
       ) : (
         <a href={url} target="_blank" rel="noopener noreferrer" className="erp-attachment-row">
           <span className="erp-attachment-icon" aria-hidden>
-            <span className="erp-icon" style={{ width: 16, height: 16, color: "var(--erp-text)" }}>
+            <span className="erp-icon erp-u-text" style={{ width: 16, height: 16 }}>
               <FileKindIcon kind={fileKind(fileName)} />
             </span>
           </span>
@@ -665,10 +665,9 @@ export function MessengerPage({
                 type="button"
                 disabled={creatingChannel}
                 onClick={() => handleStartDm(id)}
-                className="erp-messenger-channel-row"
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                className="erp-messenger-channel-row erp-u-flex erp-u-items-center erp-u-gap-8"
               >
-                <span className="erp-avatar" style={{ width: 22, height: 22, fontSize: 10 }} aria-hidden>
+                <span className="erp-avatar erp-u-h-22" style={{ width: 22, fontSize: 10 }} aria-hidden>
                   {name[0] ?? "?"}
                 </span>
                 {name}
@@ -690,7 +689,7 @@ export function MessengerPage({
             </button>
           </div>
           {channelError && (
-            <p style={{ padding: "8px 12px 0", color: "var(--erp-danger)", fontSize: 11.5 }}>{channelError}</p>
+            <p className="erp-u-danger" style={{ padding: "8px 12px 0", fontSize: 11.5 }}>{channelError}</p>
           )}
           <div className="erp-split-list-body">
             {channels.map((c) => (
@@ -717,7 +716,7 @@ export function MessengerPage({
               )}
 
               {view === "newGroup" && (
-                <div className="erp-messenger-body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="erp-messenger-body erp-u-flex erp-u-gap-8" style={{ flexDirection: "column" }}>
                   <input
                     type="text"
                     autoComplete="off"
@@ -727,9 +726,9 @@ export function MessengerPage({
                     className="erp-input"
                     style={{ fontSize: 12.5 }}
                   />
-                  <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div className="erp-u-flex" style={{ overflowY: "auto", flex: 1, flexDirection: "column", gap: 4 }}>
                     {otherProfiles.map(([id, name]) => (
-                      <label key={id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, padding: "4px 2px" }}>
+                      <label className="erp-u-flex erp-u-items-center erp-u-gap-8" key={id} style={{ fontSize: 12.5, padding: "4px 2px" }}>
                         <input
                           type="checkbox"
                           checked={pickedMemberIds.includes(id)}
@@ -924,12 +923,12 @@ export function MessengerPage({
                     </div>
                   </form>
                   {sendError && (
-                    <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
+                    <p className="erp-u-danger" style={{ padding: "0 12px 8px", fontSize: 11.5 }}>
                       {sendError}
                     </p>
                   )}
                   {deleteError && (
-                    <p style={{ padding: "0 12px 8px", color: "var(--erp-danger)", fontSize: 11.5 }}>
+                    <p className="erp-u-danger" style={{ padding: "0 12px 8px", fontSize: 11.5 }}>
                       삭제 실패: {deleteError}
                     </p>
                   )}

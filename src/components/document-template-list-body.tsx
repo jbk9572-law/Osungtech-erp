@@ -80,10 +80,10 @@ export function DocumentTemplateListBody({
       <section className="erp-split-list">
         <div className="erp-split-list-head">
           <span>양식 목록</span>
-          <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {gridRows.length}건</span>
+          <span className="erp-u-muted erp-u-normal">총 {gridRows.length}건</span>
         </div>
 
-        <div className="erp-field-grid" style={{ margin: 8, padding: 8, gap: 6 }}>
+        <div className="erp-field-grid erp-u-gap-6" style={{ margin: 8, padding: 8 }}>
           <div className="erp-field erp-span-12">
             <label htmlFor="tpl-search-q">양식 이름 검색</label>
             <input
@@ -106,7 +106,7 @@ export function DocumentTemplateListBody({
               href={`${basePath}${basePath.includes("?") ? "&" : "?"}id=${row.id}`}
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8">
                 <span style={{ fontWeight: row.id === selectedId ? 700 : 500 }}>{row.name}</span>
                 <GridBadge tone={row.isActive ? "ok" : "muted"}>{row.isActive ? "사용중" : "미사용"}</GridBadge>
               </span>

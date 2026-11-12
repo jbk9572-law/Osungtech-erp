@@ -108,12 +108,12 @@ export function AnnouncementListBody({
       <section className="erp-split-list">
         <div className="erp-split-list-head">
           <span>공지 목록</span>
-          <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+          <span className="erp-u-muted erp-u-normal">
             최근 {formatNumber(limit)}건까지{hasMore ? " · 더 있음" : ""}
           </span>
         </div>
 
-        <div className="erp-field-grid" style={{ margin: 8, padding: 8, gap: 6 }}>
+        <div className="erp-field-grid erp-u-gap-6" style={{ margin: 8, padding: 8 }}>
           <div className="erp-field erp-span-3" style={{ minWidth: 90 }}>
             <label htmlFor="ann-sort">정렬</label>
             <ErpSelect
@@ -150,7 +150,7 @@ export function AnnouncementListBody({
               href={`${basePath}${basePath.includes("?") ? "&" : "?"}id=${row.id}`}
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span className="erp-u-items-center erp-u-gap-6" style={{ display: "inline-flex" }}>
                 <span className="erp-status-dot" data-tone={row.read ? undefined : "info"} aria-hidden />
                 <span style={row.read ? { color: "var(--erp-text-muted)" } : { fontWeight: 700 }}>{row.title}</span>
               </span>
@@ -164,7 +164,7 @@ export function AnnouncementListBody({
                   <GridBadge tone="info">고정</GridBadge>
                 </span>
               )}
-              <div className="erp-split-list-row-sub" style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+              <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">
                 <span>
                   {row.authorName ?? "-"} · {new Date(row.createdAt).toLocaleDateString("ko-KR")}
                 </span>
@@ -173,7 +173,7 @@ export function AnnouncementListBody({
             </Link>
           ))}
           {!gridRows.length ? (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="p-3 text-xs erp-u-muted">
               {query.trim() ? "검색 결과가 없습니다." : "등록된 공지사항이 없습니다."}
             </p>
           ) : (

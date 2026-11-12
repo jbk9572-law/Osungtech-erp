@@ -124,7 +124,7 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
                   value={qtyByProduct[c.product_id] ?? ""}
                   onChange={(e) => setQtyByProduct((prev) => ({ ...prev, [c.product_id]: e.target.value }))}
                 />
-                <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+                <span className="text-xs erp-u-muted">
                   {c.unit}
                 </span>
               </div>
@@ -146,8 +146,8 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
         />
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 13, fontWeight: 700 }}>
+      <div className="erp-u-flex erp-u-justify-between erp-u-items-center">
+        <span className="erp-u-bold" style={{ fontSize: 13 }}>
           합계: {formatNumber(total)}원 ({items.length}개 품목)
         </span>
         <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || items.length === 0}>

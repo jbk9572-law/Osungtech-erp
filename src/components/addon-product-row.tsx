@@ -50,13 +50,8 @@ export function AddOnProductRow({
       <div className="flex flex-wrap items-start gap-4">
         <div className="erp-field" style={{ flex: "0 0 140px" }}>
           <label>키</label>
-          <span
-            style={{
-              fontFamily: "ui-monospace, 'SF Mono', monospace",
-              fontSize: "var(--erp-font-base)",
-              color: "var(--erp-text-muted)",
-              paddingTop: 6,
-            }}
+          <span className="erp-u-muted"
+            style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", fontSize: "var(--erp-font-base)", paddingTop: 6 }}
           >
             {addonKey}
           </span>

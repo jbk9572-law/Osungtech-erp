@@ -171,7 +171,7 @@ export default async function PurchaseDetailPage({
         </PageGuide>
       )}
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
@@ -196,7 +196,7 @@ export default async function PurchaseDetailPage({
             </div>
           )}
           {order.memo && (
-            <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>
+            <p className="erp-u-muted" style={{ marginTop: 12 }}>
               메모: {order.memo}
             </p>
           )}

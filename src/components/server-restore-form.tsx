@@ -41,10 +41,9 @@ export function ServerRestoreForm({ snapshots }: { snapshots: string[] }) {
 
       {snapshot && code && (
         <label
-          className="flex items-center gap-2 text-xs"
-          style={{ color: "var(--erp-text-muted)" }}
+          className="flex items-center gap-2 text-xs erp-u-muted"
         >
-          <strong style={{ color: "var(--erp-text)" }}>{snapshot}</strong> 시점으로 DB 전체를
+          <strong className="erp-u-text">{snapshot}</strong> 시점으로 DB 전체를
           되돌리려면 코드 <strong>{code}</strong> 입력
           <input
             type="text"

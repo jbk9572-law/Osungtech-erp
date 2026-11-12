@@ -238,7 +238,7 @@ export function TodoForm({
             유형
             <FieldHint text="매입/매출 등록 화면에서 '할일 가져오기'로 이 할일을 불러와 등록해야 완료 처리됩니다. 매입+출고는 입고와 출고 둘 다 등록해야 완료됩니다." />
           </label>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, height: 30 }}>
+          <div className="erp-u-flex erp-u-items-center" style={{ gap: 14, height: 30 }}>
             {(
               [
                 { value: "purchase", label: "매입" },
@@ -246,9 +246,9 @@ export function TodoForm({
                 { value: "both", label: "매입+출고" },
               ] as { value: TodoType; label: string }[]
             ).map((opt) => (
-              <label
+              <label className="erp-u-flex erp-u-items-center"
                 key={opt.value}
-                style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer" }}
+                style={{ gap: 5, fontSize: 12.5, cursor: "pointer" }}
               >
                 <input
                   type="radio"
@@ -296,10 +296,10 @@ export function TodoForm({
         )}
       </div>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
-        <div className="erp-detail-tabs" style={{ justifyContent: "space-between" }}>
+      <div className="erp-detail erp-u-mt-0">
+        <div className="erp-detail-tabs erp-u-justify-between">
           <span className="erp-detail-tab active">품목</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, margin: 4, flexWrap: "wrap" }}>
+          <div className="erp-u-flex erp-u-items-center" style={{ gap: 4, margin: 4, flexWrap: "wrap" }}>
             <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
@@ -315,8 +315,8 @@ export function TodoForm({
             <span>모조지 계산 연결됨 — {formatNumber(pendingCalcSummary)}연</span>
             <button
               type="button"
-              className="erp-btn erp-btn-danger"
-              style={{ minWidth: 0, height: 22, padding: "0 8px" }}
+              className="erp-btn erp-btn-danger erp-u-h-22 erp-u-pad-0-8"
+              style={{ minWidth: 0 }}
               onClick={() => {
                 localStorage.removeItem(PENDING_PAPER_CALC_TODO_KEY);
                 setPendingPaperCalc(null);
@@ -373,8 +373,7 @@ export function TodoForm({
                       />
                       {row.productId && (
                         <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px]"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
                         >
                           <input
                             type="checkbox"
@@ -401,7 +400,7 @@ export function TodoForm({
                         className="erp-input w-full"
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>{product?.unit ?? "-"}</td>
+                    <td className="erp-u-muted">{product?.unit ?? "-"}</td>
                     <td className="num">
                       <QuantityWithBoxInput
                         quantity={row.quantity}
@@ -411,7 +410,7 @@ export function TodoForm({
                         className="erp-input w-full"
                       />
                     </td>
-                    <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                    <td className="num erp-u-muted">
                       {(() => {
                         const unitPrice = todoType === "sale" ? product?.price : product?.cost;
                         if (!product || !unitPrice || row.quantity <= 0) return "-";
@@ -421,8 +420,8 @@ export function TodoForm({
                     <td className="num">
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger"
-                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                        style={{ minWidth: 0 }}
                         onClick={() => removeRow(row.key)}
                       >
                         삭제
@@ -444,7 +443,7 @@ export function TodoForm({
       </div>
 
       <div>
-        <label htmlFor="todo-memo" className="mb-1 block text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <label htmlFor="todo-memo" className="mb-1 block text-xs erp-u-muted">
           메모 (품목과 무관한 참고 메모)
         </label>
         <textarea

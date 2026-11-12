@@ -62,7 +62,7 @@ export default async function StockTransferDetailPage({
       />
 
       {transfer.memo && (
-        <p className="mb-3 text-sm" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-3 text-sm erp-u-muted">
           메모: {transfer.memo}
         </p>
       )}

@@ -104,7 +104,7 @@ export function NewStockTransferForm({
       </div>
 
       {sameWarehouse && (
-        <p className="text-xs" style={{ color: "var(--erp-danger)" }}>
+        <p className="text-xs erp-u-danger">
           출발 창고와 도착 창고가 같을 수 없습니다.
         </p>
       )}

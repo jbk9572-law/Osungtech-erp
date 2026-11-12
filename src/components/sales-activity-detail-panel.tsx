@@ -50,7 +50,7 @@ export async function SalesActivityDetailPanel({ id, closeHref }: { id: string; 
         }
       />
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">활동 내용 수정</span>
         </div>

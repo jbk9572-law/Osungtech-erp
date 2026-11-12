@@ -138,7 +138,7 @@ export function TaxInvoiceForm({
         <h2 className="erp-doc-title">세 금 계 산 서</h2>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="erp-detail" style={{ marginTop: 0 }}>
+          <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">공급자</span>
             </div>
@@ -152,7 +152,7 @@ export function TaxInvoiceForm({
               <PartyRow label="이메일" value={supplier.email} />
             </div>
           </div>
-          <div className="erp-detail" style={{ marginTop: 0 }}>
+          <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">공급받는자</span>
             </div>
@@ -325,7 +325,7 @@ export function TaxInvoiceForm({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={5} className="num" style={{ fontWeight: 700 }}>
+                <td colSpan={5} className="num erp-u-bold">
                   합계
                 </td>
                 <td className="num erp-doc-total">{formatNumber(totalSupply)}</td>
@@ -349,7 +349,7 @@ export function TaxInvoiceForm({
         <div className="erp-doc-header">
           <div className="erp-doc-header-row">
             <span className="erp-doc-header-label">합계금액</span>
-            <span className="erp-doc-header-value" style={{ fontWeight: 700 }}>
+            <span className="erp-doc-header-value erp-u-bold">
               {formatNumber(totalAmount)}원
             </span>
           </div>
@@ -398,12 +398,12 @@ export function TaxInvoiceForm({
 
 function PartyRow({ label, value, missingHint }: { label: string; value: string | null; missingHint?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 24, marginBottom: 4 }}>
-      <span style={{ width: 64, flex: "0 0 auto", color: "var(--erp-text-muted)" }}>{label}</span>
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-8" style={{ minHeight: 24, marginBottom: 4 }}>
+      <span className="erp-u-muted" style={{ width: 64, flex: "0 0 auto" }}>{label}</span>
       {value ? (
         <span>{value}</span>
       ) : (
-        <span style={{ color: "var(--erp-text-muted)" }}>{missingHint ?? "-"}</span>
+        <span className="erp-u-muted">{missingHint ?? "-"}</span>
       )}
     </div>
   );

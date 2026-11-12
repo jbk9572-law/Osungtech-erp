@@ -29,12 +29,12 @@ export function SupplierSection({
           공급자
         </Cell>
         <Cell colSpan={7} className="font-bold text-black" style={{ fontSize: SUPPLIER.businessNumberFontSize }}>
-          <span style={{ position: "relative", left: SUPPLIER.businessNumberOffsetX }}>
+          <span className="erp-u-relative" style={{ left: SUPPLIER.businessNumberOffsetX }}>
             {company?.business_number ?? "-"}
           </span>
         </Cell>
         <Cell colSpan={4} as="th" style={{ fontSize: SUPPLIER.labelFontSize }}>
-          <span style={{ position: "relative", left: SUPPLIER.subLabelOffsetX }}>종사업장</span>
+          <span className="erp-u-relative" style={{ left: SUPPLIER.subLabelOffsetX }}>종사업장</span>
         </Cell>
         <Cell colSpan={2} />
         {customerSlot}
@@ -46,18 +46,18 @@ export function SupplierSection({
           상<br />호
         </Cell>
         <Cell colSpan={8} align="center" className="font-bold text-black">
-          <span style={{ position: "relative", left: SUPPLIER.companyNameOffsetX }}>{company?.name ?? "-"}</span>
+          <span className="erp-u-relative" style={{ left: SUPPLIER.companyNameOffsetX }}>{company?.name ?? "-"}</span>
         </Cell>
         <Cell as="th" colSpan={1} style={{ lineHeight: `${SUPPLIER.verticalLabelLineHeight}px` }}>
           성<br />명
         </Cell>
         <Cell colSpan={5} className="font-bold text-black">
-          <span style={{ position: "relative", left: SUPPLIER.repNameOffsetX }}>
+          <span className="erp-u-relative" style={{ left: SUPPLIER.repNameOffsetX }}>
             {company?.representative_name ?? "-"}
           </span>
         </Cell>
         <Cell colSpan={2} align="center">
-          <span style={{ position: "relative", left: SUPPLIER.stampOffsetX, fontSize: SUPPLIER.stampFontSize }}>
+          <span className="erp-u-relative" style={{ left: SUPPLIER.stampOffsetX, fontSize: SUPPLIER.stampFontSize }}>
             (인)
           </span>
         </Cell>

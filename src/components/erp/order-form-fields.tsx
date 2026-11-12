@@ -21,7 +21,7 @@ export function FormSaveButtons({
   label: string;
 }) {
   return (
-    <div style={{ display: "flex", gap: 6 }}>
+    <div className="erp-u-flex erp-u-gap-6">
       {/* 수정 화면(initial.id 있음)에는 "다음 건"이라는 개념이 없어서
           신규 등록일 때만 보여준다 — 하루에 여러 건을 연달아 입력할
           때마다 매번 목록/메뉴를 다시 타지 않아도 되게 한다. */}
@@ -70,30 +70,16 @@ export function CarryoverToggle({
   return (
     <div className="erp-field erp-span-3">
       <label aria-hidden="true">&nbsp;</label>
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          height: 34,
-          padding: "0 14px",
-          borderRadius: "var(--erp-radius-lg, 0)",
-          background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
-          border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
-          cursor: "pointer",
-          fontSize: 13,
-        }}
+      <label className="erp-u-flex erp-u-items-center erp-u-gap-8"
+        style={{ height: 34, padding: "0 14px", borderRadius: "var(--erp-radius-lg, 0)", background: isCarryover ? "var(--erp-warning-bg)" : "transparent", border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`, cursor: "pointer", fontSize: 13 }}
       >
         <input
           type="checkbox"
           checked={isCarryover}
           onChange={(e) => onChange(e.target.checked)}
         />
-        <span
-          style={{
-            fontWeight: 700,
-            color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)",
-          }}
+        <span className="erp-u-bold"
+          style={{ color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)" }}
         >
           {monthLabel} 실적으로 이월
         </span>
@@ -120,15 +106,8 @@ export function PaymentMethodFields({
     <>
       <div className="erp-field erp-span-3">
         <label>결제방법</label>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            height: 30,
-            fontSize: 12.5,
-            cursor: "pointer",
-          }}
+        <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
+          style={{ height: 30, fontSize: 12.5, cursor: "pointer" }}
         >
           <input
             type="checkbox"

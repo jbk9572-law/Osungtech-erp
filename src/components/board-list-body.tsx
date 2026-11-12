@@ -86,11 +86,11 @@ export function BoardListBody({
       <section className="erp-split-list">
         <div className="erp-split-list-head">
           <span>게시판</span>
-          <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {filtered.length}건</span>
+          <span className="erp-u-muted erp-u-normal">총 {filtered.length}건</span>
         </div>
 
         {writeLinks.length > 0 && (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "8px 8px 0" }}>
+          <div className="erp-u-flex erp-u-gap-6" style={{ flexWrap: "wrap", padding: "8px 8px 0" }}>
             {writeLinks.map((w) => (
               <Link key={w.category} href={w.href} className="erp-btn" style={{ fontSize: 11, minWidth: 0 }}>
                 + {w.label}
@@ -118,7 +118,7 @@ export function BoardListBody({
               href={`${basePath}?id=${row.id}&type=${row.category}`}
               className={`erp-split-list-row${row.id === selectedId && row.category === selectedType ? " active" : ""}`}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 6, fontSize: 10, fontWeight: 700, color: "var(--erp-text-muted)" }}>
+              <div className="erp-u-flex erp-u-justify-between erp-u-gap-6 erp-u-bold erp-u-muted" style={{ fontSize: 10 }}>
                 <span>{CATEGORY_LABEL[row.category]}</span>
                 <span>{new Date(row.date).toLocaleDateString("ko-KR")}</span>
               </div>
@@ -133,7 +133,7 @@ export function BoardListBody({
             </Link>
           ))}
           {!filtered.length ? (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="p-3 text-xs erp-u-muted">
               {query.trim() ? "검색 결과가 없습니다." : "표시할 항목이 없습니다."}
             </p>
           ) : (

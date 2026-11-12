@@ -1274,15 +1274,8 @@ export function NewPurchaseForm({
             <>
               <div className="erp-field erp-span-3">
                 <label>매출 동시 등록</label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    height: 30,
-                    fontSize: 12.5,
-                    cursor: "pointer",
-                  }}
+                <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
+                  style={{ height: 30, fontSize: 12.5, cursor: "pointer" }}
                 >
                   <input
                     type="checkbox"
@@ -1355,18 +1348,11 @@ export function NewPurchaseForm({
 
       <div>
         <div
-          className="erp-form-section-head"
-          style={{ position: "relative" }}
+          className="erp-form-section-head erp-u-relative"
         >
           <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              margin: 4,
-              flexWrap: "wrap",
-            }}
+          <div className="erp-u-flex erp-u-items-center"
+            style={{ gap: 4, margin: 4, flexWrap: "wrap" }}
           >
             <QuickAddProductSearch
               products={products}
@@ -1477,14 +1463,14 @@ export function NewPurchaseForm({
                         </span>
                       </>
                     ) : (
-                      <span style={{ color: "var(--erp-danger)" }}>
+                      <span className="erp-u-danger">
                         SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
                       </span>
                     )}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">-</td>
+                  <td className="erp-u-muted">-</td>
+                  <td className="erp-u-muted">
                     {tg0Product?.unit ?? "-"}
                   </td>
                   <td className="num">
@@ -1497,8 +1483,7 @@ export function NewPurchaseForm({
                   </td>
                   {alsoCreateSale && (
                     <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      className="num erp-u-muted"
                     >
                       -
                     </td>
@@ -1508,8 +1493,7 @@ export function NewPurchaseForm({
                   </td>
                   {alsoCreateSale && (
                     <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      className="num erp-u-muted"
                     >
                       -
                     </td>
@@ -1518,8 +1502,7 @@ export function NewPurchaseForm({
                     {formatNumber(pendingCalcAmount)}원
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     {formatNumber(calcVat(pendingCalcAmount))}원
                   </td>
@@ -1529,7 +1512,7 @@ export function NewPurchaseForm({
                     ))}
                     원
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">
                     {tg0IsOverridden
                       ? `자동값 ${formatNumber(pendingCalcSummary.totalSheet)} → 수동 입력`
                       : "모조지 계산 자동 반영"}
@@ -1537,8 +1520,8 @@ export function NewPurchaseForm({
                   <td className="num">
                     <button
                       type="button"
-                      className="erp-btn erp-btn-danger"
-                      style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                      className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                      style={{ minWidth: 0 }}
                       onClick={() => {
                         localStorage.removeItem(
                           PENDING_PAPER_CALC_PURCHASE_KEY,
@@ -1558,60 +1541,53 @@ export function NewPurchaseForm({
                   key={`paper-calc-size-${i}`}
                   style={{ background: "var(--erp-bg-subtle)" }}
                 >
-                  <td
+                  <td className="erp-u-muted"
                     colSpan={3}
-                    style={{ color: "var(--erp-text-muted)", paddingLeft: 24 }}
+                    style={{ paddingLeft: 24 }}
                   >
                     ㄴ {line}
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="erp-u-muted">-</td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   {alsoCreateSale && (
                     <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      className="num erp-u-muted"
                     >
                       -
                     </td>
                   )}
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   {alsoCreateSale && (
                     <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      className="num erp-u-muted"
                     >
                       -
                     </td>
                   )}
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
                   <td
-                    className="num"
-                    style={{ color: "var(--erp-text-muted)" }}
+                    className="num erp-u-muted"
                   >
                     -
                   </td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>-</td>
+                  <td className="erp-u-muted">-</td>
                   <td />
                 </tr>
               ))}
@@ -1651,8 +1627,7 @@ export function NewPurchaseForm({
                       )}
                       {!alsoCreateSale && (
                         <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px]"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
                         >
                           <input
                             type="checkbox"
@@ -1694,8 +1669,7 @@ export function NewPurchaseForm({
                       />
                       {row.productId && (
                         <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px]"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
                         >
                           <input
                             type="checkbox"
@@ -1726,7 +1700,7 @@ export function NewPurchaseForm({
                         className="erp-input w-full"
                       />
                     </td>
-                    <td style={{ color: "var(--erp-text-muted)" }}>
+                    <td className="erp-u-muted">
                       {product?.unit ?? "-"}
                     </td>
                     <td className="num">
@@ -1760,11 +1734,8 @@ export function NewPurchaseForm({
                           className="erp-input w-full"
                         />
                         {row.saleQuantity > row.quantity && (
-                          <div
-                            style={{
-                              color: "var(--erp-danger)",
-                              fontSize: 10.5,
-                            }}
+                          <div className="erp-u-danger"
+                            style={{ fontSize: 10.5 }}
                           >
                             매입수량 초과
                           </div>
@@ -1781,8 +1752,7 @@ export function NewPurchaseForm({
                       />
                       {row.productId && (
                         <label
-                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px]"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="mt-1 flex items-center justify-end gap-1 text-[10.5px] erp-u-muted"
                         >
                           <input
                             type="checkbox"
@@ -1820,13 +1790,12 @@ export function NewPurchaseForm({
                       {formatNumber((row.quantity * row.unitCost))}원
                     </td>
                     <td
-                      className="num"
-                      style={{ color: "var(--erp-text-muted)" }}
+                      className="num erp-u-muted"
                     >
                       {formatNumber(calcVat(row.quantity * row.unitCost))}
                       원
                     </td>
-                    <td className="num" style={{ fontWeight: 600 }}>
+                    <td className="num erp-u-semibold">
                       {formatNumber((
                         row.quantity * row.unitCost +
                         calcVat(row.quantity * row.unitCost)
@@ -1848,13 +1817,8 @@ export function NewPurchaseForm({
                     <td className="num" style={{ whiteSpace: "nowrap" }}>
                       <button
                         type="button"
-                        className="erp-btn"
-                        style={{
-                          minWidth: 0,
-                          height: 26,
-                          padding: "0 8px",
-                          marginRight: 4,
-                        }}
+                        className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+                        style={{ minWidth: 0, marginRight: 4 }}
                         onClick={() => insertRowAfter(row.key)}
                         title="이 줄 아래에 빈 줄 삽입"
                       >
@@ -1862,8 +1826,8 @@ export function NewPurchaseForm({
                       </button>
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger"
-                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                        style={{ minWidth: 0 }}
                         onClick={() => removeRow(row.key)}
                         disabled={rows.length <= 1}
                       >
@@ -1876,14 +1840,13 @@ export function NewPurchaseForm({
             </tbody>
             <tfoot>
               <tr style={{ background: "var(--erp-bg)" }}>
-                <td
+                <td className="erp-u-bold"
                   colSpan={alsoCreateSale ? 8 : 6}
-                  style={{ fontWeight: 700 }}
                 >
                   매입 합계
                 </td>
                 <td className="num" colSpan={5}>
-                  <div style={{ color: "var(--erp-text-muted)" }}>
+                  <div className="erp-u-muted">
                     공급가액 {formatNumber(supplyAmount)}원 · 부가세{" "}
                     {formatNumber(taxAmount)}원
                   </div>
@@ -1937,7 +1900,7 @@ export function NewPurchaseForm({
                     key={r.key}
                     className="mb-1 flex items-center gap-2 text-xs"
                   >
-                    <span style={{ color: "var(--erp-text-muted)" }}>
+                    <span className="erp-u-muted">
                       {product?.name}
                       {product?.spec && ` (${product.spec})`}:
                     </span>
@@ -1949,7 +1912,7 @@ export function NewPurchaseForm({
                       emptyLabel="이전 매입 이력 없음 (신규 단가)"
                     />
                     {hist[0]?.lotNumber && (
-                      <span style={{ color: "var(--erp-text-muted)" }}>
+                      <span className="erp-u-muted">
                         · 최근 관리번호 {hist[0].lotNumber}
                       </span>
                     )}

@@ -734,13 +734,13 @@ async function DashboardPage({
         </div>
       </div>
       <div className="erp-home">
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 16 }}>
         <QuickStockLookup products={stockLookupProducts} />
         <div className="erp-home-panel" id="stock-risk">
           <div className="erp-home-panel-title">
             <span>재고위험</span>
             {lowStockItems.length > 0 && (
-              <span style={{ color: "var(--erp-danger)", fontVariantNumeric: "tabular-nums" }}>
+              <span className="erp-u-danger" style={{ fontVariantNumeric: "tabular-nums" }}>
                 {lowStockItems.length}건
               </span>
             )}
@@ -774,7 +774,7 @@ async function DashboardPage({
             <div className="erp-home-list">
               {recentNotes.map((note) => (
                 <div className="erp-home-list-item" key={note.id}>
-                  <span style={{ color: "var(--erp-text-muted)", fontSize: 11 }}>
+                  <span className="erp-u-muted" style={{ fontSize: 11 }}>
                     {note.note_date} · {note.profiles?.full_name ?? "익명"}
                   </span>
                   <span className="truncate">{note.content}</span>
@@ -785,7 +785,7 @@ async function DashboardPage({
             <p className="erp-home-empty">등록된 메모가 없습니다.</p>
           )}
 
-          <div className="erp-home-panel-title" style={{ marginTop: 0 }}>
+          <div className="erp-home-panel-title erp-u-mt-0">
             빠른 실행
           </div>
           <div className="erp-home-list">

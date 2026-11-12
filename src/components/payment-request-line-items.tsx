@@ -134,7 +134,7 @@ export function PaymentRequestLineItems({
                     className="erp-input w-full"
                   />
                 </td>
-                <td className="num" style={{ textAlign: "center", verticalAlign: "middle" }}>
+                <td className="num erp-u-text-center" style={{ verticalAlign: "middle" }}>
                   <input
                     type="checkbox"
                     checked={row.highlighted}
@@ -148,8 +148,8 @@ export function PaymentRequestLineItems({
                     type="button"
                     onClick={() => removeRow(row.key)}
                     disabled={rows.length === 1}
-                    className="erp-btn erp-btn-danger"
-                    style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                    className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                    style={{ minWidth: 0 }}
                   >
                     ×
                   </button>

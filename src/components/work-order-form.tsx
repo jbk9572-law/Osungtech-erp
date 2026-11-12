@@ -73,7 +73,7 @@ export function WorkOrderForm({
 
   if (producibleProducts.length === 0) {
     return (
-      <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+      <p className="text-sm erp-u-muted">
         아직 BOM(구성품)이 등록된 품목이 없습니다. 품목관리에서 완제품을 열어
         BOM을 먼저 등록해주세요.
       </p>
@@ -164,8 +164,7 @@ export function WorkOrderForm({
                     <td>
                       {r.short && (
                         <span
-                          className="text-xs font-semibold"
-                          style={{ color: "var(--erp-danger)" }}
+                          className="text-xs font-semibold erp-u-danger"
                         >
                           재고 부족
                         </span>
@@ -193,7 +192,7 @@ export function WorkOrderForm({
                   </span>
                 </div>
                 {r.short && (
-                  <span className="text-xs font-semibold" style={{ color: "var(--erp-danger)" }}>
+                  <span className="text-xs font-semibold erp-u-danger">
                     재고 부족
                   </span>
                 )}

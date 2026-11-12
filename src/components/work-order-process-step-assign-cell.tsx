@@ -48,25 +48,25 @@ export function WorkOrderProcessStepAssignCell({
 
   if (mode === "new") {
     return (
-      <form action={createAction} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <form className="erp-u-flex" action={createAction} style={{ flexDirection: "column", gap: 4 }}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="erp-u-flex" style={{ gap: 4 }}>
           <input
             name="name"
             autoComplete="off"
             placeholder="업체명"
             required
-            className="erp-input"
-            style={{ height: 22, fontSize: 11, padding: "0 6px", width: 100 }}
+            className="erp-input erp-u-h-22"
+            style={{ fontSize: 11, padding: "0 6px", width: 100 }}
           />
-          <button type="submit" className="erp-btn" style={{ height: 22, padding: "1px 6px", fontSize: 11 }} disabled={createPending}>
+          <button type="submit" className="erp-btn erp-u-h-22" style={{ padding: "1px 6px", fontSize: 11 }} disabled={createPending}>
             {createPending ? "..." : "등록·배정"}
           </button>
           <button
             type="button"
-            className="erp-btn"
-            style={{ height: 22, padding: "1px 6px", fontSize: 11 }}
+            className="erp-btn erp-u-h-22"
+            style={{ padding: "1px 6px", fontSize: 11 }}
             onClick={() => setMode("select")}
           >
             취소
@@ -79,12 +79,12 @@ export function WorkOrderProcessStepAssignCell({
 
   if (mode === "issue" && subcontractorId) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
         <PortalAccountForm targetId={subcontractorId} kind="subcontractor" />
         <button
           type="button"
-          className="erp-btn"
-          style={{ height: 22, padding: "1px 6px", fontSize: 11, alignSelf: "flex-start" }}
+          className="erp-btn erp-u-h-22"
+          style={{ padding: "1px 6px", fontSize: 11, alignSelf: "flex-start" }}
           onClick={() => setMode("select")}
         >
           닫기
@@ -98,8 +98,8 @@ export function WorkOrderProcessStepAssignCell({
       ? (subcontractors.find((s) => s.id === subcontractorId)?.name ?? "업체")
       : "사내 공정";
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <span style={{ fontSize: 11, color: "var(--erp-text-muted)" }} title="자재투입/입고 전(대기 상태)에만 담당자를 바꿀 수 있습니다.">
+      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
+        <span className="erp-u-muted" style={{ fontSize: 11 }} title="자재투입/입고 전(대기 상태)에만 담당자를 바꿀 수 있습니다.">
           {assignedName}
         </span>
         {subcontractorId && !hasPortalAccount && (
@@ -117,8 +117,8 @@ export function WorkOrderProcessStepAssignCell({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <form ref={assignFormRef} action={assignAction} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+    <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
+      <form className="erp-u-items-center" ref={assignFormRef} action={assignAction} style={{ display: "inline-flex", gap: 4 }}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
         <ErpSelect

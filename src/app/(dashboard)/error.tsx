@@ -32,7 +32,7 @@ export default function DashboardError({
     // 이어졌다. 뷰포트 기준 최소 높이를 강제하는 대신 내용만큼만 차지하게
     // 두고, 다른 화면의 알림 카드(erp-item-card 등)처럼 이 화면 영역
     // "안에" 담겨 있는 것처럼 보이도록 테두리로 감싼다.
-    <div style={{ maxWidth: 560, margin: "32px auto", textAlign: "center" }}>
+    <div className="erp-u-text-center" style={{ maxWidth: 560, margin: "32px auto" }}>
       <div
         style={{
           border: "1px solid var(--erp-border)",
@@ -41,27 +41,16 @@ export default function DashboardError({
           padding: "28px 20px",
         }}
       >
-        <p style={{ fontSize: 15, fontWeight: 700, color: "var(--erp-text)", marginBottom: 8 }}>
+        <p className="erp-u-bold erp-u-text" style={{ fontSize: 15, marginBottom: 8 }}>
           일시적인 오류로 화면을 불러오지 못했습니다.
         </p>
-        <p style={{ fontSize: 12, color: "var(--erp-text-muted)", marginBottom: 20 }}>
+        <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
           네트워크가 잠시 불안정했거나 데이터량이 많아 시간이 오래 걸렸을 수 있습니다.
           아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 아래 내용과 함께 운영자에게 알려주세요.
         </p>
         {(error.message || error.digest) && (
-          <p
-            style={{
-              fontSize: 11,
-              fontFamily: "monospace",
-              color: "var(--erp-text-muted)",
-              background: "var(--erp-bg-subtle)",
-              border: "1px solid var(--erp-border)",
-              borderRadius: 0,
-              padding: "8px 12px",
-              marginBottom: 20,
-              wordBreak: "break-word",
-              textAlign: "left",
-            }}
+          <p className="erp-u-muted"
+            style={{ fontSize: 11, fontFamily: "monospace", background: "var(--erp-bg-subtle)", border: "1px solid var(--erp-border)", borderRadius: 0, padding: "8px 12px", marginBottom: 20, wordBreak: "break-word", textAlign: "left" }}
           >
             {error.message || "(메시지 없음)"}
             {error.digest && (
@@ -72,7 +61,7 @@ export default function DashboardError({
             )}
           </p>
         )}
-        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+        <div className="erp-u-flex erp-u-gap-8" style={{ justifyContent: "center" }}>
           <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
             다시 시도
           </button>

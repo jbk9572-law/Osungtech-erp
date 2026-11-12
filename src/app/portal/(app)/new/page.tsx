@@ -7,9 +7,9 @@ export default async function PortalNewOrderPage() {
 
   return (
     <div>
-      <h1 className="erp-portal-h1" style={{ marginBottom: 12 }}>발주하기</h1>
+      <h1 className="erp-portal-h1 erp-u-mb-12">발주하기</h1>
       {error ? (
-        <p style={{ fontSize: 13, color: "var(--erp-danger)" }}>품목을 불러오지 못했습니다. 다시 시도해주세요.</p>
+        <p className="erp-u-danger" style={{ fontSize: 13 }}>품목을 불러오지 못했습니다. 다시 시도해주세요.</p>
       ) : (
         <PortalNewOrderForm catalog={catalog ?? []} />
       )}

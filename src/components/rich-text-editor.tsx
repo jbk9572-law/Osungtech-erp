@@ -535,7 +535,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           </ToolbarButton>
         </span>
         <span className="erp-richtext-toolbar-group">
-        <div style={{ position: "relative" }}>
+        <div className="erp-u-relative">
           <ToolbarButton
             title="글자 크기"
             active={!!editor.getAttributes("textStyle").fontSize}
@@ -562,7 +562,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
             </div>
           )}
         </div>
-        <div style={{ position: "relative" }}>
+        <div className="erp-u-relative">
           <ToolbarButton
             title="글자 색"
             active={!!editor.getAttributes("textStyle").color}
@@ -594,7 +594,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
             </div>
           )}
         </div>
-        <div style={{ position: "relative" }}>
+        <div className="erp-u-relative">
           <ToolbarButton
             title="형광펜"
             active={editor.isActive("highlight")}
@@ -684,7 +684,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
           </ToolbarButton>
         </span>
         <span className="erp-richtext-toolbar-group">
-        <div style={{ position: "relative" }}>
+        <div className="erp-u-relative">
           <ToolbarButton title="링크" active={editor.isActive("link")} onClick={openLinkPopover}>
             <LinkIcon />
           </ToolbarButton>
@@ -704,16 +704,16 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
                   if (e.key === "Escape") setOpenPopover(null);
                 }}
                 placeholder="https://..."
-                className="erp-input"
-                style={{ fontSize: 12, height: 26 }}
+                className="erp-input erp-u-h-26"
+                style={{ fontSize: 12 }}
               />
-              <button type="button" className="erp-btn erp-btn-primary" onClick={applyLink} style={{ height: 26, fontSize: 11.5 }}>
+              <button type="button" className="erp-btn erp-btn-primary erp-u-h-26" onClick={applyLink} style={{ fontSize: 11.5 }}>
                 적용
               </button>
             </div>
           )}
         </div>
-        <div style={{ position: "relative" }}>
+        <div className="erp-u-relative">
           <ToolbarButton
             title="이미지 (URL)"
             onClick={() => setOpenPopover(openPopover === "image" ? null : "image")}
@@ -736,10 +736,10 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, Props>(function R
                   if (e.key === "Escape") setOpenPopover(null);
                 }}
                 placeholder="이미지 URL"
-                className="erp-input"
-                style={{ fontSize: 12, height: 26 }}
+                className="erp-input erp-u-h-26"
+                style={{ fontSize: 12 }}
               />
-              <button type="button" className="erp-btn erp-btn-primary" onClick={applyImage} style={{ height: 26, fontSize: 11.5 }}>
+              <button type="button" className="erp-btn erp-btn-primary erp-u-h-26" onClick={applyImage} style={{ fontSize: 11.5 }}>
                 삽입
               </button>
             </div>

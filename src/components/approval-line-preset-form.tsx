@@ -50,7 +50,7 @@ export function ApprovalLinePresetForm({
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs font-semibold" style={{ color: "var(--erp-text)" }}>
+        <p className="mb-1.5 text-xs font-semibold erp-u-text">
           결재자 · 참조자 선택
         </p>
         <OrgChartApproverPicker

@@ -321,7 +321,7 @@ export default async function ApprovalsPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>기안 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+            <span className="erp-u-muted erp-u-normal">
               총 {formatNumber(rows.length)}건
             </span>
           </div>

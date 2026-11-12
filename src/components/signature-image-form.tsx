@@ -16,7 +16,7 @@ export function SignatureImageForm({ currentUrl }: { currentUrl?: string | null 
         // eslint-disable-next-line @next/next/no-img-element -- 사용자가 직접 올린 임의 크기 이미지라 next/image 최적화 대상이 아니다
         <img src={currentUrl} alt="내 서명" className="mb-3" style={{ height: 48, width: "auto" }} />
       ) : (
-        <p className="mb-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="mb-3 text-xs erp-u-muted">
           등록된 서명 이미지가 없습니다.
         </p>
       )}

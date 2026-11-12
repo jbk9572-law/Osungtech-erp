@@ -172,7 +172,7 @@ export default async function SaleDetailPage({
         </PageGuide>
       )}
 
-      <div className="erp-detail" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-12">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">기본정보</span>
         </div>
@@ -197,12 +197,12 @@ export default async function SaleDetailPage({
             </div>
           )}
           {order.is_return && order.return_reason && (
-            <p style={{ marginTop: 12, color: "var(--erp-danger)" }}>
+            <p className="erp-u-danger" style={{ marginTop: 12 }}>
               반품 사유: {order.return_reason}
             </p>
           )}
           {order.memo && (
-            <p style={{ marginTop: 12, color: "var(--erp-text-muted)" }}>
+            <p className="erp-u-muted" style={{ marginTop: 12 }}>
               메모: {order.memo}
             </p>
           )}
@@ -211,7 +211,7 @@ export default async function SaleDetailPage({
               {order.invoice_status === "issued" ? (
                 <>
                   <GridBadge tone="ok">계산서 발행완료</GridBadge>
-                  <span style={{ color: "var(--erp-text-muted)" }}>
+                  <span className="erp-u-muted">
                     {order.invoice_issued_at ? new Date(order.invoice_issued_at).toLocaleDateString("ko-KR") : "-"}
                   </span>
                   <Link href={taxInvoiceHref} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>

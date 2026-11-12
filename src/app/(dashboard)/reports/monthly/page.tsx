@@ -141,19 +141,14 @@ export default async function MonthlyReportPage({
             {formatNumber(totalSalesAmount)}원
           </div>
           {salesDelta && (
-            <div
-              style={{
-                marginTop: 5,
-                fontSize: 11,
-                fontWeight: 700,
-                color: salesDelta.isUp
+            <div className="erp-u-bold"
+              style={{ marginTop: 5, fontSize: 11, color: salesDelta.isUp
                   ? "var(--erp-success)"
-                  : "var(--erp-danger)",
-              }}
+                  : "var(--erp-danger)" }}
             >
               {salesDelta.isUp ? "▲" : "▼"} {salesDelta.pct.toFixed(1)}%{" "}
-              <span
-                style={{ fontWeight: 500, color: "var(--erp-text-muted)" }}
+              <span className="erp-u-muted"
+                style={{ fontWeight: 500 }}
               >
                 전월대비
               </span>
@@ -168,19 +163,14 @@ export default async function MonthlyReportPage({
             {formatNumber(totalPurchaseAmount)}원
           </div>
           {purchaseDelta && (
-            <div
-              style={{
-                marginTop: 5,
-                fontSize: 11,
-                fontWeight: 700,
-                color: purchaseDelta.isUp
+            <div className="erp-u-bold"
+              style={{ marginTop: 5, fontSize: 11, color: purchaseDelta.isUp
                   ? "var(--erp-success)"
-                  : "var(--erp-danger)",
-              }}
+                  : "var(--erp-danger)" }}
             >
               {purchaseDelta.isUp ? "▲" : "▼"} {purchaseDelta.pct.toFixed(1)}%{" "}
-              <span
-                style={{ fontWeight: 500, color: "var(--erp-text-muted)" }}
+              <span className="erp-u-muted"
+                style={{ fontWeight: 500 }}
               >
                 전월대비
               </span>
@@ -198,7 +188,7 @@ export default async function MonthlyReportPage({
       </div>
 
       {returnReasonStats.length > 0 && (
-        <div className="erp-grid-wrap" style={{ marginBottom: 12 }}>
+        <div className="erp-grid-wrap erp-u-mb-12">
           <table className="erp-grid">
             <thead>
               <tr>
@@ -227,7 +217,7 @@ export default async function MonthlyReportPage({
               ))}
             </tbody>
             <tfoot>
-              <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                 <td>합계 (매출에서 차감됨)</td>
                 <td className="num">
                   {formatNumber(returnReasonStats.reduce((sum, r) => sum + r.count, 0))}건
@@ -277,24 +267,16 @@ export default async function MonthlyReportPage({
                 return (
                   <Fragment key={g.productId}>
                     <tr style={{ background: groupBg }}>
-                      <td style={{ fontWeight: 700 }}>
+                      <td className="erp-u-bold">
                         {g.sku !== "-" && (
-                          <span
-                            style={{
-                              color: "var(--erp-text-muted)",
-                              fontWeight: 400,
-                            }}
+                          <span className="erp-u-muted erp-u-normal"
                           >
                             {g.sku} ·{" "}
                           </span>
                         )}
                         {g.name}
                         {g.spec !== "-" && (
-                          <span
-                            style={{
-                              color: "var(--erp-text-muted)",
-                              fontWeight: 400,
-                            }}
+                          <span className="erp-u-muted erp-u-normal"
                           >
                             {" "}
                             ({g.spec})
@@ -302,19 +284,19 @@ export default async function MonthlyReportPage({
                         )}
                       </td>
                       <td />
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(g.inQty)} {g.unit}
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(g.inAmount)}
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(g.outQty)} {g.unit}
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(g.outAmount)}
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber((g.inQty - g.outQty))} {g.unit}
                       </td>
                     </tr>
@@ -344,36 +326,31 @@ export default async function MonthlyReportPage({
                           </GridBadge>
                         </td>
                         <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="num erp-u-muted"
                         >
                           {d.type === "in"
                             ? `${formatNumber(d.quantity)} ${g.unit ?? ""}`
                             : "-"}
                         </td>
                         <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="num erp-u-muted"
                         >
                           {d.type === "in" ? formatNumber(d.amount) : "-"}
                         </td>
                         <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="num erp-u-muted"
                         >
                           {d.type === "out"
                             ? `${formatNumber(d.quantity)} ${g.unit ?? ""}`
                             : "-"}
                         </td>
                         <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="num erp-u-muted"
                         >
                           {d.type === "out" ? formatNumber(d.amount) : "-"}
                         </td>
                         <td
-                          className="num"
-                          style={{ color: "var(--erp-text-muted)" }}
+                          className="num erp-u-muted"
                         >
                           -
                         </td>
@@ -392,7 +369,7 @@ export default async function MonthlyReportPage({
             </tbody>
             {itemGroups.length > 0 && (
               <tfoot>
-                <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                   <td colSpan={2} className="erp-grid-sticky-label">
                     합계 ({itemGroups.length}개 품목)
                   </td>
@@ -464,27 +441,11 @@ export default async function MonthlyReportPage({
                 return (
                   <Fragment key={cg.companyId}>
                     <tr style={{ background: groupBg }}>
-                      <td colSpan={2} style={{ fontWeight: 700 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
+                      <td className="erp-u-bold" colSpan={2}>
+                        <div className="erp-u-flex erp-u-items-center erp-u-gap-8"
                         >
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: 20,
-                              height: 20,
-                              borderRadius: "50%",
-                              fontSize: 11,
-                              fontWeight: 800,
-                              flexShrink: 0,
-                              ...rankStyle,
-                            }}
+                          <span className="erp-u-items-center"
+                            style={{ display: "inline-flex", justifyContent: "center", width: 20, height: 20, borderRadius: "50%", fontSize: 11, fontWeight: 800, flexShrink: 0, ...rankStyle }}
                           >
                             {rank}
                           </span>
@@ -497,15 +458,8 @@ export default async function MonthlyReportPage({
                             {cg.companyName}
                           </Link>
                         </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            marginTop: 4,
-                            marginLeft: 28,
-                            maxWidth: 200,
-                          }}
+                        <div className="erp-u-flex erp-u-items-center erp-u-gap-8"
+                          style={{ marginTop: 4, marginLeft: 28, maxWidth: 200 }}
                         >
                           <div
                             style={{
@@ -525,20 +479,14 @@ export default async function MonthlyReportPage({
                               }}
                             />
                           </div>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              color: "var(--erp-text)",
-                              minWidth: 34,
-                              textAlign: "right",
-                            }}
+                          <span className="erp-u-bold erp-u-text"
+                            style={{ fontSize: 11, minWidth: 34, textAlign: "right" }}
                           >
                             {share.toFixed(1)}%
                           </span>
                         </div>
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(cg.totalQuantity)}
                       </td>
                       <td className="num">
@@ -547,20 +495,18 @@ export default async function MonthlyReportPage({
                         </GridBadge>
                       </td>
                       <td
-                        className="num"
-                        style={{ color: "var(--erp-text-muted)" }}
+                        className="num erp-u-muted"
                       >
                         -
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(cg.totalAmount)}
                       </td>
-                      <td className="num" style={{ fontWeight: 700 }}>
+                      <td className="num erp-u-bold">
                         {formatNumber(cg.totalTax)}
                       </td>
                       <td
-                        className="num"
-                        style={{ fontWeight: 700, color: "var(--erp-text)" }}
+                        className="num erp-u-bold erp-u-text"
                       >
                         {share.toFixed(1)}%
                       </td>
@@ -572,51 +518,42 @@ export default async function MonthlyReportPage({
                           key={`${cg.companyId}-${pg.key}`}
                           style={{ background: groupBg }}
                         >
-                          <td
-                            style={{
-                              paddingLeft: 34,
-                              color: "var(--erp-text-muted)",
-                            }}
+                          <td className="erp-u-muted"
+                            style={{ paddingLeft: 34 }}
                           >
                             {first.sku !== "-" && <span>{first.sku} · </span>}
                             {first.productName}
                           </td>
-                          <td style={{ color: "var(--erp-text-muted)" }}>
+                          <td className="erp-u-muted">
                             {first.spec !== "-" ? first.spec : "-"}
                           </td>
                           <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="num erp-u-muted"
                           >
                             {formatNumber(pg.totalQuantity)} {first.unit}
                           </td>
                           <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="num erp-u-muted"
                           >
                             -
                           </td>
                           <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="num erp-u-muted"
                           >
                             {formatNumber(Math.round(pg.avgUnitPrice))}
                           </td>
                           <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="num erp-u-muted"
                           >
                             {formatNumber(pg.totalAmount)}
                           </td>
                           <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="num erp-u-muted"
                           >
                             {formatNumber(pg.totalTax)}
                           </td>
                           <td
-                            className="num"
-                            style={{ color: "var(--erp-text-muted)" }}
+                            className="num erp-u-muted"
                           >
                             -
                           </td>
@@ -636,7 +573,7 @@ export default async function MonthlyReportPage({
             </tbody>
             {companyGroups.length > 0 && (
               <tfoot>
-                <tr style={{ background: "var(--erp-bg)", fontWeight: 700 }}>
+                <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
                   <td colSpan={2} className="erp-grid-sticky-label">
                     합계 ({companyGroups.length}곳)
                   </td>

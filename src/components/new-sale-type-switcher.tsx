@@ -14,7 +14,7 @@ export function NewSaleTypeSwitcher({ today, ...saleProps }: SaleFormProps & { t
 
   return (
     <div>
-      <div className="erp-seg" style={{ marginBottom: 12 }}>
+      <div className="erp-seg erp-u-mb-12">
         <button
           type="button"
           className={`erp-seg-btn${type === "sale" ? " active" : ""}`}

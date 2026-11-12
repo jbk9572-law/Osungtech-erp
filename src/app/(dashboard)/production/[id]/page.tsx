@@ -111,7 +111,7 @@ export default async function WorkOrderDetailPage({
         있습니다.
       </PageGuide>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">지시 정보</span>
         </div>
@@ -218,7 +218,7 @@ export default async function WorkOrderDetailPage({
                     <tr key={s.id}>
                       <td className="num">{s.sort_order}</td>
                       <td>{s.process_name}</td>
-                      <td style={{ color: "var(--erp-text-muted)" }}>{prevLabel ?? "-"}</td>
+                      <td className="erp-u-muted">{prevLabel ?? "-"}</td>
                       <td>
                         <WorkOrderProcessStepAssignCell
                           id={s.id}
@@ -237,7 +237,7 @@ export default async function WorkOrderDetailPage({
                             unitCost={s.unit_cost != null ? Number(s.unit_cost) : null}
                           />
                         ) : (
-                          <span style={{ color: "var(--erp-text-muted)" }}>-</span>
+                          <span className="erp-u-muted">-</span>
                         )}
                       </td>
                       <td style={{ color: Number(s.defect_quantity) > 0 || Number(s.returned_quantity) > 0 ? "var(--erp-danger)" : "var(--erp-text-muted)" }}>
@@ -247,13 +247,13 @@ export default async function WorkOrderDetailPage({
                       </td>
                       <td>
                         {s.defect_hold ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap" }}>
                             <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
                             <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
                             <WorkOrderStepDefectRejectButton id={s.id} workOrderId={workOrder.id} />
                           </div>
                         ) : (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap" }}>
                             <WorkOrderProcessStepActions
                               id={s.id}
                               workOrderId={workOrder.id}
@@ -355,7 +355,7 @@ export default async function WorkOrderDetailPage({
             </div>
           )}
           {!(steps && steps.length > 0) && (
-            <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="p-3 text-xs erp-u-muted">
               이 완제품에 등록된 공정 라우팅이 없어 체크리스트가 없습니다.
               (품목관리에서 공정 라우팅을 등록하면 다음 생산지시부터
               적용됩니다.)

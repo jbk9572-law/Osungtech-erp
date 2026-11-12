@@ -22,7 +22,7 @@ export function BalanceAgingSummary({
       <div className="erp-kpi-row" style={{ marginBottom: 16 }}>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">{totalLabel}</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-danger)" }}>
+          <div className="erp-kpi-value erp-u-danger">
             {formatNumber(summary.totalBalance)}원
           </div>
         </div>

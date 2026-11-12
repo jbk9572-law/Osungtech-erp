@@ -40,29 +40,20 @@ export function PriceHistoryPopover({
   }
 
   return (
-    <div
+    <div className="erp-u-relative"
       ref={wrapRef}
-      style={{ position: "relative", display: "inline-block" }}
+      style={{ display: "inline-block" }}
       onBlur={(e) => {
         if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
       }}
     >
-      <button
+      <button className="erp-u-text"
         type="button"
         onClick={handleOpen}
         aria-expanded={open}
         aria-haspopup="true"
         title="단가변경 이력 보기"
-        style={{
-          fontSize: "var(--erp-font-xs)",
-          color: "var(--erp-text)",
-          textDecoration: "underline",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 0,
-          marginLeft: 6,
-        }}
+        style={{ fontSize: "var(--erp-font-xs)", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: 6 }}
       >
         이력
       </button>
@@ -85,12 +76,12 @@ export function PriceHistoryPopover({
           }}
         >
           {loading && (
-            <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", padding: "4px 6px" }}>
+            <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", padding: "4px 6px" }}>
               불러오는 중...
             </div>
           )}
           {!loading && rows?.length === 0 && (
-            <div style={{ fontSize: "var(--erp-font-xs)", color: "var(--erp-text-muted)", padding: "4px 6px" }}>
+            <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", padding: "4px 6px" }}>
               변경 이력이 없습니다.
             </div>
           )}
@@ -104,11 +95,11 @@ export function PriceHistoryPopover({
                   borderBottom: "1px solid var(--erp-border)",
                 }}
               >
-                <div style={{ color: "var(--erp-text-muted)" }}>
+                <div className="erp-u-muted">
                   {new Date(row.createdAt).toLocaleString("ko-KR")} · {row.actorName ?? "-"} ·{" "}
                   {ACTION_LABELS[row.action] ?? row.action}
                 </div>
-                <div style={{ fontWeight: 600 }}>
+                <div className="erp-u-semibold">
                   {row.oldUnit !== null ? formatNumOrDash(row.oldUnit) : "-"}
                   {" → "}
                   {row.newUnit !== null ? formatNumOrDash(row.newUnit) : "-"}원

@@ -44,8 +44,8 @@ export function TenantPointsPanel({
       </PageGuide>
 
       <div className="mb-3 flex items-center gap-2">
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--erp-text)" }}>{formatNumber(balance)}</span>
-        <span style={{ color: "var(--erp-text-muted)" }}>포인트 보유</span>
+        <span className="erp-u-bold erp-u-text" style={{ fontSize: 20 }}>{formatNumber(balance)}</span>
+        <span className="erp-u-muted">포인트 보유</span>
       </div>
 
       <form action={formAction} className="erp-field mb-3">

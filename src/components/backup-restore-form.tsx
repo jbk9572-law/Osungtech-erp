@@ -42,10 +42,9 @@ export function BackupRestoreForm() {
 
       {fileName && code && (
         <label
-          className="flex items-center gap-2 text-xs"
-          style={{ color: "var(--erp-text-muted)" }}
+          className="flex items-center gap-2 text-xs erp-u-muted"
         >
-          <strong style={{ color: "var(--erp-text)" }}>{fileName}</strong> 복원을 확인하려면 코드{" "}
+          <strong className="erp-u-text">{fileName}</strong> 복원을 확인하려면 코드{" "}
           <strong>{code}</strong> 입력
           <input
             type="text"

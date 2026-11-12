@@ -93,7 +93,7 @@ export function SplitListBulkSelect({
         </div>
       ))}
       {rows.length === 0 && (
-        <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <p className="p-3 text-xs erp-u-muted">
           {emptyMessage}
         </p>
       )}

@@ -92,7 +92,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
       <h1 className="mb-1 erp-h1">{product.name}</h1>
       <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{product.sku}</p>
 
-      <div className="erp-detail" style={{ marginTop: 0 }}>
+      <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">상품 정보 수정</span>
         </div>
@@ -126,7 +126,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
 
           {bomRows.length > 0 && (
             <>
-              <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 12 }}>
+              <div className="erp-grid-wrap has-card-view erp-u-mb-12">
                 <table className="erp-grid">
                   <thead>
                     <tr>
@@ -160,7 +160,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
                 </table>
               </div>
 
-              <div className="erp-row-card-list" style={{ marginBottom: 12 }}>
+              <div className="erp-row-card-list erp-u-mb-12">
                 {bomRows.map((row) => (
                   <div className="erp-row-card" key={row.id}>
                     <div className="erp-row-card-head">

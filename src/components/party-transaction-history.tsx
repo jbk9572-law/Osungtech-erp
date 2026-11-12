@@ -149,9 +149,9 @@ export function PartyTransactionHistory({
                     </GridBadge>
                   </td>
                   <td>{r.date.replaceAll("-", ".")}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{r.label}</td>
+                  <td className="erp-u-muted">{r.label}</td>
                   <td className="num">{formatNumber(r.total)}</td>
-                  <td className="num" style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="num erp-u-muted">
                     {formatNumber(r.balance)}
                   </td>
                 </tr>
@@ -171,7 +171,7 @@ export function PartyTransactionHistory({
           {rows.map((r) => (
             <div className="erp-row-card" key={r.id}>
               <div className="erp-row-card-head">
-                <span className="erp-row-card-partner" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span className="erp-row-card-partner erp-u-flex erp-u-items-center erp-u-gap-6">
                   <GridBadge tone={r.kind === positiveKind ? "info" : "muted"}>
                     {kindLabels[r.kind] ?? r.kind}
                   </GridBadge>
@@ -182,7 +182,7 @@ export function PartyTransactionHistory({
               <dl className="erp-order-item-fields">
                 <div>
                   <dt>합계</dt>
-                  <dd style={{ fontWeight: 700 }}>{formatNumber(r.total)}</dd>
+                  <dd className="erp-u-bold">{formatNumber(r.total)}</dd>
                 </div>
                 <div>
                   <dt>잔액</dt>

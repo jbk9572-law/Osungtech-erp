@@ -520,7 +520,7 @@ export function ManualLayoutClient({
       </PageGuide>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <span className="text-xs erp-u-muted">
           연결할 등록 유형
         </span>
         <div className="erp-seg">
@@ -618,8 +618,8 @@ export function ManualLayoutClient({
                     <td>
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger"
-                        style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                        style={{ minWidth: 0 }}
                         onClick={() => removeRow(row.key)}
                         disabled={rows.length <= 1}
                       >
@@ -632,7 +632,7 @@ export function ManualLayoutClient({
             </table>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+            <span className="text-xs erp-u-muted">
               현재 입력 {rows.length} / {MAX_ROWS}
             </span>
             <button type="button" className="erp-btn" onClick={addRow} disabled={rows.length >= MAX_ROWS}>
@@ -641,7 +641,7 @@ export function ManualLayoutClient({
           </div>
 
           {items.length === 0 ? (
-            <p className="text-sm" style={{ color: "var(--erp-text-muted)" }}>
+            <p className="text-sm erp-u-muted">
               가로/세로/수량을 입력하면 아래에 배치용 품목이 나타납니다.
             </p>
           ) : (
@@ -654,19 +654,9 @@ export function ManualLayoutClient({
                   <button
                     key={item.name}
                     type="button"
-                    className="erp-btn"
+                    className="erp-btn erp-u-flex erp-u-items-center erp-u-gap-6"
                     disabled={isDone}
-                    style={{
-                      minWidth: 0,
-                      height: 30,
-                      padding: "0 10px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      outline: selectedItemName === item.name ? "2px solid var(--erp-primary)" : "none",
-                      outlineOffset: -1,
-                      opacity: isDone ? 0.55 : 1,
-                    }}
+                    style={{ minWidth: 0, height: 30, padding: "0 10px", outline: selectedItemName === item.name ? "2px solid var(--erp-primary)" : "none", outlineOffset: -1, opacity: isDone ? 0.55 : 1 }}
                     onClick={() => setSelectedItemName(item.name)}
                   >
                     <span
@@ -711,16 +701,16 @@ export function ManualLayoutClient({
             ))}
             <button
               type="button"
-              className="erp-btn"
-              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+              style={{ minWidth: 0 }}
               onClick={addSheet}
             >
               + 새 배치
             </button>
             <button
               type="button"
-              className="erp-btn erp-btn-danger"
-              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+              style={{ minWidth: 0 }}
               onClick={() => removeSheet(sheetIndex)}
               onBlur={confirmRemoveSheet.reset}
               disabled={sheets.length <= 1}
@@ -735,7 +725,7 @@ export function ManualLayoutClient({
               배치 {sheetIndex + 1} · {paperW} × {paperH} mm · 사용률{" "}
               {layouts[sheetIndex]?.margin.usage ?? 0}%
               {cursorPos && (
-                <span style={{ color: "var(--erp-text-muted)" }}>
+                <span className="erp-u-muted">
                   {" "}
                   · X {cursorPos.x}mm, Y {cursorPos.y}mm
                 </span>
@@ -743,8 +733,8 @@ export function ManualLayoutClient({
             </span>
             <button
               type="button"
-              className="erp-btn"
-              style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+              className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+              style={{ minWidth: 0 }}
               onClick={clearCurrentSheet}
               onBlur={confirmClearSheet.reset}
             >
@@ -912,13 +902,13 @@ export function ManualLayoutClient({
               <span>
                 선택됨: {selectedPlacement.name} ({selectedPlacement.w}×{selectedPlacement.h})
               </span>
-              <button type="button" className="erp-btn" style={{ minWidth: 0, height: 26, padding: "0 8px" }} onClick={rotateSelected}>
+              <button type="button" className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0 }} onClick={rotateSelected}>
                 회전
               </button>
               <button
                 type="button"
-                className="erp-btn erp-btn-danger"
-                style={{ minWidth: 0, height: 26, padding: "0 8px" }}
+                className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+                style={{ minWidth: 0 }}
                 onClick={deleteSelected}
               >
                 삭제

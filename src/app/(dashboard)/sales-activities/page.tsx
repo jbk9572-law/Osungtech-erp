@@ -130,7 +130,7 @@ export default async function SalesActivitiesPage({
       </PageGuide>
 
       {upcoming.length > 0 && (
-        <div className="erp-detail" style={{ marginBottom: 12 }}>
+        <div className="erp-detail erp-u-mb-12">
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">팔로우업 예정 ({upcoming.length}건)</span>
           </div>
@@ -207,7 +207,7 @@ export default async function SalesActivitiesPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>활동 이력</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>총 {formatNumber(activities.length)}건</span>
+            <span className="erp-u-muted erp-u-normal">총 {formatNumber(activities.length)}건</span>
           </div>
           <div className="erp-split-list-body">
             {activities.map((a) => (
@@ -226,7 +226,7 @@ export default async function SalesActivitiesPage({
               </Link>
             ))}
             {activities.length === 0 && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="p-3 text-xs erp-u-muted">
                 조건에 맞는 활동 기록이 없습니다.
               </p>
             )}
@@ -244,7 +244,7 @@ export default async function SalesActivitiesPage({
           {selectedId ? (
             <SalesActivityDetailPanel key={selectedId} id={selectedId} closeHref={newHref} />
           ) : (
-            <div className="erp-detail" style={{ marginTop: 0 }}>
+            <div className="erp-detail erp-u-mt-0">
               <div className="erp-detail-tabs">
                 <span className="erp-detail-tab active">새 활동 기록</span>
               </div>

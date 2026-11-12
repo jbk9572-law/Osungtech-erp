@@ -25,7 +25,7 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
       <RouteProgressBar />
       <div className="erp-platform-admin-shell">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <span className="text-xs erp-u-muted">
             플랫폼 관리자
           </span>
           {/* platform-admin은 (dashboard) 레이아웃 밖의 독립된 화면이라

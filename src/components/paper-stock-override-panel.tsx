@@ -52,8 +52,8 @@ export function PaperStockOverridePanel({
           </span>
           <button
             type="button"
-            className="erp-btn erp-btn-danger"
-            style={{ minWidth: 0, height: 24, padding: "0 8px", fontSize: 11.5 }}
+            className="erp-btn erp-btn-danger erp-u-h-24 erp-u-pad-0-8"
+            style={{ minWidth: 0, fontSize: 11.5 }}
             disabled={revertPending}
             onBlur={confirmRevert.reset}
             onClick={() => {
@@ -73,7 +73,7 @@ export function PaperStockOverridePanel({
         </PageGuide>
       )}
       {revertError && (
-        <p className="mb-2 text-xs" style={{ color: "var(--erp-danger)" }}>
+        <p className="mb-2 text-xs erp-u-danger">
           {revertError}
         </p>
       )}
@@ -111,8 +111,8 @@ export function PaperStockOverridePanel({
       <FormMessage state={state} />
 
       {history.length > 0 && (
-        <div className="mt-2 flex flex-col gap-1" style={{ color: "var(--erp-text-muted)", fontSize: 11.5 }}>
-          <div style={{ fontWeight: 600 }}>배치로그</div>
+        <div className="mt-2 flex flex-col gap-1 erp-u-muted" style={{ fontSize: 11.5 }}>
+          <div className="erp-u-semibold">배치로그</div>
           {history.map((h) => (
             <div key={h.id}>
               {new Date(h.created_at).toLocaleString("ko-KR")} · {h.profiles?.full_name ?? "-"} ·{" "}

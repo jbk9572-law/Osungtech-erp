@@ -222,10 +222,10 @@ export async function OfficialDocumentDetailPanel({
                       <tr key={r.id}>
                         <td>{r.kind === "external" ? "외부" : "사내"}</td>
                         <td>{r.name}</td>
-                        <td style={{ color: "var(--erp-text-muted)" }}>
+                        <td className="erp-u-muted">
                           {r.email ?? "-"}
                           {r.bounce_reason && (
-                            <div style={{ color: "var(--erp-danger)", fontSize: "var(--erp-font-xs)" }}>{r.bounce_reason}</div>
+                            <div className="erp-u-danger" style={{ fontSize: "var(--erp-font-xs)" }}>{r.bounce_reason}</div>
                           )}
                         </td>
                         <td>
@@ -280,7 +280,7 @@ export async function OfficialDocumentDetailPanel({
                       {r.bounce_reason && (
                         <div style={{ gridColumn: "1 / -1" }}>
                           <dt>발송실패 사유</dt>
-                          <dd style={{ color: "var(--erp-danger)" }}>{r.bounce_reason}</dd>
+                          <dd className="erp-u-danger">{r.bounce_reason}</dd>
                         </div>
                       )}
                     </dl>

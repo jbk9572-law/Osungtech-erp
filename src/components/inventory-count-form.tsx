@@ -151,7 +151,7 @@ export function InventoryCountForm({
   if (!started) {
     return (
       <div className="erp-new-count-cta">
-        <div className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+        <div className="text-xs erp-u-muted">
           전산 재고 {formatNumber(rows.length)}개 품목 기준으로 새 실사를 시작합니다. 실제로 다른
           품목만 고쳐서 저장하면 됩니다.
         </div>
@@ -163,16 +163,16 @@ export function InventoryCountForm({
   }
 
   return (
-    <div className="erp-detail" style={{ marginTop: 0, borderColor: "var(--erp-primary)" }}>
-      <div className="erp-detail-tabs" style={{ justifyContent: "space-between", paddingRight: 6 }}>
+    <div className="erp-detail erp-u-mt-0" style={{ borderColor: "var(--erp-primary)" }}>
+      <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 6 }}>
         <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
           진행 중인 실사
         </span>
         <button
           type="button"
           onClick={() => setStarted(false)}
-          className="erp-btn"
-          style={{ minWidth: 0, height: 26, padding: "0 10px" }}
+          className="erp-btn erp-u-h-26"
+          style={{ minWidth: 0, padding: "0 10px" }}
         >
           접기
         </button>
@@ -182,7 +182,7 @@ export function InventoryCountForm({
       <input type="hidden" name="warehouse_id" value={warehouseId} />
       <input type="hidden" name="rows" value={payload} />
       <input type="hidden" name="note" value={note} />
-      <div className="erp-search" style={{ alignItems: "center", justifyContent: "space-between" }}>
+      <div className="erp-search erp-u-items-center erp-u-justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <input
             type="text"
@@ -194,8 +194,7 @@ export function InventoryCountForm({
             style={{ width: 220 }}
           />
           <label
-            className="flex items-center gap-2 text-xs"
-            style={{ color: "var(--erp-text-muted)" }}
+            className="flex items-center gap-2 text-xs erp-u-muted"
           >
             <input
               type="checkbox"
@@ -205,8 +204,7 @@ export function InventoryCountForm({
             차이 있는 품목만 보기
           </label>
           <label
-            className="flex items-center gap-2 text-xs"
-            style={{ color: "var(--erp-text-muted)" }}
+            className="flex items-center gap-2 text-xs erp-u-muted"
           >
             <input
               type="checkbox"
@@ -224,7 +222,7 @@ export function InventoryCountForm({
           </PrintInPlaceButton>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: "var(--erp-text-muted)" }}>
+          <span className="text-xs erp-u-muted">
             차이 {changedRows.length}건
           </span>
           <button
@@ -290,8 +288,7 @@ export function InventoryCountForm({
             <button
               type="button"
               onClick={() => setSavedSummary(null)}
-              className="text-[11px] font-semibold"
-              style={{ color: "var(--erp-text-muted)" }}
+              className="text-[11px] font-semibold erp-u-muted"
             >
               닫기
             </button>
@@ -323,11 +320,8 @@ export function InventoryCountForm({
                       <td className="num">{formatNumber(r.systemQuantity)}</td>
                       <td className="num">{formatNumber(r.countedQuantity)}</td>
                       <td
-                        className="num"
-                        style={{
-                          fontWeight: 700,
-                          color: diff > 0 ? "var(--erp-success)" : "var(--erp-danger)",
-                        }}
+                        className="num erp-u-bold"
+                        style={{ color: diff > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
                       >
                         {diff > 0 ? "+" : ""}
                         {formatNumber(diff)}
@@ -373,8 +367,8 @@ export function InventoryCountForm({
                 <tr key={row.productId}>
                   <td>{row.sku}</td>
                   <td>{row.name}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>{row.spec || "-"}</td>
-                  <td style={{ color: "var(--erp-text-muted)" }}>
+                  <td className="erp-u-muted">{row.spec || "-"}</td>
+                  <td className="erp-u-muted">
                     {row.basePackageQty
                       ? `1박스 = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}`
                       : "-"}

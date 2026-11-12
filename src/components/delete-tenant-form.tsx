@@ -18,7 +18,7 @@ export function DeleteTenantForm({ tenantId, tenantName }: { tenantId: string; t
   return (
     <div style={{ maxWidth: 420 }}>
       <PageGuide tone="danger" className="mb-0 flex flex-col gap-3">
-        <div style={{ fontWeight: 700 }}>
+        <div className="erp-u-bold">
           <strong>{tenantName}</strong>의 매출·매입·재고·거래처·계정 등 모든 데이터를 영구히 삭제합니다. 되돌릴 수
           없습니다.
         </div>

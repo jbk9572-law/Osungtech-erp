@@ -33,7 +33,7 @@ export default async function PortalAssignmentsPage({
     supabase.rpc("subcontractor_list_all_work_order_steps"),
   ]);
   if (error) {
-    return <p style={{ fontSize: 13, color: "var(--erp-danger)" }}>배정된 공정을 불러오지 못했습니다.</p>;
+    return <p className="erp-u-danger" style={{ fontSize: 13 }}>배정된 공정을 불러오지 못했습니다.</p>;
   }
 
   const stepsByWorkOrderId = new Map<string, PortalAssignmentStep[]>();
@@ -67,7 +67,7 @@ export default async function PortalAssignmentsPage({
           F5: { submitFormSelector: "#portal-assignments-search-form" },
         }}
       />
-      <h1 className="erp-portal-h1" style={{ marginBottom: 12 }}>배정된 공정</h1>
+      <h1 className="erp-portal-h1 erp-u-mb-12">배정된 공정</h1>
 
       <DateRangeQuickFilters
         basePath={assignmentsHref}

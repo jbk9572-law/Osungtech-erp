@@ -30,7 +30,7 @@ export function Header({
           overflow: "visible",
         }}
       >
-        <span style={{ position: "relative", left: TITLE.offsetX, top: TITLE.offsetY }}>거래명세표</span>
+        <span className="erp-u-relative" style={{ left: TITLE.offsetX, top: TITLE.offsetY }}>거래명세표</span>
       </Cell>
       <Cell
         colSpan={7}
@@ -41,7 +41,7 @@ export function Header({
         style={{ fontSize: HEADER.copyLabelFontSize, paddingTop: HEADER.dateRowTopPadding, overflow: "visible" }}
         wrap
       >
-        <span style={{ position: "relative", left: HEADER.copyLabelOffsetX }}>
+        <span className="erp-u-relative" style={{ left: HEADER.copyLabelOffsetX }}>
           ({copyLabel.split(" ")[0]}
           <br />
           {copyLabel.split(" ")[1]})
@@ -112,7 +112,7 @@ export function Header({
           className="absolute top-0 border-l border-[var(--invoice-line)]"
           style={{ left: HEADER.docNumberLineOffsetX, height: HEADER.dateRowLineOffsetY }}
         />
-        <span style={{ position: "relative", left: HEADER.docNumberOffsetX }}>{docNumber}</span>
+        <span className="erp-u-relative" style={{ left: HEADER.docNumberOffsetX }}>{docNumber}</span>
         <span
           aria-hidden
           className="absolute left-0 right-0 border-t border-[var(--invoice-line)]"

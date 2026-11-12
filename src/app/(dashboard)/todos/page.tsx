@@ -167,7 +167,7 @@ export default async function TodosPage({
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">진행중</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-text)" }}>
+          <div className="erp-kpi-value erp-u-text">
             {formatNumber(inProgressCount)}건
           </div>
         </div>
@@ -179,7 +179,7 @@ export default async function TodosPage({
         </div>
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">완료</div>
-          <div className="erp-kpi-value" style={{ color: "var(--erp-text-muted)" }}>
+          <div className="erp-kpi-value erp-u-muted">
             {formatNumber(doneCount)}건
           </div>
         </div>
@@ -189,7 +189,7 @@ export default async function TodosPage({
         <section className="erp-split-list">
           <div className="erp-split-list-head">
             <span>할 일 목록</span>
-            <span style={{ color: "var(--erp-text-muted)", fontWeight: 400 }}>
+            <span className="erp-u-muted erp-u-normal">
               총 {formatNumber(rows.length)}건
             </span>
           </div>
@@ -247,7 +247,7 @@ export default async function TodosPage({
               );
             })}
             {!rows.length && (
-              <p className="p-3 text-xs" style={{ color: "var(--erp-text-muted)" }}>
+              <p className="p-3 text-xs erp-u-muted">
                 {q ? "검색 결과가 없습니다." : "등록된 할 일이 없습니다."}
               </p>
             )}
