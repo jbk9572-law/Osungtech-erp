@@ -10,7 +10,7 @@ import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
 import { PaperCalcSizeLineRows, PendingPaperCalcRow } from "@/components/erp/order-form-paper-calc-rows";
-import { SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
+import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
@@ -1606,38 +1606,13 @@ export function NewPurchaseForm({
                       ))}
                       원
                     </td>
-                    <td>
-                      <input
-                        type="text"
-                        placeholder="비고"
-                        aria-label="비고"
-                        value={row.remark}
-                        onChange={(e) =>
-                          updateRow(row.key, { remark: e.target.value })
-                        }
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td className="num" style={{ whiteSpace: "nowrap" }}>
-                      <button
-                        type="button"
-                        className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-                        style={{ minWidth: 0, marginRight: 4 }}
-                        onClick={() => insertRowAfter(row.key)}
-                        title="이 줄 아래에 빈 줄 삽입"
-                      >
-                        + 삽입
-                      </button>
-                      <button
-                        type="button"
-                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                        style={{ minWidth: 0 }}
-                        onClick={() => removeRow(row.key)}
-                        disabled={rows.length <= 1}
-                      >
-                        삭제
-                      </button>
-                    </td>
+                    <RemarkActionCells
+                      remark={row.remark}
+                      onRemarkChange={(remark) => updateRow(row.key, { remark })}
+                      onInsert={() => insertRowAfter(row.key)}
+                      onRemove={() => removeRow(row.key)}
+                      canRemove={rows.length > 1}
+                    />
                   </tr>
                 );
               })}

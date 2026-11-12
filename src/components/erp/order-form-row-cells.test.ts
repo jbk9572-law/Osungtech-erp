@@ -33,3 +33,34 @@ describe("SpecLotUnitCells", () => {
     expect(render({ unit: "ROLL" })).toContain(">ROLL</td>");
   });
 });
+
+import { RemarkActionCells } from "./order-form-row-cells";
+
+describe("RemarkActionCells", () => {
+  const renderCells = (canRemove: boolean) =>
+    renderToStaticMarkup(
+      createElement(
+        "table",
+        null,
+        createElement(
+          "tbody",
+          null,
+          createElement(
+            "tr",
+            null,
+            createElement(RemarkActionCells, { remark: "메모", onRemarkChange: () => {}, onInsert: () => {}, onRemove: () => {}, canRemove }),
+          ),
+        ),
+      ),
+    );
+  it("비고 입력칸과 삽입/삭제 버튼 두 칸을 그린다", () => {
+    const html = renderCells(true);
+    expect((html.match(/<td/g) ?? []).length).toBe(2);
+    expect(html).toContain("+ 삽입");
+    expect(html).toContain("삭제");
+  });
+  it("줄이 하나뿐이면 삭제 버튼이 잠긴다", () => {
+    expect(renderCells(false)).toContain('disabled=""');
+    expect(renderCells(true)).not.toContain('disabled=""');
+  });
+});

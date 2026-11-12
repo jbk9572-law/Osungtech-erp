@@ -68,3 +68,53 @@ export function SpecLotUnitCells({
     </>
   );
 }
+
+// 품목 줄 맨 끝의 "비고 입력칸 + 이 줄 아래 삽입 / 삭제 버튼" 두 칸 — 두 폼이 글자 그대로 똑같았다.
+export function RemarkActionCells({
+  remark,
+  onRemarkChange,
+  onInsert,
+  onRemove,
+  canRemove,
+}: {
+  remark: string;
+  onRemarkChange: (value: string) => void;
+  onInsert: () => void;
+  onRemove: () => void;
+  canRemove: boolean;
+}) {
+  return (
+    <>
+      <td>
+        <input
+          type="text"
+          placeholder="비고"
+          aria-label="비고"
+          value={remark}
+          onChange={(e) => onRemarkChange(e.target.value)}
+          className="erp-input w-full"
+        />
+      </td>
+      <td className="num" style={{ whiteSpace: "nowrap" }}>
+        <button
+          type="button"
+          className="erp-btn erp-u-h-26 erp-u-pad-0-8"
+          style={{ minWidth: 0, marginRight: 4 }}
+          onClick={onInsert}
+          title="이 줄 아래에 빈 줄 삽입"
+        >
+          + 삽입
+        </button>
+        <button
+          type="button"
+          className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
+          style={{ minWidth: 0 }}
+          onClick={onRemove}
+          disabled={!canRemove}
+        >
+          삭제
+        </button>
+      </td>
+    </>
+  );
+}
