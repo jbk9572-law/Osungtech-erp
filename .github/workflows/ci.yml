@@ -48,8 +48,12 @@ jobs:
       - name: Build
         run: npm run build
 
-  # dev(claude/**)에 푸시하면 작업실 DB(elvonix-erp-dev)에, main에
-  # 병합하면 운영 DB(elvonix-erp)에 새 마이그레이션만 자동으로 적용한다.
+  # dev(claude/**)에 푸시하면 "예행연습용" DB(elvonix-erp-dev — 실제 서비스는
+  # 이 DB를 쓰지 않는다, 가짜 데이터만 있음)에, main에 병합하면 운영 DB
+  # (elvonix-erp)에 새 마이그레이션만 자동으로 적용한다. 예행연습 DB를 남겨둔
+  # 이유: 잘못된 DB 변경이 운영에 닿기 전에 실제 Supabase에서 먼저 적용해
+  # 보는 안전망이다(지우면 운영에 곧바로 닿는다). 이 DB가 일시정지되지 않게
+  # supabase-keepalive.yml이 3일마다 핑을 보낸다.
   # 지금까지는 마이그레이션 SQL을 사람이 Supabase SQL Editor에 직접
   # 복붙해왔는데, "어디까지 적용했는지" 기록이 전혀 안 남다 보니 운영
   # DB가 dev보다 69개(약 2개월치)나 뒤처진 걸 뒤늦게 발견한 사고가
