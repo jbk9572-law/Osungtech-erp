@@ -25,6 +25,28 @@ async function createPurchase(quantity: number, unitCost = 150): Promise<string>
   return r.rows[0].id;
 }
 
+async function createSaleOn(date: string, quantity: number): Promise<string> {
+  const r = await h.db.query<{ id: string }>(
+    `select public.create_sale_with_items(
+       p_customer_id => $1, p_warehouse_id => $2, p_order_date => $3, p_memo => null,
+       p_created_by => $4, p_items => $5::jsonb) as id`,
+    [h.ids.customer, h.ids.warehouse, date, h.ids.staff,
+      JSON.stringify([{ productId: product, quantity, unitPrice: 300 }])],
+  );
+  return r.rows[0].id;
+}
+
+async function createPurchaseOn(date: string, quantity: number): Promise<string> {
+  const r = await h.db.query<{ id: string }>(
+    `select public.create_purchase_with_items(
+       p_supplier_id => $1, p_warehouse_id => $2, p_purchase_date => $3, p_memo => null,
+       p_created_by => $4, p_items => $5::jsonb) as id`,
+    [h.ids.supplier, h.ids.warehouse, date, h.ids.staff,
+      JSON.stringify([{ productId: product, quantity, unitCost: 150 }])],
+  );
+  return r.rows[0].id;
+}
+
 async function createSale(quantity: number): Promise<string> {
   const r = await h.db.query<{ id: string }>(
     `select public.create_sale_with_items(
@@ -163,6 +185,33 @@ describe("과거 사고로 남은 '기록 없이 남은수량만 줄어든' 매�
         JSON.stringify([{ productId: product, quantity: 80, unitCost: 150 }])],
     );
     expect(await remaining(purchase)).toBe(80);
+  });
+});
+
+describe("드롭십 자동 연결 범위 (migration 230: 매입일 앞뒤 14일)", () => {
+  it("매출을 먼저 끊고 며칠 뒤 매입을 넣으면 그 매출과 연결된다(드롭십)", async () => {
+    const sale = await createSaleOn("2026-11-10", 30); // 재고 없이 먼저 출고
+    const purchase = await createPurchaseOn("2026-11-12", 100); // 이틀 뒤 매입
+    expect(await remaining(purchase)).toBe(70);
+    await deleteSale(sale);
+    expect(await remaining(purchase)).toBe(100);
+    await deletePurchase(purchase);
+  });
+
+  it("한 달 전의 오래된 미연결 매출은 새 매입을 가로채지 않는다", async () => {
+    const oldSale = await createSaleOn("2026-10-01", 30);
+    const purchase = await createPurchaseOn("2026-11-12", 100);
+    expect(await remaining(purchase)).toBe(100);
+    expect(await consumptionCount()).toBe(0);
+    await deletePurchase(purchase); // 옛 매출 때문에 삭제가 막히지 않는다
+    expect(oldSale).toBeTruthy();
+  });
+
+  it("14일 경계: 14일 차이는 연결되고 15일 차이는 연결되지 않는다", async () => {
+    await createSaleOn("2026-10-29", 10); // 14일 전
+    await createSaleOn("2026-10-28", 10); // 15일 전
+    const purchase = await createPurchaseOn("2026-11-12", 100);
+    expect(await remaining(purchase)).toBe(90);
   });
 });
 
