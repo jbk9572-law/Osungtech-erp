@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "src");
 const MODULES = ["paper-calc"];
 // 핵심 코드가 써도 되는 모듈 공개 입구(모듈 안의 파일명, 확장자 제외).
-const ENTRIES = ["order-form", "order-actions", "actions", "public", "ui"];
+const ENTRIES = ["order-form", "order-actions", "actions", "public", "ui", "todo-form"];
 // 모듈 자신의 화면 경로(라우트)는 모듈의 일부로 본다.
 const OWN_ROUTE_PREFIXES = { "paper-calc": ["app/(dashboard)/paper-calc/", "app/(dashboard)/@modal/(.)paper-calc/"] };
 

@@ -1,15 +1,18 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
-import { PaperCalcModalTrigger } from "@/modules/paper-calc/components/paper-calc-modal-trigger";
-import type { PendingCalcPayload } from "@/modules/paper-calc/components/paper-calc-client";
-import { PENDING_PAPER_CALC_TODO_KEY } from "@/modules/paper-calc/lib/paper-calc-pending-key";
+import {
+  TodoPaperCalcBanner,
+  TodoPaperCalcHiddenInput,
+  TodoPaperCalcToolbarButton,
+  useTodoPaperCalc,
+} from "@/modules/paper-calc/todo-form";
 import { parseTodoType, type TodoType } from "@/lib/todo-flow";
 import { FieldHint } from "@/components/field-hint";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
@@ -18,7 +21,6 @@ import { normalizeLotNumber } from "@/lib/lot-number";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { formatNumber } from "@/lib/format-number";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
-import { PageGuide } from "@/components/erp/page-guide";
 
 type Product = {
   id: string;
@@ -141,42 +143,7 @@ export function TodoForm({
     setRows((prev) => prev.filter((row) => row.key !== key));
   }
 
-  // 신규 등록일 때만 의미가 있다: 수정 화면은 이미 todo id가 있어서 모조지
-  // 계산 화면에서 바로 저장하면 되고, 여기서 또 붙일 필요가 없다(매입/매출
-  // 등록 폼과 동일한 제약). 이 값을 채우는 경로도 두 가지다.
-  // 1) 이 폼 안의 모달(PaperCalcModalTrigger)에서 "이 계산 적용하기"를
-  //    누르면 onApply 콜백으로 바로 이 state에 꽂힌다.
-  // 2) 트리메뉴/탭바를 통해 독립적으로 연 "확장모듈 > 모조지 계산" 화면에서
-  //    미리 테스트 계산을 해보고 "새 할일 등록에 연결"을 누른 경우 —
-  //    localStorage에 잠깐 담아뒀다가 이 폼이 마운트될 때 읽어온다.
-  const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
-  function handlePaperCalcApply(payload: PendingCalcPayload) {
-    setPendingPaperCalc(JSON.stringify(payload));
-  }
-
-  useEffect(() => {
-    if (initial?.id) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from localStorage on mount
-    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_TODO_KEY));
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === PENDING_PAPER_CALC_TODO_KEY) {
-        setPendingPaperCalc(e.newValue);
-      }
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [initial?.id]);
-
-  const pendingCalcSummary = (() => {
-    if (!pendingPaperCalc) return null;
-    try {
-      const parsed = JSON.parse(pendingPaperCalc) as { totalSheet: number };
-      return parsed.totalSheet > 0 ? parsed.totalSheet : null;
-    } catch {
-      return null;
-    }
-  })();
+  const pc = useTodoPaperCalc({ isEdit: !!initial?.id });
 
   const itemsJson = JSON.stringify(
     rows
@@ -207,12 +174,12 @@ export function TodoForm({
         // (모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이 없어 지울
         // 것도 없다). 등록이 실패해도 계산 자체는 다시 하면 되므로 감수할
         // 만한 트레이드오프다.
-        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_TODO_KEY);
+        pc.clearStorageOnSubmit();
       }}
     >
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <input type="hidden" name="items" value={itemsJson} />
-      {pendingPaperCalc && <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />}
+      <TodoPaperCalcHiddenInput pc={pc} />
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <input
@@ -304,28 +271,11 @@ export function TodoForm({
             <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
               + 품목 추가
             </button>
-            {!initial?.id && paperCalcEnabled && (
-              <PaperCalcModalTrigger pendingFor="todo" onApply={handlePaperCalcApply} />
-            )}
+            <TodoPaperCalcToolbarButton pc={pc} enabled={paperCalcEnabled} />
           </div>
         </div>
 
-        {pendingCalcSummary && (
-          <PageGuide className="mb-2 flex items-center justify-between gap-2">
-            <span>모조지 계산 연결됨 — {formatNumber(pendingCalcSummary)}연</span>
-            <button
-              type="button"
-              className="erp-btn erp-btn-danger erp-u-h-22 erp-u-pad-0-8"
-              style={{ minWidth: 0 }}
-              onClick={() => {
-                localStorage.removeItem(PENDING_PAPER_CALC_TODO_KEY);
-                setPendingPaperCalc(null);
-              }}
-            >
-              취소
-            </button>
-          </PageGuide>
-        )}
+        <TodoPaperCalcBanner pc={pc} />
 
         <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
