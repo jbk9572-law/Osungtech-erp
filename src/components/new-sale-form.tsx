@@ -21,8 +21,8 @@ import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { TodoImportPopover } from "@/components/todo-import-popover";
+import { CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
 import { ResizableTh } from "@/components/grid/resizable-th";
-import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
   focusSameColumnNextRow,
@@ -1141,38 +1141,7 @@ export function NewSaleForm({
       <div>
         <div className="erp-form-section-head">
           <span className="erp-eyebrow" style={{ margin: 0 }}>기본정보</span>
-          <div style={{ display: "flex", gap: 6 }}>
-            {/* 수정 화면(initial.id 있음)에는 "다음 건"이라는 개념이 없어서
-                신규 등록일 때만 보여준다 — 하루에 여러 건을 연달아 입력할
-                때마다 매번 목록/메뉴를 다시 타지 않아도 되게 한다. */}
-            {!initial?.id && (
-              <button
-                type="submit"
-                name="continue_new"
-                value="1"
-                disabled={pending}
-                className="erp-btn"
-                style={{ minWidth: 0, margin: 4 }}
-              >
-                저장 후 계속 등록
-              </button>
-            )}
-            <button
-              ref={submitRef}
-              type="submit"
-              disabled={pending}
-              className="erp-btn erp-btn-primary"
-              style={{ minWidth: 0, margin: 4 }}
-            >
-              {pending ? (
-                <>
-                  <span className="erp-spinner" aria-hidden /> 저장 중...
-                </>
-              ) : (
-                `F7 ${isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel}`
-              )}
-            </button>
-          </div>
+          <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />
         </div>
         {!!(messageDismissed ? undefined : state) && (
           <div style={{ padding: "8px 14px 0" }}>
@@ -1230,37 +1199,7 @@ export function NewSaleForm({
               />
             </div>
           )}
-          <div className="erp-field erp-span-3">
-            <label aria-hidden="true">&nbsp;</label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                height: 34,
-                padding: "0 14px",
-                borderRadius: "var(--erp-radius-lg, 0)",
-                background: isCarryover ? "var(--erp-warning-bg)" : "transparent",
-                border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}`,
-                cursor: "pointer",
-                fontSize: 13,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={isCarryover}
-                onChange={(e) => setIsCarryover(e.target.checked)}
-              />
-              <span
-                style={{
-                  fontWeight: 700,
-                  color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)",
-                }}
-              >
-                {nextMonthLabel(orderDate)} 실적으로 이월
-              </span>
-            </label>
-          </div>
+          <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
           <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
             <label
@@ -1331,39 +1270,7 @@ export function NewSaleForm({
               style={{ width: "100%" }}
             />
           </div>
-          <div className="erp-field erp-span-3">
-            <label>결제방법</label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                height: 30,
-                fontSize: 12.5,
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={alwaysCredit}
-                onChange={(e) => setAlwaysCredit(e.target.checked)}
-              />
-              항상 외상
-            </label>
-          </div>
-          {!alwaysCredit && (
-            <div className="erp-field erp-span-3">
-              <label aria-hidden="true">&nbsp;</label>
-              <ErpSelect
-                ariaLabel="결제방법"
-                value={paymentMethod}
-                onChange={setPaymentMethod}
-                placeholder="결제방법 선택"
-                required
-                options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
-              />
-            </div>
-          )}
+          <PaymentMethodFields alwaysCredit={alwaysCredit} onAlwaysCreditChange={setAlwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
         </div>
       </div>
 
