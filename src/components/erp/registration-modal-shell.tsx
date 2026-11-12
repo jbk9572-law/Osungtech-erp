@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect, type MouseEvent } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { ModalCloseProvider, ModalCloseHrefProvider } from "@/lib/modal-context";
 
@@ -61,6 +61,10 @@ export function RegistrationModalShell({
   // router.back()(이 모달을 어떤 경로로 거쳐 왔는지에 따라 엉뚱한
   // 화면으로 가버릴 수 있다) 대신 항상 올바른 곳으로 닫힌다.
   const closeHrefRef = useRef<string | null>(closeHref ?? null);
+  // 로딩 셸처럼 어떤 화면의 모달인지 모르는 경우에도 router.back()(히스토리에 같은 주소가 겹쳐 쌓였을 때
+  // 닫기가 다시 같은 모달로 돌아가는 원인)에 기대지 않도록, 현재 주소의 상위 경로를 기본 닫기 목적지로 쓴다.
+  const pathname = usePathname();
+  const fallbackCloseHref = pathname.replace(/\/[^/]+\/?$/, "") || "/dashboard";
   // 예전엔 목적지를 알게 되는 즉시 router.prefetch()로 미리 데워뒀는데,
   // 매출/매입처럼 날짜+검색어로 필터링한 목록 위에서 상세를 열었다가
   // 닫으면 그 필터가 초기화된 목록으로 돌아가는 버그가 있었다(사용자
@@ -92,11 +96,11 @@ export function RegistrationModalShell({
       router.push(closeHrefRef.current);
       router.refresh();
     } else {
-      // 아직 목적지가 등록되지 않은 극히 짧은 순간(마운트 직후)에 대한
-      // 안전장치일 뿐, 정상 상태에서는 위 분기로만 닫힌다.
-      router.back();
+      // 아직 목적지가 등록되지 않은 극히 짧은 순간(마운트 직후)에 대한 안전장치 — 히스토리 대신 상위 경로로 이동한다.
+      router.push(fallbackCloseHref);
+      router.refresh();
     }
-  }, [router, beginClosing]);
+  }, [router, beginClosing, fallbackCloseHref]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -117,6 +121,18 @@ export function RegistrationModalShell({
 
   useScrollLock(true);
 
+  // 접근성: 모달이 열리면 포커스를 모달 안으로 옮기고(이미 안쪽 입력칸에 포커스가 있으면 그대로 둔다),
+  // 닫히면 모달을 열었던 요소로 포커스를 되돌린다.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.contains(document.activeElement)) dialog.focus({ preventScroll: true });
+    return () => {
+      if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+    };
+  }, []);
+
   function handleClickCapture(e: MouseEvent<HTMLDivElement>) {
     // "ESC 닫기" 링크처럼 이 모달을 벗어나는 실제 이동이 시작되는 순간,
     // 그 이동이 끝나길 기다리지 않고 즉시 닫히는 모습을 보여준다.
@@ -131,8 +147,12 @@ export function RegistrationModalShell({
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
         className={`erp-modal ${SIZE_CLASS[size]}${closing ? " closing" : ""}`}
-        style={{ minHeight: 0 }}
+        style={{ minHeight: 0, outline: "none" }}
         onClickCapture={handleClickCapture}
       >
         <button

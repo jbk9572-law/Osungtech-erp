@@ -41,6 +41,7 @@ export default async function BackupSettingsPage() {
             되살리는 용도로 씁니다 — 잘 보관해두세요 (거래처 정보 등 민감한 내용이
             포함되니 공유 금지).
           </p>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 파일 다운로드 API 경로라 <Link>(페이지 이동)가 아니라 일반 링크여야 한다 */}
           <a href="/api/backup/export" className="erp-btn erp-btn-primary">
             📥 지금 백업 다운로드
           </a>
