@@ -1,3 +1,4 @@
+import { isValidBearer } from "@/lib/verify-bearer";
 import { NextResponse } from "next/server";
 import { getServerEnv } from "@/lib/server-env";
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "CRON_SECRET이 설정되지 않았습니다." }, { status: 500 });
   }
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${secret}`) {
+  if (!isValidBearer(authHeader, secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
