@@ -9,6 +9,7 @@ import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
+import { PaperCalcSizeLineRows, PendingPaperCalcRow } from "@/components/erp/order-form-paper-calc-rows";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
@@ -1413,150 +1414,25 @@ export function NewPurchaseForm({
               }}
             >
               {pendingCalcSummary && (
-                <tr style={{ background: "var(--erp-info-bg)" }}>
-                  <td>
-                    {tg0Product ? (
-                      <>
-                        {tg0Product.name}
-                        <span
-                          className="ml-1 rounded px-1 text-[10.5px]"
-                          style={{
-                            background: "var(--erp-info-border)",
-                            color: "var(--erp-info-text)",
-                          }}
-                        >
-                          자동
-                        </span>
-                      </>
-                    ) : (
-                      <span className="erp-u-danger">
-                        SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
-                      </span>
-                    )}
-                  </td>
-                  <td className="erp-u-muted">-</td>
-                  <td className="erp-u-muted">-</td>
-                  <td className="erp-u-muted">
-                    {tg0Product?.unit ?? "-"}
-                  </td>
-                  <td className="num">
-                    <NumberInput
-                      value={pendingCalcQuantity}
-                      onChange={setTg0OverrideQuantity}
-                      allowFormula
-                      className="erp-input w-full"
-                    />
-                  </td>
-                  {alsoCreateSale && (
-                    <td
-                      className="num erp-u-muted"
-                    >
-                      -
-                    </td>
-                  )}
-                  <td className="num">
-                    {formatNumber(pendingCalcUnitCost)}
-                  </td>
-                  {alsoCreateSale && (
-                    <td
-                      className="num erp-u-muted"
-                    >
-                      -
-                    </td>
-                  )}
-                  <td className="num">
-                    {formatNumber(pendingCalcAmount)}원
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    {formatNumber(calcVat(pendingCalcAmount))}원
-                  </td>
-                  <td className="num">
-                    {formatNumber((
-                      pendingCalcAmount + calcVat(pendingCalcAmount)
-                    ))}
-                    원
-                  </td>
-                  <td className="erp-u-muted">
-                    {tg0IsOverridden
-                      ? `자동값 ${formatNumber(pendingCalcSummary.totalSheet)} → 수동 입력`
-                      : "모조지 계산 자동 반영"}
-                  </td>
-                  <td className="num">
-                    <button
-                      type="button"
-                      className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                      style={{ minWidth: 0 }}
-                      onClick={() => {
-                        localStorage.removeItem(
-                          PENDING_PAPER_CALC_PURCHASE_KEY,
-                        );
-                        setPendingPaperCalc(null);
-                        setCopiedPaperCalcs([]);
-                        setTg0OverrideQuantity(null);
-                      }}
-                    >
-                      취소
-                    </button>
-                  </td>
-                </tr>
+                <PendingPaperCalcRow
+                  tg0Product={tg0Product}
+                  quantity={pendingCalcQuantity}
+                  onQuantityChange={setTg0OverrideQuantity}
+                  unitAmount={pendingCalcUnitCost}
+                  amount={pendingCalcAmount}
+                  autoSheet={pendingCalcSummary.totalSheet}
+                  isOverridden={tg0IsOverridden}
+                  dashAfterQuantity={alsoCreateSale}
+                  dashAfterUnit={alsoCreateSale}
+                  onCancel={() => {
+                    localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
+                    setPendingPaperCalc(null);
+                    setCopiedPaperCalcs([]);
+                    setTg0OverrideQuantity(null);
+                  }}
+                />
               )}
-              {paperCalcSizeLines.map((line, i) => (
-                <tr
-                  key={`paper-calc-size-${i}`}
-                  style={{ background: "var(--erp-bg-subtle)" }}
-                >
-                  <td className="erp-u-muted"
-                    colSpan={3}
-                    style={{ paddingLeft: 24 }}
-                  >
-                    ㄴ {line}
-                  </td>
-                  <td className="erp-u-muted">-</td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  {alsoCreateSale && (
-                    <td
-                      className="num erp-u-muted"
-                    >
-                      -
-                    </td>
-                  )}
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  {alsoCreateSale && (
-                    <td
-                      className="num erp-u-muted"
-                    >
-                      -
-                    </td>
-                  )}
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td className="erp-u-muted">-</td>
-                  <td />
-                </tr>
-              ))}
+              <PaperCalcSizeLineRows lines={paperCalcSizeLines} dashAfterQuantity={alsoCreateSale} dashAfterUnit={alsoCreateSale} />
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentCost = resolveCost(supplierId, row.productId);
