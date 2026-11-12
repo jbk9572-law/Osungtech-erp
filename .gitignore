@@ -55,3 +55,5 @@ next-env.d.ts
 /e2e/.auth/
 /playwright-report/
 /test-results/
+/e2e-visual/.auth/
+/playwright-report-visual/
