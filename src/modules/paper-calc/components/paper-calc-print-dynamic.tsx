@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 // (`ssr: false`는 클라이언트 컴포넌트 안에서만 쓸 수 있어서 이 얇은
 // 래퍼로 분리했다.)
 const PaperCalcPrintView = dynamic(
-  () => import("@/components/paper-calc/paper-calc-print-view").then((m) => m.PaperCalcPrintView),
+  () => import("@/modules/paper-calc/components/paper-calc-print-view").then((m) => m.PaperCalcPrintView),
   { ssr: false }
 );
 

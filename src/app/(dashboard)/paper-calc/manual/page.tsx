@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { ManualLayoutClient } from "@/components/paper-calc/manual-layout-client";
+import { ManualLayoutClient } from "@/modules/paper-calc/components/manual-layout-client";
 import { createClient } from "@/lib/supabase/server";
-import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
+import { isPaperCalcEnabled } from "@/modules/paper-calc/lib/paper-calc-sync";
 
 export default async function PaperCalcManualPage({
   searchParams,

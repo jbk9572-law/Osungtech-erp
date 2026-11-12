@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PaperCalcReport } from "@/components/paper-calc/paper-calc-report";
-import { computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/lib/paper-nest-engine";
+import { PaperCalcReport } from "@/modules/paper-calc/components/paper-calc-report";
+import { computeEffectiveReams, type Item, type NestLayout, type NestResult } from "@/modules/paper-calc/lib/paper-nest-engine";
 
 export default async function PaperCalcViewPage({
   params,

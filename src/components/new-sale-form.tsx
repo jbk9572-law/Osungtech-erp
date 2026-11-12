@@ -7,8 +7,8 @@ import {
   getPurchaseItemsForDate,
   type TodayPurchaseItem,
 } from "@/app/(dashboard)/purchases/actions";
-import type { PendingCalc } from "@/lib/paper-calc-sync";
-import { pendingPaperCalcSizeLines, resolveTg0Quantity, summarizePendingPaperCalc } from "@/lib/pending-paper-calc";
+import type { PendingCalc } from "@/modules/paper-calc/lib/paper-calc-sync";
+import { pendingPaperCalcSizeLines, resolveTg0Quantity, summarizePendingPaperCalc } from "@/modules/paper-calc/lib/pending-paper-calc";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
@@ -16,7 +16,7 @@ import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
-import { PaperCalcSizeLineRows, PendingPaperCalcRow } from "@/components/erp/order-form-paper-calc-rows";
+import { PaperCalcSizeLineRows, PendingPaperCalcRow } from "@/modules/paper-calc/components/order-form-paper-calc-rows";
 import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
@@ -31,10 +31,10 @@ import {
   focusSameColumnNextRow,
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
-import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
-import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-modal-trigger";
-import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
-import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
+import { PaperCalcModalTrigger } from "@/modules/paper-calc/components/paper-calc-modal-trigger";
+import { ManualLayoutModalTrigger } from "@/modules/paper-calc/components/manual-layout-modal-trigger";
+import type { PendingCalcPayload } from "@/modules/paper-calc/components/paper-calc-client";
+import { PENDING_PAPER_CALC_KEY } from "@/modules/paper-calc/lib/paper-calc-pending-key";
 import {
   getOpenTodos,
   getPaperCalculationsForTodo,

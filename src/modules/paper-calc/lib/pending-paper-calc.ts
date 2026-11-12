@@ -7,7 +7,7 @@ import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
-} from "@/lib/paper-calc-summary";
+} from "@/modules/paper-calc/lib/paper-calc-summary";
 
 // 임시 저장된 계산(JSON 문자열)과 가져온 계산들의 연수/원지 합계. 합계 연수가 0 이하면 null.
 export function summarizePendingPaperCalc(

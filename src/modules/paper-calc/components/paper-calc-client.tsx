@@ -12,13 +12,13 @@ import {
   type Item,
   type NestLayout,
   type NestResult,
-} from "@/lib/paper-nest-engine";
-import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+} from "@/modules/paper-calc/lib/paper-nest-engine";
+import { DIAGRAM_COLORS } from "@/modules/paper-calc/lib/paper-calc-diagram-colors";
 import { GridBadge } from "@/components/grid/badge";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { startRouteProgress } from "@/lib/route-progress";
 import { printInPlace } from "@/lib/print-in-place";
-import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
+import { PaperCalcNavLink } from "@/modules/paper-calc/components/paper-calc-nav-link";
 import {
   savePaperCalculation,
   deletePaperCalculation,
@@ -31,7 +31,7 @@ import {
   PENDING_PAPER_CALC_KEY,
   PENDING_PAPER_CALC_PURCHASE_KEY,
   PENDING_PAPER_CALC_TODO_KEY,
-} from "@/lib/paper-calc-pending-key";
+} from "@/modules/paper-calc/lib/paper-calc-pending-key";
 
 type OrderRow = { key: number; width: number; height: number; qty: number };
 

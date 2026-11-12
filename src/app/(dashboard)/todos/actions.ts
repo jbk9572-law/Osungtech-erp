@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { logSlowSupabaseCall } from "@/lib/log-slow-supabase-call";
-import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/lib/paper-calc-sync";
+import { attachPendingPaperCalculationToTodo, type PendingCalc } from "@/modules/paper-calc/lib/paper-calc-sync";
 import { parseTodoType } from "@/lib/todo-flow";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { normalizeLotNumber } from "@/lib/lot-number";

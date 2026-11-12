@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { PrintButton } from "@/components/print-button";
-import type { Item, NestResult } from "@/lib/paper-nest-engine";
-import { BatchCard, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
-import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+import type { Item, NestResult } from "@/modules/paper-calc/lib/paper-nest-engine";
+import { BatchCard, ProductionSummaryTable } from "@/modules/paper-calc/components/paper-calc-client";
+import { DIAGRAM_COLORS } from "@/modules/paper-calc/lib/paper-calc-diagram-colors";
 import { formatNumber } from "@/lib/format-number";
 
 // 인쇄 미리보기(계산 직후, localStorage 기반)와 저장된 계산 다시 보기(DB

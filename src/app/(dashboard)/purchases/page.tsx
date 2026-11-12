@@ -12,13 +12,13 @@ import {
   type PurchaseRow,
   type PurchaseRowItem,
 } from "@/components/purchase-grid-table";
-import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { PAPER_STOCK_SKU } from "@/modules/paper-calc/lib/paper-calc-sync";
 import { PageGuide } from "@/components/erp/page-guide";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
-} from "@/lib/paper-calc-summary";
+} from "@/modules/paper-calc/lib/paper-calc-summary";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";

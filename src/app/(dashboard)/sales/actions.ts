@@ -8,7 +8,7 @@ import {
   attachPendingPaperCalculation,
   overrideSalesPaperStockQuantity,
   revertSalesPaperStockOverride,
-} from "@/lib/paper-calc-sync";
+} from "@/modules/paper-calc/lib/paper-calc-sync";
 import { markTodoSideDone } from "@/lib/todo-flow";
 import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";

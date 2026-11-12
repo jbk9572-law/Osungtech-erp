@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { NestEngine, type Item, type NestResult } from "@/lib/paper-nest-engine";
-import { PaperCalcReport } from "@/components/paper-calc/paper-calc-report";
+import { NestEngine, type Item, type NestResult } from "@/modules/paper-calc/lib/paper-nest-engine";
+import { PaperCalcReport } from "@/modules/paper-calc/components/paper-calc-report";
 
 type PrintInput = { paperW: number; paperH: number; items: Item[] };
 
