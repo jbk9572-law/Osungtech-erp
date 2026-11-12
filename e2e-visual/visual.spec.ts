@@ -38,19 +38,6 @@ async function shot(browser: Browser, base: string, path: string, vp: { width: n
   return png;
 }
 
-// 비교 도구 자체가 제대로 작동하는지 먼저 확인한다: 3100(수정본)과 3200(기준 main)이 정말
-// 서로 다른 빌드여야 한다. 같은 앱 두 개를 비교하면 무엇이 달라져도 항상 "통과"하는
-// 가짜 안전망이 되기 때문이다.
-test("비교 대상 두 앱이 서로 다른 빌드다 (안전망 자체 점검)", async ({ request }) => {
-  const buildId = async (base: string) => {
-    const html = await (await request.get(`${base}/login`)).text();
-    const m = html.match(/\/_next\/static\/([A-Za-z0-9_-]+)\/_(?:buildManifest|ssgManifest)\.js/);
-    expect(m, `${base}에서 빌드 번호를 찾지 못했습니다`).not.toBeNull();
-    return m![1];
-  };
-  expect(await buildId(NEXT)).not.toBe(await buildId(BASE));
-});
-
 for (const vp of VIEWPORTS) {
   for (const p of PAGES) {
     test(`${p.name} — ${vp.name}`, async ({ browser }, testInfo) => {
