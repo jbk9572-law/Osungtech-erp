@@ -1,4 +1,5 @@
 import { withPageTiming } from "@/lib/page-timing";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
@@ -568,9 +569,9 @@ async function SalesPage({
       </PageGuide>
 
       <div className="erp-toolbar">
-        <Link href="/sales/new" className="erp-btn erp-btn-primary">
+        <GuardedLink href="/sales/new" className="erp-btn erp-btn-primary">
           F2 신규
-        </Link>
+        </GuardedLink>
         <UnifiedSaleModalTrigger
           customers={quickCustomers}
           products={quickProducts}

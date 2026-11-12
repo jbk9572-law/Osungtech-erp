@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -83,9 +84,9 @@ export default async function DepartmentsPage() {
       <ListPageHeader
         title="환경설정 > 조직도 관리"
         actions={
-          <Link href="/settings/departments/new" className="erp-btn erp-btn-primary">
+          <GuardedLink href="/settings/departments/new" className="erp-btn erp-btn-primary">
             F2 새 부서
-          </Link>
+          </GuardedLink>
         }
       />
 

@@ -1,4 +1,5 @@
 import { withPageTiming } from "@/lib/page-timing";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
@@ -819,12 +820,12 @@ async function DashboardPage({
             빠른 실행
           </div>
           <div className="erp-home-list">
-            <Link className="erp-home-list-item" href="/sales/new">
+            <GuardedLink className="erp-home-list-item" href="/sales/new">
               새 판매 등록
-            </Link>
-            <Link className="erp-home-list-item" href="/purchases/new">
+            </GuardedLink>
+            <GuardedLink className="erp-home-list-item" href="/purchases/new">
               새 입고 등록
-            </Link>
+            </GuardedLink>
             <Link className="erp-home-list-item" href="/products">
               품목 등록
             </Link>

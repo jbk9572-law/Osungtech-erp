@@ -1,4 +1,5 @@
 import { withPageTiming } from "@/lib/page-timing";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
@@ -509,9 +510,9 @@ async function PurchasesPage({
       </PageGuide>
 
       <div className="erp-toolbar">
-        <Link href="/purchases/new" className="erp-btn erp-btn-primary">
+        <GuardedLink href="/purchases/new" className="erp-btn erp-btn-primary">
           F2 신규
-        </Link>
+        </GuardedLink>
         <ExcelDownloadLink
           href={exportHref}
           title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}

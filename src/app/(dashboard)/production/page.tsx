@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
@@ -80,9 +81,9 @@ export default async function ProductionPage({
         title="생산관리 > 생산지시 내역"
         actions={
           <>
-            <Link href="/production/new" className="erp-btn erp-btn-primary">
+            <GuardedLink href="/production/new" className="erp-btn erp-btn-primary">
               F2 생산지시 등록
-            </Link>
+            </GuardedLink>
             <Link href="/inventory/lot-lookup" className="erp-btn">
               품목·관리번호 통합조회
             </Link>

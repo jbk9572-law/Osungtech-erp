@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
@@ -132,9 +133,9 @@ export default async function WarehousesPage({
       <div style={{ marginTop: 14 }}>
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
           <div className="erp-u-flex" style={{ justifyContent: "flex-end", marginBottom: 10 }}>
-            <Link href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
+            <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
               F2 창고 이동 등록
-            </Link>
+            </GuardedLink>
           </div>
 
           <DateRangeQuickFilters
