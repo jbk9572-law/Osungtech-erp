@@ -1991,6 +1991,19 @@ form.erp-field-grid {
     inset 0 -2px 0 var(--erp-select-accent);
 }
 
+/* 연속으로 선택된 행들은 한 덩어리로 보이게 — 행마다 위/아래 2px 선을
+   그대로 두면 붙어 있는 두 행 사이에 4px 굵은 이중선이 생겨 겹쳐 보인다.
+   덩어리의 맨 위 행은 윗선만, 맨 아래 행은 아랫선만 남긴다. */
+.erp-grid tbody tr.selected + tr.selected {
+  box-shadow: inset 0 -2px 0 var(--erp-select-accent);
+}
+.erp-grid tbody tr.selected:has(+ tr.selected) {
+  box-shadow: inset 0 2px 0 var(--erp-select-accent);
+}
+.erp-grid tbody tr.selected + tr.selected:has(+ tr.selected) {
+  box-shadow: none;
+}
+
 /* 매출/매입 목록의 마스터-디테일 레이아웃에서, 지금 아코디언으로
    펼쳐진 명세표(마스터 행)를 강조한다 — 체크박스 일괄선택(.selected)
    과는 별개 상태라 다른 톤을 쓴다. */
