@@ -23,6 +23,7 @@ import {
   GRID_ACTION_COL_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
+import { DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -312,23 +313,12 @@ export function PurchaseGridTable({
             />
           )}
         </td>
-        <td style={opts.compactDate ? tdSticky2Carryover : tdSticky2}>
-          {row.date
-            ? opts.compactDate || rowDay(row.date) === "future"
-              ? formatCarryoverDate(row.date)
-              : new Date(row.date).toLocaleDateString("ko-KR")
-            : "-"}
-          {row.isCarryover && row.date && (
-            <GridBadge tone="warn" style={{ marginLeft: 4 }}>
-              이월
-            </GridBadge>
-          )}
-          {rowDay(row.date) === "future" && (
-            <GridBadge tone="muted" style={{ marginLeft: 4 }}>
-              예약
-            </GridBadge>
-          )}
-        </td>
+        <OrderDateCell
+          date={row.date}
+          compact={!!opts.compactDate}
+          isCarryover={!!row.isCarryover}
+          style={opts.compactDate ? tdSticky2Carryover : tdSticky2}
+        />
         <td style={colStyle("docNo", { color: "var(--erp-text-muted)" })}>
           {row.docNo ?? "-"}
         </td>
@@ -340,36 +330,12 @@ export function PurchaseGridTable({
             {isPayment ? "지급" : "매입"}
           </GridBadge>
         </td>
-        <td style={colStyle("taxType")}>
-          {row.taxType ? (
-            <GridBadge
-              tone={
-                row.taxType === "과세"
-                  ? "info"
-                  : row.taxType === "영세"
-                    ? "warn"
-                    : "muted"
-              }
-            >
-              {row.taxType}
-            </GridBadge>
-          ) : (
-            "-"
-          )}
-        </td>
+        <TaxTypeCell taxType={row.taxType} style={colStyle("taxType")} />
         <td style={colStyle("evidenceType", { color: "var(--erp-text-muted)" })}>
           {row.evidenceType ?? "-"}
         </td>
         <td>{row.supplierName}</td>
-        <td style={colStyle("deliveryMethod")}>
-          {row.deliveryMethod ? (
-            <GridBadge tone="muted">{row.deliveryMethod}</GridBadge>
-          ) : (
-            <span className="erp-u-muted">
-              -
-            </span>
-          )}
-        </td>
+        <DeliveryMethodCell deliveryMethod={row.deliveryMethod} style={colStyle("deliveryMethod")} />
         <td style={colStyle("authorName", { color: "var(--erp-text-muted)" })}>
           {row.authorName ?? "-"}
         </td>
