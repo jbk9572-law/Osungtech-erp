@@ -8,6 +8,7 @@ import {
   type TodayPurchaseItem,
 } from "@/app/(dashboard)/purchases/actions";
 import type { PendingCalc } from "@/lib/paper-calc-sync";
+import { pendingPaperCalcSizeLines, resolveTg0Quantity, summarizePendingPaperCalc } from "@/lib/pending-paper-calc";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
@@ -32,11 +33,6 @@ import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-
 import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-modal-trigger";
 import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
 import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
-import {
-  formatPaperCalcSizeLines,
-  mergePaperCalcInputItems,
-  type PaperCalcSizeRow,
-} from "@/lib/paper-calc-summary";
 import {
   getOpenTodos,
   getPaperCalculationsForTodo,
@@ -449,6 +445,7 @@ export function NewSaleForm({
 
   useEffect(() => {
     if (initial?.id) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 후 localStorage의 임시 모조지 계산을 한 번 읽어오는 동기화(서버 렌더링 때는 localStorage가 없어 초기값으로 못 읽는다)
     setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY));
 
     function handleStorage(e: StorageEvent) {
@@ -703,27 +700,10 @@ export function NewSaleForm({
   // 실제 저장은 createSale이 주문 생성 직후 attachPendingPaperCalculation/
   // attachCopiedPaperCalculations으로 처리하고(재고는 건드리지 않음), 여기서
   // rows에 섞으면 일반 품목과 똑같이 재고가 차감돼버린다.
-  const pendingCalcSummary = useMemo(() => {
-    let totalSheet = 0;
-    let totalPaper = 0;
-    if (pendingPaperCalc) {
-      try {
-        const parsed = JSON.parse(pendingPaperCalc) as {
-          totalSheet: number;
-          totalPaper: number;
-        };
-        totalSheet += parsed.totalSheet;
-        totalPaper += parsed.totalPaper;
-      } catch {
-        // 무시: 잘못된 값이면 이 부분은 0으로 취급
-      }
-    }
-    for (const calc of copiedPaperCalcs) {
-      totalSheet += calc.totalSheet;
-      totalPaper += calc.totalPaper;
-    }
-    return totalSheet > 0 ? { totalSheet, totalPaper } : null;
-  }, [pendingPaperCalc, copiedPaperCalcs]);
+  const pendingCalcSummary = useMemo(
+    () => summarizePendingPaperCalc(pendingPaperCalc, copiedPaperCalcs),
+    [pendingPaperCalc, copiedPaperCalcs],
+  );
   const tg0Product = useMemo(
     () => products.find((p) => p.sku === "TG0"),
     [products],
@@ -737,14 +717,11 @@ export function NewSaleForm({
   const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(
     null,
   );
-  const pendingCalcQuantity = pendingCalcSummary
-    ? (tg0OverrideQuantity ?? pendingCalcSummary.totalSheet)
-    : 0;
+  const { quantity: pendingCalcQuantity, isOverridden: tg0IsOverridden } = resolveTg0Quantity(
+    pendingCalcSummary,
+    tg0OverrideQuantity,
+  );
   const pendingCalcAmount = pendingCalcQuantity * pendingCalcUnitPrice;
-  const tg0IsOverridden =
-    pendingCalcSummary !== null &&
-    tg0OverrideQuantity !== null &&
-    tg0OverrideQuantity !== pendingCalcSummary.totalSheet;
 
   // TG0(모조지) 한 줄은 연 단위 수량/금액만 보여주지만, 실제로 어떤
   // 사이즈를 몇 장씩 조합해서 그 연수가 나왔는지는 메모 한 줄에 다 담기
@@ -752,21 +729,10 @@ export function NewSaleForm({
   // 줄로 그대로 보여준다. 이 줄들은 수량/단가를 세지 않는다(원지
   // 자체는 연 단위로만 청구하고, 여기 사이즈들은 그 원지를 조합해서
   // 만드는 최종 상품일 뿐 별도로 판매/청구되는 게 아니기 때문).
-  const paperCalcSizeLines = useMemo(() => {
-    let sizes: PaperCalcSizeRow[] = [];
-    if (pendingPaperCalc) {
-      try {
-        const parsed = JSON.parse(pendingPaperCalc) as { inputItems?: unknown };
-        sizes = mergePaperCalcInputItems(sizes, parsed.inputItems);
-      } catch {
-        // 무시
-      }
-    }
-    for (const calc of copiedPaperCalcs) {
-      sizes = mergePaperCalcInputItems(sizes, calc.inputItems);
-    }
-    return formatPaperCalcSizeLines(sizes);
-  }, [pendingPaperCalc, copiedPaperCalcs]);
+  const paperCalcSizeLines = useMemo(
+    () => pendingPaperCalcSizeLines(pendingPaperCalc, copiedPaperCalcs),
+    [pendingPaperCalc, copiedPaperCalcs],
+  );
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) =>
