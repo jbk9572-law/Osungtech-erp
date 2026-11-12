@@ -82,7 +82,8 @@ export async function deleteDepartment(_prevState: FormState, formData: FormData
   const id = String(formData.get("id") ?? "");
   if (!id) return { error: "잘못된 요청입니다." };
 
-  const { supabase } = await requireAdmin();
+  const { supabase, isAdmin } = await requireAdmin();
+  if (!isAdmin) return { error: "관리자만 삭제할 수 있습니다." };
   const result = await supabase.from("departments").delete().eq("id", id).select("id");
   const mutationError = requireMutatedRow(result, {
     onError: "삭제에 실패했습니다",

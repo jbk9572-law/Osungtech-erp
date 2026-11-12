@@ -46,7 +46,8 @@ export async function updateSession(request: NextRequest) {
   // 경로면 Supabase 클라이언트를 만들거나 getUser()를 부르지도 않고
   // 바로 통과시킨다.
   const pathname = request.nextUrl.pathname;
-  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
+  // 접두사 문자열만 같은 경로(/loginfoo, /authxyz 등)가 공개로 오인되지 않도록 경로 경계까지 확인한다.
+  const isPublicPath = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   if (isPublicPath) {
     return NextResponse.next({ request });

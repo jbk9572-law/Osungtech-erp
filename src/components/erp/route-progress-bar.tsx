@@ -153,7 +153,7 @@ function ProgressWatcher() {
     window.addEventListener(ROUTE_PROGRESS_EVENT, start);
     return () => {
       document.removeEventListener("click", onClick, true);
-      document.removeEventListener("submit", onSubmit, true);
+      document.removeEventListener("submit", onSubmit, false);
       window.removeEventListener(ROUTE_PROGRESS_EVENT, start);
       if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current);
       if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current);

@@ -153,6 +153,8 @@ export async function markRecipientDeliveredManually(_prevState: FormState, form
     .from("official_document_recipients")
     .update({ status: "delivered_manual", sent_at: new Date().toISOString() })
     .eq("id", recipientId)
+    // 서비스 키는 RLS를 우회하므로, 권한을 확인한 이 문서의 수신처만 바뀌도록 소속을 조건에 건다.
+    .eq("official_document_id", officialDocumentId)
     .select("id");
   const mutationError = requireMutatedRow(result, "처리에 실패했습니다");
   if (mutationError) return mutationError;
@@ -195,6 +197,7 @@ async function sendRecipientViaMock(
     .from("official_document_recipients")
     .select("id, name")
     .eq("id", recipientId)
+    .eq("official_document_id", officialDocumentId)
     .maybeSingle();
   if (!recipient) return { error: "수신처를 찾을 수 없습니다." };
 
@@ -206,6 +209,7 @@ async function sendRecipientViaMock(
     .from("official_document_recipients")
     .update({ status: "delivered_manual", sent_at: new Date().toISOString() })
     .eq("id", recipientId)
+    .eq("official_document_id", officialDocumentId)
     .select("id");
   const mutationError = requireMutatedRow(updateResult, "처리에 실패했습니다");
   if (mutationError) return mutationError;
