@@ -532,7 +532,7 @@ async function DashboardPage({
           supabase
             .from("fifo_consumptions")
             .select(
-              "purchase_order_item_id, sales_order_item_id, consumed_quantity, sales_order_items!inner(sales_orders!inner(customers(name)))"
+              "purchase_order_item_id, sales_order_item_id, consumed_quantity, sales_order_items!inner(sales_orders!inner(order_date, customers(name)))"
             )
             .eq("consumed_by_type", "sale")
             .in("purchase_order_item_id", purchaseIds)
@@ -543,7 +543,7 @@ async function DashboardPage({
             purchase_order_item_id: string;
             sales_order_item_id: string;
             consumed_quantity: number;
-            sales_order_items: { sales_orders: { customers: { name: string } | null } };
+            sales_order_items: { sales_orders: { order_date: string; customers: { name: string } | null } };
           }[]
         ),
     salesIds.length
@@ -573,7 +573,16 @@ async function DashboardPage({
     // 자체는(로스 소진 건도 같은 테이블을 쓰느라) nullable이라 타입상
     // 널 체크가 필요하다.
     if (!row.sales_order_item_id) continue;
-    const partnerName = row.sales_order_items.sales_orders.customers?.name ?? "출고처 미상";
+    const saleOrder = row.sales_order_items.sales_orders;
+    const baseName = saleOrder.customers?.name ?? "출고처 미상";
+    // 연결된 매출의 전표날짜가 이 매입의 작업일과 다르면(드롭십: 재고 없이 먼저
+    // 끊은 매출을 나중 매입이 채운 경우 등) 날짜를 붙여, "오늘 안 나갔는데 왜
+    // 있지?"로 오해하지 않게 한다. 연결 자체는 그대로 믿고 표시만 구분한다.
+    const purchaseWorkDate = purchaseItemWorkDateById.get(row.purchase_order_item_id);
+    const partnerName =
+      purchaseWorkDate && saleOrder.order_date !== purchaseWorkDate
+        ? `${baseName} (${saleOrder.order_date.slice(5).replace("-", "/")} 매출)`
+        : baseName;
     const list = purchaseDestinationsById.get(row.purchase_order_item_id) ?? [];
     list.push({ partnerName, quantity: row.consumed_quantity });
     purchaseDestinationsById.set(row.purchase_order_item_id, list);
