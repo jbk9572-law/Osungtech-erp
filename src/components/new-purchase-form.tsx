@@ -9,7 +9,6 @@ import { QuickAddProductSearch } from "@/components/quick-add-product-search";
 import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { NumberInput } from "@/components/number-input";
-import { PaperCalcSizeLineRows, PendingPaperCalcRow } from "@/modules/paper-calc/components/order-form-paper-calc-rows";
 import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
@@ -19,16 +18,10 @@ import {
   focusSameColumnNextRow,
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
-import { PaperCalcModalTrigger } from "@/modules/paper-calc/components/paper-calc-modal-trigger";
-import { ManualLayoutModalTrigger } from "@/modules/paper-calc/components/manual-layout-modal-trigger";
-import type { PendingCalcPayload } from "@/modules/paper-calc/components/paper-calc-client";
-import { PENDING_PAPER_CALC_PURCHASE_KEY } from "@/modules/paper-calc/lib/paper-calc-pending-key";
 import { TodoImportPopover } from "@/components/todo-import-popover";
 import { CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
 import { ResizableTh } from "@/components/grid/resizable-th";
 import { normalizeLotNumber } from "@/lib/lot-number";
-import type { PendingCalc } from "@/modules/paper-calc/lib/paper-calc-sync";
-import { pendingPaperCalcSizeLines, resolveTg0Quantity, summarizePendingPaperCalc } from "@/modules/paper-calc/lib/pending-paper-calc";
 import {
   getOpenTodos,
   getPaperCalculationsForTodo,
@@ -50,6 +43,14 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import {
+  PaperCalcGridRows,
+  PaperCalcHiddenInputs,
+  PaperCalcLinkedGuide,
+  PaperCalcOverrideInput,
+  PaperCalcToolbarButtons,
+  useOrderPaperCalc,
+} from "@/modules/paper-calc/order-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS, ITEM_GRID_COLUMN_PX_WIDTHS_DUAL_SPLIT } from "@/lib/item-grid-columns";
@@ -552,66 +553,22 @@ export function NewPurchaseForm({
   //    경우 — 그 화면은 이 폼과 다른 페이지라 직접 콜백을 넘길 수 없어,
   //    localStorage에 잠깐 담아뒀다가 이 폼이 마운트될 때(혹은 이미 열려
   //    있는 다른 탭에서 나중에 저장했을 때 storage 이벤트로) 읽어온다.
-  const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
-  function handlePaperCalcApply(payload: PendingCalcPayload) {
-    setPendingPaperCalc(JSON.stringify(payload));
-  }
-
-  useEffect(() => {
-    if (initial?.id) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 마운트 후 localStorage의 임시 모조지 계산을 한 번 읽어오는 동기화(서버 렌더링 때는 localStorage가 없어 초기값으로 못 읽는다)
-    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_PURCHASE_KEY));
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === PENDING_PAPER_CALC_PURCHASE_KEY) {
-        setPendingPaperCalc(e.newValue);
-      }
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [initial?.id]);
 
   // 할일에 붙어있던 모조지 계산을 "할일 가져오기"로 통째로 복사해온 것.
   // TG0 품목은 수량만 옮기면 사이즈별 배치 내역이 사라지므로, 계산 자체를
   // 그대로 붙여서 등록 시 같이 저장한다(sales의 "입고 불러오기"와 동일).
-  const [copiedPaperCalcs, setCopiedPaperCalcs] = useState<PendingCalc[]>([]);
 
   // 임시 저장된 모조지 계산(모달로 직접 계산했거나, 할일에서 가져온 것)이
   // 있으면 등록 버튼을 누르기 전에도 TG0 품목 줄이 실제로 어떤 수량으로
   // 들어갈지 그리드에 미리 보여준다. 이 줄은 편집 가능한 rows에는 넣지
   // 않는다 — 실제 저장은 createPurchase가 주문 생성 직후
   // attachPendingPaperCalculationToPurchase/attachCopiedPaperCalculationsToPurchase로 처리한다.
-  const pendingCalcSummary = useMemo(
-    () => summarizePendingPaperCalc(pendingPaperCalc, copiedPaperCalcs),
-    [pendingPaperCalc, copiedPaperCalcs],
-  );
-  const tg0Product = useMemo(
-    () => products.find((p) => p.sku === "TG0"),
-    [products],
-  );
-  const pendingCalcUnitCost = tg0Product ? Number(tg0Product.cost) : 0;
-  // 거래처와 협의해 자동 계산값(예: 3.2연)과 다른 수량(예: 3연)으로 등록해야
-  // 하는 경우, 등록 시점에 바로 고칠 수 있게 한다 — null이면 자동값 그대로.
-  // 저장 시(createPurchase)에는 이 값이 있을 때만 오버라이드 이력을 남긴다.
-  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(
-    null,
-  );
-  const { quantity: pendingCalcQuantity, isOverridden: tg0IsOverridden } = resolveTg0Quantity(
-    pendingCalcSummary,
-    tg0OverrideQuantity,
-  );
-  const pendingCalcAmount = pendingCalcQuantity * pendingCalcUnitCost;
-
-  // TG0(모조지) 한 줄은 연 단위 수량/금액만 보여주지만, 실제로 어떤
-  // 사이즈를 몇 장씩 조합해서 그 연수가 나왔는지는 메모 한 줄에 다 담기
-  // 어렵다 — 그래서 계산에 들어간 사이즈별 수량을 품목 표 아래에 참고용
-  // 줄로 그대로 보여준다. 이 줄들은 수량/단가를 세지 않는다(원지
-  // 자체는 연 단위로만 청구하고, 여기 사이즈들은 그 원지를 조합해서
-  // 만드는 최종 상품일 뿐 별도로 판매/청구되는 게 아니기 때문).
-  const paperCalcSizeLines = useMemo(
-    () => pendingPaperCalcSizeLines(pendingPaperCalc, copiedPaperCalcs),
-    [pendingPaperCalc, copiedPaperCalcs],
-  );
+  const pc = useOrderPaperCalc({
+    side: "purchase",
+    isEdit: !!initial?.id,
+    products,
+    unitPriceOf: (tg0) => Number(tg0.cost),
+  });
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) =>
@@ -873,7 +830,7 @@ export function NewPurchaseForm({
     try {
       const calcs = await getPaperCalculationsForTodo(todo.id);
       if (calcs.length > 0) {
-        setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
+        pc.addCopied(calcs);
       }
     } finally {
       setImportingTodoId(null);
@@ -894,7 +851,7 @@ export function NewPurchaseForm({
   );
   const supplyAmount =
     submittedRows.reduce((sum, row) => sum + row.quantity * row.unitCost, 0) +
-    pendingCalcAmount;
+    pc.amount;
   const taxAmount = calcVat(supplyAmount);
   const total = supplyAmount + taxAmount;
 
@@ -1033,8 +990,7 @@ export function NewPurchaseForm({
         // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
         // 없어 지울 것도 없다). 등록이 실패해도 계산 자체는 다시 하면
         // 되므로 감수할 만한 트레이드오프다.
-        if (pendingPaperCalc)
-          localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
+        pc.clearStorageOnSubmit();
       }}
     >
       <div className="erp-doc-paper flex flex-col gap-6">
@@ -1078,16 +1034,7 @@ export function NewPurchaseForm({
         <input type="hidden" name="is_carryover" value={isCarryover ? "1" : ""} />
       )}
       <input type="hidden" name="items" value={itemsJson} />
-      {pendingPaperCalc && (
-        <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
-      )}
-      {copiedPaperCalcs.length > 0 && (
-        <input
-          type="hidden"
-          name="copiedPaperCalcs"
-          value={JSON.stringify(copiedPaperCalcs)}
-        />
-      )}
+      <PaperCalcHiddenInputs pc={pc} />
       {importedTodoIds.length > 0 && (
         <input
           type="hidden"
@@ -1109,13 +1056,7 @@ export function NewPurchaseForm({
           <input type="hidden" name="sale_location_allocations" value={saleLocationAllocationsJson} />
         </>
       )}
-      {tg0IsOverridden && (
-        <input
-          type="hidden"
-          name="tg0OverrideQuantity"
-          value={tg0OverrideQuantity ?? ""}
-        />
-      )}
+      <PaperCalcOverrideInput pc={pc} />
 
       {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
@@ -1127,12 +1068,7 @@ export function NewPurchaseForm({
         </PageGuide>
       )}
 
-      {pendingPaperCalc && (
-        <PageGuide>
-          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0
-          자동 반영 줄로 표시됩니다. 등록하면 실제로 저장됩니다.
-        </PageGuide>
-      )}
+      <PaperCalcLinkedGuide pc={pc} includeCopied={false} />
 
       <div>
         <div className="erp-form-section-head">
@@ -1343,25 +1279,7 @@ export function NewPurchaseForm({
             >
               + 품목 추가
             </button>
-            {!initial?.id && paperCalcEnabled && (
-              <>
-                <PaperCalcModalTrigger
-                  pendingFor="purchase"
-                  onApply={handlePaperCalcApply}
-                />
-                {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
-                    한 세트라 나란히 붙여둔다. PaperCalcModalTrigger와
-                    똑같이 라우트 이동 없는 중첩 팝업이라 이 폼이 이미
-                    모달로 열려 있어도 품목 줄이 사라지지 않는다 — 안에서
-                    "새 매입 등록에 연결"을 누르면 storage 이벤트 대신
-                    팝업이 닫히는 시점에 localStorage를 직접 다시 읽어
-                    반영한다. */}
-                <ManualLayoutModalTrigger
-                  pendingFor="purchase"
-                  onClose={() => setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_PURCHASE_KEY))}
-                />
-              </>
-            )}
+            <PaperCalcToolbarButtons pc={pc} enabled={paperCalcEnabled} />
           </div>
 
           {openTodos !== null && (
@@ -1414,26 +1332,7 @@ export function NewPurchaseForm({
                 focusGridArrowNav(e);
               }}
             >
-              {pendingCalcSummary && (
-                <PendingPaperCalcRow
-                  tg0Product={tg0Product}
-                  quantity={pendingCalcQuantity}
-                  onQuantityChange={setTg0OverrideQuantity}
-                  unitAmount={pendingCalcUnitCost}
-                  amount={pendingCalcAmount}
-                  autoSheet={pendingCalcSummary.totalSheet}
-                  isOverridden={tg0IsOverridden}
-                  dashAfterQuantity={alsoCreateSale}
-                  dashAfterUnit={alsoCreateSale}
-                  onCancel={() => {
-                    localStorage.removeItem(PENDING_PAPER_CALC_PURCHASE_KEY);
-                    setPendingPaperCalc(null);
-                    setCopiedPaperCalcs([]);
-                    setTg0OverrideQuantity(null);
-                  }}
-                />
-              )}
-              <PaperCalcSizeLineRows lines={paperCalcSizeLines} dashAfterQuantity={alsoCreateSale} dashAfterUnit={alsoCreateSale} />
+              <PaperCalcGridRows pc={pc} dashAfterQuantity={alsoCreateSale} dashAfterUnit={alsoCreateSale} />
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentCost = resolveCost(supplierId, row.productId);

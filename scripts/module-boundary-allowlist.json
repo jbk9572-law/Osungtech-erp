@@ -16,8 +16,8 @@
   "paper-calc|app/(dashboard)/todos/new/page.tsx": 1,
   "paper-calc|app/(dashboard)/todos/page.tsx": 1,
   "paper-calc|components/dashboard-calendar.tsx": 1,
-  "paper-calc|components/new-purchase-form.tsx": 7,
-  "paper-calc|components/new-sale-form.tsx": 7,
+  "paper-calc|components/new-purchase-form.tsx": 1,
+  "paper-calc|components/new-sale-form.tsx": 1,
   "paper-calc|components/todo-detail-panel.tsx": 2,
   "paper-calc|components/todo-form.tsx": 3
 }
