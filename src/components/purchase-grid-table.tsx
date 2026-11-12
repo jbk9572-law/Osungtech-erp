@@ -1,5 +1,6 @@
 "use client";
 
+import { rowDay, rowDayClass } from "@/lib/row-day";
 import {
   Fragment,
   useActionState,
@@ -248,12 +249,10 @@ export function PurchaseGridTable({
   // 전월 이월분 행 전용 톤 — sales-grid-table.tsx와 같은 이유(스티키 칸은
   // 자기 배경색을 따로 가져서 <tr style>만으로는 색이 안 먹는다).
   const tdSticky1Carryover = stickyCellStyle(0, GRID_CHECKBOX_WIDTH, {
-    background: "var(--erp-info-bg)",
     borderLeft: "3px solid var(--erp-warning)",
   });
   const tdSticky2Carryover = stickyCellStyle(GRID_CHECKBOX_WIDTH, STICKY_2_WIDTH, {
     borderRight: "1px solid var(--erp-border)",
-    background: "var(--erp-info-bg)",
   });
 
   const activeRow = sortedRows.find((row) => row.key === activeKey) ?? null;
@@ -301,7 +300,7 @@ export function PurchaseGridTable({
     return (
       <tr
         key={row.key}
-        className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}`}
+        className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${row.isCarryover ? " row-carryover" : ""}`}
         onClick={() => opts.selectable && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
@@ -315,13 +314,18 @@ export function PurchaseGridTable({
         </td>
         <td style={opts.compactDate ? tdSticky2Carryover : tdSticky2}>
           {row.date
-            ? opts.compactDate
+            ? opts.compactDate || rowDay(row.date) === "future"
               ? formatCarryoverDate(row.date)
               : new Date(row.date).toLocaleDateString("ko-KR")
             : "-"}
           {row.isCarryover && row.date && (
             <GridBadge tone="warn" style={{ marginLeft: 4 }}>
               이월
+            </GridBadge>
+          )}
+          {rowDay(row.date) === "future" && (
+            <GridBadge tone="muted" style={{ marginLeft: 4 }}>
+              예약
             </GridBadge>
           )}
         </td>
@@ -445,7 +449,7 @@ export function PurchaseGridTable({
         ? `/suppliers/${row.supplierId}?back=${buildBackHref(resolveListHref("/purchases", backParam))}`
         : null;
     const dateLabel = row.date
-      ? opts.compactDate
+      ? opts.compactDate || rowDay(row.date) === "future"
         ? formatCarryoverDate(row.date)
         : new Date(row.date).toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" })
       : "-";
@@ -474,6 +478,11 @@ export function PurchaseGridTable({
                 이월
               </GridBadge>
             )}
+          {rowDay(row.date) === "future" && (
+            <GridBadge tone="muted" style={{ marginLeft: 4 }}>
+              예약
+            </GridBadge>
+          )}
           </span>
         </div>
         <div className="erp-row-card-item">
@@ -500,13 +509,13 @@ export function PurchaseGridTable({
 
     if (!detailHref || (opts.selectable && mobileSelectMode)) {
       return (
-        <div key={row.key} className={`erp-row-card${isRowSelected ? " selected" : ""}`}>
+        <div key={row.key} className={`erp-row-card${isRowSelected ? " selected" : ""}${rowDayClass(rowDay(row.date))}${row.isCarryover ? " row-carryover" : ""}`}>
           {body}
         </div>
       );
     }
     return (
-      <Link key={row.key} href={detailHref} className="erp-row-card">
+      <Link key={row.key} href={detailHref} className={`erp-row-card${rowDayClass(rowDay(row.date))}${row.isCarryover ? " row-carryover" : ""}`}>
         {body}
       </Link>
     );

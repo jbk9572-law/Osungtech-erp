@@ -946,6 +946,7 @@
 .erp-ribbon-searchitem {
   display: flex;
   align-items: center;
+  width: 100%;
   text-align: left;
   height: 32px;
   padding: 0 10px;
@@ -958,6 +959,40 @@
 
 .erp-ribbon-searchitem:hover {
   background: var(--erp-hover);
+}
+
+/* 회사 전환 목록 — 버튼이 <form> 안에 있어 내용 폭만큼만 줄어들고 왼쪽으로
+   쏠려 잘리던 문제. 칸을 꽉 채우는 타일 격자로 바꾸고(좁으면 1열, 넓으면
+   2~3열), 긴 이름은 한 줄 말줄임(title로 전체 표시). */
+.erp-ribbon-searchlist.erp-tile-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px;
+}
+.erp-tile-list > form {
+  display: block;
+  min-width: 0;
+}
+.erp-tile-list .erp-ribbon-searchitem {
+  height: 40px;
+  min-width: 0;
+  border: 1px solid var(--erp-border);
+  background: var(--erp-panel);
+  border-radius: var(--erp-radius-2xl, 0);
+  font-weight: 600;
+}
+.erp-tile-list .erp-ribbon-searchitem > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erp-tile-list .erp-ribbon-searchitem:hover {
+  border-color: var(--erp-select-accent);
+  background: var(--erp-hover);
+}
+.erp-tile-list > .erp-ribbon-dropdown-empty {
+  grid-column: 1 / -1;
 }
 
 /* ── Body split: tree / workspace ─────────────────────────── */
@@ -1991,12 +2026,63 @@ form.erp-field-grid {
     inset 0 -2px 0 var(--erp-select-accent);
 }
 
+/* 연속으로 선택된 행들은 한 덩어리로 보이게 — 행마다 위/아래 2px 선을
+   그대로 두면 붙어 있는 두 행 사이에 4px 굵은 이중선이 생겨 겹쳐 보인다.
+   덩어리의 맨 위 행은 윗선만, 맨 아래 행은 아랫선만 남긴다. */
+.erp-grid tbody tr.selected + tr.selected {
+  box-shadow: inset 0 -2px 0 var(--erp-select-accent);
+}
+.erp-grid tbody tr.selected:has(+ tr.selected) {
+  box-shadow: inset 0 2px 0 var(--erp-select-accent);
+}
+.erp-grid tbody tr.selected + tr.selected:has(+ tr.selected) {
+  box-shadow: none;
+}
+
 /* 매출/매입 목록의 마스터-디테일 레이아웃에서, 지금 아코디언으로
    펼쳐진 명세표(마스터 행)를 강조한다 — 체크박스 일괄선택(.selected)
    과는 별개 상태라 다른 톤을 쓴다. */
 .erp-grid tbody tr.master-active {
   background: var(--erp-info-bg);
   box-shadow: inset 3px 0 0 var(--erp-primary);
+}
+
+/* 전월 이월건 행 — 호박(앰버) 계열로 통째로 칠해서 오늘(초록)/선택(파랑)과
+   색 자체가 겹치지 않게 한다. 스티키 칸은 인라인 background라 !important. */
+.erp-grid tbody tr.row-carryover:not(.selected):not(.master-active) > td {
+  background: var(--erp-warning-bg) !important;
+}
+
+/* 목록 그리드의 "오늘"/"예약(미래 날짜)" 행 구분 — src/lib/row-day.ts.
+   오늘은 초록 계열 배경+왼쪽 띠, 예약(미래 날짜)은 회색 배경+띠 + "MM.DD 예약"(이월과 같은 방식). 글자 뱃지는
+   날짜 칸이 늘어나 보기 싫다는 지적으로 쓰지 않는다(띠가 색 외의 단서). 선택(.selected)/
+   아코디언 열림(.master-active)이 항상 우선한다. 스티키 칸(td)은 인라인
+   background를 갖고 있어 !important로만 덮을 수 있다. */
+.erp-grid tbody tr.day-today:not(.selected):not(.master-active) > td {
+  background: var(--erp-success-bg) !important;
+}
+.erp-grid tbody tr.day-today:not(.selected):not(.master-active) > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-success);
+}
+.erp-grid tbody tr.day-future:not(.selected):not(.master-active) > td {
+  background: var(--erp-bg) !important;
+}
+.erp-grid tbody tr.day-future:not(.selected):not(.master-active) > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-border-strong);
+}
+.erp-row-card.row-carryover:not(.selected) {
+  background: var(--erp-warning-bg);
+  border-color: var(--erp-warning-border, var(--erp-border-strong));
+  box-shadow: inset 4px 0 0 var(--erp-warning);
+}
+.erp-row-card.day-today:not(.selected) {
+  background: var(--erp-success-bg);
+  border-color: var(--erp-success-border);
+  box-shadow: inset 4px 0 0 var(--erp-success);
+}
+.erp-row-card.day-future:not(.selected) {
+  background: var(--erp-bg);
+  box-shadow: inset 4px 0 0 var(--erp-border-strong);
 }
 
 /* 아코디언으로 펼쳐진 품목내역을 담는 행(.erp-grid-accordion-row) —

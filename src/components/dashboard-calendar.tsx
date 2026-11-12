@@ -217,7 +217,8 @@ function splitPaperCalcByDestination(
   const leftoverSheets = Math.max(entry.totalSheet - allocatedSheets, 0);
   if (leftoverSizes.length || leftoverSheets > 0) {
     blocks.push({
-      label: STOCK_PURCHASE_LABEL,
+      // 재고 몫도 라벨 없이 그대로 보여준다("재고용" 표기는 쓰지 않음).
+      label: null,
       sizes: leftoverSizes,
       totalSheet: leftoverSheets,
       amount: entry.totalSheet > 0 ? Math.round((entry.amount * leftoverSheets) / entry.totalSheet) : 0,
@@ -271,7 +272,6 @@ function buildPartnerBlocks(
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
 const STOCK_PURCHASE_LABEL = "재고용 매입";
-const STOCK_SALE_LABEL = "재고분 출고";
 
 // 카테고리는 Paper/Material/Tray/Bobbin/Filter/Etc 여섯 가지이고, 이 중
 // Filter만 매입-매출 매칭(입고처/출고처/재고분출고 추적) 대상에서 뺀다 —
@@ -369,8 +369,8 @@ export function groupProductItemsByLabel(
   const groups: ItemLabelGroup[] = [];
   const indexByKey = new Map<string, number>();
 
-  function bucket(label: string | null, isStock: boolean): ItemLabelGroup {
-    const key = `${isStock ? "s" : "r"}:${label ?? ""}`;
+  function bucket(label: string | null): ItemLabelGroup {
+    const key = label ?? "";
     let idx = indexByKey.get(key);
     if (idx === undefined) {
       idx = groups.length;
@@ -380,14 +380,14 @@ export function groupProductItemsByLabel(
     return groups[idx];
   }
 
-  // isStock(재고용 매입/재고분 출고로 분류된 몫)은 화면/복사 텍스트
-  // 어디에도 안 보이게 통째로 뺀다(사용자 요청 — "오늘의 업무 복사하는
-  // 부분에서 재고용 자체를 빼버려"). "(NNN는 출고 후 남은재고)" 메모만
-  // 붙이는 경우(note가 있는 일반 push)는 isStock=false라 영향 없다 —
-  // 재고 몫이 아예 자기 그룹으로 통째로 떨어지는 경우만 막는다.
-  function push(label: string | null, isStock: boolean, items: ItemRow[], note: string | null = null) {
-    if (isStock) return;
-    bucket(label, isStock).items.push(...items.map((item) => ({ item, note })));
+  // 재고 몫(재고용 매입/재고분 출고로 분류되던 몫)은 "재고용"/"재고분"
+  // 라벨만 없애고 항목 자체는 라벨 없는 일반 그룹으로 그대로 보여준다.
+  // (예전엔 항목째 숨겨서 재고에서 나간 매출/매입이 통째로 안 뜨는
+  // 문제가 있었다 — 사용자 요청은 "표기를 없애라"이지 "내역을 숨겨라"가
+  // 아니다.)
+  function push(label: string | null, items: ItemRow[]) {
+    if (!items.length) return;
+    bucket(label).items.push(...items.map((item) => ({ item, note: null })));
   }
 
   // Filter 카테고리(또는 카테고리 미지정)면 매입-매출 매칭 자체를 안 하고
@@ -395,58 +395,32 @@ export function groupProductItemsByLabel(
   const isTracked = isTrackedCategory(product.items[0]?.categoryName ?? null);
 
   for (const specGroup of groupItemsBySpec(product.items)) {
-    const unit = specGroup.items[0]?.unit ?? "";
-    const isReturn = specGroup.items.some((it) => it.isReturn);
-
     if (!isTracked) {
-      push(null, false, specGroup.items);
+      push(null, specGroup.items);
       continue;
     }
 
     if (direction === "purchase") {
-      const destinations = realDestinationsForItems(specGroup.items);
-      const real = destinations.filter((d) => d.partnerName !== STOCK_PURCHASE_LABEL);
-      const stock = destinations.find((d) => d.partnerName === STOCK_PURCHASE_LABEL) ?? null;
+      const real = realDestinationsForItems(specGroup.items).filter(
+        (d) => d.partnerName !== STOCK_PURCHASE_LABEL,
+      );
 
       if (!real.length) {
-        push(stock?.partnerName ?? null, true, specGroup.items);
+        push(null, specGroup.items);
         continue;
       }
 
       let remaining = specGroup.items;
-      real.forEach((d, i) => {
+      for (const d of real) {
         const { taken, rest } = takeItems(remaining, d.quantity);
         remaining = rest;
-        const isLast = i === real.length - 1;
-        const note = isLast && stock ? `${formatNumber(stock.quantity)}${unit}는 출고 후 남은재고` : null;
-        push(d.partnerName, false, taken, note);
-      });
-    } else if (!isReturn) {
-      // 예전엔 당일 매입 origin까지 밝혀 "매입처 -> 출고처"로 표시했는데,
-      // 출고처(고객명)는 이 파트너 블록 맨 위(- {거래처명})에 이미 나와
-      // 있고, 그 매입 내역 자체도 매입 복사/화면 쪽에 이미 나오므로
-      // 매출 쪽에서 또 밝히는 게 중복이라는 지적으로 없앴다. 당일 매입과
-      // 매칭되는 만큼은 라벨 없이, 매칭 안 되고 재고에서 나간 만큼만
-      // "재고분 출고"로 구분해서 보여준다(이 구분 자체는 그대로 유지).
-      // purchasedQuantity(오늘 들어온 매입에서 실제로 소진된 양)는
-      // fifo_consumptions 기준 stockConsumedQuantity의 나머지다.
-      const purchasedQuantity = specGroup.items.reduce(
-        (sum, it) => sum + (it.quantity - it.stockConsumedQuantity),
-        0,
-      );
-
-      if (purchasedQuantity <= 0) {
-        push(STOCK_SALE_LABEL, true, specGroup.items);
-        continue;
+        push(d.partnerName, taken);
       }
-
-      const { taken, rest } = takeItems(specGroup.items, purchasedQuantity);
-      push(null, false, taken);
-      if (rest.length) {
-        push(STOCK_SALE_LABEL, true, rest);
-      }
+      // 거래처로 안 나간 나머지(재고로 남은 몫)도 라벨 없이 그대로 보여준다.
+      push(null, remaining);
     } else {
-      push(null, false, specGroup.items);
+      // 매출은 재고분/당일매입분 구분 없이 한 그룹으로 보여준다.
+      push(null, specGroup.items);
     }
   }
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { toKstDateStr } from "@/lib/kst-date";
+import { rowDay, rowDayClass } from "@/lib/row-day";
 import { Fragment, useState } from "react";
 import Link from "next/link";
 import { formatNumber } from "@/lib/format-number";
@@ -67,11 +69,13 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
               return (
                 <Fragment key={row.id}>
                   <tr
-                    className={`cursor-pointer${row.id === activeKey ? " master-active" : ""}`}
+                    className={`cursor-pointer${row.id === activeKey ? " master-active" : ""}${rowDayClass(rowDay(toKstDateStr(new Date(row.createdAt))))}`}
                     onClick={() => toggleAccordion(row.id)}
                   >
                     <td style={{ fontWeight: 600 }}>{row.docNo}</td>
-                    <td>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</td>
+                    <td>
+                      {new Date(row.createdAt).toLocaleDateString("ko-KR")}
+                    </td>
                     <td className="num">{row.itemCount}</td>
                     <td className="num">{formatNumber(row.totalAmount)}</td>
                     <td>
@@ -111,7 +115,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
         {rows.map((row) => (
           <Fragment key={row.id}>
             <div
-              className={`erp-row-card${row.id === activeKey ? " selected" : ""}`}
+              className={`erp-row-card${row.id === activeKey ? " selected" : ""}${rowDayClass(rowDay(toKstDateStr(new Date(row.createdAt))))}`}
               role="button"
               tabIndex={0}
               onClick={() => toggleAccordion(row.id)}
@@ -121,7 +125,9 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
             >
               <div className="erp-row-card-head">
                 <span className="erp-row-card-partner">주문 {row.docNo}</span>
-                <span className="erp-row-card-date">{new Date(row.createdAt).toLocaleDateString("ko-KR")}</span>
+                <span className="erp-row-card-date">
+                  {new Date(row.createdAt).toLocaleDateString("ko-KR")}
+                </span>
               </div>
               <div className="erp-row-card-item">
                 품목 {row.itemCount}건{row.memo ? ` · ${row.memo}` : ""}

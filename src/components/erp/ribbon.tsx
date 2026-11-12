@@ -337,12 +337,12 @@ export function Ribbon({
                 className="erp-input"
                 style={{ width: "100%", marginBottom: 8 }}
               />
-              <div className="erp-ribbon-searchlist">
+              <div className="erp-ribbon-searchlist erp-tile-list">
                 {filteredTenants.map((t) => (
                   <form key={t.id} action={enterTenant}>
                     <input type="hidden" name="tenantId" value={t.id} />
-                    <button type="submit" className="erp-ribbon-searchitem">
-                      {t.name}
+                    <button type="submit" className="erp-ribbon-searchitem" title={t.name}>
+                      <span>{t.name}</span>
                     </button>
                   </form>
                 ))}

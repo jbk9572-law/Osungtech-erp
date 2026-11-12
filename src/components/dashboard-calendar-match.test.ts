@@ -101,38 +101,33 @@ describe("groupProductItemsByLabel — 매입(원재료), fifo_consumptions 기�
     expect(groups[0].label).toBe("명진화학");
   });
 
-  it("일부만 나가고 나머지는 재고면(실제 거래처가 하나뿐이라) 그 한 줄에 남은재고 메모만 붙는다", () => {
-    // realDestinations가 전체 수량보다 적게 소진됐으면, 그 남는 몫은 별도
-    // 그룹이 아니라 마지막 실제 거래처 줄의 note로만 표시된다
-    // (groupProductItemsByLabel 주석 참고) — 여러 거래처로 쪼개질 때만
-    // "재고용 매입" 그룹이 별도로 생긴다(real destinations가 2개 이상일 때).
+  it("일부만 나가고 나머지는 재고면 거래처 그룹 + 라벨 없는 나머지 그룹으로 나뉜다(안 사라진다)", () => {
     const purchased = [
-      row({
-        quantity: 100,
-        realDestinations: [{ partnerName: "명진화학", quantity: 30 }],
-      }),
+      row({ quantity: 100, realDestinations: [{ partnerName: "명진화학", quantity: 30 }] }),
     ];
     const groups = groupProductItemsByLabel(group(purchased), "purchase");
-    expect(groups).toHaveLength(1);
-    expect(groups[0].label).toBe("명진화학");
-    expect(groups[0].items[0].note).toBe("70매는 출고 후 남은재고");
+    expect(groups.map((g) => g.label)).toEqual(["명진화학", null]);
+    expect(groups[0].items[0].item.quantity).toBe(30);
+    expect(groups[1].items[0].item.quantity).toBe(70);
+    expect(groups.every((g) => g.items.every((i) => i.note === null))).toBe(true);
   });
 
-  it("실제 소진 기록이 없으면(fifo 미소진) 전량 재고용 매입 몫이라 화면/복사 어디에도 안 보인다", () => {
-    // 전에는 "재고용 매입" 그룹으로 보여줬는데, 사용자 요청으로 재고로
-    // 남는 몫은 화면/복사 텍스트에서 통째로 뺀다 — groupProductItemsByLabel
-    // 자체(push)가 isStock 몫을 아예 안 담는다.
+  it("실제 소진 기록이 없으면(fifo 미소진) 라벨 없이 그대로 보인다(\"재고용 매입\" 표기 없음)", () => {
     const purchased = [row({ quantity: 100, realDestinations: [] })];
     const groups = groupProductItemsByLabel(group(purchased), "purchase");
-    expect(groups).toHaveLength(0);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].label).toBeNull();
+    expect(groups[0].items[0].item.quantity).toBe(100);
   });
 });
 
 describe("groupProductItemsByLabel — 매출(원재료), fifo_consumptions 기준 매입처 추적", () => {
-  it("오늘 산 게 없으면 전량 재고분출고라 화면/복사 어디에도 안 보인다", () => {
+  it("오늘 산 게 없어도(전량 재고에서 출고) 매출은 라벨 없이 그대로 보인다", () => {
     const sold = [row({ quantity: 50, stockConsumedQuantity: 50 })];
     const groups = groupProductItemsByLabel(group(sold), "sale");
-    expect(groups).toHaveLength(0);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].label).toBeNull();
+    expect(groups[0].items[0].item.quantity).toBe(50);
   });
 
   it("당일 매입 한 곳에서 전량 커버되면 라벨 없이(출고처는 상단에 이미 있음) 한 그룹이 된다", () => {
@@ -154,12 +149,12 @@ describe("groupProductItemsByLabel — 매출(원재료), fifo_consumptions 기�
     expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(100);
   });
 
-  it("일부는 당일 매입, 나머지는 재고면 라벨 없는 매입분만 나오고 재고분출고 몫은 숨겨진다", () => {
+  it("일부는 당일 매입, 나머지는 재고여도 전량이 한 그룹으로 나온다", () => {
     const sold = [row({ partnerName: "명진화학", quantity: 100, stockConsumedQuantity: 60 })];
     const groups = groupProductItemsByLabel(group(sold), "sale");
     expect(groups).toHaveLength(1);
     expect(groups[0].label).toBeNull();
-    expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(40);
+    expect(groups[0].items.reduce((s, i) => s + i.item.quantity, 0)).toBe(100);
   });
 
   it("반품 건은 매입처 매칭 대상에서 제외된다", () => {
