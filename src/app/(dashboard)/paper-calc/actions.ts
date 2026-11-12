@@ -6,7 +6,7 @@ import {
   syncPaperStockOrderItem,
   syncPaperStockPurchaseItem,
   PAPER_STOCK_SKU,
-} from "@/lib/paper-calc-sync";
+} from "@/modules/paper-calc/lib/paper-calc-sync";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
 import { requireMutatedRow } from "@/lib/require-mutated-row";

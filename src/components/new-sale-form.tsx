@@ -3,11 +3,9 @@
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createSale } from "@/app/(dashboard)/sales/actions";
 import {
-  getPaperCalculationsForPurchaseOrder,
   getPurchaseItemsForDate,
   type TodayPurchaseItem,
 } from "@/app/(dashboard)/purchases/actions";
-import type { PendingCalc } from "@/lib/paper-calc-sync";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
@@ -15,6 +13,7 @@ import { FormMessage } from "@/components/form-message";
 import type { FormState } from "@/components/form-message";
 import { PriceHistoryHint } from "@/components/price-history-hint";
 import { NumberInput } from "@/components/number-input";
+import { RemarkActionCells, SpecLotUnitCells } from "@/components/erp/order-form-row-cells";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
@@ -28,18 +27,8 @@ import {
   focusSameColumnNextRow,
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
-import { PaperCalcModalTrigger } from "@/components/paper-calc/paper-calc-modal-trigger";
-import { ManualLayoutModalTrigger } from "@/components/paper-calc/manual-layout-modal-trigger";
-import type { PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
-import { PENDING_PAPER_CALC_KEY } from "@/lib/paper-calc-pending-key";
-import {
-  formatPaperCalcSizeLines,
-  mergePaperCalcInputItems,
-  type PaperCalcSizeRow,
-} from "@/lib/paper-calc-summary";
 import {
   getOpenTodos,
-  getPaperCalculationsForTodo,
   type OpenTodoSummary,
 } from "@/app/(dashboard)/todos/actions";
 import { DELIVERY_METHODS } from "@/lib/delivery-method";
@@ -56,6 +45,14 @@ import {
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { useDraftAutosave } from "@/lib/use-draft-autosave";
 import { DraftResumeBanner } from "@/components/draft-resume-banner";
+import {
+  PaperCalcGridRows,
+  PaperCalcHiddenInputs,
+  PaperCalcLinkedGuide,
+  PaperCalcOverrideInput,
+  PaperCalcToolbarButtons,
+  useOrderPaperCalc,
+} from "@/modules/paper-calc/order-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { ITEM_GRID_COLUMN_PX_WIDTHS } from "@/lib/item-grid-columns";
@@ -442,23 +439,6 @@ export function NewSaleForm({
   //    경우 — 그 화면은 이 폼과 다른 페이지라 직접 콜백을 넘길 수 없어,
   //    localStorage에 잠깐 담아뒀다가 이 폼이 마운트될 때(혹은 이미 열려
   //    있는 다른 탭에서 나중에 저장했을 때 storage 이벤트로) 읽어온다.
-  const [pendingPaperCalc, setPendingPaperCalc] = useState<string | null>(null);
-  function handlePaperCalcApply(payload: PendingCalcPayload) {
-    setPendingPaperCalc(JSON.stringify(payload));
-  }
-
-  useEffect(() => {
-    if (initial?.id) return;
-    setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY));
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === PENDING_PAPER_CALC_KEY) {
-        setPendingPaperCalc(e.newValue);
-      }
-    }
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [initial?.id]);
 
   // 당일 입고된 품목을 그대로 매출로 옮겨 담는 기능(모조지처럼 당일 입고 후
   // 바로 당일 출고되는 품목을 이중 입력하지 않게 하려는 용도). 거래일자와
@@ -475,7 +455,6 @@ export function NewSaleForm({
   const [addingItemId, setAddingItemId] = useState<string | null>(null);
   // 모조지(TG0) 입고 품목은 수량만 옮기면 사이즈별 배치 내역이 사라지므로,
   // 그 매입 건에 연결된 모조지 계산 자체를 통째로 복사해서 등록 시 같이 붙인다.
-  const [copiedPaperCalcs, setCopiedPaperCalcs] = useState<PendingCalc[]>([]);
 
   async function loadPurchasesForDate() {
     setLoadingPurchases(true);
@@ -492,11 +471,7 @@ export function NewSaleForm({
     if (item.sku === "TG0") {
       setAddingItemId(item.id);
       try {
-        const calcs = await getPaperCalculationsForPurchaseOrder(
-          item.purchaseOrderId,
-        );
-        if (calcs.length > 0) {
-          setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
+        if (await pc.copyFromPurchaseOrder(item.purchaseOrderId)) {
           setAddedPurchaseItemIds((prev) => new Set(prev).add(item.id));
           return;
         }
@@ -595,10 +570,7 @@ export function NewSaleForm({
 
     setImportingTodoId(todo.id);
     try {
-      const calcs = await getPaperCalculationsForTodo(todo.id);
-      if (calcs.length > 0) {
-        setCopiedPaperCalcs((prev) => [...prev, ...calcs]);
-      }
+      await pc.copyFromTodo(todo.id);
     } finally {
       setImportingTodoId(null);
     }
@@ -703,70 +675,12 @@ export function NewSaleForm({
   // 실제 저장은 createSale이 주문 생성 직후 attachPendingPaperCalculation/
   // attachCopiedPaperCalculations으로 처리하고(재고는 건드리지 않음), 여기서
   // rows에 섞으면 일반 품목과 똑같이 재고가 차감돼버린다.
-  const pendingCalcSummary = useMemo(() => {
-    let totalSheet = 0;
-    let totalPaper = 0;
-    if (pendingPaperCalc) {
-      try {
-        const parsed = JSON.parse(pendingPaperCalc) as {
-          totalSheet: number;
-          totalPaper: number;
-        };
-        totalSheet += parsed.totalSheet;
-        totalPaper += parsed.totalPaper;
-      } catch {
-        // 무시: 잘못된 값이면 이 부분은 0으로 취급
-      }
-    }
-    for (const calc of copiedPaperCalcs) {
-      totalSheet += calc.totalSheet;
-      totalPaper += calc.totalPaper;
-    }
-    return totalSheet > 0 ? { totalSheet, totalPaper } : null;
-  }, [pendingPaperCalc, copiedPaperCalcs]);
-  const tg0Product = useMemo(
-    () => products.find((p) => p.sku === "TG0"),
-    [products],
-  );
-  const pendingCalcUnitPrice = tg0Product
-    ? resolvePrice(customerId, tg0Product.id)
-    : 0;
-  // 거래처와 협의해 자동 계산값(예: 3.2연)과 다른 수량(예: 3연)으로 등록해야
-  // 하는 경우, 등록 시점에 바로 고칠 수 있게 한다 — null이면 자동값 그대로.
-  // 저장 시(createSale)에는 이 값이 있을 때만 오버라이드 이력을 남긴다.
-  const [tg0OverrideQuantity, setTg0OverrideQuantity] = useState<number | null>(
-    null,
-  );
-  const pendingCalcQuantity = pendingCalcSummary
-    ? (tg0OverrideQuantity ?? pendingCalcSummary.totalSheet)
-    : 0;
-  const pendingCalcAmount = pendingCalcQuantity * pendingCalcUnitPrice;
-  const tg0IsOverridden =
-    pendingCalcSummary !== null &&
-    tg0OverrideQuantity !== null &&
-    tg0OverrideQuantity !== pendingCalcSummary.totalSheet;
-
-  // TG0(모조지) 한 줄은 연 단위 수량/금액만 보여주지만, 실제로 어떤
-  // 사이즈를 몇 장씩 조합해서 그 연수가 나왔는지는 메모 한 줄에 다 담기
-  // 어렵다 — 그래서 계산에 들어간 사이즈별 수량을 품목 표 아래에 참고용
-  // 줄로 그대로 보여준다. 이 줄들은 수량/단가를 세지 않는다(원지
-  // 자체는 연 단위로만 청구하고, 여기 사이즈들은 그 원지를 조합해서
-  // 만드는 최종 상품일 뿐 별도로 판매/청구되는 게 아니기 때문).
-  const paperCalcSizeLines = useMemo(() => {
-    let sizes: PaperCalcSizeRow[] = [];
-    if (pendingPaperCalc) {
-      try {
-        const parsed = JSON.parse(pendingPaperCalc) as { inputItems?: unknown };
-        sizes = mergePaperCalcInputItems(sizes, parsed.inputItems);
-      } catch {
-        // 무시
-      }
-    }
-    for (const calc of copiedPaperCalcs) {
-      sizes = mergePaperCalcInputItems(sizes, calc.inputItems);
-    }
-    return formatPaperCalcSizeLines(sizes);
-  }, [pendingPaperCalc, copiedPaperCalcs]);
+  const pc = useOrderPaperCalc({
+    side: "sales",
+    isEdit: !!initial?.id,
+    products,
+    unitPriceOf: (tg0) => resolvePrice(customerId, tg0.id),
+  });
 
   function updateRow(key: number, patch: Partial<Row>) {
     setRows((prev) =>
@@ -918,7 +832,7 @@ export function NewSaleForm({
   );
   const supplyAmount =
     submittedRows.reduce((sum, row) => sum + row.quantity * row.unitPrice, 0) +
-    pendingCalcAmount;
+    pc.amount;
   const taxAmount = calcVat(supplyAmount);
   const total = supplyAmount + taxAmount;
 
@@ -1019,7 +933,7 @@ export function NewSaleForm({
         // 지운다(모달 콜백으로 들어온 값은 애초에 localStorage에 쓴 적이
         // 없어 지울 것도 없다). 등록이 실패해도 계산 자체는 다시 하면
         // 되므로 감수할 만한 트레이드오프다.
-        if (pendingPaperCalc) localStorage.removeItem(PENDING_PAPER_CALC_KEY);
+        pc.clearStorageOnSubmit();
       }}
     >
       <div className="erp-doc-paper flex flex-col gap-6">
@@ -1062,16 +976,7 @@ export function NewSaleForm({
       <input type="hidden" name="is_sample" value={isSample ? "1" : ""} />
       <input type="hidden" name="items" value={itemsJson} />
       <input type="hidden" name="location_allocations" value={locationAllocationsJson} />
-      {pendingPaperCalc && (
-        <input type="hidden" name="pendingPaperCalc" value={pendingPaperCalc} />
-      )}
-      {copiedPaperCalcs.length > 0 && (
-        <input
-          type="hidden"
-          name="copiedPaperCalcs"
-          value={JSON.stringify(copiedPaperCalcs)}
-        />
-      )}
+      <PaperCalcHiddenInputs pc={pc} />
       {importedTodoIds.length > 0 && (
         <input
           type="hidden"
@@ -1079,22 +984,11 @@ export function NewSaleForm({
           value={JSON.stringify(importedTodoIds)}
         />
       )}
-      {tg0IsOverridden && (
-        <input
-          type="hidden"
-          name="tg0OverrideQuantity"
-          value={tg0OverrideQuantity ?? ""}
-        />
-      )}
+      <PaperCalcOverrideInput pc={pc} />
 
       {showDraftBanner && <DraftResumeBanner onResume={resumeDraft} onDiscard={discardDraft} />}
 
-      {(pendingPaperCalc || copiedPaperCalcs.length > 0) && (
-        <PageGuide>
-          모조지 계산 결과가 이 주문에 연결되어 있습니다 — 아래 품목 목록에 TG0
-          자동 반영 줄로 표시됩니다. 등록하면 실제로 저장됩니다.
-        </PageGuide>
-      )}
+      <PaperCalcLinkedGuide pc={pc} includeCopied />
 
       {isReturn && (
         <PageGuide tone="danger">
@@ -1306,25 +1200,7 @@ export function NewSaleForm({
             >
               + 품목 추가
             </button>
-            {!initial?.id && paperCalcEnabled && (
-              <>
-                <PaperCalcModalTrigger
-                  pendingFor="sales"
-                  onApply={handlePaperCalcApply}
-                />
-                {/* 모조지 계산(자동 계산)과 재단 배치 시뮬레이터(직접 배치)는
-                    한 세트라 나란히 붙여둔다. PaperCalcModalTrigger와
-                    똑같이 라우트 이동 없는 중첩 팝업이라 이 폼이 이미
-                    모달로 열려 있어도 품목 줄이 사라지지 않는다 — 안에서
-                    "새 판매 등록에 연결"을 누르면 storage 이벤트 대신
-                    팝업이 닫히는 시점에 localStorage를 직접 다시 읽어
-                    반영한다. */}
-                <ManualLayoutModalTrigger
-                  pendingFor="sales"
-                  onClose={() => setPendingPaperCalc(localStorage.getItem(PENDING_PAPER_CALC_KEY))}
-                />
-              </>
-            )}
+            <PaperCalcToolbarButtons pc={pc} enabled={paperCalcEnabled} />
           </div>
 
           {purchaseCandidates !== null && (
@@ -1443,121 +1319,7 @@ export function NewSaleForm({
                 focusGridArrowNav(e);
               }}
             >
-              {pendingCalcSummary && (
-                <tr style={{ background: "var(--erp-info-bg)" }}>
-                  <td>
-                    {tg0Product ? (
-                      <>
-                        {tg0Product.name}
-                        <span
-                          className="ml-1 rounded px-1 text-[10.5px]"
-                          style={{
-                            background: "var(--erp-info-border)",
-                            color: "var(--erp-info-text)",
-                          }}
-                        >
-                          자동
-                        </span>
-                      </>
-                    ) : (
-                      <span className="erp-u-danger">
-                        SKU &apos;TG0&apos; 품목이 없어 자동 반영되지 않습니다
-                      </span>
-                    )}
-                  </td>
-                  <td className="erp-u-muted">-</td>
-                  <td className="erp-u-muted">-</td>
-                  <td className="erp-u-muted">
-                    {tg0Product?.unit ?? "-"}
-                  </td>
-                  <td className="num">
-                    <NumberInput
-                      value={pendingCalcQuantity}
-                      onChange={setTg0OverrideQuantity}
-                      allowFormula
-                      className="erp-input w-full"
-                    />
-                  </td>
-                  <td className="num">
-                    {formatNumber(pendingCalcUnitPrice)}
-                  </td>
-                  <td className="num">
-                    {formatNumber(pendingCalcAmount)}원
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    {formatNumber(calcVat(pendingCalcAmount))}원
-                  </td>
-                  <td className="num">
-                    {formatNumber((
-                      pendingCalcAmount + calcVat(pendingCalcAmount)
-                    ))}
-                    원
-                  </td>
-                  <td className="erp-u-muted">
-                    {tg0IsOverridden
-                      ? `자동값 ${formatNumber(pendingCalcSummary.totalSheet)} → 수동 입력`
-                      : "모조지 계산 자동 반영"}
-                  </td>
-                  <td className="num">
-                    <button
-                      type="button"
-                      className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                      style={{ minWidth: 0 }}
-                      onClick={() => {
-                        localStorage.removeItem(PENDING_PAPER_CALC_KEY);
-                        setPendingPaperCalc(null);
-                        setCopiedPaperCalcs([]);
-                        setTg0OverrideQuantity(null);
-                      }}
-                    >
-                      취소
-                    </button>
-                  </td>
-                </tr>
-              )}
-              {paperCalcSizeLines.map((line, i) => (
-                <tr
-                  key={`paper-calc-size-${i}`}
-                  style={{ background: "var(--erp-bg-subtle)" }}
-                >
-                  <td className="erp-u-muted"
-                    colSpan={3}
-                    style={{ paddingLeft: 24 }}
-                  >
-                    ㄴ {line}
-                  </td>
-                  <td className="erp-u-muted">-</td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td
-                    className="num erp-u-muted"
-                  >
-                    -
-                  </td>
-                  <td className="erp-u-muted">-</td>
-                  <td />
-                </tr>
-              ))}
+              <PaperCalcGridRows pc={pc} />
               {rows.map((row) => {
                 const product = products.find((p) => p.id === row.productId);
                 const recentPrice = row.productId
@@ -1622,54 +1384,15 @@ export function NewSaleForm({
                         품목없이 직접입력
                       </label>
                     </td>
-                    <td>
-                      <input
-                        type="text"
-                        placeholder="규격"
-                        aria-label="규격"
-                        value={row.spec}
-                        onChange={(e) =>
-                          updateRow(row.key, { spec: e.target.value })
-                        }
-                        disabled={!row.manualSpec}
-                        className="erp-input w-full disabled:bg-[var(--erp-bg-disabled)] disabled:text-[var(--erp-text-muted)]"
-                      />
-                      {row.productId && (
-                        <label
-                          className="mt-1 flex items-center gap-1 text-[10.5px] erp-u-muted"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={row.manualSpec}
-                            onChange={(e) => {
-                              const manualSpec = e.target.checked;
-                              updateRow(row.key, {
-                                manualSpec,
-                                ...(manualSpec
-                                  ? {}
-                                  : { spec: product?.spec ?? "" }),
-                              });
-                            }}
-                          />
-                          직접입력
-                        </label>
-                      )}
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        placeholder="관리번호"
-                        aria-label="관리번호"
-                        value={row.lotNumber}
-                        onChange={(e) =>
-                          updateRow(row.key, { lotNumber: normalizeLotNumber(e.target.value) })
-                        }
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td className="erp-u-muted">
-                      {product?.unit ?? "-"}
-                    </td>
+                    <SpecLotUnitCells
+                      spec={row.spec}
+                      manualSpec={row.manualSpec}
+                      hasProduct={!!row.productId}
+                      productSpec={product?.spec}
+                      lotNumber={row.lotNumber}
+                      unit={product?.unit}
+                      onPatch={(patch) => updateRow(row.key, patch)}
+                    />
                     <td className="num">
                       <QuantityWithBoxInput
                         quantity={row.quantity}
@@ -1779,38 +1502,13 @@ export function NewSaleForm({
                       ))}
                       원
                     </td>
-                    <td>
-                      <input
-                        type="text"
-                        placeholder="비고"
-                        aria-label="비고"
-                        value={row.remark}
-                        onChange={(e) =>
-                          updateRow(row.key, { remark: e.target.value })
-                        }
-                        className="erp-input w-full"
-                      />
-                    </td>
-                    <td className="num" style={{ whiteSpace: "nowrap" }}>
-                      <button
-                        type="button"
-                        className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-                        style={{ minWidth: 0, marginRight: 4 }}
-                        onClick={() => insertRowAfter(row.key)}
-                        title="이 줄 아래에 빈 줄 삽입"
-                      >
-                        + 삽입
-                      </button>
-                      <button
-                        type="button"
-                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                        style={{ minWidth: 0 }}
-                        onClick={() => removeRow(row.key)}
-                        disabled={rows.length <= 1}
-                      >
-                        삭제
-                      </button>
-                    </td>
+                    <RemarkActionCells
+                      remark={row.remark}
+                      onRemarkChange={(remark) => updateRow(row.key, { remark })}
+                      onInsert={() => insertRowAfter(row.key)}
+                      onRemove={() => removeRow(row.key)}
+                      canRemove={rows.length > 1}
+                    />
                   </tr>
                 );
               })}

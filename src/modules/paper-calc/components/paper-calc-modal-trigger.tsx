@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PaperCalcClient, type PendingCalcPayload } from "@/components/paper-calc/paper-calc-client";
+import { PaperCalcClient, type PendingCalcPayload } from "@/modules/paper-calc/components/paper-calc-client";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 // 신규 판매/매입 등록 폼에서 모조지 계산을 새 탭 대신 모달로 띄운다. 아직

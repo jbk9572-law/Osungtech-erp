@@ -5,17 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
 import { deletePurchase } from "@/app/(dashboard)/purchases/actions";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { PaperCalcNavLink } from "@/components/erp/paper-calc-nav-link";
+import { PaperCalcNavLink } from "@/modules/paper-calc/ui";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
-} from "@/lib/paper-calc-summary";
-import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/lib/paper-calc-sync";
-import { PaperStockOverridePanel } from "@/components/paper-stock-override-panel";
-import {
-  overridePurchasePaperStock,
-  revertPurchasePaperStock,
-} from "@/app/(dashboard)/purchases/actions";
+} from "@/modules/paper-calc/public";
+import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/modules/paper-calc/public";
+import { PaperStockOverridePanel } from "@/modules/paper-calc/ui";
+import { overridePurchasePaperStock, revertPurchasePaperStock } from "@/modules/paper-calc/actions";
 import { resolveListHref } from "@/lib/list-return";
 import { PageGuide } from "@/components/erp/page-guide";
 import { getCurrentActor } from "@/lib/current-actor";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ManualLayoutClient } from "@/components/paper-calc/manual-layout-client";
+import { ManualLayoutClient } from "@/modules/paper-calc/components/manual-layout-client";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 
 // PaperCalcModalTrigger(모조지 계산)와 똑같은 방식으로, 신규 판매/매입

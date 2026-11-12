@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computePaperStockDelta } from "./paper-calc-sync";
+import {
+  MAX_COPIED_CALCS,
+  MAX_PENDING_RAW_LENGTH,
+  computePaperStockDelta,
+  isPendingCalc,
+  parsePendingCalc,
+} from "./paper-calc-sync";
 
 // 매출/매입 자동반영 로직을 하나로 합치면서 재고 증감 부호를
 // "방향 × (새 수량 - 이전 수량)"이라는 공식 하나로 통일했다 — 여기서
@@ -53,5 +59,41 @@ describe("computePaperStockDelta", () => {
     // 취급한다(insertInventoryAdjustment) — 그 비교와 동일한 기준으로 검증한다.
     expect(computePaperStockDelta("sales_order_id", 40, 40) === 0).toBe(true);
     expect(computePaperStockDelta("purchase_order_id", 40, 40) === 0).toBe(true);
+  });
+});
+
+describe("임시 모조지 계산 입력 검증(브라우저가 보낸 값은 신뢰하지 않는다)", () => {
+  const ok = {
+    paperW: 788,
+    paperH: 1091,
+    inputItems: [{ w: 100, h: 200, qty: 500 }],
+    layouts: [],
+    totalPaper: 3,
+    totalSheet: 1,
+    totalProd: 500,
+    overProd: 0,
+    fulfilled: true,
+  };
+
+  it("정상 값은 통과한다", () => {
+    expect(isPendingCalc(ok)).toBe(true);
+    expect(parsePendingCalc(JSON.stringify(ok))).not.toBeNull();
+  });
+
+  it("숫자가 아니거나 음수·범위 초과인 합계는 거부한다(재고 수량 조작 방지)", () => {
+    expect(isPendingCalc({ ...ok, totalSheet: "9999" })).toBe(false);
+    expect(isPendingCalc({ ...ok, totalSheet: -5 })).toBe(false);
+    expect(isPendingCalc({ ...ok, totalSheet: 1e12 })).toBe(false);
+    expect(isPendingCalc({ ...ok, paperW: 0 })).toBe(false);
+    expect(isPendingCalc({ ...ok, paperH: "788" })).toBe(false);
+  });
+
+  it("품목/배치 개수와 문자열 크기에 상한이 있다", () => {
+    expect(isPendingCalc({ ...ok, inputItems: [] })).toBe(false);
+    expect(isPendingCalc({ ...ok, inputItems: new Array(1001).fill({}) })).toBe(false);
+    expect(isPendingCalc({ ...ok, layouts: new Array(5001).fill({}) })).toBe(false);
+    expect(parsePendingCalc("x".repeat(MAX_PENDING_RAW_LENGTH + 1))).toBeNull();
+    expect(parsePendingCalc("{깨진 json")).toBeNull();
+    expect(MAX_COPIED_CALCS).toBeGreaterThan(0);
   });
 });

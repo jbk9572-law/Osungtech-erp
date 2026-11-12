@@ -11,8 +11,8 @@ import {
 } from "@/components/delivery-note-v2/DeliveryNoteCanvas";
 import { InvoicePage, type InvoiceCopies, type InvoiceLayout } from "@/components/invoice/InvoicePage";
 import type { InvoiceItem } from "@/components/invoice/types";
-import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/lib/paper-calc-summary";
-import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
+import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { calcVat } from "@/lib/tax";
 

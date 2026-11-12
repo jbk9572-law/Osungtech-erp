@@ -2,7 +2,6 @@
 
 import { useActionState, useMemo, useRef, useState } from "react";
 import { createTaxInvoice } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
-import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
@@ -10,32 +9,15 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ErpSelect } from "@/components/erp/erp-select";
-import { calcVat } from "@/lib/tax";
+import {
+  applyTaxInvoiceRowPatch,
+  blankTaxInvoiceRow,
+  seedTaxInvoiceRows,
+  summarizeTaxInvoiceRows,
+  type TaxInvoiceRow,
+} from "@/lib/tax-invoice-rows";
+import { TaxInvoiceItemsGrid } from "@/components/tax-invoice-items-grid";
 import { formatNumber } from "@/lib/format-number";
-
-type Row = {
-  key: number;
-  lineDate: string;
-  itemName: string;
-  spec: string;
-  quantity: number;
-  unitPrice: number;
-  supplyAmount: number;
-  taxAmount: number;
-  remark: string;
-};
-
-// 홈택스 화면의 품목 줄은 최대 16개까지 추가 가능 — 같은 상한을 둔다.
-const MAX_ROWS = 16;
-
-// table-layout: auto(기본값)로는 모바일 폭에서 입력칸이 찌그러진다 —
-// new-quote-form.tsx와 같은 기법으로 표를 모든 칸 폭의 합만큼 고정폭으로
-// 못박는다.
-const ITEM_GRID_TOTAL_WIDTH = 110 + 200 + 110 + 70 + 90 + 110 + 90 + 140 + 50;
-
-function blankRow(key: number, defaultDate: string): Row {
-  return { key, lineDate: defaultDate, itemName: "", spec: "", quantity: 0, unitPrice: 0, supplyAmount: 0, taxAmount: 0, remark: "" };
-}
 
 export type SupplierInfo = {
   name: string | null;
@@ -75,56 +57,18 @@ export function TaxInvoiceForm({
   const [claimType, setClaimType] = useState("claim");
   const isConsignment = invoiceType === "consignment" || invoiceType === "consignment_zero_rate";
 
-  const seeded = useMemo<Row[]>(() => {
-    if (initialRows.length === 0) return [blankRow(0, today)];
-    return initialRows.slice(0, MAX_ROWS).map((r, i) => {
-      const supplyAmount = r.quantity * r.unitPrice;
-      return {
-        key: i,
-        lineDate: today,
-        itemName: r.itemName,
-        spec: r.spec,
-        quantity: r.quantity,
-        unitPrice: r.unitPrice,
-        supplyAmount,
-        taxAmount: calcVat(supplyAmount),
-        remark: "",
-      };
-    });
-  }, [initialRows, today]);
+  const seeded = useMemo<TaxInvoiceRow[]>(
+    () => seedTaxInvoiceRows(initialRows, today),
+    [initialRows, today],
+  );
 
-  const { rows, addRow, removeRow, setRows } = useKeyedRows<Row>(seeded, (key) => blankRow(key, today));
+  const { rows, addRow, removeRow, setRows } = useKeyedRows<TaxInvoiceRow>(seeded, (key) => blankTaxInvoiceRow(key, today));
 
-  function updateRow(key: number, patch: Partial<Row>) {
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r.key !== key) return r;
-        const next = { ...r, ...patch };
-        if (patch.quantity !== undefined || patch.unitPrice !== undefined) {
-          next.supplyAmount = next.quantity * next.unitPrice;
-          next.taxAmount = calcVat(next.supplyAmount);
-        }
-        return next;
-      }),
-    );
+  function updateRow(key: number, patch: Partial<TaxInvoiceRow>) {
+    setRows((prev) => prev.map((r) => (r.key === key ? applyTaxInvoiceRowPatch(r, patch) : r)));
   }
 
-  const validRows = rows.filter((r) => r.itemName.trim());
-  const totalSupply = validRows.reduce((sum, r) => sum + r.supplyAmount, 0);
-  const totalTax = validRows.reduce((sum, r) => sum + r.taxAmount, 0);
-  const totalAmount = totalSupply + totalTax;
-  const itemsJson = JSON.stringify(
-    validRows.map((r) => ({
-      lineDate: r.lineDate || null,
-      itemName: r.itemName,
-      spec: r.spec || null,
-      quantity: r.quantity,
-      unitPrice: r.unitPrice,
-      supplyAmount: r.supplyAmount,
-      taxAmount: r.taxAmount,
-      remark: r.remark || null,
-    })),
-  );
+  const { validRows, totalSupply, totalTax, totalAmount, itemsJson } = summarizeTaxInvoiceRows(rows);
 
   return (
     <form action={formAction} onKeyDown={preventEnterSubmit} className="erp-doc-sheet">
@@ -242,109 +186,14 @@ export function TaxInvoiceForm({
           </PageGuide>
         )}
 
-        <div className="erp-grid-wrap">
-          <table
-            className="erp-grid"
-            style={{ tableLayout: "fixed", width: "100%", minWidth: ITEM_GRID_TOTAL_WIDTH }}
-          >
-            <thead>
-              <tr>
-                <th style={{ width: 110 }}>날짜</th>
-                <th style={{ width: 200 }}>품목</th>
-                <th style={{ width: 110 }}>규격</th>
-                <th className="num" style={{ width: 70 }}>수량</th>
-                <th className="num" style={{ width: 90 }}>단가</th>
-                <th className="num" style={{ width: 110 }}>공급가액</th>
-                <th className="num" style={{ width: 90 }}>세액</th>
-                <th style={{ width: 140 }}>비고</th>
-                <th style={{ width: 50 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.key}>
-                  <td>
-                    <input
-                      type="date"
-                      value={row.lineDate}
-                      onChange={(e) => updateRow(row.key, { lineDate: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={row.itemName}
-                      onChange={(e) => updateRow(row.key, { itemName: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={row.spec}
-                      onChange={(e) => updateRow(row.key, { spec: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} allowFormula className="erp-input" />
-                  </td>
-                  <td>
-                    <NumberInput value={row.unitPrice} onChange={(n) => updateRow(row.key, { unitPrice: n })} className="erp-input" />
-                  </td>
-                  <td>
-                    <NumberInput
-                      value={row.supplyAmount}
-                      onChange={(n) => updateRow(row.key, { supplyAmount: n })}
-                      className="erp-input"
-                    />
-                  </td>
-                  <td>
-                    <NumberInput value={row.taxAmount} onChange={(n) => updateRow(row.key, { taxAmount: n })} className="erp-input" />
-                  </td>
-                  <td>
-                    <input
-                      value={row.remark}
-                      onChange={(e) => updateRow(row.key, { remark: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
-                      삭제
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={5} className="num erp-u-bold">
-                  합계
-                </td>
-                <td className="num erp-doc-total">{formatNumber(totalSupply)}</td>
-                <td className="num erp-doc-total">{formatNumber(totalTax)}</td>
-                <td colSpan={2} />
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <button
-          type="button"
-          className="erp-btn"
-          onClick={addRow}
-          disabled={rows.length >= MAX_ROWS}
-          style={{ alignSelf: "flex-start" }}
-        >
-          + 품목 추가 ({rows.length}/{MAX_ROWS})
-        </button>
+        <TaxInvoiceItemsGrid
+          rows={rows}
+          onUpdate={updateRow}
+          onRemove={removeRow}
+          onAdd={addRow}
+          totalSupply={totalSupply}
+          totalTax={totalTax}
+        />
 
         <div className="erp-doc-header">
           <div className="erp-doc-header-row">

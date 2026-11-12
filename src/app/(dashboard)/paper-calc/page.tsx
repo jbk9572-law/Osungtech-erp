@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
-import { PaperCalcClient } from "@/components/paper-calc/paper-calc-client";
+import { PaperCalcClient } from "@/modules/paper-calc/components/paper-calc-client";
 import { createClient } from "@/lib/supabase/server";
-import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
-import type { NestLayout } from "@/lib/paper-nest-engine";
+import { isPaperCalcEnabled } from "@/modules/paper-calc/lib/paper-calc-sync";
+import type { NestLayout } from "@/modules/paper-calc/lib/paper-nest-engine";
 
 export default async function PaperCalcPage({
   searchParams,

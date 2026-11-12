@@ -13,7 +13,7 @@ import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { getGridColumnWidths } from "@/lib/grid-column-widths-actions";
 import { deriveDualSplitWidths } from "@/lib/item-grid-columns";
 import type { LocationOption } from "@/lib/location-stock-sync";
-import { isPaperCalcEnabled } from "@/lib/paper-calc-sync";
+import { isPaperCalcEnabled } from "@/modules/paper-calc/public";
 import { PageGuide } from "@/components/erp/page-guide";
 
 async function NewPurchasePage({

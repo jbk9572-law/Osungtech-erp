@@ -48,8 +48,8 @@ const ALLOWLIST = new Set([
   // 세금계산서 작성 폼의 "공급자/공급받는자" 박스는 실제 종이 세금계산서
   // 양식의 관례(나란히 놓인 두 박스)를 그대로 재현한 것 — 우연히 생긴
   // 중첩이 아니라 의도된 문서 서식이라 그대로 둔다.
-  "src/components/tax-invoice-form.tsx:141",
-  "src/components/tax-invoice-form.tsx:155",
+  "src/components/tax-invoice-form.tsx:85",
+  "src/components/tax-invoice-form.tsx:99",
   // .erp-detail 섹션 하나 안에 공정 단계를 한 줄씩 보여주는 카드 목록
   // (.erp-home-panel)이다 — 섹션을 또 감싸는 중복 박스가 아니라 목록
   // 항목(타임라인/체크리스트류)이라 성격이 다르다.

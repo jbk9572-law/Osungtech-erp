@@ -7,8 +7,8 @@ import { NumberInput } from "@/components/number-input";
 import { FieldHint } from "@/components/field-hint";
 import { computeCadGridLines, computeCadRulerTicks } from "@/lib/cad-grid";
 import { focusSameColumnNextRow } from "@/lib/grid-enter-nav";
-import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/lib/paper-calc-pending-key";
-import { SHEET_PER_REAM } from "@/lib/paper-nest-engine";
+import { PENDING_PAPER_CALC_KEY, PENDING_PAPER_CALC_PURCHASE_KEY } from "@/modules/paper-calc/lib/paper-calc-pending-key";
+import { SHEET_PER_REAM } from "@/modules/paper-calc/lib/paper-nest-engine";
 import {
   computeEffectiveReams,
   PALETTE,
@@ -16,9 +16,9 @@ import {
   type NestLayout,
   type NestLayoutItem,
   type NestResult,
-} from "@/lib/paper-nest-engine";
-import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/components/paper-calc/paper-calc-client";
-import { DIAGRAM_COLORS } from "@/lib/paper-calc-diagram-colors";
+} from "@/modules/paper-calc/lib/paper-nest-engine";
+import { BatchCard, DashboardCards, ProductionSummaryTable } from "@/modules/paper-calc/components/paper-calc-client";
+import { DIAGRAM_COLORS } from "@/modules/paper-calc/lib/paper-calc-diagram-colors";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
 

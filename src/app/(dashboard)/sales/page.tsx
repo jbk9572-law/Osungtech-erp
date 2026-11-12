@@ -12,12 +12,12 @@ import {
   type SalesRow,
   type SalesRowItem,
 } from "@/components/sales-grid-table";
-import { PAPER_STOCK_SKU } from "@/lib/paper-calc-sync";
+import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import {
   formatPaperCalcSizeLines,
   mergePaperCalcInputItems,
   type PaperCalcSizeRow,
-} from "@/lib/paper-calc-summary";
+} from "@/modules/paper-calc/public";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { calcVat } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
