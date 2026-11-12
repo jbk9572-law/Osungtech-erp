@@ -1,32 +1,14 @@
 "use client";
 
-import { useActionState, useMemo, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { createPurchaseQuoteRequest } from "@/app/(dashboard)/purchase-quote-requests/actions";
-import { ProductSearchSelect } from "@/components/product-search-select";
-import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
-import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
-
-type Row = { key: number; productId: string; spec: string; quantity: number; remark: string };
-
-function blankRow(key: number): Row {
-  return { key, productId: "", spec: "", quantity: 0, remark: "" };
-}
-
-function isBlankRow(row: Row): boolean {
-  return !row.productId && row.quantity === 0;
-}
-
-// table-layout: auto(기본값)로는 모바일 폭에서 <th style={{width}}>가 그냥
-// "희망 폭"이라 입력칸이 찌그러지고 상품 검색 드롭다운도 그 폭을 물려받아
-// 겹쳐 보인다 — new-sale-form.tsx/new-purchase-form.tsx와 같은 기법으로
-// 표를 모든 칸 폭의 합만큼 고정폭으로 못박아 erp-grid-wrap의 overflow:auto가
-// 가로 스크롤을 대신하게 한다.
-const ITEM_GRID_TOTAL_WIDTH = 320 + 140 + 100 + 200 + 50;
+import { ItemEntryBlock } from "@/components/erp/item-entry-block";
+import { blankItemRow, buildItemRow, isBlankItemRow, validItemRows, type ItemEntryRow } from "@/lib/item-entry-rows";
 
 export function NewPurchaseQuoteRequestForm({
   today,
@@ -41,9 +23,9 @@ export function NewPurchaseQuoteRequestForm({
   const submitRef = useRef<HTMLButtonElement>(null);
   useKeyShortcut("F7", submitRef);
   const [supplierIds, setSupplierIds] = useState<string[]>([]);
-  const { rows, addRow, removeRow, setRows, addFilledRow } = useKeyedRows<Row>([blankRow(0)], blankRow);
+  const { rows, addRow, removeRow, setRows, addFilledRow } = useKeyedRows<ItemEntryRow>([blankItemRow(0)], blankItemRow);
 
-  function updateRow(key: number, patch: Partial<Row>) {
+  function updateRow(key: number, patch: Partial<ItemEntryRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
@@ -53,23 +35,10 @@ export function NewPurchaseQuoteRequestForm({
 
   function addMobileItem(productId: string, quantity: number) {
     const product = products.find((p) => p.id === productId);
-    addFilledRow((key) => ({ key, productId, spec: product?.spec ?? "", quantity, remark: "" }), isBlankRow);
+    addFilledRow((key) => buildItemRow(key, product, productId, quantity, 0), isBlankItemRow);
   }
 
-  const mobileItems = useMemo(
-    () =>
-      rows
-        .filter((r) => !isBlankRow(r))
-        .map((r) => ({
-          key: r.key,
-          name: products.find((p) => p.id === r.productId)?.name ?? "",
-          spec: r.spec,
-          quantity: r.quantity,
-        })),
-    [rows, products],
-  );
-
-  const validRows = rows.filter((r) => r.productId && r.quantity > 0);
+  const validRows = validItemRows(rows);
   const itemsJson = JSON.stringify(
     validRows.map((r) => ({ productId: r.productId, spec: r.spec || null, quantity: r.quantity, remark: r.remark || null }))
   );
@@ -128,78 +97,15 @@ export function NewPurchaseQuoteRequestForm({
         </div>
       </div>
 
-      <div className="hidden md:block">
-        <div className="erp-grid-wrap">
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: ITEM_GRID_TOTAL_WIDTH }}>
-            <thead>
-              <tr>
-                <th style={{ width: 320 }}>품목</th>
-                <th style={{ width: 140 }}>규격</th>
-                <th className="num" style={{ width: 100 }}>수량</th>
-                <th style={{ width: 200 }}>비고</th>
-                <th style={{ width: 50 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.key}>
-                  <td>
-                    <ProductSearchSelect
-                      products={products}
-                      value={row.productId}
-                      onChange={(productId) => {
-                        const product = products.find((p) => p.id === productId);
-                        updateRow(row.key, { productId, spec: product?.spec ?? row.spec });
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={row.spec}
-                      onChange={(e) => updateRow(row.key, { spec: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} allowFormula className="erp-input" />
-                  </td>
-                  <td>
-                    <input
-                      value={row.remark}
-                      onChange={(e) => updateRow(row.key, { remark: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
-                      삭제
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <button type="button" className="erp-btn mt-3" onClick={addRow}>
-          + 품목 추가
-        </button>
-      </div>
-
-      <div className="md:hidden">
-        <MobileItemEntryPanel
-          products={products}
-          items={mobileItems}
-          showPrice={false}
-          onAdd={addMobileItem}
-          onUpdateQuantity={(key, quantity) => updateRow(key, { quantity })}
-          onRemove={removeRow}
-        />
-      </div>
+      <ItemEntryBlock
+        products={products}
+        rows={rows}
+        withPrice={false}
+        onUpdate={updateRow}
+        onRemove={removeRow}
+        onAddRow={addRow}
+        onMobileAdd={addMobileItem}
+      />
 
       <div className="flex items-center gap-2">
         <button

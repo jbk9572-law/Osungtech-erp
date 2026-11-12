@@ -1,40 +1,13 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 import { createQuote } from "@/app/(dashboard)/quotes/actions";
 import { PartySearchSelect } from "@/components/party-search-select";
-import { ProductSearchSelect } from "@/components/product-search-select";
-import { NumberInput } from "@/components/number-input";
 import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
-import { formatNumber } from "@/lib/format-number";
-import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
-
-type Row = {
-  key: number;
-  productId: string;
-  spec: string;
-  quantity: number;
-  unitPrice: number;
-  remark: string;
-};
-
-function blankRow(key: number): Row {
-  return { key, productId: "", spec: "", quantity: 0, unitPrice: 0, remark: "" };
-}
-
-function isBlankRow(row: Row): boolean {
-  return !row.productId && row.quantity === 0;
-}
-
-// table-layout: auto(기본값)인 상태로 폭이 좁은(모바일) 화면에 들어가면,
-// <th style={{width}}>는 그냥 "희망 폭"일 뿐이라 브라우저가 입력칸을 글자 하나
-// 들어갈 만큼까지 찌그러뜨려 버린다(모바일에서 상품 검색 드롭다운이 그 찌그러진
-// 폭을 그대로 물려받아 글자가 겹쳐 보이는 버그로 나타났다) — erp-grid-wrap의
-// overflow:auto가 가로 스크롤을 대신하게 하려면 표 자체를 모든 칸 폭의 합만큼
-// 고정폭으로 못박아야 한다(new-sale-form.tsx/new-purchase-form.tsx와 같은 기법).
-const ITEM_GRID_TOTAL_WIDTH = 320 + 140 + 90 + 110 + 110 + 200 + 50;
+import { ItemEntryBlock } from "@/components/erp/item-entry-block";
+import { blankItemRow, buildItemRow, isBlankItemRow, validItemRows, type ItemEntryRow } from "@/lib/item-entry-rows";
 
 export function NewQuoteForm({
   today,
@@ -47,45 +20,20 @@ export function NewQuoteForm({
 }) {
   const [state, formAction, pending] = useActionState(createQuote, undefined);
   const [customerId, setCustomerId] = useState("");
-  const { rows, addRow, removeRow, setRows, addFilledRow } = useKeyedRows<Row>([blankRow(0)], blankRow);
+  const { rows, addRow, removeRow, setRows, addFilledRow } = useKeyedRows<ItemEntryRow>([blankItemRow(0)], blankItemRow);
 
-  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
-
-  function updateRow(key: number, patch: Partial<Row>) {
+  function updateRow(key: number, patch: Partial<ItemEntryRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
-  function resolvePrice(productId: string): number {
-    return productById.get(productId)?.price ?? 0;
-  }
-
-  // 모바일 카드형 패널(매출/매입 등록과 같은 .erp-modal 바텀시트 방식)에서
-  // "품목 추가"를 누르면 호출된다 — 데스크톱 표와 같은 rows 상태를 그대로 쓴다.
+  // 모바일 카드형 패널에서 "품목 추가"를 누르면 호출된다 — 데스크톱 표와 같은
+  // rows 상태를 그대로 쓴다.
   function addMobileItem(productId: string, quantity: number, unitPrice: number) {
-    const product = productById.get(productId);
-    addFilledRow(
-      (key) => ({ key, productId, spec: product?.spec ?? "", quantity, unitPrice, remark: "" }),
-      isBlankRow,
-    );
+    const product = products.find((p) => p.id === productId);
+    addFilledRow((key) => buildItemRow(key, product, productId, quantity, unitPrice), isBlankItemRow);
   }
 
-  const validRows = rows.filter((r) => r.productId && r.quantity > 0);
-  const total = validRows.reduce((sum, r) => sum + r.quantity * r.unitPrice, 0);
-  const mobileItems = useMemo(
-    () =>
-      rows
-        .filter((r) => !isBlankRow(r))
-        .map((r) => ({
-          key: r.key,
-          name: productById.get(r.productId)?.name ?? "",
-          spec: r.spec,
-          quantity: r.quantity,
-          price: r.unitPrice,
-          amount: r.quantity * r.unitPrice,
-        })),
-    [rows, productById],
-  );
-  const mobileTotalAmount = mobileItems.reduce((sum, item) => sum + item.amount, 0);
+  const validRows = validItemRows(rows);
   const itemsJson = JSON.stringify(
     validRows.map((r) => ({
       productId: r.productId,
@@ -131,102 +79,16 @@ export function NewQuoteForm({
         </div>
       </div>
 
-      <div className="hidden md:block">
-        <div className="erp-grid-wrap">
-          <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: ITEM_GRID_TOTAL_WIDTH }}>
-            <thead>
-              <tr>
-                <th style={{ width: 320 }}>품목</th>
-                <th style={{ width: 140 }}>규격</th>
-                <th className="num" style={{ width: 90 }}>수량</th>
-                <th className="num" style={{ width: 110 }}>단가</th>
-                <th className="num" style={{ width: 110 }}>금액</th>
-                <th style={{ width: 200 }}>비고</th>
-                <th style={{ width: 50 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.key}>
-                  <td>
-                    <ProductSearchSelect
-                      products={products}
-                      value={row.productId}
-                      onChange={(productId) => {
-                        const product = productById.get(productId);
-                        updateRow(row.key, {
-                          productId,
-                          spec: product?.spec ?? row.spec,
-                          unitPrice: row.unitPrice || product?.price || 0,
-                        });
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      value={row.spec}
-                      onChange={(e) => updateRow(row.key, { spec: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} allowFormula className="erp-input" />
-                  </td>
-                  <td>
-                    <NumberInput value={row.unitPrice} onChange={(n) => updateRow(row.key, { unitPrice: n })} className="erp-input" />
-                  </td>
-                  <td className="num">{formatNumber((row.quantity * row.unitPrice))}</td>
-                  <td>
-                    <input
-                      value={row.remark}
-                      onChange={(e) => updateRow(row.key, { remark: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
-                      autoComplete="off"
-                    />
-                  </td>
-                  <td>
-                    <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
-                      삭제
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={4} className="num erp-u-bold">
-                  합계
-                </td>
-                <td className="num erp-doc-total">
-                  {formatNumber(total)}
-                </td>
-                <td colSpan={2} />
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-
-        <button type="button" className="erp-btn mt-3" onClick={addRow}>
-          + 품목 추가
-        </button>
-      </div>
-
-      <div className="md:hidden">
-        <MobileItemEntryPanel
-          products={products}
-          items={mobileItems}
-          priceLabel="단가"
-          totalAmount={mobileTotalAmount}
-          onAdd={addMobileItem}
-          onUpdateQuantity={(key, quantity) => updateRow(key, { quantity })}
-          onUpdatePrice={(key, price) => updateRow(key, { unitPrice: price })}
-          onRemove={removeRow}
-          resolvePrice={resolvePrice}
-        />
-      </div>
+      <ItemEntryBlock
+        products={products}
+        rows={rows}
+        withPrice
+        defaultPriceOf={(p) => p.price}
+        onUpdate={updateRow}
+        onRemove={removeRow}
+        onAddRow={addRow}
+        onMobileAdd={addMobileItem}
+      />
 
       <FormMessage state={state} />
 
