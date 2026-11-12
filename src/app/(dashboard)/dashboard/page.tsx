@@ -532,7 +532,7 @@ async function DashboardPage({
           supabase
             .from("fifo_consumptions")
             .select(
-              "purchase_order_item_id, sales_order_item_id, consumed_quantity, sales_order_items!inner(sales_orders!inner(order_date, customers(name)))"
+              "purchase_order_item_id, sales_order_item_id, consumed_quantity, sales_order_items!inner(sales_orders!inner(customers(name)))"
             )
             .eq("consumed_by_type", "sale")
             .in("purchase_order_item_id", purchaseIds)
@@ -543,7 +543,7 @@ async function DashboardPage({
             purchase_order_item_id: string;
             sales_order_item_id: string;
             consumed_quantity: number;
-            sales_order_items: { sales_orders: { order_date: string; customers: { name: string } | null } };
+            sales_order_items: { sales_orders: { customers: { name: string } | null } };
           }[]
         ),
     salesIds.length
@@ -566,23 +566,22 @@ async function DashboardPage({
   // fifo_consumptions가 실제로는 정확히 연결돼 있어도 두 작업일이 다르다는
   // 이유만으로 "재고용 매입"/"재고분 출고"로 잘못 갈라져 보이는 문제가 있었다.
   // fifo_consumptions 자체가 이미 "진짜 연결"이므로, 날짜 일치 여부와 무관하게
-  // 있는 그대로 믿는다 — 날짜가 다르다고 버릴 이유가 없다.
+  // 있는 그대로 믿는다 — 라고 했었지만, 지금은 아래 루프에서 "같은 날 작업분"
+  // 끼리만 인정한다(사용자 규칙). 다른 날 연결은 이 패널에 표시하지 않는다.
   const purchaseDestinationsById = new Map<string, { partnerName: string; quantity: number }[]>();
   for (const row of purchaseConsumptionRows) {
     // consumed_by_type='sale'로 걸러서 실제로는 항상 채워져 있지만, 컬럼
     // 자체는(로스 소진 건도 같은 테이블을 쓰느라) nullable이라 타입상
     // 널 체크가 필요하다.
     if (!row.sales_order_item_id) continue;
-    const saleOrder = row.sales_order_items.sales_orders;
-    const baseName = saleOrder.customers?.name ?? "출고처 미상";
-    // 연결된 매출의 전표날짜가 이 매입의 작업일과 다르면(드롭십: 재고 없이 먼저
-    // 끊은 매출을 나중 매입이 채운 경우 등) 날짜를 붙여, "오늘 안 나갔는데 왜
-    // 있지?"로 오해하지 않게 한다. 연결 자체는 그대로 믿고 표시만 구분한다.
+    // 사용자 규칙: 오늘의 업무에서 매입-매출 연결(목적지 표시)은 "같은 날" 작업된
+    // 건끼리만 한다. 매출이 다른 날 것이면(예: 며칠 전 먼저 끊어둔 매출) 그 거래처를
+    // 오늘 매입 옆에 붙이지 않는다 — 안 그러면 오늘 안 나간 거래처가 매입에 떠서
+    // 혼동된다(예: 재고로 정상 입고된 커버테이프에 거래처가 붙던 문제).
     const purchaseWorkDate = purchaseItemWorkDateById.get(row.purchase_order_item_id);
-    const partnerName =
-      purchaseWorkDate && saleOrder.order_date !== purchaseWorkDate
-        ? `${baseName} (${saleOrder.order_date.slice(5).replace("-", "/")} 매출)`
-        : baseName;
+    const saleWorkDate = salesItemWorkDateById.get(row.sales_order_item_id);
+    if (!purchaseWorkDate || purchaseWorkDate !== saleWorkDate) continue;
+    const partnerName = row.sales_order_items.sales_orders.customers?.name ?? "출고처 미상";
     const list = purchaseDestinationsById.get(row.purchase_order_item_id) ?? [];
     list.push({ partnerName, quantity: row.consumed_quantity });
     purchaseDestinationsById.set(row.purchase_order_item_id, list);
