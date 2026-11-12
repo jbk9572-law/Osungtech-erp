@@ -276,7 +276,7 @@ export async function setTenantSandbox(_prevState: FormState, formData: FormData
   return { success: nextIsSandbox ? "샌드박스로 지정했습니다." : "샌드박스 지정을 해제했습니다." };
 }
 
-const TENANT_THEMES = ["classic-light", "modern", "classic-b", "classic-c"] as const;
+const TENANT_THEMES = ["classic-light", "soft"] as const;
 
 // 회사(테넌트)별 화면 테마 지정 — 브라우저(localStorage)가 아니라
 // tenants.theme(migration 215)에 저장해 서버에서 바로 적용한다(사용자

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // 개발헌법 3번("모서리 반경 같은 값은 전부 CSS 변수로만 쓴다")에 따라
 // 모서리 반경(border-radius)도 --erp-radius-* 토큰으로 통일했다
-// (erp-theme.css :root/[data-theme="modern"] 참고) — 클래식 테마는
-// 토큰이 0, 모던 테마에서만 실제 값이 된다.
+// (erp-theme.css :root/[data-theme="soft"] 참고) — 클래식 테마는
+// 토큰이 0, Soft 테마에서만 실제 값이 된다.
 //
 // 이 토큰화 이전에는 "클래식은 그대로 두고 모던 전용 블록에 클래스
 // 이름을 하나씩 나열해서 radius를 덮어쓰는" 허용목록 방식이었는데,
