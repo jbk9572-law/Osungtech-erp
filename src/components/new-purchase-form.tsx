@@ -19,7 +19,7 @@ import {
   focusGridArrowNav,
 } from "@/lib/grid-enter-nav";
 import { TodoImportPopover } from "@/components/todo-import-popover";
-import { CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
+import { AlwaysCreditOption, CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
 import { ResizableTh } from "@/components/grid/resizable-th";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
@@ -1126,9 +1126,6 @@ export function NewPurchaseForm({
               />
             </div>
           )}
-          {!alsoCreateSale && (
-            <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(purchaseDate)} />
-          )}
           <div className="erp-field erp-span-2">
             <label htmlFor="purchase-delivery-method">입고방법</label>
             <ErpSelect
@@ -1167,7 +1164,11 @@ export function NewPurchaseForm({
               className="erp-input erp-u-w-full"
             />
           </div>
-          <PaymentMethodFields alwaysCredit={alwaysCredit} onAlwaysCreditChange={setAlwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <div className="erp-form-options">
+            {!alsoCreateSale && <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(purchaseDate)} />}
+            <AlwaysCreditOption checked={alwaysCredit} onChange={setAlwaysCredit} />
+          </div>
           {!initial?.id && customers.length > 0 && (
             <>
               <div className="erp-field erp-span-3">

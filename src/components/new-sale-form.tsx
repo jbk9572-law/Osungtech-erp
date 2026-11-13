@@ -20,7 +20,7 @@ import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { TodoImportPopover } from "@/components/todo-import-popover";
-import { CarryoverToggle, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
+import { AlwaysCreditOption, CarryoverToggle, FormCheckOption, FormSaveButtons, PaymentMethodFields } from "@/components/erp/order-form-fields";
 import { ResizableTh } from "@/components/grid/resizable-th";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import {
@@ -1086,24 +1086,6 @@ export function NewSaleForm({
               />
             </div>
           )}
-          <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
-          <div className="erp-field erp-span-3">
-            <label aria-hidden="true">&nbsp;</label>
-            <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg erp-u-h-34"
-              style={{ background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}` }}
-            >
-              <input
-                type="checkbox"
-                checked={isSample}
-                onChange={(e) => handleSampleChange(e.target.checked)}
-              />
-              <span className="erp-u-bold"
-                style={{ color: isSample ? "var(--erp-info-text)" : "var(--erp-text-muted)" }}
-              >
-                샘플(무상증정)
-              </span>
-            </label>
-          </div>
           <div className="erp-field erp-span-2">
             <label htmlFor="sale-delivery-method">배송방법</label>
             <ErpSelect
@@ -1142,7 +1124,14 @@ export function NewSaleForm({
               className="erp-input erp-u-w-full"
             />
           </div>
-          <PaymentMethodFields alwaysCredit={alwaysCredit} onAlwaysCreditChange={setAlwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <PaymentMethodFields alwaysCredit={alwaysCredit} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} />
+          <div className="erp-form-options">
+            <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
+            <FormCheckOption checked={isSample} onChange={handleSampleChange} tone="info">
+              샘플(무상증정)
+            </FormCheckOption>
+            <AlwaysCreditOption checked={alwaysCredit} onChange={setAlwaysCredit} />
+          </div>
         </div>
       </div>
 

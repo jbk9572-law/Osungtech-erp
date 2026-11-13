@@ -8,7 +8,6 @@ import { PackageQtyHistoryHint } from "@/components/package-qty-history-hint";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PRODUCT_CATEGORIES } from "@/lib/product-categories";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 type Category = { id: string; name: string };
@@ -246,7 +245,7 @@ export function ProductForm({
           </div>
         </div>
       )}
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-4">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -258,7 +257,6 @@ export function ProductForm({
       <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

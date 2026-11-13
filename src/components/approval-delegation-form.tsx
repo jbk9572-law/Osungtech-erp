@@ -3,7 +3,6 @@
 import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 export function ApprovalDelegationForm({
@@ -67,12 +66,11 @@ export function ApprovalDelegationForm({
         <input id="dg-reason" type="text" name="reason" autoComplete="off" className="erp-input w-full" placeholder="예: 출장, 휴가" />
       </div>
       <div className="flex items-center gap-2 md:col-span-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "저장 중..." : "F7 위임 등록"}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

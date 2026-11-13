@@ -8,7 +8,6 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
 import { ErpSelect } from "@/components/erp/erp-select";
 
@@ -173,18 +172,17 @@ export function NewStockTransferForm({
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="erp-form-actions">
         <button
           ref={submitRef}
           type="submit"
-          className="erp-btn erp-btn-primary"
+          className="erp-btn erp-btn-primary erp-form-submit"
           disabled={pending || sameWarehouse || !fromWarehouseId || !toWarehouseId || validRows.length === 0}
         >
           {pending ? "등록 중..." : "F7 창고 이동 등록"}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

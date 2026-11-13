@@ -5,7 +5,6 @@ import type { FormState } from "@/components/form-message";
 import { FormMessage } from "@/components/form-message";
 import { PhoneInputGroup } from "@/components/phone-input-group";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type SubcontractorFormInitial = {
   name?: string | null;
@@ -72,7 +71,7 @@ export function SubcontractorForm({
         rows={2}
         className="erp-input erp-textarea-compact md:col-span-2"
       />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary md:col-span-2">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -84,7 +83,6 @@ export function SubcontractorForm({
       <div className="md:col-span-2">
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

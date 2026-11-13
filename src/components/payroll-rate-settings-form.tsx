@@ -3,7 +3,6 @@
 import { useActionState, useRef } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type PayrollRates = {
   year: number;
@@ -59,12 +58,11 @@ export function PayrollRateSettingsForm({
         <input id="pr-source" type="text" name="source_note" autoComplete="off" defaultValue={initial.sourceNote ?? ""} className="erp-input w-full" />
       </div>
       <div className="md:col-span-3 flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "저장 중..." : "F7 저장"}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

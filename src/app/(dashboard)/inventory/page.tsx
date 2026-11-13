@@ -82,8 +82,8 @@ async function InventoryPage({
         </div>
       </div>
 
-      <form method="get" className="erp-field-grid">
-        <div className="erp-field erp-span-12">
+      <form method="get" className="erp-search-row">
+        <div className="erp-field">
           <label htmlFor="search-q">품목 / 규격 검색</label>
           <input
             id="search-q"

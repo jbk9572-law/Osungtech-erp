@@ -6,7 +6,6 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { extractTemplateFields, isServerAutoField, SERVER_AUTO_FIELD_LABELS } from "@/lib/document-template";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
 import type { RichTextEditorHandle } from "@/components/rich-text-editor";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -106,13 +105,12 @@ export function DocumentTemplateForm({
           사용 중(문서 생성 시 선택 가능)
         </label>
       )}
-      <div className="flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <div className="erp-form-actions">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "저장 중..." : `F7 ${submitLabel}`}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

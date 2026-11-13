@@ -3,7 +3,6 @@
 import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 type ProductOption = { id: string; sku: string; name: string; unit: string };
@@ -64,7 +63,7 @@ export function BomItemForm({
       </div>
       <div className="erp-field">
         <label aria-hidden="true">&nbsp;</label>
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? (
             <>
               <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -77,7 +76,6 @@ export function BomItemForm({
       <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

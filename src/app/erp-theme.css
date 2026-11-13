@@ -166,7 +166,6 @@
 .erp-u-p-24 { padding: 24px !important; }
 .erp-u-p-8 { padding: 8px !important; }
 .erp-u-pad-0-10 { padding: 0px 10px !important; }
-.erp-u-pad-0-14 { padding: 0px 14px !important; }
 .erp-u-pad-0-16 { padding: 0px 16px !important; }
 .erp-u-pad-0-5 { padding: 0px 5px !important; }
 .erp-u-pad-0-6 { padding: 0px 6px !important; }
@@ -516,7 +515,8 @@
    flex gap이 맡는다(개별 margin과 이중으로 겹치지 않게). */
 .erp-form-section-head {
   display: flex;
-  align-items: baseline;
+  /* 제목(eyebrow)과 오른쪽 도구(검색칸·버튼)가 세로 가운데로 맞게 — baseline이면 높이가 다른 컨트롤과 어긋난다. */
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
@@ -1968,6 +1968,8 @@ form.erp-field-grid {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* 좁은 칸에서도 "F5 조회"가 "F5 조 / 회"로 쪼개지지 않게 — 버튼 글자는 줄바꿈하지 않는다. */
+  white-space: nowrap;
   gap: 5px;
   height: var(--erp-control-h-md);
   min-width: 64px;
@@ -1988,6 +1990,90 @@ form.erp-field-grid {
     border-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.14s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 폼의 저장 버튼 — 폼 맨 아래 오른쪽에 붙고, 폼이 길어 화면 아래로 넘어가면 화면 아래에 따라와서 항상
+   보인다. 단축키(F7)는 버튼 글자에 같이 적혀 있어 따로 도움말 줄을 두지 않는다. */
+.erp-form-submit {
+  grid-column: 1 / -1;
+  justify-self: end;
+  align-self: end;
+  width: auto;
+  min-width: 160px;
+  position: sticky;
+  bottom: var(--erp-space-2);
+  z-index: 3;
+  box-shadow: var(--erp-shadow-md);
+}
+
+/* 저장 버튼(+결과 메시지)을 폼 맨 아래 오른쪽에 두는 줄 — 버튼과 같은 이유로 화면 아래에 따라온다. */
+.erp-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  position: sticky;
+  bottom: var(--erp-space-2);
+  z-index: 3;
+}
+
+/* 폼의 체크 옵션 한 줄(예: 이월 · 샘플 · 항상 외상) — 라벨 없는 칸을 필드 격자에 끼워 넣지 않고 칩으로 나란히 둔다. */
+.erp-form-options {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.erp-check-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--erp-control-h-md);
+  padding: 0 14px;
+  border: 1px solid var(--erp-border);
+  border-radius: var(--erp-radius-lg, 0);
+  color: var(--erp-text-muted);
+  font-size: var(--erp-font-md);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.erp-check-option.is-checked {
+  color: var(--erp-text);
+  background: var(--erp-hover);
+}
+
+.erp-check-option.is-checked.is-warn {
+  color: var(--erp-warning);
+  background: var(--erp-warning-bg);
+  border-color: var(--erp-warning-border);
+}
+
+.erp-check-option.is-checked.is-info {
+  color: var(--erp-info-text);
+  background: var(--erp-info-bg);
+  border-color: var(--erp-info-border);
+}
+
+/* 검색칸 + 조회 버튼(+초기화)이 항상 한 줄에 이어지는 검색줄 — 좁으면 버튼만 아래로 내려간다. */
+.erp-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.erp-search-row > .erp-field {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.erp-search-row > .erp-btn {
+  flex: none;
 }
 
 .erp-btn:hover {

@@ -7,7 +7,6 @@ import { FormMessage } from "@/components/form-message";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { formatNumber } from "@/lib/format-number";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ErpSelect } from "@/components/erp/erp-select";
 
@@ -178,7 +177,7 @@ export function InventoryAdjustForm({
         aria-label="사유"
         className="erp-input md:col-span-3"
       />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -190,7 +189,6 @@ export function InventoryAdjustForm({
       <div className="md:col-span-4">
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

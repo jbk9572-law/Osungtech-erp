@@ -35,7 +35,6 @@ import {
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type ItemRow = {
   partnerName: string;
@@ -1262,7 +1261,7 @@ function NoteForm({
           ref={submitRef}
           type="submit"
           disabled={pending}
-          className="erp-btn erp-btn-primary"
+          className="erp-btn erp-btn-primary erp-form-submit"
         >
           {pending ? (
             <>
@@ -1273,7 +1272,6 @@ function NoteForm({
           )}
         </button>
         <FormMessage state={state} />
-        <KeyboardHintBar items={[{ key: "F7", label: "메모 추가" }]} />
       </form>
     </div>
   );

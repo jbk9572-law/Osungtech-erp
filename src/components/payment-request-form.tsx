@@ -10,7 +10,6 @@ import { createPaymentRequest, updatePaymentRequest } from "@/app/(dashboard)/re
 import type { FormState } from "@/components/form-message";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useFormRedirect } from "@/lib/use-form-redirect";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 type Initial = {
@@ -120,7 +119,7 @@ export function PaymentRequestForm({
       )}
 
       <div className="md:col-span-4 flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? (
             <>
               <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -132,7 +131,6 @@ export function PaymentRequestForm({
         <FormMessage state={state} />
       </div>
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

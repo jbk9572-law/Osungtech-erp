@@ -5,7 +5,6 @@ import { upsertSupplierPrice } from "@/app/(dashboard)/suppliers/actions";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ProductSearchSelect } from "@/components/product-search-select";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -43,7 +42,7 @@ export function SupplierPriceForm({
         required
         className="erp-input"
       />
-      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
         {pending ? (
           <>
             <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -55,7 +54,6 @@ export function SupplierPriceForm({
       <div className="md:col-span-3">
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

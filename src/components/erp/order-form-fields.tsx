@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
 
@@ -54,7 +54,27 @@ export function FormSaveButtons({
   );
 }
 
-/** "N월 실적으로 이월" 체크박스. monthLabel은 nextMonthLabel(거래일자) 결과. */
+/** 폼 옵션 한 줄(.erp-form-options)에 놓는 체크 옵션 — 라벨 없는 칸으로 필드 격자에 끼워 넣지 않고, 같은 모양의 칩으로 한 줄에 나란히 둔다. */
+export function FormCheckOption({
+  checked,
+  onChange,
+  tone,
+  children,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  tone?: "warn" | "info";
+  children: ReactNode;
+}) {
+  return (
+    <label className={`erp-check-option${checked ? ` is-checked${tone ? ` is-${tone}` : ""}` : ""}`}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span>{children}</span>
+    </label>
+  );
+}
+
+/** "N월 실적으로 이월" 체크 옵션. monthLabel은 nextMonthLabel(거래일자) 결과. */
 export function CarryoverToggle({
   checked,
   onChange,
@@ -64,69 +84,44 @@ export function CarryoverToggle({
   onChange: (checked: boolean) => void;
   monthLabel: string;
 }) {
-  const isCarryover = checked;
   return (
-    <div className="erp-field erp-span-3">
-      <label aria-hidden="true">&nbsp;</label>
-      <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg erp-u-h-34"
-        style={{ background: isCarryover ? "var(--erp-warning-bg)" : "transparent", border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}` }}
-      >
-        <input
-          type="checkbox"
-          checked={isCarryover}
-          onChange={(e) => onChange(e.target.checked)}
-        />
-        <span className="erp-u-bold"
-          style={{ color: isCarryover ? "var(--erp-warning)" : "var(--erp-text-muted)" }}
-        >
-          {monthLabel} 실적으로 이월
-        </span>
-      </label>
-    </div>
+    <FormCheckOption checked={checked} onChange={onChange} tone="warn">
+      {monthLabel} 실적으로 이월
+    </FormCheckOption>
   );
 }
 
-/** 결제방법: [항상 외상] 체크 + (외상이 아닐 때) 결제수단 선택. */
+/** [항상 외상] 체크 옵션 — 체크를 풀면 결제방법 선택(PaymentMethodFields)이 나타난다. */
+export function AlwaysCreditOption({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <FormCheckOption checked={checked} onChange={onChange}>
+      항상 외상
+    </FormCheckOption>
+  );
+}
+
+/** 결제방법 선택 — "항상 외상"이 아닐 때만 나타난다(체크는 AlwaysCreditOption이 옵션 줄에서 맡는다). */
 export function PaymentMethodFields({
   alwaysCredit,
-  onAlwaysCreditChange,
   paymentMethod,
   onPaymentMethodChange,
 }: {
   alwaysCredit: boolean;
-  onAlwaysCreditChange: (v: boolean) => void;
   paymentMethod: string;
   onPaymentMethodChange: (v: string) => void;
 }) {
-  const setAlwaysCredit = onAlwaysCreditChange;
-  const setPaymentMethod = onPaymentMethodChange;
+  if (alwaysCredit) return null;
   return (
-    <>
-      <div className="erp-field erp-span-3">
-        <label>결제방법</label>
-        <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer erp-u-h-30"
-        >
-          <input
-            type="checkbox"
-            checked={alwaysCredit}
-            onChange={(e) => setAlwaysCredit(e.target.checked)}
-          />
-          항상 외상
-        </label>
-      </div>
-      {!alwaysCredit && (
-        <div className="erp-field erp-span-3">
-          <label aria-hidden="true">&nbsp;</label>
-          <ErpSelect
-            ariaLabel="결제방법"
-            value={paymentMethod}
-            onChange={setPaymentMethod}
-            placeholder="결제방법 선택"
-            required
-            options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
-          />
-        </div>
-      )}
-    </>
+    <div className="erp-field erp-span-3">
+      <label>결제방법</label>
+      <ErpSelect
+        ariaLabel="결제방법"
+        value={paymentMethod}
+        onChange={onPaymentMethodChange}
+        placeholder="결제방법 선택"
+        required
+        options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
+      />
+    </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useActionState, useRef } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function WarehouseForm({
   action,
@@ -26,14 +25,13 @@ export function WarehouseForm({
       </div>
       <div className="erp-field">
         <label aria-hidden="true">&nbsp;</label>
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary w-full">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "저장 중..." : "F7 창고 추가"}
         </button>
       </div>
       <div className="md:col-span-3">
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function SupportTicketForm({
   action,
@@ -42,8 +41,8 @@ export function SupportTicketForm({
         placeholder="어떤 문제가 있었는지, 어떤 화면에서 발생했는지 자세히 적어주시면 빠르게 도와드릴 수 있습니다."
         minHeight={160}
       />
-      <div className="flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+      <div className="erp-form-actions">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? (
             <>
               <span className="erp-spinner" aria-hidden /> 등록 중...
@@ -54,7 +53,6 @@ export function SupportTicketForm({
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }
