@@ -15,12 +15,13 @@ const MAX_ROWS = 200;
 export const DASHBOARD_WIDGETS = [
   { id: "kpi", title: "오늘 한눈에", bare: true, min: { w: 6, h: 2 }, def: { x: 0, y: 0, w: 12, h: 3 } },
   { id: "news", title: "소식", min: { w: 3, h: 6 }, def: { x: 0, y: 3, w: 5, h: 10 } },
-  { id: "listA", title: "목록 칸 1", min: { w: 2, h: 4 }, def: { x: 0, y: 13, w: 5, h: 8 } },
+  { id: "listA", title: "목록 칸 1", min: { w: 2, h: 4 }, def: { x: 0, y: 13, w: 5, h: 7 } },
   { id: "todo", title: "오늘 할 일", min: { w: 4, h: 6 }, def: { x: 5, y: 3, w: 4, h: 10 } },
-  { id: "memos", title: "최근 메모", min: { w: 2, h: 4 }, def: { x: 5, y: 13, w: 4, h: 8 } },
-  { id: "quick", title: "빠른 실행", min: { w: 2, h: 4 }, def: { x: 5, y: 21, w: 2, h: 5 } },
-  { id: "lookup", title: "빠른 재고 조회", min: { w: 2, h: 4 }, def: { x: 7, y: 21, w: 2, h: 5 } },
-  { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 0, y: 26, w: 9, h: 15 } },
+  { id: "attendance", title: "오늘 근태", min: { w: 3, h: 5 }, def: { x: 5, y: 13, w: 4, h: 7 } },
+  { id: "memos", title: "최근 메모", min: { w: 2, h: 4 }, def: { x: 0, y: 20, w: 5, h: 8 } },
+  { id: "quick", title: "빠른 실행", min: { w: 2, h: 4 }, def: { x: 5, y: 20, w: 2, h: 8 } },
+  { id: "lookup", title: "빠른 재고 조회", min: { w: 2, h: 4 }, def: { x: 7, y: 20, w: 2, h: 8 } },
+  { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 0, y: 28, w: 9, h: 15 } },
   { id: "report", title: "일일 리포트", min: { w: 3, h: 8 }, def: { x: 9, y: 3, w: 3, h: 26 } },
   { id: "listB", title: "목록 칸 2", min: { w: 2, h: 4 }, def: { x: 9, y: 29, w: 3, h: 6 } },
 ] as const;

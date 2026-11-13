@@ -84,7 +84,7 @@ export async function clockIn(_prevState: FormState, formData: FormData): Promis
 
   if (error) return { error: `출근 처리에 실패했습니다: ${error.message}` };
 
-  revalidatePath("/hr/attendance");
+  for (const path of ["/hr/attendance", "/dashboard"]) revalidatePath(path); // 메인 화면 "오늘 근태" 위젯도 같이 갱신
   return { success: "출근 처리했습니다." };
 }
 
@@ -115,7 +115,7 @@ export async function clockOut(_prevState: FormState, formData: FormData): Promi
 
   if (error) return { error: `퇴근 처리에 실패했습니다: ${error.message}` };
 
-  revalidatePath("/hr/attendance");
+  for (const path of ["/hr/attendance", "/dashboard"]) revalidatePath(path);
   return { success: "퇴근 처리했습니다." };
 }
 
