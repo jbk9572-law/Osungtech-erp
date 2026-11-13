@@ -35,6 +35,7 @@ import {
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
+import { formatCompactWon } from "@/lib/format-compact-won";
 
 export type ItemRow = {
   partnerName: string;
@@ -791,6 +792,7 @@ export function DashboardCalendar({
   layout,
   sourceOptions,
   sidePanels,
+  companyLayout,
   reportMoney,
   lowStock,
   monthTotals,
@@ -814,6 +816,7 @@ export function DashboardCalendar({
   layout: DashboardLayout;
   sourceOptions: { id: SourceId; title: string }[];
   sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
+  companyLayout: DashboardLayout;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -841,7 +844,9 @@ export function DashboardCalendar({
     }
   }, [todayStr]);
 
-  const selectedData: DayData = (selected && dataByDate[selected]) || {
+  // 달력에서 고른 날(없으면 기본 날짜) — 일일 리포트의 "일정·메모" 탭이 이 날의 이월·일정·메모를 보여준다.
+  const reportDate = selected ?? defaultReportDate(year, month, todayStr);
+  const selectedData: DayData = dataByDate[reportDate] || {
     salesCount: 0,
     salesTotal: 0,
     salesItems: [],
@@ -855,6 +860,80 @@ export function DashboardCalendar({
     notes: [],
     calendarItems: [],
   };
+  const dayPanel = (
+    <>
+      {(selectedData.carryoverInSales.length > 0 ||
+        selectedData.carryoverInPurchases.length > 0) && (
+        <div
+          className="mb-3 border-l-[3px] p-2 text-xs font-medium erp-u-bg-warning-bg erp-u-color-warning"
+          style={{ borderLeftColor: "var(--erp-warning)" }}
+        >
+          {selectedData.carryoverInSales.map((e, i) => (
+            <p key={`s-${i}`} className="m-0">
+              {formatMonthDay(e.fromDate)} 작업분이 이월됨 — 매출 품목{" "}
+              {e.itemCount}건
+            </p>
+          ))}
+          {selectedData.carryoverInPurchases.map((e, i) => (
+            <p key={`p-${i}`} className="m-0">
+              {formatMonthDay(e.fromDate)} 작업분이 이월됨 — 매입 품목{" "}
+              {e.itemCount}건
+            </p>
+          ))}
+        </div>
+      )}
+
+
+      {selectedData.calendarItems.length > 0 && (
+        <div className="mb-4">
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-xs font-bold text-[var(--erp-info-text)]">
+              일정 {selectedData.calendarItems.length}건
+            </p>
+            <Link
+              href="/calendar"
+              className="text-[10.5px] text-[var(--erp-text-muted)] hover:underline"
+            >
+              캘린더에서 보기
+            </Link>
+          </div>
+          <ul className="space-y-1">
+            {selectedData.calendarItems.map((item) => (
+              <li
+                key={item.id}
+                className="border-l-[3px] p-1.5 text-xs erp-u-bg-bg-subtle"
+                style={{ borderLeftColor:
+                    item.source === "meeting"
+                      ? "var(--erp-info-text)"
+                      : "var(--erp-warning)" }}
+              >
+                <span className="font-semibold text-[var(--erp-text)]">
+                  {item.title}
+                </span>
+                {!item.allDay && (
+                  <span className="ml-1.5 text-[var(--erp-text-muted)]">
+                    {item.startAt.slice(11, 16)}~{item.endAt.slice(11, 16)}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <NoteForm
+        dateStr={reportDate}
+        notes={selectedData.notes}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+      />
+    </>
+  );
+  const dayCount =
+    selectedData.calendarItems.length +
+    selectedData.notes.length +
+    selectedData.carryoverInSales.length +
+    selectedData.carryoverInPurchases.length;
   const calendarCard = (
       <div className="erp-cal-panel">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -903,7 +982,7 @@ export function DashboardCalendar({
                 return (
                   <div
                     key={`${wi}-${di}`}
-                    className="h-14 rounded-sm"
+                    className="erp-cal-cell is-empty"
                   />
                 );
               }
@@ -964,48 +1043,36 @@ export function DashboardCalendar({
                       `/sales?from=${cell.dateStr}&to=${cell.dateStr}`,
                     );
                   }}
-                  className={`h-14 rounded-sm border p-1 text-left text-xs transition-colors ${
-                    isSelected
-                      ? "border-[var(--erp-primary)] bg-[var(--erp-primary)] text-white"
-                      : isToday
-                        ? "border-[var(--erp-primary)] bg-[var(--erp-selected)]"
-                        : "border-transparent hover:bg-[var(--erp-hover)]"
-                  }`}
+                  className={`erp-cal-cell${isSelected ? " is-selected" : isToday ? " is-today" : ""}`}
                 >
                   <div className={dayColorClass}>{cell.day}</div>
-                  {holidayName ? (
-                    <div
-                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-[var(--erp-danger)]"}`}
-                    >
-                      {holidayName}
-                    </div>
-                  ) : null}
-                  <div className="mt-0.5 flex gap-0.5">
-                    {hasPurchaseDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-primary)]"}`}
-                      />
+                  {holidayName ? <div className="erp-cal-holiday">{holidayName}</div> : null}
+                  <div className="erp-cal-rich">
+                    {data?.salesTotal ? (
+                      <div className="erp-cal-amt is-sales">
+                        <span className="erp-cal-dot is-sales" aria-label="매출" />
+                        <span>{formatCompactWon(data.salesTotal)}</span>
+                      </div>
                     ) : null}
-                    {hasSalesDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-success)]"}`}
-                      />
+                    {data?.purchaseTotal ? (
+                      <div className="erp-cal-amt is-purchase">
+                        <span className="erp-cal-dot is-purchase" aria-label="매입" />
+                        <span>{formatCompactWon(data.purchaseTotal)}</span>
+                      </div>
                     ) : null}
-                    {data?.notes.length ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-warning)]"}`}
-                      />
+                    {data?.calendarItems.slice(0, 2).map((ci) => (
+                      <div key={ci.id} className="erp-cal-chip">{ci.title}</div>
+                    ))}
+                    {data && data.calendarItems.length > 2 ? (
+                      <div className="erp-cal-more">외 {data.calendarItems.length - 2}건</div>
                     ) : null}
-                    {hasScheduleDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-info-text)]"}`}
-                      />
-                    ) : null}
-                    {showLowStockDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-danger)]"}`}
-                      />
-                    ) : null}
+                  </div>
+                  <div className="erp-cal-dots">
+                    {hasPurchaseDot ? <span className="erp-cal-dot is-purchase" /> : null}
+                    {hasSalesDot ? <span className="erp-cal-dot is-sales" /> : null}
+                    {data?.notes.length ? <span className="erp-cal-dot is-note" /> : null}
+                    {hasScheduleDot ? <span className="erp-cal-dot is-event" /> : null}
+                    {showLowStockDot ? <span className="erp-cal-dot is-stock" /> : null}
                   </div>
                 </button>
               );
@@ -1038,82 +1105,6 @@ export function DashboardCalendar({
 
         </div>
 
-        {/* 고른 날짜의 이월 안내·일정·메모 — 달력 오른쪽(좁으면 아래)에서 보고 적는다. */}
-        {selected ? (
-          <div className="erp-cal-side">
-          <>
-            <h3 className="mb-2 text-sm font-bold text-[var(--erp-text)]">
-              {selected} 메모·일정
-            </h3>
-
-            {(selectedData.carryoverInSales.length > 0 ||
-              selectedData.carryoverInPurchases.length > 0) && (
-              <div
-                className="mb-3 border-l-[3px] p-2 text-xs font-medium erp-u-bg-warning-bg erp-u-color-warning"
-                style={{ borderLeftColor: "var(--erp-warning)" }}
-              >
-                {selectedData.carryoverInSales.map((e, i) => (
-                  <p key={`s-${i}`} className="m-0">
-                    {formatMonthDay(e.fromDate)} 작업분이 이월됨 — 매출 품목{" "}
-                    {e.itemCount}건
-                  </p>
-                ))}
-                {selectedData.carryoverInPurchases.map((e, i) => (
-                  <p key={`p-${i}`} className="m-0">
-                    {formatMonthDay(e.fromDate)} 작업분이 이월됨 — 매입 품목{" "}
-                    {e.itemCount}건
-                  </p>
-                ))}
-              </div>
-            )}
-
-
-            {selectedData.calendarItems.length > 0 && (
-              <div className="mb-4">
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="text-xs font-bold text-[var(--erp-info-text)]">
-                    오늘 일정 {selectedData.calendarItems.length}건
-                  </p>
-                  <Link
-                    href="/calendar"
-                    className="text-[10.5px] text-[var(--erp-text-muted)] hover:underline"
-                  >
-                    캘린더에서 보기
-                  </Link>
-                </div>
-                <ul className="space-y-1">
-                  {selectedData.calendarItems.map((item) => (
-                    <li
-                      key={item.id}
-                      className="border-l-[3px] p-1.5 text-xs erp-u-bg-bg-subtle"
-                      style={{ borderLeftColor:
-                          item.source === "meeting"
-                            ? "var(--erp-info-text)"
-                            : "var(--erp-warning)" }}
-                    >
-                      <span className="font-semibold text-[var(--erp-text)]">
-                        {item.title}
-                      </span>
-                      {!item.allDay && (
-                        <span className="ml-1.5 text-[var(--erp-text-muted)]">
-                          {item.startAt.slice(11, 16)}~{item.endAt.slice(11, 16)}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <NoteForm
-              dateStr={selected}
-              notes={selectedData.notes}
-              currentUserId={currentUserId}
-              isAdmin={isAdmin}
-            />
-          </>
-          </div>
-        ) : null}
       </div>
   );
 
@@ -1124,17 +1115,22 @@ export function DashboardCalendar({
       year={year}
       month={month}
       todayStr={todayStr}
-      date={selected ?? defaultReportDate(year, month, todayStr)} onDateChange={setSelected}
+      date={reportDate} onDateChange={setSelected}
+      dayCount={dayCount}
       getDay={getReportDay}
       money={reportMoney ?? null}
       lowStock={lowStock ?? []}
       monthTotals={monthTotals ?? null}
-    />
+    >
+      {dayPanel}
+    </DailyReportBox>
   );
 
   return (
     <DashboardWidgetGrid
       initialLayout={layout}
+      companyLayout={companyLayout}
+      canSetCompanyDefault={isAdmin}
       sourceOptions={sourceOptions}
       widgets={{ ...sidePanels, calendar: calendarCard, report: reportCard }}
     />

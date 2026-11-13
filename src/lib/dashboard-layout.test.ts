@@ -76,3 +76,17 @@ describe("stackOrder", () => {
     expect(order[0]).toBe("kpi");
   });
 });
+
+describe("기본 배치", () => {
+  it("모든 위젯이 겹치지 않고 12칸 안에 들어간다", () => {
+    const items = defaultDashboardLayout().items;
+    for (const a of items) {
+      expect(a.x + a.w, a.id).toBeLessThanOrEqual(DASHBOARD_COLS);
+      for (const b of items) {
+        if (a === b) continue;
+        const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+        expect(overlap, `${a.id}/${b.id}`).toBe(false);
+      }
+    }
+  });
+});

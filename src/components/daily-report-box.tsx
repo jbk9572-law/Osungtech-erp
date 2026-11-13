@@ -41,6 +41,8 @@ export function defaultReportDate(year: number, month: number, todayStr: string)
   return todayStr.startsWith(monthPrefix) ? todayStr : `${monthPrefix}-01`;
 }
 
+type ReportView = "summary" | "sales" | "purchase" | "day";
+
 function won(n: number) {
   return `${formatNumber(n)}원`;
 }
@@ -153,6 +155,7 @@ export function DailyReportBox({
   money,
   lowStock,
   monthTotals,
+  dayCount = 0,
   children,
 }: {
   monthTotals: ReportMonthTotals | null;
@@ -166,12 +169,13 @@ export function DailyReportBox({
   getDay: (dateStr: string) => ReportDay;
   money: ReportMoney | null;
   lowStock: ReportLowStock[];
-  // 리포트 맨 아래에 붙는 추가 구역(그날 메모·일정 등).
+  // "일정·메모" 탭에 들어갈 내용(그날 이월·일정·메모)과 그 건수 — 없으면 이 탭을 그리지 않는다.
+  dayCount?: number;
   children?: React.ReactNode;
 }) {
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
-  const [modal, setModal] = useState<null | "detail" | "copy">(null);
-  const [tab, setTab] = useState<"sales" | "purchase">("sales");
+  const [modal, setModal] = useState<null | "copy">(null);
+  const [view, setView] = useState<ReportView>("summary");
   const [options, setOptions] = useState({ includeAmounts: false, includePayments: false, includeStock: true });
   const [copied, setCopied] = useState(false);
 
@@ -221,10 +225,13 @@ export function DailyReportBox({
     ...day.purchases.slice(0, 2).map((p) => ({ p, tone: "info" as const })),
   ];
   const hiddenCount = day.sales.length + day.purchases.length - summaryPartners.length;
-  const detailPartners = tab === "sales" ? day.sales : day.purchases;
-  const detailTotal = tab === "sales" ? day.salesTotal : day.purchaseTotal;
-  const detailCount = tab === "sales" ? day.salesCount : day.purchaseCount;
-  const listHref = `${tab === "sales" ? "/sales" : "/purchases"}?from=${date}&to=${date}`;
+
+  const viewTabs: { id: ReportView; title: string; n: number | null }[] = [
+    { id: "summary", title: "요약", n: null },
+    { id: "sales", title: "매출", n: day.salesCount },
+    { id: "purchase", title: "매입", n: day.purchaseCount },
+    ...(children ? [{ id: "day" as const, title: "일정·메모", n: dayCount }] : []),
+  ];
 
   return (
     <section className="erp-daily-report" aria-label="오늘 리포트">
@@ -253,6 +260,44 @@ export function DailyReportBox({
         </button>
       </div>
 
+      <div className="erp-todo-tabs" role="tablist" aria-label="리포트 보기">
+        {viewTabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={view === t.id}
+            className={`erp-todo-tab${view === t.id ? " active" : ""}`}
+            onClick={() => setView(t.id)}
+          >
+            {t.title}
+            {t.n !== null && <> <span className="erp-todo-count">{t.n}</span></>}
+          </button>
+        ))}
+      </div>
+
+      {view === "sales" || view === "purchase" ? (
+        <div className="erp-daily-report-view">
+          {(view === "sales" ? day.sales : day.purchases).length === 0 ? (
+            <p className="erp-daily-report-empty">내역이 없습니다.</p>
+          ) : (
+            (view === "sales" ? day.sales : day.purchases).map((partner, i) => (
+              <PartnerBlock key={i} partner={partner} tone={view === "sales" ? "ok" : "info"} />
+            ))
+          )}
+          <div className="erp-daily-report-line">
+            <span className="erp-daily-report-meta">
+              {view === "sales" ? "매출" : "매입"} 합계 <strong>{won(view === "sales" ? day.salesTotal : day.purchaseTotal)}</strong> ·{" "}
+              {view === "sales" ? day.salesCount : day.purchaseCount}건
+            </span>
+            <Link className="erp-daily-report-more" href={`${view === "sales" ? "/sales" : "/purchases"}?from=${date}&to=${date}`}>
+              {view === "sales" ? "매출" : "매입"} 목록에서 열기 →
+            </Link>
+          </div>
+        </div>
+      ) : view === "day" ? (
+        <div className="erp-daily-report-extra">{children}</div>
+      ) : (
       <div className="erp-daily-report-grid">
         {/* 금액 합계 */}
         <div className="erp-daily-report-sec">
@@ -321,7 +366,7 @@ export function DailyReportBox({
             ))
           )}
           {(day.sales.length > 0 || day.purchases.length > 0) && (
-            <button type="button" className="erp-daily-report-more" onClick={() => setModal("detail")}>
+            <button type="button" className="erp-daily-report-more" onClick={() => setView("sales")}>
               매출·매입 전체 보기{hiddenCount > 0 ? ` (+${hiddenCount}곳)` : ""} →
             </button>
           )}
@@ -413,42 +458,6 @@ export function DailyReportBox({
           )}
         </div>
       </div>
-
-      {children ? <div className="erp-daily-report-extra">{children}</div> : null}
-
-      {modal === "detail" && (
-        <Modal
-          title={`매출·매입 전체 보기 · ${formatReportDateLabel(date).replaceAll("-", ".")}`}
-          onClose={() => setModal(null)}
-          footer={
-            <>
-              <span className="erp-daily-report-meta">
-                {tab === "sales" ? "매출" : "매입"} 합계 <strong>{won(detailTotal)}</strong> · {detailCount}건
-              </span>
-              <span className="erp-daily-report-spacer" />
-              <Link className="erp-btn" href={listHref}>
-                {tab === "sales" ? "매출" : "매입"} 목록에서 열기 →
-              </Link>
-              <button type="button" className="erp-btn erp-btn-primary" onClick={() => setModal(null)}>
-                닫기
-              </button>
-            </>
-          }
-        >
-          <div className="erp-daily-report-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={tab === "sales"} className={`erp-btn${tab === "sales" ? " active" : ""}`} onClick={() => setTab("sales")}>
-              매출 {day.salesCount}건
-            </button>
-            <button type="button" role="tab" aria-selected={tab === "purchase"} className={`erp-btn${tab === "purchase" ? " active" : ""}`} onClick={() => setTab("purchase")}>
-              매입 {day.purchaseCount}건
-            </button>
-          </div>
-          {detailPartners.length === 0 ? (
-            <p className="erp-daily-report-empty">내역이 없습니다.</p>
-          ) : (
-            detailPartners.map((partner, i) => <PartnerBlock key={i} partner={partner} tone={tab === "sales" ? "ok" : "info"} />)
-          )}
-        </Modal>
       )}
 
       {modal === "copy" && (

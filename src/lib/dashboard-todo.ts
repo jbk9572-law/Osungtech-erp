@@ -12,6 +12,7 @@ export type CarryoverInput = { fromDate: string; itemCount: number; kind: "sales
 
 export type LowStockInput = { id: string; name: string; quantity: number; reorderPoint: number };
 export type AnnouncementInput = { id: string; title: string; pinned: boolean };
+export type MailInput = { id: string; subject: string; fromName: string; sentLabel: string };
 
 export type TodoItem = {
   key: string;
@@ -64,10 +65,11 @@ export function buildSourceItems(input: {
   carryovers: CarryoverInput[];
   lowStock: LowStockInput[];
   announcements: AnnouncementInput[];
+  mails: MailInput[];
   todayStr: string;
   backHref: string;
 }): Record<SourceId, TodoItem[]> {
-  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [] };
+  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [], mail: [] };
   for (const a of input.approvals) {
     out.approval.push({
       key: `approval-${a.id}`,
@@ -143,6 +145,17 @@ export function buildSourceItems(input: {
       sub: "아직 읽지 않은 공지",
       due: "",
       href: `/announcements/${a.id}?back=${input.backHref}`,
+      action: "읽기 →",
+    });
+  }
+  for (const m of input.mails) {
+    out.mail.push({
+      key: `mail-${m.id}`,
+      kind: "mail",
+      title: m.subject,
+      sub: m.fromName,
+      due: m.sentLabel,
+      href: `/mail?folder=INBOX&id=${m.id}`,
       action: "읽기 →",
     });
   }

@@ -77,6 +77,7 @@ export function ClockInOutPanel({
   clockOutLocation,
   clockInAction,
   clockOutAction,
+  compact = false,
 }: {
   clockedIn: boolean;
   clockedOut: boolean;
@@ -86,6 +87,8 @@ export function ClockInOutPanel({
   clockOutLocation?: string | null;
   clockInAction: (prevState: FormState, formData: FormData) => Promise<FormState>;
   clockOutAction: (prevState: FormState, formData: FormData) => Promise<FormState>;
+  // 메인 화면 위젯용 — 위치 안내 문구와 아래 여백을 뺀다.
+  compact?: boolean;
 }) {
   const [inState, inFormAction, inPending] = useActionState(clockInAction, undefined);
   const [outState, outFormAction, outPending] = useActionState(clockOutAction, undefined);
@@ -103,7 +106,7 @@ export function ClockInOutPanel({
   const outAccuracyRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="erp-kpi-row erp-u-mb-12">
+    <div className={`erp-kpi-row${compact ? "" : " erp-u-mb-12"}`}>
       <div className="erp-home-panel erp-u-pad-10-12">
         <div className="erp-u-muted erp-u-semibold erp-u-text-caption erp-u-mb-6">
           출근
@@ -125,9 +128,9 @@ export function ClockInOutPanel({
             className="erp-btn erp-btn-primary"
           />
         </form>
-        <p className="erp-u-muted erp-u-text-xs" style={{ margin: "6px 0 0" }}>
+        {!compact && <p className="erp-u-muted erp-u-text-xs" style={{ margin: "6px 0 0" }}>
           {clockInLocation ? `📍 ${clockInLocation}` : "📍 GPS로 위치를 함께 기록합니다(권한을 거부해도 출근 처리는 계속됩니다)."}
-        </p>
+        </p>}
         <FormMessage state={inState} />
       </div>
       <div className="erp-home-panel erp-u-pad-10-12">
@@ -151,9 +154,9 @@ export function ClockInOutPanel({
             className="erp-btn erp-btn-dark"
           />
         </form>
-        <p className="erp-u-muted erp-u-text-xs" style={{ margin: "6px 0 0" }}>
+        {!compact && <p className="erp-u-muted erp-u-text-xs" style={{ margin: "6px 0 0" }}>
           {clockOutLocation ? `📍 ${clockOutLocation}` : "📍 GPS로 위치를 함께 기록합니다(권한을 거부해도 퇴근 처리는 계속됩니다)."}
-        </p>
+        </p>}
         <FormMessage state={outState} />
       </div>
     </div>

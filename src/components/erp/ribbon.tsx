@@ -14,6 +14,7 @@ import { useClickOutside } from "@/lib/use-click-outside";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { clampDropdownLeft } from "@/lib/dropdown-position";
 import { enterTenant } from "@/app/platform-admin/actions";
+import { EnterTenantSubmit } from "@/components/erp/enter-tenant-submit";
 import { PageGuide } from "@/components/erp/page-guide";
 
 const SHORTCUTS: { key: string; label: string }[] = [
@@ -339,9 +340,7 @@ export function Ribbon({
                 {filteredTenants.map((t) => (
                   <form key={t.id} action={enterTenant}>
                     <input type="hidden" name="tenantId" value={t.id} />
-                    <button type="submit" className="erp-ribbon-searchitem" title={t.name}>
-                      <span>{t.name}</span>
-                    </button>
+                    <EnterTenantSubmit label={t.name} className="erp-ribbon-searchitem" title={t.name} />
                   </form>
                 ))}
                 {!filteredTenants.length && (

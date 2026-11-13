@@ -16,12 +16,14 @@ import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
-import { normalizeDashboardLayout } from "@/lib/dashboard-layout";
+import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
 import { QuickActionsPanel, RecentMemosPanel } from "@/components/dashboard-side-panels";
 import { DashboardSourcePanel } from "@/components/dashboard-source-panel";
-import { sourceMeta } from "@/lib/dashboard-sources";
+import { sourceMeta, type SourceId } from "@/lib/dashboard-sources";
 import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
 import { DashboardTodoPanel } from "@/components/dashboard-todo-panel";
+import { DashboardAttendancePanel } from "@/components/dashboard-attendance-panel";
+import { attendanceTimeLabel, getDashboardAttendance } from "@/lib/dashboard-attendance";
 import { resolveDashboardSources } from "@/lib/dashboard-source-data";
 import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import type { ReportMoney } from "@/components/daily-report-box";
@@ -104,11 +106,10 @@ async function DashboardPage({
     isPaperCalcEnabled(supabase),
   ]);
 
+  const attendancePromise = getDashboardAttendance(supabase, user?.id ?? null, todayStr);
+
   // 사용자가 저장한 위젯 배치(없으면 기본 배치) — 저장값은 항상 검증·보정해서 쓴다.
-  const { data: layoutRow } = user
-    ? await supabase.from("ui_dashboard_layout").select("layout").eq("user_id", user.id).maybeSingle()
-    : { data: null };
-  const dashboardLayout = normalizeDashboardLayout(layoutRow?.layout);
+  const { layout: dashboardLayout, companyLayout } = await loadDashboardLayouts(supabase, user?.id ?? null);
 
   const [
     salesItems,
@@ -754,6 +755,9 @@ async function DashboardPage({
   });
   const overdueCustomers = sources.overdueCustomers;
   const firstEvent = todayData?.calendarItems[0];
+  const attendance = await attendancePromise;
+  const tabsOf = (ids: SourceId[]) =>
+    ids.filter((id) => sources.itemsOf(id) !== null).map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [] }));
   const sidePanels = {
     kpi: (
       <DashboardKpiStrip
@@ -767,13 +771,12 @@ async function DashboardPage({
         events={todayInView ? { count: todayData?.calendarItems.length ?? 0, first: firstEvent ? `${firstEvent.allDay ? "종일" : firstEvent.startAt.slice(11, 16)} ${firstEvent.title}` : null } : null}
       />
     ),
-    todo: (
-      <DashboardTodoPanel
-        tabs={dashboardLayout.sources.todo
-          .filter((id) => sources.itemsOf(id) !== null)
-          .map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [] }))}
-      />
-    ),
+    todo: <DashboardTodoPanel tabs={tabsOf(dashboardLayout.sources.todo)} />,
+    news: <DashboardTodoPanel label="소식 종류" empty="새 소식이 없습니다." tabs={tabsOf(dashboardLayout.sources.news)} />,
+    attendance: attendance ? (
+      <DashboardAttendancePanel clockInTime={attendanceTimeLabel(attendance.clockInAt)} clockOutTime={attendanceTimeLabel(attendance.clockOutAt)}
+        leaveToday={todayInView ? (todayData?.calendarItems ?? []).filter((c) => c.source === "leave").map((c) => c.title) : null} />
+    ) : null,
     listA: <DashboardSourcePanel sourceId={dashboardLayout.sources.listA} items={sources.itemsOf(dashboardLayout.sources.listA)} />,
     listB: <DashboardSourcePanel sourceId={dashboardLayout.sources.listB} items={sources.itemsOf(dashboardLayout.sources.listB)} />,
     lookup: <QuickStockLookup products={stockLookupProducts} />,
@@ -847,6 +850,7 @@ async function DashboardPage({
         }}
         lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
         layout={dashboardLayout}
+        companyLayout={companyLayout}
         sourceOptions={sources.options}
         sidePanels={sidePanels}
       />
