@@ -2,8 +2,8 @@ name: Deploy to production server
 
 # main에 push될 때마다 AWS 라이트세일 서버(서울 리전, docs/self-hosting-aws.md
 # 참고)에 최신 버전을 반영한다 — 매번 사람이 직접 터미널 열어서 돌릴 필요가
-# 없게 한다. 서버 주소/계정은 비밀값이 아니라 그대로 적어두고, SSH 개인키
-# (DEPLOY_SSH_KEY)만 저장소 Secrets에 등록한다.
+# 없게 한다. 서버 주소/계정/SSH 개인키는 저장소가 공개돼도 드러나지 않도록
+# 전부 저장소 Secrets(DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY)에 등록한다.
 #
 # 예전엔 서버에서 직접 `docker compose up -d --build`로 이미지를 빌드했는데,
 # 라이트세일 1GB RAM(+2GB 스왑) 인스턴스에서 Next.js(Turbopack) 프로덕션
@@ -34,8 +34,8 @@ jobs:
         id: envs
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: 54.180.194.235
-          username: ubuntu
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: grep -E '^NEXT_PUBLIC_SUPABASE_(URL|ANON_KEY)=' ~/Osungtech-erp/.env.production
           capture_stdout: true
@@ -82,8 +82,8 @@ jobs:
       - name: 서버로 이미지 + 구성 파일 전송
         uses: appleboy/scp-action@v1
         with:
-          host: 54.180.194.235
-          username: ubuntu
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           source: app.tar.gz,docker-compose.yml,Caddyfile
           target: ~/Osungtech-erp/
@@ -91,8 +91,8 @@ jobs:
       - name: 서버에서 이미지 적재 + 재기동
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: 54.180.194.235
-          username: ubuntu
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 10m
           script: |
