@@ -32,6 +32,7 @@ describe("buildSourceItems", () => {
     lowStock: [{ id: "p1", name: "모조지 70", quantity: 2, reorderPoint: 10 }],
     announcements: [{ id: "a1", title: "11월 휴무 안내", pinned: true }],
     mails: [],
+    memos: [{ id: "m1", noteDate: "2026-11-12", content: "에이티씨 납품 오후 3시", author: "김과장" }],
     todayStr: "2026-11-12",
     backHref: "%2Fdashboard",
   };
@@ -46,6 +47,7 @@ describe("buildSourceItems", () => {
     expect(out.carryover[0]).toMatchObject({ title: "11/10 작업분 매출 품목 2건", href: "/sales?from=2026-11-10&to=2026-11-10" });
     expect(out.lowStock[0]).toMatchObject({ title: "모조지 70", sub: "현재 2 / 기준 10", href: "/inventory/item/p1" });
     expect(out.announcement[0].title).toBe("📌 11월 휴무 안내");
+    expect(out.memo[0]).toMatchObject({ title: "에이티씨 납품 오후 3시", sub: "김과장", due: "11/12", href: "/dashboard?month=2026-11" });
   });
 
   it("모든 항목의 key가 서로 다르다", () => {

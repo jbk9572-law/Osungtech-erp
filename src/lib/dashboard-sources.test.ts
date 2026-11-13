@@ -8,11 +8,11 @@ describe("normalizeSourceSelection", () => {
     }
   });
   it("모르는 id와 중복은 버리고 탭 개수를 제한한다", () => {
-    const out = normalizeSourceSelection({ todo: ["todo", "todo", "evil", "lowStock", "approval", "overdue", "payable", "carryover", "announcement", "todo"], listA: "evil", listB: "announcement" });
+    const out = normalizeSourceSelection({ todo: ["todo", "todo", "evil", "lowStock", "approval", "overdue", "payable", "carryover", "announcement", "todo"], listA: "evil" });
     expect(out.todo).toEqual(["todo", "lowStock", "approval", "overdue", "payable", "carryover", "announcement"]);
     expect(out.todo.length).toBeLessThanOrEqual(MAX_TODO_TABS);
-    expect(out.listA).toBe(DEFAULT_SOURCE_SELECTION.listA);
-    expect(out.listB).toBe("announcement");
+    // 예전에 저장된 목록 칸(listA/listB) 같은 모르는 키는 무시한다.
+    expect(Object.keys(out).sort()).toEqual(["news", "todo"]);
   });
   it("탭을 전부 끈 선택(빈 배열)은 그대로 둔다", () => {
     expect(normalizeSourceSelection({ todo: [] }).todo).toEqual([]);
@@ -20,9 +20,9 @@ describe("normalizeSourceSelection", () => {
 });
 
 describe("소식 탭 선택값", () => {
-  it("저장값에 news가 없으면 기본(메일·결재)을 쓰고, 있으면 모르는 값·중복을 버린다", async () => {
+  it("저장값에 news가 없으면 기본(메일·공지·메모)을 쓰고, 있으면 모르는 값·중복을 버린다", async () => {
     const { normalizeSourceSelection } = await import("./dashboard-sources");
-    expect(normalizeSourceSelection({ todo: ["todo"] }).news).toEqual(["mail", "approval"]);
+    expect(normalizeSourceSelection({ todo: ["todo"] }).news).toEqual(["mail", "announcement", "memo"]);
     expect(normalizeSourceSelection({ news: ["announcement", "announcement", "nope", "mail"] }).news).toEqual(["announcement", "mail"]);
     expect(normalizeSourceSelection({ news: [] }).news).toEqual([]);
   });

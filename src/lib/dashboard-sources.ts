@@ -12,6 +12,7 @@ export const DASHBOARD_SOURCES = [
   { id: "carryover", title: "이월", tone: "muted", viewAll: "/sales", empty: "이월된 건이 없습니다." },
   { id: "lowStock", title: "재고 부족", tone: "warn", viewAll: "/inventory/reorder-suggestions", empty: "안전재고 이하 품목이 없습니다." },
   { id: "announcement", title: "읽지 않은 공지", tone: "info", viewAll: "/announcements", empty: "읽지 않은 공지가 없습니다." },
+  { id: "memo", title: "최근 메모", tone: "muted", viewAll: "/calendar", empty: "등록된 메모가 없습니다." },
   { id: "mail", title: "받은 메일", tone: "info", viewAll: "/mail?folder=INBOX", requires: "mail", empty: "읽지 않은 메일이 없습니다." },
 ] as const;
 
@@ -19,20 +20,15 @@ export type SourceId = (typeof DASHBOARD_SOURCES)[number]["id"];
 export type SourceRequirement = "receivables" | "payables" | "mail";
 
 export type DashboardSourceSelection = {
-  // "오늘 할 일" 위젯의 탭(순서대로)
+  // "업무" 위젯의 탭(순서대로) — 내가 처리할 것
   todo: SourceId[];
-  // "소식" 위젯의 탭(순서대로) — 메일·결재처럼 밖에서 들어오는 소식
+  // "소식" 위젯의 탭(순서대로) — 들어오는 것(메일·공지·메모)
   news: SourceId[];
-  // 목록 칸 두 개가 각각 보여줄 내용
-  listA: SourceId;
-  listB: SourceId;
 };
 
 export const DEFAULT_SOURCE_SELECTION: DashboardSourceSelection = {
-  todo: ["todo", "carryover"],
-  news: ["mail", "approval"],
-  listA: "announcement",
-  listB: "overdue",
+  todo: ["todo", "approval", "carryover", "overdue", "lowStock"],
+  news: ["mail", "announcement", "memo"],
 };
 
 const META = new Map<string, (typeof DASHBOARD_SOURCES)[number]>(DASHBOARD_SOURCES.map((s) => [s.id, s]));
@@ -63,14 +59,10 @@ function normalizeTabList(raw: unknown, fallback: SourceId[]): SourceId[] {
 }
 
 // 저장값(어떤 모양이든)을 안전한 선택값으로 — 모르는 id·중복은 버리고 빠진 건 기본값.
+// 예전에 저장된 목록 칸(listA/listB) 같은 모르는 키는 그냥 무시한다.
 export function normalizeSourceSelection(raw: unknown): DashboardSourceSelection {
   const base = DEFAULT_SOURCE_SELECTION;
-  if (!raw || typeof raw !== "object") return { ...base, todo: [...base.todo], news: [...base.news] };
-  const src = raw as { todo?: unknown; news?: unknown; listA?: unknown; listB?: unknown };
-  return {
-    todo: normalizeTabList(src.todo, base.todo),
-    news: normalizeTabList(src.news, base.news),
-    listA: isSourceId(src.listA) ? src.listA : base.listA,
-    listB: isSourceId(src.listB) ? src.listB : base.listB,
-  };
+  if (!raw || typeof raw !== "object") return { todo: [...base.todo], news: [...base.news] };
+  const src = raw as { todo?: unknown; news?: unknown };
+  return { todo: normalizeTabList(src.todo, base.todo), news: normalizeTabList(src.news, base.news) };
 }

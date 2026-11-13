@@ -25,7 +25,7 @@ export type StockLookupProduct = {
 // 품목을 고르면, 이미 넘겨받은 재고 목록(재고관리 > 재고현황과 같은
 // products+inventory 조인, sumInventoryQuantity 기준)에서 그 자리에서
 // 바로 찾아 보여준다 — 재고현황 전체 목록 화면으로 이동할 필요가 없다.
-export function QuickStockLookup({ products }: { products: StockLookupProduct[] }) {
+export function QuickStockLookup({ products, compact = false }: { products: StockLookupProduct[]; compact?: boolean }) {
   const [selectedId, setSelectedId] = useState("");
   const selected = products.find((p) => p.id === selectedId) ?? null;
   const isLow =
@@ -34,6 +34,31 @@ export function QuickStockLookup({ products }: { products: StockLookupProduct[] 
     selected && shouldShowBoxCountOnDashboard(selected.name, selected.categoryName)
       ? formatBoxCount(selected.quantity, selected.basePackageQty)
       : null;
+
+  // 메인 화면 맨 윗줄용 — 검색창 한 칸 + 고른 품목의 재고를 한 줄로 바로 옆에 보여준다.
+  if (compact) {
+    return (
+      <div className="erp-dash-lookup">
+        <div className="erp-dash-lookup-search">
+          <ProductSearchSelect products={products} value={selectedId} onChange={setSelectedId} placeholder="재고 조회: 품명·규격·SKU" />
+        </div>
+        {selected && (
+          <Link href={`/inventory/item/${selected.id}`} className="erp-dash-lookup-result">
+            <span className="erp-dash-lookup-name">
+              {selected.name}
+              {selected.spec ? ` (${selected.spec})` : ""}
+            </span>
+            <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>
+            <strong className="erp-u-tabular">
+              {formatNumber(selected.quantity)}
+              {selected.unit}
+              {boxCount ? ` (${boxCount})` : ""}
+            </strong>
+          </Link>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="erp-home-panel">

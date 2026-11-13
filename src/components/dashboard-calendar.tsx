@@ -1060,12 +1060,16 @@ export function DashboardCalendar({
                         <span>{formatCompactWon(data.purchaseTotal)}</span>
                       </div>
                     ) : null}
+                    {carryoverSalesCount + carryoverPurchaseCount > 0 ? (
+                      <div className="erp-cal-chip is-carry">이월 {carryoverSalesCount + carryoverPurchaseCount}건</div>
+                    ) : null}
                     {data?.calendarItems.slice(0, 2).map((ci) => (
-                      <div key={ci.id} className="erp-cal-chip">{ci.title}</div>
+                      <div key={ci.id} className={`erp-cal-chip${ci.source === "leave" ? " is-leave" : ""}`}>{ci.title}</div>
                     ))}
                     {data && data.calendarItems.length > 2 ? (
                       <div className="erp-cal-more">외 {data.calendarItems.length - 2}건</div>
                     ) : null}
+                    {data?.notes.length ? <div className="erp-cal-chip is-note">메모 {data.notes.length}</div> : null}
                   </div>
                   <div className="erp-cal-dots">
                     {hasPurchaseDot ? <span className="erp-cal-dot is-purchase" /> : null}

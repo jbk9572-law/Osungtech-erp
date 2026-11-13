@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
-import { QuickStockLookup, type StockLookupProduct } from "@/components/quick-stock-lookup";
+import type { StockLookupProduct } from "@/components/quick-stock-lookup";
 import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getNotificationSummary } from "@/lib/notifications";
 import { buildBackHref } from "@/lib/list-return";
@@ -17,12 +17,10 @@ import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
 import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
-import { QuickActionsPanel, RecentMemosPanel } from "@/components/dashboard-side-panels";
-import { DashboardSourcePanel } from "@/components/dashboard-source-panel";
 import { sourceMeta, type SourceId } from "@/lib/dashboard-sources";
 import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
 import { DashboardTodoPanel } from "@/components/dashboard-todo-panel";
-import { DashboardAttendancePanel } from "@/components/dashboard-attendance-panel";
+import { DashboardTopBar } from "@/components/dashboard-top-bar";
 import { attendanceTimeLabel, getDashboardAttendance } from "@/lib/dashboard-attendance";
 import { resolveDashboardSources } from "@/lib/dashboard-source-data";
 import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
@@ -752,6 +750,7 @@ async function DashboardPage({
     ],
     lowStock: lowStockItems,
     announcements: unreadAnnouncements,
+    memos: (recentNotes ?? []).map((n) => ({ id: n.id, noteDate: n.note_date, content: n.content, author: n.profiles?.full_name ?? "익명" })),
   });
   const overdueCustomers = sources.overdueCustomers;
   const firstEvent = todayData?.calendarItems[0];
@@ -773,20 +772,16 @@ async function DashboardPage({
     ),
     todo: <DashboardTodoPanel tabs={tabsOf(dashboardLayout.sources.todo)} />,
     news: <DashboardTodoPanel label="소식 종류" empty="새 소식이 없습니다." tabs={tabsOf(dashboardLayout.sources.news)} />,
-    attendance: attendance ? (
-      <DashboardAttendancePanel clockInTime={attendanceTimeLabel(attendance.clockInAt)} clockOutTime={attendanceTimeLabel(attendance.clockOutAt)}
-        leaveToday={todayInView ? (todayData?.calendarItems ?? []).filter((c) => c.source === "leave").map((c) => c.title) : null} />
-    ) : null,
-    listA: <DashboardSourcePanel sourceId={dashboardLayout.sources.listA} items={sources.itemsOf(dashboardLayout.sources.listA)} />,
-    listB: <DashboardSourcePanel sourceId={dashboardLayout.sources.listB} items={sources.itemsOf(dashboardLayout.sources.listB)} />,
-    lookup: <QuickStockLookup products={stockLookupProducts} />,
-    memos: <RecentMemosPanel notes={recentNotes} />,
-    quick: <QuickActionsPanel showReceivables={!!customerBalances} />,
   };
 
   return (
     <>
       <OnboardingBanner />
+      <DashboardTopBar
+        clock={attendance ? { clockInTime: attendanceTimeLabel(attendance.clockInAt), clockOutTime: attendanceTimeLabel(attendance.clockOutAt) } : null}
+        showReceivables={!!customerBalances}
+        products={stockLookupProducts}
+      />
       {hasAlerts && (
         <div className="erp-alert-banner">
           {unreadAnnouncements.slice(0, 3).map((a) => (

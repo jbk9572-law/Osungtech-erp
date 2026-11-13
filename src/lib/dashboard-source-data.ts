@@ -14,6 +14,7 @@ import {
   findOverdueCustomers,
   type AnnouncementInput,
   type CarryoverInput,
+  type MemoInput,
   type LowStockInput,
   type OverdueCustomer,
   type TodoItem,
@@ -41,8 +42,9 @@ export async function resolveDashboardSources(input: {
   carryovers: CarryoverInput[];
   lowStock: LowStockInput[];
   announcements: AnnouncementInput[];
+  memos: MemoInput[];
 }): Promise<ResolvedSources> {
-  const chosen = new Set<SourceId>([...input.selection.todo, ...input.selection.news, input.selection.listA, input.selection.listB]);
+  const chosen = new Set<SourceId>([...input.selection.todo, ...input.selection.news]);
   // 메일은 기능 on/off와 내 계정 연동 여부를 봐야 해서 별도 조회 — 메일 목록 자체는 "받은 메일"을 고른 경우에만 불러온다.
   const mail = await getDashboardMail(input.supabase, input.userId, chosen.has("mail"));
   const can = (id: SourceId) => {
@@ -61,6 +63,7 @@ export async function resolveDashboardSources(input: {
     lowStock: input.lowStock,
     announcements: input.announcements,
     mails: chosen.has("mail") ? mail.items : [],
+    memos: input.memos,
     todayStr: input.todayStr,
     backHref: input.backHref,
   });
