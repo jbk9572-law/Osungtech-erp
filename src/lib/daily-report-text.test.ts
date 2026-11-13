@@ -26,6 +26,11 @@ describe("formatReportDateLabel", () => {
 });
 
 describe("buildDailyReportText", () => {
+  it("매입이 매출보다 먼저 나온다", () => {
+    const text = buildDailyReportText(base);
+    expect(text.indexOf("[매입]")).toBeLessThan(text.indexOf("[매출]"));
+  });
+
   it("기본: 매출·매입 품목과 재고 부족만 담고 금액/수금은 넣지 않는다", () => {
     const text = buildDailyReportText(base);
     expect(text).toContain("2026-11-12 (목) 오늘 리포트");
@@ -45,7 +50,7 @@ describe("buildDailyReportText", () => {
       ...base,
       options: { includeAmounts: true, includePayments: true, includeStock: false },
     });
-    expect(text).toContain("[금액 합계]\n매출 12,480,000원 · 매입 9,860,000원");
+    expect(text).toContain("[금액 합계]\n매입 9,860,000원 · 매출 12,480,000원");
     expect(text).toContain("[수금·지급]\n수금 3,200,000원 · 지급 1,500,000원");
     expect(text).not.toContain("[재고 부족]");
   });
