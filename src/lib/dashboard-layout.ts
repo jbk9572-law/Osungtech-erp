@@ -11,12 +11,15 @@ export const DASHBOARD_MARGIN = 12;
 const MAX_ROWS = 200;
 
 export const DASHBOARD_WIDGETS = [
-  { id: "lookup", title: "빠른 재고 조회", min: { w: 2, h: 4 }, def: { x: 0, y: 0, w: 2, h: 4 } },
-  { id: "stockRisk", title: "재고위험", min: { w: 2, h: 4 }, def: { x: 0, y: 4, w: 2, h: 5 } },
-  { id: "memos", title: "최근 메모", min: { w: 2, h: 4 }, def: { x: 0, y: 9, w: 2, h: 5 } },
-  { id: "quick", title: "빠른 실행", min: { w: 2, h: 4 }, def: { x: 0, y: 14, w: 2, h: 5 } },
-  { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 2, y: 0, w: 7, h: 15 } },
-  { id: "report", title: "오늘 리포트", min: { w: 3, h: 8 }, def: { x: 9, y: 0, w: 3, h: 28 } },
+  { id: "kpi", title: "오늘 한눈에", bare: true, min: { w: 6, h: 2 }, def: { x: 0, y: 0, w: 12, h: 3 } },
+  { id: "quick", title: "빠른 실행", min: { w: 2, h: 4 }, def: { x: 0, y: 3, w: 2, h: 5 } },
+  { id: "lookup", title: "빠른 재고 조회", min: { w: 2, h: 4 }, def: { x: 0, y: 8, w: 2, h: 4 } },
+  { id: "memos", title: "최근 메모", min: { w: 2, h: 4 }, def: { x: 0, y: 12, w: 2, h: 5 } },
+  { id: "todo", title: "오늘 할 일", min: { w: 4, h: 6 }, def: { x: 2, y: 3, w: 7, h: 10 } },
+  { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 2, y: 13, w: 7, h: 15 } },
+  { id: "report", title: "오늘 리포트", min: { w: 3, h: 8 }, def: { x: 9, y: 3, w: 3, h: 26 } },
+  { id: "overdue", title: "기한 지난 미수금", min: { w: 2, h: 4 }, def: { x: 9, y: 29, w: 3, h: 6 } },
+  { id: "stockRisk", title: "재고위험", min: { w: 2, h: 4 }, def: { x: 9, y: 35, w: 3, h: 5 } },
 ] as const;
 
 export type DashboardWidgetId = (typeof DASHBOARD_WIDGETS)[number]["id"];
@@ -102,6 +105,11 @@ export function stackOrder(layout: DashboardLayout): DashboardWidgetId[] {
 
 export function widgetTitle(id: DashboardWidgetId): string {
   return WIDGET_BY_ID.get(id)!.title;
+}
+
+// 틀(테두리·배경) 없이 안쪽 카드들이 직접 보이는 위젯 — 맨 위 숫자 줄처럼 타일 여러 개가 따로 놓이는 경우.
+export function widgetIsBare(id: DashboardWidgetId): boolean {
+  return "bare" in WIDGET_BY_ID.get(id)!;
 }
 
 export function widgetMin(id: DashboardWidgetId): { w: number; h: number } {

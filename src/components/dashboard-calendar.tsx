@@ -811,7 +811,7 @@ export function DashboardCalendar({
   isAdmin: boolean;
   // 위젯 배치(사용자가 저장한 위치·크기)와, 서버에서 그려 내려주는 나머지 위젯들(재고조회·재고위험·메모·빠른실행).
   layout: DashboardLayout;
-  sidePanels: Pick<Record<DashboardWidgetId, ReactNode>, "lookup" | "stockRisk" | "memos" | "quick">;
+  sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
