@@ -45,7 +45,7 @@ export function PayslipBonusForm({
         aria-label="특별상여금"
         title="특별상여금"
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-u-minw-0 erp-u-pad-0-10" style={{ height: 28 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-u-minw-0 erp-u-pad-0-10 erp-u-h-28">
         {pending ? "저장 중..." : "반영"}
       </button>
       <FormMessage state={state} />

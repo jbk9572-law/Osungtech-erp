@@ -113,8 +113,8 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                   <div className="erp-u-relative erp-u-flex">
                     {trackSteps.map((s) => (
                       <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-flex-1 erp-u-col" key={s.name}>
-                        <div className="erp-u-h-26 erp-u-flex erp-u-items-center erp-u-bold erp-u-justify-center erp-u-text-compact"
-                          style={{ width: 26, borderRadius: "50%", boxSizing: "border-box", background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)", border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`, color: s.filled ? "var(--erp-on-primary)" : "var(--erp-text-muted)" }}
+                        <div className="erp-u-h-26 erp-u-flex erp-u-items-center erp-u-bold erp-u-justify-center erp-u-text-compact erp-u-radius-circle"
+                          style={{ width: 26, boxSizing: "border-box", background: s.filled ? "var(--erp-primary)" : "var(--erp-panel)", border: `2px solid ${s.filled ? "var(--erp-primary)" : "var(--erp-border-strong)"}`, color: s.filled ? "var(--erp-on-primary)" : "var(--erp-text-muted)" }}
                         >
                           {s.mark}
                         </div>

@@ -120,8 +120,8 @@ export function Ribbon({
     return createPortal(
       <div
         ref={dropdownRef}
-        className="erp-ribbon-dropdown"
-        style={{ position: "fixed", top: panelPos.top, left: panelPos.left }}
+        className="erp-ribbon-dropdown erp-u-fixed"
+        style={{ top: panelPos.top, left: panelPos.left }}
       >
         {content}
       </div>,

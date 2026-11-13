@@ -209,7 +209,7 @@ export function MobileItemEntryPanel({
             if (e.target === e.currentTarget) setSheetOpen(false);
           }}
         >
-          <div className="erp-modal erp-modal-md" style={{ minHeight: 0 }}>
+          <div className="erp-modal erp-modal-md erp-u-minh-0">
             <button type="button" className="erp-modal-window-close" onClick={() => setSheetOpen(false)} aria-label="닫기">
               ✕
             </button>

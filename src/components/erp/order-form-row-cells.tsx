@@ -95,7 +95,7 @@ export function RemarkActionCells({
           className="erp-input w-full"
         />
       </td>
-      <td className="num" style={{ whiteSpace: "nowrap" }}>
+      <td className="num erp-u-nowrap">
         <button
           type="button"
           className="erp-btn erp-btn-sm erp-u-minw-0 erp-u-mr-4"

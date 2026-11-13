@@ -235,9 +235,9 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
           ) : (
             <div className="erp-card-feed erp-card-feed-compact">
               {users.map((u) => (
-                <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
+                <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
                   key={u.id}
-                  style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px" }}
+                  style={{ padding: "11px 16px" }}
                 >
                   <div className="erp-u-minw-0">
                     <div className="erp-u-semibold erp-u-text erp-u-text-md">

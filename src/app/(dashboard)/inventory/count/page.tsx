@@ -311,7 +311,7 @@ export default async function InventoryCountPage({
             : undefined }}
       >
         <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 12 }}>
-          <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+          <span className="erp-detail-tab active erp-u-cursor-default" style={{ borderRight: "none" }}>
             재고 캐시 정합성 검증
           </span>
           {verifyRequested ? (
@@ -354,7 +354,7 @@ export default async function InventoryCountPage({
                 {isAdmin ? (
                   <RecalculateCacheButton />
                 ) : (
-                  <span className="text-xs erp-u-muted" style={{ flexShrink: 0 }}>
+                  <span className="text-xs erp-u-muted erp-u-shrink-0">
                     자동 교정은 관리자 전용 기능입니다.
                   </span>
                 )}
@@ -552,7 +552,7 @@ export default async function InventoryCountPage({
                   </>
                 )}
               </div>
-              <div className="text-[11px] erp-u-muted" style={{ flexShrink: 0 }}>
+              <div className="text-[11px] erp-u-muted erp-u-shrink-0">
                 {isSelected ? "▲ 접기" : "▾ 펼치기"}
               </div>
             </Link>

@@ -21,8 +21,8 @@ export function TodoImportPopover({
   onClose: () => void;
 }) {
   return (
-    <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
-      style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", boxShadow: "var(--erp-shadow-md)" }}
+    <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl erp-u-overflow-y-auto"
+      style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, boxShadow: "var(--erp-shadow-md)" }}
     >
       <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact erp-u-bb-border"
       >
@@ -78,8 +78,7 @@ export function TodoImportPopover({
               <button
                 type="button"
                 onClick={() => onImport(todo)}
-                className="erp-btn erp-btn-xs erp-u-minw-0"
-                style={{ flexShrink: 0 }}
+                className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-shrink-0"
                 disabled={isImporting}
               >
                 {isImporting ? "가져오는 중..." : "가져오기"}

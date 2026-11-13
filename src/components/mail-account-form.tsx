@@ -78,8 +78,7 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
 
         <button
           type="button"
-          className="erp-btn"
-          style={{ alignSelf: "flex-start" }}
+          className="erp-btn erp-u-self-start"
           onClick={() => setShowAdvanced((v) => !v)}
         >
           {showAdvanced ? "고급 설정 숨기기 ▲" : "고급 설정(서버 주소) ▼"}

@@ -115,14 +115,8 @@ export function ProductSearchSelect({
         typeof document !== "undefined" &&
         createPortal(
           <ul
-            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md"
-            style={{
-              position: "fixed",
-              top: dropdownRect.top,
-              left: dropdownRect.left,
-              width: dropdownRect.width,
-              zIndex: 1000,
-            }}
+            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md erp-u-fixed"
+            style={{ top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 1000 }}
           >
             {results.map((product, i) => (
               <li key={product.id}>

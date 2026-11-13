@@ -53,7 +53,7 @@ export function UsageBar(row: UsageRow) {
       <div className="erp-tree-usage-row erp-tree-usage-row-bar">
         <div className="erp-tree-usage-label">
           <span>{label}</span>
-          <span style={{ fontVariantNumeric: "tabular-nums" }}>{percent}%</span>
+          <span className="erp-u-tabular">{percent}%</span>
         </div>
         <div className="erp-usage-bar-track">
           <div className="erp-usage-bar-fill" style={{ width: `${percent}%`, background: barLevelColor(percent) }} />
@@ -72,7 +72,7 @@ export function UsageBar(row: UsageRow) {
     <div className="erp-tree-usage-row erp-tree-usage-row-bar">
       <div className="erp-tree-usage-label">
         <span>{label}</span>
-        <span style={{ fontVariantNumeric: "tabular-nums" }}>{percent}%</span>
+        <span className="erp-u-tabular">{percent}%</span>
       </div>
       <div className="erp-usage-bar-track">
         <div className="erp-usage-bar-fill" style={{ width: `${percent}%`, background: barLevelColor(percent) }} />

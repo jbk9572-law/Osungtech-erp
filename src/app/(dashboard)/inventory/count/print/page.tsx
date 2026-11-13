@@ -79,7 +79,7 @@ export default async function InventoryCountPrintPage({
         </div>
       </div>
 
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
+      <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "13%" }} />
           <col style={{ width: "24%" }} />

@@ -205,7 +205,7 @@ export function TodoForm({
             유형
             <FieldHint text="매입/매출 등록 화면에서 '할일 가져오기'로 이 할일을 불러와 등록해야 완료 처리됩니다. 매입+출고는 입고와 출고 둘 다 등록해야 완료됩니다." />
           </label>
-          <div className="erp-u-flex erp-u-items-center erp-u-gap-14" style={{ height: 30 }}>
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-14 erp-u-h-30">
             {(
               [
                 { value: "purchase", label: "매입" },
@@ -266,7 +266,7 @@ export function TodoForm({
       <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs erp-u-justify-between">
           <span className="erp-detail-tab active">품목</span>
-          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap" style={{ margin: 4 }}>
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4">
             <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
             <button type="button" onClick={addRow} className="erp-btn erp-u-minw-0">
               + 품목 추가
@@ -277,7 +277,7 @@ export function TodoForm({
 
         <TodoPaperCalcBanner pc={pc} />
 
-        <div className="erp-grid-wrap erp-u-border-none" style={{ borderRadius: 0 }}>
+        <div className="erp-grid-wrap erp-u-border-none erp-u-radius-0">
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
             <thead>
               <tr>

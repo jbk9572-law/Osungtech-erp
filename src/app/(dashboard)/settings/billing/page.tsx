@@ -52,8 +52,8 @@ function QuotaUsageRow({
           {children} ({pct.toFixed(1)}%)
         </span>
       </div>
-      <div className="erp-u-bg-page" style={{ height: 6, borderRadius: 3, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: barColor }} />
+      <div className="erp-u-bg-page erp-u-overflow-hidden" style={{ height: 6, borderRadius: 3 }}>
+        <div className="erp-u-h-full" style={{ width: `${Math.min(100, pct)}%`, background: barColor }} />
       </div>
     </div>
   );

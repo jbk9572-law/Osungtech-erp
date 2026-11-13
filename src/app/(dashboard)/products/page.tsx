@@ -179,8 +179,7 @@ async function ProductsPage({
           <form
             id="products-search-form"
             method="get"
-            className="erp-field-grid erp-u-gap-6 erp-u-p-8"
-            style={{ margin: 8 }}
+            className="erp-field-grid erp-u-gap-6 erp-u-p-8 erp-u-m-8"
           >
             <div className="erp-field erp-span-6">
               <input

@@ -142,7 +142,7 @@ export default async function TodosPage({
       <KeyboardShortcuts shortcuts={{ F2: { href: newHref }, Escape: { href: selectedId ? newHref : "/dashboard" } }} />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">할일관리</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
             F2 글쓰기
           </Link>

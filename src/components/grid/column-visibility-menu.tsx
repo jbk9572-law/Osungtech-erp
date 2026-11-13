@@ -23,9 +23,8 @@ export function ColumnVisibilityMenu({
   useEscapeToClose(open, () => setOpen(false));
 
   return (
-    <div className="erp-u-relative"
+    <div className="erp-u-relative erp-u-inline-block"
       ref={wrapRef}
-      style={{ display: "inline-block" }}
       // 메뉴 바깥 클릭 시 닫히게 — 포커스가 메뉴 밖으로 나가는 순간 닫는다.
       onBlur={(e) => {
         if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
@@ -42,9 +41,9 @@ export function ColumnVisibilityMenu({
         컬럼 설정
       </button>
       {open && (
-        <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
+        <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl erp-u-overflow-y-auto"
           role="menu"
-          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 160, maxHeight: 320, overflowY: "auto", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
+          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 160, maxHeight: 320, boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
         >
           {options.map((opt) => (
             <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-pad-4-6 erp-u-text-sm erp-u-pointer"

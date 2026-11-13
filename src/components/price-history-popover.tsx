@@ -40,27 +40,26 @@ export function PriceHistoryPopover({
   }
 
   return (
-    <div className="erp-u-relative"
+    <div className="erp-u-relative erp-u-inline-block"
       ref={wrapRef}
-      style={{ display: "inline-block" }}
       onBlur={(e) => {
         if (!wrapRef.current?.contains(e.relatedTarget as Node | null)) setOpen(false);
       }}
     >
-      <button className="erp-u-text erp-u-text-xs erp-u-border-none erp-u-pointer erp-u-ml-6"
+      <button className="erp-u-text erp-u-text-xs erp-u-border-none erp-u-pointer erp-u-ml-6 erp-u-p-0"
         type="button"
         onClick={handleOpen}
         aria-expanded={open}
         aria-haspopup="true"
         title="단가변경 이력 보기"
-        style={{ textDecoration: "underline", background: "none", padding: 0 }}
+        style={{ textDecoration: "underline", background: "none" }}
       >
         이력
       </button>
       {open && (
-        <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
+        <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl erp-u-overflow-y-auto"
           role="menu"
-          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 240, maxHeight: 280, overflowY: "auto", boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
+          style={{ top: "calc(100% + 4px)", right: 0, zIndex: 30, minWidth: 240, maxHeight: 280, boxShadow: "var(--erp-shadow-lg)", padding: "var(--erp-space-2)" }}
         >
           {loading && (
             <div className="erp-u-muted erp-u-text-xs erp-u-pad-4-6">

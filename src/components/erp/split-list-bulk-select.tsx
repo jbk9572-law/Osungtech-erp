@@ -61,7 +61,7 @@ export function SplitListBulkSelect({
   return (
     <>
       {selected.size > 0 && (
-        <div style={{ margin: 8 }}>
+        <div className="erp-u-m-8">
           <BulkDeleteBar
             formAction={formAction}
             pending={pending}

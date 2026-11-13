@@ -141,8 +141,8 @@ export function PortalAssignmentStepActions({
   }
 
   return (
-    <div className="erp-u-flex erp-u-gap-6 erp-u-col" style={{ alignItems: "flex-end" }}>
-      <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap" style={{ justifyContent: "flex-end" }}>
+    <div className="erp-u-flex erp-u-gap-6 erp-u-col erp-u-items-end">
+      <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap erp-u-justify-end">
         <GridBadge tone={defectHold ? "danger" : STATUS_LABEL[status].tone}>
           {defectHold ? "입고 불량 보류" : STATUS_LABEL[status].label}
         </GridBadge>

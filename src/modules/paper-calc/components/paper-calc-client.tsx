@@ -1026,7 +1026,7 @@ export function BatchCard({
           stroke={DIAGRAM_COLORS.paperStroke}
           strokeWidth={2}
         />
-        <g style={{ pointerEvents: "none" }}>
+        <g className="erp-u-pe-none">
           {gridLines.map((l, i) => (
             <line
               key={i}
@@ -1172,14 +1172,8 @@ export function BatchCard({
       <div className="mt-1.5 flex flex-col gap-0.5 text-xs">
         {legend.map(([name, { color, count }]) => (
           <div key={name} className="flex items-center gap-1.5">
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: color,
-                display: "inline-block",
-              }}
+            <span className="erp-u-radius-circle erp-u-inline-block"
+              style={{ width: 10, height: 10, background: color }}
             />
             {name} · {formatNumber(count)}매
           </div>

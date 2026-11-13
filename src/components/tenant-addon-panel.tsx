@@ -252,7 +252,7 @@ function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: Add
   }
 
   return (
-    <form className="erp-u-flex erp-u-gap-8 erp-u-wrap" action={formAction} style={{ alignItems: "flex-end" }}>
+    <form className="erp-u-flex erp-u-gap-8 erp-u-wrap erp-u-items-end" action={formAction}>
       <input type="hidden" name="tenantId" value={tenantId} />
       <div className="erp-field">
         <label htmlFor="attach-product">애드온</label>

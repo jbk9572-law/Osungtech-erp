@@ -138,10 +138,10 @@ export function BalanceGridTable({
           />
         </div>
         <div
-          className="erp-field erp-span-6"
-          style={{ alignItems: "flex-end", flexDirection: "row", justifyContent: "flex-end" }}
+          className="erp-field erp-span-6 erp-u-items-end erp-u-justify-end"
+          style={{ flexDirection: "row" }}
         >
-          <span className="erp-u-muted erp-u-flex erp-u-items-center erp-u-text-compact" style={{ height: 30 }}>
+          <span className="erp-u-muted erp-u-flex erp-u-items-center erp-u-text-compact erp-u-h-30">
             총 {sortedRows.length}건
             {query.trim() && rows.length !== sortedRows.length ? ` (전체 ${rows.length}건 중 검색됨)` : ""}
           </span>

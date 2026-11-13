@@ -117,7 +117,7 @@ export default async function TaxInvoicePage({
       <KeyboardShortcuts shortcuts={{ Escape: { href: closeHref } }} />
       <div className="mb-1 erp-detail-header-row">
         <h1 className="erp-h1">매출관리 &gt; 세금계산서</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <CloseButton href={closeHref}>{existing ? "ESC 목록으로" : "ESC 매출 상세로"}</CloseButton>
         </div>
       </div>

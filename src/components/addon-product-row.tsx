@@ -33,8 +33,8 @@ export function AddOnProductRow({
   const formId = `addon-form-${id}`;
 
   return (
-    <div className="erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
-      style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "14px 18px" }}
+    <div className="erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
+      style={{ padding: "14px 18px" }}
     >
       <form id={formId} action={formAction}>
         <input type="hidden" name="id" value={id} />

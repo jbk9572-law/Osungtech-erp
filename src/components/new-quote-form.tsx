@@ -92,7 +92,7 @@ export function NewQuoteForm({
 
       <FormMessage state={state} />
 
-      <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || !customerId || validRows.length === 0} style={{ alignSelf: "flex-start" }}>
+      <button type="submit" className="erp-btn erp-btn-primary erp-u-self-start" disabled={pending || !customerId || validRows.length === 0}>
         {pending ? "등록 중..." : "견적서 등록"}
       </button>
       </div>

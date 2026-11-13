@@ -108,8 +108,8 @@ export function InventoryAdjustForm({
           type="button"
           onClick={() => setDirection("increase")}
           disabled={reason === "sample" || reason === "natural_loss"}
-          className="flex-1 text-xs font-semibold disabled:opacity-50 erp-u-pad-0-10"
-          style={{ height: 30, background: direction === "increase" ? "var(--erp-primary)" : "var(--erp-panel)", color: direction === "increase" ? "var(--erp-panel)" : "var(--erp-text-muted)" }}
+          className="flex-1 text-xs font-semibold disabled:opacity-50 erp-u-pad-0-10 erp-u-h-30"
+          style={{ background: direction === "increase" ? "var(--erp-primary)" : "var(--erp-panel)", color: direction === "increase" ? "var(--erp-panel)" : "var(--erp-text-muted)" }}
         >
           증가
         </button>
@@ -117,8 +117,8 @@ export function InventoryAdjustForm({
           type="button"
           onClick={() => setDirection("decrease")}
           disabled={reason === "sample" || reason === "natural_loss"}
-          className="flex-1 text-xs font-semibold disabled:opacity-50 erp-u-pad-0-10"
-          style={{ height: 30, background: direction === "decrease" ? "var(--erp-primary)" : "var(--erp-panel)", color: direction === "decrease" ? "var(--erp-panel)" : "var(--erp-text-muted)" }}
+          className="flex-1 text-xs font-semibold disabled:opacity-50 erp-u-pad-0-10 erp-u-h-30"
+          style={{ background: direction === "decrease" ? "var(--erp-primary)" : "var(--erp-panel)", color: direction === "decrease" ? "var(--erp-panel)" : "var(--erp-text-muted)" }}
         >
           차감
         </button>

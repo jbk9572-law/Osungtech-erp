@@ -84,7 +84,7 @@ export default async function FeatureSettingsPage() {
                     {f.description}
                   </div>
                 </div>
-                <div style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
+                <div className="erp-u-shrink-0 erp-u-nowrap">
                   <FeatureToggle
                     featureKey={f.key}
                     label={f.label}

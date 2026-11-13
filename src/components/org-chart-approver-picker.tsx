@@ -60,8 +60,8 @@ export function OrgChartApproverPicker({
                   key={e.id}
                   type="button"
                   onClick={() => togglePerson({ id: e.id, name: e.fullName })}
-                  className="org-picker-row flex w-full items-center justify-between text-xs erp-u-pad-4-8 erp-u-pointer"
-                  style={{ border: "1px solid transparent", background: selected ? "var(--erp-selected)" : "transparent", borderColor: selected ? "var(--erp-primary)" : "transparent", textAlign: "left" }}
+                  className="org-picker-row flex w-full items-center justify-between text-xs erp-u-pad-4-8 erp-u-pointer erp-u-text-left"
+                  style={{ border: "1px solid transparent", background: selected ? "var(--erp-selected)" : "transparent", borderColor: selected ? "var(--erp-primary)" : "transparent" }}
                 >
                   <span>
                     {e.fullName}
@@ -99,7 +99,7 @@ export function OrgChartApproverPicker({
             참조자에 추가
           </button>
         </div>
-        <div className="org-picker-tree erp-grid-wrap erp-u-p-8" style={{ maxHeight: 280, overflowY: "auto" }}>
+        <div className="org-picker-tree erp-grid-wrap erp-u-p-8 erp-u-overflow-y-auto" style={{ maxHeight: 280 }}>
           {tree.length === 0 ? (
             <PageGuide>등록된 조직도가 없습니다. 환경설정 &gt; 조직도 관리에서 부서를 먼저 만들어주세요.</PageGuide>
           ) : (

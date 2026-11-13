@@ -96,7 +96,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           27%)이 더 넓어진다. table-layout: fixed는 원래 "첫 행" 셀의 width만
           컬럼 폭으로 인정하므로(부서명 행처럼 이후 행에 준 width는 무시됨),
           행과 무관하게 폭이 고정되도록 colgroup/col로 직접 지정한다. */}
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
+      <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />
@@ -138,7 +138,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
       {/* 실물 서식처럼 제목/작성자 박스, 부서명 박스, 품목 표를 서로 붙이지
           않고 구간마다 상하 여백을 두어 구분한다(section 별로 별도 표로
           쪼갬). */}
-      <table className="erp-u-mt-10" style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
+      <table className="erp-u-mt-10 erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />
@@ -160,7 +160,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </tbody>
       </table>
 
-      <table className="erp-u-mt-10" style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
+      <table className="erp-u-mt-10 erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />

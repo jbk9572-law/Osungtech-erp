@@ -451,7 +451,7 @@ export function SalesGridTable({
           {row.remark || "-"}
         </td>
         <td className="num" onClick={(e) => e.stopPropagation()}>
-          <div className="erp-u-flex erp-u-gap-2" style={{ justifyContent: "flex-end" }}>
+          <div className="erp-u-flex erp-u-gap-2 erp-u-justify-end">
             {detailHref && (
               <Link
                 href={detailHref}

@@ -25,6 +25,12 @@ const EXACT = new Set([
   "fontSize:13", "fontSize:14", "fontSize:16",
   'color:"var(--erp-text-muted)"', 'color:"var(--erp-text)"', 'color:"var(--erp-danger)"', "fontWeight:700",
   "fontWeight:600", "fontWeight:400", 'display:"flex"', 'alignItems:"center"', 'justifyContent:"space-between"',
+  "borderRadius:0", "marginBottom:0", 'pointerEvents:"none"', 'cursor:"default"', "flexShrink:0", 'overflow:"hidden"',
+  'alignSelf:"flex-start"', "margin:0", 'whiteSpace:"nowrap"', 'height:"100%"', 'overflowY:"auto"', "margin:8", "margin:4",
+  "minHeight:0", 'position:"fixed"', "padding:0", 'wordBreak:"break-word"', 'textAlign:"left"', 'fontVariantNumeric:"tabular-nums"',
+  'justifyContent:"flex-end"', 'textOverflow:"ellipsis"', 'borderRadius:"50%"', 'borderRadius:"var(--erp-comm-radius-row)"',
+  'boxShadow:"var(--erp-comm-shadow-row)"', "height:34", "height:30", "height:28", 'alignItems:"flex-end"', 'display:"inline-block"',
+  'margin:"0 auto"', 'minHeight:"100vh"', 'borderCollapse:"collapse"',
   'position:"relative"', 'textAlign:"center"', "marginTop:0", "marginBottom:12", "gap:6", "gap:8", 'padding:"0 8px"',
 ]);
 for (const t of ["xs", "sm", "base", "md", "lg", "xl"]) EXACT.add(`fontSize:"var(--erp-font-${t})"`);
@@ -81,7 +87,10 @@ for (const file of walk(root)) {
           const val = ts.isStringLiteral(v) ? { kind: "str", text: v.text } : ts.isNumericLiteral(v) ? { kind: "num", text: v.text } : null;
           if (!val) continue; // 동적 값(변수/계산식)은 대상이 아니다
           counts[category(prop)] += 1;
-          if (hasUtility(prop, val)) mappable += 1;
+          if (hasUtility(prop, val)) {
+            mappable += 1;
+            if (process.argv.includes("--list")) console.log(`${path.relative(path.join(here, ".."), file)}:${sf.getLineAndCharacterOfPosition(p.getStart(sf)).line + 1} ${prop}: ${v.getText(sf)}`);
+          }
         }
       }
     }

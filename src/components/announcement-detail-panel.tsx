@@ -111,7 +111,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
                 style={{ padding: "10px 0", fontSize: 13.5, color: "var(--erp-text)" }}
               />
             ) : (
-              <p className="erp-u-text" style={{ margin: 0 }}>-</p>
+              <p className="erp-u-text erp-u-m-0">-</p>
             )}
             <PageGuide className="mt-4">본인이 등록한 공지사항만 수정할 수 있습니다.</PageGuide>
           </div>

@@ -79,7 +79,7 @@ export function TenantListBody({
           <span className="erp-u-muted erp-u-normal">{rows.length}개</span>
         </div>
 
-        <div className="erp-field-grid erp-u-gap-6 erp-u-p-8" style={{ margin: 8 }}>
+        <div className="erp-field-grid erp-u-gap-6 erp-u-p-8 erp-u-m-8">
           <div className="erp-field erp-span-12">
             <label htmlFor="tenant-search-q">회사명 / 슬러그 검색</label>
             <input

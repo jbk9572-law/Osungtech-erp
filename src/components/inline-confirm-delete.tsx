@@ -70,8 +70,8 @@ export function InlineConfirmDelete({
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="text-sm erp-u-bg-panel erp-u-border erp-u-p-8 erp-u-radius-xl"
-            style={{ position: "fixed", top: rect.top, left: rect.left, zIndex: 1000, width: PANEL_WIDTH, boxShadow: "var(--erp-shadow-md)" }}
+            className="text-sm erp-u-bg-panel erp-u-border erp-u-p-8 erp-u-radius-xl erp-u-fixed"
+            style={{ top: rect.top, left: rect.left, zIndex: 1000, width: PANEL_WIDTH, boxShadow: "var(--erp-shadow-md)" }}
           >
             <form action={formAction}>
               {Object.entries(hiddenFields).map(([k, v]) => (

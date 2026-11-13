@@ -24,7 +24,7 @@ export function DeleteTenantForm({ tenantId, tenantName }: { tenantId: string; t
         </div>
 
         {!code ? (
-          <button type="button" onClick={regenerate} className="erp-btn erp-btn-danger" style={{ alignSelf: "flex-start" }}>
+          <button type="button" onClick={regenerate} className="erp-btn erp-btn-danger erp-u-self-start">
             삭제 진행
           </button>
         ) : (

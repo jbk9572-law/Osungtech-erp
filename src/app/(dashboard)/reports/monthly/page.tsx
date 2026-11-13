@@ -460,11 +460,11 @@ export default async function MonthlyReportPage({
                         <div className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-mt-4"
                           style={{ marginLeft: 28, maxWidth: 200 }}
                         >
-                          <div className="erp-u-flex-1 erp-u-bg-divider"
-                            style={{ height: 5, borderRadius: 999, overflow: "hidden" }}
+                          <div className="erp-u-flex-1 erp-u-bg-divider erp-u-overflow-hidden"
+                            style={{ height: 5, borderRadius: 999 }}
                           >
-                            <div className="erp-u-bg-primary"
-                              style={{ height: "100%", borderRadius: 999, width: `${Math.min(share, 100)}%` }}
+                            <div className="erp-u-bg-primary erp-u-h-full"
+                              style={{ borderRadius: 999, width: `${Math.min(share, 100)}%` }}
                             />
                           </div>
                           <span className="erp-u-bold erp-u-text erp-u-text-caption erp-u-text-right"

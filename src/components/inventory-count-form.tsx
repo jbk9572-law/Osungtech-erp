@@ -165,7 +165,7 @@ export function InventoryCountForm({
   return (
     <div className="erp-detail erp-u-mt-0 erp-u-bc-primary">
       <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 6 }}>
-        <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+        <span className="erp-detail-tab active erp-u-cursor-default" style={{ borderRight: "none" }}>
           진행 중인 실사
         </span>
         <button

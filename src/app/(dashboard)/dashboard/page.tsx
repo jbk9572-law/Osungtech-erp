@@ -771,7 +771,7 @@ async function DashboardPage({
           <div className="erp-home-panel-title">
             <span>재고위험</span>
             {lowStockItems.length > 0 && (
-              <span className="erp-u-danger" style={{ fontVariantNumeric: "tabular-nums" }}>
+              <span className="erp-u-danger erp-u-tabular">
                 {lowStockItems.length}건
               </span>
             )}

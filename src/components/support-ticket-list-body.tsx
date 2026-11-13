@@ -71,7 +71,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
             }}
             className={`erp-cat-item${tenant === name ? " active" : ""}`}
           >
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+            <span className="erp-u-overflow-hidden erp-u-ellipsis erp-u-nowrap">{name}</span>
             <span className="cnt">{count}</span>
           </button>
         ))}

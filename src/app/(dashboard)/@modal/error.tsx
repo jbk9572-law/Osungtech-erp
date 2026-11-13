@@ -37,7 +37,7 @@ export default function ModalError({
         if (e.target === e.currentTarget) router.back();
       }}
     >
-      <div className="erp-modal erp-modal-md" style={{ minHeight: 0 }}>
+      <div className="erp-modal erp-modal-md erp-u-minh-0">
         <button
           type="button"
           className="erp-modal-window-close"
@@ -54,8 +54,8 @@ export default function ModalError({
             일시적인 오류일 수 있습니다. 목록 화면은 그대로 있으니, 닫고 다시 열어보세요.
           </p>
           {(error.message || error.digest) && (
-            <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle"
-              style={{ fontFamily: "monospace", borderRadius: 0, wordBreak: "break-word", textAlign: "left" }}
+            <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle erp-u-radius-0 erp-u-break-word erp-u-text-left"
+              style={{ fontFamily: "monospace" }}
             >
               {error.message || "(메시지 없음)"}
               {error.digest && (

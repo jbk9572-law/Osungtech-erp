@@ -104,14 +104,14 @@ export function LocationAllocationModal({
   }
 
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-justify-center erp-u-p-16 erp-u-bg-dialog-overlay-bg"
+    <div className="erp-u-flex erp-u-items-center erp-u-justify-center erp-u-p-16 erp-u-bg-dialog-overlay-bg erp-u-fixed"
       role="alertdialog"
       aria-modal="true"
-      style={{ position: "fixed", inset: 0, zIndex: 2000 }}
+      style={{ inset: 0, zIndex: 2000 }}
     >
       <div className="erp-detail erp-u-mt-0 erp-u-flex erp-u-w-full erp-u-col" style={{ maxWidth: 520, maxHeight: "88vh" }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+          <span className="erp-detail-tab active erp-u-cursor-default">
             보관 위치 배분 확인
           </span>
         </div>
@@ -140,7 +140,7 @@ export function LocationAllocationModal({
                     {item.productName}
                     {item.spec && <span className="erp-u-normal erp-u-muted"> ({item.spec})</span>}
                   </div>
-                  <div className="erp-u-muted erp-u-text-base" style={{ whiteSpace: "nowrap" }}>
+                  <div className="erp-u-muted erp-u-text-base erp-u-nowrap">
                     필요 {formatNumber(item.quantity)} {item.unit}
                   </div>
                 </div>
@@ -157,8 +157,8 @@ export function LocationAllocationModal({
                       </div>
                       <input aria-label="위치별 배분 수량"
                         type="number"
-                        className="erp-input"
-                        style={{ width: 90, flexShrink: 0 }}
+                        className="erp-input erp-u-shrink-0"
+                        style={{ width: 90 }}
                         value={values[item.groupKey]?.[loc.locationId] ?? 0}
                         onChange={(e) => setAmount(item.groupKey, loc.locationId, Number(e.target.value) || 0)}
                       />

@@ -120,8 +120,8 @@ export function TRight({
   children: ReactNode;
 }) {
   return (
-    <div className="erp-u-absolute"
-      style={{ right: pt(PAGE_W - right), top: pt(y), fontSize: pt(size), fontWeight: bold ? 700 : 400, fontFamily: FONT, color: "#000", whiteSpace: "nowrap" }}
+    <div className="erp-u-absolute erp-u-nowrap"
+      style={{ right: pt(PAGE_W - right), top: pt(y), fontSize: pt(size), fontWeight: bold ? 700 : 400, fontFamily: FONT, color: "#000" }}
     >
       {children}
     </div>

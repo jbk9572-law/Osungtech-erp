@@ -104,7 +104,7 @@ export function DetailPageHeader({
       <div className="mb-1 erp-detail-header-row">
         <h1 className="flex items-center gap-2 erp-h1">{title}</h1>
         {actions && (
-          <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <div className="erp-toolbar erp-u-mb-0">
             {actions}
           </div>
         )}

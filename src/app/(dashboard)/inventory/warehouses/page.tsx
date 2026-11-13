@@ -120,7 +120,7 @@ export default async function WarehousesPage({
                     triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
                   />
                 </div>
-                <p className="erp-u-muted erp-u-text-sm" style={{ margin: 0 }}>
+                <p className="erp-u-muted erp-u-text-sm erp-u-m-0">
                   {w.location || "-"}
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default async function WarehousesPage({
 
       <div className="erp-u-mt-14">
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
-          <div className="erp-u-flex erp-u-mb-10" style={{ justifyContent: "flex-end" }}>
+          <div className="erp-u-flex erp-u-mb-10 erp-u-justify-end">
             <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
               F2 창고 이동 등록
             </GuardedLink>

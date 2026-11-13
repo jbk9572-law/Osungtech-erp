@@ -44,7 +44,7 @@ export function NewCollectionForm({
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">기본정보</span>
           </div>
-          <div className="erp-detail-body erp-field-grid erp-u-border-none erp-u-p-14" style={{ margin: 0 }}>
+          <div className="erp-detail-body erp-field-grid erp-u-border-none erp-u-p-14 erp-u-m-0">
             <div className="erp-field erp-span-3">
               <label htmlFor="nc-customer">출고처</label>
               <PartySearchSelect

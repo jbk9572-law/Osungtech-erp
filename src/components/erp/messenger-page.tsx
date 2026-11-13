@@ -657,7 +657,7 @@ export function MessengerPage({
               className="erp-input erp-u-w-full erp-u-text-compact"
             />
           </div>
-          <div className="erp-u-flex-1" style={{ overflowY: "auto" }}>
+          <div className="erp-u-flex-1 erp-u-overflow-y-auto">
             {filteredRoster.map(([id, name]) => (
               <button
                 key={id}
@@ -702,7 +702,7 @@ export function MessengerPage({
                 <span className="erp-u-mr-8 erp-u-inline-flex">
                   <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
                 </span>
-                <span className="erp-u-flex-1" style={{ textAlign: "left" }}>{channelLabel(c, profileNames, currentUserId)}</span>
+                <span className="erp-u-flex-1 erp-u-text-left">{channelLabel(c, profileNames, currentUserId)}</span>
                 {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
               </button>
             ))}
@@ -724,7 +724,7 @@ export function MessengerPage({
                     placeholder="그룹 이름"
                     className="erp-input erp-u-text-base"
                   />
-                  <div className="erp-u-flex erp-u-flex-1 erp-u-col erp-u-gap-4" style={{ overflowY: "auto" }}>
+                  <div className="erp-u-flex erp-u-flex-1 erp-u-col erp-u-gap-4 erp-u-overflow-y-auto">
                     {otherProfiles.map(([id, name]) => (
                       <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-text-base erp-u-pad-4-2" key={id}>
                         <input

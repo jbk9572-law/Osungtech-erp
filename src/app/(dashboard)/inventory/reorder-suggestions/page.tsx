@@ -128,7 +128,7 @@ export default async function ReorderSuggestionsPage() {
                 {group.supplierName} · {group.rows.length}개 품목
               </span>
               {purchaseHref && purchaseRequestHref ? (
-                <div className="flex flex-wrap items-center gap-2" style={{ margin: 4 }}>
+                <div className="flex flex-wrap items-center gap-2 erp-u-m-4">
                   <Link href={purchaseRequestHref} className="erp-btn">
                     이 매입처로 구매요청 작성
                   </Link>
@@ -142,7 +142,7 @@ export default async function ReorderSuggestionsPage() {
                 </PageGuide>
               )}
             </div>
-            <div className="erp-grid-wrap has-card-view erp-u-border-none" style={{ borderRadius: 0 }}>
+            <div className="erp-grid-wrap has-card-view erp-u-border-none erp-u-radius-0">
               <table className="erp-grid">
                 <thead>
                   <tr>

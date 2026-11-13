@@ -135,10 +135,9 @@ export function TaxInvoiceItemsGrid({
 
       <button
         type="button"
-        className="erp-btn"
+        className="erp-btn erp-u-self-start"
         onClick={onAdd}
         disabled={rows.length >= MAX_TAX_INVOICE_ROWS}
-        style={{ alignSelf: "flex-start" }}
       >
         + 품목 추가 ({rows.length}/{MAX_TAX_INVOICE_ROWS})
       </button>

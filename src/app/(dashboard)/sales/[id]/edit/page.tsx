@@ -140,7 +140,7 @@ export default async function EditSalePage({
         <h1 className="erp-h1">
           매출 거래 수정
         </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <PaperCalcNavLink href={`/paper-calc?salesOrderId=${id}`} className="erp-btn">
             모조지 계산
           </PaperCalcNavLink>

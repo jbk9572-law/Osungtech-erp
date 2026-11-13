@@ -39,7 +39,7 @@ export function EmployeeDepartmentForm({
         className="erp-input"
         style={{ width: 120 }}
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-u-minw-0 erp-u-pad-0-10" style={{ height: 28 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-u-minw-0 erp-u-pad-0-10 erp-u-h-28">
         {pending ? "저장 중..." : "저장"}
       </button>
       <FormMessage state={state} />

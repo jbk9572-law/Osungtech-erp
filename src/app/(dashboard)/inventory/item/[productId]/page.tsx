@@ -191,7 +191,7 @@ export default async function InventoryProductHistoryPage({
           style={{ borderColor: isRepeatedMiss ? "var(--erp-warning)" : undefined }}
         >
           <div className="erp-detail-tabs">
-            <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+            <span className="erp-detail-tab active erp-u-cursor-default" style={{ borderRight: "none" }}>
               최근 실사 편차 이력
             </span>
             {isRepeatedMiss && (
@@ -247,7 +247,7 @@ export default async function InventoryProductHistoryPage({
                       {formatNumber(t.signedQty)}
                     </span>
                   </div>
-                  <p className="erp-u-muted erp-u-text-sm" style={{ margin: 0 }}>
+                  <p className="erp-u-muted erp-u-text-sm erp-u-m-0">
                     {t.note?.replace(/^재고실사(: )?/, "") || "사유 기록 없음"}
                   </p>
                 </div>

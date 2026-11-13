@@ -96,7 +96,7 @@ export default async function CustomerOrdersPage({
                     주문 {o.doc_no} · {new Date(o.created_at).toLocaleString("ko-KR")}
                   </span>
                 </div>
-                <span className="erp-u-bold erp-u-text-md" style={{ fontVariantNumeric: "tabular-nums" }}>
+                <span className="erp-u-bold erp-u-text-md erp-u-tabular">
                   {formatNumber(total)}원
                 </span>
               </div>

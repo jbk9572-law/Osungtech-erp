@@ -28,8 +28,7 @@ export default async function Icon() {
   if (company?.logo_mark_url) {
     return new ImageResponse(
       (
-        <div className="erp-u-flex erp-u-items-center erp-u-w-full erp-u-justify-center"
-          style={{ height: "100%" }}
+        <div className="erp-u-flex erp-u-items-center erp-u-w-full erp-u-justify-center erp-u-h-full"
         >
           <img
             src={company.logo_mark_url}
@@ -46,8 +45,8 @@ export default async function Icon() {
 
   return new ImageResponse(
     (
-      <div className="erp-u-flex erp-u-items-center erp-u-bold erp-u-w-full erp-u-justify-center"
-        style={{ height: "100%", background: "#132944", color: "#fff", fontSize: 20 }}
+      <div className="erp-u-flex erp-u-items-center erp-u-bold erp-u-w-full erp-u-justify-center erp-u-h-full"
+        style={{ background: "#132944", color: "#fff", fontSize: 20 }}
       >
         E
       </div>

@@ -1028,7 +1028,7 @@ export function NewSaleForm({
 
       <div>
         <div className="erp-form-section-head">
-          <span className="erp-eyebrow" style={{ margin: 0 }}>기본정보</span>
+          <span className="erp-eyebrow erp-u-m-0">기본정보</span>
           <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={isReturn ? `반품 ${initial?.id ? "수정" : "등록"}` : submitLabel} />
         </div>
         {!!(messageDismissed ? undefined : state) && (
@@ -1089,8 +1089,8 @@ export function NewSaleForm({
           <CarryoverToggle checked={isCarryover} onChange={setIsCarryover} monthLabel={nextMonthLabel(orderDate)} />
           <div className="erp-field erp-span-3">
             <label aria-hidden="true">&nbsp;</label>
-            <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg"
-              style={{ height: 34, background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}` }}
+            <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg erp-u-h-34"
+              style={{ background: isSample ? "var(--erp-info-bg)" : "transparent", border: `1px solid ${isSample ? "var(--erp-info-border)" : "var(--erp-border)"}` }}
             >
               <input
                 type="checkbox"
@@ -1150,9 +1150,8 @@ export function NewSaleForm({
         <div
           className="erp-form-section-head erp-u-relative"
         >
-          <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
-          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap"
-            style={{ margin: 4 }}
+          <span className="erp-eyebrow erp-u-m-0">품목</span>
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4"
           >
             <QuickAddProductSearch
               products={products}
@@ -1198,8 +1197,8 @@ export function NewSaleForm({
           </div>
 
           {purchaseCandidates !== null && (
-            <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl"
-              style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, overflowY: "auto", boxShadow: "var(--erp-shadow-md)" }}
+            <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl erp-u-overflow-y-auto"
+              style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, boxShadow: "var(--erp-shadow-md)" }}
             >
               <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact erp-u-bb-border"
               >
@@ -1238,8 +1237,7 @@ export function NewSaleForm({
                       <button
                         type="button"
                         onClick={() => addPurchaseItem(item)}
-                        className="erp-btn erp-btn-xs erp-u-minw-0"
-                        style={{ flexShrink: 0 }}
+                        className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-shrink-0"
                         disabled={added || isAdding}
                       >
                         {added ? "추가됨" : isAdding ? "추가 중..." : "추가"}

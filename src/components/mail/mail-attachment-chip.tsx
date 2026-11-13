@@ -59,7 +59,7 @@ export function MailAttachmentChip({
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="erp-modal erp-modal-lg" style={{ minHeight: 0 }}>
+          <div className="erp-modal erp-modal-lg erp-u-minh-0">
             <button type="button" className="erp-modal-window-close print:hidden" onClick={() => setOpen(false)} aria-label="닫기">
               ✕
             </button>
@@ -69,11 +69,11 @@ export function MailAttachmentChip({
                 다운로드
               </a>
             </div>
-            <div className="erp-modal-body erp-u-flex-1" style={{ minHeight: 0, padding: isPdf ? 0 : undefined }}>
+            <div className="erp-modal-body erp-u-flex-1 erp-u-minh-0" style={{ padding: isPdf ? 0 : undefined }}>
               {isPdf ? (
-                <iframe className="erp-u-w-full erp-u-border-none" title={filename} src={url} style={{ height: "100%", minHeight: "75vh" }} />
+                <iframe className="erp-u-w-full erp-u-border-none erp-u-h-full" title={filename} src={url} style={{ minHeight: "75vh" }} />
               ) : isImage ? (
-                <img src={url} alt={filename} style={{ maxWidth: "100%", display: "block", margin: "0 auto" }} />
+                <img className="erp-u-mx-auto" src={url} alt={filename} style={{ maxWidth: "100%", display: "block" }} />
               ) : (
                 <p className="erp-grid-empty erp-u-mt-24">
                   이 파일 형식은 화면에서 미리볼 수 없습니다. 다운로드해 확인해주세요.

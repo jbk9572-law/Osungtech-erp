@@ -31,8 +31,7 @@ export function FormSaveButtons({
           name="continue_new"
           value="1"
           disabled={pending}
-          className="erp-btn erp-u-minw-0"
-          style={{ margin: 4 }}
+          className="erp-btn erp-u-minw-0 erp-u-m-4"
         >
           저장 후 계속 등록
         </button>
@@ -41,8 +40,7 @@ export function FormSaveButtons({
         ref={submitRef}
         type="submit"
         disabled={pending}
-        className="erp-btn erp-btn-primary erp-u-minw-0"
-        style={{ margin: 4 }}
+        className="erp-btn erp-btn-primary erp-u-minw-0 erp-u-m-4"
       >
         {pending ? (
           <>
@@ -70,8 +68,8 @@ export function CarryoverToggle({
   return (
     <div className="erp-field erp-span-3">
       <label aria-hidden="true">&nbsp;</label>
-      <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg"
-        style={{ height: 34, background: isCarryover ? "var(--erp-warning-bg)" : "transparent", border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}` }}
+      <label className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-pad-0-14 erp-u-pointer erp-u-text-md erp-u-radius-lg erp-u-h-34"
+        style={{ background: isCarryover ? "var(--erp-warning-bg)" : "transparent", border: `1px solid ${isCarryover ? "var(--erp-warning-border)" : "var(--erp-border)"}` }}
       >
         <input
           type="checkbox"
@@ -106,8 +104,7 @@ export function PaymentMethodFields({
     <>
       <div className="erp-field erp-span-3">
         <label>결제방법</label>
-        <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer"
-          style={{ height: 30 }}
+        <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer erp-u-h-30"
         >
           <input
             type="checkbox"

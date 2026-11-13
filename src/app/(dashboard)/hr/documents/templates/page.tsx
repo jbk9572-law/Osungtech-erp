@@ -102,8 +102,8 @@ export default async function DocumentTemplatesPage({
                 {CATEGORY_LABELS[selected.category] ?? selected.category}
               </p>
 
-              <div className="erp-u-text erp-u-bg-page erp-u-text-base erp-u-border-divider"
-                style={{ borderRadius: "var(--erp-comm-radius-row)", padding: "18px 20px", lineHeight: 1.8, whiteSpace: "pre-line", marginBottom: 18 }}
+              <div className="erp-u-text erp-u-bg-page erp-u-text-base erp-u-border-divider erp-u-radius-comm-row"
+                style={{ padding: "18px 20px", lineHeight: 1.8, whiteSpace: "pre-line", marginBottom: 18 }}
               >
                 {selected.body}
               </div>

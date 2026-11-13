@@ -9,10 +9,8 @@ import {
   useTransition,
 } from "react";
 import {
-  DailyReportBox,
-  type ReportLowStock,
-  type ReportMonthTotals,
-  type ReportMoney,
+  DailyReportBox, defaultReportDate,
+  type ReportLowStock, type ReportMonthTotals, type ReportMoney,
 } from "@/components/daily-report-box";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -943,6 +941,7 @@ export function DashboardCalendar({
       year={year}
       month={month}
       todayStr={todayStr}
+      date={selected ?? defaultReportDate(year, month, todayStr)} onDateChange={setSelected}
       getDay={getReportDay}
       money={reportMoney ?? null}
       lowStock={lowStock ?? []}

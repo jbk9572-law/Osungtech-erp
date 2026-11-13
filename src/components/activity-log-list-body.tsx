@@ -60,7 +60,7 @@ export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
             onClick={() => setTenant(name)}
             className={`erp-cat-item${tenant === name ? " active" : ""}`}
           >
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+            <span className="erp-u-overflow-hidden erp-u-ellipsis erp-u-nowrap">{name}</span>
             <span className="cnt">{count}</span>
           </button>
         ))}
@@ -68,9 +68,9 @@ export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
 
       <div className="erp-card-feed erp-u-minw-0">
         {visibleRows.map((r) => (
-          <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
+          <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
             key={r.id}
-            style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px" }}
+            style={{ padding: "11px 16px" }}
           >
             <div className="erp-u-minw-0">
               <div className="erp-u-semibold erp-u-text erp-u-text-base">

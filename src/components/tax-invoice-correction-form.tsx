@@ -132,9 +132,8 @@ export function TaxInvoiceCorrectionForm({
         <button
           ref={submitRef}
           type="submit"
-          className="erp-btn erp-btn-primary"
+          className="erp-btn erp-btn-primary erp-u-self-start"
           disabled={pending || validRows.length === 0}
-          style={{ alignSelf: "flex-start" }}
         >
           {pending ? "발행 중..." : "F7 수정세금계산서 발행"}
         </button>

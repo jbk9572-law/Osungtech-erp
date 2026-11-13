@@ -53,8 +53,8 @@ export function QrLabelCard({
   }
 
   return (
-    <div className="erp-u-text-center"
-      style={{ border: "1px solid #000", borderRadius: 0, overflow: "hidden", breakInside: "avoid", color: "#000" }}
+    <div className="erp-u-text-center erp-u-radius-0 erp-u-overflow-hidden"
+      style={{ border: "1px solid #000", breakInside: "avoid", color: "#000" }}
     >
       <div className="erp-u-text-lg"
         style={{ background: "#000", color: "#fff", fontWeight: 800, letterSpacing: 1, padding: "4px 0" }}
@@ -62,10 +62,10 @@ export function QrLabelCard({
         {dir === "up" ? "▲ 위" : "▼ 아래"}
       </div>
       <div className="erp-u-p-8">
-        <div
+        <div className="erp-u-mx-auto"
           role="img"
           aria-label={sku}
-          style={{ width: 110, height: 110, margin: "0 auto" }}
+          style={{ width: 110, height: 110 }}
           dangerouslySetInnerHTML={qrSvg ? { __html: qrSvg } : undefined}
         />
         <div className="erp-u-bold erp-u-text-compact erp-u-mt-4">{sku}</div>

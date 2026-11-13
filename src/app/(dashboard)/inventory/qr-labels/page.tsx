@@ -82,10 +82,9 @@ export default async function InventoryQrLabelsPage({
             className="erp-input erp-u-w-full"
           />
         </div>
-        <div className="erp-field erp-span-3" style={{ justifyContent: "flex-end" }}>
+        <div className="erp-field erp-span-3 erp-u-justify-end">
           <label aria-hidden="true">&nbsp;</label>
-          <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer"
-            style={{ height: 34 }}
+          <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer erp-u-h-34"
           >
             <input type="checkbox" name="hideZero" value="1" defaultChecked={hideZero} />
             0건인 품목은 보지 않기

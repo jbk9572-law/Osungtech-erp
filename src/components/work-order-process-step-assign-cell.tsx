@@ -82,8 +82,7 @@ export function WorkOrderProcessStepAssignCell({
         <PortalAccountForm targetId={subcontractorId} kind="subcontractor" />
         <button
           type="button"
-          className="erp-btn erp-btn-xs erp-u-pad-1-6 erp-u-text-caption"
-          style={{ alignSelf: "flex-start" }}
+          className="erp-btn erp-btn-xs erp-u-pad-1-6 erp-u-text-caption erp-u-self-start"
           onClick={() => setMode("select")}
         >
           닫기

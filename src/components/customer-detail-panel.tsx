@@ -331,7 +331,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">거래 품목 및 단가</span>
         </div>
-        <div className="erp-detail-body" style={{ padding: 0 }}>
+        <div className="erp-detail-body erp-u-p-0">
           <div className="erp-grid-wrap">
             <table className="erp-grid">
               <thead>

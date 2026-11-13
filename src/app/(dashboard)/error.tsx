@@ -33,8 +33,8 @@ export default function DashboardError({
     // 두고, 다른 화면의 알림 카드(erp-item-card 등)처럼 이 화면 영역
     // "안에" 담겨 있는 것처럼 보이도록 테두리로 감싼다.
     <div className="erp-u-text-center" style={{ maxWidth: 560, margin: "32px auto" }}>
-      <div className="erp-u-border erp-u-bg-panel"
-        style={{ borderRadius: 0, padding: "28px 20px" }}
+      <div className="erp-u-border erp-u-bg-panel erp-u-radius-0"
+        style={{ padding: "28px 20px" }}
       >
         <p className="erp-u-bold erp-u-text erp-u-mb-8" style={{ fontSize: 15 }}>
           일시적인 오류로 화면을 불러오지 못했습니다.
@@ -44,8 +44,8 @@ export default function DashboardError({
           아래 버튼으로 다시 시도해보세요. 같은 화면에서 반복되면 아래 내용과 함께 운영자에게 알려주세요.
         </p>
         {(error.message || error.digest) && (
-          <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle"
-            style={{ fontFamily: "monospace", borderRadius: 0, wordBreak: "break-word", textAlign: "left" }}
+          <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle erp-u-radius-0 erp-u-break-word erp-u-text-left"
+            style={{ fontFamily: "monospace" }}
           >
             {error.message || "(메시지 없음)"}
             {error.digest && (

@@ -1068,7 +1068,7 @@ export function NewPurchaseForm({
 
       <div>
         <div className="erp-form-section-head">
-          <span className="erp-eyebrow" style={{ margin: 0 }}>기본정보</span>
+          <span className="erp-eyebrow erp-u-m-0">기본정보</span>
           <FormSaveButtons isEdit={!!initial?.id} pending={pending} submitRef={submitRef} label={submitLabel} />
         </div>
         {!!(messageDismissed ? undefined : state) && (
@@ -1172,8 +1172,7 @@ export function NewPurchaseForm({
             <>
               <div className="erp-field erp-span-3">
                 <label>매출 동시 등록</label>
-                <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer"
-                  style={{ height: 30 }}
+                <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer erp-u-h-30"
                 >
                   <input
                     type="checkbox"
@@ -1248,9 +1247,8 @@ export function NewPurchaseForm({
         <div
           className="erp-form-section-head erp-u-relative"
         >
-          <span className="erp-eyebrow" style={{ margin: 0 }}>품목</span>
-          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap"
-            style={{ margin: 4 }}
+          <span className="erp-eyebrow erp-u-m-0">품목</span>
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4"
           >
             <QuickAddProductSearch
               products={products}

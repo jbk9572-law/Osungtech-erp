@@ -20,7 +20,7 @@ export default function ModalNotFound() {
         if (e.target === e.currentTarget) router.back();
       }}
     >
-      <div className="erp-modal erp-modal-md" style={{ minHeight: 0 }}>
+      <div className="erp-modal erp-modal-md erp-u-minh-0">
         <button
           type="button"
           className="erp-modal-window-close"

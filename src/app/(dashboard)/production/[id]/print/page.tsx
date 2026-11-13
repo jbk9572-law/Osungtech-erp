@@ -70,8 +70,8 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
         const isFirst = pageIndex === 0;
         return (
           <div key={pageIndex} className={pageIndex < pages.length - 1 ? "print-page-break" : undefined}>
-            <div className="erp-u-flex erp-u-justify-between erp-u-mb-14"
-              style={{ alignItems: "flex-end", borderBottom: "3px solid #132944", paddingBottom: 8 }}
+            <div className="erp-u-flex erp-u-justify-between erp-u-mb-14 erp-u-items-end"
+              style={{ borderBottom: "3px solid #132944", paddingBottom: 8 }}
             >
               <div>
                 <div className="erp-u-text-caption" style={{ color: "#555", letterSpacing: "0.08em" }}>ELVONIX ERP · 생산관리</div>
@@ -90,7 +90,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
             </div>
 
             {isFirst ? (
-              <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+              <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 90 }} />
                   <col />
@@ -121,7 +121,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
                 </tbody>
               </table>
             ) : (
-              <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+              <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 90 }} />
                   <col />
@@ -173,7 +173,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
             {pageSteps.length === 0 ? (
               <p className="erp-u-text-compact" style={{ color: "#666", padding: "8px 0" }}>등록된 공정이 없습니다.</p>
             ) : (
-              <table className="erp-u-mt-10" style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+              <table className="erp-u-mt-10 erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 32 }} />
                   <col />

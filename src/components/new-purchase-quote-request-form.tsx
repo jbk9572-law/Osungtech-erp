@@ -56,8 +56,8 @@ export function NewPurchaseQuoteRequestForm({
       <div className="erp-doc-header">
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <span className="erp-doc-header-label">공급처</span>
-          <span className="erp-doc-header-value" style={{ display: "block", padding: 0 }}>
-            <div className="erp-grid-wrap erp-u-border-none" style={{ maxHeight: 160, overflowY: "auto" }}>
+          <span className="erp-doc-header-value erp-u-p-0" style={{ display: "block" }}>
+            <div className="erp-grid-wrap erp-u-border-none erp-u-overflow-y-auto" style={{ maxHeight: 160 }}>
               <table className="erp-grid">
                 <tbody>
                   {suppliers.map((s) => (

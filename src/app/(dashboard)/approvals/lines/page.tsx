@@ -126,9 +126,9 @@ export default async function ApprovalLinesPage({
         ) : (
           <div className="erp-card-feed erp-card-feed-compact">
             {templates.map((t) => (
-              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border"
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
                 key={t.id}
-                style={{ borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "13px 18px" }}
+                style={{ padding: "13px 18px" }}
               >
                 <div className="erp-u-semibold erp-u-text erp-u-text-md">{t.name}</div>
                 {isAdmin ? (

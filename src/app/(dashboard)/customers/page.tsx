@@ -97,7 +97,7 @@ async function CustomersPage({
       />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">거래처관리 &gt; 출고처관리</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
             F2 신규
           </Link>
@@ -130,8 +130,7 @@ async function CustomersPage({
           <form
             id="customers-search-form"
             method="get"
-            className="erp-field-grid erp-u-gap-6 erp-u-p-8"
-            style={{ margin: 8 }}
+            className="erp-field-grid erp-u-gap-6 erp-u-p-8 erp-u-m-8"
           >
             <div className="erp-field erp-span-6">
               <input

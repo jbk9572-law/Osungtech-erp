@@ -68,7 +68,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
       {state?.skipped && state.skipped.length > 0 && (
         <div className="erp-detail erp-u-mt-0">
           <div className="erp-detail-tabs">
-            <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+            <span className="erp-detail-tab active erp-u-cursor-default">
               제외된 건 {state.skipped.length}건
             </span>
           </div>

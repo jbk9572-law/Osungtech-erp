@@ -35,6 +35,12 @@ function addDays(dateStr: string, delta: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// 달력에서 고른 날짜가 없을 때 리포트가 보여줄 날짜 — 이번 달이면 오늘, 다른 달이면 그 달 1일.
+export function defaultReportDate(year: number, month: number, todayStr: string): string {
+  const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
+  return todayStr.startsWith(monthPrefix) ? todayStr : `${monthPrefix}-01`;
+}
+
 function won(n: number) {
   return `${formatNumber(n)}원`;
 }
@@ -141,6 +147,8 @@ export function DailyReportBox({
   year,
   month,
   todayStr,
+  date,
+  onDateChange,
   getDay,
   money,
   lowStock,
@@ -150,26 +158,19 @@ export function DailyReportBox({
   year: number;
   month: number;
   todayStr: string;
+  // 보고 있는 날짜는 위(대시보드 달력)가 갖고 있다 — 달력에서 날짜를 누르면 이 박스도
+  // 같이 움직이고, 이 박스의 이전/다음/오늘 버튼도 달력 선택을 같이 바꾼다.
+  date: string;
+  onDateChange: (dateStr: string) => void;
   getDay: (dateStr: string) => ReportDay;
   money: ReportMoney | null;
   lowStock: ReportLowStock[];
 }) {
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
-  const monthFirst = `${monthPrefix}-01`;
-  // 이번 달을 보고 있으면 오늘, 다른 달을 보고 있으면 그 달 1일에서 시작한다.
-  const initial = todayStr.startsWith(monthPrefix) ? todayStr : monthFirst;
-  const [date, setDate] = useState(initial);
   const [modal, setModal] = useState<null | "detail" | "copy">(null);
   const [tab, setTab] = useState<"sales" | "purchase">("sales");
   const [options, setOptions] = useState({ includeAmounts: false, includePayments: false, includeStock: true });
   const [copied, setCopied] = useState(false);
-
-  // 자정이 지나 서버가 새 todayStr을 내려주면, 사용자가 날짜를 안 건드린 경우에 한해 따라간다.
-  const [lastToday, setLastToday] = useState(todayStr);
-  if (lastToday !== todayStr) {
-    setLastToday(todayStr);
-    if (date === lastToday && todayStr.startsWith(monthPrefix)) setDate(todayStr);
-  }
 
   const day = useMemo(() => getDay(date), [getDay, date]);
   const prev = addDays(date, -1);
@@ -229,18 +230,18 @@ export function DailyReportBox({
         <GridBadge tone="muted">{formatReportDateLabel(date).replaceAll("-", ".")}</GridBadge>
         <span className="erp-daily-report-spacer" />
         <div className="erp-daily-report-nav">
-          <button type="button" className="erp-btn" disabled={!canPrev} onClick={() => setDate(prev)}>
+          <button type="button" className="erp-btn" disabled={!canPrev} onClick={() => onDateChange(prev)}>
             ‹ 전날
           </button>
           <button
             type="button"
             className={`erp-btn${date === todayStr ? " erp-btn-primary" : ""}`}
             disabled={!todayStr.startsWith(monthPrefix)}
-            onClick={() => setDate(todayStr)}
+            onClick={() => onDateChange(todayStr)}
           >
             오늘
           </button>
-          <button type="button" className="erp-btn" disabled={!canNext} onClick={() => setDate(next)}>
+          <button type="button" className="erp-btn" disabled={!canNext} onClick={() => onDateChange(next)}>
             다음날 ›
           </button>
         </div>

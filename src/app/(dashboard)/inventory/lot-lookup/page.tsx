@@ -184,7 +184,7 @@ export default async function LotLookupPage({
 
           <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+              <span className="erp-detail-tab active erp-u-cursor-default">
                 매입 이력 (입고) {purchaseHits.length}건
               </span>
             </div>
@@ -281,7 +281,7 @@ export default async function LotLookupPage({
 
           <div className="erp-detail erp-u-mt-14">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+              <span className="erp-detail-tab active erp-u-cursor-default">
                 매출 이력 (출고) {saleHits.length}건
               </span>
             </div>
@@ -378,7 +378,7 @@ export default async function LotLookupPage({
 
           <div className="erp-detail erp-u-mt-14">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+              <span className="erp-detail-tab active erp-u-cursor-default">
                 생산지시 이력 {workOrderHits.length}건
                 {workOrderMatchMode === "doc_no" && " · LOT 정확 일치"}
                 {workOrderMatchMode === "product" && " · 품목 기준(로트 단위 아님)"}

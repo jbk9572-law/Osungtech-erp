@@ -91,15 +91,15 @@ export default async function PlatformStatsPage() {
                 <div className="flex flex-col gap-2">
                   {monthlySignups.map((m) => (
                     <div key={m.month} className="flex items-center gap-2 erp-u-text-compact">
-                      <span className="erp-u-muted" style={{ width: 56, flexShrink: 0 }}>{m.month}</span>
-                      <div className="erp-u-flex-1 erp-u-bg-bg-subtle"
-                        style={{ borderRadius: "var(--erp-comm-radius-sm)", overflow: "hidden", height: 16 }}
+                      <span className="erp-u-muted erp-u-shrink-0" style={{ width: 56 }}>{m.month}</span>
+                      <div className="erp-u-flex-1 erp-u-bg-bg-subtle erp-u-overflow-hidden"
+                        style={{ borderRadius: "var(--erp-comm-radius-sm)", height: 16 }}
                       >
-                        <div className="erp-u-bg-primary"
-                          style={{ width: `${(m.count / maxCount) * 100}%`, height: "100%", minWidth: m.count > 0 ? 4 : 0 }}
+                        <div className="erp-u-bg-primary erp-u-h-full"
+                          style={{ width: `${(m.count / maxCount) * 100}%`, minWidth: m.count > 0 ? 4 : 0 }}
                         />
                       </div>
-                      <span className="erp-u-text-right" style={{ width: 32, flexShrink: 0 }}>{m.count}</span>
+                      <span className="erp-u-text-right erp-u-shrink-0" style={{ width: 32 }}>{m.count}</span>
                     </div>
                   ))}
                 </div>
@@ -143,7 +143,7 @@ export default async function PlatformStatsPage() {
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">업체별 발송량</span>
         </div>
-        <div className="erp-detail-body" style={{ padding: 0 }}>
+        <div className="erp-detail-body erp-u-p-0">
           {tenantUsage.length === 0 ? (
             <p className="erp-grid-empty">표시할 테넌트가 없습니다.</p>
           ) : (
@@ -160,7 +160,7 @@ export default async function PlatformStatsPage() {
                 </thead>
                 <tbody>
                   {tenantUsage.map((row) => (
-                    <tr key={row.tenant_id} style={{ cursor: "default" }}>
+                    <tr className="erp-u-cursor-default" key={row.tenant_id}>
                       <td>{row.tenant_name}</td>
                       <td className="erp-u-text-right">{formatNumber(row.email_sent_count)}</td>
                       <td className="erp-u-text-right">{formatNumber(row.fax_sent_count)}</td>

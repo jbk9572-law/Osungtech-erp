@@ -8,8 +8,8 @@ import Link from "next/link";
 export default function DashboardNotFound() {
   return (
     <div className="erp-u-text-center" style={{ maxWidth: 560, margin: "32px auto" }}>
-      <div className="erp-u-border erp-u-bg-panel"
-        style={{ borderRadius: 0, padding: "28px 20px" }}
+      <div className="erp-u-border erp-u-bg-panel erp-u-radius-0"
+        style={{ padding: "28px 20px" }}
       >
         <p className="erp-u-bold erp-u-text erp-u-mb-8" style={{ fontSize: 15 }}>
           페이지를 찾을 수 없습니다.
