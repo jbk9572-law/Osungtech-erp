@@ -6285,14 +6285,11 @@ a.erp-detail-tab:hover:not(.active) {
   background: transparent;
 }
 
-/* 달력 패널 — 왼쪽 달력 | 오른쪽 고른 날짜의 메모·일정. 패널이 좁아지면(위젯 크기를 줄이거나
-   모바일) 오른쪽 영역이 달력 아래로 내려간다. */
+/* 달력 패널 — 고른 날짜의 이월·일정·메모는 일일 리포트 위젯의 "일정·메모" 탭에서 본다. */
 .erp-cal-panel {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(240px, 1fr);
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .erp-cal-main {
@@ -6348,27 +6345,6 @@ a.erp-detail-tab:hover:not(.active) {
   .erp-cal-dots { display: flex; }
 }
 
-.erp-cal-side {
-  border-radius: var(--erp-radius-xl, 0);
-  position: relative;
-  min-width: 0;
-  min-height: 0;
-  padding: 14px 16px;
-  border-left: 1px solid var(--erp-divider);
-  background: var(--erp-bg-subtle);
-  overflow: auto;
-}
-
-@container (max-width: 700px) {
-  .erp-cal-panel {
-    grid-template-columns: minmax(0, 1fr);
-    height: auto;
-  }
-  .erp-cal-side {
-    border-left: 0;
-    border-top: 1px solid var(--erp-divider);
-  }
-}
 
 .erp-widget-body {
   container-type: inline-size;
@@ -6583,6 +6559,10 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 /* 리포트 맨 아래 추가 구역(그날 메모·일정·이월 안내) */
+.erp-daily-report-view {
+  padding: 8px 12px;
+}
+
 .erp-daily-report-extra {
   border-radius: var(--erp-radius-xl, 0);
   padding: 12px 14px;
@@ -6786,25 +6766,6 @@ a.erp-detail-tab:hover:not(.active) {
   padding: 10px 16px;
   border-top: 1px solid var(--erp-border-strong);
   background: var(--erp-panel);
-}
-
-.erp-daily-report-tabs {
-  display: inline-flex;
-}
-
-.erp-daily-report-tabs .erp-btn {
-  min-width: 0;
-  margin-left: -1px;
-}
-
-.erp-daily-report-tabs .erp-btn:first-child {
-  margin-left: 0;
-}
-
-.erp-daily-report-tabs .erp-btn.active {
-  background: var(--erp-primary);
-  border-color: var(--erp-primary);
-  color: var(--erp-on-primary);
 }
 
 .erp-daily-report-partner {
