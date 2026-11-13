@@ -126,9 +126,9 @@ export default async function SuppliersPage({
           <form
             id="suppliers-search-form"
             method="get"
-            className="erp-field-grid erp-u-gap-6 erp-u-p-8 erp-u-m-8"
+            className="erp-search-row erp-u-p-8 erp-u-m-8"
           >
-            <div className="erp-field erp-span-6">
+            <div className="erp-field">
               <input
                 type="text"
                 name="q"
@@ -138,7 +138,7 @@ export default async function SuppliersPage({
                 className="erp-input erp-u-w-full"
               />
             </div>
-            <button type="submit" className="erp-btn erp-btn-primary erp-u-w-full">
+            <button type="submit" className="erp-btn erp-btn-primary">
               F5 조회
             </button>
           </form>

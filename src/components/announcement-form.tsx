@@ -5,7 +5,6 @@ import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export function AnnouncementForm({
   action,
@@ -42,7 +41,7 @@ export function AnnouncementForm({
         <RichTextEditor value={content} onChange={setContent} placeholder="내용을 입력하세요..." minHeight={260} />
       </div>
       <div className="md:col-span-3 flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+        <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? (
             <>
               <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -53,7 +52,6 @@ export function AnnouncementForm({
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

@@ -6,7 +6,6 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ErpSelect } from "@/components/erp/erp-select";
 import {
@@ -132,13 +131,12 @@ export function TaxInvoiceCorrectionForm({
         <button
           ref={submitRef}
           type="submit"
-          className="erp-btn erp-btn-primary erp-u-self-start"
+          className="erp-btn erp-btn-primary erp-form-submit"
           disabled={pending || validRows.length === 0}
         >
           {pending ? "발행 중..." : "F7 수정세금계산서 발행"}
         </button>
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "발행" }]} />
     </form>
   );
 }

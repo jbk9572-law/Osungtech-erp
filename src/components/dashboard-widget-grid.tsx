@@ -5,6 +5,7 @@ import ReactGridLayout, { useContainerWidth, verticalCompactor, type Layout } fr
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { resetDashboardLayout, saveDashboardLayout } from "@/lib/dashboard-layout-actions";
+import { MAX_TODO_TABS, type SourceId } from "@/lib/dashboard-sources";
 import {
   DASHBOARD_COLS,
   DASHBOARD_MARGIN,
@@ -43,9 +44,12 @@ function useIsWide() {
 
 export function DashboardWidgetGrid({
   initialLayout,
+  sourceOptions,
   widgets,
 }: {
   initialLayout: DashboardLayout;
+  // 이 사용자가 고를 수 있는 내용(권한이 없는 것은 빠져 있다)
+  sourceOptions: { id: SourceId; title: string }[];
   widgets: Partial<Record<DashboardWidgetId, ReactNode>>;
 }) {
   const wide = useIsWide();
@@ -55,6 +59,7 @@ export function DashboardWidgetGrid({
   const editing = editRequested && wide;
   const [draft, setDraft] = useState<DashboardLayout>(initialLayout);
   const [busy, setBusy] = useState(false);
+  const [pickerFor, setPickerFor] = useState<DashboardWidgetId | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const { width, containerRef, mounted } = useContainerWidth();
 
@@ -74,13 +79,73 @@ export function DashboardWidgetGrid({
   }, []);
 
   const hideWidget = (id: DashboardWidgetId) =>
-    setDraft((d) => ({ items: d.items.filter((i) => i.id !== id), hidden: [...d.hidden, id] }));
+    setDraft((d) => ({ ...d, items: d.items.filter((i) => i.id !== id), hidden: [...d.hidden, id] }));
   const showWidget = (id: DashboardWidgetId) =>
     setDraft((d) => {
       const def = DASHBOARD_WIDGETS.find((w) => w.id === id)!.def;
       const bottom = d.items.reduce((m, i) => Math.max(m, i.y + i.h), 0);
-      return { items: [...d.items, { id, ...def, x: 0, y: bottom }], hidden: d.hidden.filter((h) => h !== id) };
+      return { ...d, items: [...d.items, { id, ...def, x: 0, y: bottom }], hidden: d.hidden.filter((h) => h !== id) };
     });
+
+  // 내용 고르기(오늘 할 일 탭은 여러 개·순서 있음, 목록 칸은 하나) — 저장하면 서버가 고른 내용을 불러와 반영한다.
+  const toggleTodoSource = (id: SourceId) =>
+    setDraft((d) => {
+      const cur = d.sources.todo;
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= MAX_TODO_TABS ? cur : [...cur, id];
+      return { ...d, sources: { ...d.sources, todo: next } };
+    });
+  const moveTodoSource = (id: SourceId, dir: -1 | 1) =>
+    setDraft((d) => {
+      const cur = [...d.sources.todo];
+      const i = cur.indexOf(id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= cur.length) return d;
+      [cur[i], cur[j]] = [cur[j], cur[i]];
+      return { ...d, sources: { ...d.sources, todo: cur } };
+    });
+  const setListSource = (which: "listA" | "listB", id: SourceId) =>
+    setDraft((d) => ({ ...d, sources: { ...d.sources, [which]: id } }));
+  const titleOf = (id: SourceId) => sourceOptions.find((o) => o.id === id)?.title ?? id;
+
+  function renderPicker(id: DashboardWidgetId) {
+    if (id === "todo") {
+      const chosen = draft.sources.todo.filter((x) => sourceOptions.some((o) => o.id === x));
+      const rest = sourceOptions.filter((o) => !chosen.includes(o.id));
+      return (
+        <div className="erp-widget-picker">
+          <p className="erp-widget-picker-title">탭에 넣을 내용 (위에서부터 탭 순서, 최대 {MAX_TODO_TABS}개)</p>
+          {chosen.map((sid, i) => (
+            <div key={sid} className="erp-widget-picker-row">
+              <input type="checkbox" id={`pk-${sid}`} checked onChange={() => toggleTodoSource(sid)} />
+              <label htmlFor={`pk-${sid}`}>{titleOf(sid)}</label>
+              <button type="button" className="erp-btn erp-btn-xs" disabled={i === 0} onClick={() => moveTodoSource(sid, -1)} aria-label={`${titleOf(sid)} 위로`}>▲</button>
+              <button type="button" className="erp-btn erp-btn-xs" disabled={i === chosen.length - 1} onClick={() => moveTodoSource(sid, 1)} aria-label={`${titleOf(sid)} 아래로`}>▼</button>
+            </div>
+          ))}
+          {rest.map((o) => (
+            <div key={o.id} className="erp-widget-picker-row">
+              <input type="checkbox" id={`pk-${o.id}`} checked={false} disabled={chosen.length >= MAX_TODO_TABS} onChange={() => toggleTodoSource(o.id)} />
+              <label htmlFor={`pk-${o.id}`}>{o.title}</label>
+            </div>
+          ))}
+          <p className="erp-widget-picker-hint">저장하면 반영됩니다.</p>
+        </div>
+      );
+    }
+    const which = id as "listA" | "listB";
+    return (
+      <div className="erp-widget-picker">
+        <p className="erp-widget-picker-title">이 칸에 보여줄 내용</p>
+        {sourceOptions.map((o) => (
+          <div key={o.id} className="erp-widget-picker-row">
+            <input type="radio" name={`pk-${which}`} id={`pk-${which}-${o.id}`} checked={draft.sources[which] === o.id} onChange={() => setListSource(which, o.id)} />
+            <label htmlFor={`pk-${which}-${o.id}`}>{o.title}</label>
+          </div>
+        ))}
+        <p className="erp-widget-picker-hint">저장하면 반영됩니다.</p>
+      </div>
+    );
+  }
 
   async function save() {
     setBusy(true);
@@ -92,6 +157,7 @@ export function DashboardWidgetGrid({
       return;
     }
     setLayout(normalizeDashboardLayout(draft));
+    setPickerFor(null);
     setEditing(false);
   }
 
@@ -166,6 +232,16 @@ export function DashboardWidgetGrid({
                 <div key={i.id} className={`erp-widget is-editing${widgetIsBare(i.id) ? " is-bare" : ""}`}>
                   <div className="erp-widget-handle">
                     <span>{widgetTitle(i.id)}</span>
+                    {(i.id === "todo" || i.id === "listA" || i.id === "listB") && (
+                      <button
+                        type="button"
+                        className="erp-widget-handle-btn"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => setPickerFor((p) => (p === i.id ? null : i.id))}
+                      >
+                        {pickerFor === i.id ? "닫기" : "내용 선택"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="erp-widget-hide"
@@ -176,7 +252,7 @@ export function DashboardWidgetGrid({
                       ✕
                     </button>
                   </div>
-                  <div className="erp-widget-body">{widgets[i.id]}</div>
+                  {pickerFor === i.id ? renderPicker(i.id) : <div className="erp-widget-body">{widgets[i.id]}</div>}
                 </div>
               ))}
             </ReactGridLayout>

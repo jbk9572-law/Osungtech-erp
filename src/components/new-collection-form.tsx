@@ -7,7 +7,6 @@ import { PartyTransactionHistory } from "@/components/party-transaction-history"
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 // 매출 등록 화면의 "유형: 수금" 모드 — 품목 그리드 없이 출고처의 미수금에
@@ -86,7 +85,7 @@ export function NewCollectionForm({
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+          <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
             {pending ? (
               <>
                 <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -97,7 +96,6 @@ export function NewCollectionForm({
           </button>
           <FormMessage state={state} />
         </div>
-        <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>
 
       <PartyTransactionHistory

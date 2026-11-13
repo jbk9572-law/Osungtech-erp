@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { DashboardWidgetGrid } from "@/components/dashboard-widget-grid";
 import type { DashboardLayout, DashboardWidgetId } from "@/lib/dashboard-layout";
+import type { SourceId } from "@/lib/dashboard-sources";
 import { useRouter } from "next/navigation";
 import {
   addCalendarNote,
@@ -34,7 +35,6 @@ import {
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
 export type ItemRow = {
   partnerName: string;
@@ -789,6 +789,7 @@ export function DashboardCalendar({
   currentUserId,
   isAdmin,
   layout,
+  sourceOptions,
   sidePanels,
   reportMoney,
   lowStock,
@@ -811,6 +812,7 @@ export function DashboardCalendar({
   isAdmin: boolean;
   // 위젯 배치(사용자가 저장한 위치·크기)와, 서버에서 그려 내려주는 나머지 위젯들(재고조회·재고위험·메모·빠른실행).
   layout: DashboardLayout;
+  sourceOptions: { id: SourceId; title: string }[];
   sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
 }) {
   const router = useRouter();
@@ -1133,6 +1135,7 @@ export function DashboardCalendar({
   return (
     <DashboardWidgetGrid
       initialLayout={layout}
+      sourceOptions={sourceOptions}
       widgets={{ ...sidePanels, calendar: calendarCard, report: reportCard }}
     />
   );
@@ -1258,7 +1261,7 @@ function NoteForm({
           ref={submitRef}
           type="submit"
           disabled={pending}
-          className="erp-btn erp-btn-primary"
+          className="erp-btn erp-btn-primary erp-form-submit"
         >
           {pending ? (
             <>
@@ -1269,7 +1272,6 @@ function NoteForm({
           )}
         </button>
         <FormMessage state={state} />
-        <KeyboardHintBar items={[{ key: "F7", label: "메모 추가" }]} />
       </form>
     </div>
   );

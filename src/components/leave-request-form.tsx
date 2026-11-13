@@ -8,7 +8,6 @@ import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-char
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
 import { LEAVE_UNIT_DAYS, LEAVE_UNIT_LABEL, LEAVE_UNIT_OPTIONS, type LeaveUnit } from "@/lib/leave-unit";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 export function LeaveRequestForm({
@@ -156,13 +155,12 @@ export function LeaveRequestForm({
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending || approvers.length === 0} className="erp-btn erp-btn-primary">
+      <div className="erp-form-actions">
+        <button ref={submitRef} type="submit" disabled={pending || approvers.length === 0} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "신청 중..." : "F7 휴가 신청"}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

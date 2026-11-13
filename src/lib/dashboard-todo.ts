@@ -1,4 +1,5 @@
 import { RECEIVABLE_OVERDUE_DAYS, type PartyBalance } from "@/lib/ar-ap";
+import type { SourceId } from "@/lib/dashboard-sources";
 
 // 메인 화면 "오늘 할 일" — 결재 대기·연체 미수금·내 할 일·이월 건을 한 목록으로 묶는 순수 로직.
 // 데이터를 가져오는 쪽(page.tsx, dashboard-approvals.ts)과 그리는 쪽(dashboard-todo-panel.tsx)을
@@ -9,22 +10,17 @@ export type ApprovalQueueItem = { id: string; title: string; createdAt: string; 
 export type TodoNoticeInput = { id: string; title: string; due_date: string | null };
 export type CarryoverInput = { fromDate: string; itemCount: number; kind: "sales" | "purchase" };
 
-export type TodoKind = "approval" | "overdue" | "todo" | "carryover";
+export type LowStockInput = { id: string; name: string; quantity: number; reorderPoint: number };
+export type AnnouncementInput = { id: string; title: string; pinned: boolean };
+
 export type TodoItem = {
   key: string;
-  kind: TodoKind;
+  kind: SourceId;
   title: string;
   sub: string;
   due: string;
   href: string;
   action: string;
-};
-
-export const TODO_KIND_LABEL: Record<TodoKind, string> = {
-  approval: "결재 대기",
-  overdue: "연체 미수금",
-  todo: "내 할 일",
-  carryover: "이월",
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -59,17 +55,21 @@ function formatMonthDay(dateStr: string): string {
 
 const won = (n: number) => `${Math.round(n).toLocaleString("ko-KR")}원`;
 
-export function buildTodoItems(input: {
+// 내용(원천)별 항목 목록을 한 번에 만든다. 화면은 고른 내용만 꺼내 쓴다.
+export function buildSourceItems(input: {
   approvals: ApprovalQueueItem[];
   overdue: OverdueCustomer[];
+  payables: OverdueCustomer[];
   todos: TodoNoticeInput[];
   carryovers: CarryoverInput[];
+  lowStock: LowStockInput[];
+  announcements: AnnouncementInput[];
   todayStr: string;
   backHref: string;
-}): TodoItem[] {
-  const items: TodoItem[] = [];
+}): Record<SourceId, TodoItem[]> {
+  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [] };
   for (const a of input.approvals) {
-    items.push({
+    out.approval.push({
       key: `approval-${a.id}`,
       kind: "approval",
       title: a.title,
@@ -80,7 +80,7 @@ export function buildTodoItems(input: {
     });
   }
   for (const c of input.overdue) {
-    items.push({
+    out.overdue.push({
       key: `overdue-${c.id}`,
       kind: "overdue",
       title: `${c.name} 미수금 ${won(c.balance)}`,
@@ -90,9 +90,20 @@ export function buildTodoItems(input: {
       action: "수금 확인 →",
     });
   }
+  for (const c of input.payables) {
+    out.payable.push({
+      key: `payable-${c.id}`,
+      kind: "payable",
+      title: `${c.name} 미지급금 ${won(c.balance)}`,
+      sub: `가장 오래된 미지급 ${c.daysOverdue}일 지남`,
+      due: `${c.daysOverdue}일 지남`,
+      href: "/payables",
+      action: "지급 확인 →",
+    });
+  }
   for (const t of input.todos) {
     const late = !!t.due_date && t.due_date < input.todayStr;
-    items.push({
+    out.todo.push({
       key: `todo-${t.id}`,
       kind: "todo",
       title: t.title,
@@ -103,7 +114,7 @@ export function buildTodoItems(input: {
     });
   }
   for (const [i, c] of input.carryovers.entries()) {
-    items.push({
+    out.carryover.push({
       key: `carryover-${i}-${c.kind}-${c.fromDate}`,
       kind: "carryover",
       title: `${formatMonthDay(c.fromDate)} 작업분 ${c.kind === "sales" ? "매출" : "매입"} 품목 ${c.itemCount}건`,
@@ -113,5 +124,27 @@ export function buildTodoItems(input: {
       action: "확인 →",
     });
   }
-  return items;
+  for (const p of input.lowStock) {
+    out.lowStock.push({
+      key: `lowStock-${p.id}`,
+      kind: "lowStock",
+      title: p.name,
+      sub: `현재 ${p.quantity.toLocaleString("ko-KR")} / 기준 ${p.reorderPoint.toLocaleString("ko-KR")}`,
+      due: "",
+      href: `/inventory/item/${p.id}`,
+      action: "보기 →",
+    });
+  }
+  for (const a of input.announcements) {
+    out.announcement.push({
+      key: `announcement-${a.id}`,
+      kind: "announcement",
+      title: `${a.pinned ? "📌 " : ""}${a.title}`,
+      sub: "아직 읽지 않은 공지",
+      due: "",
+      href: `/announcements/${a.id}?back=${input.backHref}`,
+      action: "읽기 →",
+    });
+  }
+  return out;
 }

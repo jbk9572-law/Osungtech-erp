@@ -7,7 +7,6 @@ import { FormMessage } from "@/components/form-message";
 import { useKeyedRows } from "@/lib/use-keyed-rows";
 import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ItemEntryBlock } from "@/components/erp/item-entry-block";
 import { blankItemRow, buildItemRow, isBlankItemRow, validItemRows, type ItemEntryRow } from "@/lib/item-entry-rows";
 
@@ -103,11 +102,11 @@ export function NewPurchaseRequestForm({
         onMobileAdd={addMobileItem}
       />
 
-      <div className="flex items-center gap-2">
+      <div className="erp-form-actions">
         <button
           ref={submitRef}
           type="submit"
-          className="erp-btn erp-btn-primary"
+          className="erp-btn erp-btn-primary erp-form-submit"
           disabled={pending || !supplierId || validRows.length === 0}
         >
           {pending ? "등록 중..." : "F7 구매요청 등록"}
@@ -115,7 +114,6 @@ export function NewPurchaseRequestForm({
         <FormMessage state={state} />
       </div>
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

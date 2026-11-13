@@ -103,12 +103,9 @@ export function DetailPageHeader({
     <>
       <div className="mb-1 erp-detail-header-row">
         <h1 className="flex items-center gap-2 erp-h1">{title}</h1>
-        {actions && (
-          <div className="erp-toolbar erp-u-mb-0">
-            {actions}
-          </div>
-        )}
       </div>
+      {/* 버튼 줄은 제목 바로 아래 왼쪽 — ListPageHeader와 같은 자리라 화면마다 버튼 위치가 다르지 않다. */}
+      {actions && <div className="erp-toolbar">{actions}</div>}
       {meta && <p className="mb-4 text-xs text-[var(--erp-text-muted)]">{meta}</p>}
     </>
   );

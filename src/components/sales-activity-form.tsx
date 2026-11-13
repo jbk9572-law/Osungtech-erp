@@ -5,7 +5,6 @@ import { createActivity } from "@/app/(dashboard)/sales-activities/actions";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 const ACTIVITY_TYPES = ["전화", "방문", "이메일", "기타"] as const;
@@ -141,13 +140,12 @@ export function SalesActivityForm({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button ref={submitRef} type="submit" className="erp-btn erp-btn-primary" disabled={pending}>
+      <div className="erp-form-actions">
+        <button ref={submitRef} type="submit" className="erp-btn erp-btn-primary erp-form-submit" disabled={pending}>
           {pending ? "저장 중..." : (submitLabel ?? "F7 활동 기록")}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

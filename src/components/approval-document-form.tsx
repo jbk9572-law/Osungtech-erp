@@ -9,7 +9,6 @@ import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-char
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import { extractTemplateFields, renderTemplate } from "@/lib/document-template";
 import { RichTextEditor } from "@/components/rich-text-editor-dynamic";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 type TemplateOption = { id: string; name: string; body: string };
@@ -177,13 +176,12 @@ export function ApprovalDocumentForm({
         <button type="submit" formAction={draftFormAction} disabled={pending || draftPending} className="erp-btn">
           {draftPending ? "저장 중..." : "임시저장"}
         </button>
-        <button ref={submitRef} type="submit" disabled={pending || draftPending || approvers.length === 0} className="erp-btn erp-btn-primary">
+        <button ref={submitRef} type="submit" disabled={pending || draftPending || approvers.length === 0} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "상신 중..." : "F7 상신"}
         </button>
         <FormMessage state={state} />
         <FormMessage state={draftState} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

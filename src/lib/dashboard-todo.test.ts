@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTodoItems, daysBetween, findOverdueCustomers } from "./dashboard-todo";
+import { buildSourceItems, daysBetween, findOverdueCustomers } from "./dashboard-todo";
 
 describe("daysBetween", () => {
   it("날짜 문자열끼리 일수를 센다", () => {
@@ -22,22 +22,33 @@ describe("findOverdueCustomers", () => {
   });
 });
 
-describe("buildTodoItems", () => {
-  it("결재 → 연체 → 내 할 일 → 이월 순서로 한 목록에 담고, 문구와 링크를 만든다", () => {
-    const items = buildTodoItems({
-      approvals: [{ id: "d1", title: "지급결의서", createdAt: "2026-11-12T01:00:00Z", authorName: "김부장" }],
-      overdue: [{ id: "c1", name: "세진기획", balance: 318000, daysOverdue: 40 }],
-      todos: [{ id: "t1", title: "납품 확인 전화", due_date: "2026-11-10" }, { id: "t2", title: "견적 정리", due_date: null }],
-      carryovers: [{ fromDate: "2026-11-10", itemCount: 2, kind: "sales" }],
-      todayStr: "2026-11-12",
-      backHref: "%2Fdashboard",
-    });
-    expect(items.map((i) => i.kind)).toEqual(["approval", "overdue", "todo", "todo", "carryover"]);
-    expect(items[0]).toMatchObject({ sub: "김부장 기안", href: "/approvals?id=d1" });
-    expect(items[1].title).toContain("318,000원");
-    expect(items[2]).toMatchObject({ due: "지연", href: "/todos/t1?back=%2Fdashboard" });
-    expect(items[3].sub).toBe("마감일 없음");
-    expect(items[4]).toMatchObject({ title: "11/10 작업분 매출 품목 2건", href: "/sales?from=2026-11-10&to=2026-11-10" });
-    expect(new Set(items.map((i) => i.key)).size).toBe(items.length);
+describe("buildSourceItems", () => {
+  const input = {
+    approvals: [{ id: "d1", title: "지급결의서", createdAt: "2026-11-12T01:00:00Z", authorName: "김부장" }],
+    overdue: [{ id: "c1", name: "세진기획", balance: 318000, daysOverdue: 40 }],
+    payables: [{ id: "s1", name: "리더스특수지", balance: 6000000, daysOverdue: 35 }],
+    todos: [{ id: "t1", title: "납품 확인 전화", due_date: "2026-11-10" }, { id: "t2", title: "견적 정리", due_date: null }],
+    carryovers: [{ fromDate: "2026-11-10", itemCount: 2, kind: "sales" as const }],
+    lowStock: [{ id: "p1", name: "모조지 70", quantity: 2, reorderPoint: 10 }],
+    announcements: [{ id: "a1", title: "11월 휴무 안내", pinned: true }],
+    todayStr: "2026-11-12",
+    backHref: "%2Fdashboard",
+  };
+
+  it("내용(원천)별로 항목을 만들고 문구와 링크를 붙인다", () => {
+    const out = buildSourceItems(input);
+    expect(out.approval[0]).toMatchObject({ sub: "김부장 기안", href: "/approvals?id=d1" });
+    expect(out.overdue[0].title).toContain("318,000원");
+    expect(out.payable[0]).toMatchObject({ href: "/payables", due: "35일 지남" });
+    expect(out.todo[0]).toMatchObject({ due: "지연", href: "/todos/t1?back=%2Fdashboard" });
+    expect(out.todo[1].sub).toBe("마감일 없음");
+    expect(out.carryover[0]).toMatchObject({ title: "11/10 작업분 매출 품목 2건", href: "/sales?from=2026-11-10&to=2026-11-10" });
+    expect(out.lowStock[0]).toMatchObject({ title: "모조지 70", sub: "현재 2 / 기준 10", href: "/inventory/item/p1" });
+    expect(out.announcement[0].title).toBe("📌 11월 휴무 안내");
+  });
+
+  it("모든 항목의 key가 서로 다르다", () => {
+    const all = Object.values(buildSourceItems(input)).flat();
+    expect(new Set(all.map((i) => i.key)).size).toBe(all.length);
   });
 });

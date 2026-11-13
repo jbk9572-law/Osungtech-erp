@@ -5,6 +5,8 @@
 // 저장값은 사용자 입력이므로 항상 normalizeDashboardLayout()을 거쳐 쓴다: 모르는 위젯 id 제거,
 // 숫자 범위 제한, 빠진 위젯은 기본 위치로 채움(나중에 위젯이 추가돼도 기존 사용자 화면이 안 깨진다).
 
+import { DEFAULT_SOURCE_SELECTION, normalizeSourceSelection, type DashboardSourceSelection } from "@/lib/dashboard-sources";
+
 export const DASHBOARD_COLS = 12;
 export const DASHBOARD_ROW_HEIGHT = 24;
 export const DASHBOARD_MARGIN = 12;
@@ -18,14 +20,19 @@ export const DASHBOARD_WIDGETS = [
   { id: "todo", title: "오늘 할 일", min: { w: 4, h: 6 }, def: { x: 2, y: 3, w: 7, h: 10 } },
   { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 2, y: 13, w: 7, h: 15 } },
   { id: "report", title: "오늘 리포트", min: { w: 3, h: 8 }, def: { x: 9, y: 3, w: 3, h: 26 } },
-  { id: "overdue", title: "기한 지난 미수금", min: { w: 2, h: 4 }, def: { x: 9, y: 29, w: 3, h: 6 } },
-  { id: "stockRisk", title: "재고위험", min: { w: 2, h: 4 }, def: { x: 9, y: 35, w: 3, h: 5 } },
+  { id: "listA", title: "목록 칸 1", min: { w: 2, h: 4 }, def: { x: 9, y: 29, w: 3, h: 6 } },
+  { id: "listB", title: "목록 칸 2", min: { w: 2, h: 4 }, def: { x: 9, y: 35, w: 3, h: 5 } },
 ] as const;
 
 export type DashboardWidgetId = (typeof DASHBOARD_WIDGETS)[number]["id"];
 
 export type DashboardLayoutItem = { id: DashboardWidgetId; x: number; y: number; w: number; h: number };
-export type DashboardLayout = { items: DashboardLayoutItem[]; hidden: DashboardWidgetId[] };
+export type DashboardLayout = {
+  items: DashboardLayoutItem[];
+  hidden: DashboardWidgetId[];
+  // 칸에 보여줄 내용(오늘 할 일 탭, 목록 칸 2개) — dashboard-sources.ts
+  sources: DashboardSourceSelection;
+};
 
 const WIDGET_BY_ID = new Map<string, (typeof DASHBOARD_WIDGETS)[number]>(DASHBOARD_WIDGETS.map((w) => [w.id, w]));
 
@@ -34,7 +41,11 @@ export function isDashboardWidgetId(v: unknown): v is DashboardWidgetId {
 }
 
 export function defaultDashboardLayout(): DashboardLayout {
-  return { items: DASHBOARD_WIDGETS.map((w) => ({ id: w.id, ...w.def })), hidden: [] };
+  return {
+    items: DASHBOARD_WIDGETS.map((w) => ({ id: w.id, ...w.def })),
+    hidden: [],
+    sources: { ...DEFAULT_SOURCE_SELECTION, todo: [...DEFAULT_SOURCE_SELECTION.todo] },
+  };
 }
 
 function clampInt(v: unknown, min: number, max: number): number | null {
@@ -46,7 +57,7 @@ function clampInt(v: unknown, min: number, max: number): number | null {
 export function normalizeDashboardLayout(raw: unknown): DashboardLayout {
   const base = defaultDashboardLayout();
   if (!raw || typeof raw !== "object") return base;
-  const src = raw as { items?: unknown; hidden?: unknown };
+  const src = raw as { items?: unknown; hidden?: unknown; sources?: unknown };
 
   const hidden: DashboardWidgetId[] = [];
   if (Array.isArray(src.hidden)) {
@@ -77,7 +88,7 @@ export function normalizeDashboardLayout(raw: unknown): DashboardLayout {
   for (const d of base.items) {
     if (!seen.has(d.id) && !hidden.includes(d.id)) items.push(d);
   }
-  return { items: resolveOverlaps(items.filter((i) => !hidden.includes(i.id))), hidden };
+  return { items: resolveOverlaps(items.filter((i) => !hidden.includes(i.id))), hidden, sources: normalizeSourceSelection(src.sources) };
 }
 
 // 겹친 위젯은 아래로 밀어낸다 — 화면에서 확정된 배치(grid가 이미 겹침 없이 정리한 값)는 그대로 두고,

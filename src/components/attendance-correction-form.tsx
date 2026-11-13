@@ -7,7 +7,6 @@ import { preventEnterSubmit } from "@/lib/prevent-enter-submit";
 import { OrgChartApproverPicker, type PickedPerson } from "@/components/org-chart-approver-picker";
 import type { OrgDepartmentNode } from "@/lib/org-chart";
 import type { ApprovalLinePresetOption } from "@/components/approval-document-form";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 
 export function AttendanceCorrectionForm({
@@ -96,13 +95,12 @@ export function AttendanceCorrectionForm({
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <button ref={submitRef} type="submit" disabled={pending || approvers.length === 0} className="erp-btn erp-btn-primary">
+      <div className="erp-form-actions">
+        <button ref={submitRef} type="submit" disabled={pending || approvers.length === 0} className="erp-btn erp-btn-primary erp-form-submit">
           {pending ? "신청 중..." : "F7 정정 신청"}
         </button>
         <FormMessage state={state} />
       </div>
-      <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
     </form>
   );
 }

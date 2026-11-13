@@ -6,7 +6,6 @@ import { PartySearchSelect } from "@/components/party-search-select";
 import { PartyTransactionHistory } from "@/components/party-transaction-history";
 import { FormMessage } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
-import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { PAYMENT_METHODS as METHODS } from "@/lib/payment-methods";
 
@@ -85,7 +84,7 @@ export function NewPaymentForm({
         </div>
 
         <div className="mt-3 flex items-center gap-2">
-          <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary">
+          <button ref={submitRef} type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-form-submit">
             {pending ? (
               <>
                 <span className="erp-spinner" aria-hidden /> 저장 중...
@@ -96,7 +95,6 @@ export function NewPaymentForm({
           </button>
           <FormMessage state={state} />
         </div>
-        <KeyboardHintBar items={[{ key: "F7", label: "저장" }]} />
       </form>
 
       <PartyTransactionHistory
