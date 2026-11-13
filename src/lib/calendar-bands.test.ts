@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_BANDS, buildDayBands, bandsTooltip, type BandSource } from "./calendar-bands";
+import { MAX_BANDS, buildDayBands, buildDayCounts, bandsTooltip, type BandSource } from "./calendar-bands";
 
 const empty: BandSource = { salesItems: [], purchaseItems: [], calendarItems: [], todoItems: [], notes: [] };
 const item = (partnerName: string, productName: string, extra: object = {}) => ({ partnerName, productName, ...extra });
@@ -48,5 +48,20 @@ describe("buildDayBands", () => {
   it("툴팁은 모든 띠를 줄바꿈으로 잇는다", () => {
     const { all } = buildDayBands({ ...empty, salesItems: [item("A", "a")], todoItems: [{ title: "전화" }] }, { lowStockCount: 0 });
     expect(bandsTooltip(all)).toBe("매출 A · a\n할일 전화");
+  });
+});
+
+describe("buildDayCounts", () => {
+  it("0건인 종류는 빼고 순서(매출·매입·할 일·일정·재고 부족)대로 건수만 돌려준다", () => {
+    const rows = buildDayCounts({ salesCount: 3, purchaseCount: 0, todoItems: [1], calendarItems: [1, 2] }, { lowStockCount: 1 });
+    expect(rows).toEqual([
+      { kind: "sales", label: "매출", count: 3 },
+      { kind: "todo", label: "할 일", count: 1 },
+      { kind: "event", label: "일정", count: 2 },
+      { kind: "stock", label: "재고 부족", count: 1 },
+    ]);
+  });
+  it("아무것도 없으면 빈 목록", () => {
+    expect(buildDayCounts(undefined, { lowStockCount: 0 })).toEqual([]);
   });
 });

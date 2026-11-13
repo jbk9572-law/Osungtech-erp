@@ -35,7 +35,8 @@ import {
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
-import { bandsTooltip, buildDayBands } from "@/lib/calendar-bands";
+import { bandsTooltip, buildDayBands, buildDayCounts } from "@/lib/calendar-bands";
+import { usePersistedChoice } from "@/lib/use-persisted-choice";
 
 export type ItemRow = {
   partnerName: string;
@@ -98,6 +99,8 @@ type DayData = {
   // 이 날 마감인 할 일(아직 안 끝난 것) — 달력 칸에 주황 띠로 보인다
   todoItems: { id: string; title: string }[];
 };
+
+const CAL_MODES = ["count", "detail"] as const;
 
 // 달력 아래 범례 — 칸 안 띠·점의 색과 같은 종류 이름
 const CAL_LEGEND: [string, string][] = [
@@ -844,6 +847,8 @@ export function DashboardCalendar({
       ? todayStr
       : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
+  // 칸 표시 방식 — 기본은 종류별 건수만("건수"), 업체명 띠로 보려면 "자세히". 이 브라우저에 기억한다.
+  const [calMode, setCalMode] = usePersistedChoice("erp:dashboard-cal-mode", CAL_MODES, "count");
 
   // MidnightRefresh가 router.refresh()로 서버 데이터(todayStr 포함)를
   // 새로 받아와도, 이 상태는 처음 마운트될 때 한 번만 정해지므로 자정이
@@ -964,7 +969,15 @@ export function DashboardCalendar({
           <h2 className="text-sm font-bold text-[var(--erp-text)]">
             {year}년 {month}월
           </h2>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-1">
+            <span className="erp-seg" role="group" aria-label="달력 표시 방식">
+              <button type="button" className={calMode === "count" ? "active" : ""} aria-pressed={calMode === "count"} onClick={() => setCalMode("count")}>
+                건수
+              </button>
+              <button type="button" className={calMode === "detail" ? "active" : ""} aria-pressed={calMode === "detail"} onClick={() => setCalMode("detail")}>
+                자세히
+              </button>
+            </span>
             <Link
               href={prevMonthHref}
               className="rounded-sm border border-[var(--erp-border)] px-2 py-1 text-xs text-[var(--erp-text-muted)] hover:bg-[var(--erp-hover)]"
@@ -1019,6 +1032,7 @@ export function DashboardCalendar({
                       : "text-[var(--erp-text)]";
               // 칸 안의 띠(매출·매입·할 일·일정·재고 부족·메모·이월) — 넓으면 글자로, 좁은 칸·모바일은 점으로 보인다.
               const bands = buildDayBands(data, { lowStockCount: isToday && lowStockToday ? (lowStock?.length ?? 1) : 0 });
+              const counts = buildDayCounts(data, { lowStockCount: isToday && lowStockToday ? (lowStock?.length ?? 1) : 0 });
               const tooltip = [holidayName, bandsTooltip(bands.all)].filter(Boolean).join("\n") || undefined;
               return (
                 <button
@@ -1037,13 +1051,20 @@ export function DashboardCalendar({
                   <div className={dayColorClass}>{cell.day}</div>
                   {holidayName ? <div className="erp-cal-holiday">{holidayName}</div> : null}
                   <div className="erp-cal-rich">
-                    {bands.shown.map((b, i) => (
-                      <div key={i} className={`erp-cal-chip is-${b.kind}`}>
-                        {b.tag && <em>{b.tag}</em>}
-                        {b.text}
-                      </div>
-                    ))}
-                    {bands.more > 0 ? <div className="erp-cal-more">외 {bands.more}건</div> : null}
+                    {calMode === "count"
+                      ? counts.map((c) => (
+                          <div key={c.kind} className={`erp-cal-count is-${c.kind}`}>
+                            <span>{c.label}</span>
+                            <b>{c.count}건</b>
+                          </div>
+                        ))
+                      : bands.shown.map((b, i) => (
+                          <div key={i} className={`erp-cal-chip is-${b.kind}`}>
+                            {b.tag && <em>{b.tag}</em>}
+                            {b.text}
+                          </div>
+                        ))}
+                    {calMode === "detail" && bands.more > 0 ? <div className="erp-cal-more">외 {bands.more}건</div> : null}
                   </div>
                   <div className="erp-cal-dots">
                     {bands.all.map((b, i) => (

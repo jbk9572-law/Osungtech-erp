@@ -1,5 +1,4 @@
 import { withPageTiming } from "@/lib/page-timing";
-import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
@@ -8,12 +7,10 @@ import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getNotificationSummary } from "@/lib/notifications";
 import { buildBackHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
-import { todoTypeLabel } from "@/lib/todo-flow";
 import { mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/modules/paper-calc/public";
 import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
-import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
 import { getMonthTodosByDate, type MonthTodo } from "@/lib/dashboard-month-todos";
@@ -729,9 +726,6 @@ async function DashboardPage({
     Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseTotal, 0) + carryoverInPurchaseTotal;
   const monthPurchaseCount = Object.values(dataByDate).reduce((sum, day) => sum + day.purchaseCount, 0);
 
-  const hasAlerts =
-    unreadAnnouncements.length > 0 || dueSoonTodos.length > 0 || lowStockItems.length > 0;
-
   // 대시보드에서 공지/할일을 열었다가 닫으면 그 레코드의 기본 목록이
   // 아니라 대시보드로 돌아와야 한다(사용자 지적 — "상세보기 끄면 엉뚱한
   // 메뉴로 이동해버린다").
@@ -790,46 +784,6 @@ async function DashboardPage({
         showReceivables={!!customerBalances}
         products={stockLookupProducts}
       />
-      {hasAlerts && (
-        <div className="erp-alert-banner">
-          {unreadAnnouncements.slice(0, 3).map((a) => (
-            <Link key={`a-${a.id}`} href={`/announcements/${a.id}?back=${dashboardBack}`} className="erp-alert-item">
-              <span className="erp-alert-tag">공지</span>
-              {a.pinned ? "📌 " : ""}
-              {a.title}
-            </Link>
-          ))}
-          {dueSoonTodos.slice(0, 10).map((t) => {
-            const overdue = !!t.due_date && t.due_date < todayStr;
-            const itemCount = t.itemCount;
-            return (
-              <Link
-                key={`d-${t.id}`}
-                href={`/todos/${t.id}?back=${dashboardBack}`}
-                className={`erp-alert-item${overdue ? " danger" : ""}`}
-              >
-                <span className={`erp-alert-tag${overdue ? " danger" : ""}`}>{overdue ? "지연" : "할 일"}</span>
-                {t.title}
-                {t.due_date ? ` (${t.due_date})` : ""}
-                <GridBadge tone="muted" style={{ marginLeft: 6 }}>
-                  {todoTypeLabel(t.todoType, t.shipDate, t.due_date)}
-                </GridBadge>
-                {itemCount > 0 && (
-                  <GridBadge tone="muted" style={{ marginLeft: 4 }}>
-                    품목 {itemCount}건
-                  </GridBadge>
-                )}
-              </Link>
-            );
-          })}
-          {lowStockItems.length > 0 && (
-            <Link href="#stock-risk" className="erp-alert-item danger">
-              <span className="erp-alert-tag danger">재고</span>
-              안전재고 이하 품목이 {lowStockItems.length}건 있습니다 — 자세히 보기 →
-            </Link>
-          )}
-        </div>
-      )}
       <div className="erp-home">
       <DashboardCalendar
         year={year}

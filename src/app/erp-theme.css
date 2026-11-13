@@ -4729,52 +4729,6 @@ a.erp-detail-tab:hover:not(.active) {
   word-break: break-word;
 }
 
-/* ── 대시보드 알림 배너(공지/할일 마감) ───────────────────────── */
-.erp-alert-banner {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.erp-alert-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px 5px 6px;
-  border: 1px solid var(--erp-warning-border);
-  border-radius: var(--erp-radius-3xl, 0);
-  background: var(--erp-panel);
-  color: var(--erp-warning);
-  font-size: var(--erp-font-base);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.erp-alert-item:hover {
-  background: var(--erp-warning-bg);
-}
-
-.erp-alert-item.danger {
-  border-color: var(--erp-danger-border);
-  color: var(--erp-danger);
-}
-
-.erp-alert-tag {
-  flex: 0 0 auto;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--erp-bg);
-  color: var(--erp-text-muted);
-  font-size: var(--erp-font-xs);
-  font-weight: 700;
-}
-
-.erp-alert-tag.danger {
-  background: var(--erp-danger-bg);
-  color: var(--erp-danger);
-}
-
 /* ── 미확인 알림 팝업(10분마다 재확인) ────────────────────────── */
 /* 항목마다 독립된 박스로 하나씩 쌓인다. column-reverse라 새로 추가된
    항목이 원점(우측 하단, 메신저 FAB 바로 위)에 붙고 먼저 뜬 항목들은
@@ -6318,6 +6272,43 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-cal-chip.is-stock { border-left-color: var(--erp-danger); background: var(--erp-danger-bg, var(--erp-hover)); }
 .erp-cal-chip.is-note { border-left-color: var(--erp-text-muted); background: var(--erp-bg-subtle); }
 .erp-cal-chip.is-carry { border-left-color: var(--erp-text-muted); background: var(--erp-bg-subtle); }
+/* 건수 모드 한 줄 — "매출 ........ 3건" (종류별 색 띠, 업체명 없이 건수만) */
+.erp-cal-count {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 4px;
+  border-left: 3px solid var(--erp-select-accent);
+  border-radius: var(--erp-radius-sm, 0);
+  background: var(--erp-hover);
+  font-size: var(--erp-font-xs);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.erp-cal-count b { font-weight: 800; }
+.erp-cal-count.is-sales { border-left-color: var(--erp-success); background: var(--erp-success-bg); }
+.erp-cal-count.is-purchase { border-left-color: var(--erp-primary); background: var(--erp-info-bg); }
+.erp-cal-count.is-todo { border-left-color: var(--erp-warning); background: var(--erp-warning-bg); }
+.erp-cal-count.is-stock { border-left-color: var(--erp-danger); background: var(--erp-danger-bg); }
+.erp-cal-cell.is-selected .erp-cal-count { background: transparent; border-left-color: var(--erp-on-primary); color: var(--erp-on-primary); }
+
+/* 두 가지 중 하나를 고르는 짧은 전환 버튼(예: 달력 건수/자세히) */
+.erp-seg { display: inline-flex; }
+.erp-seg button {
+  margin-left: -1px;
+  padding: 3px 10px;
+  border: 1px solid var(--erp-border);
+  background: var(--erp-panel);
+  color: var(--erp-text);
+  font: inherit;
+  font-size: var(--erp-font-sm);
+  cursor: pointer;
+}
+.erp-seg button:first-child { margin-left: 0; border-radius: var(--erp-radius-md, 0) 0 0 var(--erp-radius-md, 0); }
+.erp-seg button:last-child { border-radius: 0 var(--erp-radius-md, 0) var(--erp-radius-md, 0) 0; }
+.erp-seg button.active { background: var(--erp-primary); border-color: var(--erp-primary); color: var(--erp-on-primary); }
+
 .erp-cal-more { font-size: var(--erp-font-xs); color: var(--erp-text-muted); }
 .erp-cal-cell.is-selected .erp-cal-more { color: var(--erp-on-primary); }
 .erp-cal-cell.is-selected .erp-cal-chip { background: transparent; border-left-color: var(--erp-on-primary); color: var(--erp-on-primary); }
