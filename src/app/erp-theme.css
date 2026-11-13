@@ -3914,7 +3914,8 @@ a.erp-detail-tab:hover:not(.active) {
 /* ── Home Workspace ────────────────────────────────────────── */
 .erp-home {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  /* 3분할: 사이드(재고위험·메모·바로가기) | 달력 | 오늘 리포트 */
+  grid-template-columns: 260px minmax(0, 1fr) 360px;
   gap: 16px;
   align-items: start;
 }
@@ -3927,6 +3928,15 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-home,
 .erp-home * {
   min-width: 0;
+}
+
+@media (max-width: 1300px) {
+  .erp-home {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .erp-home-report {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -5852,11 +5862,10 @@ a.erp-detail-tab:hover:not(.active) {
 /* ── 메인 화면 "오늘 리포트" 박스 (daily-report-box.tsx) ─────────────────
    하루치 매출·매입·수금지급·재고를 한 박스로 보여준다. 색/간격/글자 크기는 전부
    --erp-* 토큰만 쓴다. 헤더는 앱 맨 위 남색 타이틀바와 겹쳐 보이지 않게 옅은
-   바탕(--erp-bg-subtle)에 남색 글자로 둔다. .erp-home 격자 안에서는 항상
-   맨 위 한 줄 전체를 차지한다(대시보드 달력이 이 격자의 자식이라서). */
-.erp-home > .erp-daily-report {
-  grid-column: 1 / -1;
-  order: -1;
+   바탕(--erp-bg-subtle)에 남색 글자로 둔다. .erp-home 격자의 오른쪽 한 칸
+   (.erp-home-report, 좁은 화면에서는 아래 한 줄 전체)에 들어가므로 구역은 세로로 쌓는다. */
+.erp-home-report {
+  min-width: 0;
 }
 
 .erp-daily-report {
@@ -5902,17 +5911,25 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-daily-report-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .erp-daily-report-sec {
-  padding: 14px 16px;
-  border-right: 1px solid var(--erp-divider);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--erp-divider);
   min-width: 0;
 }
 
 .erp-daily-report-sec:last-child {
-  border-right: 0;
+  border-bottom: 0;
+}
+
+/* 리포트 맨 아래 추가 구역(그날 메모·일정·이월 안내) */
+.erp-daily-report-extra {
+  border-radius: var(--erp-radius-xl, 0);
+  padding: 12px 14px;
+  border-top: 1px solid var(--erp-border-strong);
+  background: var(--erp-bg-subtle);
 }
 
 .erp-daily-report-sec-title {

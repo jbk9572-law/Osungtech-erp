@@ -153,6 +153,7 @@ export function DailyReportBox({
   money,
   lowStock,
   monthTotals,
+  children,
 }: {
   monthTotals: ReportMonthTotals | null;
   year: number;
@@ -165,6 +166,8 @@ export function DailyReportBox({
   getDay: (dateStr: string) => ReportDay;
   money: ReportMoney | null;
   lowStock: ReportLowStock[];
+  // 리포트 맨 아래에 붙는 추가 구역(그날 메모·일정 등).
+  children?: React.ReactNode;
 }) {
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
   const [modal, setModal] = useState<null | "detail" | "copy">(null);
@@ -410,6 +413,8 @@ export function DailyReportBox({
           )}
         </div>
       </div>
+
+      {children ? <div className="erp-daily-report-extra">{children}</div> : null}
 
       {modal === "detail" && (
         <Modal
