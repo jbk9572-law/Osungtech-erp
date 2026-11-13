@@ -2,8 +2,6 @@ import { withPageTiming } from "@/lib/page-timing";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { OnboardingBanner } from "@/components/onboarding-banner";
-import type { StockLookupProduct } from "@/components/quick-stock-lookup";
-import { sumInventoryQuantity } from "@/lib/inventory-quantity";
 import { getNotificationSummary } from "@/lib/notifications";
 import { buildBackHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -12,17 +10,16 @@ import { PAPER_STOCK_SKU, isPaperCalcEnabled } from "@/modules/paper-calc/public
 import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { canViewPage } from "@/lib/department-page-access";
 import { getMonthTodosByDate, type MonthTodo } from "@/lib/dashboard-month-todos";
 import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
+import { loadDashboardMoney } from "@/lib/dashboard-money";
+import { early } from "@/lib/early";
 import { sourceMeta, type SourceId } from "@/lib/dashboard-sources";
 import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
 import { DashboardTodoPanel } from "@/components/dashboard-todo-panel";
 import { DashboardTopBar } from "@/components/dashboard-top-bar";
 import { attendanceTimeLabel, getDashboardAttendance } from "@/lib/dashboard-attendance";
-import { resolveDashboardSources } from "@/lib/dashboard-source-data";
-import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
-import type { ReportMoney } from "@/components/daily-report-box";
+import { prefetchDashboardSources, resolveDashboardSources } from "@/lib/dashboard-source-data";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -96,16 +93,25 @@ async function DashboardPage({
   // 남아있어야 한다 — 아래 carryoverWorkSales/Purchases 조회에서 쓴다.
   const workDateRange = kstMonthRangeUtcIso(year, month);
 
+  // 서로 상관없는 조회는 맨 처음에 한꺼번에 출발시킨다 — DB를 부를 때마다 왕복 시간이 드는데, 앞 조회가 끝나길 기다렸다가
+  // 순서대로 시작하면 그 시간이 계속 더해진다(예전엔 순서대로 약 9~10단계). 아래 값들은 필요한 자리에서 받는다.
+  const userP = early(getUser());
+  const layoutsP = early(userP.then((u) => loadDashboardLayouts(supabase, u?.id ?? null)));
+  const attendanceP = early(userP.then((u) => getDashboardAttendance(supabase, u?.id ?? null, todayStr)));
+  const monthTodosP = early(getMonthTodosByDate(supabase, monthStart, monthEnd));
+  const moneyP = early(loadDashboardMoney(supabase, monthStart, monthEnd));
+  const prefetchP = early(
+    Promise.all([userP, layoutsP]).then(([u, l]) =>
+      prefetchDashboardSources({ supabase, userId: u?.id ?? null, todayStr, selection: l.layout.sources }),
+    ),
+  );
+
   const [user, { userId: currentUserId, isAdmin }, paperCalcEnabled] = await Promise.all([
-    getUser(),
+    userP,
     getCurrentActor(supabase),
     isPaperCalcEnabled(supabase),
   ]);
-
-  const attendancePromise = getDashboardAttendance(supabase, user?.id ?? null, todayStr);
-
-  // 사용자가 저장한 위젯 배치(없으면 기본 배치) — 저장값은 항상 검증·보정해서 쓴다.
-  const { layout: dashboardLayout, companyLayout } = await loadDashboardLayouts(supabase, user?.id ?? null);
+  const { layout: dashboardLayout, companyLayout } = await layoutsP;
 
   const [
     salesItems,
@@ -122,7 +128,6 @@ async function DashboardPage({
     carryoverInPurchases,
     { data: myProfile },
     notifications,
-    stockLookupProductRows,
   ] = await Promise.all([
     // 매출/매입 라인아이템은 거래량이 많은 테넌트에서 한 달에 PostgREST
     // 기본 max_rows(1000)를 쉽게 넘을 수 있어, 메인 대시보드 집계가
@@ -235,41 +240,14 @@ async function DashboardPage({
     user
       ? getNotificationSummary(supabase, user.id)
       : Promise.resolve({ announcements: [], todos: [], lowStock: [] }),
-    // 대시보드 "퀵 재고조회" 패널용 — 재고관리 > 재고현황과 같은 products+
-    // inventory 조인(sumInventoryQuantity 기준)을 그대로 써서, 재고현황
-    // 화면과 항상 같은 수치를 보여준다.
-    fetchAllRows<{
-      id: string;
-      sku: string;
-      name: string;
-      spec: string | null;
-      unit: string;
-      base_package_qty: number | null;
-      reorder_point: number | null;
-      categories: { name: string } | null;
-      inventory: { quantity: number; warehouse_id: string }[];
-    }>((from, to) =>
-      supabase
-        .from("products")
-        .select(
-          "id, sku, name, spec, unit, base_package_qty, reorder_point, categories(name), inventory(quantity, warehouse_id)"
-        )
-        .order("name")
-        .range(from, to),
-    ),
   ]);
 
-  const stockLookupProducts: StockLookupProduct[] = stockLookupProductRows.map((p) => ({
-    id: p.id,
-    sku: p.sku,
-    name: p.name,
-    spec: p.spec,
-    unit: p.unit,
-    categoryName: p.categories?.name ?? null,
-    basePackageQty: p.base_package_qty,
-    reorderPoint: p.reorder_point,
-    quantity: sumInventoryQuantity(p.inventory),
-  }));
+  // 회사 캘린더(/calendar)의 회의·연차 조회는 내 회사 정보(myProfile)가 나오자마자 시작해서, 아래 FIFO 조회와 동시에 진행한다.
+  const calendarItemsP = early(
+    myProfile
+      ? getCalendarItems(supabase, { from: `${monthStart}T00:00:00`, to: `${monthEnd}T23:59:59`, tenantId: myProfile.tenant_id, isDemo: myProfile.is_demo })
+      : Promise.resolve([] as CalendarItem[]),
+  );
 
   const unreadAnnouncements = notifications.announcements;
   const dueSoonTodos = notifications.todos;
@@ -647,12 +625,7 @@ async function DashboardPage({
   // 그대로 얹는다 — /calendar 화면과 같은 조회 함수를 써서 두 화면이
   // 어긋나지 않게 한다.
   if (myProfile) {
-    const calendarItems = await getCalendarItems(supabase, {
-      from: `${monthStart}T00:00:00`,
-      to: `${monthEnd}T23:59:59`,
-      tenantId: myProfile.tenant_id,
-      isDemo: myProfile.is_demo,
-    });
+    const calendarItems = await calendarItemsP;
     for (const item of calendarItems) {
       let cur = item.startAt.slice(0, 10);
       const end = item.endAt.slice(0, 10);
@@ -669,49 +642,13 @@ async function DashboardPage({
     }
   }
 
-  const monthTodos = await getMonthTodosByDate(supabase, monthStart, monthEnd);
+  const monthTodos = await monthTodosP;
   for (const [date, list] of Object.entries(monthTodos.byDate)) ensure(date).todoItems.push(...list);
 
   const weeks = buildWeeks(year, month);
 
-  // "오늘 리포트" 박스의 수금·지급·잔액. 부서별 화면 접근 권한(미수금현황/미지급금현황)을
-  // 그대로 따른다 — 권한 없는 쪽은 null로 내려 박스가 그 칸을 그리지 않는다.
-  const [canSeeReceivables, canSeePayables] = await Promise.all([
-    canViewPage(supabase, "/receivables"),
-    canViewPage(supabase, "/payables"),
-  ]);
-  const sumPaymentsByDate = (rows: { paid_at: string; amount: string | number }[]) => {
-    const byDate: Record<string, number> = {};
-    for (const row of rows) byDate[row.paid_at] = (byDate[row.paid_at] ?? 0) + Number(row.amount);
-    return byDate;
-  };
-  const [collectedRows, paidRows, customerBalances, supplierBalances] = await Promise.all([
-    canSeeReceivables
-      ? fetchAllRows<{ paid_at: string; amount: string | number }>((from, to) =>
-          supabase.from("customer_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to),
-        )
-      : Promise.resolve(null),
-    canSeePayables
-      ? fetchAllRows<{ paid_at: string; amount: string | number }>((from, to) =>
-          supabase.from("supplier_payments").select("paid_at, amount").gte("paid_at", monthStart).lte("paid_at", monthEnd).range(from, to),
-        )
-      : Promise.resolve(null),
-    canSeeReceivables ? getAllCustomerBalances(supabase) : Promise.resolve(null),
-    canSeePayables ? getAllSupplierBalances(supabase) : Promise.resolve(null),
-  ]);
-  const reportMoney: ReportMoney | null =
-    canSeeReceivables || canSeePayables
-      ? {
-          collectedByDate: collectedRows ? sumPaymentsByDate(collectedRows) : null,
-          paidByDate: paidRows ? sumPaymentsByDate(paidRows) : null,
-          receivable: customerBalances
-            ? { amount: sumOutstandingBalance(customerBalances), parties: customerBalances.filter((b) => b.balance > 0).length }
-            : null,
-          payable: supplierBalances
-            ? { amount: sumOutstandingBalance(supplierBalances), parties: supplierBalances.filter((b) => b.balance > 0).length }
-            : null,
-        }
-      : null;
+  // "일일 리포트"의 수금·지급·잔액(권한 따라 일부 null) — 맨 처음에 시작해 둔 조회(moneyP)를 여기서 받는다.
+  const { reportMoney, customerBalances, supplierBalances } = await moneyP;
 
   // 오늘 매출/매입, 재고위험 건수는 전부 바로 아래 달력 옆 "오늘의 업무"
   // 패널과 "재고위험" 패널에 이미 자세히 나오는 정보라, 요약 카드에는
@@ -736,11 +673,9 @@ async function DashboardPage({
   const todayData = dataByDate[todayStr] as DayData | undefined;
   const todayInView = todayStr.startsWith(`${year}-${String(month).padStart(2, "0")}`);
   const sources = await resolveDashboardSources({
-    supabase,
-    userId: user?.id ?? null,
+    prefetch: prefetchP,
     todayStr,
     backHref: dashboardBack,
-    selection: dashboardLayout.sources,
     customerBalances,
     supplierBalances,
     todos: dueSoonTodos,
@@ -754,7 +689,7 @@ async function DashboardPage({
   });
   const overdueCustomers = sources.overdueCustomers;
   const firstEvent = todayData?.calendarItems[0];
-  const attendance = await attendancePromise;
+  const attendance = await attendanceP;
   const tabsOf = (ids: SourceId[]) =>
     ids.filter((id) => sources.itemsOf(id) !== null).map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [], note: sources.noteOf(id) }));
   const sidePanels = {
@@ -782,7 +717,6 @@ async function DashboardPage({
       <DashboardTopBar
         clock={attendance ? { clockInTime: attendanceTimeLabel(attendance.clockInAt), clockOutTime: attendanceTimeLabel(attendance.clockOutAt) } : null}
         showReceivables={!!customerBalances}
-        products={stockLookupProducts}
       />
       <div className="erp-home">
       <DashboardCalendar

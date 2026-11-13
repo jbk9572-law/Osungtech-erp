@@ -1,4 +1,5 @@
 import { reportServerError } from "@/lib/error-tracking";
+import { runWithDbStats } from "@/lib/db-call-stats";
 
 // 어느 화면이 서버에서 몇 초 걸리는지 숫자로 알기 위한 측정 래퍼 — 앱 전체
 // 속도 개선을 "추측"이 아니라 측정부터 하자는 결정으로 만들었다. 평소(문턱값
@@ -17,19 +18,23 @@ export function withPageTiming<Props>(
 ): (props: Props) => Promise<React.ReactNode> {
   return async function TimedPage(props: Props) {
     const start = Date.now();
-    try {
-      return await page(props);
-    } finally {
-      const durationMs = Date.now() - start;
-      const now = Date.now();
-      if (durationMs >= SLOW_PAGE_THRESHOLD_MS && now - (lastReportedAt.get(label) ?? 0) >= REPORT_INTERVAL_MS) {
-        lastReportedAt.set(label, now);
-        console.error(JSON.stringify({ tag: "slowPage", label, durationMs }));
-        await reportServerError(
-          Object.assign(new Error(`page ${label} took ${durationMs}ms`), { name: "SlowPageWarning" }),
-          { label, durationMs },
-        );
+    return runWithDbStats(async (db) => {
+      try {
+        return await page(props);
+      } finally {
+        const durationMs = Date.now() - start;
+        const now = Date.now();
+        if (durationMs >= SLOW_PAGE_THRESHOLD_MS && now - (lastReportedAt.get(label) ?? 0) >= REPORT_INTERVAL_MS) {
+          lastReportedAt.set(label, now);
+          // dbCalls/dbMs: 이 화면이 Supabase를 몇 번 불렀고 호출별 시간의 합이 얼마인지(병렬이면 실제 대기보다 큼)
+          const detail = { label, durationMs, dbCalls: db.calls, dbMs: Math.round(db.ms) };
+          console.error(JSON.stringify({ tag: "slowPage", ...detail }));
+          await reportServerError(
+            Object.assign(new Error(`page ${label} took ${durationMs}ms (DB ${db.calls}번, 합 ${Math.round(db.ms)}ms)`), { name: "SlowPageWarning" }),
+            detail,
+          );
+        }
       }
-    }
+    });
   };
 }
