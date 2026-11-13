@@ -30,6 +30,10 @@ export default async function MessengerPageRoute() {
   const isAdmin = (profiles ?? []).find((p) => p.id === user.id)?.role === "admin";
 
   const { data: allChannelId } = await safeQuery<string>(supabase.rpc("get_or_create_all_channel"));
+  // 내가 알림을 꺼 둔 방 — 목록에 "알림 끔" 표시와 대화창 위 알림 켜기/끄기 버튼에 쓴다.
+  const { data: mutedRows } = await safeQuery<{ channel_id: string }[]>(
+    supabase.from("messenger_channel_reads").select("channel_id").eq("user_id", user.id).eq("muted", true).limit(500),
+  );
 
   const [{ data: channelRows }, { data: memberRows }, { data: messages }] = await Promise.all([
     safeQuery<{ id: string; type: string; name: string | null }[]>(
@@ -94,6 +98,7 @@ export default async function MessengerPageRoute() {
       profileNames={profileNames}
       currentUserId={user.id}
       isAdmin={isAdmin}
+      mutedChannelIds={(mutedRows ?? []).map((r) => r.channel_id)}
     />
   );
 }

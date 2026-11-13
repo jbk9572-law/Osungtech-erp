@@ -35,7 +35,7 @@ import {
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
-import { formatCompactWon } from "@/lib/format-compact-won";
+import { bandsTooltip, buildDayBands } from "@/lib/calendar-bands";
 
 export type ItemRow = {
   partnerName: string;
@@ -95,7 +95,19 @@ type DayData = {
   // 재사용한다 — 대시보드 전용 데이터를 따로 만들면 캘린더 화면과
   // 어긋날 수 있어, src/lib/calendar-data.ts의 같은 타입/조회 함수를 쓴다.
   calendarItems: CalendarItem[];
+  // 이 날 마감인 할 일(아직 안 끝난 것) — 달력 칸에 주황 띠로 보인다
+  todoItems: { id: string; title: string }[];
 };
+
+// 달력 아래 범례 — 칸 안 띠·점의 색과 같은 종류 이름
+const CAL_LEGEND: [string, string][] = [
+  ["sales", "매출"],
+  ["purchase", "매입"],
+  ["todo", "할 일"],
+  ["event", "일정·휴가"],
+  ["stock", "재고 부족(오늘)"],
+  ["note", "메모·이월"],
+];
 
 type Cell = { dateStr: string; day: number } | null;
 
@@ -793,6 +805,7 @@ export function DashboardCalendar({
   sourceOptions,
   sidePanels,
   companyLayout,
+  todoTruncated = false,
   reportMoney,
   lowStock,
   monthTotals,
@@ -817,6 +830,8 @@ export function DashboardCalendar({
   sourceOptions: { id: SourceId; title: string }[];
   sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
   companyLayout: DashboardLayout;
+  // 이번 달 마감 할 일이 상한을 넘어 일부만 띠로 보일 때 true
+  todoTruncated?: boolean;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -859,6 +874,7 @@ export function DashboardCalendar({
     carryoverInPurchases: [],
     notes: [],
     calendarItems: [],
+    todoItems: [],
   };
   const dayPanel = (
     <>
@@ -1001,41 +1017,14 @@ export function DashboardCalendar({
                     : isSaturday
                       ? "text-[var(--erp-primary)]"
                       : "text-[var(--erp-text)]";
-              const showLowStockDot = isToday && lowStockToday;
-              const carryoverSalesCount =
-                data?.salesItems.filter((i) => i.isCarryover).length ?? 0;
-              const carryoverPurchaseCount =
-                data?.purchaseItems.filter((i) => i.isCarryover).length ?? 0;
-              const hasSalesDot = !!data?.salesCount || carryoverSalesCount > 0;
-              const hasPurchaseDot =
-                !!data?.purchaseCount || carryoverPurchaseCount > 0;
-              const hasScheduleDot = !!data?.calendarItems.length;
-              const tooltipParts = [
-                data?.salesCount ? `매출 ${data.salesCount}건` : null,
-                data?.purchaseCount ? `매입 ${data.purchaseCount}건` : null,
-                carryoverSalesCount
-                  ? `이월 매출 ${carryoverSalesCount}건`
-                  : null,
-                carryoverPurchaseCount
-                  ? `이월 매입 ${carryoverPurchaseCount}건`
-                  : null,
-                ...(data?.carryoverInSales.map(
-                  (e) => `${formatMonthDay(e.fromDate)} 작업분 이월됨(매출 ${e.itemCount}건)`,
-                ) ?? []),
-                ...(data?.carryoverInPurchases.map(
-                  (e) => `${formatMonthDay(e.fromDate)} 작업분 이월됨(매입 ${e.itemCount}건)`,
-                ) ?? []),
-                data?.notes.length ? "메모 있음" : null,
-                hasScheduleDot ? `일정 ${data!.calendarItems.length}건` : null,
-                showLowStockDot ? "안전재고 부족" : null,
-              ].filter(Boolean);
+              // 칸 안의 띠(매출·매입·할 일·일정·재고 부족·메모·이월) — 넓으면 글자로, 좁은 칸·모바일은 점으로 보인다.
+              const bands = buildDayBands(data, { lowStockCount: isToday && lowStockToday ? (lowStock?.length ?? 1) : 0 });
+              const tooltip = [holidayName, bandsTooltip(bands.all)].filter(Boolean).join("\n") || undefined;
               return (
                 <button
                   key={cell.dateStr}
                   type="button"
-                  title={
-                    tooltipParts.length ? tooltipParts.join(" · ") : undefined
-                  }
+                  title={tooltip}
                   onClick={() => setSelected(cell.dateStr)}
                   onDoubleClick={() => {
                     startRouteProgress();
@@ -1048,35 +1037,18 @@ export function DashboardCalendar({
                   <div className={dayColorClass}>{cell.day}</div>
                   {holidayName ? <div className="erp-cal-holiday">{holidayName}</div> : null}
                   <div className="erp-cal-rich">
-                    {data?.salesTotal ? (
-                      <div className="erp-cal-amt is-sales">
-                        <span className="erp-cal-dot is-sales" aria-label="매출" />
-                        <span>{formatCompactWon(data.salesTotal)}</span>
+                    {bands.shown.map((b, i) => (
+                      <div key={i} className={`erp-cal-chip is-${b.kind}`}>
+                        {b.tag && <em>{b.tag}</em>}
+                        {b.text}
                       </div>
-                    ) : null}
-                    {data?.purchaseTotal ? (
-                      <div className="erp-cal-amt is-purchase">
-                        <span className="erp-cal-dot is-purchase" aria-label="매입" />
-                        <span>{formatCompactWon(data.purchaseTotal)}</span>
-                      </div>
-                    ) : null}
-                    {carryoverSalesCount + carryoverPurchaseCount > 0 ? (
-                      <div className="erp-cal-chip is-carry">이월 {carryoverSalesCount + carryoverPurchaseCount}건</div>
-                    ) : null}
-                    {data?.calendarItems.slice(0, 2).map((ci) => (
-                      <div key={ci.id} className={`erp-cal-chip${ci.source === "leave" ? " is-leave" : ""}`}>{ci.title}</div>
                     ))}
-                    {data && data.calendarItems.length > 2 ? (
-                      <div className="erp-cal-more">외 {data.calendarItems.length - 2}건</div>
-                    ) : null}
-                    {data?.notes.length ? <div className="erp-cal-chip is-note">메모 {data.notes.length}</div> : null}
+                    {bands.more > 0 ? <div className="erp-cal-more">외 {bands.more}건</div> : null}
                   </div>
                   <div className="erp-cal-dots">
-                    {hasPurchaseDot ? <span className="erp-cal-dot is-purchase" /> : null}
-                    {hasSalesDot ? <span className="erp-cal-dot is-sales" /> : null}
-                    {data?.notes.length ? <span className="erp-cal-dot is-note" /> : null}
-                    {hasScheduleDot ? <span className="erp-cal-dot is-event" /> : null}
-                    {showLowStockDot ? <span className="erp-cal-dot is-stock" /> : null}
+                    {bands.all.map((b, i) => (
+                      <span key={i} className={`erp-cal-dot is-${b.kind}`} />
+                    ))}
                   </div>
                 </button>
               );
@@ -1085,27 +1057,13 @@ export function DashboardCalendar({
         </div>
 
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-[var(--erp-text-muted)]">
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-primary)]" />{" "}
-            매입
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-success)]" />{" "}
-            매출
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-warning)]" />{" "}
-            메모
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-info-text)]" />{" "}
-            일정
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--erp-danger)]" />{" "}
-            재고부족
-          </span>
+          {CAL_LEGEND.map(([kind, label]) => (
+            <span key={kind} className="flex items-center gap-1">
+              <span className={`erp-cal-dot is-${kind}`} /> {label}
+            </span>
+          ))}
         </div>
+        {todoTruncated && <p className="erp-u-muted erp-u-text-caption erp-u-mt-8">이번 달 할 일이 많아 일부만 띠로 표시됩니다. 전체는 할일관리에서 확인하세요.</p>}
 
         </div>
 

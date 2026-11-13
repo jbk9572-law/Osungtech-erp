@@ -13,6 +13,8 @@ export type CarryoverInput = { fromDate: string; itemCount: number; kind: "sales
 export type LowStockInput = { id: string; name: string; quantity: number; reorderPoint: number };
 export type AnnouncementInput = { id: string; title: string; pinned: boolean };
 export type MemoInput = { id: string; noteDate: string; content: string; author: string };
+export type ChatInput = { channelId: string; label: string; sender: string; content: string; unreadCount: number; timeLabel: string };
+export type BoardInput = { id: string; title: string; pinned: boolean; createdAt: string };
 export type MailInput = { id: string; subject: string; fromName: string; sentLabel: string };
 
 export type TodoItem = {
@@ -67,11 +69,14 @@ export function buildSourceItems(input: {
   lowStock: LowStockInput[];
   announcements: AnnouncementInput[];
   mails: MailInput[];
+  sentMails: MailInput[];
+  chats: ChatInput[];
+  boards: BoardInput[];
   memos: MemoInput[];
   todayStr: string;
   backHref: string;
 }): Record<SourceId, TodoItem[]> {
-  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [], mail: [], memo: [] };
+  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [], mail: [], sentMail: [], messenger: [], board: [], memo: [] };
   for (const a of input.approvals) {
     out.approval.push({
       key: `approval-${a.id}`,
@@ -158,6 +163,39 @@ export function buildSourceItems(input: {
       sub: m.fromName,
       due: m.sentLabel,
       href: `/mail?folder=INBOX&id=${m.id}`,
+      action: "읽기 →",
+    });
+  }
+  for (const m of input.sentMails) {
+    out.sentMail.push({
+      key: `sentMail-${m.id}`,
+      kind: "sentMail",
+      title: m.subject,
+      sub: `받는 사람 ${m.fromName}`,
+      due: m.sentLabel,
+      href: `/mail?folder=SENT&id=${m.id}`,
+      action: "보기 →",
+    });
+  }
+  for (const c of input.chats) {
+    out.messenger.push({
+      key: `messenger-${c.channelId}`,
+      kind: "messenger",
+      title: `${c.label} · ${c.content.length > 40 ? `${c.content.slice(0, 40)}…` : c.content}`,
+      sub: `${c.sender}${c.unreadCount > 1 ? ` 외 새 메시지 ${c.unreadCount}개` : ""}`,
+      due: c.timeLabel,
+      href: `/messenger?openMessenger=${c.channelId}`,
+      action: "열기 →",
+    });
+  }
+  for (const b of input.boards) {
+    out.board.push({
+      key: `board-${b.id}`,
+      kind: "board",
+      title: `${b.pinned ? "📌 " : ""}${b.title}`,
+      sub: "공지·게시글",
+      due: formatMonthDay(b.createdAt.slice(0, 10)),
+      href: `/announcements/${b.id}?back=${input.backHref}`,
       action: "읽기 →",
     });
   }

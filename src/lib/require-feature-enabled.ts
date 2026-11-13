@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -11,9 +12,15 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 // 그 검사가 아예 없어서 메뉴만 안 보일 뿐 URL을 직접 치면(북마크, 공유
 // 링크 등) 꺼둔 기능의 데이터를 그대로 읽고 쓸 수 있었다. 그 6개 모듈의
 // 진입 페이지에서 이 함수 하나로 통일해서 막는다.
-export async function isFeatureEnabled(supabase: SupabaseServerClient, featureKey: string): Promise<boolean> {
+// 한 화면을 그리는 동안 같은 클라이언트로 여러 기능(메일·메신저·인사 등)을 물어도 tenants 조회는 한 번만 한다
+// (메인 화면이 기능마다 따로 조회해서 왕복이 늘던 것을 막는다). 서버 액션처럼 렌더 밖에서 부르면 그냥 매번 조회한다.
+const disabledFeaturesOf = cache(async (supabase: SupabaseServerClient): Promise<string[]> => {
   const { data: tenant } = await supabase.from("tenants").select("disabled_features").maybeSingle();
-  return !(tenant?.disabled_features ?? []).includes(featureKey);
+  return tenant?.disabled_features ?? [];
+});
+
+export async function isFeatureEnabled(supabase: SupabaseServerClient, featureKey: string): Promise<boolean> {
+  return !(await disabledFeaturesOf(supabase)).includes(featureKey);
 }
 
 // 꺼진 기능이면 대시보드로 되돌린다 — paper-calc/page.tsx와 동일한 처리.

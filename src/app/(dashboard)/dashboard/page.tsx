@@ -16,6 +16,7 @@ import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
+import { getMonthTodosByDate, type MonthTodo } from "@/lib/dashboard-month-todos";
 import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
 import { sourceMeta, type SourceId } from "@/lib/dashboard-sources";
 import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
@@ -345,6 +346,7 @@ async function DashboardPage({
       createdBy: string | null;
     }[];
     calendarItems: CalendarItem[];
+    todoItems: MonthTodo[];
   };
 
   const dataByDate: Record<string, DayData> = {};
@@ -364,6 +366,7 @@ async function DashboardPage({
         carryoverInPurchases: [],
         notes: [],
         calendarItems: [],
+        todoItems: [],
       };
     }
     return dataByDate[date];
@@ -669,6 +672,9 @@ async function DashboardPage({
     }
   }
 
+  const monthTodos = await getMonthTodosByDate(supabase, monthStart, monthEnd);
+  for (const [date, list] of Object.entries(monthTodos.byDate)) ensure(date).todoItems.push(...list);
+
   const weeks = buildWeeks(year, month);
 
   // "오늘 리포트" 박스의 수금·지급·잔액. 부서별 화면 접근 권한(미수금현황/미지급금현황)을
@@ -756,7 +762,7 @@ async function DashboardPage({
   const firstEvent = todayData?.calendarItems[0];
   const attendance = await attendancePromise;
   const tabsOf = (ids: SourceId[]) =>
-    ids.filter((id) => sources.itemsOf(id) !== null).map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [] }));
+    ids.filter((id) => sources.itemsOf(id) !== null).map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [], note: sources.noteOf(id) }));
   const sidePanels = {
     kpi: (
       <DashboardKpiStrip
@@ -772,6 +778,8 @@ async function DashboardPage({
     ),
     todo: <DashboardTodoPanel tabs={tabsOf(dashboardLayout.sources.todo)} />,
     news: <DashboardTodoPanel label="소식 종류" empty="새 소식이 없습니다." tabs={tabsOf(dashboardLayout.sources.news)} />,
+    extra1: <DashboardTodoPanel label="추가 칸 1 종류" empty="표시할 내용이 없습니다." tabs={tabsOf(dashboardLayout.sources.extra1)} />,
+    extra2: <DashboardTodoPanel label="추가 칸 2 종류" empty="표시할 내용이 없습니다." tabs={tabsOf(dashboardLayout.sources.extra2)} />,
   };
 
   return (
@@ -846,6 +854,7 @@ async function DashboardPage({
         lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
         layout={dashboardLayout}
         companyLayout={companyLayout}
+        todoTruncated={monthTodos.truncated}
         sourceOptions={sources.options}
         sidePanels={sidePanels}
       />

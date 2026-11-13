@@ -10,14 +10,18 @@ import {
   createGroup,
   leaveGroup,
   resolveMessengerAttachmentUrl,
+  markMessengerChannelRead,
+  setMessengerChannelMuted,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
 import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
+import { useDebouncedCallback } from "@/lib/use-debounced-callback";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
-import { PaperclipIcon, ChatIcon, GroupIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { PaperclipIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel";
 
 export type { MessengerMessage };
 
@@ -74,50 +78,6 @@ function highlightText(text: string, query: string): React.ReactNode {
   }
   if (idx < text.length) parts.push(text.slice(idx));
   return parts;
-}
-
-function channelLabel(channel: MessengerChannel, profileNames: Record<string, string>, currentUserId: string): string {
-  if (channel.type === "all") return "전체";
-  if (channel.type === "group") return channel.name ?? "그룹";
-  const otherId = channel.memberIds.find((id) => id !== currentUserId);
-  return otherId ? (profileNames[otherId] ?? "구성원") : "DM";
-}
-
-// "전체"/그룹 채널은 선 아이콘으로, 1:1 DM은 상대방 이니셜 아바타로
-// 보여준다(이모지 👤보다 실제로 누구인지 한눈에 더 잘 들어온다).
-function ChannelAvatar({
-  channel,
-  profileNames,
-  currentUserId,
-  size = 20,
-}: {
-  channel: MessengerChannel;
-  profileNames: Record<string, string>;
-  currentUserId: string;
-  // 사이드바 채널 목록(기본값, 아이콘만)과 대화창 상단 헤더(더 크게)가
-  // 같은 컴포넌트를 공유하면서 크기만 다르게 쓴다.
-  size?: number;
-}) {
-  if (channel.type === "all") {
-    return (
-      <span className="erp-icon erp-u-text" style={{ width: size, height: size }} aria-hidden>
-        <ChatIcon />
-      </span>
-    );
-  }
-  if (channel.type === "group") {
-    return (
-      <span className="erp-icon erp-u-text" style={{ width: size, height: size }} aria-hidden>
-        <GroupIcon />
-      </span>
-    );
-  }
-  const label = channelLabel(channel, profileNames, currentUserId);
-  return (
-    <span className="erp-avatar" style={{ width: size, height: size, fontSize: Math.round(size * 0.45) }} aria-hidden>
-      {label[0] ?? "?"}
-    </span>
-  );
 }
 
 // 사원목록(roster)/채팅방목록(rooms)/대화창(chat)/그룹만들기(newGroup) —
@@ -265,6 +225,7 @@ export function MessengerPage({
   profileNames,
   currentUserId,
   isAdmin,
+  mutedChannelIds,
 }: {
   channels: MessengerChannel[];
   activeChannelId: string | null;
@@ -272,6 +233,7 @@ export function MessengerPage({
   profileNames: Record<string, string>;
   currentUserId: string;
   isAdmin: boolean;
+  mutedChannelIds: string[];
 }) {
   const [view, setView] = useState<View>("rooms");
   const [rosterQuery, setRosterQuery] = useState("");
@@ -301,10 +263,17 @@ export function MessengerPage({
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
   const activeChannelIdRef = useRef(activeChannelId);
+  const viewRef = useRef<View>("rooms");
+  const [mutedIds, setMutedIds] = useState<Set<string>>(new Set(mutedChannelIds));
+  // 대화창을 열어 둔 채 메시지가 연달아 와도 읽음 요청은 3초에 한 번만 보낸다.
+  const markReadSoon = useDebouncedCallback((channelId: string) => void markMessengerChannelRead(channelId), 3000);
 
   useEffect(() => {
     activeChannelIdRef.current = activeChannelId;
   }, [activeChannelId]);
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
 
   // "홈 화면"(채팅방목록)에서는 Esc가 대시보드로 나가고, 대화창/그룹
   // 만들기처럼 하위 화면이나 사원목록에서는 채팅방목록으로 한 단계만
@@ -317,9 +286,30 @@ export function MessengerPage({
     }
   });
 
+  async function toggleMute(channelId: string) {
+    const next = !mutedIds.has(channelId);
+    setMutedIds((prev) => {
+      const copy = new Set(prev);
+      if (next) copy.add(channelId);
+      else copy.delete(channelId);
+      return copy;
+    });
+    const res = await setMessengerChannelMuted(channelId, next);
+    if (res.error) {
+      // 실패하면 화면 표시를 원래대로 되돌린다.
+      setMutedIds((prev) => {
+        const copy = new Set(prev);
+        if (next) copy.delete(channelId);
+        else copy.add(channelId);
+        return copy;
+      });
+    }
+  }
+
   async function openChannel(channelId: string) {
     setActiveChannelId(channelId);
     setView("chat");
+    void markMessengerChannelRead(channelId); // 메인 화면 "메신저" 탭의 안 읽은 개수용
     setSearchQuery("");
     setUnseenChannelIds((prev) => {
       if (!prev.has(channelId)) return prev;
@@ -385,6 +375,9 @@ export function MessengerPage({
             return { ...prev, [row.channel_id]: [...bucket, row] };
           });
           const isActiveChannel = row.channel_id === activeChannelIdRef.current;
+          if (isActiveChannel && viewRef.current === "chat" && row.sender_id !== currentUserId) {
+            markReadSoon(row.channel_id);
+          }
           if (!isActiveChannel && row.sender_id !== currentUserId) {
             setUnseenChannelIds((prev) => new Set(prev).add(row.channel_id));
           }
@@ -703,7 +696,8 @@ export function MessengerPage({
                   <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
                 </span>
                 <span className="erp-u-flex-1 erp-u-text-left">{channelLabel(c, profileNames, currentUserId)}</span>
-                {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
+                {mutedIds.has(c.id) && <span className="erp-u-muted erp-u-text-caption" title="이 방의 알림이 꺼져 있습니다">🔕</span>}
+                {unseenChannelIds.has(c.id) && !mutedIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
               </button>
             ))}
           </div>
@@ -759,6 +753,9 @@ export function MessengerPage({
                       {channelLabel(activeChannel, profileNames, currentUserId)}
                     </span>
                     <span className="erp-messenger-erp-badge">ERP 연동 활성화됨</span>
+                    <button type="button" className="erp-btn erp-btn-xs" onClick={() => toggleMute(activeChannel.id)}>
+                      {mutedIds.has(activeChannel.id) ? "🔕 알림 켜기" : "🔔 알림 끄기"}
+                    </button>
                   </div>
 
                   <div className="erp-messenger-search">

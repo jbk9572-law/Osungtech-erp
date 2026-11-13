@@ -12,23 +12,31 @@ export const DASHBOARD_SOURCES = [
   { id: "carryover", title: "이월", tone: "muted", viewAll: "/sales", empty: "이월된 건이 없습니다." },
   { id: "lowStock", title: "재고 부족", tone: "warn", viewAll: "/inventory/reorder-suggestions", empty: "안전재고 이하 품목이 없습니다." },
   { id: "announcement", title: "읽지 않은 공지", tone: "info", viewAll: "/announcements", empty: "읽지 않은 공지가 없습니다." },
+  { id: "sentMail", title: "보낸 메일", tone: "muted", viewAll: "/mail?folder=SENT", requires: "mail", empty: "보낸 메일이 없습니다." },
+  { id: "messenger", title: "메신저", tone: "info", viewAll: "/messenger", requires: "messenger", empty: "안 읽은 대화가 없습니다." },
+  { id: "board", title: "최근 공지", tone: "muted", viewAll: "/announcements", empty: "공지가 없습니다." },
   { id: "memo", title: "최근 메모", tone: "muted", viewAll: "/calendar", empty: "등록된 메모가 없습니다." },
   { id: "mail", title: "받은 메일", tone: "info", viewAll: "/mail?folder=INBOX", requires: "mail", empty: "읽지 않은 메일이 없습니다." },
 ] as const;
 
 export type SourceId = (typeof DASHBOARD_SOURCES)[number]["id"];
-export type SourceRequirement = "receivables" | "payables" | "mail";
+export type SourceRequirement = "receivables" | "payables" | "mail" | "messenger";
 
 export type DashboardSourceSelection = {
   // "업무" 위젯의 탭(순서대로) — 내가 처리할 것
   todo: SourceId[];
   // "소식" 위젯의 탭(순서대로) — 들어오는 것(메일·공지·메모)
   news: SourceId[];
+  // 사용자가 "위젯 추가"로 만드는 추가 칸 2개의 탭 — 처음엔 비어 있다.
+  extra1: SourceId[];
+  extra2: SourceId[];
 };
 
 export const DEFAULT_SOURCE_SELECTION: DashboardSourceSelection = {
   todo: ["todo", "approval", "carryover", "overdue", "lowStock"],
   news: ["mail", "announcement", "memo"],
+  extra1: [],
+  extra2: [],
 };
 
 const META = new Map<string, (typeof DASHBOARD_SOURCES)[number]>(DASHBOARD_SOURCES.map((s) => [s.id, s]));
@@ -62,7 +70,11 @@ function normalizeTabList(raw: unknown, fallback: SourceId[]): SourceId[] {
 // 예전에 저장된 목록 칸(listA/listB) 같은 모르는 키는 그냥 무시한다.
 export function normalizeSourceSelection(raw: unknown): DashboardSourceSelection {
   const base = DEFAULT_SOURCE_SELECTION;
-  if (!raw || typeof raw !== "object") return { todo: [...base.todo], news: [...base.news] };
-  const src = raw as { todo?: unknown; news?: unknown };
-  return { todo: normalizeTabList(src.todo, base.todo), news: normalizeTabList(src.news, base.news) };
+  const src = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    todo: normalizeTabList(src.todo, base.todo),
+    news: normalizeTabList(src.news, base.news),
+    extra1: normalizeTabList(src.extra1, base.extra1),
+    extra2: normalizeTabList(src.extra2, base.extra2),
+  };
 }

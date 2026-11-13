@@ -4,6 +4,8 @@ import { useCallback, useState, useSyncExternalStore, type ReactNode } from "rea
 import ReactGridLayout, { useContainerWidth, verticalCompactor, type Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import { moveItem } from "@/lib/array-move";
+import { DashboardMobileEditor } from "@/components/dashboard-mobile-editor";
 import { resetDashboardLayout, saveDashboardLayout, saveTenantDefaultLayout } from "@/lib/dashboard-layout-actions";
 import { MAX_TODO_TABS, type SourceId } from "@/lib/dashboard-sources";
 import {
@@ -11,6 +13,7 @@ import {
   DASHBOARD_MARGIN,
   DASHBOARD_ROW_HEIGHT,
   DASHBOARD_WIDGETS,
+  isTabWidget,
   normalizeDashboardLayout,
   stackOrder,
   widgetIsBare,
@@ -19,6 +22,7 @@ import {
   type DashboardLayout,
   type DashboardLayoutItem,
   type DashboardWidgetId,
+  type TabWidgetId,
 } from "@/lib/dashboard-layout";
 
 // 메인 대시보드 위젯 배치 — 평소(보기)에는 CSS grid로 그려서 서버 렌더링과 똑같이 깜빡임 없이 나오고,
@@ -66,6 +70,7 @@ export function DashboardWidgetGrid({
   const [busy, setBusy] = useState(false);
   const [pickerFor, setPickerFor] = useState<DashboardWidgetId | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { width, containerRef, mounted } = useContainerWidth();
 
   const startEdit = () => {
@@ -93,7 +98,10 @@ export function DashboardWidgetGrid({
     });
 
   // 내용 고르기(오늘 할 일 탭은 여러 개·순서 있음, 목록 칸은 하나) — 저장하면 서버가 고른 내용을 불러와 반영한다.
-  type TabWidget = "todo" | "news";
+  type TabWidget = TabWidgetId;
+  // "위젯 추가" 메뉴에서 내용만 탭에 넣을 때 — 이미 있으면 그대로 둔다.
+  const addTabSource = (key: TabWidget, id: SourceId) =>
+    setDraft((d) => (d.sources[key].includes(id) || d.sources[key].length >= MAX_TODO_TABS ? d : { ...d, sources: { ...d.sources, [key]: [...d.sources[key], id] } }));
   const toggleTabSource = (key: TabWidget, id: SourceId) =>
     setDraft((d) => {
       const cur = d.sources[key];
@@ -101,18 +109,11 @@ export function DashboardWidgetGrid({
       return { ...d, sources: { ...d.sources, [key]: next } };
     });
   const moveTabSource = (key: TabWidget, id: SourceId, dir: -1 | 1) =>
-    setDraft((d) => {
-      const cur = [...d.sources[key]];
-      const i = cur.indexOf(id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= cur.length) return d;
-      [cur[i], cur[j]] = [cur[j], cur[i]];
-      return { ...d, sources: { ...d.sources, [key]: cur } };
-    });
+    setDraft((d) => ({ ...d, sources: { ...d.sources, [key]: moveItem(d.sources[key], id, dir) } }));
   const titleOf = (id: SourceId) => sourceOptions.find((o) => o.id === id)?.title ?? id;
 
   function renderPicker(id: DashboardWidgetId) {
-    if (id === "todo" || id === "news") {
+    if (isTabWidget(id)) {
       const chosen = draft.sources[id].filter((x) => sourceOptions.some((o) => o.id === x));
       const rest = sourceOptions.filter((o) => !chosen.includes(o.id));
       return (
@@ -178,6 +179,8 @@ export function DashboardWidgetGrid({
   // 내용이 없는 위젯(예: 권한이 없어 안 그리는 미수금 위젯)은 칸도 만들지 않는다.
   const shown = editing ? draft : layout;
   const present = (id: DashboardWidgetId) => widgets[id] != null;
+  // 지금 화면에 없는 위젯(숨겼거나 아직 안 만든 추가 칸) — "위젯 추가" 메뉴에 나온다.
+  const addable = DASHBOARD_WIDGETS.filter((w) => !draft.items.some((i) => i.id === w.id) && present(w.id));
   const order = stackOrder(layout);
 
   return (
@@ -187,11 +190,50 @@ export function DashboardWidgetGrid({
           {editing ? (
             <>
               <span className="erp-widget-bar-hint">위젯 위쪽 바를 끌어서 옮기고, 위젯의 왼쪽·오른쪽·아래 가장자리나 아래 모서리를 끌어서 크기를 바꾸세요.</span>
-              {draft.hidden.map((id) => (
-                <button key={id} type="button" className="erp-btn erp-btn-xs" onClick={() => showWidget(id)}>
-                  ＋ {widgetTitle(id)}
+              <div className="erp-widget-add">
+                <button type="button" className="erp-btn erp-btn-xs erp-btn-primary" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
+                  ＋ 위젯 추가 ▾
                 </button>
-              ))}
+                {menuOpen && (
+                  <div className="erp-widget-menu">
+                    <div className="erp-widget-menu-title">칸(위젯) 추가</div>
+                    {addable.length ? (
+                      addable.map((w) => (
+                        <div key={w.id} className="erp-widget-menu-row">
+                          <span>{w.title}</span>
+                          <button
+                            type="button"
+                            className="erp-btn erp-btn-xs"
+                            onClick={() => {
+                              showWidget(w.id);
+                              if (isTabWidget(w.id)) setPickerFor(w.id);
+                              setMenuOpen(false);
+                            }}
+                          >
+                            추가
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="erp-widget-menu-empty">모든 위젯이 이미 화면에 있습니다.</p>
+                    )}
+                    <div className="erp-widget-menu-title">내용을 탭에 넣기</div>
+                    {sourceOptions.map((o) => (
+                      <div key={o.id} className="erp-widget-menu-row">
+                        <span>{o.title}</span>
+                        <span className="erp-widget-menu-btns">
+                          {(["news", "todo"] as const).map((k) => (
+                            <button key={k} type="button" className="erp-btn erp-btn-xs" disabled={draft.sources[k].includes(o.id)} onClick={() => addTabSource(k, o.id)}>
+                              {k === "news" ? "소식" : "업무"}
+                            </button>
+                          ))}
+                        </span>
+                      </div>
+                    ))}
+                    <p className="erp-widget-picker-hint">저장하면 반영됩니다.</p>
+                  </div>
+                )}
+              </div>
               <span className="erp-daily-report-spacer" />
               <button type="button" className="erp-btn erp-btn-xs" disabled={busy} onClick={reset}>
                 기본값으로
@@ -218,6 +260,9 @@ export function DashboardWidgetGrid({
           )}
         </div>
       )}
+      {!wide && (
+        <DashboardMobileEditor layout={layout} shownIds={DASHBOARD_WIDGETS.map((w) => w.id).filter(present)} onSaved={setLayout} />
+      )}
       {message && <p className="erp-widget-message" role="alert">{message}</p>}
 
       {editing && wide ? (
@@ -236,7 +281,7 @@ export function DashboardWidgetGrid({
                 <div key={i.id} className={`erp-widget is-editing${widgetIsBare(i.id) ? " is-bare" : ""}`}>
                   <div className="erp-widget-handle">
                     <span>{widgetTitle(i.id)}</span>
-                    {(i.id === "todo" || i.id === "news") && (
+                    {isTabWidget(i.id) && (
                       <button
                         type="button"
                         className="erp-widget-handle-btn"
@@ -267,7 +312,7 @@ export function DashboardWidgetGrid({
           {layout.items.filter((i) => present(i.id)).map((i) => (
             <div
               key={i.id}
-              className={`erp-widget${widgetIsBare(i.id) ? " is-bare" : ""}`}
+              className={`erp-widget${widgetIsBare(i.id) ? " is-bare" : ""}${layout.mobile.hidden.includes(i.id) ? " is-mobile-hidden" : ""}`}
               style={{
                 gridColumn: `${i.x + 1} / span ${i.w}`,
                 gridRow: `${i.y + 1} / span ${i.h}`,

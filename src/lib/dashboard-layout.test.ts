@@ -24,7 +24,8 @@ describe("normalizeDashboardLayout", () => {
       ],
     });
     const ids = out.items.map((i) => i.id).sort();
-    expect(ids).toEqual(DASHBOARD_WIDGETS.map((w) => w.id).sort());
+    // 추가 칸(optional)은 사용자가 "위젯 추가"로 만들기 전에는 자동으로 채우지 않는다.
+    expect(ids).toEqual(DASHBOARD_WIDGETS.filter((w) => !("optional" in w)).map((w) => w.id).sort());
     expect(out.items.find((i) => i.id === "calendar")).toMatchObject({ x: 0, y: 0, w: 6, h: 12 });
     const def = DASHBOARD_WIDGETS.find((w) => w.id === "report")!.def;
     // 값이 깨진 위젯은 기본 크기로 되돌아온다(자리는 겹침 정리로 밀릴 수 있다).
@@ -88,5 +89,30 @@ describe("기본 배치", () => {
         expect(overlap, `${a.id}/${b.id}`).toBe(false);
       }
     }
+  });
+});
+
+describe("추가 칸(optional 위젯)", () => {
+  it("기본 배치에는 없고, 사용자가 저장한 배치에 있으면 그대로 살린다", () => {
+    expect(defaultDashboardLayout().items.some((i) => i.id === "extra1")).toBe(false);
+    const out = normalizeDashboardLayout({ items: [{ id: "extra1", x: 0, y: 40, w: 6, h: 8 }] });
+    expect(out.items.find((i) => i.id === "extra1")).toMatchObject({ x: 0, y: 40, w: 6, h: 8 });
+    expect(out.items.some((i) => i.id === "extra2")).toBe(false);
+  });
+});
+
+describe("좁은 화면 순서·숨김", () => {
+  it("저장값이 없으면 비어 있고, 모르는 id·중복은 버린다", () => {
+    expect(defaultDashboardLayout().mobile).toEqual({ order: [], hidden: [] });
+    const out = normalizeDashboardLayout({ mobile: { order: ["news", "news", "evil", "kpi"], hidden: ["report", 3] } });
+    expect(out.mobile).toEqual({ order: ["news", "kpi"], hidden: ["report"] });
+  });
+
+  it("지정한 순서가 먼저, 나머지는 위→아래 순서로 이어진다", () => {
+    const layout = normalizeDashboardLayout({ mobile: { order: ["report", "news"] } });
+    const order = stackOrder(layout);
+    expect(order.slice(0, 2)).toEqual(["report", "news"]);
+    expect(order).toHaveLength(layout.items.length);
+    expect(new Set(order).size).toBe(order.length);
   });
 });
