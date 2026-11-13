@@ -118,7 +118,6 @@
 .erp-u-gap-10 { gap: 10px !important; }
 .erp-u-gap-12 { gap: 12px !important; }
 .erp-u-gap-14 { gap: 14px !important; }
-.erp-u-gap-16 { gap: 16px !important; }
 .erp-u-gap-2 { gap: 2px !important; }
 .erp-u-gap-20 { gap: 20px !important; }
 .erp-u-gap-4 { gap: 4px !important; }
@@ -3913,11 +3912,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 /* ── Home Workspace ────────────────────────────────────────── */
 .erp-home {
-  display: grid;
-  /* 3분할: 사이드(재고위험·메모·바로가기) | 달력 | 오늘 리포트 */
-  grid-template-columns: 260px minmax(0, 1fr) 360px;
-  gap: 16px;
-  align-items: start;
+  min-width: 0;
 }
 
 /* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
@@ -3930,19 +3925,171 @@ a.erp-detail-tab:hover:not(.active) {
   min-width: 0;
 }
 
-@media (max-width: 1300px) {
-  .erp-home {
-    grid-template-columns: 220px minmax(0, 1fr);
+.erp-home-panel {
+  border-radius: var(--erp-comm-radius-row);
+  border-color: var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow-row);
+}
+
+@media (max-width: 768px) {
+  /* 데스크톱 전용 flex-fill 트릭(.erp-page:has(...) 등 — 위 ".erp-page가
+     분할뷰를 가진 화면에서만" 규칙 참고)은 목록+상세를 나란히 보여줄
+     때만 필요하다 — 모바일은 display:block으로 풀어서 목록/상세를
+     세로로 자연스럽게 쌓으므로, flex를 그대로 두면 컨테이너가 화면
+     높이만큼 고정된 채 내용이 넘쳐도 안 늘어나 잘려 보인다. 체인 전체를
+     block으로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
+  .erp-page:has(> div > .erp-split-shell),
+  .erp-page:has(> div > .erp-split3-shell),
+  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) {
+    display: block;
   }
-  .erp-home-report {
-    grid-column: 1 / -1;
+  .erp-page:has(> div > .erp-split-shell) > div,
+  .erp-page:has(> div > .erp-split3-shell) > div,
+  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) > div {
+    display: block;
+  }
+  .erp-split-shell {
+    display: block;
+  }
+  /* 특정 항목을 선택했을 때만 목록을 숨기고 상세를 전체 폭으로 보여준다
+     — 아무것도 선택 안 한 기본 상태(신규 등록 폼)는 목록과 함께 계속
+     세로로 쌓아 보여준다(모바일에서 신규 등록 폼 자체가 안 보이게
+     숨어버리는 걸 막기 위함). */
+  .erp-split-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+  .erp-split-list,
+  .erp-split-detail {
+    max-height: none;
+  }
+
+  .erp-split3-shell {
+    display: block;
+  }
+  .erp-split3-shell[data-mobile-view="detail"] .erp-cat-sidebar,
+  .erp-split3-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+  .erp-cat-sidebar {
+    max-height: none;
+    margin-bottom: 10px;
+  }
+
+  /* split3-shell을 쓰는 화면(메일함/공지사항)의 상세(메일 본문/글
+     읽기)는, 다른 분할뷰 화면(거래처 상세 등)과 달리 "목록에서 글 하나
+     열어본다"는 성격이 최신 SNS/메일 앱의 "전체화면으로 펼쳐지는
+     글/대화" 느낌에 가깝다(사용자 요청). 그래서 이 화면들에서만
+     .erp-split-detail의 카드 테두리를 없애 전용 화면처럼 보이게 한다
+     — .erp-split-shell(거래처/품목 등 13개 화면)이 쓰는 같은 클래스는
+     선택자를 .erp-split3-shell 안으로 좁혀서 그대로 둔다. */
+  .erp-split3-shell .erp-split-detail {
+    border: none;
+    padding: 14px 0 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
-@media (max-width: 1100px) {
-  .erp-home {
+/* ── 8. Status bar ─────────────────────────────────────────── */
+.erp-statusbar {
+  height: 26px;
+  flex: 0 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--erp-bg-subtle);
+  border-top: 1px solid var(--erp-border);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-statusbar span {
+  white-space: nowrap;
+}
+
+.erp-statusbar .sep {
+  color: var(--erp-glyph-muted);
+}
+
+/* 월별리포트/할일관리/공지사항 상단의 4칸 요약 카드 — 월별리포트/todos
+   페이지, announcement-grid-table.tsx 세 곳이 똑같은 인라인 스타일
+   (display:grid, repeat(4,1fr), gap:10, marginBottom:12)을 각자 들고
+   있었는데 모바일 대응이 하나도 없었다. .erp-home-panel이 overflow:
+   hidden이라 좁은 화면에서 4등분된 칸에 "1,234,567원" 같은 숫자가
+   부러질 자리 없이 통째로 잘려서 안 보이는 문제가 있어(재현: 360px
+   화면에서 카드 폭이 패딩 포함 74px 안팎, 숫자는 90-110px 필요),
+   인라인 스타일 대신 공용 클래스로 묶고 모바일에서 2칸으로 접는다. */
+.erp-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .erp-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* QR 라벨 인쇄 화면의 카드 그리드 — repeat(3,1fr)만 있고 모바일 대응이
+   없어서, 카드 안 QR SVG가 고정폭(110px)이라 grid item이 그 아래로 못
+   줄어들어 390px 화면에서 3번째 칸이 넘쳐 잘려 보이던 문제. 다른
+   요약카드 그리드(erp-kpi-row 등)와 같은 방식으로 좁은 화면에서 접는다. */
+.erp-qr-label-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .erp-qr-label-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .erp-qr-label-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.erp-hero-card {
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-left: 3px solid var(--erp-primary);
+  border-radius: var(--erp-radius-3xl, 0);
+  padding: 16px 18px;
+}
+
+.erp-hero-label {
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+
+.erp-hero-value {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Home Workspace ────────────────────────────────────────── */
+.erp-home {
+  min-width: 0;
+}
+
+/* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
+   최소 폭(min-width: auto)을 가져서, 모바일 1열 레이아웃에서 부모 grid
+   칸 너비를 무시하고 넘쳐버릴 수 있다(실제로 "최근 메모"의 긴 한 줄
+   메모 때문에 발생 확인됨). 자식들과 그 안의 모든 요소에 min-width: 0을
+   줘서 항상 grid 칸 너비에 맞게 줄어들 수 있게 한다. */
+.erp-home,
+.erp-home * {
+  min-width: 0;
 }
 
 .erp-home-panel {
@@ -5863,9 +6010,100 @@ a.erp-detail-tab:hover:not(.active) {
    하루치 매출·매입·수금지급·재고를 한 박스로 보여준다. 색/간격/글자 크기는 전부
    --erp-* 토큰만 쓴다. 헤더는 앱 맨 위 남색 타이틀바와 겹쳐 보이지 않게 옅은
    바탕(--erp-bg-subtle)에 남색 글자로 둔다. .erp-home 격자의 오른쪽 한 칸
-   (.erp-home-report, 좁은 화면에서는 아래 한 줄 전체)에 들어가므로 구역은 세로로 쌓는다. */
-.erp-home-report {
+   (.erp-widget, 사용자가 폭을 줄일 수 있다)에 들어가므로 구역은 세로로 쌓는다. */
+/* ── 대시보드 위젯 배치 (dashboard-widget-grid.tsx) ───────────────
+   칸 계산(행 높이·간격)은 react-grid-layout 설정(dashboard-layout.ts의
+   DASHBOARD_ROW_HEIGHT/DASHBOARD_MARGIN)과 같은 값이어야 편집 중 모양과
+   저장 후 모양이 일치한다. 좁은 화면(<1100px)은 한 줄로 쌓는다. */
+.erp-widget-wrap {
+  display: grid;
+  gap: 8px;
   min-width: 0;
+}
+
+.erp-widget-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-widget-bar-hint {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-widget-message {
+  margin: 0;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-danger);
+}
+
+.erp-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: 24px;
+  gap: 12px;
+}
+
+.erp-widget {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.erp-widget-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 위젯 칸(사용자가 정한 크기)을 안의 카드가 가득 채운다 — 내용이 적어도 칸 모양이 일정하다. */
+.erp-widget-body > * {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.erp-widget.is-editing {
+  border: 1px dashed var(--erp-primary);
+  border-radius: var(--erp-radius-xl, 0);
+  background: var(--erp-panel);
+  overflow: hidden;
+}
+
+.erp-widget.is-editing .erp-widget-body {
+  pointer-events: none;
+}
+
+.erp-widget-handle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  cursor: move;
+}
+
+.erp-widget-hide {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 1099px) {
+  .erp-widget-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  .erp-widget-body {
+    overflow: visible;
+  }
 }
 
 .erp-daily-report {

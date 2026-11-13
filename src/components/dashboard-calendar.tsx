@@ -7,12 +7,15 @@ import {
   useRef,
   useState,
   useTransition,
+  type ReactNode,
 } from "react";
 import {
   DailyReportBox, defaultReportDate,
   type ReportLowStock, type ReportMonthTotals, type ReportMoney,
 } from "@/components/daily-report-box";
 import Link from "next/link";
+import { DashboardWidgetGrid } from "@/components/dashboard-widget-grid";
+import type { DashboardLayout, DashboardWidgetId } from "@/lib/dashboard-layout";
 import { useRouter } from "next/navigation";
 import {
   addCalendarNote,
@@ -827,6 +830,8 @@ export function DashboardCalendar({
   paperStockProductName,
   currentUserId,
   isAdmin,
+  layout,
+  sidePanels,
   reportMoney,
   lowStock,
   monthTotals,
@@ -846,6 +851,9 @@ export function DashboardCalendar({
   paperStockProductName: string;
   currentUserId: string | null;
   isAdmin: boolean;
+  // 위젯 배치(사용자가 저장한 위치·크기)와, 서버에서 그려 내려주는 나머지 위젯들(재고조회·재고위험·메모·빠른실행).
+  layout: DashboardLayout;
+  sidePanels: Pick<Record<DashboardWidgetId, ReactNode>, "lookup" | "stockRisk" | "memos" | "quick">;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -903,8 +911,7 @@ export function DashboardCalendar({
     setTimeout(() => setCopiedType(null), 1500);
   }
 
-  return (
-    <>
+  const calendarCard = (
       <div className="relative overflow-hidden rounded-sm border border-[var(--erp-border)] bg-white p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -1084,10 +1091,11 @@ export function DashboardCalendar({
           </span>
         </div>
       </div>
+  );
 
-    {/* 오른쪽 칸: 오늘 리포트 + 그날 메모·일정·이월 안내(예전 "오늘의 업무" 패널의 이 기능들을
-        리포트 안으로 옮겼다 — 매입/매출 품목은 리포트의 상세보기 팝업이 보여준다). */}
-    <div className="erp-home-report">
+  // 오늘 리포트 + 그날 메모·일정·이월 안내(예전 "오늘의 업무" 패널의 이 기능들을 리포트 안으로 옮겼다 —
+  // 매입/매출 품목은 리포트의 상세보기 팝업이 보여준다).
+  const reportCard = (
     <DailyReportBox
       key={`${year}-${month}`}
       year={year}
@@ -1198,8 +1206,13 @@ export function DashboardCalendar({
           </>
       ) : null}
     </DailyReportBox>
-    </div>
-    </>
+  );
+
+  return (
+    <DashboardWidgetGrid
+      initialLayout={layout}
+      widgets={{ ...sidePanels, calendar: calendarCard, report: reportCard }}
+    />
   );
 }
 
