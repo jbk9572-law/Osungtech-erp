@@ -88,44 +88,45 @@ export function DashboardWidgetGrid({
     });
 
   // 내용 고르기(오늘 할 일 탭은 여러 개·순서 있음, 목록 칸은 하나) — 저장하면 서버가 고른 내용을 불러와 반영한다.
-  const toggleTodoSource = (id: SourceId) =>
+  const toggleTabSource = (key: TabWidget, id: SourceId) =>
     setDraft((d) => {
-      const cur = d.sources.todo;
+      const cur = d.sources[key];
       const next = cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= MAX_TODO_TABS ? cur : [...cur, id];
-      return { ...d, sources: { ...d.sources, todo: next } };
+      return { ...d, sources: { ...d.sources, [key]: next } };
     });
-  const moveTodoSource = (id: SourceId, dir: -1 | 1) =>
+  const moveTabSource = (key: TabWidget, id: SourceId, dir: -1 | 1) =>
     setDraft((d) => {
-      const cur = [...d.sources.todo];
+      const cur = [...d.sources[key]];
       const i = cur.indexOf(id);
       const j = i + dir;
       if (i < 0 || j < 0 || j >= cur.length) return d;
       [cur[i], cur[j]] = [cur[j], cur[i]];
-      return { ...d, sources: { ...d.sources, todo: cur } };
+      return { ...d, sources: { ...d.sources, [key]: cur } };
     });
   const setListSource = (which: "listA" | "listB", id: SourceId) =>
     setDraft((d) => ({ ...d, sources: { ...d.sources, [which]: id } }));
+  type TabWidget = "todo" | "news";
   const titleOf = (id: SourceId) => sourceOptions.find((o) => o.id === id)?.title ?? id;
 
   function renderPicker(id: DashboardWidgetId) {
-    if (id === "todo") {
-      const chosen = draft.sources.todo.filter((x) => sourceOptions.some((o) => o.id === x));
+    if (id === "todo" || id === "news") {
+      const chosen = draft.sources[id].filter((x) => sourceOptions.some((o) => o.id === x));
       const rest = sourceOptions.filter((o) => !chosen.includes(o.id));
       return (
         <div className="erp-widget-picker">
           <p className="erp-widget-picker-title">탭에 넣을 내용 (위에서부터 탭 순서, 최대 {MAX_TODO_TABS}개)</p>
           {chosen.map((sid, i) => (
             <div key={sid} className="erp-widget-picker-row">
-              <input type="checkbox" id={`pk-${sid}`} checked onChange={() => toggleTodoSource(sid)} />
-              <label htmlFor={`pk-${sid}`}>{titleOf(sid)}</label>
-              <button type="button" className="erp-btn erp-btn-xs" disabled={i === 0} onClick={() => moveTodoSource(sid, -1)} aria-label={`${titleOf(sid)} 위로`}>▲</button>
-              <button type="button" className="erp-btn erp-btn-xs" disabled={i === chosen.length - 1} onClick={() => moveTodoSource(sid, 1)} aria-label={`${titleOf(sid)} 아래로`}>▼</button>
+              <input type="checkbox" id={`pk-${id}-${sid}`} checked onChange={() => toggleTabSource(id, sid)} />
+              <label htmlFor={`pk-${id}-${sid}`}>{titleOf(sid)}</label>
+              <button type="button" className="erp-btn erp-btn-xs" disabled={i === 0} onClick={() => moveTabSource(id, sid, -1)} aria-label={`${titleOf(sid)} 위로`}>▲</button>
+              <button type="button" className="erp-btn erp-btn-xs" disabled={i === chosen.length - 1} onClick={() => moveTabSource(id, sid, 1)} aria-label={`${titleOf(sid)} 아래로`}>▼</button>
             </div>
           ))}
           {rest.map((o) => (
             <div key={o.id} className="erp-widget-picker-row">
-              <input type="checkbox" id={`pk-${o.id}`} checked={false} disabled={chosen.length >= MAX_TODO_TABS} onChange={() => toggleTodoSource(o.id)} />
-              <label htmlFor={`pk-${o.id}`}>{o.title}</label>
+              <input type="checkbox" id={`pk-${id}-${o.id}`} checked={false} disabled={chosen.length >= MAX_TODO_TABS} onChange={() => toggleTabSource(id, o.id)} />
+              <label htmlFor={`pk-${id}-${o.id}`}>{o.title}</label>
             </div>
           ))}
           <p className="erp-widget-picker-hint">저장하면 반영됩니다.</p>
@@ -232,7 +233,7 @@ export function DashboardWidgetGrid({
                 <div key={i.id} className={`erp-widget is-editing${widgetIsBare(i.id) ? " is-bare" : ""}`}>
                   <div className="erp-widget-handle">
                     <span>{widgetTitle(i.id)}</span>
-                    {(i.id === "todo" || i.id === "listA" || i.id === "listB") && (
+                    {(i.id === "todo" || i.id === "news" || i.id === "listA" || i.id === "listB") && (
                       <button
                         type="button"
                         className="erp-widget-handle-btn"

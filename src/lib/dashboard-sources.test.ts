@@ -18,3 +18,12 @@ describe("normalizeSourceSelection", () => {
     expect(normalizeSourceSelection({ todo: [] }).todo).toEqual([]);
   });
 });
+
+describe("소식 탭 선택값", () => {
+  it("저장값에 news가 없으면 기본(메일·결재)을 쓰고, 있으면 모르는 값·중복을 버린다", async () => {
+    const { normalizeSourceSelection } = await import("./dashboard-sources");
+    expect(normalizeSourceSelection({ todo: ["todo"] }).news).toEqual(["mail", "approval"]);
+    expect(normalizeSourceSelection({ news: ["announcement", "announcement", "nope", "mail"] }).news).toEqual(["announcement", "mail"]);
+    expect(normalizeSourceSelection({ news: [] }).news).toEqual([]);
+  });
+});

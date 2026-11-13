@@ -31,6 +31,7 @@ describe("buildSourceItems", () => {
     carryovers: [{ fromDate: "2026-11-10", itemCount: 2, kind: "sales" as const }],
     lowStock: [{ id: "p1", name: "모조지 70", quantity: 2, reorderPoint: 10 }],
     announcements: [{ id: "a1", title: "11월 휴무 안내", pinned: true }],
+    mails: [],
     todayStr: "2026-11-12",
     backHref: "%2Fdashboard",
   };

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
 import type { PartyBalance } from "@/lib/ar-ap";
 import { getMyApprovalQueue } from "@/lib/dashboard-approvals";
+import { getDashboardMail } from "@/lib/dashboard-mail";
 import {
   DASHBOARD_SOURCES,
   sourceRequirement,
@@ -41,11 +42,13 @@ export async function resolveDashboardSources(input: {
   lowStock: LowStockInput[];
   announcements: AnnouncementInput[];
 }): Promise<ResolvedSources> {
+  const chosen = new Set<SourceId>([...input.selection.todo, ...input.selection.news, input.selection.listA, input.selection.listB]);
+  // 메일은 기능 on/off와 내 계정 연동 여부를 봐야 해서 별도 조회 — 메일 목록 자체는 "받은 메일"을 고른 경우에만 불러온다.
+  const mail = await getDashboardMail(input.supabase, input.userId, chosen.has("mail"));
   const can = (id: SourceId) => {
     const need = sourceRequirement(id);
-    return need === "receivables" ? !!input.customerBalances : need === "payables" ? !!input.supplierBalances : true;
+    return need === "receivables" ? !!input.customerBalances : need === "payables" ? !!input.supplierBalances : need === "mail" ? mail.available : true;
   };
-  const chosen = new Set<SourceId>([...input.selection.todo, input.selection.listA, input.selection.listB]);
   const overdueCustomers = input.customerBalances ? findOverdueCustomers(input.customerBalances, input.todayStr) : [];
   const approvals =
     chosen.has("approval") && input.userId ? await getMyApprovalQueue(input.supabase, input.userId, input.todayStr) : [];
@@ -57,6 +60,7 @@ export async function resolveDashboardSources(input: {
     carryovers: input.carryovers,
     lowStock: input.lowStock,
     announcements: input.announcements,
+    mails: chosen.has("mail") ? mail.items : [],
     todayStr: input.todayStr,
     backHref: input.backHref,
   });
