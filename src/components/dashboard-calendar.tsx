@@ -35,6 +35,7 @@ import {
 import { formatBoxCount, formatQuantityWithBoxes } from "@/lib/package-qty";
 import type { CalendarItem } from "@/lib/calendar-data";
 import { formatNumber } from "@/lib/format-number";
+import { formatCompactWon } from "@/lib/format-compact-won";
 
 export type ItemRow = {
   partnerName: string;
@@ -903,7 +904,7 @@ export function DashboardCalendar({
                 return (
                   <div
                     key={`${wi}-${di}`}
-                    className="h-14 rounded-sm"
+                    className="erp-cal-cell is-empty"
                   />
                 );
               }
@@ -964,48 +965,36 @@ export function DashboardCalendar({
                       `/sales?from=${cell.dateStr}&to=${cell.dateStr}`,
                     );
                   }}
-                  className={`h-14 rounded-sm border p-1 text-left text-xs transition-colors ${
-                    isSelected
-                      ? "border-[var(--erp-primary)] bg-[var(--erp-primary)] text-white"
-                      : isToday
-                        ? "border-[var(--erp-primary)] bg-[var(--erp-selected)]"
-                        : "border-transparent hover:bg-[var(--erp-hover)]"
-                  }`}
+                  className={`erp-cal-cell${isSelected ? " is-selected" : isToday ? " is-today" : ""}`}
                 >
                   <div className={dayColorClass}>{cell.day}</div>
-                  {holidayName ? (
-                    <div
-                      className={`truncate text-[9px] leading-tight ${isSelected ? "text-white" : "text-[var(--erp-danger)]"}`}
-                    >
-                      {holidayName}
-                    </div>
-                  ) : null}
-                  <div className="mt-0.5 flex gap-0.5">
-                    {hasPurchaseDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-primary)]"}`}
-                      />
+                  {holidayName ? <div className="erp-cal-holiday">{holidayName}</div> : null}
+                  <div className="erp-cal-rich">
+                    {data?.salesTotal ? (
+                      <div className="erp-cal-amt is-sales">
+                        <span className="erp-cal-dot is-sales" aria-label="매출" />
+                        <span>{formatCompactWon(data.salesTotal)}</span>
+                      </div>
                     ) : null}
-                    {hasSalesDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-success)]"}`}
-                      />
+                    {data?.purchaseTotal ? (
+                      <div className="erp-cal-amt is-purchase">
+                        <span className="erp-cal-dot is-purchase" aria-label="매입" />
+                        <span>{formatCompactWon(data.purchaseTotal)}</span>
+                      </div>
                     ) : null}
-                    {data?.notes.length ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-warning)]"}`}
-                      />
+                    {data?.calendarItems.slice(0, 2).map((ci) => (
+                      <div key={ci.id} className="erp-cal-chip">{ci.title}</div>
+                    ))}
+                    {data && data.calendarItems.length > 2 ? (
+                      <div className="erp-cal-more">외 {data.calendarItems.length - 2}건</div>
                     ) : null}
-                    {hasScheduleDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-info-text)]"}`}
-                      />
-                    ) : null}
-                    {showLowStockDot ? (
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : "bg-[var(--erp-danger)]"}`}
-                      />
-                    ) : null}
+                  </div>
+                  <div className="erp-cal-dots">
+                    {hasPurchaseDot ? <span className="erp-cal-dot is-purchase" /> : null}
+                    {hasSalesDot ? <span className="erp-cal-dot is-sales" /> : null}
+                    {data?.notes.length ? <span className="erp-cal-dot is-note" /> : null}
+                    {hasScheduleDot ? <span className="erp-cal-dot is-event" /> : null}
+                    {showLowStockDot ? <span className="erp-cal-dot is-stock" /> : null}
                   </div>
                 </button>
               );
