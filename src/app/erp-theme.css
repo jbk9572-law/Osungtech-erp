@@ -4473,47 +4473,10 @@ a.erp-detail-tab:hover:not(.active) {
   color: var(--erp-text);
 }
 
-.erp-home-list {
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.erp-home-list-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 7px 10px;
-  border-radius: var(--erp-radius-lg, 0);
-  font-size: var(--erp-font-base);
-  text-decoration: none;
-  color: var(--erp-text);
-  border: 1px solid var(--erp-divider);
-}
-
-.erp-home-list-item:hover {
-  background: var(--erp-hover);
-}
-
 .erp-home-empty {
   padding: 16px 12px;
   color: var(--erp-text-muted);
   font-size: var(--erp-font-base);
-}
-
-/* ── 대시보드 재고위험 카드: 안전재고 이하 품목이 많아져도 카드 안에서만
-   스크롤되게 해서 달력·메모 등 나머지 레이아웃이 밀리지 않게 한다. ── */
-.erp-home-stock-footer {
-  padding: 8px 12px 10px;
-  border-top: 1px solid var(--erp-divider);
-}
-
-.erp-home-stock-footer a {
-  font-size: var(--erp-font-sm);
-  color: var(--erp-text);
-  text-decoration: none;
-  font-weight: 600;
 }
 
 /* ── 페이지 이동 중 표시 ─────────────────────────────────────
@@ -6895,4 +6858,31 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-daily-report-line.flush {
   padding: 0;
+}
+
+/* 메인 화면 맨 윗줄(출근·빠른 실행·재고 조회) — 위젯이 아니라 늘 같은 자리에 있는 도구 줄 */
+.erp-dash-topbar {
+  border-radius: var(--erp-radius-xl, 0);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--erp-border-strong);
+  background: var(--erp-panel);
+}
+.erp-dash-clock { display: inline-flex; align-items: center; gap: 8px; }
+.erp-dash-clock .erp-btn { min-width: 84px; width: auto !important; }
+.erp-dash-clock-label,
+.erp-dash-clock-done { font-size: var(--erp-font-sm); color: var(--erp-text-muted); white-space: nowrap; }
+.erp-dash-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.erp-dash-lookup { display: flex; flex: 1 1 280px; align-items: center; gap: 8px; min-width: 0; margin-left: auto; }
+.erp-dash-lookup-search { flex: 1 1 220px; max-width: 340px; min-width: 0; }
+.erp-dash-lookup-result { display: inline-flex; align-items: center; gap: 8px; min-width: 0; color: inherit; text-decoration: none; }
+.erp-dash-lookup-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .erp-dash-topbar { padding: 8px 12px; }
+  .erp-dash-lookup { flex-basis: 100%; margin-left: 0; }
+  .erp-dash-lookup-search { max-width: none; }
 }

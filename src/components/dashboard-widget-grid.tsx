@@ -93,6 +93,7 @@ export function DashboardWidgetGrid({
     });
 
   // 내용 고르기(오늘 할 일 탭은 여러 개·순서 있음, 목록 칸은 하나) — 저장하면 서버가 고른 내용을 불러와 반영한다.
+  type TabWidget = "todo" | "news";
   const toggleTabSource = (key: TabWidget, id: SourceId) =>
     setDraft((d) => {
       const cur = d.sources[key];
@@ -108,9 +109,6 @@ export function DashboardWidgetGrid({
       [cur[i], cur[j]] = [cur[j], cur[i]];
       return { ...d, sources: { ...d.sources, [key]: cur } };
     });
-  const setListSource = (which: "listA" | "listB", id: SourceId) =>
-    setDraft((d) => ({ ...d, sources: { ...d.sources, [which]: id } }));
-  type TabWidget = "todo" | "news";
   const titleOf = (id: SourceId) => sourceOptions.find((o) => o.id === id)?.title ?? id;
 
   function renderPicker(id: DashboardWidgetId) {
@@ -138,19 +136,7 @@ export function DashboardWidgetGrid({
         </div>
       );
     }
-    const which = id as "listA" | "listB";
-    return (
-      <div className="erp-widget-picker">
-        <p className="erp-widget-picker-title">이 칸에 보여줄 내용</p>
-        {sourceOptions.map((o) => (
-          <div key={o.id} className="erp-widget-picker-row">
-            <input type="radio" name={`pk-${which}`} id={`pk-${which}-${o.id}`} checked={draft.sources[which] === o.id} onChange={() => setListSource(which, o.id)} />
-            <label htmlFor={`pk-${which}-${o.id}`}>{o.title}</label>
-          </div>
-        ))}
-        <p className="erp-widget-picker-hint">저장하면 반영됩니다.</p>
-      </div>
-    );
+    return null;
   }
 
   async function save() {
@@ -250,7 +236,7 @@ export function DashboardWidgetGrid({
                 <div key={i.id} className={`erp-widget is-editing${widgetIsBare(i.id) ? " is-bare" : ""}`}>
                   <div className="erp-widget-handle">
                     <span>{widgetTitle(i.id)}</span>
-                    {(i.id === "todo" || i.id === "news" || i.id === "listA" || i.id === "listB") && (
+                    {(i.id === "todo" || i.id === "news") && (
                       <button
                         type="button"
                         className="erp-widget-handle-btn"

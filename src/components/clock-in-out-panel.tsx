@@ -22,7 +22,7 @@ function getCurrentPosition(): Promise<GeoResult> {
   });
 }
 
-function ClockButton({
+export function ClockButton({
   label,
   pendingLabel,
   disabled,

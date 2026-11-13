@@ -12,6 +12,7 @@ export type CarryoverInput = { fromDate: string; itemCount: number; kind: "sales
 
 export type LowStockInput = { id: string; name: string; quantity: number; reorderPoint: number };
 export type AnnouncementInput = { id: string; title: string; pinned: boolean };
+export type MemoInput = { id: string; noteDate: string; content: string; author: string };
 export type MailInput = { id: string; subject: string; fromName: string; sentLabel: string };
 
 export type TodoItem = {
@@ -66,10 +67,11 @@ export function buildSourceItems(input: {
   lowStock: LowStockInput[];
   announcements: AnnouncementInput[];
   mails: MailInput[];
+  memos: MemoInput[];
   todayStr: string;
   backHref: string;
 }): Record<SourceId, TodoItem[]> {
-  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [], mail: [] };
+  const out: Record<SourceId, TodoItem[]> = { approval: [], overdue: [], payable: [], todo: [], carryover: [], lowStock: [], announcement: [], mail: [], memo: [] };
   for (const a of input.approvals) {
     out.approval.push({
       key: `approval-${a.id}`,
@@ -157,6 +159,17 @@ export function buildSourceItems(input: {
       due: m.sentLabel,
       href: `/mail?folder=INBOX&id=${m.id}`,
       action: "읽기 →",
+    });
+  }
+  for (const n of input.memos) {
+    out.memo.push({
+      key: `memo-${n.id}`,
+      kind: "memo",
+      title: n.content,
+      sub: n.author,
+      due: formatMonthDay(n.noteDate),
+      href: `/dashboard?month=${n.noteDate.slice(0, 7)}`,
+      action: "",
     });
   }
   return out;
