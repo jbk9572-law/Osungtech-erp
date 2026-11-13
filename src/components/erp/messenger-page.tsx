@@ -10,6 +10,7 @@ import {
   createGroup,
   leaveGroup,
   resolveMessengerAttachmentUrl,
+  markMessengerChannelRead,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
 import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
@@ -17,7 +18,8 @@ import { FilePickerInput } from "@/components/file-picker-input";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
-import { PaperclipIcon, ChatIcon, GroupIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { PaperclipIcon, DownloadIcon, FileKindIcon, SendIcon } from "@/components/erp/groupware-icons";
+import { ChannelAvatar, channelLabel } from "@/components/erp/messenger-channel";
 
 export type { MessengerMessage };
 
@@ -74,50 +76,6 @@ function highlightText(text: string, query: string): React.ReactNode {
   }
   if (idx < text.length) parts.push(text.slice(idx));
   return parts;
-}
-
-function channelLabel(channel: MessengerChannel, profileNames: Record<string, string>, currentUserId: string): string {
-  if (channel.type === "all") return "전체";
-  if (channel.type === "group") return channel.name ?? "그룹";
-  const otherId = channel.memberIds.find((id) => id !== currentUserId);
-  return otherId ? (profileNames[otherId] ?? "구성원") : "DM";
-}
-
-// "전체"/그룹 채널은 선 아이콘으로, 1:1 DM은 상대방 이니셜 아바타로
-// 보여준다(이모지 👤보다 실제로 누구인지 한눈에 더 잘 들어온다).
-function ChannelAvatar({
-  channel,
-  profileNames,
-  currentUserId,
-  size = 20,
-}: {
-  channel: MessengerChannel;
-  profileNames: Record<string, string>;
-  currentUserId: string;
-  // 사이드바 채널 목록(기본값, 아이콘만)과 대화창 상단 헤더(더 크게)가
-  // 같은 컴포넌트를 공유하면서 크기만 다르게 쓴다.
-  size?: number;
-}) {
-  if (channel.type === "all") {
-    return (
-      <span className="erp-icon erp-u-text" style={{ width: size, height: size }} aria-hidden>
-        <ChatIcon />
-      </span>
-    );
-  }
-  if (channel.type === "group") {
-    return (
-      <span className="erp-icon erp-u-text" style={{ width: size, height: size }} aria-hidden>
-        <GroupIcon />
-      </span>
-    );
-  }
-  const label = channelLabel(channel, profileNames, currentUserId);
-  return (
-    <span className="erp-avatar" style={{ width: size, height: size, fontSize: Math.round(size * 0.45) }} aria-hidden>
-      {label[0] ?? "?"}
-    </span>
-  );
 }
 
 // 사원목록(roster)/채팅방목록(rooms)/대화창(chat)/그룹만들기(newGroup) —
@@ -301,10 +259,14 @@ export function MessengerPage({
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const listEndRef = useRef<HTMLDivElement>(null);
   const activeChannelIdRef = useRef(activeChannelId);
+  const viewRef = useRef<View>("rooms");
 
   useEffect(() => {
     activeChannelIdRef.current = activeChannelId;
   }, [activeChannelId]);
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
 
   // "홈 화면"(채팅방목록)에서는 Esc가 대시보드로 나가고, 대화창/그룹
   // 만들기처럼 하위 화면이나 사원목록에서는 채팅방목록으로 한 단계만
@@ -320,6 +282,7 @@ export function MessengerPage({
   async function openChannel(channelId: string) {
     setActiveChannelId(channelId);
     setView("chat");
+    void markMessengerChannelRead(channelId); // 메인 화면 "메신저" 탭의 안 읽은 개수용
     setSearchQuery("");
     setUnseenChannelIds((prev) => {
       if (!prev.has(channelId)) return prev;
@@ -385,6 +348,9 @@ export function MessengerPage({
             return { ...prev, [row.channel_id]: [...bucket, row] };
           });
           const isActiveChannel = row.channel_id === activeChannelIdRef.current;
+          if (isActiveChannel && viewRef.current === "chat" && row.sender_id !== currentUserId) {
+            void markMessengerChannelRead(row.channel_id);
+          }
           if (!isActiveChannel && row.sender_id !== currentUserId) {
             setUnseenChannelIds((prev) => new Set(prev).add(row.channel_id));
           }

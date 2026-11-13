@@ -389,3 +389,13 @@ export async function leaveGroup(channelId: string): Promise<{ error?: string }>
   if (error) return { error: `나가기에 실패했습니다: ${error.message}` };
   return {};
 }
+
+// 이 채널을 "지금까지 다 읽음"으로 표시한다 — 메인 화면 "메신저" 탭의 안 읽은 개수가 이 값으로 계산된다.
+// 대화창을 열 때와, 열어 둔 대화에 새 메시지가 올 때 부른다. 실패해도 대화에는 영향이 없다(조용히 무시).
+export async function markMessengerChannelRead(channelId: string): Promise<void> {
+  const user = await getUser();
+  if (!user || !channelId) return;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("mark_messenger_channel_read", { p_channel_id: channelId });
+  if (error) console.error("메신저 읽음 처리 실패:", error.message);
+}

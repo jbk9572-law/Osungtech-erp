@@ -12,7 +12,7 @@ describe("normalizeSourceSelection", () => {
     expect(out.todo).toEqual(["todo", "lowStock", "approval", "overdue", "payable", "carryover", "announcement"]);
     expect(out.todo.length).toBeLessThanOrEqual(MAX_TODO_TABS);
     // 예전에 저장된 목록 칸(listA/listB) 같은 모르는 키는 무시한다.
-    expect(Object.keys(out).sort()).toEqual(["news", "todo"]);
+    expect(Object.keys(out).sort()).toEqual(["extra1", "extra2", "news", "todo"]);
   });
   it("탭을 전부 끈 선택(빈 배열)은 그대로 둔다", () => {
     expect(normalizeSourceSelection({ todo: [] }).todo).toEqual([]);

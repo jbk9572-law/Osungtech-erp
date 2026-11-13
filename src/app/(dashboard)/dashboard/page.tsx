@@ -16,6 +16,7 @@ import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
+import { getMonthTodosByDate, type MonthTodo } from "@/lib/dashboard-month-todos";
 import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
 import { sourceMeta, type SourceId } from "@/lib/dashboard-sources";
 import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
@@ -345,6 +346,7 @@ async function DashboardPage({
       createdBy: string | null;
     }[];
     calendarItems: CalendarItem[];
+    todoItems: MonthTodo[];
   };
 
   const dataByDate: Record<string, DayData> = {};
@@ -364,6 +366,7 @@ async function DashboardPage({
         carryoverInPurchases: [],
         notes: [],
         calendarItems: [],
+        todoItems: [],
       };
     }
     return dataByDate[date];
@@ -669,6 +672,8 @@ async function DashboardPage({
     }
   }
 
+  for (const [date, list] of Object.entries(await getMonthTodosByDate(supabase, monthStart, monthEnd))) ensure(date).todoItems.push(...list);
+
   const weeks = buildWeeks(year, month);
 
   // "오늘 리포트" 박스의 수금·지급·잔액. 부서별 화면 접근 권한(미수금현황/미지급금현황)을
@@ -772,6 +777,8 @@ async function DashboardPage({
     ),
     todo: <DashboardTodoPanel tabs={tabsOf(dashboardLayout.sources.todo)} />,
     news: <DashboardTodoPanel label="소식 종류" empty="새 소식이 없습니다." tabs={tabsOf(dashboardLayout.sources.news)} />,
+    extra1: <DashboardTodoPanel label="추가 칸 1 종류" empty="표시할 내용이 없습니다." tabs={tabsOf(dashboardLayout.sources.extra1)} />,
+    extra2: <DashboardTodoPanel label="추가 칸 2 종류" empty="표시할 내용이 없습니다." tabs={tabsOf(dashboardLayout.sources.extra2)} />,
   };
 
   return (

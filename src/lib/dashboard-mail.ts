@@ -8,40 +8,68 @@ import type { MailInput } from "@/lib/dashboard-todo";
 // 계정이 없으면 available=false라 내용 고르기 목록에서도 빠진다. 내 메일이 아닌 건 RLS와 계정 조건으로 막는다.
 const MAIL_LIMIT = 8;
 
-export type DashboardMail = { available: boolean; items: MailInput[] };
+export type DashboardMail = { available: boolean; items: MailInput[]; sentItems: MailInput[] };
 
 export async function getDashboardMail(
   supabase: SupabaseClient<Database>,
   userId: string | null,
-  withItems: boolean,
+  want: { inbox: boolean; sent: boolean },
 ): Promise<DashboardMail> {
-  if (!userId) return { available: false, items: [] };
+  if (!userId) return { available: false, items: [], sentItems: [] };
   const [enabled, accountRes] = await Promise.all([
     isFeatureEnabled(supabase, "mail"),
     supabase.from("mail_accounts").select("id").eq("user_id", userId).maybeSingle(),
   ]);
   const account = accountRes.data;
-  if (!enabled || !account) return { available: false, items: [] };
-  if (!withItems) return { available: true, items: [] };
+  if (!enabled || !account) return { available: false, items: [], sentItems: [] };
+  if (!want.inbox && !want.sent) return { available: true, items: [], sentItems: [] };
 
-  const { data } = await supabase
-    .from("mail_messages")
-    .select("id, subject, from_name, from_address, sent_at")
-    .eq("mail_account_id", account.id)
-    .eq("folder", "INBOX")
-    .eq("is_read", false)
-    .order("sent_at", { ascending: false, nullsFirst: false })
-    .limit(MAIL_LIMIT);
+  const [inbox, sent] = await Promise.all([
+    want.inbox
+      ? supabase
+          .from("mail_messages")
+          .select("id, subject, from_name, from_address, sent_at")
+          .eq("mail_account_id", account.id)
+          .eq("folder", "INBOX")
+          .eq("is_read", false)
+          .order("sent_at", { ascending: false, nullsFirst: false })
+          .limit(MAIL_LIMIT)
+      : Promise.resolve({ data: [] as { id: string; subject: string | null; from_name: string | null; from_address: string | null; sent_at: string | null }[] }),
+    want.sent
+      ? supabase
+          .from("mail_messages")
+          .select("id, subject, to_addresses, sent_at")
+          .eq("mail_account_id", account.id)
+          .eq("folder", "SENT")
+          .order("sent_at", { ascending: false, nullsFirst: false })
+          .limit(MAIL_LIMIT)
+      : Promise.resolve({ data: [] as { id: string; subject: string | null; to_addresses: unknown; sent_at: string | null }[] }),
+  ]);
 
   return {
     available: true,
-    items: (data ?? []).map((m) => ({
+    items: (inbox.data ?? []).map((m) => ({
       id: m.id,
       subject: m.subject?.trim() || "(제목 없음)",
       fromName: m.from_name?.trim() || m.from_address || "보낸 사람 없음",
       sentLabel: mailTimeLabel(m.sent_at),
     })),
+    sentItems: (sent.data ?? []).map((m) => ({
+      id: m.id,
+      subject: m.subject?.trim() || "(제목 없음)",
+      fromName: recipientLabel(m.to_addresses),
+      sentLabel: mailTimeLabel(m.sent_at),
+    })),
   };
+}
+
+// 보낸 메일의 받는 사람 — 첫 사람 이름(없으면 주소) 외 N명.
+export function recipientLabel(raw: unknown): string {
+  const list = Array.isArray(raw) ? (raw as { name?: string | null; email?: string | null }[]) : [];
+  const first = list[0];
+  if (!first) return "받는 사람 없음";
+  const name = first.name?.trim() || first.email || "받는 사람 없음";
+  return list.length > 1 ? `${name} 외 ${list.length - 1}명` : name;
 }
 
 // 오늘 온 메일은 시각("10:42"), 이전 메일은 월/일("11/11")로 — 한국 시간 기준.

@@ -5585,6 +5585,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      messenger_channel_reads: {
+        Row: {
+          channel_id: string;
+          user_id: string;
+          tenant_id: string;
+          is_demo: boolean;
+          last_read_at: string;
+        };
+        Insert: {
+          channel_id: string;
+          user_id: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          last_read_at?: string;
+        };
+        Update: {
+          channel_id?: string;
+          user_id?: string;
+          tenant_id?: string;
+          is_demo?: boolean;
+          last_read_at?: string;
+        };
+        Relationships: [];
+      };
       tenant_dashboard_layout: {
         Row: {
           tenant_id: string;
@@ -5627,6 +5651,21 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      mark_messenger_channel_read: {
+        Args: { p_channel_id: string };
+        Returns: undefined;
+      };
+      get_messenger_unread: {
+        Args: { p_limit?: number };
+        Returns: {
+          channel_id: string;
+          channel_label: string;
+          last_sender_name: string | null;
+          last_content: string | null;
+          last_at: string;
+          unread_count: number;
+        }[];
+      };
       get_or_create_calendar_feed_token: {
         Args: Record<PropertyKey, never>;
         Returns: string;

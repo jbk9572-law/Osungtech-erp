@@ -17,6 +17,9 @@ export const DASHBOARD_WIDGETS = [
   { id: "todo", title: "업무", min: { w: 3, h: 6 }, def: { x: 0, y: 3, w: 6, h: 11 } },
   { id: "news", title: "소식", min: { w: 3, h: 6 }, def: { x: 6, y: 3, w: 6, h: 11 } },
   { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 0, y: 14, w: 8, h: 19 } },
+  // 처음엔 화면에 없고, 화면 편집 > "위젯 추가"로 사용자가 만든다(optional) — 탭 내용은 "내용 선택"으로 고른다.
+  { id: "extra1", title: "추가 칸 1", optional: true, min: { w: 3, h: 6 }, def: { x: 0, y: 33, w: 6, h: 10 } },
+  { id: "extra2", title: "추가 칸 2", optional: true, min: { w: 3, h: 6 }, def: { x: 6, y: 33, w: 6, h: 10 } },
   { id: "report", title: "일일 리포트", min: { w: 3, h: 8 }, def: { x: 8, y: 14, w: 4, h: 19 } },
 ] as const;
 
@@ -38,9 +41,14 @@ export function isDashboardWidgetId(v: unknown): v is DashboardWidgetId {
 
 export function defaultDashboardLayout(): DashboardLayout {
   return {
-    items: DASHBOARD_WIDGETS.map((w) => ({ id: w.id, ...w.def })),
+    items: DASHBOARD_WIDGETS.filter((w) => !("optional" in w)).map((w) => ({ id: w.id, ...w.def })),
     hidden: [],
-    sources: { todo: [...DEFAULT_SOURCE_SELECTION.todo], news: [...DEFAULT_SOURCE_SELECTION.news] },
+    sources: {
+      todo: [...DEFAULT_SOURCE_SELECTION.todo],
+      news: [...DEFAULT_SOURCE_SELECTION.news],
+      extra1: [...DEFAULT_SOURCE_SELECTION.extra1],
+      extra2: [...DEFAULT_SOURCE_SELECTION.extra2],
+    },
   };
 }
 
@@ -117,6 +125,12 @@ export function widgetTitle(id: DashboardWidgetId): string {
 // 틀(테두리·배경) 없이 안쪽 카드들이 직접 보이는 위젯 — 맨 위 숫자 줄처럼 타일 여러 개가 따로 놓이는 경우.
 export function widgetIsBare(id: DashboardWidgetId): boolean {
   return "bare" in WIDGET_BY_ID.get(id)!;
+}
+
+// 탭 내용을 사용자가 고르는 위젯(업무·소식·추가 칸)
+export type TabWidgetId = "todo" | "news" | "extra1" | "extra2";
+export function isTabWidget(id: DashboardWidgetId): id is TabWidgetId {
+  return id === "todo" || id === "news" || id === "extra1" || id === "extra2";
 }
 
 export function widgetMin(id: DashboardWidgetId): { w: number; h: number } {
