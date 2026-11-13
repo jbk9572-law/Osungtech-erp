@@ -51,7 +51,7 @@ export default async function PortalOrdersPage({
     supabase.rpc("portal_list_order_items"),
   ]);
   if (error) {
-    return <p className="erp-u-danger" style={{ fontSize: 13 }}>주문 내역을 불러오지 못했습니다.</p>;
+    return <p className="erp-u-danger erp-u-text-md">주문 내역을 불러오지 못했습니다.</p>;
   }
 
   const itemsByOrderId = new Map<string, OrderDetailItem[]>();

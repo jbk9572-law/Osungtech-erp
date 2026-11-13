@@ -61,7 +61,7 @@ export function TenantQuotaPanel({
           />
         </div>
         <div>
-          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
             {pending ? "저장 중..." : "저장"}
           </button>
         </div>

@@ -183,7 +183,7 @@ export function WorkOrderForm({
                   <span className="erp-row-card-partner">{r.name}</span>
                   <span className="erp-row-card-date">{r.sku}</span>
                 </div>
-                <div className="erp-row-card-foot" style={{ marginTop: 6 }}>
+                <div className="erp-row-card-foot erp-u-mt-6">
                   <span className="erp-row-card-qty">
                     필요 {formatNumber(r.needed)} {r.unit}
                   </span>

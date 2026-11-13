@@ -7,14 +7,15 @@ import {
   useRef,
   useState,
   useTransition,
+  type ReactNode,
 } from "react";
 import {
-  DailyReportBox,
-  type ReportLowStock,
-  type ReportMonthTotals,
-  type ReportMoney,
+  DailyReportBox, defaultReportDate,
+  type ReportLowStock, type ReportMonthTotals, type ReportMoney,
 } from "@/components/daily-report-box";
 import Link from "next/link";
+import { DashboardWidgetGrid } from "@/components/dashboard-widget-grid";
+import type { DashboardLayout, DashboardWidgetId } from "@/lib/dashboard-layout";
 import { useRouter } from "next/navigation";
 import {
   addCalendarNote,
@@ -511,15 +512,6 @@ export function shouldShowBoxCountOnDashboard(productName: string, categoryName:
   return true;
 }
 
-// 위 shouldShowBoxCountOnDashboard 판단과 formatBoxCount 호출을 한 곳으로
-// 묶어, 매입/매출 패널의 단일 품목 줄·복수 품목 줄 네 군데가 각자 다시
-// 조립하지 않게 한다.
-function BoxCountSuffix({ item, productName }: { item: ItemRow; productName: string }) {
-  if (!shouldShowBoxCountOnDashboard(productName, item.categoryName)) return null;
-  const boxCount = formatBoxCount(item.quantity, item.basePackageQty);
-  return boxCount ? <span> ({boxCount})</span> : null;
-}
-
 // 거래처별로 카톡복사 텍스트에서 박스 수 표기("(N박스)")를 빼달라는 요청 —
 // 화면 표시는 그대로 두고 복사 텍스트에서만 적용한다(stripFilterUnitsForCopy와
 // 동일한 방식). 거래처 이름은 오타 없이 정확히 일치해야 하고, SKU/카테고리
@@ -825,31 +817,6 @@ function formatMonthDay(dateStr: string): string {
   return `${Number(m)}/${Number(d)}`;
 }
 
-function CarryoverBadge() {
-  return (
-    <span
-      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold"
-      style={{
-        background: "var(--erp-warning-bg)",
-        color: "var(--erp-warning)",
-      }}
-    >
-      이월
-    </span>
-  );
-}
-
-function ReturnBadge() {
-  return (
-    <span
-      className="ml-1 inline-flex items-center px-1.5 py-px text-[9px] font-bold erp-u-danger"
-      style={{ background: "var(--erp-danger-bg)" }}
-    >
-      반품
-    </span>
-  );
-}
-
 export function DashboardCalendar({
   year,
   month,
@@ -863,6 +830,8 @@ export function DashboardCalendar({
   paperStockProductName,
   currentUserId,
   isAdmin,
+  layout,
+  sidePanels,
   reportMoney,
   lowStock,
   monthTotals,
@@ -882,6 +851,9 @@ export function DashboardCalendar({
   paperStockProductName: string;
   currentUserId: string | null;
   isAdmin: boolean;
+  // 위젯 배치(사용자가 저장한 위치·크기)와, 서버에서 그려 내려주는 나머지 위젯들(재고조회·재고위험·메모·빠른실행).
+  layout: DashboardLayout;
+  sidePanels: Pick<Record<DashboardWidgetId, ReactNode>, "lookup" | "stockRisk" | "memos" | "quick">;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -939,21 +911,7 @@ export function DashboardCalendar({
     setTimeout(() => setCopiedType(null), 1500);
   }
 
-  return (
-    <>
-    {/* 오늘 리포트 박스 — .erp-home 격자의 맨 위 한 줄(CSS: .erp-home > .erp-daily-report).
-        같은 dataByDate를 재사용하므로 데이터가 두 번 직렬화되지 않는다. */}
-    <DailyReportBox
-      key={`${year}-${month}`}
-      year={year}
-      month={month}
-      todayStr={todayStr}
-      getDay={getReportDay}
-      money={reportMoney ?? null}
-      lowStock={lowStock ?? []}
-      monthTotals={monthTotals ?? null}
-    />
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_300px]">
+  const calendarCard = (
       <div className="relative overflow-hidden rounded-sm border border-[var(--erp-border)] bg-white p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -1000,7 +958,7 @@ export function DashboardCalendar({
                 return (
                   <div
                     key={`${wi}-${di}`}
-                    className="aspect-square rounded-sm"
+                    className="h-14 rounded-sm"
                   />
                 );
               }
@@ -1061,7 +1019,7 @@ export function DashboardCalendar({
                       `/sales?from=${cell.dateStr}&to=${cell.dateStr}`,
                     );
                   }}
-                  className={`aspect-square rounded-sm border p-1 text-left text-xs transition-colors ${
+                  className={`h-14 rounded-sm border p-1 text-left text-xs transition-colors ${
                     isSelected
                       ? "border-[var(--erp-primary)] bg-[var(--erp-primary)] text-white"
                       : isToday
@@ -1133,13 +1091,27 @@ export function DashboardCalendar({
           </span>
         </div>
       </div>
+  );
 
-      <div className="rounded-sm border border-[var(--erp-border)] bg-white p-4">
-        {selected ? (
+  // 오늘 리포트 + 그날 메모·일정·이월 안내(예전 "오늘의 업무" 패널의 이 기능들을 리포트 안으로 옮겼다 —
+  // 매입/매출 품목은 리포트의 상세보기 팝업이 보여준다).
+  const reportCard = (
+    <DailyReportBox
+      key={`${year}-${month}`}
+      year={year}
+      month={month}
+      todayStr={todayStr}
+      date={selected ?? defaultReportDate(year, month, todayStr)} onDateChange={setSelected}
+      getDay={getReportDay}
+      money={reportMoney ?? null}
+      lowStock={lowStock ?? []}
+      monthTotals={monthTotals ?? null}
+    >
+      {selected ? (
           <>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-[var(--erp-text)]">
-                {selected} 오늘의 업무
+                메모·일정
               </h3>
               <div className="flex shrink-0 gap-1">
                 <button
@@ -1169,12 +1141,8 @@ export function DashboardCalendar({
             {(selectedData.carryoverInSales.length > 0 ||
               selectedData.carryoverInPurchases.length > 0) && (
               <div
-                className="mb-3 border-l-[3px] p-2 text-xs font-medium"
-                style={{
-                  borderLeftColor: "var(--erp-warning)",
-                  background: "var(--erp-warning-bg)",
-                  color: "var(--erp-warning)",
-                }}
+                className="mb-3 border-l-[3px] p-2 text-xs font-medium erp-u-bg-warning-bg erp-u-color-warning"
+                style={{ borderLeftColor: "var(--erp-warning)" }}
               >
                 {selectedData.carryoverInSales.map((e, i) => (
                   <p key={`s-${i}`} className="m-0">
@@ -1191,382 +1159,6 @@ export function DashboardCalendar({
               </div>
             )}
 
-            <div
-              className="mb-3 border-l-[3px] border-l-[var(--erp-primary)] p-2"
-              style={{
-                background:
-                  "linear-gradient(90deg, var(--erp-selected), transparent 60%)",
-              }}
-            >
-              <p className="mb-1 text-xs font-bold text-[var(--erp-primary)]">
-                매입 {selectedData.purchaseCount}건 ·{" "}
-                {formatNumber(selectedData.purchaseTotal)}원
-              </p>
-              {(selectedData.purchaseItems.length > 0 ||
-                Object.keys(selectedData.purchasePaperCalcByPartner).length >
-                  0) && (
-                <div className="space-y-2 text-xs font-medium text-[var(--erp-primary)]">
-                  {buildPartnerBlocks(
-                    selectedData.purchaseItems,
-                    selectedData.purchasePaperCalcByPartner,
-                    selectedData.salesPaperCalcByPartner,
-                  ).map((partner, pi) => (
-                    <div key={pi}>
-                      <p className="font-bold">- {partner.partnerName}</p>
-                      <div className="space-y-3 pl-3">
-                        {partner.products.flatMap((product, di) => {
-                          const groups = groupProductItemsByLabel(
-                            product,
-                            "purchase",
-                          );
-                          const blocks = groups.map((group, gi) => {
-                            const anyCarryover = group.items.some(
-                              ({ item }) => item.isCarryover,
-                            );
-                            // 카톡 복사 텍스트(buildProductLineGroups)와 순서가 어긋나지
-                            // 않도록, 화면에 보여줄 항목도 같은 기준(* 뒤쪽 숫자)으로
-                            // 정렬한다 — 예전에 "화면과 복사 텍스트 순서가 다르다"는
-                            // 문제를 고쳤는데 복사 쪽에만 정렬이 적용되며 다시 어긋났다.
-                            const sortedItems = sortBySpecTrailingNumber(
-                              group.items,
-                              ({ item }) => item.spec || "",
-                            );
-                            return (
-                              <div key={`${di}-${gi}`}>
-                                <p className="font-semibold text-[var(--erp-text)]">
-                                  - {product.productName}
-                                  {group.label &&
-                                    ` ${formatDestinationLabel(group.label)}`}
-                                </p>
-                                <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                                  {group.items.length === 1 ? (
-                                    (() => {
-                                      const { item, note } = group.items[0];
-                                      return (
-                                        <li>
-                                          <Link
-                                            href={`/purchases/${item.orderId}`}
-                                            className="flex items-start justify-between gap-2 hover:underline"
-                                          >
-                                            <span className="min-w-0">
-                                              {item.spec || "규격 미지정"} :{" "}
-                                              {formatNumber(item.quantity)}
-                                              {item.unit}
-                                              <BoxCountSuffix item={item} productName={product.productName} />
-                                              {note && (
-                                                <span className="text-[10px]">
-                                                  {" "}
-                                                  ({note})
-                                                </span>
-                                              )}
-                                              {item.isCarryover && (
-                                                <CarryoverBadge />
-                                              )}
-                                              {item.remark && (
-                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                  비고: {item.remark}
-                                                </span>
-                                              )}
-                                            </span>
-                                            <span className="shrink-0">
-                                              {formatNumber(item.amount)}원
-                                            </span>
-                                          </Link>
-                                        </li>
-                                      );
-                                    })()
-                                  ) : (
-                                    <>
-                                      {sortedItems.map(({ item, note }, i) => (
-                                        <li key={i}>
-                                          <Link
-                                            href={`/purchases/${item.orderId}`}
-                                            className="flex items-start justify-between gap-2 hover:underline"
-                                          >
-                                            <span className="min-w-0">
-                                              {item.spec || "규격 미지정"} :{" "}
-                                              {formatNumber(item.quantity)}
-                                              {item.unit}
-                                              <BoxCountSuffix item={item} productName={product.productName} />
-                                              {note && (
-                                                <span className="text-[10px]">
-                                                  {" "}
-                                                  ({note})
-                                                </span>
-                                              )}
-                                              {item.remark && (
-                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                  비고: {item.remark}
-                                                </span>
-                                              )}
-                                            </span>
-                                            <span className="shrink-0">
-                                              {formatNumber(item.amount)}원
-                                            </span>
-                                          </Link>
-                                        </li>
-                                      ))}
-                                      {(() => {
-                                        const totals = productTotals(
-                                          sortedItems.map(({ item }) => item),
-                                        );
-                                        return (
-                                          <li className="flex items-start justify-between gap-2">
-                                            <span className="min-w-0">
-                                              합계 -{" "}
-                                              {formatNumber(totals.quantity)}
-                                              {totals.unit}
-                                              {anyCarryover && <CarryoverBadge />}
-                                            </span>
-                                            <span className="shrink-0">
-                                              {formatNumber(totals.amount)}원
-                                            </span>
-                                          </li>
-                                        );
-                                      })()}
-                                    </>
-                                  )}
-                                </ul>
-                              </div>
-                            );
-                          });
-                          if (groups.length > 1) {
-                            const grand = productTotals(product.items);
-                            blocks.push(
-                              <div
-                                key={`${di}-grand`}
-                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)]"
-                                style={{ borderColor: "var(--erp-border)" }}
-                              >
-                                <span className="min-w-0">
-                                  입고합계 - {formatNumber(grand.quantity)}
-                                  {grand.unit}
-                                </span>
-                                <span className="shrink-0">
-                                  {formatNumber(grand.amount)}원
-                                </span>
-                              </div>,
-                            );
-                          }
-                          return blocks;
-                        })}
-                        {partner.paperCalcBlocks.map((block, bi) => (
-                          <div key={`pc-${bi}`}>
-                            <p className="font-semibold text-[var(--erp-text)]">
-                              - {paperStockProductName}
-                              {block.label &&
-                                ` ${formatDestinationLabel(block.label)}`}
-                            </p>
-                            <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                              {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
-                                <li key={i}>{line}</li>
-                              ))}
-                              <li className="flex items-start justify-between gap-2 text-[var(--erp-primary)]">
-                                <span className="min-w-0">
-                                  합계 - {formatNumber(block.totalSheet)}연
-                                </span>
-                                <span className="shrink-0">
-                                  {formatNumber(block.amount)}원
-                                </span>
-                              </li>
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div
-              className="mb-4 border-l-[3px] border-l-[var(--erp-success)] p-2"
-              style={{
-                background:
-                  "linear-gradient(90deg, var(--erp-success-bg), transparent 60%)",
-              }}
-            >
-              <p className="mb-1 text-xs font-bold text-[var(--erp-success)]">
-                매출 {selectedData.salesCount}건 ·{" "}
-                {formatNumber(selectedData.salesTotal)}원
-              </p>
-              {(selectedData.salesItems.length > 0 ||
-                Object.keys(selectedData.salesPaperCalcByPartner).length >
-                  0) && (
-                <div className="space-y-2 text-xs font-medium text-[var(--erp-success)]">
-                  {buildPartnerBlocks(
-                    selectedData.salesItems,
-                    selectedData.salesPaperCalcByPartner,
-                  ).map((partner, pi) => (
-                    <div key={pi}>
-                      <p className="font-bold">- {partner.partnerName}</p>
-                      <div className="space-y-3 pl-3">
-                        {partner.products.flatMap((product, di) => {
-                          const groups = groupProductItemsByLabel(
-                            product,
-                            "sale",
-                          );
-                          const blocks = groups.map((group, gi) => {
-                            const anyCarryover = group.items.some(
-                              ({ item }) => item.isCarryover,
-                            );
-                            // 카톡 복사 텍스트(buildProductLineGroups)와 순서가 어긋나지
-                            // 않도록, 화면에 보여줄 항목도 같은 기준(* 뒤쪽 숫자)으로
-                            // 정렬한다 — 예전에 "화면과 복사 텍스트 순서가 다르다"는
-                            // 문제를 고쳤는데 복사 쪽에만 정렬이 적용되며 다시 어긋났다.
-                            const sortedItems = sortBySpecTrailingNumber(
-                              group.items,
-                              ({ item }) => item.spec || "",
-                            );
-                            return (
-                              <div key={`${di}-${gi}`}>
-                                <p className="font-semibold text-[var(--erp-text)]">
-                                  - {product.productName}
-                                  {group.label &&
-                                    ` ${formatDestinationLabel(group.label)}`}
-                                </p>
-                                <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                                  {group.items.length === 1 ? (
-                                    (() => {
-                                      const { item, note } = group.items[0];
-                                      return (
-                                        <li>
-                                          <Link
-                                            href={`/sales/${item.orderId}`}
-                                            className="flex items-start justify-between gap-2 hover:underline"
-                                          >
-                                            <span className="min-w-0">
-                                              {item.spec || "규격 미지정"} :{" "}
-                                              {formatNumber(item.quantity)}
-                                              {item.unit}
-                                              <BoxCountSuffix item={item} productName={product.productName} />
-                                              {note && (
-                                                <span className="text-[10px]">
-                                                  {" "}
-                                                  ({note})
-                                                </span>
-                                              )}
-                                              {item.isCarryover && (
-                                                <CarryoverBadge />
-                                              )}
-                                              {item.isReturn && <ReturnBadge />}
-                                              {item.remark && (
-                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                  비고: {item.remark}
-                                                </span>
-                                              )}
-                                            </span>
-                                            <span className="shrink-0">
-                                              {formatNumber(item.amount)}원
-                                            </span>
-                                          </Link>
-                                        </li>
-                                      );
-                                    })()
-                                  ) : (
-                                    <>
-                                      {sortedItems.map(({ item, note }, i) => (
-                                        <li key={i}>
-                                          <Link
-                                            href={`/sales/${item.orderId}`}
-                                            className="flex items-start justify-between gap-2 hover:underline"
-                                          >
-                                            <span className="min-w-0">
-                                              {item.spec || "규격 미지정"} :{" "}
-                                              {formatNumber(item.quantity)}
-                                              {item.unit}
-                                              <BoxCountSuffix item={item} productName={product.productName} />
-                                              {note && (
-                                                <span className="text-[10px]">
-                                                  {" "}
-                                                  ({note})
-                                                </span>
-                                              )}
-                                              {item.isReturn && <ReturnBadge />}
-                                              {item.remark && (
-                                                <span className="block text-[10px] text-[var(--erp-text-muted)]/70">
-                                                  비고: {item.remark}
-                                                </span>
-                                              )}
-                                            </span>
-                                            <span className="shrink-0">
-                                              {formatNumber(item.amount)}원
-                                            </span>
-                                          </Link>
-                                        </li>
-                                      ))}
-                                      {(() => {
-                                        const totals = productTotals(
-                                          sortedItems.map(({ item }) => item),
-                                        );
-                                        return (
-                                          <li className="flex items-start justify-between gap-2">
-                                            <span className="min-w-0">
-                                              합계 -{" "}
-                                              {formatNumber(totals.quantity)}
-                                              {totals.unit}
-                                              {anyCarryover && <CarryoverBadge />}
-                                            </span>
-                                            <span className="shrink-0">
-                                              {formatNumber(totals.amount)}원
-                                            </span>
-                                          </li>
-                                        );
-                                      })()}
-                                    </>
-                                  )}
-                                </ul>
-                              </div>
-                            );
-                          });
-                          if (groups.length > 1) {
-                            const grand = productTotals(product.items);
-                            blocks.push(
-                              <div
-                                key={`${di}-grand`}
-                                className="mt-1 flex items-start justify-between gap-2 border-t border-dashed pt-1 font-semibold text-[var(--erp-text)]"
-                                style={{ borderColor: "var(--erp-border)" }}
-                              >
-                                <span className="min-w-0">
-                                  출고합계 - {formatNumber(grand.quantity)}
-                                  {grand.unit}
-                                </span>
-                                <span className="shrink-0">
-                                  {formatNumber(grand.amount)}원
-                                </span>
-                              </div>,
-                            );
-                          }
-                          return blocks;
-                        })}
-                        {partner.paperCalcBlocks.map((block, bi) => (
-                          <div key={`pc-${bi}`}>
-                            <p className="font-semibold text-[var(--erp-text)]">
-                              - {paperStockProductName}
-                              {block.label &&
-                                ` ${formatDestinationLabel(block.label)}`}
-                            </p>
-                            <ul className="space-y-1 pl-3 font-normal text-[var(--erp-text-muted)]">
-                              {formatPaperCalcSizeLines(block.sizes).map((line, i) => (
-                                <li key={i}>{line}</li>
-                              ))}
-                              <li className="flex items-start justify-between gap-2 text-[var(--erp-success)]">
-                                <span className="min-w-0">
-                                  합계 - {formatNumber(block.totalSheet)}연
-                                </span>
-                                <span className="shrink-0">
-                                  {formatNumber(block.amount)}원
-                                </span>
-                              </li>
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {selectedData.calendarItems.length > 0 && (
               <div className="mb-4">
@@ -1585,14 +1177,11 @@ export function DashboardCalendar({
                   {selectedData.calendarItems.map((item) => (
                     <li
                       key={item.id}
-                      className="border-l-[3px] p-1.5 text-xs"
-                      style={{
-                        borderLeftColor:
+                      className="border-l-[3px] p-1.5 text-xs erp-u-bg-bg-subtle"
+                      style={{ borderLeftColor:
                           item.source === "meeting"
                             ? "var(--erp-info-text)"
-                            : "var(--erp-warning)",
-                        background: "var(--erp-bg-subtle)",
-                      }}
+                            : "var(--erp-warning)" }}
                     >
                       <span className="font-semibold text-[var(--erp-text)]">
                         {item.title}
@@ -1615,14 +1204,15 @@ export function DashboardCalendar({
               isAdmin={isAdmin}
             />
           </>
-        ) : (
-          <p className="text-sm text-[var(--erp-text-muted)]">
-            날짜를 선택해주세요.
-          </p>
-        )}
-      </div>
-    </div>
-    </>
+      ) : null}
+    </DailyReportBox>
+  );
+
+  return (
+    <DashboardWidgetGrid
+      initialLayout={layout}
+      widgets={{ ...sidePanels, calendar: calendarCard, report: reportCard }}
+    />
   );
 }
 
@@ -1666,8 +1256,7 @@ function NoteForm({
           {notes.map((note) => (
             <li key={note.id} className="flex items-start gap-2">
               <span
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold erp-u-text"
-                style={{ background: "var(--erp-selected)" }}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold erp-u-text erp-u-bg-selected"
               >
                 {note.authorName.slice(0, 1)}
               </span>

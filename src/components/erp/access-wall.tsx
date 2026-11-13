@@ -17,7 +17,7 @@ export function AccessWall({ title, message, backHref }: { title: string; messag
     <div>
       {backHref && <KeyboardShortcuts shortcuts={{ Escape: { href: backHref } }} />}
       <h1 className="mb-1 erp-h1">{title}</h1>
-      <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+      <p className="erp-grid-empty erp-u-mt-24">
         {message}
       </p>
     </div>

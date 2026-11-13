@@ -63,36 +63,34 @@ export function ReceiptReorderList({
       {order.map((receipt, index) => (
         <li
           key={receipt.id}
-          className="flex flex-col items-center gap-1 rounded-sm border p-2"
-          style={{ borderColor: "var(--erp-border)", width: 108 }}
+          className="flex flex-col items-center gap-1 rounded-sm border p-2 erp-u-bc-border"
+          style={{ width: 108 }}
         >
           <a href={receipt.file_url ?? "#"} target="_blank" rel="noopener noreferrer">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <img className="erp-u-radius-lg"
               src={receipt.file_url ?? ""}
               alt={`영수증 ${index + 1}`}
-              style={{ width: 88, height: 88, objectFit: "cover", borderRadius: "var(--erp-radius-lg, 0)" }}
+              style={{ width: 88, height: 88, objectFit: "cover" }}
             />
           </a>
           <span className="text-[11px] erp-u-muted">
             #{index + 1}
           </span>
           <div className="flex items-center gap-1">
-            <button
+            <button aria-label="위로 이동"
               type="button"
               onClick={() => move(index, -1)}
               disabled={index === 0 || isPending}
-              className="erp-btn erp-u-h-22"
-              style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+              className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
             >
               ▲
             </button>
-            <button
+            <button aria-label="아래로 이동"
               type="button"
               onClick={() => move(index, 1)}
               disabled={index === order.length - 1 || isPending}
-              className="erp-btn erp-u-h-22"
-              style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+              className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
             >
               ▼
             </button>

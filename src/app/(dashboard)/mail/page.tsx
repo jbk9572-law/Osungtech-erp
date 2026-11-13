@@ -202,7 +202,7 @@ export default async function MailPage({
               <h2 className="mb-2 text-base font-bold text-[var(--erp-text)]">
                 {selected.subject || "(제목 없음)"}
               </h2>
-              <div className="mb-3 erp-u-flex erp-u-items-center" style={{ gap: 10 }}>
+              <div className="mb-3 erp-u-flex erp-u-items-center erp-u-gap-10">
                 <span className="erp-avatar" style={{ width: 32, height: 32 }} aria-hidden>
                   {initial(selected.from_name, selected.from_address)}
                 </span>
@@ -235,18 +235,18 @@ export default async function MailPage({
                 </div>
               )}
 
-              <div style={{ borderTop: "1px solid var(--erp-divider)", paddingTop: "var(--erp-space-4)" }}>
+              <div className="erp-u-bt-divider" style={{ paddingTop: "var(--erp-space-4)" }}>
                 {selected.body_html ? (
                   // 외부에서 온 메일 원문 HTML은 절대 신뢰할 수 없다(악성 스크립트가
                   // 섞여 들어올 수 있음) — dangerouslySetInnerHTML로 이 앱 페이지에
                   // 직접 꽂으면 우리 세션 쿠키/스토리지에 접근 가능한 XSS가 된다.
                   // 스크립트 실행이 막힌 sandbox iframe(다른 오리진처럼 격리됨) 안에
                   // 그려서, 내용은 그대로 보여주되 실행 권한은 주지 않는다.
-                  <iframe
+                  <iframe className="erp-u-w-full erp-u-border-none"
                     title="메일 본문"
                     srcDoc={selected.body_html}
                     sandbox="allow-popups allow-popups-to-escape-sandbox"
-                    style={{ width: "100%", minHeight: 420, border: "none" }}
+                    style={{ minHeight: 420 }}
                   />
                 ) : (
                   <p style={{ whiteSpace: "pre-wrap" }}>{selected.body_text || "(내용 없음)"}</p>

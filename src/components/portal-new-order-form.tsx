@@ -72,12 +72,12 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
                   <td>{c.spec ?? "-"}</td>
                   <td className="num">{formatNumber(c.unit_price)}</td>
                   <td className="num">
-                    <input
+                    <input aria-label="수량"
                       type="number"
                       min={0}
                       step="any"
-                      className="erp-input"
-                      style={{ width: 90, textAlign: "right" }}
+                      className="erp-input erp-u-text-right"
+                      style={{ width: 90 }}
                       value={qtyByProduct[c.product_id] ?? ""}
                       onChange={(e) =>
                         setQtyByProduct((prev) => ({ ...prev, [c.product_id]: e.target.value }))
@@ -109,17 +109,16 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
                 <span className="erp-row-card-date">{c.sku}</span>
               </div>
               {c.spec && <div className="erp-row-card-item">{c.spec}</div>}
-              <div className="erp-row-card-foot" style={{ marginTop: 6 }}>
+              <div className="erp-row-card-foot erp-u-mt-6">
                 <span className="erp-row-card-qty">단가 {formatNumber(c.unit_price)}원</span>
                 <span className="erp-row-card-amount">{qty > 0 ? `${formatNumber(qty * c.unit_price)}원` : "-"}</span>
               </div>
-              <div className="flex items-center gap-2" style={{ marginTop: 4 }}>
+              <div className="flex items-center gap-2 erp-u-mt-4">
                 <input
                   type="number"
                   min={0}
                   step="any"
-                  className="erp-input"
-                  style={{ flex: 1 }}
+                  className="erp-input erp-u-flex-1"
                   aria-label="수량"
                   value={qtyByProduct[c.product_id] ?? ""}
                   onChange={(e) => setQtyByProduct((prev) => ({ ...prev, [c.product_id]: e.target.value }))}
@@ -139,15 +138,15 @@ export function PortalNewOrderForm({ catalog }: { catalog: CatalogRow[] }) {
           id="portal-order-memo"
           name="memo"
           rows={2}
-          className="erp-input"
-          style={{ width: "100%", height: "auto" }}
+          className="erp-input erp-u-w-full"
+          style={{ height: "auto" }}
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
         />
       </div>
 
       <div className="erp-u-flex erp-u-justify-between erp-u-items-center">
-        <span className="erp-u-bold" style={{ fontSize: 13 }}>
+        <span className="erp-u-bold erp-u-text-md">
           합계: {formatNumber(total)}원 ({items.length}개 품목)
         </span>
         <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || items.length === 0}>

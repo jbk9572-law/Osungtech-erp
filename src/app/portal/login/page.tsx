@@ -20,20 +20,20 @@ function PortalLoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--erp-bg)] px-4">
       <div className="w-full max-w-[380px] rounded-sm border border-[var(--erp-border)] bg-white p-6 shadow-sm">
-        <div className="erp-u-bold erp-u-text" style={{ fontSize: 18, marginBottom: 4 }}>
+        <div className="erp-u-bold erp-u-text erp-u-mb-4" style={{ fontSize: 18 }}>
           거래처 포털
         </div>
-        <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
+        <p className="erp-u-muted erp-u-text-compact erp-u-mb-20">
           발주 및 주문 진행 상태 조회
         </p>
         <form action={formAction} className="flex flex-col gap-3">
           <div className="erp-field">
             <label htmlFor="portal-email">이메일</label>
-            <input id="portal-email" name="email" type="email" autoComplete="username" required className="erp-input" style={{ width: "100%" }} />
+            <input id="portal-email" name="email" type="email" autoComplete="username" required className="erp-input erp-u-w-full" />
           </div>
           <div className="erp-field">
             <label htmlFor="portal-password">비밀번호</label>
-            <input id="portal-password" name="password" type="password" autoComplete="current-password" required className="erp-input" style={{ width: "100%" }} />
+            <input id="portal-password" name="password" type="password" autoComplete="current-password" required className="erp-input erp-u-w-full" />
           </div>
           {otherSessionNotice && (
             <p className="rounded-sm bg-[var(--erp-info-bg)] px-3 py-2 text-xs font-medium text-[var(--erp-info-text)]">

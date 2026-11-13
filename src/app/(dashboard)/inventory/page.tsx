@@ -92,8 +92,7 @@ async function InventoryPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="상품명, SKU, 규격, 카테고리, 공급처"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { isTaxExempt, canIssueTaxInvoice, defaultInvoiceTypeFromTaxType } from "@/lib/tax-evidence-type";
 
 export type BulkTaxInvoiceState =
@@ -49,7 +49,7 @@ export async function bulkCreateTaxInvoices(
 
   const { data: orders } = await supabase
     .from("sales_orders")
-    .select("id, doc_no, created_by, customer_id, tax_type, evidence_type, customers(name)")
+    .select("id, doc_no, created_by, customer_id, tax_type, evidence_type, is_return, customers(name)")
     .in("id", salesOrderIds);
 
   const skipped: { docNo: number | null; customerName: string | null; reason: string }[] = [];
@@ -65,6 +65,11 @@ export async function bulkCreateTaxInvoices(
 
     if (!canManage(order.created_by, actor.userId, actor.isAdmin)) {
       skipped.push({ ...label, reason: "본인이 등록한 건이 아닙니다." });
+      continue;
+    }
+    // 반품 전표를 양수 금액의 정발행 계산서로 만들면 안 된다 — 반품은 수정세금계산서(마이너스)로 처리한다.
+    if (order.is_return) {
+      skipped.push({ ...label, reason: "반품 건입니다(수정세금계산서로 처리해주세요)." });
       continue;
     }
     if (isTaxExempt(order.tax_type)) {
@@ -106,7 +111,7 @@ export async function bulkCreateTaxInvoices(
         quantity: Number(it.quantity),
         unitPrice: Number(it.unit_price),
         supplyAmount,
-        taxAmount: calcVat(supplyAmount),
+        taxAmount: calcVatForTaxType(supplyAmount, order.tax_type),
       };
     });
     const totalSupply = lineItems.reduce((sum, r) => sum + r.supplyAmount, 0);

@@ -35,8 +35,7 @@ export function PlatformAdminNav() {
 
   return (
     <div
-      className="erp-comm-tabs erp-comm-tabs-scroll erp-platform-admin-tabs-mobile"
-      style={{ marginBottom: "var(--erp-space-5)" }}
+      className="erp-comm-tabs erp-comm-tabs-scroll erp-platform-admin-tabs-mobile erp-u-mb-s5"
     >
       {NAV_ITEMS.map((item) => (
         <Link

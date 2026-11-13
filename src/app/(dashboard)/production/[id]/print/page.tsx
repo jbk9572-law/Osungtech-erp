@@ -70,16 +70,16 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
         const isFirst = pageIndex === 0;
         return (
           <div key={pageIndex} className={pageIndex < pages.length - 1 ? "print-page-break" : undefined}>
-            <div className="erp-u-flex erp-u-justify-between"
-              style={{ alignItems: "flex-end", borderBottom: "3px solid #132944", paddingBottom: 8, marginBottom: 14 }}
+            <div className="erp-u-flex erp-u-justify-between erp-u-mb-14 erp-u-items-end"
+              style={{ borderBottom: "3px solid #132944", paddingBottom: 8 }}
             >
               <div>
-                <div style={{ fontSize: 11, color: "#555", letterSpacing: "0.08em" }}>ELVONIX ERP · 생산관리</div>
+                <div className="erp-u-text-caption" style={{ color: "#555", letterSpacing: "0.08em" }}>ELVONIX ERP · 생산관리</div>
                 <h1 style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "0.02em" }}>
                   생산지시서 (작업지시서){!isFirst && " — 이어서"}
                 </h1>
               </div>
-              <div style={{ textAlign: "right", fontSize: 12, color: "#444" }}>
+              <div className="erp-u-text-right erp-u-text-compact" style={{ color: "#444" }}>
                 <div>
                   문서번호: <b>{docNo}</b>
                 </div>
@@ -90,7 +90,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
             </div>
 
             {isFirst ? (
-              <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+              <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 90 }} />
                   <col />
@@ -114,14 +114,14 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
                     <th style={thStyle}>규격</th>
                     <td style={cellStyle}>{workOrder.products?.spec || "-"}</td>
                     <th style={thStyle}>수량</th>
-                    <td style={{ ...cellStyle, textAlign: "right" }}>
+                    <td className="erp-u-text-right" style={{ ...cellStyle }}>
                       {formatNumber(Number(workOrder.quantity))} {workOrder.products?.unit}
                     </td>
                   </tr>
                 </tbody>
               </table>
             ) : (
-              <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
+              <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 90 }} />
                   <col />
@@ -143,21 +143,21 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
             )}
 
             {isFirst && (
-              <div className="erp-u-flex" style={{ border: "1px solid #333", height: 220, marginTop: 10 }}>
-                <div className="erp-u-relative erp-u-flex erp-u-items-center"
-                  style={{ flex: 1, borderRight: "1px solid #333", justifyContent: "center" }}
+              <div className="erp-u-flex erp-u-mt-10" style={{ border: "1px solid #333", height: 220 }}>
+                <div className="erp-u-relative erp-u-flex erp-u-items-center erp-u-flex-1 erp-u-justify-center"
+                  style={{ borderRight: "1px solid #333" }}
                 >
-                  <span className="erp-u-bold" style={{ position: "absolute", top: 6, left: 8, fontSize: 11, color: "#555" }}>
+                  <span className="erp-u-bold erp-u-absolute erp-u-text-caption" style={{ top: 6, left: 8, color: "#555" }}>
                     도면
                   </span>
-                  <span style={{ color: "#aaa", fontSize: 12 }}>[도면 삽입 영역]</span>
+                  <span className="erp-u-text-compact" style={{ color: "#aaa" }}>[도면 삽입 영역]</span>
                 </div>
-                <div className="erp-u-relative" style={{ flex: 1, padding: "24px 10px 10px" }}>
-                  <span className="erp-u-bold" style={{ position: "absolute", top: 6, left: 8, fontSize: 11, color: "#555" }}>
+                <div className="erp-u-relative erp-u-flex-1" style={{ padding: "24px 10px 10px" }}>
+                  <span className="erp-u-bold erp-u-absolute erp-u-text-caption" style={{ top: 6, left: 8, color: "#555" }}>
                     특이사항
                   </span>
                   {workOrder.memo && (
-                    <div style={{ fontSize: 11, color: "#333", marginBottom: 6 }}>{workOrder.memo}</div>
+                    <div className="erp-u-text-caption erp-u-mb-6" style={{ color: "#333" }}>{workOrder.memo}</div>
                   )}
                   {Array.from({ length: 7 }).map((_, i) => (
                     <div key={i} style={{ borderBottom: "1px solid #ccc", height: 20 }} />
@@ -166,14 +166,14 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
               </div>
             )}
 
-            <div className="erp-u-bold" style={{ fontSize: 13, marginTop: 14 }}>
+            <div className="erp-u-bold erp-u-text-md erp-u-mt-14">
               공정 진행 체크리스트{!isFirst && " (이어서)"} — 공정마다 받을 때(인수)·끝낼 때(완료) 서명
             </div>
 
             {pageSteps.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#666", padding: "8px 0" }}>등록된 공정이 없습니다.</p>
+              <p className="erp-u-text-compact" style={{ color: "#666", padding: "8px 0" }}>등록된 공정이 없습니다.</p>
             ) : (
-              <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: 10 }}>
+              <table className="erp-u-mt-10 erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed" }}>
                 <colgroup>
                   <col style={{ width: 32 }} />
                   <col />
@@ -206,7 +206,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
               </table>
             )}
 
-            <div className="erp-u-text-center" style={{ fontSize: 10.5, color: "#666", marginTop: 14 }}>
+            <div className="erp-u-text-center erp-u-text-xs erp-u-mt-14" style={{ color: "#666" }}>
               이 문서는 생산지시서 원본과 함께 실물에 동봉해 공정마다(사내 ↔ 외부 업체 포함) 전달합니다. 공정이 한
               장에 다 들어가지 않으면 별도 서식이 아니라 이 서식의 뒷면에 이어서 찍힙니다.
             </div>

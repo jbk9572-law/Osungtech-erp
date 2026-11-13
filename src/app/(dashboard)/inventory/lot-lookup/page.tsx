@@ -162,13 +162,13 @@ export default async function LotLookupPage({
       <LotLookupSearchForm products={products} q={q ?? ""} productId={productId} />
 
       {!hasQuery && (
-        <p className="erp-grid-empty" style={{ marginTop: 12 }}>
+        <p className="erp-grid-empty erp-u-mt-12">
           관리번호(로트) 또는 품목을 입력해서 조회해주세요.
         </p>
       )}
 
       {hasQuery && noHits && (
-        <p className="erp-grid-empty" style={{ marginTop: 12 }}>
+        <p className="erp-grid-empty erp-u-mt-12">
           조건에 맞는 매입/매출/생산지시 내역이 없습니다.
         </p>
       )}
@@ -184,7 +184,7 @@ export default async function LotLookupPage({
 
           <div className="erp-detail erp-u-mt-0">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+              <span className="erp-detail-tab active erp-u-cursor-default">
                 매입 이력 (입고) {purchaseHits.length}건
               </span>
             </div>
@@ -213,7 +213,7 @@ export default async function LotLookupPage({
                         </td>
                         <td>{h.purchase_orders?.suppliers?.name ?? "-"}</td>
                         <td>{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</td>
-                        <td className="num erp-u-bold" style={{ color: "var(--erp-success)" }}>
+                        <td className="num erp-u-bold erp-u-color-success">
                           {formatNumber(Number(h.quantity))}
                         </td>
                       </tr>
@@ -252,7 +252,7 @@ export default async function LotLookupPage({
                       </div>
                       <div className="erp-row-card-foot">
                         <span className="erp-row-card-item">{h.products ? `${h.products.sku} · ${h.products.name}` : "-"}</span>
-                        <span className="erp-row-card-amount" style={{ color: "var(--erp-success)" }}>
+                        <span className="erp-row-card-amount erp-u-color-success">
                           {formatNumber(Number(h.quantity))}
                         </span>
                       </div>
@@ -270,7 +270,7 @@ export default async function LotLookupPage({
                 })}
                 {purchaseHits.length === 0 && <p className="erp-grid-empty">매입 이력 없음</p>}
                 {purchaseHits.length > 0 && (
-                  <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
+                  <div className="erp-row-card-foot erp-u-bold erp-u-pad-4-2">
                     <span>합계 입고</span>
                     <span className="erp-row-card-amount">{formatNumber(totalIn)}</span>
                   </div>
@@ -279,9 +279,9 @@ export default async function LotLookupPage({
             </div>
           </div>
 
-          <div className="erp-detail" style={{ marginTop: 14 }}>
+          <div className="erp-detail erp-u-mt-14">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+              <span className="erp-detail-tab active erp-u-cursor-default">
                 매출 이력 (출고) {saleHits.length}건
               </span>
             </div>
@@ -367,7 +367,7 @@ export default async function LotLookupPage({
                 })}
                 {saleHits.length === 0 && <p className="erp-grid-empty">매출 이력 없음</p>}
                 {saleHits.length > 0 && (
-                  <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
+                  <div className="erp-row-card-foot erp-u-bold erp-u-pad-4-2">
                     <span>합계 출고</span>
                     <span className="erp-row-card-amount">{formatNumber(totalOut)}</span>
                   </div>
@@ -376,9 +376,9 @@ export default async function LotLookupPage({
             </div>
           </div>
 
-          <div className="erp-detail" style={{ marginTop: 14 }}>
+          <div className="erp-detail erp-u-mt-14">
             <div className="erp-detail-tabs">
-              <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+              <span className="erp-detail-tab active erp-u-cursor-default">
                 생산지시 이력 {workOrderHits.length}건
                 {workOrderMatchMode === "doc_no" && " · LOT 정확 일치"}
                 {workOrderMatchMode === "product" && " · 품목 기준(로트 단위 아님)"}

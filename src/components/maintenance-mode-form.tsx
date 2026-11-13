@@ -39,7 +39,7 @@ export function MaintenanceModeForm({
           className="erp-input erp-textarea-compact w-full"
         />
       </div>
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ alignSelf: "flex-start" }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-self-start">
         {pending ? "저장 중..." : "저장"}
       </button>
       <FormMessage state={state} />

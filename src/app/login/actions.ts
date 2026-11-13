@@ -111,7 +111,7 @@ export async function login(_prevState: { error: string } | undefined, formData:
     }
   }
 
-  const { error } = await logSlowSupabaseCall("login.signInWithPassword", () =>
+  const { data: signInData, error } = await logSlowSupabaseCall("login.signInWithPassword", () =>
     supabase.auth.signInWithPassword({ email, password })
   );
 
@@ -120,6 +120,26 @@ export async function login(_prevState: { error: string } | undefined, formData:
     return { error: LOGIN_FAILED_MESSAGE };
   }
   recordLoginSuccess(ip, throttleId);
+
+  // 이메일 형식(아이디@...)으로 로그인하면 위 회사코드 경로의 차단 확인을 거치지 않으므로, 비밀번호가 맞은
+  // 뒤 이 계정이 속한 회사의 상태를 직접 확인해 같은 기준(비활성/기간 만료)으로 막는다.
+  if (!blockReason && signInData?.user) {
+    try {
+      const adminClient = createAdminClient();
+      const { data: profile } = await adminClient.from("profiles").select("tenant_id").eq("id", signInData.user.id).maybeSingle();
+      if (profile?.tenant_id) {
+        const { data: tenant } = await adminClient
+          .from("tenants")
+          .select("disabled_at, plan_expires_at")
+          .eq("id", profile.tenant_id)
+          .maybeSingle();
+        if (tenant?.disabled_at) blockReason = "disabled";
+        else if (tenant?.plan_expires_at && new Date(tenant.plan_expires_at).getTime() < Date.now()) blockReason = "expired";
+      }
+    } catch {
+      // 확인 자체가 실패하면 기존 동작(통과)을 유지한다 — 로그인 장애로 번지지 않게.
+    }
+  }
 
   // 비밀번호가 맞은 사용자에게만 비활성/만료 사유를 알려준다(위 주석 참고).
   if (blockReason === "disabled" || blockReason === "expired") {

@@ -16,7 +16,7 @@ export function RecalculateCacheButton() {
 
   return (
     <form action={formAction} className="flex flex-col items-end gap-1">
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ flexShrink: 0 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-shrink-0">
         {pending ? "교정 중..." : "지금 자동 교정"}
       </button>
       <FormMessage state={state} />

@@ -30,7 +30,7 @@ function spaceOut(text: string) {
 const cellStyle: React.CSSProperties = {
   border: "1px solid #000",
   padding: "6px 8px",
-  fontSize: 13,
+  fontSize: "var(--erp-font-md)",
 };
 
 // 명세표(일자~비고) 본문 행에 쓰는 스타일. 빈 줄(허전해 보이지 않게 채우는
@@ -96,7 +96,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
           27%)이 더 넓어진다. table-layout: fixed는 원래 "첫 행" 셀의 width만
           컬럼 폭으로 인정하므로(부서명 행처럼 이후 행에 준 width는 무시됨),
           행과 무관하게 폭이 고정되도록 colgroup/col로 직접 지정한다. */}
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", color: "#000" }}>
+      <table className="erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />
@@ -113,7 +113,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
             >
               {title.big}
               {title.sub && (
-                <div className="erp-u-normal" style={{ marginTop: 4, fontSize: 11, letterSpacing: 0 }}>{title.sub}</div>
+                <div className="erp-u-normal erp-u-mt-4 erp-u-text-caption" style={{ letterSpacing: 0 }}>{title.sub}</div>
               )}
             </td>
             <td className="erp-u-text-center" style={{ ...cellStyle }} rowSpan={2}>
@@ -138,7 +138,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
       {/* 실물 서식처럼 제목/작성자 박스, 부서명 박스, 품목 표를 서로 붙이지
           않고 구간마다 상하 여백을 두어 구분한다(section 별로 별도 표로
           쪼갬). */}
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: 10, color: "#000" }}>
+      <table className="erp-u-mt-10 erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />
@@ -160,7 +160,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
         </tbody>
       </table>
 
-      <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed", marginTop: 10, color: "#000" }}>
+      <table className="erp-u-mt-10 erp-u-border-collapse" style={{ width: "100%", tableLayout: "fixed", color: "#000" }}>
         <colgroup>
           <col style={{ width: "15%" }} />
           <col style={{ width: "27%" }} />
@@ -189,7 +189,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
                 <td className="erp-u-text-center" style={{ ...s }}>{item.used_at.replaceAll("-", ".")}</td>
                 <td style={{ ...s, wordBreak: "break-word" }}>{item.vendor}</td>
                 <td className="erp-u-text-center" style={{ ...s }}>{item.purpose || ""}</td>
-                <td style={{ ...s, textAlign: "right" }}>{formatNumber(Number(item.amount))}</td>
+                <td className="erp-u-text-right" style={{ ...s }}>{formatNumber(Number(item.amount))}</td>
                 <td style={{ ...s, wordBreak: "break-word" }}>{item.remark || ""}</td>
               </tr>
             );
@@ -198,7 +198,7 @@ export default async function PaymentRequestPrintPage({ params }: { params: Prom
             <td className="erp-u-text-center erp-u-bold" style={{ ...itemCellStyle }} colSpan={3}>
               합 계
             </td>
-            <td className="erp-u-bold" style={{ ...itemCellStyle, textAlign: "right" }}>{formatNumber(total)}</td>
+            <td className="erp-u-bold erp-u-text-right" style={{ ...itemCellStyle }}>{formatNumber(total)}</td>
             <td style={itemCellStyle} />
           </tr>
         </tbody>

@@ -94,7 +94,7 @@ export default async function DocumentTemplatesPage({
         <div className="erp-split-detail">
           {selected ? (
             <>
-              <div className="erp-u-flex erp-u-items-center erp-u-justify-between" style={{ gap: 10, marginBottom: 4 }}>
+              <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-10 erp-u-mb-4">
                 <h2 className="text-base font-bold erp-u-text">{selected.name}</h2>
                 <GridBadge tone={selected.is_active ? "ok" : "muted"}>{selected.is_active ? "사용중" : "미사용"}</GridBadge>
               </div>
@@ -102,8 +102,8 @@ export default async function DocumentTemplatesPage({
                 {CATEGORY_LABELS[selected.category] ?? selected.category}
               </p>
 
-              <div className="erp-u-text"
-                style={{ background: "var(--erp-bg)", border: "1px solid var(--erp-divider)", borderRadius: "var(--erp-comm-radius-row)", padding: "18px 20px", fontSize: "var(--erp-font-base)", lineHeight: 1.8, whiteSpace: "pre-line", marginBottom: 18 }}
+              <div className="erp-u-text erp-u-bg-page erp-u-text-base erp-u-border-divider erp-u-radius-comm-row"
+                style={{ padding: "18px 20px", lineHeight: 1.8, whiteSpace: "pre-line", marginBottom: 18 }}
               >
                 {selected.body}
               </div>

@@ -54,7 +54,7 @@ export default async function EditCalendarEventPage({
             endTime: toTimeStr(endAt),
           }}
         />
-        <div style={{ marginTop: 12 }}>
+        <div className="erp-u-mt-12">
           <InlineConfirmDelete
             action={deleteCalendarEvent}
             hiddenFields={{ id: event.id }}

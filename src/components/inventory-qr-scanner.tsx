@@ -186,40 +186,34 @@ export function InventoryQrScanner({
           그 주변 톤은 앱과 맞춘다. */}
       <div className="erp-detail erp-u-mt-0" style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}>
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+          <span className="erp-detail-tab active erp-u-cursor-default">
             카메라 스캔
           </span>
         </div>
         <div className="erp-detail-body">
-          <div className="erp-u-relative"
-            style={{ width: "100%", aspectRatio: "3 / 4", background: "var(--erp-bg-subtle)", borderRadius: 0, border: "2px solid var(--erp-primary)", overflow: "hidden" }}
+          <div className="erp-u-relative erp-u-w-full erp-u-bg-bg-subtle erp-u-radius-0 erp-u-overflow-hidden"
+            style={{ aspectRatio: "3 / 4", border: "2px solid var(--erp-primary)" }}
           >
-            <video
+            <video className="erp-u-w-full erp-u-h-full"
               ref={videoRef}
               muted
               playsInline
               autoPlay
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ objectFit: "cover" }}
             />
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
             {flash && (
-              <div
+              <div className="erp-u-absolute erp-u-pe-none"
                 key={flash.token}
                 aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  pointerEvents: "none",
-                  background: flash.kind === "ok" ? "rgba(34, 197, 94, 0.45)" : "rgba(220, 38, 38, 0.45)",
-                  animation: "erp-scan-flash 380ms ease-out forwards",
-                }}
+                style={{ inset: 0, background: flash.kind === "ok" ? "rgba(34, 197, 94, 0.45)" : "rgba(220, 38, 38, 0.45)", animation: "erp-scan-flash 380ms ease-out forwards" }}
               />
             )}
 
             {cameraError && (
-              <div className="erp-u-flex erp-u-items-center erp-u-text-center"
-                style={{ position: "absolute", inset: 0, justifyContent: "center", padding: 16, color: "#fff", background: "rgba(0,0,0,0.7)", fontSize: 13 }}
+              <div className="erp-u-flex erp-u-items-center erp-u-text-center erp-u-absolute erp-u-justify-center erp-u-p-16 erp-u-text-md"
+                style={{ inset: 0, color: "#fff", background: "rgba(0,0,0,0.7)" }}
               >
                 {cameraError}
               </div>
@@ -231,40 +225,20 @@ export function InventoryQrScanner({
                 그대로 보여주고, 네 귀퉁이 브래킷 + 오가는 스캔 라인만 앱의
                 메인 컬러로 살짝 얹어 "지금 스캔 중"이라는 걸 표시한다. */}
             {!cameraError && (
-              <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+              <div className="erp-u-absolute erp-u-pe-none" aria-hidden="true" style={{ inset: 0 }}>
                 {[
                   { top: 10, left: 10, borderTopLeftRadius: 10 },
                   { top: 10, right: 10, borderTopRightRadius: 10 },
                   { bottom: 10, left: 10, borderBottomLeftRadius: 10 },
                   { bottom: 10, right: 10, borderBottomRightRadius: 10 },
                 ].map((corner, i) => (
-                  <div
+                  <div className="erp-u-absolute"
                     key={i}
-                    style={{
-                      position: "absolute",
-                      width: 34,
-                      height: 34,
-                      opacity: 0.9,
-                      borderTop: "top" in corner ? "4px solid var(--erp-primary)" : undefined,
-                      borderBottom: "bottom" in corner ? "4px solid var(--erp-primary)" : undefined,
-                      borderLeft: "left" in corner ? "4px solid var(--erp-primary)" : undefined,
-                      borderRight: "right" in corner ? "4px solid var(--erp-primary)" : undefined,
-                      ...corner,
-                    }}
+                    style={{ width: 34, height: 34, opacity: 0.9, borderTop: "top" in corner ? "4px solid var(--erp-primary)" : undefined, borderBottom: "bottom" in corner ? "4px solid var(--erp-primary)" : undefined, borderLeft: "left" in corner ? "4px solid var(--erp-primary)" : undefined, borderRight: "right" in corner ? "4px solid var(--erp-primary)" : undefined, ...corner }}
                   />
                 ))}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 16,
-                    right: 16,
-                    top: "45%",
-                    height: 2,
-                    borderRadius: 0,
-                    background: "linear-gradient(90deg, transparent, var(--erp-primary), transparent)",
-                    boxShadow: "0 0 10px 2px rgba(19, 41, 68, 0.85)",
-                    animation: "erp-scan-line 1.8s ease-in-out infinite",
-                  }}
+                <div className="erp-u-absolute erp-u-radius-0"
+                  style={{ left: 16, right: 16, top: "45%", height: 2, background: "linear-gradient(90deg, transparent, var(--erp-primary), transparent)", boxShadow: "0 0 10px 2px rgba(19, 41, 68, 0.85)", animation: "erp-scan-line 1.8s ease-in-out infinite" }}
                 />
               </div>
             )}
@@ -272,32 +246,26 @@ export function InventoryQrScanner({
             {/* 좌상단에 계속 맥박치는 점 + "스캔 중" 표시로 카메라가
                 멈춘 게 아니라는 걸 항상 눈에 보이게 한다. */}
             {!cameraError && (
-              <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-semibold"
+              <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-semibold erp-u-absolute erp-u-text-caption erp-u-radius-0 erp-u-pe-none"
                 aria-hidden="true"
-                style={{ position: "absolute", top: 10, left: "50%", transform: "translateX(-50%)", padding: "5px 11px", borderRadius: 0, background: "rgba(15, 20, 30, 0.65)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", color: "#fff", fontSize: 11, pointerEvents: "none" }}
+                style={{ top: 10, left: "50%", transform: "translateX(-50%)", padding: "5px 11px", background: "rgba(15, 20, 30, 0.65)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", color: "#fff" }}
               >
-                <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: "#4ade80",
-                    animation: "erp-live-pulse 1.6s infinite",
-                  }}
+                <span className="erp-u-radius-circle"
+                  style={{ width: 7, height: 7, background: "#4ade80", animation: "erp-live-pulse 1.6s infinite" }}
                 />
                 스캔 중
               </div>
             )}
 
             {!cameraError && scanState.active && (
-              <div className="erp-u-flex erp-u-text"
-                style={{ position: "absolute", left: 10, right: 10, bottom: 10, flexDirection: "column", background: "rgba(255, 255, 255, 0.97)", borderRadius: 0, borderTop: "4px solid var(--erp-primary)", boxShadow: "var(--erp-shadow-lg)", overflow: "hidden", animation: "erp-sheet-in 220ms ease-out" }}
+              <div className="erp-u-flex erp-u-text erp-u-absolute erp-u-col erp-u-radius-0 erp-u-overflow-hidden"
+                style={{ left: 10, right: 10, bottom: 10, background: "rgba(255, 255, 255, 0.97)", borderTop: "4px solid var(--erp-primary)", boxShadow: "var(--erp-shadow-lg)", animation: "erp-sheet-in 220ms ease-out" }}
               >
-                <div style={{ width: 36, height: 4, borderRadius: 0, background: "var(--erp-border)", margin: "8px auto 2px" }} />
+                <div className="erp-u-bg-border erp-u-radius-0" style={{ width: 36, height: 4, margin: "8px auto 2px" }} />
                 <div style={{ padding: "6px 14px 12px" }}>
-                  <div className="erp-u-muted" style={{ fontSize: 11, marginBottom: 1 }}>{scanState.active.sku}</div>
-                  <div style={{ fontSize: 16, fontWeight: 800 }}>{scanState.active.name}</div>
-                  <div className="erp-u-muted" style={{ fontSize: 12.5, marginBottom: 10 }}>
+                  <div className="erp-u-muted erp-u-text-caption" style={{ marginBottom: 1 }}>{scanState.active.sku}</div>
+                  <div className="erp-u-text-xl" style={{ fontWeight: 800 }}>{scanState.active.name}</div>
+                  <div className="erp-u-muted erp-u-text-base erp-u-mb-10">
                     {scanState.active.spec ?? "-"} · 전산 재고{" "}
                     <strong className="erp-u-text">
                       <QtyWithBoxes
@@ -311,20 +279,18 @@ export function InventoryQrScanner({
                     <button
                       type="button"
                       onClick={() => setMismatchInput(String(scanState.active!.systemQuantity))}
-                      className="erp-btn erp-btn-danger"
-                      style={{ width: "100%" }}
+                      className="erp-btn erp-btn-danger erp-u-w-full"
                     >
                       수량 다름 — 실제 수량 입력
                     </button>
                   ) : (
                     <div className="erp-u-flex erp-u-gap-6">
-                      <input
+                      <input aria-label="실제 수량"
                         type="number"
                         autoFocus
                         value={mismatchInput}
                         onChange={(e) => setMismatchInput(e.target.value)}
-                        className="erp-input"
-                        style={{ flex: 1 }}
+                        className="erp-input erp-u-flex-1"
                       />
                       <button type="button" onClick={handleMismatchConfirm} className="erp-btn erp-btn-primary">
                         확정
@@ -339,8 +305,8 @@ export function InventoryQrScanner({
             )}
 
             {!cameraError && !scanState.active && (
-              <div className="erp-u-text-center"
-                style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", maxWidth: "84%", padding: "7px 14px", borderRadius: 0, background: scanState.unknownSku ? "rgba(220, 38, 38, 0.35)" : "rgba(255, 255, 255, 0.16)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", border: `1px solid ${scanState.unknownSku ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.35)"}`, color: "#fff", textShadow: "0 1px 3px rgba(0, 0, 0, 0.6)", fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+              <div className="erp-u-text-center erp-u-absolute erp-u-text-base erp-u-radius-0 erp-u-nowrap erp-u-overflow-hidden erp-u-ellipsis"
+                style={{ bottom: 10, left: "50%", transform: "translateX(-50%)", maxWidth: "84%", padding: "7px 14px", background: scanState.unknownSku ? "rgba(220, 38, 38, 0.35)" : "rgba(255, 255, 255, 0.16)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", border: `1px solid ${scanState.unknownSku ? "rgba(220, 38, 38, 0.5)" : "rgba(255, 255, 255, 0.35)"}`, color: "#fff", textShadow: "0 1px 3px rgba(0, 0, 0, 0.6)" }}
               >
                 {scanState.unknownSku
                   ? `"${scanState.unknownSku}" 품목을 찾을 수 없습니다`
@@ -356,17 +322,16 @@ export function InventoryQrScanner({
         자동 확정됩니다.
       </PageGuide>
 
-      <div className="erp-field" style={{ marginTop: 10, maxWidth: 480, margin: "10px auto 0" }}>
+      <div className="erp-field erp-u-mt-10" style={{ maxWidth: 480, margin: "10px auto 0" }}>
         <label>카메라가 안 될 때 — SKU 직접 입력</label>
         <div className="erp-u-flex erp-u-gap-6">
-          <input
+          <input aria-label="품목 코드(SKU) 직접 입력"
             type="text"
             autoComplete="off"
             value={manualSku}
             onChange={(e) => setManualSku(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleManualLookup()}
-            className="erp-input"
-            style={{ flex: 1 }}
+            className="erp-input erp-u-flex-1"
           />
           <button type="button" onClick={handleManualLookup} className="erp-btn">
             조회
@@ -375,11 +340,11 @@ export function InventoryQrScanner({
       </div>
 
       <div
-        className="erp-detail"
-        style={{ marginTop: 14, maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}
+        className="erp-detail erp-u-mt-14"
+        style={{ maxWidth: 480, marginLeft: "auto", marginRight: "auto" }}
       >
         <div className="erp-detail-tabs">
-          <span className="erp-detail-tab active" style={{ cursor: "default" }}>
+          <span className="erp-detail-tab active erp-u-cursor-default">
             스캔 현황
           </span>
         </div>
@@ -455,21 +420,20 @@ export function InventoryQrScanner({
             </div>
           )}
 
-          <form action={formAction} style={{ marginTop: 10 }}>
+          <form className="erp-u-mt-10" action={formAction}>
             <input type="hidden" name="warehouse_id" value={warehouseId} />
             <input type="hidden" name="rows" value={rowsPayload} />
             <input type="hidden" name="note" value="QR 자동실사" />
             <FormMessage state={state} />
             {!ended ? (
-              <button type="button" onClick={handleEnd} className="erp-btn erp-btn-primary" style={{ width: "100%" }}>
+              <button type="button" onClick={handleEnd} className="erp-btn erp-btn-primary erp-u-w-full">
                 실사 종료
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={pending || scanState.mismatches.length === 0}
-                className="erp-btn erp-btn-primary"
-                style={{ width: "100%" }}
+                className="erp-btn erp-btn-primary erp-u-w-full"
               >
                 {pending
                   ? "저장 중..."

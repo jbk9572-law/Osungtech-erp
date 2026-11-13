@@ -61,7 +61,7 @@ export function SplitListBulkSelect({
   return (
     <>
       {selected.size > 0 && (
-        <div style={{ margin: 8 }}>
+        <div className="erp-u-m-8">
           <BulkDeleteBar
             formAction={formAction}
             pending={pending}
@@ -80,12 +80,11 @@ export function SplitListBulkSelect({
           className={`erp-split-list-row${row.active ? " active" : ""}`}
           style={{ display: "flex", alignItems: "flex-start", gap: 6 }}
         >
-          <input
+          <input className="erp-u-mt-3"
             type="checkbox"
             checked={selected.has(row.id)}
             onChange={() => toggleRow(row.id)}
             aria-label={`${row.label} 선택`}
-            style={{ marginTop: 3 }}
           />
           <Link href={row.href} style={{ flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>
             {row.content}

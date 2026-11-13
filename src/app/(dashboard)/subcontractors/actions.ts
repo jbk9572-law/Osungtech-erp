@@ -5,6 +5,11 @@ import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
 import { requireMutatedRow } from "@/lib/require-mutated-row";
 import { combinePhone } from "@/lib/phone";
+import { canViewPage } from "@/lib/department-page-access";
+
+// 화면(page.tsx)과 내보내기에는 부서별 접근권한 확인이 있는데 이 액션들에는 없어서, 접근이 막힌 부서도
+// 액션을 직접 호출하면 처리할 수 있었다 — 화면과 같은 기준을 서버 액션에서도 확인한다.
+const NO_ACCESS_MESSAGE = "이 화면에 대한 접근 권한이 없습니다.";
 
 function subcontractorFieldsFrom(formData: FormData) {
   const defaultUnitCostRaw = String(formData.get("default_unit_cost") ?? "").trim();
@@ -22,6 +27,7 @@ export async function createSubcontractor(_prevState: FormState, formData: FormD
   if (!fields.name) return { error: "업체명을 입력해주세요." };
 
   const supabase = await createClient();
+  if (!(await canViewPage(supabase, "/subcontractors"))) return { error: NO_ACCESS_MESSAGE };
   const { error } = await supabase.from("subcontractors").insert(fields);
   if (error) return { error: `등록에 실패했습니다: ${error.message}` };
 
@@ -36,6 +42,7 @@ export async function updateSubcontractor(_prevState: FormState, formData: FormD
   if (!fields.name) return { error: "업체명을 입력해주세요." };
 
   const supabase = await createClient();
+  if (!(await canViewPage(supabase, "/subcontractors"))) return { error: NO_ACCESS_MESSAGE };
   const result = await supabase.from("subcontractors").update(fields).eq("id", id).select("id");
   const mutationError = requireMutatedRow(result, "업체를 찾을 수 없습니다.");
   if (mutationError) return mutationError;
@@ -49,6 +56,7 @@ export async function deleteSubcontractor(_prevState: FormState, formData: FormD
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+  if (!(await canViewPage(supabase, "/subcontractors"))) return { error: NO_ACCESS_MESSAGE };
   const result = await supabase.from("subcontractors").delete().eq("id", id).select("id");
   const mutationError = requireMutatedRow(result, "업체를 찾을 수 없습니다.");
   if (mutationError) return mutationError;
@@ -69,6 +77,7 @@ export async function bulkDeleteSubcontractors(_prevState: FormState, formData: 
   }
 
   const supabase = await createClient();
+  if (!(await canViewPage(supabase, "/subcontractors"))) return { error: NO_ACCESS_MESSAGE };
   // deleteSubcontractor와 같은 이유(.select()로 실제 삭제 행 확인)로
   // error 없이 0건 삭제된 것도 실패로 집계한다.
   const results = await Promise.all(ids.map((id) => supabase.from("subcontractors").delete().eq("id", id).select("id")));
@@ -91,6 +100,7 @@ export async function addSubcontractorPayment(_prevState: FormState, formData: F
   }
 
   const supabase = await createClient();
+  if (!(await canViewPage(supabase, "/subcontractor-payables"))) return { error: NO_ACCESS_MESSAGE };
   const user = await getUser();
 
   const { error } = await supabase.from("subcontractor_payments").insert({
@@ -116,6 +126,7 @@ export async function deleteSubcontractorPayment(_prevState: FormState, formData
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+  if (!(await canViewPage(supabase, "/subcontractor-payables"))) return { error: NO_ACCESS_MESSAGE };
   const result = await supabase.from("subcontractor_payments").delete().eq("id", id).select("id");
   const mutationError = requireMutatedRow(result, {
     onError: "삭제에 실패했습니다",

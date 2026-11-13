@@ -88,20 +88,20 @@ export default async function CustomerOrdersPage({
           const items = o.customer_order_items ?? [];
           const allConverted = items.length > 0 && items.every((i) => i.work_order_id || i.sales_order_id);
           return (
-            <div id={`order-${o.id}`} key={o.id} className="erp-home-panel" style={{ padding: 14, scrollMarginTop: 60 }}>
-              <div className="erp-u-flex erp-u-justify-between erp-u-items-center" style={{ marginBottom: 8 }}>
+            <div id={`order-${o.id}`} key={o.id} className="erp-home-panel erp-u-p-14" style={{ scrollMarginTop: 60 }}>
+              <div className="erp-u-flex erp-u-justify-between erp-u-items-center erp-u-mb-8">
                 <div>
                   <span className="erp-u-bold">{o.customers?.name ?? "-"}</span>
-                  <span className="erp-u-muted" style={{ marginLeft: 8, fontSize: 12 }}>
+                  <span className="erp-u-muted erp-u-ml-8 erp-u-text-compact">
                     주문 {o.doc_no} · {new Date(o.created_at).toLocaleString("ko-KR")}
                   </span>
                 </div>
-                <span className="erp-u-bold" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+                <span className="erp-u-bold erp-u-text-md erp-u-tabular">
                   {formatNumber(total)}원
                 </span>
               </div>
 
-              <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 8 }}>
+              <div className="erp-grid-wrap has-card-view erp-u-mb-8">
                 <table className="erp-grid">
                 <thead>
                   <tr>
@@ -129,7 +129,7 @@ export default async function CustomerOrdersPage({
                             </span>
                           )}
                           {itemConverted && (
-                            <span className="erp-badge erp-badge-success" style={{ marginLeft: 6 }}>
+                            <span className="erp-badge erp-badge-success erp-u-ml-6">
                               {item.work_order_id
                                 ? `생산지시 연결됨(${item.work_orders?.status === "completed" ? "생산완료" : item.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`
                                 : "판매로 연결됨"}
@@ -171,7 +171,7 @@ export default async function CustomerOrdersPage({
                 </table>
               </div>
 
-              <div className="erp-row-card-list" style={{ marginBottom: 8 }}>
+              <div className="erp-row-card-list erp-u-mb-8">
                 {items.map((item) => {
                   const manufactured = manufacturedProductIds.has(item.product_id);
                   const itemConverted = Boolean(item.work_order_id || item.sales_order_id);
@@ -241,7 +241,7 @@ export default async function CustomerOrdersPage({
               </div>
 
               {o.memo && (
-                <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 8 }}>요청사항: {o.memo}</p>
+                <p className="erp-u-muted erp-u-text-compact erp-u-mb-8">요청사항: {o.memo}</p>
               )}
 
               {activeTab === "requested" && (
@@ -269,7 +269,7 @@ export default async function CustomerOrdersPage({
               )}
 
               {activeTab === "rejected" && o.reject_reason && (
-                <p className="erp-u-danger" style={{ fontSize: 12 }}>반려 사유: {o.reject_reason}</p>
+                <p className="erp-u-danger erp-u-text-compact">반려 사유: {o.reject_reason}</p>
               )}
             </div>
           );

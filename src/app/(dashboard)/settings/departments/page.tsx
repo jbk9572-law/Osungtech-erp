@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -14,14 +15,14 @@ import { buildOrgTree, type OrgDepartmentNode } from "@/lib/org-chart";
 function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: number }) {
   const isReal = !node.id.startsWith("__");
   return (
-    <div style={{ marginLeft: depth * 20, marginBottom: 4 }}>
+    <div className="erp-u-mb-4" style={{ marginLeft: depth * 20 }}>
       {/* 부서명+인원수+수정/삭제 버튼을 flex-wrap 없이 한 줄에 강제
           배치하고 있었다 — 깊은 depth(marginLeft 누적)와 긴 부서명이
           겹치는 좁은 화면에서는 이 div가 .erp-grid-wrap 같은 가로스크롤
           래퍼도 없이 그냥 .erp의 overflow-x:hidden에 잘려 버튼이
           안 눌리는 버그가 생긴다(모바일 감사에서 발견) — flex-wrap을
           줘서 공간이 모자라면 버튼이 다음 줄로 자연스럽게 내려가게 한다. */}
-      <div className="flex items-center gap-2" style={{ padding: "4px 0", flexWrap: "wrap" }}>
+      <div className="flex items-center gap-2 erp-u-wrap" style={{ padding: "4px 0" }}>
         <span style={{ fontWeight: depth === 0 ? 700 : 500 }}>
           {"└ ".repeat(depth > 0 ? 1 : 0)}
           {node.name}
@@ -44,7 +45,7 @@ function DepartmentNode({ node, depth }: { node: OrgDepartmentNode; depth: numbe
         )}
       </div>
       {node.employees.length > 0 && (
-        <div className="text-xs erp-u-muted" style={{ marginLeft: 20 }}>
+        <div className="text-xs erp-u-muted erp-u-ml-20">
           {node.employees.map((e) => e.fullName + (e.positionTitle ? `(${e.positionTitle})` : "")).join(", ")}
         </div>
       )}
@@ -83,9 +84,9 @@ export default async function DepartmentsPage() {
       <ListPageHeader
         title="환경설정 > 조직도 관리"
         actions={
-          <Link href="/settings/departments/new" className="erp-btn erp-btn-primary">
+          <GuardedLink href="/settings/departments/new" className="erp-btn erp-btn-primary">
             F2 새 부서
-          </Link>
+          </GuardedLink>
         }
       />
 
@@ -104,7 +105,7 @@ export default async function DepartmentsPage() {
         )}
       </FormSection>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <FormSection tabLabel="구성원 배치">
           <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">

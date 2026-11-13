@@ -33,15 +33,8 @@ export function AddOnProductRow({
   const formId = `addon-form-${id}`;
 
   return (
-    <div
-      style={{
-        background: "var(--erp-panel)",
-        border: "1px solid var(--erp-comm-border)",
-        borderRadius: "var(--erp-comm-radius-row)",
-        boxShadow: "var(--erp-comm-shadow-row)",
-        padding: "14px 18px",
-        flex: "0 0 auto",
-      }}
+    <div className="erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
+      style={{ padding: "14px 18px" }}
     >
       <form id={formId} action={formAction}>
         <input type="hidden" name="id" value={id} />
@@ -50,8 +43,8 @@ export function AddOnProductRow({
       <div className="flex flex-wrap items-start gap-4">
         <div className="erp-field" style={{ flex: "0 0 140px" }}>
           <label>키</label>
-          <span className="erp-u-muted"
-            style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", fontSize: "var(--erp-font-base)", paddingTop: 6 }}
+          <span className="erp-u-muted erp-u-text-base"
+            style={{ fontFamily: "ui-monospace, 'SF Mono', monospace", paddingTop: 6 }}
           >
             {addonKey}
           </span>
@@ -105,27 +98,26 @@ export function AddOnProductRow({
             className="erp-input w-full"
           />
         </div>
-        <div className="erp-field" style={{ flex: "0 0 auto" }}>
+        <div className="erp-field erp-u-flex-none">
           <label htmlFor={`${formId}-active`}>노출</label>
-          <input
+          <input className="erp-u-mt-6"
             id={`${formId}-active`}
             type="checkbox"
             name="is_active"
             value="1"
             form={formId}
             defaultChecked={isActive}
-            style={{ marginTop: 6 }}
           />
         </div>
       </div>
 
       <div
-        className="flex items-center justify-between"
-        style={{ marginTop: "var(--erp-space-3)", paddingTop: "var(--erp-space-2)", borderTop: "1px solid var(--erp-divider)" }}
+        className="flex items-center justify-between erp-u-mt-s3 erp-u-bt-divider"
+        style={{ paddingTop: "var(--erp-space-2)" }}
       >
         <FormMessage state={state} />
         <div className="flex items-center gap-1">
-          <button type="submit" form={formId} className="erp-btn" disabled={pending} style={{ minWidth: 0 }}>
+          <button type="submit" form={formId} className="erp-btn erp-u-minw-0" disabled={pending}>
             {pending ? "저장 중..." : "저장"}
           </button>
           <DeleteButton action={deleteAddOnProduct} id={id} confirmMessage={`"${name}" 애드온을 삭제하시겠습니까?`} />

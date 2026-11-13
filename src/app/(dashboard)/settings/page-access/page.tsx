@@ -47,7 +47,7 @@ export default async function PageAccessSettingsPage() {
       </PageGuide>
 
       {!departments?.length ? (
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+        <p className="erp-grid-empty erp-u-mt-24">
           먼저 환경설정 &gt; 조직도 관리에서 부서를 등록하세요.
         </p>
       ) : (
@@ -94,10 +94,10 @@ export default async function PageAccessSettingsPage() {
                 <div className="erp-row-card-head">
                   <span className="erp-row-card-partner">{page.label}</span>
                 </div>
-                <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
+                <div className="erp-u-flex erp-u-col erp-u-gap-4">
                   {departments.map((d) => (
                     <div className="erp-u-flex erp-u-items-center erp-u-justify-between" key={d.id}>
-                      <span className="erp-u-muted" style={{ fontSize: "var(--erp-font-sm)" }}>{d.name}</span>
+                      <span className="erp-u-muted erp-u-text-sm">{d.name}</span>
                       <FeatureToggle
                         featureKey={`${page.pageKey}::${d.id}`}
                         label={`${page.label} - ${d.name}`}

@@ -1,4 +1,5 @@
 import { withPageTiming } from "@/lib/page-timing";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
@@ -19,7 +20,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/modules/paper-calc/public";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -116,6 +117,7 @@ async function SalesPage({
       .select(SALE_ITEM_SELECT)
       .order("sales_orders(order_date)", { ascending: false })
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .gte("sales_orders.order_date", effectiveFrom)
       .lte("sales_orders.order_date", effectiveTo);
 
@@ -195,8 +197,7 @@ async function SalesPage({
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
     // 과세구분이 면세/영세면 세액 0 — 지금까지는 전부 과세로 취급했다.
-    const taxAmount =
-      item.sales_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.sales_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -333,7 +334,7 @@ async function SalesPage({
     : (rawCarryoverItems ?? []);
   const carryoverItemRows = carryoverKeywordItems.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = item.sales_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.sales_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const carryoverRows: DisplayRow[] = Object.values(
@@ -475,8 +476,7 @@ async function SalesPage({
     return sum + (row.sales_orders?.is_return ? -supplyAmount : supplyAmount);
   }, 0);
   const totalTax = filteredTotalsRows.reduce((sum, row) => {
-    if (row.sales_orders?.tax_type !== "과세") return sum;
-    const taxAmount = calcVat(row.quantity * Number(row.unit_price));
+    const taxAmount = calcVatForTaxType(row.quantity * Number(row.unit_price), row.sales_orders?.tax_type);
     return sum + (row.sales_orders?.is_return ? -taxAmount : taxAmount);
   }, 0);
   const totalQuantity = filteredTotalsRows.reduce((sum, row) => sum + row.quantity, 0);
@@ -549,8 +549,7 @@ async function SalesPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="출고처명, 상품명, SKU, 규격, 관리번호, 배송방법, 메모, 비고"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -568,9 +567,9 @@ async function SalesPage({
       </PageGuide>
 
       <div className="erp-toolbar">
-        <Link href="/sales/new" className="erp-btn erp-btn-primary">
+        <GuardedLink href="/sales/new" className="erp-btn erp-btn-primary">
           F2 신규
-        </Link>
+        </GuardedLink>
         <UnifiedSaleModalTrigger
           customers={quickCustomers}
           products={quickProducts}
@@ -595,7 +594,7 @@ async function SalesPage({
         <PageGuide tone="info" className="mb-2">
           이번 달 매출 실적(리포트 기준) = 신규 {formatNumber(totalSupply)}원 + 전월 이월{" "}
           {formatNumber(carryoverSupplyTotal)}원 ={" "}
-          <strong style={{ color: "var(--erp-primary)" }}>{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
+          <strong className="erp-u-color-primary">{formatNumber(totalSupply + carryoverSupplyTotal)}원</strong>{" "}
           — 전월 이월분은 아래 목록 합계(날짜 기준)에는 포함되지 않고, 별도 구간으로만 표시됩니다.
         </PageGuide>
       )}
@@ -613,7 +612,7 @@ async function SalesPage({
       />
 
       {hasMore && (
-        <div className="erp-u-flex" style={{ justifyContent: "center", marginTop: 12 }}>
+        <div className="erp-u-flex erp-u-justify-center erp-u-mt-12">
           <Link href={moreHref} className="erp-btn">
             더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>

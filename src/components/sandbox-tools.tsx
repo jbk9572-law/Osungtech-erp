@@ -65,10 +65,10 @@ export function SandboxTools() {
               />
             </label>
             <div className="flex gap-2">
-              <button type="submit" disabled={resetPending || !confirmMatches} className="erp-btn erp-btn-danger" style={{ minWidth: 0 }}>
+              <button type="submit" disabled={resetPending || !confirmMatches} className="erp-btn erp-btn-danger erp-u-minw-0">
                 {resetPending ? "초기화 중..." : "초기화 실행"}
               </button>
-              <button type="button" onClick={reset} className="erp-btn" style={{ minWidth: 0 }}>
+              <button type="button" onClick={reset} className="erp-btn erp-u-minw-0">
                 취소
               </button>
             </div>

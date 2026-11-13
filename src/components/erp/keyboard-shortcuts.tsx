@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printInPlace } from "@/lib/print-in-place";
 import { startRouteProgress } from "@/lib/route-progress";
+import { shouldAllowNavigation } from "@/lib/nav-guard";
 import { useModalClose, useSetModalCloseHref } from "@/lib/modal-context";
 import { KeyboardHintBar } from "@/components/erp/keyboard-hint-bar";
 
@@ -96,6 +97,8 @@ export function KeyboardShortcuts({
         if (action.newTab) {
           window.open(action.href, "_blank", "noopener,noreferrer");
         } else {
+          // 키를 꾹 누르거나 버튼 클릭과 겹쳐 같은 이동이 연달아 시작되는 것을 막는다.
+          if (!shouldAllowNavigation(action.href)) return;
           startRouteProgress();
           router.push(action.href);
         }

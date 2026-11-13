@@ -77,7 +77,7 @@ export function PurchaseQuotePriceForm({
       </div>
 
       <div className="flex items-center gap-2">
-        <button type="submit" className="erp-btn erp-btn-primary" disabled={pending} style={{ alignSelf: "flex-start" }}>
+        <button type="submit" className="erp-btn erp-btn-primary erp-u-self-start" disabled={pending}>
           {pending ? "저장 중..." : "견적가 저장"}
         </button>
         <FormMessage state={state} />

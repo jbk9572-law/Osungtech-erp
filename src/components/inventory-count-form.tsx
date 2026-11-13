@@ -163,16 +163,15 @@ export function InventoryCountForm({
   }
 
   return (
-    <div className="erp-detail erp-u-mt-0" style={{ borderColor: "var(--erp-primary)" }}>
+    <div className="erp-detail erp-u-mt-0 erp-u-bc-primary">
       <div className="erp-detail-tabs erp-u-justify-between" style={{ paddingRight: 6 }}>
-        <span className="erp-detail-tab active" style={{ borderRight: "none", cursor: "default" }}>
+        <span className="erp-detail-tab active erp-u-cursor-default" style={{ borderRight: "none" }}>
           진행 중인 실사
         </span>
         <button
           type="button"
           onClick={() => setStarted(false)}
-          className="erp-btn erp-u-h-26"
-          style={{ minWidth: 0, padding: "0 10px" }}
+          className="erp-btn erp-btn-sm erp-u-minw-0 erp-u-pad-0-10"
         >
           접기
         </button>
@@ -244,7 +243,7 @@ export function InventoryCountForm({
         </div>
       </div>
       {hasUnexplainedLargeDiff && (
-        <p className="mt-1 text-[11px]" style={{ color: "var(--erp-warning)" }}>
+        <p className="mt-1 text-[11px] erp-u-color-warning">
           ⚠ 확인 필요로 표시된 품목이 있는데 사유를 안 적었습니다. 저장 버튼을 한 번 더 누르면 그대로
           저장됩니다.
         </p>
@@ -255,7 +254,7 @@ export function InventoryCountForm({
           남기는 것과 같은 이유. 저장을 막지는 않되(작지 않은 원인은
           현장에서 바로 못 밝혀낼 수도 있다), 비워두면 이력에 "-"로 남아
           기록을 안 남겼다는 사실 자체가 보이게 한다. */}
-      <div className="erp-field" style={{ marginTop: 8 }}>
+      <div className="erp-field erp-u-mt-8">
         <label htmlFor="count-note">사유 / 메모 (선택)</label>
         <input
           id="count-note"
@@ -267,22 +266,16 @@ export function InventoryCountForm({
             confirmSave.reset();
           }}
           placeholder="예: 파손 3개 폐기, 분기 정기실사 등 — 나중에 이력에서 원인을 되짚어볼 때 도움이 됩니다"
-          className="erp-input"
-          style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
         />
       </div>
       <FormMessage state={state} />
       {savedSummary && savedSummary.length > 0 && (
         <div
-          className="rounded p-2 text-xs"
-          style={{
-            marginTop: 8,
-            background: "var(--erp-success-bg)",
-            border: "1px solid var(--erp-success-border)",
-          }}
+          className="rounded p-2 text-xs erp-u-mt-8 erp-u-bg-success-bg erp-u-border-success-border"
         >
           <div className="mb-2 flex items-center justify-between">
-            <strong style={{ color: "var(--erp-success)" }}>
+            <strong className="erp-u-color-success">
               이번 실사에서 {savedSummary.length}개 품목이 조정되었습니다.
             </strong>
             <button
@@ -334,7 +327,7 @@ export function InventoryCountForm({
           </div>
         </div>
       )}
-      <div className="erp-grid-wrap has-card-view" style={{ marginTop: 8 }}>
+      <div className="erp-grid-wrap has-card-view erp-u-mt-8">
         <table
           className="erp-grid"
           style={{ tableLayout: "fixed", width: "100%", minWidth: COUNT_GRID_TOTAL_WIDTH }}
@@ -433,7 +426,7 @@ export function InventoryCountForm({
           product-grid-table)과 같은 .erp-row-card-list 패턴을 그대로
           쓴다. 입력칸(QuantityWithBoxInput)과 차이/배지 로직은 표 쪽과
           완전히 같은 state(counted/baseline)를 공유한다. */}
-      <div className="erp-row-card-list" style={{ marginTop: 8 }}>
+      <div className="erp-row-card-list erp-u-mt-8">
         {visibleRows.map((row) => {
           const systemQuantity = baseline[row.productId] ?? row.systemQuantity;
           const value = counted[row.productId] ?? systemQuantity;
@@ -446,7 +439,7 @@ export function InventoryCountForm({
                 <span className="erp-row-card-date">{row.sku}</span>
               </div>
               {row.spec && <div className="erp-row-card-item">{row.spec}</div>}
-              <div className="erp-row-card-foot" style={{ marginTop: 6 }}>
+              <div className="erp-row-card-foot erp-u-mt-6">
                 <span className="erp-row-card-qty">
                   전산 <QtyWithBoxes quantity={systemQuantity} basePackageQty={row.basePackageQty} unit={row.unit ?? ""} />
                 </span>
@@ -465,7 +458,7 @@ export function InventoryCountForm({
                   {formatNumber(diff)}
                 </span>
               </div>
-              <div style={{ marginTop: 4 }}>
+              <div className="erp-u-mt-4">
                 <QuantityWithBoxInput
                   quantity={value}
                   onQuantityChange={(n) => setCounted((prev) => ({ ...prev, [row.productId]: n }))}
@@ -476,7 +469,7 @@ export function InventoryCountForm({
                 />
               </div>
               {flagged && (
-                <div style={{ marginTop: 4 }}>
+                <div className="erp-u-mt-4">
                   <GridBadge tone="warn" title="전산 재고 대비 차이가 큽니다 — 위 사유란에 원인을 남겨두는 걸 권장합니다.">
                     ⚠ 확인 필요
                   </GridBadge>

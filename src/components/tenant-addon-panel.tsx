@@ -159,19 +159,15 @@ export function TenantAddonPanel({
           자사 도메인 메일 애드온(프리미엄) 사용
         </label>
         <div>
-          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
             {pending ? "저장 중..." : "저장"}
           </button>
         </div>
         <FormMessage state={state} />
       </form>
 
-      <div
-        style={{
-          marginTop: "var(--erp-space-5)",
-          paddingTop: "var(--erp-space-4)",
-          borderTop: "1px solid var(--erp-divider)",
-        }}
+      <div className="erp-u-mt-s5 erp-u-bt-divider"
+        style={{ paddingTop: "var(--erp-space-4)" }}
       >
         <p className="mb-2 text-xs font-bold erp-u-muted">
           부착된 애드온
@@ -181,7 +177,7 @@ export function TenantAddonPanel({
             부착된 애드온이 없습니다.
           </p>
         ) : (
-          <div className="flex flex-col gap-2" style={{ marginBottom: "var(--erp-space-3)" }}>
+          <div className="flex flex-col gap-2 erp-u-mb-s3">
             {addonSubscriptions.map((s) => (
               <AddonSubscriptionRow key={s.addOnProductId} tenantId={tenantId} subscription={s} />
             ))}
@@ -206,18 +202,17 @@ function AddonSubscriptionRow({ tenantId, subscription }: { tenantId: string; su
   const unit = addonKindUnit(subscription.kind);
 
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-gap-8"
-      style={{ flexWrap: "wrap", border: "1px solid var(--erp-border)", padding: "8px 10px" }}
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-wrap erp-u-border erp-u-pad-8-10"
     >
-      <div style={{ flex: "1 1 160px", minWidth: 0 }}>
-        <div className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-sm)" }}>{subscription.name}</div>
-        <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
+      <div className="erp-u-minw-0" style={{ flex: "1 1 160px" }}>
+        <div className="erp-u-semibold erp-u-text erp-u-text-sm">{subscription.name}</div>
+        <div className="erp-u-muted erp-u-text-xs">
           {addonKindLabel(subscription.kind)} · {formatNumber(subscription.capacity)}
           {unit} × {subscription.quantity}개 = {formatNumber(subscription.capacity * subscription.quantity)}
           {unit} · 월 {formatNumber(subscription.monthlyPrice * subscription.quantity)}원
         </div>
       </div>
-      <form className="erp-u-flex erp-u-items-center" action={attachAction} style={{ gap: 4 }}>
+      <form className="erp-u-flex erp-u-items-center erp-u-gap-4" action={attachAction}>
         <input type="hidden" name="tenantId" value={tenantId} />
         <input type="hidden" name="addOnProductId" value={subscription.addOnProductId} />
         <input
@@ -229,14 +224,14 @@ function AddonSubscriptionRow({ tenantId, subscription }: { tenantId: string; su
           style={{ width: 60 }}
           aria-label={`${subscription.name} 수량`}
         />
-        <button type="submit" disabled={attachPending} className="erp-btn" style={{ minWidth: 0 }}>
+        <button type="submit" disabled={attachPending} className="erp-btn erp-u-minw-0">
           {attachPending ? "저장 중..." : "수정"}
         </button>
       </form>
       <form action={detachAction}>
         <input type="hidden" name="tenantId" value={tenantId} />
         <input type="hidden" name="addOnProductId" value={subscription.addOnProductId} />
-        <button type="submit" disabled={detachPending} className="erp-btn" style={{ minWidth: 0 }}>
+        <button type="submit" disabled={detachPending} className="erp-btn erp-u-minw-0">
           {detachPending ? "해제 중..." : "해제"}
         </button>
       </form>
@@ -257,7 +252,7 @@ function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: Add
   }
 
   return (
-    <form className="erp-u-flex erp-u-gap-8" action={formAction} style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+    <form className="erp-u-flex erp-u-gap-8 erp-u-wrap erp-u-items-end" action={formAction}>
       <input type="hidden" name="tenantId" value={tenantId} />
       <div className="erp-field">
         <label htmlFor="attach-product">애드온</label>
@@ -278,7 +273,7 @@ function AttachAddonForm({ tenantId, catalog }: { tenantId: string; catalog: Add
         <label htmlFor="attach-qty">수량</label>
         <input id="attach-qty" type="number" name="quantity" min={1} defaultValue={1} className="erp-input" style={{ width: 70 }} />
       </div>
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
         {pending ? "부착 중..." : "부착"}
       </button>
       <FormMessage state={state} />

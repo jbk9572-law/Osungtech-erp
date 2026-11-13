@@ -54,7 +54,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
       <div>
         <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
         <ListPageHeader title="보고서 > 지급결의양식 > 수정" />
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+        <p className="erp-grid-empty erp-u-mt-24">
           본인이 작성한 지급결의서만 수정할 수 있습니다.
         </p>
       </div>
@@ -66,7 +66,7 @@ export default async function EditPaymentRequestPage({ params }: { params: Promi
       <div>
         <KeyboardShortcuts shortcuts={{ Escape: { href: `/reports/payment-requests/${id}` } }} />
         <ListPageHeader title="보고서 > 지급결의양식 > 수정" />
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+        <p className="erp-grid-empty erp-u-mt-24">
           이미 제출(마감)된 지급결의서는 수정할 수 없습니다. 회수 후 다시 시도해주세요.
         </p>
       </div>

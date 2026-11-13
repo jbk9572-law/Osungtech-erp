@@ -5585,6 +5585,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      ui_dashboard_layout: {
+        Row: {
+          user_id: string;
+          layout: Json;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          layout: Json;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          layout?: Json;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

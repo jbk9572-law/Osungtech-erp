@@ -15,8 +15,9 @@ import { nowInKst, toKstDateStr } from "@/lib/kst-date";
 import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { formatNumber } from "@/lib/format-number";
 import { canViewPage } from "@/lib/department-page-access";
+import { normalizeDashboardLayout } from "@/lib/dashboard-layout";
+import { QuickActionsPanel, RecentMemosPanel, StockRiskPanel } from "@/components/dashboard-side-panels";
 import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import type { ReportMoney } from "@/components/daily-report-box";
 
@@ -97,6 +98,12 @@ async function DashboardPage({
     getCurrentActor(supabase),
     isPaperCalcEnabled(supabase),
   ]);
+
+  // 사용자가 저장한 위젯 배치(없으면 기본 배치) — 저장값은 항상 검증·보정해서 쓴다.
+  const { data: layoutRow } = user
+    ? await supabase.from("ui_dashboard_layout").select("layout").eq("user_id", user.id).maybeSingle()
+    : { data: null };
+  const dashboardLayout = normalizeDashboardLayout(layoutRow?.layout);
 
   const [
     salesItems,
@@ -720,6 +727,14 @@ async function DashboardPage({
   // 메뉴로 이동해버린다").
   const dashboardBack = buildBackHref("/dashboard");
 
+  // 위젯으로 나뉘는 서버 렌더링 조각들 — 어디에 어떤 크기로 놓을지는 사용자가 저장한 배치(DashboardWidgetGrid)가 정한다.
+  const sidePanels = {
+    lookup: <QuickStockLookup products={stockLookupProducts} />,
+    stockRisk: <StockRiskPanel items={lowStockItems} />,
+    memos: <RecentMemosPanel notes={recentNotes} />,
+    quick: <QuickActionsPanel />,
+  };
+
   return (
     <>
       <OnboardingBanner />
@@ -764,77 +779,6 @@ async function DashboardPage({
         </div>
       )}
       <div className="erp-home">
-      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 16 }}>
-        <QuickStockLookup products={stockLookupProducts} />
-        <div className="erp-home-panel" id="stock-risk">
-          <div className="erp-home-panel-title">
-            <span>재고위험</span>
-            {lowStockItems.length > 0 && (
-              <span className="erp-u-danger" style={{ fontVariantNumeric: "tabular-nums" }}>
-                {lowStockItems.length}건
-              </span>
-            )}
-          </div>
-          {lowStockItems.length ? (
-            <>
-              <div className="erp-home-stock-list">
-                {lowStockItems.map((p) => (
-                  <Link key={p.id} href={`/inventory/item/${p.id}`} className="erp-home-stock-row">
-                    <span className="name">{p.name}</span>
-                    <span className="ratio">
-                      현재 {formatNumber(p.quantity)} / 기준 {formatNumber(p.reorderPoint)}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              <div className="erp-home-stock-footer">
-                <Link href="/inventory">재고현황 전체 보기 →</Link>
-                {" · "}
-                <Link href="/inventory/reorder-suggestions">발주 제안 보기 →</Link>
-              </div>
-            </>
-          ) : (
-            <p className="erp-home-empty">안전재고 이하 품목이 없습니다.</p>
-          )}
-        </div>
-
-        <div className="erp-home-panel">
-          <div className="erp-home-panel-title">최근 메모</div>
-          {recentNotes?.length ? (
-            <div className="erp-home-list">
-              {recentNotes.map((note) => (
-                <div className="erp-home-list-item" key={note.id}>
-                  <span className="erp-u-muted" style={{ fontSize: 11 }}>
-                    {note.note_date} · {note.profiles?.full_name ?? "익명"}
-                  </span>
-                  <span className="truncate">{note.content}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="erp-home-empty">등록된 메모가 없습니다.</p>
-          )}
-
-          <div className="erp-home-panel-title erp-u-mt-0">
-            빠른 실행
-          </div>
-          <div className="erp-home-list">
-            <Link className="erp-home-list-item" href="/sales/new">
-              새 판매 등록
-            </Link>
-            <Link className="erp-home-list-item" href="/purchases/new">
-              새 입고 등록
-            </Link>
-            <Link className="erp-home-list-item" href="/products">
-              품목 등록
-            </Link>
-            <Link className="erp-home-list-item" href="/inventory">
-              재고 조회
-            </Link>
-          </div>
-        </div>
-      </div>
-
       <DashboardCalendar
         year={year}
         month={month}
@@ -856,6 +800,8 @@ async function DashboardPage({
           purchaseTotal: monthPurchaseTotal,
         }}
         lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
+        layout={dashboardLayout}
+        sidePanels={sidePanels}
       />
       </div>
     </>

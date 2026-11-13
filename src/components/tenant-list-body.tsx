@@ -79,7 +79,7 @@ export function TenantListBody({
           <span className="erp-u-muted erp-u-normal">{rows.length}개</span>
         </div>
 
-        <div className="erp-field-grid erp-u-gap-6" style={{ margin: 8, padding: 8 }}>
+        <div className="erp-field-grid erp-u-gap-6 erp-u-p-8 erp-u-m-8">
           <div className="erp-field erp-span-12">
             <label htmlFor="tenant-search-q">회사명 / 슬러그 검색</label>
             <input
@@ -89,8 +89,7 @@ export function TenantListBody({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="회사명 또는 슬러그 검색"
-              className="erp-input"
-              style={{ width: "100%" }}
+              className="erp-input erp-u-w-full"
             />
           </div>
         </div>
@@ -103,7 +102,7 @@ export function TenantListBody({
               className={`erp-split-list-row${row.id === selectedId ? " active" : ""}`}
             >
               <span className="erp-u-bold">{row.name}</span>
-              <span style={{ marginLeft: 6 }}>
+              <span className="erp-u-ml-6">
                 <GridBadge tone={row.statusTone}>{row.statusLabel}</GridBadge>
               </span>
               <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">

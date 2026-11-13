@@ -22,7 +22,7 @@ export function ResetTenantUserPasswordForm({ tenantId, userId }: { tenantId: st
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="erp-btn" style={{ minWidth: 0 }}>
+      <button type="button" onClick={() => setOpen(true)} className="erp-btn erp-u-minw-0">
         비밀번호 재설정
       </button>
     );
@@ -42,10 +42,10 @@ export function ResetTenantUserPasswordForm({ tenantId, userId }: { tenantId: st
         style={{ width: 160 }}
         autoFocus
       />
-      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
         {pending ? "저장 중..." : "확인"}
       </button>
-      <button type="button" onClick={() => setOpen(false)} className="erp-btn" style={{ minWidth: 0 }}>
+      <button type="button" onClick={() => setOpen(false)} className="erp-btn erp-u-minw-0">
         취소
       </button>
       <FormMessage state={state} />

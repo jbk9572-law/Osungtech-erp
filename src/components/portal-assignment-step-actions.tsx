@@ -57,7 +57,7 @@ export function PortalAssignmentStepActions({
 
   if (mode === "receiving-defect") {
     return (
-      <form className="erp-u-flex erp-u-gap-6" action={receivingAction} style={{ flexDirection: "column", minWidth: 180 }}>
+      <form className="erp-u-flex erp-u-gap-6 erp-u-col" action={receivingAction} style={{ minWidth: 180 }}>
         <input type="hidden" name="step_id" value={stepId} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
         <input type="hidden" name="has_defect" value="true" />
@@ -68,16 +68,14 @@ export function PortalAssignmentStepActions({
           step="1"
           placeholder="불량 수량"
           required
-          className="erp-input erp-u-h-26"
-          style={{ fontSize: 11.5 }}
+          className="erp-input erp-u-h-26 erp-u-text-sm"
         />
         <input
           name="note"
           type="text"
           autoComplete="off"
           placeholder="불량 사유(선택)"
-          className="erp-input erp-u-h-26"
-          style={{ fontSize: 11.5 }}
+          className="erp-input erp-u-h-26 erp-u-text-sm"
         />
         <div className="erp-u-flex erp-u-gap-6">
           <button
@@ -102,7 +100,7 @@ export function PortalAssignmentStepActions({
 
   if (mode === "work-defect") {
     return (
-      <form className="erp-u-flex erp-u-gap-6" action={workDefectAction} style={{ flexDirection: "column", minWidth: 180 }}>
+      <form className="erp-u-flex erp-u-gap-6 erp-u-col" action={workDefectAction} style={{ minWidth: 180 }}>
         <input type="hidden" name="step_id" value={stepId} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
         <input
@@ -112,16 +110,14 @@ export function PortalAssignmentStepActions({
           step="1"
           placeholder="불량 수량"
           required
-          className="erp-input erp-u-h-26"
-          style={{ fontSize: 11.5 }}
+          className="erp-input erp-u-h-26 erp-u-text-sm"
         />
         <input
           name="note"
           type="text"
           autoComplete="off"
           placeholder="불량 사유(선택)"
-          className="erp-input erp-u-h-26"
-          style={{ fontSize: 11.5 }}
+          className="erp-input erp-u-h-26 erp-u-text-sm"
         />
         <div className="erp-u-flex erp-u-gap-6">
           <button
@@ -145,8 +141,8 @@ export function PortalAssignmentStepActions({
   }
 
   return (
-    <div className="erp-u-flex erp-u-gap-6" style={{ flexDirection: "column", alignItems: "flex-end" }}>
-      <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
+    <div className="erp-u-flex erp-u-gap-6 erp-u-col erp-u-items-end">
+      <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap erp-u-justify-end">
         <GridBadge tone={defectHold ? "danger" : STATUS_LABEL[status].tone}>
           {defectHold ? "입고 불량 보류" : STATUS_LABEL[status].label}
         </GridBadge>
@@ -230,7 +226,7 @@ export function PortalAssignmentStepActions({
         )}
       </div>
       {defectQuantity > 0 && (
-        <span className="erp-u-danger" style={{ fontSize: 11 }}>이 공정 불량 {defectQuantity}개</span>
+        <span className="erp-u-danger erp-u-text-caption">이 공정 불량 {defectQuantity}개</span>
       )}
       <FormMessage state={updateState} />
     </div>

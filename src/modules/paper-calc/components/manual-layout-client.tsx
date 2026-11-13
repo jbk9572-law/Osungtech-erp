@@ -618,8 +618,7 @@ export function ManualLayoutClient({
                     <td>
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                        style={{ minWidth: 0 }}
+                        className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                         onClick={() => removeRow(row.key)}
                         disabled={rows.length <= 1}
                       >
@@ -645,7 +644,7 @@ export function ManualLayoutClient({
               가로/세로/수량을 입력하면 아래에 배치용 품목이 나타납니다.
             </p>
           ) : (
-            <div className="flex flex-wrap items-center gap-2 border-t pt-3" style={{ borderColor: "var(--erp-border)" }}>
+            <div className="flex flex-wrap items-center gap-2 border-t pt-3 erp-u-bc-border">
               {items.map((item) => {
                 const placedCount = placedCountForItem(sheets, item.name);
                 const maxCount = maxCountForItem(item);
@@ -654,19 +653,13 @@ export function ManualLayoutClient({
                   <button
                     key={item.name}
                     type="button"
-                    className="erp-btn erp-u-flex erp-u-items-center erp-u-gap-6"
+                    className="erp-btn erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-minw-0 erp-u-pad-0-10 erp-u-h-30"
                     disabled={isDone}
-                    style={{ minWidth: 0, height: 30, padding: "0 10px", outline: selectedItemName === item.name ? "2px solid var(--erp-primary)" : "none", outlineOffset: -1, opacity: isDone ? 0.55 : 1 }}
+                    style={{ outline: selectedItemName === item.name ? "2px solid var(--erp-primary)" : "none", outlineOffset: -1, opacity: isDone ? 0.55 : 1 }}
                     onClick={() => setSelectedItemName(item.name)}
                   >
-                    <span
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: "50%",
-                        background: colorMap[item.name],
-                        display: "inline-block",
-                      }}
+                    <span className="erp-u-radius-circle erp-u-inline-block"
+                      style={{ width: 12, height: 12, background: colorMap[item.name] }}
                     />
                     {item.name} ({placedCount}/{maxCount}배치{isDone ? " · 완료" : ""})
                   </button>
@@ -701,16 +694,14 @@ export function ManualLayoutClient({
             ))}
             <button
               type="button"
-              className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-sm erp-u-minw-0"
               onClick={addSheet}
             >
               + 새 배치
             </button>
             <button
               type="button"
-              className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
               onClick={() => removeSheet(sheetIndex)}
               onBlur={confirmRemoveSheet.reset}
               disabled={sheets.length <= 1}
@@ -733,8 +724,7 @@ export function ManualLayoutClient({
             </span>
             <button
               type="button"
-              className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-sm erp-u-minw-0"
               onClick={clearCurrentSheet}
               onBlur={confirmClearSheet.reset}
             >
@@ -742,21 +732,10 @@ export function ManualLayoutClient({
             </button>
           </div>
 
-          <svg
+          <svg className="erp-u-w-full"
             ref={svgRef}
             viewBox={`0 0 ${paperW} ${paperH}`}
-            style={{
-              width: "100%",
-              height: 460,
-              background: DIAGRAM_COLORS.canvasBg,
-              cursor: selectedItemName ? "crosshair" : "default",
-              // 캔버스가 화면 가로 폭 전체를 차지하다 보니, 여기를 "none"으로
-              // 막으면 조각이 없는 빈 공간을 스치기만 해도 모바일에서 페이지
-              // 세로 스크롤이 전혀 안 되는 문제가 있었다. 배치된 조각(위
-              // rect)만 개별적으로 touchAction: "none"이라 그 위에서 시작한
-              // 드래그는 그대로 잡히고, 빈 공간에서는 세로 스크롤이 된다.
-              touchAction: "pan-y",
-            }}
+            style={{ height: 460, background: DIAGRAM_COLORS.canvasBg, cursor: selectedItemName ? "crosshair" : "default", touchAction: "pan-y" }}
             onClick={handleCanvasClick}
             onPointerMove={handleSvgPointerMove}
             onPointerLeave={handleSvgPointerLeave}
@@ -770,7 +749,7 @@ export function ManualLayoutClient({
               stroke={DIAGRAM_COLORS.paperStroke}
               strokeWidth={2}
             />
-            <g style={{ pointerEvents: "none" }}>
+            <g className="erp-u-pe-none">
               {gridLines.map((l, i) => (
                 <line
                   key={i}
@@ -832,35 +811,32 @@ export function ManualLayoutClient({
                   />
                   {showLabel && !isDragging && (
                     <>
-                      <text
+                      <text className="erp-u-pe-none"
                         x={it.x + it.w / 2}
                         y={it.y + it.h / 2}
                         textAnchor="middle"
                         dominantBaseline="middle"
                         fontSize={Math.min(paperW, paperH) * 0.03}
                         fill={DIAGRAM_COLORS.labelPrimary}
-                        style={{ pointerEvents: "none" }}
                       >
                         {it.name}
                       </text>
-                      <text
+                      <text className="erp-u-pe-none"
                         x={it.x + it.w / 2}
                         y={it.y + dimFontSize + 4}
                         textAnchor="middle"
                         fontSize={dimFontSize}
                         fill={DIAGRAM_COLORS.labelSecondary}
-                        style={{ pointerEvents: "none" }}
                       >
                         {it.w}
                       </text>
-                      <text
+                      <text className="erp-u-pe-none"
                         x={it.x + dimFontSize + 4}
                         y={it.y + it.h / 2}
                         textAnchor="middle"
                         fontSize={dimFontSize}
                         fill={DIAGRAM_COLORS.labelSecondary}
                         transform={`rotate(-90, ${it.x + dimFontSize + 4}, ${it.y + it.h / 2})`}
-                        style={{ pointerEvents: "none" }}
                       >
                         {it.h}
                       </text>
@@ -870,7 +846,7 @@ export function ManualLayoutClient({
               );
             })}
             {dragGhost && (
-              <rect
+              <rect className="erp-u-pe-none"
                 x={dragGhost.x}
                 y={dragGhost.y}
                 width={dragGhost.w}
@@ -879,11 +855,10 @@ export function ManualLayoutClient({
                 stroke={dragGhost.valid ? "var(--erp-success)" : "var(--erp-danger)"}
                 strokeDasharray="6 4"
                 strokeWidth={2}
-                style={{ pointerEvents: "none" }}
               />
             )}
             {!dragGhost && hoverGhost && (
-              <rect
+              <rect className="erp-u-pe-none"
                 x={hoverGhost.x}
                 y={hoverGhost.y}
                 width={hoverGhost.w}
@@ -892,7 +867,6 @@ export function ManualLayoutClient({
                 stroke={hoverGhost.valid ? "var(--erp-success)" : "var(--erp-danger)"}
                 strokeDasharray="6 4"
                 strokeWidth={2}
-                style={{ pointerEvents: "none" }}
               />
             )}
           </svg>
@@ -902,13 +876,12 @@ export function ManualLayoutClient({
               <span>
                 선택됨: {selectedPlacement.name} ({selectedPlacement.w}×{selectedPlacement.h})
               </span>
-              <button type="button" className="erp-btn erp-u-h-26 erp-u-pad-0-8" style={{ minWidth: 0 }} onClick={rotateSelected}>
+              <button type="button" className="erp-btn erp-btn-sm erp-u-minw-0" onClick={rotateSelected}>
                 회전
               </button>
               <button
                 type="button"
-                className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                style={{ minWidth: 0 }}
+                className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                 onClick={deleteSelected}
               >
                 삭제

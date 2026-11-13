@@ -69,7 +69,7 @@ export function PaymentRequestLineItems({
   return (
     <div className="md:col-span-4">
       <input type="hidden" name="items" value={itemsJson} />
-      <div className="erp-grid-wrap" style={{ border: "1px solid var(--erp-border)" }}>
+      <div className="erp-grid-wrap erp-u-border">
         <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
           <thead>
             <tr>
@@ -90,7 +90,7 @@ export function PaymentRequestLineItems({
             {rows.map((row) => (
               <tr key={row.key} style={row.highlighted ? { background: "var(--erp-highlight-bg)" } : undefined}>
                 <td>
-                  <input
+                  <input aria-label="사용일"
                     type="date"
                     value={row.usedAt}
                     onChange={(e) => updateRow(row.key, { usedAt: e.target.value })}
@@ -127,7 +127,7 @@ export function PaymentRequestLineItems({
                   />
                 </td>
                 <td>
-                  <input
+                  <input aria-label="비고"
                     type="text"
                     value={row.remark}
                     onChange={(e) => updateRow(row.key, { remark: e.target.value })}
@@ -144,12 +144,11 @@ export function PaymentRequestLineItems({
                   />
                 </td>
                 <td className="num">
-                  <button
+                  <button aria-label="행 삭제"
                     type="button"
                     onClick={() => removeRow(row.key)}
                     disabled={rows.length === 1}
-                    className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                    style={{ minWidth: 0 }}
+                    className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                   >
                     ×
                   </button>

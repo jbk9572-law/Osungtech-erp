@@ -43,7 +43,7 @@ export function NewPaymentForm({
           <div className="erp-detail-tabs">
             <span className="erp-detail-tab active">기본정보</span>
           </div>
-          <div className="erp-detail-body erp-field-grid" style={{ border: "none", padding: 14, margin: 0 }}>
+          <div className="erp-detail-body erp-field-grid erp-u-border-none erp-u-p-14 erp-u-m-0">
             <div className="erp-field erp-span-3">
               <label htmlFor="np-supplier">공급처</label>
               <PartySearchSelect
@@ -78,8 +78,7 @@ export function NewPaymentForm({
                 id="np-memo"
                 name="memo"
                 autoComplete="off"
-                className="erp-input"
-                style={{ width: "100%" }}
+                className="erp-input erp-u-w-full"
               />
             </div>
           </div>

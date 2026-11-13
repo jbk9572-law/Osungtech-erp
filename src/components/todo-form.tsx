@@ -205,7 +205,7 @@ export function TodoForm({
             유형
             <FieldHint text="매입/매출 등록 화면에서 '할일 가져오기'로 이 할일을 불러와 등록해야 완료 처리됩니다. 매입+출고는 입고와 출고 둘 다 등록해야 완료됩니다." />
           </label>
-          <div className="erp-u-flex erp-u-items-center" style={{ gap: 14, height: 30 }}>
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-14 erp-u-h-30">
             {(
               [
                 { value: "purchase", label: "매입" },
@@ -213,9 +213,9 @@ export function TodoForm({
                 { value: "both", label: "매입+출고" },
               ] as { value: TodoType; label: string }[]
             ).map((opt) => (
-              <label className="erp-u-flex erp-u-items-center"
+              <label className="erp-u-flex erp-u-items-center erp-u-text-base erp-u-pointer"
                 key={opt.value}
-                style={{ gap: 5, fontSize: 12.5, cursor: "pointer" }}
+                style={{ gap: 5 }}
               >
                 <input
                   type="radio"
@@ -266,9 +266,9 @@ export function TodoForm({
       <div className="erp-detail erp-u-mt-0">
         <div className="erp-detail-tabs erp-u-justify-between">
           <span className="erp-detail-tab active">품목</span>
-          <div className="erp-u-flex erp-u-items-center" style={{ gap: 4, margin: 4, flexWrap: "wrap" }}>
+          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4">
             <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
-            <button type="button" onClick={addRow} className="erp-btn" style={{ minWidth: 0 }}>
+            <button type="button" onClick={addRow} className="erp-btn erp-u-minw-0">
               + 품목 추가
             </button>
             <TodoPaperCalcToolbarButton pc={pc} enabled={paperCalcEnabled} />
@@ -277,7 +277,7 @@ export function TodoForm({
 
         <TodoPaperCalcBanner pc={pc} />
 
-        <div className="erp-grid-wrap" style={{ border: "none", borderRadius: 0 }}>
+        <div className="erp-grid-wrap erp-u-border-none erp-u-radius-0">
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
             <thead>
               <tr>
@@ -370,8 +370,7 @@ export function TodoForm({
                     <td className="num">
                       <button
                         type="button"
-                        className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                        style={{ minWidth: 0 }}
+                        className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                         onClick={() => removeRow(row.key)}
                       >
                         삭제

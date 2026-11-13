@@ -53,48 +53,40 @@ export function QrLabelCard({
   }
 
   return (
-    <div className="erp-u-text-center"
-      style={{ border: "1px solid #000", borderRadius: 0, overflow: "hidden", breakInside: "avoid", color: "#000" }}
+    <div className="erp-u-text-center erp-u-radius-0 erp-u-overflow-hidden"
+      style={{ border: "1px solid #000", breakInside: "avoid", color: "#000" }}
     >
-      <div
-        style={{
-          background: "#000",
-          color: "#fff",
-          fontWeight: 800,
-          fontSize: 14,
-          letterSpacing: 1,
-          padding: "4px 0",
-        }}
+      <div className="erp-u-text-lg"
+        style={{ background: "#000", color: "#fff", fontWeight: 800, letterSpacing: 1, padding: "4px 0" }}
       >
         {dir === "up" ? "▲ 위" : "▼ 아래"}
       </div>
-      <div style={{ padding: 8 }}>
-        <div
+      <div className="erp-u-p-8">
+        <div className="erp-u-mx-auto"
           role="img"
           aria-label={sku}
-          style={{ width: 110, height: 110, margin: "0 auto" }}
+          style={{ width: 110, height: 110 }}
           dangerouslySetInnerHTML={qrSvg ? { __html: qrSvg } : undefined}
         />
-        <div className="erp-u-bold" style={{ fontSize: 12, marginTop: 4 }}>{sku}</div>
-        <div style={{ fontSize: 11, lineHeight: 1.3 }}>{name}</div>
+        <div className="erp-u-bold erp-u-text-compact erp-u-mt-4">{sku}</div>
+        <div className="erp-u-text-caption" style={{ lineHeight: 1.3 }}>{name}</div>
         {spec && <div style={{ fontSize: 10, color: "#444" }}>{spec}</div>}
         <div
-          className="print:hidden erp-u-flex"
-          style={{ gap: 4, justifyContent: "center", marginTop: 6 }}
+          className="print:hidden erp-u-flex erp-u-gap-4 erp-u-justify-center erp-u-mt-6"
         >
           <button
             type="button"
             onClick={() => choose("up")}
-            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
-            style={{ minWidth: 0, fontSize: 11, ...(dir === "up" ? { background: "var(--erp-selected)" } : {}) }}
+            className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-caption"
+            style={{ ...(dir === "up" ? { background: "var(--erp-selected)" } : {}) }}
           >
             ▲ 위
           </button>
           <button
             type="button"
             onClick={() => choose("down")}
-            className="erp-btn erp-u-h-24 erp-u-pad-0-8"
-            style={{ minWidth: 0, fontSize: 11, ...(dir === "down" ? { background: "var(--erp-selected)" } : {}) }}
+            className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-caption"
+            style={{ ...(dir === "down" ? { background: "var(--erp-selected)" } : {}) }}
           >
             ▼ 아래
           </button>

@@ -9,9 +9,6 @@ type TenantOption = { id: string; name: string; theme: string };
 
 const THEME_LABELS: Record<string, string> = {
   "classic-light": "Classic Light (기본)",
-  modern: "Modern",
-  "classic-b": "Classic B (각진 인디고)",
-  "classic-c": "Classic C (슬레이트 장부형)",
 };
 
 // 회사(테넌트)별로 다른 테마를 줄 수 있어야 해서("관리자페이지에서
@@ -55,7 +52,7 @@ export function TenantThemeForm({ tenants }: { tenants: TenantOption[] }) {
           ariaLabel="테마"
           options={Object.entries(THEME_LABELS).map(([value, label]) => ({ value, label }))}
         />
-        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
           {pending ? "적용 중..." : "적용"}
         </button>
       </form>

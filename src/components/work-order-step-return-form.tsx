@@ -20,8 +20,7 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
     return (
       <button
         type="button"
-        className="erp-btn erp-u-h-22"
-        style={{ padding: "1px 8px", fontSize: 11 }}
+        className="erp-btn erp-btn-xs erp-u-pad-1-8 erp-u-text-caption"
         onClick={() => setOpen(true)}
       >
         반품
@@ -30,7 +29,7 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
   }
 
   return (
-    <form className="erp-u-flex" action={formAction} style={{ flexDirection: "column", gap: 4, minWidth: 160 }}>
+    <form className="erp-u-flex erp-u-col erp-u-gap-4" action={formAction} style={{ minWidth: 160 }}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <input
@@ -41,27 +40,24 @@ export function WorkOrderStepReturnForm({ id, workOrderId }: { id: string; workO
         required
         autoComplete="off"
         placeholder="반품 수량"
-        className="erp-input erp-u-h-24"
-        style={{ fontSize: 11 }}
+        className="erp-input erp-u-h-24 erp-u-text-caption"
       />
       <input
         name="note"
         type="text"
         autoComplete="off"
         placeholder="사유(선택)"
-        className="erp-input erp-u-h-24"
-        style={{ fontSize: 11 }}
+        className="erp-input erp-u-h-24 erp-u-text-caption"
       />
       <div className="erp-u-flex erp-u-gap-6">
         <button
           type="submit"
-          className="erp-btn erp-btn-danger erp-u-h-22"
-          style={{ padding: "1px 8px", fontSize: 11 }}
+          className="erp-btn erp-btn-danger erp-btn-xs erp-u-pad-1-8 erp-u-text-caption"
           disabled={pending}
         >
           {pending ? "..." : "반품 저장"}
         </button>
-        <button type="button" className="erp-btn erp-u-h-22" style={{ padding: "1px 8px", fontSize: 11 }} onClick={() => setOpen(false)}>
+        <button type="button" className="erp-btn erp-btn-xs erp-u-pad-1-8 erp-u-text-caption" onClick={() => setOpen(false)}>
           취소
         </button>
       </div>

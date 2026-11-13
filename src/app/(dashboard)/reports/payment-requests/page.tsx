@@ -81,7 +81,7 @@ export default async function PaymentRequestsPage({
       />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">보고서 &gt; 지급결의양식</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
             F2 글쓰기
           </Link>
@@ -126,7 +126,7 @@ export default async function PaymentRequestsPage({
                   content: (
                     <>
                       {label}
-                      <span style={{ marginLeft: 6 }}>
+                      <span className="erp-u-ml-6">
                         <GridBadge tone={status.tone}>{status.label}</GridBadge>
                       </span>
                       <div className="erp-split-list-row-sub">

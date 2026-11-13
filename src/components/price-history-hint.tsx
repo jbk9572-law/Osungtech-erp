@@ -34,8 +34,7 @@ export function PriceHistoryHint({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="font-medium hover:underline"
-        style={{ color: "var(--erp-success)" }}
+        className="font-medium hover:underline erp-u-color-success"
       >
         ✓ 최근단가{" "}
         {previousDifferent && `${formatNumber(previousDifferent.unitPrice)}원 → `}
@@ -44,8 +43,7 @@ export function PriceHistoryHint({
       </button>
       {expanded && (
         <ul
-          className="mt-1 max-w-xs space-y-0.5 rounded-sm border p-2"
-          style={{ borderColor: "var(--erp-border)", background: "var(--erp-bg-subtle)" }}
+          className="mt-1 max-w-xs space-y-0.5 rounded-sm border p-2 erp-u-bc-border erp-u-bg-bg-subtle"
         >
           {history.slice(0, 5).map((entry, index) => {
             // 그 다음(더 과거) 항목과 비교해 이 시점에 가격이 바뀌었는지

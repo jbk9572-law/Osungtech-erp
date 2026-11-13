@@ -48,29 +48,26 @@ export function TaxInvoiceItemsGrid({
             {rows.map((row) => (
               <tr key={row.key}>
                 <td>
-                  <input
+                  <input aria-label="공급일"
                     type="date"
                     value={row.lineDate}
                     onChange={(e) => onUpdate(row.key, { lineDate: e.target.value })}
-                    className="erp-input"
-                    style={{ width: "100%" }}
+                    className="erp-input erp-u-w-full"
                   />
                 </td>
                 <td>
-                  <input
+                  <input aria-label="품목명"
                     value={row.itemName}
                     onChange={(e) => onUpdate(row.key, { itemName: e.target.value })}
-                    className="erp-input"
-                    style={{ width: "100%" }}
+                    className="erp-input erp-u-w-full"
                     autoComplete="off"
                   />
                 </td>
                 <td>
-                  <input
+                  <input aria-label="규격"
                     value={row.spec}
                     onChange={(e) => onUpdate(row.key, { spec: e.target.value })}
-                    className="erp-input"
-                    style={{ width: "100%" }}
+                    className="erp-input erp-u-w-full"
                     autoComplete="off"
                   />
                 </td>
@@ -108,16 +105,15 @@ export function TaxInvoiceItemsGrid({
                   />
                 </td>
                 <td>
-                  <input
+                  <input aria-label="비고"
                     value={row.remark}
                     onChange={(e) => onUpdate(row.key, { remark: e.target.value })}
-                    className="erp-input"
-                    style={{ width: "100%" }}
+                    className="erp-input erp-u-w-full"
                     autoComplete="off"
                   />
                 </td>
                 <td>
-                  <button type="button" className="erp-btn" onClick={() => onRemove(row.key)} style={{ minWidth: 0 }}>
+                  <button type="button" className="erp-btn erp-u-minw-0" onClick={() => onRemove(row.key)}>
                     삭제
                   </button>
                 </td>
@@ -139,10 +135,9 @@ export function TaxInvoiceItemsGrid({
 
       <button
         type="button"
-        className="erp-btn"
+        className="erp-btn erp-u-self-start"
         onClick={onAdd}
         disabled={rows.length >= MAX_TAX_INVOICE_ROWS}
-        style={{ alignSelf: "flex-start" }}
       >
         + 품목 추가 ({rows.length}/{MAX_TAX_INVOICE_ROWS})
       </button>

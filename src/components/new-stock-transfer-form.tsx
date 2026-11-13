@@ -139,16 +139,15 @@ export function NewStockTransferForm({
                     <NumberInput value={row.quantity} onChange={(n) => updateRow(row.key, { quantity: n })} allowFormula className="erp-input" />
                   </td>
                   <td>
-                    <input
+                    <input aria-label="비고"
                       value={row.remark}
                       onChange={(e) => updateRow(row.key, { remark: e.target.value })}
-                      className="erp-input"
-                      style={{ width: "100%" }}
+                      className="erp-input erp-u-w-full"
                       autoComplete="off"
                     />
                   </td>
                   <td>
-                    <button type="button" className="erp-btn" onClick={() => removeRow(row.key)} style={{ minWidth: 0 }}>
+                    <button type="button" className="erp-btn erp-u-minw-0" onClick={() => removeRow(row.key)}>
                       삭제
                     </button>
                   </td>

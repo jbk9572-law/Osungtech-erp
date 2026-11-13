@@ -189,8 +189,7 @@ export default async function SalesActivitiesPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="거래처명, 제목, 내용"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -217,7 +216,7 @@ export default async function SalesActivitiesPage({
                 className={`erp-split-list-row${a.id === selectedId ? " active" : ""}`}
               >
                 {a.customers?.name ?? "-"}
-                <span style={{ marginLeft: 6 }}>
+                <span className="erp-u-ml-6">
                   <GridBadge tone="muted">{a.activity_type}</GridBadge>
                 </span>
                 <div className="erp-split-list-row-sub">
@@ -232,7 +231,7 @@ export default async function SalesActivitiesPage({
             )}
           </div>
           {hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-p-8 erp-u-bt-border">
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
               </Link>

@@ -175,7 +175,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
                         </dd>
                       </div>
                     </dl>
-                    <div style={{ marginTop: 4 }}>
+                    <div className="erp-u-mt-4">
                       <InlineConfirmDelete
                         action={deleteBomItem}
                         hiddenFields={{ id: row.id, parent_product_id: product.id }}

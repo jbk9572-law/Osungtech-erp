@@ -188,7 +188,7 @@ export default async function MonthlyReportCompanyPage({
               const first = group.items[0];
               return (
                 <Fragment key={group.key}>
-                  <tr style={{ background: "var(--erp-bg-subtle)" }}>
+                  <tr className="erp-u-bg-bg-subtle">
                     <td className="erp-u-bold" colSpan={4}>
                       {first.productName}
                       {first.spec !== "-" && (
@@ -198,8 +198,7 @@ export default async function MonthlyReportCompanyPage({
                           · {first.spec}
                         </span>
                       )}
-                      <span className="erp-u-normal erp-u-muted"
-                        style={{ marginLeft: 8, fontSize: 11 }}
+                      <span className="erp-u-normal erp-u-muted erp-u-ml-8 erp-u-text-caption"
                       >
                         {group.items.length}건
                       </span>
@@ -249,7 +248,7 @@ export default async function MonthlyReportCompanyPage({
           </tbody>
           {rows.length > 0 && (
             <tfoot>
-              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+              <tr className="erp-u-bold erp-u-bg-page">
                 <td colSpan={4} className="erp-grid-sticky-label">
                   합계 ({rows.length}건)
                 </td>

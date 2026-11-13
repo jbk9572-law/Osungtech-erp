@@ -71,8 +71,7 @@ export function TodoPaperCalcBanner({ pc }: { pc: TodoPaperCalc }) {
       <span>모조지 계산 연결됨 — {formatNumber(pc.totalSheet)}연</span>
       <button
         type="button"
-        className="erp-btn erp-btn-danger erp-u-h-22 erp-u-pad-0-8"
-        style={{ minWidth: 0 }}
+        className="erp-btn erp-btn-danger erp-btn-xs erp-u-minw-0"
         onClick={pc.cancel}
       >
         취소

@@ -17,7 +17,7 @@ import { resolveListHref } from "@/lib/list-return";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
 import { GridBadge } from "@/components/grid/badge";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { PageGuide } from "@/components/erp/page-guide";
 import { DetailPageHeader, DetailInfoRow } from "@/components/erp/page-header";
@@ -83,7 +83,7 @@ export default async function SaleDetailPage({
 
   const rows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_price);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount = calcVatForTaxType(supplyAmount, order.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const totalSupply = rows.reduce((sum, row) => sum + row.supplyAmount, 0);
@@ -174,8 +174,8 @@ export default async function SaleDetailPage({
           <span className="erp-detail-tab active">기본정보</span>
         </div>
         <div
-          className="erp-detail-body"
-          style={{ fontSize: 12.5, paddingTop: 16, paddingBottom: 16 }}
+          className="erp-detail-body erp-u-text-base"
+          style={{ paddingTop: 16, paddingBottom: 16 }}
         >
           <DetailInfoRow label="No">{order.doc_no}</DetailInfoRow>
           <DetailInfoRow label="출고처명">{order.customers?.name ?? "-"}</DetailInfoRow>
@@ -183,7 +183,7 @@ export default async function SaleDetailPage({
           <DetailInfoRow label="연락처">{order.customers?.phone ?? "-"}</DetailInfoRow>
           <DetailInfoRow label="작성자">{order.profiles?.full_name ?? "-"}</DetailInfoRow>
           {allowManage && paperCalcEnabled && paperCalcs && paperCalcs.length > 0 && (
-            <div style={{ marginTop: 8 }}>
+            <div className="erp-u-mt-8">
               <PaperStockOverridePanel
                 orderId={id}
                 idFieldName="sales_order_id"
@@ -194,12 +194,12 @@ export default async function SaleDetailPage({
             </div>
           )}
           {order.is_return && order.return_reason && (
-            <p className="erp-u-danger" style={{ marginTop: 12 }}>
+            <p className="erp-u-danger erp-u-mt-12">
               반품 사유: {order.return_reason}
             </p>
           )}
           {order.memo && (
-            <p className="erp-u-muted" style={{ marginTop: 12 }}>
+            <p className="erp-u-muted erp-u-mt-12">
               메모: {order.memo}
             </p>
           )}

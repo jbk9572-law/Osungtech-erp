@@ -15,6 +15,42 @@
      규칙이 같은 우선순위일 때 순서상 나중이라 이기도록(= 예전 동작 그대로).
    - 표 폭(width/minWidth)은 lint(check-fixed-table-columns 등)가 style에서
      읽으므로 일부러 유틸로 옮기지 않는다. */
+
+/* 묶음 속기(margin/padding/radius)는 아래 개별 유틸보다 "먼저" 둔다 — 같은
+   요소에 개별 유틸(예: erp-u-mt-10)이 같이 있으면 개별 쪽이 이기던 기존
+   동작을 그대로 지키기 위해서다(같은 !important라 뒤에 오는 쪽이 이김). */
+.erp-u-m-0 { margin: 0 !important; }
+.erp-u-m-4 { margin: 4px !important; }
+.erp-u-m-8 { margin: 8px !important; }
+.erp-u-mx-auto { margin: 0 auto !important; }
+.erp-u-p-0 { padding: 0 !important; }
+.erp-u-radius-0 { border-radius: 0 !important; }
+.erp-u-radius-circle { border-radius: 50% !important; }
+.erp-u-radius-comm-row { border-radius: var(--erp-comm-radius-row) !important; }
+.erp-u-shadow-comm-row { box-shadow: var(--erp-comm-shadow-row) !important; }
+.erp-u-mb-0 { margin-bottom: 0 !important; }
+.erp-u-pe-none { pointer-events: none !important; }
+.erp-u-cursor-default { cursor: default !important; }
+.erp-u-shrink-0 { flex-shrink: 0 !important; }
+.erp-u-overflow-hidden { overflow: hidden !important; }
+.erp-u-overflow-y-auto { overflow-y: auto !important; }
+.erp-u-self-start { align-self: flex-start !important; }
+.erp-u-nowrap { white-space: nowrap !important; }
+.erp-u-h-full { height: 100% !important; }
+.erp-u-h-34 { height: 34px !important; }
+.erp-u-h-30 { height: var(--erp-control-h-cell) !important; }
+.erp-u-h-28 { height: var(--erp-control-h-sm) !important; }
+.erp-u-minh-0 { min-height: 0 !important; }
+.erp-u-minh-screen { min-height: 100vh !important; }
+.erp-u-fixed { position: fixed !important; }
+.erp-u-break-word { word-break: break-word !important; }
+.erp-u-text-left { text-align: left !important; }
+.erp-u-tabular { font-variant-numeric: tabular-nums !important; }
+.erp-u-justify-end { justify-content: flex-end !important; }
+.erp-u-items-end { align-items: flex-end !important; }
+.erp-u-ellipsis { text-overflow: ellipsis !important; }
+.erp-u-inline-block { display: inline-block !important; }
+.erp-u-border-collapse { border-collapse: collapse !important; }
 .erp-u-muted { color: var(--erp-text-muted) !important; }
 .erp-u-text { color: var(--erp-text) !important; }
 .erp-u-danger { color: var(--erp-danger) !important; }
@@ -30,10 +66,140 @@
 .erp-u-mb-12 { margin-bottom: 12px !important; }
 .erp-u-gap-6 { gap: 6px !important; }
 .erp-u-gap-8 { gap: 8px !important; }
-.erp-u-h-22 { height: 22px !important; }
-.erp-u-h-24 { height: 24px !important; }
-.erp-u-h-26 { height: 26px !important; }
+/* 컨트롤 높이는 토큰 3단계(md 32 / sm 28 / xs 24)로만 쓴다 — 22/24/26이 제각각이던 것을 합쳤다
+   (기존 클래스 이름은 호출부가 많아 유지하고 값만 토큰으로 맞춤: 22·24 → xs, 26 → sm). */
+.erp-u-h-22 { height: var(--erp-control-h-xs) !important; }
+.erp-u-h-24 { height: var(--erp-control-h-xs) !important; }
+.erp-u-h-26 { height: var(--erp-control-h-sm) !important; }
 .erp-u-pad-0-8 { padding: 0 8px !important; }
+.erp-u-bb-border { border-bottom: 1px solid var(--erp-border) !important; }
+.erp-u-bb-divider { border-bottom: 1px solid var(--erp-divider) !important; }
+.erp-u-bc-border { border-color: var(--erp-border) !important; }
+.erp-u-bc-primary { border-color: var(--erp-primary) !important; }
+.erp-u-bg-bg-subtle { background: var(--erp-bg-subtle) !important; }
+.erp-u-bg-border { background: var(--erp-border) !important; }
+.erp-u-bg-border-strong { background: var(--erp-border-strong) !important; }
+.erp-u-bg-danger { background: var(--erp-danger) !important; }
+.erp-u-bg-danger-bg { background: var(--erp-danger-bg) !important; }
+.erp-u-bg-dialog-overlay-bg { background: var(--erp-dialog-overlay-bg) !important; }
+.erp-u-bg-divider { background: var(--erp-divider) !important; }
+.erp-u-bg-hover { background: var(--erp-hover) !important; }
+.erp-u-bg-info-bg { background: var(--erp-info-bg) !important; }
+.erp-u-bg-info-border { background: var(--erp-info-border) !important; }
+.erp-u-bg-lightbox-btn-bg { background: var(--erp-lightbox-btn-bg) !important; }
+.erp-u-bg-primary { background: var(--erp-primary) !important; }
+.erp-u-bg-selected { background: var(--erp-selected) !important; }
+.erp-u-bg-success-bg { background: var(--erp-success-bg) !important; }
+.erp-u-bg-warning-bg { background: var(--erp-warning-bg) !important; }
+.erp-u-border-comm-border { border: 1px solid var(--erp-comm-border) !important; }
+.erp-u-border-danger { border: 1px solid var(--erp-danger) !important; }
+.erp-u-border-danger-border { border: 1px solid var(--erp-danger-border) !important; }
+.erp-u-border-divider { border: 1px solid var(--erp-divider) !important; }
+.erp-u-border-info-border { border: 1px solid var(--erp-info-border) !important; }
+.erp-u-border-success-border { border: 1px solid var(--erp-success-border) !important; }
+.erp-u-bt-border { border-top: 1px solid var(--erp-border) !important; }
+.erp-u-bt-divider { border-top: 1px solid var(--erp-divider) !important; }
+.erp-u-color-info-text { color: var(--erp-info-text) !important; }
+.erp-u-color-primary { color: var(--erp-primary) !important; }
+.erp-u-color-success { color: var(--erp-success) !important; }
+.erp-u-color-warning { color: var(--erp-warning) !important; }
+.erp-u-radius-lg { border-radius: var(--erp-radius-lg, 0) !important; }
+.erp-u-radius-sm { border-radius: var(--erp-radius-sm, 0) !important; }
+.erp-u-radius-xl { border-radius: var(--erp-radius-xl, 0) !important; }
+.erp-u-absolute { position: absolute !important; }
+.erp-u-bg-page { background: var(--erp-bg) !important; }
+.erp-u-bg-panel { background: var(--erp-panel) !important; }
+.erp-u-border { border: 1px solid var(--erp-border) !important; }
+.erp-u-border-none { border: none !important; }
+.erp-u-col { flex-direction: column !important; }
+.erp-u-col-all { grid-column: 1 / -1 !important; }
+.erp-u-flex-1 { flex: 1 !important; }
+.erp-u-flex-none { flex: 0 0 auto !important; }
+.erp-u-gap-10 { gap: 10px !important; }
+.erp-u-gap-12 { gap: 12px !important; }
+.erp-u-gap-14 { gap: 14px !important; }
+.erp-u-gap-2 { gap: 2px !important; }
+.erp-u-gap-20 { gap: 20px !important; }
+.erp-u-gap-4 { gap: 4px !important; }
+.erp-u-gap-s2 { gap: var(--erp-space-2) !important; }
+.erp-u-gap-s5 { gap: var(--erp-space-5) !important; }
+.erp-u-inline-flex { display: inline-flex !important; }
+.erp-u-justify-center { justify-content: center !important; }
+.erp-u-mb-10 { margin-bottom: 10px !important; }
+.erp-u-mb-14 { margin-bottom: 14px !important; }
+.erp-u-mb-16 { margin-bottom: 16px !important; }
+.erp-u-mb-2 { margin-bottom: 2px !important; }
+.erp-u-mb-20 { margin-bottom: 20px !important; }
+.erp-u-mb-4 { margin-bottom: 4px !important; }
+.erp-u-mb-6 { margin-bottom: 6px !important; }
+.erp-u-mb-8 { margin-bottom: 8px !important; }
+.erp-u-mb-s3 { margin-bottom: var(--erp-space-3) !important; }
+.erp-u-mb-s4 { margin-bottom: var(--erp-space-4) !important; }
+.erp-u-mb-s5 { margin-bottom: var(--erp-space-5) !important; }
+.erp-u-minw-0 { min-width: 0 !important; }
+.erp-u-ml-16 { margin-left: 16px !important; }
+.erp-u-ml-20 { margin-left: 20px !important; }
+.erp-u-ml-4 { margin-left: 4px !important; }
+.erp-u-ml-6 { margin-left: 6px !important; }
+.erp-u-ml-8 { margin-left: 8px !important; }
+.erp-u-ml-s2 { margin-left: var(--erp-space-2) !important; }
+.erp-u-mr-4 { margin-right: 4px !important; }
+.erp-u-mr-8 { margin-right: 8px !important; }
+.erp-u-mt-10 { margin-top: 10px !important; }
+.erp-u-mt-12 { margin-top: 12px !important; }
+.erp-u-mt-14 { margin-top: 14px !important; }
+.erp-u-mt-16 { margin-top: 16px !important; }
+.erp-u-mt-2 { margin-top: 2px !important; }
+.erp-u-mt-24 { margin-top: 24px !important; }
+.erp-u-mt-3 { margin-top: 3px !important; }
+.erp-u-mt-4 { margin-top: 4px !important; }
+.erp-u-mt-6 { margin-top: 6px !important; }
+.erp-u-mt-8 { margin-top: 8px !important; }
+.erp-u-mt-s3 { margin-top: var(--erp-space-3) !important; }
+.erp-u-mt-s4 { margin-top: var(--erp-space-4) !important; }
+.erp-u-mt-s5 { margin-top: var(--erp-space-5) !important; }
+.erp-u-p-10 { padding: 10px !important; }
+.erp-u-p-12 { padding: 12px !important; }
+.erp-u-p-14 { padding: 14px !important; }
+.erp-u-p-16 { padding: 16px !important; }
+.erp-u-p-20 { padding: 20px !important; }
+.erp-u-p-24 { padding: 24px !important; }
+.erp-u-p-8 { padding: 8px !important; }
+.erp-u-pad-0-10 { padding: 0px 10px !important; }
+.erp-u-pad-0-14 { padding: 0px 14px !important; }
+.erp-u-pad-0-16 { padding: 0px 16px !important; }
+.erp-u-pad-0-5 { padding: 0px 5px !important; }
+.erp-u-pad-0-6 { padding: 0px 6px !important; }
+.erp-u-pad-1-10 { padding: 1px 10px !important; }
+.erp-u-pad-1-6 { padding: 1px 6px !important; }
+.erp-u-pad-1-8 { padding: 1px 8px !important; }
+.erp-u-pad-10-12 { padding: 10px 12px !important; }
+.erp-u-pad-10-14 { padding: 10px 14px !important; }
+.erp-u-pad-2-10 { padding: 2px 10px !important; }
+.erp-u-pad-2-6 { padding: 2px 6px !important; }
+.erp-u-pad-2-8 { padding: 2px 8px !important; }
+.erp-u-pad-3-8 { padding: 3px 8px !important; }
+.erp-u-pad-4-12 { padding: 4px 12px !important; }
+.erp-u-pad-4-2 { padding: 4px 2px !important; }
+.erp-u-pad-4-6 { padding: 4px 6px !important; }
+.erp-u-pad-4-8 { padding: 4px 8px !important; }
+.erp-u-pad-6-10 { padding: 6px 10px !important; }
+.erp-u-pad-6-8 { padding: 6px 8px !important; }
+.erp-u-pad-8-10 { padding: 8px 10px !important; }
+.erp-u-pad-8-12 { padding: 8px 12px !important; }
+.erp-u-pad-8-8 { padding: 8px 8px !important; }
+.erp-u-pointer { cursor: pointer !important; }
+.erp-u-text-base { font-size: var(--erp-font-base) !important; }
+.erp-u-text-caption { font-size: var(--erp-font-caption) !important; }
+.erp-u-text-compact { font-size: var(--erp-font-compact) !important; }
+.erp-u-text-lg { font-size: var(--erp-font-lg) !important; }
+.erp-u-text-md { font-size: var(--erp-font-md) !important; }
+.erp-u-text-right { text-align: right !important; }
+.erp-u-text-sm { font-size: var(--erp-font-sm) !important; }
+.erp-u-text-xl { font-size: var(--erp-font-xl) !important; }
+.erp-u-text-xs { font-size: var(--erp-font-xs) !important; }
+.erp-u-w-full { width: 100% !important; }
+.erp-u-wrap { flex-wrap: wrap !important; }
 
 :root {
   /* 브랜드 로고(엘보닉스) "E" 마크 본체의 짙은 남색에 맞춰 조정 —
@@ -195,7 +361,7 @@
   --erp-comm-shadow-btn: 0 2px 8px -3px rgba(19, 41, 68, 0.3);
 
   /* 모서리 반경(r값) 스케일 — 클래식 테마는 전부 0(각진 디자인
-     언어)이고, 모던 테마([data-theme="modern"] 블록)에서만 실제 값으로
+     언어)이고, 다른 테마가 생길 때 그 테마 블록에서만 실제 값으로
      바뀐다. 전에는 이 반대 방향("클래식은 그냥 두고, 모던에서만 클래스
      이름을 하나씩 나열해서 radius를 덮어쓰는" 허용목록 방식)으로 돼
      있었는데, 그러면 새 박스형 컴포넌트가 생기거나 기존 박스에 flush
@@ -246,6 +412,14 @@
   --erp-space-4: 12px;
   --erp-space-5: 16px;
   --erp-space-6: 24px;
+  /* 컨트롤(버튼·입력칸·셀렉트) 높이 3단계. md=기본, sm=툴바/표 안 보조, xs=표 안 소형, cell=표 셀 안 입력칸. */
+  --erp-control-h-md: 32px;
+  --erp-control-h-sm: 28px;
+  --erp-control-h-xs: 24px;
+  --erp-control-h-cell: 30px;
+  /* 인라인으로 쓰이던 11px/12px 글자 크기의 공용 토큰(값 그대로) — 11.5/12.5 토큰으로 합칠지는 화면을 보며 결정. */
+  --erp-font-caption: 11px;
+  --erp-font-compact: 12px;
 }
 
 .erp {
@@ -1499,16 +1673,6 @@
   font-weight: 600;
 }
 
-/* 모던 테마 목업(매출관리 > 출고관리)은 선택된 월 칩을 옅은 음영이
-   아니라 꽉 찬 인디고 배경 + 흰 글자로 보여준다 — 매출/매입이 같은
-   DateRangeQuickFilters를 쓰므로(컴포넌트 주석 참고) 토큰만 모던
-   스코프에서 덮어써서 두 화면 다 자동으로 맞는다. */
-[data-theme="modern"] .erp-date-preset-btn.active {
-  background: var(--erp-primary);
-  color: var(--erp-on-primary);
-  border-color: var(--erp-primary);
-}
-
 .erp-field {
   display: flex;
   flex-direction: column;
@@ -1555,13 +1719,13 @@
 
 .erp-input,
 .erp-select {
-  height: 30px;
+  height: var(--erp-control-h-md);
   border: 1px solid var(--erp-border);
   /* 0 → 3px: 표/그리드는 각진 모서리를 유지하지만, 입력칸/버튼까지
      전부 직각이면 화면 전체가 딱딱해 보인다는 지적 — 아주 살짝만.
-     모던 테마에서는 --erp-radius-xl(12px)로 더 둥글게(다른 박스형
+     둥근 테마에서는 --erp-radius-xl로 더 둥글게(다른 박스형
      컴포넌트와 같은 톤) — 이 토큰화 작업 때 정작 이 기본 규칙 자체를
-     빠뜨려서, 모던 테마인 회사에서도 입력칸/셀렉트만 계속 3px(사실상
+     빠뜨려서, 둥근 테마인 회사에서도 입력칸/셀렉트만 계속 3px(사실상
      거의 안 보이는 각짐)로 남아있던 실제 버그였다(사용자 스크린샷으로
      확인 — 공급처/입고방법/과세구분 입력칸이 전부 각져 보임). */
   border-radius: var(--erp-radius-xl, 3px);
@@ -1576,6 +1740,12 @@
     border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 표(.erp-grid) 셀 안 입력칸은 행 높이를 지키려고 기존 30px을 유지한다. */
+.erp-grid .erp-input,
+.erp-grid .erp-select {
+  height: var(--erp-control-h-cell);
 }
 
 .erp-input:focus,
@@ -1799,8 +1969,8 @@ form.erp-field-grid {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 32px;
-  min-width: 90px;
+  height: var(--erp-control-h-md);
+  min-width: 64px;
   padding: 0 12px;
   border-radius: var(--erp-radius-xl, 3px);
   border: 1px solid var(--erp-border);
@@ -1840,6 +2010,26 @@ form.erp-field-grid {
   .erp-btn:hover,
   .erp-btn:active {
     transform: none;
+  }
+}
+
+/* 크기 변형: sm(28)=툴바/보조, xs(24)=표 안 소형. 최소 폭은 해제한다. */
+.erp-btn-sm {
+  height: var(--erp-control-h-sm);
+  min-width: 0;
+  padding: 0 var(--erp-space-3);
+}
+.erp-btn-xs {
+  height: var(--erp-control-h-xs);
+  min-width: 0;
+  padding: 0 var(--erp-space-3);
+  font-size: var(--erp-font-sm);
+}
+
+/* 터치 기기: 표 밖의 버튼·입력칸은 누르기 쉽게 40px 이상. 표 안은 행 높이를 지키려고 그대로 둔다. */
+@media (pointer: coarse) {
+  :is(.erp-btn, .erp-input, .erp-select):not(.erp-grid *) {
+    min-height: 40px;
   }
 }
 
@@ -3722,10 +3912,7 @@ a.erp-detail-tab:hover:not(.active) {
 
 /* ── Home Workspace ────────────────────────────────────────── */
 .erp-home {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 16px;
-  align-items: start;
+  min-width: 0;
 }
 
 /* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
@@ -3738,10 +3925,171 @@ a.erp-detail-tab:hover:not(.active) {
   min-width: 0;
 }
 
-@media (max-width: 1100px) {
-  .erp-home {
+.erp-home-panel {
+  border-radius: var(--erp-comm-radius-row);
+  border-color: var(--erp-comm-border);
+  box-shadow: var(--erp-comm-shadow-row);
+}
+
+@media (max-width: 768px) {
+  /* 데스크톱 전용 flex-fill 트릭(.erp-page:has(...) 등 — 위 ".erp-page가
+     분할뷰를 가진 화면에서만" 규칙 참고)은 목록+상세를 나란히 보여줄
+     때만 필요하다 — 모바일은 display:block으로 풀어서 목록/상세를
+     세로로 자연스럽게 쌓으므로, flex를 그대로 두면 컨테이너가 화면
+     높이만큼 고정된 채 내용이 넘쳐도 안 늘어나 잘려 보인다. 체인 전체를
+     block으로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
+  .erp-page:has(> div > .erp-split-shell),
+  .erp-page:has(> div > .erp-split3-shell),
+  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) {
+    display: block;
+  }
+  .erp-page:has(> div > .erp-split-shell) > div,
+  .erp-page:has(> div > .erp-split3-shell) > div,
+  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) > div {
+    display: block;
+  }
+  .erp-split-shell {
+    display: block;
+  }
+  /* 특정 항목을 선택했을 때만 목록을 숨기고 상세를 전체 폭으로 보여준다
+     — 아무것도 선택 안 한 기본 상태(신규 등록 폼)는 목록과 함께 계속
+     세로로 쌓아 보여준다(모바일에서 신규 등록 폼 자체가 안 보이게
+     숨어버리는 걸 막기 위함). */
+  .erp-split-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+  .erp-split-list,
+  .erp-split-detail {
+    max-height: none;
+  }
+
+  .erp-split3-shell {
+    display: block;
+  }
+  .erp-split3-shell[data-mobile-view="detail"] .erp-cat-sidebar,
+  .erp-split3-shell[data-mobile-view="detail"] .erp-split-list {
+    display: none;
+  }
+  .erp-cat-sidebar {
+    max-height: none;
+    margin-bottom: 10px;
+  }
+
+  /* split3-shell을 쓰는 화면(메일함/공지사항)의 상세(메일 본문/글
+     읽기)는, 다른 분할뷰 화면(거래처 상세 등)과 달리 "목록에서 글 하나
+     열어본다"는 성격이 최신 SNS/메일 앱의 "전체화면으로 펼쳐지는
+     글/대화" 느낌에 가깝다(사용자 요청). 그래서 이 화면들에서만
+     .erp-split-detail의 카드 테두리를 없애 전용 화면처럼 보이게 한다
+     — .erp-split-shell(거래처/품목 등 13개 화면)이 쓰는 같은 클래스는
+     선택자를 .erp-split3-shell 안으로 좁혀서 그대로 둔다. */
+  .erp-split3-shell .erp-split-detail {
+    border: none;
+    padding: 14px 0 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ── 8. Status bar ─────────────────────────────────────────── */
+.erp-statusbar {
+  height: 26px;
+  flex: 0 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--erp-bg-subtle);
+  border-top: 1px solid var(--erp-border);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-statusbar span {
+  white-space: nowrap;
+}
+
+.erp-statusbar .sep {
+  color: var(--erp-glyph-muted);
+}
+
+/* 월별리포트/할일관리/공지사항 상단의 4칸 요약 카드 — 월별리포트/todos
+   페이지, announcement-grid-table.tsx 세 곳이 똑같은 인라인 스타일
+   (display:grid, repeat(4,1fr), gap:10, marginBottom:12)을 각자 들고
+   있었는데 모바일 대응이 하나도 없었다. .erp-home-panel이 overflow:
+   hidden이라 좁은 화면에서 4등분된 칸에 "1,234,567원" 같은 숫자가
+   부러질 자리 없이 통째로 잘려서 안 보이는 문제가 있어(재현: 360px
+   화면에서 카드 폭이 패딩 포함 74px 안팎, 숫자는 90-110px 필요),
+   인라인 스타일 대신 공용 클래스로 묶고 모바일에서 2칸으로 접는다. */
+.erp-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+  .erp-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* QR 라벨 인쇄 화면의 카드 그리드 — repeat(3,1fr)만 있고 모바일 대응이
+   없어서, 카드 안 QR SVG가 고정폭(110px)이라 grid item이 그 아래로 못
+   줄어들어 390px 화면에서 3번째 칸이 넘쳐 잘려 보이던 문제. 다른
+   요약카드 그리드(erp-kpi-row 등)와 같은 방식으로 좁은 화면에서 접는다. */
+.erp-qr-label-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .erp-qr-label-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .erp-qr-label-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.erp-hero-card {
+  background: var(--erp-panel);
+  border: 1px solid var(--erp-border-strong);
+  border-left: 3px solid var(--erp-primary);
+  border-radius: var(--erp-radius-3xl, 0);
+  padding: 16px 18px;
+}
+
+.erp-hero-label {
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  color: var(--erp-text-muted);
+}
+
+.erp-hero-value {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Home Workspace ────────────────────────────────────────── */
+.erp-home {
+  min-width: 0;
+}
+
+/* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
+   최소 폭(min-width: auto)을 가져서, 모바일 1열 레이아웃에서 부모 grid
+   칸 너비를 무시하고 넘쳐버릴 수 있다(실제로 "최근 메모"의 긴 한 줄
+   메모 때문에 발생 확인됨). 자식들과 그 안의 모든 요소에 min-width: 0을
+   줘서 항상 grid 칸 너비에 맞게 줄어들 수 있게 한다. */
+.erp-home,
+.erp-home * {
+  min-width: 0;
 }
 
 .erp-home-panel {
@@ -5658,481 +6006,104 @@ a.erp-detail-tab:hover:not(.active) {
   }
 }
 
-/* ════════════════════════════════════════════════════════════════
-   "Modern" 테마
-   ════════════════════════════════════════════════════════════════
-   사용자가 올린 목업 12개(메신저/게시판/대시보드/매입/매출/결재선
-   설정/문서양식관리 등 — 전부 테넌트 ERP 화면이다) 그대로의 관제탑
-   톤 어두운 헤더 + 인디고 포인트 + 큰 라운드 코너를 재현한다. 처음엔
-   이 전체를 다크 테마로 잘못 만들었었다 — 목업을 다시 확인해보니
-   <body>는 전부 bg-[#F1F5F9]/bg-[#F8FAFC](밝은 슬레이트)이고, 어두운
-   건 맨 위 타이틀바 하나(slate-900→indigo-950 그라디언트)뿐이다
-   ("다크모드가 아니라 모던테마야, 내가준 html파일 어디도 다크모드로
-   안되어있다"는 사용자 피드백으로 수정). 그래서 색 토큰은 라이트로
-   다시 잡고, 타이틀바 그라디언트/큰 라운드 코너만 목업 그대로
-   가져간다.
-
-   브라우저 localStorage가 아니라 회사(테넌트) 단위 설정이다(사용자
-   요청: "관리자페이지에서 모던으로 바꾸면 전체 변경되는건데 그걸
-   업체별로 변경할 수 있게 해줘" — 회사마다 다른 테마를 가질 수 있어야
-   한다). tenants.theme 컬럼(migration 215)을 서버에서 읽어
-   ErpShell(대시보드 전체를 감싸는 루트 .erp div)에 data-theme="modern"
-   속성을 직접 렌더링한다 — :root/<html> 전역이 아니라 이 .erp 래퍼
-   아래로만 CSS 변수가 상속되므로 회사마다 다른 값을 그대로 가질 수
-   있고, 클라이언트 JS/localStorage 없이 서버에서 바로 적용되니
-   깜빡임(FOUC)도 없다. 켜고 끄는 스위치는 플랫폼관리자 > 환경설정에
-   업체선택 드롭다운과 함께 있다(tenant-theme-form.tsx).
-
-   거의 모든 색이 이미 --erp-*(:root) 토큰 하나로 몰려 있어서, 여기서
-   그 토큰들만 다시 정의하면 기존 컴포넌트 구조를 전혀 안 바꿔도 메신저/
-   매입/매출 등 그 회사의 앱 전체 화면이 자동으로 이 테마로 바뀐다.
-   로그인/인쇄 라우트, 플랫폼관리자 콘솔 자체는 이 속성을 설정하는
-   주체가 아니라서 원래부터 영향 없다. 목업의 각 화면마다 제각각이던
-   그리드 비율(3:7, 2:3:7, 2:2.5:5.5 등)은 그대로 베끼지 않는다 — 이
-   앱은 이미 .erp-split-shell/.erp-split3-shell로 화면 전체가 통일된
-   분할 비율을 쓰고 있고(개발헌법 3번), 화면마다 다른 비율을 쓰는 건
-   그 자체가 이 디자인 시스템이 막으려는 문제이기 때문이다. */
-[data-theme="modern"] {
-  --erp-primary: #4f46e5;
-  --erp-primary-dark: #4338ca;
-  --erp-on-primary: #ffffff;
-  --erp-border: #e2e8f0;
-  --erp-border-strong: #cbd5e1;
-  --erp-hover: #f8fafc;
-  --erp-selected: #eef2ff;
-  --erp-select-accent: #4f46e5;
-  --erp-success: #047857;
-  --erp-warning: #92400e;
-  --erp-danger: #be123c;
-  --erp-success-bg: #ecfdf5;
-  --erp-success-border: #a7f3d0;
-  --erp-warning-bg: #fffbeb;
-  --erp-warning-border: #fde68a;
-  --erp-led-bg: #e11d48;
-  --erp-led-text: #ffffff;
-  --erp-danger-bg: #fff1f2;
-  --erp-danger-border: #fecdd3;
-  --erp-info-bg: #eef2ff;
-  --erp-info-border: #c7d2fe;
-  --erp-info-text: var(--erp-text);
-  --erp-highlight-bg: #fef08a;
-  --erp-text: #0f172a;
-  --erp-text-muted: #64748b;
-  --erp-text-disabled: #cbd5e1;
-  --erp-icon-muted: #94a3b8;
-  --erp-glyph-muted: #cbd5e1;
-  --erp-tree-badge-border: #e2e8f0;
-  --erp-tabbar-bg: #ffffff;
-  --erp-tab-bg: #f1f5f9;
-  --erp-search-hit-bg: #fef08a;
-  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.15);
-  --erp-dialog-overlay-bg: rgba(15, 20, 30, 0.55);
-  --erp-bg: #f1f5f9;
-  --erp-panel: #ffffff;
-  --erp-bg-subtle: #f8fafc;
-  --erp-divider: #f1f5f9;
-  --erp-grid-line: #e2e8f0;
-  --erp-grid-header-bg: #f1f5f9;
-  --erp-bg-disabled: #f1f5f9;
-  --erp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 8px -3px rgba(15, 23, 42, 0.1);
-  --erp-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 12px 28px -10px rgba(15, 23, 42, 0.16);
-  --erp-shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.14), 0 16px 40px -12px rgba(15, 23, 42, 0.2);
-  --erp-comm-border: rgba(15, 23, 42, 0.08);
-  --erp-comm-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 24px -16px rgba(15, 23, 42, 0.14);
-  --erp-comm-shadow-row: 0 1px 1px rgba(15, 23, 42, 0.03), 0 6px 16px -10px rgba(15, 23, 42, 0.16);
-  --erp-comm-shadow-btn: 0 2px 8px -3px rgba(79, 70, 229, 0.4);
-  /* 위 :root의 r값 스케일 — 모던 테마에서만 실제 둥근 값으로. 기존에
-     화면 곳곳(아래 각 컴포넌트 기본 규칙)에서 쓰던 값을 그대로 옮겨왔다
-     (새 크기를 지어내지 않음). */
-  --erp-radius-xs: 3px;
-  --erp-radius-sm: 6px;
-  --erp-radius-md: 8px;
-  --erp-radius-lg: 10px;
-  --erp-radius-xl: 12px;
-  --erp-radius-2xl: 14px;
-  --erp-radius-3xl: 16px;
-  --erp-radius-4xl: 20px;
-  --erp-radius-circle: 50%;
-  --erp-radius-pill: 999px;
-}
-
-/* 타이틀바 — 목업의 관제탑 그라디언트(slate-900 → indigo-950 →
-   slate-900)를 그대로 재현한다. 목업에서 유일하게 어두운 요소다. */
-[data-theme="modern"] .erp-titlebar {
-  background: linear-gradient(to right, #0f172a, #1e1b4b, #0f172a);
-}
-
-/* 목업은 전체적으로 큰 라운드 코너(카드 rounded-2xl, 버튼/입력
-   rounded-xl)를 쓴다 — 이 중 .rounded-sm은 우리 토큰이 아니라
-   Tailwind 자체 유틸리티 클래스라(화면 JSX에 직접 쓰임), 토큰 전환
-   대상이 아니고 그대로 이 테마 스코프 안에서 덮어쓴다(선택자 특이도로
-   기존 규칙을 이김). */
-[data-theme="modern"] .rounded-sm {
-  border-radius: 10px;
-}
-/* 지급결의서 영수증 첨부(receipt-picker.tsx)의 썸네일 카드/추가 버튼도
-   같은 이유로 Tailwind .rounded-md를 직접 쓰고 있어서(globals.css가
-   전체 rounded-* 스케일을 0으로 낮춰놔서 모던에서도 그대로 각짐), 같은
-   방식으로 이 스코프 안에서만 덮어쓴다. */
-[data-theme="modern"] .rounded-md {
-  border-radius: 10px;
-}
-
-/* 아래부터는 전부 r값(border-radius) 자체가 아니라 "모던 테마에서만
-   다른" 부가 효과(그림자/오버플로/마진/강조선 숨김 등)만 모아둔다 —
-   r값 자체는 더 이상 여기 나열하지 않는다. 각 컴포넌트의 기본 규칙이
-   이미 border-radius: var(--erp-radius-*) 토큰을 쓰고 있어서, 위
-   [data-theme="modern"] { --erp-radius-*: ...; } 토큰 값만 바뀌면
-   클래식(0)과 모던(실제 값) 둘 다 자동으로 맞는다 — 이 블록에 새
-   클래스를 추가할 필요가 없다. 새 박스형 컴포넌트를 만들 때는 역할에
-   맞는 --erp-radius-* 토큰을 기본 규칙에 바로 쓰면 되고(위 :root
-   주석의 역할 설명 참고), 혹시 빠뜨리면 scripts/check-radius-
-   token.mjs가 lint에서 잡아준다. */
-[data-theme="modern"] .erp-tree,
-[data-theme="modern"] .erp-cat-sidebar {
-  background: var(--erp-panel);
-}
-[data-theme="modern"] .erp-hero-card,
-[data-theme="modern"] .erp-home-panel,
-[data-theme="modern"] .erp-alert-item {
-  box-shadow: var(--erp-shadow-sm);
-}
-[data-theme="modern"] .erp-hero-card {
-  border-left-color: transparent;
-}
-[data-theme="modern"] .erp-split-list-row {
-  margin: 2px 6px;
-  border-bottom-color: transparent;
-}
-[data-theme="modern"] .erp-split-list-row.active {
-  box-shadow: none;
-}
-[data-theme="modern"] .erp-split-list,
-[data-theme="modern"] .erp-richtext,
-[data-theme="modern"] .erp-doc-header {
-  overflow: hidden;
-}
-[data-theme="modern"] .erp-doc-paper {
-  box-shadow: var(--erp-shadow-sm);
-}
-
-/* ── classic-b 테마 ───────────────────────────────────────────
-   상용화 전 디자인 후보 비교용 세 번째 테마(migration 223). 모던과
-   같은 인디고 계열 강조색을 쓰지만, r값(둥근 모서리) 스케일은 전혀
-   건드리지 않는다 — :root의 --erp-radius-*가 전부 0이라(위 :root
-   주석 참고) 이 블록이 따로 선언 안 하면 자동으로 전부 각진 채로
-   남는다. 사용자가 올린 목업(매출관리 > 출고관리, 전부
-   border-radius:0 !important)의 "인디고 색 + 완전히 각진 모서리"
-   조합을 그대로 재현하는 게 목적이다. 모던 테마처럼 색 토큰만
-   건드려서, 켜는 순간 그 회사 화면 전체(매입/메신저/대시보드 등)가
-   자동으로 이 배색을 따른다 — 다만 실제로 화면 하나하나 눈으로
-   맞춰본 건 이번 요청 범위인 매출관리 > 출고관리뿐이다(다른 화면은
-   토큰 상속만으로 동작하되 개별 확인 전). */
-[data-theme="classic-b"] {
-  --erp-primary: #4f46e5;
-  --erp-primary-dark: #4338ca;
-  --erp-on-primary: #ffffff;
-  --erp-border: #cbd5e1;
-  --erp-border-strong: #94a3b8;
-  --erp-hover: #f8fafc;
-  --erp-selected: #eef2ff;
-  --erp-select-accent: #4f46e5;
-  --erp-success: #047857;
-  --erp-warning: #92400e;
-  --erp-danger: #be123c;
-  --erp-success-bg: #ecfdf5;
-  --erp-success-border: #a7f3d0;
-  --erp-warning-bg: #fef3c7;
-  --erp-warning-border: #fde68a;
-  --erp-led-bg: #e11d48;
-  --erp-led-text: #ffffff;
-  --erp-danger-bg: #fff1f2;
-  --erp-danger-border: #fecdd3;
-  --erp-info-bg: #eef2ff;
-  --erp-info-border: #c7d2fe;
-  --erp-info-text: var(--erp-text);
-  --erp-highlight-bg: #fef08a;
-  --erp-text: #0f172a;
-  --erp-text-muted: #64748b;
-  --erp-text-disabled: #cbd5e1;
-  --erp-icon-muted: #94a3b8;
-  --erp-glyph-muted: #cbd5e1;
-  --erp-tree-badge-border: #e2e8f0;
-  --erp-tabbar-bg: #ffffff;
-  --erp-tab-bg: #f1f5f9;
-  --erp-search-hit-bg: #fef08a;
-  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.15);
-  --erp-dialog-overlay-bg: rgba(15, 20, 30, 0.55);
-  --erp-bg: #f0f2f5;
-  --erp-panel: #ffffff;
-  --erp-bg-subtle: #f8fafc;
-  --erp-divider: #f1f5f9;
-  --erp-grid-line: #cbd5e1;
-  --erp-grid-header-bg: #e2e8f0;
-  --erp-bg-disabled: #f1f5f9;
-  --erp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 8px -3px rgba(15, 23, 42, 0.1);
-  --erp-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 12px 28px -10px rgba(15, 23, 42, 0.16);
-  --erp-shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.14), 0 16px 40px -12px rgba(15, 23, 42, 0.2);
-  --erp-comm-border: rgba(15, 23, 42, 0.08);
-  --erp-comm-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 24px -16px rgba(15, 23, 42, 0.14);
-  --erp-comm-shadow-row: 0 1px 1px rgba(15, 23, 42, 0.03), 0 6px 16px -10px rgba(15, 23, 42, 0.16);
-  --erp-comm-shadow-btn: 0 2px 8px -3px rgba(79, 70, 229, 0.4);
-}
-
-/* 목업 타이틀바는 그라디언트가 아니라 단색 네이비(slate-800)다 —
-   .erp-titlebar 기본 규칙이 var(--erp-primary)를 그대로 쓰는데,
-   classic-b는 버튼/강조색(인디고)과 타이틀바 색을 서로 다르게
-   가져가야 해서(목업 참고) 모던과 같은 방식으로 이 스코프에서만
-   한 번 더 덮어쓴다. */
-[data-theme="classic-b"] .erp-titlebar {
-  background: #1e293b;
-}
-
-/* 조회기간 월 칩도 모던과 같은 이유로 선택된 달을 꽉 찬 인디고
-   배경으로 — DateRangeQuickFilters 컴포넌트 주석 참고(매출/매입
-   공용이라 두 화면 다 자동 적용). */
-[data-theme="classic-b"] .erp-date-preset-btn.active {
-  background: var(--erp-primary);
-  color: var(--erp-on-primary);
-  border-color: var(--erp-primary);
-}
-[data-theme="classic-b"] .erp-date-preset-btn {
-  height: 20px;
-  min-width: 0;
-  padding: 0 8px;
-  font-size: 11px;
-}
-
-/* 목업은 표마다 가로줄만이 아니라 모든 칸에 테두리를 두르는
-   "완전히 그려진 그리드"다(각 th/td에 border border-slate-300) —
-   기본 .erp-grid는 가로줄만 그린다. r값처럼 토큰 하나로 못 끄고 다시
-   켤 수 있는 값이 아니라서(선 유무 자체가 다른 규칙), classic-b
-   스코프에서 칸마다 테두리를 추가로 그린다. 글자 크기/칸 안쪽 여백도
-   목업(text-[11px], padding 4px 6px)에 맞춘다. */
-[data-theme="classic-b"] .erp-grid {
-  font-size: 11px;
-  border: 1px solid var(--erp-border);
-}
-[data-theme="classic-b"] .erp-grid thead th {
-  height: auto;
-  padding: 6px;
-  border: 1px solid var(--erp-border);
-}
-[data-theme="classic-b"] .erp-grid tbody td,
-[data-theme="classic-b"] .erp-grid tfoot td {
-  height: auto;
-  padding: 4px 6px;
-  border: 1px solid var(--erp-border);
-}
-
-/* 배지(.erp-badge)는 기본 규칙에서 border-radius:999px(알약)이 r값
-   토큰이 아니라 리터럴이라 테마로 못 바꾼다 — 목업의 "미발행" 배지는
-   알약이 아니라 각진 작은 태그(bg-amber-100 text-amber-800 px-1.5
-   py-0.5 text-[10px] font-bold)라 classic-b에서 직접 덮어쓴다. */
-[data-theme="classic-b"] .erp-badge {
-  border-radius: 0;
-  padding: 2px 6px;
-  font-size: 10px;
-}
-
-/* 버튼도 목업처럼 더 작고 조밀하게 — 전체 앱에서 쓰는 공용
-   .erp-btn이라 모든 버튼 크기가 모던보다 한 단계 더 컴팩트해진다
-   (목업 자체가 버튼마다 padding이 제각각이라 완전히 똑같이는 못
-   맞추지만, 전체적인 "작고 각진" 인상은 이렇게 맞춘다). */
-[data-theme="classic-b"] .erp-btn {
-  height: 26px;
-  min-width: 0;
-  padding: 0 10px;
-  font-size: 11px;
-}
-
-/* ── 사용자 재지적: 매출관리 콘텐츠만이 아니라 공용 셸(타이틀바/
-   유틸리티바/좌측 메뉴트리/탭바)까지 목업 그대로 — "행 넓이 높이까지
-   모든 걸" 전부 포함. 이 넷은 sales/page.tsx가 아니라 title-bar.tsx/
-   ribbon.tsx/tree-menu.tsx/tab-bar.tsx가 그리는 공용 컴포넌트라, 켜는
-   순간 앱 전체(매입/메신저/대시보드 등)에 자동 적용된다. */
-
-/* 타이틀바 글자색 — 목업은 단일 색이 아니라 요소별로 다르다: 회사명
-   indigo-400, 가운데 경로 slate-400, 오른쪽 날짜/이메일 slate-300,
-   링크(백업·비번변경 등) indigo-300, 로그아웃만 rose-400. 로그아웃
-   버튼은 title-bar.tsx가 className 없이 LogoutButton을 렌더링해서
-   클래스 선택자가 없어, 감싸는 <form>으로 범위를 좁힌다. */
-[data-theme="classic-b"] .erp-titlebar-name {
-  color: #818cf8;
-}
-[data-theme="classic-b"] .erp-titlebar-menu {
-  color: #94a3b8;
-}
-[data-theme="classic-b"] .erp-titlebar-right {
-  color: #cbd5e1;
-}
-[data-theme="classic-b"] .erp-titlebar-right a {
-  color: #a5b4fc;
-}
-[data-theme="classic-b"] .erp-titlebar-right form button {
-  color: #fb7185;
-}
-
-/* 유틸리티 아이콘바(Ribbon) — 목업은 h-8(32px)인데 기본 규칙은 40px. */
-[data-theme="classic-b"] .erp-ribbon {
-  height: 32px;
-  flex-basis: 32px;
-}
-[data-theme="classic-b"] .erp-ribbon-btn {
-  height: 24px;
-  font-size: 11px;
-}
-[data-theme="classic-b"] .erp-ribbon-btn:hover {
-  color: var(--erp-primary);
-}
-
-/* 좌측 메뉴 트리 — 목업은 w-56(224px, 기본 240px보다 좁음). 활성
-   그룹(펼친 상태의 현재 섹션)은 인디고 글자+연한 인디고 배경+왼쪽
-   굵은 선, 그 안의 활성 리프 항목(지금 보고 있는 화면)은 꽉 찬 인디고
-   배경+흰 글자로 — 기본 .erp-tree-item.active는 연한 선택 배경(pill)
-   뿐이라 목업과 다르다. */
-[data-theme="classic-b"] .erp-tree {
-  flex-basis: 224px;
-  width: 224px;
-}
-[data-theme="classic-b"] .erp-tree.collapsed {
-  flex-basis: 60px;
-  width: 60px;
-}
-[data-theme="classic-b"] .erp-tree-group:has(.erp-tree-item.active) .erp-tree-group-label {
-  color: var(--erp-primary);
-  background: var(--erp-selected);
-  border-left: 2px solid var(--erp-primary);
-}
-[data-theme="classic-b"] .erp-tree-item.active {
-  background: var(--erp-primary);
-  color: var(--erp-on-primary);
-  font-weight: 700;
-}
-
-/* 탭바 — 활성 탭 글자색이 기본은 어두운 본문색인데 목업은 인디고
-   볼드, 탭 자체도 더 조밀하다(목업 py-1 ≈ 24px 안팎). 상단 2px
-   인디고 테두리는 기존 .erp-tab.active가 이미 토큰(--erp-primary)
-   기반이라 색은 자동으로 맞는다. */
-[data-theme="classic-b"] .erp-tabbar {
-  height: 30px;
-  flex-basis: 30px;
-}
-[data-theme="classic-b"] .erp-tab {
-  height: 24px;
-  font-size: 11px;
-}
-[data-theme="classic-b"] .erp-tab.active {
-  color: var(--erp-primary);
-  font-weight: 700;
-}
-
-/* ── classic-c 테마 ───────────────────────────────────────────
-   migration 226 — 사용자가 전달한 목업(매출관리 > 출고관리, 슬레이트
-   회색 + 블루 액센트 + 앰버 경고색, 그누보드류 넓고 촘촘한 장부
-   느낌)을 네 번째 테마 후보로 재현한다. classic-b와 같은 패턴 —
-   색 토큰만 건드려서 켜는 순간 그 회사 화면 전체가 자동으로 이
-   배색을 따르지만, 실제로 화면 하나하나 눈으로 맞춰본 건 이번
-   요청 범위인 매출관리 > 출고관리(그리드+인라인 아코디언)뿐이다.
-   r값(모서리)은 목업도 거의 각진 느낌이라 :root 기본값(전부 0)을
-   그대로 상속해 따로 안 건드린다. */
-[data-theme="classic-c"] {
-  /* 처음엔 blue-600(#2563eb)을 썼는데, 타이틀바(.erp-titlebar)와
-     달력 "선택된 날짜" 칸(dashboard-calendar.tsx)이 둘 다 --erp-primary를
-     그대로 꽉 찬 배경으로 쓰는 자리라 너무 쨍하고 가벼워 보였다(사용자
-     지적 — "장난하나"). 기본/모던/classic-b 전부 --erp-primary가
-     어둡고 차분한 톤(#132944/#4f46e5)이라 이 테마도 한 단계 더
-     진하게(blue-700) 맞춘다. */
-  --erp-primary: #1d4ed8;
-  --erp-primary-dark: #1e40af;
-  --erp-on-primary: #ffffff;
-  --erp-border: #cbd5e1;
-  --erp-border-strong: #94a3b8;
-  --erp-hover: #f8fafc;
-  --erp-selected: #eff6ff;
-  --erp-select-accent: #2563eb;
-  --erp-success: #047857;
-  --erp-warning: #f59e0b;
-  --erp-danger: #dc2626;
-  --erp-success-bg: #ecfdf5;
-  --erp-success-border: #a7f3d0;
-  --erp-warning-bg: #fffbeb;
-  --erp-warning-border: #fde68a;
-  --erp-led-bg: #dc2626;
-  --erp-led-text: #ffffff;
-  --erp-danger-bg: #fef2f2;
-  --erp-danger-border: #fecaca;
-  --erp-info-bg: #eff6ff;
-  --erp-info-border: #bfdbfe;
-  --erp-info-text: var(--erp-text);
-  --erp-highlight-bg: #fef08a;
-  --erp-text: #0f172a;
-  --erp-text-muted: #64748b;
-  --erp-text-disabled: #cbd5e1;
-  --erp-icon-muted: #94a3b8;
-  --erp-glyph-muted: #cbd5e1;
-  --erp-tree-badge-border: #e2e8f0;
-  --erp-tabbar-bg: #ffffff;
-  --erp-tab-bg: #f1f5f9;
-  --erp-search-hit-bg: #fef08a;
-  --erp-lightbox-btn-bg: rgba(255, 255, 255, 0.15);
-  --erp-dialog-overlay-bg: rgba(15, 20, 30, 0.55);
-  --erp-bg: #f1f5f9;
-  --erp-panel: #ffffff;
-  --erp-bg-subtle: #f8fafc;
-  --erp-divider: #f1f5f9;
-  --erp-grid-line: #e2e8f0;
-  --erp-grid-header-bg: #f1f5f9;
-  --erp-bg-disabled: #f1f5f9;
-  --erp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 8px -3px rgba(15, 23, 42, 0.1);
-  --erp-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08), 0 12px 28px -10px rgba(15, 23, 42, 0.16);
-  --erp-shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.14), 0 16px 40px -12px rgba(15, 23, 42, 0.2);
-  --erp-comm-border: rgba(15, 23, 42, 0.08);
-  --erp-comm-shadow: 0 1px 1px rgba(15, 23, 42, 0.03), 0 10px 24px -16px rgba(15, 23, 42, 0.14);
-  --erp-comm-shadow-row: 0 1px 1px rgba(15, 23, 42, 0.03), 0 6px 16px -10px rgba(15, 23, 42, 0.16);
-  --erp-comm-shadow-btn: 0 2px 8px -3px rgba(37, 99, 235, 0.4);
-}
-
-/* 타이틀바는 모던/classic-b와 같은 이유로 --erp-primary를 그대로
-   안 쓴다 — .erp-titlebar 기본 규칙이 --erp-primary를 꽉 찬 배경으로
-   칠하는데, 파란 계열을 화면 맨 위 전체 폭에 그대로 바르면 톤을
-   낮춰도 여전히 가볍게 보인다. 이 테마는 슬레이트 계열이니 어두운
-   슬레이트(classic-b와 같은 #1e293b)로 — "쨍한 파랑 띠" 대신 차분한
-   짙은 회색 타이틀바로 맞춘다. */
-[data-theme="classic-c"] .erp-titlebar {
-  background: #1e293b;
-}
-
-/* 목업 그리드는 py-1.5 px-2.5(≈6px/10px)로 기본(헤더 32px/바디 30px
-   고정 높이)보다 더 촘촘하다 — "장부 밀도감" 요청에 맞춰 칸 높이를
-   내용에 맡기고(height: auto) 패딩만 좁힌다. */
-[data-theme="classic-c"] .erp-grid thead th {
-  height: auto;
-  padding: 6px 10px;
-}
-[data-theme="classic-c"] .erp-grid tbody td,
-[data-theme="classic-c"] .erp-grid tfoot td {
-  height: auto;
-  padding: 6px 10px;
-}
-
-/* 이월 배지가 목업에서 옅은 배경+글자색 알약이 아니라 꽉 찬 앰버
-   배경+흰 글자인 사각 태그(bg-amber-500 text-white)다 — warn 톤만
-   이 테마에서 반전시킨다(success/danger는 목업에 등장하지 않아 기본
-   옅은 배경 방식 그대로 둔다). */
-[data-theme="classic-c"] .erp-badge-warning {
-  background: var(--erp-warning);
-  color: var(--erp-on-primary);
-}
-
 /* ── 메인 화면 "오늘 리포트" 박스 (daily-report-box.tsx) ─────────────────
    하루치 매출·매입·수금지급·재고를 한 박스로 보여준다. 색/간격/글자 크기는 전부
    --erp-* 토큰만 쓴다. 헤더는 앱 맨 위 남색 타이틀바와 겹쳐 보이지 않게 옅은
-   바탕(--erp-bg-subtle)에 남색 글자로 둔다. .erp-home 격자 안에서는 항상
-   맨 위 한 줄 전체를 차지한다(대시보드 달력이 이 격자의 자식이라서). */
-.erp-home > .erp-daily-report {
-  grid-column: 1 / -1;
-  order: -1;
+   바탕(--erp-bg-subtle)에 남색 글자로 둔다. .erp-home 격자의 오른쪽 한 칸
+   (.erp-widget, 사용자가 폭을 줄일 수 있다)에 들어가므로 구역은 세로로 쌓는다. */
+/* ── 대시보드 위젯 배치 (dashboard-widget-grid.tsx) ───────────────
+   칸 계산(행 높이·간격)은 react-grid-layout 설정(dashboard-layout.ts의
+   DASHBOARD_ROW_HEIGHT/DASHBOARD_MARGIN)과 같은 값이어야 편집 중 모양과
+   저장 후 모양이 일치한다. 좁은 화면(<1100px)은 한 줄로 쌓는다. */
+.erp-widget-wrap {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.erp-widget-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.erp-widget-bar-hint {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-widget-message {
+  margin: 0;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-danger);
+}
+
+.erp-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: 24px;
+  gap: 12px;
+}
+
+.erp-widget {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.erp-widget-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* 위젯 칸(사용자가 정한 크기)을 안의 카드가 가득 채운다 — 내용이 적어도 칸 모양이 일정하다. */
+.erp-widget-body > * {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.erp-widget.is-editing {
+  border: 1px dashed var(--erp-primary);
+  border-radius: var(--erp-radius-xl, 0);
+  background: var(--erp-panel);
+  overflow: hidden;
+}
+
+.erp-widget.is-editing .erp-widget-body {
+  pointer-events: none;
+}
+
+.erp-widget-handle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  background: var(--erp-primary);
+  color: var(--erp-on-primary);
+  font-size: var(--erp-font-sm);
+  font-weight: 700;
+  cursor: move;
+}
+
+.erp-widget-hide {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 1099px) {
+  .erp-widget-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  .erp-widget-body {
+    overflow: visible;
+  }
 }
 
 .erp-daily-report {
@@ -6178,17 +6149,25 @@ a.erp-detail-tab:hover:not(.active) {
 
 .erp-daily-report-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .erp-daily-report-sec {
-  padding: 14px 16px;
-  border-right: 1px solid var(--erp-divider);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--erp-divider);
   min-width: 0;
 }
 
 .erp-daily-report-sec:last-child {
-  border-right: 0;
+  border-bottom: 0;
+}
+
+/* 리포트 맨 아래 추가 구역(그날 메모·일정·이월 안내) */
+.erp-daily-report-extra {
+  border-radius: var(--erp-radius-xl, 0);
+  padding: 12px 14px;
+  border-top: 1px solid var(--erp-border-strong);
+  background: var(--erp-bg-subtle);
 }
 
 .erp-daily-report-sec-title {

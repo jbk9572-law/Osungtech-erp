@@ -35,3 +35,29 @@ for (const [label, listPath, newPath] of [
     }
   });
 }
+
+// 닫은 뒤 다시 여는 경로: 모달을 닫고 목록으로 돌아간 다음 같은 "신규"를 다시 누르면(0.8초 이상 간격)
+// 이전에 닫힌 모달이 재사용돼 아무것도 안 보이면 안 된다(@modal 슬롯 정리 — catch-all 페이지).
+for (const [label, listPath, newPath] of [
+  ["매입", "/purchases", "/purchases/new"],
+  ["매출", "/sales", "/sales/new"],
+] as const) {
+  test(`${label}: 신규 → 닫기 → 다시 신규를 눌러도 등록 화면이 보인다`, async ({ page }) => {
+    await page.goto(listPath);
+    const btn = page.locator(`a[href="${newPath}"].erp-btn`).first();
+    await expect(btn).toBeVisible();
+
+    await btn.click();
+    await expect(page.locator(".erp-modal[role='dialog']")).toBeVisible({ timeout: 15000 });
+
+    await page.locator(".erp-modal-window-close").click();
+    await expect(page.locator(".erp-modal")).toHaveCount(0, { timeout: 15000 });
+    await page.waitForTimeout(1200);
+
+    await btn.click();
+    const dialog = page.locator(".erp-modal[role='dialog']");
+    await expect(dialog).toBeVisible({ timeout: 15000 });
+    await expect(page.locator(".erp-modal-overlay.closing")).toHaveCount(0);
+    await expect(dialog.locator("form")).toBeVisible();
+  });
+}

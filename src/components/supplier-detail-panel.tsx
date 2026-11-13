@@ -164,7 +164,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
           />
 
           {balance.payments.length > 0 && (
-            <div className="erp-grid-wrap" style={{ marginTop: 12 }}>
+            <div className="erp-grid-wrap erp-u-mt-12">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -255,7 +255,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">매입 품목 및 단가</span>
         </div>
-        <div className="erp-detail-body" style={{ padding: 0 }}>
+        <div className="erp-detail-body erp-u-p-0">
           <div className="erp-grid-wrap">
             <table className="erp-grid">
               <thead>

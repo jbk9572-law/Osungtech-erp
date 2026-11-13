@@ -52,8 +52,8 @@ function QuotaUsageRow({
           {children} ({pct.toFixed(1)}%)
         </span>
       </div>
-      <div style={{ height: 6, borderRadius: 3, background: "var(--erp-bg)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: barColor }} />
+      <div className="erp-u-bg-page erp-u-overflow-hidden" style={{ height: 6, borderRadius: 3 }}>
+        <div className="erp-u-h-full" style={{ width: `${Math.min(100, pct)}%`, background: barColor }} />
       </div>
     </div>
   );
@@ -97,7 +97,7 @@ export default async function BillingPage() {
         문의는 운영자 문의 채널로 남겨주시면 운영자가 직접 처리해드립니다.
       </PageGuide>
 
-      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: 16 }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-16">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">현재 이용 현황</span>
         </div>
@@ -122,7 +122,7 @@ export default async function BillingPage() {
         </div>
       </div>
 
-      <div className="erp-detail" style={{ marginBottom: 16 }}>
+      <div className="erp-detail erp-u-mb-16">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">저장 공간 사용량</span>
         </div>

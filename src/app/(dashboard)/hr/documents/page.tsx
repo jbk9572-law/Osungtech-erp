@@ -71,7 +71,7 @@ export default async function DocumentsPage({
       />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">그룹웨어 &gt; 문서함</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <Link href={newHref} className="erp-btn erp-btn-primary">
             F2 새 문서
           </Link>
@@ -102,7 +102,7 @@ export default async function DocumentsPage({
                 className={`erp-split-list-row${d.id === selectedId ? " active" : ""}`}
               >
                 {d.title}
-                <span style={{ marginLeft: "var(--erp-space-2)" }}>
+                <span className="erp-u-ml-s2">
                   <GridBadge tone={d.status === "issued" ? "ok" : "warn"}>
                     {d.status === "issued" ? "발급완료" : "초안"}
                   </GridBadge>

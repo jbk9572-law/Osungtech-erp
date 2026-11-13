@@ -79,6 +79,7 @@ export default async function VatReportPage({
         .select("id, is_return, tax_type, order_date, is_carryover, sales_order_items(quantity, unit_price)")
         .gte("order_date", lookbackFrom)
         .lte("order_date", to)
+        .order("id")
         .range(f, t)
     ),
     fetchAllRows<{
@@ -93,6 +94,7 @@ export default async function VatReportPage({
         .select("id, tax_type, purchase_date, is_carryover, purchase_order_items(quantity, unit_cost)")
         .gte("purchase_date", lookbackFrom)
         .lte("purchase_date", to)
+        .order("id")
         .range(f, t)
     ),
   ]);
@@ -131,7 +133,7 @@ export default async function VatReportPage({
         실제 신고는 담당 세무사/홈택스를 통해 별도로 진행해주세요 — 이 화면은 신고 전 참고 자료입니다.
       </PageGuide>
 
-      <div className="erp-date-presets" style={{ marginBottom: 8 }}>
+      <div className="erp-date-presets erp-u-mb-8">
         {quarterLinks.map((q) => (
           <Link
             key={q.label}
@@ -144,9 +146,9 @@ export default async function VatReportPage({
       </div>
 
       <form className="erp-toolbar" style={{ marginTop: -4 }}>
-        <input type="date" name="from" defaultValue={from} className="erp-input" style={{ width: "auto" }} />
+        <input aria-label="조회 시작일" type="date" name="from" defaultValue={from} className="erp-input" style={{ width: "auto" }} />
         <span>~</span>
-        <input type="date" name="to" defaultValue={to} className="erp-input" style={{ width: "auto" }} />
+        <input aria-label="조회 종료일" type="date" name="to" defaultValue={to} className="erp-input" style={{ width: "auto" }} />
         <button type="submit" className="erp-btn">
           조회
         </button>

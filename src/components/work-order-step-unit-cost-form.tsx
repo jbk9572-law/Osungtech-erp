@@ -16,7 +16,7 @@ export function WorkOrderStepUnitCostForm({
   const [state, formAction, pending] = useActionState(setStepUnitCost, undefined);
 
   return (
-    <form className="erp-u-flex erp-u-items-center" action={formAction} style={{ gap: 4 }}>
+    <form className="erp-u-flex erp-u-items-center erp-u-gap-4" action={formAction}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="work_order_id" value={workOrderId} />
       <input
@@ -27,10 +27,10 @@ export function WorkOrderStepUnitCostForm({
         autoComplete="off"
         defaultValue={unitCost ?? ""}
         placeholder="단가"
-        className="erp-input erp-u-h-22"
-        style={{ fontSize: 11, padding: "0 6px", width: 80 }}
+        className="erp-input erp-u-h-22 erp-u-text-caption erp-u-pad-0-6"
+        style={{ width: 80 }}
       />
-      <button type="submit" className="erp-btn erp-u-h-22" style={{ padding: "1px 6px", fontSize: 11 }} disabled={pending}>
+      <button type="submit" className="erp-btn erp-btn-xs erp-u-pad-1-6 erp-u-text-caption" disabled={pending}>
         {pending ? "..." : "저장"}
       </button>
       <FormMessage state={state} />

@@ -24,7 +24,7 @@ export default async function PlatformPlansPage() {
         이용/이용 중지)는 고객사 상세 화면에서 별도로 관리합니다.
       </PageGuide>
 
-      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-s5">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">새 요금제 등록</span>
         </div>

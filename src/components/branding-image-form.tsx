@@ -40,7 +40,7 @@ function BrandingSlot({
           label="이미지 선택"
           onFileChange={(f) => setHasFile(!!f)}
         />
-        <button type="submit" disabled={pending || !hasFile} className="erp-btn" style={{ minWidth: 0 }}>
+        <button type="submit" disabled={pending || !hasFile} className="erp-btn erp-u-minw-0">
           {pending ? (
             <>
               <span className="erp-spinner" aria-hidden /> 업로드 중...
@@ -53,7 +53,7 @@ function BrandingSlot({
       {currentUrl && (
         <form action={resetAction} className="mt-2">
           <input type="hidden" name="slot" value={slot} />
-          <button type="submit" disabled={resetPending} className="erp-btn erp-btn-danger" style={{ minWidth: 0 }}>
+          <button type="submit" disabled={resetPending} className="erp-btn erp-btn-danger erp-u-minw-0">
             {resetPending ? "되돌리는 중..." : "기본값으로 되돌리기"}
           </button>
         </form>

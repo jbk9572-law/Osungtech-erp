@@ -103,8 +103,7 @@ export function SalesActivityForm({
             autoComplete="off"
             required
             defaultValue={initial?.subject ?? ""}
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
             placeholder="예: 9월 발주 관련 미팅"
           />
         </div>
@@ -137,8 +136,7 @@ export function SalesActivityForm({
             name="next_action_memo"
             autoComplete="off"
             defaultValue={initial?.next_action_memo ?? ""}
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
       </div>

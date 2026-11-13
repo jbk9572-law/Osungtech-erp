@@ -37,7 +37,7 @@ export default function ModalError({
         if (e.target === e.currentTarget) router.back();
       }}
     >
-      <div className="erp-modal erp-modal-md" style={{ minHeight: 0 }}>
+      <div className="erp-modal erp-modal-md erp-u-minh-0">
         <button
           type="button"
           className="erp-modal-window-close"
@@ -47,15 +47,15 @@ export default function ModalError({
           ✕
         </button>
         <div className="erp-modal-body erp-u-text-center" style={{ padding: "32px 20px" }}>
-          <p className="erp-u-bold erp-u-text" style={{ fontSize: 14, marginBottom: 8 }}>
+          <p className="erp-u-bold erp-u-text erp-u-text-lg erp-u-mb-8">
             이 항목을 불러오지 못했습니다.
           </p>
-          <p className="erp-u-muted" style={{ fontSize: 12, marginBottom: 20 }}>
+          <p className="erp-u-muted erp-u-text-compact erp-u-mb-20">
             일시적인 오류일 수 있습니다. 목록 화면은 그대로 있으니, 닫고 다시 열어보세요.
           </p>
           {(error.message || error.digest) && (
-            <p className="erp-u-muted"
-              style={{ fontSize: 11, fontFamily: "monospace", background: "var(--erp-bg-subtle)", border: "1px solid var(--erp-border)", borderRadius: 0, padding: "8px 12px", marginBottom: 20, wordBreak: "break-word", textAlign: "left" }}
+            <p className="erp-u-muted erp-u-text-caption erp-u-border erp-u-pad-8-12 erp-u-mb-20 erp-u-bg-bg-subtle erp-u-radius-0 erp-u-break-word erp-u-text-left"
+              style={{ fontFamily: "monospace" }}
             >
               {error.message || "(메시지 없음)"}
               {error.digest && (
@@ -66,7 +66,7 @@ export default function ModalError({
               )}
             </p>
           )}
-          <div className="erp-u-flex erp-u-gap-8" style={{ justifyContent: "center" }}>
+          <div className="erp-u-flex erp-u-gap-8 erp-u-justify-center">
             <button type="button" onClick={() => reset()} className="erp-btn erp-btn-primary">
               다시 시도
             </button>

@@ -1,4 +1,5 @@
 import { withPageTiming } from "@/lib/page-timing";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange, getMonthRange, shiftMonth } from "@/lib/date-presets";
@@ -20,7 +21,7 @@ import {
   type PaperCalcSizeRow,
 } from "@/modules/paper-calc/public";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 import { formatNumber } from "@/lib/format-number";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
@@ -152,8 +153,7 @@ async function PurchasesPage({
 
   const itemRows = (items ?? []).map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount =
-      item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
 
@@ -288,7 +288,7 @@ async function PurchasesPage({
     : (rawCarryoverItems ?? []);
   const carryoverItemRows = carryoverKeywordItems.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = item.purchase_orders?.tax_type === "과세" ? calcVat(supplyAmount) : 0;
+    const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
     return { ...item, supplyAmount, taxAmount };
   });
   const carryoverRows: DisplayRow[] = Object.values(
@@ -419,9 +419,7 @@ async function PurchasesPage({
   );
   const totalTax = filteredTotalsRows.reduce(
     (sum, row) =>
-      row.purchase_orders?.tax_type === "과세"
-        ? sum + calcVat(row.quantity * Number(row.unit_cost))
-        : sum,
+      sum + calcVatForTaxType(row.quantity * Number(row.unit_cost), row.purchase_orders?.tax_type),
     0,
   );
   const presets = getQuickDatePresets();
@@ -490,8 +488,7 @@ async function PurchasesPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="공급처명, 상품명, SKU, 규격, 관리번호, 배송방법, 메모, 비고"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -509,9 +506,9 @@ async function PurchasesPage({
       </PageGuide>
 
       <div className="erp-toolbar">
-        <Link href="/purchases/new" className="erp-btn erp-btn-primary">
+        <GuardedLink href="/purchases/new" className="erp-btn erp-btn-primary">
           F2 신규
-        </Link>
+        </GuardedLink>
         <ExcelDownloadLink
           href={exportHref}
           title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}
@@ -542,7 +539,7 @@ async function PurchasesPage({
       />
 
       {hasMore && (
-        <div className="erp-u-flex" style={{ justifyContent: "center", marginTop: 12 }}>
+        <div className="erp-u-flex erp-u-justify-center erp-u-mt-12">
           <Link href={moreHref} className="erp-btn">
             더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
           </Link>

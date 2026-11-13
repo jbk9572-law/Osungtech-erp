@@ -145,12 +145,12 @@ export default async function LeaveBalancesPage() {
                 <dd>{remaining}</dd>
               </div>
             </dl>
-            <div style={{ marginTop: 4 }}>
-              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>입사일</div>
+            <div className="erp-u-mt-4">
+              <div className="erp-u-muted erp-u-text-xs erp-u-mb-2">입사일</div>
               <HireDateForm action={setHireDate} userId={p.id} hireDate={p.hire_date} />
             </div>
-            <div style={{ marginTop: 4 }}>
-              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
+            <div className="erp-u-mt-4">
+              <div className="erp-u-muted erp-u-text-xs erp-u-mb-2">
                 {year}년 연차 총일수
               </div>
               <LeaveBalanceForm
@@ -161,8 +161,8 @@ export default async function LeaveBalancesPage() {
                 suggestedDays={suggestedDays}
               />
             </div>
-            <div style={{ marginTop: 4 }}>
-              <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>추가 부여</div>
+            <div className="erp-u-mt-4">
+              <div className="erp-u-muted erp-u-text-xs erp-u-mb-2">추가 부여</div>
               <LeaveGrantForm action={grantExtraLeave} userId={p.id} year={year} />
             </div>
           </div>
@@ -244,9 +244,9 @@ export default async function LeaveBalancesPage() {
                   <dd>{window!.expiryDate}</dd>
                 </div>
               </dl>
-              <div className="erp-u-flex erp-u-gap-8" style={{ marginTop: 4, flexWrap: "wrap" }}>
+              <div className="erp-u-flex erp-u-gap-8 erp-u-mt-4 erp-u-wrap">
                 <div>
-                  <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
+                  <div className="erp-u-muted erp-u-text-xs erp-u-mb-2">
                     1차 (기한 6개월 전)
                   </div>
                   <LeavePromotionButton
@@ -259,7 +259,7 @@ export default async function LeaveBalancesPage() {
                   />
                 </div>
                 <div>
-                  <div className="erp-u-muted" style={{ fontSize: "var(--erp-font-xs)", marginBottom: 2 }}>
+                  <div className="erp-u-muted erp-u-text-xs erp-u-mb-2">
                     2차 (기한 2개월 전)
                   </div>
                   {window!.secondNoticeDate <= today ? (

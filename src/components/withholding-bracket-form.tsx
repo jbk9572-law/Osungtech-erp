@@ -117,11 +117,11 @@ export function WithholdingBracketForm({
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ height: 30 }}>
+        <button type="submit" disabled={pending} className="erp-btn erp-btn-primary">
           {pending ? "저장 중..." : v.id ? "수정 저장" : "구간 추가"}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="erp-btn" style={{ height: 30 }}>
+          <button type="button" onClick={onCancel} className="erp-btn">
             취소
           </button>
         )}

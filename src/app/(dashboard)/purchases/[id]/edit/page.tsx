@@ -111,7 +111,7 @@ export default async function EditPurchasePage({
         <h1 className="mb-4 erp-h1">
           매입 거래 수정
         </h1>
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+        <p className="erp-grid-empty erp-u-mt-24">
           본인이 등록한 거래만 수정할 수 있습니다.
         </p>
       </div>
@@ -135,7 +135,7 @@ export default async function EditPurchasePage({
         <h1 className="erp-h1">
           매입 거래 수정
         </h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <PaperCalcNavLink href={`/paper-calc?purchaseOrderId=${id}`} className="erp-btn">
             모조지 계산
           </PaperCalcNavLink>

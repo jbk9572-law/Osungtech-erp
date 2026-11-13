@@ -25,20 +25,18 @@ export function PackageQtyHistoryHint({
   const latest = history[0];
 
   return (
-    <div className="text-xs" style={{ marginTop: 4 }}>
+    <div className="text-xs erp-u-mt-4">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="font-medium hover:underline"
-        style={{ color: "var(--erp-success)" }}
+        className="font-medium hover:underline erp-u-color-success"
       >
         ✓ 최근 포장수량 {formatNumber(latest.basePackageQty)} ({latest.changedAt}) · 히스토리{" "}
         {expanded ? "숨기기" : `${history.length}건 보기`}
       </button>
       {expanded && (
         <ul
-          className="mt-1 max-w-xs space-y-0.5 rounded-sm border p-2"
-          style={{ borderColor: "var(--erp-border)", background: "var(--erp-bg-subtle)" }}
+          className="mt-1 max-w-xs space-y-0.5 rounded-sm border p-2 erp-u-bc-border erp-u-bg-bg-subtle"
         >
           {history.slice(0, 5).map((entry, index) => (
             <li key={index} className="flex items-center justify-between gap-4 erp-u-muted">

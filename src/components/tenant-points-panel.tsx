@@ -73,7 +73,7 @@ export function TenantPointsPanel({
             style={{ width: 220 }}
             required
           />
-          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary" style={{ minWidth: 0 }}>
+          <button type="submit" disabled={pending} className="erp-btn erp-btn-primary erp-u-minw-0">
             {pending ? "처리 중..." : "적용"}
           </button>
         </div>

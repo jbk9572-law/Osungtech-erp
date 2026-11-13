@@ -91,14 +91,14 @@ export async function TodoDetailPanel({ id }: { id: string }) {
       <div className="mb-1 erp-detail-header-row">
         <h1 className="erp-h1">{allowManage ? "수정" : "상세"}</h1>
         {allowManage && (
-          <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <div className="erp-toolbar erp-u-mb-0">
             <DeleteButton action={deleteTodo} id={row.id} confirmMessage="이 할 일을 삭제하시겠습니까?" />
           </div>
         )}
       </div>
 
       <div className="erp-post-header">
-        <div className="erp-u-flex" style={{ gap: "var(--erp-space-2)", marginBottom: "var(--erp-space-3)" }}>
+        <div className="erp-u-flex erp-u-gap-s2 erp-u-mb-s3">
           <GridBadge tone="muted">{todoTypeLabel(row.todo_type, row.ship_date, row.due_date)}</GridBadge>
           {overdue && <GridBadge tone="danger">기한초과</GridBadge>}
           {row.done && <GridBadge tone="ok">완료</GridBadge>}

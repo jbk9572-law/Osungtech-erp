@@ -247,13 +247,13 @@ export default async function WorkOrderDetailPage({
                       </td>
                       <td>
                         {s.defect_hold ? (
-                          <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap" }}>
+                          <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap">
                             <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
                             <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
                             <WorkOrderStepDefectRejectButton id={s.id} workOrderId={workOrder.id} />
                           </div>
                         ) : (
-                          <div className="erp-u-flex erp-u-items-center erp-u-gap-6" style={{ flexWrap: "wrap" }}>
+                          <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap">
                             <WorkOrderProcessStepActions
                               id={s.id}
                               workOrderId={workOrder.id}
@@ -302,7 +302,7 @@ export default async function WorkOrderDetailPage({
                           {!(Number(s.defect_quantity) > 0) && !(Number(s.returned_quantity) > 0) && "-"}
                         </dd>
                       </div>
-                      <div style={{ gridColumn: "1 / -1" }}>
+                      <div className="erp-u-col-all">
                         <dt>담당</dt>
                         <dd>
                           <WorkOrderProcessStepAssignCell
@@ -316,7 +316,7 @@ export default async function WorkOrderDetailPage({
                         </dd>
                       </div>
                       {s.assignee_kind === "subcontractor" && (
-                        <div style={{ gridColumn: "1 / -1" }}>
+                        <div className="erp-u-col-all">
                           <dt>단가</dt>
                           <dd>
                             <WorkOrderStepUnitCostForm
@@ -328,7 +328,7 @@ export default async function WorkOrderDetailPage({
                         </div>
                       )}
                     </dl>
-                    <div className="erp-row-card-foot" style={{ flexWrap: "wrap" }}>
+                    <div className="erp-row-card-foot erp-u-wrap">
                       {s.defect_hold ? (
                         <>
                           <span className="erp-badge erp-badge-danger">입고 불량 보류</span>

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { encryptSecret } from "@/lib/mail/crypto";
+import { UNSAFE_MAIL_SERVER_MESSAGE, isSafeMailHost, isSafeMailPort } from "@/lib/mail/host-guard";
 import type { ImapClient } from "@/lib/mail/imap-client";
 import type { FormState } from "@/components/form-message";
 
@@ -41,9 +42,16 @@ function parseInput(formData: FormData): MailAccountInput {
 // supported" — official-documents 발송 액션에서 실제 발생 확인).
 // api/cron/mail-sync/route.ts와 같은 이유.
 export async function testMailConnection(_prevState: FormState, formData: FormData): Promise<FormState> {
+  // 로그인하지 않은 요청이 우리 서버를 통해 임의의 서버에 접속(포트 스캔 등)하지 못하게 한다.
+  const user = await getUser();
+  if (!user) return { error: "인증되지 않은 요청입니다." };
+
   const input = parseInput(formData);
   if (!input.username || !input.appPassword) {
     return { error: "아이디와 앱 비밀번호를 입력해주세요." };
+  }
+  if (!isSafeMailHost(input.imapHost) || !isSafeMailPort(input.imapPort)) {
+    return { error: UNSAFE_MAIL_SERVER_MESSAGE };
   }
 
   const { ImapClient } = await import("@/lib/mail/imap-client");
@@ -53,7 +61,9 @@ export async function testMailConnection(_prevState: FormState, formData: FormDa
     await client.login(input.username, input.appPassword);
     return { success: "연결에 성공했습니다. 아래 저장 버튼을 눌러 계정을 등록해주세요." };
   } catch (err) {
-    return { error: `연결에 실패했습니다: ${err instanceof Error ? err.message : String(err)}` };
+    // 내부 오류 원문(접속 거부/타임아웃 등)을 그대로 돌려주면 서버 쪽 네트워크 정보를 알려주게 된다.
+    console.error("메일 연결 테스트 실패:", err instanceof Error ? err.message : String(err));
+    return { error: "연결에 실패했습니다. 서버 주소·포트·아이디·앱 비밀번호를 확인해주세요." };
   } finally {
     if (client) await client.logout();
   }
@@ -66,6 +76,12 @@ export async function saveMailAccount(_prevState: FormState, formData: FormData)
   const input = parseInput(formData);
   if (!input.emailAddress || !input.username) {
     return { error: "이메일 주소와 아이디를 입력해주세요." };
+  }
+  if (
+    !isSafeMailHost(input.imapHost) || !isSafeMailPort(input.imapPort) ||
+    !isSafeMailHost(input.smtpHost) || !isSafeMailPort(input.smtpPort)
+  ) {
+    return { error: UNSAFE_MAIL_SERVER_MESSAGE };
   }
 
   const supabase = await createClient();

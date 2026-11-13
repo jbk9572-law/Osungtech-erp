@@ -195,8 +195,8 @@ export function SnsFiltechCanvas({
         src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
-        className="pointer-events-none opacity-90 mix-blend-multiply"
-        style={{ position: "absolute", left: pt(243), top: pt(722.88), width: pt(33.12), height: pt(30.24) }}
+        className="pointer-events-none opacity-90 mix-blend-multiply erp-u-absolute"
+        style={{ left: pt(243), top: pt(722.88), width: pt(33.12), height: pt(30.24) }}
       />
       <T x={319.08} y={730.4} size={9.96} bold>인수자</T>
       <TRight right={534.48 - 8} y={730.4} size={9.96}>(인)</TRight>
@@ -370,8 +370,8 @@ export function ZenithTechCanvas({
         src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
-        className="pointer-events-none opacity-90 mix-blend-multiply"
-        style={{ position: "absolute", left: pt(243), top: pt(724.56), width: pt(33.12), height: pt(30.24) }}
+        className="pointer-events-none opacity-90 mix-blend-multiply erp-u-absolute"
+        style={{ left: pt(243), top: pt(724.56), width: pt(33.12), height: pt(30.24) }}
       />
       <T x={319.08} y={732.08} size={9.96} bold>인수자</T>
       <TRight right={534.48 - 8} y={732.08} size={9.96}>(인)</TRight>
@@ -540,8 +540,8 @@ export function KtSolutionCanvas({
         src={company?.seal_image_url || "/branding/sample-company-seal.png"}
         alt=""
         aria-hidden
-        className="pointer-events-none opacity-90 mix-blend-multiply"
-        style={{ position: "absolute", left: pt(243), top: pt(722.4), width: pt(33.12), height: pt(30.24) }}
+        className="pointer-events-none opacity-90 mix-blend-multiply erp-u-absolute"
+        style={{ left: pt(243), top: pt(722.4), width: pt(33.12), height: pt(30.24) }}
       />
       <T x={319.08} y={729.92} size={9.96} bold>인수자</T>
       <TRight right={534.48 - 8} y={729.92} size={9.96}>(인)</TRight>

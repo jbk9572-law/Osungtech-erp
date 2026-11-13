@@ -21,7 +21,7 @@ export default async function DocumentPrintPage({
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px", fontFamily: "serif" }}>
+    <div className="erp-u-mx-auto" style={{ maxWidth: 720, padding: "40px 24px", fontFamily: "serif" }}>
       <PrintButton />
       <h1 className="erp-u-text-center erp-u-bold" style={{ fontSize: 20, marginBottom: 32, letterSpacing: 4 }}>
         {doc.title}

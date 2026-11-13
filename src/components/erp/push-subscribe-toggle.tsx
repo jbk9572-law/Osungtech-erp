@@ -80,7 +80,7 @@ export function PushSubscribeToggle() {
       <button type="button" onClick={toggle} disabled={busy}>
         {subscribed ? "🔔 브라우저 알림 끄기" : "🔕 브라우저 알림 켜기"}
       </button>
-      {error && <span className="erp-u-danger" style={{ fontSize: 11 }}>{error}</span>}
+      {error && <span className="erp-u-danger erp-u-text-caption">{error}</span>}
     </div>
   );
 }

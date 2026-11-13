@@ -35,17 +35,13 @@ export function PendingPaperCalcRow({
   dashAfterUnit?: boolean;
 }) {
   return (
-    <tr style={{ background: "var(--erp-info-bg)" }}>
+    <tr className="erp-u-bg-info-bg">
       <td>
         {tg0Product ? (
           <>
             {tg0Product.name}
             <span
-              className="ml-1 rounded px-1 text-[10.5px]"
-              style={{
-                background: "var(--erp-info-border)",
-                color: "var(--erp-info-text)",
-              }}
+              className="ml-1 rounded px-1 text-[10.5px] erp-u-bg-info-border erp-u-color-info-text"
             >
               자동
             </span>
@@ -72,8 +68,7 @@ export function PendingPaperCalcRow({
       <td className="num">
         <button
           type="button"
-          className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-          style={{ minWidth: 0 }}
+          className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
           onClick={onCancel}
         >
           취소
@@ -95,7 +90,7 @@ export function PaperCalcSizeLineRows({
   return (
     <>
       {lines.map((line, i) => (
-        <tr key={`paper-calc-size-${i}`} style={{ background: "var(--erp-bg-subtle)" }}>
+        <tr className="erp-u-bg-bg-subtle" key={`paper-calc-size-${i}`}>
           <td className="erp-u-muted" colSpan={3} style={{ paddingLeft: 24 }}>
             ㄴ {line}
           </td>

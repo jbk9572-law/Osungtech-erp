@@ -140,8 +140,7 @@ export default async function PurchaseQuoteRequestsPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="매입처명, 메모"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -168,7 +167,7 @@ export default async function PurchaseQuoteRequestsPage({
                 className={`erp-split-list-row${r.id === selectedId ? " active" : ""}`}
               >
                 {r.target_supplier_ids.map((sid) => supplierNameById.get(sid) ?? "-").join(", ")}
-                <span style={{ marginLeft: 6 }}>
+                <span className="erp-u-ml-6">
                   <GridBadge tone={r.status === "closed" ? "ok" : "warn"}>
                     {r.status === "closed" ? "확정완료" : "비교중"}
                   </GridBadge>
@@ -187,7 +186,7 @@ export default async function PurchaseQuoteRequestsPage({
             )}
           </div>
           {hasMore && (
-            <div style={{ padding: 8, borderTop: "1px solid var(--erp-border)" }}>
+            <div className="erp-u-p-8 erp-u-bt-border">
               <Link href={moreHref} className="erp-btn" style={{ width: "100%" }}>
                 더보기 (다음 {formatNumber(LIST_LIMIT_STEP)}줄)
               </Link>

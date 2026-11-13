@@ -145,7 +145,7 @@ export function ProductForm({
         onChange={(e) => setSpec(e.target.value)}
         className="erp-input"
       />
-      <div className="erp-u-flex" style={{ gap: 4 }}>
+      <div className="erp-u-flex erp-u-gap-4">
         {unitMode === "preset" ? (
           <ErpSelect
             name="unit"
@@ -163,14 +163,12 @@ export function ProductForm({
             onChange={(e) => setUnitValue(e.target.value)}
             placeholder="단위 직접입력"
             aria-label="단위 직접입력"
-            className="erp-input"
-            style={{ flex: 1 }}
+            className="erp-input erp-u-flex-1"
           />
         )}
         <button
           type="button"
-          className="erp-btn erp-u-pad-0-8"
-          style={{ minWidth: 0 }}
+          className="erp-btn erp-u-pad-0-8 erp-u-minw-0"
           onClick={() => setUnitMode((m) => (m === "preset" ? "custom" : "preset"))}
         >
           {unitMode === "preset" ? "직접입력" : "목록"}
@@ -219,8 +217,7 @@ export function ProductForm({
           min="0"
           value={basePackageQty}
           onChange={(e) => setBasePackageQty(e.target.value === "" ? "" : Number(e.target.value))}
-          className="erp-input"
-          style={{ width: "100%" }}
+          className="erp-input erp-u-w-full"
           title="포장(박스) 1개에 들어가는 기본 수량. 예: 1박스 = 50ea면 50을 입력. KG처럼 담기는 양에 따라 달라지는 품목은 아래 이력에서 이전 값으로 다시 채울 수 있습니다."
         />
         <PackageQtyHistoryHint history={packageQtyHistory} onSelect={setBasePackageQty} />
@@ -228,8 +225,8 @@ export function ProductForm({
       {parentCandidates.length > 0 && (
         <div className="md:col-span-2">
           <input type="hidden" name="parent_product_id" value={parentProductId} />
-          <div className="erp-u-flex" style={{ gap: 4 }}>
-            <div style={{ flex: 1 }}>
+          <div className="erp-u-flex erp-u-gap-4">
+            <div className="erp-u-flex-1">
               <ProductSearchSelect
                 products={parentCandidates}
                 value={parentProductId}
@@ -240,8 +237,7 @@ export function ProductForm({
             {parentProductId && (
               <button
                 type="button"
-                className="erp-btn erp-u-pad-0-8"
-                style={{ minWidth: 0 }}
+                className="erp-btn erp-u-pad-0-8 erp-u-minw-0"
                 onClick={() => setParentProductId("")}
               >
                 해제

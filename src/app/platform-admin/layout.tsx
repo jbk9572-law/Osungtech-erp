@@ -16,7 +16,7 @@ export default async function PlatformAdminLayout({ children }: { children: Reac
   }
 
   return (
-    <div className="erp erp-comm-shell" style={{ minHeight: "100vh", background: "var(--erp-bg)" }}>
+    <div className="erp erp-comm-shell erp-u-bg-page erp-u-minh-screen">
       {/* (dashboard)/portal 레이아웃은 ErpShell 안에서 이 컴포넌트를 공용으로
           쓰는데, platform-admin은 ErpShell 없이 직접 래퍼를 그리다 보니
           이동 시 아무 피드백도 없었다 — 클릭/제출을 전역으로 감지해 200ms

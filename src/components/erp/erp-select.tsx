@@ -125,13 +125,8 @@ export function ErpSelect({
         createPortal(
           <ul
             role="listbox"
-            className="erp-select-popup"
-            style={{
-              position: "fixed",
-              top: dropdownRect.top,
-              left: dropdownRect.left,
-              width: dropdownRect.width,
-            }}
+            className="erp-select-popup erp-u-fixed"
+            style={{ top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width }}
           >
             {options.map((o, i) => (
               <li key={o.value}>

@@ -24,7 +24,7 @@ export function DeleteTenantForm({ tenantId, tenantName }: { tenantId: string; t
         </div>
 
         {!code ? (
-          <button type="button" onClick={regenerate} className="erp-btn erp-btn-danger" style={{ alignSelf: "flex-start" }}>
+          <button type="button" onClick={regenerate} className="erp-btn erp-btn-danger erp-u-self-start">
             삭제 진행
           </button>
         ) : (
@@ -49,10 +49,10 @@ export function DeleteTenantForm({ tenantId, tenantName }: { tenantId: string; t
               />
             </label>
             <div className="flex gap-2">
-              <button type="submit" disabled={pending || !confirmMatches} className="erp-btn erp-btn-danger" style={{ minWidth: 0 }}>
+              <button type="submit" disabled={pending || !confirmMatches} className="erp-btn erp-btn-danger erp-u-minw-0">
                 {pending ? "삭제 중..." : "영구 삭제"}
               </button>
-              <button type="button" onClick={reset} className="erp-btn" style={{ minWidth: 0 }}>
+              <button type="button" onClick={reset} className="erp-btn erp-u-minw-0">
                 취소
               </button>
             </div>

@@ -350,8 +350,7 @@ export function PaperCalcClient({
               <div className="ml-auto flex items-center pr-2">
                 <button
                   type="button"
-                  className="erp-btn erp-btn-primary erp-u-h-26"
-                  style={{ minWidth: 0, padding: "0 10px" }}
+                  className="erp-btn erp-btn-primary erp-btn-sm erp-u-minw-0 erp-u-pad-0-10"
                   onClick={() => setShowNewCalcForm(true)}
                 >
                   + 새로 계산하기
@@ -454,8 +453,7 @@ export function PaperCalcClient({
                         <td>
                           <button
                             type="button"
-                            className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-                            style={{ minWidth: 0 }}
+                            className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
                             onClick={() => removeRow(row.key)}
                             disabled={rows.length <= 1}
                           >
@@ -485,8 +483,7 @@ export function PaperCalcClient({
               </div>
 
               <div
-                className="flex flex-wrap items-end gap-4 border-t pt-3"
-                style={{ borderColor: "var(--erp-border)" }}
+                className="flex flex-wrap items-end gap-4 border-t pt-3 erp-u-bc-border"
               >
                 <div className="erp-field">
                   <label htmlFor="pc-paper-w">
@@ -729,26 +726,23 @@ export function PaperCalcClient({
                   <div className="ml-auto flex items-center gap-1 pr-2">
                     <button
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-                      style={{ minWidth: 0 }}
+                      className="erp-btn erp-btn-sm erp-u-minw-0"
                       onClick={() => setPage(0)}
                       disabled={currentPage === 0}
                     >
                       처음
                     </button>
-                    <button
+                    <button aria-label="이전"
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-                      style={{ minWidth: 0 }}
+                      className="erp-btn erp-btn-sm erp-u-minw-0"
                       onClick={() => setPage((p) => p - 1)}
                       disabled={currentPage === 0}
                     >
                       ◀
                     </button>
-                    <button
+                    <button aria-label="다음"
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-                      style={{ minWidth: 0 }}
+                      className="erp-btn erp-btn-sm erp-u-minw-0"
                       onClick={() => setPage((p) => p + 1)}
                       disabled={currentPage + 1 >= totalPages}
                     >
@@ -756,8 +750,7 @@ export function PaperCalcClient({
                     </button>
                     <button
                       type="button"
-                      className="erp-btn erp-u-h-26 erp-u-pad-0-8"
-                      style={{ minWidth: 0 }}
+                      className="erp-btn erp-btn-sm erp-u-minw-0"
                       onClick={() => setPage(totalPages - 1)}
                       disabled={currentPage + 1 >= totalPages}
                     >
@@ -894,8 +887,7 @@ function SavedCalcRow({
             )}
             <button
               type="submit"
-              className="erp-btn erp-btn-danger erp-u-h-26 erp-u-pad-0-8"
-              style={{ minWidth: 0 }}
+              className="erp-btn erp-btn-danger erp-btn-sm erp-u-minw-0"
               disabled={pending}
               onBlur={confirmDelete.reset}
             >
@@ -953,11 +945,8 @@ export function DashboardCards({
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded p-3"
-          style={{
-            background: card.bg ?? DIAGRAM_COLORS.cardBg,
-            border: "1px solid var(--erp-border)",
-          }}
+          className="rounded p-3 erp-u-border"
+          style={{ background: card.bg ?? DIAGRAM_COLORS.cardBg }}
         >
           <div className="text-xs erp-u-muted">
             {card.label}
@@ -1015,11 +1004,8 @@ export function BatchCard({
 
   return (
     <div
-      className="rounded border p-3"
-      style={{
-        borderColor: "var(--erp-border)",
-        background: DIAGRAM_COLORS.cardBg,
-      }}
+      className="rounded border p-3 erp-u-bc-border"
+      style={{ background: DIAGRAM_COLORS.cardBg }}
     >
       <div className="text-center text-sm font-bold">배치 {index + 1}</div>
       <div
@@ -1027,13 +1013,9 @@ export function BatchCard({
       >
         {layout.paperW} × {layout.paperH} mm
       </div>
-      <svg
+      <svg className="erp-u-w-full"
         viewBox={`0 0 ${layout.paperW} ${layout.paperH}`}
-        style={{
-          width: "100%",
-          height: 300,
-          background: DIAGRAM_COLORS.canvasBg,
-        }}
+        style={{ height: 300, background: DIAGRAM_COLORS.canvasBg }}
       >
         <rect
           x={0}
@@ -1044,7 +1026,7 @@ export function BatchCard({
           stroke={DIAGRAM_COLORS.paperStroke}
           strokeWidth={2}
         />
-        <g style={{ pointerEvents: "none" }}>
+        <g className="erp-u-pe-none">
           {gridLines.map((l, i) => (
             <line
               key={i}
@@ -1190,14 +1172,8 @@ export function BatchCard({
       <div className="mt-1.5 flex flex-col gap-0.5 text-xs">
         {legend.map(([name, { color, count }]) => (
           <div key={name} className="flex items-center gap-1.5">
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: color,
-                display: "inline-block",
-              }}
+            <span className="erp-u-radius-circle erp-u-inline-block"
+              style={{ width: 10, height: 10, background: color }}
             />
             {name} · {formatNumber(count)}매
           </div>

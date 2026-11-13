@@ -71,7 +71,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
             }}
             className={`erp-cat-item${tenant === name ? " active" : ""}`}
           >
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+            <span className="erp-u-overflow-hidden erp-u-ellipsis erp-u-nowrap">{name}</span>
             <span className="cnt">{count}</span>
           </button>
         ))}
@@ -96,7 +96,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
                 <span className="erp-u-bold">
                   #{t.doc_no} {t.subject}
                 </span>
-                <span style={{ marginLeft: 6 }}>
+                <span className="erp-u-ml-6">
                   <GridBadge tone={status.tone}>{status.label}</GridBadge>
                 </span>
                 <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">
@@ -118,7 +118,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
         {selected ? (
           <div>
             <div className="mb-1 flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 erp-h1" style={{ fontSize: "var(--erp-font-lg)" }}>
+              <h2 className="flex items-center gap-2 erp-h1 erp-u-text-lg">
                 #{selected.doc_no} {selected.subject}
               </h2>
               <GridBadge tone={resolveStatusLabel(STATUS_LABEL, selected.status).tone}>

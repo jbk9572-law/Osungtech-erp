@@ -62,6 +62,7 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
         .select("id, doc_no, order_date, payment_method, is_return, sales_order_items(quantity, unit_price)")
         .eq("customer_id", customerId)
         .order("order_date", { ascending: true })
+        .order("id", { ascending: true })
         .range(from, to),
     ),
     fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
@@ -71,6 +72,7 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
           .select("id, paid_at, amount, method, memo")
           .eq("customer_id", customerId)
           .order("paid_at", { ascending: false })
+          .order("id", { ascending: false })
           .range(from, to),
     ),
   ]);
@@ -117,6 +119,7 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
         .select("id, doc_no, purchase_date, payment_method, purchase_order_items(quantity, unit_cost)")
         .eq("supplier_id", supplierId)
         .order("purchase_date", { ascending: true })
+        .order("id", { ascending: true })
         .range(from, to),
     ),
     fetchAllRows<{ id: string; paid_at: string; amount: string | number; method: string | null; memo: string | null }>(
@@ -126,6 +129,7 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
           .select("id, paid_at, amount, method, memo")
           .eq("supplier_id", supplierId)
           .order("paid_at", { ascending: false })
+          .order("id", { ascending: false })
           .range(from, to),
     ),
   ]);
@@ -264,6 +268,7 @@ export async function getSubcontractorBalance(supabase: SupabaseServerClient, su
           .select("id, paid_at, amount, method, memo")
           .eq("subcontractor_id", subcontractorId)
           .order("paid_at", { ascending: false })
+          .order("id", { ascending: false })
           .range(from, to),
     ),
   ]);

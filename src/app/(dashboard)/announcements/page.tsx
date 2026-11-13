@@ -99,7 +99,7 @@ export default async function AnnouncementsPage({
       />
       <div className="erp-page-toolbar erp-detail-header-row">
         <h1 className="erp-h1">공지사항</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           {isManagerOrAdmin && (
             <Link href={newHref} className="erp-btn erp-btn-primary">
               F2 글쓰기
@@ -113,7 +113,7 @@ export default async function AnnouncementsPage({
         </div>
       </div>
 
-      <div className="erp-kpi-row" style={{ marginBottom: "var(--erp-space-4)" }}>
+      <div className="erp-kpi-row erp-u-mb-s4">
         <div className="erp-home-panel erp-kpi-card">
           <div className="erp-kpi-label">전체 공지</div>
           <div className="erp-kpi-value">{formatNumber(totalCount)}건</div>

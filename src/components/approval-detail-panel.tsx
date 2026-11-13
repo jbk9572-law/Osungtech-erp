@@ -183,7 +183,7 @@ export async function ApprovalDetailPanel({
           <span className="erp-detail-tab active">결재선</span>
         </div>
         <div className="erp-detail-body">
-          <div className="m-steps flex flex-wrap gap-2" style={{ marginBottom: "var(--erp-space-4)" }}>
+          <div className="m-steps flex flex-wrap gap-2 erp-u-mb-s4">
             {approverSteps.map((s) => {
               const tone = s.status === "approved" ? "ok" : s.status === "rejected" ? "danger" : "muted";
               const decidedByDelegate = s.decided_by && s.decided_by !== s.approver_id;
@@ -208,12 +208,12 @@ export async function ApprovalDetailPanel({
                     </span>
                   )}
                   {pendingDelegation && (
-                    <span className="text-xs" style={{ color: "var(--erp-info-text)" }}>
+                    <span className="text-xs erp-u-color-info-text">
                       (지금 {pendingDelegation.profiles?.full_name ?? "대리인"}이 대리 결재 중)
                     </span>
                   )}
                   {s.comment && (
-                    <span className="erp-u-muted" style={{ fontSize: 12 }}>&quot;{s.comment}&quot;</span>
+                    <span className="erp-u-muted erp-u-text-compact">&quot;{s.comment}&quot;</span>
                   )}
                 </div>
               );

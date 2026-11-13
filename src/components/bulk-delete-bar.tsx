@@ -36,30 +36,28 @@ export function BulkDeleteBar({
   return (
     <form
       action={formAction}
-      className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm"
-      style={{ borderColor: "var(--erp-border)", background: "var(--erp-selected)" }}
+      className="mb-2 flex flex-wrap items-center gap-2 rounded-sm border p-2 text-sm erp-u-bc-border erp-u-bg-selected"
     >
       <input type="hidden" name="ids" value={JSON.stringify(selectedIds)} />
       <span className="erp-u-semibold">{selectedIds.length}건 선택됨</span>
       {namePreview && <span className="erp-u-muted">({namePreview})</span>}
       {warningText && <span className="erp-u-danger">{warningText}</span>}
-      <label className="erp-u-items-center erp-u-gap-6" style={{ display: "inline-flex" }}>
+      <label className="erp-u-items-center erp-u-gap-6 erp-u-inline-flex">
         확인 코드 <strong>{code}</strong> 입력
         <input
           type="text"
           inputMode="numeric"
           value={confirmText}
           onChange={(e) => onConfirmTextChange(e.target.value)}
-          className="erp-input erp-u-h-24"
-          style={{ width: 56, padding: "0 6px", fontSize: 11.5 }}
+          className="erp-input erp-u-h-24 erp-u-pad-0-6 erp-u-text-sm"
+          style={{ width: 56 }}
           aria-label={`삭제를 확인하려면 ${code}를 입력하세요`}
         />
       </label>
       <button
         type="submit"
         disabled={pending || !confirmMatches}
-        className="erp-btn erp-btn-danger"
-        style={{ minWidth: 0 }}
+        className="erp-btn erp-btn-danger erp-u-minw-0"
       >
         {pending ? "삭제 중..." : "선택 삭제"}
       </button>

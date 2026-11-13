@@ -36,33 +36,18 @@ export type Geom = { x: number; y: number; w: number; h: number };
 
 export function Fill({ x, y, w, h }: Geom) {
   return (
-    <div
+    <div className="erp-u-absolute"
       aria-hidden
-      style={{
-        position: "absolute",
-        left: pt(x),
-        top: pt(y),
-        width: pt(w),
-        height: pt(h),
-        background: "#d0cece",
-      }}
+      style={{ left: pt(x), top: pt(y), width: pt(w), height: pt(h), background: "#d0cece" }}
     />
   );
 }
 
 export function Line({ x, y, w, h }: Geom) {
   return (
-    <div
+    <div className="erp-u-absolute"
       aria-hidden
-      style={{
-        position: "absolute",
-        left: pt(x),
-        top: pt(y),
-        width: pt(Math.max(w, 0.75)),
-        height: pt(Math.max(h, 0.75)),
-        border: "0.75pt solid #000",
-        boxSizing: "border-box",
-      }}
+      style={{ left: pt(x), top: pt(y), width: pt(Math.max(w, 0.75)), height: pt(Math.max(h, 0.75)), border: "0.75pt solid #000", boxSizing: "border-box" }}
     />
   );
 }
@@ -84,19 +69,8 @@ export function T({
   width?: number;
 }) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: pt(x),
-        top: pt(y),
-        width: width != null ? pt(width) : undefined,
-        fontSize: pt(size),
-        fontWeight: bold ? 700 : 400,
-        fontFamily: FONT,
-        color: "#000",
-        lineHeight: 1.2,
-        whiteSpace: width ? "normal" : "nowrap",
-      }}
+    <div className="erp-u-absolute"
+      style={{ left: pt(x), top: pt(y), width: width != null ? pt(width) : undefined, fontSize: pt(size), fontWeight: bold ? 700 : 400, fontFamily: FONT, color: "#000", lineHeight: 1.2, whiteSpace: width ? "normal" : "nowrap" }}
     >
       {children}
     </div>
@@ -123,21 +97,8 @@ export function TCenter({
   lineHeight?: number;
 }) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: pt(centerX),
-        top: pt(y),
-        width: width != null ? pt(width) : undefined,
-        transform: "translateX(-50%)",
-        textAlign: width != null ? "center" : undefined,
-        fontSize: pt(size),
-        fontWeight: bold ? 700 : 400,
-        fontFamily: FONT,
-        color: "#000",
-        lineHeight,
-        whiteSpace: width != null ? "normal" : "nowrap",
-      }}
+    <div className="erp-u-absolute"
+      style={{ left: pt(centerX), top: pt(y), width: width != null ? pt(width) : undefined, transform: "translateX(-50%)", textAlign: width != null ? "center" : undefined, fontSize: pt(size), fontWeight: bold ? 700 : 400, fontFamily: FONT, color: "#000", lineHeight, whiteSpace: width != null ? "normal" : "nowrap" }}
     >
       {children}
     </div>
@@ -159,17 +120,8 @@ export function TRight({
   children: ReactNode;
 }) {
   return (
-    <div
-      style={{
-        position: "absolute",
-        right: pt(PAGE_W - right),
-        top: pt(y),
-        fontSize: pt(size),
-        fontWeight: bold ? 700 : 400,
-        fontFamily: FONT,
-        color: "#000",
-        whiteSpace: "nowrap",
-      }}
+    <div className="erp-u-absolute erp-u-nowrap"
+      style={{ right: pt(PAGE_W - right), top: pt(y), fontSize: pt(size), fontWeight: bold ? 700 : 400, fontFamily: FONT, color: "#000" }}
     >
       {children}
     </div>

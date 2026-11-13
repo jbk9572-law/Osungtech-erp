@@ -26,7 +26,7 @@ export function MailAttachmentChip({
 
   if (!url) {
     return (
-      <span className="erp-btn erp-u-items-center" style={{ opacity: 0.5, display: "inline-flex", gap: 5 }}>
+      <span className="erp-btn erp-u-items-center erp-u-inline-flex" style={{ opacity: 0.5, gap: 5 }}>
         <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
           <PaperclipIcon />
         </span>
@@ -42,8 +42,8 @@ export function MailAttachmentChip({
     <>
       <button
         type="button"
-        className="erp-btn erp-u-items-center"
-        style={{ display: "inline-flex", gap: 5 }}
+        className="erp-btn erp-u-items-center erp-u-inline-flex"
+        style={{ gap: 5 }}
         onClick={() => setOpen(true)}
       >
         <span className="erp-icon" style={{ width: 13, height: 13 }} aria-hidden>
@@ -59,23 +59,23 @@ export function MailAttachmentChip({
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
-          <div className="erp-modal erp-modal-lg" style={{ minHeight: 0 }}>
+          <div className="erp-modal erp-modal-lg erp-u-minh-0">
             <button type="button" className="erp-modal-window-close print:hidden" onClick={() => setOpen(false)} aria-label="닫기">
               ✕
             </button>
             <div className="erp-modal-title">
               <span>{filename}</span>
-              <a href={url} download={filename} className="erp-btn erp-u-h-24" style={{ padding: "1px 10px", fontSize: 11 }}>
+              <a href={url} download={filename} className="erp-btn erp-btn-xs erp-u-pad-1-10 erp-u-text-caption">
                 다운로드
               </a>
             </div>
-            <div className="erp-modal-body" style={{ flex: 1, minHeight: 0, padding: isPdf ? 0 : undefined }}>
+            <div className="erp-modal-body erp-u-flex-1 erp-u-minh-0" style={{ padding: isPdf ? 0 : undefined }}>
               {isPdf ? (
-                <iframe title={filename} src={url} style={{ width: "100%", height: "100%", minHeight: "75vh", border: "none" }} />
+                <iframe className="erp-u-w-full erp-u-border-none erp-u-h-full" title={filename} src={url} style={{ minHeight: "75vh" }} />
               ) : isImage ? (
-                <img src={url} alt={filename} style={{ maxWidth: "100%", display: "block", margin: "0 auto" }} />
+                <img className="erp-u-mx-auto" src={url} alt={filename} style={{ maxWidth: "100%", display: "block" }} />
               ) : (
-                <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+                <p className="erp-grid-empty erp-u-mt-24">
                   이 파일 형식은 화면에서 미리볼 수 없습니다. 다운로드해 확인해주세요.
                 </p>
               )}

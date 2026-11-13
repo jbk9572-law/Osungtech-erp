@@ -49,7 +49,7 @@ export function OrderDetailPanel({
           품목내역{selection ? ` — ${selection.dateLabel} ${selection.label}` : ""}
         </div>
       </div>
-      <div className="erp-detail-body" style={{ padding: 0 }}>
+      <div className="erp-detail-body erp-u-p-0">
         <div className="erp-grid-wrap has-card-view">
           <table className="erp-grid">
             <thead>
@@ -113,9 +113,9 @@ export function OrderDetailPanel({
                     </tr>
                     {item.paperCalcSizeLines?.map((line, lineIndex) => (
                       <tr key={`size-${lineIndex}`}>
-                        <td className="erp-u-muted"
+                        <td className="erp-u-muted erp-u-text-sm"
                           colSpan={8}
-                          style={{ paddingLeft: 26, fontSize: 11.5 }}
+                          style={{ paddingLeft: 26 }}
                         >
                           ㄴ {line}
                         </td>
@@ -127,7 +127,7 @@ export function OrderDetailPanel({
             </tbody>
             {selection && selection.items.length > 0 && (
               <tfoot>
-                <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+                <tr className="erp-u-bold erp-u-bg-page">
                   <td colSpan={3}>합계 ({selection.items.length}건)</td>
                   <td className="num">{formatNumber(totalQuantity)}</td>
                   <td />
@@ -194,15 +194,14 @@ export function OrderDetailPanel({
                       </dd>
                     </div>
                     {item.remark && (
-                      <div style={{ gridColumn: "1 / -1" }}>
+                      <div className="erp-u-col-all">
                         <dt>비고</dt>
                         <dd>{item.remark}</dd>
                       </div>
                     )}
                   </dl>
                   {!!item.paperCalcSizeLines?.length && (
-                    <div className="erp-u-muted"
-                      style={{ marginTop: 2, fontSize: "var(--erp-font-xs)" }}
+                    <div className="erp-u-muted erp-u-mt-2 erp-u-text-xs"
                     >
                       {item.paperCalcSizeLines.map((line, lineIndex) => (
                         <div key={lineIndex}>ㄴ {line}</div>

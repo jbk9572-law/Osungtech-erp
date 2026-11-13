@@ -44,14 +44,13 @@ export function LeaveBalanceForm({
           onClick={() => {
             if (inputRef.current) inputRef.current.value = String(suggestedDays);
           }}
-          className="erp-btn erp-u-pad-0-8"
-          style={{ minWidth: 0, height: 28, fontSize: 11 }}
+          className="erp-btn erp-u-pad-0-8 erp-u-minw-0 erp-u-text-caption erp-u-h-28"
           title="입사일 기준 법정 연차 자동계산값을 입력칸에 채웁니다"
         >
           자동계산 {suggestedDays}일 적용
         </button>
       )}
-      <button type="submit" disabled={pending} className="erp-btn" style={{ minWidth: 0, height: 28, padding: "0 10px" }}>
+      <button type="submit" disabled={pending} className="erp-btn erp-u-minw-0 erp-u-pad-0-10 erp-u-h-28">
         {pending ? "저장 중..." : "저장"}
       </button>
       <FormMessage state={state} />

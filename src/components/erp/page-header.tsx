@@ -104,7 +104,7 @@ export function DetailPageHeader({
       <div className="mb-1 erp-detail-header-row">
         <h1 className="flex items-center gap-2 erp-h1">{title}</h1>
         {actions && (
-          <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+          <div className="erp-toolbar erp-u-mb-0">
             {actions}
           </div>
         )}
@@ -119,7 +119,7 @@ export function DetailPageHeader({
 // marginBottom:8}}을 복붙하고 있던 패턴(헌법검사에서 발견)을 공용화했다.
 export function DetailInfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-gap-8" style={{ minHeight: 26, marginBottom: 8 }}>
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-mb-8" style={{ minHeight: 26 }}>
       <span className="erp-u-muted" style={{ width: 72 }}>{label}</span>
       <span>{children}</span>
     </div>

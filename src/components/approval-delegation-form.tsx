@@ -39,7 +39,7 @@ export function ApprovalDelegationForm({
       ) : (
         <div className="erp-field">
           <label>위임자</label>
-          <input className="erp-input w-full" value="본인" disabled readOnly />
+          <input aria-label="위임자(본인)" className="erp-input w-full" value="본인" disabled readOnly />
         </div>
       )}
       <div className="erp-field">

@@ -29,8 +29,7 @@ export function LeaveGrantForm({
     return (
       <button
         type="button"
-        className="erp-btn erp-u-h-24 erp-u-pad-0-8"
-        style={{ minWidth: 0, fontSize: 11 }}
+        className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-caption"
         onClick={() => setOpen(true)}
       >
         + 추가 부여
@@ -50,21 +49,19 @@ export function LeaveGrantForm({
           min="0.5"
           placeholder="부여 일수"
           required
-          className="erp-input erp-u-h-26"
-          style={{ width: 90, fontSize: 11.5 }}
+          className="erp-input erp-u-h-26 erp-u-text-sm"
+          style={{ width: 90 }}
         />
         <button
           type="submit"
           disabled={pending}
-          className="erp-btn erp-btn-primary erp-u-h-24"
-          style={{ minWidth: 0, padding: "0 10px", fontSize: 11 }}
+          className="erp-btn erp-btn-primary erp-btn-xs erp-u-minw-0 erp-u-pad-0-10 erp-u-text-caption"
         >
           {pending ? "저장 중..." : "부여"}
         </button>
         <button
           type="button"
-          className="erp-btn erp-u-h-24 erp-u-pad-0-8"
-          style={{ minWidth: 0, fontSize: 11 }}
+          className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-text-caption"
           onClick={() => setOpen(false)}
         >
           취소
@@ -76,8 +73,7 @@ export function LeaveGrantForm({
         autoComplete="off"
         placeholder="부여 사유 (필수)"
         required
-        className="erp-input erp-u-h-26"
-        style={{ fontSize: 11.5 }}
+        className="erp-input erp-u-h-26 erp-u-text-sm"
       />
       <FormMessage state={state} />
     </form>

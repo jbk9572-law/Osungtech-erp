@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { canManageOrder } from "@/lib/can-manage-order";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { issueMockTaxInvoice } from "@/lib/mock-providers/mock-send";
 import type { FormState } from "@/components/form-message";
 
@@ -28,6 +28,43 @@ const MODIFICATION_REASONS = [
   "goods_returned",
   "export_lc_after",
 ] as const;
+
+// 브라우저가 보낸 금액을 그대로 저장하지 않고 서버에서 품목 합계와 맞는지 확인한다 — 헤더와 품목 합이
+// 어긋난 계산서가 저장되는 것을 막는다(폼은 품목 합계로 헤더 금액을 채우므로 정상 입력은 항상 맞는다).
+function validateTaxInvoiceAmounts(
+  items: ItemInput[],
+  header: { supplyAmount: number; taxAmount: number; totalAmount: number },
+): string | null {
+  const finite = (n: unknown) => typeof n === "number" && Number.isFinite(n);
+  for (const item of items) {
+    if (!item || !finite(item.quantity) || !finite(item.unitPrice) || !finite(item.supplyAmount) || !finite(item.taxAmount)) {
+      return "품목 금액이 올바르지 않습니다.";
+    }
+  }
+  if (![header.supplyAmount, header.taxAmount, header.totalAmount].every(finite)) return "금액이 올바르지 않습니다.";
+  const sumSupply = items.reduce((sum, item) => sum + item.supplyAmount, 0);
+  const sumTax = items.reduce((sum, item) => sum + item.taxAmount, 0);
+  if (header.supplyAmount !== sumSupply || header.taxAmount !== sumTax || header.totalAmount !== header.supplyAmount + header.taxAmount) {
+    return "합계 금액이 품목 합계와 맞지 않습니다. 화면을 새로고침한 뒤 다시 시도해주세요.";
+  }
+  return null;
+}
+
+async function restoreBackupInvoice(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  backup: { header: Record<string, unknown>; items: Record<string, unknown>[] } | null,
+) {
+  if (!backup) return;
+  const { error: headerError } = await supabase.from("tax_invoices").insert(backup.header as never);
+  if (headerError) {
+    console.error("기존 세금계산서 복구 실패(헤더):", headerError.message);
+    return;
+  }
+  if (backup.items.length > 0) {
+    const { error: itemsError } = await supabase.from("tax_invoice_items").insert(backup.items as never);
+    if (itemsError) console.error("기존 세금계산서 복구 실패(품목):", itemsError.message);
+  }
+}
 
 // 세금계산서 발행 — 매출 건 하나당 "원본" 세금계산서는 최대 1장
 // (tax_invoices.original_invoice_id가 null인 행에 부분 유니크 인덱스).
@@ -75,6 +112,8 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
   if (!Array.isArray(items) || items.length === 0) {
     return { error: "품목을 1개 이상 입력해주세요." };
   }
+  const amountError = validateTaxInvoiceAmounts(items, { supplyAmount, taxAmount, totalAmount });
+  if (amountError) return { error: amountError };
 
   const supabase = await createClient();
   if (!(await canManageOrder(supabase, "sales_orders", salesOrderId))) {
@@ -91,6 +130,8 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
   }
 
   const user = await getUser();
+
+  let backupInvoice: { header: Record<string, unknown>; items: Record<string, unknown>[] } | null = null;
 
   // 재발행이면 기존 원본을 지우고 새로 만든다(위 주석 참고) — 단, 이미 그
   // 원본에 딸린 수정세금계산서가 있으면 통째로 지울 수 없으니 막는다.
@@ -109,6 +150,10 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
     if (correctionCount && correctionCount > 0) {
       return { error: "이미 수정세금계산서가 발행된 건입니다. 원본을 다시 고칠 수는 없고, 수정세금계산서를 추가로 발행해주세요." };
     }
+    // 새로 만드는 데 실패하면 원본이 사라지지 않도록, 지우기 전에 기존 행을 보관해 두었다가 실패 시 복구한다.
+    const { data: oldHeader } = await supabase.from("tax_invoices").select("*").eq("id", existingOriginal.id).maybeSingle();
+    const { data: oldItems } = await supabase.from("tax_invoice_items").select("*").eq("tax_invoice_id", existingOriginal.id);
+    if (oldHeader) backupInvoice = { header: oldHeader, items: oldItems ?? [] };
     const { error: deleteExistingError } = await supabase.from("tax_invoices").delete().eq("id", existingOriginal.id);
     if (deleteExistingError) {
       return { error: `기존 세금계산서 삭제에 실패했습니다: ${deleteExistingError.message}` };
@@ -140,6 +185,7 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
     .single();
 
   if (insertError || !invoice) {
+    await restoreBackupInvoice(supabase, backupInvoice);
     return { error: `발행에 실패했습니다${insertError ? `: ${insertError.message}` : ""}` };
   }
 
@@ -166,6 +212,7 @@ export async function createTaxInvoice(_prevState: FormState, formData: FormData
     if (rollbackError) {
       console.error("세금계산서 헤더 롤백 실패:", rollbackError);
     }
+    await restoreBackupInvoice(supabase, backupInvoice);
     return { error: `품목 저장에 실패했습니다: ${itemsError.message}` };
   }
 
@@ -218,7 +265,7 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
 
   const { data: order } = await supabase
     .from("sales_orders")
-    .select("customer_id, customers(name)")
+    .select("customer_id, tax_type, customers(name)")
     .eq("id", salesOrderId)
     .maybeSingle();
   if (!order) return { error: "매출 건을 찾을 수 없습니다." };
@@ -253,7 +300,7 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
       quantity: item.quantity,
       unitPrice: Number(item.unit_price),
       supplyAmount,
-      taxAmount: calcVat(supplyAmount),
+      taxAmount: calcVatForTaxType(supplyAmount, order.tax_type),
     };
   });
   const totalSupply = taxInvoiceItems.reduce((sum, item) => sum + item.supplyAmount, 0);

@@ -79,14 +79,12 @@ export default async function InventoryQrLabelsPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="상품명, SKU, 규격, 카테고리"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
-        <div className="erp-field erp-span-3" style={{ justifyContent: "flex-end" }}>
+        <div className="erp-field erp-span-3 erp-u-justify-end">
           <label aria-hidden="true">&nbsp;</label>
-          <label className="erp-u-flex erp-u-items-center erp-u-gap-6"
-            style={{ height: 34, fontSize: 12.5, cursor: "pointer" }}
+          <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer erp-u-h-34"
           >
             <input type="checkbox" name="hideZero" value="1" defaultChecked={hideZero} />
             0건인 품목은 보지 않기
@@ -113,7 +111,7 @@ export default async function InventoryQrLabelsPage({
       </div>
 
       {!labels.length && (
-        <p className="erp-grid-empty" style={{ marginTop: 12 }}>
+        <p className="erp-grid-empty erp-u-mt-12">
           조건에 맞는 품목이 없습니다.
         </p>
       )}

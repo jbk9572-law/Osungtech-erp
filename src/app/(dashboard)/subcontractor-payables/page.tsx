@@ -34,7 +34,7 @@ export default async function SubcontractorPayablesPage() {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h1 className="erp-h1">생산관리 &gt; 외주비정산</h1>
-        <div className="erp-toolbar" style={{ marginBottom: 0 }}>
+        <div className="erp-toolbar erp-u-mb-0">
           <ExcelDownloadLink href="/api/subcontractor-payables/export" />
         </div>
       </div>

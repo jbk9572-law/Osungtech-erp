@@ -125,7 +125,7 @@ export async function PurchaseRequestDetailPanel({
         </p>
       )}
 
-      <div className="erp-grid-wrap has-card-view" style={{ marginBottom: 16 }}>
+      <div className="erp-grid-wrap has-card-view erp-u-mb-16">
         <table className="erp-grid">
           <thead>
             <tr>
@@ -163,7 +163,7 @@ export async function PurchaseRequestDetailPanel({
         </table>
       </div>
 
-      <div className="erp-row-card-list" style={{ marginBottom: 16 }}>
+      <div className="erp-row-card-list erp-u-mb-16">
         {(items ?? []).length === 0 ? (
           <p className="erp-grid-empty">등록된 품목이 없습니다.</p>
         ) : (
@@ -193,7 +193,7 @@ export async function PurchaseRequestDetailPanel({
                     </dd>
                   </div>
                   {item.remark && (
-                    <div style={{ gridColumn: "1 / -1" }}>
+                    <div className="erp-u-col-all">
                       <dt>비고</dt>
                       <dd>{item.remark}</dd>
                     </div>

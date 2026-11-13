@@ -90,7 +90,7 @@ export function BoardListBody({
         </div>
 
         {writeLinks.length > 0 && (
-          <div className="erp-u-flex erp-u-gap-6" style={{ flexWrap: "wrap", padding: "8px 8px 0" }}>
+          <div className="erp-u-flex erp-u-gap-6 erp-u-wrap" style={{ padding: "8px 8px 0" }}>
             {writeLinks.map((w) => (
               <Link key={w.category} href={w.href} className="erp-btn" style={{ fontSize: 11, minWidth: 0 }}>
                 + {w.label}
@@ -99,15 +99,14 @@ export function BoardListBody({
           </div>
         )}
 
-        <div style={{ padding: 8 }}>
+        <div className="erp-u-p-8">
           <input
             type="text"
             autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="제목으로 검색"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
 
@@ -122,10 +121,10 @@ export function BoardListBody({
                 <span>{CATEGORY_LABEL[row.category]}</span>
                 <span>{new Date(row.date).toLocaleDateString("ko-KR")}</span>
               </div>
-              <div style={{ marginTop: 2 }}>
+              <div className="erp-u-mt-2">
                 {row.title}
                 {row.status && (
-                  <span style={{ marginLeft: 6 }}>
+                  <span className="erp-u-ml-6">
                     <GridBadge tone={row.status.tone}>{row.status.label}</GridBadge>
                   </span>
                 )}

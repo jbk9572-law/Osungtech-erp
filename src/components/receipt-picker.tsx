@@ -126,12 +126,12 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
         {items.map((item, index) => (
           <li
             key={item.id}
-            className="relative flex flex-col items-center gap-1 rounded-md border p-1.5 shadow-sm"
-            style={{ borderColor: "var(--erp-border)", width: THUMB_SIZE + 12, background: "var(--erp-panel)" }}
+            className="relative flex flex-col items-center gap-1 rounded-md border p-1.5 shadow-sm erp-u-bg-panel erp-u-bc-border"
+            style={{ width: THUMB_SIZE + 12 }}
           >
             <span
-              className="absolute -left-1.5 -top-1.5 flex items-center justify-center rounded-full text-[10px] font-bold text-white"
-              style={{ width: 18, height: 18, background: "var(--erp-primary)" }}
+              className="absolute -left-1.5 -top-1.5 flex items-center justify-center rounded-full text-[10px] font-bold text-white erp-u-bg-primary"
+              style={{ width: 18, height: 18 }}
             >
               {index + 1}
             </span>
@@ -139,36 +139,34 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
               type="button"
               onClick={() => remove(item.id)}
               aria-label="삭제"
-              className="absolute -right-1.5 -top-1.5 flex items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ width: 18, height: 18, background: "var(--erp-danger)", lineHeight: 1 }}
+              className="absolute -right-1.5 -top-1.5 flex items-center justify-center rounded-full text-xs font-bold text-white erp-u-bg-danger"
+              style={{ width: 18, height: 18, lineHeight: 1 }}
             >
               ×
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <img className="erp-u-radius-lg"
               src={item.previewUrl}
               alt={`영수증 ${index + 1}`}
-              style={{ width: THUMB_SIZE, height: THUMB_SIZE, objectFit: "cover", borderRadius: "var(--erp-radius-lg, 0)" }}
+              style={{ width: THUMB_SIZE, height: THUMB_SIZE, objectFit: "cover" }}
             />
             <span className="text-[10px] erp-u-muted">
               {formatKb(item.originalSize)} → {formatKb(item.file.size)}
             </span>
             <div className="flex items-center gap-1">
-              <button
+              <button aria-label="위로 이동"
                 type="button"
                 onClick={() => move(index, -1)}
                 disabled={index === 0}
-                className="erp-btn erp-u-h-22"
-                style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+                className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
               >
                 ▲
               </button>
-              <button
+              <button aria-label="아래로 이동"
                 type="button"
                 onClick={() => move(index, 1)}
                 disabled={index === items.length - 1}
-                className="erp-btn erp-u-h-22"
-                style={{ minWidth: 0, padding: "1px 6px", fontSize: 11 }}
+                className="erp-btn erp-btn-xs erp-u-minw-0 erp-u-pad-1-6 erp-u-text-caption"
               >
                 ▼
               </button>
@@ -181,8 +179,8 @@ export function ReceiptPicker({ clearOn }: { clearOn?: FormState } = {}) {
             type="button"
             onClick={() => pickerInputRef.current?.click()}
             disabled={compressing}
-            className="flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed transition-colors erp-u-muted"
-            style={{ width: THUMB_SIZE + 12, height: THUMB_SIZE + 44, borderColor: "var(--erp-border)", background: "var(--erp-hover)" }}
+            className="flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed transition-colors erp-u-muted erp-u-bc-border erp-u-bg-hover"
+            style={{ width: THUMB_SIZE + 12, height: THUMB_SIZE + 44 }}
           >
             {compressing ? (
               <>

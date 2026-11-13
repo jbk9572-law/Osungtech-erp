@@ -101,7 +101,7 @@ export default async function ReorderSuggestionsPage() {
       </PageGuide>
 
       {groups.length === 0 && (
-        <p className="erp-grid-empty" style={{ marginTop: 24 }}>
+        <p className="erp-grid-empty erp-u-mt-24">
           안전재고 이하로 떨어진 품목이 없습니다.
         </p>
       )}
@@ -128,7 +128,7 @@ export default async function ReorderSuggestionsPage() {
                 {group.supplierName} · {group.rows.length}개 품목
               </span>
               {purchaseHref && purchaseRequestHref ? (
-                <div className="flex flex-wrap items-center gap-2" style={{ margin: 4 }}>
+                <div className="flex flex-wrap items-center gap-2 erp-u-m-4">
                   <Link href={purchaseRequestHref} className="erp-btn">
                     이 매입처로 구매요청 작성
                   </Link>
@@ -142,7 +142,7 @@ export default async function ReorderSuggestionsPage() {
                 </PageGuide>
               )}
             </div>
-            <div className="erp-grid-wrap has-card-view" style={{ border: "none", borderRadius: 0 }}>
+            <div className="erp-grid-wrap has-card-view erp-u-border-none erp-u-radius-0">
               <table className="erp-grid">
                 <thead>
                   <tr>
@@ -183,7 +183,7 @@ export default async function ReorderSuggestionsPage() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+                  <tr className="erp-u-bold erp-u-bg-page">
                     <td colSpan={6} className="erp-grid-sticky-label">
                       예상 매입금액 합계
                     </td>
@@ -229,7 +229,7 @@ export default async function ReorderSuggestionsPage() {
                   </div>
                 </div>
               ))}
-              <div className="erp-row-card-foot erp-u-bold" style={{ padding: "4px 2px" }}>
+              <div className="erp-row-card-foot erp-u-bold erp-u-pad-4-2">
                 <span>예상 매입금액 합계</span>
                 <span className="erp-row-card-amount">{formatNumber(Math.round(totalEstimate))}원</span>
               </div>

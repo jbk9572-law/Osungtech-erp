@@ -8,7 +8,7 @@ import type { InvoiceItem } from "@/components/invoice/types";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems } from "@/modules/paper-calc/public";
 import { PAPER_STOCK_SKU } from "@/modules/paper-calc/public";
 import { getSupplierBalance } from "@/lib/ar-ap";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 
 // 매출(sales/[id]/print)에는 있던 인쇄 화면이 매입에는 아예 없었다 —
 // 전체 감사에서 발견. 매입은 거래처(공급처)별 전용 서식(출고증 등)이
@@ -55,7 +55,7 @@ export default async function PurchasePrintPage({
 
   const invoiceItems: InvoiceItem[] = (items ?? []).flatMap((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount = calcVatForTaxType(supplyAmount, order.tax_type);
     const d = new Date(order.purchase_date);
     const row: InvoiceItem = {
       id: item.id,

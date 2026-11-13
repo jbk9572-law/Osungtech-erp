@@ -371,6 +371,14 @@ export async function resolveMessengerAttachmentUrl(filePath: string): Promise<s
   const supabase = await createClient();
   const user = await getUser();
   if (!user || !filePath) return null;
+  // 임의의 경로로 서명 URL을 만들어 가는 것을 막는다 — 이 사용자가 조회할 수 있는(RLS) 메시지에 실제로
+  // 붙어 있는 첨부 경로일 때만 열람 URL을 발급한다.
+  const { data: attached } = await supabase
+    .from("messenger_messages")
+    .select("id")
+    .eq("file_path", filePath)
+    .limit(1);
+  if (!attached || attached.length === 0) return null;
   return getAttachmentDownloadUrl({ supabase, bucket: "messenger-attachments", path: filePath });
 }
 

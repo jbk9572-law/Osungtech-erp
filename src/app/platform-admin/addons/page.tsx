@@ -23,7 +23,7 @@ export default async function PlatformAddOnsPage() {
         (이름·적용 유형·제공량·가격)만 코드 수정 없이 관리합니다.
       </PageGuide>
 
-      <div className="erp-detail erp-u-mt-0" style={{ marginBottom: "var(--erp-space-5)" }}>
+      <div className="erp-detail erp-u-mt-0 erp-u-mb-s5">
         <div className="erp-detail-tabs">
           <span className="erp-detail-tab active">새 애드온 등록</span>
         </div>

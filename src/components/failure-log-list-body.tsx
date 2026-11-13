@@ -45,37 +45,37 @@ export function FailureLogListBody({ rows }: { rows: FailureLogRow[] }) {
             onClick={() => setTenant(name)}
             className={`erp-cat-item${tenant === name ? " active" : ""}`}
           >
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+            <span className="erp-u-overflow-hidden erp-u-ellipsis erp-u-nowrap">{name}</span>
             <span className="cnt">{count}</span>
           </button>
         ))}
       </div>
 
-      <div className="erp-card-feed" style={{ minWidth: 0 }}>
+      <div className="erp-card-feed erp-u-minw-0">
         {visibleRows.map((r) => (
-          <div className="erp-u-flex"
+          <div className="erp-u-flex erp-u-col erp-u-gap-4 erp-u-bg-panel erp-u-flex-none erp-u-border-comm-border erp-u-radius-comm-row erp-u-shadow-comm-row"
             key={r.id}
-            style={{ flexDirection: "column", gap: 4, background: "var(--erp-panel)", border: "1px solid var(--erp-comm-border)", borderRadius: "var(--erp-comm-radius-row)", boxShadow: "var(--erp-comm-shadow-row)", padding: "11px 16px", flex: "0 0 auto" }}
+            style={{ padding: "11px 16px" }}
           >
-            <div className="erp-u-flex erp-u-items-center erp-u-justify-between" style={{ gap: "var(--erp-space-5)" }}>
-              <div className="erp-u-flex erp-u-items-center" style={{ minWidth: 0, gap: "var(--erp-space-2)" }}>
+            <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5">
+              <div className="erp-u-flex erp-u-items-center erp-u-minw-0 erp-u-gap-s2">
                 <span className="erp-badge erp-badge-danger" style={{ fontFamily: "monospace" }}>
                   {r.code}
                 </span>
-                <span className="erp-u-semibold erp-u-text" style={{ fontSize: "var(--erp-font-base)" }}>
+                <span className="erp-u-semibold erp-u-text erp-u-text-base">
                   {r.message_ko}
                 </span>
               </div>
-              <div className="erp-u-muted" style={{ fontSize: 11, flex: "0 0 auto" }}>
+              <div className="erp-u-muted erp-u-text-caption erp-u-flex-none">
                 {new Date(r.created_at).toLocaleString("ko-KR")}
               </div>
             </div>
-            <div className="erp-u-muted" style={{ fontSize: 11 }}>
+            <div className="erp-u-muted erp-u-text-caption">
               {r.tenant_name ?? "-"} · {r.action}
               {r.entity_type ? ` (${r.entity_type})` : ""} · {r.actor_name ?? "-"}
             </div>
             {r.detail && r.detail !== r.message_ko && (
-              <div className="erp-u-muted" style={{ fontSize: 11, fontFamily: "monospace" }}>{r.detail}</div>
+              <div className="erp-u-muted erp-u-text-caption" style={{ fontFamily: "monospace" }}>{r.detail}</div>
             )}
           </div>
         ))}

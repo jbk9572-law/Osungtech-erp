@@ -76,9 +76,9 @@ export function QuickAddProductSearch({
   // 구분되는 "여기서 바로 추가" 전용 입력칸으로 보이게 한다.
   return (
     <div className="relative" style={{ minWidth: 240, flex: "1 1 240px" }}>
-      <span className="erp-u-text"
+      <span className="erp-u-text erp-u-absolute erp-u-text-base erp-u-pe-none"
         aria-hidden
-        style={{ position: "absolute", top: "50%", left: 9, transform: "translateY(-50%)", fontSize: 12.5, pointerEvents: "none" }}
+        style={{ top: "50%", left: 9, transform: "translateY(-50%)" }}
       >
         🔍
       </span>
@@ -112,19 +112,13 @@ export function QuickAddProductSearch({
             pick(results[highlight].id);
           }
         }}
-        className="erp-input"
-        style={{
-          width: "100%",
-          paddingLeft: 26,
-          paddingRight: showEnterBadge ? 56 : undefined,
-          borderColor: "var(--erp-primary)",
-          background: "var(--erp-info-bg)",
-        }}
+        className="erp-input erp-u-w-full erp-u-bc-primary erp-u-bg-info-bg"
+        style={{ paddingLeft: 26, paddingRight: showEnterBadge ? 56 : undefined }}
       />
       {showEnterBadge && (
-        <span className="erp-u-items-center erp-u-bold"
+        <span className="erp-u-items-center erp-u-bold erp-u-absolute erp-u-inline-flex erp-u-gap-2 erp-u-pad-2-6 erp-u-text-xs erp-u-bg-info-bg erp-u-color-info-text erp-u-pe-none"
           aria-hidden
-          style={{ position: "absolute", top: "50%", right: 6, transform: "translateY(-50%)", display: "inline-flex", gap: 2, padding: "2px 6px", borderRadius: 999, fontSize: 10.5, background: "var(--erp-info-bg)", color: "var(--erp-info-text)", pointerEvents: "none" }}
+          style={{ top: "50%", right: 6, transform: "translateY(-50%)", borderRadius: 999 }}
         >
           ⏎ 추가
         </span>
@@ -135,14 +129,8 @@ export function QuickAddProductSearch({
         typeof document !== "undefined" &&
         createPortal(
           <ul
-            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md"
-            style={{
-              position: "fixed",
-              top: dropdownRect.top,
-              left: dropdownRect.left,
-              width: dropdownRect.width,
-              zIndex: 1000,
-            }}
+            className="max-h-56 overflow-y-auto rounded-sm border border-[var(--erp-border)] bg-white text-[12.5px] shadow-md erp-u-fixed"
+            style={{ top: dropdownRect.top, left: dropdownRect.left, width: dropdownRect.width, zIndex: 1000 }}
           >
             {results.map((product, i) => (
               <li key={product.id}>

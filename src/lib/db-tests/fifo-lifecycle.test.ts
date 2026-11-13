@@ -241,3 +241,61 @@ describe("권한 / 마감일", () => {
     await expect(deletePurchase(crypto.randomUUID())).rejects.toThrow(/인증되지 않은/);
   });
 });
+
+describe("삭제/수정 시 재고 되돌림 (migration 231)", () => {
+  async function stockOf(productId: string): Promise<number> {
+    const r = await h.db.query<{ s: string }>(
+      `select coalesce(sum(case when type = 'out' then -quantity else quantity end), 0)::text as s
+       from public.inventory_transactions where product_id = $1`,
+      [productId],
+    );
+    return Number(r.rows[0].s);
+  }
+
+  it("직접입력 줄이 있는 매출도 삭제된다(예전에는 NOT NULL 위반으로 영구 삭제 불가)", async () => {
+    const purchase = await createPurchase(100);
+    const r = await h.db.query<{ id: string }>(
+      `select public.create_sale_with_items(
+         p_customer_id => $1, p_warehouse_id => $2, p_order_date => $3, p_memo => null,
+         p_created_by => $4, p_items => $5::jsonb) as id`,
+      [h.ids.customer, h.ids.warehouse, "2026-11-11", h.ids.staff,
+        JSON.stringify([
+          { productId: product, quantity: 10, unitPrice: 300 },
+          { customName: "소프너 교체", quantity: 1, unitPrice: 50000 },
+        ])],
+    );
+    await deleteSale(r.rows[0].id);
+    const left = await h.db.query(`select 1 from public.sales_orders where id = $1`, [r.rows[0].id]);
+    expect(left.rows.length).toBe(0);
+    expect(await remaining(purchase)).toBe(100);
+  });
+
+  it("직접입력 줄만 있는 매입도 삭제된다", async () => {
+    const r = await h.db.query<{ id: string }>(
+      `select public.create_purchase_with_items(
+         p_supplier_id => $1, p_warehouse_id => $2, p_purchase_date => $3, p_memo => null,
+         p_created_by => $4, p_items => $5::jsonb) as id`,
+      [h.ids.supplier, h.ids.warehouse, "2026-11-10", h.ids.staff,
+        JSON.stringify([{ customName: "운송비", quantity: 1, unitCost: 30000 }])],
+    );
+    await deletePurchase(r.rows[0].id);
+    const left = await h.db.query(`select 1 from public.purchase_orders where id = $1`, [r.rows[0].id]);
+    expect(left.rows.length).toBe(0);
+  });
+
+  it("파생 SKU 매출을 삭제하면 재고가 모품목에 복원되고 자식에는 쌓이지 않는다", async () => {
+    const child = await h.makeProduct({ name: "모조지-1", cost: 100, parent: product });
+    await createPurchase(100);
+    const r = await h.db.query<{ id: string }>(
+      `select public.create_sale_with_items(
+         p_customer_id => $1, p_warehouse_id => $2, p_order_date => $3, p_memo => null,
+         p_created_by => $4, p_items => $5::jsonb) as id`,
+      [h.ids.customer, h.ids.warehouse, "2026-11-11", h.ids.staff,
+        JSON.stringify([{ productId: child, quantity: 10, unitPrice: 300 }])],
+    );
+    expect(await stockOf(product)).toBe(90);
+    await deleteSale(r.rows[0].id);
+    expect(await stockOf(product)).toBe(100);
+    expect(await stockOf(child)).toBe(0);
+  });
+});

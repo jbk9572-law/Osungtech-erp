@@ -48,25 +48,24 @@ export function WorkOrderProcessStepAssignCell({
 
   if (mode === "new") {
     return (
-      <form className="erp-u-flex" action={createAction} style={{ flexDirection: "column", gap: 4 }}>
+      <form className="erp-u-flex erp-u-col erp-u-gap-4" action={createAction}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
-        <div className="erp-u-flex" style={{ gap: 4 }}>
+        <div className="erp-u-flex erp-u-gap-4">
           <input
             name="name"
             autoComplete="off"
             placeholder="업체명"
             required
-            className="erp-input erp-u-h-22"
-            style={{ fontSize: 11, padding: "0 6px", width: 100 }}
+            className="erp-input erp-u-h-22 erp-u-text-caption erp-u-pad-0-6"
+            style={{ width: 100 }}
           />
-          <button type="submit" className="erp-btn erp-u-h-22" style={{ padding: "1px 6px", fontSize: 11 }} disabled={createPending}>
+          <button type="submit" className="erp-btn erp-btn-xs erp-u-pad-1-6 erp-u-text-caption" disabled={createPending}>
             {createPending ? "..." : "등록·배정"}
           </button>
           <button
             type="button"
-            className="erp-btn erp-u-h-22"
-            style={{ padding: "1px 6px", fontSize: 11 }}
+            className="erp-btn erp-btn-xs erp-u-pad-1-6 erp-u-text-caption"
             onClick={() => setMode("select")}
           >
             취소
@@ -79,12 +78,11 @@ export function WorkOrderProcessStepAssignCell({
 
   if (mode === "issue" && subcontractorId) {
     return (
-      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
+      <div className="erp-u-flex erp-u-col erp-u-gap-4">
         <PortalAccountForm targetId={subcontractorId} kind="subcontractor" />
         <button
           type="button"
-          className="erp-btn erp-u-h-22"
-          style={{ padding: "1px 6px", fontSize: 11, alignSelf: "flex-start" }}
+          className="erp-btn erp-btn-xs erp-u-pad-1-6 erp-u-text-caption erp-u-self-start"
           onClick={() => setMode("select")}
         >
           닫기
@@ -98,15 +96,15 @@ export function WorkOrderProcessStepAssignCell({
       ? (subcontractors.find((s) => s.id === subcontractorId)?.name ?? "업체")
       : "사내 공정";
     return (
-      <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
-        <span className="erp-u-muted" style={{ fontSize: 11 }} title="자재투입/입고 전(대기 상태)에만 담당자를 바꿀 수 있습니다.">
+      <div className="erp-u-flex erp-u-col erp-u-gap-4">
+        <span className="erp-u-muted erp-u-text-caption" title="자재투입/입고 전(대기 상태)에만 담당자를 바꿀 수 있습니다.">
           {assignedName}
         </span>
         {subcontractorId && !hasPortalAccount && (
           <button
             type="button"
-            className="erp-badge erp-badge-warning"
-            style={{ border: "none", cursor: "pointer", width: "fit-content" }}
+            className="erp-badge erp-badge-warning erp-u-border-none erp-u-pointer"
+            style={{ width: "fit-content" }}
             onClick={() => setMode("issue")}
           >
             포털 계정 없음 · 발급하기
@@ -117,8 +115,8 @@ export function WorkOrderProcessStepAssignCell({
   }
 
   return (
-    <div className="erp-u-flex" style={{ flexDirection: "column", gap: 4 }}>
-      <form className="erp-u-items-center" ref={assignFormRef} action={assignAction} style={{ display: "inline-flex", gap: 4 }}>
+    <div className="erp-u-flex erp-u-col erp-u-gap-4">
+      <form className="erp-u-items-center erp-u-inline-flex erp-u-gap-4" ref={assignFormRef} action={assignAction}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="work_order_id" value={workOrderId} />
         <ErpSelect
@@ -146,8 +144,8 @@ export function WorkOrderProcessStepAssignCell({
       {subcontractorId && !hasPortalAccount && (
         <button
           type="button"
-          className="erp-badge erp-badge-warning"
-          style={{ border: "none", cursor: "pointer", width: "fit-content" }}
+          className="erp-badge erp-badge-warning erp-u-border-none erp-u-pointer"
+          style={{ width: "fit-content" }}
           onClick={() => setMode("issue")}
         >
           포털 계정 없음 · 발급하기

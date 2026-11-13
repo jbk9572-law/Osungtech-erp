@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection } from "@/components/erp/page-header";
@@ -71,7 +72,7 @@ export default async function WarehousesPage({
         <WarehouseForm action={createWarehouse} />
       </FormSection>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <FormSection tabLabel={`창고 목록 (${warehouses.length})`}>
           <div className="erp-grid-wrap has-card-view">
             <table className="erp-grid">
@@ -119,7 +120,7 @@ export default async function WarehousesPage({
                     triggerStyle={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}
                   />
                 </div>
-                <p className="erp-u-muted" style={{ margin: 0, fontSize: "var(--erp-font-sm)" }}>
+                <p className="erp-u-muted erp-u-text-sm erp-u-m-0">
                   {w.location || "-"}
                 </p>
               </div>
@@ -129,12 +130,12 @@ export default async function WarehousesPage({
         </FormSection>
       </div>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="erp-u-mt-14">
         <FormSection tabLabel={`창고 이동 이력 (${transfers.length})`}>
-          <div className="erp-u-flex" style={{ justifyContent: "flex-end", marginBottom: 10 }}>
-            <Link href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
+          <div className="erp-u-flex erp-u-mb-10 erp-u-justify-end">
+            <GuardedLink href="/inventory/transfers/new" className="erp-btn erp-btn-primary">
               F2 창고 이동 등록
-            </Link>
+            </GuardedLink>
           </div>
 
           <DateRangeQuickFilters
@@ -145,7 +146,7 @@ export default async function WarehousesPage({
             to={effectiveTo}
           />
 
-          <form method="get" className="erp-field-grid" style={{ marginBottom: 10 }}>
+          <form method="get" className="erp-field-grid erp-u-mb-10">
             <div className="erp-field erp-span-2">
               <label htmlFor="transfer-from">시작일</label>
               <input id="transfer-from" type="date" name="from" defaultValue={from ?? effectiveFrom} className="erp-input" />
@@ -224,7 +225,7 @@ export default async function WarehousesPage({
                       <dd>{t.profiles?.full_name ?? "-"}</dd>
                     </div>
                     {t.memo && (
-                      <div style={{ gridColumn: "1 / -1" }}>
+                      <div className="erp-u-col-all">
                         <dt>메모</dt>
                         <dd>{t.memo}</dd>
                       </div>

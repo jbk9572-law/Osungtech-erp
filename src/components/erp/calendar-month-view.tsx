@@ -184,7 +184,7 @@ export function CalendarMonthView({
           ) : (
             <ul className="flex flex-col gap-2">
               {selectedItems.map((item) => (
-                <li key={item.id} className="border-l-[3px] p-2 text-xs" style={{ borderLeftColor: item.source === "meeting" ? "var(--erp-primary)" : "var(--erp-warning)", background: "var(--erp-bg-subtle)" }}>
+                <li key={item.id} className="border-l-[3px] p-2 text-xs erp-u-bg-bg-subtle" style={{ borderLeftColor: item.source === "meeting" ? "var(--erp-primary)" : "var(--erp-warning)" }}>
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-semibold text-[var(--erp-text)]">{item.title}</span>
                     {canEdit(item) && (
@@ -218,13 +218,13 @@ export function CalendarMonthView({
           {feedUrl ? (
             <>
               <div className="mb-2 flex items-center gap-1">
-                <input readOnly value={feedUrl} className="erp-input w-full" style={{ fontSize: 11 }} onFocus={(e) => e.currentTarget.select()} />
+                <input aria-label="캘린더 구독 주소" readOnly value={feedUrl} className="erp-input w-full erp-u-text-caption" onFocus={(e) => e.currentTarget.select()} />
               </div>
               <div className="flex gap-1">
-                <button type="button" onClick={handleCopyFeedUrl} className="erp-btn" style={{ minWidth: 0 }}>
+                <button type="button" onClick={handleCopyFeedUrl} className="erp-btn erp-u-minw-0">
                   {copied ? "복사됨" : "URL 복사"}
                 </button>
-                <button type="button" onClick={handleRegenerate} disabled={regenPending} className="erp-btn" style={{ minWidth: 0 }}>
+                <button type="button" onClick={handleRegenerate} disabled={regenPending} className="erp-btn erp-u-minw-0">
                   {regenPending ? "재발급 중..." : "URL 재발급"}
                 </button>
               </div>

@@ -375,7 +375,7 @@ export function PurchaseGridTable({
           {isPayment ? (
             "-"
           ) : row.invoiceReceived ? (
-            <span className="erp-u-bold" style={{ color: "var(--erp-success)" }}>✓ 수취</span>
+            <span className="erp-u-bold erp-u-color-success">✓ 수취</span>
           ) : (
             <span className="erp-u-muted">미수취</span>
           )}
@@ -541,9 +541,8 @@ export function PurchaseGridTable({
           {carryoverRows && carryoverRows.length > 0 && (
             <tbody>
               <tr>
-                <td className="erp-u-bold erp-u-muted"
+                <td className="erp-u-bold erp-u-muted erp-u-bg-page erp-u-pad-6-8"
                   colSpan={20}
-                  style={{ background: "var(--erp-bg)", padding: "6px 8px" }}
                 >
                   전월 이월분 · 이번달 실적으로 반영됨
                 </td>
@@ -551,20 +550,19 @@ export function PurchaseGridTable({
               {carryoverRows.map((row) => renderRow(row, { selectable: false, compactDate: true }))}
               <tr>
                 <td colSpan={2} style={stickyFooterStyle(0)} />
-                <td className="erp-u-muted"
+                <td className="erp-u-muted erp-u-text-xs erp-u-pad-4-8"
                   colSpan={11}
-                  style={{ fontSize: "var(--erp-font-xs)", padding: "4px 8px" }}
                 >
                   전월 이월 소계 ({carryoverRows.length}건)
                 </td>
-                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverQuantity ?? 0)}
                 </td>
                 <td />
-                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverSupply ?? 0)}
                 </td>
-                <td className="num erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
+                <td className="num erp-u-muted erp-u-text-xs">
                   {formatNumber(carryoverTax ?? 0)}
                 </td>
                 <td />
@@ -600,7 +598,7 @@ export function PurchaseGridTable({
           </tbody>
           {sortedRows.length > 0 && (
             <tfoot>
-              <tr className="erp-u-bold" style={{ background: "var(--erp-bg)" }}>
+              <tr className="erp-u-bold erp-u-bg-page">
                 <td colSpan={2} style={stickyFooterStyle(0)} />
                 <td
                   colSpan={11}
@@ -656,7 +654,7 @@ export function PurchaseGridTable({
       <div className="erp-row-card-list">
         {carryoverRows && carryoverRows.length > 0 && (
           <>
-            <div className="erp-u-bold erp-u-muted" style={{ fontSize: "var(--erp-font-xs)" }}>
+            <div className="erp-u-bold erp-u-muted erp-u-text-xs">
               전월 이월분 · 이번달 실적으로 반영됨
             </div>
             {carryoverRows.map((row) => renderMobileCard(row, { selectable: false, compactDate: true }))}

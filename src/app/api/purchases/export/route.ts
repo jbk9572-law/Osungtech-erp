@@ -9,7 +9,7 @@ import { fetchWoteLedgerEntries } from "@/lib/wote-ledger-query";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { nowInKst } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 
 // 매입관리 엑셀 다운로드. 항상 이번달(오늘 기준) 1일~말일 범위를 뽑는다.
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     supabase
       .from("purchase_order_items")
       .select(
-        "*, purchase_orders!inner(purchase_date, supplier_id, memo, delivery_method, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
+        "*, purchase_orders!inner(purchase_date, supplier_id, tax_type, memo, delivery_method, suppliers(name)), products(sku, name, spec, unit, base_package_qty)"
       )
       .gte("purchase_orders.purchase_date", from)
       .lte("purchase_orders.purchase_date", to)
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
 
   const rows = items.map((item) => {
     const supplyAmount = item.quantity * Number(item.unit_cost);
-    const taxAmount = calcVat(supplyAmount);
+    const taxAmount = calcVatForTaxType(supplyAmount, item.purchase_orders?.tax_type);
     return {
       매입일자: item.purchase_orders?.purchase_date ?? "",
       공급처명: item.purchase_orders?.suppliers?.name ?? "",

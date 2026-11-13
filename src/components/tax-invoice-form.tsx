@@ -86,7 +86,7 @@ export function TaxInvoiceForm({
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">공급자</span>
             </div>
-            <div className="erp-detail-body" style={{ fontSize: 12.5 }}>
+            <div className="erp-detail-body erp-u-text-base">
               <PartyRow label="등록번호" value={supplier.businessNumber} />
               <PartyRow label="상호" value={supplier.name} />
               <PartyRow label="성명" value={supplier.representativeName} />
@@ -100,7 +100,7 @@ export function TaxInvoiceForm({
             <div className="erp-detail-tabs">
               <span className="erp-detail-tab active">공급받는자</span>
             </div>
-            <div className="erp-detail-body" style={{ fontSize: 12.5 }}>
+            <div className="erp-detail-body erp-u-text-base">
               <PartyRow label="등록번호" value={buyer.businessNumber} />
               <PartyRow label="상호" value={buyer.name} />
               <PartyRow label="성명" value={buyer.representativeName} />
@@ -176,7 +176,7 @@ export function TaxInvoiceForm({
           <div className="erp-doc-header-row erp-doc-header-row-full">
             <label htmlFor="ti-remark" className="erp-doc-header-label">비고</label>
             <span className="erp-doc-header-value">
-              <textarea id="ti-remark" name="remark" rows={2} className="erp-input erp-textarea-compact w-full" style={{ border: "none" }} />
+              <textarea id="ti-remark" name="remark" rows={2} className="erp-input erp-textarea-compact w-full erp-u-border-none" />
             </span>
           </div>
         </div>
@@ -233,9 +233,8 @@ export function TaxInvoiceForm({
         <button
           ref={submitRef}
           type="submit"
-          className="erp-btn erp-btn-primary"
+          className="erp-btn erp-btn-primary erp-u-self-start"
           disabled={pending || validRows.length === 0}
-          style={{ alignSelf: "flex-start" }}
         >
           {pending ? "발행 중..." : "F7 세금계산서 발행"}
         </button>
@@ -247,8 +246,8 @@ export function TaxInvoiceForm({
 
 function PartyRow({ label, value, missingHint }: { label: string; value: string | null; missingHint?: string }) {
   return (
-    <div className="erp-u-flex erp-u-items-center erp-u-gap-8" style={{ minHeight: 24, marginBottom: 4 }}>
-      <span className="erp-u-muted" style={{ width: 64, flex: "0 0 auto" }}>{label}</span>
+    <div className="erp-u-flex erp-u-items-center erp-u-gap-8 erp-u-mb-4" style={{ minHeight: 24 }}>
+      <span className="erp-u-muted erp-u-flex-none" style={{ width: 64 }}>{label}</span>
       {value ? (
         <span>{value}</span>
       ) : (
@@ -263,6 +262,6 @@ function PartyRow({ label, value, missingHint }: { label: string; value: string 
 // 충분하다(콤마 등 서식 없이 그대로 제출).
 function NumberInputField({ id, name }: { id: string; name: string }) {
   return (
-    <input id={id} name={name} type="number" min="0" step="1" defaultValue={0} className="erp-input" style={{ textAlign: "right" }} />
+    <input id={id} name={name} type="number" min="0" step="1" defaultValue={0} className="erp-input erp-u-text-right" />
   );
 }

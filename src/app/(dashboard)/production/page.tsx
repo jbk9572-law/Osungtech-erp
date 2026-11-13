@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
 import { DateRangeQuickFilters } from "@/components/erp/date-range-quick-filters";
@@ -80,9 +81,9 @@ export default async function ProductionPage({
         title="생산관리 > 생산지시 내역"
         actions={
           <>
-            <Link href="/production/new" className="erp-btn erp-btn-primary">
+            <GuardedLink href="/production/new" className="erp-btn erp-btn-primary">
               F2 생산지시 등록
-            </Link>
+            </GuardedLink>
             <Link href="/inventory/lot-lookup" className="erp-btn">
               품목·관리번호 통합조회
             </Link>
@@ -116,8 +117,7 @@ export default async function ProductionPage({
             autoComplete="off"
             defaultValue={q ?? ""}
             placeholder="상품명, SKU, 창고, 메모"
-            className="erp-input"
-            style={{ width: "100%" }}
+            className="erp-input erp-u-w-full"
           />
         </div>
         <button type="submit" className="erp-btn erp-btn-primary">
@@ -247,7 +247,7 @@ export default async function ProductionPage({
                     <dd>{row.profiles?.full_name ?? "-"}</dd>
                   </div>
                   {row.memo && (
-                    <div style={{ gridColumn: "1 / -1" }}>
+                    <div className="erp-u-col-all">
                       <dt>메모</dt>
                       <dd>{row.memo}</dd>
                     </div>

@@ -74,7 +74,7 @@ export function NewQuoteForm({
         <div className="erp-doc-header-row erp-doc-header-row-full">
           <label htmlFor="q-memo" className="erp-doc-header-label">메모</label>
           <span className="erp-doc-header-value">
-            <textarea id="q-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full" style={{ border: "none" }} />
+            <textarea id="q-memo" name="memo" rows={2} className="erp-input erp-textarea-compact w-full erp-u-border-none" />
           </span>
         </div>
       </div>
@@ -92,7 +92,7 @@ export function NewQuoteForm({
 
       <FormMessage state={state} />
 
-      <button type="submit" className="erp-btn erp-btn-primary" disabled={pending || !customerId || validRows.length === 0} style={{ alignSelf: "flex-start" }}>
+      <button type="submit" className="erp-btn erp-btn-primary erp-u-self-start" disabled={pending || !customerId || validRows.length === 0}>
         {pending ? "등록 중..." : "견적서 등록"}
       </button>
       </div>
