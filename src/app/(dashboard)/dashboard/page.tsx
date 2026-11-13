@@ -672,7 +672,8 @@ async function DashboardPage({
     }
   }
 
-  for (const [date, list] of Object.entries(await getMonthTodosByDate(supabase, monthStart, monthEnd))) ensure(date).todoItems.push(...list);
+  const monthTodos = await getMonthTodosByDate(supabase, monthStart, monthEnd);
+  for (const [date, list] of Object.entries(monthTodos.byDate)) ensure(date).todoItems.push(...list);
 
   const weeks = buildWeeks(year, month);
 
@@ -761,7 +762,7 @@ async function DashboardPage({
   const firstEvent = todayData?.calendarItems[0];
   const attendance = await attendancePromise;
   const tabsOf = (ids: SourceId[]) =>
-    ids.filter((id) => sources.itemsOf(id) !== null).map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [] }));
+    ids.filter((id) => sources.itemsOf(id) !== null).map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [], note: sources.noteOf(id) }));
   const sidePanels = {
     kpi: (
       <DashboardKpiStrip
@@ -853,6 +854,7 @@ async function DashboardPage({
         lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
         layout={dashboardLayout}
         companyLayout={companyLayout}
+        todoTruncated={monthTodos.truncated}
         sourceOptions={sources.options}
         sidePanels={sidePanels}
       />

@@ -100,3 +100,19 @@ describe("추가 칸(optional 위젯)", () => {
     expect(out.items.some((i) => i.id === "extra2")).toBe(false);
   });
 });
+
+describe("좁은 화면 순서·숨김", () => {
+  it("저장값이 없으면 비어 있고, 모르는 id·중복은 버린다", () => {
+    expect(defaultDashboardLayout().mobile).toEqual({ order: [], hidden: [] });
+    const out = normalizeDashboardLayout({ mobile: { order: ["news", "news", "evil", "kpi"], hidden: ["report", 3] } });
+    expect(out.mobile).toEqual({ order: ["news", "kpi"], hidden: ["report"] });
+  });
+
+  it("지정한 순서가 먼저, 나머지는 위→아래 순서로 이어진다", () => {
+    const layout = normalizeDashboardLayout({ mobile: { order: ["report", "news"] } });
+    const order = stackOrder(layout);
+    expect(order.slice(0, 2)).toEqual(["report", "news"]);
+    expect(order).toHaveLength(layout.items.length);
+    expect(new Set(order).size).toBe(order.length);
+  });
+});

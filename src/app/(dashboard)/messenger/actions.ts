@@ -276,12 +276,21 @@ async function notifyChannelMembers(
   ]);
   if (!channel || channel.type === "all" || !members?.length) return;
 
+  // 이 방의 알림을 끈 사람은 푸시 대상에서 뺀다(끄지 않은 사람 id만 DB 함수가 돌려준다).
+  const { data: unmuted, error: muteError } = await supabase.rpc("messenger_unmuted_recipients", {
+    p_channel_id: channelId,
+    p_user_ids: members.map((m) => m.user_id),
+  });
+  if (muteError) console.error("알림 끈 사람 확인 실패(모두에게 알림):", muteError.message);
+  const recipients = unmuted ?? members.map((m) => m.user_id); // 조회 실패 시에는 평소처럼 모두에게(알림 누락이 더 나쁘다)
+  if (!recipients.length) return;
+
   const senderName = senderProfile?.full_name ?? "구성원";
   const body = content || (hasFile ? "파일을 보냈습니다." : "");
   const title = channel.type === "group" ? `${channel.name ?? "그룹"} · ${senderName}` : `${senderName}님의 메시지`;
 
   await notify(supabase, {
-    userIds: members.map((m) => m.user_id),
+    userIds: recipients,
     type: channel.type === "group" ? "messenger_group" : "messenger_dm",
     title,
     body,
@@ -393,6 +402,20 @@ export async function leaveGroup(channelId: string): Promise<{ error?: string }>
 // 이 채널을 "지금까지 다 읽음"으로 표시한다 — 메인 화면 "메신저" 탭의 안 읽은 개수가 이 값으로 계산된다.
 // 대화창을 열 때와, 열어 둔 대화에 새 메시지가 올 때 부른다. 실패해도 대화에는 영향이 없다(조용히 무시).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// 이 방의 알림을 끄거나 켠다 — 끈 방은 메인 화면 "메신저" 개수와 푸시 알림에서 빠진다(메신저 안에서는 그대로 보인다).
+export async function setMessengerChannelMuted(channelId: string, muted: boolean): Promise<{ error?: string }> {
+  const user = await getUser();
+  if (!user) return { error: "로그인이 필요합니다." };
+  if (!UUID_RE.test(channelId)) return { error: "잘못된 요청입니다." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_messenger_channel_muted", { p_channel_id: channelId, p_muted: muted });
+  if (error) {
+    console.error("메신저 알림 설정 실패:", error.message);
+    return { error: "알림 설정을 바꾸지 못했습니다. 잠시 후 다시 시도해주세요." };
+  }
+  return {};
+}
 
 export async function markMessengerChannelRead(channelId: string): Promise<void> {
   const user = await getUser();

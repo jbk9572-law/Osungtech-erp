@@ -6180,6 +6180,16 @@ a.erp-detail-tab:hover:not(.active) {
   box-shadow: inset 0 -2px 0 var(--erp-primary);
 }
 
+.erp-todo-note {
+  border-radius: var(--erp-radius-md, 0);
+  margin: 0;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--erp-divider);
+  background: var(--erp-bg-subtle);
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
 .erp-todo-count {
   font-variant-numeric: tabular-nums;
 }
@@ -6935,3 +6945,8 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-widget-menu-row:first-of-type { border-top: 0; }
 .erp-widget-menu-btns { display: inline-flex; gap: 4px; }
 .erp-widget-menu-empty { margin: 0; padding: 8px 10px; font-size: var(--erp-font-sm); color: var(--erp-text-muted); }
+
+/* 좁은 화면에서 사용자가 숨긴 위젯 — 넓은 화면(1100px 이상)에서는 그대로 보인다 */
+@media (max-width: 1099px) {
+  .erp-widget.is-mobile-hidden { display: none; }
+}

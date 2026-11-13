@@ -28,6 +28,8 @@ import {
 // 권한이 필요한 내용(미수금/미지급금)은 해당 잔액을 볼 수 없는 사람에게는 선택 목록에서도 빠진다.
 export type ResolvedSources = {
   itemsOf: (id: SourceId) => TodoItem[] | null;
+  // 탭 아래에 붙는 한 줄 안내(예: 메일 마지막 확인 시각) — 없으면 null
+  noteOf: (id: SourceId) => string | null;
   options: { id: SourceId; title: string }[];
   overdueCustomers: OverdueCustomer[];
 };
@@ -78,6 +80,7 @@ export async function resolveDashboardSources(input: {
   });
   return {
     itemsOf: (id) => (can(id) ? all[id] : null),
+    noteOf: (id) => (id === "mail" || id === "sentMail" ? mail.syncNote : null),
     options: DASHBOARD_SOURCES.filter((s) => can(s.id)).map((s) => ({ id: s.id, title: s.title })),
     overdueCustomers,
   };

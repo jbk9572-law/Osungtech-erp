@@ -36,7 +36,7 @@ beforeEach(async () => {
     insert into public.messenger_channel_members (channel_id, user_id, tenant_id) values ('${chDmOthers}', '${userB}', '${t}'), ('${chDmOthers}', '${userC}', '${t}');
   `);
   await enableRowLevelSecurity(h.db); // authenticated 역할을 만든다(마이그레이션의 grant보다 먼저)
-  for (const f of ["00000000000236_messenger_read_state.sql", "00000000000237_messenger_unread_window.sql"]) {
+  for (const f of ["00000000000236_messenger_read_state.sql", "00000000000237_messenger_unread_window.sql", "00000000000238_messenger_mute_and_system_alerts.sql"]) {
     await h.db.exec(fs.readFileSync(path.join(process.cwd(), "supabase", "migrations", f), "utf8"));
   }
   // 운영 messenger_messages는 "내가 볼 수 있는 채널"만 읽히게 RLS가 걸려 있다(migration 137) — 같은 규칙을 재현한다.
@@ -89,5 +89,32 @@ describe("get_messenger_unread / mark_messenger_channel_read", () => {
     await h.as(h.ids.admin);
     const rows = await h.db.query(`select 1 from public.messenger_channel_reads`);
     expect(rows.rows).toHaveLength(0);
+  });
+
+  it("시스템 자동 알림(보낸 사람 없음)은 안 읽은 개수에 넣지 않는다", async () => {
+    await h.db.exec("reset role");
+    await h.db.query(`insert into public.messenger_messages (channel_id, sender_id, content, created_at) values ($1, null, '미수금 연체 알림', '2026-11-20 09:00:00+00')`, [chAll]);
+    await h.db.exec("set role authenticated");
+    expect((await h.db.query(`select * from public.get_messenger_unread()`)).rows).toHaveLength(0);
+  });
+
+  it("알림을 끈 방은 안 읽은 목록에서 빠지고, 다시 켜면 돌아온다", async () => {
+    await say(chAll, userB, "회의 3시", "2026-11-20 09:00:00+00");
+    await h.db.query(`select public.set_messenger_channel_muted($1, true)`, [chAll]);
+    // 가상 DB 시계 문제로 읽은 시각을 과거로 돌려 둔다(끄는 순간 now()로 기록되므로).
+    await h.db.exec(`reset role; update public.messenger_channel_reads set last_read_at = '2026-11-14 00:00:00+00'; set role authenticated;`);
+    expect((await h.db.query(`select * from public.get_messenger_unread()`)).rows).toHaveLength(0);
+    await h.db.query(`select public.set_messenger_channel_muted($1, false)`, [chAll]);
+    expect((await h.db.query(`select * from public.get_messenger_unread()`)).rows).toHaveLength(1);
+  });
+
+  it("푸시 대상에서 알림을 끈 사람만 거르고, 채널 멤버가 아닌 사람은 아무것도 얻지 못한다", async () => {
+    await h.as(userB);
+    await h.db.query(`select public.set_messenger_channel_muted($1, true)`, [chDmOthers]);
+    await h.as(userC);
+    const r = await h.db.query(`select * from public.messenger_unmuted_recipients($1, $2::uuid[])`, [chDmOthers, `{${userB},${userC}}`]);
+    expect(r.rows.map((x) => (x as { messenger_unmuted_recipients: string }).messenger_unmuted_recipients)).toEqual([userC]);
+    await h.as(h.ids.staff); // chDmOthers의 멤버가 아니다
+    expect((await h.db.query(`select * from public.messenger_unmuted_recipients($1, $2::uuid[])`, [chDmOthers, `{${userB}}`])).rows).toHaveLength(0);
   });
 });

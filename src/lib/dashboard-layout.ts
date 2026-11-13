@@ -26,9 +26,12 @@ export const DASHBOARD_WIDGETS = [
 export type DashboardWidgetId = (typeof DASHBOARD_WIDGETS)[number]["id"];
 
 export type DashboardLayoutItem = { id: DashboardWidgetId; x: number; y: number; w: number; h: number };
+// 좁은 화면(모바일)에서만 쓰는 순서·숨김 — 넓은 화면 배치(items/hidden)와 따로 저장한다.
+export type DashboardMobilePrefs = { order: DashboardWidgetId[]; hidden: DashboardWidgetId[] };
 export type DashboardLayout = {
   items: DashboardLayoutItem[];
   hidden: DashboardWidgetId[];
+  mobile: DashboardMobilePrefs;
   // 칸에 보여줄 내용(오늘 할 일 탭, 목록 칸 2개) — dashboard-sources.ts
   sources: DashboardSourceSelection;
 };
@@ -43,6 +46,7 @@ export function defaultDashboardLayout(): DashboardLayout {
   return {
     items: DASHBOARD_WIDGETS.filter((w) => !("optional" in w)).map((w) => ({ id: w.id, ...w.def })),
     hidden: [],
+    mobile: { order: [], hidden: [] },
     sources: {
       todo: [...DEFAULT_SOURCE_SELECTION.todo],
       news: [...DEFAULT_SOURCE_SELECTION.news],
@@ -50,6 +54,17 @@ export function defaultDashboardLayout(): DashboardLayout {
       extra2: [...DEFAULT_SOURCE_SELECTION.extra2],
     },
   };
+}
+
+// 위젯 id 목록(숨김·좁은 화면 순서 등) 검증 — 모르는 id·중복은 버리고 위젯 수까지만.
+function cleanWidgetIds(raw: unknown): DashboardWidgetId[] {
+  const out: DashboardWidgetId[] = [];
+  if (Array.isArray(raw)) {
+    for (const h of raw.slice(0, DASHBOARD_WIDGETS.length)) {
+      if (isDashboardWidgetId(h) && !out.includes(h)) out.push(h);
+    }
+  }
+  return out;
 }
 
 function clampInt(v: unknown, min: number, max: number): number | null {
@@ -61,14 +76,9 @@ function clampInt(v: unknown, min: number, max: number): number | null {
 export function normalizeDashboardLayout(raw: unknown): DashboardLayout {
   const base = defaultDashboardLayout();
   if (!raw || typeof raw !== "object") return base;
-  const src = raw as { items?: unknown; hidden?: unknown; sources?: unknown };
+  const src = raw as { items?: unknown; hidden?: unknown; mobile?: unknown; sources?: unknown };
 
-  const hidden: DashboardWidgetId[] = [];
-  if (Array.isArray(src.hidden)) {
-    for (const h of src.hidden.slice(0, DASHBOARD_WIDGETS.length)) {
-      if (isDashboardWidgetId(h) && !hidden.includes(h)) hidden.push(h);
-    }
-  }
+  const hidden = cleanWidgetIds(src.hidden);
 
   const seen = new Set<string>();
   const items: DashboardLayoutItem[] = [];
@@ -92,7 +102,13 @@ export function normalizeDashboardLayout(raw: unknown): DashboardLayout {
   for (const d of base.items) {
     if (!seen.has(d.id) && !hidden.includes(d.id)) items.push(d);
   }
-  return { items: resolveOverlaps(items.filter((i) => !hidden.includes(i.id))), hidden, sources: normalizeSourceSelection(src.sources) };
+  const mobileRaw = (src.mobile && typeof src.mobile === "object" ? src.mobile : {}) as { order?: unknown; hidden?: unknown };
+  return {
+    items: resolveOverlaps(items.filter((i) => !hidden.includes(i.id))),
+    hidden,
+    mobile: { order: cleanWidgetIds(mobileRaw.order), hidden: cleanWidgetIds(mobileRaw.hidden) },
+    sources: normalizeSourceSelection(src.sources),
+  };
 }
 
 // 겹친 위젯은 아래로 밀어낸다 — 화면에서 확정된 배치(grid가 이미 겹침 없이 정리한 값)는 그대로 두고,
@@ -113,9 +129,11 @@ export function resolveOverlaps(input: DashboardLayoutItem[]): DashboardLayoutIt
   return input.map((i) => placed.find((p) => p.id === i.id)!);
 }
 
-// 좁은 화면(한 줄로 쌓는 경우)에서 쓰는 순서: 위→아래, 같은 줄이면 왼쪽→오른쪽.
+// 좁은 화면(한 줄로 쌓는 경우)에서 쓰는 순서: 사용자가 정한 순서(mobile.order)가 먼저, 나머지는 위→아래·왼쪽→오른쪽.
 export function stackOrder(layout: DashboardLayout): DashboardWidgetId[] {
-  return [...layout.items].sort((a, b) => a.y - b.y || a.x - b.x).map((i) => i.id);
+  const base = [...layout.items].sort((a, b) => a.y - b.y || a.x - b.x).map((i) => i.id);
+  const custom = layout.mobile.order.filter((id) => base.includes(id));
+  return [...custom, ...base.filter((id) => !custom.includes(id))];
 }
 
 export function widgetTitle(id: DashboardWidgetId): string {

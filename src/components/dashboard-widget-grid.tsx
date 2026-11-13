@@ -4,6 +4,8 @@ import { useCallback, useState, useSyncExternalStore, type ReactNode } from "rea
 import ReactGridLayout, { useContainerWidth, verticalCompactor, type Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import { moveItem } from "@/lib/array-move";
+import { DashboardMobileEditor } from "@/components/dashboard-mobile-editor";
 import { resetDashboardLayout, saveDashboardLayout, saveTenantDefaultLayout } from "@/lib/dashboard-layout-actions";
 import { MAX_TODO_TABS, type SourceId } from "@/lib/dashboard-sources";
 import {
@@ -107,14 +109,7 @@ export function DashboardWidgetGrid({
       return { ...d, sources: { ...d.sources, [key]: next } };
     });
   const moveTabSource = (key: TabWidget, id: SourceId, dir: -1 | 1) =>
-    setDraft((d) => {
-      const cur = [...d.sources[key]];
-      const i = cur.indexOf(id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= cur.length) return d;
-      [cur[i], cur[j]] = [cur[j], cur[i]];
-      return { ...d, sources: { ...d.sources, [key]: cur } };
-    });
+    setDraft((d) => ({ ...d, sources: { ...d.sources, [key]: moveItem(d.sources[key], id, dir) } }));
   const titleOf = (id: SourceId) => sourceOptions.find((o) => o.id === id)?.title ?? id;
 
   function renderPicker(id: DashboardWidgetId) {
@@ -265,6 +260,9 @@ export function DashboardWidgetGrid({
           )}
         </div>
       )}
+      {!wide && (
+        <DashboardMobileEditor layout={layout} shownIds={DASHBOARD_WIDGETS.map((w) => w.id).filter(present)} onSaved={setLayout} />
+      )}
       {message && <p className="erp-widget-message" role="alert">{message}</p>}
 
       {editing && wide ? (
@@ -314,7 +312,7 @@ export function DashboardWidgetGrid({
           {layout.items.filter((i) => present(i.id)).map((i) => (
             <div
               key={i.id}
-              className={`erp-widget${widgetIsBare(i.id) ? " is-bare" : ""}`}
+              className={`erp-widget${widgetIsBare(i.id) ? " is-bare" : ""}${layout.mobile.hidden.includes(i.id) ? " is-mobile-hidden" : ""}`}
               style={{
                 gridColumn: `${i.x + 1} / span ${i.w}`,
                 gridRow: `${i.y + 1} / span ${i.h}`,

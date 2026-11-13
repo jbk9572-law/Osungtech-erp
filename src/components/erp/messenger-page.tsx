@@ -11,10 +11,12 @@ import {
   leaveGroup,
   resolveMessengerAttachmentUrl,
   markMessengerChannelRead,
+  setMessengerChannelMuted,
 } from "@/app/(dashboard)/messenger/actions";
 import type { MessengerMessage, MessengerChannel, MessengerErpRef } from "@/lib/messenger-types";
 import { fileKind, formatFileSize, isImageFile } from "@/lib/file-display";
 import { FilePickerInput } from "@/components/file-picker-input";
+import { useDebouncedCallback } from "@/lib/use-debounced-callback";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -223,6 +225,7 @@ export function MessengerPage({
   profileNames,
   currentUserId,
   isAdmin,
+  mutedChannelIds,
 }: {
   channels: MessengerChannel[];
   activeChannelId: string | null;
@@ -230,6 +233,7 @@ export function MessengerPage({
   profileNames: Record<string, string>;
   currentUserId: string;
   isAdmin: boolean;
+  mutedChannelIds: string[];
 }) {
   const [view, setView] = useState<View>("rooms");
   const [rosterQuery, setRosterQuery] = useState("");
@@ -260,6 +264,9 @@ export function MessengerPage({
   const listEndRef = useRef<HTMLDivElement>(null);
   const activeChannelIdRef = useRef(activeChannelId);
   const viewRef = useRef<View>("rooms");
+  const [mutedIds, setMutedIds] = useState<Set<string>>(new Set(mutedChannelIds));
+  // 대화창을 열어 둔 채 메시지가 연달아 와도 읽음 요청은 3초에 한 번만 보낸다.
+  const markReadSoon = useDebouncedCallback((channelId: string) => void markMessengerChannelRead(channelId), 3000);
 
   useEffect(() => {
     activeChannelIdRef.current = activeChannelId;
@@ -278,6 +285,26 @@ export function MessengerPage({
       router.push("/dashboard");
     }
   });
+
+  async function toggleMute(channelId: string) {
+    const next = !mutedIds.has(channelId);
+    setMutedIds((prev) => {
+      const copy = new Set(prev);
+      if (next) copy.add(channelId);
+      else copy.delete(channelId);
+      return copy;
+    });
+    const res = await setMessengerChannelMuted(channelId, next);
+    if (res.error) {
+      // 실패하면 화면 표시를 원래대로 되돌린다.
+      setMutedIds((prev) => {
+        const copy = new Set(prev);
+        if (next) copy.delete(channelId);
+        else copy.add(channelId);
+        return copy;
+      });
+    }
+  }
 
   async function openChannel(channelId: string) {
     setActiveChannelId(channelId);
@@ -349,7 +376,7 @@ export function MessengerPage({
           });
           const isActiveChannel = row.channel_id === activeChannelIdRef.current;
           if (isActiveChannel && viewRef.current === "chat" && row.sender_id !== currentUserId) {
-            void markMessengerChannelRead(row.channel_id);
+            markReadSoon(row.channel_id);
           }
           if (!isActiveChannel && row.sender_id !== currentUserId) {
             setUnseenChannelIds((prev) => new Set(prev).add(row.channel_id));
@@ -669,7 +696,8 @@ export function MessengerPage({
                   <ChannelAvatar channel={c} profileNames={profileNames} currentUserId={currentUserId} />
                 </span>
                 <span className="erp-u-flex-1 erp-u-text-left">{channelLabel(c, profileNames, currentUserId)}</span>
-                {unseenChannelIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
+                {mutedIds.has(c.id) && <span className="erp-u-muted erp-u-text-caption" title="이 방의 알림이 꺼져 있습니다">🔕</span>}
+                {unseenChannelIds.has(c.id) && !mutedIds.has(c.id) && <span className="erp-messenger-unread-dot" style={{ position: "static" }} aria-hidden />}
               </button>
             ))}
           </div>
@@ -725,6 +753,9 @@ export function MessengerPage({
                       {channelLabel(activeChannel, profileNames, currentUserId)}
                     </span>
                     <span className="erp-messenger-erp-badge">ERP 연동 활성화됨</span>
+                    <button type="button" className="erp-btn erp-btn-xs" onClick={() => toggleMute(activeChannel.id)}>
+                      {mutedIds.has(activeChannel.id) ? "🔕 알림 켜기" : "🔔 알림 끄기"}
+                    </button>
                   </div>
 
                   <div className="erp-messenger-search">

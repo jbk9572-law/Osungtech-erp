@@ -805,6 +805,7 @@ export function DashboardCalendar({
   sourceOptions,
   sidePanels,
   companyLayout,
+  todoTruncated = false,
   reportMoney,
   lowStock,
   monthTotals,
@@ -829,6 +830,8 @@ export function DashboardCalendar({
   sourceOptions: { id: SourceId; title: string }[];
   sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
   companyLayout: DashboardLayout;
+  // 이번 달 마감 할 일이 상한을 넘어 일부만 띠로 보일 때 true
+  todoTruncated?: boolean;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -1060,6 +1063,7 @@ export function DashboardCalendar({
             </span>
           ))}
         </div>
+        {todoTruncated && <p className="erp-u-muted erp-u-text-caption erp-u-mt-8">이번 달 할 일이 많아 일부만 띠로 표시됩니다. 전체는 할일관리에서 확인하세요.</p>}
 
         </div>
 

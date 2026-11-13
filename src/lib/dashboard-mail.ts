@@ -8,21 +8,23 @@ import type { MailInput } from "@/lib/dashboard-todo";
 // 계정이 없으면 available=false라 내용 고르기 목록에서도 빠진다. 내 메일이 아닌 건 RLS와 계정 조건으로 막는다.
 const MAIL_LIMIT = 8;
 
-export type DashboardMail = { available: boolean; items: MailInput[]; sentItems: MailInput[] };
+// syncNote: 메일은 서버에서 가져와 저장해 둔 것을 보여주므로, 언제 마지막으로 가져왔는지(또는 오류)를 탭 아래에 알려준다.
+export type DashboardMail = { available: boolean; items: MailInput[]; sentItems: MailInput[]; syncNote: string | null };
 
 export async function getDashboardMail(
   supabase: SupabaseClient<Database>,
   userId: string | null,
   want: { inbox: boolean; sent: boolean },
 ): Promise<DashboardMail> {
-  if (!userId) return { available: false, items: [], sentItems: [] };
+  if (!userId) return { available: false, items: [], sentItems: [], syncNote: null };
   const [enabled, accountRes] = await Promise.all([
     isFeatureEnabled(supabase, "mail"),
-    supabase.from("mail_accounts").select("id").eq("user_id", userId).maybeSingle(),
+    supabase.from("mail_accounts").select("id, last_synced_at, last_sync_error").eq("user_id", userId).maybeSingle(),
   ]);
   const account = accountRes.data;
-  if (!enabled || !account) return { available: false, items: [], sentItems: [] };
-  if (!want.inbox && !want.sent) return { available: true, items: [], sentItems: [] };
+  if (!enabled || !account) return { available: false, items: [], sentItems: [], syncNote: null };
+  const syncNote = syncNoteOf(account.last_synced_at, account.last_sync_error);
+  if (!want.inbox && !want.sent) return { available: true, items: [], sentItems: [], syncNote };
 
   const [inbox, sent] = await Promise.all([
     want.inbox
@@ -48,6 +50,7 @@ export async function getDashboardMail(
 
   return {
     available: true,
+    syncNote,
     items: (inbox.data ?? []).map((m) => ({
       id: m.id,
       subject: m.subject?.trim() || "(제목 없음)",
@@ -61,6 +64,13 @@ export async function getDashboardMail(
       sentLabel: mailTimeLabel(m.sent_at),
     })),
   };
+}
+
+// "메일함 마지막 확인 14:20" — 오류가 있으면 그 사실을, 아직 한 번도 못 가져왔으면 그렇게 알려준다.
+export function syncNoteOf(lastSyncedAt: string | null, lastError: string | null): string {
+  if (lastError) return "메일 서버 연결에 문제가 있어 새 메일을 가져오지 못하고 있습니다(환경설정 > 메일 계정 연동 확인).";
+  const label = mailTimeLabel(lastSyncedAt);
+  return label ? `메일함 마지막 확인 ${label}` : "아직 메일을 가져오지 않았습니다.";
 }
 
 // 보낸 메일의 받는 사람 — 첫 사람 이름(없으면 주소) 외 N명.
