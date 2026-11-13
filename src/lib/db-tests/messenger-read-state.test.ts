@@ -36,7 +36,9 @@ beforeEach(async () => {
     insert into public.messenger_channel_members (channel_id, user_id, tenant_id) values ('${chDmOthers}', '${userB}', '${t}'), ('${chDmOthers}', '${userC}', '${t}');
   `);
   await enableRowLevelSecurity(h.db); // authenticated 역할을 만든다(마이그레이션의 grant보다 먼저)
-  await h.db.exec(fs.readFileSync(path.join(process.cwd(), "supabase", "migrations", "00000000000236_messenger_read_state.sql"), "utf8"));
+  for (const f of ["00000000000236_messenger_read_state.sql", "00000000000237_messenger_unread_window.sql"]) {
+    await h.db.exec(fs.readFileSync(path.join(process.cwd(), "supabase", "migrations", f), "utf8"));
+  }
   // 운영 messenger_messages는 "내가 볼 수 있는 채널"만 읽히게 RLS가 걸려 있다(migration 137) — 같은 규칙을 재현한다.
   await h.db.exec(`
     alter table public.messenger_messages enable row level security;
