@@ -2,6 +2,7 @@ import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database.types";
+import { withDbCallStats } from "@/lib/db-call-stats";
 
 // react의 cache()로 감싸서, 같은 요청(레이아웃 + 페이지 + 그 안에서 호출되는
 // 여러 헬퍼) 안에서 createClient()를 몇 번을 부르든 항상 같은 클라이언트
@@ -16,6 +17,8 @@ export const createClient = cache(async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // 화면별 DB 호출 횟수·대기 시간 측정용(withPageTiming이 요청마다 통계 상자를 열어 준다)
+      global: { fetch: withDbCallStats() },
       cookies: {
         getAll() {
           return cookieStore.getAll();

@@ -34,12 +34,38 @@ export type ResolvedSources = {
   overdueCustomers: OverdueCustomer[];
 };
 
-export async function resolveDashboardSources(input: {
+// 고른 내용에 필요한 "밖에서 가져오는" 자료(메일·메신저·공지·결재 대기)를 한꺼번에 불러온다. 이 자료는 메인 화면의 다른
+// 조회 결과(미수금·할 일 등)와 상관없으므로, 화면 맨 처음에 시작해 두고 마지막에 resolveDashboardSources에 넘기면 다른
+// 조회와 동시에 진행된다(예전엔 맨 마지막에 순서대로 시작해서 그만큼 더 기다렸다).
+export type SourcePrefetch = {
+  chosen: Set<SourceId>;
+  mail: Awaited<ReturnType<typeof getDashboardMail>>;
+  messenger: Awaited<ReturnType<typeof getDashboardMessenger>>;
+  boards: Awaited<ReturnType<typeof getRecentBoard>>;
+  approvals: Awaited<ReturnType<typeof getMyApprovalQueue>>;
+};
+
+export async function prefetchDashboardSources(input: {
   supabase: SupabaseClient<Database>;
   userId: string | null;
   todayStr: string;
-  backHref: string;
   selection: DashboardSourceSelection;
+}): Promise<SourcePrefetch> {
+  const chosen = new Set<SourceId>([...input.selection.todo, ...input.selection.news, ...input.selection.extra1, ...input.selection.extra2]);
+  // 메일은 기능 on/off와 내 계정 연동 여부를 봐야 해서 별도 조회 — 메일 목록 자체는 "받은 메일"을 고른 경우에만 불러온다.
+  const [mail, messenger, boards, approvals] = await Promise.all([
+    getDashboardMail(input.supabase, input.userId, { inbox: chosen.has("mail"), sent: chosen.has("sentMail") }),
+    getDashboardMessenger(input.supabase, input.userId, chosen.has("messenger")),
+    chosen.has("board") ? getRecentBoard(input.supabase) : Promise.resolve([]),
+    chosen.has("approval") && input.userId ? getMyApprovalQueue(input.supabase, input.userId, input.todayStr) : Promise.resolve([]),
+  ]);
+  return { chosen, mail, messenger, boards, approvals };
+}
+
+export async function resolveDashboardSources(input: {
+  prefetch: Promise<SourcePrefetch>;
+  todayStr: string;
+  backHref: string;
   customerBalances: PartyBalance[] | null;
   supplierBalances: PartyBalance[] | null;
   todos: TodoNoticeInput[];
@@ -48,20 +74,12 @@ export async function resolveDashboardSources(input: {
   announcements: AnnouncementInput[];
   memos: MemoInput[];
 }): Promise<ResolvedSources> {
-  const chosen = new Set<SourceId>([...input.selection.todo, ...input.selection.news, ...input.selection.extra1, ...input.selection.extra2]);
-  // 메일은 기능 on/off와 내 계정 연동 여부를 봐야 해서 별도 조회 — 메일 목록 자체는 "받은 메일"을 고른 경우에만 불러온다.
-  const [mail, messenger, boards] = await Promise.all([
-    getDashboardMail(input.supabase, input.userId, { inbox: chosen.has("mail"), sent: chosen.has("sentMail") }),
-    getDashboardMessenger(input.supabase, input.userId, chosen.has("messenger")),
-    chosen.has("board") ? getRecentBoard(input.supabase) : Promise.resolve([]),
-  ]);
+  const { chosen, mail, messenger, boards, approvals } = await input.prefetch;
   const can = (id: SourceId) => {
     const need = sourceRequirement(id);
     return need === "receivables" ? !!input.customerBalances : need === "payables" ? !!input.supplierBalances : need === "mail" ? mail.available : need === "messenger" ? messenger.available : true;
   };
   const overdueCustomers = input.customerBalances ? findOverdueCustomers(input.customerBalances, input.todayStr) : [];
-  const approvals =
-    chosen.has("approval") && input.userId ? await getMyApprovalQueue(input.supabase, input.userId, input.todayStr) : [];
   const all = buildSourceItems({
     approvals,
     overdue: overdueCustomers,

@@ -69,3 +69,30 @@ export async function setMaintenanceMode(_prevState: FormState, formData: FormDa
   revalidatePath("/platform-admin/settings");
   return { success: enabled ? "점검 모드를 켰습니다." : "점검 모드를 껐습니다." };
 }
+
+// 서버 → DB 응답 속도 재기 — 앱 서버(서울 라이트세일)에서 Supabase까지 가장 가벼운 조회를 여러 번 보내서 한 번 왕복에
+// 몇 ms 걸리는지 본다. 화면 하나가 DB 조회를 수십 번 하므로, 한 번의 왕복이 길면(예: 서버와 DB가 멀리 떨어져 있으면)
+// 화면 전체가 그만큼 곱해져 느려진다 — "전체적으로 느리다"의 원인이 거리인지 가려내는 용도다.
+export async function measureDbLatency(): Promise<FormState> {
+  const { supabase, isPlatformAdmin } = await requirePlatformAdmin();
+  if (!isPlatformAdmin) return { error: "플랫폼 운영자만 실행할 수 있습니다." };
+
+  const times: number[] = [];
+  for (let i = 0; i < 7; i += 1) {
+    const start = performance.now();
+    const { error } = await supabase.from("platform_settings").select("id").eq("id", true).maybeSingle();
+    const ms = performance.now() - start;
+    if (error) return { error: `측정 중 조회가 실패했습니다: ${error.message}` };
+    if (i > 0) times.push(ms); // 첫 번째는 연결을 맺는 비용이 섞여서 버린다
+  }
+  const avg = times.reduce((a, b) => a + b, 0) / times.length;
+  return {
+    success: `DB 한 번 왕복 평균 ${Math.round(avg)}ms (최소 ${Math.round(Math.min(...times))} · 최대 ${Math.round(Math.max(...times))}, 6회). ${verdict(avg)}`,
+  };
+}
+
+function verdict(avgMs: number): string {
+  if (avgMs < 30) return "서버와 DB가 가까운 편입니다.";
+  if (avgMs < 100) return "보통입니다. 화면 하나가 조회를 20번 하면 약 " + Math.round((avgMs * 20) / 100) / 10 + "초가 DB 대기입니다.";
+  return "느린 편입니다 — 서버와 DB가 멀리 떨어져 있을 가능성이 큽니다. 화면 하나가 조회를 20번 하면 약 " + Math.round((avgMs * 20) / 100) / 10 + "초가 DB 대기입니다.";
+}

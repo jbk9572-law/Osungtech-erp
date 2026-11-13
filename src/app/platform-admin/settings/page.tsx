@@ -5,6 +5,7 @@ import { FeatureToggle } from "@/components/feature-toggle";
 import { PlatformDefaultPlanSelect } from "@/components/platform-default-plan-select";
 import { MaintenanceModeForm } from "@/components/maintenance-mode-form";
 import { TenantThemeForm } from "@/components/tenant-theme-form";
+import { DbLatencyProbe } from "@/components/db-latency-probe";
 import { TenantIndustryForm } from "@/components/tenant-industry-form";
 import { setPlatformDefaultFeatureEnabled } from "@/app/platform-admin/settings/actions";
 import { MENU_GROUPS, MENU_TOGGLE_LOCKED_HREFS } from "@/lib/erp-menu";
@@ -41,6 +42,18 @@ export default async function PlatformSettingsPage() {
             enabled={settings?.maintenance_mode ?? false}
             message={settings?.maintenance_message ?? null}
           />
+        </div>
+      </div>
+
+      <div className="erp-detail erp-u-mb-s5">
+        <div className="erp-detail-tabs">
+          <span className="erp-detail-tab active">서버 진단</span>
+        </div>
+        <div className="erp-detail-body">
+          <p className="erp-u-muted erp-u-text-sm erp-u-mb-8">
+            화면이 전체적으로 느릴 때 원인이 서버와 DB 사이의 거리인지 확인합니다. 숫자가 클수록(100ms 이상) 화면마다 DB 대기 시간이 누적됩니다.
+          </p>
+          <DbLatencyProbe />
         </div>
       </div>
 

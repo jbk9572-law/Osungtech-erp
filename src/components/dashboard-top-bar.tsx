@@ -5,7 +5,8 @@ import { useActionState, useRef, useState } from "react";
 import { ClockButton } from "@/components/clock-in-out-panel";
 import { FormMessage } from "@/components/form-message";
 import { GuardedLink } from "@/components/erp/guarded-link";
-import { QuickStockLookup, type StockLookupProduct } from "@/components/quick-stock-lookup";
+import { QuickStockLookup } from "@/components/quick-stock-lookup";
+import { loadStockLookupProducts } from "@/app/(dashboard)/dashboard/stock-lookup-actions";
 import { clockIn, clockOut } from "@/app/(dashboard)/hr/actions";
 
 // 메인 화면 맨 윗줄 — 하루에 몇 번씩 쓰는 것(출근·퇴근, 빠른 실행, 재고 조회)을 위젯 자리 없이 늘 같은 곳에 둔다.
@@ -50,12 +51,10 @@ function ClockBar({ clockInTime, clockOutTime }: TopBarClock) {
 export function DashboardTopBar({
   clock,
   showReceivables,
-  products,
 }: {
   // 인사관리·근태를 끈 회사는 null — 출근 버튼을 그리지 않는다.
   clock: TopBarClock | null;
   showReceivables: boolean;
-  products: StockLookupProduct[];
 }) {
   return (
     <div className="erp-dash-topbar">
@@ -66,7 +65,7 @@ export function DashboardTopBar({
         <Link className="erp-btn erp-btn-sm" href="/products">품목 등록</Link>
         {showReceivables && <Link className="erp-btn erp-btn-sm" href="/receivables">미수금 현황</Link>}
       </div>
-      <QuickStockLookup compact products={products} />
+      <QuickStockLookup loadProducts={loadStockLookupProducts} />
     </div>
   );
 }

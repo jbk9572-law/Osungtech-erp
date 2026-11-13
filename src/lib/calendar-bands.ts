@@ -52,3 +52,22 @@ export function buildDayBands(day: BandSource | undefined, opts: { lowStockCount
 export function bandsTooltip(all: Band[]): string | undefined {
   return all.length ? all.map((b) => `${b.tag ? `${b.tag} ` : ""}${b.text}`).join("\n") : undefined;
 }
+
+// 건수 모드 — 칸마다 종류별 건수만 한 줄씩("매출 3건"). 업체명 같은 자세한 내용은 칸에 마우스를 올리거나(bandsTooltip)
+// 칸을 눌러 열리는 일일 리포트에서 본다. 건수는 리포트·상단 숫자와 같은 기준(매출·매입은 전표 수)을 쓴다.
+export type CountKind = "sales" | "purchase" | "todo" | "event" | "stock";
+export type CountRow = { kind: CountKind; label: string; count: number };
+
+export function buildDayCounts(
+  day: { salesCount: number; purchaseCount: number; todoItems: unknown[]; calendarItems: unknown[] } | undefined,
+  opts: { lowStockCount: number },
+): CountRow[] {
+  const rows: CountRow[] = [
+    { kind: "sales", label: "매출", count: day?.salesCount ?? 0 },
+    { kind: "purchase", label: "매입", count: day?.purchaseCount ?? 0 },
+    { kind: "todo", label: "할 일", count: day?.todoItems.length ?? 0 },
+    { kind: "event", label: "일정", count: day?.calendarItems.length ?? 0 },
+    { kind: "stock", label: "재고 부족", count: opts.lowStockCount },
+  ];
+  return rows.filter((r) => r.count > 0);
+}
