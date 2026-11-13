@@ -792,6 +792,7 @@ export function DashboardCalendar({
   layout,
   sourceOptions,
   sidePanels,
+  companyLayout,
   reportMoney,
   lowStock,
   monthTotals,
@@ -815,6 +816,7 @@ export function DashboardCalendar({
   layout: DashboardLayout;
   sourceOptions: { id: SourceId; title: string }[];
   sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
+  companyLayout: DashboardLayout;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -1127,6 +1129,8 @@ export function DashboardCalendar({
   return (
     <DashboardWidgetGrid
       initialLayout={layout}
+      companyLayout={companyLayout}
+      canSetCompanyDefault={isAdmin}
       sourceOptions={sourceOptions}
       widgets={{ ...sidePanels, calendar: calendarCard, report: reportCard }}
     />

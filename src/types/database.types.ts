@@ -5585,6 +5585,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      tenant_dashboard_layout: {
+        Row: {
+          tenant_id: string;
+          layout: Json;
+          updated_by: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          tenant_id?: string;
+          layout: Json;
+          updated_by?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          tenant_id?: string;
+          layout?: Json;
+          updated_by?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       ui_dashboard_layout: {
         Row: {
           user_id: string;

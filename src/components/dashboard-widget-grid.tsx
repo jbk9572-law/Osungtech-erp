@@ -4,14 +4,13 @@ import { useCallback, useState, useSyncExternalStore, type ReactNode } from "rea
 import ReactGridLayout, { useContainerWidth, verticalCompactor, type Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
-import { resetDashboardLayout, saveDashboardLayout } from "@/lib/dashboard-layout-actions";
+import { resetDashboardLayout, saveDashboardLayout, saveTenantDefaultLayout } from "@/lib/dashboard-layout-actions";
 import { MAX_TODO_TABS, type SourceId } from "@/lib/dashboard-sources";
 import {
   DASHBOARD_COLS,
   DASHBOARD_MARGIN,
   DASHBOARD_ROW_HEIGHT,
   DASHBOARD_WIDGETS,
-  defaultDashboardLayout,
   normalizeDashboardLayout,
   stackOrder,
   widgetIsBare,
@@ -44,10 +43,16 @@ function useIsWide() {
 
 export function DashboardWidgetGrid({
   initialLayout,
+  companyLayout,
+  canSetCompanyDefault,
   sourceOptions,
   widgets,
 }: {
   initialLayout: DashboardLayout;
+  // 개인 배치를 지우고 "기본값으로" 돌아갈 곳(관리자가 저장한 회사 기본, 없으면 시스템 기본)
+  companyLayout: DashboardLayout;
+  // 관리자만 — 지금 편집한 배치를 회사 기본으로 저장할 수 있다.
+  canSetCompanyDefault: boolean;
   // 이 사용자가 고를 수 있는 내용(권한이 없는 것은 빠져 있다)
   sourceOptions: { id: SourceId; title: string }[];
   widgets: Partial<Record<DashboardWidgetId, ReactNode>>;
@@ -171,10 +176,17 @@ export function DashboardWidgetGrid({
       setMessage(res.error ?? "기본값으로 되돌리지 못했습니다.");
       return;
     }
-    const def = defaultDashboardLayout();
-    setLayout(def);
-    setDraft(def);
+    setLayout(companyLayout);
+    setDraft(companyLayout);
     setEditing(false);
+  }
+
+  async function saveCompanyDefault() {
+    setBusy(true);
+    setMessage(null);
+    const res = await saveTenantDefaultLayout(draft);
+    setBusy(false);
+    setMessage(res.ok ? "회사 기본 배치로 저장했습니다. 개인 배치를 따로 저장하지 않은 직원에게 보입니다." : (res.error ?? "저장하지 못했습니다."));
   }
 
   // 내용이 없는 위젯(예: 권한이 없어 안 그리는 미수금 위젯)은 칸도 만들지 않는다.
@@ -198,6 +210,11 @@ export function DashboardWidgetGrid({
               <button type="button" className="erp-btn erp-btn-xs" disabled={busy} onClick={reset}>
                 기본값으로
               </button>
+              {canSetCompanyDefault && (
+                <button type="button" className="erp-btn erp-btn-xs" disabled={busy} onClick={saveCompanyDefault}>
+                  회사 기본으로 저장
+                </button>
+              )}
               <button type="button" className="erp-btn erp-btn-xs" disabled={busy} onClick={() => setEditing(false)}>
                 취소
               </button>

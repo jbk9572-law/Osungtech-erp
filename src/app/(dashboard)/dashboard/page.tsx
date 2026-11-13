@@ -16,7 +16,7 @@ import { getCalendarItems, type CalendarItem } from "@/lib/calendar-data";
 import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
-import { normalizeDashboardLayout } from "@/lib/dashboard-layout";
+import { loadDashboardLayouts } from "@/lib/dashboard-layout-load";
 import { QuickActionsPanel, RecentMemosPanel } from "@/components/dashboard-side-panels";
 import { DashboardSourcePanel } from "@/components/dashboard-source-panel";
 import { sourceMeta, type SourceId } from "@/lib/dashboard-sources";
@@ -109,10 +109,7 @@ async function DashboardPage({
   const attendancePromise = getDashboardAttendance(supabase, user?.id ?? null, todayStr);
 
   // 사용자가 저장한 위젯 배치(없으면 기본 배치) — 저장값은 항상 검증·보정해서 쓴다.
-  const { data: layoutRow } = user
-    ? await supabase.from("ui_dashboard_layout").select("layout").eq("user_id", user.id).maybeSingle()
-    : { data: null };
-  const dashboardLayout = normalizeDashboardLayout(layoutRow?.layout);
+  const { layout: dashboardLayout, companyLayout } = await loadDashboardLayouts(supabase, user?.id ?? null);
 
   const [
     salesItems,
@@ -853,6 +850,7 @@ async function DashboardPage({
         }}
         lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
         layout={dashboardLayout}
+        companyLayout={companyLayout}
         sourceOptions={sources.options}
         sidePanels={sidePanels}
       />
