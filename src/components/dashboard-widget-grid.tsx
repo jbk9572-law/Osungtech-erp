@@ -118,7 +118,7 @@ export function DashboardWidgetGrid({
         <div className="erp-widget-bar">
           {editing ? (
             <>
-              <span className="erp-widget-bar-hint">위젯을 끌어서 옮기고, 오른쪽 아래 모서리를 끌어서 크기를 바꾸세요.</span>
+              <span className="erp-widget-bar-hint">위젯 위쪽 바를 끌어서 옮기고, 위젯의 왼쪽·오른쪽·아래 가장자리나 아래 모서리를 끌어서 크기를 바꾸세요.</span>
               {draft.hidden.map((id) => (
                 <button key={id} type="button" className="erp-btn erp-btn-xs" onClick={() => showWidget(id)}>
                   ＋ {widgetTitle(id)}
@@ -155,7 +155,7 @@ export function DashboardWidgetGrid({
               layout={shown.items.map((i) => ({ i: i.id, x: i.x, y: i.y, w: i.w, h: i.h, minW: widgetMin(i.id).w, minH: widgetMin(i.id).h }))}
               gridConfig={{ cols: DASHBOARD_COLS, rowHeight: DASHBOARD_ROW_HEIGHT, margin: [DASHBOARD_MARGIN, DASHBOARD_MARGIN], containerPadding: [0, 0], maxRows: Infinity }}
               dragConfig={{ enabled: true, bounded: false, handle: ".erp-widget-handle", threshold: 3 }}
-              resizeConfig={{ enabled: true, handles: ["se"] }}
+              resizeConfig={{ enabled: true, handles: ["e", "w", "s", "se", "sw"] }}
               compactor={verticalCompactor}
               onLayoutChange={onLayoutChange}
             >

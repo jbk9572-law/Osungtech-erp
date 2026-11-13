@@ -11,12 +11,12 @@ export const DASHBOARD_MARGIN = 12;
 const MAX_ROWS = 200;
 
 export const DASHBOARD_WIDGETS = [
-  { id: "lookup", title: "빠른 재고 조회", min: { w: 2, h: 4 }, def: { x: 0, y: 0, w: 3, h: 4 } },
-  { id: "stockRisk", title: "재고위험", min: { w: 2, h: 4 }, def: { x: 0, y: 4, w: 3, h: 5 } },
-  { id: "memos", title: "최근 메모", min: { w: 2, h: 4 }, def: { x: 0, y: 9, w: 3, h: 5 } },
-  { id: "quick", title: "빠른 실행", min: { w: 2, h: 4 }, def: { x: 0, y: 14, w: 3, h: 5 } },
-  { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 3, y: 0, w: 5, h: 14 } },
-  { id: "report", title: "오늘 리포트", min: { w: 3, h: 8 }, def: { x: 8, y: 0, w: 4, h: 40 } },
+  { id: "lookup", title: "빠른 재고 조회", min: { w: 2, h: 4 }, def: { x: 0, y: 0, w: 2, h: 4 } },
+  { id: "stockRisk", title: "재고위험", min: { w: 2, h: 4 }, def: { x: 0, y: 4, w: 2, h: 5 } },
+  { id: "memos", title: "최근 메모", min: { w: 2, h: 4 }, def: { x: 0, y: 9, w: 2, h: 5 } },
+  { id: "quick", title: "빠른 실행", min: { w: 2, h: 4 }, def: { x: 0, y: 14, w: 2, h: 5 } },
+  { id: "calendar", title: "달력", min: { w: 4, h: 10 }, def: { x: 2, y: 0, w: 7, h: 22 } },
+  { id: "report", title: "오늘 리포트", min: { w: 3, h: 8 }, def: { x: 9, y: 0, w: 3, h: 28 } },
 ] as const;
 
 export type DashboardWidgetId = (typeof DASHBOARD_WIDGETS)[number]["id"];

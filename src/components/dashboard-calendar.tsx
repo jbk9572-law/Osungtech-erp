@@ -27,7 +27,6 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
 import { canManage } from "@/lib/can-manage";
 import { startRouteProgress } from "@/lib/route-progress";
-import { copyText } from "@/lib/clipboard";
 import {
   formatPaperCalcSizeLines,
   type PaperCalcSizeRow,
@@ -653,33 +652,6 @@ function appendItemLines(
   });
 }
 
-function buildSalesCopyText(
-  dateStr: string,
-  data: DayData,
-  paperStockProductName: string,
-) {
-  const lines: string[] = [`${dateStr} 매출`, "", `[매출] ${data.salesCount}건`, ""];
-  appendItemLines(data.salesItems, data.salesPaperCalcByPartner, paperStockProductName, lines, "sale");
-  return lines.join("\n");
-}
-
-function buildPurchaseCopyText(
-  dateStr: string,
-  data: DayData,
-  paperStockProductName: string,
-) {
-  const lines: string[] = [`${dateStr} 매입`, "", `[매입] ${data.purchaseCount}건`, ""];
-  appendItemLines(
-    data.purchaseItems,
-    data.purchasePaperCalcByPartner,
-    paperStockProductName,
-    lines,
-    "purchase",
-    data.salesPaperCalcByPartner,
-  );
-  return lines.join("\n");
-}
-
 // ── 메인 화면 "오늘 리포트" 박스용 가공 ───────────────────────────────
 // 박스 UI(daily-report-box.tsx)는 이 파일을 import하지 않고, 여기서 만든 순수
 // 데이터(ReportDay)만 받는다 — 순환 import 없이 같은 dataByDate를 재사용해서
@@ -797,20 +769,6 @@ export function buildReportDay(data: DayData | undefined, paperStockProductName:
   };
 }
 
-// 메모 로그를 카톡 등에 붙여넣을 수 있는 텍스트로 옮긴다. 화면에는
-// 작성자·시각이 같이 보이지만, 복사 텍스트에는 시각까지는 필요 없다는
-// 피드백에 따라 "작성자: 내용"만 담는다.
-function buildMemoCopyText(
-  dateStr: string,
-  notes: { authorName: string; content: string }[],
-) {
-  const lines: string[] = [`${dateStr} 메모`, ""];
-  for (const note of notes) {
-    lines.push(`${note.authorName}: ${note.content}`);
-  }
-  return lines.join("\n");
-}
-
 // "2026-09-30" -> "9/30" — 이월 유입 표시에서 짧게 보여줄 때 쓴다.
 function formatMonthDay(dateStr: string): string {
   const [, m, d] = dateStr.split("-");
@@ -866,9 +824,6 @@ export function DashboardCalendar({
       ? todayStr
       : null;
   const [selected, setSelected] = useState<string | null>(defaultSelected);
-  const [copiedType, setCopiedType] = useState<
-    "sales" | "purchase" | "memo" | null
-  >(null);
 
   // MidnightRefresh가 router.refresh()로 서버 데이터(todayStr 포함)를
   // 새로 받아와도, 이 상태는 처음 마운트될 때 한 번만 정해지므로 자정이
@@ -898,19 +853,6 @@ export function DashboardCalendar({
     notes: [],
     calendarItems: [],
   };
-  async function handleCopy(type: "sales" | "purchase" | "memo") {
-    if (!selected) return;
-    const text =
-      type === "sales"
-        ? buildSalesCopyText(selected, selectedData, paperStockProductName)
-        : type === "purchase"
-          ? buildPurchaseCopyText(selected, selectedData, paperStockProductName)
-          : buildMemoCopyText(selected, selectedData.notes);
-    await copyText(text);
-    setCopiedType(type);
-    setTimeout(() => setCopiedType(null), 1500);
-  }
-
   const calendarCard = (
       <div className="relative overflow-hidden rounded-sm border border-[var(--erp-border)] bg-white p-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1090,53 +1032,14 @@ export function DashboardCalendar({
             재고부족
           </span>
         </div>
-      </div>
-  );
 
-  // 오늘 리포트 + 그날 메모·일정·이월 안내(예전 "오늘의 업무" 패널의 이 기능들을 리포트 안으로 옮겼다 —
-  // 매입/매출 품목은 리포트의 상세보기 팝업이 보여준다).
-  const reportCard = (
-    <DailyReportBox
-      key={`${year}-${month}`}
-      year={year}
-      month={month}
-      todayStr={todayStr}
-      date={selected ?? defaultReportDate(year, month, todayStr)} onDateChange={setSelected}
-      getDay={getReportDay}
-      money={reportMoney ?? null}
-      lowStock={lowStock ?? []}
-      monthTotals={monthTotals ?? null}
-    >
-      {selected ? (
+        {/* 고른 날짜의 이월 안내·일정·메모 — 달력에서 날짜를 누르면 바로 아래에서 보고 적는다. */}
+        {selected ? (
+          <div className="relative mt-3 border-t border-[var(--erp-border)] pt-3">
           <>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-bold text-[var(--erp-text)]">
-                메모·일정
-              </h3>
-              <div className="flex shrink-0 gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleCopy("purchase")}
-                  className="rounded-sm border border-[var(--erp-primary)] bg-[var(--erp-selected)] px-2 py-1 text-xs font-bold text-[var(--erp-primary)] hover:bg-[#d3e0ee]"
-                >
-                  {copiedType === "purchase" ? "복사됨" : "매입 복사"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleCopy("sales")}
-                  className="rounded-sm border border-[var(--erp-success)] bg-[var(--erp-success-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-success)] hover:bg-[var(--erp-success-border)]"
-                >
-                  {copiedType === "sales" ? "복사됨" : "매출 복사"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleCopy("memo")}
-                  className="rounded-sm border border-[var(--erp-info-border)] bg-[var(--erp-info-bg)] px-2 py-1 text-xs font-bold text-[var(--erp-info-text)] hover:opacity-80"
-                >
-                  {copiedType === "memo" ? "복사됨" : "메모 복사"}
-                </button>
-              </div>
-            </div>
+            <h3 className="mb-2 text-sm font-bold text-[var(--erp-text)]">
+              {selected} 메모·일정
+            </h3>
 
             {(selectedData.carryoverInSales.length > 0 ||
               selectedData.carryoverInPurchases.length > 0) && (
@@ -1204,8 +1107,24 @@ export function DashboardCalendar({
               isAdmin={isAdmin}
             />
           </>
-      ) : null}
-    </DailyReportBox>
+          </div>
+        ) : null}
+      </div>
+  );
+
+  // 오늘 리포트 — 매입/매출 품목은 상세보기 팝업, 카톡 복사는 "텍스트 복사"가 맡는다.
+  const reportCard = (
+    <DailyReportBox
+      key={`${year}-${month}`}
+      year={year}
+      month={month}
+      todayStr={todayStr}
+      date={selected ?? defaultReportDate(year, month, todayStr)} onDateChange={setSelected}
+      getDay={getReportDay}
+      money={reportMoney ?? null}
+      lowStock={lowStock ?? []}
+      monthTotals={monthTotals ?? null}
+    />
   );
 
   return (

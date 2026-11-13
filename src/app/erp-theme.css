@@ -6076,6 +6076,68 @@ a.erp-detail-tab:hover:not(.active) {
   pointer-events: none;
 }
 
+/* 편집 중 크기 조절 손잡이 — 가장자리·모서리가 눈에 띄게 표시하고, 마우스를 올리면 강조한다. */
+.erp-widget.is-editing .react-resizable-handle {
+  z-index: 2;
+  opacity: 0.9;
+}
+
+.erp-widget.is-editing .react-resizable-handle:hover {
+  background: var(--erp-selected);
+}
+
+/* 가장자리 손잡이는 라이브러리 기본값이 45도 회전돼 있어(화살표용) 회전을 풀고 위치를 직접 잡는다. */
+.erp-widget.is-editing .react-resizable-handle-e,
+.erp-widget.is-editing .react-resizable-handle-w,
+.erp-widget.is-editing .react-resizable-handle-s {
+  margin: 0;
+  transform: none;
+}
+
+.erp-widget.is-editing .react-resizable-handle-e,
+.erp-widget.is-editing .react-resizable-handle-w {
+  top: 24px;
+  bottom: 12px;
+  width: 8px;
+  height: auto;
+  cursor: ew-resize;
+}
+
+.erp-widget.is-editing .react-resizable-handle-e {
+  right: 0;
+  border-right: 3px solid var(--erp-primary);
+}
+
+.erp-widget.is-editing .react-resizable-handle-w {
+  left: 0;
+  border-left: 3px solid var(--erp-primary);
+}
+
+.erp-widget.is-editing .react-resizable-handle-s {
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  width: auto;
+  height: 8px;
+  cursor: ns-resize;
+  border-bottom: 3px solid var(--erp-primary);
+}
+
+/* 가장자리 손잡이는 라이브러리의 화살표 모양(::after)을 쓰지 않고 테두리 선만 보인다. */
+.erp-widget.is-editing .react-resizable-handle-e::after,
+.erp-widget.is-editing .react-resizable-handle-w::after,
+.erp-widget.is-editing .react-resizable-handle-s::after {
+  display: none;
+}
+
+.erp-widget.is-editing .react-resizable-handle-se::after,
+.erp-widget.is-editing .react-resizable-handle-sw::after {
+  border-color: var(--erp-primary);
+  border-width: 0 3px 3px 0;
+  width: 10px;
+  height: 10px;
+}
+
 .erp-widget-handle {
   display: flex;
   align-items: center;
