@@ -6326,6 +6326,9 @@ a.erp-detail-tab:hover:not(.active) {
 .erp-cal-amt.is-sales { color: var(--erp-success); }
 .erp-cal-amt.is-purchase { color: var(--erp-primary); }
 .erp-cal-chip { padding: 0 3px; border-radius: var(--erp-radius-sm, 0); border-left: 3px solid var(--erp-select-accent); background: var(--erp-hover); font-size: var(--erp-font-xs); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--erp-text); }
+.erp-cal-chip.is-leave { border-left-color: var(--erp-warning); background: var(--erp-warning-bg); }
+.erp-cal-chip.is-carry { border-left-color: var(--erp-warning); background: var(--erp-warning-bg); }
+.erp-cal-chip.is-note { border-left-color: var(--erp-success); background: var(--erp-success-bg); }
 .erp-cal-more { font-size: var(--erp-font-xs); color: var(--erp-text-muted); }
 .erp-cal-cell.is-selected .erp-cal-amt,
 .erp-cal-cell.is-selected .erp-cal-more { color: var(--erp-on-primary); }
