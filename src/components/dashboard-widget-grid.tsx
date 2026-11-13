@@ -13,6 +13,7 @@ import {
   defaultDashboardLayout,
   normalizeDashboardLayout,
   stackOrder,
+  widgetIsBare,
   widgetMin,
   widgetTitle,
   type DashboardLayout,
@@ -45,7 +46,7 @@ export function DashboardWidgetGrid({
   widgets,
 }: {
   initialLayout: DashboardLayout;
-  widgets: Record<DashboardWidgetId, ReactNode>;
+  widgets: Partial<Record<DashboardWidgetId, ReactNode>>;
 }) {
   const wide = useIsWide();
   const [layout, setLayout] = useState<DashboardLayout>(initialLayout);
@@ -109,7 +110,9 @@ export function DashboardWidgetGrid({
     setEditing(false);
   }
 
+  // 내용이 없는 위젯(예: 권한이 없어 안 그리는 미수금 위젯)은 칸도 만들지 않는다.
   const shown = editing ? draft : layout;
+  const present = (id: DashboardWidgetId) => widgets[id] != null;
   const order = stackOrder(layout);
 
   return (
@@ -152,15 +155,15 @@ export function DashboardWidgetGrid({
           {mounted && (
             <ReactGridLayout
               width={width}
-              layout={shown.items.map((i) => ({ i: i.id, x: i.x, y: i.y, w: i.w, h: i.h, minW: widgetMin(i.id).w, minH: widgetMin(i.id).h }))}
+              layout={shown.items.filter((i) => present(i.id)).map((i) => ({ i: i.id, x: i.x, y: i.y, w: i.w, h: i.h, minW: widgetMin(i.id).w, minH: widgetMin(i.id).h }))}
               gridConfig={{ cols: DASHBOARD_COLS, rowHeight: DASHBOARD_ROW_HEIGHT, margin: [DASHBOARD_MARGIN, DASHBOARD_MARGIN], containerPadding: [0, 0], maxRows: Infinity }}
               dragConfig={{ enabled: true, bounded: false, handle: ".erp-widget-handle", threshold: 3 }}
               resizeConfig={{ enabled: true, handles: ["e", "w", "s", "se", "sw"] }}
               compactor={verticalCompactor}
               onLayoutChange={onLayoutChange}
             >
-              {shown.items.map((i) => (
-                <div key={i.id} className="erp-widget is-editing">
+              {shown.items.filter((i) => present(i.id)).map((i) => (
+                <div key={i.id} className={`erp-widget is-editing${widgetIsBare(i.id) ? " is-bare" : ""}`}>
                   <div className="erp-widget-handle">
                     <span>{widgetTitle(i.id)}</span>
                     <button
@@ -181,10 +184,10 @@ export function DashboardWidgetGrid({
         </div>
       ) : (
         <div className="erp-widget-grid">
-          {layout.items.map((i) => (
+          {layout.items.filter((i) => present(i.id)).map((i) => (
             <div
               key={i.id}
-              className="erp-widget"
+              className={`erp-widget${widgetIsBare(i.id) ? " is-bare" : ""}`}
               style={{
                 gridColumn: `${i.x + 1} / span ${i.w}`,
                 gridRow: `${i.y + 1} / span ${i.h}`,

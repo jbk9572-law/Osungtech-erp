@@ -1,16 +1,8 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { toKstDateStr } from "@/lib/kst-date";
-import { computePartyBalance } from "@/lib/ar-ap";
+import { computePartyBalance, RECEIVABLE_OVERDUE_DAYS } from "@/lib/ar-ap";
 import { formatNumber } from "@/lib/format-number";
-
-// 미수금 연체 알림 기준 — 거의 모든 거래처가 평소에도 며칠 정도의
-// "가장 오래된 미결제 전표"를 들고 있는 게 정상(월말 정산 등 보통
-// 결제주기)이라, 연체일수가 조금만 있어도 알리면 매번 스팸이 된다.
-// /receivables 화면 자체는 기준 없이 전부 보여주지만(담당자가 필요할
-// 때 직접 들어가 확인), 이 알림은 "진짜 오래 밀린 것만" 콕 집어줘야
-// 하므로 30일(한 달 이상 연체)을 기준으로 삼는다.
-const RECEIVABLE_OVERDUE_DAYS = 30;
 
 export type AlertSyncResult = { posted: number; cleared: number };
 

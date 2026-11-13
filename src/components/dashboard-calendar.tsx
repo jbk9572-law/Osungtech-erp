@@ -811,7 +811,7 @@ export function DashboardCalendar({
   isAdmin: boolean;
   // 위젯 배치(사용자가 저장한 위치·크기)와, 서버에서 그려 내려주는 나머지 위젯들(재고조회·재고위험·메모·빠른실행).
   layout: DashboardLayout;
-  sidePanels: Pick<Record<DashboardWidgetId, ReactNode>, "lookup" | "stockRisk" | "memos" | "quick">;
+  sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
 }) {
   const router = useRouter();
   const getReportDay = useCallback(
@@ -854,7 +854,7 @@ export function DashboardCalendar({
     calendarItems: [],
   };
   const calendarCard = (
-      <div className="relative overflow-hidden rounded-sm border border-[var(--erp-border)] bg-white p-4">
+      <div className="erp-cal-panel">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={backgroundLogoUrl || "/branding/logo-mark.png"}
@@ -862,6 +862,7 @@ export function DashboardCalendar({
           aria-hidden
           className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.05]"
         />
+        <div className="erp-cal-main">
         <div className="relative mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-[var(--erp-text)]">
             {year}년 {month}월
@@ -1033,9 +1034,11 @@ export function DashboardCalendar({
           </span>
         </div>
 
-        {/* 고른 날짜의 이월 안내·일정·메모 — 달력에서 날짜를 누르면 바로 아래에서 보고 적는다. */}
+        </div>
+
+        {/* 고른 날짜의 이월 안내·일정·메모 — 달력 오른쪽(좁으면 아래)에서 보고 적는다. */}
         {selected ? (
-          <div className="relative mt-3 border-t border-[var(--erp-border)] pt-3">
+          <div className="erp-cal-side">
           <>
             <h3 className="mb-2 text-sm font-bold text-[var(--erp-text)]">
               {selected} 메모·일정

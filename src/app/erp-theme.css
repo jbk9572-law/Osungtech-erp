@@ -6046,14 +6046,244 @@ a.erp-detail-tab:hover:not(.active) {
   gap: 12px;
 }
 
+/* 위젯 공통 틀 — 6개 위젯이 전부 같은 테두리·모서리·그림자·배경을 쓰고, 안쪽 카드는 자기 틀을 끈다. */
 .erp-widget {
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  border: 1px solid var(--erp-border-strong);
+  border-radius: var(--erp-radius-3xl, 0);
+  background: var(--erp-panel);
+  box-shadow: var(--erp-shadow-sm);
+  overflow: hidden;
+}
+
+/* 틀 없이 안쪽 타일이 직접 놓이는 위젯(맨 위 숫자 줄). */
+.erp-widget.is-bare {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.erp-widget.is-bare .erp-widget-body {
+  overflow: visible;
+}
+
+/* ── 메인 화면 맨 위 숫자 줄 (dashboard-kpi-strip.tsx) ───────────────── */
+.erp-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.erp-kpi {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--erp-border-strong);
+  border-left: 4px solid var(--erp-grid-line);
+  border-radius: var(--erp-radius-xl, 0);
+  background: var(--erp-panel);
+  box-shadow: var(--erp-shadow-sm);
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-kpi:hover {
+  background: var(--erp-hover);
+}
+
+.erp-kpi.is-ok {
+  border-left-color: var(--erp-success);
+}
+
+.erp-kpi.is-warn {
+  border-left-color: var(--erp-warning);
+}
+
+.erp-kpi.is-bad {
+  border-left-color: var(--erp-danger);
+}
+
+.erp-kpi-label {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-kpi-value {
+  font-size: var(--erp-font-xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-kpi.is-bad .erp-kpi-value {
+  color: var(--erp-danger);
+}
+
+.erp-kpi.is-warn .erp-kpi-value {
+  color: var(--erp-warning);
+}
+
+.erp-kpi-sub {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── 메인 화면 "오늘 할 일" (dashboard-todo-panel.tsx) ───────────────── */
+.erp-todo-tabs {
+  border-radius: var(--erp-radius-xl, 0);
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--erp-border-strong);
+  background: var(--erp-bg-subtle);
+}
+
+.erp-todo-tab {
+  padding: 7px 14px;
+  border: 0;
+  border-right: 1px solid var(--erp-grid-line);
+  background: transparent;
+  color: var(--erp-text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.erp-todo-tab.active {
+  background: var(--erp-panel);
+  color: var(--erp-primary);
+  box-shadow: inset 0 -2px 0 var(--erp-primary);
+}
+
+.erp-todo-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.erp-todo-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid var(--erp-divider);
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-todo-row:first-child {
+  border-top: 0;
+}
+
+.erp-todo-row:hover {
+  background: var(--erp-hover);
+}
+
+.erp-todo-title {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.erp-todo-sub {
+  font-weight: 400;
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+}
+
+.erp-todo-due {
+  font-size: var(--erp-font-sm);
+  color: var(--erp-text-muted);
+  white-space: nowrap;
+}
+
+.erp-todo-go {
+  color: var(--erp-primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@container (max-width: 480px) {
+  .erp-todo-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .erp-todo-due {
+    display: none;
+  }
+}
+
+.erp-late-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  border-top: 1px solid var(--erp-divider);
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-late-row:first-child {
+  border-top: 0;
+}
+
+.erp-widget-body > .erp-home-panel,
+.erp-widget-body > .erp-daily-report,
+.erp-widget-body > .erp-cal-panel {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* 달력 패널 — 왼쪽 달력 | 오른쪽 고른 날짜의 메모·일정. 패널이 좁아지면(위젯 크기를 줄이거나
+   모바일) 오른쪽 영역이 달력 아래로 내려간다. */
+.erp-cal-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(240px, 1fr);
+  height: 100%;
+  overflow: hidden;
+}
+
+.erp-cal-main {
+  position: relative;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.erp-cal-side {
+  border-radius: var(--erp-radius-xl, 0);
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 16px;
+  border-left: 1px solid var(--erp-divider);
+  background: var(--erp-bg-subtle);
+  overflow: auto;
+}
+
+@container (max-width: 700px) {
+  .erp-cal-panel {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+  .erp-cal-side {
+    border-left: 0;
+    border-top: 1px solid var(--erp-divider);
+  }
 }
 
 .erp-widget-body {
+  container-type: inline-size;
   flex: 1;
   min-height: 0;
   overflow: auto;
@@ -6066,10 +6296,8 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-widget.is-editing {
-  border: 1px dashed var(--erp-primary);
-  border-radius: var(--erp-radius-xl, 0);
-  background: var(--erp-panel);
-  overflow: hidden;
+  outline: 2px dashed var(--erp-primary);
+  outline-offset: -1px;
 }
 
 .erp-widget.is-editing .erp-widget-body {

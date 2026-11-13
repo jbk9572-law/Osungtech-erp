@@ -48,13 +48,14 @@ export function buildDailyReportText(input: DailyReportTextInput): string {
 
   if (options.includeAmounts) {
     out.push("[금액 합계]");
-    out.push(`매출 ${formatNumber(input.salesTotal)}원 · 매입 ${formatNumber(input.purchaseTotal)}원`);
+    out.push(`매입 ${formatNumber(input.purchaseTotal)}원 · 매출 ${formatNumber(input.salesTotal)}원`);
     out.push("");
   }
 
-  out.push(...section("매출", input.salesCount, input.salesLines));
-  out.push("");
+  // 순서는 매입 → 매출(들어온 물건을 먼저, 나간 물건을 나중에) — 카톡으로 공유할 때 읽는 순서다.
   out.push(...section("매입", input.purchaseCount, input.purchaseLines));
+  out.push("");
+  out.push(...section("매출", input.salesCount, input.salesLines));
 
   if (options.includePayments && (input.collected !== null || input.paid !== null)) {
     out.push("");

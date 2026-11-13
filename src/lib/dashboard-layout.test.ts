@@ -26,7 +26,9 @@ describe("normalizeDashboardLayout", () => {
     const ids = out.items.map((i) => i.id).sort();
     expect(ids).toEqual(DASHBOARD_WIDGETS.map((w) => w.id).sort());
     expect(out.items.find((i) => i.id === "calendar")).toMatchObject({ x: 0, y: 0, w: 6, h: 12 });
-    expect(out.items.find((i) => i.id === "report")).toMatchObject(DASHBOARD_WIDGETS.find((w) => w.id === "report")!.def);
+    const def = DASHBOARD_WIDGETS.find((w) => w.id === "report")!.def;
+    // 값이 깨진 위젯은 기본 크기로 되돌아온다(자리는 겹침 정리로 밀릴 수 있다).
+    expect(out.items.find((i) => i.id === "report")).toMatchObject({ w: def.w, h: def.h });
   });
 
   it("범위를 벗어난 크기·위치는 최소/최대로 맞춘다", () => {
@@ -70,7 +72,7 @@ describe("resolveOverlaps", () => {
 describe("stackOrder", () => {
   it("위→아래, 같은 줄이면 왼쪽→오른쪽 순서", () => {
     const order = stackOrder(defaultDashboardLayout());
-    expect(order.indexOf("calendar")).toBeLessThan(order.indexOf("report"));
-    expect(order[0]).toBe("lookup");
+    expect(order.indexOf("todo")).toBeLessThan(order.indexOf("calendar"));
+    expect(order[0]).toBe("kpi");
   });
 });

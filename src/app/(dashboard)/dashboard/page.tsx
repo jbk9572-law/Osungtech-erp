@@ -17,7 +17,11 @@ import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
 import { normalizeDashboardLayout } from "@/lib/dashboard-layout";
-import { QuickActionsPanel, RecentMemosPanel, StockRiskPanel } from "@/components/dashboard-side-panels";
+import { OverdueReceivablesPanel, QuickActionsPanel, RecentMemosPanel, StockRiskPanel } from "@/components/dashboard-side-panels";
+import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
+import { DashboardTodoPanel } from "@/components/dashboard-todo-panel";
+import { buildTodoItems, findOverdueCustomers } from "@/lib/dashboard-todo";
+import { getMyApprovalQueue } from "@/lib/dashboard-approvals";
 import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import type { ReportMoney } from "@/components/daily-report-box";
 
@@ -728,11 +732,42 @@ async function DashboardPage({
   const dashboardBack = buildBackHref("/dashboard");
 
   // 위젯으로 나뉘는 서버 렌더링 조각들 — 어디에 어떤 크기로 놓을지는 사용자가 저장한 배치(DashboardWidgetGrid)가 정한다.
+  // 오늘 데이터는 지금 보는 달 안에 있을 때만 알 수 있다(다른 달을 보면 null로 두고 "—"로 보여준다).
+  const todayData = dataByDate[todayStr] as DayData | undefined;
+  const todayInView = todayStr.startsWith(`${year}-${String(month).padStart(2, "0")}`);
+  const overdueCustomers = customerBalances ? findOverdueCustomers(customerBalances, todayStr) : [];
+  const approvalQueue = user ? await getMyApprovalQueue(supabase, user.id, todayStr) : [];
+  const todoItems = buildTodoItems({
+    approvals: approvalQueue,
+    overdue: overdueCustomers,
+    todos: dueSoonTodos,
+    carryovers: [
+      ...(todayData?.carryoverInSales ?? []).map((c) => ({ ...c, kind: "sales" as const })),
+      ...(todayData?.carryoverInPurchases ?? []).map((c) => ({ ...c, kind: "purchase" as const })),
+    ],
+    todayStr,
+    backHref: dashboardBack,
+  });
+  const firstEvent = todayData?.calendarItems[0];
   const sidePanels = {
+    kpi: (
+      <DashboardKpiStrip
+        todayStr={todayStr}
+        sales={todayInView ? { count: todayData?.salesCount ?? 0, total: todayData?.salesTotal ?? 0 } : null}
+        purchase={todayInView ? { count: todayData?.purchaseCount ?? 0, total: todayData?.purchaseTotal ?? 0 } : null}
+        receivable={
+          reportMoney?.receivable ? { amount: reportMoney.receivable.amount, parties: reportMoney.receivable.parties, overdueCount: overdueCustomers.length } : null
+        }
+        lowStock={{ count: lowStockItems.length, first: lowStockItems[0] ? `${lowStockItems[0].name} · 현재 ${lowStockItems[0].quantity} / 기준 ${lowStockItems[0].reorderPoint}` : null }}
+        events={todayInView ? { count: todayData?.calendarItems.length ?? 0, first: firstEvent ? `${firstEvent.allDay ? "종일" : firstEvent.startAt.slice(11, 16)} ${firstEvent.title}` : null } : null}
+      />
+    ),
+    todo: <DashboardTodoPanel items={todoItems} />,
+    overdue: customerBalances ? <OverdueReceivablesPanel items={overdueCustomers} /> : null,
     lookup: <QuickStockLookup products={stockLookupProducts} />,
     stockRisk: <StockRiskPanel items={lowStockItems} />,
     memos: <RecentMemosPanel notes={recentNotes} />,
-    quick: <QuickActionsPanel />,
+    quick: <QuickActionsPanel showReceivables={!!customerBalances} />,
   };
 
   return (
