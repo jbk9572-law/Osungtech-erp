@@ -33,6 +33,7 @@ import { formatNumber } from "@/lib/format-number";
 import { buildBackHref, resolveListHref } from "@/lib/list-return";
 import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
+import { GridToolbar } from "@/components/grid/grid-toolbar";
 
 // 매출(sales-grid-table.tsx)과 같은 이유로 계정별로 끌 수 있는 칸만
 // 여기 올린다 — 날짜/공급처/품목명/수량/금액 같은 핵심 칸은 빼서 못
@@ -501,9 +502,9 @@ export function PurchaseGridTable({
         />
       )}
 
-      <div className="erp-grid-toolbar">
+      <GridToolbar total={sortedRows.length} selectedCount={selected.size}>
         <ColumnVisibilityMenu options={PURCHASE_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
-      </div>
+      </GridToolbar>
 
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">

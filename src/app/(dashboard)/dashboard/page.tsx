@@ -17,11 +17,12 @@ import { GridBadge } from "@/components/grid/badge";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { canViewPage } from "@/lib/department-page-access";
 import { normalizeDashboardLayout } from "@/lib/dashboard-layout";
-import { OverdueReceivablesPanel, QuickActionsPanel, RecentMemosPanel, StockRiskPanel } from "@/components/dashboard-side-panels";
+import { QuickActionsPanel, RecentMemosPanel } from "@/components/dashboard-side-panels";
+import { DashboardSourcePanel } from "@/components/dashboard-source-panel";
+import { sourceMeta } from "@/lib/dashboard-sources";
 import { DashboardKpiStrip } from "@/components/dashboard-kpi-strip";
 import { DashboardTodoPanel } from "@/components/dashboard-todo-panel";
-import { buildTodoItems, findOverdueCustomers } from "@/lib/dashboard-todo";
-import { getMyApprovalQueue } from "@/lib/dashboard-approvals";
+import { resolveDashboardSources } from "@/lib/dashboard-source-data";
 import { getAllCustomerBalances, getAllSupplierBalances, sumOutstandingBalance } from "@/lib/ar-ap";
 import type { ReportMoney } from "@/components/daily-report-box";
 
@@ -735,19 +736,23 @@ async function DashboardPage({
   // 오늘 데이터는 지금 보는 달 안에 있을 때만 알 수 있다(다른 달을 보면 null로 두고 "—"로 보여준다).
   const todayData = dataByDate[todayStr] as DayData | undefined;
   const todayInView = todayStr.startsWith(`${year}-${String(month).padStart(2, "0")}`);
-  const overdueCustomers = customerBalances ? findOverdueCustomers(customerBalances, todayStr) : [];
-  const approvalQueue = user ? await getMyApprovalQueue(supabase, user.id, todayStr) : [];
-  const todoItems = buildTodoItems({
-    approvals: approvalQueue,
-    overdue: overdueCustomers,
+  const sources = await resolveDashboardSources({
+    supabase,
+    userId: user?.id ?? null,
+    todayStr,
+    backHref: dashboardBack,
+    selection: dashboardLayout.sources,
+    customerBalances,
+    supplierBalances,
     todos: dueSoonTodos,
     carryovers: [
       ...(todayData?.carryoverInSales ?? []).map((c) => ({ ...c, kind: "sales" as const })),
       ...(todayData?.carryoverInPurchases ?? []).map((c) => ({ ...c, kind: "purchase" as const })),
     ],
-    todayStr,
-    backHref: dashboardBack,
+    lowStock: lowStockItems,
+    announcements: unreadAnnouncements,
   });
+  const overdueCustomers = sources.overdueCustomers;
   const firstEvent = todayData?.calendarItems[0];
   const sidePanels = {
     kpi: (
@@ -762,10 +767,16 @@ async function DashboardPage({
         events={todayInView ? { count: todayData?.calendarItems.length ?? 0, first: firstEvent ? `${firstEvent.allDay ? "종일" : firstEvent.startAt.slice(11, 16)} ${firstEvent.title}` : null } : null}
       />
     ),
-    todo: <DashboardTodoPanel items={todoItems} />,
-    overdue: customerBalances ? <OverdueReceivablesPanel items={overdueCustomers} /> : null,
+    todo: (
+      <DashboardTodoPanel
+        tabs={dashboardLayout.sources.todo
+          .filter((id) => sources.itemsOf(id) !== null)
+          .map((id) => ({ id, title: sourceMeta(id).title, items: sources.itemsOf(id) ?? [] }))}
+      />
+    ),
+    listA: <DashboardSourcePanel sourceId={dashboardLayout.sources.listA} items={sources.itemsOf(dashboardLayout.sources.listA)} />,
+    listB: <DashboardSourcePanel sourceId={dashboardLayout.sources.listB} items={sources.itemsOf(dashboardLayout.sources.listB)} />,
     lookup: <QuickStockLookup products={stockLookupProducts} />,
-    stockRisk: <StockRiskPanel items={lowStockItems} />,
     memos: <RecentMemosPanel notes={recentNotes} />,
     quick: <QuickActionsPanel showReceivables={!!customerBalances} />,
   };
@@ -836,6 +847,7 @@ async function DashboardPage({
         }}
         lowStock={lowStockItems.map((p) => ({ id: p.id, name: p.name, quantity: p.quantity, reorderPoint: p.reorderPoint }))}
         layout={dashboardLayout}
+        sourceOptions={sources.options}
         sidePanels={sidePanels}
       />
       </div>

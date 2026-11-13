@@ -16,6 +16,7 @@ import {
 import Link from "next/link";
 import { DashboardWidgetGrid } from "@/components/dashboard-widget-grid";
 import type { DashboardLayout, DashboardWidgetId } from "@/lib/dashboard-layout";
+import type { SourceId } from "@/lib/dashboard-sources";
 import { useRouter } from "next/navigation";
 import {
   addCalendarNote,
@@ -789,6 +790,7 @@ export function DashboardCalendar({
   currentUserId,
   isAdmin,
   layout,
+  sourceOptions,
   sidePanels,
   reportMoney,
   lowStock,
@@ -811,6 +813,7 @@ export function DashboardCalendar({
   isAdmin: boolean;
   // 위젯 배치(사용자가 저장한 위치·크기)와, 서버에서 그려 내려주는 나머지 위젯들(재고조회·재고위험·메모·빠른실행).
   layout: DashboardLayout;
+  sourceOptions: { id: SourceId; title: string }[];
   sidePanels: Partial<Record<Exclude<DashboardWidgetId, "calendar" | "report">, ReactNode>>;
 }) {
   const router = useRouter();
@@ -1133,6 +1136,7 @@ export function DashboardCalendar({
   return (
     <DashboardWidgetGrid
       initialLayout={layout}
+      sourceOptions={sourceOptions}
       widgets={{ ...sidePanels, calendar: calendarCard, report: reportCard }}
     />
   );

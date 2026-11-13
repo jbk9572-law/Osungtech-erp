@@ -34,6 +34,7 @@ import { canIssueTaxInvoice, isTaxExempt } from "@/lib/tax-evidence-type";
 import { buildBackHref, resolveListHref } from "@/lib/list-return";
 import { useColumnVisibility } from "@/lib/use-column-visibility";
 import { ColumnVisibilityMenu, type ColumnVisibilityOption } from "@/components/grid/column-visibility-menu";
+import { GridToolbar } from "@/components/grid/grid-toolbar";
 
 // 핵심 칸(체크박스/날짜/거래처/품목/수량/공급가액/세액/작업)은 끌 수
 // 없게 여기 안 넣는다 — 나머지만 "컬럼 설정"에서 계정별로 켜고 끈다.
@@ -593,9 +594,9 @@ export function SalesGridTable({
         />
       )}
 
-      <div className="erp-grid-toolbar">
+      <GridToolbar total={sortedRows.length} selectedCount={selected.size}>
         <ColumnVisibilityMenu options={SALES_HIDEABLE_COLUMNS} isHidden={isHidden} onToggle={toggleColumn} />
-      </div>
+      </GridToolbar>
 
       <div className="erp-grid-wrap has-card-view">
         <table className="erp-grid">
