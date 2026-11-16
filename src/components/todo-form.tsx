@@ -156,10 +156,12 @@ export function TodoForm({
   const [importDate, setImportDate] = useState(() => todayKstStr());
   const [importOrders, setImportOrders] = useState<ImportableOrder[] | null>(null);
   const [importLoading, setImportLoading] = useState(false);
+  const [importFailed, setImportFailed] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
 
   async function loadImportOrders(kind: "purchase" | "sale", date: string) {
     setImportLoading(true);
+    setImportFailed(false);
     setImportOrders(null);
     try {
       const items: ImportableOrderItem[] =
@@ -170,8 +172,10 @@ export function TodoForm({
             }))
           : await getSaleItemsForDate(date);
       setImportOrders(groupByOrder(items));
-    } catch {
-      setImportOrders([]);
+    } catch (error) {
+      // 조회가 실패했는데 "불러올 품목이 없음"으로 보이면 원인을 알 수 없다 — 실패는 따로 보여 주고 기록한다.
+      console.error("불러오기 조회 실패:", error);
+      setImportFailed(true);
     } finally {
       setImportLoading(false);
     }
@@ -353,6 +357,7 @@ export function TodoForm({
               }}
               orders={importOrders}
               loading={importLoading}
+              failed={importFailed}
               onImport={applyImport}
               onClose={() => setImportKind(null)}
             />

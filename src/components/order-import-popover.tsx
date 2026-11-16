@@ -10,6 +10,7 @@ export function OrderImportPopover({
   onDateChange,
   orders,
   loading,
+  failed,
   onImport,
   onClose,
 }: {
@@ -18,6 +19,8 @@ export function OrderImportPopover({
   onDateChange: (date: string) => void;
   orders: ImportableOrder[] | null;
   loading: boolean;
+  // 서버 조회가 실패했을 때 — "품목이 없습니다"와 구분해서 보여 준다.
+  failed: boolean;
   onImport: (order: ImportableOrder) => void;
   onClose: () => void;
 }) {
@@ -31,7 +34,9 @@ export function OrderImportPopover({
           닫기
         </button>
       </div>
-      {loading || orders === null ? (
+      {failed ? (
+        <p className="erp-home-empty erp-u-p-10" role="alert">불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.</p>
+      ) : loading || orders === null ? (
         <p className="erp-home-empty erp-u-p-10">불러오는 중...</p>
       ) : orders.length === 0 ? (
         <p className="erp-home-empty erp-u-p-10">{date}에 불러올 {label} 품목이 없습니다.</p>
