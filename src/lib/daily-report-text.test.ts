@@ -33,7 +33,8 @@ describe("buildDailyReportText", () => {
 
   it("기본: 매출·매입 품목과 재고 부족만 담고 금액/수금은 넣지 않는다", () => {
     const text = buildDailyReportText(base);
-    expect(text).toContain("2026-11-12 (목) 오늘 리포트");
+    expect(text.split("\n")[0]).toBe("2026-11-12 (목)");
+    expect(text).not.toContain("리포트");
     expect(text).toContain("[매출] 2건");
     expect(text).toContain("    605*685 : 20,000 EA");
     expect(text).toContain("[매입] 1건");

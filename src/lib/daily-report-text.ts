@@ -47,7 +47,7 @@ function section(title: string, count: number, lines: string[]): string[] {
 
 export function buildDailyReportText(input: DailyReportTextInput): string {
   const { options } = input;
-  const out: string[] = [`${formatReportDateLabel(input.dateStr)} 오늘 리포트`, ""];
+  const out: string[] = [formatReportDateLabel(input.dateStr), ""];
 
   if (options.includeAmounts) {
     out.push("[금액 합계]");
