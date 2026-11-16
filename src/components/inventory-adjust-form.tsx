@@ -126,6 +126,7 @@ export function InventoryAdjustForm({
         quantity={amount}
         onQuantityChange={setAmount}
         basePackageQty={selectedProduct?.base_package_qty}
+        unit={selectedProduct?.unit}
         allowFormula
         className="erp-input"
       />

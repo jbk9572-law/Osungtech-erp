@@ -179,7 +179,7 @@ export default async function InventoryProductHistoryPage({
           <>
             {product.sku} · {product.name}
             {product.spec && ` (${product.spec})`} · 현재 재고{" "}
-            <QtyWithBoxes quantity={currentQuantity} basePackageQty={product.base_package_qty} />
+            <QtyWithBoxes quantity={currentQuantity} basePackageQty={product.base_package_qty} packUnit={product.unit} />
             {product.unit ?? ""}
           </>
         }
@@ -352,7 +352,7 @@ export default async function InventoryProductHistoryPage({
                     {row.authorName ?? "-"}
                   </td>
                   <td className="num">
-                    <QtyWithBoxes quantity={row.balance} basePackageQty={product.base_package_qty} />
+                    <QtyWithBoxes quantity={row.balance} basePackageQty={product.base_package_qty} packUnit={product.unit} />
                   </td>
                 </>
               );
@@ -394,7 +394,7 @@ export default async function InventoryProductHistoryPage({
                 <div>
                   <dt>재고 잔량</dt>
                   <dd>
-                    <QtyWithBoxes quantity={row.balance} basePackageQty={product.base_package_qty} />
+                    <QtyWithBoxes quantity={row.balance} basePackageQty={product.base_package_qty} packUnit={product.unit} />
                   </dd>
                 </div>
                 <div>

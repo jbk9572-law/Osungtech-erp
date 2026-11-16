@@ -23,6 +23,7 @@ export function QuantityWithBoxInput({
   onQuantityChange,
   allowFormula = false,
   basePackageQty,
+  unit,
   label = "수량",
   className = "erp-input w-full",
 }: {
@@ -30,6 +31,8 @@ export function QuantityWithBoxInput({
   onQuantityChange: (n: number) => void;
   allowFormula?: boolean;
   basePackageQty?: number | string | null;
+  // 품목 단위 — 리터 계열이면 환산 표시가 "박스"가 아니라 "포"로 나온다.
+  unit?: string | null;
   // 출고수량처럼 "수량"이 아닌 다른 이름이 필요한 자리에서 바꿔 쓴다.
   label?: string;
   className?: string;
@@ -53,7 +56,7 @@ export function QuantityWithBoxInput({
       />
       {base !== null && base > 0 && quantity !== 0 && (
         <div className="mt-0.5 text-[10px] erp-u-muted">
-          <QtyWithBoxes quantity={quantity} basePackageQty={base} />
+          <QtyWithBoxes quantity={quantity} basePackageQty={base} packUnit={unit} />
         </div>
       )}
     </div>
