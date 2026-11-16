@@ -40,36 +40,64 @@ const TABS: { key: Tab; label: string }[] = [
 // /sales/new의 정식 등록 폼(품목 수십 줄·모조지 계산·임시저장 등)은
 // 그대로 두고, 이 모달은 "거래처 고르고 품목 1~5줄만 빠르게" 쓰는
 // 용도로 범위를 좁혔다.
-export function UnifiedSaleModalTrigger({
-  customers,
-  products,
-  warehouses,
-  prices,
-  history,
-  today,
-}: {
+export type QuickSaleData = {
   customers: Customer[];
   products: Product[];
   warehouses: Warehouse[];
   prices: PriceRow[];
   history: HistoryRow[];
+};
+
+// 모달에 쓸 거래처/품목/단가 목록은 버튼을 처음 눌렀을 때만 불러온다(loadData) — 목록 화면을 열 때마다 받아 오면 느려진다.
+export function UnifiedSaleModalTrigger({
+  loadData,
+  today,
+}: {
+  loadData: () => Promise<QuickSaleData | null>;
   today: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [data, setData] = useState<QuickSaleData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   useEscapeToClose(open, () => setOpen(false));
+
+  async function openModal() {
+    if (data) {
+      setOpen(true);
+      return;
+    }
+    if (loading) return;
+    setLoading(true);
+    setFailed(false);
+    try {
+      const loaded = await loadData();
+      if (loaded) {
+        setData(loaded);
+        setOpen(true);
+      } else {
+        setFailed(true);
+      }
+    } catch {
+      setFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <>
-      <button type="button" className="erp-btn" onClick={() => setOpen(true)}>
-        ⚡ 빠른등록(매출·수금·반품)
+      <button type="button" className="erp-btn" disabled={loading} onClick={openModal}>
+        {loading ? "불러오는 중..." : "⚡ 빠른등록(매출·수금·반품)"}
       </button>
-      {open && (
+      {failed && <span className="erp-u-muted erp-u-text-caption" role="alert">불러오지 못했습니다. 다시 눌러주세요.</span>}
+      {open && data && (
         <UnifiedSaleModal
-          customers={customers}
-          products={products}
-          warehouses={warehouses}
-          prices={prices}
-          history={history}
+          customers={data.customers}
+          products={data.products}
+          warehouses={data.warehouses}
+          prices={data.prices}
+          history={data.history}
           today={today}
           onClose={() => setOpen(false)}
         />

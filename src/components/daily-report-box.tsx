@@ -176,7 +176,7 @@ export function DailyReportBox({
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}`;
   const [modal, setModal] = useState<null | "copy">(null);
   const [view, setView] = useState<ReportView>("summary");
-  const [options, setOptions] = useState({ includeAmounts: false, includePayments: false, includeStock: true });
+  const [options, setOptions] = useState({ includePurchase: true, includeSales: true, includeAmounts: false, includePayments: false, includeStock: true });
   const [copied, setCopied] = useState(false);
 
   const day = useMemo(() => getDay(date), [getDay, date]);
@@ -477,7 +477,20 @@ export function DailyReportBox({
           <div className="erp-daily-report-options">
             <strong className="erp-daily-report-meta">포함할 내용</strong>
             <label>
-              <input type="checkbox" checked disabled /> 매출·매입 품목
+              <input
+                type="checkbox"
+                checked={options.includePurchase}
+                onChange={(e) => setOptions((o) => ({ ...o, includePurchase: e.target.checked }))}
+              />{" "}
+              매입 품목
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={options.includeSales}
+                onChange={(e) => setOptions((o) => ({ ...o, includeSales: e.target.checked }))}
+              />{" "}
+              매출 품목
             </label>
             <label>
               <input

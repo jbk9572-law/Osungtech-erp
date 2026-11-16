@@ -26,6 +26,7 @@ import { formatNumber } from "@/lib/format-number";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ExcelDownloadLink } from "@/components/erp/excel-download-link";
 import { UnifiedSaleModalTrigger } from "@/components/unified-sale-modal";
+import { loadQuickSaleData } from "@/app/(dashboard)/sales/quick-sale-data-actions";
 import { todayKstStr } from "@/lib/kst-date";
 
 type DisplayRow = SalesRow;
@@ -49,43 +50,6 @@ async function SalesPage({
   // 목록 링크에 지금 화면의 쿼리스트링을 실어 보낸다.
   const backParam = buildListReturnParam({ q, from, to, limit: limitParam });
   const supabase = await createClient();
-
-  // "⚡ 빠른등록" 모달(통합 판매 거래 등록 — 매출/수금/반품 3탭)에 쓸
-  // 거래처/품목/창고 선택지. 이 목록 화면 자체가 보여주는 매출 데이터와는
-  // 무관하고, 모달을 열 때만 쓰인다.
-  // quickPrices/quickHistory: 이 모달은 품목을 고르면 단가가 비어있는 채로
-  // 시작해서 거래처별 단가/최근단가를 일일이 다시 찾아 입력해야 했다(사용자
-  // 지적 — "단가 이력이나 기존단가 불러오는거 안되는거야") — 정식 등록
-  // 폼(new-sale-form.tsx)의 resolvePrice/PriceHistoryHint와 같은 데이터를
-  // 이 모달에도 똑같이 공급한다.
-  const [quickCustomers, quickProducts, quickWarehouses, quickPrices, { data: quickHistoryRows }] =
-    await Promise.all([
-      fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
-        supabase.from("customers").select("id, name, notes").order("name").range(from, to),
-      ),
-      fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; price: number }>((from, to) =>
-        supabase.from("products").select("id, sku, name, spec, price").order("name").range(from, to),
-      ),
-      fetchAllRows<{ id: string; name: string }>((from, to) =>
-        supabase.from("warehouses").select("id, name").order("created_at", { ascending: true }).range(from, to),
-      ),
-      fetchAllRows<{ customer_id: string; product_id: string; unit_price: number }>((from, to) =>
-        supabase.from("customer_product_prices").select("customer_id, product_id, unit_price").range(from, to),
-      ),
-      supabase
-        .from("sales_order_items")
-        .select("product_id, unit_price, sales_orders!inner(customer_id, order_date)")
-        .order("created_at", { ascending: false })
-        .limit(500),
-    ]);
-  const quickHistory = (quickHistoryRows ?? [])
-    .filter((row): row is typeof row & { product_id: string } => row.product_id !== null)
-    .map((row) => ({
-      customerId: row.sales_orders.customer_id,
-      productId: row.product_id,
-      unitPrice: Number(row.unit_price),
-      orderDate: row.sales_orders.order_date,
-    }));
 
   // 전월 이월분 구간에서도 똑같은 모양의 행을 그릴 수 있게, select 문자열을
   // 상수로 빼서 두 쿼리가 같은 타입으로 추론되게 한다(아래
@@ -570,14 +534,7 @@ async function SalesPage({
         <GuardedLink href="/sales/new" className="erp-btn erp-btn-primary">
           F2 신규
         </GuardedLink>
-        <UnifiedSaleModalTrigger
-          customers={quickCustomers}
-          products={quickProducts}
-          warehouses={quickWarehouses}
-          prices={quickPrices}
-          history={quickHistory}
-          today={todayKstStr()}
-        />
+        <UnifiedSaleModalTrigger loadData={loadQuickSaleData} today={todayKstStr()} />
         <ExcelDownloadLink
           href={exportHref}
           title={q ? `이번달 "${q}" 검색 결과를 엑셀로 다운로드` : "이번달(1일~말일) 전체 내역을 엑셀로 다운로드"}

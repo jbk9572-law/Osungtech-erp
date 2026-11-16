@@ -1,5 +1,6 @@
 "use client";
 
+import { recordPageUrl } from "@/lib/modal-origin";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { findByLongestPrefix } from "@/lib/route-match";
@@ -47,6 +48,7 @@ export function TabBar() {
   ]);
 
   useEffect(() => {
+    recordPageUrl(pathname + window.location.search);
     const section = sectionFor(pathname);
     if (!section) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs open-tab list to the current route

@@ -6,6 +6,7 @@ import { focusNextCellInRow } from "@/lib/grid-enter-nav";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { useDropdownReposition } from "@/lib/use-dropdown-reposition";
+import { productLabel } from "@/lib/product-label";
 
 type Product = { id: string; sku: string; name: string; spec?: string | null };
 
@@ -72,7 +73,7 @@ export function ProductSearchSelect({
         ref={inputRef}
         id={id}
         type="text"
-        value={open ? query : (selected?.name ?? "")}
+        value={open ? query : (selected ? productLabel(selected) : "")}
         placeholder={placeholder}
         aria-label={placeholder}
         autoComplete="off"
@@ -136,8 +137,7 @@ export function ProductSearchSelect({
                 >
                   <span className="font-medium text-[var(--erp-text)]">{product.sku}</span>
                   <span className="ml-2 text-[var(--erp-text-muted)]">
-                    {product.name}
-                    {product.spec ? ` (${product.spec})` : ""}
+                    {productLabel(product)}
                   </span>
                 </button>
               </li>

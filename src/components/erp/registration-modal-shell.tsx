@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, useEffect, type MouseEvent } from "react
 import { usePathname, useRouter } from "next/navigation";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { ModalCloseProvider, ModalCloseHrefProvider } from "@/lib/modal-context";
+import { getModalOrigin, pathOf } from "@/lib/modal-origin";
 
 const SIZE_CLASS = {
   md: "erp-modal-md",
@@ -87,6 +88,15 @@ export function RegistrationModalShell({
     // "닫힌" 사용자 눈에는 안 보이는 뒷정리일 뿐이라, 성공/실패나 속도가
     // 닫힘 자체의 체감에 더 이상 영향을 주지 않는다.
     beginClosing();
+    // 목록이 아닌 곳(예: 메인 화면의 "새 판매")에서 열었으면 고정 목적지(/sales) 대신 열었던 화면으로 돌아간다.
+    // 같은 목록에서 열었으면(경로가 같으면) 그 목록이 등록해 둔 조회조건 포함 목적지를 그대로 쓴다.
+    const target = closeHrefRef.current ?? fallbackCloseHref;
+    const origin = getModalOrigin();
+    if (origin && pathOf(origin) !== pathOf(target) && pathOf(origin) !== pathname) {
+      router.push(origin);
+      router.refresh();
+      return;
+    }
     if (closeHrefRef.current) {
       // 이 페이지가 등록해준 정확한 목적지로 명시 이동한다 — 브라우저
       // 히스토리(router.back())에 기대지 않으므로 이 모달을 어떤 경로로
@@ -100,7 +110,7 @@ export function RegistrationModalShell({
       router.push(fallbackCloseHref);
       router.refresh();
     }
-  }, [router, beginClosing, fallbackCloseHref]);
+  }, [router, beginClosing, fallbackCloseHref, pathname]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -132,6 +142,19 @@ export function RegistrationModalShell({
       if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
     };
   }, []);
+
+  // 탭·메뉴처럼 모달 바깥의 링크를 눌러 다른 화면으로 가는 순간에도 즉시 닫힌 모습을 보여준다 — 소프트 이동 중에는
+  // 병렬 라우트 슬롯이 이전 모달을 새 화면이 도착할 때까지 붙들고 있어서, 느린 화면으로 가면 모달이 한참 떠 있다가 사라졌다.
+  useEffect(() => {
+    function onDocClick(e: globalThis.MouseEvent) {
+      if (dialogRef.current?.contains(e.target as Node)) return;
+      // 링크(탭·사이드 메뉴) 말고도, 리본의 즐겨찾기·최근 화면·메뉴 검색 항목은 링크가 아니라 버튼이 router.push로 이동한다.
+      const isRibbonNavItem = (e.target as HTMLElement | null)?.closest?.(".erp-ribbon-dropdown-item, .erp-ribbon-searchitem");
+      if (isInternalNavAnchor(e.target) || isRibbonNavItem) beginClosing();
+    }
+    document.addEventListener("click", onDocClick, true);
+    return () => document.removeEventListener("click", onDocClick, true);
+  }, [beginClosing]);
 
   function handleClickCapture(e: MouseEvent<HTMLDivElement>) {
     // "ESC 닫기" 링크처럼 이 모달을 벗어나는 실제 이동이 시작되는 순간,
