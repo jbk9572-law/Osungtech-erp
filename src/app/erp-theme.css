@@ -4490,8 +4490,10 @@ a.erp-detail-tab:hover:not(.active) {
   animation: erp-nav-overlay-out 0.2s ease-in forwards;
 }
 
-/* 모달 안에 로딩 화면이 떠 있는 동안은 뒤쪽 "이동 중..." 오버레이를 숨긴다 — 로딩 표시가 모달 안과 뒤쪽, 두 곳에 같이 뜨던 것을 한 곳으로. */
-body:has(.erp-modal [data-erp-route-loading]) .erp-nav-overlay {
+/* 로딩 화면(페이지의 "조회 중...", 모달 안 "불러오는 중...", 플랫폼 관리자 로딩 — 모두 data-erp-route-loading 마커)이 떠 있는 동안은
+   "이동 중..." 오버레이를 숨긴다 — 로딩 표시가 두 겹으로 겹쳐 뜨던 것을 한 가지만 보이게. 로딩 화면이 없는 경우(같은 주소에서 저장·제출 등)에는
+   마커가 없으므로 오버레이가 그대로 동작한다. */
+body:has([data-erp-route-loading]) .erp-nav-overlay {
   display: none;
 }
 
