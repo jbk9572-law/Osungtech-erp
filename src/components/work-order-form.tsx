@@ -6,11 +6,13 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ErpSelect } from "@/components/erp/erp-select";
 import { formatNumber } from "@/lib/format-number";
+import { productOptionLabel } from "@/lib/product-label";
 
 type ComponentInfo = {
   productId: string;
   sku: string;
   name: string;
+  spec?: string | null;
   unit: string;
   qtyPerUnit: number;
   stockByWarehouse: Record<string, number>;
@@ -19,6 +21,7 @@ type ProducibleProduct = {
   id: string;
   sku: string;
   name: string;
+  spec?: string | null;
   unit: string;
   components: ComponentInfo[];
 };
@@ -89,7 +92,7 @@ export function WorkOrderForm({
           value={productId}
           onChange={setProductId}
           required
-          options={producibleProducts.map((p) => ({ value: p.id, label: `${p.sku} · ${p.name}` }))}
+          options={producibleProducts.map((p) => ({ value: p.id, label: productOptionLabel(p) }))}
         />
       </div>
       <div className="erp-field">
@@ -152,7 +155,7 @@ export function WorkOrderForm({
                 {requirements.map((r) => (
                   <tr key={r.productId}>
                     <td>
-                      {r.sku} · {r.name}
+                      {productOptionLabel(r)}
                     </td>
                     <td className="num">
                       {formatNumber(r.needed)} {r.unit}

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { ErpSelect } from "@/components/erp/erp-select";
+import { productOptionLabel } from "@/lib/product-label";
 
-type Product = { id: string; sku: string; name: string };
+type Product = { id: string; sku: string; name: string; spec?: string | null };
 type Warehouse = { id: string; name: string };
 
 // 수불부 조회 폼(GET 폼)은 서버 컴포넌트라 React state를 들 수 없다 —
@@ -36,7 +37,7 @@ export function LedgerFilterSelects({
           placeholder="선택"
           value={productId}
           onChange={setProductId}
-          options={products.map((p) => ({ value: p.id, label: `${p.sku} · ${p.name}` }))}
+          options={products.map((p) => ({ value: p.id, label: productOptionLabel(p) }))}
         />
       </div>
       <div className="erp-field erp-span-3">

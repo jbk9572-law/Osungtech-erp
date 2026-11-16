@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { productLabel } from "@/lib/product-label";
 import { createPortal } from "react-dom";
 import { useHighlightScroll } from "@/lib/use-highlight-scroll";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -150,8 +151,7 @@ export function QuickAddProductSearch({
                 >
                   <span className="font-medium text-[var(--erp-text)]">{product.sku}</span>
                   <span className="ml-2 text-[var(--erp-text-muted)]">
-                    {product.name}
-                    {product.spec ? ` (${product.spec})` : ""}
+                    {productLabel(product)}
                   </span>
                 </button>
               </li>

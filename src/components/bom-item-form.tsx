@@ -4,8 +4,9 @@ import { useActionState, useRef, useState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ErpSelect } from "@/components/erp/erp-select";
+import { productOptionLabel } from "@/lib/product-label";
 
-type ProductOption = { id: string; sku: string; name: string; unit: string };
+type ProductOption = { id: string; sku: string; name: string; spec?: string | null; unit: string };
 
 // 품목 상세 화면의 "BOM(구성품)" 등록 폼 — 완제품 1개를 만드는 데 필요한
 // 구성품과 단위당 소요량을 한 줄씩 추가한다. 완제품 자기 자신은 구성품
@@ -45,7 +46,7 @@ export function BomItemForm({
           placeholder="선택"
           value={componentId}
           onChange={setComponentId}
-          options={candidates.map((p) => ({ value: p.id, label: `${p.sku} · ${p.name}` }))}
+          options={candidates.map((p) => ({ value: p.id, label: productOptionLabel(p) }))}
         />
       </div>
       <div className="erp-field">

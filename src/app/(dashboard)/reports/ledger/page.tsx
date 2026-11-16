@@ -24,8 +24,8 @@ export default async function InventoryLedgerPage({
 
   const supabase = await createClient();
   const [products, warehouses] = await Promise.all([
-    fetchAllRows<{ id: string; sku: string; name: string; unit: string }>((f, t) =>
-      supabase.from("products").select("id, sku, name, unit").order("name").range(f, t),
+    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; unit: string }>((f, t) =>
+      supabase.from("products").select("id, sku, name, spec, unit").order("name").range(f, t),
     ),
     supabase.from("warehouses").select("id, name").order("name"),
   ]);

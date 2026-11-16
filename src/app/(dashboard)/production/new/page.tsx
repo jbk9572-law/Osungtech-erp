@@ -24,8 +24,8 @@ export default async function NewWorkOrderPage() {
         .select("parent_product_id, component_product_id, quantity_per_unit")
         .range(from, to),
     ),
-    fetchAllRows<{ id: string; sku: string; name: string; unit: string }>((from, to) =>
-      supabase.from("products").select("id, sku, name, unit").order("name").range(from, to),
+    fetchAllRows<{ id: string; sku: string; name: string; spec: string | null; unit: string }>((from, to) =>
+      supabase.from("products").select("id, sku, name, spec, unit").order("name").range(from, to),
     ),
     // warehouses는 창고 1곳 기준 운영이라 사실상 1~2행(check-pagination.mjs의
     // SAFE_UNBOUNDED_TABLES와 같은 근거).
@@ -67,6 +67,7 @@ export default async function NewWorkOrderPage() {
         id: parent.id,
         sku: parent.sku,
         name: parent.name,
+        spec: parent.spec,
         unit: parent.unit,
         components: components
           .map((c) => {
@@ -76,6 +77,7 @@ export default async function NewWorkOrderPage() {
               productId: component.id,
               sku: component.sku,
               name: component.name,
+              spec: component.spec,
               unit: component.unit,
               qtyPerUnit: Number(c.quantity_per_unit),
               stockByWarehouse: stockByProduct.get(component.id) ?? {},
