@@ -3,37 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ROUTE_PROGRESS_EVENT, ROUTE_LOADING_MARKER_SELECTOR } from "@/lib/route-progress";
-
-function isInternalNavClick(e: MouseEvent) {
-  if (
-    e.defaultPrevented ||
-    e.button !== 0 ||
-    e.metaKey ||
-    e.ctrlKey ||
-    e.shiftKey ||
-    e.altKey
-  ) {
-    return false;
-  }
-  const anchor = (e.target as HTMLElement)?.closest?.(
-    "a[href]",
-  ) as HTMLAnchorElement | null;
-  if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download"))
-    return false;
-  let url: URL;
-  try {
-    url = new URL(anchor.href, window.location.href);
-  } catch {
-    return false;
-  }
-  if (url.origin !== window.location.origin) return false;
-  if (
-    url.pathname === window.location.pathname &&
-    url.search === window.location.search
-  )
-    return false;
-  return true;
-}
+import { isInternalNavClick } from "@/lib/nav-start";
 
 type Phase = "idle" | "visible" | "done";
 
