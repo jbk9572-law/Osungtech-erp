@@ -8,6 +8,7 @@ import { TreeMenu } from "@/components/erp/tree-menu";
 import { TabBar } from "@/components/erp/tab-bar";
 import { StatusBar } from "@/components/erp/status-bar";
 import { RouteProgressBar } from "@/components/erp/route-progress-bar";
+import { NavTimingReporter } from "@/components/erp/nav-timing-reporter";
 import { MidnightRefresh } from "@/components/erp/midnight-refresh";
 import { NotificationToaster } from "@/components/erp/notification-toaster";
 import { findMenuItem } from "@/lib/erp-menu";
@@ -168,6 +169,7 @@ export function ErpShell({
         />
         <div className="erp-workspace">
           <RouteProgressBar />
+          <NavTimingReporter />
           <TabBar />
           {/* pathname을 key로 줘서 이동할 때마다 이 div를 새로 마운트시킨다 —
               안 그러면(그냥 내용만 바뀌면) 최초 진입 때 딱 한 번만 애니메이션이

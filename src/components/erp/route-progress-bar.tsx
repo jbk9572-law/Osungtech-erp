@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ROUTE_PROGRESS_EVENT } from "@/lib/route-progress";
+import { ROUTE_PROGRESS_EVENT, ROUTE_LOADING_MARKER_SELECTOR } from "@/lib/route-progress";
 
 function isInternalNavClick(e: MouseEvent) {
   if (
@@ -49,7 +49,6 @@ const SHOW_DELAY_MS = 200;
 // 바뀜 = 이동 끝남"으로만 보면 실제 내용(느린 조회)이 하나도 안 온
 // 시점에 오버레이가 너무 일찍 꺼진다 — 이 마커가 DOM에 있는 동안은 아직
 // 로딩 화면만 떠 있는 것으로 보고 오버레이를 계속 띄워둔다.
-const ROUTE_LOADING_MARKER_SELECTOR = "[data-erp-route-loading]";
 
 function ProgressWatcher() {
   const pathname = usePathname();
