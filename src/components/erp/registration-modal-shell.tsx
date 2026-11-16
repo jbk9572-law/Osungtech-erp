@@ -148,7 +148,9 @@ export function RegistrationModalShell({
   useEffect(() => {
     function onDocClick(e: globalThis.MouseEvent) {
       if (dialogRef.current?.contains(e.target as Node)) return;
-      if (isInternalNavAnchor(e.target)) beginClosing();
+      // 링크(탭·사이드 메뉴) 말고도, 리본의 즐겨찾기·최근 화면·메뉴 검색 항목은 링크가 아니라 버튼이 router.push로 이동한다.
+      const isRibbonNavItem = (e.target as HTMLElement | null)?.closest?.(".erp-ribbon-dropdown-item, .erp-ribbon-searchitem");
+      if (isInternalNavAnchor(e.target) || isRibbonNavItem) beginClosing();
     }
     document.addEventListener("click", onDocClick, true);
     return () => document.removeEventListener("click", onDocClick, true);
