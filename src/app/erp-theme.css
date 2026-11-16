@@ -6206,6 +6206,20 @@ a.erp-detail-tab:hover:not(.active) {
   overflow: auto;
 }
 
+/* 회사 로고 워터마크 — 날짜 칸(불투명 배경) 위에 옅게 얹고 클릭은 통과시킨다. */
+.erp-cal-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: min(256px, 70%);
+  aspect-ratio: 1;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  opacity: 0.06;
+  pointer-events: none;
+}
+
 .erp-cal-main {
   position: relative;
   min-width: 0;

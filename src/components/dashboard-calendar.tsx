@@ -957,13 +957,6 @@ export function DashboardCalendar({
     selectedData.carryoverInPurchases.length;
   const calendarCard = (
       <div className="erp-cal-panel">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={backgroundLogoUrl || "/branding/logo-mark.png"}
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 opacity-[0.05]"
-        />
         <div className="erp-cal-main">
         <div className="relative mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-[var(--erp-text)]">
@@ -1087,7 +1080,9 @@ export function DashboardCalendar({
         {todoTruncated && <p className="erp-u-muted erp-u-text-caption erp-u-mt-8">이번 달 할 일이 많아 일부만 띠로 표시됩니다. 전체는 할일관리에서 확인하세요.</p>}
 
         </div>
-
+        {/* 날짜 칸이 불투명 배경이라 뒤에 깔면 가려진다 — 칸 위에 아주 옅게 얹는다(클릭은 통과). */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={backgroundLogoUrl || "/branding/logo-mark.png"} alt="" aria-hidden className="erp-cal-watermark" />
       </div>
   );
 
