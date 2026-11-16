@@ -11,13 +11,16 @@ export function QtyWithBoxes({
   quantity,
   basePackageQty,
   unit,
+  packUnit,
 }: {
   quantity: number;
   basePackageQty: number | string | null | undefined;
   unit?: string;
+  // 수량 옆에 단위 글자를 붙이지 않는 자리에서도 "박스/포" 라벨을 고르려고 품목 단위만 따로 넘길 때 쓴다.
+  packUnit?: string | null;
 }) {
   const qtyLabel = unit ? `${formatNumber(quantity)} ${unit}` : formatNumber(quantity);
-  const boxLabel = formatBoxCount(quantity, basePackageQty);
+  const boxLabel = formatBoxCount(quantity, basePackageQty, packUnit ?? unit);
   return (
     <>
       {qtyLabel}

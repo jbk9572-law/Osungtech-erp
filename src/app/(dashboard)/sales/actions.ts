@@ -12,6 +12,7 @@ import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { applyOrderLocationStock, reverseOrderLocationStock, parseAllocationChoices } from "@/lib/location-stock-sync";
+import type { ImportableOrderItem } from "@/lib/order-import";
 import { logOperationFailure } from "@/lib/log-operation-failure";
 import { classifyOrderDeleteError } from "@/lib/classify-order-delete-error";
 
@@ -442,3 +443,33 @@ export async function bulkDeleteSales(_prevState: FormState, formData: FormData)
 // (components/tax-invoice-form.tsx, .../tax-invoice/actions.ts의
 // createTaxInvoice/cancelTaxInvoice)으로 옮겼다 — sales_orders.invoice_*
 // 컬럼은 그 액션들이 계속 갱신해서 이 화면/목록이 보는 값은 그대로다.
+
+// 할일 등록 화면의 "매출에서 불러오기" — 특정 거래일자의 매출 품목(반품 제외)을 불러온다. 매입 쪽(getPurchaseItemsForDate)과 같은 모양으로 돌려준다.
+export async function getSaleItemsForDate(date: string): Promise<ImportableOrderItem[]> {
+  if (!date) return [];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sales_order_items")
+    .select(
+      "id, product_id, quantity, spec, lot_number, sales_order_id, products(sku, name, spec, unit), sales_orders!inner(order_date, is_return, customer_id, customers(name))"
+    )
+    .eq("sales_orders.order_date", date)
+    .eq("sales_orders.is_return", false)
+    .order("created_at", { ascending: true });
+  // 직접입력(품목 미연결) 줄은 할일 품목으로 옮길 수 없어 제외한다.
+  return (data ?? [])
+    .filter((item): item is typeof item & { product_id: string } => item.product_id !== null)
+    .map((item) => ({
+      id: item.id,
+      orderId: item.sales_order_id,
+      productId: item.product_id,
+      productName: item.products?.name ?? "상품 미상",
+      sku: item.products?.sku ?? "",
+      spec: item.spec || item.products?.spec || "",
+      quantity: item.quantity,
+      unit: item.products?.unit ?? "",
+      lotNumber: item.lot_number ?? "",
+      partnerId: item.sales_orders?.customer_id ?? "",
+      partnerName: item.sales_orders?.customers?.name ?? "거래처 미상",
+    }));
+}

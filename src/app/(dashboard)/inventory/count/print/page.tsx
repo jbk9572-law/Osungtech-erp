@@ -1,3 +1,4 @@
+import { packageUnitLabel } from "@/lib/package-qty";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
@@ -107,7 +108,7 @@ export default async function InventoryCountPrintPage({
               <td style={cellStyle}>{row.name}</td>
               <td style={cellStyle}>{row.spec || ""}</td>
               <td style={cellStyle}>
-                {row.basePackageQty ? `${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}/박스` : ""}
+                {row.basePackageQty ? `${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}/${packageUnitLabel(row.unit)}` : ""}
               </td>
               <td className="erp-u-text-right" style={{ ...cellStyle }}>
                 {formatNumber(row.systemQuantity)} {row.unit ?? ""}

@@ -31,7 +31,7 @@ export function QuickStockLookup({ loadProducts }: { loadProducts: () => Promise
   const isLow = !!selected && (selected.reorderPoint ?? 0) > 0 && selected.quantity <= (selected.reorderPoint ?? 0);
   const boxCount =
     selected && shouldShowBoxCountOnDashboard(selected.name, selected.categoryName)
-      ? formatBoxCount(selected.quantity, selected.basePackageQty)
+      ? formatBoxCount(selected.quantity, selected.basePackageQty, selected.unit)
       : null;
 
   const ensureLoaded = () => {

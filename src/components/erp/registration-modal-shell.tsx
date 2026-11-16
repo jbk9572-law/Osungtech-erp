@@ -13,6 +13,14 @@ const SIZE_CLASS = {
   xl: "erp-modal-xl",
 } as const;
 
+// 방금 닫은 모달 — 닫으면서 이동하는 짧은 사이에 앱이 같은 모달 칸을 한 번 더 새로 그리면, 새로 만들어진 모달은 "처음 열리는" 상태라
+// 배경막이 서서히 나타났다 사라져 깜빡인다. 같은 주소에서 닫은 직후(0.8초 안) 다시 만들어지면 처음부터 숨김으로 시작한다.
+const RECENT_CLOSE_MS = 800;
+let lastClosed: { path: string; at: number } | null = null;
+function wasJustClosed(path: string): boolean {
+  return !!lastClosed && lastClosed.path === path && Date.now() - lastClosed.at < RECENT_CLOSE_MS;
+}
+
 function isInternalNavAnchor(target: EventTarget | null): boolean {
   const anchor = (target as HTMLElement | null)?.closest?.(
     "a[href]",
@@ -55,7 +63,7 @@ export function RegistrationModalShell({
   // 있으므로 이걸로 "닫힘"은 완성이고, 주소를 배경 화면 URL로 되돌리는
   // 실제 라우트 이동은 그 뒤에 조용히 백그라운드로 흘려보낸다(닫힘의
   // 체감 속도가 그 이동 성공/실패나 속도에 더 이상 좌우되지 않는다).
-  const [closing, setClosing] = useState(false);
+  const [closing, setClosing] = useState(() => typeof window !== "undefined" && wasJustClosed(window.location.pathname));
   // 모달 안에서 입력/저장/버튼 조작이 있었는지 — 없으면 닫을 때 배경 화면을 서버에서 다시 받지 않는다.
   const dirtyRef = useRef(false);
   // 이 모달의 페이지가 KeyboardShortcuts를 통해 알려주는 "진짜 닫기
@@ -95,6 +103,7 @@ export function RegistrationModalShell({
     // "닫힌" 사용자 눈에는 안 보이는 뒷정리일 뿐이라, 성공/실패나 속도가
     // 닫힘 자체의 체감에 더 이상 영향을 주지 않는다.
     beginClosing();
+    lastClosed = { path: pathname, at: Date.now() };
     // 저장이 아직 끝나기 전이면, 저장이 뒤늦게 끝났을 때 상세 화면으로 자동 이동해서 방금 닫은 걸 덮어쓰지 않게 알린다.
     notifyUserLeft();
     // 닫을 때는 push가 아니라 replace — push로 쌓으면 브라우저 "뒤로가기"를 눌렀을 때 방금 닫은 모달이 다시 열린다.

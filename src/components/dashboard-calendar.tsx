@@ -702,7 +702,7 @@ function buildReportPartners(
         const first = group.items[0];
         const quantity = group.items.reduce((sum, item) => sum + item.quantity, 0);
         const boxes = shouldShowBoxCountOnDashboard(product.productName, first.categoryName)
-          ? formatBoxCount(quantity, first.basePackageQty)
+          ? formatBoxCount(quantity, first.basePackageQty, first.unit)
           : null;
         return { spec: group.spec, quantity: `${formatNumber(quantity)}${first.unit}`, boxes, isReturn: first.isReturn };
       });

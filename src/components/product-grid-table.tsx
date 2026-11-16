@@ -1,5 +1,6 @@
 "use client";
 
+import { packageUnitLabel } from "@/lib/package-qty";
 import { useActionState, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ClickableRow } from "@/components/clickable-row";
@@ -159,7 +160,7 @@ export function ProductGridTable({
           {mode === "inventory" ? (
             <>
               <span className="erp-row-card-qty">
-                <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} />
+                <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} packUnit={row.unit} />
               </span>
               <span className="erp-row-card-amount">{formatNumOrDash(row.price)}원</span>
             </>
@@ -259,7 +260,7 @@ export function ProductGridTable({
                 <td className="erp-u-muted">{row.spec ?? "-"}</td>
                 <td className="erp-u-muted">{row.unit ?? "-"}</td>
                 <td className="erp-u-muted">
-                  {row.basePackageQty ? `1박스 = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}` : "-"}
+                  {row.basePackageQty ? `1${packageUnitLabel(row.unit)} = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}` : "-"}
                 </td>
                 <td className="erp-u-muted">{row.categoryName ?? "-"}</td>
                 <td className="erp-u-muted">{row.supplierName ?? "-"}</td>
@@ -276,7 +277,7 @@ export function ProductGridTable({
                 ) : (
                   <>
                     <td className="num">
-                      <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} />
+                      <QtyWithBoxes quantity={row.quantity} basePackageQty={row.basePackageQty} packUnit={row.unit} />
                     </td>
                     <td>
                       <GridBadge tone={isLow ? "danger" : "ok"}>{isLow ? "재주문 필요" : "정상"}</GridBadge>

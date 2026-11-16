@@ -1,5 +1,6 @@
 "use client";
 
+import { packageUnitLabel } from "@/lib/package-qty";
 import { useActionState, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { submitStockCount } from "@/app/(dashboard)/inventory/actions";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
@@ -362,7 +363,7 @@ export function InventoryCountForm({
                   <td className="erp-u-muted">{row.spec || "-"}</td>
                   <td className="erp-u-muted">
                     {row.basePackageQty
-                      ? `1박스 = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}`
+                      ? `1${packageUnitLabel(row.unit)} = ${formatNumber(Number(row.basePackageQty))}${row.unit ?? ""}`
                       : "-"}
                   </td>
                   <td className="num">

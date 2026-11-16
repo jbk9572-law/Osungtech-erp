@@ -15,19 +15,27 @@ export function formatPackageQty(
   return `${formatNumber(base)}*${boxLabel}`;
 }
 
+// 단위가 리터 계열(L, ML, KL, 18L, 20L처럼 숫자·M·K가 붙은 L)이면 "박스"가 아니라 "포"로 부른다. "ROLL"처럼 글자가 더 붙은 단위는
+// L로 끝나도 해당하지 않는다(필름·테이프는 박스). 박스 라벨을 만드는 모든 자리가 이 함수 하나를 쓴다.
+const LITER_UNIT = /^(?:\d+(?:\.\d+)?\s*)?[MK]?L$/i;
+export function packageUnitLabel(unit?: string | null): "박스" | "포" {
+  return unit && LITER_UNIT.test(unit.trim()) ? "포" : "박스";
+}
+
 // "1.5박스"처럼 박스 수만 뽑아 쓰고 싶은 자리(수량 입력칸 옆에 붙이는 등)를
 // 위해 분리해뒀다 — formatQuantityWithBoxes와 같은 계산을 여기서 한 번만 한다.
 // 포장수량이 없는 품목은 null을 돌려줘서 호출부가 아예 안 보여줄 수 있게 한다.
 export function formatBoxCount(
   quantity: number,
-  basePackageQty: number | string | null | undefined
+  basePackageQty: number | string | null | undefined,
+  unit?: string | null
 ): string | null {
   const base = basePackageQty != null ? Number(basePackageQty) : null;
   if (!base) return null;
 
   const boxCount = quantity / base;
   const boxLabel = Number.isInteger(boxCount) ? formatNumber(boxCount) : boxCount.toFixed(1);
-  return `${boxLabel}박스`;
+  return `${boxLabel}${packageUnitLabel(unit)}`;
 }
 
 // 재고수량 옆에 몇 박스 분량인지 괄호로 같이 보여준다(예: "500 (10박스)").
@@ -41,6 +49,6 @@ export function formatQuantityWithBoxes(
   unit?: string
 ): string {
   const qtyLabel = unit ? `${formatNumber(quantity)} ${unit}` : formatNumber(quantity);
-  const boxLabel = formatBoxCount(quantity, basePackageQty);
+  const boxLabel = formatBoxCount(quantity, basePackageQty, unit);
   return boxLabel ? `${qtyLabel} (${boxLabel})` : qtyLabel;
 }

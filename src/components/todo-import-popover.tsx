@@ -21,9 +21,7 @@ export function TodoImportPopover({
   onClose: () => void;
 }) {
   return (
-    <div className="erp-u-absolute erp-u-bg-panel erp-u-border erp-u-radius-xl erp-u-overflow-y-auto"
-      style={{ top: "100%", right: 4, zIndex: 20, width: 420, maxWidth: "90vw", maxHeight: 320, boxShadow: "var(--erp-shadow-md)" }}
-    >
+    <div className="erp-import-popover">
       <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-bold erp-u-pad-6-10 erp-u-text-compact erp-u-bb-border"
       >
         <span>완료 안 한 할 일</span>
