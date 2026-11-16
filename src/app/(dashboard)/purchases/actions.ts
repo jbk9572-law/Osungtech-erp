@@ -71,6 +71,7 @@ export type TodayPurchaseItem = {
   unit: string;
   supplierName: string;
   purchaseOrderId: string;
+  supplierId: string;
   lotNumber: string;
 };
 
@@ -84,7 +85,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
   const { data } = await supabase
     .from("purchase_order_items")
     .select(
-      "id, product_id, quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, suppliers(name))"
+      "id, product_id, quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, supplier_id, suppliers(name))"
     )
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
@@ -103,6 +104,7 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
     unit: item.products?.unit ?? "",
     supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
     purchaseOrderId: item.purchase_order_id,
+    supplierId: item.purchase_orders?.supplier_id ?? "",
     lotNumber: item.lot_number ?? "",
   }));
 }

@@ -20,6 +20,11 @@ import { focusSameColumnNextRow, focusGridArrowNav } from "@/lib/grid-enter-nav"
 import { normalizeLotNumber } from "@/lib/lot-number";
 import { useFormRedirect } from "@/lib/use-form-redirect";
 import { formatNumber } from "@/lib/format-number";
+import { OrderImportPopover } from "@/components/order-import-popover";
+import { getPurchaseItemsForDate } from "@/app/(dashboard)/purchases/actions";
+import { getSaleItemsForDate } from "@/app/(dashboard)/sales/actions";
+import { groupByOrder, type ImportableOrder, type ImportableOrderItem } from "@/lib/order-import";
+import { todayKstStr } from "@/lib/kst-date";
 
 type Product = {
   id: string;
@@ -144,6 +149,65 @@ export function TodoForm({
 
   const pc = useTodoPaperCalc({ isEdit: !!initial?.id });
 
+  // 이미 입력해 둔 매입/매출의 품목·규격·수량·관리번호(LOT)를 다시 치지 않고 할일 품목으로 옮겨 담는다.
+  // 마감일·출고예정일은 일부러 건드리지 않는다 — 잊지 않으려고 적는 할일이라 날짜는 직접 정하는 게 핵심이다.
+  const [importKind, setImportKind] = useState<null | "purchase" | "sale">(null);
+  const [importDate, setImportDate] = useState(() => todayKstStr());
+  const [importOrders, setImportOrders] = useState<ImportableOrder[] | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+
+  async function loadImportOrders(kind: "purchase" | "sale", date: string) {
+    setImportLoading(true);
+    setImportOrders(null);
+    try {
+      const items: ImportableOrderItem[] =
+        kind === "purchase"
+          ? (await getPurchaseItemsForDate(date)).map((i) => ({
+              id: i.id, orderId: i.purchaseOrderId, productId: i.productId, productName: i.productName, sku: i.sku, spec: i.spec,
+              quantity: i.quantity, unit: i.unit, lotNumber: i.lotNumber, partnerId: i.supplierId, partnerName: i.supplierName,
+            }))
+          : await getSaleItemsForDate(date);
+      setImportOrders(groupByOrder(items));
+    } catch {
+      setImportOrders([]);
+    } finally {
+      setImportLoading(false);
+    }
+  }
+
+  function openImport(kind: "purchase" | "sale") {
+    setImportKind(kind);
+    setImportMessage(null);
+    void loadImportOrders(kind, importDate);
+  }
+
+  function applyImport(order: ImportableOrder) {
+    // 같은 품목·관리번호·수량이 이미 있으면 건너뛴다(같은 거래를 두 번 불러와 줄이 겹치는 것 방지).
+    const exists = (it: ImportableOrderItem) =>
+      rows.some((r) => r.productId === it.productId && r.lotNumber === it.lotNumber && r.quantity === it.quantity);
+    const fresh = order.items.filter((it) => !exists(it));
+    let key = nextKey;
+    const newRows: Row[] = fresh.map((it) => ({
+      key: key++,
+      productId: it.productId,
+      spec: it.spec,
+      manualSpec: Boolean(it.spec),
+      lotNumber: it.lotNumber,
+      quantity: it.quantity,
+    }));
+    if (newRows.length) {
+      setRows((prev) => (prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? newRows : [...prev, ...newRows]));
+      setNextKey(key);
+    }
+    // 거래처는 비어 있고 이 할일 유형에 해당하는 쪽일 때만 채운다(이미 고른 값은 덮어쓰지 않는다).
+    if (importKind === "purchase" && todoType !== "sale" && !supplierId && order.partnerId) setSupplierId(order.partnerId);
+    if (importKind === "sale" && todoType !== "purchase" && !customerId && order.partnerId) setCustomerId(order.partnerId);
+    const skipped = order.items.length - fresh.length;
+    setImportMessage(`${order.partnerName}: 품목 ${newRows.length}건을 불러왔습니다${skipped ? ` (이미 있는 ${skipped}건은 건너뜀)` : ""}.`);
+    setImportKind(null);
+  }
+
   const itemsJson = JSON.stringify(
     rows
       .filter((row) => row.productId && row.quantity > 0)
@@ -263,16 +327,37 @@ export function TodoForm({
       </div>
 
       <div className="erp-detail erp-u-mt-0">
-        <div className="erp-detail-tabs erp-u-justify-between">
+        <div className="erp-detail-tabs erp-u-justify-between erp-u-relative">
           <span className="erp-detail-tab active">품목</span>
           <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4">
             <QuickAddProductSearch products={products} onAdd={quickAddProduct} />
+            <button type="button" onClick={() => openImport("purchase")} className="erp-btn erp-u-minw-0">
+              매입에서 불러오기
+            </button>
+            <button type="button" onClick={() => openImport("sale")} className="erp-btn erp-u-minw-0">
+              매출에서 불러오기
+            </button>
             <button type="button" onClick={addRow} className="erp-btn erp-u-minw-0">
               + 품목 추가
             </button>
             <TodoPaperCalcToolbarButton pc={pc} enabled={paperCalcEnabled} />
           </div>
+          {importKind && (
+            <OrderImportPopover
+              kind={importKind}
+              date={importDate}
+              onDateChange={(d) => {
+                setImportDate(d);
+                void loadImportOrders(importKind, d);
+              }}
+              orders={importOrders}
+              loading={importLoading}
+              onImport={applyImport}
+              onClose={() => setImportKind(null)}
+            />
+          )}
         </div>
+        {importMessage && <p className="erp-u-muted erp-u-text-caption erp-u-pad-6-10" role="status">{importMessage}</p>}
 
         <TodoPaperCalcBanner pc={pc} />
 
