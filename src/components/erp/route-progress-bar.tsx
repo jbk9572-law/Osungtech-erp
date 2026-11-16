@@ -3,37 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ROUTE_PROGRESS_EVENT, ROUTE_LOADING_MARKER_SELECTOR } from "@/lib/route-progress";
-
-function isInternalNavClick(e: MouseEvent) {
-  if (
-    e.defaultPrevented ||
-    e.button !== 0 ||
-    e.metaKey ||
-    e.ctrlKey ||
-    e.shiftKey ||
-    e.altKey
-  ) {
-    return false;
-  }
-  const anchor = (e.target as HTMLElement)?.closest?.(
-    "a[href]",
-  ) as HTMLAnchorElement | null;
-  if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download"))
-    return false;
-  let url: URL;
-  try {
-    url = new URL(anchor.href, window.location.href);
-  } catch {
-    return false;
-  }
-  if (url.origin !== window.location.origin) return false;
-  if (
-    url.pathname === window.location.pathname &&
-    url.search === window.location.search
-  )
-    return false;
-  return true;
-}
+import { isInternalNavClick } from "@/lib/nav-start";
 
 type Phase = "idle" | "visible" | "done";
 
@@ -43,7 +13,7 @@ type Phase = "idle" | "visible" | "done";
 const SHOW_DELAY_MS = 200;
 
 // 인터셉트 라우트(@modal)처럼 목적지에 route-level loading.tsx가 먼저
-// 끼어드는 화면들의 로딩 화면 루트에 이 마커를 심어둔다(@modal/loading.tsx,
+// 끼어드는 화면들의 로딩 화면 루트에 이 마커를 심어둔다(components/erp/modal-loading.tsx,
 // (dashboard)/loading.tsx, platform-admin/loading.tsx). usePathname()은
 // 그 로딩 화면이 뜨는 시점에 이미 새 주소로 바뀌어버리기 때문에, "주소가
 // 바뀜 = 이동 끝남"으로만 보면 실제 내용(느린 조회)이 하나도 안 온

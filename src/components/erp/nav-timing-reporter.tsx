@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ROUTE_PROGRESS_EVENT, ROUTE_LOADING_MARKER_SELECTOR } from "@/lib/route-progress";
+import { ROUTE_LOADING_MARKER_SELECTOR } from "@/lib/route-progress";
+import { subscribeNavStart } from "@/lib/nav-start";
 import { PERF_BUDGET } from "@/lib/perf-budget";
 import { reportSlowNavigation } from "@/app/(dashboard)/perf-actions";
 
@@ -10,18 +11,6 @@ import { reportSlowNavigation } from "@/app/(dashboard)/perf-actions";
 // 화면마다 따로 계측을 붙이지 않아도 앱 전체가 같은 기준(PERF_BUDGET.navigationMs)으로 기록된다. 느린 이동만, 같은 화면은
 // 1분에 한 번만 서버로 보낸다(서버 액션이 Sentry에 남김). 화면 동작에는 아무 영향이 없다.
 const REPORT_INTERVAL_MS = 60_000;
-
-function isInternalNavClick(e: MouseEvent) {
-  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false;
-  const anchor = (e.target as HTMLElement)?.closest?.("a[href]") as HTMLAnchorElement | null;
-  if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) return false;
-  try {
-    const url = new URL(anchor.href, window.location.href);
-    return url.origin === window.location.origin && !(url.pathname === window.location.pathname && url.search === window.location.search);
-  } catch {
-    return false;
-  }
-}
 
 function Watcher() {
   const pathname = usePathname();
@@ -31,20 +20,13 @@ function Watcher() {
   const key = `${pathname}?${searchParams.toString()}`;
   const keyRef = useRef(key);
 
-  useEffect(() => {
-    const begin = () => {
-      startRef.current = performance.now();
-    };
-    const onClick = (e: MouseEvent) => {
-      if (isInternalNavClick(e)) begin();
-    };
-    document.addEventListener("click", onClick, true);
-    window.addEventListener(ROUTE_PROGRESS_EVENT, begin);
-    return () => {
-      document.removeEventListener("click", onClick, true);
-      window.removeEventListener(ROUTE_PROGRESS_EVENT, begin);
-    };
-  }, []);
+  useEffect(
+    () =>
+      subscribeNavStart(() => {
+        startRef.current = performance.now();
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (keyRef.current === key) return;

@@ -4,7 +4,8 @@ import { useCallback, useRef, useState, useEffect, type MouseEvent } from "react
 import { usePathname, useRouter } from "next/navigation";
 import { useScrollLock } from "@/lib/use-scroll-lock";
 import { ModalCloseProvider, ModalCloseHrefProvider } from "@/lib/modal-context";
-import { getModalOrigin, pathOf } from "@/lib/modal-origin";
+import { getModalOrigin, markModalOpen, pathOf } from "@/lib/modal-origin";
+import { notifyUserLeft } from "@/lib/nav-start";
 
 const SIZE_CLASS = {
   md: "erp-modal-md",
@@ -67,6 +68,10 @@ export function RegistrationModalShell({
   // 로딩 셸처럼 어떤 화면의 모달인지 모르는 경우에도 router.back()(히스토리에 같은 주소가 겹쳐 쌓였을 때
   // 닫기가 다시 같은 모달로 돌아가는 원인)에 기대지 않도록, 현재 주소의 상위 경로를 기본 닫기 목적지로 쓴다.
   const pathname = usePathname();
+  // 이 주소가 모달로 열려 있음을 기억 — 모달에서 모달로 바뀌어도 "열었던 화면"은 모달이 아닌 마지막 화면으로 남는다(modal-origin.ts).
+  useEffect(() => {
+    markModalOpen(pathname);
+  }, [pathname]);
   const fallbackCloseHref = pathname.replace(/\/[^/]+\/?$/, "") || "/dashboard";
   // 예전엔 목적지를 알게 되는 즉시 router.prefetch()로 미리 데워뒀는데,
   // 매출/매입처럼 날짜+검색어로 필터링한 목록 위에서 상세를 열었다가
@@ -90,6 +95,8 @@ export function RegistrationModalShell({
     // "닫힌" 사용자 눈에는 안 보이는 뒷정리일 뿐이라, 성공/실패나 속도가
     // 닫힘 자체의 체감에 더 이상 영향을 주지 않는다.
     beginClosing();
+    // 저장이 아직 끝나기 전이면, 저장이 뒤늦게 끝났을 때 상세 화면으로 자동 이동해서 방금 닫은 걸 덮어쓰지 않게 알린다.
+    notifyUserLeft();
     // 닫을 때는 push가 아니라 replace — push로 쌓으면 브라우저 "뒤로가기"를 눌렀을 때 방금 닫은 모달이 다시 열린다.
     // 데이터를 건드린 적이 없으면(입력·저장·버튼 없이 바로 닫음) 이미 그려져 있던 배경 화면이 그대로 맞으므로 서버에 새로
     // 요청(refresh)하지 않는다 — 무거운 화면(메인·매출관리)에서 닫기가 오래 걸리던 원인이었다.
