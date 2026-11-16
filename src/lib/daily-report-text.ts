@@ -17,6 +17,9 @@ export function formatReportDateLabel(dateStr: string): string {
 }
 
 export type DailyReportTextOptions = {
+  // 매입/매출 품목 줄을 각각 넣을지(기본 둘 다 켬) — 한쪽만 공유하고 싶을 때가 있다.
+  includePurchase: boolean;
+  includeSales: boolean;
   includeAmounts: boolean;
   includePayments: boolean;
   includeStock: boolean;
@@ -53,9 +56,13 @@ export function buildDailyReportText(input: DailyReportTextInput): string {
   }
 
   // 순서는 매입 → 매출(들어온 물건을 먼저, 나간 물건을 나중에) — 카톡으로 공유할 때 읽는 순서다.
-  out.push(...section("매입", input.purchaseCount, input.purchaseLines));
-  out.push("");
-  out.push(...section("매출", input.salesCount, input.salesLines));
+  const sections: string[][] = [];
+  if (options.includePurchase) sections.push(section("매입", input.purchaseCount, input.purchaseLines));
+  if (options.includeSales) sections.push(section("매출", input.salesCount, input.salesLines));
+  sections.forEach((lines, i) => {
+    if (i > 0) out.push("");
+    out.push(...lines);
+  });
 
   if (options.includePayments && (input.collected !== null || input.paid !== null)) {
     out.push("");

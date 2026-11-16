@@ -12,7 +12,7 @@ const base = {
   collected: 3200000,
   paid: 1500000,
   lowStock: [{ name: "모조지 70", quantity: 2, reorderPoint: 10 }],
-  options: { includeAmounts: false, includePayments: false, includeStock: true },
+  options: { includePurchase: true, includeSales: true, includeAmounts: false, includePayments: false, includeStock: true },
 };
 
 describe("formatReportDateLabel", () => {
@@ -45,10 +45,19 @@ describe("buildDailyReportText", () => {
     expect(text).not.toContain("[수금·지급]");
   });
 
+  it("매입만/매출만 골라 담을 수 있다", () => {
+    const onlyPurchase = buildDailyReportText({ ...base, options: { ...base.options, includeSales: false } });
+    expect(onlyPurchase).toContain("[매입] 1건");
+    expect(onlyPurchase).not.toContain("[매출]");
+    const onlySales = buildDailyReportText({ ...base, options: { ...base.options, includePurchase: false } });
+    expect(onlySales).toContain("[매출] 2건");
+    expect(onlySales).not.toContain("[매입]");
+  });
+
   it("금액·수금지급을 켜면 해당 줄이 추가된다", () => {
     const text = buildDailyReportText({
       ...base,
-      options: { includeAmounts: true, includePayments: true, includeStock: false },
+      options: { ...base.options, includeAmounts: true, includePayments: true, includeStock: false },
     });
     expect(text).toContain("[금액 합계]\n매입 9,860,000원 · 매출 12,480,000원");
     expect(text).toContain("[수금·지급]\n수금 3,200,000원 · 지급 1,500,000원");
@@ -60,7 +69,7 @@ describe("buildDailyReportText", () => {
       ...base,
       collected: null,
       paid: null,
-      options: { includeAmounts: false, includePayments: true, includeStock: false },
+      options: { ...base.options, includeAmounts: false, includePayments: true, includeStock: false },
     });
     expect(text).not.toContain("[수금·지급]");
   });
@@ -69,7 +78,7 @@ describe("buildDailyReportText", () => {
     const text = buildDailyReportText({
       ...base,
       paid: null,
-      options: { includeAmounts: false, includePayments: true, includeStock: false },
+      options: { ...base.options, includeAmounts: false, includePayments: true, includeStock: false },
     });
     expect(text).toContain("수금 3,200,000원");
     expect(text).not.toContain("지급 1,500,000원");
