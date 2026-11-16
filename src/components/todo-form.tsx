@@ -6,6 +6,7 @@ import { useKeyShortcut } from "@/lib/use-key-shortcut";
 import { ProductSearchSelect } from "@/components/product-search-select";
 import { PartySearchSelect } from "@/components/party-search-select";
 import { QuickAddProductSearch } from "@/components/quick-add-product-search";
+import { MobileItemEntryPanel } from "@/components/erp/mobile-item-entry-panel";
 import { QuantityWithBoxInput } from "@/components/quantity-with-box-input";
 import {
   TodoPaperCalcBanner,
@@ -155,10 +156,12 @@ export function TodoForm({
   const [importDate, setImportDate] = useState(() => todayKstStr());
   const [importOrders, setImportOrders] = useState<ImportableOrder[] | null>(null);
   const [importLoading, setImportLoading] = useState(false);
+  const [importFailed, setImportFailed] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
 
   async function loadImportOrders(kind: "purchase" | "sale", date: string) {
     setImportLoading(true);
+    setImportFailed(false);
     setImportOrders(null);
     try {
       const items: ImportableOrderItem[] =
@@ -169,8 +172,10 @@ export function TodoForm({
             }))
           : await getSaleItemsForDate(date);
       setImportOrders(groupByOrder(items));
-    } catch {
-      setImportOrders([]);
+    } catch (error) {
+      // 조회가 실패했는데 "불러올 품목이 없음"으로 보이면 원인을 알 수 없다 — 실패는 따로 보여 주고 기록한다.
+      console.error("불러오기 조회 실패:", error);
+      setImportFailed(true);
     } finally {
       setImportLoading(false);
     }
@@ -352,6 +357,7 @@ export function TodoForm({
               }}
               orders={importOrders}
               loading={importLoading}
+              failed={importFailed}
               onImport={applyImport}
               onClose={() => setImportKind(null)}
             />
@@ -361,6 +367,7 @@ export function TodoForm({
 
         <TodoPaperCalcBanner pc={pc} />
 
+        <div className="hidden md:block">
         <div className="erp-grid-wrap erp-u-border-none erp-u-radius-0">
           <table className="erp-grid" style={{ tableLayout: "fixed", width: "100%", minWidth: 640 }}>
             <thead>
@@ -473,6 +480,31 @@ export function TodoForm({
               )}
             </tbody>
           </table>
+        </div>
+        </div>
+
+        {/* 모바일(768px 미만)은 가로로 긴 표 대신 카드 목록 — 견적서·구매요청서 등과 같은 공용 패널을 쓴다. 행 상태는 데스크톱 표와 같다. */}
+        <div className="md:hidden erp-u-pad-6-10">
+          <MobileItemEntryPanel
+            products={products}
+            items={rows
+              .filter((r) => r.productId)
+              .map((r) => {
+                const p = products.find((x) => x.id === r.productId);
+                return { key: r.key, name: p?.name ?? "", spec: r.spec, quantity: r.quantity, lotNumber: r.lotNumber };
+              })}
+            showPrice={false}
+            showLot
+            onAdd={(productId, quantity, _price, lotNumber) => {
+              const product = products.find((p) => p.id === productId);
+              const newRow: Row = { key: nextKey, productId, spec: product?.spec ?? "", manualSpec: false, lotNumber: lotNumber ?? "", quantity };
+              setRows((prev) => (prev.length === 1 && !prev[0].productId && prev[0].quantity === 0 ? [newRow] : [...prev, newRow]));
+              setNextKey((k) => k + 1);
+            }}
+            onUpdateQuantity={(key, quantity) => updateRow(key, { quantity })}
+            onUpdateLot={(key, lotNumber) => updateRow(key, { lotNumber })}
+            onRemove={removeRow}
+          />
         </div>
       </div>
 

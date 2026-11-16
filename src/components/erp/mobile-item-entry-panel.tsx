@@ -9,7 +9,7 @@ import { formatNumber } from "@/lib/format-number";
 
 type SearchProduct = { id: string; sku: string; name: string; spec?: string | null };
 type QuickPickItem = { productId: string; sku: string; name: string; spec?: string | null };
-type EntryItem = { key: number; name: string; spec?: string | null; quantity: number; price?: number; amount?: number };
+type EntryItem = { key: number; name: string; spec?: string | null; quantity: number; price?: number; amount?: number; lotNumber?: string };
 
 // 매출/매입 등록 폼의 품목 입력 표는 칸이 10개 안팎이라 모바일에서 가로
 // 스크롤 압박이 심하다는 지적("가로형 횡그리드 모바일환경에서 스크롤압박이
@@ -31,6 +31,7 @@ export function MobileItemEntryPanel({
   quickPicks = [],
   items,
   showPrice = true,
+  showLot = false,
   priceLabel = "단가",
   totalLabel = "합계",
   totalAmount,
@@ -38,6 +39,7 @@ export function MobileItemEntryPanel({
   onAdd,
   onUpdateQuantity,
   onUpdatePrice,
+  onUpdateLot,
   onRemove,
   resolvePrice = () => 0,
 }: {
@@ -48,14 +50,17 @@ export function MobileItemEntryPanel({
   // 수량만 입력하게 한다(견적서/구매요청서/매출/매입은 단가가 있으므로
   // 기본값 true).
   showPrice?: boolean;
+  // 관리번호(LOT)를 입력·표시하는 폼(할일 등록)에서 켠다 — 카드와 추가 시트에 관리번호 칸이 생긴다.
+  showLot?: boolean;
   priceLabel?: string;
   totalLabel?: string;
   // showPrice일 때만 쓰인다.
   totalAmount?: number;
   onQuickAdd?: (productId: string) => void;
-  onAdd: (productId: string, quantity: number, price: number) => void;
+  onAdd: (productId: string, quantity: number, price: number, lotNumber?: string) => void;
   onUpdateQuantity: (key: number, quantity: number) => void;
   onUpdatePrice?: (key: number, price: number) => void;
+  onUpdateLot?: (key: number, lotNumber: string) => void;
   onRemove: (key: number) => void;
   // 품목을 고른 시점의 기본 단가(거래처/공급처별 단가 이력 → 품목
   // 기본가 순으로 호출부가 이미 계산해둔 값)를 시트에 미리 채운다.
@@ -66,6 +71,7 @@ export function MobileItemEntryPanel({
   const [draftProductId, setDraftProductId] = useState("");
   const [draftQuantity, setDraftQuantity] = useState(1);
   const [draftPrice, setDraftPrice] = useState(0);
+  const [draftLot, setDraftLot] = useState("");
   useEscapeToClose(sheetOpen, () => setSheetOpen(false));
   useScrollLock(sheetOpen);
 
@@ -73,6 +79,7 @@ export function MobileItemEntryPanel({
     setDraftProductId("");
     setDraftQuantity(1);
     setDraftPrice(0);
+    setDraftLot("");
     setSheetOpen(true);
   }
 
@@ -83,7 +90,7 @@ export function MobileItemEntryPanel({
 
   function confirmAdd() {
     if (!draftProductId || draftQuantity <= 0) return;
-    onAdd(draftProductId, draftQuantity, draftPrice);
+    onAdd(draftProductId, draftQuantity, draftPrice, showLot ? draftLot.trim() : undefined);
     setSheetOpen(false);
   }
 
@@ -160,6 +167,16 @@ export function MobileItemEntryPanel({
                   ✕
                 </button>
               </div>
+              {showLot && (
+                <input
+                  value={item.lotNumber ?? ""}
+                  onChange={(e) => onUpdateLot?.(item.key, e.target.value)}
+                  placeholder="관리번호(LOT)"
+                  aria-label="관리번호(LOT)"
+                  autoComplete="off"
+                  className="erp-input erp-u-w-full"
+                />
+              )}
               <div className="flex items-center gap-2">
                 <div className="erp-u-flex-1 erp-u-minw-0">
                   <NumberInput
@@ -253,6 +270,18 @@ export function MobileItemEntryPanel({
                   </div>
                 )}
               </div>
+              {showLot && (
+                <div>
+                  <label className="mb-1 block text-xs erp-u-muted">관리번호(LOT)</label>
+                  <input
+                    value={draftLot}
+                    onChange={(e) => setDraftLot(e.target.value)}
+                    autoComplete="off"
+                    aria-label="관리번호(LOT)"
+                    className="erp-input erp-u-w-full"
+                  />
+                </div>
+              )}
               {showPrice && (
                 <div className="flex items-center justify-between rounded-sm px-3 py-2 erp-u-bg-info-bg">
                   <span className="text-xs font-semibold erp-u-color-info-text">
