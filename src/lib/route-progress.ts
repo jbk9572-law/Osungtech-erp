@@ -8,3 +8,7 @@ export function startRouteProgress() {
     window.dispatchEvent(new Event(ROUTE_PROGRESS_EVENT));
   }
 }
+
+// 인터셉트 라우트(@modal)처럼 목적지에 route-level loading.tsx가 먼저 끼어드는 화면의 로딩 화면 루트에 심는 마커 —
+// "주소는 바뀌었지만 아직 로딩 화면뿐"인 동안을 구분한다(RouteProgressBar, NavTimingReporter가 같이 쓴다).
+export const ROUTE_LOADING_MARKER_SELECTOR = "[data-erp-route-loading]";
