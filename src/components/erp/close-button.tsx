@@ -27,7 +27,7 @@ export function CloseButton({
 
   if (closeModal) {
     return (
-      <button type="button" className={className} onClick={closeModal}>
+      <button type="button" className={className} data-modal-close onClick={closeModal}>
         {children}
       </button>
     );

@@ -55,6 +55,8 @@ export function RegistrationModalShell({
   // 실제 라우트 이동은 그 뒤에 조용히 백그라운드로 흘려보낸다(닫힘의
   // 체감 속도가 그 이동 성공/실패나 속도에 더 이상 좌우되지 않는다).
   const [closing, setClosing] = useState(false);
+  // 모달 안에서 입력/저장/버튼 조작이 있었는지 — 없으면 닫을 때 배경 화면을 서버에서 다시 받지 않는다.
+  const dirtyRef = useRef(false);
   // 이 모달의 페이지가 KeyboardShortcuts를 통해 알려주는 "진짜 닫기
   // 목적지"(그 페이지의 Escape.href와 같은 값)로 덮어쓰기 전까지는
   // 위 closeHref prop을 기본값으로 쓴다 — 그래서 그 등록을 깜빡한
@@ -88,28 +90,24 @@ export function RegistrationModalShell({
     // "닫힌" 사용자 눈에는 안 보이는 뒷정리일 뿐이라, 성공/실패나 속도가
     // 닫힘 자체의 체감에 더 이상 영향을 주지 않는다.
     beginClosing();
+    // 닫을 때는 push가 아니라 replace — push로 쌓으면 브라우저 "뒤로가기"를 눌렀을 때 방금 닫은 모달이 다시 열린다.
+    // 데이터를 건드린 적이 없으면(입력·저장·버튼 없이 바로 닫음) 이미 그려져 있던 배경 화면이 그대로 맞으므로 서버에 새로
+    // 요청(refresh)하지 않는다 — 무거운 화면(메인·매출관리)에서 닫기가 오래 걸리던 원인이었다.
+    const leave = (href: string) => {
+      router.replace(href);
+      if (dirtyRef.current) router.refresh();
+    };
     // 목록이 아닌 곳(예: 메인 화면의 "새 판매")에서 열었으면 고정 목적지(/sales) 대신 열었던 화면으로 돌아간다.
     // 같은 목록에서 열었으면(경로가 같으면) 그 목록이 등록해 둔 조회조건 포함 목적지를 그대로 쓴다.
     const target = closeHrefRef.current ?? fallbackCloseHref;
     const origin = getModalOrigin();
     if (origin && pathOf(origin) !== pathOf(target) && pathOf(origin) !== pathname) {
-      router.push(origin);
-      router.refresh();
+      leave(origin);
       return;
     }
-    if (closeHrefRef.current) {
-      // 이 페이지가 등록해준 정확한 목적지로 명시 이동한다 — 브라우저
-      // 히스토리(router.back())에 기대지 않으므로 이 모달을 어떤 경로로
-      // 거쳐 들어왔든 항상 같은 곳으로 닫힌다. refresh()로 그 목적지의
-      // 클라이언트 캐시를 비워, 모달이 열려 있던 동안 캐시된 적이 있어도
-      // 항상 최신 검색조건 기준 결과를 받아오게 한다.
-      router.push(closeHrefRef.current);
-      router.refresh();
-    } else {
-      // 아직 목적지가 등록되지 않은 극히 짧은 순간(마운트 직후)에 대한 안전장치 — 히스토리 대신 상위 경로로 이동한다.
-      router.push(fallbackCloseHref);
-      router.refresh();
-    }
+    // 이 페이지가 등록해준 정확한 목적지(또는 마운트 직후 아직 등록 전이면 상위 경로)로 명시 이동한다 — 브라우저
+    // 히스토리(router.back())에 기대지 않으므로 이 모달을 어떤 경로로 거쳐 들어왔든 항상 같은 곳으로 닫힌다.
+    leave(target);
   }, [router, beginClosing, fallbackCloseHref, pathname]);
 
   useEffect(() => {
@@ -156,7 +154,14 @@ export function RegistrationModalShell({
     return () => document.removeEventListener("click", onDocClick, true);
   }, [beginClosing]);
 
+  function markDirty(e: { target: EventTarget | null }) {
+    const el = e.target as HTMLElement | null;
+    if (el?.closest?.("[data-modal-close], .erp-modal-window-close")) return;
+    dirtyRef.current = true;
+  }
+
   function handleClickCapture(e: MouseEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement | null)?.closest?.("button")) markDirty(e);
     // "ESC 닫기" 링크처럼 이 모달을 벗어나는 실제 이동이 시작되는 순간,
     // 그 이동이 끝나길 기다리지 않고 즉시 닫히는 모습을 보여준다.
     if (isInternalNavAnchor(e.target)) beginClosing();
@@ -177,6 +182,8 @@ export function RegistrationModalShell({
         className={`erp-modal ${SIZE_CLASS[size]}${closing ? " closing" : ""}`}
         style={{ minHeight: 0, outline: "none" }}
         onClickCapture={handleClickCapture}
+        onChangeCapture={markDirty}
+        onSubmitCapture={markDirty}
       >
         <button
           type="button"
