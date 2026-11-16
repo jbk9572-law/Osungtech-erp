@@ -18,14 +18,24 @@ export function isInternalNavClick(e: MouseEvent): boolean {
   }
 }
 
+// 모달을 X·ESC·배경 클릭으로 닫는 것도 "화면을 떠난다"는 뜻이다 — 링크 클릭이 아니라서 위 판정에 안 걸리므로, 모달 셸이 닫을 때 직접 알린다.
+// (저장이 끝나기 전에 모달을 닫았는데 저장 뒤 자동 이동이 상세 화면을 다시 띄우던 문제)
+export const USER_LEFT_EVENT = "erp:user-left";
+
+export function notifyUserLeft() {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(USER_LEFT_EVENT));
+}
+
 export function subscribeNavStart(onStart: () => void): () => void {
   const onClick = (e: MouseEvent) => {
     if (isInternalNavClick(e)) onStart();
   };
   document.addEventListener("click", onClick, true);
   window.addEventListener(ROUTE_PROGRESS_EVENT, onStart);
+  window.addEventListener(USER_LEFT_EVENT, onStart);
   return () => {
     document.removeEventListener("click", onClick, true);
     window.removeEventListener(ROUTE_PROGRESS_EVENT, onStart);
+    window.removeEventListener(USER_LEFT_EVENT, onStart);
   };
 }
