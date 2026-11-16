@@ -6217,6 +6217,21 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
   box-shadow: var(--erp-shadow-md);
 }
 
+/* 모바일: 부모의 overflow·폭에 잘리지 않게 화면 아래쪽에 가로로 꽉 차는 시트처럼 띄운다. */
+@media (max-width: 768px) {
+  .erp-import-popover {
+    position: fixed;
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    max-width: none;
+    max-height: 60vh;
+    z-index: 200;
+  }
+}
+
 .erp-widget-body > .erp-home-panel,
 .erp-widget-body > .erp-daily-report,
 .erp-widget-body > .erp-cal-panel {
