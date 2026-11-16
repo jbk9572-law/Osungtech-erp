@@ -43,7 +43,7 @@ type Phase = "idle" | "visible" | "done";
 const SHOW_DELAY_MS = 200;
 
 // 인터셉트 라우트(@modal)처럼 목적지에 route-level loading.tsx가 먼저
-// 끼어드는 화면들의 로딩 화면 루트에 이 마커를 심어둔다(@modal/loading.tsx,
+// 끼어드는 화면들의 로딩 화면 루트에 이 마커를 심어둔다(components/erp/modal-loading.tsx,
 // (dashboard)/loading.tsx, platform-admin/loading.tsx). usePathname()은
 // 그 로딩 화면이 뜨는 시점에 이미 새 주소로 바뀌어버리기 때문에, "주소가
 // 바뀜 = 이동 끝남"으로만 보면 실제 내용(느린 조회)이 하나도 안 온
