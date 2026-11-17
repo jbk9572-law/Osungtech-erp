@@ -25,7 +25,21 @@ function rng(seed: number) {
 
 type Doc = { id: string; qty: number };
 
-async function run(seed: number, steps: number) {
+// 업종마다 데이터 모양이 다르다 — 한 업종(종이 제조·유통)만 시험하면 그 업종의 가정이 DB 함수에 박혀도 모른다.
+//  기본: 정수 수량, 모두 품목 있는 줄
+//  식품·kg: 소수 수량(0.25 단위)과 소수 단가 — 반올림·부동소수 오차가 재고를 어긋나게 하지 않는지
+//  서비스 혼합: 품목 없이 이름만 적는 줄(컨설팅·배송비 등)이 매출에 섞임 — 재고와 무관한 줄이 재고 계산을 건드리지 않는지
+//  소매: 반품이 잦음 — 반품이 재고 이력과 맞는지
+type Profile = { name: string; decimal: boolean; customLines: boolean; returns: boolean };
+const PROFILES: Profile[] = [
+  { name: "기본(정수 수량)", decimal: false, customLines: false, returns: false },
+  { name: "식품·kg(소수 수량·단가)", decimal: true, customLines: false, returns: false },
+  { name: "서비스 혼합(품목 없는 줄)", decimal: false, customLines: true, returns: false },
+  { name: "소매(반품 잦음)", decimal: false, customLines: false, returns: true },
+  { name: "전부 섞기", decimal: true, customLines: true, returns: true },
+];
+
+async function run(seed: number, steps: number, profile: Profile) {
   const h: Harness = await createHarness();
   const products = [await h.makeProduct({ name: "모조지", cost: 100 }), await h.makeProduct({ name: "골판지", cost: 60 })];
   const rand = rng(seed);
@@ -34,8 +48,15 @@ async function run(seed: number, steps: number) {
   const purchases: Doc[] = [];
   const sales: Doc[] = [];
   // 한 전표에 1~3개 줄, 품목은 두 개 중 무작위(같은 품목이 두 줄에 나올 수도 있다)
-  const items = (maxQty: number, price: Record<string, number>) => {
-    const lines = Array.from({ length: 1 + pick(3) }, () => ({ productId: products[pick(products.length)], quantity: 1 + pick(maxQty), ...price }));
+  const qtyOf = (maxQty: number) => (profile.decimal ? (1 + pick(maxQty * 4)) / 4 : 1 + pick(maxQty));
+  const items = (maxQty: number, price: Record<string, number>, sale = false) => {
+    const lines = Array.from({ length: 1 + pick(3) }, () => {
+      const quantity = qtyOf(maxQty);
+      const unit = profile.decimal ? { ...price, ...Object.fromEntries(Object.entries(price).map(([k, v]) => [k, v + pick(100) / 100])) } : price;
+      // 서비스 혼합: 매출 줄 일부는 품목 없이 이름만(재고와 무관)
+      if (sale && profile.customLines && rand() < 0.35) return { customName: "컨설팅 용역", quantity, ...unit };
+      return { productId: products[pick(products.length)], quantity, ...unit };
+    });
     return { lines, total: lines.reduce((a, l) => a + l.quantity, 0) };
   };
   const day = () => `2026-11-${String(1 + pick(10)).padStart(2, "0")}`;
@@ -63,12 +84,13 @@ async function run(seed: number, steps: number) {
        from public.sales_order_items soi`);
     for (const s of over) if (Number(s.consumed) > Number(s.quantity) + 1e-6) fail(`R2 소진 합이 매출 수량 초과(${after}): sale item ${s.id}`);
     // R3 재고 이력은 장부식이다: 입고(+) 출고(−) 그리고 수정·삭제 때 남기는 되돌림(adjustment, 부호 있는 값)을 모두 합친 순재고가
-    // "매입 수량 합 − 매출 수량 합"과 같아야 한다.
+    // "매입 수량 합 − 매출 수량 합 + 반품 수량 합"과 같아야 한다(품목 없는 줄은 재고와 무관해서 제외).
     const [net] = await q<{ n: string | null }>(
       `select sum(case type when 'in' then quantity when 'out' then -quantity else quantity end) as n from public.inventory_transactions`);
-    const poiTotal = Number((await q<{ s: string | null }>(`select sum(quantity) as s from public.purchase_order_items`))[0].s ?? 0);
-    const soiTotal = Number((await q<{ s: string | null }>(`select sum(quantity) as s from public.sales_order_items`))[0].s ?? 0);
-    if (Number(net.n ?? 0) !== poiTotal - soiTotal) fail(`R3 순재고 이력(${net.n ?? 0}) ≠ 매입 합(${poiTotal}) − 매출 합(${soiTotal}) (${after})`);
+    const poiTotal = Number((await q<{ s: string | null }>(`select sum(quantity) as s from public.purchase_order_items where product_id is not null`))[0].s ?? 0);
+    const soiTotal = Number((await q<{ s: string | null }>(
+      `select sum(case when so.is_return then -s.quantity else s.quantity end) as s from public.sales_order_items s join public.sales_orders so on so.id = s.sales_order_id where s.product_id is not null`))[0].s ?? 0);
+    if (Math.abs(Number(net.n ?? 0) - (poiTotal - soiTotal)) > 1e-6) fail(`R3 순재고 이력(${net.n ?? 0}) ≠ 매입 합(${poiTotal}) − 매출 순합(${soiTotal}) (${after})`);
   }
 
   async function counts() {
@@ -88,7 +110,7 @@ async function run(seed: number, steps: number) {
       log.push(`매입 등록 ${qty}개 ${d}`);
     },
     async createSale() {
-      const { lines, total: qty } = items(80, { unitPrice: 300 });
+      const { lines, total: qty } = items(80, { unitPrice: 300 }, true);
       const d = day();
       const r = await q<{ id: string }>(
         `select public.create_sale_with_items(p_customer_id => $1, p_warehouse_id => $2, p_order_date => $3, p_memo => null, p_created_by => $4, p_items => $5::jsonb) as id`,
@@ -96,10 +118,19 @@ async function run(seed: number, steps: number) {
       sales.push({ id: r[0].id, qty });
       log.push(`매출 등록 ${qty}개 ${d}`);
     },
+    async createReturn() {
+      const { lines, total: qty } = items(20, { unitPrice: 300 });
+      const d = day();
+      const r = await q<{ id: string }>(
+        `select public.create_sale_with_items(p_customer_id => $1, p_warehouse_id => $2, p_order_date => $3, p_memo => null, p_created_by => $4, p_items => $5::jsonb, p_is_return => true) as id`,
+        [h.ids.customer, h.ids.warehouse, d, h.ids.staff, JSON.stringify(lines)]);
+      sales.push({ id: r[0].id, qty });
+      log.push(`반품 등록 ${qty}개 ${d}`);
+    },
     async updateSale() {
       if (!sales.length) return;
       const s = sales[pick(sales.length)];
-      const { lines, total: qty } = items(80, { unitPrice: 300 });
+      const { lines, total: qty } = items(80, { unitPrice: 300 }, true);
       await q(
         `select public.update_sale_with_items(p_id => $1, p_customer_id => $2, p_warehouse_id => $3, p_order_date => $4, p_memo => null, p_updated_by => $5, p_items => $6::jsonb)`,
         [s.id, h.ids.customer, h.ids.warehouse, day(), h.ids.staff, JSON.stringify(lines)]);
@@ -131,7 +162,7 @@ async function run(seed: number, steps: number) {
       purchases.splice(i, 1);
     },
   };
-  const names = ["createPurchase", "createPurchase", "createSale", "createSale", "updateSale", "updatePurchase", "deleteSale", "deletePurchase"];
+  const names = ["createPurchase", "createPurchase", "createSale", "createSale", "updateSale", "updatePurchase", "deleteSale", "deletePurchase", ...(profile.returns ? ["createReturn", "createReturn"] : [])];
 
   let rejected = 0;
   for (let step = 0; step < steps; step++) {
@@ -149,6 +180,13 @@ async function run(seed: number, steps: number) {
     await checkInvariants(`${step + 1}번째 ${name}`);
   }
 
+  // 이 시드가 업종 특성을 실제로 만들어 냈는지(안 만들었으면 시험이 헛돈 것이다)
+  const [ex] = await q<{ custom: string; returns: string; decimals: string }>(
+    `select (select count(*) from public.sales_order_items where product_id is null) as custom,
+            (select count(*) from public.sales_orders where is_return) as returns,
+            (select count(*) from public.purchase_order_items where quantity <> trunc(quantity)) as decimals`);
+  const exercised = { custom: Number(ex.custom), returns: Number(ex.returns), decimals: Number(ex.decimals) };
+
   // R5: 모두 지우면 0으로 돌아와야 한다(매출 먼저, 그다음 매입)
   for (const s of [...sales]) await q(`select public.delete_sale_with_items($1, $2)`, [s.id, h.ids.staff]);
   for (const p of [...purchases]) await q(`select public.delete_purchase_with_items($1, $2)`, [p.id, h.ids.staff]);
@@ -161,13 +199,18 @@ async function run(seed: number, steps: number) {
   const [net] = await q<{ n: string | null }>(
     `select sum(case type when 'in' then quantity when 'out' then -quantity else quantity end) as n from public.inventory_transactions`);
   if (Number(net.n ?? 0) !== 0) fail(`R5 전부 삭제 후 순재고 이력이 0이 아님: ${net.n}`);
-  return { rejected };
+  return { rejected, exercised };
 }
 
 describe("재고·입출고 무작위 순서 검증(불변 규칙)", () => {
-  for (const seed of [1, 7, 42, 2026, 31337, 99, 123, 555]) {
-    it(`시드 ${seed}: 여러 품목·여러 줄을 섞은 80번 무작위 작업 뒤에도 불변 규칙이 유지된다`, async () => {
-      await run(seed, 80);
-    }, 180000);
+  for (const profile of PROFILES) {
+    for (const seed of profile.name === "기본(정수 수량)" ? [1, 7, 42, 2026, 31337, 99, 123, 555] : [3, 11, 77]) {
+      it(`[${profile.name}] 시드 ${seed}: 80번 무작위 작업 뒤에도 불변 규칙이 유지된다`, async () => {
+        const r = await run(seed, 80, profile);
+        if (profile.customLines) expect(r.exercised.custom, "품목 없는 줄이 만들어지지 않음").toBeGreaterThan(0);
+        if (profile.returns) expect(r.exercised.returns, "반품이 만들어지지 않음").toBeGreaterThan(0);
+        if (profile.decimal) expect(r.exercised.decimals, "소수 수량이 만들어지지 않음").toBeGreaterThan(0);
+      }, 180000);
+    }
   }
 });
