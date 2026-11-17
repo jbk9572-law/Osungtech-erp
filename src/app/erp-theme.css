@@ -111,6 +111,8 @@
 .erp-u-bg-panel { background: var(--erp-panel) !important; }
 .erp-u-border { border: 1px solid var(--erp-border) !important; }
 .erp-u-border-none { border: none !important; }
+.erp-u-no-underline { text-decoration: none !important; }
+.erp-u-w-fit { width: fit-content !important; }
 .erp-u-col { flex-direction: column !important; }
 .erp-u-col-all { grid-column: 1 / -1 !important; }
 .erp-u-flex-1 { flex: 1 !important; }
