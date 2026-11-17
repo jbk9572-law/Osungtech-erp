@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { GridBadge } from "@/components/grid/badge";
 
 export type FailureLogRow = {
   id: string;
@@ -59,9 +60,9 @@ export function FailureLogListBody({ rows }: { rows: FailureLogRow[] }) {
           >
             <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-s5">
               <div className="erp-u-flex erp-u-items-center erp-u-minw-0 erp-u-gap-s2">
-                <span className="erp-badge erp-badge-danger" style={{ fontFamily: "monospace" }}>
+                <GridBadge tone="danger" style={{ fontFamily: "monospace" }}>
                   {r.code}
-                </span>
+                </GridBadge>
                 <span className="erp-u-semibold erp-u-text erp-u-text-base">
                   {r.message_ko}
                 </span>

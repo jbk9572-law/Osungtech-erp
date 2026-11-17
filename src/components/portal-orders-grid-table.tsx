@@ -1,6 +1,7 @@
 "use client";
 
 import { toKstDateStr } from "@/lib/kst-date";
+import { GridBadge } from "@/components/grid/badge";
 import { rowDay, rowDayClass } from "@/lib/row-day";
 import { Fragment, useState } from "react";
 import Link from "next/link";
@@ -79,9 +80,9 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
                     <td className="num">{row.itemCount}</td>
                     <td className="num">{formatNumber(row.totalAmount)}</td>
                     <td>
-                      <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
+                      <GridBadge tone={row.isRejected ? "danger" : "info"}>
                         {row.progressLabel}
-                      </span>
+                      </GridBadge>
                     </td>
                     <td className="erp-u-muted">{row.memo ?? "-"}</td>
                     <td className="num" onClick={(e) => e.stopPropagation()}>
@@ -133,9 +134,9 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
                 품목 {row.itemCount}건{row.memo ? ` · ${row.memo}` : ""}
               </div>
               <div className="erp-row-card-foot">
-                <span className={`erp-badge ${row.isRejected ? "erp-badge-danger" : "erp-badge-info"}`}>
+                <GridBadge tone={row.isRejected ? "danger" : "info"}>
                   {row.progressLabel}
-                </span>
+                </GridBadge>
                 <span className="erp-row-card-amount">{formatNumber(row.totalAmount)}원</span>
               </div>
               <div onClick={(e) => e.stopPropagation()}>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GridBadge } from "@/components/grid/badge";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { EditCompanyForm } from "@/components/edit-company-form";
 import { TenantStatusControls } from "@/components/tenant-status-controls";
@@ -244,11 +245,11 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
                       {u.full_name}
                       {u.is_demo && (
                         <span className="erp-u-ml-s2">
-                          <span className="erp-badge erp-badge-warning">데모</span>
+                          <GridBadge tone="warn">데모</GridBadge>
                         </span>
                       )}
                       <span className="erp-u-ml-s2">
-                        <span className="erp-badge erp-badge-muted">{ROLE_LABELS[u.role] ?? u.role}</span>
+                        <GridBadge tone="muted">{ROLE_LABELS[u.role] ?? u.role}</GridBadge>
                       </span>
                     </div>
                     <div className="erp-u-muted erp-u-text-sm erp-u-mt-3">{u.username}</div>

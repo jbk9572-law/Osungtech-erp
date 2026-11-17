@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { GridBadge } from "@/components/grid/badge";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerPriceForm } from "@/components/customer-price-form";
@@ -407,9 +408,9 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                     <tr key={a.id}>
                       <td>{a.username}</td>
                       <td>
-                        <span className={`erp-badge ${a.disabled ? "erp-badge-muted" : "erp-badge-success"}`}>
+                        <GridBadge tone={a.disabled ? "muted" : "ok"}>
                           {a.disabled ? "비활성" : "사용중"}
-                        </span>
+                        </GridBadge>
                       </td>
                       <td>{new Date(a.created_at).toLocaleDateString("ko-KR")}</td>
                       <td>{!a.disabled && <PortalAccountDisableForm id={a.id} />}</td>

@@ -20,14 +20,16 @@ export function GridBadge({
   children,
   style,
   title,
+  className,
 }: {
   tone: BadgeTone;
   children: ReactNode;
   style?: CSSProperties;
   title?: string;
+  className?: string;
 }) {
   return (
-    <span className={`erp-badge ${TONE_CLASS[tone]}`} style={style} title={title}>
+    <span className={`erp-badge ${TONE_CLASS[tone]}${className ? ` ${className}` : ""}`} style={style} title={title}>
       {children}
     </span>
   );

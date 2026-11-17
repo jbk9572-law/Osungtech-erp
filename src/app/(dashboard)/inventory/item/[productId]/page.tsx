@@ -401,7 +401,7 @@ export default async function InventoryProductHistoryPage({
                   <dt>관리번호</dt>
                   <dd>
                     {row.lotNumber ? (
-                      <span className="erp-badge erp-badge-muted">{row.lotNumber}</span>
+                      <GridBadge tone="muted">{row.lotNumber}</GridBadge>
                     ) : (
                       "-"
                     )}

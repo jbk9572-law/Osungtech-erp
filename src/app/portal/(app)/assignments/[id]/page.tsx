@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { GridBadge } from "@/components/grid/badge";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatNumber } from "@/lib/format-number";
@@ -93,13 +94,11 @@ export default async function PortalAssignmentDetailPage({ params }: { params: P
                     defectQuantity={Number(s.defect_quantity)}
                   />
                 ) : (
-                  <span
-                    className={`erp-badge ${s.defect_hold || s.status === "returned" ? "erp-badge-danger" : "erp-badge-muted"}`}
-                  >
+                  <GridBadge tone={s.defect_hold || s.status === "returned" ? "danger" : "muted"}>
                     {s.defect_hold
                       ? "입고 불량 보류"
                       : (NON_MINE_STATUS_LABEL[s.status] ?? s.status)}
-                  </span>
+                  </GridBadge>
                 )}
               </div>
               );
