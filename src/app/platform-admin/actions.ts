@@ -1,5 +1,6 @@
 "use server";
 
+import { provisionMetadata } from "@/lib/auth-provisioning";
 import { refreshLayout } from "@/lib/layout-cache";
 import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { redirect } from "next/navigation";
@@ -71,12 +72,12 @@ export async function createCompanyTenant(_prevState: FormState, formData: FormD
     email,
     password,
     email_confirm: true,
-    user_metadata: {
+    ...provisionMetadata({
       full_name: fullName,
       username,
       new_tenant_name: companyName,
       new_tenant_slug: slug,
-    },
+    }),
   });
 
   if (error || !created.user) {
@@ -142,7 +143,7 @@ export async function createTenantDemoAccount(_prevState: FormState, formData: F
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, username, tenant_id: tenantId },
+    ...provisionMetadata({ full_name: fullName, username, tenant_id: tenantId }),
   });
 
   if (error || !created.user) {

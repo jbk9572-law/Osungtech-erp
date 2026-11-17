@@ -1,5 +1,6 @@
 "use server";
 
+import { provisionMetadata } from "@/lib/auth-provisioning";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -92,7 +93,7 @@ async function seedSandboxEmployees(): Promise<string | null> {
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: emp.fullName, username: emp.username, tenant_id: myTenant.id },
+      ...provisionMetadata({ full_name: emp.fullName, username: emp.username, tenant_id: myTenant.id }),
     });
     if (error || !created.user) continue; // 이미 존재(재시도) 등은 조용히 건너뜀
 
