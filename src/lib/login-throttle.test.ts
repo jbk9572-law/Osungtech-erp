@@ -52,3 +52,31 @@ describe("login-throttle", () => {
     expect(clientIpFromHeaders(new Headers())).toBe("unknown");
   });
 });
+
+describe("login-throttle: 접속지를 바꿔 가며 한 계정을 노리는 공격", () => {
+  it("접속지(IP/조작한 헤더)를 매번 바꿔도 같은 계정에 20번 실패하면 막힌다", () => {
+    for (let i = 0; i < 19; i++) recordLoginFailure(`10.0.0.${i}`, "kim");
+    expect(throttleRemainingSeconds("10.9.9.9", "kim")).toBe(0);
+    recordLoginFailure("10.0.0.99", "kim");
+    expect(throttleRemainingSeconds("10.8.8.8", "kim")).toBeGreaterThan(0); // 아직 한 번도 안 쓴 새 접속지도 막힌다
+  });
+  it("다른 계정은 영향을 받지 않는다", () => {
+    for (let i = 0; i < 25; i++) recordLoginFailure(`10.1.0.${i}`, "kim");
+    expect(throttleRemainingSeconds("10.1.0.200", "lee")).toBe(0);
+  });
+  it("대문자·소문자만 바꿔 우회할 수 없다", () => {
+    for (let i = 0; i < 20; i++) recordLoginFailure(`10.2.0.${i}`, i % 2 ? "KIM" : "kim");
+    expect(throttleRemainingSeconds("10.2.9.9", "Kim")).toBeGreaterThan(0);
+  });
+  it("로그인에 성공하면 계정 카운터도 풀린다", () => {
+    for (let i = 0; i < 20; i++) recordLoginFailure(`10.3.0.${i}`, "kim");
+    recordLoginSuccess("10.3.9.9", "kim");
+    expect(throttleRemainingSeconds("10.3.9.9", "kim")).toBe(0);
+  });
+  it("10분이 지나면 풀린다(공격으로 잠겨도 영구 잠금은 아님)", () => {
+    const t0 = 1_000_000;
+    for (let i = 0; i < 20; i++) recordLoginFailure(`10.4.0.${i}`, "kim", t0);
+    expect(throttleRemainingSeconds("10.4.9.9", "kim", t0 + 1000)).toBeGreaterThan(0);
+    expect(throttleRemainingSeconds("10.4.9.9", "kim", t0 + 11 * 60 * 1000)).toBe(0);
+  });
+});
