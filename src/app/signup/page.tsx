@@ -61,11 +61,11 @@ export default function SignupPage() {
             style={{ left: "-9999px", width: 1, height: 1, opacity: 0 }}
           />
 
-          <Field label="회사명" name="companyName" placeholder="예: 오성테크" required autoComplete="organization" />
+          <Field label="회사명" name="companyName" placeholder="예: (주)엘보닉스" required autoComplete="organization" />
           <Field
             label="회사코드"
             name="slug"
-            placeholder="예: osungtech (영문 소문자/숫자/하이픈)"
+            placeholder="예: elvonix (영문 소문자/숫자/하이픈)"
             required
             pattern="[a-z0-9-]{2,32}"
             autoComplete="off"
