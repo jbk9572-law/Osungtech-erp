@@ -92,7 +92,7 @@ export async function buildStandardLedgerWorkbook(
   totalCell.border = boxBorder();
 
   const vatCell = sheet.getCell("B6");
-  vatCell.value = { formula: "B5*1.1" };
+  vatCell.value = { formula: "ROUND(B5*1.1,0)" };
   vatCell.numFmt = WON_FORMAT;
   vatCell.font = { bold: true };
   vatCell.alignment = { horizontal: "center" };
@@ -237,7 +237,7 @@ export async function buildLeadersSpecialWorkbook(
   totalCell.border = boxBorder();
 
   const vatCell = sheet.getCell("B4");
-  vatCell.value = { formula: "B3*1.1" };
+  vatCell.value = { formula: "ROUND(B3*1.1,0)" };
   vatCell.numFmt = WON_FORMAT;
   vatCell.font = { bold: true };
   vatCell.alignment = { horizontal: "center" };
