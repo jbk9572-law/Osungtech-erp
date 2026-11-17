@@ -102,7 +102,7 @@ type Row = {
   unitPrice: number;
   manualPrice: boolean;
   remark: string;
-  // 입고 불러오기로 가져온 줄이 나갈 입고분(매입 품목) id — 저장 때 서버가 그 입고분에서 먼저 차감한다. 품목을 바꾸면 비운다.
+  // 입고 불러오기로 가져온 줄이 나갈 입고분(매입 품목) id — 저장 때 연결 기록으로만 남긴다(재고 차감은 선입선출 그대로). 품목을 바꾸면 비운다.
   sourcePurchaseItemId?: string | null;
 };
 
@@ -700,7 +700,7 @@ export function NewSaleForm({
     const unitPrice = resolvePrice(customerId, productId);
     updateRow(key, {
       productId,
-      // 다른 품목으로 바꾸면 이전에 지정한 입고분은 더 이상 맞지 않는다.
+      // 다른 품목으로 바꾸면 이전에 연결한 입고분은 더 이상 맞지 않는다.
       sourcePurchaseItemId: null,
       spec: product?.spec ?? "",
       unitPrice,

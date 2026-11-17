@@ -27,7 +27,7 @@ type SaleItemInput = {
   unitPrice: number;
   remark?: string | null;
   lotNumber?: string | null;
-  // "입고 불러오기"로 가져온 줄이 나갈 입고분(매입 품목) id — 있으면 그 입고분에서 먼저 차감한다(없으면 선입선출).
+  // "입고 불러오기"로 가져온 줄이 나갈 입고분(매입 품목) id — 있으면 연결 기록으로만 저장한다(차감은 항상 선입선출).
   sourcePurchaseItemId?: string | null;
 };
 
