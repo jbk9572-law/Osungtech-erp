@@ -258,6 +258,10 @@
   --erp-success-border: #b7e4c7;
   --erp-warning-bg: #fff3e0;
   --erp-warning-border: #ffd9a8;
+  /* 익월이월(이번 달 등록 → 다음 달 실적) 전용 — 전월 이월(호박색 warning)·오늘(초록)·선택(파랑)·예약(회색)과 겹치지 않는 연보라 */
+  --erp-carry-next-bg: #f1ecfb;
+  --erp-carry-next-border: #d6c9f0;
+  --erp-carry-next-bar: #7a58c4;
   /* 플랫폼 전체공지 배너 전용 — LED 전광판처럼 눈에 확 띄어야 해서
      나머지 배지/배너와 달리 시맨틱 톤(success/warning/danger/info)을
      쓰지 않고 실제 전광판 배색(빨간 바탕 + 노란 글씨)을 그대로 쓴다. */
@@ -2404,6 +2408,13 @@ form.erp-field-grid {
 .erp-grid tbody tr.row-carryover:not(.selected):not(.master-active) > td {
   background: var(--erp-warning-bg) !important;
 }
+/* 익월이월건 행(이번 달에 등록, 다음 달 실적으로 넘김) — 전월 이월(호박색)과 다른 연보라로 칠하고 왼쪽에 띠를 둔다. */
+.erp-grid tbody tr.row-carryover-next:not(.selected):not(.master-active) > td {
+  background: var(--erp-carry-next-bg) !important;
+}
+.erp-grid tbody tr.row-carryover-next:not(.selected):not(.master-active) > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-carry-next-bar);
+}
 
 /* 목록 그리드의 "오늘"/"예약(미래 날짜)" 행 구분 — src/lib/row-day.ts.
    오늘은 초록 계열 배경+왼쪽 띠, 예약(미래 날짜)은 회색 배경+띠 + "MM.DD 예약"(이월과 같은 방식). 글자 뱃지는
@@ -2426,6 +2437,11 @@ form.erp-field-grid {
   background: var(--erp-warning-bg);
   border-color: var(--erp-warning-border, var(--erp-border-strong));
   box-shadow: inset 4px 0 0 var(--erp-warning);
+}
+.erp-row-card.row-carryover-next:not(.selected) {
+  background: var(--erp-carry-next-bg);
+  border-color: var(--erp-carry-next-border);
+  box-shadow: inset 4px 0 0 var(--erp-carry-next-bar);
 }
 .erp-row-card.day-today:not(.selected) {
   background: var(--erp-success-bg);
@@ -3150,6 +3166,18 @@ form.erp-field-grid {
 .erp-badge-info {
   background: var(--erp-info-bg);
   color: var(--erp-text);
+}
+
+.erp-badge-carry,
+.erp-badge-carry-prev {
+  background: var(--erp-panel);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.erp-badge-carry {
+  color: var(--erp-carry-next-bar);
+}
+.erp-badge-carry-prev {
+  color: var(--erp-warning);
 }
 
 /* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로

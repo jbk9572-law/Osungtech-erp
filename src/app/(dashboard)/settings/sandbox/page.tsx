@@ -5,6 +5,7 @@ import { ListPageHeader, FormSection } from "@/components/erp/page-header";
 import { AccessWall } from "@/components/erp/access-wall";
 import { PageGuide } from "@/components/erp/page-guide";
 import { SandboxTools } from "@/components/sandbox-tools";
+import Link from "next/link";
 
 export default async function SandboxSettingsPage() {
   const supabase = await createClient();
@@ -15,6 +16,9 @@ export default async function SandboxSettingsPage() {
   }
 
   const { data: isSandbox } = await supabase.rpc("is_sandbox_tenant");
+  // 플랫폼 운영자가 회사 전환으로 들어온 경우, 샌드박스 지정은 이 회사의 고객사 상세에서 하므로 바로 갈 수 있게 한다.
+  const { data: isPlatformAdmin } = !isSandbox ? await supabase.rpc("is_platform_admin") : { data: false };
+  const { data: currentTenantId } = !isSandbox && isPlatformAdmin ? await supabase.rpc("current_tenant_id") : { data: null };
 
   return (
     <div>
@@ -25,6 +29,14 @@ export default async function SandboxSettingsPage() {
         <PageGuide tone="warning">
           이 회사는 샌드박스로 지정되지 않았습니다. 플랫폼 운영자가 플랫폼관리자 &gt; 고객사 상세에서
           「샌드박스로 지정」을 눌러야 아래 도구를 쓸 수 있습니다.
+          {isPlatformAdmin === true && currentTenantId && (
+            <>
+              {" "}
+              <Link href={`/platform-admin/${currentTenantId}`} className="erp-btn">
+                이 회사의 고객사 상세로 이동
+              </Link>
+            </>
+          )}
         </PageGuide>
       ) : (
         <>
