@@ -300,9 +300,9 @@ describe("삭제/수정 시 재고 되돌림 (migration 231)", () => {
   });
 });
 
-// ── 지정한 입고분 우선 차감(239 마이그레이션) ─────────────────────────────────────────────────────────────
-// "입고 불러오기"로 가져온 매출 품목은 sourcePurchaseItemId로 그 입고분을 지정한다 — 그 입고분에서 먼저 차감하고,
-// 모자란 만큼만 선입선출로 잇는다. 수정/삭제도 같은 입고분 기준으로 되돌아와야 한다.
+// ── 불러오기 연결 기록(239의 source_purchase_item_id, 241에서 차감 변경 제거) ───────────────────────────────
+// "입고 불러오기"로 가져온 매출 품목은 sourcePurchaseItemId로 어느 입고 품목에서 왔는지만 기록한다.
+// 재고 차감은 항상 선입선출이고, 불러오기 목록의 남은 수량은 이 연결 기록으로 계산한다(재고 남은 수량과 무관).
 async function purchaseItemId(purchaseId: string): Promise<string> {
   const r = await h.db.query<{ id: string }>(`select id from public.purchase_order_items where purchase_order_id = $1`, [purchaseId]);
   return r.rows[0].id;
@@ -329,88 +329,56 @@ async function updateSaleWithSource(id: string, date: string, items: { quantity:
   );
 }
 
-async function setPickedLayerOption(enabled: boolean) {
-  await h.db.query(
-    enabled
-      ? `update public.tenants set disabled_features = array_remove(disabled_features, 'deduct_picked_layer') where id = $1`
-      : `update public.tenants set disabled_features = array_append(disabled_features, 'deduct_picked_layer') where id = $1 and not ('deduct_picked_layer' = any(disabled_features))`,
-    [h.ids.tenant],
-  );
+// 불러오기 목록이 쓰는 "연결된 판매 수량" — 앱(getPurchaseItemsForDate)과 같은 기준.
+async function linkedQuantity(sourceId: string): Promise<number> {
+  const r = await h.db.query<{ q: string | null }>(
+    `select sum(quantity) as q from public.sales_order_items where source_purchase_item_id = $1`, [sourceId]);
+  return Number(r.rows[0].q ?? 0);
 }
 
-describe("회사 옵션이 꺼져 있으면(기본) 지정해도 선입선출", () => {
-  it("지정한 입고분이 와도 무시하고 오래된 입고분부터 차감한다(예전과 같은 동작)", async () => {
+describe("입고 불러오기 연결 기록", () => {
+  it("불러온 판매는 재고 차감과 별개로 연결만 남긴다 — 차감은 항상 선입선출", async () => {
     const older = await createPurchaseOn("2026-11-01", 100);
     const picked = await createPurchaseOn("2026-11-02", 50);
-    await saleWithSource("2026-11-03", [{ quantity: 30, source: await purchaseItemId(picked) }]);
-    expect(await remaining(older)).toBe(70);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    expect(await remaining(older)).toBe(70); // 오래된 입고분에서 차감(예전과 같음)
     expect(await remaining(picked)).toBe(50);
-  });
-});
-
-describe("지정한 입고분 우선 차감 (회사 옵션 켬)", () => {
-  beforeEach(async () => {
-    await setPickedLayerOption(true);
+    expect(await linkedQuantity(source)).toBe(30); // 그래도 불러온 입고분은 "30 사용"으로 기록
   });
 
-  it("지정한 입고분에서 먼저 차감한다(선입선출이면 오래된 입고분이 줄었을 상황)", async () => {
-    const older = await createPurchaseOn("2026-11-01", 100);
+  it("직접 입력한 판매는 연결이 없다", async () => {
     const picked = await createPurchaseOn("2026-11-02", 50);
-    await saleWithSource("2026-11-03", [{ quantity: 30, source: await purchaseItemId(picked) }]);
-    expect(await remaining(older)).toBe(100);
-    expect(await remaining(picked)).toBe(20);
-  });
-
-  it("지정 없이 등록하면 예전처럼 오래된 입고분부터 차감한다", async () => {
-    const older = await createPurchaseOn("2026-11-01", 100);
-    const newer = await createPurchaseOn("2026-11-02", 50);
     await saleWithSource("2026-11-03", [{ quantity: 30 }]);
-    expect(await remaining(older)).toBe(70);
-    expect(await remaining(newer)).toBe(50);
+    expect(await linkedQuantity(await purchaseItemId(picked))).toBe(0);
   });
 
-  it("지정한 입고분이 모자라면 가능한 만큼만 빼고 나머지는 오래된 입고분에서 차감한다(출고가 막히지 않음)", async () => {
-    const older = await createPurchaseOn("2026-11-01", 100);
-    const picked = await createPurchaseOn("2026-11-02", 50);
-    await saleWithSource("2026-11-03", [{ quantity: 80, source: await purchaseItemId(picked) }]);
-    expect(await remaining(picked)).toBe(0);
-    expect(await remaining(older)).toBe(70);
-  });
-
-  it("수정해도 같은 입고분이 유지되고, 삭제하면 그 입고분으로 되돌아온다", async () => {
-    const older = await createPurchaseOn("2026-11-01", 100);
+  it("판매 수정으로 수량이 바뀌면 연결 수량도 따라가고, 연결을 빼면 0이 된다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
     const picked = await createPurchaseOn("2026-11-02", 50);
     const source = await purchaseItemId(picked);
     const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
     await updateSaleWithSource(sale, "2026-11-03", [{ quantity: 40, source }]);
-    expect(await remaining(picked)).toBe(10);
-    expect(await remaining(older)).toBe(100);
-    await deleteSale(sale);
-    expect(await remaining(picked)).toBe(50);
-    expect(await remaining(older)).toBe(100);
+    expect(await linkedQuantity(source)).toBe(40);
+    await updateSaleWithSource(sale, "2026-11-03", [{ quantity: 40 }]);
+    expect(await linkedQuantity(source)).toBe(0);
   });
 
-  it("수정 때 지정을 빼고 보내면 선입선출로 바뀐다(입고분이 어긋나지 않고 합계는 유지)", async () => {
+  it("판매를 삭제하면 연결이 사라져 그 입고분을 다시 불러올 수 있다(재고도 원상 복구)", async () => {
     const older = await createPurchaseOn("2026-11-01", 100);
     const picked = await createPurchaseOn("2026-11-02", 50);
-    const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source: await purchaseItemId(picked) }]);
-    await updateSaleWithSource(sale, "2026-11-03", [{ quantity: 30 }]);
-    expect(await remaining(picked)).toBe(50);
-    expect(await remaining(older)).toBe(70);
+    const source = await purchaseItemId(picked);
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await deleteSale(sale);
+    expect(await linkedQuantity(source)).toBe(0);
+    expect(await remaining(older)).toBe(100);
   });
 
-  it("다른 품목의 입고분을 지정하면 무시하고 선입선출로 차감한다", async () => {
-    const other = await h.makeProduct({ name: "다른 품목", cost: 10 });
-    const r = await h.db.query<{ id: string }>(
-      `select public.create_purchase_with_items(
-         p_supplier_id => $1, p_warehouse_id => $2, p_purchase_date => $3, p_memo => null,
-         p_created_by => $4, p_items => $5::jsonb) as id`,
-      [h.ids.supplier, h.ids.warehouse, "2026-11-02", h.ids.staff, JSON.stringify([{ productId: other, quantity: 50, unitCost: 10 }])],
-    );
-    const otherPurchase = r.rows[0].id;
-    const older = await createPurchaseOn("2026-11-01", 100);
-    await saleWithSource("2026-11-03", [{ quantity: 30, source: await purchaseItemId(otherPurchase) }]);
-    expect(await remaining(older)).toBe(70);
-    expect(await remaining(otherPurchase)).toBe(50);
+  it("다른 입고분이 소진돼도 불러온 입고분의 연결 수량은 영향이 없다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 100 }]); // 직접 입력으로 오래된 입고분 전량 소진
+    expect(await linkedQuantity(source)).toBe(0); // 안 불러온 입고분은 계속 불러올 수 있다
   });
 });

@@ -18,7 +18,6 @@ const MIGRATIONS_DIR = path.join(process.cwd(), "supabase", "migrations");
 
 // 테스트가 검증하는 함수들 — 운영 마이그레이션에서 최종 정의를 가져온다.
 const FUNCTIONS_UNDER_TEST = [
-  "tenant_behavior_enabled",
   "consume_fifo_layers",
   "release_fifo_consumption",
   "backfill_fifo_consumption_for_purchase",
@@ -202,7 +201,7 @@ export async function createHarness(): Promise<Harness> {
     supplier: crypto.randomUUID(),
   };
   await db.exec(`
-    insert into public.tenants (id, disabled_features) values ('${ids.tenant}', array['deduct_picked_layer']);
+    insert into public.tenants (id) values ('${ids.tenant}');
     insert into public.profiles (id, role) values ('${ids.admin}', 'admin'), ('${ids.staff}', 'staff');
     insert into public.tenant_members (user_id, tenant_id) values ('${ids.admin}', '${ids.tenant}'), ('${ids.staff}', '${ids.tenant}');
     insert into public.warehouses (id) values ('${ids.warehouse}');
