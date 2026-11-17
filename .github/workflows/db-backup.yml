@@ -94,6 +94,24 @@ jobs:
           # 파일을 해시하는 것뿐이라 추가 DB 트래픽은 없다.
           sha256sum "$DUMP_FILE" | cut -d' ' -f1 > /tmp/new-hash.txt
 
+      # 백업 파일 암호화(저장소가 공개여도 DB 내용이 새지 않게). secret DB_BACKUP_PASSPHRASE 가 등록돼 있으면 AES-256 으로 암호화한
+      # <시각>.dump.enc 만 커밋하고 평문 덤프는 지운다. 등록 전에는 예전처럼 평문(.dump)을 올리되 경고를 남긴다 — 등록하는 순간부터 자동 적용.
+      # 비밀번호를 잃어버리면 복원할 수 없으니 GitHub Secrets 외에 본인 비밀번호 관리자에도 반드시 보관할 것(docs/db-backup-restore.md).
+      - name: Encrypt dump (if DB_BACKUP_PASSPHRASE is set)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.DB_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+            echo "::warning::DB_BACKUP_PASSPHRASE secret 이 없어 백업을 암호화하지 않고 올립니다(공개 저장소면 DB 내용이 노출됩니다). docs/db-backup-restore.md 의 '백업 암호화'를 참고해 등록하세요."
+            exit 0
+          fi
+          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass env:BACKUP_PASSPHRASE -in "$DUMP_FILE" -out "${DUMP_FILE}.enc"
+          # 암호화본이 정말 풀리는지 바로 확인하고(깨진 백업을 올리지 않기 위해) 평문은 지운다.
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:BACKUP_PASSPHRASE -in "${DUMP_FILE}.enc" | cmp - "$DUMP_FILE"
+          rm -f "$DUMP_FILE"
+          echo "DUMP_FILE=${DUMP_FILE}.enc" >> "$GITHUB_ENV"
+
       - name: Switch to db-backups branch (create if missing)
         run: |
           set -euo pipefail
@@ -128,7 +146,7 @@ jobs:
           set -euo pipefail
           mkdir -p backups
           cd backups
-          ls -1 *.dump 2>/dev/null | sort | head -n -720 | xargs -r rm -f
+          ls -1 *.dump *.dump.enc 2>/dev/null | sort | head -n -720 | xargs -r rm -f
 
       - name: Commit and push
         if: steps.check.outputs.changed == 'true'

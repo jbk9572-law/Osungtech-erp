@@ -35,6 +35,18 @@ if [ ! -f "$DUMP_FILE" ]; then
   exit 1
 fi
 
+# 암호화된 백업(.dump.enc)이면 환경변수 DB_BACKUP_PASSPHRASE 로 먼저 풀어서 복원한다.
+if [[ "$DUMP_FILE" == *.enc ]]; then
+  if [ -z "${DB_BACKUP_PASSPHRASE:-}" ]; then
+    echo "암호화된 백업입니다. 환경변수 DB_BACKUP_PASSPHRASE 에 백업 비밀번호를 넣고 다시 실행하세요." >&2
+    exit 1
+  fi
+  PLAIN_FILE="$(mktemp --suffix=.dump)"
+  trap 'rm -f "$PLAIN_FILE"' EXIT
+  openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -pass env:DB_BACKUP_PASSPHRASE -in "$DUMP_FILE" -out "$PLAIN_FILE"
+  DUMP_FILE="$PLAIN_FILE"
+fi
+
 echo "복원 대상: $(echo "$TARGET_DB_URL" | sed -E 's#(://[^:]+):[^@]+@#\1:****@#')"
 read -r -p "위 대상 DB의 충돌 테이블/함수가 삭제 후 재생성됩니다. 계속할까요? (yes 입력) " confirm
 if [ "$confirm" != "yes" ]; then

@@ -42,7 +42,7 @@ export async function listServerBackupSnapshots(): Promise<SnapshotListResult> {
     const snapshots = (data.tree ?? [])
       .filter(
         (e): e is { path: string; type: string } =>
-          e.type === "blob" && typeof e.path === "string" && e.path.startsWith("backups/") && e.path.endsWith(".dump")
+          e.type === "blob" && typeof e.path === "string" && e.path.startsWith("backups/") && (e.path.endsWith(".dump") || e.path.endsWith(".dump.enc"))
       )
       .map((e) => e.path.slice("backups/".length))
       // 파일명이 UTC 타임스탬프라 문자열 내림차순 정렬이 곧 최신순이다.
