@@ -317,6 +317,38 @@ export const INDUSTRY_PRESETS: {
     disable: [],
     enable: ["production", "paper_calc"],
   },
+  {
+    key: "food",
+    label: "식품 제조/유통업",
+    description:
+      "생산관리를 켜고(소수 수량·kg 단위 품목 지원), 종이 제조 전용 확장모듈(모조지 계산, 재단 배치 시뮬레이터)과 파생 SKU는 끕니다. 재고 실사·QR 라벨은 LOT 추적에 쓰므로 켭니다.",
+    disable: ["paper_calc", "derived_sku"],
+    enable: ["production", "/inventory/count", "/inventory/count/scan", "/inventory/qr-labels"],
+  },
+  {
+    key: "retail",
+    label: "소매/매장업",
+    description:
+      "매출·매입·재고 위주로 구성하고 생산관리, 확장모듈, 영업활동·견적(CRM), 구매 견적요청은 끕니다. 반품이 잦은 흐름은 매출 화면의 반품 처리를 그대로 씁니다.",
+    disable: ["production", "paper_calc", "derived_sku", "crm", "/purchase-quote-requests"],
+    enable: ["/inventory/count", "/inventory/reorder-suggestions"],
+  },
+  {
+    key: "service",
+    label: "서비스/용역업",
+    description:
+      "재고를 거의 쓰지 않는 회사용입니다. 생산관리·확장모듈과 재고 실사·QR·자동 발주 제안을 끄고, 영업활동·견적(CRM)과 인사관리는 켭니다. 품목 없이 이름만 적는 줄은 매출·매입 입력에서 그대로 쓸 수 있습니다.",
+    disable: [
+      "production",
+      "paper_calc",
+      "derived_sku",
+      "/inventory/count",
+      "/inventory/count/scan",
+      "/inventory/qr-labels",
+      "/inventory/reorder-suggestions",
+    ],
+    enable: ["crm", "hr"],
+  },
 ];
 
 export type MenuItem = { label: string; href: string };
