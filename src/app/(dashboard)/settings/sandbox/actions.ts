@@ -248,8 +248,19 @@ async function seedSandboxEmployees(): Promise<string | null> {
 
 export async function seedSandbox(_prevState: FormState, _formData: FormData): Promise<FormState> {
   const supabase = await createClient();
-  const { error } = await supabase.rpc("sandbox_seed");
-  if (error) return { error: `더미 데이터 생성에 실패했습니다: ${error.message}` };
+
+  // 한 번의 요청으로 전부 만들면 서버가 요청 하나에 허용하는 시간(약 8초)을 넘겨 "statement timeout"으로 실패했다 —
+  // DB 함수를 단계(sandbox_seed_stage)로 나눠서 단계마다 따로 부른다(마이그레이션 249). 각 단계는 별도 요청이라 시간 제한도 따로 적용된다.
+  const { data: stageCount, error: countError } = await supabase.rpc("sandbox_seed_stage_count");
+  if (countError || !stageCount) return { error: `더미 데이터 생성에 실패했습니다: ${countError?.message ?? "단계 수를 알 수 없습니다."}` };
+  for (let stage = 1; stage <= stageCount; stage++) {
+    const { error } = await supabase.rpc("sandbox_seed_stage", { p_stage: stage });
+    if (error) {
+      return {
+        error: `더미 데이터 생성에 실패했습니다(${stage}/${stageCount}단계): ${error.message} — 「초기화」를 누른 뒤 다시 생성해 주세요(앞 단계까지 만들어진 데이터는 초기화로 지워집니다).`,
+      };
+    }
+  }
 
   const employeeNote = await seedSandboxEmployees();
 

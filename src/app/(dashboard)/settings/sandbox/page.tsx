@@ -17,8 +17,16 @@ export default async function SandboxSettingsPage() {
 
   const { data: isSandbox } = await supabase.rpc("is_sandbox_tenant");
   // 플랫폼 운영자가 회사 전환으로 들어온 경우, 샌드박스 지정은 이 회사의 고객사 상세에서 하므로 바로 갈 수 있게 한다.
-  const { data: isPlatformAdmin } = !isSandbox ? await supabase.rpc("is_platform_admin") : { data: false };
-  const { data: currentTenantId } = !isSandbox && isPlatformAdmin ? await supabase.rpc("current_tenant_id") : { data: null };
+  let isPlatformAdmin = false;
+  let currentTenantId: string | null = null;
+  if (!isSandbox) {
+    const { data: adminFlag, error: adminError } = await supabase.rpc("is_platform_admin");
+    isPlatformAdmin = !adminError && adminFlag === true;
+    if (isPlatformAdmin) {
+      const { data: tenantId, error: tenantError } = await supabase.rpc("current_tenant_id");
+      currentTenantId = tenantError ? null : (tenantId as string | null);
+    }
+  }
 
   return (
     <div>
@@ -29,7 +37,7 @@ export default async function SandboxSettingsPage() {
         <PageGuide tone="warning">
           이 회사는 샌드박스로 지정되지 않았습니다. 플랫폼 운영자가 플랫폼관리자 &gt; 고객사 상세에서
           「샌드박스로 지정」을 눌러야 아래 도구를 쓸 수 있습니다.
-          {isPlatformAdmin === true && currentTenantId && (
+          {isPlatformAdmin && currentTenantId && (
             <>
               {" "}
               <Link href={`/platform-admin/${currentTenantId}`} className="erp-btn">
