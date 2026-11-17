@@ -19,7 +19,7 @@ import {
   requestAttendanceCorrection,
   cancelAttendanceCorrection,
 } from "@/app/(dashboard)/hr/actions";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstTime, todayKstStr } from "@/lib/kst-date";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { buildOrgTree } from "@/lib/org-chart";
 import { haversineDistanceMeters } from "@/lib/geo";
@@ -154,7 +154,7 @@ export default async function AttendancePage() {
     .sort((a, b) => b.hours - a.hours);
 
   const fmtTime = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }) : null;
+    iso ? formatKstTime(iso, { hour: "2-digit", minute: "2-digit" }) : null;
 
   // 사무실 좌표가 설정돼 있으면(환경설정 > 회사정보) 거리를, 없거나 GPS
   // 확인에 실패했으면 그 사실을 그대로 보여준다 — "확인했더니 멀다"와

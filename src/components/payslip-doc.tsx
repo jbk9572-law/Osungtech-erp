@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
 
 type Company = { name: string } | null;
@@ -99,7 +100,7 @@ export function PayslipDoc({
             </td>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">지급일 상태</th>
             <td className="border border-black px-2 py-1">
-              {status === "confirmed" ? `확정 (${confirmedAt ? new Date(confirmedAt).toLocaleDateString("ko-KR") : "-"})` : "초안"}
+              {status === "confirmed" ? `확정 (${confirmedAt ? formatKstDate(confirmedAt) : "-"})` : "초안"}
             </td>
           </tr>
           <tr>

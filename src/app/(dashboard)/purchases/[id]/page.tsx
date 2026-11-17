@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/is-uuid";
 import Link from "next/link";
@@ -130,7 +131,7 @@ export default async function PurchaseDetailPage({
             {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
           </>
         }
-        meta={`${new Date(order.purchase_date).toLocaleDateString("ko-KR")} 입고`}
+        meta={`${formatKstDate(order.purchase_date)} 입고`}
         actions={
           <>
             <Link href={printHref} className="erp-btn">

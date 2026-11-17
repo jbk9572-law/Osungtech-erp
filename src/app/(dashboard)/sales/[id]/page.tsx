@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/is-uuid";
 import Link from "next/link";
@@ -134,7 +135,7 @@ export default async function SaleDetailPage({
             {order.is_carryover && <GridBadge tone="warn">이월</GridBadge>}
           </>
         }
-        meta={`${new Date(order.order_date).toLocaleDateString("ko-KR")} 출고`}
+        meta={`${formatKstDate(order.order_date)} 출고`}
         actions={
           <>
             <Link href={printHref} className="erp-btn">
@@ -209,7 +210,7 @@ export default async function SaleDetailPage({
                 <>
                   <GridBadge tone="ok">계산서 발행완료</GridBadge>
                   <span className="erp-u-muted">
-                    {order.invoice_issued_at ? new Date(order.invoice_issued_at).toLocaleDateString("ko-KR") : "-"}
+                    {order.invoice_issued_at ? formatKstDate(order.invoice_issued_at) : "-"}
                   </span>
                   <Link href={taxInvoiceHref} className="erp-btn" style={{ minWidth: 0, height: 22, padding: "0 8px", fontSize: 11 }}>
                     세금계산서 보기

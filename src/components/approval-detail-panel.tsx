@@ -10,7 +10,7 @@ import { decideApprovalStep, deleteApprovalDocument, recallApprovalDocument } fr
 import { ApprovalDecisionForm } from "@/components/approval-decision-form";
 import { getCurrentActor } from "@/lib/current-actor";
 import { buildBackHref } from "@/lib/list-return";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDateTime, todayKstStr } from "@/lib/kst-date";
 import { resolveStatusLabel } from "@/lib/status-label";
 
 // 작성자 본인이 삭제할 수 있는 상태 — DB 정책(migration 181,
@@ -117,7 +117,7 @@ export async function ApprovalDetailPanel({
         title={doc.title}
         meta={
           <>
-            {doc.profiles?.full_name ?? "기안자 미상"} · {new Date(doc.created_at).toLocaleString("ko-KR")} ·{" "}
+            {doc.profiles?.full_name ?? "기안자 미상"} · {formatKstDateTime(doc.created_at)} ·{" "}
             <GridBadge tone={resolveStatusLabel(STATUS_LABEL, doc.status).tone}>
               {resolveStatusLabel(STATUS_LABEL, doc.status).label}
             </GridBadge>

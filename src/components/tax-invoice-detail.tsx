@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useActionState } from "react";
 import Link from "next/link";
 import { FormMessage, type FormState } from "@/components/form-message";
@@ -83,7 +84,7 @@ export function TaxInvoiceDetail({
       <div className="flex flex-wrap items-center gap-2">
         <GridBadge tone="ok">계산서 발행완료</GridBadge>
         <span className="text-xs erp-u-muted">
-          {new Date(invoice.issue_date).toLocaleDateString("ko-KR")} · {INVOICE_TYPE_LABEL[invoice.invoice_type] ?? invoice.invoice_type} ·{" "}
+          {formatKstDate(invoice.issue_date)} · {INVOICE_TYPE_LABEL[invoice.invoice_type] ?? invoice.invoice_type} ·{" "}
           {CLAIM_TYPE_LABEL[invoice.claim_type] ?? invoice.claim_type}
         </span>
         <Link
@@ -128,7 +129,7 @@ export function TaxInvoiceDetail({
             {items.map((item) => (
               <tr key={item.id}>
                 <td className="erp-u-muted">
-                  {item.line_date ? new Date(item.line_date).toLocaleDateString("ko-KR") : "-"}
+                  {item.line_date ? formatKstDate(item.line_date) : "-"}
                 </td>
                 <td>{item.item_name}</td>
                 <td className="erp-u-muted">{item.spec || "-"}</td>
@@ -163,7 +164,7 @@ export function TaxInvoiceDetail({
                 <div className="erp-row-card-head">
                   <span className="erp-row-card-partner">{item.item_name}</span>
                   <span className="erp-row-card-date erp-u-normal">
-                    {item.line_date ? new Date(item.line_date).toLocaleDateString("ko-KR") : "-"}
+                    {item.line_date ? formatKstDate(item.line_date) : "-"}
                   </span>
                 </div>
                 <dl className="erp-order-item-fields">
@@ -237,7 +238,7 @@ export function TaxInvoiceDetail({
                   <GridBadge tone="info">
                     {c.modification_reason ? MODIFICATION_REASON_LABEL[c.modification_reason] ?? c.modification_reason : "-"}
                   </GridBadge>
-                  <span className="erp-u-muted">{new Date(c.issue_date).toLocaleDateString("ko-KR")}</span>
+                  <span className="erp-u-muted">{formatKstDate(c.issue_date)}</span>
                   <span className="erp-u-bold">{formatNumber(c.total_amount)}원</span>
                 </div>
                 <ul className="erp-u-muted erp-u-mt-4" style={{ paddingLeft: 16 }}>

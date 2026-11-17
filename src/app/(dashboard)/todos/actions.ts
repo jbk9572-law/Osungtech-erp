@@ -249,6 +249,16 @@ export async function toggleTodo(formData: FormData): Promise<{ error: string } 
   if (!id) return { error: "잘못된 요청입니다." };
 
   const supabase = await createClient();
+  // 체크박스가 "내가 본 현재 상태(done)"를 같이 보낸다. 더블클릭이나 오래 열어 둔 탭에서 이미 바뀐 뒤에 또 뒤집으면
+  // 원래 상태로 되돌아가 버리므로, DB 의 현재 값이 내가 본 값과 다르면(이미 처리됨) 아무것도 하지 않는다.
+  const seenDone = formData.get("done");
+  if (seenDone === "true" || seenDone === "false") {
+    const { data: current } = await supabase.from("todos").select("done").eq("id", id).maybeSingle();
+    if (current && current.done !== (seenDone === "true")) {
+      revalidatePath("/todos");
+      return;
+    }
+  }
   // 전체 수정/삭제는 작성자·관리자로 제한되지만, 완료 체크는 실제로 그
   // 일을 처리한 사람이 눌러야 하는 경우가 많아 별도 RPC(누구나 실행 가능)로
   // 처리한다 — DB가 현재 done 값을 직접 읽어서 뒤집으므로 클라이언트가 보낸

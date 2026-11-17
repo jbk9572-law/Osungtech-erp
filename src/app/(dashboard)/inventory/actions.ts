@@ -1,5 +1,6 @@
 "use server";
 
+import { isSaneNumber, MAX_SANE_QUANTITY } from "@/lib/form-number";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
 import type { FormState } from "@/components/form-message";
@@ -19,6 +20,9 @@ export async function adjustInventory(
   }
   if (!quantity) {
     return { error: "0이 아닌 수량을 입력해주세요. (기초재고 등록은 양수, 재고 차감은 음수)" };
+  }
+  if (!isSaneNumber(quantity, MAX_SANE_QUANTITY)) {
+    return { error: "수량이 올바르지 않습니다." };
   }
 
   const supabase = await createClient();
@@ -115,6 +119,14 @@ export async function submitStockCount(
   // 매입/매출이 들어와 재고가 이미 바뀌었을 수 있어서, 클라이언트가 들고
   // 있던 값을 그대로 믿으면 그 사이 변동분을 이중으로 반영하거나 지워버리게
   // 된다. 실제 델타는 저장 시점의 최신 값을 다시 조회해서 계산한다(아래).
+  // 조작된 요청 방어: 실사 수량은 0 이상의 정상 숫자여야 하고(음수 실사값은 잔량을 음수로 박아 넣는다),
+  // 같은 품목(같은 위치)이 두 줄 오면 같은 기준 잔량에서 두 번 조정되므로 마지막 줄 하나만 쓴다.
+  if (rows.some((r) => !r || !isSaneNumber(r.countedQuantity, MAX_SANE_QUANTITY) || r.countedQuantity < 0)) {
+    return { error: "실사 수량이 올바르지 않습니다. 0 이상의 숫자만 입력할 수 있습니다." };
+  }
+  const lastRowByKey = new Map<string, (typeof rows)[number]>();
+  for (const r of rows) lastRowByKey.set(`${r.productId}|${r.locationCode ?? ""}`, r);
+  rows = [...lastRowByKey.values()];
   const candidates = rows.filter((r) => r.productId && r.countedQuantity !== r.systemQuantity);
   if (candidates.length === 0) {
     return { error: "차이가 있는 품목이 없습니다." };

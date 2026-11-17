@@ -40,3 +40,21 @@ export function toKstDateStr(date: Date): string {
 export function currentKstYearMonth(now: Date = new Date()): string {
   return todayKstStr(now).slice(0, 7);
 }
+
+// ── 화면 표시용 날짜·시각 (항상 한국 시간) ──────────────────────────────
+// 서버(UTC)와 브라우저(KST)가 같은 시각을 서로 다르게 찍으면 KST 00~09시에 날짜가 하루 다르고,
+// 새로고침마다 hydration 불일치 경고가 난다. 화면에 날짜/시각을 찍을 때는 toLocale*String("ko-KR")을
+// 직접 쓰지 말고 아래 함수를 쓴다(check-kst-display.mjs 가 lint에서 막는다).
+type KstInput = Date | string | number;
+
+export function formatKstDate(value: KstInput = new Date(), options?: Intl.DateTimeFormatOptions): string {
+  return new Date(value).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", ...options });
+}
+
+export function formatKstDateTime(value: KstInput = new Date(), options?: Intl.DateTimeFormatOptions): string {
+  return new Date(value).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", ...options });
+}
+
+export function formatKstTime(value: KstInput = new Date(), options?: Intl.DateTimeFormatOptions): string {
+  return new Date(value).toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul", ...options });
+}

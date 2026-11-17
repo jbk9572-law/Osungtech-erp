@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDate, formatKstDateTime, todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, FormSection, SplitListFiller } from "@/components/erp/page-header";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -137,7 +137,7 @@ export default async function ApprovalsPage({
                 <tbody>
                   {drafts.map((d) => (
                     <tr key={d.id}>
-                      <td>{new Date(d.created_at).toLocaleString("ko-KR")}</td>
+                      <td>{formatKstDateTime(d.created_at)}</td>
                       <td>{d.title || "(제목 없음)"}</td>
                       <td>
                         <div className="flex items-center gap-1">
@@ -169,7 +169,7 @@ export default async function ApprovalsPage({
                     <span className="erp-row-card-partner">{d.title || "(제목 없음)"}</span>
                   </div>
                   <div className="erp-row-card-item">
-                    마지막 저장 {new Date(d.created_at).toLocaleString("ko-KR")}
+                    마지막 저장 {formatKstDateTime(d.created_at)}
                   </div>
                   <div className="erp-row-card-foot">
                     <Link
@@ -344,7 +344,7 @@ export default async function ApprovalsPage({
                     </span>
                   )}
                   <div className="erp-split-list-row-sub">
-                    {d.profiles?.full_name ?? "-"} · {new Date(d.created_at).toLocaleDateString("ko-KR")}
+                    {d.profiles?.full_name ?? "-"} · {formatKstDate(d.created_at)}
                   </div>
                 </Link>
               );

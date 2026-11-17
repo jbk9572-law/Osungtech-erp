@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -153,7 +154,7 @@ export async function OfficialDocumentsList({ box, id }: { box: "mine" | "receiv
                   </span>
                   <div className="erp-split-list-row-sub">
                     {row.doc_no ? `${row.doc_no_year}-${row.doc_no}` : "번호 미부여"} ·{" "}
-                    {DISCLOSURE_LABEL[row.disclosure] ?? row.disclosure} · {new Date(row.created_at).toLocaleDateString("ko-KR")}
+                    {DISCLOSURE_LABEL[row.disclosure] ?? row.disclosure} · {formatKstDate(row.created_at)}
                   </div>
                 </Link>
               );

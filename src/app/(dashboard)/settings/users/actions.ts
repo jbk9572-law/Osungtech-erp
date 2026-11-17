@@ -111,7 +111,7 @@ function generateTempPassword(): string {
 }
 
 export async function importEmployeesExcel(_prevState: FormState, formData: FormData): Promise<FormState> {
-  const { supabase, isAdmin } = await requireAdmin();
+  const { supabase, isAdmin, selfId } = await requireAdmin();
   if (!isAdmin) return { error: "관리자만 일괄 등록할 수 있습니다." };
 
   const file = formData.get("file");
@@ -200,7 +200,13 @@ export async function importEmployeesExcel(_prevState: FormState, formData: Form
 
     const existingId = profileIdByUsername.get(username);
     if (existingId) {
-      const { error } = await admin.from("profiles").update(profileUpdate).eq("id", existingId);
+      // 엑셀로 "내 자신"의 역할을 바꾸면(예: 유일한 관리자를 직원으로) 아무도 관리자가 아니게 될 수 있다 — 권한관리 화면의
+      // "본인 권한은 바꿀 수 없음" 규칙과 같게, 본인 행은 역할을 건드리지 않는다.
+      const { role: nextRole, ...updateWithoutRole } = profileUpdate;
+      const { error } = await admin
+        .from("profiles")
+        .update(existingId === selfId ? updateWithoutRole : { ...updateWithoutRole, role: nextRole })
+        .eq("id", existingId);
       if (error) {
         errors.push({ row: rowNum, reason: `갱신 실패: ${error.message}` });
         continue;

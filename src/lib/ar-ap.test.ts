@@ -51,3 +51,15 @@ describe("consumeOldestFirst — 수금/지급을 오래된 전표부터 상계"
     expect(consumeOldestFirst([], 1000, "2026-08-15")).toEqual([]);
   });
 });
+
+import { consumeOldestFirst as _consume, roundMoney } from "./ar-ap";
+describe("부동소수 잡음", () => {
+  it("1.1 × 3000 = 3300 을 정확히 수금하면 미결제로 남지 않는다", () => {
+    const total = roundMoney(1.1 * 3000);
+    expect(total).toBe(3300);
+    expect(_consume([{ total, date: "2026-11-01" }], 3300, "2026-11-17")).toEqual([]);
+  });
+  it("0.1 × 3 도 0.3 으로 정리된다", () => {
+    expect(roundMoney(0.1 * 3)).toBe(0.3);
+  });
+});

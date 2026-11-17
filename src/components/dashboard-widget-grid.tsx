@@ -143,8 +143,14 @@ export function DashboardWidgetGrid({
   async function save() {
     setBusy(true);
     setMessage(null);
-    const res = await saveDashboardLayout(draft);
-    setBusy(false);
+    let res: Awaited<ReturnType<typeof saveDashboardLayout>>;
+    try {
+      res = await saveDashboardLayout(draft);
+    } catch {
+      res = { ok: false, error: "네트워크 오류로 저장하지 못했습니다. 다시 시도해주세요." };
+    } finally {
+      setBusy(false);
+    }
     if (!res.ok) {
       setMessage(res.error ?? "저장하지 못했습니다.");
       return;
@@ -157,8 +163,14 @@ export function DashboardWidgetGrid({
   async function reset() {
     setBusy(true);
     setMessage(null);
-    const res = await resetDashboardLayout();
-    setBusy(false);
+    let res: Awaited<ReturnType<typeof resetDashboardLayout>>;
+    try {
+      res = await resetDashboardLayout();
+    } catch {
+      res = { ok: false, error: "네트워크 오류로 되돌리지 못했습니다. 다시 시도해주세요." };
+    } finally {
+      setBusy(false);
+    }
     if (!res.ok) {
       setMessage(res.error ?? "기본값으로 되돌리지 못했습니다.");
       return;
@@ -171,8 +183,14 @@ export function DashboardWidgetGrid({
   async function saveCompanyDefault() {
     setBusy(true);
     setMessage(null);
-    const res = await saveTenantDefaultLayout(draft);
-    setBusy(false);
+    let res: Awaited<ReturnType<typeof saveTenantDefaultLayout>>;
+    try {
+      res = await saveTenantDefaultLayout(draft);
+    } catch {
+      res = { ok: false, error: "네트워크 오류로 저장하지 못했습니다. 다시 시도해주세요." };
+    } finally {
+      setBusy(false);
+    }
     setMessage(res.ok ? "회사 기본 배치로 저장했습니다. 개인 배치를 따로 저장하지 않은 직원에게 보입니다." : (res.error ?? "저장하지 못했습니다."));
   }
 

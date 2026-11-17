@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClickableRow } from "@/components/clickable-row";
@@ -86,7 +87,7 @@ export default async function UsersSettingsPage() {
                     disabled={row.id === userId}
                   />
                 </td>
-                <td>{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
+                <td>{formatKstDate(row.created_at)}</td>
               </ClickableRow>
             ))}
             {!profiles?.length && (
@@ -105,7 +106,7 @@ export default async function UsersSettingsPage() {
           <Link key={row.id} href={`/settings/users/${row.id}`} className="erp-row-card">
             <div className="erp-row-card-head">
               <span className="erp-row-card-partner">{row.full_name ?? "-"}</span>
-              <span className="erp-row-card-date">{new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
+              <span className="erp-row-card-date">{formatKstDate(row.created_at)}</span>
             </div>
             <dl className="erp-order-item-fields">
               <div>

@@ -1,3 +1,4 @@
+import { formatKstDate, formatKstDateTime } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryCountForm, type CountRow } from "@/components/inventory-count-form";
@@ -246,7 +247,7 @@ export default async function InventoryCountPage({
           {sessions.length > 0 ? (
             <>
               <div className="erp-hero-value" style={{ fontSize: 17 }}>
-                {new Date(sessions[0].createdAt).toLocaleDateString("ko-KR")}
+                {formatKstDate(sessions[0].createdAt)}
               </div>
               <div className="erp-hero-sub">
                 {sessions[0].authorName ?? "-"} · {sessions[0].items.length}건 조정
@@ -461,7 +462,7 @@ export default async function InventoryCountPage({
               <div className="erp-u-flex-1 erp-u-minw-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-bold erp-u-text-md">
-                    {new Date(session.createdAt).toLocaleString("ko-KR")}
+                    {formatKstDateTime(session.createdAt)}
                   </span>
                   <GridBadge tone="info">{session.items.length}건 조정</GridBadge>
                 </div>

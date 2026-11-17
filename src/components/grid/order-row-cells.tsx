@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import type { CSSProperties } from "react";
 import { GridBadge } from "@/components/grid/badge";
 import { formatCarryoverDate, nextMonthLabel, usesShortDate } from "@/lib/carryover";
@@ -39,7 +40,7 @@ export function OrderDateCell({
       {date
         ? usesShortDate({ compactSection: compact, isCarryover, isFuture: rowDay(date) === "future" })
           ? formatCarryoverDate(date)
-          : new Date(date).toLocaleDateString("ko-KR")
+          : formatKstDate(date)
         : "-"}
       {isCarryover && date && <CarryoverBadge date={date} fromPrevMonth={compact} />}
       {rowDay(date) === "future" && (

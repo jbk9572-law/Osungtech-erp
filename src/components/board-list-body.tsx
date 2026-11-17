@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
@@ -119,7 +120,7 @@ export function BoardListBody({
             >
               <div className="erp-u-flex erp-u-justify-between erp-u-gap-6 erp-u-bold erp-u-muted" style={{ fontSize: 10 }}>
                 <span>{CATEGORY_LABEL[row.category]}</span>
-                <span>{new Date(row.date).toLocaleDateString("ko-KR")}</span>
+                <span>{formatKstDate(row.date)}</span>
               </div>
               <div className="erp-u-mt-2">
                 {row.title}

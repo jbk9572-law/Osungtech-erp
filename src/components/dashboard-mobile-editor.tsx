@@ -33,8 +33,14 @@ export function DashboardMobileEditor({
   async function save() {
     setBusy(true);
     const next = { ...layout, mobile: { order, hidden } };
-    const res = await saveDashboardLayout(next);
-    setBusy(false);
+    let res: Awaited<ReturnType<typeof saveDashboardLayout>>;
+    try {
+      res = await saveDashboardLayout(next);
+    } catch {
+      res = { ok: false, error: "네트워크 오류로 저장하지 못했습니다. 다시 시도해주세요." };
+    } finally {
+      setBusy(false);
+    }
     if (!res.ok) {
       setMessage(res.error ?? "저장하지 못했습니다.");
       return;

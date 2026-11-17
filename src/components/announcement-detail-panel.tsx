@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -90,7 +91,7 @@ export async function AnnouncementDetailPanel({ id, closeHref }: { id: string; c
         <div className="erp-post-title">{row.title}</div>
         <div className="erp-post-byline">
           <span className="erp-avatar">{row.profiles?.full_name?.trim()?.[0] ?? "?"}</span>
-          {row.profiles?.full_name ?? "-"} · {new Date(row.created_at).toLocaleDateString("ko-KR")}
+          {row.profiles?.full_name ?? "-"} · {formatKstDate(row.created_at)}
         </div>
       </div>
       <div className="erp-post-body">

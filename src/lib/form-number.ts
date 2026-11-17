@@ -13,3 +13,12 @@ export function numberOrNull(raw: FormDataEntryValue | null): number | null {
   const n = Number(trimmed);
   return Number.isFinite(n) ? n : null;
 }
+
+// 금액·수량 상한. 이 값을 넘거나 NaN/Infinity 이면 "비정상 입력"으로 본다(order-items-input.ts 의 상한과 같은 기준).
+export const MAX_SANE_QUANTITY = 1_000_000_000;
+export const MAX_SANE_AMOUNT = 1_000_000_000_000;
+
+/** 유한한 숫자이고 절댓값이 상한 이하인가. (Infinity, NaN, 1e30 같은 값을 거른다) */
+export function isSaneNumber(value: unknown, max: number = MAX_SANE_AMOUNT): value is number {
+  return typeof value === "number" && Number.isFinite(value) && Math.abs(value) <= max;
+}

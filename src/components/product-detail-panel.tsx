@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProductForm } from "@/components/product-form";
@@ -106,7 +107,7 @@ export async function ProductDetailPanel({ id }: { id: string }) {
             submitLabel="저장"
             packageQtyHistory={(packageQtyHistory ?? []).map((h) => ({
               basePackageQty: Number(h.base_package_qty),
-              changedAt: new Date(h.changed_at).toLocaleDateString("ko-KR"),
+              changedAt: formatKstDate(h.changed_at),
             }))}
             parentCandidates={parentCandidates}
           />

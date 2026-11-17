@@ -122,7 +122,8 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
     return { error: docNoErrorMessage(error, docNo) ?? `판매 거래 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  const itemsWithProduct = items.filter((item) => item.productId);
+  // 샘플(무상)은 단가가 0으로 강제돼 있어서, 거래처별 단가 기억에 0원을 저장하면 다음 정상 매출 단가가 0으로 채워진다 → 건너뛴다.
+  const itemsWithProduct = isSample ? [] : items.filter((item) => item.productId);
   if (itemsWithProduct.length > 0) {
     const priceResults = await Promise.all(
       itemsWithProduct.map((item) =>
@@ -298,7 +299,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
 
   const priceResults = await Promise.all(
     items
-      .filter((item) => item.productId)
+      .filter((item) => item.productId && !isSample)
       .map((item) =>
       supabase.from("customer_product_prices").upsert(
         {

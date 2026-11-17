@@ -11,7 +11,7 @@ import { TenantAddonPanel } from "@/components/tenant-addon-panel";
 import { DeleteTenantForm } from "@/components/delete-tenant-form";
 import { EnterTenantButton } from "@/components/enter-tenant-button";
 import { DetailPageHeader } from "@/components/erp/page-header";
-import { currentKstYearMonth } from "@/lib/kst-date";
+import { currentKstYearMonth, formatKstDate } from "@/lib/kst-date";
 
 const ROLE_LABELS: Record<string, string> = { admin: "관리자", manager: "매니저", staff: "직원" };
 
@@ -133,7 +133,7 @@ export async function TenantDetailPanel({ tenantId, closeHref }: { tenantId: str
           <div className="erp-kpi-label">계정 수 / 가입일</div>
           <div className="erp-kpi-value">{userIds.length}명</div>
           <div className="erp-u-muted erp-u-text-xs erp-u-mt-2">
-            {new Date(tenant.created_at).toLocaleDateString("ko-KR")}
+            {formatKstDate(tenant.created_at)}
           </div>
         </div>
       </div>

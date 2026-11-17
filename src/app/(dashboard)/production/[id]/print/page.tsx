@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -55,7 +56,7 @@ export default async function WorkOrderPrintPage({ params }: { params: Promise<{
   if (pages.length === 0) pages.push([]);
 
   const docNo = `WO-${workOrder.doc_no}`;
-  const today = new Date().toLocaleDateString("ko-KR").replaceAll(" ", "");
+  const today = formatKstDate().replaceAll(" ", "");
 
   return (
     <div className="mx-auto print-page-margin" style={{ width: 760, maxWidth: "100%", color: "#000" }}>

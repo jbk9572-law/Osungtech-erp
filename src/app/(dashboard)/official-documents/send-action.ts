@@ -93,6 +93,22 @@ export async function sendOfficialDocument(_prevState: FormState, formData: Form
       continue;
     }
 
+    // 더블클릭·두 탭에서 동시에 발송을 누르면 둘 다 같은 수신처를 읽고 메일이 두 번 나간다 → 메일을 보내기 전에
+    // 이 수신처를 먼저 "발송됨"으로 선점한다(조건부 update). 선점에 실패하면 다른 요청이 이미 처리 중이므로 건너뛴다.
+    // 아래 발송이 실패하면 'bounced'로 바꿔 다시 시도할 수 있게 한다.
+    const { data: claimed, error: claimError } = await admin
+      .from("official_document_recipients")
+      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .eq("id", r.id)
+      .in("status", ["pending", "bounced"])
+      .select("id");
+    if (claimError) {
+      console.error("수신처 발송 선점 실패:", claimError.message);
+      failedCount++;
+      continue;
+    }
+    if (!claimed || claimed.length === 0) continue;
+
     try {
       const password = await decryptSecret(account.encrypted_app_password);
       const { sendMail } = await import("@/lib/mail/smtp-send");
@@ -107,11 +123,6 @@ export async function sendOfficialDocument(_prevState: FormState, formData: Form
         subject: doc.title,
         text: doc.body,
       });
-      const { error: markSentError } = await admin
-        .from("official_document_recipients")
-        .update({ status: "sent", sent_at: new Date().toISOString() })
-        .eq("id", r.id);
-      if (markSentError) console.error("발송 성공 후 상태 갱신 실패:", markSentError.message);
       sentCount++;
     } catch (err) {
       const { error: markBouncedError } = await admin

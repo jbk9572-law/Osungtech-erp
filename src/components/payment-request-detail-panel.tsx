@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -168,7 +169,7 @@ export async function PaymentRequestDetailPanel({
             <span>기간: {formatPeriod(row.period_from, row.period_to)}</span>
             <span>사용카드: {row.card_type}</span>
             <span>작성자: {row.profiles?.full_name ?? "-"}</span>
-            <span>작성일: {new Date(row.created_at).toLocaleDateString("ko-KR")}</span>
+            <span>작성일: {formatKstDate(row.created_at)}</span>
           </div>
 
           <div className="erp-grid-wrap has-card-view erp-u-border">

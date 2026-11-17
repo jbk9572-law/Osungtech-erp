@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -205,7 +206,7 @@ export default async function LotLookupPage({
                         <td>
                           {h.purchase_orders ? (
                             <Link href={`/purchases/${h.purchase_orders.id}`} style={{ color: "inherit" }}>
-                              {new Date(h.purchase_orders.purchase_date).toLocaleDateString("ko-KR")}
+                              {formatKstDate(h.purchase_orders.purchase_date)}
                             </Link>
                           ) : (
                             "-"
@@ -247,7 +248,7 @@ export default async function LotLookupPage({
                       <div className="erp-row-card-head">
                         <span className="erp-row-card-partner">{h.purchase_orders?.suppliers?.name ?? "-"}</span>
                         <span className="erp-row-card-date">
-                          {h.purchase_orders ? new Date(h.purchase_orders.purchase_date).toLocaleDateString("ko-KR") : "-"}
+                          {h.purchase_orders ? formatKstDate(h.purchase_orders.purchase_date) : "-"}
                         </span>
                       </div>
                       <div className="erp-row-card-foot">
@@ -302,7 +303,7 @@ export default async function LotLookupPage({
                         <td>
                           {h.sales_orders ? (
                             <Link href={`/sales/${h.sales_orders.id}`} style={{ color: "inherit" }}>
-                              {new Date(h.sales_orders.order_date).toLocaleDateString("ko-KR")}
+                              {formatKstDate(h.sales_orders.order_date)}
                             </Link>
                           ) : (
                             "-"
@@ -344,7 +345,7 @@ export default async function LotLookupPage({
                       <div className="erp-row-card-head">
                         <span className="erp-row-card-partner">{h.sales_orders?.customers?.name ?? "-"}</span>
                         <span className="erp-row-card-date">
-                          {h.sales_orders ? new Date(h.sales_orders.order_date).toLocaleDateString("ko-KR") : "-"}
+                          {h.sales_orders ? formatKstDate(h.sales_orders.order_date) : "-"}
                         </span>
                       </div>
                       <div className="erp-row-card-foot">
@@ -401,7 +402,7 @@ export default async function LotLookupPage({
                       <tr key={w.id}>
                         <td>
                           <Link href={`/production/${w.id}?back=${selfBack}`} style={{ color: "inherit" }}>
-                            {new Date(w.order_date).toLocaleDateString("ko-KR")}
+                            {formatKstDate(w.order_date)}
                           </Link>
                         </td>
                         <td>LOT {w.doc_no}</td>
@@ -438,7 +439,7 @@ export default async function LotLookupPage({
                     <dl className="erp-order-item-fields">
                       <div>
                         <dt>날짜</dt>
-                        <dd>{new Date(w.order_date).toLocaleDateString("ko-KR")}</dd>
+                        <dd>{formatKstDate(w.order_date)}</dd>
                       </div>
                       <div>
                         <dt>완제품</dt>

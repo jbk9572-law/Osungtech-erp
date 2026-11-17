@@ -1,3 +1,4 @@
+import { formatKstDate, formatKstDateTime } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/require-admin";
@@ -216,7 +217,7 @@ function formatValue(tableName: string, key: string, v: unknown, lookups: Lookup
     key === "paid_at" ||
     key === "invoice_issued_at"
   ) {
-    return new Date(String(v)).toLocaleDateString("ko-KR");
+    return formatKstDate(String(v));
   }
   if (typeof v === "object") return JSON.stringify(v);
   const s = String(v);
@@ -519,7 +520,7 @@ export default async function AuditLogPage({
             {viewRows.map((row) => (
               <tr key={row.id}>
                 <td className="erp-u-muted">
-                  {new Date(row.createdAt).toLocaleString("ko-KR")}
+                  {formatKstDateTime(row.createdAt)}
                 </td>
                 <td>{row.tableLabel}</td>
                 <td>
@@ -569,7 +570,7 @@ export default async function AuditLogPage({
             <dl className="erp-order-item-fields">
               <div>
                 <dt>일시</dt>
-                <dd>{new Date(row.createdAt).toLocaleString("ko-KR")}</dd>
+                <dd>{formatKstDateTime(row.createdAt)}</dd>
               </div>
               <div>
                 <dt>구분</dt>

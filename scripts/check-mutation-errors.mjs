@@ -56,9 +56,9 @@ const ALLOWLIST = new Set([
   // 팩스/알림톡/세금계산서 가짜 발송(가상 API) 버튼을 샌드박스
   // 테넌트에서만 보이게/쓸 수 있게 막는 이중 확인 — 위와 같은 이유로
   // 실패하면 fail-closed(샌드박스 아님으로 간주해 버튼 숨김/거부)된다.
-  "src/components/official-document-detail-panel.tsx:75",
+  "src/components/official-document-detail-panel.tsx:76",
   "src/app/(dashboard)/official-documents/actions.ts:181",
-  "src/app/(dashboard)/sales/[id]/tax-invoice/actions.ts:259",
+  "src/app/(dashboard)/sales/[id]/tax-invoice/actions.ts:260",
 ]);
 
 function walkDir(dir, out = []) {

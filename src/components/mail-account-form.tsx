@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDateTime } from "@/lib/kst-date";
 import { useActionState, useRef, useState } from "react";
 import { saveMailAccount, deleteMailAccount, testMailConnection } from "@/app/(dashboard)/settings/mail/actions";
 import { FormMessage } from "@/components/form-message";
@@ -151,7 +152,7 @@ export function MailAccountForm({ account }: { account: MailAccount }) {
       {account && (
         <div className="rounded-sm border border-[var(--erp-divider)] p-3 text-xs erp-u-muted">
           {account.last_synced_at ? (
-            <p>마지막 동기화: {new Date(account.last_synced_at).toLocaleString("ko-KR")}</p>
+            <p>마지막 동기화: {formatKstDateTime(account.last_synced_at)}</p>
           ) : (
             <p>아직 동기화한 적이 없습니다. 메일함 화면에서 새로고침해주세요.</p>
           )}

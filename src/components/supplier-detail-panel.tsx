@@ -24,7 +24,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePurchasePriceSchedules } from "@/lib/price-schedule";
 import { getSupplierBalance } from "@/lib/ar-ap";
 import { canViewPage } from "@/lib/department-page-access";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDate, todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { formatNumber } from "@/lib/format-number";
@@ -285,7 +285,7 @@ export async function SupplierDetailPanel({ id }: { id: string }) {
                       />
                     </td>
                     <td className="erp-u-muted">
-                      {new Date(price.updated_at).toLocaleDateString("ko-KR")}
+                      {formatKstDate(price.updated_at)}
                       <PriceHistoryPopover tableName="supplier_product_prices" recordId={price.id} />
                     </td>
                   </tr>

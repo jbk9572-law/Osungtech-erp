@@ -4,7 +4,7 @@ import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
 import { formatNumber } from "@/lib/format-number";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDateTime, todayKstStr } from "@/lib/kst-date";
 import {
   CustomerOrderApproveForm,
   CustomerOrderRejectForm,
@@ -94,7 +94,7 @@ export default async function CustomerOrdersPage({
                 <div>
                   <span className="erp-u-bold">{o.customers?.name ?? "-"}</span>
                   <span className="erp-u-muted erp-u-ml-8 erp-u-text-compact">
-                    주문 {o.doc_no} · {new Date(o.created_at).toLocaleString("ko-KR")}
+                    주문 {o.doc_no} · {formatKstDateTime(o.created_at)}
                   </span>
                 </div>
                 <span className="erp-u-bold erp-u-text-md erp-u-tabular">

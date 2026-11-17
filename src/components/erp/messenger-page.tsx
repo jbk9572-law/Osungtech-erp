@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate, formatKstTime } from "@/lib/kst-date";
 import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -49,7 +50,7 @@ function formatDateLabel(key: string): string {
   const yesterdayKey = yesterday.toLocaleDateString("sv-SE");
   if (key === todayKey) return "오늘";
   if (key === yesterdayKey) return "어제";
-  return new Date(key).toLocaleDateString("ko-KR", {
+  return formatKstDate(key, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -798,7 +799,7 @@ export function MessengerPage({
                               )}
                               <div className="erp-messenger-bubble-group" data-mine={mine ? "1" : undefined}>
                                 <div className="erp-messenger-bubble-meta">
-                                  {nameFor(m.sender_id)} · {new Date(m.created_at).toLocaleTimeString("ko-KR")}
+                                  {nameFor(m.sender_id)} · {formatKstTime(m.created_at)}
                                 </div>
 
                                 {m.erp_ref && <ErpRefCard erpRef={m.erp_ref} />}

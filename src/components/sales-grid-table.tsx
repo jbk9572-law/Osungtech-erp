@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { rowDay, rowDayClass } from "@/lib/row-day";
 import {
   Fragment,
@@ -282,7 +283,7 @@ export function SalesGridTable({
     ? {
         label: activeRow.customerName ?? "-",
         dateLabel: activeRow.date
-          ? new Date(activeRow.date).toLocaleDateString("ko-KR")
+          ? formatKstDate(activeRow.date)
           : "-",
         isReturn: activeRow.isReturn,
         items:
@@ -348,7 +349,7 @@ export function SalesGridTable({
             <RowCheckbox
               checked={isRowSelected}
               onChange={() => toggleRow(row.orderId!)}
-              label={`${row.date ? new Date(row.date).toLocaleDateString("ko-KR") + " " : ""}${row.customerName ?? ""} 선택`}
+              label={`${row.date ? formatKstDate(row.date) + " " : ""}${row.customerName ?? ""} 선택`}
             />
           )}
         </td>
@@ -502,7 +503,7 @@ export function SalesGridTable({
     const dateLabel = row.date
       ? usesShortDate({ compactSection: !!opts.compactDate, isCarryover: row.isCarryover, isFuture: rowDay(row.date) === "future" })
         ? formatCarryoverDate(row.date)
-        : new Date(row.date).toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" })
+        : formatKstDate(row.date, { month: "2-digit", day: "2-digit" })
       : "-";
 
     const body = (

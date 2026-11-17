@@ -4,7 +4,7 @@ import { effectiveMonth } from "@/lib/carryover";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { clusterByDominantPartner } from "@/lib/cluster-by-partner";
 import { groupByProductKey } from "@/lib/group-by-product";
-import { calcVat } from "@/lib/tax";
+import { calcVatForTaxType } from "@/lib/tax";
 import { matchesSearch } from "@/lib/search-match";
 
 // 월별 리포트(reports/monthly, reports/monthly/company)와 엑셀 다운로드가
@@ -121,7 +121,7 @@ export async function fetchMonthlyReportData(
       supabase
         .from("sales_order_items")
         .select(
-          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, customers(id, name)), products(sku, name, spec, unit, categories(name))",
+          "quantity, unit_price, product_id, sales_orders!inner(id, order_date, is_return, return_reason, is_carryover, tax_type, customers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("sales_orders.order_date", lookbackFrom)
         .lte("sales_orders.order_date", to)
@@ -132,7 +132,7 @@ export async function fetchMonthlyReportData(
       supabase
         .from("purchase_order_items")
         .select(
-          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
+          "quantity, unit_cost, product_id, purchase_orders!inner(id, purchase_date, is_carryover, tax_type, suppliers(id, name)), products(sku, name, spec, unit, categories(name))",
         )
         .gte("purchase_orders.purchase_date", lookbackFrom)
         .lte("purchase_orders.purchase_date", to)
@@ -275,7 +275,7 @@ export async function fetchMonthlyReportData(
         unit: row.products?.unit ?? null,
         quantity: row.quantity,
         amount,
-        taxAmount: calcVat(amount),
+        taxAmount: calcVatForTaxType(amount, row.purchase_orders?.tax_type),
       };
     });
   const salesCompanyRows: CompanyProductRow[] = salesRows
@@ -295,7 +295,7 @@ export async function fetchMonthlyReportData(
         unit: row.products?.unit ?? null,
         quantity: row.quantity * sign,
         amount,
-        taxAmount: calcVat(supplyAmount) * sign,
+        taxAmount: calcVatForTaxType(supplyAmount, row.sales_orders?.tax_type) * sign,
       };
     });
 

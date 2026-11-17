@@ -22,7 +22,14 @@ export type StatementItem = {
   quantity: number;
   unitPrice: number;
   basePackageQty: number | null;
+  // 전표의 과세구분(과세/면세/영세). 없으면 과세로 본다. 면세·영세 전표는 세액 칸을 0으로 쓴다.
+  taxType?: string | null;
 };
+
+// 세액 칸 수식: 과세만 10%이고 원 단위로 반올림한다(목록·상세·API 내보내기와 같은 기준 — 예전에는 구분 없이 10%를 곱하고 반올림하지 않았다).
+function taxFormula(supplyCellRef: string, item: StatementItem): { formula: string } {
+  return { formula: item.taxType && item.taxType !== "과세" ? "0" : `ROUND(${supplyCellRef}*0.1,0)` };
+}
 
 const WON_FORMAT = '_-"₩"* #,##0_-;-"₩"* #,##0_-;_-"₩"* "-"_-;_-@_-';
 const NUM_FORMAT = '_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
@@ -278,7 +285,7 @@ export async function buildFilterBoxStatementWorkbook(
     amountCell.value = { formula: `F${r}*G${r}` };
     amountCell.numFmt = NUM_FORMAT;
     const taxCell = sheet.getCell(r, 9);
-    taxCell.value = { formula: `H${r}*0.1` };
+    taxCell.value = taxFormula(`H${r}`, item);
     taxCell.numFmt = NUM_FORMAT;
     applyRowBorder(sheet, r, 10);
   });
@@ -349,7 +356,7 @@ export async function buildFilterNoBoxStatementWorkbook(
     amountCell.value = { formula: `E${r}*F${r}` };
     amountCell.numFmt = NUM_FORMAT;
     const taxCell = sheet.getCell(r, 8);
-    taxCell.value = { formula: `G${r}*0.1` };
+    taxCell.value = taxFormula(`G${r}`, item);
     taxCell.numFmt = NUM_FORMAT;
     applyRowBorder(sheet, r, 9);
   });
@@ -430,7 +437,7 @@ export async function buildPaperRollStatementWorkbook(
     amountCell.value = { formula: `G${r}*H${r}` };
     amountCell.numFmt = NUM_FORMAT;
     const taxCell = sheet.getCell(r, 10);
-    taxCell.value = { formula: `I${r}*0.1` };
+    taxCell.value = taxFormula(`I${r}`, item);
     taxCell.numFmt = NUM_FORMAT;
     applyRowBorder(sheet, r, 11, [1, 2, 3, 11]);
   });

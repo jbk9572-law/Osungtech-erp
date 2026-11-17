@@ -1,5 +1,6 @@
 "use server";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { sanitizeUploadContentType } from "@/lib/upload-safety";
 import { notify } from "@/lib/notify";
@@ -119,7 +120,7 @@ async function buildAnnouncementRef(supabase: Supa, arg: string): Promise<Messen
     badge: ann.pinned ? "고정" : undefined,
     lines: [
       { label: "제목", value: ann.title },
-      { label: "등록일", value: new Date(ann.created_at).toLocaleDateString("ko-KR") },
+      { label: "등록일", value: formatKstDate(ann.created_at) },
     ],
     href: `/announcements/${ann.id}`,
   };
@@ -149,7 +150,7 @@ async function buildFollowupRef(supabase: Supa, arg: string): Promise<MessengerE
     title: "팔로우업 일정",
     lines: [
       { label: "거래처", value: activity.customers?.name ?? "-" },
-      { label: "예정일", value: new Date(activity.next_action_date).toLocaleDateString("ko-KR") },
+      { label: "예정일", value: formatKstDate(activity.next_action_date) },
       { label: "메모", value: activity.next_action_memo ?? "-" },
     ],
     href: "/sales-activities",

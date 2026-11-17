@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnnouncementCheckbox } from "@/components/announcement-checkbox";
@@ -165,7 +166,7 @@ export function AnnouncementListBody({
               )}
               <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">
                 <span>
-                  {row.authorName ?? "-"} · {new Date(row.createdAt).toLocaleDateString("ko-KR")}
+                  {row.authorName ?? "-"} · {formatKstDate(row.createdAt)}
                 </span>
                 <AnnouncementCheckbox id={row.id} read={row.read} label={row.title} />
               </div>

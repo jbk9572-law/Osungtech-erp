@@ -157,14 +157,16 @@ export async function reverseOrderLocationStock(
   supabase: SupabaseServerClient,
   orderType: OrderType,
   orderId: string,
-): Promise<void> {
+): Promise<number> {
   const { data: rows } = await supabase
     .from("order_item_location_stock")
     .select("id, product_id, location_id, quantity_delta")
     .eq("order_type", orderType)
     .eq("order_id", orderId);
-  if (!rows || rows.length === 0) return;
+  if (!rows || rows.length === 0) return 0;
 
+  // 되돌리기에 성공한 배정 기록만 지운다 — 실패한 기록까지 지우면 어긋난 위치 재고를 나중에 바로잡을 근거가 사라진다.
+  const reversedIds: string[] = [];
   for (const row of rows) {
     // apply_location_stock_delta가 상대값으로 더하고(없으면 새로 만들고)
     // 부호에 따라 입고/출고를 이력에 남긴다 — applyOrderLocationStock과
@@ -175,14 +177,15 @@ export async function reverseOrderLocationStock(
       p_delta: -row.quantity_delta,
     });
     if (error) console.error("위치별 재고 되돌리기 실패:", error.message);
+    else reversedIds.push(row.id);
   }
 
-  const { error: cleanupError } = await supabase
-    .from("order_item_location_stock")
-    .delete()
-    .eq("order_type", orderType)
-    .eq("order_id", orderId);
-  if (cleanupError) console.error("위치별 재고 배정 이력 정리 실패:", cleanupError.message);
+  if (reversedIds.length > 0) {
+    const { error: cleanupError } = await supabase.from("order_item_location_stock").delete().in("id", reversedIds);
+    if (cleanupError) console.error("위치별 재고 배정 이력 정리 실패:", cleanupError.message);
+  }
+  // 되돌리지 못한 기록 수(0이면 전부 성공).
+  return rows.length - reversedIds.length;
 }
 
 // 매출/매입 서버 액션에서 hidden input(location_allocations)으로 넘어온

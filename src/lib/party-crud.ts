@@ -5,6 +5,7 @@
 // 거래내역 조회(getCustomerTransactionHistory/getSupplierTransactionHistory)는
 // 반품 처리·헤더명 등 고유 로직이 많아 공용화 가치보다 복잡도가 더
 // 커서 각 파일에 그대로 둔다.
+import { isSaneNumber } from "@/lib/form-number";
 import type { createClient } from "@/lib/supabase/server";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -142,6 +143,8 @@ export async function addPartyPayment(
   memo: string | null,
   createdBy: string | null,
 ): Promise<ActionResult> {
+  if (!isSaneNumber(amount) || !(amount > 0)) return { error: "금액이 올바르지 않습니다." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(paidAt) || Number.isNaN(Date.parse(paidAt))) return { error: "일자가 올바르지 않습니다." };
   // 새로고침 재전송·두 탭 동시 입력 등으로 같은 수금/지급이 이중 등록되면 미수/미지급이 그만큼 틀어진다 —
   // 같은 거래처·일자·금액·방법·메모가 최근 15초 안에 이미 있으면 중복으로 보고 막는다(정상적으로 같은 금액을
   // 연달아 나눠 받는 경우는 메모나 시간 간격이 다르다).

@@ -1,3 +1,4 @@
+import { formatKstDate, formatKstDateTime } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -161,7 +162,7 @@ export async function OfficialDocumentDetailPanel({
           </div>
           <div className="erp-info-cell">
             <div className="erp-info-label">작성일</div>
-            <div className="erp-info-value">{new Date(doc.created_at).toLocaleDateString("ko-KR")}</div>
+            <div className="erp-info-value">{formatKstDate(doc.created_at)}</div>
           </div>
           <div className="erp-info-cell">
             <div className="erp-info-label">공개구분</div>
@@ -180,7 +181,7 @@ export async function OfficialDocumentDetailPanel({
           {doc.sent_at && (
             <div className="erp-info-cell">
               <div className="erp-info-label">발송일시</div>
-              <div className="erp-info-value">{new Date(doc.sent_at).toLocaleString("ko-KR")}</div>
+              <div className="erp-info-value">{formatKstDateTime(doc.sent_at)}</div>
             </div>
           )}
         </div>

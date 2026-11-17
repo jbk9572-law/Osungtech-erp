@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { GridBadge } from "@/components/grid/badge";
@@ -109,7 +110,7 @@ export function TenantListBody({
                 <span>
                   {row.slug} · {row.planLabel}
                 </span>
-                <span>{new Date(row.createdAt).toLocaleDateString("ko-KR")}</span>
+                <span>{formatKstDate(row.createdAt)}</span>
               </div>
             </Link>
           ))}

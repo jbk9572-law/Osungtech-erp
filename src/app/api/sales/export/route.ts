@@ -67,6 +67,7 @@ export async function GET(request: Request) {
         unit: item.products?.unit ?? "",
         quantity: item.quantity,
         unitPrice: Number(item.unit_price),
+        taxType: item.sales_orders?.tax_type ?? null,
         basePackageQty:
           item.products?.base_package_qty != null ? Number(item.products.base_package_qty) : null,
       }));

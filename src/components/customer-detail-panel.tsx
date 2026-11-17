@@ -27,7 +27,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 import { applyDuePriceSchedules } from "@/lib/price-schedule";
 import { getCustomerBalance } from "@/lib/ar-ap";
 import { canViewPage } from "@/lib/department-page-access";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDate, todayKstStr } from "@/lib/kst-date";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { fetchAllRows } from "@/lib/fetch-all-rows";
 import { SalesActivityForm } from "@/components/sales-activity-form";
@@ -362,7 +362,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                       />
                     </td>
                     <td className="erp-u-muted">
-                      {new Date(price.updated_at).toLocaleDateString("ko-KR")}
+                      {formatKstDate(price.updated_at)}
                       <PriceHistoryPopover tableName="customer_product_prices" recordId={price.id} />
                     </td>
                   </tr>
@@ -412,7 +412,7 @@ export async function CustomerDetailPanel({ id }: { id: string }) {
                           {a.disabled ? "비활성" : "사용중"}
                         </GridBadge>
                       </td>
-                      <td>{new Date(a.created_at).toLocaleDateString("ko-KR")}</td>
+                      <td>{formatKstDate(a.created_at)}</td>
                       <td>{!a.disabled && <PortalAccountDisableForm id={a.id} />}</td>
                     </tr>
                   ))}

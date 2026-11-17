@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDateTime } from "@/lib/kst-date";
 import { useActionState, useState } from "react";
 import { adjustTenantPoints } from "@/app/platform-admin/actions";
 import { FormMessage } from "@/components/form-message";
@@ -92,7 +93,7 @@ export function TenantPointsPanel({
           <tbody>
             {transactions.map((t) => (
               <tr key={t.id}>
-                <td>{new Date(t.created_at).toLocaleString("ko-KR")}</td>
+                <td>{formatKstDateTime(t.created_at)}</td>
                 <td style={{ color: t.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}>
                   {t.delta > 0 ? `+${t.delta}` : t.delta}
                 </td>
@@ -114,7 +115,7 @@ export function TenantPointsPanel({
         {transactions.map((t) => (
           <div className="erp-row-card" key={t.id}>
             <div className="erp-row-card-head">
-              <span className="erp-row-card-partner">{new Date(t.created_at).toLocaleString("ko-KR")}</span>
+              <span className="erp-row-card-partner">{formatKstDateTime(t.created_at)}</span>
               <span
                 className="erp-row-card-amount"
                 style={{ color: t.delta > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}

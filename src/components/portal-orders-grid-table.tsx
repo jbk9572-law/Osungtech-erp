@@ -1,6 +1,6 @@
 "use client";
 
-import { toKstDateStr } from "@/lib/kst-date";
+import { formatKstDate, toKstDateStr } from "@/lib/kst-date";
 import { GridBadge } from "@/components/grid/badge";
 import { rowDay, rowDayClass } from "@/lib/row-day";
 import { Fragment, useState } from "react";
@@ -36,7 +36,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
   const selection: OrderDetailSelection | null = active
     ? {
         label: `주문 ${active.docNo}`,
-        dateLabel: new Date(active.createdAt).toLocaleDateString("ko-KR"),
+        dateLabel: formatKstDate(active.createdAt),
         items: active.items,
       }
     : null;
@@ -64,7 +64,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
             {rows.map((row) => {
               const rowSelection: OrderDetailSelection = {
                 label: `주문 ${row.docNo}`,
-                dateLabel: new Date(row.createdAt).toLocaleDateString("ko-KR"),
+                dateLabel: formatKstDate(row.createdAt),
                 items: row.items,
               };
               return (
@@ -75,7 +75,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
                   >
                     <td className="erp-u-semibold">{row.docNo}</td>
                     <td>
-                      {new Date(row.createdAt).toLocaleDateString("ko-KR")}
+                      {formatKstDate(row.createdAt)}
                     </td>
                     <td className="num">{row.itemCount}</td>
                     <td className="num">{formatNumber(row.totalAmount)}</td>
@@ -127,7 +127,7 @@ export function PortalOrdersGridTable({ rows, ordersHref }: { rows: PortalOrderR
               <div className="erp-row-card-head">
                 <span className="erp-row-card-partner">주문 {row.docNo}</span>
                 <span className="erp-row-card-date">
-                  {new Date(row.createdAt).toLocaleDateString("ko-KR")}
+                  {formatKstDate(row.createdAt)}
                 </span>
               </div>
               <div className="erp-row-card-item">

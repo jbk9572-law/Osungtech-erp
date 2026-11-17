@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,7 +43,7 @@ export function TitleBar({
 }) {
   const pathname = usePathname();
   const menuLabel = findByLongestPrefix(SECTION_LABEL, pathname, (s) => s.prefix)?.label ?? "";
-  const today = new Date().toLocaleDateString("ko-KR", {
+  const today = formatKstDate(new Date(), {
     year: "numeric",
     month: "long",
     day: "numeric",

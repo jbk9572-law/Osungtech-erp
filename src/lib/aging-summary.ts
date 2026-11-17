@@ -14,7 +14,10 @@ export type AgingSummary = {
   buckets: AgingBucket[];
 };
 
-export function buildAgingSummary(rows: BalanceRow[]): AgingSummary {
+export function buildAgingSummary(allRows: BalanceRow[]): AgingSummary {
+  // 초과 입금(잔액이 마이너스인 거래처)은 "받을 돈"이 아니므로 합계·거래처 수·연체 구간에서 뺀다 —
+  // 대시보드의 미수 합계(sumOutstandingBalance)와 같은 기준. 목록에는 그대로 보여 준다.
+  const rows = allRows.filter((r) => r.balance > 0);
   const totalBalance = rows.reduce((sum, r) => sum + r.balance, 0);
   const partyCount = rows.length;
   const avgBalance = partyCount > 0 ? totalBalance / partyCount : 0;
