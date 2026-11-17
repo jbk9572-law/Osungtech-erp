@@ -3887,6 +3887,7 @@ export type Database = {
           unit_cost: number;
           remark: string | null;
           lot_number: string | null;
+          source_purchase_item_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -3900,6 +3901,7 @@ export type Database = {
           unit_cost?: number;
           remark?: string | null;
           lot_number?: string | null;
+          source_purchase_item_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -3913,6 +3915,7 @@ export type Database = {
           unit_cost?: number;
           remark?: string | null;
           lot_number?: string | null;
+          source_purchase_item_id?: string | null;
           created_at?: string;
         };
         Relationships: [

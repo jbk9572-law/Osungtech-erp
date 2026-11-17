@@ -27,6 +27,8 @@ type SaleItemInput = {
   unitPrice: number;
   remark?: string | null;
   lotNumber?: string | null;
+  // "입고 불러오기"로 가져온 줄이 나갈 입고분(매입 품목) id — 있으면 그 입고분에서 먼저 차감한다(없으면 선입선출).
+  sourcePurchaseItemId?: string | null;
 };
 
 function parseItems(itemsRaw: string): SaleItemInput[] | null {
@@ -103,6 +105,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       unitPrice: item.unitPrice,
       remark: item.remark || null,
       lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
+      sourcePurchaseItemId: item.productId ? item.sourcePurchaseItemId || null : null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,
@@ -263,6 +266,7 @@ export async function updateSale(_prevState: FormState, formData: FormData): Pro
       unitPrice: item.unitPrice,
       remark: item.remark || null,
       lotNumber: item.lotNumber ? normalizeLotNumber(item.lotNumber) : null,
+      sourcePurchaseItemId: item.productId ? item.sourcePurchaseItemId || null : null,
     })),
     p_payment_method: paymentMethod,
     p_delivery_method: deliveryMethod,

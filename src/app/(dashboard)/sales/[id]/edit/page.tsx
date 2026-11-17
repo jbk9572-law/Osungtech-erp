@@ -40,7 +40,9 @@ export default async function EditSalePage({
     supabase.from("sales_orders").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("sales_order_items")
-      .select("product_id, custom_name, spec, quantity, unit_price, remark, lot_number")
+      // 컬럼을 이름으로 적지 않고 "*"로 읽는다 — 새 코드가 DB 변경(source_purchase_item_id 추가)보다 먼저 배포되는 짧은 사이에도
+      // 존재하지 않는 컬럼 때문에 조회가 통째로 실패해 품목이 비어 보이는 일이 없게(있으면 값이 오고 없으면 undefined).
+      .select("*")
       .eq("sales_order_id", id)
       .order("created_at"),
     fetchAllRows<{ id: string; name: string; notes: string | null }>((from, to) =>
@@ -190,6 +192,7 @@ export default async function EditSalePage({
             unitPrice: Number(item.unit_price),
             remark: item.remark,
             lotNumber: item.lot_number,
+            sourcePurchaseItemId: item.source_purchase_item_id ?? null,
           })),
         }}
         initialColWidths={gridColWidths}

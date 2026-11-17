@@ -102,6 +102,8 @@ type Row = {
   unitPrice: number;
   manualPrice: boolean;
   remark: string;
+  // 입고 불러오기로 가져온 줄이 나갈 입고분(매입 품목) id — 저장 때 서버가 그 입고분에서 먼저 차감한다. 품목을 바꾸면 비운다.
+  sourcePurchaseItemId?: string | null;
 };
 
 // 임시저장(useDraftAutosave)에 담아두는 값 — 서버로 실제 제출되는 값과
@@ -148,6 +150,7 @@ export type SaleInitial = {
     unitPrice: number;
     remark?: string | null;
     lotNumber?: string | null;
+    sourcePurchaseItemId?: string | null;
   }[];
 };
 
@@ -301,6 +304,7 @@ export function NewSaleForm({
           unitPrice: item.unitPrice,
           manualPrice: (!item.productId && !!item.customName) || item.unitPrice === 0,
           remark: item.remark ?? "",
+          sourcePurchaseItemId: item.sourcePurchaseItemId ?? null,
         }))
       : [makeBlankRow(0)],
     makeBlankRow,
@@ -490,6 +494,7 @@ export function NewSaleForm({
         manualSpec: Boolean(item.spec),
         lotNumber: item.lotNumber,
         quantity: item.quantity,
+        sourcePurchaseItemId: item.id,
         unitPrice: resolvePrice(customerId, item.productId),
         manualPrice: unlockWhenUnknown(resolvePrice(customerId, item.productId)),
         remark: "",
@@ -695,6 +700,8 @@ export function NewSaleForm({
     const unitPrice = resolvePrice(customerId, productId);
     updateRow(key, {
       productId,
+      // 다른 품목으로 바꾸면 이전에 지정한 입고분은 더 이상 맞지 않는다.
+      sourcePurchaseItemId: null,
       spec: product?.spec ?? "",
       unitPrice,
       manualPrice: unlockWhenUnknown(unitPrice),
@@ -848,6 +855,7 @@ export function NewSaleForm({
         unitPrice: row.unitPrice,
         remark: row.remark || null,
         lotNumber: row.lotNumber || null,
+        sourcePurchaseItemId: row.productId ? row.sourcePurchaseItemId || null : null,
       })),
   );
 

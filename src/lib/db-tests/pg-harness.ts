@@ -115,7 +115,7 @@ create table public.sales_order_items (
   sales_order_id uuid not null references public.sales_orders(id) on delete cascade,
   product_id uuid, custom_name text, spec text,
   quantity numeric not null, unit_price numeric not null default 0, unit_cost numeric not null default 0,
-  remark text, lot_number text,
+  remark text, lot_number text, source_purchase_item_id uuid,
   created_at timestamptz not null default now(),
   tenant_id uuid default public.current_tenant_id()
 );
