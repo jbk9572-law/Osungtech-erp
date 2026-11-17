@@ -1202,7 +1202,7 @@ export function NewSaleForm({
               </div>
               {purchaseCandidates.length === 0 ? (
                 <p className="erp-home-empty erp-u-p-10">
-                  해당 날짜에 입고된 품목이 없습니다.
+                  해당 날짜에 출고할 입고 품목이 없습니다(이미 출고된 입고는 표시되지 않습니다).
                 </p>
               ) : (
                 purchaseCandidates.map((item) => {

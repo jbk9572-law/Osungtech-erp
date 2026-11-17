@@ -10,6 +10,7 @@ import { resolveListHref } from "@/lib/list-return";
 import type { FormState } from "@/components/form-message";
 import { canManageOrder } from "@/lib/can-manage-order";
 import { parseDocNo, docNoErrorMessage } from "@/lib/doc-no";
+import { pickImportablePurchaseItems } from "@/lib/purchase-import";
 import { logOperationFailure } from "@/lib/log-operation-failure";
 import { classifyOrderDeleteError } from "@/lib/classify-order-delete-error";
 import { normalizeLotNumber } from "@/lib/lot-number";
@@ -73,6 +74,8 @@ export type TodayPurchaseItem = {
   purchaseOrderId: string;
   supplierId: string;
   lotNumber: string;
+  // 받은 수량(quantity는 아직 안 나간 남은 수량)
+  receivedQuantity: number;
 };
 
 // 당일 입고된 품목을 그대로 매출/할일로 옮겨 담을 수 있게, 특정 거래일자에
@@ -85,28 +88,31 @@ export async function getPurchaseItemsForDate(date: string): Promise<TodayPurcha
   const { data } = await supabase
     .from("purchase_order_items")
     .select(
-      "id, product_id, quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, supplier_id, suppliers(name))"
+      "id, product_id, quantity, remaining_quantity, spec, lot_number, purchase_order_id, products(sku, name, spec, unit), purchase_orders!inner(purchase_date, supplier_id, suppliers(name))"
     )
     .eq("purchase_orders.purchase_date", date)
     .order("created_at", { ascending: true });
 
   // 직접입력(품목 미연결) 줄은 연결할 품목이 없어 "가져오기" 대상이 될 수
   // 없으므로 제외한다.
-  return (data ?? [])
+  const rows = (data ?? [])
     .filter((item): item is typeof item & { product_id: string } => item.product_id !== null)
     .map((item) => ({
-    id: item.id,
-    productId: item.product_id,
-    productName: item.products?.name ?? "상품 미상",
-    sku: item.products?.sku ?? "",
-    spec: item.spec || item.products?.spec || "",
-    quantity: item.quantity,
-    unit: item.products?.unit ?? "",
-    supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
-    purchaseOrderId: item.purchase_order_id,
-    supplierId: item.purchase_orders?.supplier_id ?? "",
-    lotNumber: item.lot_number ?? "",
-  }));
+      id: item.id,
+      productId: item.product_id,
+      productName: item.products?.name ?? "상품 미상",
+      sku: item.products?.sku ?? "",
+      spec: item.spec || item.products?.spec || "",
+      quantity: Number(item.quantity),
+      remainingQuantity: item.remaining_quantity === null || item.remaining_quantity === undefined ? null : Number(item.remaining_quantity),
+      unit: item.products?.unit ?? "",
+      supplierName: item.purchase_orders?.suppliers?.name ?? "공급처 미상",
+      purchaseOrderId: item.purchase_order_id,
+      supplierId: item.purchase_orders?.supplier_id ?? "",
+      lotNumber: item.lot_number ?? "",
+    }));
+  // 이미 전부 출고된 입고는 빼고, 일부만 나간 입고는 남은 수량만 — 같은 입고를 두 번 출고하는 이중 등록을 막는다(lib/purchase-import.ts).
+  return pickImportablePurchaseItems(rows).map(({ remainingQuantity: _remaining, ...item }) => item);
 }
 
 export async function createPurchase(
