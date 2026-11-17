@@ -1,5 +1,6 @@
 "use server";
 
+import { provisionMetadata } from "@/lib/auth-provisioning";
 import { isPasswordLongEnough, MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -65,7 +66,7 @@ export async function createUserAccount(_prevState: FormState, formData: FormDat
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, username, tenant_id: myTenant.id },
+    ...provisionMetadata({ full_name: fullName, username, tenant_id: myTenant.id }),
   });
 
   if (error || !created.user) {
@@ -221,7 +222,7 @@ export async function importEmployeesExcel(_prevState: FormState, formData: Form
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: fullName, username, tenant_id: myTenant.id },
+      ...provisionMetadata({ full_name: fullName, username, tenant_id: myTenant.id }),
     });
     if (createError || !created.user) {
       const isDuplicate = createError?.message?.toLowerCase().includes("already");

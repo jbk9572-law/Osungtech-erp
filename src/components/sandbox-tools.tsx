@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { resetSandbox, seedSandbox } from "@/app/(dashboard)/settings/sandbox/actions";
+import { resetSandbox, seedSandbox, seedSandboxIndustry } from "@/app/(dashboard)/settings/sandbox/actions";
 import { FormMessage } from "@/components/form-message";
 import { useConfirmCode } from "@/lib/use-confirm-code";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -9,6 +9,7 @@ import { PageGuide } from "@/components/erp/page-guide";
 export function SandboxTools() {
   const [resetState, resetAction, resetPending] = useActionState(resetSandbox, undefined);
   const [seedState, seedAction, seedPending] = useActionState(seedSandbox, undefined);
+  const [industryState, industryAction, industryPending] = useActionState(seedSandboxIndustry, undefined);
   const { code, confirmText, setConfirmText, confirmMatches, regenerate, reset } = useConfirmCode();
 
   return (
@@ -33,6 +34,27 @@ export function SandboxTools() {
           </button>
         </form>
         <FormMessage state={seedState} />
+      </div>
+
+      <div className="erp-field">
+        <label>업종별 예시 데이터</label>
+        <PageGuide className="mb-2">
+          위 더미 데이터를 먼저 만든 뒤, 다른 업종에서 흔한 거래 모양을 작게 얹어 화면을 확인합니다. 식품은 소수 수량·소수
+          단가(kg/L)와 반품, 소매는 소량 다품목 출고와 잦은 반품, 서비스는 품목 없이 이름만 적는 용역 줄(재고 미사용)입니다.
+          같은 업종은 한 번만 만들 수 있고, 「초기화」로 지울 수 있습니다.
+        </PageGuide>
+        <form action={industryAction} className="flex flex-wrap gap-2">
+          <button type="submit" name="industry" value="food" disabled={industryPending} className="erp-btn erp-u-minw-0">
+            식품 예시
+          </button>
+          <button type="submit" name="industry" value="retail" disabled={industryPending} className="erp-btn erp-u-minw-0">
+            소매 예시
+          </button>
+          <button type="submit" name="industry" value="service" disabled={industryPending} className="erp-btn erp-u-minw-0">
+            서비스 예시
+          </button>
+        </form>
+        <FormMessage state={industryState} />
       </div>
 
       <div className="erp-field">

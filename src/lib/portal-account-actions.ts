@@ -1,5 +1,6 @@
 "use server";
 
+import { provisionMetadata } from "@/lib/auth-provisioning";
 import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -72,7 +73,7 @@ export async function createPortalAccount(_prevState: FormState, formData: FormD
     email,
     password,
     email_confirm: true,
-    user_metadata: { [metadataKey]: targetId, username },
+    ...provisionMetadata({ [metadataKey]: targetId, username }),
   });
 
   if (error || !created.user) {

@@ -12,7 +12,7 @@ test.describe("메인 화면 · 오늘 리포트 박스", () => {
 
     await box.getByRole("button", { name: "텍스트 복사" }).click();
     const preview = page.locator(".erp-daily-report-preview");
-    await expect(preview).toContainText("오늘 리포트");
+    // 복사 텍스트 첫 줄은 날짜·요일만 나온다(제목 문구 "오늘 리포트"는 박스 제목에만 있다).
     await expect(preview).toContainText("[매출]");
     await expect(preview).toContainText("[매입]");
     await page.keyboard.press("Escape");

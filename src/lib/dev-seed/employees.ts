@@ -1,3 +1,4 @@
+import { provisionMetadata } from "@/lib/auth-provisioning";
 import type { Db, DummyEmployee, PlatformAdminMember } from "./types";
 import { DEPARTMENTS, POSITIONS, randomFullName } from "./korean-data";
 import { fetchAllRows } from "../fetch-all-rows";
@@ -90,7 +91,7 @@ export async function ensureDummyEmployees(
       email,
       password: DUMMY_EMPLOYEE_PASSWORD,
       email_confirm: true,
-      user_metadata: { full_name: fullName, username, tenant_id: tenantId },
+      ...provisionMetadata({ full_name: fullName, username, tenant_id: tenantId }),
     });
     if (createError || !authUser.user) {
       // 이미 존재하는 이메일이면 건너뛰고 다음 번호로 — 그 외 오류는
@@ -194,7 +195,7 @@ export async function ensurePortalAccounts(
         email,
         password: DUMMY_PORTAL_PASSWORD,
         email_confirm: true,
-        user_metadata: { portal_customer_id: customer.id, tenant_id: tenantId },
+        ...provisionMetadata({ portal_customer_id: customer.id, tenant_id: tenantId }),
       });
       if (createError) {
         console.error(`[dev-seed] 더미 거래처 포털 계정(${email}) 생성 실패: ${createError.message}`);

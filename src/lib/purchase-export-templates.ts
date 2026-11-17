@@ -17,7 +17,17 @@ export type LedgerItem = {
   quantity: number;
   unitCost: number;
   basePackageQty: number | null;
+  // 전표의 과세구분(과세/면세/영세). 없으면 과세로 본다. 면세·영세 전표는 VAT 합계에 세액을 더하지 않는다.
+  taxType?: string | null;
 };
+
+// 'VAT 합계' 칸 수식: 총액(공급가 합계) + 과세 품목 공급가의 10%(원 단위 반올림). 예전에는 전체에 1.1을 곱해 면세·영세에도 세액이 붙었다.
+function vatTotalFormula(totalCellRef: string, items: LedgerItem[]): { formula: string } {
+  const taxableSupply = items
+    .filter((i) => !i.taxType || i.taxType === "과세")
+    .reduce((sum, i) => sum + i.quantity * i.unitCost, 0);
+  return { formula: `ROUND(${totalCellRef}+${taxableSupply}*0.1,0)` };
+}
 
 const WON_FORMAT = '_-"₩"* #,##0_-;-"₩"* #,##0_-;_-"₩"* "-"_-;_-@_-';
 const NUM_FORMAT = '_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
@@ -92,7 +102,7 @@ export async function buildStandardLedgerWorkbook(
   totalCell.border = boxBorder();
 
   const vatCell = sheet.getCell("B6");
-  vatCell.value = { formula: "ROUND(B5*1.1,0)" };
+  vatCell.value = vatTotalFormula("B5", items);
   vatCell.numFmt = WON_FORMAT;
   vatCell.font = { bold: true };
   vatCell.alignment = { horizontal: "center" };
@@ -237,7 +247,7 @@ export async function buildLeadersSpecialWorkbook(
   totalCell.border = boxBorder();
 
   const vatCell = sheet.getCell("B4");
-  vatCell.value = { formula: "ROUND(B3*1.1,0)" };
+  vatCell.value = vatTotalFormula("B3", items);
   vatCell.numFmt = WON_FORMAT;
   vatCell.font = { bold: true };
   vatCell.alignment = { horizontal: "center" };

@@ -1,5 +1,6 @@
 "use server";
 
+import { provisionMetadata } from "@/lib/auth-provisioning";
 import { isPasswordLongEnough, PASSWORD_TOO_SHORT_MESSAGE } from "@/lib/password-policy";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -128,7 +129,7 @@ export async function signupTenant(_prevState: FormState, formData: FormData): P
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, username, new_tenant_name: companyName, new_tenant_slug: slug },
+    ...provisionMetadata({ full_name: fullName, username, new_tenant_name: companyName, new_tenant_slug: slug }),
   });
   if (error || !created.user) {
     const isDuplicate = error?.message?.toLowerCase().includes("already");
