@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -157,7 +158,7 @@ export default async function InventoryLedgerPage({
                 <tbody>
                   {ledgerRows.map((r) => (
                     <tr key={r.id}>
-                      <td>{new Date(r.date).toLocaleDateString("ko-KR")}</td>
+                      <td>{formatKstDate(r.date)}</td>
                       <td>{TYPE_LABEL[r.type] ?? r.type}</td>
                       <td className="num" style={{ color: r.delta < 0 ? "var(--erp-danger)" : "var(--erp-primary)" }}>
                         {r.delta > 0 ? "+" : ""}

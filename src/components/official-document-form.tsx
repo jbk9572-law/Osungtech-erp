@@ -231,7 +231,7 @@ export function OfficialDocumentForm({
           ) : (
             <div className="flex flex-col gap-1.5">
               {recipients.map((r) => (
-                <div key={r.key} className="flex items-center gap-2">
+                <div key={r.key} className="flex flex-wrap items-center gap-2">
                   <span className="text-[10.5px] erp-u-muted" style={{ width: 40 }}>
                     {r.kind === "external" ? "외부" : "사내"}
                   </span>

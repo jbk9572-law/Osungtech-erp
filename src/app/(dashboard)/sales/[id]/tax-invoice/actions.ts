@@ -1,5 +1,6 @@
 "use server";
 
+import { todayKstStr } from "@/lib/kst-date";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -313,7 +314,7 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
       sales_order_id: salesOrderId,
       customer_id: order.customer_id,
       invoice_type: "general",
-      issue_date: new Date().toISOString().slice(0, 10),
+      issue_date: todayKstStr(),
       supply_amount: totalSupply,
       tax_amount: totalTax,
       total_amount: totalSupply + totalTax,
@@ -350,7 +351,7 @@ export async function issueTaxInvoiceViaMockApi(_prevState: FormState, formData:
 
   const { error: syncError } = await supabase
     .from("sales_orders")
-    .update({ invoice_status: "issued", invoice_issued_at: new Date().toISOString().slice(0, 10), invoice_provider: "mock_api" })
+    .update({ invoice_status: "issued", invoice_issued_at: todayKstStr(), invoice_provider: "mock_api" })
     .eq("id", salesOrderId);
   if (syncError) console.error("sales_orders.invoice_status 동기화 실패:", syncError);
 

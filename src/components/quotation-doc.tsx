@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { calcVat } from "@/lib/tax";
 import { formatNumber } from "@/lib/format-number";
 
@@ -75,7 +76,7 @@ export function QuotationDoc({
               {customer?.name ?? "-"} 귀하
             </td>
             <th className="w-20 border border-black bg-gray-50 px-2 py-1 font-medium">견적일자</th>
-            <td className="border border-black px-2 py-1">{new Date(quoteDate).toLocaleDateString("ko-KR")}</td>
+            <td className="border border-black px-2 py-1">{formatKstDate(quoteDate)}</td>
           </tr>
           <tr>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">담당자</th>
@@ -85,7 +86,7 @@ export function QuotationDoc({
             </td>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">유효기간</th>
             <td className="border border-black px-2 py-1">
-              {validUntil ? `~${new Date(validUntil).toLocaleDateString("ko-KR")}` : "-"}
+              {validUntil ? `~${formatKstDate(validUntil)}` : "-"}
             </td>
           </tr>
           <tr>

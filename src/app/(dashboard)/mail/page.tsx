@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatKstDate, formatKstTime } from "@/lib/kst-date";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { ListPageHeader, SplitDetailEmpty, SplitListFiller, FormSection } from "@/components/erp/page-header";
@@ -16,12 +17,10 @@ type Folder = "INBOX" | "SENT";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "";
-  const d = new Date(iso);
-  const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
+  const sameDay = formatKstDate(iso) === formatKstDate(new Date());
   return sameDay
-    ? d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
-    : d.toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" });
+    ? formatKstTime(iso, { hour: "2-digit", minute: "2-digit" })
+    : formatKstDate(iso, { month: "2-digit", day: "2-digit" });
 }
 
 function initial(name: string | null, address: string | null): string {

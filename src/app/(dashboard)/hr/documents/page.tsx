@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -108,7 +109,7 @@ export default async function DocumentsPage({
                   </GridBadge>
                 </span>
                 <div className="erp-split-list-row-sub">
-                  {new Date(d.created_at).toLocaleDateString("ko-KR")}
+                  {formatKstDate(d.created_at)}
                   {d.profiles?.full_name ? ` · ${d.profiles.full_name}` : ""}
                 </div>
               </Link>

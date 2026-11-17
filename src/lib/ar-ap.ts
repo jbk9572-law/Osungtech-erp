@@ -35,13 +35,19 @@ type PartyPaymentRow = { id: string; paid_at: string; amount: string | number; m
 // 외주비처럼 반품 개념이 없는 쪽은 음수 전표가 없어 그대로 지금까지의
 // 동작과 동일하다. consumeOldestFirst처럼 제네릭으로 둬서, 외주비정산의
 // processName/workOrderId 같은 호출부별 추가 필드가 그대로 보존된다.
+// 금액 합계의 부동소수 잡음(1.1 × 3000 = 3300.0000000000005 등)을 소수 둘째 자리에서 정리한다. DB(numeric)는 정확한 값이라
+// 잡음을 그대로 두면 "정확히 수금했는데 5e-13원 미수"로 남아 DB 집계(get_customer_balances)와 화면이 어긋난다.
+export function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export function computePartyBalance<T extends { total: number; date: string }>(
   creditOrders: T[],
   payments: PartyPaymentRow[],
 ) {
-  const totalAmount = creditOrders.reduce((sum, o) => sum + o.total, 0);
-  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const totalNegative = creditOrders.filter((o) => o.total < 0).reduce((sum, o) => sum - o.total, 0);
+  const totalAmount = roundMoney(creditOrders.reduce((sum, o) => sum + o.total, 0));
+  const totalPaid = roundMoney(payments.reduce((sum, p) => sum + Number(p.amount), 0));
+  const totalNegative = roundMoney(creditOrders.filter((o) => o.total < 0).reduce((sum, o) => sum - o.total, 0));
   const positiveOrders = creditOrders.filter((o) => o.total > 0);
   const unpaidOrders = consumeOldestFirst(positiveOrders, totalPaid + totalNegative);
   return { totalAmount, totalPaid, balance: totalAmount - totalPaid, unpaidOrders };
@@ -88,7 +94,7 @@ export async function getCustomerBalance(supabase: SupabaseServerClient, custome
       docNo: o.doc_no,
       date: o.order_date,
       total:
-        (o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0) *
+        roundMoney((o.sales_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_price), 0)) *
         (o.is_return ? -1 : 1),
     }));
 
@@ -139,7 +145,7 @@ export async function getSupplierBalance(supabase: SupabaseServerClient, supplie
       id: o.id,
       docNo: o.doc_no,
       date: o.purchase_date,
-      total: (o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0),
+      total: roundMoney((o.purchase_order_items ?? []).reduce((sum, i) => sum + i.quantity * Number(i.unit_cost), 0)),
     }));
 
   const { totalAmount: totalPurchases, totalPaid, balance, unpaidOrders } = computePartyBalance(
@@ -163,9 +169,9 @@ export function consumeOldestFirst<T extends { total: number; date: string }>(
   const unpaid: (T & { outstanding: number; daysOverdue: number })[] = [];
   for (const order of orders) {
     if (pool >= order.total) {
-      pool -= order.total;
+      pool = roundMoney(pool - order.total);
     } else {
-      unpaid.push({ ...order, outstanding: order.total - pool, daysOverdue: daysSince(order.date, today) });
+      unpaid.push({ ...order, outstanding: roundMoney(order.total - pool), daysOverdue: daysSince(order.date, today) });
       pool = 0;
     }
   }

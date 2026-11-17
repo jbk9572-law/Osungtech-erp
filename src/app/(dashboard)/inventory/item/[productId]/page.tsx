@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { GridBadgeLink } from "@/components/grid/badge";
 import { notFound } from "next/navigation";
@@ -219,7 +220,7 @@ export default async function InventoryProductHistoryPage({
                 <tbody>
                   {countAdjustments.map((t) => (
                     <tr key={t.id}>
-                      <td>{new Date(t.date).toLocaleDateString("ko-KR")}</td>
+                      <td>{formatKstDate(t.date)}</td>
                       <td
                         className="num erp-u-bold"
                         style={{ color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
@@ -239,7 +240,7 @@ export default async function InventoryProductHistoryPage({
               {countAdjustments.map((t) => (
                 <div className="erp-row-card" key={t.id}>
                   <div className="erp-row-card-head">
-                    <span className="erp-row-card-partner">{new Date(t.date).toLocaleDateString("ko-KR")}</span>
+                    <span className="erp-row-card-partner">{formatKstDate(t.date)}</span>
                     <span
                       className="erp-row-card-amount"
                       style={{ color: t.signedQty > 0 ? "var(--erp-success)" : "var(--erp-danger)" }}
@@ -324,7 +325,7 @@ export default async function InventoryProductHistoryPage({
               const note = row.correctionNote ?? row.note;
               const cells = (
                 <>
-                  <td>{new Date(row.date).toLocaleDateString("ko-KR")}</td>
+                  <td>{formatKstDate(row.date)}</td>
                   <td>{isIn ? (row.partnerName ?? "-") : <span className="erp-u-muted">-</span>}</td>
                   <td className="num" style={{ color: isIn ? "var(--erp-success)" : "var(--erp-text-muted)", fontWeight: isIn ? 700 : undefined }}>
                     {isIn ? formatNumber(Math.abs(row.signedQty)) : "-"}
@@ -379,7 +380,7 @@ export default async function InventoryProductHistoryPage({
             <>
               <div className="erp-row-card-head">
                 <span className="erp-row-card-partner">{row.partnerName ?? "-"}</span>
-                <span className="erp-row-card-date">{new Date(row.date).toLocaleDateString("ko-KR")}</span>
+                <span className="erp-row-card-date">{formatKstDate(row.date)}</span>
               </div>
               <dl className="erp-order-item-fields">
                 <div>

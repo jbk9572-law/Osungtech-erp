@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentActor } from "@/lib/current-actor";
@@ -114,7 +115,7 @@ export default async function BillingPage() {
               </div>
               <p className="text-xs erp-u-muted">
                 {tenant.plan_expires_at
-                  ? `이용 만료일: ${new Date(tenant.plan_expires_at).toLocaleDateString("ko-KR")}`
+                  ? `이용 만료일: ${formatKstDate(tenant.plan_expires_at)}`
                   : "이용 만료일이 설정되어 있지 않습니다(무제한)."}
               </p>
             </div>

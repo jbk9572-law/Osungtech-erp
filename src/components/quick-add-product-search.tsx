@@ -101,6 +101,8 @@ export function QuickAddProductSearch({
         }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={(e) => {
+          // 한글 조합 중 Enter(글자 확정)가 첫 검색결과 선택으로 튀지 않게 한다.
+          if (e.nativeEvent.isComposing) return;
           if (!open || results.length === 0) return;
           if (e.key === "ArrowDown") {
             e.preventDefault();

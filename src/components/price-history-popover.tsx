@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDateTime } from "@/lib/kst-date";
 import { useRef, useState } from "react";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
@@ -33,9 +34,13 @@ export function PriceHistoryPopover({
     setOpen(next);
     if (next && rows === null) {
       setLoading(true);
-      const data = await getPriceChangeHistory(tableName, recordId);
-      setRows(data);
-      setLoading(false);
+      try {
+        setRows(await getPriceChangeHistory(tableName, recordId));
+      } catch {
+        // 실패하면 rows 를 null 로 둬서 다음에 열 때 다시 시도한다.
+      } finally {
+        setLoading(false);
+      }
     }
   }
 
@@ -78,7 +83,7 @@ export function PriceHistoryPopover({
                 style={{ padding: "6px" }}
               >
                 <div className="erp-u-muted">
-                  {new Date(row.createdAt).toLocaleString("ko-KR")} · {row.actorName ?? "-"} ·{" "}
+                  {formatKstDateTime(row.createdAt)} · {row.actorName ?? "-"} ·{" "}
                   {ACTION_LABELS[row.action] ?? row.action}
                 </div>
                 <div className="erp-u-semibold">

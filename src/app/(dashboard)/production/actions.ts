@@ -1,5 +1,6 @@
 "use server";
 
+import { reverseOrderLocationStock } from "@/lib/location-stock-sync";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
@@ -86,6 +87,8 @@ export async function deleteWorkOrder(_prevState: FormState, formData: FormData)
   if (error) {
     return { error: `삭제에 실패했습니다: ${error.message}` };
   }
+  // 자재 투입·완료 때 위치별 재고(order_type='production')를 움직였다면 그만큼 되돌린다(매출/매입 삭제와 같은 처리).
+  await reverseOrderLocationStock(supabase, "production", id);
 
   revalidatePath("/production");
   revalidatePath("/inventory");

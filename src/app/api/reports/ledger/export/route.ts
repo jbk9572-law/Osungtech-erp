@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { buildXlsxResponse } from "@/lib/xlsx-response";
 import { requireAuthedApiUser } from "@/lib/require-auth";
 import { currentMonth, getMonthRange } from "@/lib/date-presets";
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
   const rows = periodRows.map((r) => {
     const delta = r.type === "out" ? -Math.abs(Number(r.quantity)) : Number(r.quantity);
     return {
-      일시: new Date(r.transaction_date).toLocaleDateString("ko-KR"),
+      일시: formatKstDate(r.transaction_date),
       구분: TYPE_LABEL[r.type] ?? r.type,
       수량: delta,
       잔량: r.balance_after,

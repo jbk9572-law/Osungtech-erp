@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -62,7 +63,7 @@ export default async function PurchaseTaxInvoiceImportPage() {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
-                <td>{new Date(r.issue_date).toLocaleDateString("ko-KR")}</td>
+                <td>{formatKstDate(r.issue_date)}</td>
                 <td className="erp-u-muted">{r.hometax_approval_number}</td>
                 <td>{r.supplier_name}</td>
                 <td className="num">{formatNumber(r.total_amount)}</td>
@@ -93,7 +94,7 @@ export default async function PurchaseTaxInvoiceImportPage() {
           <div className="erp-row-card" key={r.id}>
             <div className="erp-row-card-head">
               <span className="erp-row-card-partner">{r.supplier_name}</span>
-              <span className="erp-row-card-date">{new Date(r.issue_date).toLocaleDateString("ko-KR")}</span>
+              <span className="erp-row-card-date">{formatKstDate(r.issue_date)}</span>
             </div>
             <dl className="erp-order-item-fields">
               <div>

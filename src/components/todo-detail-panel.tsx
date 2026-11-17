@@ -5,7 +5,7 @@ import { TodoForm, type TodoInitialItem } from "@/components/todo-form";
 import { PaperCalcNavLink } from "@/modules/paper-calc/ui";
 import { formatPaperCalcSizeLines, mergePaperCalcInputItems, type PaperCalcSizeRow } from "@/modules/paper-calc/public";
 import { todoTypeLabel } from "@/lib/todo-flow";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDate, todayKstStr } from "@/lib/kst-date";
 import { deleteTodo, updateTodo } from "@/app/(dashboard)/todos/actions";
 import { getCurrentActor } from "@/lib/current-actor";
 import { canManage } from "@/lib/can-manage";
@@ -126,7 +126,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
           <div className="erp-info-cell">
             <div className="erp-info-label">마감일</div>
             <div className="erp-info-value" style={overdue ? { color: "var(--erp-danger)" } : undefined}>
-              {row.due_date ? new Date(row.due_date).toLocaleDateString("ko-KR") : "-"}
+              {row.due_date ? formatKstDate(row.due_date) : "-"}
             </div>
           </div>
           <div className="erp-info-cell">
@@ -237,7 +237,7 @@ export async function TodoDetailPanel({ id }: { id: string }) {
           <div>
             {row.due_date && (
               <p className="mb-3 text-sm erp-u-muted">
-                마감일: {new Date(row.due_date).toLocaleDateString("ko-KR")}
+                마감일: {formatKstDate(row.due_date)}
               </p>
             )}
             {row.memo && (

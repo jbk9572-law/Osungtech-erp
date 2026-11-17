@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { requirePlatformAdmin } from "@/lib/require-platform-admin";
 import { PageGuide } from "@/components/erp/page-guide";
 import { ListPageHeader } from "@/components/erp/page-header";
@@ -44,7 +45,7 @@ export default async function PlatformAnnouncementsPage() {
               <div className="erp-u-minw-0">
                 <div className="erp-u-semibold erp-u-text erp-u-text-md">{a.title}</div>
                 <div className="erp-u-muted erp-u-text-sm erp-u-mt-3">
-                  {a.content ?? "-"} · {new Date(a.created_at).toLocaleDateString("ko-KR")}
+                  {a.content ?? "-"} · {formatKstDate(a.created_at)}
                 </div>
               </div>
               <div className="erp-u-flex erp-u-items-center erp-u-gap-10 erp-u-flex-none">

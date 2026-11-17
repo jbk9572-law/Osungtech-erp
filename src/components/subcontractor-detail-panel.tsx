@@ -7,7 +7,7 @@ import { PartyPaymentForm } from "@/components/party-payment-form";
 import { PartyPaymentDeleteForm } from "@/components/party-payment-delete-form";
 import { PageGuide } from "@/components/erp/page-guide";
 import { formatNumber } from "@/lib/format-number";
-import { todayKstStr } from "@/lib/kst-date";
+import { formatKstDate, todayKstStr } from "@/lib/kst-date";
 import { getSubcontractorBalance } from "@/lib/ar-ap";
 import { buildBackHref } from "@/lib/list-return";
 import {
@@ -101,7 +101,7 @@ export async function SubcontractorDetailPanel({
                           {a.disabled ? "비활성" : "사용중"}
                         </GridBadge>
                       </td>
-                      <td>{new Date(a.created_at).toLocaleDateString("ko-KR")}</td>
+                      <td>{formatKstDate(a.created_at)}</td>
                       <td>{!a.disabled && <PortalAccountDisableForm id={a.id} kind="subcontractor" />}</td>
                     </tr>
                   ))}

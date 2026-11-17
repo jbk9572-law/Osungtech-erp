@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 export function StatusBar({
   email,
   companyName,
@@ -5,7 +6,7 @@ export function StatusBar({
   email: string | null;
   companyName?: string | null;
 }) {
-  const now = new Date().toLocaleDateString("ko-KR");
+  const now = formatKstDate();
 
   return (
     <div className="erp-statusbar">

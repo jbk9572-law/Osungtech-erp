@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useActionState, useState } from "react";
 import { bulkCreateTaxInvoices, type BulkTaxInvoiceState } from "@/app/(dashboard)/sales/tax-invoices/bulk-create/actions";
 import { FormMessage } from "@/components/form-message";
@@ -110,7 +111,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
                     aria-label={`${o.docNo ?? o.id} 선택`}
                   />
                 </td>
-                <td>{new Date(o.date).toLocaleDateString("ko-KR")}</td>
+                <td>{formatKstDate(o.date)}</td>
                 <td>{o.docNo ?? "-"}</td>
                 <td>{o.customerName ?? "-"}</td>
                 <td className="num">{formatNumber(o.supplyAmount)}</td>
@@ -158,7 +159,7 @@ export function BulkTaxInvoiceForm({ orders, today }: { orders: BulkEligibleOrde
                 />
                 <span className="erp-row-card-partner">{o.customerName ?? "-"}</span>
               </span>
-              <span className="erp-row-card-date">{new Date(o.date).toLocaleDateString("ko-KR")}</span>
+              <span className="erp-row-card-date">{formatKstDate(o.date)}</span>
             </div>
             <div className="erp-row-card-foot">
               <span className="erp-u-muted">전표번호 {o.docNo ?? "-"}</span>

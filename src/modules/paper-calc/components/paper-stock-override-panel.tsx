@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDateTime } from "@/lib/kst-date";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 import { useConfirmTwice } from "@/lib/use-confirm-twice";
@@ -114,7 +115,7 @@ export function PaperStockOverridePanel({
           <div className="erp-u-semibold">배치로그</div>
           {history.map((h) => (
             <div key={h.id}>
-              {new Date(h.created_at).toLocaleString("ko-KR")} · {h.profiles?.full_name ?? "-"} ·{" "}
+              {formatKstDateTime(h.created_at)} · {h.profiles?.full_name ?? "-"} ·{" "}
               {formatNumber(Number(h.auto_quantity))}연 → {formatNumber(Number(h.override_quantity))}연
               {h.note ? ` (${h.note})` : ""}
               {h.reverted_at ? " · 되돌림" : " · 적용 중"}

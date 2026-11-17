@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstTime } from "@/lib/kst-date";
 import {
   useActionState,
   useCallback,
@@ -1167,7 +1168,7 @@ function NoteForm({
                   <span
                     className="text-[10.5px] erp-u-muted"
                   >
-                    {new Date(note.createdAt).toLocaleTimeString("ko-KR", {
+                    {formatKstTime(note.createdAt, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

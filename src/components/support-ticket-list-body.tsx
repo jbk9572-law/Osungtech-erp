@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate, formatKstDateTime } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import { RichTextView } from "@/components/erp/rich-text-view";
 import { GridBadge } from "@/components/grid/badge";
@@ -101,7 +102,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
                 </span>
                 <div className="erp-split-list-row-sub erp-u-flex erp-u-justify-between erp-u-gap-6">
                   <span>{t.tenantName}</span>
-                  <span>{new Date(t.created_at).toLocaleDateString("ko-KR")}</span>
+                  <span>{formatKstDate(t.created_at)}</span>
                 </div>
               </button>
             );
@@ -126,7 +127,7 @@ export function SupportTicketListBody({ tickets }: { tickets: SupportTicketRow[]
               </GridBadge>
             </div>
             <p className="mb-4 text-xs erp-u-muted">
-              {selected.tenantName} · {new Date(selected.created_at).toLocaleString("ko-KR")}
+              {selected.tenantName} · {formatKstDateTime(selected.created_at)}
             </p>
             {/* 좌우 패딩은 0으로 둬 위 제목(h2)과 왼쪽 끝이 맞게 하되,
                 위아래까지 0이면 글이 바로 위/아래 요소에 딱 붙어 보인다는

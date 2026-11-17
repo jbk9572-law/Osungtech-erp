@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDateTime } from "@/lib/kst-date";
 import { useMemo, useState } from "react";
 import { GridBadge } from "@/components/grid/badge";
 
@@ -85,7 +86,7 @@ export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
               </div>
             </div>
             <div className="erp-u-muted erp-u-text-caption erp-u-flex-none">
-              {new Date(r.created_at).toLocaleString("ko-KR")}
+              {formatKstDateTime(r.created_at)}
             </div>
           </div>
         ))}

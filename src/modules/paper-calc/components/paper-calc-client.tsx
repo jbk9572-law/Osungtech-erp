@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDateTime } from "@/lib/kst-date";
 import { useRouter } from "next/navigation";
 import { useActionState, useMemo, useState } from "react";
 import { NumberInput } from "@/components/number-input";
@@ -846,7 +847,7 @@ function SavedCalcRow({
 
   return (
     <tr>
-      <td>{new Date(calc.created_at).toLocaleString("ko-KR")}</td>
+      <td>{formatKstDateTime(calc.created_at)}</td>
       <td className="num">
         {formatNumber(calc.total_paper)}장 ({calc.total_sheet}연 구매 ·
         실사용 {effectiveReams.toFixed(2)}연)

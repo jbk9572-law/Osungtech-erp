@@ -1,3 +1,4 @@
+import { formatKstDate } from "@/lib/kst-date";
 import { formatNumber } from "@/lib/format-number";
 
 type Company = {
@@ -189,7 +190,7 @@ export function DeliveryNoteDoc({
             </td>
             <th className="border border-black bg-gray-50 px-2 py-1 font-medium">출고일</th>
             <td className="border border-black px-2 py-1">
-              {new Date(orderDate).toLocaleDateString("ko-KR")}
+              {formatKstDate(orderDate)}
             </td>
           </tr>
         </tbody>

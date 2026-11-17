@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useActionState, useMemo, useRef, useState } from "react";
 import { createTaxInvoiceCorrection } from "@/app/(dashboard)/sales/[id]/tax-invoice/actions";
 import { FormMessage } from "@/components/form-message";
@@ -75,7 +76,7 @@ export function TaxInvoiceCorrectionForm({
         <h2 className="erp-doc-title">수 정 세 금 계 산 서</h2>
 
         <p className="text-xs erp-u-muted">
-          당초 세금계산서 작성일자: {new Date(originalIssueDate).toLocaleDateString("ko-KR")}
+          당초 세금계산서 작성일자: {formatKstDate(originalIssueDate)}
         </p>
 
         <div className="erp-doc-header">

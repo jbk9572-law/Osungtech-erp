@@ -1,3 +1,4 @@
+import { formatKstDateTime } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import { GridBadge } from "@/components/grid/badge";
 import Link from "next/link";
@@ -83,7 +84,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
         </Link>
       </div>
       <p className="erp-u-muted erp-u-text-compact erp-u-mb-16">
-        {new Date(order.created_at).toLocaleString("ko-KR")}
+        {formatKstDateTime(order.created_at)}
       </p>
 
       <div className="erp-detail erp-u-mt-0">

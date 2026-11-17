@@ -1,5 +1,6 @@
 "use client";
 
+import { formatKstDate } from "@/lib/kst-date";
 import { useActionState } from "react";
 import { FormMessage, type FormState } from "@/components/form-message";
 
@@ -27,7 +28,7 @@ export function LeavePromotionButton({
   if (sentAt) {
     return (
       <span className="text-xs erp-u-muted">
-        {stage}차 발송됨 ({new Date(sentAt).toLocaleDateString("ko-KR")})
+        {stage}차 발송됨 ({formatKstDate(sentAt)})
       </span>
     );
   }

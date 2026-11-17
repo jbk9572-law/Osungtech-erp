@@ -82,6 +82,14 @@ export async function convertCustomerOrderItemToWorkOrder(
   }
 
   const supabase = await createClient();
+  // 더블클릭·두 사람이 동시에 눌러 같은 품목이 두 번 전환(생산지시 2개)되지 않도록, 이미 전환된 줄이면 막는다.
+  const { data: existing } = await supabase
+    .from("customer_order_items")
+    .select("work_order_id, sales_order_id")
+    .eq("id", itemId)
+    .maybeSingle();
+  if (!existing) return { error: "주문 품목을 찾을 수 없습니다." };
+  if (existing.work_order_id || existing.sales_order_id) return { error: "이미 전환된 품목입니다." };
   const { data: workOrderId, error } = await supabase.rpc("create_work_order", {
     p_product_id: productId,
     p_warehouse_id: warehouseId,
@@ -94,11 +102,15 @@ export async function convertCustomerOrderItemToWorkOrder(
     return { error: `생산지시 생성에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  const { error: linkError } = await supabase
+  const { data: linked, error: linkError } = await supabase
     .from("customer_order_items")
     .update({ work_order_id: workOrderId })
-    .eq("id", itemId);
+    .eq("id", itemId)
+    .is("work_order_id", null)
+    .is("sales_order_id", null)
+    .select("id");
   if (linkError) return { error: `생산지시는 만들어졌지만 주문과 연결에 실패했습니다: ${linkError.message}` };
+  if (!linked || linked.length === 0) return { error: "다른 사용자가 먼저 이 품목을 전환했습니다. 생산지시가 중복으로 만들어졌는지 생산관리에서 확인해주세요." };
 
   revalidatePath("/customer-orders");
   revalidatePath("/production");
@@ -127,8 +139,19 @@ export async function convertCustomerOrderItemToSale(
     return { error: "창고와 거래일자를 확인해주세요." };
   }
 
+  if (!Number.isFinite(unitPrice) || Math.abs(unitPrice) > 1_000_000_000_000 || quantity > 1_000_000_000) {
+    return { error: "수량 또는 단가가 올바르지 않습니다." };
+  }
+
   const supabase = await createClient();
   const user = await getUser();
+  const { data: existing } = await supabase
+    .from("customer_order_items")
+    .select("work_order_id, sales_order_id")
+    .eq("id", itemId)
+    .maybeSingle();
+  if (!existing) return { error: "주문 품목을 찾을 수 없습니다." };
+  if (existing.work_order_id || existing.sales_order_id) return { error: "이미 전환된 품목입니다." };
   const { data: salesOrderId, error } = await supabase.rpc("create_sale_with_items", {
     p_customer_id: customerId,
     p_warehouse_id: warehouseId,
@@ -142,11 +165,15 @@ export async function convertCustomerOrderItemToSale(
     return { error: `판매 등록에 실패했습니다: ${error?.message ?? "알 수 없는 오류"}` };
   }
 
-  const { error: linkError } = await supabase
+  const { data: linked, error: linkError } = await supabase
     .from("customer_order_items")
     .update({ sales_order_id: salesOrderId })
-    .eq("id", itemId);
+    .eq("id", itemId)
+    .is("work_order_id", null)
+    .is("sales_order_id", null)
+    .select("id");
   if (linkError) return { error: `판매는 등록됐지만 주문과 연결에 실패했습니다: ${linkError.message}` };
+  if (!linked || linked.length === 0) return { error: "다른 사용자가 먼저 이 품목을 전환했습니다. 판매가 중복으로 등록됐는지 출고관리에서 확인해주세요." };
 
   revalidatePath("/customer-orders");
   revalidatePath("/sales");

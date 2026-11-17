@@ -1,3 +1,4 @@
+import { formatKstDateTime } from "@/lib/kst-date";
 import { notFound } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { DeleteButton } from "@/components/delete-button";
@@ -34,7 +35,7 @@ export async function DocumentDetailPanel({ id }: { id: string }) {
         meta={
           <>
             {doc.profiles?.full_name ? `대상: ${doc.profiles.full_name} · ` : ""}
-            {new Date(doc.created_at).toLocaleString("ko-KR")} ·{" "}
+            {formatKstDateTime(doc.created_at)} ·{" "}
             <GridBadge tone={doc.status === "issued" ? "ok" : "warn"}>{doc.status === "issued" ? "발급완료" : "초안"}</GridBadge>
           </>
         }

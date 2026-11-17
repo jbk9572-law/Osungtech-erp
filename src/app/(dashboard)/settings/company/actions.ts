@@ -113,7 +113,12 @@ export async function uploadBrandingImage(
   if (isDemoError) {
     return { error: `계정 종류를 확인하지 못해 업로드를 중단했습니다: ${isDemoError.message}` };
   }
-  const path = isDemo ? `demo/${BRANDING_SLOTS[slot]}.png` : `${BRANDING_SLOTS[slot]}.png`;
+  // 회사마다 폴더를 따로 쓴다 — 예전에는 모든 회사가 같은 파일 이름에 덮어써서 다른 회사 로고가 바뀌었다(스토리지 정책 253도 이 경로 규칙을 강제한다).
+  const { data: tenantId, error: tenantError } = await supabase.rpc("current_tenant_id");
+  if (tenantError || !tenantId) {
+    return { error: "소속 회사를 확인하지 못해 업로드를 중단했습니다." };
+  }
+  const path = isDemo ? `demo/${tenantId}/${BRANDING_SLOTS[slot]}.png` : `${tenantId}/${BRANDING_SLOTS[slot]}.png`;
 
   // 의도적으로 preferR2를 안 쓴다 — 로고는 앱 전체 헤더에 영구 URL로
   // 박혀서 계속 쓰이는데, R2는 매번 새로 서명해야 하는 단기 URL만
