@@ -6410,7 +6410,7 @@ export type Database = {
         }[];
       };
       get_cross_tenant_failure_log: {
-        Args: { p_limit?: number };
+        Args: { p_limit?: number; p_offset?: number };
         Returns: {
           id: string;
           tenant_name: string | null;
@@ -6421,7 +6421,16 @@ export type Database = {
           detail: string | null;
           actor_name: string | null;
           created_at: string;
+          total_count: number;
         }[];
+      };
+      get_maintenance_flag: {
+        Args: Record<PropertyKey, never>;
+        Returns: { maintenance_mode: boolean; maintenance_message: string | null }[];
+      };
+      purge_old_failure_logs: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
       };
       get_platform_stats: {
         Args: Record<string, never>;

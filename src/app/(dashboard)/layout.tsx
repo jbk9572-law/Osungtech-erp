@@ -1,3 +1,4 @@
+import { layoutCacheKey } from "@/lib/layout-cache";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient, getUser } from "@/lib/supabase/server";
@@ -70,7 +71,7 @@ export default async function DashboardLayout({
   // 걸러지므로 캐시 키에 반드시 user.id를 넣는다 — 그래야 다른 회사
   // 사용자끼리 절대 캐시를 공유하지 않는다.
   const LAYOUT_CACHE_TTL_MS = 10_000;
-  const { data: bootstrapRaw } = await ttlCached(`layout:bootstrap:${user.id}`, LAYOUT_CACHE_TTL_MS, () =>
+  const { data: bootstrapRaw } = await ttlCached(layoutCacheKey("bootstrap", user.id), LAYOUT_CACHE_TTL_MS, () =>
     safeQuery(supabase.rpc("get_dashboard_layout_bootstrap")),
   );
   const bootstrap = bootstrapRaw as LayoutBootstrap | null;
@@ -86,7 +87,7 @@ export default async function DashboardLayout({
   // 뒤에만 따로 부른다(일반 테넌트 사용자의 메뉴 이동마다 불필요한
   // 왕복이 추가되지 않게). bootstrap과 같은 TTL 캐시를 재사용한다.
   const { data: impersonationTenantsRaw } = isPlatformAdmin
-    ? await ttlCached(`layout:impersonation-tenants:${user.id}`, LAYOUT_CACHE_TTL_MS, () =>
+    ? await ttlCached(layoutCacheKey("impersonation-tenants", user.id), LAYOUT_CACHE_TTL_MS, () =>
         safeQuery(supabase.rpc("get_platform_tenant_list")),
       )
     : { data: null };

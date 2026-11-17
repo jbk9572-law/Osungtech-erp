@@ -504,7 +504,7 @@ async function SalesPage({
             className="erp-input"
           />
         </div>
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-4">
           <label htmlFor="search-q">출고처 / 상품 / 규격 검색</label>
           <input
             id="search-q"

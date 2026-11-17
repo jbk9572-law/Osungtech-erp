@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { decideMaintenance, getMaintenanceFlag, type MaintenanceDecision } from "@/lib/maintenance";
 
 // "/demo"는 아이디/비밀번호 입력 없이 데모 계정으로 자동 로그인시켜주는
 // 진입점(src/app/demo/route.ts)이라, 로그인 전 상태에서도 이 경로 자체는
@@ -33,7 +34,31 @@ import { NextResponse, type NextRequest } from "next/server";
 // (user가 없고 PUBLIC_PATHS에도 없어서) 엉뚱하게 직원용 /login으로
 // 튕겨나가는 버그가 난다 — 이 세션 안에서는 계속 직원으로 로그인된 채
 // 테스트해서 못 보고 지나갔던 경로다.
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/api/csp-report", "/terms", "/privacy", "/portal"];
+const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/demo", "/api/calendar/feed", "/api/cron", "/api/csp-report", "/terms", "/privacy", "/portal", "/maintenance"];
+
+// 점검 모드: 안내 화면은 503으로 바꿔 보여 주고, 화면 이동·저장 요청은 503으로 거절한다(lib/maintenance.ts).
+function maintenanceResponse(decision: MaintenanceDecision, request: NextRequest): NextResponse | null {
+  if (decision === "allow") return null;
+  if (decision === "page") return NextResponse.rewrite(new URL("/maintenance", request.url), { status: 503 });
+  return new NextResponse("시스템 점검 중입니다.", { status: 503, headers: { "Retry-After": "300" } });
+}
+
+// 플랫폼 운영자 여부는 점검 중일 때만 필요하므로(평소엔 조회 안 함) 그때만 물어보고 30초 동안 사용자별로 기억한다.
+const adminCache = new Map<string, { value: boolean; at: number }>();
+async function isPlatformAdminCached(supabase: ReturnType<typeof createServerClient>, sub: string): Promise<boolean> {
+  const hit = adminCache.get(sub);
+  if (hit && Date.now() - hit.at < 30_000) return hit.value;
+  let value = false;
+  try {
+    const { data, error } = await supabase.rpc("is_platform_admin");
+    value = !error && data === true; // 확인 실패는 운영자 아님으로 처리(점검 중에 잘못 통과시키지 않는다)
+  } catch {
+    value = false;
+  }
+  adminCache.set(sub, { value, at: Date.now() });
+  if (adminCache.size > 200) adminCache.clear();
+  return value;
+}
 
 export async function updateSession(request: NextRequest) {
   // 공개 경로(/login 등)는 로그인 안 된 사람을 /login으로 보내는
@@ -50,6 +75,14 @@ export async function updateSession(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   if (isPublicPath) {
+    // 거래처 포털도 점검 중에는 막는다(로그인 전이라 운영자 예외 없음). 로그인 화면 등 나머지 공개 경로는 그대로 연다.
+    if (pathname === "/portal" || pathname.startsWith("/portal/")) {
+      const flag = await getMaintenanceFlag();
+      if (flag.on) {
+        const blocked = maintenanceResponse(decideMaintenance({ on: true, isPlatformAdmin: false, pathname, headers: request.headers }), request);
+        if (blocked) return blocked;
+      }
+    }
     return NextResponse.next({ request });
   }
 
@@ -114,9 +147,11 @@ export async function updateSession(request: NextRequest) {
     .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
 
   let hasValidSession = false;
+  let sessionSub = "";
   try {
     const { data, error: claimsError } = await supabase.auth.getClaims();
     hasValidSession = !claimsError && !!data?.claims?.sub;
+    sessionSub = data?.claims?.sub ?? "";
   } catch {
     hasValidSession = false;
   }
@@ -133,6 +168,14 @@ export async function updateSession(request: NextRequest) {
     url.searchParams.set("next", originalPath);
     if (hadAuthCookie) url.searchParams.set("notice", "other_session");
     return NextResponse.redirect(url);
+  }
+
+  // 점검 모드: (dashboard)/layout.tsx만 확인하면 이미 열린 화면의 이동·저장 요청이 막히지 않아, 모든 요청의 입구에서 확인한다.
+  const maintenance = await getMaintenanceFlag();
+  if (maintenance.on) {
+    const isAdmin = await isPlatformAdminCached(supabase, sessionSub);
+    const blocked = maintenanceResponse(decideMaintenance({ on: true, isPlatformAdmin: isAdmin, pathname, headers: request.headers }), request);
+    if (blocked) return blocked;
   }
 
   return response;

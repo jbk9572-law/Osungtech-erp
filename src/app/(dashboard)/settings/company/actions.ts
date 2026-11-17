@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { refreshLayout } from "@/lib/layout-cache";
 import { combinePhone } from "@/lib/phone";
 import { detectRasterImageType } from "@/lib/upload-safety";
 import { requireAdmin } from "@/lib/require-admin";
@@ -65,6 +66,7 @@ export async function updateCompanyProfile(
     };
   }
 
+  refreshLayout();
   revalidatePath("/settings/company");
   return { success: "회사 정보가 저장되었습니다." };
 }
@@ -143,7 +145,7 @@ export async function uploadBrandingImage(
     return { error: `저장에 실패했습니다: ${error.message}` };
   }
 
-  revalidatePath("/", "layout");
+  refreshLayout();
   return { success: "이미지가 저장되었습니다." };
 }
 
@@ -201,6 +203,6 @@ export async function resetBrandingImage(
     return { error: `되돌리기에 실패했습니다: ${error.message}` };
   }
 
-  revalidatePath("/", "layout");
+  refreshLayout();
   return { success: "기본값으로 되돌렸습니다." };
 }
