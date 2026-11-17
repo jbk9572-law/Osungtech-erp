@@ -180,7 +180,7 @@ export default async function SalesActivitiesPage({
           <label htmlFor="sa-search-to">종료일</label>
           <input id="sa-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-4">
           <label htmlFor="sa-search-q">거래처 / 제목 / 내용 검색</label>
           <input
             id="sa-search-q"

@@ -125,7 +125,7 @@ export default async function QuotesPage({
           <label htmlFor="quotes-search-to">종료일</label>
           <input id="quotes-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-4">
           <label htmlFor="quotes-search-q">거래처 / 견적번호 / 메모 검색</label>
           <input
             id="quotes-search-q"

@@ -131,7 +131,7 @@ export default async function PurchaseQuoteRequestsPage({
           <label htmlFor="pqr-search-to">종료일</label>
           <input id="pqr-search-to" type="date" name="to" defaultValue={to ?? ""} className="erp-input" />
         </div>
-        <div className="erp-field erp-span-6">
+        <div className="erp-field erp-span-4">
           <label htmlFor="pqr-search-q">매입처 / 메모 검색</label>
           <input
             id="pqr-search-q"

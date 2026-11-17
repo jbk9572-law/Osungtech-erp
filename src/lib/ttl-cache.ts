@@ -16,3 +16,11 @@ export async function ttlCached<T>(key: string, ttlMs: number, compute: () => Pr
   store.set(key, { value, expiresAt: Date.now() + ttlMs });
   return value;
 }
+
+// 값이 바뀐 걸 이미 알고 있을 때(예: 회사 전환, 회사 이름·로고 저장) TTL이 끝나길 기다리지 않고
+// 그 접두어로 시작하는 캐시를 바로 비운다. 이 서버 프로세스 안의 캐시만 비운다.
+export function invalidateTtlCache(keyPrefix: string): void {
+  for (const key of store.keys()) {
+    if (key.startsWith(keyPrefix)) store.delete(key);
+  }
+}
