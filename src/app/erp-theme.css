@@ -2474,6 +2474,12 @@ form.erp-field-grid {
   font-variant-numeric: tabular-nums;
   font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
 }
+/* 숫자 칸 머리글(th.num)은 오른쪽 정렬만 따르고 글꼴은 다른 머리글과 같게 —
+   고정폭 글꼴은 값(td)에만 쓴다. 안 그러면 수량·단가·금액 머리글만 더 크고
+   다른 글꼴로 보여 칸 머리글 줄이 들쭉날쭉하다. */
+.erp-grid thead th.num {
+  font-family: inherit;
+}
 
 /* 키보드로 행을 옮겨다닐 때(Tab/Enter) 지금 입력 중인 행이 어디인지
    한눈에 보이게 — 칸 하나(.erp-input:focus)만 알려주던 걸 행 전체
