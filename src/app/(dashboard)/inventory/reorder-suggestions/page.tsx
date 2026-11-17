@@ -47,6 +47,8 @@ export default async function ReorderSuggestionsPage() {
       .from("products")
       .select("id, sku, name, spec, unit, reorder_point, cost, supplier_id, suppliers(id, name), inventory(quantity)")
       .gt("reorder_point", 0)
+      // 파생 SKU(모품목과 재고를 공유)는 자기 재고가 늘 비어 있어 항상 "부족"으로 제안되므로 제외한다 — 발주는 모품목 기준.
+      .is("parent_product_id", null)
       .order("name")
       .range(from, to),
   );

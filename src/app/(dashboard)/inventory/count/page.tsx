@@ -62,11 +62,12 @@ export default async function InventoryCountPage({
       unit: string;
       reorder_point: number | null;
       base_package_qty: number | null;
+      parent_product_id: string | null;
       inventory: { quantity: number; warehouse_id: string }[];
     }>((from, to) =>
       supabase
         .from("products")
-        .select("id, sku, name, spec, unit, reorder_point, base_package_qty, inventory(quantity, warehouse_id)")
+        .select("id, sku, name, spec, unit, reorder_point, base_package_qty, parent_product_id, inventory(quantity, warehouse_id)")
         .order("name")
         .range(from, to),
     ),
@@ -137,6 +138,8 @@ export default async function InventoryCountPage({
   // 같은 기준. 이 화면은 어차피 전체 품목을 이미 불러와 놓은 상태라
   // 별도 조회 없이 그대로 필터링한다.
   const lowStockProducts = products
+    // 파생 SKU(모품목과 재고 공유)는 자기 재고가 늘 비어 있어 항상 부족으로 뜨므로 제외한다(알림종과 같은 기준).
+    .filter((p) => !p.parent_product_id)
     .map((p) => ({
       name: p.name,
       quantity: sumInventoryQuantity(p.inventory),
