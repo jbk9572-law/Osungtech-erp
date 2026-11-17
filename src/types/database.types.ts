@@ -6490,7 +6490,7 @@ export type Database = {
         Returns: undefined;
       };
       mark_todo_side_done: {
-        Args: { p_id: string; p_side: string };
+        Args: { p_id: string; p_side: string; p_order_id?: string };
         Returns: undefined;
       };
       apply_due_price_schedules: {

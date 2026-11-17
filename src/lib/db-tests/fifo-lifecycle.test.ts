@@ -419,3 +419,67 @@ describe("연결 수량이 입고 수량을 넘지 못하게 DB가 막는다(242
     expect(await linkedQuantity(source)).toBe(50);
   });
 });
+
+// ── 할일에서 불러온 전표를 지우면 할일이 다시 열린다(243) ─────────────────────────────────────────────────────
+async function makeTodo(type: "purchase" | "sale" | "both"): Promise<string> {
+  const r = await h.db.query<{ id: string }>(`insert into public.todos (todo_type, tenant_id) values ($1, $2) returning id`, [type, h.ids.tenant]);
+  return r.rows[0].id;
+}
+const markDone = (todo: string, side: "purchase" | "sale", order: string) =>
+  h.db.query(`select public.mark_todo_side_done($1, $2, $3)`, [todo, side, order]);
+async function todoState(id: string) {
+  const r = await h.db.query<{ done: boolean; purchase_done_at: string | null; sale_done_at: string | null }>(
+    `select done, purchase_done_at, sale_done_at from public.todos where id = $1`, [id]);
+  return r.rows[0];
+}
+
+describe("할일에서 불러온 전표 삭제 시 할일 되돌리기", () => {
+  it("매출만 있는 할일: 매출을 지우면 다시 열린다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const todo = await makeTodo("sale");
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "sale", sale);
+    expect((await todoState(todo)).done).toBe(true);
+    await deleteSale(sale);
+    const after = await todoState(todo);
+    expect(after.done).toBe(false);
+    expect(after.sale_done_at).toBeNull();
+  });
+
+  it("당일 매입+출고 할일: 매출만 지우면 매출 방향만 다시 열리고 매입 완료는 유지된다", async () => {
+    const purchase = await createPurchaseOn("2026-11-03", 100);
+    const todo = await makeTodo("both");
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "purchase", purchase);
+    await markDone(todo, "sale", sale);
+    expect((await todoState(todo)).done).toBe(true);
+    await deleteSale(sale);
+    const after = await todoState(todo);
+    expect(after.done).toBe(false);
+    expect(after.sale_done_at).toBeNull();
+    expect(after.purchase_done_at).not.toBeNull();
+  });
+
+  it("같은 할일을 쓴 다른 매출이 남아 있으면 닫힌 채로 둔다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const todo = await makeTodo("sale");
+    const a = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    const b = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "sale", a);
+    await markDone(todo, "sale", b);
+    await deleteSale(a);
+    expect((await todoState(todo)).done).toBe(true);
+    await deleteSale(b);
+    expect((await todoState(todo)).done).toBe(false);
+  });
+
+  it("할일과 무관한 전표를 지워도 할일은 그대로다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const todo = await makeTodo("sale");
+    const linked = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    const other = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "sale", linked);
+    await deleteSale(other);
+    expect((await todoState(todo)).done).toBe(true);
+  });
+});

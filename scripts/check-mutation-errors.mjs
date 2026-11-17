@@ -35,7 +35,7 @@ const ALLOWLIST = new Set([
   // security definer RPC로 우회한다. 호출부(sales/purchases actions.ts)가
   // 이미 "할일 완료 처리는 부가 동작이라 등록 자체를 막지 않는다"는 명시적
   // try/catch로 감싸고 있어, 실패를 의도적으로 무시한다.
-  "src/lib/todo-flow.ts:42",
+  "src/lib/todo-flow.ts:44",
   // applyDuePriceSchedules/applyDuePurchasePriceSchedules: 화면을 열 때마다
   // 자동으로 시도하는 eventually-consistent 동기화다 — 이번에 실패해도
   // 다음에 누가 화면을 열면 다시 시도되므로 놓칠 일이 없다(주석 참고).

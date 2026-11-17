@@ -33,11 +33,13 @@ export function todoTypeLabel(
 export async function markTodoSideDone(
   supabase: SupabaseServerClient,
   todoId: string,
-  side: "purchase" | "sale"
+  side: "purchase" | "sale",
+  // 이 할일을 불러와 만든 전표 id — 넘기면 연결이 남아, 그 전표를 삭제할 때 할일이 다시 열린다.
+  orderId?: string | null
 ) {
   // 본인이 만들지 않은(다른 직원의) 할일도 "할일 가져오기"로 가져와 실제
   // 매입/매출을 등록할 수 있는 게 이 앱의 정상 흐름이라, 완료 표시 자체는
   // RLS(본인 또는 관리자만 수정 가능)를 우회하는 security definer RPC로
   // 처리한다 — 일반 update로는 RLS에 막혀 조용히 아무 일도 안 일어난다.
-  await supabase.rpc("mark_todo_side_done", { p_id: todoId, p_side: side });
+  await supabase.rpc("mark_todo_side_done", { p_id: todoId, p_side: side, p_order_id: orderId ?? undefined });
 }

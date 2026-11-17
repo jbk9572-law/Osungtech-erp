@@ -393,9 +393,9 @@ export async function createPurchase(
       if (Array.isArray(todoIds)) {
         for (const todoId of todoIds) {
           if (typeof todoId === "string" && todoId) {
-            await markTodoSideDone(supabase, todoId, "purchase");
+            await markTodoSideDone(supabase, todoId, "purchase", purchaseOrderId);
             if (salesOrderId) {
-              await markTodoSideDone(supabase, todoId, "sale");
+              await markTodoSideDone(supabase, todoId, "sale", salesOrderId);
             }
           }
         }

@@ -169,7 +169,7 @@ export async function createSale(_prevState: FormState, formData: FormData): Pro
       if (Array.isArray(todoIds)) {
         for (const todoId of todoIds) {
           if (typeof todoId === "string" && todoId) {
-            await markTodoSideDone(supabase, todoId, "sale");
+            await markTodoSideDone(supabase, todoId, "sale", salesOrderId);
           }
         }
       }
