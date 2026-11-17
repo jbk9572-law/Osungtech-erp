@@ -18,6 +18,7 @@ const MIGRATIONS_DIR = path.join(process.cwd(), "supabase", "migrations");
 
 // 테스트가 검증하는 함수들 — 운영 마이그레이션에서 최종 정의를 가져온다.
 const FUNCTIONS_UNDER_TEST = [
+  "guard_purchase_link_capacity",
   "consume_fifo_layers",
   "release_fifo_consumption",
   "backfill_fifo_consumption_for_purchase",
@@ -191,6 +192,11 @@ export async function createHarness(): Promise<Harness> {
   for (const name of FUNCTIONS_UNDER_TEST) {
     await db.exec(latestFunctionSql(name));
   }
+  // 입고 불러오기 연결 수량 가드(242)의 트리거 정의도 마이그레이션 파일에서 그대로 읽어 건다.
+  const guardSql = fs.readFileSync(path.join(MIGRATIONS_DIR, "00000000000242_guard_purchase_link_capacity.sql"), "utf8");
+  const trigger = guardSql.match(/create constraint trigger guard_purchase_link_capacity[\s\S]*?;/);
+  if (!trigger) throw new Error("마이그레이션 242에서 트리거 정의를 찾지 못했습니다.");
+  await db.exec(trigger[0]);
 
   const ids = {
     tenant: crypto.randomUUID(),

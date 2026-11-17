@@ -382,3 +382,40 @@ describe("입고 불러오기 연결 기록", () => {
     expect(await linkedQuantity(source)).toBe(0); // 안 불러온 입고분은 계속 불러올 수 있다
   });
 });
+
+describe("연결 수량이 입고 수량을 넘지 못하게 DB가 막는다(242)", () => {
+  it("입고 수량만큼은 불러올 수 있다", async () => {
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 50, source }]);
+    expect(await linkedQuantity(source)).toBe(50);
+  });
+
+  it("이미 다른 매출이 불러간 뒤 같은 입고분을 또 저장하면 거절된다(동시에 열어 둔 두 화면)", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await expect(saleWithSource("2026-11-03", [{ quantity: 30, source }])).rejects.toThrow(/불러온 입고 수량/);
+    expect(await linkedQuantity(source)).toBe(30);
+  });
+
+  it("한 화면에서 같은 입고분을 두 줄로 불러와 합계가 넘으면 거절된다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await expect(saleWithSource("2026-11-03", [{ quantity: 30, source }, { quantity: 30, source }])).rejects.toThrow(/불러온 입고 수량/);
+    expect(await linkedQuantity(source)).toBe(0); // 실패한 저장은 통째로 취소된다
+  });
+
+  it("판매 수정으로 수량을 늘려 넘기면 거절되고, 지운 뒤에는 다시 불러올 수 있다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await expect(updateSaleWithSource(sale, "2026-11-03", [{ quantity: 60, source }])).rejects.toThrow(/불러온 입고 수량/);
+    await deleteSale(sale);
+    await saleWithSource("2026-11-03", [{ quantity: 50, source }]);
+    expect(await linkedQuantity(source)).toBe(50);
+  });
+});
