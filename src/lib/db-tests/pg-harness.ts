@@ -18,6 +18,9 @@ const MIGRATIONS_DIR = path.join(process.cwd(), "supabase", "migrations");
 
 // 테스트가 검증하는 함수들 — 운영 마이그레이션에서 최종 정의를 가져온다.
 const FUNCTIONS_UNDER_TEST = [
+  "guard_purchase_link_capacity",
+  "mark_todo_side_done",
+  "reopen_todos_on_order_delete",
   "consume_fifo_layers",
   "release_fifo_consumption",
   "backfill_fifo_consumption_for_purchase",
@@ -56,7 +59,7 @@ create or replace function auth.uid() returns uuid language sql stable as $$
 $$;
 create or replace function auth.role() returns text language sql stable as $$ select 'authenticated' $$;
 
-create table public.tenants (id uuid primary key default gen_random_uuid(), closing_date date);
+create table public.tenants (id uuid primary key default gen_random_uuid(), closing_date date, disabled_features text[] not null default '{}');
 create table public.profiles (id uuid primary key, role text not null default 'staff');
 create table public.tenant_members (user_id uuid primary key, tenant_id uuid not null references public.tenants(id));
 create table public.platform_admin_impersonations (admin_user_id uuid, tenant_id uuid, ended_at timestamptz);
@@ -68,6 +71,13 @@ create function public.is_admin() returns boolean language sql stable as $$
   select exists (select 1 from public.profiles me where me.id = auth.uid() and me.role = 'admin')
 $$;
 create function public.is_demo_actor() returns boolean language sql stable as $$ select false $$;
+
+create table public.todos (
+  id uuid primary key default gen_random_uuid(),
+  todo_type text not null default 'sale', done boolean not null default false, done_at timestamptz,
+  purchase_done_at timestamptz, sale_done_at timestamptz,
+  tenant_id uuid default public.current_tenant_id()
+);
 
 create table public.warehouses (id uuid primary key default gen_random_uuid(), name text not null default 'W');
 create table public.customers (id uuid primary key default gen_random_uuid(), name text not null default 'C');
@@ -87,6 +97,7 @@ create table public.purchase_orders (
   supplier_id uuid, warehouse_id uuid, purchase_date date, memo text, created_by uuid,
   payment_method text, delivery_method text, doc_no bigint, tax_type text, evidence_type text,
   is_carryover boolean not null default false,
+  source_todo_ids uuid[] not null default '{}',
   tenant_id uuid default public.current_tenant_id()
 );
 create table public.purchase_order_items (
@@ -108,6 +119,7 @@ create table public.sales_orders (
   is_return boolean not null default false, return_reason text,
   is_carryover boolean not null default false, tax_type text, evidence_type text,
   is_sample boolean not null default false,
+  source_todo_ids uuid[] not null default '{}',
   tenant_id uuid default public.current_tenant_id()
 );
 create table public.sales_order_items (
@@ -115,7 +127,7 @@ create table public.sales_order_items (
   sales_order_id uuid not null references public.sales_orders(id) on delete cascade,
   product_id uuid, custom_name text, spec text,
   quantity numeric not null, unit_price numeric not null default 0, unit_cost numeric not null default 0,
-  remark text, lot_number text,
+  remark text, lot_number text, source_purchase_item_id uuid,
   created_at timestamptz not null default now(),
   tenant_id uuid default public.current_tenant_id()
 );
@@ -191,6 +203,14 @@ export async function createHarness(): Promise<Harness> {
   for (const name of FUNCTIONS_UNDER_TEST) {
     await db.exec(latestFunctionSql(name));
   }
+  // 입고 불러오기 연결 수량 가드(242)의 트리거 정의도 마이그레이션 파일에서 그대로 읽어 건다.
+  const guardSql = fs.readFileSync(path.join(MIGRATIONS_DIR, "00000000000242_guard_purchase_link_capacity.sql"), "utf8");
+  const trigger = guardSql.match(/create constraint trigger guard_purchase_link_capacity[\s\S]*?;/);
+  if (!trigger) throw new Error("마이그레이션 242에서 트리거 정의를 찾지 못했습니다.");
+  await db.exec(trigger[0]);
+  // 할일 되돌리기 트리거(243)도 마이그레이션 파일에서 그대로 읽어 건다.
+  const todoSql = fs.readFileSync(path.join(MIGRATIONS_DIR, "00000000000243_todo_reopen_on_order_delete.sql"), "utf8");
+  for (const t of todoSql.match(/create trigger [\s\S]*?;/g) ?? []) await db.exec(t);
 
   const ids = {
     tenant: crypto.randomUUID(),

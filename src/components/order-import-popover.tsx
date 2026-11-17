@@ -39,7 +39,9 @@ export function OrderImportPopover({
       ) : loading || orders === null ? (
         <p className="erp-home-empty erp-u-p-10">불러오는 중...</p>
       ) : orders.length === 0 ? (
-        <p className="erp-home-empty erp-u-p-10">{date}에 불러올 {label} 품목이 없습니다.</p>
+        <p className="erp-home-empty erp-u-p-10">
+          {date}에 불러올 {label} 품목이 없습니다.{kind === "purchase" ? " (이미 전부 출고된 입고는 표시되지 않습니다)" : ""}
+        </p>
       ) : (
         orders.map((order) => (
           <div className="erp-u-flex erp-u-items-center erp-u-justify-between erp-u-gap-8 erp-u-pad-6-10 erp-u-text-compact erp-u-bb-divider" key={order.orderId}>

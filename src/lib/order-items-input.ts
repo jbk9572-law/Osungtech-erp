@@ -37,7 +37,7 @@ export function parseOrderItems<T extends ParsedOrderItem>(raw: string, opts: { 
     if (!isFiniteWithin(item.quantity, MAX_ITEM_QUANTITY)) return null;
     if (item.unitPrice !== undefined && !isFiniteWithin(item.unitPrice, MAX_ITEM_AMOUNT_UNIT)) return null;
     if (item.unitCost !== undefined && !isFiniteWithin(item.unitCost, MAX_ITEM_AMOUNT_UNIT)) return null;
-    for (const key of ["productId", "customName", "spec", "remark", "lotNumber"]) {
+    for (const key of ["productId", "customName", "spec", "remark", "lotNumber", "sourcePurchaseItemId"]) {
       const v = (item as Record<string, unknown>)[key];
       if (v !== undefined && v !== null && (typeof v !== "string" || v.length > MAX_TEXT_LENGTH)) return null;
     }

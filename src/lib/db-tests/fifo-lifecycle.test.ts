@@ -299,3 +299,187 @@ describe("삭제/수정 시 재고 되돌림 (migration 231)", () => {
     expect(await stockOf(child)).toBe(0);
   });
 });
+
+// ── 불러오기 연결 기록(239의 source_purchase_item_id, 241에서 차감 변경 제거) ───────────────────────────────
+// "입고 불러오기"로 가져온 매출 품목은 sourcePurchaseItemId로 어느 입고 품목에서 왔는지만 기록한다.
+// 재고 차감은 항상 선입선출이고, 불러오기 목록의 남은 수량은 이 연결 기록으로 계산한다(재고 남은 수량과 무관).
+async function purchaseItemId(purchaseId: string): Promise<string> {
+  const r = await h.db.query<{ id: string }>(`select id from public.purchase_order_items where purchase_order_id = $1`, [purchaseId]);
+  return r.rows[0].id;
+}
+
+async function saleWithSource(date: string, items: { quantity: number; source?: string }[]): Promise<string> {
+  const r = await h.db.query<{ id: string }>(
+    `select public.create_sale_with_items(
+       p_customer_id => $1, p_warehouse_id => $2, p_order_date => $3, p_memo => null,
+       p_created_by => $4, p_items => $5::jsonb) as id`,
+    [h.ids.customer, h.ids.warehouse, date, h.ids.staff,
+      JSON.stringify(items.map((i) => ({ productId: product, quantity: i.quantity, unitPrice: 300, sourcePurchaseItemId: i.source ?? "" })))],
+  );
+  return r.rows[0].id;
+}
+
+async function updateSaleWithSource(id: string, date: string, items: { quantity: number; source?: string }[]) {
+  await h.db.query(
+    `select public.update_sale_with_items(
+       p_id => $1, p_customer_id => $2, p_warehouse_id => $3, p_order_date => $4, p_memo => null,
+       p_updated_by => $5, p_items => $6::jsonb)`,
+    [id, h.ids.customer, h.ids.warehouse, date, h.ids.staff,
+      JSON.stringify(items.map((i) => ({ productId: product, quantity: i.quantity, unitPrice: 300, sourcePurchaseItemId: i.source ?? "" })))],
+  );
+}
+
+// 불러오기 목록이 쓰는 "연결된 판매 수량" — 앱(getPurchaseItemsForDate)과 같은 기준.
+async function linkedQuantity(sourceId: string): Promise<number> {
+  const r = await h.db.query<{ q: string | null }>(
+    `select sum(quantity) as q from public.sales_order_items where source_purchase_item_id = $1`, [sourceId]);
+  return Number(r.rows[0].q ?? 0);
+}
+
+describe("입고 불러오기 연결 기록", () => {
+  it("불러온 판매는 재고 차감과 별개로 연결만 남긴다 — 차감은 항상 선입선출", async () => {
+    const older = await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    expect(await remaining(older)).toBe(70); // 오래된 입고분에서 차감(예전과 같음)
+    expect(await remaining(picked)).toBe(50);
+    expect(await linkedQuantity(source)).toBe(30); // 그래도 불러온 입고분은 "30 사용"으로 기록
+  });
+
+  it("직접 입력한 판매는 연결이 없다", async () => {
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    await saleWithSource("2026-11-03", [{ quantity: 30 }]);
+    expect(await linkedQuantity(await purchaseItemId(picked))).toBe(0);
+  });
+
+  it("판매 수정으로 수량이 바뀌면 연결 수량도 따라가고, 연결을 빼면 0이 된다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await updateSaleWithSource(sale, "2026-11-03", [{ quantity: 40, source }]);
+    expect(await linkedQuantity(source)).toBe(40);
+    await updateSaleWithSource(sale, "2026-11-03", [{ quantity: 40 }]);
+    expect(await linkedQuantity(source)).toBe(0);
+  });
+
+  it("판매를 삭제하면 연결이 사라져 그 입고분을 다시 불러올 수 있다(재고도 원상 복구)", async () => {
+    const older = await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await deleteSale(sale);
+    expect(await linkedQuantity(source)).toBe(0);
+    expect(await remaining(older)).toBe(100);
+  });
+
+  it("다른 입고분이 소진돼도 불러온 입고분의 연결 수량은 영향이 없다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 100 }]); // 직접 입력으로 오래된 입고분 전량 소진
+    expect(await linkedQuantity(source)).toBe(0); // 안 불러온 입고분은 계속 불러올 수 있다
+  });
+});
+
+describe("연결 수량이 입고 수량을 넘지 못하게 DB가 막는다(242)", () => {
+  it("입고 수량만큼은 불러올 수 있다", async () => {
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 50, source }]);
+    expect(await linkedQuantity(source)).toBe(50);
+  });
+
+  it("이미 다른 매출이 불러간 뒤 같은 입고분을 또 저장하면 거절된다(동시에 열어 둔 두 화면)", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await expect(saleWithSource("2026-11-03", [{ quantity: 30, source }])).rejects.toThrow(/불러온 입고 수량/);
+    expect(await linkedQuantity(source)).toBe(30);
+  });
+
+  it("한 화면에서 같은 입고분을 두 줄로 불러와 합계가 넘으면 거절된다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    await expect(saleWithSource("2026-11-03", [{ quantity: 30, source }, { quantity: 30, source }])).rejects.toThrow(/불러온 입고 수량/);
+    expect(await linkedQuantity(source)).toBe(0); // 실패한 저장은 통째로 취소된다
+  });
+
+  it("판매 수정으로 수량을 늘려 넘기면 거절되고, 지운 뒤에는 다시 불러올 수 있다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    const source = await purchaseItemId(picked);
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 30, source }]);
+    await expect(updateSaleWithSource(sale, "2026-11-03", [{ quantity: 60, source }])).rejects.toThrow(/불러온 입고 수량/);
+    await deleteSale(sale);
+    await saleWithSource("2026-11-03", [{ quantity: 50, source }]);
+    expect(await linkedQuantity(source)).toBe(50);
+  });
+});
+
+// ── 할일에서 불러온 전표를 지우면 할일이 다시 열린다(243) ─────────────────────────────────────────────────────
+async function makeTodo(type: "purchase" | "sale" | "both"): Promise<string> {
+  const r = await h.db.query<{ id: string }>(`insert into public.todos (todo_type, tenant_id) values ($1, $2) returning id`, [type, h.ids.tenant]);
+  return r.rows[0].id;
+}
+const markDone = (todo: string, side: "purchase" | "sale", order: string) =>
+  h.db.query(`select public.mark_todo_side_done($1, $2, $3)`, [todo, side, order]);
+async function todoState(id: string) {
+  const r = await h.db.query<{ done: boolean; purchase_done_at: string | null; sale_done_at: string | null }>(
+    `select done, purchase_done_at, sale_done_at from public.todos where id = $1`, [id]);
+  return r.rows[0];
+}
+
+describe("할일에서 불러온 전표 삭제 시 할일 되돌리기", () => {
+  it("매출만 있는 할일: 매출을 지우면 다시 열린다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const todo = await makeTodo("sale");
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "sale", sale);
+    expect((await todoState(todo)).done).toBe(true);
+    await deleteSale(sale);
+    const after = await todoState(todo);
+    expect(after.done).toBe(false);
+    expect(after.sale_done_at).toBeNull();
+  });
+
+  it("당일 매입+출고 할일: 매출만 지우면 매출 방향만 다시 열리고 매입 완료는 유지된다", async () => {
+    const purchase = await createPurchaseOn("2026-11-03", 100);
+    const todo = await makeTodo("both");
+    const sale = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "purchase", purchase);
+    await markDone(todo, "sale", sale);
+    expect((await todoState(todo)).done).toBe(true);
+    await deleteSale(sale);
+    const after = await todoState(todo);
+    expect(after.done).toBe(false);
+    expect(after.sale_done_at).toBeNull();
+    expect(after.purchase_done_at).not.toBeNull();
+  });
+
+  it("같은 할일을 쓴 다른 매출이 남아 있으면 닫힌 채로 둔다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const todo = await makeTodo("sale");
+    const a = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    const b = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "sale", a);
+    await markDone(todo, "sale", b);
+    await deleteSale(a);
+    expect((await todoState(todo)).done).toBe(true);
+    await deleteSale(b);
+    expect((await todoState(todo)).done).toBe(false);
+  });
+
+  it("할일과 무관한 전표를 지워도 할일은 그대로다", async () => {
+    await createPurchaseOn("2026-11-01", 100);
+    const todo = await makeTodo("sale");
+    const linked = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    const other = await saleWithSource("2026-11-03", [{ quantity: 10 }]);
+    await markDone(todo, "sale", linked);
+    await deleteSale(other);
+    expect((await todoState(todo)).done).toBe(true);
+  });
+});
