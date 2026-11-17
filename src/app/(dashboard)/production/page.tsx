@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GridBadgeLink } from "@/components/grid/badge";
 import { GuardedLink } from "@/components/erp/guarded-link";
 import { createClient } from "@/lib/supabase/server";
 import { getQuickDatePresets, getYearMonthButtons, defaultListRange } from "@/lib/date-presets";
@@ -159,14 +160,12 @@ export default async function ProductionPage({
                     </td>
                     <td>
                       {row.products?.sku} · {row.products?.name}{" "}
-                      <Link
+                      <GridBadgeLink
                         href={`/inventory/lot-lookup?q=${encodeURIComponent(`LOT${row.doc_no}`)}`}
-                        className="erp-badge erp-badge-muted"
-                        style={{ textDecoration: "none" }}
                         title="이 생산지시의 매입/매출/생산 통합조회"
                       >
                         LOT{row.doc_no} 조회
-                      </Link>
+                      </GridBadgeLink>
                     </td>
                     <td className="num">
                       {formatNumber(Number(row.quantity))} {row.products?.unit}
@@ -219,13 +218,9 @@ export default async function ProductionPage({
                 </div>
                 <div className="erp-row-card-item">
                   {row.products?.sku} · {row.products?.name}{" "}
-                  <Link
-                    href={`/inventory/lot-lookup?q=${encodeURIComponent(`LOT${row.doc_no}`)}`}
-                    className="erp-badge erp-badge-muted"
-                    style={{ textDecoration: "none" }}
-                  >
+                  <GridBadgeLink href={`/inventory/lot-lookup?q=${encodeURIComponent(`LOT${row.doc_no}`)}`}>
                     LOT{row.doc_no} 조회
-                  </Link>
+                  </GridBadgeLink>
                 </div>
                 <dl className="erp-order-item-fields">
                   <div>

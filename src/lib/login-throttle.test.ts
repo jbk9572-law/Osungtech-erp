@@ -10,6 +10,18 @@ import {
 beforeEach(() => resetLoginThrottle());
 
 describe("login-throttle", () => {
+  it("한도에 닿는 순간에만 잠금 종류를 돌려준다(이미 잠긴 뒤 추가 실패는 null)", () => {
+    const kinds = [];
+    for (let i = 0; i < 7; i++) kinds.push(recordLoginFailure("1.1.1.1", "kim"));
+    expect(kinds).toEqual([null, null, null, null, "id", null, null]);
+  });
+
+  it("한 계정에 접속지를 바꿔 20번 실패하면 account 잠금을 알린다", () => {
+    let last = null;
+    for (let i = 0; i < 20; i++) last = recordLoginFailure(`9.9.9.${i}`, "boss");
+    expect(last).toBe("account");
+  });
+
   it("같은 접속지+아이디로 5번 실패하면 막힌다", () => {
     for (let i = 0; i < 4; i++) recordLoginFailure("1.1.1.1", "kim");
     expect(throttleRemainingSeconds("1.1.1.1", "kim")).toBe(0);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { GridBadge } from "@/components/grid/badge";
 
 export type ActivityLogRow = {
   id: string;
@@ -76,7 +77,7 @@ export function ActivityLogListBody({ rows }: { rows: ActivityLogRow[] }) {
               <div className="erp-u-semibold erp-u-text erp-u-text-base">
                 {r.tenant_name ?? "-"}
                 <span className="erp-u-ml-s2">
-                  <span className="erp-badge erp-badge-muted">{ACTION_LABELS[r.action] ?? r.action}</span>
+                  <GridBadge tone="muted">{ACTION_LABELS[r.action] ?? r.action}</GridBadge>
                 </span>
               </div>
               <div className="erp-u-muted erp-u-text-caption erp-u-mt-3">

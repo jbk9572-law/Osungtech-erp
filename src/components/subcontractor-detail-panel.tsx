@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GridBadge } from "@/components/grid/badge";
 import { createClient } from "@/lib/supabase/server";
 import { SubcontractorForm } from "@/components/subcontractor-form";
 import { PortalAccountForm, PortalAccountDisableForm } from "@/components/portal-account-form";
@@ -96,9 +97,9 @@ export async function SubcontractorDetailPanel({
                     <tr key={a.id}>
                       <td>{a.username}</td>
                       <td>
-                        <span className={`erp-badge ${a.disabled ? "erp-badge-muted" : "erp-badge-success"}`}>
+                        <GridBadge tone={a.disabled ? "muted" : "ok"}>
                           {a.disabled ? "비활성" : "사용중"}
-                        </span>
+                        </GridBadge>
                       </td>
                       <td>{new Date(a.created_at).toLocaleDateString("ko-KR")}</td>
                       <td>{!a.disabled && <PortalAccountDisableForm id={a.id} kind="subcontractor" />}</td>
@@ -146,9 +147,9 @@ export async function SubcontractorDetailPanel({
                       <td className="num">{s.unit_cost != null ? `${formatNumber(Number(s.unit_cost))}원` : "-"}</td>
                       <td className="num">{Number(s.returned_quantity) > 0 ? formatNumber(Number(s.returned_quantity)) : "-"}</td>
                       <td>
-                        <span className={`erp-badge ${s.status === "returned" ? "erp-badge-danger" : "erp-badge-muted"}`}>
+                        <GridBadge tone={s.status === "returned" ? "danger" : "muted"}>
                           {STEP_STATUS_LABEL[s.status] ?? s.status}
-                        </span>
+                        </GridBadge>
                       </td>
                     </tr>
                   ))}

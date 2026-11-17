@@ -83,7 +83,7 @@ export function PortalAssignmentsGridTable({
                 <td className="num">{formatNumber(row.quantity)}</td>
                 <td>{row.orderDate.replaceAll("-", ".")}</td>
                 <td>
-                  <span className="erp-badge erp-badge-muted">{WORK_ORDER_STATUS_LABEL[row.status] ?? row.status}</span>
+                  <GridBadge tone="muted">{WORK_ORDER_STATUS_LABEL[row.status] ?? row.status}</GridBadge>
                 </td>
                 <td className="num" onClick={(e) => e.stopPropagation()}>
                   <Link href={`${assignmentsHref}/${row.id}`} className="erp-btn erp-portal-action-btn">
@@ -125,7 +125,7 @@ export function PortalAssignmentsGridTable({
             </div>
             <div className="erp-row-card-foot">
               <span className="erp-row-card-qty">{formatNumber(row.quantity)}</span>
-              <span className="erp-badge erp-badge-muted">{WORK_ORDER_STATUS_LABEL[row.status] ?? row.status}</span>
+              <GridBadge tone="muted">{WORK_ORDER_STATUS_LABEL[row.status] ?? row.status}</GridBadge>
             </div>
             <div onClick={(e) => e.stopPropagation()}>
               <Link href={`${assignmentsHref}/${row.id}`} className="erp-btn erp-portal-action-btn" style={{ width: "100%", marginTop: 4 }}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { GridBadge } from "@/components/grid/badge";
 import { useEffect, useState } from "react";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
 import { PageGuide } from "@/components/erp/page-guide";
@@ -131,11 +132,7 @@ export function LocationAllocationModal({
                 <div className="erp-u-flex erp-u-justify-between erp-u-gap-8 erp-u-mb-6" style={{ alignItems: "baseline" }}>
                   <div className="erp-u-bold erp-u-flex erp-u-items-center erp-u-gap-6" style={{ fontSize: 13.5 }}>
                     {item.direction && (
-                      <span className="erp-u-bold erp-u-text-xs erp-u-pad-1-6"
-                        style={{ borderRadius: 999, background: item.direction === "출고" ? "var(--erp-danger-bg)" : "var(--erp-success-bg)", color: item.direction === "출고" ? "var(--erp-danger)" : "var(--erp-success)" }}
-                      >
-                        {item.direction}
-                      </span>
+                      <GridBadge tone={item.direction === "출고" ? "danger" : "ok"}>{item.direction}</GridBadge>
                     )}
                     {item.productName}
                     {item.spec && <span className="erp-u-normal erp-u-muted"> ({item.spec})</span>}

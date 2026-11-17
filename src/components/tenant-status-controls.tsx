@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import { GridBadge } from "@/components/grid/badge";
 import {
   toggleTenantActive,
   updateTenantPlan,
@@ -136,9 +137,9 @@ export function TenantStatusControls({
             {periodPending ? "저장 중..." : "저장"}
           </button>
           {planExpiresAt && (
-            <span className={`erp-badge ${isExpired ? "erp-badge-danger" : "erp-badge-info"}`}>
+            <GridBadge tone={isExpired ? "danger" : "info"}>
               {isExpired ? "만료됨" : `${toDateInputValue(planExpiresAt)}까지`}
-            </span>
+            </GridBadge>
           )}
         </form>
         <FormMessage state={periodState} />
@@ -156,9 +157,9 @@ export function TenantStatusControls({
           >
             {togglePending ? "처리 중..." : disabled ? "다시 활성화" : "비활성화(로그인 차단)"}
           </button>
-          <span className={`erp-badge ${disabled ? "erp-badge-danger" : "erp-badge-success"}`}>
+          <GridBadge tone={disabled ? "danger" : "ok"}>
             {disabled ? "비활성" : "활성"}
-          </span>
+          </GridBadge>
         </form>
         <FormMessage state={toggleState} />
       </div>
@@ -171,9 +172,9 @@ export function TenantStatusControls({
           <button type="submit" disabled={sandboxPending} className="erp-btn">
             {sandboxPending ? "처리 중..." : isSandbox ? "샌드박스 지정 해제" : "샌드박스로 지정"}
           </button>
-          <span className={`erp-badge ${isSandbox ? "erp-badge-info" : "erp-badge-muted"}`}>
+          <GridBadge tone={isSandbox ? "info" : "muted"}>
             {isSandbox ? "샌드박스" : "일반"}
-          </span>
+          </GridBadge>
         </form>
         <PageGuide className="mt-1 mb-0">
           샌드박스로 지정하면 그 테넌트에 로그인한 관리자가 환경설정 &gt; 샌드박스 도구에서 데이터를 원클릭

@@ -13,6 +13,8 @@
 // 성공하면 그 아이디의 카운터를 비운다. 같은 사무실(같은 공인 IP)의 여러 직원이 쓰는 점을 고려해 IP 전체 한도는
 // 아이디별 한도보다 넉넉하게 둔다.
 
+import { reportServerError } from "@/lib/error-tracking";
+
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_FAILS_PER_ID = 5;
 const MAX_FAILS_PER_IP = 30;
@@ -56,12 +58,36 @@ export function throttleRemainingSeconds(ip: string, loginId: string, now = Date
   return Math.max(1, Math.ceil((start + WINDOW_MS - now) / 1000));
 }
 
-export function recordLoginFailure(ip: string, loginId: string, now = Date.now()) {
+/** 이번 실패로 새로 잠금 한도에 닿은 묶음. 이미 잠긴 뒤의 추가 실패는 null(같은 공격을 매번 알리지 않기 위해). */
+export type LockoutKind = "id" | "ip" | "account";
+
+export function recordLoginFailure(ip: string, loginId: string, now = Date.now()): LockoutKind | null {
   sweep(now);
   const { idKey, ipKey, acctKey } = loginKeys(ip, loginId);
-  current(idKey, now).fails += 1;
-  current(ipKey, now).fails += 1;
-  current(acctKey, now).fails += 1;
+  const idB = current(idKey, now);
+  const ipB = current(ipKey, now);
+  const acctB = current(acctKey, now);
+  idB.fails += 1;
+  ipB.fails += 1;
+  acctB.fails += 1;
+  // 한도에 "딱 닿는 순간"만 알린다(접속지를 알 수 없으면 IP 묶음은 잠금 대상이 아니므로 알리지 않는다).
+  const kind: LockoutKind | null =
+    acctB.fails === MAX_FAILS_PER_ACCOUNT
+      ? "account"
+      : idB.fails === MAX_FAILS_PER_ID
+        ? "id"
+        : ip !== "unknown" && ipB.fails === MAX_FAILS_PER_IP
+          ? "ip"
+          : null;
+  reportLockout(kind, ip);
+  return kind;
+}
+
+/** 잠금이 새로 걸렸을 때 운영자가 볼 수 있게 서버 에러 추적(Sentry)으로 알린다. DSN 이 없으면 아무 일도 안 한다. */
+export function reportLockout(kind: LockoutKind | null, ip: string): void {
+  if (!kind) return;
+  const label = kind === "account" ? "한 계정에 여러 접속지에서 대량 시도" : kind === "ip" ? "한 접속지에서 대량 시도" : "한 계정·접속지 반복 실패";
+  void reportServerError(new Error(`로그인 잠금 발생: ${label}`), { kind, ip, security: true });
 }
 
 export function recordLoginSuccess(ip: string, loginId: string) {

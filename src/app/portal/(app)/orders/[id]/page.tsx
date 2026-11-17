@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { GridBadge } from "@/components/grid/badge";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatNumber } from "@/lib/format-number";
@@ -92,9 +93,9 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
         <div className="erp-detail-body">
           {order.status === "rejected" || order.status === "cancelled" ? (
             <>
-              <span className="erp-badge erp-badge-danger erp-u-text-md erp-u-pad-4-12">
+              <GridBadge tone="danger" className="erp-u-text-md erp-u-pad-4-12">
                 {describeProgress(order)}
-              </span>
+              </GridBadge>
               {order.status === "rejected" && order.reject_reason && (
                 <p className="erp-u-danger erp-u-mt-8 erp-u-text-compact">반려 사유: {order.reject_reason}</p>
               )}

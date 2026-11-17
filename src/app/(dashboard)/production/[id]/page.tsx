@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GridBadge } from "@/components/grid/badge";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -248,7 +249,7 @@ export default async function WorkOrderDetailPage({
                       <td>
                         {s.defect_hold ? (
                           <div className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-wrap">
-                            <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
+                            <GridBadge tone="danger">입고 불량 보류</GridBadge>
                             <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
                             <WorkOrderStepDefectRejectButton id={s.id} workOrderId={workOrder.id} />
                           </div>
@@ -331,7 +332,7 @@ export default async function WorkOrderDetailPage({
                     <div className="erp-row-card-foot erp-u-wrap">
                       {s.defect_hold ? (
                         <>
-                          <span className="erp-badge erp-badge-danger">입고 불량 보류</span>
+                          <GridBadge tone="danger">입고 불량 보류</GridBadge>
                           <WorkOrderStepDefectResolveButton id={s.id} workOrderId={workOrder.id} />
                           <WorkOrderStepDefectRejectButton id={s.id} workOrderId={workOrder.id} />
                         </>

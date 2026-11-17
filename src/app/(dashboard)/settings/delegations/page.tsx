@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { GridBadge } from "@/components/grid/badge";
 import { getCurrentActor } from "@/lib/current-actor";
 import { todayKstStr } from "@/lib/kst-date";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
@@ -68,9 +69,9 @@ export default async function ApprovalDelegationsPage() {
                     <div className="erp-u-semibold erp-u-text erp-u-text-md">
                       {d.delegator?.full_name ?? "-"} → {d.delegate?.full_name ?? "-"}
                       {active && (
-                        <span className="erp-badge erp-badge-success erp-u-ml-s2">
+                        <GridBadge tone="ok" className="erp-u-ml-s2">
                           진행중
-                        </span>
+                        </GridBadge>
                       )}
                     </div>
                     <div className="erp-u-muted erp-u-text-sm erp-u-mt-3">

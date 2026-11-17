@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { GridBadgeLink } from "@/components/grid/badge";
 import { formatPackageQty } from "@/lib/package-qty";
 import { formatNumOrDash } from "@/lib/format-num-or-dash";
 import { formatNumber } from "@/lib/format-number";
@@ -35,13 +35,9 @@ export type OrderItemRow = {
 function LotBadge({ lotNumber }: { lotNumber: string | null }) {
   if (!lotNumber) return <>-</>;
   return (
-    <Link
-      href={`/inventory/lot-lookup?q=${encodeURIComponent(lotNumber)}`}
-      className="erp-badge erp-badge-muted"
-      style={{ textDecoration: "none" }}
-    >
+    <GridBadgeLink href={`/inventory/lot-lookup?q=${encodeURIComponent(lotNumber)}`}>
       {lotNumber}
-    </Link>
+    </GridBadgeLink>
   );
 }
 

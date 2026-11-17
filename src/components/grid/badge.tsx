@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 // erp-badge-* 색상 조합을 각 그리드가 삼항연산자로 직접 조립해서 쓰다보니
@@ -5,7 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 // 고르게 해서 색 매핑을 한 곳에서 관리한다.
 export type BadgeTone = "ok" | "warn" | "danger" | "muted" | "info" | "carry" | "carryPrev";
 
-const TONE_CLASS: Record<BadgeTone, string> = {
+export const TONE_CLASS: Record<BadgeTone, string> = {
   ok: "erp-badge-success",
   warn: "erp-badge-warning",
   danger: "erp-badge-danger",
@@ -20,15 +21,36 @@ export function GridBadge({
   children,
   style,
   title,
+  className,
 }: {
   tone: BadgeTone;
   children: ReactNode;
   style?: CSSProperties;
   title?: string;
+  className?: string;
 }) {
   return (
-    <span className={`erp-badge ${TONE_CLASS[tone]}`} style={style} title={title}>
+    <span className={`erp-badge ${TONE_CLASS[tone]}${className ? ` ${className}` : ""}`} style={style} title={title}>
       {children}
     </span>
+  );
+}
+
+/** 눌러서 이동하는 뱃지(예: LOT 번호 → LOT 통합조회). 모양·색은 GridBadge 와 같다. */
+export function GridBadgeLink({
+  href,
+  tone = "muted",
+  children,
+  title,
+}: {
+  href: string;
+  tone?: BadgeTone;
+  children: ReactNode;
+  title?: string;
+}) {
+  return (
+    <Link href={href} className={`erp-badge ${TONE_CLASS[tone]} erp-u-no-underline`} title={title}>
+      {children}
+    </Link>
   );
 }

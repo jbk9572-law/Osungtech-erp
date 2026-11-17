@@ -1,5 +1,6 @@
 "use client";
 
+import { GridBadgeButton } from "@/components/grid/badge-button";
 import { useActionState, useRef, useState } from "react";
 import { assignWorkOrderProcessStep, createAndAssignSubcontractor } from "@/app/(dashboard)/production/actions";
 import { PortalAccountForm } from "@/components/portal-account-form";
@@ -101,14 +102,7 @@ export function WorkOrderProcessStepAssignCell({
           {assignedName}
         </span>
         {subcontractorId && !hasPortalAccount && (
-          <button
-            type="button"
-            className="erp-badge erp-badge-warning erp-u-border-none erp-u-pointer"
-            style={{ width: "fit-content" }}
-            onClick={() => setMode("issue")}
-          >
-            포털 계정 없음 · 발급하기
-          </button>
+          <GridBadgeButton onClick={() => setMode("issue")}>포털 계정 없음 · 발급하기</GridBadgeButton>
         )}
       </div>
     );
@@ -142,14 +136,7 @@ export function WorkOrderProcessStepAssignCell({
       </form>
       <FormMessage state={assignState} />
       {subcontractorId && !hasPortalAccount && (
-        <button
-          type="button"
-          className="erp-badge erp-badge-warning erp-u-border-none erp-u-pointer"
-          style={{ width: "fit-content" }}
-          onClick={() => setMode("issue")}
-        >
-          포털 계정 없음 · 발급하기
-        </button>
+        <GridBadgeButton onClick={() => setMode("issue")}>포털 계정 없음 · 발급하기</GridBadgeButton>
       )}
     </div>
   );

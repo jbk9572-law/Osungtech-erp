@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { GridBadge } from "@/components/grid/badge";
 import { KeyboardShortcuts } from "@/components/erp/keyboard-shortcuts";
 import { PageGuide } from "@/components/erp/page-guide";
 import { requireFeatureEnabled } from "@/lib/require-feature-enabled";
@@ -121,19 +122,16 @@ export default async function CustomerOrdersPage({
                         <td>
                           {item.products?.sku} · {item.products?.name}
                           {activeTab === "approved" && (
-                            <span
-                              className={`erp-badge ${manufactured ? "erp-badge-info" : "erp-badge-muted"}`}
-                              style={{ marginLeft: 6 }}
-                            >
+                            <GridBadge tone={manufactured ? "info" : "muted"} style={{ marginLeft: 6 }}>
                               {manufactured ? "제조품" : "사입품"}
-                            </span>
+                            </GridBadge>
                           )}
                           {itemConverted && (
-                            <span className="erp-badge erp-badge-success erp-u-ml-6">
+                            <GridBadge tone="ok" className="erp-u-ml-6">
                               {item.work_order_id
                                 ? `생산지시 연결됨(${item.work_orders?.status === "completed" ? "생산완료" : item.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`
                                 : "판매로 연결됨"}
-                            </span>
+                            </GridBadge>
                           )}
                         </td>
                         <td>{item.products?.spec ?? "-"}</td>
@@ -184,16 +182,16 @@ export default async function CustomerOrdersPage({
                       </div>
                       <div className="erp-row-card-badges">
                         {activeTab === "approved" && (
-                          <span className={`erp-badge ${manufactured ? "erp-badge-info" : "erp-badge-muted"}`}>
+                          <GridBadge tone={manufactured ? "info" : "muted"}>
                             {manufactured ? "제조품" : "사입품"}
-                          </span>
+                          </GridBadge>
                         )}
                         {itemConverted && (
-                          <span className="erp-badge erp-badge-success">
+                          <GridBadge tone="ok">
                             {item.work_order_id
                               ? `생산지시 연결됨(${item.work_orders?.status === "completed" ? "생산완료" : item.work_orders?.status === "material_issued" ? "생산중" : "생산대기"})`
                               : "판매로 연결됨"}
-                          </span>
+                          </GridBadge>
                         )}
                       </div>
                       <dl className="erp-order-item-fields">
@@ -254,15 +252,15 @@ export default async function CustomerOrdersPage({
               {activeTab === "approved" && (
                 <div className="erp-u-flex erp-u-gap-8 erp-u-items-center">
                   {!allConverted && (
-                    <span className="erp-badge erp-badge-muted">
+                    <GridBadge tone="muted">
                       {items.some((i) => i.work_order_id || i.sales_order_id)
                         ? "일부 품목 미연결"
                         : "생산지시/판매 미연결"}
-                    </span>
+                    </GridBadge>
                   )}
-                  <span className="erp-badge erp-badge-muted">
+                  <GridBadge tone="muted">
                     배송: {o.shipping_status === "delivered" ? "완료" : o.shipping_status === "shipped" ? "배송중" : "대기"}
-                  </span>
+                  </GridBadge>
                   {o.shipping_status === "pending" && <ShippingStatusForm id={o.id} status="shipped" label="배송중 처리" />}
                   {o.shipping_status === "shipped" && <ShippingStatusForm id={o.id} status="delivered" label="배송완료 처리" />}
                 </div>

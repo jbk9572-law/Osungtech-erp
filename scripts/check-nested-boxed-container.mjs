@@ -53,7 +53,7 @@ const ALLOWLIST = new Set([
   // .erp-detail 섹션 하나 안에 공정 단계를 한 줄씩 보여주는 카드 목록
   // (.erp-home-panel)이다 — 섹션을 또 감싸는 중복 박스가 아니라 목록
   // 항목(타임라인/체크리스트류)이라 성격이 다르다.
-  "src/app/portal/(app)/assignments/[id]/page.tsx:71",
+  "src/app/portal/(app)/assignments/[id]/page.tsx:72",
 ]);
 
 function walkDir(dir, out = []) {
