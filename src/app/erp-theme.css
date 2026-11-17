@@ -2447,6 +2447,26 @@ form.erp-field-grid {
   font-size: var(--erp-font-xs);
   font-weight: 700;
   border-bottom: 1px solid var(--erp-divider);
+  /* 바깥 표 머리글용 sticky가 안쪽 표에도 따라와, 스크롤하면 안쪽 머리글이
+     첫 품목 행 위에 겹쳐 두꺼워 보였다 — 안쪽 표는 고정하지 않는다. */
+  position: static;
+}
+/* 안쪽 표는 줄무늬/호버를 쓰지 않는다 — "ㄴ 규격" 보조 줄까지 한 줄로 세어
+   첫 품목 행만 회색 띠로 보이던 문제. 배경은 카드 색 하나로 통일. */
+.erp-grid-accordion-row .erp-grid tbody tr,
+.erp-grid-accordion-row .erp-grid tbody tr:nth-child(even),
+.erp-grid-accordion-row .erp-grid tbody tr:hover {
+  background: var(--erp-panel);
+}
+.erp-grid-accordion-row .erp-grid tbody td {
+  height: 30px;
+  padding-block: 0;
+  vertical-align: middle;
+}
+/* "계산 연결됨" 뱃지가 첫 품목 행 높이를 키우지 않게 한다. */
+.erp-grid-accordion-row .erp-grid tbody td .erp-badge {
+  line-height: 1.2;
+  vertical-align: middle;
 }
 
 .erp-grid .num {
