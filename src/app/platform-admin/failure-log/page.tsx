@@ -6,6 +6,16 @@ import { FailureLogListBody } from "@/components/failure-log-list-body";
 
 const PAGE_SIZE = 200;
 
+// 최근 24시간 요약 — 같은 CODE가 반복되면 사용자 실수가 아니라 설계·배포 문제일 가능성이 높다.
+// 이 페이지(최신 200건) 안에서 셈하므로 첫 페이지에서만 쓴다.
+function summarizeLast24h(rows: { code: string; created_at: string }[]) {
+  const since = Date.now() - 24 * 60 * 60 * 1000;
+  const recent = rows.filter((r) => new Date(r.created_at).getTime() >= since);
+  const byCode = new Map<string, number>();
+  for (const r of recent) byCode.set(r.code, (byCode.get(r.code) ?? 0) + 1);
+  return { recentCount: recent.length, topCodes: [...byCode.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3) as [string, number][] };
+}
+
 export default async function PlatformFailureLogPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const { supabase } = await requirePlatformAdmin();
   const { page: pageParam } = await searchParams;
@@ -20,6 +30,8 @@ export default async function PlatformFailureLogPage({ searchParams }: { searchP
   });
   const total = Number(rows?.[0]?.total_count ?? 0);
 
+  const { recentCount, topCodes } = page === 1 ? summarizeLast24h(rows ?? []) : { recentCount: 0, topCodes: [] as [string, number][] };
+
   return (
     <div>
       <ListPageHeader eyebrow="플랫폼 관리" title="실패 로그" />
@@ -29,6 +41,18 @@ export default async function PlatformFailureLogPage({ searchParams }: { searchP
         실패가 연달아 나면 30초에 한 번만 남기고, 90일이 지난 기록은 자동으로 지워집니다. 같은 CODE가 반복되면 설계
         문제일 가능성이 높으니 눈여겨봐주세요.
       </PageGuide>
+
+      {page === 1 && !!rows?.length && (
+        <p className="erp-u-text-base">
+          <strong>최근 24시간 실패 {recentCount}건</strong>
+          {topCodes.length > 0 && (
+            <span className="erp-u-muted">
+              {" "}
+              · 많이 반복된 CODE: {topCodes.map(([code, n]) => `${code} (${n}건)`).join(", ")}
+            </span>
+          )}
+        </p>
+      )}
 
       {!rows?.length ? (
         <p className="erp-grid-empty">{error ? `조회에 실패했습니다: ${error.message}` : "표시할 실패 로그가 없습니다."}</p>

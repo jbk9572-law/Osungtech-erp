@@ -6394,6 +6394,14 @@ export type Database = {
         Args: Record<string, never>;
         Returns: void;
       };
+      sandbox_seed_stage: {
+        Args: { p_stage: number };
+        Returns: undefined;
+      };
+      sandbox_seed_stage_count: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
       reply_support_ticket: {
         Args: { p_id: string; p_reply: string; p_status?: string };
         Returns: undefined;

@@ -23,7 +23,8 @@ import {
   GRID_ACTION_COL_WIDTH,
 } from "@/lib/grid-sticky";
 import { GridBadge } from "@/components/grid/badge";
-import { DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
+import { CarryoverBadge, DeliveryMethodCell, OrderDateCell, TaxTypeCell } from "@/components/grid/order-row-cells";
+import { carryoverRowClass, usesShortDate } from "@/lib/carryover";
 import { RowCheckbox } from "@/components/grid/row-checkbox";
 import { OrderDetailPanel, type OrderDetailSelection } from "@/components/grid/order-detail-panel";
 import { useEscapeToClose } from "@/lib/use-escape-to-close";
@@ -339,7 +340,7 @@ export function SalesGridTable({
     return (
       <tr
         key={row.key}
-        className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${row.isCarryover ? " row-carryover" : ""}`}
+        className={`cursor-pointer${isRowSelected ? " selected" : isActive ? " master-active" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}
         onClick={() => opts.selectable && toggleAccordion(row.key)}
       >
         <td style={opts.compactDate ? tdSticky1Carryover : tdSticky1}>
@@ -499,7 +500,7 @@ export function SalesGridTable({
         ? `/customers/${row.customerId}?back=${buildBackHref(resolveListHref("/sales", backParam))}`
         : null;
     const dateLabel = row.date
-      ? opts.compactDate || rowDay(row.date) === "future"
+      ? usesShortDate({ compactSection: !!opts.compactDate, isCarryover: row.isCarryover, isFuture: rowDay(row.date) === "future" })
         ? formatCarryoverDate(row.date)
         : new Date(row.date).toLocaleDateString("ko-KR", { month: "2-digit", day: "2-digit" })
       : "-";
@@ -523,11 +524,7 @@ export function SalesGridTable({
           )}
           <span className="erp-row-card-date">
             {dateLabel}
-            {row.isCarryover && row.date && (
-              <GridBadge tone="warn" style={{ marginLeft: 4 }}>
-                이월
-              </GridBadge>
-            )}
+            {row.isCarryover && row.date && <CarryoverBadge date={row.date} fromPrevMonth={!!opts.compactDate} />}
           {rowDay(row.date) === "future" && (
             <GridBadge tone="muted" style={{ marginLeft: 4 }}>
               예약
@@ -567,13 +564,13 @@ export function SalesGridTable({
 
     if (!detailHref || (opts.selectable && mobileSelectMode)) {
       return (
-        <div key={row.key} className={`erp-row-card${isRowSelected ? " selected" : ""}${rowDayClass(rowDay(row.date))}${row.isCarryover ? " row-carryover" : ""}`}>
+        <div key={row.key} className={`erp-row-card${isRowSelected ? " selected" : ""}${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}>
           {body}
         </div>
       );
     }
     return (
-      <Link key={row.key} href={detailHref} className={`erp-row-card${rowDayClass(rowDay(row.date))}${row.isCarryover ? " row-carryover" : ""}`}>
+      <Link key={row.key} href={detailHref} className={`erp-row-card${rowDayClass(rowDay(row.date))}${carryoverRowClass(row.isCarryover, !!opts.compactDate)}`}>
         {body}
       </Link>
     );

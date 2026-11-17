@@ -17,7 +17,7 @@ import path from "node:path";
 const MIGRATIONS_DIR = path.join(process.cwd(), "supabase", "migrations");
 
 // 테스트가 검증하는 함수들 — 운영 마이그레이션에서 최종 정의를 가져온다.
-const FUNCTIONS_UNDER_TEST = [
+export const FUNCTIONS_UNDER_TEST = [
   "guard_purchase_link_capacity",
   "mark_todo_side_done",
   "reopen_todos_on_order_delete",
@@ -34,7 +34,7 @@ const FUNCTIONS_UNDER_TEST = [
   "create_purchase_and_sale_with_items",
 ];
 
-function latestFunctionSql(name: string): string {
+export function latestFunctionSql(name: string): string {
   const files = fs.readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort();
   let latest: string | null = null;
   const re = new RegExp(`create or replace function public\\.${name}\\(`, "g");
@@ -52,7 +52,7 @@ function latestFunctionSql(name: string): string {
   return latest;
 }
 
-const SCHEMA_SQL = `
+export const SCHEMA_SQL = `
 create schema if not exists auth;
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid

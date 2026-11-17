@@ -18,6 +18,9 @@ const CSP_REPORT_ONLY = [
   "report-uri /api/csp-report",
 ].join("; ");
 
+// 강제 적용하는 최소 CSP — 위의 전체 정책(CSP_REPORT_ONLY)과 따로 동시에 내려간다(강제 + 감시 병행은 표준 동작).
+const CSP_ENFORCED_BASICS = ["object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'self'"].join("; ");
+
 const nextConfig: NextConfig = {
   // 오라클 클라우드 무료 서버(Docker)로 셀프호스팅할 때 필요한 최소
   // 실행 번들만 만든다. Vercel 배포에는 영향 없음(무시되는 옵션).
@@ -65,8 +68,11 @@ const nextConfig: NextConfig = {
           // 이 앱이 쓰지 않는 민감한 브라우저 기능(카메라/마이크/위치)을
           // 명시적으로 꺼서, 그 기능을 쓰는 악성 삽입 코드가 있어도 막는다.
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          // 스크립트 삽입(XSS) 공격을 한 겹 더 막기 위한 정책 — 지금은 감시만 한다.
+          // 스크립트 삽입(XSS) 공격을 한 겹 더 막기 위한 정책 — 전체 정책은 지금 감시만 한다.
           { key: "Content-Security-Policy-Report-Only", value: CSP_REPORT_ONLY },
+          // 깨질 위험이 거의 없는 4개만 먼저 "강제"한다: 플러그인 금지, <base> 태그 바꿔치기 금지, 폼을 다른 사이트로 보내기 금지,
+          // 다른 사이트가 이 앱을 iframe에 넣기 금지. (스크립트·이미지·연결 출처 같은 넓은 지시는 보고 로그를 본 뒤 올린다)
+          { key: "Content-Security-Policy", value: CSP_ENFORCED_BASICS },
         ],
       },
     ];

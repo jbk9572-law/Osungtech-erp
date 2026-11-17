@@ -1,3 +1,5 @@
+import { todayKstStr } from "@/lib/kst-date";
+
 // 이월(carryover) 공용 유틸.
 //
 // 거래일자(order_date/purchase_date)는 항상 실제 처리일 그대로 저장하고,
@@ -46,12 +48,29 @@ export function monthRangeOf(from: string, to: string): string | null {
   return to === expectedTo ? `${yearStr}-${monthStr}` : null;
 }
 
-// 이월 건 전용 축약 날짜("MM.DD", 연도 생략) — "전월 이월분" 구간은 구간
-// 제목에 이미 "전월(10월)"이라고 적혀 있어 각 행마다 연도까지 반복하면
-// 중복이고, 옆에 "이월" 배지까지 붙으면 일반 행보다 칸이 넓어져 표가
-// 들쭉날쭉해 보인다(사용자 지적). 일반 행의 날짜 표기(toLocaleDateString)는
-// 그대로 둔다 — 이월 전용 구간에서만 쓴다.
-export function formatCarryoverDate(dateStr: string): string {
-  const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(dateStr);
-  return match ? `${match[1]}.${match[2]}` : dateStr;
+// ── 이월건 날짜 표기 규칙(매출/매입 목록 표·모바일 카드 공통, 이 함수 한 곳에서만 정한다) ─────────────
+//  1) 날짜 칸에는 항상 "실제 거래일"을 쓴다. 이월이라고 실적월로 바꿔 쓰지 않는다(거래일자는 처리한 날 그대로 저장돼 있다).
+//  2) 뱃지가 붙는 행(이월·예약)은 "MM.DD"로 짧게 쓴다 — 날짜 칸이 좁아(92px) 긴 날짜에 뱃지까지 붙으면 줄이 깨진다.
+//     올해가 아니면 "YY.MM.DD"로 연도 두 자리를 붙여 헷갈리지 않게 한다(예: 1월에 보는 전월이월분의 "25.12.30").
+//  3) 뱃지가 없는 일반 행은 지금처럼 "YYYY. MM. DD."를 그대로 쓴다.
+//  4) 이월 종류와 실적월은 날짜가 아니라 뱃지("이월", 색으로 종류 구분, 툴팁에 "N월 실적")로만 표시한다.
+export function formatCarryoverDate(dateStr: string, todayStr: string = todayKstStr()): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!match) return dateStr;
+  const [, year, month, day] = match;
+  return year === todayStr.slice(0, 4) ? `${month}.${day}` : `${year.slice(2)}.${month}.${day}`;
+}
+
+// 이 행이 뱃지(이월/예약)를 달고 있어 짧은 날짜(규칙 2)를 써야 하는지 — 표와 모바일 카드가 같은 판단을 쓴다.
+export function usesShortDate(opts: { compactSection: boolean; isCarryover: boolean | undefined; isFuture: boolean }): boolean {
+  return opts.compactSection || !!opts.isCarryover || opts.isFuture;
+}
+
+// 목록 행(<tr>/카드)의 이월 색 구분용 className — 두 종류를 다른 색으로 보여 준다:
+//  · 전월 이월(이번 달 실적으로 넘어온 건, "전월 이월분" 구간의 행) → row-carryover (호박색)
+//  · 익월이월(이번 달에 등록했지만 다음 달 실적으로 넘기는 건, 목록 안의 행) → row-carryover-next (연보라)
+// 매출/매입 목록 표와 모바일 카드가 같은 규칙을 쓰도록 한 곳에서 정한다.
+export function carryoverRowClass(isCarryover: boolean | undefined, inPrevMonthSection: boolean): string {
+  if (!isCarryover) return "";
+  return inPrevMonthSection ? " row-carryover" : " row-carryover-next";
 }

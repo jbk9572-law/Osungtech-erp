@@ -258,6 +258,10 @@
   --erp-success-border: #b7e4c7;
   --erp-warning-bg: #fff3e0;
   --erp-warning-border: #ffd9a8;
+  /* 익월이월(이번 달 등록 → 다음 달 실적) 전용 — 전월 이월(호박색 warning)·오늘(초록)·선택(파랑)·예약(회색)과 겹치지 않는 연보라 */
+  --erp-carry-next-bg: #f1ecfb;
+  --erp-carry-next-border: #d6c9f0;
+  --erp-carry-next-bar: #7a58c4;
   /* 플랫폼 전체공지 배너 전용 — LED 전광판처럼 눈에 확 띄어야 해서
      나머지 배지/배너와 달리 시맨틱 톤(success/warning/danger/info)을
      쓰지 않고 실제 전광판 배색(빨간 바탕 + 노란 글씨)을 그대로 쓴다. */
@@ -2404,6 +2408,13 @@ form.erp-field-grid {
 .erp-grid tbody tr.row-carryover:not(.selected):not(.master-active) > td {
   background: var(--erp-warning-bg) !important;
 }
+/* 익월이월건 행(이번 달에 등록, 다음 달 실적으로 넘김) — 전월 이월(호박색)과 다른 연보라로 칠하고 왼쪽에 띠를 둔다. */
+.erp-grid tbody tr.row-carryover-next:not(.selected):not(.master-active) > td {
+  background: var(--erp-carry-next-bg) !important;
+}
+.erp-grid tbody tr.row-carryover-next:not(.selected):not(.master-active) > td:first-child {
+  box-shadow: inset 3px 0 0 var(--erp-carry-next-bar);
+}
 
 /* 목록 그리드의 "오늘"/"예약(미래 날짜)" 행 구분 — src/lib/row-day.ts.
    오늘은 초록 계열 배경+왼쪽 띠, 예약(미래 날짜)은 회색 배경+띠 + "MM.DD 예약"(이월과 같은 방식). 글자 뱃지는
@@ -2426,6 +2437,11 @@ form.erp-field-grid {
   background: var(--erp-warning-bg);
   border-color: var(--erp-warning-border, var(--erp-border-strong));
   box-shadow: inset 4px 0 0 var(--erp-warning);
+}
+.erp-row-card.row-carryover-next:not(.selected) {
+  background: var(--erp-carry-next-bg);
+  border-color: var(--erp-carry-next-border);
+  box-shadow: inset 4px 0 0 var(--erp-carry-next-bar);
 }
 .erp-row-card.day-today:not(.selected) {
   background: var(--erp-success-bg);
@@ -2463,8 +2479,16 @@ form.erp-field-grid {
 .erp-grid-accordion-row > td > .erp-detail {
   margin-top: 0;
   background: var(--erp-bg);
-  border: 1px solid var(--erp-divider);
+  border: 1px solid var(--erp-border);
   border-radius: var(--erp-radius-lg, 0);
+}
+/* 안쪽 표(흰 행)가 회색 카드 위에 떠 보이지 않게 카드 테두리를 진하게 하고, 안쪽 표 테두리는 없애 한 겹으로 맞춘다(이중선 방지). 행 구분선도 뚜렷하게 */
+.erp-grid-accordion-row .erp-grid-wrap {
+  border: none;
+  border-radius: 0;
+}
+.erp-grid-accordion-row .erp-grid tbody td {
+  border-bottom: 1px solid var(--erp-grid-line);
 }
 
 /* 안쪽 품목내역 표의 헤더는 바깥 표 헤더와 똑같이 무겁게 가져가면
@@ -3142,6 +3166,18 @@ form.erp-field-grid {
 .erp-badge-info {
   background: var(--erp-info-bg);
   color: var(--erp-text);
+}
+
+.erp-badge-carry,
+.erp-badge-carry-prev {
+  background: var(--erp-panel);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.erp-badge-carry {
+  color: var(--erp-carry-next-bar);
+}
+.erp-badge-carry-prev {
+  color: var(--erp-warning);
 }
 
 /* 그리드 행 안에 있는 "명세표 →" 같은 텍스트 링크를 아이콘 버튼으로
@@ -3930,42 +3966,10 @@ a.erp-detail-tab:hover:not(.active) {
      세로로 자연스럽게 쌓으므로, flex를 그대로 두면 컨테이너가 화면
      높이만큼 고정된 채 내용이 넘쳐도 안 늘어나 잘려 보인다. 체인 전체를
      block으로 되돌려 내용 높이만큼 자연스럽게 자라게 한다. */
-  .erp-page:has(> div > .erp-split-shell),
-  .erp-page:has(> div > .erp-split3-shell),
-  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) {
-    display: block;
-  }
-  .erp-page:has(> div > .erp-split-shell) > div,
-  .erp-page:has(> div > .erp-split3-shell) > div,
-  .erp-page:has(> div > .erp-card-feed:not(.erp-card-feed-compact)) > div {
-    display: block;
-  }
-  .erp-split-shell {
-    display: block;
-  }
   /* 특정 항목을 선택했을 때만 목록을 숨기고 상세를 전체 폭으로 보여준다
      — 아무것도 선택 안 한 기본 상태(신규 등록 폼)는 목록과 함께 계속
      세로로 쌓아 보여준다(모바일에서 신규 등록 폼 자체가 안 보이게
      숨어버리는 걸 막기 위함). */
-  .erp-split-shell[data-mobile-view="detail"] .erp-split-list {
-    display: none;
-  }
-  .erp-split-list,
-  .erp-split-detail {
-    max-height: none;
-  }
-
-  .erp-split3-shell {
-    display: block;
-  }
-  .erp-split3-shell[data-mobile-view="detail"] .erp-cat-sidebar,
-  .erp-split3-shell[data-mobile-view="detail"] .erp-split-list {
-    display: none;
-  }
-  .erp-cat-sidebar {
-    max-height: none;
-    margin-bottom: 10px;
-  }
 
   /* split3-shell을 쓰는 화면(메일함/공지사항)의 상세(메일 본문/글
      읽기)는, 다른 분할뷰 화면(거래처 상세 등)과 달리 "목록에서 글 하나
@@ -3974,35 +3978,9 @@ a.erp-detail-tab:hover:not(.active) {
      .erp-split-detail의 카드 테두리를 없애 전용 화면처럼 보이게 한다
      — .erp-split-shell(거래처/품목 등 13개 화면)이 쓰는 같은 클래스는
      선택자를 .erp-split3-shell 안으로 좁혀서 그대로 둔다. */
-  .erp-split3-shell .erp-split-detail {
-    border: none;
-    padding: 14px 0 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
 }
 
 /* ── 8. Status bar ─────────────────────────────────────────── */
-.erp-statusbar {
-  height: 26px;
-  flex: 0 0 26px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 12px;
-  background: var(--erp-bg-subtle);
-  border-top: 1px solid var(--erp-border);
-  font-size: var(--erp-font-sm);
-  color: var(--erp-text-muted);
-}
-
-.erp-statusbar span {
-  white-space: nowrap;
-}
-
-.erp-statusbar .sep {
-  color: var(--erp-glyph-muted);
-}
 
 /* 월별리포트/할일관리/공지사항 상단의 4칸 요약 카드 — 월별리포트/todos
    페이지, announcement-grid-table.tsx 세 곳이 똑같은 인라인 스타일
@@ -4012,81 +3990,30 @@ a.erp-detail-tab:hover:not(.active) {
    부러질 자리 없이 통째로 잘려서 안 보이는 문제가 있어(재현: 360px
    화면에서 카드 폭이 패딩 포함 74px 안팎, 숫자는 90-110px 필요),
    인라인 스타일 대신 공용 클래스로 묶고 모바일에서 2칸으로 접는다. */
-.erp-kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 12px;
-}
 
 @media (max-width: 640px) {
-  .erp-kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 /* QR 라벨 인쇄 화면의 카드 그리드 — repeat(3,1fr)만 있고 모바일 대응이
    없어서, 카드 안 QR SVG가 고정폭(110px)이라 grid item이 그 아래로 못
    줄어들어 390px 화면에서 3번째 칸이 넘쳐 잘려 보이던 문제. 다른
    요약카드 그리드(erp-kpi-row 등)와 같은 방식으로 좁은 화면에서 접는다. */
-.erp-qr-label-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 12px;
-}
 
 @media (max-width: 640px) {
-  .erp-qr-label-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 420px) {
-  .erp-qr-label-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.erp-hero-card {
-  background: var(--erp-panel);
-  border: 1px solid var(--erp-border-strong);
-  border-left: 3px solid var(--erp-primary);
-  border-radius: var(--erp-radius-3xl, 0);
-  padding: 16px 18px;
-}
-
-.erp-hero-label {
-  font-size: var(--erp-font-sm);
-  font-weight: 700;
-  color: var(--erp-text-muted);
-}
-
-.erp-hero-value {
-  font-size: 18px;
-  font-weight: 800;
-  margin-top: 4px;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ── Home Workspace ────────────────────────────────────────── */
-.erp-home {
-  min-width: 0;
-}
 
 /* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
    최소 폭(min-width: auto)을 가져서, 모바일 1열 레이아웃에서 부모 grid
    칸 너비를 무시하고 넘쳐버릴 수 있다(실제로 "최근 메모"의 긴 한 줄
    메모 때문에 발생 확인됨). 자식들과 그 안의 모든 요소에 min-width: 0을
    줘서 항상 grid 칸 너비에 맞게 줄어들 수 있게 한다. */
-.erp-home,
-.erp-home * {
-  min-width: 0;
-}
 
 .erp-home-panel {
-  border-radius: var(--erp-comm-radius-row);
-  border-color: var(--erp-comm-border);
   box-shadow: var(--erp-comm-shadow-row);
 }
 
@@ -4237,10 +4164,6 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 /* ── Home Workspace ────────────────────────────────────────── */
-.erp-home {
-  min-width: 0;
-}
-
 /* grid 자식은 기본적으로 내용물(긴 메모 한 줄 등)보다 작아지지 않으려는
    최소 폭(min-width: auto)을 가져서, 모바일 1열 레이아웃에서 부모 grid
    칸 너비를 무시하고 넘쳐버릴 수 있다(실제로 "최근 메모"의 긴 한 줄
@@ -4268,16 +4191,11 @@ a.erp-detail-tab:hover:not(.active) {
 }
 
 .erp-kpi-label {
-  font-size: var(--erp-font-sm);
-  color: var(--erp-text-muted);
   font-weight: 600;
   margin-bottom: 6px;
 }
 
 .erp-kpi-value {
-  font-size: 20px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
   font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
 }
 
