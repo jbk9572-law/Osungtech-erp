@@ -525,6 +525,31 @@
   margin-bottom: 14px;
 }
 
+/* 품목 섹션 머리줄의 도구 묶음(매출/매입 입력) — 왼쪽은 품목 검색창, 오른쪽은
+   버튼들이 한 줄로 모이게 한다. 검색창이 버튼들 사이에 끼어 흩어져 보이고
+   표 머리글과 맞지 않던 것을 한 규칙으로 정리. 좁은 화면에서는 줄바꿈된다. */
+.erp-item-toolbar {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.erp-item-toolbar > :first-child {
+  margin-right: auto;
+  max-width: 420px;
+}
+@media (max-width: 640px) {
+  .erp-item-toolbar {
+    justify-content: flex-start;
+  }
+  .erp-item-toolbar > :first-child {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
 /* h1 아래 붙는 한 줄 설명 — "출고 및 세금계산서 발행 내역을
    조회합니다" 같은 화면 용도 설명. */
 .erp-page-desc {

@@ -1058,7 +1058,7 @@ export function NewSaleForm({
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
-          <div className="erp-field erp-span-3">
+          <div className="erp-field erp-span-4">
             <label htmlFor="sale-customer">출고처</label>
             <PartySearchSelect
               id="sale-customer"
@@ -1094,7 +1094,7 @@ export function NewSaleForm({
               />
             </div>
           )}
-          <div className="erp-field erp-span-2">
+          <div className={`erp-field ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
             <label htmlFor="sale-delivery-method">배송방법</label>
             <ErpSelect
               id="sale-delivery-method"
@@ -1112,7 +1112,7 @@ export function NewSaleForm({
               options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-span-4">
             <label htmlFor="sale-evidence-type">증빙유형</label>
             <ErpSelect
               id="sale-evidence-type"
@@ -1148,8 +1148,7 @@ export function NewSaleForm({
           className="erp-form-section-head erp-u-relative"
         >
           <span className="erp-eyebrow erp-u-m-0">품목</span>
-          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4"
-          >
+          <div className="erp-item-toolbar">
             <QuickAddProductSearch
               products={products}
               onAdd={quickAddProduct}
