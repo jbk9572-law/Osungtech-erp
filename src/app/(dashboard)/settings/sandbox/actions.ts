@@ -267,3 +267,17 @@ export async function seedSandbox(_prevState: FormState, _formData: FormData): P
   revalidatePath("/", "layout");
   return { success: employeeNote ? `더미 데이터를 생성했습니다. ${employeeNote}` : "더미 데이터를 생성했습니다." };
 }
+
+// 업종별 예시 데이터 — 기본 더미데이터 위에 식품(소수 수량)·소매(반품 잦음)·서비스(품목 없는 줄) 모양의 거래를 작게 얹는다(마이그레이션 256).
+// 안전장치(샌드박스 회사인지·관리자인지·이미 만들었는지)는 DB 함수가 전부 확인한다.
+export async function seedSandboxIndustry(_prevState: FormState, formData: FormData): Promise<FormState> {
+  const industry = String(formData.get("industry") ?? "");
+  if (!["food", "retail", "service"].includes(industry)) return { error: "업종을 선택해주세요." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sandbox_seed_industry", { p_industry: industry });
+  if (error) return { error: `업종 예시 데이터 생성에 실패했습니다: ${error.message}` };
+
+  revalidatePath("/", "layout");
+  return { success: typeof data === "string" ? data : "업종 예시 데이터를 만들었습니다." };
+}
