@@ -329,7 +329,30 @@ async function updateSaleWithSource(id: string, date: string, items: { quantity:
   );
 }
 
-describe("지정한 입고분 우선 차감", () => {
+async function setPickedLayerOption(enabled: boolean) {
+  await h.db.query(
+    enabled
+      ? `update public.tenants set disabled_features = array_remove(disabled_features, 'deduct_picked_layer') where id = $1`
+      : `update public.tenants set disabled_features = array_append(disabled_features, 'deduct_picked_layer') where id = $1 and not ('deduct_picked_layer' = any(disabled_features))`,
+    [h.ids.tenant],
+  );
+}
+
+describe("회사 옵션이 꺼져 있으면(기본) 지정해도 선입선출", () => {
+  it("지정한 입고분이 와도 무시하고 오래된 입고분부터 차감한다(예전과 같은 동작)", async () => {
+    const older = await createPurchaseOn("2026-11-01", 100);
+    const picked = await createPurchaseOn("2026-11-02", 50);
+    await saleWithSource("2026-11-03", [{ quantity: 30, source: await purchaseItemId(picked) }]);
+    expect(await remaining(older)).toBe(70);
+    expect(await remaining(picked)).toBe(50);
+  });
+});
+
+describe("지정한 입고분 우선 차감 (회사 옵션 켬)", () => {
+  beforeEach(async () => {
+    await setPickedLayerOption(true);
+  });
+
   it("지정한 입고분에서 먼저 차감한다(선입선출이면 오래된 입고분이 줄었을 상황)", async () => {
     const older = await createPurchaseOn("2026-11-01", 100);
     const picked = await createPurchaseOn("2026-11-02", 50);

@@ -18,6 +18,7 @@ const MIGRATIONS_DIR = path.join(process.cwd(), "supabase", "migrations");
 
 // 테스트가 검증하는 함수들 — 운영 마이그레이션에서 최종 정의를 가져온다.
 const FUNCTIONS_UNDER_TEST = [
+  "tenant_behavior_enabled",
   "consume_fifo_layers",
   "release_fifo_consumption",
   "backfill_fifo_consumption_for_purchase",
@@ -56,7 +57,7 @@ create or replace function auth.uid() returns uuid language sql stable as $$
 $$;
 create or replace function auth.role() returns text language sql stable as $$ select 'authenticated' $$;
 
-create table public.tenants (id uuid primary key default gen_random_uuid(), closing_date date);
+create table public.tenants (id uuid primary key default gen_random_uuid(), closing_date date, disabled_features text[] not null default '{}');
 create table public.profiles (id uuid primary key, role text not null default 'staff');
 create table public.tenant_members (user_id uuid primary key, tenant_id uuid not null references public.tenants(id));
 create table public.platform_admin_impersonations (admin_user_id uuid, tenant_id uuid, ended_at timestamptz);
@@ -201,7 +202,7 @@ export async function createHarness(): Promise<Harness> {
     supplier: crypto.randomUUID(),
   };
   await db.exec(`
-    insert into public.tenants (id) values ('${ids.tenant}');
+    insert into public.tenants (id, disabled_features) values ('${ids.tenant}', array['deduct_picked_layer']);
     insert into public.profiles (id, role) values ('${ids.admin}', 'admin'), ('${ids.staff}', 'staff');
     insert into public.tenant_members (user_id, tenant_id) values ('${ids.admin}', '${ids.tenant}'), ('${ids.staff}', '${ids.tenant}');
     insert into public.warehouses (id) values ('${ids.warehouse}');
