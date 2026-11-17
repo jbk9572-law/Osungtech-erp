@@ -10,16 +10,16 @@
 // 지적으로 90px까지 줄였다가 버튼 자체가 칸보다 넓어져서 겹쳐 보이는
 // 회귀가 생겼다 — 다시 여유 있게 124px로 되돌린다.
 export const ITEM_GRID_COLUMN_PX_WIDTHS = {
-  product: 110,
-  spec: 110,
+  product: 190,
+  spec: 100,
   lotNumber: 88,
-  unit: 40,
-  quantity: 110,
-  price: 99,
-  supplyAmount: 110,
-  tax: 88,
-  total: 99,
-  remark: 165,
+  unit: 44,
+  quantity: 104,
+  price: 96,
+  supplyAmount: 104,
+  tax: 84,
+  total: 96,
+  remark: 120,
   actions: 124,
 } as const;
 

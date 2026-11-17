@@ -1090,7 +1090,7 @@ export function NewPurchaseForm({
               title="비워두면 자동으로 채번됩니다. 인쇄되는 거래명세표의 No와 같은 번호입니다."
             />
           </div>
-          <div className="erp-field erp-span-3">
+          <div className="erp-field erp-span-4">
             <label htmlFor="purchase-supplier">공급처</label>
             <PartySearchSelect
               id="purchase-supplier"
@@ -1126,7 +1126,7 @@ export function NewPurchaseForm({
               />
             </div>
           )}
-          <div className="erp-field erp-span-2">
+          <div className={`erp-field ${warehouses.length > 1 ? "erp-span-2" : "erp-span-4"}`}>
             <label htmlFor="purchase-delivery-method">입고방법</label>
             <ErpSelect
               id="purchase-delivery-method"
@@ -1144,7 +1144,7 @@ export function NewPurchaseForm({
               options={TAX_TYPES.map((t) => ({ value: t, label: t }))}
             />
           </div>
-          <div className="erp-field erp-span-2">
+          <div className="erp-field erp-span-4">
             <label htmlFor="purchase-evidence-type">증빙유형</label>
             <ErpSelect
               id="purchase-evidence-type"
@@ -1171,7 +1171,7 @@ export function NewPurchaseForm({
           </div>
           {!initial?.id && customers.length > 0 && (
             <>
-              <div className="erp-field erp-span-3">
+              <div className="erp-field erp-span-2">
                 <label>매출 동시 등록</label>
                 <label className="erp-u-flex erp-u-items-center erp-u-gap-6 erp-u-text-base erp-u-pointer erp-u-h-30"
                 >
@@ -1208,7 +1208,7 @@ export function NewPurchaseForm({
               </div>
               {alsoCreateSale && (
                 <>
-                  <div className="erp-field erp-span-3">
+                  <div className="erp-field erp-span-4">
                     <label htmlFor="purchase-sale-customer">출고처</label>
                     <PartySearchSelect
                       id="purchase-sale-customer"
@@ -1228,7 +1228,7 @@ export function NewPurchaseForm({
                       className="erp-input"
                     />
                   </div>
-                  <div className="erp-field erp-span-2">
+                  <div className="erp-field erp-span-4">
                     <label htmlFor="purchase-sale-delivery-method">납품방법</label>
                     <ErpSelect
                       id="purchase-sale-delivery-method"
@@ -1249,8 +1249,7 @@ export function NewPurchaseForm({
           className="erp-form-section-head erp-u-relative"
         >
           <span className="erp-eyebrow erp-u-m-0">품목</span>
-          <div className="erp-u-flex erp-u-items-center erp-u-gap-4 erp-u-wrap erp-u-m-4"
-          >
+          <div className="erp-item-toolbar">
             <QuickAddProductSearch
               products={products}
               onAdd={quickAddProduct}

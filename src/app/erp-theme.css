@@ -525,6 +525,31 @@
   margin-bottom: 14px;
 }
 
+/* 품목 섹션 머리줄의 도구 묶음(매출/매입 입력) — 왼쪽은 품목 검색창, 오른쪽은
+   버튼들이 한 줄로 모이게 한다. 검색창이 버튼들 사이에 끼어 흩어져 보이고
+   표 머리글과 맞지 않던 것을 한 규칙으로 정리. 좁은 화면에서는 줄바꿈된다. */
+.erp-item-toolbar {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.erp-item-toolbar > :first-child {
+  margin-right: auto;
+  max-width: 420px;
+}
+@media (max-width: 640px) {
+  .erp-item-toolbar {
+    justify-content: flex-start;
+  }
+  .erp-item-toolbar > :first-child {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
 /* h1 아래 붙는 한 줄 설명 — "출고 및 세금계산서 발행 내역을
    조회합니다" 같은 화면 용도 설명. */
 .erp-page-desc {
@@ -2183,31 +2208,35 @@ form.erp-field-grid {
   background: var(--erp-hover);
 }
 
-/* ── 유형 토글(매출/수금, 매입/지급 등) ───────────────────── */
+/* ── 두 가지 중 하나를 고르는 전환 버튼(매출/수금, 매입/지급, 달력 건수/자세히 등) ───
+   이 컨트롤이 두 군데에 따로 정의돼(큰 틀은 바깥 테두리, 뒤에 추가된 규칙은 버튼마다 테두리) 겹쳐서
+   테두리가 이중으로 보였다 — 한 곳으로 합쳤다: 바깥 테두리 한 겹 + 버튼 사이 구분선 하나. */
 .erp-seg {
   display: inline-flex;
   border: 1px solid var(--erp-border);
   border-radius: var(--erp-radius-md, 0);
   overflow: hidden;
 }
-
-.erp-seg-btn {
+.erp-seg button {
+  margin: 0;
+  padding: 3px 10px;
   border: none;
-  padding: 8px 22px;
-  font-size: var(--erp-font-md);
-  font-weight: 600;
-  cursor: pointer;
   background: var(--erp-panel);
-  color: var(--erp-text-muted);
+  color: var(--erp-text);
+  font: inherit;
+  font-size: var(--erp-font-sm);
+  cursor: pointer;
 }
-
-.erp-seg-btn + .erp-seg-btn {
+.erp-seg button + button {
   border-left: 1px solid var(--erp-border);
 }
-
-.erp-seg-btn.active {
+.erp-seg button.active {
   background: var(--erp-primary);
   color: var(--erp-on-primary);
+}
+.erp-seg button.active,
+.erp-seg button.active + button {
+  border-left-color: var(--erp-primary);
 }
 
 /* ── 6. Data grid ──────────────────────────────────────────── */
@@ -2473,6 +2502,12 @@ form.erp-field-grid {
   text-align: right;
   font-variant-numeric: tabular-nums;
   font-family: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
+}
+/* 숫자 칸 머리글(th.num)은 오른쪽 정렬만 따르고 글꼴은 다른 머리글과 같게 —
+   고정폭 글꼴은 값(td)에만 쓴다. 안 그러면 수량·단가·금액 머리글만 더 크고
+   다른 글꼴로 보여 칸 머리글 줄이 들쭉날쭉하다. */
+.erp-grid thead th.num {
+  font-family: inherit;
 }
 
 /* 키보드로 행을 옮겨다닐 때(Tab/Enter) 지금 입력 중인 행이 어디인지
@@ -6355,22 +6390,6 @@ body:has([data-erp-route-loading]) .erp-nav-overlay {
 .erp-cal-count.is-todo { border-left-color: var(--erp-warning); background: var(--erp-warning-bg); }
 .erp-cal-count.is-stock { border-left-color: var(--erp-danger); background: var(--erp-danger-bg); }
 .erp-cal-cell.is-selected .erp-cal-count { background: transparent; border-left-color: var(--erp-on-primary); color: var(--erp-on-primary); }
-
-/* 두 가지 중 하나를 고르는 짧은 전환 버튼(예: 달력 건수/자세히) */
-.erp-seg { display: inline-flex; }
-.erp-seg button {
-  margin-left: -1px;
-  padding: 3px 10px;
-  border: 1px solid var(--erp-border);
-  background: var(--erp-panel);
-  color: var(--erp-text);
-  font: inherit;
-  font-size: var(--erp-font-sm);
-  cursor: pointer;
-}
-.erp-seg button:first-child { margin-left: 0; border-radius: var(--erp-radius-md, 0) 0 0 var(--erp-radius-md, 0); }
-.erp-seg button:last-child { border-radius: 0 var(--erp-radius-md, 0) var(--erp-radius-md, 0) 0; }
-.erp-seg button.active { background: var(--erp-primary); border-color: var(--erp-primary); color: var(--erp-on-primary); }
 
 .erp-cal-more { font-size: var(--erp-font-xs); color: var(--erp-text-muted); }
 .erp-cal-cell.is-selected .erp-cal-more { color: var(--erp-on-primary); }
